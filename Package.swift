@@ -78,7 +78,7 @@ let package = Package(
         ),
         .testTarget(
             name: "SwiftInferTemplatesTests",
-            dependencies: ["SwiftInferTemplates"]
+            dependencies: ["SwiftInferTemplates", "SwiftInferCore"]
         ),
         .testTarget(
             name: "SwiftInferCLITests",
