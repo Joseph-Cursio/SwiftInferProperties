@@ -5,9 +5,9 @@ import SwiftInferCore
 ///
 /// PRD v0.3 §5.2 specifies eight shipped templates: round-trip, idempotence,
 /// commutativity, associativity, monotonicity, identity-element,
-/// invariant-preservation, inverse-pair. M1.3 ships **idempotence**; M1.4
-/// adds round-trip + cross-function pairing; subsequent milestones add the
-/// remaining six.
+/// invariant-preservation, inverse-pair. M1.3 shipped **idempotence**; M1.4
+/// adds **round-trip** + cross-function pairing; subsequent milestones add
+/// the remaining six.
 public enum SwiftInferTemplates {}
 
 /// Static registry that orchestrates every M1 template against a corpus of
@@ -18,12 +18,24 @@ public enum SwiftInferTemplates {}
 public enum TemplateRegistry {
 
     /// Run every M1 template against `summaries`. Output is sorted by
-    /// (file path, line) so the byte-identical-reproducibility guarantee
-    /// (PRD §16 #6) holds across runs.
+    /// (file path, line) of the first evidence row so the byte-identical-
+    /// reproducibility guarantee (PRD §16 #6) holds across runs.
+    ///
+    /// Currently runs idempotence (per summary) and round-trip (per pair
+    /// produced by `FunctionPairing.candidates(in:)`). Both templates are
+    /// allowed to fire on the same function — overlap (e.g. `parse`/
+    /// `format` matching both round-trip's curated inverse list and
+    /// idempotence's `format` verb) is left for the M3 contradiction-
+    /// detection pass to deduplicate.
     public static func discover(in summaries: [FunctionSummary]) -> [Suggestion] {
         var suggestions: [Suggestion] = []
         for summary in summaries {
             if let suggestion = IdempotenceTemplate.suggest(for: summary) {
+                suggestions.append(suggestion)
+            }
+        }
+        for pair in FunctionPairing.candidates(in: summaries) {
+            if let suggestion = RoundTripTemplate.suggest(for: pair) {
                 suggestions.append(suggestion)
             }
         }

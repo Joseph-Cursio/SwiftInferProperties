@@ -107,6 +107,58 @@ struct DiscoverPipelineTests {
         #expect(recording.text == "0 suggestions.")
     }
 
+    @Test("Round-trip pair surfaces with curated name match")
+    func roundTripFixtureRenders() throws {
+        let directory = try writeFixture(name: "RoundTrip", contents: """
+        struct MyType {}
+        struct Codec {
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: recording
+        )
+        #expect(recording.text.contains("Template: round-trip"))
+        #expect(recording.text.contains("Score:    70 (Likely)"))
+        #expect(recording.text.contains("encode(_:)"))
+        #expect(recording.text.contains("decode(_:)"))
+        #expect(recording.text.contains("✓ Curated inverse name pair: encode/decode (+40)"))
+        #expect(recording.text.contains("⚠ Throws on either side"))
+    }
+
+    @Test("Non-deterministic body in either round-trip half suppresses the pair")
+    func roundTripNonDeterministicVeto() throws {
+        let directory = try writeFixture(name: "RoundTripVeto", contents: """
+        struct MyType {}
+        struct Codec {
+            func encode(_ value: MyType) -> Data {
+                _ = Date()
+                return Data()
+            }
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            output: recording
+        )
+        #expect(!recording.text.contains("Template: round-trip"))
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {

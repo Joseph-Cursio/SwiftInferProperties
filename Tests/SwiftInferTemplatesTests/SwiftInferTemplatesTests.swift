@@ -11,13 +11,17 @@ struct TemplateRegistryTests {
         #expect(TemplateRegistry.discover(in: []).isEmpty)
     }
 
-    @Test("Suggestions are sorted by (file, line) for byte-stable output")
+    @Test("Idempotence suggestions are sorted by (file, line) for byte-stable output")
     func sortedByLocation() {
         let early = makeIdempotentSummary(file: "B.swift", line: 1)
         let middle = makeIdempotentSummary(file: "A.swift", line: 100)
         let late = makeIdempotentSummary(file: "B.swift", line: 50)
         let suggestions = TemplateRegistry.discover(in: [early, middle, late])
-        let locations = suggestions.compactMap { $0.evidence.first?.location }
+        // Three String -> String functions also cross-pair via round-trip;
+        // filter to idempotence so the sort assertion stays focused.
+        let locations = suggestions
+            .filter { $0.templateName == "idempotence" }
+            .compactMap { $0.evidence.first?.location }
         #expect(locations.map(\.file) == ["A.swift", "B.swift", "B.swift"])
         #expect(locations.map(\.line) == [100, 1, 50])
     }
@@ -60,6 +64,72 @@ struct TemplateRegistryTests {
         let suggestion = try #require(suggestions.first)
         #expect(suggestion.templateName == "idempotence")
         #expect(suggestion.score.tier == .strong)
+    }
+
+    @Test("Both idempotence and round-trip fire over a mixed corpus")
+    func bothTemplatesFire() {
+        let normalize = makeIdempotentSummary(file: "A.swift", line: 1)
+        let encode = FunctionSummary(
+            name: "encode",
+            parameters: [Parameter(label: nil, internalName: "v", typeText: "MyType", isInout: false)],
+            returnTypeText: "Data",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "B.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let decode = FunctionSummary(
+            name: "decode",
+            parameters: [Parameter(label: nil, internalName: "d", typeText: "Data", isInout: false)],
+            returnTypeText: "MyType",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "B.swift", line: 5, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let suggestions = TemplateRegistry.discover(in: [normalize, encode, decode])
+        let templates = suggestions.map(\.templateName)
+        #expect(templates.contains("idempotence"))
+        #expect(templates.contains("round-trip"))
+        #expect(suggestions.count == 2)
+    }
+
+    @Test("Idempotence and round-trip suggestions interleave by (file, line)")
+    func interleavedSorting() {
+        let earlyNormalize = makeIdempotentSummary(file: "A.swift", line: 50)
+        let encode = FunctionSummary(
+            name: "encode",
+            parameters: [Parameter(label: nil, internalName: "v", typeText: "MyType", isInout: false)],
+            returnTypeText: "Data",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "A.swift", line: 10, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let decode = FunctionSummary(
+            name: "decode",
+            parameters: [Parameter(label: nil, internalName: "d", typeText: "Data", isInout: false)],
+            returnTypeText: "MyType",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "A.swift", line: 20, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let suggestions = TemplateRegistry.discover(in: [earlyNormalize, encode, decode])
+        // round-trip is anchored at encode (line 10), idempotence at line 50.
+        #expect(suggestions.map(\.templateName) == ["round-trip", "idempotence"])
     }
 
     private func makeIdempotentSummary(file: String, line: Int) -> FunctionSummary {
