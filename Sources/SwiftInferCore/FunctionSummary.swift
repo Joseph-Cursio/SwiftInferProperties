@@ -148,16 +148,27 @@ public struct BodySignals: Sendable, Equatable {
     /// the corpus-level union is computed at template-discovery time.
     public let reducerOpsReferenced: [String]
 
+    /// Subset of `reducerOpsReferenced` whose `.reduce(seed, op)` call site
+    /// uses an identity-shaped seed — `0`, `0.0`, `""`, `[]`, `[:]`, `nil`,
+    /// `false`, or a member-access reference whose leaf name is in the
+    /// curated identity list (`.empty`, `.zero`, `.identity`, `.none`,
+    /// `.default`). Feeds the identity-element template's
+    /// accumulator-with-empty-seed signal (PRD v0.3 §5.3, +20). Sorted
+    /// alphabetically for deterministic output.
+    public let reducerOpsWithIdentitySeed: [String]
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
-        reducerOpsReferenced: [String] = []
+        reducerOpsReferenced: [String] = [],
+        reducerOpsWithIdentitySeed: [String] = []
     ) {
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected
         self.reducerOpsReferenced = reducerOpsReferenced
+        self.reducerOpsWithIdentitySeed = reducerOpsWithIdentitySeed
     }
 
     /// Empty signals — used for functions without bodies.
@@ -165,6 +176,7 @@ public struct BodySignals: Sendable, Equatable {
         hasNonDeterministicCall: false,
         hasSelfComposition: false,
         nonDeterministicAPIsDetected: [],
-        reducerOpsReferenced: []
+        reducerOpsReferenced: [],
+        reducerOpsWithIdentitySeed: []
     )
 }

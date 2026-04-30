@@ -8,7 +8,9 @@ import SwiftInferCore
 /// invariant-preservation, inverse-pair. M1.3 shipped **idempotence**; M1.4
 /// adds **round-trip** + cross-function pairing; M2.3 adds **commutativity**;
 /// M2.4 adds **associativity** with reducer/builder usage as a new
-/// type-flow signal; subsequent milestones add the remaining four.
+/// type-flow signal; M2.5 adds **identity-element** with op + identity
+/// constant cross-pairing and an accumulator-with-empty-seed type-flow
+/// signal; subsequent milestones add the remaining three.
 public enum SwiftInferTemplates {}
 
 /// Static registry that orchestrates every M1 template against a corpus of
@@ -28,16 +30,20 @@ public enum TemplateRegistry {
     /// vocabulary plumbing keep compiling.
     ///
     /// Currently runs idempotence + commutativity + associativity (per
-    /// summary) and round-trip (per pair produced by
-    /// `FunctionPairing.candidates(in:)`). Multiple templates are
-    /// allowed to fire on the same function — overlap (e.g. `merge`
-    /// matching both commutativity and associativity since they share
-    /// the same curated naming list per v0.2 §5.2; or `add` matching
-    /// idempotence + commutativity + associativity if the type pattern
-    /// allows) is left for the M3 contradiction-detection pass and the
-    /// M7 algebraic-structure-composition (§5.4) cluster to deduplicate.
+    /// summary), round-trip (per pair produced by
+    /// `FunctionPairing.candidates(in:)`), and identity-element (per pair
+    /// produced by `IdentityElementPairing.candidates(in:identities:)`).
+    /// Multiple templates are allowed to fire on the same function —
+    /// overlap (e.g. `merge` matching both commutativity and
+    /// associativity since they share the same curated naming list per
+    /// v0.2 §5.2; or `add` matching idempotence + commutativity +
+    /// associativity if the type pattern allows; or `merge` + `IntSet.empty`
+    /// triggering identity-element on top of the binary-op suggestions)
+    /// is left for the M3 contradiction-detection pass and the M7
+    /// algebraic-structure-composition (§5.4) cluster to deduplicate.
     public static func discover(
         in summaries: [FunctionSummary],
+        identities: [IdentityCandidate] = [],
         vocabulary: Vocabulary = .empty
     ) -> [Suggestion] {
         // Corpus-wide union of names referenced as the closure-position
@@ -45,6 +51,11 @@ public enum TemplateRegistry {
         // reducer/builder-usage signal (PRD §5.3, +20). Computed once per
         // discover so per-summary template calls are O(1) lookups.
         let reducerOps: Set<String> = Set(summaries.flatMap(\.bodySignals.reducerOpsReferenced))
+        // Subset whose `.reduce(seed, op)` seed was identity-shaped — feeds
+        // identity-element's accumulator-with-empty-seed signal (+20).
+        let opsWithIdentitySeed: Set<String> = Set(
+            summaries.flatMap(\.bodySignals.reducerOpsWithIdentitySeed)
+        )
         var suggestions: [Suggestion] = []
         for summary in summaries {
             if let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary) {
@@ -66,20 +77,35 @@ public enum TemplateRegistry {
                 suggestions.append(suggestion)
             }
         }
+        for pair in IdentityElementPairing.candidates(in: summaries, identities: identities) {
+            if let suggestion = IdentityElementTemplate.suggest(
+                for: pair,
+                opsWithIdentitySeed: opsWithIdentitySeed
+            ) {
+                suggestions.append(suggestion)
+            }
+        }
         return suggestions.sorted(by: lessThan)
     }
 
-    /// Convenience: scan `directory` recursively, run every M1 template
-    /// against the resulting summaries, and filter out any suggestion
-    /// whose identity matches a `// swiftinfer: skip <hash>` marker
-    /// found anywhere in the scanned `.swift` files (PRD §7.5).
+    /// Convenience: scan `directory` recursively, run every shipped
+    /// template against the resulting summaries + identity candidates,
+    /// and filter out any suggestion whose identity matches a
+    /// `// swiftinfer: skip <hash>` marker found anywhere in the scanned
+    /// `.swift` files (PRD §7.5). Uses `FunctionScanner.scanCorpus` so
+    /// summaries and identity candidates come from a single AST walk —
+    /// keeps the §13 perf budget intact.
     public static func discover(
         in directory: URL,
         vocabulary: Vocabulary = .empty
     ) throws -> [Suggestion] {
-        let summaries = try FunctionScanner.scan(directory: directory)
+        let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
-        return discover(in: summaries, vocabulary: vocabulary).filter { suggestion in
+        return discover(
+            in: corpus.summaries,
+            identities: corpus.identities,
+            vocabulary: vocabulary
+        ).filter { suggestion in
             !skipHashes.contains(suggestion.identity.normalized)
         }
     }

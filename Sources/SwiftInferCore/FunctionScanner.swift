@@ -2,6 +2,13 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
+// swiftlint:disable file_length
+// File contains the M2.5-extended scanner — function decls, body signals,
+// identity candidates, and reducer-op seed classification all live here so
+// the visitor walks the source tree exactly once. Splitting along the
+// 400-line file limit would force the body / identity / seed visitors into
+// separate files that have to be edited in lockstep.
+
 /// Static-analysis pipeline that walks Swift source and emits one
 /// `FunctionSummary` per function declaration. M1.2 surface — the M1.3+
 /// scoring engine consumes the produced summaries without further parsing.
@@ -23,11 +30,7 @@ public enum FunctionScanner {
     /// to every emitted `SourceLocation` — pass the path you want shown to
     /// the user (e.g. `Sources/MyTarget/MyFile.swift`).
     public static func scan(source: String, file: String) -> [FunctionSummary] {
-        let tree = Parser.parse(source: source)
-        let converter = SourceLocationConverter(fileName: file, tree: tree)
-        let visitor = FunctionScannerVisitor(file: file, converter: converter)
-        visitor.walk(tree)
-        return visitor.summaries
+        scanCorpus(source: source, file: file).summaries
     }
 
     /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
@@ -41,13 +44,38 @@ public enum FunctionScanner {
     /// across runs — supports the byte-identical-reproducibility guarantee
     /// (PRD v0.3 §16 #6).
     public static func scan(directory: URL) throws -> [FunctionSummary] {
+        try scanCorpus(directory: directory).summaries
+    }
+
+    /// One-pass scan that emits both `FunctionSummary` records and
+    /// `IdentityCandidate` records from a single AST walk. Added for
+    /// M2.5's identity-element template — keeps the §13 perf budget
+    /// intact by avoiding a second pass over the source tree.
+    public static func scanCorpus(source: String, file: String) -> ScannedCorpus {
+        let tree = Parser.parse(source: source)
+        let converter = SourceLocationConverter(fileName: file, tree: tree)
+        let visitor = FunctionScannerVisitor(file: file, converter: converter)
+        visitor.walk(tree)
+        return ScannedCorpus(summaries: visitor.summaries, identities: visitor.identities)
+    }
+
+    /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
+    public static func scanCorpus(file: URL) throws -> ScannedCorpus {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        return scanCorpus(source: source, file: file.path)
+    }
+
+    /// Recursively scan every `.swift` file under `directory`. Files are
+    /// visited in deterministic (sorted-path) order so the merged output
+    /// is stable across runs.
+    public static func scanCorpus(directory: URL) throws -> ScannedCorpus {
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(
             at: directory,
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles]
         ) else {
-            return []
+            return .empty
         }
         var swiftFiles: [URL] = []
         for case let url as URL in enumerator where url.pathExtension == "swift" {
@@ -55,10 +83,13 @@ public enum FunctionScanner {
         }
         swiftFiles.sort { $0.path < $1.path }
         var summaries: [FunctionSummary] = []
+        var identities: [IdentityCandidate] = []
         for fileURL in swiftFiles {
-            summaries.append(contentsOf: try scan(file: fileURL))
+            let corpus = try scanCorpus(file: fileURL)
+            summaries.append(contentsOf: corpus.summaries)
+            identities.append(contentsOf: corpus.identities)
         }
-        return summaries
+        return ScannedCorpus(summaries: summaries, identities: identities)
     }
 }
 
@@ -67,6 +98,7 @@ public enum FunctionScanner {
 private final class FunctionScannerVisitor: SyntaxVisitor {
 
     var summaries: [FunctionSummary] = []
+    var identities: [IdentityCandidate] = []
     private let file: String
     private let converter: SourceLocationConverter
     private var typeStack: [String] = []
@@ -81,6 +113,14 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         summaries.append(makeSummary(from: node))
         return .skipChildren
+    }
+
+    // Variable decl — capture identity-shaped statics. Children of function
+    // decls are skipped above, so vars inside function bodies never reach
+    // here; only top-level vars and vars inside types do.
+    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+        captureIdentityCandidates(from: node)
+        return .visitChildren
     }
 
     // Type-bearing decls — push/pop the innermost type name.
@@ -207,8 +247,74 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
             hasSelfComposition: scanner.foundSelfComposition,
             nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),
-            reducerOpsReferenced: scanner.reducerOps.sorted()
+            reducerOpsReferenced: scanner.reducerOps.sorted(),
+            reducerOpsWithIdentitySeed: scanner.reducerOpsWithIdentitySeed.sorted()
         )
+    }
+
+    /// Emit one `IdentityCandidate` per binding inside a static `let` / `var`
+    /// whose name is in the curated identity-shaped list AND that has an
+    /// explicit type annotation. M2.5 conservative scope skips
+    /// type-inferred decls — pairing requires textual type comparison
+    /// against `(T, T) -> T` op signatures, and inferring `T` from an
+    /// initializer expression isn't tractable without semantic resolution.
+    ///
+    /// In multi-binding decls (`static let zero, empty: IntSet = .init()`),
+    /// SwiftSyntax attaches the type annotation only to the last binding;
+    /// earlier bindings inherit it. The loop therefore looks forward to
+    /// the next-annotated binding for any unannotated entry.
+    private func captureIdentityCandidates(from node: VariableDeclSyntax) {
+        let modifiers = node.modifiers.map { $0.name.text }
+        guard modifiers.contains("static") || modifiers.contains("class") else {
+            return
+        }
+        let bindings = Array(node.bindings)
+        let position = node.bindingSpecifier.positionAfterSkippingLeadingTrivia
+        let sourceLocation = converter.location(for: position)
+        let location = SourceLocation(
+            file: file,
+            line: sourceLocation.line,
+            column: sourceLocation.column
+        )
+        for (index, binding) in bindings.enumerated() {
+            guard let pattern = binding.pattern.as(IdentifierPatternSyntax.self),
+                  let typeText = inheritedTypeText(at: index, in: bindings) else {
+                continue
+            }
+            let name = unescaped(pattern.identifier.text)
+            guard IdentityNames.curated.contains(name) else {
+                continue
+            }
+            identities.append(
+                IdentityCandidate(
+                    name: name,
+                    typeText: typeText,
+                    containingTypeName: typeStack.last,
+                    location: location
+                )
+            )
+        }
+    }
+
+    private func inheritedTypeText(
+        at index: Int,
+        in bindings: [PatternBindingSyntax]
+    ) -> String? {
+        for forwardIndex in index..<bindings.count {
+            if let annotation = bindings[forwardIndex].typeAnnotation {
+                return annotation.type.trimmedDescription
+            }
+        }
+        return nil
+    }
+
+    private func unescaped(_ identifier: String) -> String {
+        guard identifier.count >= 2,
+              identifier.hasPrefix("`"),
+              identifier.hasSuffix("`") else {
+            return identifier
+        }
+        return String(identifier.dropFirst().dropLast())
     }
 }
 
@@ -220,6 +326,7 @@ private final class BodySignalVisitor: SyntaxVisitor {
     var detectedAPIs: Set<String> = []
     var foundSelfComposition = false
     var reducerOps: Set<String> = []
+    var reducerOpsWithIdentitySeed: Set<String> = []
 
     init(funcName: String) {
         self.funcName = funcName
@@ -248,21 +355,106 @@ private final class BodySignalVisitor: SyntaxVisitor {
     /// `Type.method`). Trailing closures and explicit closure literals are
     /// intentionally skipped — the M2.4 detector only resolves named-function
     /// references, mirroring the conservative-precision posture of §3.5.
+    /// M2.5 extends this to additionally classify whether the `<seed>`
+    /// argument is identity-shaped (literal zero / empty collection / nil /
+    /// false, or a member-access leaf in the curated identity-name list);
+    /// that classification feeds the identity-element template's
+    /// accumulator-with-empty-seed signal (PRD §5.3, +20).
     private func recordReducerOp(in node: FunctionCallExprSyntax) {
         guard let member = node.calledExpression.as(MemberAccessExprSyntax.self),
               member.declName.baseName.text == "reduce",
               node.arguments.count == 2 else {
             return
         }
+        let seedArg = node.arguments[node.arguments.startIndex]
         let opArg = node.arguments[node.arguments.index(node.arguments.startIndex, offsetBy: 1)]
+        let opName: String?
         if let ref = opArg.expression.as(DeclReferenceExprSyntax.self) {
-            reducerOps.insert(ref.baseName.text)
+            opName = ref.baseName.text
+        } else if let memberRef = opArg.expression.as(MemberAccessExprSyntax.self) {
+            opName = memberRef.declName.baseName.text
+        } else {
+            opName = nil
+        }
+        guard let opName else {
             return
         }
-        if let memberRef = opArg.expression.as(MemberAccessExprSyntax.self) {
-            reducerOps.insert(memberRef.declName.baseName.text)
+        reducerOps.insert(opName)
+        if isIdentityShapedSeed(seedArg.expression) {
+            reducerOpsWithIdentitySeed.insert(opName)
         }
     }
+
+    private func isIdentityShapedSeed(_ expression: ExprSyntax) -> Bool {
+        if isIdentityShapedLiteral(expression) {
+            return true
+        }
+        if let memberAccess = expression.as(MemberAccessExprSyntax.self) {
+            return IdentityNames.curated.contains(memberAccess.declName.baseName.text)
+        }
+        return false
+    }
+
+    private func isIdentityShapedLiteral(_ expression: ExprSyntax) -> Bool {
+        if let int = expression.as(IntegerLiteralExprSyntax.self) {
+            return int.literal.text == "0"
+        }
+        if let float = expression.as(FloatLiteralExprSyntax.self) {
+            return float.literal.text == "0.0"
+        }
+        if let str = expression.as(StringLiteralExprSyntax.self) {
+            return isEmptyStringLiteral(str)
+        }
+        if let array = expression.as(ArrayExprSyntax.self) {
+            return array.elements.isEmpty
+        }
+        if let dict = expression.as(DictionaryExprSyntax.self) {
+            return isEmptyDictionaryLiteral(dict)
+        }
+        if expression.is(NilLiteralExprSyntax.self) {
+            return true
+        }
+        if let bool = expression.as(BooleanLiteralExprSyntax.self) {
+            return bool.literal.text == "false"
+        }
+        return false
+    }
+
+    private func isEmptyStringLiteral(_ str: StringLiteralExprSyntax) -> Bool {
+        str.segments.allSatisfy { segment in
+            guard let plain = segment.as(StringSegmentSyntax.self) else {
+                return false
+            }
+            return plain.content.text.isEmpty
+        }
+    }
+
+    private func isEmptyDictionaryLiteral(_ dict: DictionaryExprSyntax) -> Bool {
+        switch dict.content {
+        case .colon:
+            return true
+        case .elements(let elements):
+            return elements.isEmpty
+        }
+    }
+}
+
+// MARK: - Curated identity names (PRD v0.3 §5.2 priority 1)
+
+enum IdentityNames {
+
+    /// Names that signal an identity-shaped value per PRD §5.2's
+    /// identity-element priority-1 list. Used both by
+    /// `FunctionScannerVisitor.captureIdentityCandidates` (declaration
+    /// detection) and by `BodySignalVisitor.isIdentityShapedSeed`
+    /// (member-access seed classification, e.g. `xs.reduce(.empty, op)`).
+    static let curated: Set<String> = [
+        "zero",
+        "empty",
+        "identity",
+        "none",
+        "default"
+    ]
 }
 
 // MARK: - Non-deterministic API list

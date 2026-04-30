@@ -152,6 +152,34 @@ struct TemplateRegistryTests {
         #expect(associativity.score.tier == .strong)
     }
 
+    @Test("Identity-element fires on (T, T) -> T op + same-typed static identity via discover(in:directory:)")
+    func identityElementFromDirectoryScan() throws {
+        // End-to-end: a single .swift file with a binary-op merge plus an
+        // identity-shaped `empty` constant on the same type, plus a driver
+        // that uses `merge` as a reducer with `.empty` as the seed. The
+        // registry should compose the identity-element suggestion at
+        // Strong (30 + 40 + 20 = 90) without any explicit identities
+        // parameter — directory scan threads through `scanCorpus`.
+        let directory = try writeFixture(named: "IdentityElementCorpus", contents: """
+        struct IntSet {
+            static let empty: IntSet = IntSet()
+            func merge(_ lhs: IntSet, _ rhs: IntSet) -> IntSet { return lhs }
+        }
+        struct Driver {
+            func fold(_ xs: [IntSet]) -> IntSet {
+                return xs.reduce(.empty, IntSet.merge)
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let identityElement = try #require(
+            suggestions.first { $0.templateName == "identity-element" }
+        )
+        #expect(identityElement.score.total == 90)
+        #expect(identityElement.score.tier == .strong)
+    }
+
     @Test("Idempotence and round-trip suggestions interleave by (file, line)")
     func interleavedSorting() {
         let earlyNormalize = makeIdempotentSummary(file: "A.swift", line: 50)
