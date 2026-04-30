@@ -29,13 +29,17 @@ struct TemplateRegistryTests {
     @Test("Functions that don't match any template are dropped from output")
     func nonMatchingDropped() {
         let matching = makeIdempotentSummary(file: "A.swift", line: 1)
+        // Mismatched parameter and return types — no idempotence (1 param
+        // needed), no commutativity (params would need to match each
+        // other and the return type), and there's no second function to
+        // pair with for round-trip.
         let nonMatching = FunctionSummary(
             name: "tickle",
             parameters: [
                 Parameter(label: "from", internalName: "src", typeText: "Int", isInout: false),
-                Parameter(label: "to", internalName: "dst", typeText: "Int", isInout: false)
+                Parameter(label: "to", internalName: "dst", typeText: "String", isInout: false)
             ],
-            returnTypeText: "Int",
+            returnTypeText: "Bool",
             isThrows: false,
             isAsync: false,
             isMutating: false,

@@ -505,6 +505,82 @@ struct DiscoverPipelineTests {
         #expect(diagnostics.lines.isEmpty)
     }
 
+    // MARK: - Commutativity (M2.3)
+
+    @Test("Commutativity fixture surfaces the new template end-to-end")
+    func commutativityFixtureRenders() throws {
+        let directory = try writeFixture(name: "CommutativityUnion", contents: """
+        struct IntSet {
+            func merge(_ lhs: IntSet, _ rhs: IntSet) -> IntSet {
+                return lhs
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Template: commutativity"))
+        #expect(recording.text.contains("Score:    70 (Likely)"))
+        #expect(recording.text.contains("✓ Type-symmetry signature: (T, T) -> T (T = IntSet) (+30)"))
+        #expect(recording.text.contains("✓ Curated commutativity verb match: 'merge' (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Anti-commutativity verb on commutativity-shape function is suppressed even with --include-possible")
+    func antiCommutativityVerbSuppressed() throws {
+        let directory = try writeFixture(name: "CommutativityAnti", contents: """
+        struct Strings {
+            func concatenate(_ a: [String], _ b: [String]) -> [String] {
+                return a + b
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        // 30 type-symmetry + (-30) anti-commutativity = 0 → suppressed,
+        // hidden regardless of --include-possible.
+        #expect(!recording.text.contains("Template: commutativity"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Project-vocabulary commutativity verb fires through the pipeline")
+    func projectVocabularyCommutativityFlowsThrough() throws {
+        let directory = try writeFixture(name: "CommutativityProjectVocab", contents: """
+        struct Graph {
+            func unionGraphs(_ a: Graph, _ b: Graph) -> Graph {
+                return a
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data(#"{ "commutativityVerbs": ["unionGraphs"] }"#.utf8).write(to: vocabularyPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            explicitVocabularyPath: vocabularyPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Template: commutativity"))
+        #expect(recording.text.contains("Score:    70 (Likely)"))
+        #expect(recording.text.contains("✓ Project-vocabulary commutativity verb match: 'unionGraphs' (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
     @Test("Malformed explicit config path emits a stderr warning and falls back to defaults")
     func malformedConfigWarns() throws {
         let directory = try writeFixture(name: "ConfigMalformed", contents: """

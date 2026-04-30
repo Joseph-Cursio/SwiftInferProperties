@@ -6,8 +6,8 @@ import SwiftInferCore
 /// PRD v0.3 §5.2 specifies eight shipped templates: round-trip, idempotence,
 /// commutativity, associativity, monotonicity, identity-element,
 /// invariant-preservation, inverse-pair. M1.3 shipped **idempotence**; M1.4
-/// adds **round-trip** + cross-function pairing; subsequent milestones add
-/// the remaining six.
+/// adds **round-trip** + cross-function pairing; M2.3 adds **commutativity**;
+/// subsequent milestones add the remaining five.
 public enum SwiftInferTemplates {}
 
 /// Static registry that orchestrates every M1 template against a corpus of
@@ -26,12 +26,13 @@ public enum TemplateRegistry {
     /// `.empty` so M1 call sites that haven't been updated for the M2
     /// vocabulary plumbing keep compiling.
     ///
-    /// Currently runs idempotence (per summary) and round-trip (per pair
-    /// produced by `FunctionPairing.candidates(in:)`). Both templates are
-    /// allowed to fire on the same function — overlap (e.g. `parse`/
-    /// `format` matching both round-trip's curated inverse list and
-    /// idempotence's `format` verb) is left for the M3 contradiction-
-    /// detection pass to deduplicate.
+    /// Currently runs idempotence + commutativity (per summary) and
+    /// round-trip (per pair produced by `FunctionPairing.candidates(in:)`).
+    /// Multiple templates are allowed to fire on the same function —
+    /// overlap (e.g. `parse`/`format` matching both round-trip's curated
+    /// inverse list and idempotence's `format` verb; or `add` matching
+    /// both idempotence and commutativity if the type pattern allows) is
+    /// left for the M3 contradiction-detection pass to deduplicate.
     public static func discover(
         in summaries: [FunctionSummary],
         vocabulary: Vocabulary = .empty
@@ -39,6 +40,9 @@ public enum TemplateRegistry {
         var suggestions: [Suggestion] = []
         for summary in summaries {
             if let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary) {
+                suggestions.append(suggestion)
+            }
+            if let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary) {
                 suggestions.append(suggestion)
             }
         }
