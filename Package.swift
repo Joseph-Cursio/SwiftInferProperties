@@ -86,6 +86,14 @@ let package = Package(
                 "SwiftInferCLI",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
+        ),
+        // SwiftInferIntegrationTests — M1.6 perf integration tests against
+        // the §13 budgets, plus M1.7 §16 hard-guarantee tests. Kept in a
+        // separate target so the unit suites stay fast while the
+        // integration suite has room to scale.
+        .testTarget(
+            name: "SwiftInferIntegrationTests",
+            dependencies: ["SwiftInferTemplates", "SwiftInferCore"]
         )
     ]
 )
