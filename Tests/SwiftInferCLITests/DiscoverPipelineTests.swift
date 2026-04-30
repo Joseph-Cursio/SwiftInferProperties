@@ -2,10 +2,12 @@ import Foundation
 import Testing
 @testable import SwiftInferCLI
 
-// swiftlint:disable type_body_length
-// Test suites cohere around their subject — splitting along the 250-line
-// body limit would scatter the discover-pipeline assertions across
-// multiple files for no reader benefit.
+// swiftlint:disable type_body_length file_length
+// The discover pipeline integrates four moving parts (templates,
+// vocabulary, config, skip markers); the suite has grown past the
+// default body/file limits as M2 features land. Splitting along the
+// limits would scatter related end-to-end assertions across multiple
+// files for no reader benefit.
 @Suite("Discover pipeline — end-to-end against on-disk fixtures")
 struct DiscoverPipelineTests {
 
@@ -339,6 +341,195 @@ struct DiscoverPipelineTests {
         )
         #expect(recording.text == "0 suggestions.")
         #expect(diagnostics.lines.isEmpty)
+    }
+
+    // MARK: - Config integration (M2.2)
+
+    @Test("Config-set includePossible:true surfaces Possible-tier suggestions when CLI is unset")
+    func configIncludePossibleTrueSurfacesPossible() throws {
+        let directory = try writeFixture(name: "ConfigPossibleTrue", contents: """
+        struct Helpers {
+            func process(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let configPath = directory.appendingPathComponent("config.toml")
+        try Data("""
+        [discover]
+        includePossible = true
+        """.utf8).write(to: configPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: nil,
+            explicitConfigPath: configPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("1 suggestion."))
+        #expect(recording.text.contains("(Possible)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("CLI includePossible:true wins over config-set false")
+    func cliWinsOverConfigForIncludePossibleTrue() throws {
+        let directory = try writeFixture(name: "CliOverConfigTrue", contents: """
+        struct Helpers {
+            func process(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let configPath = directory.appendingPathComponent("config.toml")
+        try Data("""
+        [discover]
+        includePossible = false
+        """.utf8).write(to: configPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            explicitConfigPath: configPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("(Possible)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("CLI includePossible:false wins over config-set true")
+    func cliWinsOverConfigForIncludePossibleFalse() throws {
+        let directory = try writeFixture(name: "CliOverConfigFalse", contents: """
+        struct Helpers {
+            func process(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let configPath = directory.appendingPathComponent("config.toml")
+        try Data("""
+        [discover]
+        includePossible = true
+        """.utf8).write(to: configPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            explicitConfigPath: configPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text == "0 suggestions.")
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Config-set vocabularyPath flows through to project-vocab signal")
+    func configVocabularyPathFlowsThrough() throws {
+        // Use a Package.swift sentinel so ConfigLoader's walk-up resolves
+        // the relative vocabularyPath against this directory.
+        let root = try makeFixtureDirectory(name: "ConfigVocabPath")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try Data("// swift-tools-version: 6.1\n".utf8)
+            .write(to: root.appendingPathComponent("Package.swift"))
+        let configDir = root.appendingPathComponent(".swiftinfer")
+        try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
+        try Data("""
+        [discover]
+        vocabularyPath = ".swiftinfer/custom-vocab.json"
+        """.utf8).write(to: configDir.appendingPathComponent("config.toml"))
+        try Data(#"{ "idempotenceVerbs": ["sanitizeXML"] }"#.utf8)
+            .write(to: configDir.appendingPathComponent("custom-vocab.json"))
+        let target = root
+            .appendingPathComponent("Sources")
+            .appendingPathComponent("MyTarget")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """.write(to: target.appendingPathComponent("Source.swift"), atomically: true, encoding: .utf8)
+
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Score:    70 (Likely)"))
+        #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("CLI --vocabulary wins over config-set vocabularyPath")
+    func cliVocabularyOverridesConfig() throws {
+        let directory = try writeFixture(name: "CliOverConfigVocab", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let configPath = directory.appendingPathComponent("config.toml")
+        let stubVocabPath = directory.appendingPathComponent("stub.json")
+        try Data(#"{ "idempotenceVerbs": ["differentVerb"] }"#.utf8).write(to: stubVocabPath)
+        try Data("""
+        [discover]
+        vocabularyPath = "stub.json"
+        """.utf8).write(to: configPath)
+        let cliVocabPath = directory.appendingPathComponent("cli-vocab.json")
+        try Data(#"{ "idempotenceVerbs": ["sanitizeXML"] }"#.utf8).write(to: cliVocabPath)
+
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            explicitVocabularyPath: cliVocabPath,
+            explicitConfigPath: configPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        // The CLI vocab includes sanitizeXML → project-vocab signal fires.
+        // The config vocab has differentVerb → wouldn't have fired.
+        #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Malformed explicit config path emits a stderr warning and falls back to defaults")
+    func malformedConfigWarns() throws {
+        let directory = try writeFixture(name: "ConfigMalformed", contents: """
+        struct Helpers {
+            func process(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let configPath = directory.appendingPathComponent("config.toml")
+        try Data("[discover\nbroken".utf8).write(to: configPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            explicitConfigPath: configPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        // Defaults → Possible tier hidden → 0 suggestions.
+        #expect(recording.text == "0 suggestions.")
+        #expect(diagnostics.lines.count == 1)
+        #expect(diagnostics.lines.first?.hasPrefix("warning: ") == true)
+        #expect(diagnostics.lines.first?.contains("could not parse") == true)
     }
 
     // MARK: - Helpers

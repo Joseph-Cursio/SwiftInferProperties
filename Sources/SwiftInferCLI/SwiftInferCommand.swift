@@ -51,29 +51,48 @@ extension SwiftInferCommand {
 
         @Flag(
             name: .long,
-            help: "Include `Possible` tier suggestions (score 20–39). Hidden by default per PRD §4.2."
+            inversion: .prefixedNo,
+            help: """
+            Include `Possible` tier suggestions (score 20–39). Hidden by \
+            default per PRD §4.2. Pass --include-possible / \
+            --no-include-possible to override the project's \
+            .swiftinfer/config.toml setting.
+            """
         )
-        public var includePossible: Bool = false
+        public var includePossible: Bool?
 
         @Option(
             name: .long,
             help: """
             Path to a vocabulary file (PRD §4.5). When omitted, swift-infer \
-            walks up from the target directory to the package root and looks \
-            for .swiftinfer/vocabulary.json.
+            falls back to the path in .swiftinfer/config.toml's \
+            [discover].vocabularyPath, then to the conventional \
+            .swiftinfer/vocabulary.json next to Package.swift.
             """
         )
         public var vocabulary: String?
+
+        @Option(
+            name: .long,
+            help: """
+            Path to a config file. When omitted, swift-infer walks up \
+            from the target directory to the package root and looks for \
+            .swiftinfer/config.toml.
+            """
+        )
+        public var config: String?
 
         public init() {}
 
         public func run() async throws {
             let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
             let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
+            let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }
             try Self.run(
                 directory: directory,
                 includePossible: includePossible,
                 explicitVocabularyPath: explicitVocabularyPath,
+                explicitConfigPath: explicitConfigPath,
                 output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -82,21 +101,38 @@ extension SwiftInferCommand {
         /// Pure pipeline — exposed at the type level so tests exercise
         /// discovery without going through ArgumentParser or stdout.
         ///
-        /// Caller passes the directory to scan, the visibility flag, an
-        /// optional vocabulary-path override (PRD §4.5; nil → implicit
-        /// walk-up lookup), a sink for rendered suggestion output, and a
-        /// sink for diagnostic warnings (kept separate so warnings reach
-        /// stderr without polluting the byte-stable suggestion stream).
+        /// Precedence per the M2 plan: CLI > config > defaults. A `nil`
+        /// `includePossible` means "no CLI flag passed; let config (or
+        /// the default) decide". A non-nil value wins over both. Same
+        /// shape for `explicitVocabularyPath`: when nil, the CLI looks
+        /// at `[discover].vocabularyPath` in config; when also unset
+        /// there, falls back to the conventional walk-up location.
         public static func run(
             directory: URL,
-            includePossible: Bool,
+            includePossible: Bool? = nil,
             explicitVocabularyPath: URL? = nil,
+            explicitConfigPath: URL? = nil,
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
+            let configResult = ConfigLoader.load(
+                startingFrom: directory,
+                explicitPath: explicitConfigPath
+            )
+            for warning in configResult.warnings {
+                diagnostics.writeDiagnostic("warning: \(warning)")
+            }
+            let effectiveIncludePossible =
+                includePossible ?? configResult.config.includePossible
+            let effectiveVocabularyPath = resolveVocabularyPath(
+                cliOverride: explicitVocabularyPath,
+                configValue: configResult.config.vocabularyPath,
+                packageRoot: configResult.packageRoot
+            )
+
             let vocabResult = VocabularyLoader.load(
                 startingFrom: directory,
-                explicitPath: explicitVocabularyPath
+                explicitPath: effectiveVocabularyPath
             )
             for warning in vocabResult.warnings {
                 diagnostics.writeDiagnostic("warning: \(warning)")
@@ -106,10 +142,37 @@ extension SwiftInferCommand {
                 vocabulary: vocabResult.vocabulary
             )
             let visible = all.filter { suggestion in
-                includePossible || suggestion.score.tier.isVisibleByDefault
+                effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
             }
             let rendered = SuggestionRenderer.render(visible)
             output.write(rendered)
+        }
+
+        /// Resolve the vocabulary path with CLI > config > implicit-walk-up
+        /// precedence. Relative paths in config are resolved against the
+        /// package root the config loader walked up to; absolute paths
+        /// pass through unchanged. Absoluteness is checked on the raw
+        /// string — `URL(fileURLWithPath:)` would otherwise re-anchor a
+        /// relative path against the current working directory before we
+        /// got the chance to join it with the package root.
+        private static func resolveVocabularyPath(
+            cliOverride: URL?,
+            configValue: String?,
+            packageRoot: URL?
+        ) -> URL? {
+            if let cliOverride {
+                return cliOverride
+            }
+            guard let raw = configValue else {
+                return nil
+            }
+            if raw.hasPrefix("/") {
+                return URL(fileURLWithPath: raw)
+            }
+            if let packageRoot {
+                return packageRoot.appendingPathComponent(raw)
+            }
+            return URL(fileURLWithPath: raw)
         }
     }
 }
