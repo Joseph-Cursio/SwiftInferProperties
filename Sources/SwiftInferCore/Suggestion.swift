@@ -24,18 +24,25 @@ public struct Suggestion: Sendable, Equatable {
     /// from active signals + template-known caveats.
     public let explainability: ExplainabilityBlock
 
+    /// Stable hash per §7.5 — the key under which decisions live in
+    /// `.swiftinfer/decisions.json` (M-post) and the value the developer
+    /// puts in a `// swiftinfer: skip <hash>` rejection marker.
+    public let identity: SuggestionIdentity
+
     public init(
         templateName: String,
         evidence: [Evidence],
         score: Score,
         generator: GeneratorMetadata,
-        explainability: ExplainabilityBlock
+        explainability: ExplainabilityBlock,
+        identity: SuggestionIdentity
     ) {
         self.templateName = templateName
         self.evidence = evidence
         self.score = score
         self.generator = generator
         self.explainability = explainability
+        self.identity = identity
     }
 }
 

@@ -21,6 +21,8 @@ struct SuggestionRendererTests {
     @Test("Strong suggestion renders byte-for-byte against the golden")
     func strongSuggestionGolden() {
         let suggestion = makeStrongSuggestion()
+        // Identity is the SHA256-derived display of canonical input
+        // "renderer-golden-fixed", precomputed so the golden stays stable.
         let expected = """
 [Suggestion]
 Template: idempotence
@@ -37,6 +39,8 @@ Why this might be wrong:
 
 Generator: not yet computed (M3 prerequisite)
 Sampling:  not run (M4 deferred)
+Identity:  0x95BF4EDE0EEDECD6
+Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
 """
         #expect(SuggestionRenderer.render(suggestion) == expected)
     }
@@ -55,7 +59,8 @@ Sampling:  not run (M4 deferred)
             explainability: ExplainabilityBlock(
                 whySuggested: ["evidence row", "Type-symmetry (+30)"],
                 whyMightBeWrong: []
-            )
+            ),
+            identity: SuggestionIdentity(canonicalInput: "test|empty-caveats")
         )
         let rendered = SuggestionRenderer.render(suggestion)
         #expect(rendered.contains("  ✓ no known caveats for this template"))
@@ -82,11 +87,20 @@ Sampling:  not run (M4 deferred)
                 confidence: .high,
                 sampling: .passed(trials: 25)
             ),
-            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: [])
+            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "test|sampling-passed")
         )
         let rendered = SuggestionRenderer.render(suggestion)
         #expect(rendered.contains("Generator: .derivedMemberwise, confidence: .high"))
         #expect(rendered.contains("Sampling:  25/25 passed"))
+    }
+
+    @Test("Identity + Suppress lines always appear in the footer")
+    func identityFooter() {
+        let suggestion = makeStrongSuggestion()
+        let rendered = SuggestionRenderer.render(suggestion)
+        #expect(rendered.contains("Identity:  0x"))
+        #expect(rendered.contains("Suppress:  // swiftinfer: skip 0x"))
     }
 
     private func makeStrongSuggestion() -> Suggestion {
@@ -115,7 +129,8 @@ Sampling:  not run (M4 deferred)
                 whyMightBeWrong: [
                     "T must conform to Equatable for the emitted property to compile."
                 ]
-            )
+            ),
+            identity: SuggestionIdentity(canonicalInput: "renderer-golden-fixed")
         )
     }
 }

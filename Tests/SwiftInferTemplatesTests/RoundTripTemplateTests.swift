@@ -124,31 +124,10 @@ struct RoundTripTemplateTests {
 
     @Test("Likely suggestion renders byte-for-byte against the M1 acceptance-bar golden")
     func likelyRoundTripGoldenRender() throws {
-        let forward = FunctionSummary(
-            name: "encode",
-            parameters: [Parameter(label: nil, internalName: "value", typeText: "MyType", isInout: false)],
-            returnTypeText: "Data",
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Sources/Demo/Codec.swift", line: 3, column: 5),
-            containingTypeName: "Codec",
-            bodySignals: .empty
+        let pair = FunctionPair(
+            forward: makeCodecHalf(name: "encode", paramType: "MyType", returnType: "Data", line: 3),
+            reverse: makeCodecHalf(name: "decode", paramType: "Data", returnType: "MyType", line: 6)
         )
-        let reverse = FunctionSummary(
-            name: "decode",
-            parameters: [Parameter(label: nil, internalName: "data", typeText: "Data", isInout: false)],
-            returnTypeText: "MyType",
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Sources/Demo/Codec.swift", line: 6, column: 5),
-            containingTypeName: "Codec",
-            bodySignals: .empty
-        )
-        let pair = FunctionPair(forward: forward, reverse: reverse)
         let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
         let rendered = SuggestionRenderer.render(suggestion)
         let expected = """
@@ -171,11 +150,33 @@ SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 
 Generator: not yet computed (M3 prerequisite)
 Sampling:  not run (M4 deferred)
+Identity:  0x4C3618BEBBE59391
+Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
 """
         #expect(rendered == expected)
     }
 
     // MARK: - Helpers
+
+    private func makeCodecHalf(
+        name: String,
+        paramType: String,
+        returnType: String,
+        line: Int
+    ) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [Parameter(label: nil, internalName: "value", typeText: paramType, isInout: false)],
+            returnTypeText: returnType,
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Sources/Demo/Codec.swift", line: line, column: 5),
+            containingTypeName: "Codec",
+            bodySignals: .empty
+        )
+    }
 
     private func makePair(
         forwardName: String,

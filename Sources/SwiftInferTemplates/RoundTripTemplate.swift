@@ -49,8 +49,21 @@ public enum RoundTripTemplate {
             evidence: [makeEvidence(pair.forward), makeEvidence(pair.reverse)],
             score: score,
             generator: .m1Placeholder,
-            explainability: makeExplainability(for: pair, signals: signals)
+            explainability: makeExplainability(for: pair, signals: signals),
+            identity: makeIdentity(for: pair)
         )
+    }
+
+    /// Canonical hash input per PRD §7.5: `template ID | canonical
+    /// signature A | canonical signature B`, where A and B are sorted
+    /// lexicographically so the hash is orientation-agnostic. A pair
+    /// produces the same identity regardless of which half
+    /// `FunctionPairing` chose as `forward`.
+    private static func makeIdentity(for pair: FunctionPair) -> SuggestionIdentity {
+        let forwardSig = IdempotenceTemplate.canonicalSignature(of: pair.forward)
+        let reverseSig = IdempotenceTemplate.canonicalSignature(of: pair.reverse)
+        let sorted = [forwardSig, reverseSig].sorted()
+        return SuggestionIdentity(canonicalInput: "round-trip|" + sorted.joined(separator: "|"))
     }
 
     // MARK: - Signals

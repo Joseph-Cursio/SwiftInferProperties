@@ -42,11 +42,16 @@ public enum TemplateRegistry {
         return suggestions.sorted(by: lessThan)
     }
 
-    /// Convenience: scan `directory` recursively and run every M1 template
-    /// against the resulting summaries.
+    /// Convenience: scan `directory` recursively, run every M1 template
+    /// against the resulting summaries, and filter out any suggestion
+    /// whose identity matches a `// swiftinfer: skip <hash>` marker
+    /// found anywhere in the scanned `.swift` files (PRD §7.5).
     public static func discover(in directory: URL) throws -> [Suggestion] {
         let summaries = try FunctionScanner.scan(directory: directory)
-        return discover(in: summaries)
+        let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
+        return discover(in: summaries).filter { suggestion in
+            !skipHashes.contains(suggestion.identity.normalized)
+        }
     }
 
     private static func lessThan(_ lhs: Suggestion, _ rhs: Suggestion) -> Bool {

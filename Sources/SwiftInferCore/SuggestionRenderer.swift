@@ -38,6 +38,8 @@ public enum SuggestionRenderer {
         lines.append("")
         lines.append(renderGeneratorLine(suggestion.generator))
         lines.append(renderSamplingLine(suggestion.generator))
+        lines.append("Identity:  \(suggestion.identity.display)")
+        lines.append("Suppress:  // swiftinfer: skip \(suggestion.identity.display)")
         return lines.joined(separator: "\n")
     }
 

@@ -56,8 +56,30 @@ public enum IdempotenceTemplate {
             evidence: [makeEvidence(summary)],
             score: score,
             generator: .m1Placeholder,
-            explainability: makeExplainability(for: summary, signals: signals)
+            explainability: makeExplainability(for: summary, signals: signals),
+            identity: makeIdentity(for: summary)
         )
+    }
+
+    /// Canonical hash input per PRD §7.5: `template ID | canonical
+    /// signature`. Source location is intentionally excluded — moving a
+    /// function within a file or across files must not change its
+    /// identity. Containing-type name *is* included; two unrelated types
+    /// can have a method named `normalize(_:)` and they produce distinct
+    /// suggestions.
+    private static func makeIdentity(for summary: FunctionSummary) -> SuggestionIdentity {
+        SuggestionIdentity(canonicalInput: "idempotence|" + canonicalSignature(of: summary))
+    }
+
+    /// Stable string form of a function signature: `Container.name(label1:label2:)|(T1,T2)->R`.
+    /// Order-stable by parameter declaration order; spaces stripped so the
+    /// hash is robust against trivial source reformatting.
+    static func canonicalSignature(of summary: FunctionSummary) -> String {
+        let typePrefix = summary.containingTypeName.map { "\($0)." } ?? ""
+        let labels = summary.parameters.map { ($0.label ?? "_") + ":" }.joined()
+        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ",")
+        let returnType = summary.returnTypeText ?? "Void"
+        return "\(typePrefix)\(summary.name)(\(labels))|(\(paramTypes))->\(returnType)"
     }
 
     // MARK: - Signals

@@ -228,6 +228,8 @@ SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 
 Generator: not yet computed (M3 prerequisite)
 Sampling:  not run (M4 deferred)
+Identity:  0xA1C9DEC1AEA2791C
+Suppress:  // swiftinfer: skip 0xA1C9DEC1AEA2791C
 """
         #expect(rendered == expected)
     }

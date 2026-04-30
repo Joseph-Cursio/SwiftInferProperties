@@ -135,6 +135,74 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("⚠ Throws on either side"))
     }
 
+    @Test("Skip marker in source suppresses the matching suggestion")
+    func skipMarkerSuppressesSuggestion() throws {
+        // Identity for: idempotence|Sanitizer.normalize(_:)|(String)->String
+        // (computed via SHA256 in SuggestionIdentity)
+        let directory = try writeFixture(name: "SkipMarker", contents: """
+        // swiftinfer: skip 0xA1C9DEC1AEA2791C
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: recording
+        )
+        #expect(recording.text == "0 suggestions.")
+    }
+
+    @Test("Skip marker for an unrelated hash leaves the suggestion in place")
+    func skipMarkerUnrelatedHashIgnored() throws {
+        let directory = try writeFixture(name: "SkipUnrelated", contents: """
+        // swiftinfer: skip 0xDEADBEEF12345678
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: recording
+        )
+        #expect(recording.text.contains("Template: idempotence"))
+        #expect(recording.text.contains("Score:    90 (Strong)"))
+    }
+
+    @Test("Round-trip skip marker suppresses the pair regardless of orientation")
+    func skipMarkerRoundTrip() throws {
+        // Identity for: round-trip|Codec.decode(_:)|(Data)->MyType|Codec.encode(_:)|(MyType)->Data
+        let directory = try writeFixture(name: "SkipRoundTrip", contents: """
+        // swiftinfer: skip 0x4C3618BEBBE59391
+        struct MyType {}
+        struct Codec {
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: recording
+        )
+        #expect(!recording.text.contains("Template: round-trip"))
+    }
+
     @Test("Non-deterministic body in either round-trip half suppresses the pair")
     func roundTripNonDeterministicVeto() throws {
         let directory = try writeFixture(name: "RoundTripVeto", contents: """
