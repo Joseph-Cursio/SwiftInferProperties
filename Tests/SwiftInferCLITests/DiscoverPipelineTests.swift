@@ -2,6 +2,10 @@ import Foundation
 import Testing
 @testable import SwiftInferCLI
 
+// swiftlint:disable type_body_length
+// Test suites cohere around their subject — splitting along the 250-line
+// body limit would scatter the discover-pipeline assertions across
+// multiple files for no reader benefit.
 @Suite("Discover pipeline — end-to-end against on-disk fixtures")
 struct DiscoverPipelineTests {
 
@@ -227,6 +231,116 @@ struct DiscoverPipelineTests {
         #expect(!recording.text.contains("Template: round-trip"))
     }
 
+    // MARK: - Vocabulary integration (M2.1)
+
+    @Test("Project-vocabulary idempotence verb flows through to rendered output")
+    func projectVocabularyIdempotenceFlowsThrough() throws {
+        let directory = try writeFixture(name: "VocabIdempotence", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data(#"{ "idempotenceVerbs": ["sanitizeXML"] }"#.utf8).write(to: vocabularyPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            explicitVocabularyPath: vocabularyPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Score:    70 (Likely)"))
+        #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Project-vocabulary inverse pair flows through to round-trip output")
+    func projectVocabularyRoundTripFlowsThrough() throws {
+        let directory = try writeFixture(name: "VocabRoundTrip", contents: """
+        struct Job {}
+        struct Queue {
+            func enqueue(_ value: Job) -> Job? {
+                return value
+            }
+            func dequeue(_ value: Job?) -> Job {
+                return value ?? Job()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data(#"{ "inversePairs": [["enqueue", "dequeue"]] }"#.utf8).write(to: vocabularyPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            explicitVocabularyPath: vocabularyPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Template: round-trip"))
+        #expect(recording.text.contains("✓ Project-vocabulary inverse name pair: enqueue/dequeue (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Malformed explicit vocabulary path emits a stderr warning and falls back to .empty")
+    func malformedVocabularyWarns() throws {
+        let directory = try writeFixture(name: "VocabMalformed", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data("{ malformed:".utf8).write(to: vocabularyPath)
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            explicitVocabularyPath: vocabularyPath,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        // Vocabulary fell back to .empty, so sanitizeXML doesn't fire
+        // any name signal — the function only matches type-symmetry (30,
+        // Possible) and is hidden behind --include-possible.
+        #expect(recording.text == "0 suggestions.")
+        #expect(diagnostics.lines.count == 1)
+        #expect(diagnostics.lines.first?.hasPrefix("warning: ") == true)
+        #expect(diagnostics.lines.first?.contains("could not parse") == true)
+    }
+
+    @Test("Absent vocabulary file with no explicit path is silent — no warning, no name signal")
+    func absentVocabularyIsSilent() throws {
+        let directory = try writeFixture(name: "VocabAbsent", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text == "0 suggestions.")
+        #expect(diagnostics.lines.isEmpty)
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {
@@ -243,6 +357,7 @@ struct DiscoverPipelineTests {
         return directory
     }
 }
+// swiftlint:enable type_body_length
 
 /// In-memory output sink used by the pipeline tests so they can assert
 /// against rendered text without going through stdout.
@@ -250,5 +365,14 @@ private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
     var text: String = ""
     func write(_ text: String) {
         self.text = text
+    }
+}
+
+/// In-memory diagnostic sink used by the M2.1 vocabulary tests to assert
+/// against stderr-bound warnings without writing to the real stderr.
+private final class RecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    var lines: [String] = []
+    func writeDiagnostic(_ text: String) {
+        lines.append(text)
     }
 }

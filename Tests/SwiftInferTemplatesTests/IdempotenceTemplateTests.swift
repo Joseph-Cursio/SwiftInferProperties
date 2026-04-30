@@ -2,6 +2,10 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
+// swiftlint:disable type_body_length
+// Test suites cohere around their subject — splitting along the 250-line
+// body limit would scatter the idempotence-template assertions across
+// multiple files for no reader benefit.
 @Suite("IdempotenceTemplate — type pattern, name match, body signal, vetoes")
 struct IdempotenceTemplateTests {
 
@@ -110,6 +114,77 @@ struct IdempotenceTemplateTests {
             returnType: nil
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
+    }
+
+    // MARK: - Project vocabulary (PRD §4.5)
+
+    @Test("Project-vocabulary verb on T -> T scores 70 (Likely)")
+    func projectVocabularyVerb() {
+        let summary = makeSummary(
+            name: "sanitizeXML",
+            paramType: "String",
+            returnType: "String"
+        )
+        let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML", "rewritePath"])
+        let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary)
+        #expect(suggestion?.score.total == 70)
+        #expect(suggestion?.score.tier == .likely)
+    }
+
+    @Test("Project-vocabulary signal renders with the project-vocab detail line")
+    func projectVocabularyDetailLine() throws {
+        let summary = makeSummary(
+            name: "sanitizeXML",
+            paramType: "String",
+            returnType: "String"
+        )
+        let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
+        let suggestion = try #require(IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary))
+        let nameLine = suggestion.explainability.whySuggested.first { line in
+            line.contains("verb match")
+        }
+        #expect(nameLine == "Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)")
+    }
+
+    @Test("Curated verb wins over project-vocabulary when both list the same name")
+    func curatedTakesPrecedenceOverProjectVocabulary() throws {
+        let summary = makeSummary(
+            name: "normalize",
+            paramType: "String",
+            returnType: "String"
+        )
+        let vocabulary = Vocabulary(idempotenceVerbs: ["normalize"])
+        let suggestion = try #require(IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary))
+        // Score should still be 70 — not double-counted to 110.
+        #expect(suggestion.score.total == 70)
+        let nameLine = suggestion.explainability.whySuggested.first { line in
+            line.contains("verb match")
+        }
+        #expect(nameLine == "Curated idempotence verb match: 'normalize' (+40)")
+    }
+
+    @Test("Empty vocabulary leaves curated behaviour unchanged")
+    func emptyVocabularyLeavesCuratedAlone() {
+        let summary = makeSummary(
+            name: "normalize",
+            paramType: "String",
+            returnType: "String"
+        )
+        let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: .empty)
+        #expect(suggestion?.score.total == 70)
+    }
+
+    @Test("A name in neither list still produces the 30-baseline (Possible) suggestion")
+    func unmatchedNameStillScoresBaseline() {
+        let summary = makeSummary(
+            name: "process",
+            paramType: "String",
+            returnType: "String"
+        )
+        let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
+        let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary)
+        #expect(suggestion?.score.total == 30)
+        #expect(suggestion?.score.tier == .possible)
     }
 
     // MARK: - Vetoes
@@ -281,3 +356,4 @@ Suppress:  // swiftinfer: skip 0xA1C9DEC1AEA2791C
         )
     }
 }
+// swiftlint:enable type_body_length

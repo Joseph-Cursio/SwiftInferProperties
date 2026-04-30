@@ -33,12 +33,20 @@ public enum IdempotenceTemplate {
 
     /// Build a suggestion for `summary`, or return `nil` if the type
     /// pattern doesn't match or the score collapses to `.suppressed`.
-    public static func suggest(for summary: FunctionSummary) -> Suggestion? {
+    ///
+    /// `vocabulary` is the project-extensible naming layer per PRD §4.5;
+    /// the template consults `vocabulary.idempotenceVerbs` alongside the
+    /// curated list. Defaults to `.empty` so M1 call sites compile
+    /// unchanged.
+    public static func suggest(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary = .empty
+    ) -> Suggestion? {
         guard let typeSymmetry = typeSymmetrySignal(for: summary) else {
             return nil
         }
         var signals: [Signal] = [typeSymmetry]
-        if let name = nameSignal(for: summary) {
+        if let name = nameSignal(for: summary, vocabulary: vocabulary) {
             signals.append(name)
         }
         if let composition = selfCompositionSignal(for: summary) {
@@ -102,15 +110,29 @@ public enum IdempotenceTemplate {
         )
     }
 
-    private static func nameSignal(for summary: FunctionSummary) -> Signal? {
-        guard curatedVerbs.contains(summary.name) else {
-            return nil
+    private static func nameSignal(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary
+    ) -> Signal? {
+        // Curated takes precedence over project vocabulary so a verb
+        // already in the curated list never double-fires when the project
+        // happens to repeat it. Both contribute the same +40 weight per
+        // PRD §4.5; only the rendered detail line distinguishes them.
+        if curatedVerbs.contains(summary.name) {
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 40,
+                detail: "Curated idempotence verb match: '\(summary.name)'"
+            )
         }
-        return Signal(
-            kind: .exactNameMatch,
-            weight: 40,
-            detail: "Curated idempotence verb match: '\(summary.name)'"
-        )
+        if vocabulary.idempotenceVerbs.contains(summary.name) {
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 40,
+                detail: "Project-vocabulary idempotence verb match: '\(summary.name)'"
+            )
+        }
+        return nil
     }
 
     private static func selfCompositionSignal(for summary: FunctionSummary) -> Signal? {

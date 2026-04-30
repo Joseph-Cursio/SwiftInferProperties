@@ -32,9 +32,16 @@ public enum RoundTripTemplate {
         ("lock", "unlock")
     ]
 
-    public static func suggest(for pair: FunctionPair) -> Suggestion? {
+    /// `vocabulary` is the project-extensible naming layer per PRD §4.5;
+    /// the template consults `vocabulary.inversePairs` alongside the
+    /// curated list. Defaults to `.empty` so M1 call sites compile
+    /// unchanged.
+    public static func suggest(
+        for pair: FunctionPair,
+        vocabulary: Vocabulary = .empty
+    ) -> Suggestion? {
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
-        if let name = nameSignal(for: pair) {
+        if let name = nameSignal(for: pair, vocabulary: vocabulary) {
             signals.append(name)
         }
         if let veto = nonDeterministicVeto(for: pair) {
@@ -78,21 +85,47 @@ public enum RoundTripTemplate {
         )
     }
 
-    private static func nameSignal(for pair: FunctionPair) -> Signal? {
+    private static func nameSignal(
+        for pair: FunctionPair,
+        vocabulary: Vocabulary
+    ) -> Signal? {
         let forwardName = pair.forward.name
         let reverseName = pair.reverse.name
-        for (firstHalf, secondHalf) in curatedInversePairs {
-            let directMatch = forwardName == firstHalf && reverseName == secondHalf
-            let swappedMatch = forwardName == secondHalf && reverseName == firstHalf
-            if directMatch || swappedMatch {
-                return Signal(
-                    kind: .exactNameMatch,
-                    weight: 40,
-                    detail: "Curated inverse name pair: \(firstHalf)/\(secondHalf)"
-                )
-            }
+        // Curated takes precedence over project vocabulary so a pair
+        // already in the curated list never double-fires when the project
+        // happens to repeat it. Both contribute the same +40 weight per
+        // PRD §4.5; only the rendered detail line distinguishes them.
+        if let curated = curatedInversePairs.first(where: { tuple in
+            matches(forwardName: forwardName, reverseName: reverseName, lhs: tuple.0, rhs: tuple.1)
+        }) {
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 40,
+                detail: "Curated inverse name pair: \(curated.0)/\(curated.1)"
+            )
+        }
+        if let projectPair = vocabulary.inversePairs.first(where: { entry in
+            matches(forwardName: forwardName, reverseName: reverseName, lhs: entry.forward, rhs: entry.reverse)
+        }) {
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 40,
+                detail: "Project-vocabulary inverse name pair: "
+                    + "\(projectPair.forward)/\(projectPair.reverse)"
+            )
         }
         return nil
+    }
+
+    private static func matches(
+        forwardName: String,
+        reverseName: String,
+        lhs: String,
+        rhs: String
+    ) -> Bool {
+        let direct = forwardName == lhs && reverseName == rhs
+        let swapped = forwardName == rhs && reverseName == lhs
+        return direct || swapped
     }
 
     private static func nonDeterministicVeto(for pair: FunctionPair) -> Signal? {

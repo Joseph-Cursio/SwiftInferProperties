@@ -2,6 +2,10 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
+// swiftlint:disable type_body_length
+// Test suites cohere around their subject — splitting along the 250-line
+// body limit would scatter the round-trip-template assertions across
+// multiple files for no reader benefit.
 @Suite("RoundTripTemplate — pair shape, name match, vetoes, caveats")
 struct RoundTripTemplateTests {
 
@@ -122,6 +126,146 @@ struct RoundTripTemplateTests {
         #expect(suggestion.explainability.whyMightBeWrong[1].contains("Equatable"))
     }
 
+    // MARK: - Project vocabulary (PRD §4.5)
+
+    @Test("Project-vocabulary pair scores 70 (Likely)")
+    func projectVocabularyPair() {
+        let pair = makePair(
+            forwardName: "enqueue",
+            reverseName: "dequeue",
+            forwardParam: "Job",
+            forwardReturn: "Job?"
+        )
+        let vocabulary = Vocabulary(
+            inversePairs: [InversePair(forward: "enqueue", reverse: "dequeue")]
+        )
+        let suggestion = RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary)
+        #expect(suggestion?.score.total == 70)
+        #expect(suggestion?.score.tier == .likely)
+    }
+
+    @Test("Project-vocabulary pair matches in either orientation")
+    func projectVocabularyOrientationInsensitive() {
+        let direct = makePair(
+            forwardName: "enqueue",
+            reverseName: "dequeue",
+            forwardParam: "Job",
+            forwardReturn: "Job?"
+        )
+        let swapped = makePair(
+            forwardName: "dequeue",
+            reverseName: "enqueue",
+            forwardParam: "Job?",
+            forwardReturn: "Job"
+        )
+        let vocabulary = Vocabulary(
+            inversePairs: [InversePair(forward: "enqueue", reverse: "dequeue")]
+        )
+        #expect(RoundTripTemplate.suggest(for: direct, vocabulary: vocabulary)?.score.total == 70)
+        #expect(RoundTripTemplate.suggest(for: swapped, vocabulary: vocabulary)?.score.total == 70)
+    }
+
+    @Test("Project-vocabulary signal renders with the project-vocab detail line")
+    func projectVocabularyDetailLine() throws {
+        let pair = makePair(
+            forwardName: "enqueue",
+            reverseName: "dequeue",
+            forwardParam: "Job",
+            forwardReturn: "Job?"
+        )
+        let vocabulary = Vocabulary(
+            inversePairs: [InversePair(forward: "enqueue", reverse: "dequeue")]
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary))
+        let nameLine = suggestion.explainability.whySuggested.first { line in
+            line.contains("inverse name pair")
+        }
+        #expect(nameLine == "Project-vocabulary inverse name pair: enqueue/dequeue (+40)")
+    }
+
+    @Test("Curated pair wins over a project-vocabulary list that repeats the same names")
+    func curatedTakesPrecedenceOverProjectVocabulary() throws {
+        let pair = makePair(
+            forwardName: "encode",
+            reverseName: "decode",
+            forwardParam: "MyType",
+            forwardReturn: "Data"
+        )
+        let vocabulary = Vocabulary(
+            inversePairs: [InversePair(forward: "encode", reverse: "decode")]
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary))
+        #expect(suggestion.score.total == 70)
+        let nameLine = suggestion.explainability.whySuggested.first { line in
+            line.contains("inverse name pair")
+        }
+        #expect(nameLine == "Curated inverse name pair: encode/decode (+40)")
+    }
+
+    @Test("Empty vocabulary leaves curated behaviour unchanged")
+    func emptyVocabularyLeavesCuratedAlone() {
+        let pair = makePair(
+            forwardName: "encode",
+            reverseName: "decode",
+            forwardParam: "MyType",
+            forwardReturn: "Data"
+        )
+        let suggestion = RoundTripTemplate.suggest(for: pair, vocabulary: .empty)
+        #expect(suggestion?.score.total == 70)
+    }
+
+    @Test("Pair matching neither curated nor project-vocab still scores 30 baseline")
+    func unmatchedPairScoresBaseline() {
+        let pair = makePair(
+            forwardName: "transform",
+            reverseName: "untransform",
+            forwardParam: "MyType",
+            forwardReturn: "Data"
+        )
+        let vocabulary = Vocabulary(
+            inversePairs: [InversePair(forward: "enqueue", reverse: "dequeue")]
+        )
+        let suggestion = RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary)
+        #expect(suggestion?.score.total == 30)
+    }
+
+    @Test("Project-vocabulary Likely suggestion renders byte-for-byte")
+    func projectVocabularyGoldenRender() throws {
+        let pair = FunctionPair(
+            forward: makeCodecHalf(name: "enqueue", paramType: "Job", returnType: "Job?", line: 3),
+            reverse: makeCodecHalf(name: "dequeue", paramType: "Job?", returnType: "Job", line: 6)
+        )
+        let vocabulary = Vocabulary(
+            inversePairs: [InversePair(forward: "enqueue", reverse: "dequeue")]
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary))
+        let rendered = SuggestionRenderer.render(suggestion)
+        let expected = """
+[Suggestion]
+Template: round-trip
+Score:    70 (Likely)
+
+Why suggested:
+  ✓ enqueue(_:) (Job) -> Job? — Sources/Demo/Codec.swift:3
+  ✓ dequeue(_:) (Job?) -> Job — Sources/Demo/Codec.swift:6
+  ✓ Type-symmetry signature: Job -> Job? ↔ Job? -> Job (+30)
+  ✓ Project-vocabulary inverse name pair: enqueue/dequeue (+40)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set \
+of the inner function; a generator that produces values outside that set \
+will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. \
+SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run (M4 deferred)
+Identity:  \(suggestion.identity.display)
+Suppress:  // swiftinfer: skip \(suggestion.identity.display)
+"""
+        #expect(rendered == expected)
+    }
+
     @Test("Likely suggestion renders byte-for-byte against the M1 acceptance-bar golden")
     func likelyRoundTripGoldenRender() throws {
         let pair = FunctionPair(
@@ -213,3 +357,4 @@ Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
         return FunctionPair(forward: forward, reverse: reverse)
     }
 }
+// swiftlint:enable type_body_length
