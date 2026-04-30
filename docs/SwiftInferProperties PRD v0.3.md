@@ -154,7 +154,9 @@ A suggestion's score is the sum of contributing signals (positive and negative).
 | **Side-effect penalty** | -20 | Function is `mutating`, returns `Void`, has `inout` params, or calls APIs marked unsafe/IO-bound. |
 | **Generator-quality penalty** | -15 | Best generator available is `.todo` or weakly-typed for an explicitly bounded domain. |
 | **Counter-signal: asymmetric assertion** | -25 | TestLifter found an explicitly asymmetric assertion contradicting a candidate symmetric property in any test. |
+| **Counter-signal: anti-commutativity naming** | -30 | Function name matches a curated anti-commutativity list (`subtract`, `difference`, `divide`, `apply`, `prepend`, `append`, `concat`-family) **or** a project-vocabulary `antiCommutativityVerbs` entry (§4.5). Applies to commutativity, semilattice, and any algebraic-structure claim that requires commutativity. |
 | **Counter-signal: early return / partial function** | -15 | Function body has guard/early-return paths suggesting partiality, contradicting `T → T` totality. |
+| **Counter-signal: non-deterministic body** | -∞ | Type-flow analysis detects calls to `Date()`, `Date.now`, `UUID()`, `Random.next()`, `URLSession`, or other clock/IO/randomness APIs in the function body. Disqualifies idempotence and most algebraic claims (see Appendix B.3). |
 | **Counter-signal: uses non-Equatable output** | -∞ | The output type is not `Equatable` — the property is structurally untestable. Suggestion is suppressed entirely. |
 
 ### 4.2 Tier Mapping
@@ -255,7 +257,67 @@ Each entry defines:
 - The known caveats that always appear in the "why this might be wrong" explainability block (§4.5)
 - Interaction warnings with other templates
 
-The seven shipped templates are: round-trip, idempotence, commutativity, associativity, monotonicity, identity-element, invariant-preservation, inverse-pair. (Detailed signatures, scoring contributors, counter-signals, and emitted bodies are in v0.2 §5.2 — unchanged in v0.3 except for the explainability-block additions.)
+The eight shipped templates are: round-trip, idempotence, commutativity, associativity, monotonicity, identity-element, invariant-preservation, inverse-pair.
+
+The two M1 templates — round-trip and idempotence — are specified in full below. The other six are lifted verbatim from v0.2 §5.2 in `Joseph-Cursio/SwiftProtocolLaws` at commit `722841b`, file `docs/Property Inference/SwiftInferProperties PRD.md`, and remain unchanged in v0.3 except for the explainability-block additions of §4.5; the v0.4 sweep will inline them here. (v0.2's separate Semilattice and Reducer/Event-Application templates were folded into §5.4's algebraic-structure composition — they are no longer standalone.)
+
+#### Round-Trip
+
+**Type pattern:** Two functions `f: T → U` and `g: U → T` in the same module, with `T: Equatable`. *Necessary.*
+
+**Name signals:** known inverse pairs (`encode`/`decode`, `serialize`/`deserialize`, `compress`/`decompress`, `encrypt`/`decrypt`, `parse`/`format`, `push`/`pop`, `insert`/`remove`, `open`/`close`, `marshal`/`unmarshal`, `pack`/`unpack`, `lock`/`unlock`), plus any project-vocabulary `inversePairs` entries (§4.5). Escalator only; the type pattern must hold first.
+
+**Sampling test:** generate 25 `T` values, check `g(f(t)) == t` for all of them. Seed is derived from suggestion identity (§16 #6).
+
+**Counter-signals:** non-Equatable `T` (-∞ veto, see Appendix B.1); both functions throw with potentially asymmetric domains (warning surfaced in explainability, see Appendix B.4); type-flow detection of non-deterministic API calls in either body (-∞ veto).
+
+**Known caveats** (always rendered in the "why this might be wrong" block): *throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures.*
+
+**Emitted property:**
+
+```swift
+// Template: round-trip
+// Confidence: Strong (score 95)
+// Signals: type symmetry T↔U (+30), curated name pair encode/decode (+40),
+//          sampling 25/25 passed under derived generator (+10),
+//          .high generator confidence (.derived(.memberwise))
+// Evidence: encode(_:) -> Data (MyType.swift:14), decode(_:) -> MyType (MyType.swift:22)
+// Seed: 0x9F2C8B14 (derived from suggestion identity hash)
+@Test func roundTripEncoding() async throws {
+    await propertyCheck(input: Gen.derived(MyType.self)) { value in
+        #expect(try decode(encode(value)) == value)
+    }
+}
+```
+
+#### Idempotence
+
+**Type pattern:** A function `f: T → T` with `T: Equatable`. *Necessary.*
+
+**Name signals:** `normalize`, `canonicalize`, `trim`, `flatten`, `sort`, `deduplicate`, `sanitize`, `format`, plus any project-vocabulary `idempotenceVerbs` entries (§4.5). Escalator only.
+
+**Sampling test:** generate 25 `T` values, check `f(f(t)) == f(t)` for all of them. Seed is derived from suggestion identity (§16 #6).
+
+**Counter-signals:** non-Equatable output (-∞); type-flow detection of non-deterministic API calls in body — `Date()`, `Date.now`, `UUID()`, `Random.next()`, `URLSession`, etc. — is a **structural disqualifier** (-∞ veto, see Appendix B.3) since `f(f(x))` cannot equal `f(x)` if `f` reads the clock; partial functions (early-return / guard paths suggesting `T → T` is incomplete) apply -15.
+
+**Known caveats:** *idempotence over an Equatable-by-value type may still differ under reference equality if `T` is a class with custom `==`; the property is over value equality as `T.==` defines it.*
+
+**Emitted property:**
+
+```swift
+// Template: idempotence
+// Confidence: Strong (score 80)
+// Signals: type T→T (+30), name signal "normalize" (+40),
+//          sampling 25/25 passed (+10)
+// Evidence: normalize(_:) -> String (Sanitizer.swift:7)
+// Seed: 0x4A1E55D2 (derived from suggestion identity hash)
+@Test func normalizeIsIdempotent() async {
+    await propertyCheck(input: Gen.string()) { value in
+        let once = normalize(value)
+        #expect(normalize(once) == once)
+    }
+}
+```
 
 ### 5.3 Type-Flow Analysis
 
@@ -281,7 +343,19 @@ Reuses `@Discoverable(group:)` from `ProtoLawMacro` (no new API). Introduces onl
 
 ### 5.8 Milestones
 
-Same M1–M7 as v0.2, with the explainability-block requirement added as a cross-cutting requirement to every milestone (no separate milestone — it's a per-template deliverable).
+| Milestone | Deliverable |
+|-----------|-------------|
+| M1 | SwiftSyntax pipeline; CLI discovery tool (`swift-infer discover`); round-trip + idempotence templates wired through the §4 scoring engine and §4.5 explainability block; basic cross-function pairing (type + naming filter); `// swiftinfer: skip` rejection markers honored; performance budget hit on the §13 reference corpora (`swift-collections`, `swift-algorithms`). |
+| M2 | Commutativity, associativity, identity-element templates; project configuration (`.swiftinfer/config.toml`); pluggable naming vocabulary (§4.5) loaded from `.swiftinfer/vocabulary.json`. |
+| M3 | Contradiction detection (§5.6); cross-validation with TestLifter (+20 signal per §4.1) once TestLifter M1 lands. Prerequisite: `DerivationStrategist` exposed publicly from SwiftProtocolLaws (see §11, §21 OQ #4). |
+| M4 | Scoring model surfaced fully in output (per-signal weights in the explainability block); sampling-before-suggesting (§4.3) using the seeded policy of §16 #6. |
+| M5 | `@CheckProperty` and `@Discoverable` annotation API (§5.7); `--dry-run` / `--stats-only` modes. |
+| M6 | Monotonicity (`Possible` by default — escalation only via TestLifter corroboration or explicit annotation per §5.2 caveat); invariant-preservation (annotation-only); RefactorBridge upstream-loop conformance suggestions written to `Tests/Generated/SwiftInferRefactors/` (§6, §16 #1). |
+| M7 | Algebraic-structure composition (§5.4) — semigroup / monoid / group / semilattice / ring claims accumulated from per-template signals on the same type; expanded identity-element detection (init-based + reduce-usage signals); `inverse-pair` template ships standalone for non-Equatable cases (suppressed per §16 #6 explainability). |
+
+The §4.5 explainability block ("why suggested" + "why this might be wrong") is a **cross-cutting per-template deliverable** — every template added in any milestone must ship its block populated from the matched counter-signals plus the template's known caveats. There is no separate "explainability milestone."
+
+**M1 acceptance bar.** Beyond the deliverables above, M1 is not done until: (a) every emitted stub for round-trip and idempotence has a golden-file test (per §18) covering the explainability block byte-for-byte; (b) the §13 performance budget for `swift-infer discover` (< 2s wall on 50-file module) is hit on `swift-collections` and `swift-algorithms`; (c) the §16 hard guarantees relevant to discovery (no source-file modification, no telemetry, byte-identical reproducibility under fixed seeds) have integration tests in CI.
 
 -----
 
@@ -372,7 +446,7 @@ A type rule of thumb for contributors: **contractual** properties live in SwiftP
 
 Unchanged from v0.2 §11. Bidirectional via RefactorBridge: SwiftInfer detects algebraic structure → suggests protocol conformance → SwiftProtocolLaws' discovery plugin emits the law-check on the next regeneration → laws are enforced on every CI run thereafter.
 
-The shared `DerivationStrategist` actor is the one component that must be extracted from `ProtoLawMacro`'s internal implementation and made public. This is a small refactor on the SwiftProtocolLaws side, prerequisite for SwiftInfer M3.
+The shared `DerivationStrategist` enum lives in `ProtoLawCore` at `package` visibility (see `Sources/ProtoLawCore/DerivationStrategy.swift:170` in `Joseph-Cursio/SwiftProtocolLaws`); promoting it — along with `DerivationStrategy`, `TypeShape`, and the public surface of `MemberwiseEmitter` — from `package` to `public` is the prerequisite for SwiftInfer M3. See §21 OQ #4 for the concrete action item.
 
 The overlap with SwiftProtocolLaws' own M5 round-trip advisory is intentional — different confidence regimes (HIGH-confidence syntactic in SwiftProtocolLaws, weighted full-spectrum in SwiftInfer). When both fire on the same pair, SwiftInfer adds +20 for cross-validation.
 
@@ -457,7 +531,7 @@ Per Copilot critique §9. SwiftInfer ships with the following hard guarantees, e
 3. **SwiftInfer never auto-accepts suggestions.** Even in CI mode, `drift` emits warnings, not failures. The accept/reject step is always human.
 4. **SwiftInfer never emits silently-wrong code.** When generator inference fails, the stub is emitted with `.todo`, which does not compile. There is no "approximately correct" generator fallback.
 5. **SwiftInfer never operates outside the configured target.** `--target` is required for `discover`; the tool refuses to scan files outside the named target's source roots.
-6. **SwiftInfer's output is reproducible.** Re-running `discover` on unchanged source produces byte-identical output (modulo the timestamp recorded in decisions.json on accept). Same property as SwiftProtocolLaws' discovery plugin.
+6. **SwiftInfer's output is reproducible.** Re-running `discover` on unchanged source produces byte-identical output (modulo the timestamp recorded in decisions.json on accept). Same property as SwiftProtocolLaws' discovery plugin. **Seed policy:** all sampling that contributes to a suggestion's score (§4.1 sampling-pass row, §4.3 `samplingResult`) uses a deterministic seed derived from the suggestion-identity hash (§7.5) — concretely, the low 64 bits of `SHA256(suggestionIdentityHash || "sampling")`. The seed is rendered in the explainability block of every emitted stub so a developer can re-run sampling under the same conditions. `--seed-override` is supported for debugging only and is never persisted to `decisions.json`.
 
 These guarantees are tested by the integration suite (§18). Violation is a release-blocking bug.
 
@@ -608,16 +682,36 @@ Xcode source-editor extension for inline suggestions and quick-fix ("Generate pr
 
 ChatGPT noted the natural connection: SwiftInfer discovers properties, and a separate semantic linter could enforce them as project rules ("if the team committed to monoid laws on Config, lint any new function that breaks them"). This requires either a separate SwiftLint integration or a new linting tool; both are out of SwiftInfer's scope but on the strategic trajectory.
 
+### 20.6 In-Source `@ProposedProperty` Marker Annotations (v1.1+)
+
+Considered for v1, **deferred to v1.1+ alongside the §20.4 IDE story.** The proposal: a passive marker attribute `@ProposedProperty(.idempotent, score: 80, evidence: "encode/decode pair, sampling 25/25")` that a `swift-infer apply --suggestion <hash>` subcommand writes to the relevant declaration, surfacing structured proposals next to the code they describe. Modeled on the marker conventions in `Joseph-Cursio/swiftidempotency` (`@Idempotent`, `@NonIdempotent`, `@Observational`) and `Joseph-Cursio/SwiftProtocolLaws`, but **passive only** — `@ProposedProperty` does not expand at compile time, so SwiftInfer never becomes a runtime dependency of the source target.
+
+**Design decision baked in (not to be re-litigated): truth lives in `.swiftinfer/decisions.json`, not in source markers.** Re-running discovery recomputes proposals from AST + decisions; markers, when added, are decorative UX. Three reasons:
+
+1. **Refactor robustness.** The AST-shape suggestion-identity hash (§7.5) survives renames and signature-preserving refactors. Source markers do not — a renamed function loses its marker even though the proposal still applies.
+2. **Disambiguation.** "Marker not yet applied" and "marker explicitly deleted" are distinct states a developer needs to express. Source-of-truth markers cannot express the second without a sidecar — at which point you have a sidecar anyway.
+3. **No emission without a consumer.** Emitting markers ahead of an IDE that surfaces them just adds PR noise. The marker and the IDE quick-fix story (§20.4) ship together or not at all.
+
+**Consequence for v1:** §16 #1 stands unchanged — no source modification by any v1 subcommand. The in-source path in v1 is the developer-applied `@CheckProperty(...)` of §5.7, which contributes the +35 `@Discoverable` signal on subsequent discovery runs. The `swift-infer apply` subcommand is v1.1+ ergonomics layered on top of the same decisions.json that already drives v1.
+
+**Three annotation states** (vocabulary for v1.1+ design conversations):
+
+| State | What it is | v1 source? | v1.1 source? |
+|-------|-----------|------------|--------------|
+| Detected | SwiftInfer's score + evidence record | `.swiftinfer/` only | `.swiftinfer/` only |
+| Proposed | `@ProposedProperty(.idempotent, ...)` marker | not emitted | emitted by `swift-infer apply` |
+| Adopted | `@CheckProperty(.idempotent)` / `@Idempotent` / `@Discoverable(group:)` | developer-applied | developer-applied (or upgrade subcommand) |
+
 -----
 
 ## 21. Open Questions
 
 Trimmed from v0.2 — Open Question 5 (Generator Gap macro), Open Question 6 (semantic indexing), Open Question 7 (domain packs) all moved into §20 Future Directions with concrete v1.1 framing. Remaining open questions:
 
-1. **Separate package or monorepo?** The shared `DerivationStrategist` requirement makes monorepo more attractive than v0.1 framing suggested. Recommend monorepo with separate target and version-tagged release; SwiftInfer 1.0 ships with SwiftProtocolLaws ≥ 1.5 as a hard dependency.
+1. ~~**Separate package or monorepo?**~~ **Resolved (separate package).** SwiftInfer ships as `Joseph-Cursio/SwiftInferProperties`, a sibling repo to `Joseph-Cursio/SwiftProtocolLaws`. During pre-1.0, `Package.swift` references SwiftProtocolLaws via a local path (`../SwiftProtocolLaws`); swap to a versioned URL dep before tagging 1.0. SwiftInfer 1.0 will require SwiftProtocolLaws ≥ 1.5.
 2. **TemplateEngine as compiler plugin vs. CLI?** CLI for v1 (whole-module scanning + interactive mode). Compiler-plugin mode for incremental per-file suggestions during development is desirable but unscoped — defer to v1.1 with the IDE integration push.
 3. **TestLifter and Swift Testing vs. XCTest?** M1 should target both. The slicing pass is the same; the SwiftSyntax shape of `@Test func` is well-defined.
-4. **The shared `DerivationStrategist` extraction.** This is a small refactor on the SwiftProtocolLaws side, prerequisite for SwiftInfer M3. Confirm with the SwiftProtocolLaws maintainer that exposing `DerivationStrategist` publicly is acceptable — it currently lives inside `ProtoLawMacro`.
+4. ~~**The shared `DerivationStrategist` extraction.**~~ **Resolved (action item, not an open question).** As of the SwiftProtocolLaws working tree, `DerivationStrategist` lives in `ProtoLawCore` (not `ProtoLawMacro` as v0.3 originally stated) at `package` visibility — see `Sources/ProtoLawCore/DerivationStrategy.swift:170`. Same maintainer owns both repos. **Action for SwiftInfer M3:** open a PR on SwiftProtocolLaws promoting `DerivationStrategist`, `DerivationStrategy`, `TypeShape`, and `MemberwiseEmitter`'s public surface from `package` to `public`; tag a SwiftProtocolLaws minor release; bump SwiftInfer's local-path dep to that tag. No design question remains.
 5. **Threshold calibration source.** §17 calibration assumes a corpus of opt-in projects contributing decisions. How is that corpus assembled — public-repo dogfooding only, or invited closed-source pilots? Affects the calibration timeline directly.
 
 -----
