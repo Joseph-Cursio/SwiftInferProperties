@@ -2,10 +2,10 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length
+// swiftlint:disable type_body_length file_length
 // Test suites cohere around their subject — splitting along the 250-line
-// body limit would scatter the idempotence-template assertions across
-// multiple files for no reader benefit.
+// body / 400-line file limit would scatter the idempotence-template
+// assertions across multiple files for no reader benefit.
 @Suite("IdempotenceTemplate — type pattern, name match, body signal, vetoes")
 struct IdempotenceTemplateTests {
 
@@ -264,6 +264,50 @@ struct IdempotenceTemplateTests {
     }
 
     // MARK: - Golden render
+
+    @Test("Project-vocabulary Likely suggestion renders byte-for-byte against the M2 acceptance-bar golden")
+    func projectVocabularyGoldenRender() throws {
+        // Closes M2 acceptance bar (a): proves a project-vocab idempotence
+        // verb match contributes the same +40 weight as the curated list
+        // and surfaces with the project-vocab detail line in the rendered
+        // output. Mirror of RoundTripTemplateTests.projectVocabularyGoldenRender.
+        let summary = FunctionSummary(
+            name: "sanitizeXML",
+            parameters: [Parameter(label: nil, internalName: "value", typeText: "String", isInout: false)],
+            returnTypeText: "String",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Sources/Demo/Sanitizer.swift", line: 11, column: 5),
+            containingTypeName: "Sanitizer",
+            bodySignals: .empty
+        )
+        let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
+        let suggestion = try #require(IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary))
+        let rendered = SuggestionRenderer.render(suggestion)
+        let expected = """
+[Suggestion]
+Template: idempotence
+Score:    70 (Likely)
+
+Why suggested:
+  ✓ sanitizeXML(_:) (String) -> String — Sources/Demo/Sanitizer.swift:11
+  ✓ Type-symmetry signature: T -> T (T = String) (+30)
+  ✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. \
+SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run (M4 deferred)
+Identity:  \(suggestion.identity.display)
+Suppress:  // swiftinfer: skip \(suggestion.identity.display)
+"""
+        #expect(rendered == expected)
+    }
 
     @Test("Strong suggestion renders byte-for-byte against the M1 acceptance-bar golden")
     func strongSuggestionGoldenRender() throws {
