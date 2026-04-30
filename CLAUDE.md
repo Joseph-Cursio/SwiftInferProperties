@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Pre-M1 skeleton.** No SwiftInfer behavior has been implemented yet. Only the `Package.swift`, an empty `SwiftInfer` namespace target, a smoke test, CI, and the canonical PRD live here. Real work begins with M1 (TemplateEngine — round-trip / idempotence detectors) per `docs/SwiftInferProperties PRD v0.3.md` §5.8.
+**M1 shipped; M2 in progress.** TemplateEngine M1 (round-trip + idempotence templates, cross-function pairing, suggestion-identity hashing, `// swiftinfer: skip` markers, §13 perf integration suite, §16/§14 hard-guarantee integration suite) is complete on `main`. Sub-milestones M1.1–M1.7 landed as individual `feat(M1.x):` commits. M1's §5.8 acceptance bar (golden-file explainability blocks, §13 perf budget on `swift-collections` + a synthetic 50-file corpus, §16 hard guarantees in CI) is met. The next milestone is M2 per `docs/M2 Plan.md` — commutativity / associativity / identity-element templates plus `.swiftinfer/config.toml` and `.swiftinfer/vocabulary.json` plumbing.
 
 ## What this repo is
 
@@ -23,7 +23,8 @@ During pre-1.0 development, `Package.swift` references SwiftProtocolLaws via a l
 | Question | File |
 |---|---|
 | Product scope, milestones (M1–M9), success criteria | `docs/SwiftInferProperties PRD v0.3.md` |
-| **Current milestone execution plan (M1 sub-milestones, target layout, deps)** | `docs/M1 Plan.md` |
+| **Current milestone execution plan (M2 sub-milestones, target layout, deps)** | `docs/M2 Plan.md` |
+| Closed milestone plans (M1) | `docs/archive/M1 Plan.md` |
 | What v0.3 changed vs v0.1/v0.2 | The `Supersedes:` line points at git history of the SwiftProtocolLaws repo, where v0.1 and v0.2 lived before the split |
 | ProtocolLawKit / ProtoLawMacro source of truth | the SwiftProtocolLaws repo, not this one |
 
