@@ -206,7 +206,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
         return BodySignals(
             hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
             hasSelfComposition: scanner.foundSelfComposition,
-            nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted()
+            nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),
+            reducerOpsReferenced: scanner.reducerOps.sorted()
         )
     }
 }
@@ -218,6 +219,7 @@ private final class BodySignalVisitor: SyntaxVisitor {
     let funcName: String
     var detectedAPIs: Set<String> = []
     var foundSelfComposition = false
+    var reducerOps: Set<String> = []
 
     init(funcName: String) {
         self.funcName = funcName
@@ -237,7 +239,29 @@ private final class BodySignalVisitor: SyntaxVisitor {
                 foundSelfComposition = true
             }
         }
+        recordReducerOp(in: node)
         return .visitChildren
+    }
+
+    /// Detect `<expr>.reduce(<seed>, <op>)` and `<expr>.reduce(into: <seed>, <op>)`
+    /// where `<op>` is a function reference (bare identifier or member-access
+    /// `Type.method`). Trailing closures and explicit closure literals are
+    /// intentionally skipped — the M2.4 detector only resolves named-function
+    /// references, mirroring the conservative-precision posture of §3.5.
+    private func recordReducerOp(in node: FunctionCallExprSyntax) {
+        guard let member = node.calledExpression.as(MemberAccessExprSyntax.self),
+              member.declName.baseName.text == "reduce",
+              node.arguments.count == 2 else {
+            return
+        }
+        let opArg = node.arguments[node.arguments.index(node.arguments.startIndex, offsetBy: 1)]
+        if let ref = opArg.expression.as(DeclReferenceExprSyntax.self) {
+            reducerOps.insert(ref.baseName.text)
+            return
+        }
+        if let memberRef = opArg.expression.as(MemberAccessExprSyntax.self) {
+            reducerOps.insert(memberRef.declName.baseName.text)
+        }
     }
 }
 

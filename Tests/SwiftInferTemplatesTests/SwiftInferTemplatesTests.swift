@@ -104,6 +104,54 @@ struct TemplateRegistryTests {
         #expect(suggestions.count == 2)
     }
 
+    @Test("Associativity reducer-fold signal aggregates corpus-wide via TemplateRegistry.discover")
+    func associativityReducerOpsAggregateAcrossSummaries() throws {
+        // `combine` is in the curated commutativity list (shared with
+        // associativity per v0.2 §5.2 naming), and its name appears as
+        // the closure-position arg of `.reduce(0, combine)` in `driver`'s
+        // body. The registry must union reducer-op references across
+        // summaries before invoking the associativity template — the
+        // signal then fires even though `combine` itself never calls
+        // reduce in its own body.
+        let combine = FunctionSummary(
+            name: "combine",
+            parameters: [
+                Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
+                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
+            ],
+            returnTypeText: "Int",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "A.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let driver = FunctionSummary(
+            name: "driver",
+            parameters: [Parameter(label: nil, internalName: "xs", typeText: "[Int]", isInout: false)],
+            returnTypeText: "Int",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "A.swift", line: 10, column: 1),
+            containingTypeName: nil,
+            bodySignals: BodySignals(
+                hasNonDeterministicCall: false,
+                hasSelfComposition: false,
+                nonDeterministicAPIsDetected: [],
+                reducerOpsReferenced: ["combine"]
+            )
+        )
+        let suggestions = TemplateRegistry.discover(in: [combine, driver])
+        let associativity = try #require(suggestions.first { $0.templateName == "associativity" })
+        // 30 type + 40 curated `combine` + 20 reducer = 90 → Strong.
+        #expect(associativity.score.total == 90)
+        #expect(associativity.score.tier == .strong)
+    }
+
     @Test("Idempotence and round-trip suggestions interleave by (file, line)")
     func interleavedSorting() {
         let earlyNormalize = makeIdempotentSummary(file: "A.swift", line: 50)

@@ -140,20 +140,31 @@ public struct BodySignals: Sendable, Equatable {
     /// for deterministic output.
     public let nonDeterministicAPIsDetected: [String]
 
+    /// Distinct function names referenced as the closure-position argument
+    /// of `.reduce(_, X)` calls in this body (e.g. `xs.reduce(0, add)` or
+    /// `xs.reduce(into: 0, MyType.combine)` records `add` and `combine`).
+    /// Feeds the associativity template's reducer/builder-usage signal
+    /// (PRD v0.3 §5.3, +20). Sorted alphabetically for deterministic output;
+    /// the corpus-level union is computed at template-discovery time.
+    public let reducerOpsReferenced: [String]
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
-        nonDeterministicAPIsDetected: [String]
+        nonDeterministicAPIsDetected: [String],
+        reducerOpsReferenced: [String] = []
     ) {
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected
+        self.reducerOpsReferenced = reducerOpsReferenced
     }
 
     /// Empty signals — used for functions without bodies.
     public static let empty = BodySignals(
         hasNonDeterministicCall: false,
         hasSelfComposition: false,
-        nonDeterministicAPIsDetected: []
+        nonDeterministicAPIsDetected: [],
+        reducerOpsReferenced: []
     )
 }

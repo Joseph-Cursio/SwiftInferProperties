@@ -2,6 +2,11 @@ import Foundation
 import Testing
 @testable import SwiftInferCore
 
+// swiftlint:disable file_length
+// Two cohesive scanner suites — splitting along the 400-line file limit
+// would orphan related body-signal cases (non-determinism, self-comp,
+// reducer-op refs) into a separate file for no reader benefit.
+
 @Suite("FunctionScanner — header and structure")
 struct FunctionScannerHeaderTests {
 
@@ -270,6 +275,123 @@ struct FunctionScannerBodyTests {
         let summaries = FunctionScanner.scan(source: source, file: "Test.swift")
         #expect(summaries.count == 2)
         #expect(summaries.allSatisfy { $0.bodySignals.hasSelfComposition == false })
+    }
+
+    // MARK: Reducer-op detection (M2.4)
+
+    @Test
+    func detectsBareFunctionReferenceAsReducerOp() throws {
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            return xs.reduce(0, add)
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced == ["add"])
+    }
+
+    @Test
+    func detectsMemberAccessReferenceAsReducerOp() throws {
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            return xs.reduce(0, MyType.combine)
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced == ["combine"])
+    }
+
+    @Test
+    func detectsReducerOpUnderReduceIntoForm() throws {
+        // `.reduce(into:_:)` is the in-place variant; the closure-position
+        // arg still resolves the candidate function reference.
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            return xs.reduce(into: 0, accumulate)
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced == ["accumulate"])
+    }
+
+    @Test
+    func multipleDistinctReducerOpsAreSorted() throws {
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            let a = xs.reduce(0, zebra)
+            let b = xs.reduce(0, alpha)
+            return a + b
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced == ["alpha", "zebra"])
+    }
+
+    @Test
+    func reducerOpDuplicatedAcrossCallsDeduplicates() throws {
+        let source = """
+        func driver(_ xs: [Int], _ ys: [Int]) -> Int {
+            let a = xs.reduce(0, add)
+            let b = ys.reduce(0, add)
+            return a + b
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced == ["add"])
+    }
+
+    @Test
+    func reduceWithClosureArgumentIsNotRecorded() throws {
+        // M2.4 conservative scope — only named-function references resolve.
+        // Closures and method refs with parameter labels are intentionally
+        // skipped to avoid false positives.
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            return xs.reduce(0) { acc, x in acc + x }
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced.isEmpty)
+    }
+
+    @Test
+    func reduceWithSingleArgumentIsNotRecorded() throws {
+        // Pure trailing-closure form: no second positional argument.
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            return xs.reduce(0, { $0 + $1 })
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        // Closure literal isn't a function reference — no record.
+        #expect(summary.bodySignals.reducerOpsReferenced.isEmpty)
+    }
+
+    @Test
+    func nonReduceMemberCallDoesNotProduceReducerOp() throws {
+        let source = """
+        func driver(_ xs: [Int]) -> Int {
+            return xs.map(double).first ?? 0
+        }
+        """
+        let summary = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first
+        )
+        #expect(summary.bodySignals.reducerOpsReferenced.isEmpty)
     }
 
     // MARK: Edge cases — multiple, empty, no functions
