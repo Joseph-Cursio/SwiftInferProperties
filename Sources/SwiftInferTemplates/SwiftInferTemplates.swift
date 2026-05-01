@@ -39,12 +39,32 @@ public enum TemplateRegistry {
     /// v0.2 §5.2; or `add` matching idempotence + commutativity +
     /// associativity if the type pattern allows; or `merge` + `IntSet.empty`
     /// triggering identity-element on top of the binary-op suggestions)
-    /// is left for the M3 contradiction-detection pass and the M7
-    /// algebraic-structure-composition (§5.4) cluster to deduplicate.
+    /// is left for the M7 algebraic-structure-composition (§5.4) cluster
+    /// to deduplicate.
+    ///
+    /// `typeDecls` feed M3.4's `ContradictionDetector` via
+    /// `EquatableResolver` — commutativity suggestions whose return type
+    /// classifies `.notEquatable` and round-trip pairs where either
+    /// half's domain or codomain classifies `.notEquatable` get dropped
+    /// per PRD §5.6 contradictions #2 / #3. Defaults to empty so M1/M2
+    /// call sites that don't yet thread type-decl info compile and run
+    /// unchanged — empty `typeDecls` yields a resolver with no corpus
+    /// evidence, which only drops on the curated non-Equatable shape
+    /// list (function types, `Any`, `AnyObject`, opaque/existential
+    /// prefixes); concrete corpus types stay `.unknown` and survive.
+    ///
+    /// `diagnostic` is a stderr sink for the dropped-contradiction stream
+    /// (M3 plan open decision #4 default `(b)`). Defaults to a no-op so
+    /// non-CLI consumers (tests, programmatic discovery) don't spew
+    /// diagnostics; the CLI's `Discover.run` wires it into the existing
+    /// `DiagnosticOutput` channel so drops land on stderr alongside the
+    /// vocabulary/config warning lines.
     public static func discover(
         in summaries: [FunctionSummary],
         identities: [IdentityCandidate] = [],
-        vocabulary: Vocabulary = .empty
+        typeDecls: [TypeDecl] = [],
+        vocabulary: Vocabulary = .empty,
+        diagnostic: (String) -> Void = { _ in }
     ) -> [Suggestion] {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -57,12 +77,18 @@ public enum TemplateRegistry {
             summaries.flatMap(\.bodySignals.reducerOpsWithIdentitySeed)
         )
         var suggestions: [Suggestion] = []
+        // Per-suggestion list of type texts the M3.4 contradiction
+        // detector classifies. Templates that don't surface a §5.6
+        // contradiction (idempotence, associativity, identity-element)
+        // skip this map entirely — the detector treats absence as keep.
+        var typesToCheck: [SuggestionIdentity: [String]] = [:]
         for summary in summaries {
             if let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary) {
                 suggestions.append(suggestion)
             }
             if let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary) {
                 suggestions.append(suggestion)
+                typesToCheck[suggestion.identity] = commutativityTypes(for: summary)
             }
             if let suggestion = AssociativityTemplate.suggest(
                 for: summary,
@@ -75,6 +101,7 @@ public enum TemplateRegistry {
         for pair in FunctionPairing.candidates(in: summaries) {
             if let suggestion = RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary) {
                 suggestions.append(suggestion)
+                typesToCheck[suggestion.identity] = roundTripTypes(for: pair)
             }
         }
         for pair in IdentityElementPairing.candidates(in: summaries, identities: identities) {
@@ -85,7 +112,17 @@ public enum TemplateRegistry {
                 suggestions.append(suggestion)
             }
         }
-        return suggestions.sorted(by: lessThan)
+
+        let resolver = EquatableResolver(typeDecls: typeDecls)
+        let outcome = ContradictionDetector.filter(
+            suggestions,
+            typesToCheck: typesToCheck,
+            resolver: resolver
+        )
+        for drop in outcome.dropped {
+            diagnostic("contradiction: " + drop.reason)
+        }
+        return outcome.kept.sorted(by: lessThan)
     }
 
     /// Convenience: scan `directory` recursively, run every shipped
@@ -93,21 +130,57 @@ public enum TemplateRegistry {
     /// and filter out any suggestion whose identity matches a
     /// `// swiftinfer: skip <hash>` marker found anywhere in the scanned
     /// `.swift` files (PRD §7.5). Uses `FunctionScanner.scanCorpus` so
-    /// summaries and identity candidates come from a single AST walk —
-    /// keeps the §13 perf budget intact.
+    /// summaries, identity candidates, and `TypeDecl` records all come
+    /// from a single AST walk — keeps the §13 perf budget intact even
+    /// with the M3.4 contradiction pass active.
     public static func discover(
         in directory: URL,
-        vocabulary: Vocabulary = .empty
+        vocabulary: Vocabulary = .empty,
+        diagnostic: (String) -> Void = { _ in }
     ) throws -> [Suggestion] {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
         return discover(
             in: corpus.summaries,
             identities: corpus.identities,
-            vocabulary: vocabulary
+            typeDecls: corpus.typeDecls,
+            vocabulary: vocabulary,
+            diagnostic: diagnostic
         ).filter { suggestion in
             !skipHashes.contains(suggestion.identity.normalized)
         }
+    }
+
+    /// PRD §5.6 #2 — every type that has to classify Equatable for the
+    /// commutativity suggestion to be testable. The type pattern guard
+    /// in `CommutativityTemplate` enforces param[0] == param[1] ==
+    /// return, but the detector is robust to template-side changes by
+    /// listing all three.
+    private static func commutativityTypes(for summary: FunctionSummary) -> [String] {
+        var types = summary.parameters.map(\.typeText)
+        if let returnType = summary.returnTypeText {
+            types.append(returnType)
+        }
+        return types
+    }
+
+    /// PRD §5.6 #3 — domain and codomain on both halves of the
+    /// round-trip pair. `FunctionPairing` enforces
+    /// `forward.return == reverse.param[0]` and vice-versa, so the
+    /// resulting set is at most two distinct type texts (T and U); the
+    /// detector lists all four positions for symmetry with the
+    /// commutativity helper.
+    private static func roundTripTypes(for pair: FunctionPair) -> [String] {
+        var types: [String] = []
+        types.append(contentsOf: pair.forward.parameters.map(\.typeText))
+        if let returnType = pair.forward.returnTypeText {
+            types.append(returnType)
+        }
+        types.append(contentsOf: pair.reverse.parameters.map(\.typeText))
+        if let returnType = pair.reverse.returnTypeText {
+            types.append(returnType)
+        }
+        return types
     }
 
     private static func lessThan(_ lhs: Suggestion, _ rhs: Suggestion) -> Bool {

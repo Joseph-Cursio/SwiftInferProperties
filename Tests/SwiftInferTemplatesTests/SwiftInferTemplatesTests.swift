@@ -3,6 +3,10 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
+// swiftlint:disable type_body_length
+// Test suites cohere around their subject — splitting along the 250-line
+// body limit would scatter the registry-orchestration assertions across
+// multiple files for no reader benefit.
 @Suite("TemplateRegistry — discovery orchestration over multiple summaries")
 struct TemplateRegistryTests {
 
@@ -212,6 +216,110 @@ struct TemplateRegistryTests {
         #expect(suggestions.map(\.templateName) == ["round-trip", "idempotence"])
     }
 
+    @Test("Contradiction pass drops commutativity over non-Equatable return + emits stderr diagnostic")
+    func contradictionDropsCommutativityForNonEquatableReturn() {
+        // `merge(_:_:)` over `Any` matches the commutativity type pattern
+        // (param[0] == param[1] == return) but `Any` is in the curated
+        // non-Equatable shape list, so the contradiction pass drops it
+        // and emits a `contradiction:` diagnostic per M3 plan §M3.4.
+        let merge = FunctionSummary(
+            name: "merge",
+            parameters: [
+                Parameter(label: nil, internalName: "a", typeText: "Any", isInout: false),
+                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false)
+            ],
+            returnTypeText: "Any",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Mixer.swift", line: 3, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        var diagnostics: [String] = []
+        let suggestions = TemplateRegistry.discover(
+            in: [merge],
+            diagnostic: { diagnostics.append($0) }
+        )
+        #expect(suggestions.allSatisfy { $0.templateName != "commutativity" })
+        #expect(diagnostics.count == 1)
+        let line = diagnostics.first ?? ""
+        #expect(line.hasPrefix("contradiction: "))
+        #expect(line.contains("commutativity"))
+        #expect(line.contains("merge"))
+        #expect(line.contains("Mixer.swift:3"))
+        #expect(line.contains("PRD §5.6 #2"))
+    }
+
+    @Test("Contradiction pass drops round-trip pair when domain is non-Equatable function type")
+    func contradictionDropsRoundTripForNonEquatableDomain() {
+        // wrap: ((Int) -> Int) -> Data, unwrap: (Data) -> (Int) -> Int.
+        // Both halves traffic in `(Int) -> Int`, which classifies as
+        // .notEquatable; the round-trip property is structurally
+        // untestable.
+        let wrap = FunctionSummary(
+            name: "wrap",
+            parameters: [Parameter(label: nil, internalName: "f", typeText: "(Int) -> Int", isInout: false)],
+            returnTypeText: "Data",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Wrap.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let unwrap = FunctionSummary(
+            name: "unwrap",
+            parameters: [Parameter(label: nil, internalName: "d", typeText: "Data", isInout: false)],
+            returnTypeText: "(Int) -> Int",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Wrap.swift", line: 5, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        var diagnostics: [String] = []
+        let suggestions = TemplateRegistry.discover(
+            in: [wrap, unwrap],
+            diagnostic: { diagnostics.append($0) }
+        )
+        #expect(suggestions.allSatisfy { $0.templateName != "round-trip" })
+        #expect(diagnostics.count == 1)
+        let line = diagnostics.first ?? ""
+        #expect(line.contains("round-trip"))
+        #expect(line.contains("PRD §5.6 #3"))
+    }
+
+    @Test("Directory scan threads typeDecls through discover and emits contradiction diagnostics")
+    func directoryScanFiresContradictionDiagnostic() throws {
+        // End-to-end: scanCorpus emits typeDecls, discover builds the
+        // resolver, and a non-Equatable param type triggers a drop with
+        // a stderr diagnostic. Composer's compose(_:_:) shape is
+        // `((Int) -> Int, (Int) -> Int) -> (Int) -> Int` — commutativity
+        // type pattern matches but the non-Equatable shape vetoes.
+        let directory = try writeFixture(named: "ContradictionDirScan", contents: """
+        struct Composer {
+            func compose(_ a: (Int) -> Int, _ b: (Int) -> Int) -> (Int) -> Int { return a }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var diagnostics: [String] = []
+        let suggestions = try TemplateRegistry.discover(
+            in: directory,
+            diagnostic: { diagnostics.append($0) }
+        )
+        #expect(suggestions.allSatisfy { $0.templateName != "commutativity" })
+        #expect(diagnostics.contains { line in
+            line.hasPrefix("contradiction: ")
+                && line.contains("commutativity")
+                && line.contains("compose")
+        })
+    }
+
     private func makeIdempotentSummary(file: String, line: Int) -> FunctionSummary {
         FunctionSummary(
             name: "normalize",
@@ -236,3 +344,4 @@ struct TemplateRegistryTests {
         return base
     }
 }
+// swiftlint:enable type_body_length

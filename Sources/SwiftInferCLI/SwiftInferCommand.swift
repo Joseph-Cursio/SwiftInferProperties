@@ -139,7 +139,8 @@ extension SwiftInferCommand {
             }
             let all = try TemplateRegistry.discover(
                 in: directory,
-                vocabulary: vocabResult.vocabulary
+                vocabulary: vocabResult.vocabulary,
+                diagnostic: { diagnostics.writeDiagnostic($0) }
             )
             let visible = all.filter { suggestion in
                 effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
