@@ -47,16 +47,22 @@ public enum FunctionScanner {
         try scanCorpus(directory: directory).summaries
     }
 
-    /// One-pass scan that emits both `FunctionSummary` records and
-    /// `IdentityCandidate` records from a single AST walk. Added for
-    /// M2.5's identity-element template — keeps the §13 perf budget
-    /// intact by avoiding a second pass over the source tree.
+    /// One-pass scan that emits `FunctionSummary`, `IdentityCandidate`,
+    /// and `TypeDecl` records from a single AST walk. Started in M2.5 for
+    /// the identity-element template; M3.2 extended the same walk to
+    /// emit `TypeDecl` records for M3.3's `EquatableResolver`. Keeps
+    /// the §13 perf budget intact by avoiding a second pass over the
+    /// source tree.
     public static func scanCorpus(source: String, file: String) -> ScannedCorpus {
         let tree = Parser.parse(source: source)
         let converter = SourceLocationConverter(fileName: file, tree: tree)
         let visitor = FunctionScannerVisitor(file: file, converter: converter)
         visitor.walk(tree)
-        return ScannedCorpus(summaries: visitor.summaries, identities: visitor.identities)
+        return ScannedCorpus(
+            summaries: visitor.summaries,
+            identities: visitor.identities,
+            typeDecls: visitor.typeDecls
+        )
     }
 
     /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
@@ -84,12 +90,14 @@ public enum FunctionScanner {
         swiftFiles.sort { $0.path < $1.path }
         var summaries: [FunctionSummary] = []
         var identities: [IdentityCandidate] = []
+        var typeDecls: [TypeDecl] = []
         for fileURL in swiftFiles {
             let corpus = try scanCorpus(file: fileURL)
             summaries.append(contentsOf: corpus.summaries)
             identities.append(contentsOf: corpus.identities)
+            typeDecls.append(contentsOf: corpus.typeDecls)
         }
-        return ScannedCorpus(summaries: summaries, identities: identities)
+        return ScannedCorpus(summaries: summaries, identities: identities, typeDecls: typeDecls)
     }
 }
 
@@ -99,6 +107,7 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
 
     var summaries: [FunctionSummary] = []
     var identities: [IdentityCandidate] = []
+    var typeDecls: [TypeDecl] = []
     private let file: String
     private let converter: SourceLocationConverter
     private var typeStack: [String] = []
@@ -123,8 +132,14 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
         return .visitChildren
     }
 
-    // Type-bearing decls — push/pop the innermost type name.
+    // Type-bearing decls — emit a TypeDecl AND push/pop the innermost type name.
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+        typeDecls.append(makeTypeDecl(
+            name: node.name.text,
+            kind: .class,
+            inheritanceClause: node.inheritanceClause,
+            keywordToken: node.classKeyword
+        ))
         typeStack.append(node.name.text)
         return .visitChildren
     }
@@ -133,6 +148,12 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+        typeDecls.append(makeTypeDecl(
+            name: node.name.text,
+            kind: .struct,
+            inheritanceClause: node.inheritanceClause,
+            keywordToken: node.structKeyword
+        ))
         typeStack.append(node.name.text)
         return .visitChildren
     }
@@ -141,6 +162,12 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+        typeDecls.append(makeTypeDecl(
+            name: node.name.text,
+            kind: .enum,
+            inheritanceClause: node.inheritanceClause,
+            keywordToken: node.enumKeyword
+        ))
         typeStack.append(node.name.text)
         return .visitChildren
     }
@@ -149,6 +176,12 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+        typeDecls.append(makeTypeDecl(
+            name: node.name.text,
+            kind: .actor,
+            inheritanceClause: node.inheritanceClause,
+            keywordToken: node.actorKeyword
+        ))
         typeStack.append(node.name.text)
         return .visitChildren
     }
@@ -157,7 +190,14 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        typeStack.append(node.extendedType.trimmedDescription)
+        let extendedTypeText = node.extendedType.trimmedDescription
+        typeDecls.append(makeTypeDecl(
+            name: extendedTypeText,
+            kind: .extension,
+            inheritanceClause: node.inheritanceClause,
+            keywordToken: node.extensionKeyword
+        ))
+        typeStack.append(extendedTypeText)
         return .visitChildren
     }
     override func visitPost(_ node: ExtensionDeclSyntax) {
@@ -306,6 +346,34 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             }
         }
         return nil
+    }
+
+    /// Build a `TypeDecl` from a type-bearing decl's name, kind,
+    /// inheritance clause, and introducer keyword. Centralizes the
+    /// inheritance-clause parsing and location calculation so each
+    /// `visit(_:)` site stays a one-liner.
+    private func makeTypeDecl(
+        name: String,
+        kind: TypeDecl.Kind,
+        inheritanceClause: InheritanceClauseSyntax?,
+        keywordToken: TokenSyntax
+    ) -> TypeDecl {
+        let inheritedTypes = inheritanceClause?.inheritedTypes.map {
+            $0.type.trimmedDescription
+        } ?? []
+        let position = keywordToken.positionAfterSkippingLeadingTrivia
+        let sourceLocation = converter.location(for: position)
+        let location = SourceLocation(
+            file: file,
+            line: sourceLocation.line,
+            column: sourceLocation.column
+        )
+        return TypeDecl(
+            name: name,
+            kind: kind,
+            inheritedTypes: inheritedTypes,
+            location: location
+        )
     }
 
     private func unescaped(_ identifier: String) -> String {

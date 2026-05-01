@@ -43,17 +43,25 @@ public struct IdentityCandidate: Sendable, Equatable {
 /// Output of a single scanner pass over a source unit. Bundles the
 /// `FunctionSummary` records that drive idempotence / round-trip /
 /// commutativity / associativity templates with the `IdentityCandidate`
-/// records that drive the M2.5 identity-element template — both come from
-/// the same AST walk so the §13 perf budget isn't doubled by a second pass.
+/// records that drive the M2.5 identity-element template and the
+/// `TypeDecl` records that drive M3.3's `EquatableResolver` — all three
+/// come from the same AST walk so the §13 perf budget isn't doubled by a
+/// second pass.
 public struct ScannedCorpus: Sendable, Equatable {
 
     public let summaries: [FunctionSummary]
     public let identities: [IdentityCandidate]
+    public let typeDecls: [TypeDecl]
 
-    public init(summaries: [FunctionSummary], identities: [IdentityCandidate]) {
+    public init(
+        summaries: [FunctionSummary],
+        identities: [IdentityCandidate],
+        typeDecls: [TypeDecl]
+    ) {
         self.summaries = summaries
         self.identities = identities
+        self.typeDecls = typeDecls
     }
 
-    public static let empty = ScannedCorpus(summaries: [], identities: [])
+    public static let empty = ScannedCorpus(summaries: [], identities: [], typeDecls: [])
 }
