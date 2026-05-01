@@ -4,7 +4,7 @@
 /// fixes them empirically once SwiftInfer has run against open-source
 /// corpora. Treat the numbers below as v0.3 defaults, not load-bearing
 /// constants.
-public enum Tier: String, Sendable, Equatable, CaseIterable {
+public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
 
     /// Score >= 75. Shown by default.
     case strong
