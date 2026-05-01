@@ -1,8 +1,13 @@
 import Foundation
+import ProtoLawCore
 import Testing
 @testable import SwiftInferCore
 
-@Suite("FunctionScanner.scanCorpus — type-decl emission (M3.2)")
+// swiftlint:disable type_body_length
+// Test suites cohere around their subject — splitting along the 250-line
+// body limit would scatter the M3.2 + M4.1 type-decl emission assertions
+// across multiple files for no reader benefit.
+@Suite("FunctionScanner.scanCorpus — type-decl emission (M3.2 + M4.1)")
 struct TypeDeclScannerTests {
 
     // MARK: Primary type kinds
@@ -209,4 +214,146 @@ struct TypeDeclScannerTests {
         let kinds = corpus.typeDecls.map(\.kind)
         #expect(kinds == [.struct, .struct, .extension])
     }
+
+    // MARK: M4.1 — stored members, hasUserInit, hasUserGen
+
+    @Test
+    func capturesStoredMembersInSourceOrder() throws {
+        let source = """
+        struct Point {
+            let x: Int
+            let y: Int
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.storedMembers.map(\.name) == ["x", "y"])
+        #expect(decl.storedMembers.map(\.typeName) == ["Int", "Int"])
+        #expect(decl.hasUserInit == false)
+        #expect(decl.hasUserGen == false)
+    }
+
+    @Test
+    func capturesMultiBindingStoredPropertiesAsSeparateMembers() throws {
+        let source = """
+        struct Pair {
+            let lhs: Int, rhs: String
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.storedMembers == [
+            StoredMember(name: "lhs", typeName: "Int"),
+            StoredMember(name: "rhs", typeName: "String")
+        ])
+    }
+
+    @Test
+    func skipsComputedAndStaticPropertiesFromStoredMembers() throws {
+        // Computed properties carry an accessor block; static properties
+        // are filtered before binding inspection. Both must be excluded
+        // from the strategist's stored-property list.
+        let source = """
+        struct Bag {
+            let raw: Int
+            static let empty: Bag = Bag(raw: 0)
+            var doubled: Int { raw * 2 }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.storedMembers.map(\.name) == ["raw"])
+    }
+
+    @Test
+    func capturesHasUserInitOnStructWithExplicitInit() throws {
+        let source = """
+        struct Wallet {
+            let balance: Int
+            init(balance: Int) {
+                self.balance = balance
+            }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.hasUserInit == true)
+        // hasUserInit doesn't affect storedMembers — the strategist
+        // gates membersise derivation on the conjunction at decision time.
+        #expect(decl.storedMembers.map(\.name) == ["balance"])
+    }
+
+    @Test
+    func extensionWithInitDoesNotSetHasUserInitOnTheExtensionRecord() throws {
+        // Inits in extensions don't suppress the synthesised memberwise
+        // init per the strategist contract — the extension's TypeDecl
+        // must report hasUserInit = false even when its body has an init.
+        let source = """
+        struct Foo {
+            let n: Int
+        }
+        extension Foo {
+            init(double n: Int) {
+                self.init(n: n * 2)
+            }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let primary = try #require(corpus.typeDecls.first { $0.kind == .struct })
+        let extn = try #require(corpus.typeDecls.first { $0.kind == .extension })
+        #expect(primary.hasUserInit == false)
+        #expect(extn.hasUserInit == false)
+        // Extensions never carry stored members either — Swift won't
+        // even compile a stored property in an extension.
+        #expect(extn.storedMembers.isEmpty)
+    }
+
+    @Test
+    func capturesHasUserGenOnStaticGenMethod() throws {
+        let source = """
+        struct Widget {
+            let id: Int
+            static func gen() -> Gen<Widget> {
+                Gen.always(Widget(id: 0))
+            }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.hasUserGen == true)
+    }
+
+    @Test
+    func instanceLevelGenMethodDoesNotSetHasUserGen() throws {
+        // A non-static `func gen()` is an instance method, not a
+        // factory — strategist Strategy A only honours `static` so the
+        // scanner's flag must too.
+        let source = """
+        struct Widget {
+            let id: Int
+            func gen() -> Int { id }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.hasUserGen == false)
+    }
+
+    @Test
+    func extensionWithStaticGenMethodSetsHasUserGenOnExtensionRecord() throws {
+        let source = """
+        struct Widget {
+            let id: Int
+        }
+        extension Widget {
+            static func gen() -> Gen<Widget> { Gen.always(Widget(id: 0)) }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let primary = try #require(corpus.typeDecls.first { $0.kind == .struct })
+        let extn = try #require(corpus.typeDecls.first { $0.kind == .extension })
+        #expect(primary.hasUserGen == false)
+        #expect(extn.hasUserGen == true)
+    }
 }
+// swiftlint:enable type_body_length

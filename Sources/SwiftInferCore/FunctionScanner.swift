@@ -1,4 +1,5 @@
 import Foundation
+import ProtoLawCore
 import SwiftParser
 import SwiftSyntax
 
@@ -103,6 +104,12 @@ public enum FunctionScanner {
 
 // MARK: - Visitor
 
+// swiftlint:disable type_body_length
+// The visitor coheres around its single AST walk — function decls,
+// identity candidates, type decls, and the M4.1 member-block inspectors
+// all live here so the source tree is traversed exactly once per file.
+// Splitting along the 250-line body limit would force the per-decl
+// helpers into separate visitor types that have to be edited in lockstep.
 private final class FunctionScannerVisitor: SyntaxVisitor {
 
     var summaries: [FunctionSummary] = []
@@ -138,7 +145,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             name: node.name.text,
             kind: .class,
             inheritanceClause: node.inheritanceClause,
-            keywordToken: node.classKeyword
+            keywordToken: node.classKeyword,
+            memberBlock: node.memberBlock
         ))
         typeStack.append(node.name.text)
         return .visitChildren
@@ -152,7 +160,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             name: node.name.text,
             kind: .struct,
             inheritanceClause: node.inheritanceClause,
-            keywordToken: node.structKeyword
+            keywordToken: node.structKeyword,
+            memberBlock: node.memberBlock
         ))
         typeStack.append(node.name.text)
         return .visitChildren
@@ -166,7 +175,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             name: node.name.text,
             kind: .enum,
             inheritanceClause: node.inheritanceClause,
-            keywordToken: node.enumKeyword
+            keywordToken: node.enumKeyword,
+            memberBlock: node.memberBlock
         ))
         typeStack.append(node.name.text)
         return .visitChildren
@@ -180,7 +190,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             name: node.name.text,
             kind: .actor,
             inheritanceClause: node.inheritanceClause,
-            keywordToken: node.actorKeyword
+            keywordToken: node.actorKeyword,
+            memberBlock: node.memberBlock
         ))
         typeStack.append(node.name.text)
         return .visitChildren
@@ -195,7 +206,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             name: extendedTypeText,
             kind: .extension,
             inheritanceClause: node.inheritanceClause,
-            keywordToken: node.extensionKeyword
+            keywordToken: node.extensionKeyword,
+            memberBlock: node.memberBlock
         ))
         typeStack.append(extendedTypeText)
         return .visitChildren
@@ -349,14 +361,17 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     /// Build a `TypeDecl` from a type-bearing decl's name, kind,
-    /// inheritance clause, and introducer keyword. Centralizes the
-    /// inheritance-clause parsing and location calculation so each
-    /// `visit(_:)` site stays a one-liner.
+    /// inheritance clause, introducer keyword, and member block.
+    /// Centralizes inheritance-clause parsing, location calculation,
+    /// and the M4.1 member-block inspection (stored properties, user-
+    /// declared init, user-declared `gen()`) so each `visit(_:)` site
+    /// stays a one-liner.
     private func makeTypeDecl(
         name: String,
         kind: TypeDecl.Kind,
         inheritanceClause: InheritanceClauseSyntax?,
-        keywordToken: TokenSyntax
+        keywordToken: TokenSyntax,
+        memberBlock: MemberBlockSyntax
     ) -> TypeDecl {
         let inheritedTypes = inheritanceClause?.inheritedTypes.map {
             $0.type.trimmedDescription
@@ -368,12 +383,82 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             line: sourceLocation.line,
             column: sourceLocation.column
         )
+        // hasUserInit: extensions don't suppress synthesised memberwise
+        // init even when they declare an init, so the strategist
+        // contract per `DerivationStrategy.swift:147` requires we leave
+        // it false for extension records regardless of body content.
+        let hasUserInit = (kind == .extension) ? false : Self.scanForUserInit(in: memberBlock)
+        // storedMembers: extensions can't add stored properties to a
+        // struct (compile error), so always empty for `.extension`.
+        let storedMembers = (kind == .extension) ? [] : Self.scanStoredMembers(in: memberBlock)
         return TypeDecl(
             name: name,
             kind: kind,
             inheritedTypes: inheritedTypes,
-            location: location
+            location: location,
+            hasUserGen: Self.scanForUserGen(in: memberBlock),
+            storedMembers: storedMembers,
+            hasUserInit: hasUserInit
         )
+    }
+
+    /// Stored properties declared in `memberBlock`, in source order.
+    /// Returns only `let` / `var` declarations with explicit type
+    /// annotations and no accessor block (computed properties skipped).
+    /// `static` / `class` properties are also filtered. Multi-binding
+    /// lines (`let x: Int, y: Int`) produce one entry per binding.
+    /// Ported from SwiftProtocolLaws's `ProtoLawMacroImpl.MemberBlockInspector`
+    /// — the macro impl can't be a runtime dep here, so the logic is
+    /// duplicated by design (matches the in-tree port the discovery
+    /// plugin uses for the same reason).
+    private static func scanStoredMembers(in memberBlock: MemberBlockSyntax) -> [StoredMember] {
+        var result: [StoredMember] = []
+        for member in memberBlock.members {
+            guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
+            guard !isStaticOrClass(varDecl.modifiers) else { continue }
+            for binding in varDecl.bindings {
+                if binding.accessorBlock != nil { continue }
+                guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else {
+                    continue
+                }
+                guard let typeAnnotation = binding.typeAnnotation else { continue }
+                result.append(StoredMember(
+                    name: identifier.identifier.text,
+                    typeName: typeAnnotation.type.trimmedDescription
+                ))
+            }
+        }
+        return result
+    }
+
+    /// `true` when `memberBlock` declares any `init(...)`. Used by the
+    /// memberwise-Arbitrary derivation gate per the strategist contract.
+    private static func scanForUserInit(in memberBlock: MemberBlockSyntax) -> Bool {
+        for member in memberBlock.members
+        where member.decl.as(InitializerDeclSyntax.self) != nil {
+            return true
+        }
+        return false
+    }
+
+    /// `true` when `memberBlock` declares a `static func gen(...)` —
+    /// the user-supplied generator that wins PRD §5.7's Strategy A
+    /// short-circuit. Parameter-list shape isn't checked: the strategist
+    /// honours any `static gen` in the body, and emitting a non-zero-arg
+    /// `gen()` is a user error the compiler catches.
+    private static func scanForUserGen(in memberBlock: MemberBlockSyntax) -> Bool {
+        for member in memberBlock.members {
+            guard let funcDecl = member.decl.as(FunctionDeclSyntax.self) else { continue }
+            guard funcDecl.name.text == "gen" else { continue }
+            if isStaticOrClass(funcDecl.modifiers) { return true }
+        }
+        return false
+    }
+
+    private static func isStaticOrClass(_ modifiers: DeclModifierListSyntax) -> Bool {
+        modifiers.contains { mod in
+            mod.name.tokenKind == .keyword(.static) || mod.name.tokenKind == .keyword(.class)
+        }
     }
 
     private func unescaped(_ identifier: String) -> String {
@@ -385,6 +470,7 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
         return String(identifier.dropFirst().dropLast())
     }
 }
+// swiftlint:enable type_body_length
 
 // MARK: - Body signal visitor
 
