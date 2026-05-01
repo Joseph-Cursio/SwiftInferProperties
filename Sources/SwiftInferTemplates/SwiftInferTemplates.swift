@@ -79,6 +79,72 @@ public enum TemplateRegistry {
         diagnostic: (String) -> Void = { _ in },
         crossValidationFromTestLifter: Set<SuggestionIdentity> = []
     ) -> [Suggestion] {
+        let collector = collectSuggestions(
+            summaries: summaries,
+            identities: identities,
+            vocabulary: vocabulary
+        )
+        let resolver = EquatableResolver(typeDecls: typeDecls)
+        let outcome = ContradictionDetector.filter(
+            collector.suggestions,
+            typesToCheck: collector.contradictionTypes,
+            resolver: resolver
+        )
+        for drop in outcome.dropped {
+            diagnostic("contradiction: " + drop.reason)
+        }
+        let shapesByName = Dictionary(
+            uniqueKeysWithValues: TypeShapeBuilder.shapes(from: typeDecls).map { ($0.name, $0) }
+        )
+        let withGenerators = GeneratorSelection.apply(
+            to: outcome.kept,
+            generatorTypeByIdentity: collector.generatorTypes,
+            shapesByName: shapesByName
+        )
+        let crossValidated = applyCrossValidation(
+            to: withGenerators,
+            matching: crossValidationFromTestLifter
+        )
+        return crossValidated.sorted(by: lessThan)
+    }
+
+    /// Mutable accumulator used inside `collectSuggestions`. Keeps the
+    /// three parallel collections in one place so the per-summary /
+    /// per-pair helpers don't have to thread three `inout` parameters
+    /// each. `contradictionTypes` feeds the M3.4 detector;
+    /// `generatorTypes` feeds the M4.2 selector. Both are sparse —
+    /// only suggestions that need per-suggestion type context are
+    /// recorded.
+    private struct SuggestionCollector {
+        var suggestions: [Suggestion] = []
+        var contradictionTypes: [SuggestionIdentity: [String]] = [:]
+        var generatorTypes: [SuggestionIdentity: String] = [:]
+
+        mutating func record(
+            _ suggestion: Suggestion,
+            contradictionTypes contradictionTypeValues: [String]? = nil,
+            generatorType: String? = nil
+        ) {
+            suggestions.append(suggestion)
+            if let contradictionTypeValues {
+                contradictionTypes[suggestion.identity] = contradictionTypeValues
+            }
+            if let generatorType {
+                generatorTypes[suggestion.identity] = generatorType
+            }
+        }
+    }
+
+    /// Run every shipped template against `summaries` + `identities`
+    /// and bundle the resulting suggestions with their per-identity
+    /// type context. Pulled out of `discover` so the orchestration
+    /// function stays readable as a five-step pipeline (collect →
+    /// drop → select generator → cross-validate → sort).
+    private static func collectSuggestions(
+        summaries: [FunctionSummary],
+        identities: [IdentityCandidate],
+        vocabulary: Vocabulary
+    ) -> SuggestionCollector {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
         // reducer/builder-usage signal (PRD §5.3, +20). Computed once per
@@ -89,32 +155,22 @@ public enum TemplateRegistry {
         let opsWithIdentitySeed: Set<String> = Set(
             summaries.flatMap(\.bodySignals.reducerOpsWithIdentitySeed)
         )
-        var suggestions: [Suggestion] = []
-        // Per-suggestion list of type texts the M3.4 contradiction
-        // detector classifies. Templates that don't surface a §5.6
-        // contradiction (idempotence, associativity, identity-element)
-        // skip this map entirely — the detector treats absence as keep.
-        var typesToCheck: [SuggestionIdentity: [String]] = [:]
+        var collector = SuggestionCollector()
         for summary in summaries {
-            if let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary) {
-                suggestions.append(suggestion)
-            }
-            if let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary) {
-                suggestions.append(suggestion)
-                typesToCheck[suggestion.identity] = commutativityTypes(for: summary)
-            }
-            if let suggestion = AssociativityTemplate.suggest(
-                for: summary,
+            collectPerSummarySuggestions(
+                summary: summary,
                 vocabulary: vocabulary,
-                reducerOps: reducerOps
-            ) {
-                suggestions.append(suggestion)
-            }
+                reducerOps: reducerOps,
+                into: &collector
+            )
         }
         for pair in FunctionPairing.candidates(in: summaries) {
             if let suggestion = RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary) {
-                suggestions.append(suggestion)
-                typesToCheck[suggestion.identity] = roundTripTypes(for: pair)
+                collector.record(
+                    suggestion,
+                    contradictionTypes: roundTripTypes(for: pair),
+                    generatorType: generatorType(for: pair)
+                )
             }
         }
         for pair in IdentityElementPairing.candidates(in: summaries, identities: identities) {
@@ -122,24 +178,39 @@ public enum TemplateRegistry {
                 for: pair,
                 opsWithIdentitySeed: opsWithIdentitySeed
             ) {
-                suggestions.append(suggestion)
+                collector.record(suggestion, generatorType: generatorType(for: pair.operation))
             }
         }
+        return collector
+    }
 
-        let resolver = EquatableResolver(typeDecls: typeDecls)
-        let outcome = ContradictionDetector.filter(
-            suggestions,
-            typesToCheck: typesToCheck,
-            resolver: resolver
-        )
-        for drop in outcome.dropped {
-            diagnostic("contradiction: " + drop.reason)
+    /// Idempotence + commutativity + associativity all fire per
+    /// summary; this helper keeps the per-summary loop body readable
+    /// by encapsulating the three constructions in one place.
+    private static func collectPerSummarySuggestions(
+        summary: FunctionSummary,
+        vocabulary: Vocabulary,
+        reducerOps: Set<String>,
+        into collector: inout SuggestionCollector
+    ) {
+        let summaryGenType = generatorType(for: summary)
+        if let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary) {
+            collector.record(suggestion, generatorType: summaryGenType)
         }
-        let crossValidated = applyCrossValidation(
-            to: outcome.kept,
-            matching: crossValidationFromTestLifter
-        )
-        return crossValidated.sorted(by: lessThan)
+        if let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary) {
+            collector.record(
+                suggestion,
+                contradictionTypes: commutativityTypes(for: summary),
+                generatorType: summaryGenType
+            )
+        }
+        if let suggestion = AssociativityTemplate.suggest(
+            for: summary,
+            vocabulary: vocabulary,
+            reducerOps: reducerOps
+        ) {
+            collector.record(suggestion, generatorType: summaryGenType)
+        }
     }
 
     /// Convenience: scan `directory` recursively, run every shipped
@@ -181,6 +252,26 @@ public enum TemplateRegistry {
             types.append(returnType)
         }
         return types
+    }
+
+    /// Generator-relevant `T` for a single-summary template
+    /// (idempotence's `T -> T`, commutativity / associativity /
+    /// identity-element's `(T, T) -> T`). All four templates take their
+    /// generator from the first parameter's type text — the type the
+    /// emitted property test would generate values of. Returns `nil`
+    /// for the (impossible-in-the-current-template-set) case of an
+    /// arity-zero summary.
+    private static func generatorType(for summary: FunctionSummary) -> String? {
+        summary.parameters.first?.typeText
+    }
+
+    /// Generator-relevant `T` for the round-trip template. Picks the
+    /// forward half's parameter type — the test sampled from `T`
+    /// then asserts `g(f(t)) == t`, matching the
+    /// `FunctionPairing.forward` orientation `RoundTripTemplate`
+    /// already uses for evidence rendering.
+    private static func generatorType(for pair: FunctionPair) -> String? {
+        pair.forward.parameters.first?.typeText
     }
 
     /// PRD §5.6 #3 — domain and codomain on both halves of the

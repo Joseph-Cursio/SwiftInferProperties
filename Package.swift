@@ -61,9 +61,16 @@ let package = Package(
         ),
         // SwiftInferTemplates — TemplateEngine template registry. M1 ships
         // round-trip and idempotence; subsequent milestones add the rest.
+        // M4.2 adds the `ProtoLawCore` dep so `GeneratorSelection` can
+        // call `DerivationStrategist.strategy(for:)` directly — Core
+        // already pulls the same product (M3.1), but SwiftPM doesn't
+        // re-export transitively, so the import has to be explicit here.
         .target(
             name: "SwiftInferTemplates",
-            dependencies: ["SwiftInferCore"]
+            dependencies: [
+                "SwiftInferCore",
+                .product(name: "ProtoLawCore", package: "SwiftProtocolLaws")
+            ]
         ),
         // SwiftInferCLI — ArgumentParser-driven command surface. Subcommands
         // (discover, drift, etc.) live here; the executable target is a thin

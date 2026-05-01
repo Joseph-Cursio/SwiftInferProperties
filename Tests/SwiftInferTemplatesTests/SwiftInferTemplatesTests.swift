@@ -294,6 +294,73 @@ struct TemplateRegistryTests {
         #expect(line.contains("PRD §5.6 #3"))
     }
 
+    @Test("GeneratorSelection populates derivedMemberwise from corpus TypeShapes (M4.2)")
+    func generatorSelectionPopulatesDerivedMemberwise() throws {
+        // End-to-end: discover sees a Money struct with stdlib members
+        // plus a normalize idempotence candidate over Money. The
+        // generator-selection pass calls DerivationStrategist on the
+        // Money TypeShape and rebuilds the suggestion with
+        // .derivedMemberwise / .medium.
+        let directory = try writeFixture(named: "GenSelectMemberwise", contents: """
+        struct Money {
+            let amount: Int
+            let currency: String
+        }
+        struct Sanitizer {
+            func normalize(_ value: Money) -> Money {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
+        #expect(idempotence.generator.source == .derivedMemberwise)
+        #expect(idempotence.generator.confidence == .medium)
+        #expect(idempotence.generator.sampling == .notRun)
+    }
+
+    @Test("GeneratorSelection skips stdlib-typed properties — open decision #2 default")
+    func generatorSelectionSkipsStdlibTypedProperties() throws {
+        // String isn't in the corpus's TypeShape index — selection
+        // skips, generator stays .notYetComputed. Matches the existing
+        // CLI byte-stable assertions.
+        let directory = try writeFixture(named: "GenSelectSkipStdlib", contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
+        #expect(idempotence.generator.source == .notYetComputed)
+        #expect(idempotence.generator.confidence == nil)
+    }
+
+    @Test("GeneratorSelection populates registered for static gen() corpus types")
+    func generatorSelectionPopulatesRegisteredForUserGen() throws {
+        // Widget declares a static gen() in its primary body — strategist
+        // returns .userGen → .registered with .high confidence.
+        let directory = try writeFixture(named: "GenSelectUserGen", contents: """
+        struct Widget {
+            let id: Int
+            static func gen() -> Int { 0 }
+        }
+        struct Sanitizer {
+            func normalize(_ value: Widget) -> Widget {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
+        #expect(idempotence.generator.source == .registered)
+        #expect(idempotence.generator.confidence == .high)
+    }
+
     @Test("Cross-validation seam adds +20 signal to matching identities (M3.5)")
     func crossValidationLiftsScoreOnMatchingIdentity() throws {
         let normalize = makeIdempotentSummary(file: "A.swift", line: 1)
