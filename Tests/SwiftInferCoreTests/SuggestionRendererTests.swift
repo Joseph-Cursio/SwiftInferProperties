@@ -23,6 +23,10 @@ struct SuggestionRendererTests {
         let suggestion = makeStrongSuggestion()
         // Identity is the SHA256-derived display of canonical input
         // "renderer-golden-fixed", precomputed so the golden stays stable.
+        // Sampling-line seed is M4.3's §16 #6 derivation; computed
+        // here at test time so the golden tracks the same SamplingSeed
+        // formula the production renderer uses.
+        let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
         let expected = """
 [Suggestion]
 Template: idempotence
@@ -38,7 +42,7 @@ Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile.
 
 Generator: not yet computed (M3 prerequisite)
-Sampling:  not run (M4 deferred)
+Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  0x95BF4EDE0EEDECD6
 Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
 """
@@ -66,12 +70,13 @@ Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
         #expect(rendered.contains("  ✓ no known caveats for this template"))
     }
 
-    @Test("M1 placeholder generator + sampling render the deferral footer")
+    @Test("M1 placeholder generator + M4.3 sampling-seed line render in the footer")
     func m1PlaceholderFooter() {
         let suggestion = makeStrongSuggestion()
         let rendered = SuggestionRenderer.render(suggestion)
+        let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
         #expect(rendered.contains("Generator: not yet computed (M3 prerequisite)"))
-        #expect(rendered.contains("Sampling:  not run (M4 deferred)"))
+        #expect(rendered.contains("Sampling:  not run; lifted test seed: \(seedHex)"))
     }
 
     @Test("Sampling.passed renders the trial count")

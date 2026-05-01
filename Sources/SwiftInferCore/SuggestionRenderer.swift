@@ -37,7 +37,10 @@ public enum SuggestionRenderer {
         }
         lines.append("")
         lines.append(renderGeneratorLine(suggestion.generator))
-        lines.append(renderSamplingLine(suggestion.generator))
+        lines.append(renderSamplingLine(
+            suggestion.generator,
+            identity: suggestion.identity
+        ))
         lines.append("Identity:  \(suggestion.identity.display)")
         lines.append("Suppress:  // swiftinfer: skip \(suggestion.identity.display)")
         return lines.joined(separator: "\n")
@@ -70,10 +73,20 @@ public enum SuggestionRenderer {
         }
     }
 
-    private static func renderSamplingLine(_ meta: GeneratorMetadata) -> String {
+    /// `meta.sampling` carries the sampling outcome; `identity` feeds
+    /// the M4.3 §16 #6 lifted-test-seed derivation rendered alongside.
+    /// Per the M4 plan's open decision #3 default `(b)`: the `.notRun`
+    /// arm renders the seed inline so the dormant state is informative
+    /// rather than apologetic — the M5+ lifted test stub picks up the
+    /// same seed by re-deriving from the suggestion identity.
+    private static func renderSamplingLine(
+        _ meta: GeneratorMetadata,
+        identity: SuggestionIdentity
+    ) -> String {
         switch meta.sampling {
         case .notRun:
-            return "Sampling:  not run (M4 deferred)"
+            let seed = SamplingSeed.derive(from: identity)
+            return "Sampling:  not run; lifted test seed: \(SamplingSeed.renderHex(seed))"
         case .passed(let trials):
             return "Sampling:  \(trials)/\(trials) passed"
         case .failed(let seed, let counter):

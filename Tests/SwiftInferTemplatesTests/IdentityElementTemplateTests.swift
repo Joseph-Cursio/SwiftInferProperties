@@ -339,7 +339,8 @@ struct IdentityElementTemplateTests {
     }
 
     private func expectedGoldenRender(suggestion: Suggestion) -> String {
-        """
+        let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
+        return """
 [Suggestion]
 Template: identity-element
 Score:    90 (Strong)
@@ -360,7 +361,7 @@ A one-sided identity (e.g. left-identity only) will pass the type pattern but \
 fail one of the emitted assertions under M4 sampling.
 
 Generator: not yet computed (M3 prerequisite)
-Sampling:  not run (M4 deferred)
+Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)
 """

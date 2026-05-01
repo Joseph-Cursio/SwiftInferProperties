@@ -240,6 +240,7 @@ struct RoundTripTemplateTests {
         )
         let suggestion = try #require(RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary))
         let rendered = SuggestionRenderer.render(suggestion)
+        let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
         let expected = """
 [Suggestion]
 Template: round-trip
@@ -259,7 +260,7 @@ will surface false-positive failures (Appendix B.4).
 SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 
 Generator: not yet computed (M3 prerequisite)
-Sampling:  not run (M4 deferred)
+Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)
 """
@@ -274,6 +275,7 @@ Suppress:  // swiftinfer: skip \(suggestion.identity.display)
         )
         let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
         let rendered = SuggestionRenderer.render(suggestion)
+        let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
         let expected = """
 [Suggestion]
 Template: round-trip
@@ -293,7 +295,7 @@ will surface false-positive failures (Appendix B.4).
 SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 
 Generator: not yet computed (M3 prerequisite)
-Sampling:  not run (M4 deferred)
+Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  0x4C3618BEBBE59391
 Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
 """

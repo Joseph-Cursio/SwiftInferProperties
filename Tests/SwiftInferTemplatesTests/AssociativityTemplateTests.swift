@@ -329,6 +329,7 @@ struct AssociativityTemplateTests {
             AssociativityTemplate.suggest(for: summary, reducerOps: ["merge"])
         )
         let rendered = SuggestionRenderer.render(suggestion)
+        let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
         let expected = """
 [Suggestion]
 Template: associativity
@@ -348,7 +349,7 @@ SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 a Double-typed candidate may pass the type pattern but fail sampling under M4.
 
 Generator: not yet computed (M3 prerequisite)
-Sampling:  not run (M4 deferred)
+Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)
 """

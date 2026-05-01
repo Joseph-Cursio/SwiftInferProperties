@@ -90,7 +90,10 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("✓ Self-composition detected in body"))
         #expect(recording.text.contains("⚠ T must conform to Equatable"))
         #expect(recording.text.contains("Generator: not yet computed (M3 prerequisite)"))
-        #expect(recording.text.contains("Sampling:  not run (M4 deferred)"))
+        // M4.3 §16 #6 — the seed is rendered inline so the lifted
+        // test stub picks it up (M5+); we don't pin the exact hex
+        // here because the identity hash is asserted elsewhere.
+        #expect(recording.text.contains("Sampling:  not run; lifted test seed: 0x"))
     }
 
     @Test("Non-deterministic body suppresses an otherwise-strong candidate")
