@@ -244,6 +244,7 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
 
         let containingTypeName = typeStack.last
         let bodySignals = scanBody(of: node)
+        let discoverableGroup = Self.scanDiscoverableGroup(in: node.attributes)
 
         return FunctionSummary(
             name: name,
@@ -255,8 +256,52 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             isStatic: isStatic,
             location: location,
             containingTypeName: containingTypeName,
-            bodySignals: bodySignals
+            bodySignals: bodySignals,
+            discoverableGroup: discoverableGroup
         )
+    }
+
+    /// Detect `@Discoverable(group: "...")` on a function decl's
+    /// attribute list and return the group string-literal value, or
+    /// `nil` when the attribute is absent or carries no `group:`
+    /// argument. Recognize-only per PRD v0.4 §5.7 — the attribute is
+    /// matched by name (`Discoverable`); SwiftInferProperties does not
+    /// take a runtime dependency on `ProtoLawMacro`'s definition.
+    /// Multiple `@Discoverable` attributes on the same decl: the first
+    /// one wins (Swift compile-time semantics would also flag duplicates,
+    /// so this is a conservative tie-break).
+    private static func scanDiscoverableGroup(in attributes: AttributeListSyntax) -> String? {
+        for element in attributes {
+            guard let attribute = element.as(AttributeSyntax.self) else { continue }
+            // `attributeName` is a TypeSyntax; trimmedDescription drops
+            // surrounding whitespace but preserves the bare identifier.
+            // Tolerate fully-qualified `@ProtoLawMacro.Discoverable(...)`
+            // by checking the trailing identifier component.
+            let nameText = attribute.attributeName.trimmedDescription
+            let lastComponent = nameText.split(separator: ".").last.map(String.init) ?? nameText
+            guard lastComponent == "Discoverable" else { continue }
+            guard case let .argumentList(arguments) = attribute.arguments else { continue }
+            for argument in arguments where argument.label?.text == "group" {
+                if let group = stringLiteralValue(of: argument.expression) {
+                    return group
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Pull the literal string value out of a single-segment
+    /// `StringLiteralExprSyntax`. Returns `nil` for interpolated or
+    /// multi-segment literals — interpolation in attribute arguments
+    /// would resolve at expansion time and isn't representable as a
+    /// stable group name during scan.
+    private static func stringLiteralValue(of expression: ExprSyntax) -> String? {
+        guard let literal = expression.as(StringLiteralExprSyntax.self) else { return nil }
+        guard literal.segments.count == 1,
+              let segment = literal.segments.first?.as(StringSegmentSyntax.self) else {
+            return nil
+        }
+        return segment.content.text
     }
 
     private func makeParameter(from syntax: FunctionParameterSyntax) -> Parameter {

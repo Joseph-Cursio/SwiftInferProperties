@@ -47,6 +47,18 @@ public struct FunctionSummary: Sendable, Equatable {
     /// Body-derived type-flow signals (PRD v0.3 §5.3).
     public let bodySignals: BodySignals
 
+    /// Group identifier from a `@Discoverable(group: "...")` attribute on
+    /// the function decl, when the user has tagged it. `nil` when the
+    /// function carries no `@Discoverable` attribute or the attribute
+    /// has no `group:` argument. PRD v0.4 §5.7 + §4.1: SwiftInferProperties
+    /// recognizes the attribute *by name match* during the SwiftSyntax
+    /// walk — no runtime dep on `ProtoLawMacro`. Two functions sharing
+    /// the same non-nil `discoverableGroup` earn a `+35` cross-pair
+    /// signal at the round-trip-template scoring layer.
+    /// Defaults to `nil` so M1–M4 call sites that don't yet populate
+    /// the field compile unchanged.
+    public let discoverableGroup: String?
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -57,7 +69,8 @@ public struct FunctionSummary: Sendable, Equatable {
         isStatic: Bool,
         location: SourceLocation,
         containingTypeName: String?,
-        bodySignals: BodySignals
+        bodySignals: BodySignals,
+        discoverableGroup: String? = nil
     ) {
         self.name = name
         self.parameters = parameters
@@ -69,6 +82,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.location = location
         self.containingTypeName = containingTypeName
         self.bodySignals = bodySignals
+        self.discoverableGroup = discoverableGroup
     }
 }
 

@@ -2,7 +2,7 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length
+// swiftlint:disable type_body_length file_length
 // Test suites cohere around their subject — splitting along the 250-line
 // body limit would scatter the round-trip-template assertions across
 // multiple files for no reader benefit.
@@ -302,6 +302,78 @@ Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
         #expect(rendered == expected)
     }
 
+    // MARK: - @Discoverable +35 signal (M5.1)
+
+    @Test("@Discoverable(group:) on both halves contributes +35 to a curated round-trip pair")
+    func discoverableSignalLiftsCuratedPairScore() throws {
+        let pair = makePair(
+            forwardName: "encode",
+            reverseName: "decode",
+            forwardParam: "MyType",
+            forwardReturn: "Data",
+            forwardGroup: "codec",
+            reverseGroup: "codec"
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
+        // 30 type + 40 curated encode/decode + 35 discoverable = 105 → Strong.
+        #expect(suggestion.score.total == 105)
+        #expect(suggestion.score.tier == .strong)
+        let discoverable = try #require(
+            suggestion.score.signals.first { $0.kind == .discoverableAnnotation }
+        )
+        #expect(discoverable.weight == 35)
+        #expect(discoverable.detail.contains("codec"))
+    }
+
+    @Test("@Discoverable(group:) lifts an otherwise-Possible non-curated pair into Likely")
+    func discoverableSignalLiftsNonCuratedPair() throws {
+        // No curated naming match — only the +30 type-symmetry signal
+        // would normally land this at Possible (30 → Possible).
+        // The +35 from a same-group @Discoverable lifts it to 65 → Likely.
+        let pair = makePair(
+            forwardName: "transform",
+            reverseName: "untransform",
+            forwardParam: "MyType",
+            forwardReturn: "Data",
+            forwardGroup: "codec",
+            reverseGroup: "codec"
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
+        #expect(suggestion.score.total == 65)
+        #expect(suggestion.score.tier == .likely)
+    }
+
+    @Test("Mismatched @Discoverable groups do NOT contribute the +35 signal")
+    func discoverableSignalSkippedOnGroupMismatch() throws {
+        let pair = makePair(
+            forwardName: "encode",
+            reverseName: "decode",
+            forwardParam: "MyType",
+            forwardReturn: "Data",
+            forwardGroup: "codec",
+            reverseGroup: "queue"
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
+        // 30 type + 40 curated = 70 (no +35) → Likely.
+        #expect(suggestion.score.total == 70)
+        #expect(!suggestion.score.signals.contains { $0.kind == .discoverableAnnotation })
+    }
+
+    @Test("One-sided @Discoverable does NOT contribute the +35 signal")
+    func discoverableSignalSkippedOnOneSidedAnnotation() throws {
+        let pair = makePair(
+            forwardName: "encode",
+            reverseName: "decode",
+            forwardParam: "MyType",
+            forwardReturn: "Data",
+            forwardGroup: "codec",
+            reverseGroup: nil
+        )
+        let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
+        #expect(suggestion.score.total == 70)
+        #expect(!suggestion.score.signals.contains { $0.kind == .discoverableAnnotation })
+    }
+
     // MARK: - Helpers
 
     private func makeCodecHalf(
@@ -330,7 +402,9 @@ Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
         forwardParam: String,
         forwardReturn: String,
         forwardBodySignals: BodySignals = .empty,
-        reverseBodySignals: BodySignals = .empty
+        reverseBodySignals: BodySignals = .empty,
+        forwardGroup: String? = nil,
+        reverseGroup: String? = nil
     ) -> FunctionPair {
         let forward = FunctionSummary(
             name: forwardName,
@@ -342,7 +416,8 @@ Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
             isStatic: false,
             location: SourceLocation(file: "Test.swift", line: 1, column: 1),
             containingTypeName: nil,
-            bodySignals: forwardBodySignals
+            bodySignals: forwardBodySignals,
+            discoverableGroup: forwardGroup
         )
         let reverse = FunctionSummary(
             name: reverseName,
@@ -354,9 +429,10 @@ Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391
             isStatic: false,
             location: SourceLocation(file: "Test.swift", line: 5, column: 1),
             containingTypeName: nil,
-            bodySignals: reverseBodySignals
+            bodySignals: reverseBodySignals,
+            discoverableGroup: reverseGroup
         )
         return FunctionPair(forward: forward, reverse: reverse)
     }
 }
-// swiftlint:enable type_body_length
+// swiftlint:enable type_body_length file_length

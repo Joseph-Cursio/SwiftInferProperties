@@ -44,6 +44,9 @@ public enum RoundTripTemplate {
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
             signals.append(name)
         }
+        if let discoverable = discoverableSignal(for: pair) {
+            signals.append(discoverable)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
@@ -126,6 +129,21 @@ public enum RoundTripTemplate {
         let direct = forwardName == lhs && reverseName == rhs
         let swapped = forwardName == rhs && reverseName == lhs
         return direct || swapped
+    }
+
+    /// PRD §4.1 `+35` cross-pair signal — fires when both halves of
+    /// the pair share the same non-nil `@Discoverable(group:)` value.
+    /// M5.1 introduces this signal in the recognize-only mode per
+    /// PRD v0.4 §5.7 (no runtime dep on `ProtoLawMacro`). The detail
+    /// line cites the matched group name so the §4.5 explainability
+    /// block can show what the signal was scoped to.
+    private static func discoverableSignal(for pair: FunctionPair) -> Signal? {
+        guard let group = pair.sharedDiscoverableGroup else { return nil }
+        return Signal(
+            kind: .discoverableAnnotation,
+            weight: 35,
+            detail: "Both halves carry @Discoverable(group: \"\(group)\")"
+        )
     }
 
     private static func nonDeterministicVeto(for pair: FunctionPair) -> Signal? {

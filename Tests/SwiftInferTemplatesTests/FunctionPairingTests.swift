@@ -119,7 +119,56 @@ struct FunctionPairingTests {
         #expect(pairs[1].forward.location.file == "B.swift")
     }
 
+    // MARK: - sharedDiscoverableGroup (M5.1)
+
+    @Test("sharedDiscoverableGroup is nil when neither half is annotated")
+    func sharedGroupNilForUnannotatedPair() {
+        let pair = makePair(forwardGroup: nil, reverseGroup: nil)
+        #expect(pair.sharedDiscoverableGroup == nil)
+    }
+
+    @Test("sharedDiscoverableGroup is nil when only one half is annotated")
+    func sharedGroupNilForOneSidedAnnotation() {
+        let onlyForward = makePair(forwardGroup: "codec", reverseGroup: nil)
+        let onlyReverse = makePair(forwardGroup: nil, reverseGroup: "codec")
+        #expect(onlyForward.sharedDiscoverableGroup == nil)
+        #expect(onlyReverse.sharedDiscoverableGroup == nil)
+    }
+
+    @Test("sharedDiscoverableGroup is nil when groups disagree")
+    func sharedGroupNilForMismatchedGroups() {
+        let pair = makePair(forwardGroup: "codec", reverseGroup: "queue")
+        #expect(pair.sharedDiscoverableGroup == nil)
+    }
+
+    @Test("sharedDiscoverableGroup returns the common group when both halves match")
+    func sharedGroupMatchesForCommonGroup() {
+        let pair = makePair(forwardGroup: "codec", reverseGroup: "codec")
+        #expect(pair.sharedDiscoverableGroup == "codec")
+    }
+
     // MARK: - Helpers
+
+    private func makePair(
+        forwardGroup: String?,
+        reverseGroup: String?
+    ) -> FunctionPair {
+        let forward = makeSummary(
+            name: "encode",
+            paramType: "MyType",
+            returnType: "Data",
+            line: 3,
+            discoverableGroup: forwardGroup
+        )
+        let reverse = makeSummary(
+            name: "decode",
+            paramType: "Data",
+            returnType: "MyType",
+            line: 7,
+            discoverableGroup: reverseGroup
+        )
+        return FunctionPair(forward: forward, reverse: reverse)
+    }
 
     private func makeSummary(
         name: String,
@@ -128,7 +177,8 @@ struct FunctionPairingTests {
         returnType: String?,
         isMutating: Bool = false,
         file: String = "Test.swift",
-        line: Int = 1
+        line: Int = 1,
+        discoverableGroup: String? = nil
     ) -> FunctionSummary {
         let parameters: [Parameter]
         if let explicitParameters {
@@ -148,7 +198,8 @@ struct FunctionPairingTests {
             isStatic: false,
             location: SourceLocation(file: file, line: line, column: 1),
             containingTypeName: nil,
-            bodySignals: .empty
+            bodySignals: .empty,
+            discoverableGroup: discoverableGroup
         )
     }
 }

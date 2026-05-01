@@ -294,6 +294,58 @@ struct TemplateRegistryTests {
         #expect(line.contains("PRD §5.6 #3"))
     }
 
+    @Test("@Discoverable(group:) on both halves of a round-trip pair fires the +35 signal end-to-end (M5.1)")
+    func discoverableGroupSignalFiresEndToEnd() throws {
+        // Both halves carry @Discoverable(group: "codec") — the +35
+        // signal should land on the round-trip suggestion that
+        // discover produces from the on-disk fixture.
+        let directory = try writeFixture(named: "DiscoverableE2E", contents: """
+        struct MyType {}
+        struct Codec {
+            @Discoverable(group: "codec")
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            @Discoverable(group: "codec")
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
+        let discoverable = try #require(
+            roundTrip.score.signals.first { $0.kind == .discoverableAnnotation }
+        )
+        #expect(discoverable.weight == 35)
+        #expect(discoverable.detail.contains("codec"))
+        // 30 type + 40 curated encode/decode + 35 discoverable = 105 → Strong.
+        #expect(roundTrip.score.total == 105)
+    }
+
+    @Test("Mismatched @Discoverable groups across the pair leave the +35 signal off")
+    func discoverableGroupMismatchSkipsTheSignal() throws {
+        let directory = try writeFixture(named: "DiscoverableMismatch", contents: """
+        struct MyType {}
+        struct Codec {
+            @Discoverable(group: "codec")
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            @Discoverable(group: "queue")
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
+        #expect(!roundTrip.score.signals.contains { $0.kind == .discoverableAnnotation })
+        #expect(roundTrip.score.total == 70)
+    }
+
     @Test("GeneratorSelection populates derivedMemberwise from corpus TypeShapes (M4.2)")
     func generatorSelectionPopulatesDerivedMemberwise() throws {
         // End-to-end: discover sees a Money struct with stdlib members

@@ -17,6 +17,24 @@ public struct FunctionPair: Sendable, Equatable {
         self.forward = forward
         self.reverse = reverse
     }
+
+    /// Common `@Discoverable(group:)` value when both halves of the
+    /// pair carry the same non-nil group; `nil` otherwise. Computed
+    /// pure-property — consumers like `RoundTripTemplate` (M5.1) read
+    /// it to decide whether to fire the `+35` PRD §4.1
+    /// `.discoverableAnnotation` cross-pair signal. Mismatched groups
+    /// (one pair half tagged `"codec"`, the other tagged `"queue"`)
+    /// return `nil` — the user explicitly grouped these into different
+    /// scopes, so the annotation is *not* evidence of a cross-pair
+    /// property; conversely, both-untagged is the M1-default case.
+    public var sharedDiscoverableGroup: String? {
+        guard let forwardGroup = forward.discoverableGroup,
+              let reverseGroup = reverse.discoverableGroup,
+              forwardGroup == reverseGroup else {
+            return nil
+        }
+        return forwardGroup
+    }
 }
 
 /// Type-driven candidate-pair finder. Implements PRD v0.3 §5.5's first
