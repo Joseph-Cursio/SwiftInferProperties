@@ -3,10 +3,10 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length
+// swiftlint:disable type_body_length file_length
 // Test suites cohere around their subject — splitting along the 250-line
-// body limit would scatter the registry-orchestration assertions across
-// multiple files for no reader benefit.
+// body / 400-line file limits would scatter the registry-orchestration
+// assertions across multiple files for no reader benefit.
 @Suite("TemplateRegistry — discovery orchestration over multiple summaries")
 struct TemplateRegistryTests {
 
@@ -294,6 +294,68 @@ struct TemplateRegistryTests {
         #expect(line.contains("PRD §5.6 #3"))
     }
 
+    @Test("Cross-validation seam adds +20 signal to matching identities (M3.5)")
+    func crossValidationLiftsScoreOnMatchingIdentity() throws {
+        let normalize = makeIdempotentSummary(file: "A.swift", line: 1)
+        let baseline = TemplateRegistry.discover(in: [normalize])
+        let target = try #require(baseline.first { $0.templateName == "idempotence" })
+        let baselineTotal = target.score.total
+
+        let crossValidated = TemplateRegistry.discover(
+            in: [normalize],
+            crossValidationFromTestLifter: [target.identity]
+        )
+        let lifted = try #require(crossValidated.first { $0.templateName == "idempotence" })
+        #expect(lifted.score.total == baselineTotal + 20)
+        #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })
+        #expect(lifted.identity == target.identity)
+        #expect(lifted.explainability.whySuggested.contains { $0.contains("Cross-validated by TestLifter") })
+    }
+
+    @Test("Cross-validation set with no matches leaves suggestions byte-stable")
+    func crossValidationNoMatchIsByteStable() {
+        let normalize = makeIdempotentSummary(file: "A.swift", line: 1)
+        let baseline = TemplateRegistry.discover(in: [normalize])
+        let unrelated = SuggestionIdentity(canonicalInput: "irrelevant|never-matches")
+        let withCrossValidation = TemplateRegistry.discover(
+            in: [normalize],
+            crossValidationFromTestLifter: [unrelated]
+        )
+        #expect(baseline == withCrossValidation)
+    }
+
+    @Test("Cross-validation does not resurrect a contradiction-dropped suggestion")
+    func crossValidationDoesNotResurrectDroppedSuggestion() {
+        // Commutativity over Any → dropped by the §5.6 #2 detector.
+        // Even with the suggestion's identity in the cross-validation
+        // set, it stays gone — drops happen before cross-validation.
+        let merge = FunctionSummary(
+            name: "merge",
+            parameters: [
+                Parameter(label: nil, internalName: "a", typeText: "Any", isInout: false),
+                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false)
+            ],
+            returnTypeText: "Any",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Mixer.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        // We compute the would-be identity by reaching into the template
+        // directly — this is deliberately a white-box test so we can
+        // assert the cross-validation seam doesn't override the §5.6
+        // drop layered above it.
+        let droppedSuggestion = CommutativityTemplate.suggest(for: merge)
+        let crossValidated = TemplateRegistry.discover(
+            in: [merge],
+            crossValidationFromTestLifter: droppedSuggestion.map { [$0.identity] } ?? []
+        )
+        #expect(crossValidated.allSatisfy { $0.templateName != "commutativity" })
+    }
+
     @Test("Directory scan threads typeDecls through discover and emits contradiction diagnostics")
     func directoryScanFiresContradictionDiagnostic() throws {
         // End-to-end: scanCorpus emits typeDecls, discover builds the
@@ -344,4 +406,4 @@ struct TemplateRegistryTests {
         return base
     }
 }
-// swiftlint:enable type_body_length
+// swiftlint:enable type_body_length file_length

@@ -59,12 +59,25 @@ public enum TemplateRegistry {
     /// diagnostics; the CLI's `Discover.run` wires it into the existing
     /// `DiagnosticOutput` channel so drops land on stderr alongside the
     /// vocabulary/config warning lines.
+    ///
+    /// `crossValidationFromTestLifter` is the M3.5 dormant seam for the
+    /// PRD §4.1 `+20` cross-validation signal. Suggestions whose
+    /// `identity` appears in the set get rebuilt with an additional
+    /// `Signal(kind: .crossValidation, weight: 20)` and a matching
+    /// `whySuggested` line; other suggestions pass through unchanged.
+    /// The set defaults to empty because TestLifter M1 hasn't shipped in
+    /// SwiftProtocolLaws — when it does, that milestone wires the input.
+    /// Cross-validation is applied *after* the contradiction pass on
+    /// purpose: a suggestion the §5.6 detector dropped is structurally
+    /// untestable, so cross-validation can't (and shouldn't) resurrect
+    /// it.
     public static func discover(
         in summaries: [FunctionSummary],
         identities: [IdentityCandidate] = [],
         typeDecls: [TypeDecl] = [],
         vocabulary: Vocabulary = .empty,
-        diagnostic: (String) -> Void = { _ in }
+        diagnostic: (String) -> Void = { _ in },
+        crossValidationFromTestLifter: Set<SuggestionIdentity> = []
     ) -> [Suggestion] {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -122,7 +135,11 @@ public enum TemplateRegistry {
         for drop in outcome.dropped {
             diagnostic("contradiction: " + drop.reason)
         }
-        return outcome.kept.sorted(by: lessThan)
+        let crossValidated = applyCrossValidation(
+            to: outcome.kept,
+            matching: crossValidationFromTestLifter
+        )
+        return crossValidated.sorted(by: lessThan)
     }
 
     /// Convenience: scan `directory` recursively, run every shipped
@@ -136,7 +153,8 @@ public enum TemplateRegistry {
     public static func discover(
         in directory: URL,
         vocabulary: Vocabulary = .empty,
-        diagnostic: (String) -> Void = { _ in }
+        diagnostic: (String) -> Void = { _ in },
+        crossValidationFromTestLifter: Set<SuggestionIdentity> = []
     ) throws -> [Suggestion] {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
@@ -145,7 +163,8 @@ public enum TemplateRegistry {
             identities: corpus.identities,
             typeDecls: corpus.typeDecls,
             vocabulary: vocabulary,
-            diagnostic: diagnostic
+            diagnostic: diagnostic,
+            crossValidationFromTestLifter: crossValidationFromTestLifter
         ).filter { suggestion in
             !skipHashes.contains(suggestion.identity.normalized)
         }
@@ -181,6 +200,53 @@ public enum TemplateRegistry {
             types.append(returnType)
         }
         return types
+    }
+
+    /// Detail text rendered for the M3.5 cross-validation signal. Kept
+    /// generic for the dormant seam — once TestLifter M1 ships, the
+    /// caller-side hook can pass a richer detail (e.g. the test name).
+    static let crossValidationDetail = "Cross-validated by TestLifter"
+
+    /// Walk `suggestions` and rebuild any whose `identity` is in
+    /// `identities`, appending a `+20` cross-validation signal and a
+    /// matching `whySuggested` line. Suggestions outside the set pass
+    /// through by reference equality. The set is checked first so the
+    /// fast path (empty set, no cross-validation) is a no-op.
+    private static func applyCrossValidation(
+        to suggestions: [Suggestion],
+        matching identities: Set<SuggestionIdentity>
+    ) -> [Suggestion] {
+        if identities.isEmpty {
+            return suggestions
+        }
+        return suggestions.map { suggestion in
+            guard identities.contains(suggestion.identity) else {
+                return suggestion
+            }
+            return rebuildWithCrossValidation(suggestion)
+        }
+    }
+
+    private static func rebuildWithCrossValidation(_ suggestion: Suggestion) -> Suggestion {
+        let signal = Signal(
+            kind: .crossValidation,
+            weight: 20,
+            detail: crossValidationDetail
+        )
+        let newScore = Score(signals: suggestion.score.signals + [signal])
+        let newWhy = suggestion.explainability.whySuggested + ["\(crossValidationDetail) (+20)"]
+        let newExplainability = ExplainabilityBlock(
+            whySuggested: newWhy,
+            whyMightBeWrong: suggestion.explainability.whyMightBeWrong
+        )
+        return Suggestion(
+            templateName: suggestion.templateName,
+            evidence: suggestion.evidence,
+            score: newScore,
+            generator: suggestion.generator,
+            explainability: newExplainability,
+            identity: suggestion.identity
+        )
     }
 
     private static func lessThan(_ lhs: Suggestion, _ rhs: Suggestion) -> Bool {
