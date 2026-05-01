@@ -1,4 +1,5 @@
 // swift-tools-version: 6.1
+import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
@@ -22,6 +23,19 @@ let package = Package(
         .library(
             name: "SwiftInferCLI",
             targets: ["SwiftInferCLI"]
+        ),
+        // M5.2: user-facing macro library. Users import this in their
+        // test target and write `@CheckProperty(.idempotent)` on the
+        // function under test. The macro's expanded test stub references
+        // `ProtocolLawKit.SwiftPropertyBasedBackend` and `Seed`, so the
+        // library re-exports `ProtocolLawKit` to spare users a second
+        // import. Test targets DO want `Testing.framework` (which the
+        // kit transitively pulls), so the v0.4 §16 #6 Testing-framework
+        // exclusion that holds for the `swift-infer` executable doesn't
+        // bite here.
+        .library(
+            name: "SwiftInferMacro",
+            targets: ["SwiftInferMacro"]
         ),
         .executable(
             name: "swift-infer",
@@ -83,6 +97,40 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),
+        // M5.2: user-facing macro target — declarations only. Re-exports
+        // `ProtocolLawKit` so users importing `SwiftInferMacro` can use
+        // the macro-emitted `SwiftPropertyBasedBackend` + `Seed` types
+        // without a second import. The actual macro impl lives in
+        // `SwiftInferMacroImpl` below; this target exposes the
+        // `@CheckProperty` attribute attached to it.
+        .target(
+            name: "SwiftInferMacro",
+            dependencies: [
+                "SwiftInferMacroImpl",
+                .product(name: "ProtocolLawKit", package: "SwiftProtocolLaws")
+            ]
+        ),
+        // M5.2: compiler-plugin target hosting the macro implementation.
+        // Plugin targets compile against swift-syntax and run during
+        // macro expansion (a separate compiler subprocess). Mirrors the
+        // kit's `ProtoLawMacroImpl` shape. Depends on `SwiftInferCore`
+        // for the `SamplingSeed` derivation that the expansion embeds
+        // as a literal `Seed(stateA:stateB:stateC:stateD:)` in the
+        // emitted test stub, and on `ProtoLawCore` for the
+        // `GeneratorExpressionEmitter` (K-prep-M1) that turns a
+        // `DerivationStrategy` into the generator expression text the
+        // emitted test will reference.
+        .macro(
+            name: "SwiftInferMacroImpl",
+            dependencies: [
+                "SwiftInferCore",
+                .product(name: "ProtoLawCore", package: "SwiftProtocolLaws"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "SwiftDiagnostics", package: "swift-syntax")
+            ]
+        ),
         // swift-infer — executable. Sources/swift-infer/main.swift only
         // forwards to SwiftInferCommand.main(); no logic lives here.
         .executableTarget(
@@ -102,6 +150,14 @@ let package = Package(
             dependencies: [
                 "SwiftInferCLI",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ]
+        ),
+        .testTarget(
+            name: "SwiftInferMacroTests",
+            dependencies: [
+                "SwiftInferMacro",
+                "SwiftInferMacroImpl",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
             ]
         ),
         // SwiftInferIntegrationTests — M1.6 perf integration tests against
