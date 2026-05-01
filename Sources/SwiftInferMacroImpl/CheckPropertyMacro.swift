@@ -34,15 +34,12 @@ public struct CheckPropertyMacro: PeerMacro {
         switch kind {
         case .idempotent:
             return expandIdempotent(function: function, in: context)
-        case .roundTrip:
-            // M5.3 deliverable. Diagnose explicitly so users tagging
-            // `.roundTrip(pairedWith:)` against M5.2 see why nothing
-            // expanded rather than a silent no-op.
-            context.diagnose(Diagnostic(
-                node: Syntax(node),
-                message: SwiftInferMacroDiagnostic.roundTripNotYetShipped
-            ))
-            return []
+        case .roundTrip(let inverseName):
+            return expandRoundTrip(
+                function: function,
+                inverseName: inverseName,
+                in: context
+            )
         }
     }
 
@@ -159,6 +156,105 @@ public struct CheckPropertyMacro: PeerMacro {
             """ as DeclSyntax
         return [body]
     }
+
+    // MARK: - Round-trip expansion
+
+    private static func expandRoundTrip(
+        function: FunctionDeclSyntax,
+        inverseName: String,
+        in context: some MacroExpansionContext
+    ) -> [DeclSyntax] {
+        guard function.signature.parameterClause.parameters.count == 1,
+              let parameter = function.signature.parameterClause.parameters.first,
+              let returnType = function.signature.returnClause?.type else {
+            context.diagnose(Diagnostic(
+                node: Syntax(function),
+                message: SwiftInferMacroDiagnostic.roundTripRequiresUnaryShape
+            ))
+            return []
+        }
+        let paramTypeText = parameter.type.trimmedDescription
+        let returnTypeText = returnType.trimmedDescription
+        guard paramTypeText != returnTypeText else {
+            // T -> T is the .idempotent shape; round-trip is T -> U with
+            // T != U. Prevent a confusing same-type round-trip stub
+            // (where decode(encode(value)) == value collapses to
+            // identity if both sides are no-ops on the same type).
+            context.diagnose(Diagnostic(
+                node: Syntax(function),
+                message: SwiftInferMacroDiagnostic.roundTripRequiresDistinctTypes
+            ))
+            return []
+        }
+        let forwardName = function.name.text
+        let canonicalSignature = roundTripCanonicalSignature(
+            forwardName: forwardName,
+            inverseName: inverseName,
+            forwardParam: paramTypeText,
+            forwardReturn: returnTypeText
+        )
+        return [emitRoundTripPeer(
+            forwardName: forwardName,
+            inverseName: inverseName,
+            seed: SamplingSeed.derive(fromIdentityHash: canonicalSignature),
+            generator: generatorSource(for: paramTypeText)
+        )]
+    }
+
+    private static func emitRoundTripPeer(
+        forwardName: String,
+        inverseName: String,
+        seed: SamplingSeed.Value,
+        generator: String
+    ) -> DeclSyntax {
+        let testFunctionName = "\(forwardName)_\(inverseName)_roundTrip"
+        return """
+
+            @Test func \(raw: testFunctionName)() async {
+                let backend = SwiftPropertyBasedBackend()
+                let seed = Seed(
+                    stateA: 0x\(raw: hex(seed.stateA)),
+                    stateB: 0x\(raw: hex(seed.stateB)),
+                    stateC: 0x\(raw: hex(seed.stateC)),
+                    stateD: 0x\(raw: hex(seed.stateD))
+                )
+                let result = await backend.check(
+                    trials: 100,
+                    seed: seed,
+                    sample: { rng in (\(raw: generator)).run(&rng) },
+                    property: { value in \(raw: inverseName)(\(raw: forwardName)(value)) == value }
+                )
+                if case let .failed(_, _, input, error) = result {
+                    Issue.record(
+                        "\(raw: forwardName)/\(raw: inverseName) round-trip failed at input \\(input)."
+                            + " \\(error?.message ?? \\"\\")"
+                    )
+                }
+            }
+            """ as DeclSyntax
+    }
+
+    /// Build the orientation-agnostic canonical signature used for the
+    /// round-trip seed. Sorts the forward / reverse names lexically so
+    /// attaching `@CheckProperty(.roundTrip(pairedWith: "decode"))` to
+    /// `encode` and attaching `@CheckProperty(.roundTrip(pairedWith:
+    /// "encode"))` to `decode` produce the same seed (mirrors how
+    /// `RoundTripTemplate.makeIdentity` sorts its halves for the same
+    /// reason — the property is symmetric so the identity should be too).
+    /// The forward type signature appears alongside in the canonical
+    /// form so e.g. `encode/decode` over `MyType` ↔ `Data` and
+    /// `encode/decode` over `OtherType` ↔ `Data` get distinct seeds.
+    private static func roundTripCanonicalSignature(
+        forwardName: String,
+        inverseName: String,
+        forwardParam: String,
+        forwardReturn: String
+    ) -> String {
+        let sorted = [forwardName, inverseName].sorted().joined(separator: "|")
+        return "checkProperty.roundTrip|\(sorted)|(\(forwardParam))->\(forwardReturn)"
+    }
+
+    // MARK: - Shared helpers
 
     /// Pick the generator expression for `paramType`. If it matches a
     /// `ProtoLawCore.RawType` (stdlib `Int`, `String`, `Bool`, etc.),
