@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**M1 + M2 shipped; M3 next.** TemplateEngine M2 (commutativity, associativity, identity-element templates; `.swiftinfer/vocabulary.json` + `.swiftinfer/config.toml` plumbing; reducer/builder-usage and accumulator-with-empty-seed type-flow signals; corpus-wide identity-candidate scanning) is complete on `main`. Sub-milestones M2.1–M2.6 landed as individual `feat(M2.x):` commits on top of the M1.1–M1.7 series. M2's §5.8 acceptance bar (byte-stable goldens for all five shipped templates including the vocabulary-extension path for round-trip + idempotence; §13 perf budget on `swift-collections` + the synthetic 50-file corpus with all five templates active; vocabulary + config integration tests proving values flow through to scoring + rendering) is met. The next milestone is M3 — contradiction detection (PRD §5.6) + cross-validation with TestLifter once `DerivationStrategist` exposes the public surface from SwiftProtocolLaws (PRD §21 OQ #4).
+**M1 + M2 + M3 shipped; M4 next.** M3 (contradiction detection per PRD §5.6 + the dormant cross-validation seam) is complete on `main`. Sub-milestones M3.1–M3.6 landed as individual `feat(M3.x):` commits on top of the M1.1–M1.7 + M2.1–M2.6 series. M3 ships the `ProtoLawCore` dep wiring (M3.1), `TypeDecl` records emitted from the single-pass scan (M3.2), the textual `EquatableResolver` (M3.3), the `ContradictionDetector` cross-cutting filter for §5.6 contradictions #2 / #3 with stderr diagnostics (M3.4), and the `crossValidationFromTestLifter` parameter as a callable-but-dormant TestLifter seam (M3.5). The §5.8 acceptance bar — byte-stable diagnostic goldens for both contradiction shapes, §13 perf budget on `swift-collections` + the synthetic 50-file corpus *with all five M2 templates active plus the new contradiction pass*, and `EquatableResolver` integration tests against fixture corpora exercising all three classification states — is met (M3.6). Contradictions #1 + #4 stay structurally inert until M7 ships the involutive + binary-op-idempotence templates that would emit the conflicting suggestions. The next milestone is M4 — sampling (PRD §4.3) + generator inference via `DerivationStrategist.strategy(for:)` (PRD §11).
 
 ## What this repo is
 
@@ -23,8 +23,7 @@ During pre-1.0 development, `Package.swift` references SwiftProtocolLaws via a l
 | Question | File |
 |---|---|
 | Product scope, milestones (M1–M9), success criteria | `docs/SwiftInferProperties PRD v0.3.md` |
-| **Current milestone execution plan (M3 sub-milestones, contradiction-detection scope, deps)** | `docs/M3 Plan.md` |
-| Closed milestone plans | `docs/archive/M1 Plan.md`, `docs/archive/M2 Plan.md` |
+| Closed milestone plans | `docs/archive/M1 Plan.md`, `docs/archive/M2 Plan.md`, `docs/archive/M3 Plan.md` |
 | What v0.3 changed vs v0.1/v0.2 | The `Supersedes:` line points at git history of the SwiftProtocolLaws repo, where v0.1 and v0.2 lived before the split |
 | ProtocolLawKit / ProtoLawMacro source of truth | the SwiftProtocolLaws repo, not this one |
 

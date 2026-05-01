@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SwiftInferCore
 import SwiftInferTemplates
 
 /// PRD v0.3 §13 performance budget integration suite.
@@ -14,21 +15,38 @@ import SwiftInferTemplates
 @Suite("Performance — PRD §13 budget enforcement")
 struct PerformanceTests {
 
-    /// 50-file synthetic corpus: per-file idempotent `normalize`,
-    /// per-file `encode`/`decode` round-trip pair, and an unrelated
-    /// helper. Generates a realistic mix of suggestions while keeping
-    /// the input deterministic across runs.
+    /// 50-file synthetic corpus: each file fires every M2 template plus
+    /// the M3.4 contradiction pass. Per file:
+    ///   - `normalize(_:)` — idempotence
+    ///   - `encode(_:)` / `decode(_:)` — round-trip
+    ///   - `merge(_:_:)` over a custom struct — commutativity + associativity
+    ///   - `static let empty: T` + `merge` reduce — identity-element
+    ///   - the `merge` is referenced via `xs.reduce(.empty, merge)` →
+    ///     reducer/builder usage signal
+    /// All five M2 templates are active alongside the contradiction
+    /// detector on the same scan, matching the M3.6 acceptance bar's
+    /// "all five templates plus the new contradiction pass" requirement.
     @Test("Synthetic 50-file corpus discover completes within the §13 2-second budget")
     func syntheticFiftyFileCorpus() throws {
         let directory = try generateSyntheticCorpus(fileCount: 50)
         defer { try? FileManager.default.removeItem(at: directory) }
+        var output: [Suggestion] = []
         let elapsed = try measureWall {
-            _ = try TemplateRegistry.discover(in: directory)
+            output = try TemplateRegistry.discover(in: directory)
         }
         #expect(
             elapsed < 2.0,
             "Synthetic 50-file discover took \(formatted(elapsed))s — over the §13 2s budget"
         )
+        // M3.6 acceptance bar: all five M2 templates active *plus* the
+        // contradiction pass. Each template must surface at least once
+        // across the corpus so the budget covers the full pipeline.
+        let templates = Set(output.map(\.templateName))
+        #expect(templates.contains("idempotence"))
+        #expect(templates.contains("round-trip"))
+        #expect(templates.contains("commutativity"))
+        #expect(templates.contains("associativity"))
+        #expect(templates.contains("identity-element"))
     }
 
     /// `swift-collections/Sources/DequeModule` is 44 `.swift` files —
@@ -86,16 +104,25 @@ struct PerformanceTests {
     }
 
     private func syntheticFileSource(index: Int) -> String {
-        // Per-file unique types keep cross-file round-trip pairing
-        // bounded — a realistic module rarely lets every encoder pair
-        // with every decoder.
+        // Per-file unique types keep cross-file pairing bounded — a
+        // realistic module rarely lets every encoder pair with every
+        // decoder, or every merge with every other merge's identity.
         let payload = "Payload\(index)"
         let data = "Data\(index)"
+        let bag = "Bag\(index)"
         return """
         import Foundation
 
         struct \(payload) {}
         struct \(data) {}
+        struct \(bag): Equatable {}
+
+        extension \(bag) {
+            static let empty: \(bag) = \(bag)()
+            func merge(_ first: \(bag), _ second: \(bag)) -> \(bag) {
+                return first
+            }
+        }
 
         struct Container\(index) {
             func normalize(_ value: String) -> String {
@@ -106,6 +133,9 @@ struct PerformanceTests {
             }
             func decode(_ data: \(data)) -> \(payload) {
                 return \(payload)()
+            }
+            func fold(_ items: [\(bag)]) -> \(bag) {
+                return items.reduce(.empty, \(bag).merge)
             }
             func unrelated(_ first: Int, _ second: Int) -> Bool {
                 return first == second

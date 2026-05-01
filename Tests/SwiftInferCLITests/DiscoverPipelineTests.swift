@@ -608,6 +608,116 @@ struct DiscoverPipelineTests {
         #expect(diagnostics.lines.first?.contains("could not parse") == true)
     }
 
+    // MARK: - Contradiction detection (M3.4) — byte-stable diagnostics + elision
+
+    @Test("Commutativity contradiction emits byte-stable stderr diagnostic")
+    func commutativityContradictionEmitsByteStableDiagnostic() throws {
+        // Single fixture line so the column/line positions are pinned —
+        // `merge(_:_:)` lands at line 2 of Source.swift.
+        let directory = try writeFixture(name: "ContradictionCommGolden", contents: """
+        struct AnyMixer {
+            func merge(_ first: Any, _ second: Any) -> Any { return first }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        let normalized = normalizeDiagnostics(diagnostics.lines, fixture: directory)
+        let expected = [
+            "contradiction: dropped commutativity suggestion for merge(_:_:)"
+                + " at <FIXTURE>/Source.swift:2 — type 'Any' is not Equatable (PRD §5.6 #2)"
+        ]
+        #expect(normalized == expected)
+    }
+
+    @Test("Round-trip contradiction emits byte-stable stderr diagnostic")
+    func roundTripContradictionEmitsByteStableDiagnostic() throws {
+        // wrap on line 2, unwrap on line 3 — wrap is the canonical
+        // forward (sorted by file/line), so the diagnostic anchors there.
+        let directory = try writeFixture(name: "ContradictionRTGolden", contents: """
+        struct Wrapper {
+            func wrap(_ closure: (Int) -> Int) -> Data { return Data() }
+            func unwrap(_ raw: Data) -> (Int) -> Int { return { value in value } }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        let normalized = normalizeDiagnostics(diagnostics.lines, fixture: directory)
+        let expected = [
+            "contradiction: dropped round-trip suggestion for wrap(_:)"
+                + " at <FIXTURE>/Source.swift:2 — type '(Int) -> Int' is not Equatable (PRD §5.6 #3)"
+        ]
+        #expect(normalized == expected)
+    }
+
+    @Test("Contradiction-dropped commutativity suggestion is elided from stdout")
+    func contradictionDroppedSuggestionIsElidedFromStdout() throws {
+        // `combineAny` isn't in any curated naming list — both commutativity
+        // and associativity score 30 (just type-symmetry) → Possible.
+        // Default flags hide Possible-tier output, so stdout must render
+        // the zero-suggestions sentinel. The contradiction filter still
+        // runs at suggestion-collection time, so stderr must still carry
+        // the commutativity drop diagnostic.
+        let directory = try writeFixture(name: "ContradictionElide", contents: """
+        struct AnyMixer {
+            func combineAny(_ first: Any, _ second: Any) -> Any { return first }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text == "0 suggestions.")
+        #expect(diagnostics.lines.count == 1)
+        #expect(diagnostics.lines.first?.contains("commutativity") == true)
+    }
+
+    @Test("Contradiction drop only elides the offending template — sibling templates over the same function survive")
+    func contradictionDropPreservesUnrelatedSiblingTemplates() throws {
+        // `merge` matches both commutativity and associativity (shared
+        // verb list per v0.2 §5.2). The §5.6 #2 contradiction layer
+        // drops *only* commutativity — associativity over `Any` is
+        // structurally inert at M3 (it's an M7 algebraic-structure-cluster
+        // concern). Plus `normalize` adds an unrelated idempotence
+        // suggestion. Stdout should carry idempotence + associativity;
+        // stderr should carry exactly one commutativity drop line.
+        let directory = try writeFixture(name: "ContradictionMixed", contents: """
+        struct Mix {
+            func normalize(_ value: String) -> String { return normalize(normalize(value)) }
+            func merge(_ first: Any, _ second: Any) -> Any { return first }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("2 suggestions."))
+        #expect(recording.text.contains("Template: idempotence"))
+        #expect(recording.text.contains("Template: associativity"))
+        #expect(!recording.text.contains("Template: commutativity"))
+        #expect(diagnostics.lines.count == 1)
+        #expect(diagnostics.lines.first?.contains("commutativity") == true)
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {
@@ -622,6 +732,33 @@ struct DiscoverPipelineTests {
         let file = directory.appendingPathComponent("Source.swift")
         try contents.write(to: file, atomically: true, encoding: .utf8)
         return directory
+    }
+
+    /// Substitute the dynamic fixture-directory absolute path with a
+    /// `<FIXTURE>` placeholder so byte-stable goldens can pin the rest
+    /// of the diagnostic line. macOS sometimes canonicalises tmp paths
+    /// through the `/private` symlink during scan (`/var/folders/...`
+    /// → `/private/var/folders/...`); we substitute both forms,
+    /// longest-first, so whichever shape lands in the diagnostic
+    /// normalises identically.
+    private func normalizeDiagnostics(
+        _ lines: [String],
+        fixture directory: URL
+    ) -> [String] {
+        let raw = directory.path
+        let withPrivatePrefix = raw.hasPrefix("/private") ? raw : "/private" + raw
+        let withoutPrivatePrefix = raw.hasPrefix("/private/")
+            ? String(raw.dropFirst("/private".count))
+            : raw
+        let candidates = [withPrivatePrefix, withoutPrivatePrefix, raw]
+            .sorted { $0.count > $1.count }
+        return lines.map { line in
+            var result = line
+            for path in candidates {
+                result = result.replacingOccurrences(of: path, with: "<FIXTURE>")
+            }
+            return result
+        }
     }
 }
 // swiftlint:enable type_body_length
