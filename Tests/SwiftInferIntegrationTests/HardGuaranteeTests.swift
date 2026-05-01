@@ -68,6 +68,34 @@ struct HardGuaranteeTests {
         #expect(first == second)
     }
 
+    @Test("Sampling seed is reproducible across runs (PRD §16 #6 + M4.3)")
+    func samplingSeedReproducibleAcrossRuns() throws {
+        // §16 #6 requires the sampling seed to be byte-identical for
+        // unchanged source. M4.3 derives the seed from the suggestion
+        // identity (which is itself derived from the canonical signature),
+        // so re-running discover must produce identical seeds — and the
+        // rendered "lifted test seed: 0x..." line must match across runs.
+        let directory = try makeFixture(named: "SeedReproducibility")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let firstRun = try TemplateRegistry.discover(in: directory)
+        let secondRun = try TemplateRegistry.discover(in: directory)
+        let firstSeeds = firstRun.map { SamplingSeed.derive(from: $0.identity) }
+        let secondSeeds = secondRun.map { SamplingSeed.derive(from: $0.identity) }
+        #expect(firstSeeds == secondSeeds, "Sampling seeds drifted across runs on unchanged source")
+        // Belt-and-suspenders: confirm the rendered text contains the
+        // same hex form across runs. The whole-output reproducibility
+        // test above implicitly covers this, but pinning the seed line
+        // explicitly catches regressions where the renderer might
+        // someday emit the seed conditionally.
+        let firstRendered = SuggestionRenderer.render(firstRun)
+        let secondRendered = SuggestionRenderer.render(secondRun)
+        for seed in firstSeeds {
+            let line = "lifted test seed: \(SamplingSeed.renderHex(seed))"
+            #expect(firstRendered.contains(line))
+            #expect(secondRendered.contains(line))
+        }
+    }
+
     @Test("Discovery order is stable across an out-of-order input shuffle")
     func discoveryOrderStable() throws {
         // Same logical corpus, different file *names* — sorted-path

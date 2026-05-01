@@ -47,6 +47,17 @@ struct PerformanceTests {
         #expect(templates.contains("commutativity"))
         #expect(templates.contains("associativity"))
         #expect(templates.contains("identity-element"))
+        // M4.5 acceptance bar (b): the M4.2 generator-selection pass
+        // is active on top of the contradiction pass. The synthetic
+        // corpus's `Bag` struct has two stdlib stored members
+        // (`Int` + `String`) so commutativity / associativity /
+        // identity-element suggestions over `Bag` lift to
+        // `.derivedMemberwise`. At least one suggestion must therefore
+        // carry a populated generator source — without M4.2 firing,
+        // every suggestion would stay at the M1 `.notYetComputed`
+        // placeholder.
+        let populated = output.contains { $0.generator.source != .notYetComputed }
+        #expect(populated, "GeneratorSelection did not fire on the synthetic corpus")
     }
 
     /// `swift-collections/Sources/DequeModule` is 44 `.swift` files —

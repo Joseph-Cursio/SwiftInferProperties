@@ -721,6 +721,119 @@ struct DiscoverPipelineTests {
         #expect(diagnostics.lines.first?.contains("commutativity") == true)
     }
 
+    // MARK: - Generator selection (M4.2) — CLI integration
+
+    @Test("CLI surfaces .derivedMemberwise generator line for struct-typed property")
+    func cliRendersDerivedMemberwiseGenerator() throws {
+        let directory = try writeFixture(name: "GenSelectMemberwiseCLI", contents: """
+        struct Money {
+            let amount: Int
+            let currency: String
+        }
+        struct Sanitizer {
+            func normalize(_ value: Money) -> Money {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording
+        )
+        #expect(recording.text.contains("Generator: .derivedMemberwise, confidence: .medium"))
+        #expect(recording.text.contains("Sampling:  not run; lifted test seed: 0x"))
+    }
+
+    @Test("CLI surfaces .derivedCaseIterable generator line for enum: CaseIterable property")
+    func cliRendersDerivedCaseIterableGenerator() throws {
+        let directory = try writeFixture(name: "GenSelectCaseIterCLI", contents: """
+        enum Side: CaseIterable {
+            case left, right
+        }
+        struct Helpers {
+            func normalize(_ value: Side) -> Side {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording
+        )
+        #expect(recording.text.contains("Generator: .derivedCaseIterable, confidence: .high"))
+    }
+
+    @Test("CLI surfaces .derivedRawRepresentable generator line for raw-value enum property")
+    func cliRendersDerivedRawRepresentableGenerator() throws {
+        let directory = try writeFixture(name: "GenSelectRawRepCLI", contents: """
+        enum StatusCode: Int {
+            case ok = 200, notFound = 404
+        }
+        struct Helpers {
+            func normalize(_ value: StatusCode) -> StatusCode {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording
+        )
+        #expect(recording.text.contains("Generator: .derivedRawRepresentable, confidence: .high"))
+    }
+
+    @Test("CLI surfaces .registered generator line for static gen() property")
+    func cliRendersRegisteredGenerator() throws {
+        let directory = try writeFixture(name: "GenSelectUserGenCLI", contents: """
+        struct Widget {
+            let id: Int
+            static func gen() -> Int { 0 }
+        }
+        struct Helpers {
+            func normalize(_ value: Widget) -> Widget {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording
+        )
+        #expect(recording.text.contains("Generator: .registered, confidence: .high"))
+    }
+
+    @Test("CLI surfaces .todo generator line (no confidence) for class-typed property")
+    func cliRendersTodoGenerator() throws {
+        let directory = try writeFixture(name: "GenSelectTodoCLI", contents: """
+        class Logger {
+            let prefix: String = ""
+        }
+        struct Helpers {
+            func normalize(_ value: Logger) -> Logger {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording
+        )
+        #expect(recording.text.contains("Generator: .todo"))
+        // .todo carries nil confidence — the renderer omits the
+        // confidence fragment in that case.
+        #expect(!recording.text.contains("Generator: .todo, confidence:"))
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {
