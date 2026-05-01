@@ -2,11 +2,13 @@
 
 ## SwiftInfer: Type-Directed Property Inference for Swift
 
-**Version:** 0.3 Draft
+**Version:** 0.4 Draft
 **Status:** Proposal
 **Audience:** Open Source Contributors, Swift Ecosystem
-**Depends On:** SwiftProtocolLaws (ProtocolLawKit + ProtoLawMacro), v1.5+
-**Supersedes:** v0.2 and v0.1 (in git history at commits prior to this version)
+**Depends On:** SwiftProtocolLaws (ProtocolLawKit + ProtoLawMacro + ProtoLawCore), v1.7+
+**Supersedes:** v0.3, v0.2, and v0.1 (v0.3 in git history at commits prior to this version; v0.2 + v0.1 in the SwiftProtocolLaws repo's git history before the 2026-04-30 split)
+
+> **What changed in v0.4.** Operational tightening pass driven by an audit between SwiftInferProperties M4.5 and M5. Five revisions, all closing scope gaps the §3.6 + §5.8 + §7.9 + §16 + §17 cross-read surfaced: (1) new **§5.8 M6 row "workflow operationalization"** — bundles `--interactive` triage (§8), the `Tests/Generated/SwiftInfer/` writeout from `discover` (§3.6 step 3), `swift-infer drift` (§9), and `.swiftinfer/decisions.json` infrastructure into one milestone slot. Existing M6 → M7, M7 → M8. Closes the gap where these capabilities were prescribed in the body of the PRD but unowned in the milestone table; (2) new **§5.9 capability ↔ milestone cross-reference table** — every CLI subcommand, generated-files path, `.swiftinfer/` artifact, and flag now has a single home with milestone owner and v1.1+ status; (3) **§16 #6 sampling seed widened** from "low 64 bits of SHA256" to "all 256 bits packed as four big-endian UInt64s for the Xoshiro256\*\* state" — matches the upstream `Seed` shape that downstream consumers (SwiftInferProperties M4.3 / M5+, the kit's `SwiftPropertyBasedBackend`) consume. The `--show-suppressed` and `--seed-override` flags from §16 #6 are explicitly scoped to v1.1+; (4) **§17 Adoption Tracking and Metrics** is explicitly marked v1.1+ in the section header, resolving a tension between the §14 "v1.1's Adoption Tracking dashboard" sentence and the §17 section's prior unscoped framing; (5) **§5.7 @Discoverable reuse** clarified — SwiftInferProperties recognizes the attribute by name match without a runtime dependency on `ProtoLawMacro` at scan time, freeing users from a forced double-import.
 
 > **What changed from v0.2.** v0.3 folds in the ChatGPT and Copilot critiques. Five structural shifts: (1) explicit **Product Philosophy** statement (Copilot) — "high precision, low recall, conservative" — codifies what was implicit; (2) explicit **Developer Workflow** walkthrough (Copilot); (3) **Explainability** is promoted to a first-class concern (ChatGPT) — every suggestion ships both "why suggested" and "why this might be wrong"; (4) new operational sections — **Performance Expectations**, **Security & Privacy**, **Failure Modes & Hard Guarantees**, **Adoption Tracking & Metrics**, **Test Coverage Requirements** — turn the document from vision into a buildable spec (Copilot); (5) the **Semantic Index** (ChatGPT's deferred Contribution 3 from v0.2) is explicitly scoped as a planned **Contribution 4 for v1.1**, with the Constraint Engine, Domain Template Packs, IDE integration, and Semantic Linting bridge listed as the v1.1+ trajectory in a new §20 Future Directions. Two new minor additions: **pluggable naming vocabularies** (ChatGPT) extend the scoring engine; **TestLifter expanded outputs** (preconditions, domains) are scoped as M9. A **Negative Examples appendix** (Copilot) shows what SwiftInfer must *not* suggest. The full delta is in Appendix A.
 
@@ -120,16 +122,16 @@ This philosophy is load-bearing for the scoring engine (§4) and the success cri
 
 ## 3.6 Developer Workflow (NEW in v0.3)
 
-The intended end-to-end workflow:
+The intended end-to-end workflow. Each step lists its owning milestone (§5.8 for TemplateEngine, §7.9 for TestLifter, §5.9 for the cross-reference table) — the v0.4 audit (top-of-doc) added these refs after the §3.6 ↔ §5.8 cross-read surfaced multiple capability gaps.
 
-1. **Discovery.** Developer runs `swift-infer discover --target MyApp` or `swift-infer discover --interactive`.
-2. **Suggestion review.** Suggestions are grouped by tier (`✓ Strong`, `~ Likely`, optionally `? Possible` with `--include-possible`). Each suggestion shows its evidence trail and explainability block (§4.5).
-3. **Adoption.** Accepted suggestions write stubs to `Tests/Generated/SwiftInfer/`. RefactorBridge suggestions write conformance stubs to `Tests/Generated/SwiftInferRefactors/` for the developer to inspect and move (never auto-edit existing source — see §16).
-4. **Generator completion.** Developer resolves any `.todo` generators. Mock-based synthesis (§7.4) reduces this step's frequency.
-5. **Execution.** `PropertyBackend` (single backend: `swift-property-based`) executes the tests via the standard `swift test` flow.
-6. **Counterexample feedback.** When a property fails, the shrunk counterexample is convertible into a focused unit test via `swift-infer convert-counterexample` (M8).
-7. **Drift checking.** CI runs `swift-infer drift --baseline .swiftinfer/baseline.json` on every PR, warning (non-fatally) about new Strong-tier suggestions added since baseline that lack a recorded decision.
-8. **Decision persistence.** Accept / reject / skip decisions live in `.swiftinfer/decisions.json`, keyed by stable suggestion-identity hash (§7.5). Decisions survive refactors that don't change function signatures or AST shape.
+1. **Discovery.** Developer runs `swift-infer discover --target MyApp` (TemplateEngine M1, shipped) or `swift-infer discover --interactive` (TemplateEngine M6, NEW in v0.4).
+2. **Suggestion review.** Suggestions are grouped by tier (`✓ Strong`, `~ Likely`, optionally `? Possible` with `--include-possible`). Each suggestion shows its evidence trail and explainability block (§4.5). (TemplateEngine M1, shipped — extended through M2 / M3 / M4 as templates and signals landed.)
+3. **Adoption.** Accepted suggestions write stubs to `Tests/Generated/SwiftInfer/` (TemplateEngine M6, NEW in v0.4 — opt-in via `--interactive`'s `[A]` / `[B]` accept; v1.1+ `swift-infer apply` per §20.6 automates this for non-interactive flows). The user can also opt-in *per declaration* via the M5 `@CheckProperty` macro (§5.7), which expands an `@Test` peer in the user's own source — not under `Tests/Generated/SwiftInfer/`. RefactorBridge suggestions write conformance stubs to `Tests/Generated/SwiftInferRefactors/` (TemplateEngine M7) for the developer to inspect and move (never auto-edit existing source — see §16).
+4. **Generator completion.** Developer resolves any `.todo` generators. Mock-based synthesis (§7.4) reduces this step's frequency. (TemplateEngine M4 selects the strategy + emits `.todo` stubs when no derivation applies; TestLifter M4 ships mock-based synthesis from observed test construction.)
+5. **Execution.** `PropertyBackend` (single backend: `swift-property-based`) executes the tests via the standard `swift test` flow. (External — runs through SwiftProtocolLaws's published `PropertyBackend` surface.)
+6. **Counterexample feedback.** When a property fails, the shrunk counterexample is convertible into a focused unit test via `swift-infer convert-counterexample` (TestLifter M8).
+7. **Drift checking.** CI runs `swift-infer drift --baseline .swiftinfer/baseline.json` on every PR, warning (non-fatally) about new Strong-tier suggestions added since baseline that lack a recorded decision. (TemplateEngine M6, NEW in v0.4.)
+8. **Decision persistence.** Accept / reject / skip decisions live in `.swiftinfer/decisions.json`, keyed by stable suggestion-identity hash (§7.5). Decisions survive refactors that don't change function signatures or AST shape. (TemplateEngine M6 ships the persistence layer; the suggestion-identity hash itself shipped at TemplateEngine M1.5.)
 
 -----
 
@@ -339,7 +341,9 @@ Same table as v0.2 §5.6. Contradictions surface in the explainability block as 
 
 ### 5.7 Annotation API
 
-Reuses `@Discoverable(group:)` from `ProtoLawMacro` (no new API). Introduces only `@CheckProperty(.idempotent)` / `@CheckProperty(.roundTrip, pairedWith:)` for direct stub generation. Detail unchanged from v0.2 §5.7.
+Reuses the **`@Discoverable(group:)` attribute syntax** from `ProtoLawMacro`. SwiftInferProperties' scanner recognizes the attribute by name match during the SwiftSyntax walk — *no runtime dependency* on `ProtoLawMacro` is required at scan time, so users opting into `@Discoverable` solely for SwiftInfer scoping don't pay a forced second `import` (clarified in v0.4 — open decision #2 in `docs/M5 Plan.md`'s in-flight defaults). Users wanting compile-time validation of the attribute (the kit's macro-expansion guarantee) import `ProtoLawMacro` themselves.
+
+Introduces only `@CheckProperty(.idempotent)` / `@CheckProperty(.roundTrip, pairedWith:)` for direct stub generation. Implemented as a SwiftSyntax peer macro (lands in M5 per §5.8) that expands the tagged function decl into an `@Test func` peer in the user's source — not into `Tests/Generated/SwiftInfer/`. The latter is the M6 `--interactive` writeout path (§3.6 step 3 + §5.8 M6); `@CheckProperty` is the per-declaration opt-in path. Both paths consume the M4.3 sampling seed (§16 #6) and the M4.2 `GeneratorSelection` strategy.
 
 ### 5.8 Milestones
 
@@ -350,12 +354,69 @@ Reuses `@Discoverable(group:)` from `ProtoLawMacro` (no new API). Introduces onl
 | M3 | Contradiction detection (§5.6); cross-validation with TestLifter (+20 signal per §4.1) once TestLifter M1 lands. Prerequisite: `DerivationStrategist` exposed publicly from SwiftProtocolLaws (see §11, §21 OQ #4). |
 | M4 | Scoring model surfaced fully in output (per-signal weights in the explainability block); sampling-before-suggesting (§4.3) using the seeded policy of §16 #6. |
 | M5 | `@CheckProperty` and `@Discoverable` annotation API (§5.7); `--dry-run` / `--stats-only` modes. |
-| M6 | Monotonicity (`Possible` by default — escalation only via TestLifter corroboration or explicit annotation per §5.2 caveat); invariant-preservation (annotation-only); RefactorBridge upstream-loop conformance suggestions written to `Tests/Generated/SwiftInferRefactors/` (§6, §16 #1). |
-| M7 | Algebraic-structure composition (§5.4) — semigroup / monoid / group / semilattice / ring claims accumulated from per-template signals on the same type; expanded identity-element detection (init-based + reduce-usage signals); `inverse-pair` template ships standalone for non-Equatable cases (suppressed per §16 #6 explainability). |
+| M6 | **Workflow operationalization (NEW in v0.4).** `swift-infer discover --interactive` triage mode (§8) walking suggestions with `[A/B/s/n/?]` prompts; the §3.6 step 3 writeout — accepted suggestions emit property-test stubs to `Tests/Generated/SwiftInfer/`; `swift-infer drift` mode (§9) with `.swiftinfer/baseline.json` baseline + non-fatal drift warnings; `.swiftinfer/decisions.json` infrastructure (read + write + schema). The `// swiftinfer: skip` honoring + suggestion-identity hashing the v0.3 TestLifter §7.9 M6 row also listed are already in the TemplateEngine M1.5 ship; this M6 picks up the persistence half. |
+| M7 (was M6) | Monotonicity (`Possible` by default — escalation only via TestLifter corroboration or explicit annotation per §5.2 caveat); invariant-preservation (annotation-only); RefactorBridge upstream-loop conformance suggestions written to `Tests/Generated/SwiftInferRefactors/` (§6, §16 #1). |
+| M8 (was M7) | Algebraic-structure composition (§5.4) — semigroup / monoid / group / semilattice / ring claims accumulated from per-template signals on the same type; expanded identity-element detection (init-based + reduce-usage signals); `inverse-pair` template ships standalone for non-Equatable cases (suppressed per §16 #6 explainability). |
 
 The §4.5 explainability block ("why suggested" + "why this might be wrong") is a **cross-cutting per-template deliverable** — every template added in any milestone must ship its block populated from the matched counter-signals plus the template's known caveats. There is no separate "explainability milestone."
 
 **M1 acceptance bar.** Beyond the deliverables above, M1 is not done until: (a) every emitted stub for round-trip and idempotence has a golden-file test (per §18) covering the explainability block byte-for-byte; (b) the §13 performance budget for `swift-infer discover` (< 2s wall on 50-file module) is hit on `swift-collections` and `swift-algorithms`; (c) the §16 hard guarantees relevant to discovery (no source-file modification, no telemetry, byte-identical reproducibility under fixed seeds) have integration tests in CI.
+
+### 5.9 Capability ↔ Milestone Cross-Reference (NEW in v0.4)
+
+The audit between M4.5 and M5 found multiple capabilities prescribed in the body of the PRD (§3.6, §8, §9, §16, §17) that lacked owners in the §5.8 milestone table. v0.4 closes those gaps; this section makes the full ownership picture inspectable in one place.
+
+**CLI subcommands.**
+
+| Subcommand | Owner | Status |
+|---|---|---|
+| `swift-infer discover --target <name>` | TemplateEngine M1 | Shipped |
+| `swift-infer discover --include-possible` | TemplateEngine M1 | Shipped |
+| `swift-infer discover --vocabulary <path>` | TemplateEngine M2.1 | Shipped |
+| `swift-infer discover --config <path>` | TemplateEngine M2.2 | Shipped |
+| `swift-infer discover --stats-only` | TemplateEngine M5 | Planned |
+| `swift-infer discover --dry-run` | TemplateEngine M5 | Planned (placeholder for M6+ writes) |
+| `swift-infer discover --interactive` | TemplateEngine M6 (NEW in v0.4) | Planned |
+| `swift-infer discover --show-suppressed` | v1.1+ | Deferred |
+| `swift-infer discover --seed-override <hex>` | v1.1+ | Deferred |
+| `swift-infer drift --baseline <path>` | TemplateEngine M6 (NEW in v0.4) | Planned |
+| `swift-infer convert-counterexample` | TestLifter M8 | Planned |
+| `swift-infer metrics` | v1.1+ (§17) | Deferred |
+| `swift-infer apply --suggestion <hash>` | v1.1+ (§20.6) | Deferred |
+
+**Generated-files paths (PRD §16 #1 hard guarantee).**
+
+| Path | Owner | Status |
+|---|---|---|
+| `Tests/Generated/SwiftInfer/` | TemplateEngine M6 (`--interactive` accept) + TestLifter M1+ | M6 planned, TestLifter unstarted |
+| `Tests/Generated/SwiftInferRefactors/` | TemplateEngine M7 (was M6 pre-v0.4) | Planned |
+| `Tests/Generated/SwiftInferGenerators/` | v1.1+ | Reserved path, no v1 owner |
+
+**`.swiftinfer/` artifacts.**
+
+| File | Owner (read) | Owner (write) |
+|---|---|---|
+| `.swiftinfer/vocabulary.json` | TemplateEngine M2.1 (shipped) | User-authored |
+| `.swiftinfer/config.toml` | TemplateEngine M2.2 (shipped) | User-authored |
+| `.swiftinfer/decisions.json` | TemplateEngine M6 (NEW in v0.4) | TemplateEngine M6 (`--interactive` writes; `drift` reads) |
+| `.swiftinfer/baseline.json` | TemplateEngine M6 (NEW in v0.4) | TemplateEngine M6 (`drift --baseline-update`) |
+| `// swiftinfer: skip <hash>` source markers | TemplateEngine M1.5 (shipped) | User-authored |
+
+**Annotation API (§5.7).**
+
+| Attribute | Owner (definition) | Owner (consumption) |
+|---|---|---|
+| `@Discoverable(group:)` | SwiftProtocolLaws (`ProtoLawMacro`) | TemplateEngine M5 — recognizes by name match, no runtime dep |
+| `@CheckProperty(.idempotent)` | TemplateEngine M5 (NEW macro target) | M5 peer-macro expansion at user compile time |
+| `@CheckProperty(.roundTrip, pairedWith:)` | TemplateEngine M5 | M5 peer-macro expansion |
+
+**v0.3 cross-series ambiguities resolved.**
+
+| v0.3 location | v0.3 owner (text) | v0.4 resolution |
+|---|---|---|
+| §7.9 M6 "decisions.json persistence" | TestLifter M6 | Owner moved to **TemplateEngine M6** — persistence is consumed by both series, but TemplateEngine is the producer of the suggestion records and naturally owns the schema. TestLifter consumes the same file. |
+| §7.9 M6 "Suggestion-identity hashing" | TestLifter M6 | Already shipped in **TemplateEngine M1.5** — TestLifter consumes. |
+| §7.9 M6 "`// swiftinfer: skip` honoring" | TestLifter M6 | Already shipped in **TemplateEngine M1.5** — TestLifter consumes. |
 
 -----
 
@@ -526,20 +587,25 @@ Registry ordering would be confidence-driven, not insertion-order. Built-in temp
 
 Per Copilot critique §9. SwiftInfer ships with the following hard guarantees, enforced by code review and integration tests:
 
-1. **SwiftInfer never modifies existing source files.** Generated content goes only to `Tests/Generated/SwiftInfer/`, `Tests/Generated/SwiftInferRefactors/`, and `Tests/Generated/SwiftInferGenerators/`. RefactorBridge conformance suggestions write conformance stubs to the Refactors directory; the developer manually moves them.
+1. **SwiftInfer never modifies existing source files.** Generated content goes only to:
+   - `Tests/Generated/SwiftInfer/` — TemplateEngine M6 (`--interactive` accept) writes property-test stubs here; TestLifter (M1+, currently unstarted in this repo) writes lifted-from-existing-tests properties here.
+   - `Tests/Generated/SwiftInferRefactors/` — RefactorBridge (TemplateEngine M7, was M6 pre-v0.4) writes conformance stubs the developer manually moves.
+   - `Tests/Generated/SwiftInferGenerators/` — **v1.1+** reserved path. Currently unowned by any v1 milestone; intended for the v1.1 generator-emitter writeout when `swift-infer apply` (§20.6) lands and emits standalone `Gen<T>` files separately from their consuming test files.
+
+   Never auto-edits existing source; the M5 `@CheckProperty` macro emits peer declarations at the user's compile time (the user wrote the attribute), which is *not* a SwiftInfer-side write.
 2. **SwiftInfer never deletes tests.** TestLifter reads existing tests; it never overwrites them. Lifted properties are emitted as new files, never replacements.
 3. **SwiftInfer never auto-accepts suggestions.** Even in CI mode, `drift` emits warnings, not failures. The accept/reject step is always human.
 4. **SwiftInfer never emits silently-wrong code.** When generator inference fails, the stub is emitted with `.todo`, which does not compile. There is no "approximately correct" generator fallback.
 5. **SwiftInfer never operates outside the configured target.** `--target` is required for `discover`; the tool refuses to scan files outside the named target's source roots.
-6. **SwiftInfer's output is reproducible.** Re-running `discover` on unchanged source produces byte-identical output (modulo the timestamp recorded in decisions.json on accept). Same property as SwiftProtocolLaws' discovery plugin. **Seed policy:** all sampling that contributes to a suggestion's score (§4.1 sampling-pass row, §4.3 `samplingResult`) uses a deterministic seed derived from the suggestion-identity hash (§7.5) — concretely, the low 64 bits of `SHA256(suggestionIdentityHash || "sampling")`. The seed is rendered in the explainability block of every emitted stub so a developer can re-run sampling under the same conditions. `--seed-override` is supported for debugging only and is never persisted to `decisions.json`.
+6. **SwiftInfer's output is reproducible.** Re-running `discover` on unchanged source produces byte-identical output (modulo the timestamp recorded in decisions.json on accept). Same property as SwiftProtocolLaws' discovery plugin. **Seed policy (revised in v0.4):** all sampling that contributes to a suggestion's score (§4.1 sampling-pass row, §4.3 `samplingResult`) uses a deterministic seed derived from the suggestion-identity hash (§7.5) — concretely, **all 256 bits of `SHA256(suggestionIdentityHash || "sampling")` packed as four big-endian `UInt64`s for the Xoshiro256\*\* state**. The v0.3 spec read "low 64 bits of SHA256(...)"; v0.4 widens to 256 bits because that's the full state-space size of the upstream `Xoshiro256**` RNG (one `Seed` value = four `UInt64`s) and the K-prep-M2 audit on the SwiftProtocolLaws side surfaced the API mismatch. The seed is rendered in the explainability block of every emitted stub so a developer can re-run sampling under the same conditions. **`--seed-override` is v1.1+** (not in any v1 milestone); when shipped, it'll be supported for debugging only and never persisted to `decisions.json`. **`--show-suppressed` is also v1.1+** — the v0.3 reference to `--show-suppressed` for viewing suppressed-tier suggestion explainability blocks lacks a v1 milestone owner.
 
 These guarantees are tested by the integration suite (§18). Violation is a release-blocking bug.
 
 -----
 
-## 17. Adoption Tracking and Metrics (NEW in v0.3)
+## 17. Adoption Tracking and Metrics (NEW in v0.3, scoped to v1.1+ in v0.4)
 
-ChatGPT's critique observed that "trust is everything" appears in the philosophy but is never operationalized. v0.3 makes adoption tracking concrete and uses it to close the calibration loop on the scoring engine.
+ChatGPT's critique observed that "trust is everything" appears in the philosophy but is never operationalized. v0.3 makes adoption tracking concrete and uses it to close the calibration loop on the scoring engine. **v0.4 explicitly scopes this section to v1.1+** — the §14 sentence about "v1.1's Adoption Tracking dashboard" already pinned the timing; v0.4 makes the same scoping visible in the section header so the §17 metrics + the `swift-infer metrics` subcommand they describe aren't accidentally read as v1 deliverables. The v1 surface ships `.swiftinfer/decisions.json` (TemplateEngine M6, NEW in v0.4) so the data underlying §17 metrics accumulates from v1; the metrics command + dashboard read that data in v1.1+.
 
 ### 17.1 Tracked Metrics
 
@@ -718,9 +784,11 @@ Trimmed from v0.2 — Open Question 5 (Generator Gap macro), Open Question 6 (se
 
 ## 22. References
 
-- [_7_SwiftProtocolLaws PRD](_7_SwiftProtocolLaws%20PRD.md) — upstream dependency (v0.3+)
-- [_4a_ Algebraic Structures](_4a_%20Algebraic%20Structures.md)
-- [_4c_ Monoids and Property Testing](_4c_Monoids%20and%20Property%20Testing.md)
+> **Post-split note (v0.4).** v0.2 lived in the SwiftProtocolLaws repo alongside the kit's PRD; references with leading `_N_` numeric prefixes (e.g. `_4a_ Algebraic Structures.md`) are kit-internal docs that did *not* migrate to this repo at the 2026-04-30 split. They remain in the SwiftProtocolLaws repo's git history. Cross-repo citations stay because the design rationale they encode is still load-bearing for SwiftInferProperties' algebraic-structure work (M7, was M6 pre-v0.4).
+
+- [SwiftProtocolLaws PRD](https://github.com/Joseph-Cursio/SwiftProtocolLaws/blob/main/docs/SwiftProtocolLaws%20PRD.md) — upstream dependency (v0.3+; SwiftInferProperties M3+ requires SwiftProtocolLaws v1.6+, M5+ requires v1.7+)
+- `_4a_ Algebraic Structures.md` — kit-internal; in `Joseph-Cursio/SwiftProtocolLaws` repo history
+- `_4c_ Monoids and Property Testing.md` — kit-internal; in `Joseph-Cursio/SwiftProtocolLaws` repo history
 - [Gemini critique](Gemini%20critique.md) — primary input to v0.2
 - [ChatGPT critique](ChatGPT%20critique.md) — primary input to v0.3 (Semantic Index, Explainability, Constraint Engine, Adoption Metrics)
 - [Copilot critique](Copilot%20critique.md) — primary input to v0.3 (Product Philosophy, Developer Workflow, Performance, Privacy, Hard Guarantees, Negative Examples)
