@@ -29,13 +29,16 @@ let package = Package(
         )
     ],
     dependencies: [
-        // SwiftProtocolLaws dep re-enabled at M3 once `DerivationStrategist`
-        // (currently `package`-visible in `ProtoLawCore`) is promoted to
-        // `public` per PRD §11 / §21 OQ #4. The dep will target `ProtoLawCore`,
-        // not `ProtocolLawKit` — ProtocolLawKit transitively pulls
-        // swift-testing's `Testing.framework`, which would prevent the
-        // `swift-infer` executable from running outside a test context.
-        // .package(path: "../SwiftProtocolLaws"),
+        // SwiftProtocolLaws v1.6.0+ exposes `DerivationStrategist` (and its
+        // value types `TypeShape`, `StoredMember`, `RawType`, `MemberSpec`,
+        // `DerivationStrategy`) publicly via the `ProtoLawCore` library
+        // product. SwiftInferProperties M3 consumes `ProtoLawCore` only —
+        // `ProtocolLawKit` transitively pulls swift-testing's
+        // `Testing.framework`, which would prevent the `swift-infer`
+        // executable from running outside a test context. Local-path until
+        // SwiftInferProperties crosses the 1.0 boundary; swap to a
+        // versioned URL dep before tagging.
+        .package(path: "../SwiftProtocolLaws"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
@@ -46,7 +49,14 @@ let package = Package(
             name: "SwiftInferCore",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax")
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                // M3 dep wiring (M3.1) — `ProtoLawCore` exposes
+                // `DerivationStrategist` for the M4 generator-inference
+                // hookup (PRD §11). M3 itself only references the types
+                // (smoke test in SwiftInferCoreTests proves the dep
+                // resolves and the public API is callable); active calls
+                // into `DerivationStrategist.strategy(for:)` come in M4.
+                .product(name: "ProtoLawCore", package: "SwiftProtocolLaws")
             ]
         ),
         // SwiftInferTemplates — TemplateEngine template registry. M1 ships
