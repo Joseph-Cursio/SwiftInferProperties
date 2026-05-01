@@ -834,6 +834,57 @@ struct DiscoverPipelineTests {
         #expect(!recording.text.contains("Generator: .todo, confidence:"))
     }
 
+    // MARK: - --stats-only mode (M5.4)
+
+    @Test("--stats-only swaps full explainability for the per-template summary block")
+    func statsOnlyRendersSummaryBlock() throws {
+        // normalize is a Strong-tier idempotence candidate; encode/decode
+        // is a Likely-tier round-trip. Two templates, two tiers.
+        let directory = try writeFixture(name: "StatsOnlyMode", contents: """
+        struct MyType {}
+        struct Codec {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            statsOnly: true,
+            output: recording
+        )
+        // Header line + per-template lines, no per-suggestion blocks.
+        #expect(recording.text.hasPrefix("2 suggestions across 2 templates."))
+        #expect(recording.text.contains("idempotence"))
+        #expect(recording.text.contains("round-trip"))
+        #expect(recording.text.contains("(1 Strong)"))
+        #expect(recording.text.contains("(1 Likely)"))
+        // No explainability-block markers should appear in stats mode.
+        #expect(!recording.text.contains("Why suggested:"))
+        #expect(!recording.text.contains("[Suggestion]"))
+    }
+
+    @Test("--stats-only on an empty corpus renders the zero-suggestions sentinel")
+    func statsOnlyEmptyCorpusRendersSentinel() throws {
+        let directory = try makeFixtureDirectory(name: "StatsOnlyEmpty")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            statsOnly: true,
+            output: recording
+        )
+        #expect(recording.text == "0 suggestions.")
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {

@@ -82,6 +82,17 @@ extension SwiftInferCommand {
         )
         public var config: String?
 
+        @Flag(
+            name: .long,
+            help: """
+            Render a per-template / per-tier summary block instead of \
+            the full §4.5 explainability blocks. Useful for CI \
+            dashboards tracking suggestion-count regressions over time. \
+            (M5.4, PRD v0.4 §5.8.)
+            """
+        )
+        public var statsOnly: Bool = false
+
         public init() {}
 
         public func run() async throws {
@@ -93,6 +104,7 @@ extension SwiftInferCommand {
                 includePossible: includePossible,
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
+                statsOnly: statsOnly,
                 output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -112,6 +124,7 @@ extension SwiftInferCommand {
             includePossible: Bool? = nil,
             explicitVocabularyPath: URL? = nil,
             explicitConfigPath: URL? = nil,
+            statsOnly: Bool = false,
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
@@ -145,7 +158,9 @@ extension SwiftInferCommand {
             let visible = all.filter { suggestion in
                 effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
             }
-            let rendered = SuggestionRenderer.render(visible)
+            let rendered = statsOnly
+                ? SuggestionRenderer.renderStats(visible)
+                : SuggestionRenderer.render(visible)
             output.write(rendered)
         }
 

@@ -61,6 +61,87 @@ public enum SuggestionRenderer {
         return blocks.joined(separator: "\n\n")
     }
 
+    /// `--stats-only` mode (M5.4). Renders a per-template /
+    /// per-tier summary block instead of the full §4.5 explainability
+    /// blocks — useful for CI dashboards that want to track "did the
+    /// count of Strong-tier suggestions regress this commit?" without
+    /// piping through the full output.
+    ///
+    /// Shape (PRD v0.4 §5.8 M5 example):
+    /// ```
+    /// 37 suggestions across 5 templates.
+    ///   idempotence:        12 (8 Strong, 3 Likely, 1 Possible)
+    ///   round-trip:          7 (5 Strong, 2 Likely)
+    ///   commutativity:       9 (3 Strong, 4 Likely, 2 Possible)
+    /// ```
+    /// Templates sorted alphabetically for byte-stability across runs
+    /// (PRD §16 #6 reproducibility). Tier breakdown in Strong / Likely
+    /// / Possible order; empty tiers omitted; `.suppressed` excluded
+    /// because suppressed suggestions never reach the renderer at the
+    /// CLI surface anyway.
+    public static func renderStats(_ suggestions: [Suggestion]) -> String {
+        if suggestions.isEmpty {
+            return "0 suggestions."
+        }
+        let byTemplate = Dictionary(grouping: suggestions, by: { $0.templateName })
+        let templates = byTemplate.keys.sorted()
+        let header = countHeader(suggestions.count, templateCount: templates.count)
+        let nameWidth = templates.map(\.count).max() ?? 0
+        // Total width before " (..." section: 2 leading + name + ":" + 5-wide
+        // count column. Auto-expands if any count exceeds 5 digits.
+        let countColumnWidth = max(5, byTemplate.values.map { String($0.count).count }.max() ?? 1)
+        let targetWidth = 2 + nameWidth + 1 + countColumnWidth
+        var lines: [String] = [header]
+        for template in templates {
+            let group = byTemplate[template] ?? []
+            lines.append(renderTemplateLine(
+                template: template,
+                count: group.count,
+                tierBreakdown: tierBreakdown(group),
+                targetWidth: targetWidth
+            ))
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private static func countHeader(_ totalCount: Int, templateCount: Int) -> String {
+        let suggestionWord = totalCount == 1 ? "suggestion" : "suggestions"
+        let templateWord = templateCount == 1 ? "template" : "templates"
+        return "\(totalCount) \(suggestionWord) across \(templateCount) \(templateWord)."
+    }
+
+    private static func renderTemplateLine(
+        template: String,
+        count: Int,
+        tierBreakdown: String,
+        targetWidth: Int
+    ) -> String {
+        let prefix = "  \(template):"
+        let countStr = "\(count)"
+        let padding = String(
+            repeating: " ",
+            count: max(1, targetWidth - prefix.count - countStr.count)
+        )
+        return prefix + padding + countStr + " (\(tierBreakdown))"
+    }
+
+    /// Strong / Likely / Possible in tier order; empty tiers dropped.
+    /// `.suppressed` is omitted by design — those suggestions don't
+    /// reach the renderer from the CLI's `discover --include-possible`
+    /// path, and surfacing them in the stats line would conflict with
+    /// the §4.2 "never shown" rule for suppressed.
+    private static func tierBreakdown(_ suggestions: [Suggestion]) -> String {
+        var counts: [Tier: Int] = [:]
+        for suggestion in suggestions {
+            counts[suggestion.score.tier, default: 0] += 1
+        }
+        let parts: [String] = [Tier.strong, .likely, .possible].compactMap { tier in
+            guard let value = counts[tier], value > 0 else { return nil }
+            return "\(value) \(tier.label)"
+        }
+        return parts.joined(separator: ", ")
+    }
+
     private static func renderGeneratorLine(_ meta: GeneratorMetadata) -> String {
         switch meta.source {
         case .notYetComputed:
