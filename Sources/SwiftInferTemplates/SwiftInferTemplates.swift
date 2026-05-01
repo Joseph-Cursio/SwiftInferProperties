@@ -325,7 +325,7 @@ public enum TemplateRegistry {
             detail: crossValidationDetail
         )
         let newScore = Score(signals: suggestion.score.signals + [signal])
-        let newWhy = suggestion.explainability.whySuggested + ["\(crossValidationDetail) (+20)"]
+        let newWhy = suggestion.explainability.whySuggested + [signal.formattedLine]
         let newExplainability = ExplainabilityBlock(
             whySuggested: newWhy,
             whyMightBeWrong: suggestion.explainability.whyMightBeWrong

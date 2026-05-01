@@ -180,7 +180,7 @@ public enum RoundTripTemplate {
                 + " — \(reverseEvidence.location.file):\(reverseEvidence.location.line)"
         )
         for signal in signals {
-            whySuggested.append(formatSignalLine(signal))
+            whySuggested.append(signal.formattedLine)
         }
         let caveats: [String] = [
             "Throws on either side narrows the property's domain to the success set "
@@ -190,14 +190,6 @@ public enum RoundTripTemplate {
                 + "SwiftInfer M1 does not verify protocol conformance — confirm before applying."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
-
-    private static func formatSignalLine(_ signal: Signal) -> String {
-        if signal.isVeto {
-            return "\(signal.detail) (veto)"
-        }
-        let sign = signal.weight >= 0 ? "+" : ""
-        return "\(signal.detail) (\(sign)\(signal.weight))"
     }
 
     // MARK: - Display helpers

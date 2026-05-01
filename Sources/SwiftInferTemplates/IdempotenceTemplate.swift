@@ -178,7 +178,7 @@ public enum IdempotenceTemplate {
             "\(evidence.displayName) \(evidence.signature) — \(evidence.location.file):\(evidence.location.line)"
         )
         for signal in signals {
-            whySuggested.append(formatSignalLine(signal))
+            whySuggested.append(signal.formattedLine)
         }
         let caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
@@ -186,14 +186,6 @@ public enum IdempotenceTemplate {
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
-
-    private static func formatSignalLine(_ signal: Signal) -> String {
-        if signal.isVeto {
-            return "\(signal.detail) (veto)"
-        }
-        let sign = signal.weight >= 0 ? "+" : ""
-        return "\(signal.detail) (\(sign)\(signal.weight))"
     }
 
     // MARK: - Display helpers

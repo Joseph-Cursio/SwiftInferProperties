@@ -53,4 +53,23 @@ public struct Signal: Sendable, Equatable {
     public var isVeto: Bool {
         weight == Self.vetoWeight
     }
+
+    /// Bullet text the explainability block (PRD §4.5) renders for this
+    /// signal. Vetoes render as `"<detail> (veto)"`; non-vetoed signals
+    /// render `"<detail> (<sign><weight>)"` with `+`/`-` prefixed to the
+    /// weight. Templates compose this into their `whySuggested` lines at
+    /// suggest time so the renderer just lays out bullets.
+    ///
+    /// M4.4 consolidated five copies of this formatter (one per
+    /// shipped template) into a single value-type extension per the M4
+    /// plan's open decision #4 default `(b)` — keeps `whySuggested:
+    /// [String]` shape unchanged while eliminating drift risk between
+    /// templates.
+    public var formattedLine: String {
+        if isVeto {
+            return "\(detail) (veto)"
+        }
+        let sign = weight >= 0 ? "+" : ""
+        return "\(detail) (\(sign)\(weight))"
+    }
 }
