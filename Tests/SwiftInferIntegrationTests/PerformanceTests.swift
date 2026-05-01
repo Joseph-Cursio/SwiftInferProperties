@@ -58,6 +58,16 @@ struct PerformanceTests {
         // placeholder.
         let populated = output.contains { $0.generator.source != .notYetComputed }
         #expect(populated, "GeneratorSelection did not fire on the synthetic corpus")
+        // M5.6 acceptance bar (f): the M5.1 @Discoverable scanner
+        // extension is active. Each per-file Container's encode /
+        // decode pair carries @Discoverable(group: "codec<n>"), so
+        // every round-trip suggestion across the corpus must also
+        // earn the +35 .discoverableAnnotation signal — without M5.1
+        // firing, no suggestion would carry it.
+        let discoverableSeen = output.contains { suggestion in
+            suggestion.score.signals.contains { $0.kind == .discoverableAnnotation }
+        }
+        #expect(discoverableSeen, "@Discoverable signal did not fire on the synthetic corpus")
     }
 
     /// `swift-collections/Sources/DequeModule` is 44 `.swift` files —
@@ -139,9 +149,11 @@ struct PerformanceTests {
             func normalize(_ value: String) -> String {
                 return normalize(normalize(value))
             }
+            @Discoverable(group: "codec\(index)")
             func encode(_ value: \(payload)) -> \(data) {
                 return \(data)()
             }
+            @Discoverable(group: "codec\(index)")
             func decode(_ data: \(data)) -> \(payload) {
                 return \(payload)()
             }
