@@ -885,6 +885,81 @@ struct DiscoverPipelineTests {
         #expect(recording.text == "0 suggestions.")
     }
 
+    // MARK: - --dry-run mode (M5.5)
+
+    @Test("--dry-run emits a placeholder-status stderr diagnostic")
+    func dryRunEmitsPlaceholderDiagnostic() throws {
+        let directory = try writeFixture(name: "DryRunDiagnostic", contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            dryRun: true,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(diagnostics.lines.contains { line in
+            line.hasPrefix("note: --dry-run is a forward-looking placeholder")
+                && line.contains("M6's --interactive writeout")
+        })
+    }
+
+    @Test("--dry-run produces byte-identical stdout to the no-flag path")
+    func dryRunStdoutMatchesNoFlagPath() throws {
+        // PRD §16 #1 already guarantees discover is read-only, so
+        // --dry-run is currently a no-op. The flag plumbs a future M6
+        // hook; today, stdout must match byte-for-byte across the two
+        // invocations.
+        let directory = try writeFixture(name: "DryRunParity", contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let withoutFlag = RecordingOutput()
+        let withFlag = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: withoutFlag,
+            diagnostics: RecordingDiagnosticOutput()
+        )
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            dryRun: true,
+            output: withFlag,
+            diagnostics: RecordingDiagnosticOutput()
+        )
+        #expect(withoutFlag.text == withFlag.text)
+    }
+
+    @Test("--dry-run unset emits no placeholder diagnostic")
+    func dryRunUnsetIsSilent() throws {
+        let directory = try writeFixture(name: "DryRunSilent", contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: RecordingOutput(),
+            diagnostics: diagnostics
+        )
+        #expect(!diagnostics.lines.contains { $0.contains("--dry-run") })
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {

@@ -93,6 +93,19 @@ extension SwiftInferCommand {
         )
         public var statsOnly: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            Forward-looking placeholder for M6's --interactive writeout. \
+            Currently a no-op since discover is read-only per §16 #1; \
+            passing the flag explicitly emits a stderr diagnostic so \
+            users don't silently expect different behaviour. (M5.5, \
+            PRD v0.4 §5.8 — flag plumbed now so M6 can flip it without \
+            an API break.)
+            """
+        )
+        public var dryRun: Bool = false
+
         public init() {}
 
         public func run() async throws {
@@ -105,6 +118,7 @@ extension SwiftInferCommand {
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
                 statsOnly: statsOnly,
+                dryRun: dryRun,
                 output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -125,9 +139,16 @@ extension SwiftInferCommand {
             explicitVocabularyPath: URL? = nil,
             explicitConfigPath: URL? = nil,
             statsOnly: Bool = false,
+            dryRun: Bool = false,
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
+            if dryRun {
+                diagnostics.writeDiagnostic(
+                    "note: --dry-run is a forward-looking placeholder for M6's"
+                        + " --interactive writeout; no writes are issued by v1 discover"
+                )
+            }
             let configResult = ConfigLoader.load(
                 startingFrom: directory,
                 explicitPath: explicitConfigPath
