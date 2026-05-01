@@ -124,6 +124,12 @@ let package = Package(
             name: "SwiftInferMacroImpl",
             dependencies: [
                 "SwiftInferCore",
+                // M6.3: SwiftInferTemplates dep for the shared
+                // `LiftedTestEmitter` — the macro impl now delegates
+                // its idempotent / round-trip text emission to the
+                // emitter so the macro path and M6.4's interactive-
+                // accept writeout share one canonical stub shape.
+                "SwiftInferTemplates",
                 .product(name: "ProtoLawCore", package: "SwiftProtocolLaws"),
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),

@@ -1,6 +1,6 @@
-import ProtoLawCore
 import SwiftDiagnostics
 import SwiftInferCore
+import SwiftInferTemplates
 import SwiftSyntax
 import SwiftSyntaxMacros
 
@@ -127,34 +127,13 @@ public struct CheckPropertyMacro: PeerMacro {
         let funcName = function.name.text
         let canonicalSignature = "checkProperty.idempotent|\(funcName)|(\(paramTypeText))->\(returnTypeText)"
         let seed = SamplingSeed.derive(fromIdentityHash: canonicalSignature)
-        let generatorExpression = generatorSource(for: paramTypeText)
-        let testFunctionName = "\(funcName)_isIdempotent"
-
-        let body = """
-
-            @Test func \(raw: testFunctionName)() async {
-                let backend = SwiftPropertyBasedBackend()
-                let seed = Seed(
-                    stateA: 0x\(raw: hex(seed.stateA)),
-                    stateB: 0x\(raw: hex(seed.stateB)),
-                    stateC: 0x\(raw: hex(seed.stateC)),
-                    stateD: 0x\(raw: hex(seed.stateD))
-                )
-                let result = await backend.check(
-                    trials: 100,
-                    seed: seed,
-                    sample: { rng in (\(raw: generatorExpression)).run(&rng) },
-                    property: { value in \(raw: funcName)(\(raw: funcName)(value)) == \(raw: funcName)(value) }
-                )
-                if case let .failed(_, _, input, error) = result {
-                    Issue.record(
-                        "\(raw: funcName)(_:) failed idempotence at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
-                    )
-                }
-            }
-            """ as DeclSyntax
-        return [body]
+        let source = LiftedTestEmitter.idempotent(
+            funcName: funcName,
+            typeName: paramTypeText,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText)
+        )
+        return [DeclSyntax(stringLiteral: source)]
     }
 
     // MARK: - Round-trip expansion
@@ -193,45 +172,13 @@ public struct CheckPropertyMacro: PeerMacro {
             forwardParam: paramTypeText,
             forwardReturn: returnTypeText
         )
-        return [emitRoundTripPeer(
+        let source = LiftedTestEmitter.roundTrip(
             forwardName: forwardName,
             inverseName: inverseName,
             seed: SamplingSeed.derive(fromIdentityHash: canonicalSignature),
-            generator: generatorSource(for: paramTypeText)
-        )]
-    }
-
-    private static func emitRoundTripPeer(
-        forwardName: String,
-        inverseName: String,
-        seed: SamplingSeed.Value,
-        generator: String
-    ) -> DeclSyntax {
-        let testFunctionName = "\(forwardName)_\(inverseName)_roundTrip"
-        return """
-
-            @Test func \(raw: testFunctionName)() async {
-                let backend = SwiftPropertyBasedBackend()
-                let seed = Seed(
-                    stateA: 0x\(raw: hex(seed.stateA)),
-                    stateB: 0x\(raw: hex(seed.stateB)),
-                    stateC: 0x\(raw: hex(seed.stateC)),
-                    stateD: 0x\(raw: hex(seed.stateD))
-                )
-                let result = await backend.check(
-                    trials: 100,
-                    seed: seed,
-                    sample: { rng in (\(raw: generator)).run(&rng) },
-                    property: { value in \(raw: inverseName)(\(raw: forwardName)(value)) == value }
-                )
-                if case let .failed(_, _, input, error) = result {
-                    Issue.record(
-                        "\(raw: forwardName)/\(raw: inverseName) round-trip failed at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
-                    )
-                }
-            }
-            """ as DeclSyntax
+            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText)
+        )
+        return [DeclSyntax(stringLiteral: source)]
     }
 
     /// Build the orientation-agnostic canonical signature used for the
@@ -254,24 +201,4 @@ public struct CheckPropertyMacro: PeerMacro {
         return "checkProperty.roundTrip|\(sorted)|(\(forwardParam))->\(forwardReturn)"
     }
 
-    // MARK: - Shared helpers
-
-    /// Pick the generator expression for `paramType`. If it matches a
-    /// `ProtoLawCore.RawType` (stdlib `Int`, `String`, `Bool`, etc.),
-    /// emit the canonical `RawType.generatorExpression` so the M4.2
-    /// generator-selection convention is respected. Otherwise, emit
-    /// `\(paramType).gen()` — same `.userGen` fallback the
-    /// `DerivationStrategist` produces, requiring the user to provide
-    /// `static func gen() -> Gen<T>` on the type.
-    private static func generatorSource(for paramType: String) -> String {
-        if let rawType = RawType(typeName: paramType) {
-            return rawType.generatorExpression
-        }
-        return "\(paramType).gen()"
-    }
-
-    private static func hex(_ word: UInt64) -> String {
-        let raw = String(word, radix: 16, uppercase: true)
-        return String(repeating: "0", count: 16 - raw.count) + raw
-    }
 }
