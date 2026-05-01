@@ -163,10 +163,12 @@ let package = Package(
         // SwiftInferIntegrationTests — M1.6 perf integration tests against
         // the §13 budgets, plus M1.7 §16 hard-guarantee tests. Kept in a
         // separate target so the unit suites stay fast while the
-        // integration suite has room to scale.
+        // integration suite has room to scale. SwiftInferCLI dep added in
+        // M6.2 so the discover→snapshot→reload integration test can call
+        // BaselineLoader without re-implementing its read+write path.
         .testTarget(
             name: "SwiftInferIntegrationTests",
-            dependencies: ["SwiftInferTemplates", "SwiftInferCore"]
+            dependencies: ["SwiftInferTemplates", "SwiftInferCore", "SwiftInferCLI"]
         )
     ]
 )
