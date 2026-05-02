@@ -71,25 +71,30 @@ struct SuggestionRendererStatsTests {
         // Mirrors the §5.8 M5 example. Score values pre-bucketed into
         // Strong (90 = ≥75) / Likely (60 = 40..<75) / Possible (30 =
         // 20..<40) so the per-tier counts match the PRD exemplar.
-        let suggestions =
-            // idempotence: 8 Strong, 3 Likely, 1 Possible
-            Array(repeating: makeSuggestion(template: "idempotence", score: 90), count: 8) +
-            Array(repeating: makeSuggestion(template: "idempotence", score: 60), count: 3) +
-            [makeSuggestion(template: "idempotence", score: 30)] +
-            // round-trip: 5 Strong, 2 Likely
-            Array(repeating: makeSuggestion(template: "round-trip", score: 90), count: 5) +
-            Array(repeating: makeSuggestion(template: "round-trip", score: 60), count: 2) +
-            // commutativity: 3 Strong, 4 Likely, 2 Possible
-            Array(repeating: makeSuggestion(template: "commutativity", score: 90), count: 3) +
-            Array(repeating: makeSuggestion(template: "commutativity", score: 60), count: 4) +
-            Array(repeating: makeSuggestion(template: "commutativity", score: 30), count: 2) +
-            // associativity: 2 Strong, 3 Likely, 1 Possible
-            Array(repeating: makeSuggestion(template: "associativity", score: 90), count: 2) +
-            Array(repeating: makeSuggestion(template: "associativity", score: 60), count: 3) +
-            [makeSuggestion(template: "associativity", score: 30)] +
-            // identity-element: 2 Strong, 1 Likely
-            Array(repeating: makeSuggestion(template: "identity-element", score: 90), count: 2) +
-            [makeSuggestion(template: "identity-element", score: 60)]
+        //
+        // Per-template arrays built in separate `let`s — a single
+        // chained `+` expression of this size trips the Swift compiler's
+        // type-check timeout on the GitHub-hosted CI runners (works
+        // locally on Swift 6.3.1; fails on the older toolchain CI uses).
+        let idempotence: [Suggestion] =
+            Array(repeating: makeSuggestion(template: "idempotence", score: 90), count: 8)
+            + Array(repeating: makeSuggestion(template: "idempotence", score: 60), count: 3)
+            + [makeSuggestion(template: "idempotence", score: 30)]
+        let roundTrip: [Suggestion] =
+            Array(repeating: makeSuggestion(template: "round-trip", score: 90), count: 5)
+            + Array(repeating: makeSuggestion(template: "round-trip", score: 60), count: 2)
+        let commutativity: [Suggestion] =
+            Array(repeating: makeSuggestion(template: "commutativity", score: 90), count: 3)
+            + Array(repeating: makeSuggestion(template: "commutativity", score: 60), count: 4)
+            + Array(repeating: makeSuggestion(template: "commutativity", score: 30), count: 2)
+        let associativity: [Suggestion] =
+            Array(repeating: makeSuggestion(template: "associativity", score: 90), count: 2)
+            + Array(repeating: makeSuggestion(template: "associativity", score: 60), count: 3)
+            + [makeSuggestion(template: "associativity", score: 30)]
+        let identityElement: [Suggestion] =
+            Array(repeating: makeSuggestion(template: "identity-element", score: 90), count: 2)
+            + [makeSuggestion(template: "identity-element", score: 60)]
+        let suggestions = idempotence + roundTrip + commutativity + associativity + identityElement
 
         let expected = """
             37 suggestions across 5 templates.
