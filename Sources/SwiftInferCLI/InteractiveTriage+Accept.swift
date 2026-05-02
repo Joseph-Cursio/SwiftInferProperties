@@ -185,19 +185,30 @@ extension InteractiveTriage {
         return path
     }
 
-    /// Build the bare extension source via `LiftedConformanceEmitter`.
-    /// Dispatches on `protocolName`; returns the always-fail extension
-    /// for unsupported protocols (M8 will widen this surface).
+    /// Build the conformance extension source via `LiftedConformanceEmitter`.
+    /// Dispatches on `protocolName`; threads the proposal's witness
+    /// names (M7.5.a) into the emitter so the writeout aliases the
+    /// user's existing op + identity into the kit's required statics.
+    /// Returns the always-fail extension for unsupported protocols
+    /// (M8 will widen this surface).
     private static func liftedConformanceSource(for proposal: RefactorBridgeProposal) -> String {
         switch proposal.protocolName {
         case "Semigroup":
             return LiftedConformanceEmitter.semigroup(
                 typeName: proposal.typeName,
+                combineWitness: proposal.combineWitness,
                 explainability: proposal.explainability
             )
         case "Monoid":
+            // Monoid proposals always carry an identityWitness per the
+            // orchestrator's Monoid-only-when-identity-element-fires
+            // rule. Defensive fallback to "identity" if nil — emits the
+            // bare extension shape so the user gets a clean Swift
+            // compile error rather than a malformed witness reference.
             return LiftedConformanceEmitter.monoid(
                 typeName: proposal.typeName,
+                combineWitness: proposal.combineWitness,
+                identityWitness: proposal.identityWitness ?? "identity",
                 explainability: proposal.explainability
             )
         default:

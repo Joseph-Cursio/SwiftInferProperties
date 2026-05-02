@@ -23,34 +23,72 @@ import SwiftInferCore
 /// writeout sees the same justification the CLI rendered.
 public enum LiftedConformanceEmitter {
 
-    /// Emit a `Semigroup` conformance extension for `typeName`.
-    /// `Semigroup`'s only law is associativity (`(a • b) • c == a • (b • c)`);
-    /// the conformance asserts that the user's type satisfies it under
-    /// some user-supplied binary op. The actual op witness is supplied
-    /// by the user's existing type definition — this emitter only
-    /// declares the conformance.
+    /// Emit a `Semigroup` conformance extension for `typeName`,
+    /// aliasing the user's existing binary op (`combineWitness`) into
+    /// the kit's required `static func combine(_:_:)` static. When the
+    /// user's op is already named `combine`, the witness is omitted —
+    /// the bare extension body satisfies the conformance via the
+    /// existing static and avoids infinite-recursion on `Self.combine`.
+    ///
+    /// `combineWitness` is the bare function name (no parens), e.g.
+    /// `"merge"` from an `Evidence.displayName` of `"merge(_:_:)"`.
+    /// The witness is called as `Self.\(combineWitness)(lhs, rhs)` —
+    /// resolves correctly when the user's op is a static method on the
+    /// type. Free-function or instance-method ops produce a compile
+    /// error in the user's project; same posture as the LiftedTestEmitter
+    /// arms (the test stub doesn't compile if the user's op isn't
+    /// static-shaped).
     public static func semigroup(
         typeName: String,
+        combineWitness: String,
         explainability: ExplainabilityBlock
     ) -> String {
-        makeExtension(
+        let body = aliasingCombineBody(typeName: typeName, witness: combineWitness)
+        return makeExtension(
             typeName: typeName,
             protocolName: "Semigroup",
+            body: body,
             explainability: explainability
         )
     }
 
     /// Emit a `Monoid` conformance extension for `typeName`. `Monoid`
     /// extends `Semigroup` with an identity element witness (`a • id ==
-    /// a == id • a`). As with `semigroup`, the actual witnesses are
-    /// supplied by the user's existing type definition.
+    /// a == id • a`). Aliases both `combineWitness` (binary op) and
+    /// `identityWitness` (static element name) into the kit's required
+    /// `static func combine(_:_:)` and `static var identity`.
+    /// Witness names matching `"combine"` / `"identity"` skip the
+    /// aliasing for that arm.
+    ///
+    /// Example: `monoid(typeName: "Tally", combineWitness: "merge",
+    /// identityWitness: "empty", ...)` produces:
+    ///
+    /// ```swift
+    /// extension Tally: Monoid {
+    ///     public static func combine(_ lhs: Tally, _ rhs: Tally) -> Tally {
+    ///         Self.merge(lhs, rhs)
+    ///     }
+    ///     public static var identity: Tally { Self.empty }
+    /// }
+    /// ```
     public static func monoid(
         typeName: String,
+        combineWitness: String,
+        identityWitness: String,
         explainability: ExplainabilityBlock
     ) -> String {
-        makeExtension(
+        var bodyParts: [String] = []
+        if let combine = aliasingCombineBody(typeName: typeName, witness: combineWitness) {
+            bodyParts.append(combine)
+        }
+        if let identity = aliasingIdentityBody(typeName: typeName, witness: identityWitness) {
+            bodyParts.append(identity)
+        }
+        let body = bodyParts.isEmpty ? nil : bodyParts.joined(separator: "\n")
+        return makeExtension(
             typeName: typeName,
             protocolName: "Monoid",
+            body: body,
             explainability: explainability
         )
     }
@@ -73,13 +111,22 @@ public enum LiftedConformanceEmitter {
     // MARK: - Shared extension shape
 
     /// One template covers both arms — semigroup and monoid share the
-    /// extension scaffold and only differ in the protocol name. Keeping
-    /// the template centralised means future protocol arms (M8's
-    /// CommutativeMonoid / Group / Semilattice / Ring) plug in without
-    /// touching the comment-header rendering.
+    /// extension scaffold and only differ in the protocol name + the
+    /// per-arm witness body. Keeping the template centralised means
+    /// future protocol arms (M8's CommutativeMonoid / Group /
+    /// Semilattice / Ring) plug in without touching the comment-header
+    /// rendering.
+    ///
+    /// `body` is `nil` when the user's existing surface already
+    /// satisfies the protocol's requirements (witness names exactly
+    /// match the protocol's required identifiers); the extension
+    /// renders as `extension TypeName: Protocol {}` (bare, no body).
+    /// Otherwise, the body is rendered between the `{` and `}` with
+    /// the §4.5 explainability block above the `extension` line.
     private static func makeExtension(
         typeName: String,
         protocolName: String,
+        body: String?,
         explainability: ExplainabilityBlock
     ) -> String {
         let header = renderExplainabilityHeader(
@@ -87,10 +134,44 @@ public enum LiftedConformanceEmitter {
             protocolName: protocolName,
             explainability: explainability
         )
+        guard let body, !body.isEmpty else {
+            return """
+
+            \(header)
+            extension \(typeName): \(protocolName) {}
+            """
+        }
         return """
 
         \(header)
-        extension \(typeName): \(protocolName) {}
+        extension \(typeName): \(protocolName) {
+        \(body)
+        }
+        """
+    }
+
+    /// Render the body of a `static func combine(_:_:)` aliasing the
+    /// user's binary op. Returns `nil` when the user's op is already
+    /// named `combine` — the existing static satisfies the requirement
+    /// directly, and emitting an aliasing `Self.combine(lhs, rhs)`
+    /// would recurse infinitely at runtime.
+    private static func aliasingCombineBody(typeName: String, witness: String) -> String? {
+        guard witness != "combine" else { return nil }
+        return """
+            public static func combine(_ lhs: \(typeName), _ rhs: \(typeName)) -> \(typeName) {
+                Self.\(witness)(lhs, rhs)
+            }
+        """
+    }
+
+    /// Render the body of a `static var identity` aliasing the user's
+    /// identity element. Returns `nil` when the user's static is
+    /// already named `identity` — same self-recursion concern as
+    /// `aliasingCombineBody`.
+    private static func aliasingIdentityBody(typeName: String, witness: String) -> String? {
+        guard witness != "identity" else { return nil }
+        return """
+            public static var identity: \(typeName) { Self.\(witness) }
         """
     }
 

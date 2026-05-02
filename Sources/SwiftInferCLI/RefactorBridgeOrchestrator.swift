@@ -12,6 +12,16 @@ import SwiftInferTemplates
 /// `protocolName` is the strongest claim the orchestrator can support
 /// from available evidence: `Monoid` if the type has both associativity
 /// and identity-element signals; `Semigroup` if only associativity.
+///
+/// Witness fields (M7.5.a): the bare names of the user's existing
+/// binary op (`combineWitness`) and identity element (`identityWitness`,
+/// `nil` for Semigroup-only proposals) extracted from the contributing
+/// suggestions' evidence. The `LiftedConformanceEmitter` aliases these
+/// into the kit's required `static func combine(_:_:)` /
+/// `static var identity` so the emitted `extension TypeName: Protocol {…}`
+/// compiles in the user's project without manual editing — the gap the
+/// kit-side v1.8.0 ship and the SwiftInferProperties v1.8.0+ dep bump
+/// don't close on their own.
 public struct RefactorBridgeProposal: Sendable, Equatable {
 
     /// Type the conformance is proposed for. The text the user wrote in
@@ -24,6 +34,25 @@ public struct RefactorBridgeProposal: Sendable, Equatable {
     /// `"Group"` / `"Semilattice"` / `"Ring"` on top via the same
     /// orchestrator surface.
     public let protocolName: String
+
+    /// Bare name of the user's existing binary op (e.g. `"merge"` for
+    /// a `merge(_:_:)` static), extracted from the associativity
+    /// suggestion's `Evidence.displayName`. The conformance writeout
+    /// aliases this into the kit's required
+    /// `static func combine(_:_:)` via `Self.\(combineWitness)(lhs, rhs)`.
+    /// When the witness is already `"combine"`, no aliasing is emitted
+    /// (the user's existing static satisfies the requirement directly,
+    /// and self-aliasing would recurse infinitely at runtime).
+    public let combineWitness: String
+
+    /// Bare name of the user's existing identity element (e.g.
+    /// `"empty"` for a `static let empty`), extracted from the
+    /// identity-element suggestion's `Evidence.displayName`. `nil` for
+    /// Semigroup-only proposals (no identity-element suggestion
+    /// contributed). When the witness is already `"identity"`, no
+    /// aliasing is emitted; same self-recursion concern as
+    /// `combineWitness`.
+    public let identityWitness: String?
 
     /// §4.5 explainability block — "why suggested" + "why this might be
     /// wrong" — assembled from the contributing suggestions' explainability
@@ -41,11 +70,15 @@ public struct RefactorBridgeProposal: Sendable, Equatable {
     public init(
         typeName: String,
         protocolName: String,
+        combineWitness: String,
+        identityWitness: String?,
         explainability: ExplainabilityBlock,
         relatedIdentities: Set<SuggestionIdentity>
     ) {
         self.typeName = typeName
         self.protocolName = protocolName
+        self.combineWitness = combineWitness
+        self.identityWitness = identityWitness
         self.explainability = explainability
         self.relatedIdentities = relatedIdentities
     }
@@ -103,28 +136,49 @@ public enum RefactorBridgeOrchestrator {
     /// `RefactorBridgeProposal` when the signal set warrants one,
     /// returning `nil` otherwise (e.g. commutativity-only with no
     /// associativity peer — no claim to make under M7.5's arm set).
+    ///
+    /// Tracks the witness names per-arm: the associativity arm
+    /// contributes `combineWitness` (function name from evidence[0]),
+    /// the identity-element arm contributes `identityWitness` (constant
+    /// name from evidence[1] — see `IdentityElementTemplate`'s
+    /// `makeEvidence(identity:)` for the two-row evidence shape).
     private struct TypeAccumulator {
         let typeName: String
         var hasAssociativity: Bool = false
         var hasIdentityElement: Bool = false
+        var combineWitness: String?
+        var identityWitness: String?
         var contributing: [Suggestion] = []
         var identities: Set<SuggestionIdentity> = []
 
         mutating func record(signal: TemplateSignal, from suggestion: Suggestion) {
             switch signal {
-            case .associativity: hasAssociativity = true
-            case .identityElement: hasIdentityElement = true
+            case .associativity:
+                hasAssociativity = true
+                if combineWitness == nil {
+                    combineWitness = combineWitnessName(from: suggestion)
+                }
+            case .identityElement:
+                hasIdentityElement = true
+                if combineWitness == nil {
+                    combineWitness = combineWitnessName(from: suggestion)
+                }
+                if identityWitness == nil {
+                    identityWitness = identityWitnessName(from: suggestion)
+                }
             }
             contributing.append(suggestion)
             identities.insert(suggestion.identity)
         }
 
         var proposal: RefactorBridgeProposal? {
-            guard hasAssociativity else { return nil }
+            guard hasAssociativity, let combineWitness else { return nil }
             let protocolName = hasIdentityElement ? "Monoid" : "Semigroup"
             return RefactorBridgeProposal(
                 typeName: typeName,
                 protocolName: protocolName,
+                combineWitness: combineWitness,
+                identityWitness: hasIdentityElement ? identityWitness : nil,
                 explainability: aggregatedExplainability(protocolName: protocolName),
                 relatedIdentities: identities
             )
@@ -142,6 +196,39 @@ public enum RefactorBridgeOrchestrator {
             ]
             return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: caveats)
         }
+    }
+
+    // MARK: - Witness extraction
+
+    /// Strip the parameter-list suffix from a function-evidence
+    /// displayName. `"merge(_:_:)"` → `"merge"`. Returns the original
+    /// string if no `(` is present (defensive — every shipped template
+    /// renders displayName as `<name>(<labels>)`).
+    private static func combineWitnessName(from suggestion: Suggestion) -> String? {
+        guard let displayName = suggestion.evidence.first?.displayName else { return nil }
+        return bareName(from: displayName)
+    }
+
+    /// Pull the identity-element name from an `identity-element`
+    /// suggestion. `IdentityElementTemplate.makeEvidence(identity:)`
+    /// produces displayName `"Tally.empty"` (qualified) or `"empty"`
+    /// (top-level); strip the optional type prefix and return the
+    /// member name, which the emitter aliases via `Self.<name>`.
+    private static func identityWitnessName(from suggestion: Suggestion) -> String? {
+        guard suggestion.evidence.count >= 2,
+              let displayName = suggestion.evidence.dropFirst().first?.displayName else {
+            return nil
+        }
+        if let dotIndex = displayName.lastIndex(of: ".") {
+            return String(displayName[displayName.index(after: dotIndex)...])
+        }
+        return displayName
+    }
+
+    /// Strip parens-and-after from a function display name.
+    private static func bareName(from displayName: String) -> String {
+        guard let parenIndex = displayName.firstIndex(of: "(") else { return displayName }
+        return String(displayName[..<parenIndex])
     }
 
     /// Structural-conformance signals M7.5's orchestrator recognizes. M8

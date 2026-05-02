@@ -96,6 +96,63 @@ struct RefactorBridgeOrchestratorTests {
         #expect(why.contains { $0.contains("from identity-element:") })
     }
 
+    // MARK: - Witness extraction (M7.5.a)
+
+    @Test("Semigroup proposal carries the binary op's bare name as combineWitness")
+    func semigroupCarriesCombineWitness() {
+        let assoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "merge")
+        let proposals = RefactorBridgeOrchestrator.proposals(from: [assoc])
+        let proposal = try? #require(proposals["Money"])
+        #expect(proposal?.combineWitness == "merge")
+        #expect(proposal?.identityWitness == nil)
+    }
+
+    @Test("Monoid proposal carries both binary op and identity element witnesses")
+    func monoidCarriesBothWitnesses() {
+        let assoc = makeSuggestion(template: "associativity", typeName: "Tally", funcName: "merge")
+        let identity = makeIdentityElementSuggestion(
+            typeName: "Tally",
+            opName: "merge",
+            identityName: "empty"
+        )
+        let proposals = RefactorBridgeOrchestrator.proposals(from: [assoc, identity])
+        let proposal = try? #require(proposals["Tally"])
+        #expect(proposal?.combineWitness == "merge")
+        #expect(proposal?.identityWitness == "empty")
+    }
+
+    @Test("Identity witness strips the qualifying type prefix")
+    func identityWitnessStripsTypePrefix() {
+        let assoc = makeSuggestion(template: "associativity", typeName: "Tally", funcName: "merge")
+        // IdentityElementTemplate emits a qualified displayName like
+        // `"Tally.empty"` when the identity is a static member of a
+        // type. The orchestrator strips the type prefix so the witness
+        // resolves correctly via `Self.<name>` inside the extension.
+        let identity = makeIdentityElementSuggestion(
+            typeName: "Tally",
+            opName: "merge",
+            identityDisplayName: "Tally.empty"
+        )
+        let proposals = RefactorBridgeOrchestrator.proposals(from: [assoc, identity])
+        #expect(proposals["Tally"]?.identityWitness == "empty")
+    }
+
+    @Test("Witness names propagate when only the identity-element suggestion contributes the binary op evidence")
+    func witnessNamesFromIdentityElementAlone() {
+        // Edge case: associativity is the priority signal, but if it's
+        // missing entirely the orchestrator returns nil (no Semigroup
+        // claim). This test confirms the witness-only-on-identity-element
+        // path doesn't accidentally produce a proposal — the Semigroup
+        // gate is associativity-only per open decision #6.
+        let identity = makeIdentityElementSuggestion(
+            typeName: "Tally",
+            opName: "merge",
+            identityName: "empty"
+        )
+        let proposals = RefactorBridgeOrchestrator.proposals(from: [identity])
+        #expect(proposals["Tally"] == nil)
+    }
+
     // MARK: - Helpers
 
     private func makeSuggestion(
@@ -117,6 +174,38 @@ struct RefactorBridgeOrchestratorTests {
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
             identity: SuggestionIdentity(canonicalInput: identityHash)
+        )
+    }
+
+    /// Build an identity-element suggestion with the two-row evidence
+    /// shape `IdentityElementTemplate.suggest` produces — operation
+    /// evidence first, then identity-element evidence. The orchestrator
+    /// reads evidence[0] for combineWitness, evidence[1] for
+    /// identityWitness.
+    private func makeIdentityElementSuggestion(
+        typeName: String,
+        opName: String,
+        identityName: String? = nil,
+        identityDisplayName: String? = nil
+    ) -> Suggestion {
+        let opEvidence = Evidence(
+            displayName: "\(opName)(_:_:)",
+            signature: "(\(typeName), \(typeName)) -> \(typeName)",
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1)
+        )
+        let displayName = identityDisplayName ?? identityName ?? "empty"
+        let identityEvidence = Evidence(
+            displayName: displayName,
+            signature: ": \(typeName)",
+            location: SourceLocation(file: "Test.swift", line: 5, column: 1)
+        )
+        return Suggestion(
+            templateName: "identity-element",
+            evidence: [opEvidence, identityEvidence],
+            score: Score(signals: []),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "identity-element|\(opName)|\(typeName)")
         )
     }
 }

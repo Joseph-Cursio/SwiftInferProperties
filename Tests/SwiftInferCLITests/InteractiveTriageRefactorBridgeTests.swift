@@ -70,6 +70,8 @@ struct InteractiveTriageRefactorBridgeTests {
         let proposal = RefactorBridgeProposal(
             typeName: "IntSet",
             protocolName: "Semigroup",
+            combineWitness: "merge",
+            identityWitness: nil,
             explainability: ExplainabilityBlock(whySuggested: ["op match"], whyMightBeWrong: ["assoc not verified"]),
             relatedIdentities: [assoc.identity]
         )
@@ -87,12 +89,16 @@ struct InteractiveTriageRefactorBridgeTests {
         let path = try #require(result.writtenFiles.first)
         #expect(path.path.contains("Tests/Generated/SwiftInferRefactors/IntSet/Semigroup.swift"))
         let contents = try String(contentsOf: path, encoding: .utf8)
-        #expect(contents.contains("extension IntSet: Semigroup {}"))
+        // M7.5.a — emitter aliases the user's `merge` op into the
+        // kit's required `static func combine(_:_:)`.
+        #expect(contents.contains("extension IntSet: Semigroup {"))
+        #expect(contents.contains("public static func combine(_ lhs: IntSet, _ rhs: IntSet) -> IntSet {"))
+        #expect(contents.contains("Self.merge(lhs, rhs)"))
         #expect(contents.contains("import ProtocolLawKit"))
         #expect(contents.contains("RefactorBridge proposal: IntSet → Semigroup"))
     }
 
-    @Test("B accept on Monoid proposal writes a Monoid extension")
+    @Test("B accept on Monoid proposal writes a Monoid extension with combine + identity aliasing")
     func bAcceptWritesMonoidExtension() throws {
         let directory = try makeFixtureDirectory(name: "BAcceptMonoid")
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -100,6 +106,8 @@ struct InteractiveTriageRefactorBridgeTests {
         let proposal = RefactorBridgeProposal(
             typeName: "IntSet",
             protocolName: "Monoid",
+            combineWitness: "merge",
+            identityWitness: "empty",
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
             relatedIdentities: [assoc.identity]
         )
@@ -115,7 +123,11 @@ struct InteractiveTriageRefactorBridgeTests {
         let path = try #require(result.writtenFiles.first)
         #expect(path.path.contains("Tests/Generated/SwiftInferRefactors/IntSet/Monoid.swift"))
         let contents = try String(contentsOf: path, encoding: .utf8)
-        #expect(contents.contains("extension IntSet: Monoid {}"))
+        // M7.5.a — emitter aliases both `merge` (binary op) and
+        // `empty` (identity element) into the kit's required statics.
+        #expect(contents.contains("extension IntSet: Monoid {"))
+        #expect(contents.contains("Self.merge(lhs, rhs)"))
+        #expect(contents.contains("public static var identity: IntSet { Self.empty }"))
     }
 
     // MARK: - Per-type aggregation (open decision #7)
@@ -129,6 +141,8 @@ struct InteractiveTriageRefactorBridgeTests {
         let proposal = RefactorBridgeProposal(
             typeName: "IntSet",
             protocolName: "Monoid",
+            combineWitness: "merge",
+            identityWitness: "empty",
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
             relatedIdentities: [first.identity, second.identity]
         )
@@ -164,6 +178,8 @@ struct InteractiveTriageRefactorBridgeTests {
         let proposal = RefactorBridgeProposal(
             typeName: "IntSet",
             protocolName: "Semigroup",
+            combineWitness: "merge",
+            identityWitness: nil,
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
             relatedIdentities: [assoc.identity]  // unrelated.identity NOT in set
         )
@@ -192,6 +208,8 @@ struct InteractiveTriageRefactorBridgeTests {
         let proposal = RefactorBridgeProposal(
             typeName: "IntSet",
             protocolName: "Semigroup",
+            combineWitness: "merge",
+            identityWitness: nil,
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
             relatedIdentities: [assoc.identity]
         )
