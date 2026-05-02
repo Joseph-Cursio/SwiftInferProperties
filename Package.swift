@@ -46,13 +46,15 @@ let package = Package(
         // SwiftProtocolLaws v1.6.0+ exposes `DerivationStrategist` (and its
         // value types `TypeShape`, `StoredMember`, `RawType`, `MemberSpec`,
         // `DerivationStrategy`) publicly via the `ProtoLawCore` library
-        // product. SwiftInferProperties M3 consumes `ProtoLawCore` only —
+        // product. SwiftInferProperties M3 consumes `ProtoLawCore`;
+        // M7.4's RefactorBridge writeouts emit `extension TypeName:
+        // Semigroup {}` / `Monoid {}` against `import ProtocolLawKit`,
+        // requiring v1.8.0+ (the kit's first kit-defined protocol cluster).
         // `ProtocolLawKit` transitively pulls swift-testing's
         // `Testing.framework`, which would prevent the `swift-infer`
-        // executable from running outside a test context. Local-path until
-        // SwiftInferProperties crosses the 1.0 boundary; swap to a
-        // versioned URL dep before tagging.
-        .package(path: "../SwiftProtocolLaws"),
+        // executable from running outside a test context — only the
+        // generated test-target writeouts import it.
+        .package(url: "https://github.com/Joseph-Cursio/SwiftProtocolLaws.git", from: "1.8.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
