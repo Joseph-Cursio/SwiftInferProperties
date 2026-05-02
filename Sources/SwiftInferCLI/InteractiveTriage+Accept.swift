@@ -2,6 +2,14 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
+// swiftlint:disable file_length
+// M8.2 added four template arms (commutative / associative /
+// identity-element / inverse-pair) on top of the M6.3 + M7.3 four,
+// pushing this file past the 400-line cap. Splitting further would
+// scatter the dispatch + extraction helpers across two files for
+// minimal reader benefit; the file already lives one extension deep
+// from `InteractiveTriage.swift` for the same SwiftLint reason.
+
 /// Accept-path helpers + suggestion-field extraction for
 /// `InteractiveTriage` (M6.4). Split out to keep the main enum body
 /// under SwiftLint's 250-line cap; nothing here is part of the
@@ -42,10 +50,12 @@ extension InteractiveTriage {
 
     /// Build the lifted-test source text for `suggestion` if its
     /// template arm has a `LiftedTestEmitter` writeout in v1. M6.3
-    /// ships `idempotent` + `roundTrip`; M7.3 adds `monotonicity`
-    /// + `invariant-preservation`. The remaining three templates
-    /// (commutativity, associativity, identity-element) get their
-    /// arms in M8 and return `nil` here meanwhile.
+    /// ships `idempotent` + `roundTrip`; M7.3 adds `monotonicity` +
+    /// `invariant-preservation`; M8.2 closes the gap with
+    /// `commutativity`, `associativity`, `identity-element`, and
+    /// `inverse-pair`. After M8.2 every shipped template has a stub
+    /// arm — the `default` branch becomes a defensive fallback for
+    /// future templates rather than a v1 limitation.
     private static func liftedTestStub(for suggestion: Suggestion) -> String? {
         switch suggestion.templateName {
         case "idempotence":
@@ -56,6 +66,14 @@ extension InteractiveTriage {
             return monotonicStub(for: suggestion)
         case "invariant-preservation":
             return invariantPreservingStub(for: suggestion)
+        case "commutativity":
+            return commutativeStub(for: suggestion)
+        case "associativity":
+            return associativeStub(for: suggestion)
+        case "identity-element":
+            return identityElementStub(for: suggestion)
+        case "inverse-pair":
+            return inversePairStub(for: suggestion)
         default:
             return nil
         }
@@ -126,6 +144,94 @@ extension InteractiveTriage {
             seed: seed,
             generator: LiftedTestEmitter.defaultGenerator(for: typeName)
         )
+    }
+
+    private static func commutativeStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let funcName = functionName(from: evidence.displayName),
+              let typeName = paramType(from: evidence.signature) else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.commutative(
+            funcName: funcName,
+            typeName: typeName,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: typeName)
+        )
+    }
+
+    private static func associativeStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let funcName = functionName(from: evidence.displayName),
+              let typeName = paramType(from: evidence.signature) else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.associative(
+            funcName: funcName,
+            typeName: typeName,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: typeName)
+        )
+    }
+
+    /// IdentityElementTemplate emits a 2-row evidence: row 0 is the
+    /// binary op (signature `(T, T) -> T`), row 1 is the identity
+    /// element (displayName like `"IntSet.empty"` or `"empty"`,
+    /// signature `": T"`). Mirror of
+    /// `RefactorBridgeOrchestrator.identityWitnessName(from:)` —
+    /// strips the optional type prefix so the emitter receives the
+    /// bare member name and references it as `\(typeName).\(identityName)`.
+    private static func identityElementStub(for suggestion: Suggestion) -> String? {
+        guard suggestion.evidence.count >= 2,
+              let opEvidence = suggestion.evidence.first,
+              let identityEvidence = suggestion.evidence.dropFirst().first,
+              let funcName = functionName(from: opEvidence.displayName),
+              let typeName = paramType(from: opEvidence.signature) else {
+            return nil
+        }
+        let identityName = bareIdentityName(from: identityEvidence.displayName)
+        guard !identityName.isEmpty else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.identityElement(
+            funcName: funcName,
+            typeName: typeName,
+            identityName: identityName,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: typeName)
+        )
+    }
+
+    private static func inversePairStub(for suggestion: Suggestion) -> String? {
+        guard suggestion.evidence.count >= 2,
+              let forwardEvidence = suggestion.evidence.first,
+              let reverseEvidence = suggestion.evidence.dropFirst().first,
+              let forwardName = functionName(from: forwardEvidence.displayName),
+              let inverseName = functionName(from: reverseEvidence.displayName),
+              let forwardParam = paramType(from: forwardEvidence.signature) else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.inversePair(
+            forwardName: forwardName,
+            inverseName: inverseName,
+            typeName: forwardParam,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: forwardParam)
+        )
+    }
+
+    /// Strip the optional `\(typeName).` prefix from an identity-element
+    /// evidence displayName. `"IntSet.empty"` → `"empty"`; `"empty"` →
+    /// `"empty"`. Used by `identityElementStub`.
+    private static func bareIdentityName(from displayName: String) -> String {
+        guard let dotIndex = displayName.lastIndex(of: ".") else {
+            return displayName
+        }
+        return String(displayName[displayName.index(after: dotIndex)...])
     }
 
     /// Wrap the bare `@Test func` block from `LiftedTestEmitter` with
@@ -341,3 +447,4 @@ extension InteractiveTriage {
         }
     }
 }
+// swiftlint:enable file_length

@@ -100,10 +100,13 @@ struct InteractiveTriageTests {
     }
 
     @Test
-    func acceptOnUnsupportedTemplateRecordsDecisionWithoutWritingFile() throws {
-        // Commutativity has no LiftedTestEmitter arm in v1 — accept
-        // records the decision but the orchestrator emits a `note:`
-        // diagnostic and skips the file write.
+    func acceptOnCommutativityWritesFileViaM8_2EmitterArm() throws {
+        // M8.2 added the LiftedTestEmitter.commutative arm — accept now
+        // writes a stub file rather than surfacing the v1 "no stub
+        // writeout available" diagnostic. This test pins the M8.2
+        // wiring: dispatch through `liftedTestStub(for:)` ->
+        // `commutativeStub(for:)` -> `LiftedTestEmitter.commutative(...)`
+        // -> Tests/Generated/SwiftInfer/commutativity/merge.swift.
         let directory = try makeFixtureDirectory(name: "AcceptCommutativity")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeBinarySuggestion(template: "commutativity", funcName: "merge")
@@ -119,10 +122,16 @@ struct InteractiveTriageTests {
         )
         let stored = try #require(result.updatedDecisions.record(for: suggestion.identity.normalized))
         #expect(stored.decision == .accepted)
-        #expect(result.writtenFiles.isEmpty)
+        let stubPath = try #require(result.writtenFiles.first)
+        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/commutativity/merge.swift"))
+        let contents = try String(contentsOf: stubPath, encoding: .utf8)
+        #expect(contents.contains("@Test func merge_isCommutative()"))
+        #expect(contents.contains("merge(pair.0, pair.1) == merge(pair.1, pair.0)"))
+        // The "no stub writeout available" diagnostic must NOT fire —
+        // M8.2 closes that gap for every shipped template.
         #expect(diagnostics.lines.contains { line in
-            line.contains("no stub writeout available for template 'commutativity'")
-        })
+            line.contains("no stub writeout available")
+        } == false)
     }
 
     // MARK: - Skip + Reject + Empty-line
