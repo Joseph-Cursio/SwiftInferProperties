@@ -40,16 +40,24 @@ public struct Vocabulary: Sendable, Equatable {
     /// `commutativityVerbs` — carried in the M2.1 schema.
     public let antiCommutativityVerbs: [String]
 
+    /// Project-supplied verbs for the monotonicity template (M7.1). Extends
+    /// the curated `length` / `count` / `size` / `priority` / `score` /
+    /// `depth` / `height` / `weight` list. Kept opt-in alongside the curated
+    /// set the template ships with.
+    public let monotonicityVerbs: [String]
+
     public init(
         inversePairs: [InversePair] = [],
         idempotenceVerbs: [String] = [],
         commutativityVerbs: [String] = [],
-        antiCommutativityVerbs: [String] = []
+        antiCommutativityVerbs: [String] = [],
+        monotonicityVerbs: [String] = []
     ) {
         self.inversePairs = inversePairs
         self.idempotenceVerbs = idempotenceVerbs
         self.commutativityVerbs = commutativityVerbs
         self.antiCommutativityVerbs = antiCommutativityVerbs
+        self.monotonicityVerbs = monotonicityVerbs
     }
 
     /// The default vocabulary — every list empty. Templates fall back to
@@ -64,6 +72,7 @@ extension Vocabulary: Codable {
         case idempotenceVerbs
         case commutativityVerbs
         case antiCommutativityVerbs
+        case monotonicityVerbs
     }
 
     public init(from decoder: any Decoder) throws {
@@ -72,7 +81,8 @@ extension Vocabulary: Codable {
             inversePairs: try container.decodeIfPresent([InversePair].self, forKey: .inversePairs) ?? [],
             idempotenceVerbs: try container.decodeIfPresent([String].self, forKey: .idempotenceVerbs) ?? [],
             commutativityVerbs: try container.decodeIfPresent([String].self, forKey: .commutativityVerbs) ?? [],
-            antiCommutativityVerbs: try container.decodeIfPresent([String].self, forKey: .antiCommutativityVerbs) ?? []
+            antiCommutativityVerbs: try container.decodeIfPresent([String].self, forKey: .antiCommutativityVerbs) ?? [],
+            monotonicityVerbs: try container.decodeIfPresent([String].self, forKey: .monotonicityVerbs) ?? []
         )
     }
 
@@ -82,6 +92,7 @@ extension Vocabulary: Codable {
         try container.encode(idempotenceVerbs, forKey: .idempotenceVerbs)
         try container.encode(commutativityVerbs, forKey: .commutativityVerbs)
         try container.encode(antiCommutativityVerbs, forKey: .antiCommutativityVerbs)
+        try container.encode(monotonicityVerbs, forKey: .monotonicityVerbs)
     }
 }
 

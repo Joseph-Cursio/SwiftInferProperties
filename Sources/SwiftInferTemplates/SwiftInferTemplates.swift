@@ -211,6 +211,13 @@ public enum TemplateRegistry {
         ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
+        // MonotonicityTemplate is intentionally NOT dispatched here. The M7.1
+        // plan row scopes M7.1 as "Pure template — no orchestration" and
+        // M7.6's validation suite handles registry wiring once the synthetic
+        // corpus gains a `length(_:)`-shaped fixture and the existing
+        // discover-pipeline goldens are updated for the new template's
+        // matches. Calling code can still consume the template directly via
+        // `MonotonicityTemplate.suggest(for:vocabulary:)`.
     }
 
     /// Convenience: scan `directory` recursively, run every shipped

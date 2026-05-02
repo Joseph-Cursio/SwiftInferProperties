@@ -15,6 +15,7 @@ public struct Signal: Sendable, Equatable {
         // Positive
         case exactNameMatch
         case typeSymmetrySignature
+        case orderedCodomainSignature
         case algebraicStructureCluster
         case reduceFoldUsage
         case discoverableAnnotation
