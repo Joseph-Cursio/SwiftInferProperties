@@ -10,7 +10,9 @@
 ///   "inversePairs": [["enqueue", "dequeue"], ["activate", "deactivate"]],
 ///   "idempotenceVerbs": ["sanitizeXML", "rewritePath"],
 ///   "commutativityVerbs": ["unionGraphs"],
-///   "antiCommutativityVerbs": ["concatenateOrdered"]
+///   "antiCommutativityVerbs": ["concatenateOrdered"],
+///   "monotonicityVerbs": ["depth"],
+///   "inverseElementVerbs": ["mirror", "antipodal"]
 /// }
 /// ```
 ///
@@ -46,18 +48,30 @@ public struct Vocabulary: Sendable, Equatable {
     /// set the template ships with.
     public let monotonicityVerbs: [String]
 
+    /// Project-supplied verbs for the inverse-element pairing pass (M8.3 +
+    /// M8.4 Group arm). Extends the curated `negate` / `negated` /
+    /// `inverse` / `inverted` / `reciprocal` / `complement` / `invert`
+    /// list. The pairing pass uses these as a *pre-filter* — only unary
+    /// `T -> T` functions whose name matches the curated or project list
+    /// surface as inverse-element witnesses. PRD §5.4's Group claim
+    /// requires a Monoid + inverse signal pair on the same type; this is
+    /// the "inverse" half of that signal.
+    public let inverseElementVerbs: [String]
+
     public init(
         inversePairs: [InversePair] = [],
         idempotenceVerbs: [String] = [],
         commutativityVerbs: [String] = [],
         antiCommutativityVerbs: [String] = [],
-        monotonicityVerbs: [String] = []
+        monotonicityVerbs: [String] = [],
+        inverseElementVerbs: [String] = []
     ) {
         self.inversePairs = inversePairs
         self.idempotenceVerbs = idempotenceVerbs
         self.commutativityVerbs = commutativityVerbs
         self.antiCommutativityVerbs = antiCommutativityVerbs
         self.monotonicityVerbs = monotonicityVerbs
+        self.inverseElementVerbs = inverseElementVerbs
     }
 
     /// The default vocabulary — every list empty. Templates fall back to
@@ -73,6 +87,7 @@ extension Vocabulary: Codable {
         case commutativityVerbs
         case antiCommutativityVerbs
         case monotonicityVerbs
+        case inverseElementVerbs
     }
 
     public init(from decoder: any Decoder) throws {
@@ -82,7 +97,8 @@ extension Vocabulary: Codable {
             idempotenceVerbs: try container.decodeIfPresent([String].self, forKey: .idempotenceVerbs) ?? [],
             commutativityVerbs: try container.decodeIfPresent([String].self, forKey: .commutativityVerbs) ?? [],
             antiCommutativityVerbs: try container.decodeIfPresent([String].self, forKey: .antiCommutativityVerbs) ?? [],
-            monotonicityVerbs: try container.decodeIfPresent([String].self, forKey: .monotonicityVerbs) ?? []
+            monotonicityVerbs: try container.decodeIfPresent([String].self, forKey: .monotonicityVerbs) ?? [],
+            inverseElementVerbs: try container.decodeIfPresent([String].self, forKey: .inverseElementVerbs) ?? []
         )
     }
 
@@ -93,6 +109,7 @@ extension Vocabulary: Codable {
         try container.encode(commutativityVerbs, forKey: .commutativityVerbs)
         try container.encode(antiCommutativityVerbs, forKey: .antiCommutativityVerbs)
         try container.encode(monotonicityVerbs, forKey: .monotonicityVerbs)
+        try container.encode(inverseElementVerbs, forKey: .inverseElementVerbs)
     }
 }
 
