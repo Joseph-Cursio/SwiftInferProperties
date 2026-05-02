@@ -337,12 +337,15 @@ Multiple per-template signals on the same type → structural claim (semigroup, 
 |---|---|---|
 | binary op `(T, T) → T` + associativity | **Semigroup** | **kit-defined `Semigroup`** (v1.8.0+) |
 | Semigroup + identity element | **Monoid** | **kit-defined `Monoid`** (v1.8.0+); `AdditiveArithmetic` still suggested as a *secondary* Option B when the `+` / `zero` shape fits |
-| Monoid + inverse function | **Group** | (no kit protocol yet — claim only; M8) |
-| Monoid + commutativity + idempotence | **Bounded join-semilattice** | suggest `SetAlgebra` if applicable |
-| Two monoids on same type, distributive | **Ring** | suggest `Numeric` (with caveats — see below) |
-| `T → T` + `T → T` inverse + identity | **Group acting on T** | (no kit protocol yet — informational) |
+| Monoid + commutativity | **CommutativeMonoid** | **kit-defined `CommutativeMonoid`** (v1.9.0+) — adds `combineCommutativity` Strict law on top of Monoid |
+| Monoid + inverse function | **Group** | **kit-defined `Group`** (v1.9.0+) — adds `static func inverse(_:)` requirement + `combineLeftInverse` / `combineRightInverse` Strict laws |
+| CommutativeMonoid + idempotence | **Semilattice** | **kit-defined `Semilattice`** (v1.9.0+) — adds `combineIdempotence` Strict law; stdlib `SetAlgebra` suggested as a *secondary* Option B when curated set-named ops (`union` / `intersect` / `subtract`) fire |
+| Two monoids on same type, distributive | **Ring** | suggest stdlib `Numeric` (with caveats — see below) |
+| `T → T` + `T → T` inverse + identity | **Group acting on T** | (no kit protocol yet — informational; function-space carrier doesn't fit the kit's per-type protocol shape) |
 
-The M7.5.a writeout path (`Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`) emits aliasing extensions that bridge the user's existing op / identity names into the kit's required `static func combine(_:_:)` / `static var identity`. The user's source compiles end-to-end against `import ProtocolLawKit`; SwiftProtocolLaws' discovery plugin then verifies the laws on every CI run thereafter.
+The M7.5.a writeout path (`Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`) emits aliasing extensions that bridge the user's existing op / identity names into the kit's required `static func combine(_:_:)` / `static var identity` / `static func inverse(_:)`. The user's source compiles end-to-end against `import ProtocolLawKit`; SwiftProtocolLaws' discovery plugin then verifies the laws on every CI run thereafter.
+
+**Post-M8 status (M8.4.a + M8.4.b.1 + M8.4.b.2 shipped on `main`).** Every row of the table above is now end-to-end implemented through the orchestrator → emitter → InteractiveTriage dispatch chain. M8.0 added kit-defined `CommutativeMonoid` / `Group` / `Semilattice` to SwiftProtocolLaws v1.9.0, retiring the v0.4-as-drafted "claim only" status those rows had. M8.4.b.1's `[A/B/B'/s/n/?]` extended prompt surfaces the Semilattice + SetAlgebra dual when curated set-named ops fire, plus the incomparable-arm split for types that satisfy both CommutativeMonoid AND Group simultaneously (mathematically a CommutativeGroup; v1.9.0 doesn't ship a kit `CommutativeGroup`, so the orchestrator emits both as peer proposals). M8.4.b.2's Ring detection consumes the per-(type, op-set) signal accumulator + curated additive (`+` / `add` / `plus` / `sum`) and multiplicative (`*` / `multiply` / `times` / `mul` / `product`) naming lists; the writeout targets stdlib `Numeric` with a strong §4.5 caveat covering the FloatingPoint / IEEE-754 trap.
 
 ### 5.5 Cross-Function Pairing Strategy
 

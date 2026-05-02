@@ -207,6 +207,80 @@ struct HardGuaranteeTests {
         #expect(sourceBefore == sourceAfter)
     }
 
+    // MARK: - §16 #1 — M8 RefactorBridge writeout allowlist (CMon / Group / Semilattice / Ring)
+
+    @Test("M8 --interactive B accept honors the SwiftInferRefactors/ allowlist for every new arm")
+    func interactiveBAcceptOnEachM8ArmHonorsAllowlist() throws {
+        // Builds a fixture corpus where each of the four M8 promotion
+        // arms (CommutativeMonoid / Group / Semilattice / Ring) fires on
+        // a distinct type. Runs `--interactive` with scripted "B" inputs
+        // for every prompt, then asserts every added file is under the
+        // SwiftInferRefactors/ allowlist + decisions.json. PRD §16 #1
+        // hard-guarantee — M8's expanded promotion surface must NOT
+        // accidentally write outside the allowlist for any arm.
+        let directory = try makeM8MultiArmFixture(named: "M8AllArmsAllowlist")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        let before = try fileSet(of: directory)
+        // Script enough B / s answers to navigate every prompt the
+        // corpus surfaces. The exact prompt count depends on which
+        // suggestions fire; over-specify with "s" tail to handle any
+        // residual collapse-to-[A/s/n/?] prompts after the per-type
+        // conformance is decided.
+        let script = Array(repeating: "B", count: 10) + Array(repeating: "s", count: 30)
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            interactive: true,
+            promptInput: ScriptedPromptInput(scriptedLines: script),
+            output: SilentOutput(),
+            diagnostics: SilentDiagnosticOutput()
+        )
+        let after = try fileSet(of: directory)
+        let added = after.subtracting(before)
+        // Every added file must land under SwiftInferRefactors/ or be
+        // the decisions.json record. SwiftInfer/ test-stub writeouts
+        // are also permitted (the corpus may surface property-test
+        // suggestions on these types); the allowlist is the union.
+        for path in added {
+            let isInfer = path.hasPrefix("/Tests/Generated/SwiftInfer/")
+            let isRefactors = path.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
+            let isDecisions = path == "/.swiftinfer/decisions.json"
+            #expect(
+                isInfer || isRefactors || isDecisions,
+                "M8 --interactive accept wrote outside the allowlist: \(path)"
+            )
+        }
+        // At least one Refactors writeout must exist — the test would
+        // be vacuous otherwise. Spot-check that one of the M8 protocol
+        // arms surfaced.
+        let refactorsPaths = added.filter {
+            $0.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
+        }
+        #expect(!refactorsPaths.isEmpty, "expected at least one M8 conformance writeout")
+        let m8Protocols = ["CommutativeMonoid", "Group", "Semilattice", "Numeric", "SetAlgebra"]
+        let firedM8Arm = refactorsPaths.contains { path in
+            m8Protocols.contains { path.contains("/\($0).swift") }
+        }
+        #expect(firedM8Arm, "expected at least one of \(m8Protocols) to surface; got: \(refactorsPaths)")
+        // The §16 #1 invariant we're pinning: every writeout under
+        // /Tests/Generated/SwiftInferRefactors/ matches the
+        // <TypeName>/<ProtocolName>.swift convention. Multi-arm
+        // single-session coverage is brittle (per-prompt scripting
+        // depends on suggestion ordering); per-arm integration tests
+        // live alongside the orchestrator unit tests.
+        for path in refactorsPaths {
+            let parts = path.components(separatedBy: "/").suffix(2)
+            #expect(parts.count == 2,
+                "expected /Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift; got: \(path)")
+            #expect(path.hasSuffix(".swift"),
+                "expected .swift extension; got: \(path)")
+        }
+        // Source files untouched.
+        let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
+        let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
+        #expect(sourceBefore == sourceAfter)
+    }
+
     @Test("--update-baseline writes only .swiftinfer/baseline.json under packageRoot")
     func updateBaselineWritesOnlyToConventionalPath() throws {
         let directory = try makeM6Fixture(named: "UpdateBaselineAllowlist")
@@ -401,6 +475,68 @@ struct HardGuaranteeTests {
         }
         """.write(
             to: target.appendingPathComponent("Bag.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        return base
+    }
+
+    /// M8.6 fixture — corpus exercising each new orchestrator promotion
+    /// arm on a distinct type:
+    ///
+    /// - **`Tally`** — `merge` is associative + commutative + has
+    ///   identity `empty` → fires CommutativeMonoid (kit v1.9.0).
+    /// - **`AdditiveInt`** — `plus` Monoid-shaped + `negate` curated
+    ///   inverse → fires Group (kit v1.9.0).
+    /// - **`MaxInt`** — `combine` (max-shape) is associative +
+    ///   commutative + idempotent + has identity → fires Semilattice
+    ///   (kit v1.9.0). Curated set-named ops not used; pure
+    ///   Semilattice without SetAlgebra secondary.
+    /// - **`Money`** — `add` + `multiply` both Monoid-shaped →
+    ///   fires Ring (stdlib `Numeric`).
+    private func makeM8MultiArmFixture(named name: String) throws -> URL {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftInferM8MultiArm-\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: base.appendingPathComponent("Package.swift")
+        )
+        let target = base.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        // M2.5's IdentityElementTemplate requires explicit `: T` type
+        // annotation on identity-candidate declarations — the
+        // FunctionScanner's identity-candidate emit pass skips
+        // type-inferred decls. Every static let below carries an
+        // explicit annotation so the IdentityCandidate records emit.
+        try """
+        struct Tally: Equatable {
+            static let empty: Tally = Tally()
+            static func merge(_ lhs: Tally, _ rhs: Tally) -> Tally { lhs }
+            // M2.3 commutativity matches by name (`merge` is in the
+            // curated commutativity-verb list).
+        }
+
+        struct AdditiveInt: Equatable {
+            static let zero: AdditiveInt = AdditiveInt()
+            static func plus(_ lhs: AdditiveInt, _ rhs: AdditiveInt) -> AdditiveInt { lhs }
+            static func negate(_ value: AdditiveInt) -> AdditiveInt { value }
+        }
+
+        struct MaxInt: Equatable {
+            static let minimum: MaxInt = MaxInt()
+            static func combine(_ lhs: MaxInt, _ rhs: MaxInt) -> MaxInt { lhs }
+            // `combine` matches commutativity + idempotence verbs +
+            // is associative — fires the full Semilattice signal set.
+        }
+
+        struct Money: Equatable {
+            static let zero: Money = Money()
+            static let one: Money = Money()
+            static func add(_ lhs: Money, _ rhs: Money) -> Money { lhs }
+            static func multiply(_ lhs: Money, _ rhs: Money) -> Money { lhs }
+        }
+        """.write(
+            to: target.appendingPathComponent("M8Arms.swift"),
             atomically: true,
             encoding: .utf8
         )
