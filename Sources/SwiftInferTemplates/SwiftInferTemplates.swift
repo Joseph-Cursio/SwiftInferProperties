@@ -1,6 +1,14 @@
 import Foundation
 import SwiftInferCore
 
+// swiftlint:disable file_length type_body_length
+// M8.4.a added DiscoverArtifacts + discoverArtifacts(in:) on top of the
+// existing TemplateRegistry surface, pushing both file_length (>400)
+// and the TemplateRegistry enum's type_body_length (>250) past their
+// caps. Splitting would scatter the orchestration entry points across
+// multiple files for no reader benefit — every entry point shares the
+// SuggestionCollector / per-summary helpers / cross-validation seam.
+
 /// SwiftInferTemplates — TemplateEngine template registry.
 ///
 /// PRD v0.3 §5.2 specifies eight shipped templates: round-trip, idempotence,
@@ -252,9 +260,51 @@ public enum TemplateRegistry {
         diagnostic: (String) -> Void = { _ in },
         crossValidationFromTestLifter: Set<SuggestionIdentity> = []
     ) throws -> [Suggestion] {
+        try discoverArtifacts(
+            in: directory,
+            vocabulary: vocabulary,
+            diagnostic: diagnostic,
+            crossValidationFromTestLifter: crossValidationFromTestLifter
+        ).suggestions
+    }
+
+    /// Result of a `discoverArtifacts(in:)` run — bundles the surviving
+    /// suggestions with the inverse-element witness records M8.4.a's
+    /// `RefactorBridgeOrchestrator` needs to emit Group claims. M7.5
+    /// callers continue to use `discover(in:)` for the suggestions-only
+    /// shape; the M8.4.a CLI uses `discoverArtifacts` so it can thread
+    /// the inverse pairs into the orchestrator without a second corpus
+    /// scan.
+    public struct DiscoverArtifacts: Sendable {
+        public let suggestions: [Suggestion]
+        public let inverseElementPairs: [InverseElementPair]
+
+        public init(
+            suggestions: [Suggestion],
+            inverseElementPairs: [InverseElementPair]
+        ) {
+            self.suggestions = suggestions
+            self.inverseElementPairs = inverseElementPairs
+        }
+    }
+
+    /// Scan + discover + extract M8.3's inverse-element witnesses in one
+    /// pass over the corpus. Mirrors `discover(in:)`'s semantics for
+    /// suggestions (skip-marker filtering, every shipped template fires)
+    /// and additionally returns `InverseElementPair` records the CLI
+    /// threads into the M8.4.a orchestrator. The corpus is scanned
+    /// exactly once — the inverse-element pass reads the same
+    /// `corpus.summaries` array the suggestion-collection pass does, so
+    /// the §13 perf budget isn't doubled.
+    public static func discoverArtifacts(
+        in directory: URL,
+        vocabulary: Vocabulary = .empty,
+        diagnostic: (String) -> Void = { _ in },
+        crossValidationFromTestLifter: Set<SuggestionIdentity> = []
+    ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
-        return discover(
+        let suggestions = discover(
             in: corpus.summaries,
             identities: corpus.identities,
             typeDecls: corpus.typeDecls,
@@ -264,6 +314,14 @@ public enum TemplateRegistry {
         ).filter { suggestion in
             !skipHashes.contains(suggestion.identity.normalized)
         }
+        let inverseElementPairs = InverseElementPairing.candidates(
+            in: corpus.summaries,
+            vocabulary: vocabulary
+        )
+        return DiscoverArtifacts(
+            suggestions: suggestions,
+            inverseElementPairs: inverseElementPairs
+        )
     }
 
     /// PRD §5.6 #2 — every type that has to classify Equatable for the
@@ -380,3 +438,4 @@ public enum TemplateRegistry {
         return lhs.templateName < rhs.templateName
     }
 }
+// swiftlint:enable file_length type_body_length

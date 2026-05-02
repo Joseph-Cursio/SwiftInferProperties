@@ -191,7 +191,10 @@ extension SwiftInferCommand {
             }
             if interactive {
                 let packageRoot = pipeline.packageRoot ?? directory
-                let proposalsByType = RefactorBridgeOrchestrator.proposals(from: visible)
+                let proposalsByType = RefactorBridgeOrchestrator.proposals(
+                    from: visible,
+                    inverseElementPairs: pipeline.inverseElementPairs
+                )
                 let context = InteractiveTriage.Context(
                     prompt: promptInput,
                     output: output,

@@ -19,9 +19,23 @@ extension SwiftInferCommand.Discover {
         public let suggestions: [Suggestion]
         public let packageRoot: URL?
 
-        public init(suggestions: [Suggestion], packageRoot: URL?) {
+        /// Inverse-element witness pairs (M8.3) — feeds M8.4.a's
+        /// `RefactorBridgeOrchestrator.proposals(from:inverseElementPairs:)`
+        /// to surface `Group` conformance proposals when the corpus
+        /// has a unary inverse function alongside a binary op +
+        /// identity element on the same type. Empty for the non-
+        /// interactive code paths (drift, render-only); the
+        /// orchestrator only consumes them in `--interactive` mode.
+        public let inverseElementPairs: [InverseElementPair]
+
+        public init(
+            suggestions: [Suggestion],
+            packageRoot: URL?,
+            inverseElementPairs: [InverseElementPair] = []
+        ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
+            self.inverseElementPairs = inverseElementPairs
         }
     }
 
@@ -53,15 +67,19 @@ extension SwiftInferCommand.Discover {
         for warning in vocabResult.warnings {
             diagnostics.writeDiagnostic("warning: \(warning)")
         }
-        let all = try TemplateRegistry.discover(
+        let artifacts = try TemplateRegistry.discoverArtifacts(
             in: directory,
             vocabulary: vocabResult.vocabulary,
             diagnostic: { diagnostics.writeDiagnostic($0) }
         )
-        let visible = all.filter { suggestion in
+        let visible = artifacts.suggestions.filter { suggestion in
             effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
         }
-        return PipelineResult(suggestions: visible, packageRoot: configResult.packageRoot)
+        return PipelineResult(
+            suggestions: visible,
+            packageRoot: configResult.packageRoot,
+            inverseElementPairs: artifacts.inverseElementPairs
+        )
     }
 
     /// Snapshot the current run's surface-suggestion identities to
