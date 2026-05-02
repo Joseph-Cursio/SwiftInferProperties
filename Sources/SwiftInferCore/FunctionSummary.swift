@@ -59,6 +59,19 @@ public struct FunctionSummary: Sendable, Equatable {
     /// the field compile unchanged.
     public let discoverableGroup: String?
 
+    /// Keypath text from a `@CheckProperty(.preservesInvariant(\.foo))`
+    /// attribute on the function decl, when the user has tagged it. `nil`
+    /// when the function carries no such attribute or the attribute's
+    /// argument isn't a well-formed key-path literal. PRD v0.4 §5.2 +
+    /// M7.2 plan row: SwiftInferProperties recognizes the attribute by
+    /// name match (same posture as `discoverableGroup`); the keypath is
+    /// captured opaquely as source text per M7 plan open decision #5(a).
+    /// `InvariantPreservationTemplate` fires only when this field is
+    /// non-nil — there is no naming/type-pattern fallback. Defaults to
+    /// `nil` so call sites that don't yet populate the field compile
+    /// unchanged.
+    public let invariantKeypath: String?
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -70,7 +83,8 @@ public struct FunctionSummary: Sendable, Equatable {
         location: SourceLocation,
         containingTypeName: String?,
         bodySignals: BodySignals,
-        discoverableGroup: String? = nil
+        discoverableGroup: String? = nil,
+        invariantKeypath: String? = nil
     ) {
         self.name = name
         self.parameters = parameters
@@ -83,6 +97,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.containingTypeName = containingTypeName
         self.bodySignals = bodySignals
         self.discoverableGroup = discoverableGroup
+        self.invariantKeypath = invariantKeypath
     }
 }
 

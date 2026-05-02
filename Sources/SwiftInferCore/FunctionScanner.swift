@@ -245,6 +245,7 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
         let containingTypeName = typeStack.last
         let bodySignals = scanBody(of: node)
         let discoverableGroup = Self.scanDiscoverableGroup(in: node.attributes)
+        let invariantKeypath = Self.scanInvariantKeypath(in: node.attributes)
 
         return FunctionSummary(
             name: name,
@@ -257,7 +258,8 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             location: location,
             containingTypeName: containingTypeName,
             bodySignals: bodySignals,
-            discoverableGroup: discoverableGroup
+            discoverableGroup: discoverableGroup,
+            invariantKeypath: invariantKeypath
         )
     }
 
@@ -302,6 +304,39 @@ private final class FunctionScannerVisitor: SyntaxVisitor {
             return nil
         }
         return segment.content.text
+    }
+
+    /// Detect `@CheckProperty(.preservesInvariant(\.foo))` on a function
+    /// decl's attribute list and return the keypath source text (e.g.
+    /// `"\.isValid"`), or `nil` when the attribute is absent or
+    /// malformed. M7.2 plan row: scanner-side recognition only, mirroring
+    /// `scanDiscoverableGroup`'s posture (PRD v0.4 §5.7) — match the
+    /// attribute by name (`CheckProperty`) and capture the keypath
+    /// opaquely per M7 plan open decision #5(a).
+    ///
+    /// Multiple `@CheckProperty(.preservesInvariant(...))` attributes on
+    /// the same decl: the first well-formed one wins (consistent with
+    /// `scanDiscoverableGroup`'s tie-break). Other `@CheckProperty`
+    /// arms (`.idempotent`, `.roundTrip`) are ignored here; this scan
+    /// is invariant-specific.
+    private static func scanInvariantKeypath(in attributes: AttributeListSyntax) -> String? {
+        for element in attributes {
+            guard let attribute = element.as(AttributeSyntax.self) else { continue }
+            let nameText = attribute.attributeName.trimmedDescription
+            let lastComponent = nameText.split(separator: ".").last.map(String.init) ?? nameText
+            guard lastComponent == "CheckProperty" else { continue }
+            guard case let .argumentList(arguments) = attribute.arguments,
+                  let firstArgument = arguments.first else { continue }
+            guard let call = firstArgument.expression.as(FunctionCallExprSyntax.self),
+                  let memberAccess = call.calledExpression.as(MemberAccessExprSyntax.self),
+                  memberAccess.declName.baseName.text == "preservesInvariant" else { continue }
+            guard let keyPathArgument = call.arguments.first,
+                  let keyPath = keyPathArgument.expression.as(KeyPathExprSyntax.self) else {
+                continue
+            }
+            return keyPath.trimmedDescription
+        }
+        return nil
     }
 
     private func makeParameter(from syntax: FunctionParameterSyntax) -> Parameter {

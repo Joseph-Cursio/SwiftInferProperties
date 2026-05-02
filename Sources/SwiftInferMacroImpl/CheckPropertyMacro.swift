@@ -40,6 +40,13 @@ public struct CheckPropertyMacro: PeerMacro {
                 inverseName: inverseName,
                 in: context
             )
+        case .preservesInvariant:
+            // M7.2 ships scanner-side recognition only — the macro impl
+            // matches the case so user code compiles, but emits no peer.
+            // The `swift-infer discover` scanner recognises the same
+            // attribute textually and surfaces a Strong-tier suggestion.
+            // Peer-test generation is M7.2.a per the M7 plan.
+            return []
         }
     }
 
@@ -52,6 +59,7 @@ public struct CheckPropertyMacro: PeerMacro {
     private enum ParsedKind {
         case idempotent
         case roundTrip(pairedWith: String)
+        case preservesInvariant(keyPath: String)
     }
 
     private static func parseKind(from node: AttributeSyntax) -> ParsedKind? {
@@ -60,12 +68,13 @@ public struct CheckPropertyMacro: PeerMacro {
             return nil
         }
         // The argument is a member-access expression like `.idempotent`
-        // or `.roundTrip(pairedWith: "decode")`.
+        // or a function call like `.roundTrip(pairedWith: "decode")` or
+        // `.preservesInvariant(\.isValid)`.
         if let memberAccess = firstArgument.expression.as(MemberAccessExprSyntax.self) {
             return parseSimpleCase(memberAccess: memberAccess)
         }
         if let functionCall = firstArgument.expression.as(FunctionCallExprSyntax.self) {
-            return parseRoundTripCase(call: functionCall)
+            return parseFunctionCallCase(call: functionCall)
         }
         return nil
     }
@@ -77,17 +86,28 @@ public struct CheckPropertyMacro: PeerMacro {
         }
     }
 
-    private static func parseRoundTripCase(call: FunctionCallExprSyntax) -> ParsedKind? {
-        guard let memberAccess = call.calledExpression.as(MemberAccessExprSyntax.self),
-              memberAccess.declName.baseName.text == "roundTrip" else {
+    private static func parseFunctionCallCase(call: FunctionCallExprSyntax) -> ParsedKind? {
+        guard let memberAccess = call.calledExpression.as(MemberAccessExprSyntax.self) else {
             return nil
         }
-        for argument in call.arguments where argument.label?.text == "pairedWith" {
-            if let paired = stringLiteralValue(of: argument.expression) {
-                return .roundTrip(pairedWith: paired)
+        switch memberAccess.declName.baseName.text {
+        case "roundTrip":
+            for argument in call.arguments where argument.label?.text == "pairedWith" {
+                if let paired = stringLiteralValue(of: argument.expression) {
+                    return .roundTrip(pairedWith: paired)
+                }
             }
+            return nil
+        case "preservesInvariant":
+            // First (unlabelled) argument is the keypath literal.
+            guard let firstArgument = call.arguments.first else { return nil }
+            guard let keyPath = firstArgument.expression.as(KeyPathExprSyntax.self) else {
+                return nil
+            }
+            return .preservesInvariant(keyPath: keyPath.trimmedDescription)
+        default:
+            return nil
         }
-        return nil
     }
 
     private static func stringLiteralValue(of expression: ExprSyntax) -> String? {
