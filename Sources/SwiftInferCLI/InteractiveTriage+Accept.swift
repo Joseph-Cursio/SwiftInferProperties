@@ -42,15 +42,20 @@ extension InteractiveTriage {
 
     /// Build the lifted-test source text for `suggestion` if its
     /// template arm has a `LiftedTestEmitter` writeout in v1. M6.3
-    /// ships only `idempotent` + `roundTrip`; the other three
-    /// templates (commutativity, associativity, identity-element)
-    /// return `nil`.
+    /// ships `idempotent` + `roundTrip`; M7.3 adds `monotonicity`
+    /// + `invariant-preservation`. The remaining three templates
+    /// (commutativity, associativity, identity-element) get their
+    /// arms in M8 and return `nil` here meanwhile.
     private static func liftedTestStub(for suggestion: Suggestion) -> String? {
         switch suggestion.templateName {
         case "idempotence":
             return idempotentStub(for: suggestion)
         case "round-trip":
             return roundTripStub(for: suggestion)
+        case "monotonicity":
+            return monotonicStub(for: suggestion)
+        case "invariant-preservation":
+            return invariantPreservingStub(for: suggestion)
         default:
             return nil
         }
@@ -86,6 +91,40 @@ extension InteractiveTriage {
             inverseName: inverseName,
             seed: seed,
             generator: LiftedTestEmitter.defaultGenerator(for: forwardParam)
+        )
+    }
+
+    private static func monotonicStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let funcName = functionName(from: evidence.displayName),
+              let typeName = paramType(from: evidence.signature),
+              let returnType = returnType(from: evidence.signature) else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.monotonic(
+            funcName: funcName,
+            typeName: typeName,
+            returnType: returnType,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: typeName)
+        )
+    }
+
+    private static func invariantPreservingStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let funcName = functionName(from: evidence.displayName),
+              let typeName = paramType(from: evidence.signature),
+              let invariantName = invariantKeypath(from: evidence.signature) else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.invariantPreserving(
+            funcName: funcName,
+            typeName: typeName,
+            invariantName: invariantName,
+            seed: seed,
+            generator: LiftedTestEmitter.defaultGenerator(for: typeName)
         )
     }
 
@@ -139,6 +178,29 @@ extension InteractiveTriage {
         return stripped.isEmpty ? nil : stripped
     }
 
+    /// Pull the return type out of a signature like
+    /// `"(String) -> Int"` — returns `"Int"`. Strips any trailing
+    /// `preserving X` clause that the invariant-preservation template
+    /// appends. Returns `nil` if no `->` separator exists.
+    static func returnType(from signature: String) -> String? {
+        guard let arrowRange = signature.range(of: "->") else { return nil }
+        var tail = signature[arrowRange.upperBound...].trimmingCharacters(in: .whitespaces)
+        if let preservingRange = tail.range(of: " preserving ") {
+            tail = String(tail[..<preservingRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+        }
+        return tail.isEmpty ? nil : tail
+    }
+
+    /// Pull the keypath text out of an invariant-preservation signature
+    /// like `"(Widget) -> Widget preserving \\.isValid"` — returns
+    /// `"\\.isValid"`. Returns `nil` if the `preserving` marker is absent
+    /// (the signature isn't from `InvariantPreservationTemplate`).
+    static func invariantKeypath(from signature: String) -> String? {
+        guard let preservingRange = signature.range(of: " preserving ") else { return nil }
+        let tail = signature[preservingRange.upperBound...].trimmingCharacters(in: .whitespaces)
+        return tail.isEmpty ? nil : tail
+    }
+
     // MARK: - Decision record construction
 
     static func makeRecord(
@@ -173,6 +235,18 @@ extension InteractiveTriage {
                 return "\(funcName).swift"
             }
             return "\(funcName)_\(reverseName).swift"
+        case "invariant-preservation":
+            // Same function with two different keypaths is two distinct
+            // suggestions per InvariantPreservationTemplate's identity
+            // rule — the file name carries the keypath suffix so accept
+            // doesn't overwrite a previous accept on the other keypath.
+            guard let keyPath = invariantKeypath(from: evidence.signature) else {
+                return "\(funcName).swift"
+            }
+            let suffix = keyPath
+                .replacingOccurrences(of: "\\.", with: "")
+                .replacingOccurrences(of: ".", with: "_")
+            return "\(funcName)_\(suffix).swift"
         default:
             return "\(funcName).swift"
         }

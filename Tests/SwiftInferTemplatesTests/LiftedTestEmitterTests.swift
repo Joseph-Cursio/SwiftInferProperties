@@ -2,7 +2,12 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-@Suite("LiftedTestEmitter — pure-function lifted-test source emit (M6.3)")
+// swiftlint:disable type_body_length
+// Suite coheres around its subject — the byte-stable goldens for each
+// emitter arm are inherently long string literals; splitting along the
+// 250-line body limit would scatter the goldens across multiple files
+// for no reader benefit.
+@Suite("LiftedTestEmitter — pure-function lifted-test source emit (M6.3 + M7.3)")
 struct LiftedTestEmitterTests {
 
     // MARK: - defaultGenerator(for:)
@@ -158,4 +163,136 @@ struct LiftedTestEmitterTests {
         #expect(idempotentSource.contains("transform_isIdempotent"))
         #expect(roundTripSource.contains("transform_untransform_roundTrip"))
     }
+
+    // MARK: - monotonic(...) byte-stable golden (M7.3)
+
+    @Test
+    func monotonicEmitsByteStableTestStub() {
+        let seed = SamplingSeed.Value(
+            stateA: 0xAAAA_BBBB_CCCC_DDDD,
+            stateB: 0xEEEE_FFFF_0000_1111,
+            stateC: 0x2222_3333_4444_5555,
+            stateD: 0x6666_7777_8888_9999
+        )
+        let source = LiftedTestEmitter.monotonic(
+            funcName: "length",
+            typeName: "String",
+            returnType: "Int",
+            seed: seed,
+            generator: "Gen<Character>.letterOrNumber.string(of: 0...8)"
+        )
+        let expected = """
+
+            @Test func length_isMonotonic() async {
+                let backend = SwiftPropertyBasedBackend()
+                let seed = Seed(
+                    stateA: 0xAAAABBBBCCCCDDDD,
+                    stateB: 0xEEEEFFFF00001111,
+                    stateC: 0x2222333344445555,
+                    stateD: 0x6666777788889999
+                )
+                let result = await backend.check(
+                    trials: 100,
+                    seed: seed,
+                    sample: { rng in
+                                let lhs = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(&rng)
+                                let rhs = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(&rng)
+                                return lhs < rhs ? (lhs, rhs) : (rhs, lhs)
+                            },
+                    property: { pair in length(pair.0) <= length(pair.1) }
+                )
+                if case let .failed(_, _, input, error) = result {
+                    Issue.record(
+                        "length(_:) failed monotonicity at input \\(input)."
+                            + " \\(error?.message ?? \\"\\")"
+                    )
+                }
+            }
+            """
+        #expect(source == expected)
+    }
+
+    // MARK: - invariantPreserving(...) byte-stable golden (M7.3)
+
+    @Test
+    func invariantPreservingEmitsByteStableTestStub() {
+        let seed = SamplingSeed.Value(
+            stateA: 0x1010_1010_1010_1010,
+            stateB: 0x2020_2020_2020_2020,
+            stateC: 0x3030_3030_3030_3030,
+            stateD: 0x4040_4040_4040_4040
+        )
+        let source = LiftedTestEmitter.invariantPreserving(
+            funcName: "adjust",
+            typeName: "Widget",
+            invariantName: "\\.isValid",
+            seed: seed,
+            generator: "Widget.gen()"
+        )
+        let expected = """
+
+            @Test func adjust_preservesInvariant_isValid() async {
+                let backend = SwiftPropertyBasedBackend()
+                let seed = Seed(
+                    stateA: 0x1010101010101010,
+                    stateB: 0x2020202020202020,
+                    stateC: 0x3030303030303030,
+                    stateD: 0x4040404040404040
+                )
+                let result = await backend.check(
+                    trials: 100,
+                    seed: seed,
+                    sample: { rng in (Widget.gen()).run(&rng) },
+                    property: { value in !value[keyPath: \\.isValid] || adjust(value)[keyPath: \\.isValid] }
+                )
+                if case let .failed(_, _, input, error) = result {
+                    Issue.record(
+                        "adjust(_:) failed invariant preservation \\.isValid at input \\(input)."
+                            + " \\(error?.message ?? \\"\\")"
+                    )
+                }
+            }
+            """
+        #expect(source == expected)
+    }
+
+    @Test
+    func invariantPreservingSanitizesNestedKeypathInTestName() {
+        let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
+        let source = LiftedTestEmitter.invariantPreserving(
+            funcName: "transfer",
+            typeName: "User",
+            invariantName: "\\.account.balance",
+            seed: seed,
+            generator: "User.gen()"
+        )
+        // Test-function name strips the leading `\.` and rewrites `.`
+        // separators as `_` so the identifier is valid Swift.
+        #expect(source.contains("transfer_preservesInvariant_account_balance"))
+        // The keypath itself remains verbatim inside the property closure.
+        #expect(source.contains("[keyPath: \\.account.balance]"))
+    }
+
+    @Test
+    func monotonicAndInvariantPreservingProduceDistinctSource() {
+        let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
+        let monotonicSource = LiftedTestEmitter.monotonic(
+            funcName: "score",
+            typeName: "Widget",
+            returnType: "Int",
+            seed: seed,
+            generator: "Widget.gen()"
+        )
+        let invariantSource = LiftedTestEmitter.invariantPreserving(
+            funcName: "score",
+            typeName: "Widget",
+            invariantName: "\\.isValid",
+            seed: seed,
+            generator: "Widget.gen()"
+        )
+        #expect(monotonicSource != invariantSource)
+        #expect(monotonicSource.contains("score_isMonotonic"))
+        #expect(invariantSource.contains("score_preservesInvariant_isValid"))
+    }
 }
+// swiftlint:enable type_body_length
