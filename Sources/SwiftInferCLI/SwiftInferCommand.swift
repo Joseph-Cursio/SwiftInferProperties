@@ -96,15 +96,27 @@ extension SwiftInferCommand {
         @Flag(
             name: .long,
             help: """
-            Forward-looking placeholder for M6's --interactive writeout. \
-            Currently a no-op since discover is read-only per §16 #1; \
-            passing the flag explicitly emits a stderr diagnostic so \
-            users don't silently expect different behaviour. (M5.5, \
-            PRD v0.4 §5.8 — flag plumbed now so M6 can flip it without \
-            an API break.)
+            Suppress writes during --interactive triage. Accept (A) \
+            gestures show the would-be file path on stdout but skip \
+            both the file write and the .swiftinfer/decisions.json \
+            update. Without --interactive there are no writes to \
+            suppress, so --dry-run is a no-op. (M5.5 + M6.4, PRD v0.4 \
+            §5.8.)
             """
         )
         public var dryRun: Bool = false
+
+        @Flag(
+            name: .long,
+            help: """
+            Walk surviving suggestions one at a time, prompting \
+            [A/s/n/?]: Accept writes a property-test stub to \
+            Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift \
+            and records the decision; Skip / Reject record the decision \
+            without writing files. (M6.4, PRD v0.4 §5.8.)
+            """
+        )
+        public var interactive: Bool = false
 
         public init() {}
 
@@ -119,6 +131,7 @@ extension SwiftInferCommand {
                 explicitConfigPath: explicitConfigPath,
                 statsOnly: statsOnly,
                 dryRun: dryRun,
+                interactive: interactive,
                 output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -140,15 +153,11 @@ extension SwiftInferCommand {
             explicitConfigPath: URL? = nil,
             statsOnly: Bool = false,
             dryRun: Bool = false,
+            interactive: Bool = false,
+            promptInput: any PromptInput = StdinPromptInput(),
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
-            if dryRun {
-                diagnostics.writeDiagnostic(
-                    "note: --dry-run is a forward-looking placeholder for M6's"
-                        + " --interactive writeout; no writes are issued by v1 discover"
-                )
-            }
             let configResult = ConfigLoader.load(
                 startingFrom: directory,
                 explicitPath: explicitConfigPath
@@ -179,10 +188,53 @@ extension SwiftInferCommand {
             let visible = all.filter { suggestion in
                 effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
             }
+
+            if interactive {
+                let packageRoot = configResult.packageRoot ?? directory
+                let context = InteractiveTriage.Context(
+                    prompt: promptInput,
+                    output: output,
+                    diagnostics: diagnostics,
+                    outputDirectory: packageRoot,
+                    dryRun: dryRun
+                )
+                try runInteractive(
+                    suggestions: visible,
+                    packageRoot: packageRoot,
+                    context: context
+                )
+                return
+            }
+
             let rendered = statsOnly
                 ? SuggestionRenderer.renderStats(visible)
                 : SuggestionRenderer.render(visible)
             output.write(rendered)
+        }
+
+        /// Drive the M6.4 `--interactive` triage session: load the
+        /// existing decisions, walk surviving suggestions through the
+        /// `[A/s/n/?]` prompt loop, persist the updated decisions
+        /// (unless `--dry-run`).
+        private static func runInteractive(
+            suggestions: [Suggestion],
+            packageRoot: URL,
+            context: InteractiveTriage.Context
+        ) throws {
+            let decisionsResult = DecisionsLoader.load(startingFrom: packageRoot)
+            for warning in decisionsResult.warnings {
+                context.diagnostics.writeDiagnostic("warning: \(warning)")
+            }
+            let outcome = try InteractiveTriage.run(
+                suggestions: suggestions,
+                existingDecisions: decisionsResult.decisions,
+                context: context
+            )
+            if !context.dryRun, outcome.updatedDecisions != decisionsResult.decisions {
+                let path = decisionsResult.packageRoot.map(DecisionsLoader.defaultPath(for:))
+                    ?? DecisionsLoader.defaultPath(for: packageRoot)
+                try DecisionsLoader.write(outcome.updatedDecisions, to: path)
+            }
         }
 
         /// Resolve the vocabulary path with CLI > config > implicit-walk-up
