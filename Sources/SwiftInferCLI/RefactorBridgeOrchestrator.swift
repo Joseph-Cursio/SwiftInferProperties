@@ -2,12 +2,18 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
-// swiftlint:disable file_length
+// swiftlint:disable file_length type_body_length cyclomatic_complexity
 // M8.4.a widened TemplateSignal from 2 to 4 cases + added Group's
-// inverse-element witness threading + per-protocol caveat rendering,
-// pushing this file past the 400-line cap. Splitting further would
-// scatter the orchestrator's tightly-coupled accumulator + promotion
-// logic across two files for minimal reader benefit.
+// inverse-element witness threading + per-protocol caveat rendering;
+// M8.4.b.1 added the multi-proposal + Semilattice/SetAlgebra split;
+// M8.4.b.2 added per-op tracking for Ring detection + the Numeric
+// promotion arm — all pushing this file past file_length, the enum
+// past type_body_length, and `TypeAccumulator.record` past
+// cyclomatic_complexity. Splitting further would scatter the
+// orchestrator's tightly-coupled accumulator + promotion logic across
+// multiple files for minimal reader benefit; the per-op tracking
+// branches in `record` are structurally one switch and extracting
+// would just disperse the per-signal flag updates.
 
 /// One RefactorBridge proposal — a structural-conformance suggestion the
 /// `[A/B/s/n/?]` interactive prompt surfaces alongside per-suggestion
@@ -220,6 +226,18 @@ public enum RefactorBridgeOrchestrator {
     /// `makeEvidence(identity:)` for the two-row evidence shape), and
     /// M8.3's inverse-element pairing pass contributes `inverseWitness`
     /// (function name from `InverseElementPair.inverse.name`).
+    /// Per-op signal record (M8.4.b.2). Tracks whether a specific
+    /// binary op on the type has the Monoid signal set (assoc +
+    /// identity-element). Ring detection scans `perOp` for one
+    /// additive-named + one multiplicative-named op both Monoid-shaped;
+    /// if both exist, the type's claim is Ring rather than the
+    /// type-level CommutativeMonoid / Group / etc.
+    private struct OpInfo {
+        var hasAssociativity: Bool = false
+        var hasIdentity: Bool = false
+        var identityName: String?
+    }
+
     private struct TypeAccumulator {
         let typeName: String
         var hasAssociativity: Bool = false
@@ -230,28 +248,41 @@ public enum RefactorBridgeOrchestrator {
         var combineWitness: String?
         var identityWitness: String?
         var inverseWitness: String?
+        // M8.4.b.2 — per-op tracking for Ring detection.
+        var perOp: [String: OpInfo] = [:]
         var contributing: [Suggestion] = []
         var identities: Set<SuggestionIdentity> = []
 
         mutating func record(signal: TemplateSignal, from suggestion: Suggestion) {
+            let opName = RefactorBridgeOrchestrator.combineWitnessName(from: suggestion)
             switch signal {
             case .associativity:
                 hasAssociativity = true
                 if combineWitness == nil {
-                    combineWitness = combineWitnessName(from: suggestion)
+                    combineWitness = opName
+                }
+                if let opName {
+                    perOp[opName, default: OpInfo()].hasAssociativity = true
                 }
             case .identityElement:
                 hasIdentityElement = true
                 if combineWitness == nil {
-                    combineWitness = combineWitnessName(from: suggestion)
+                    combineWitness = opName
                 }
+                let identity = RefactorBridgeOrchestrator.identityWitnessName(from: suggestion)
                 if identityWitness == nil {
-                    identityWitness = identityWitnessName(from: suggestion)
+                    identityWitness = identity
+                }
+                if let opName {
+                    perOp[opName, default: OpInfo()].hasIdentity = true
+                    if perOp[opName]?.identityName == nil {
+                        perOp[opName]?.identityName = identity
+                    }
                 }
             case .commutativity:
                 hasCommutativity = true
                 if combineWitness == nil {
-                    combineWitness = combineWitnessName(from: suggestion)
+                    combineWitness = opName
                 }
             case .idempotence:
                 // Idempotence on a binary op `(T, T) -> T` is the
@@ -261,7 +292,7 @@ public enum RefactorBridgeOrchestrator {
                 // matches contribute here.
                 hasIdempotence = true
                 if combineWitness == nil {
-                    combineWitness = combineWitnessName(from: suggestion)
+                    combineWitness = opName
                 }
             }
             contributing.append(suggestion)
@@ -299,6 +330,18 @@ public enum RefactorBridgeOrchestrator {
         /// proposal (e.g. commutativity-only with no associativity).
         var proposals: [RefactorBridgeProposal] {
             guard hasAssociativity, let combineWitness else { return [] }
+            // M8.4.b.2 — Ring detection runs first. When two binary
+            // ops on the same type are both Monoid-shaped AND one
+            // has a curated additive name + the other a curated
+            // multiplicative name, the type's structural claim is
+            // Ring (PRD §5.4 row 5 — "two monoids on same type,
+            // distributive → Ring → suggest Numeric"). Per open
+            // decision #5 default `(b)`, Ring collapses both ops
+            // into one proposal — separate Monoid proposals for
+            // each op would be redundant signal-double-counting.
+            if let ring = ringPromotion() {
+                return [ring]
+            }
             // Cover the Semilattice branch first — its signal set is a
             // superset of CommutativeMonoid + Monoid + Semigroup.
             if hasAssociativity, hasIdentityElement, hasCommutativity, hasIdempotence {
@@ -325,6 +368,120 @@ public enum RefactorBridgeOrchestrator {
             }
             return [makeProposal(protocolName: "Semigroup", combineWitness: combineWitness)]
         }
+
+        /// Detect the Ring shape — two Monoid-shaped ops on the same
+        /// type, one with a curated additive name and one with a
+        /// curated multiplicative name. Returns the Ring proposal
+        /// targeting stdlib `Numeric` (PRD §5.4 row 5) when both are
+        /// found; `nil` otherwise. M8 plan open decision #4 default
+        /// `(a)` for the *claim* — fires on naming alone, no
+        /// TypeShape numeric-shape gating in this milestone (the
+        /// strong §4.5 caveat enumerating Numeric's full requirement
+        /// set is the user's safety net; v1.1+ can add the gate).
+        ///
+        /// **Distributivity isn't sample-verified** — we trust the
+        /// curated additive/multiplicative naming as a structural
+        /// hint that distributivity is intended. The §4.5 caveat
+        /// flags this so the user knows the law isn't checked at
+        /// suggestion time.
+        private func ringPromotion() -> RefactorBridgeProposal? {
+            let monoidShapedOps = perOp.filter {
+                $0.value.hasAssociativity && $0.value.hasIdentity
+            }
+            let additive = monoidShapedOps.keys
+                .filter { TypeAccumulator.curatedAdditiveOpNames.contains($0) }
+                .sorted()
+                .first
+            let multiplicative = monoidShapedOps.keys
+                .filter { TypeAccumulator.curatedMultiplicativeOpNames.contains($0) }
+                .sorted()
+                .first
+            guard let additive, let multiplicative else { return nil }
+            let additiveIdentity = monoidShapedOps[additive]?.identityName
+            let multiplicativeIdentity = monoidShapedOps[multiplicative]?.identityName
+            return RefactorBridgeProposal(
+                typeName: typeName,
+                protocolName: "Numeric",
+                // Numeric extension is bare — no witness aliasing
+                // (the user's existing `+` / `*` operator implementations
+                // satisfy the protocol). combineWitness carries the
+                // additive op name for proposal-display purposes only;
+                // identityWitness carries the additive identity (zero).
+                combineWitness: additive,
+                identityWitness: additiveIdentity,
+                inverseWitness: nil,
+                explainability: ringExplainability(
+                    additiveOp: additive,
+                    multiplicativeOp: multiplicative,
+                    additiveIdentity: additiveIdentity,
+                    multiplicativeIdentity: multiplicativeIdentity
+                ),
+                relatedIdentities: identities
+            )
+        }
+
+        /// §4.5 explainability for the Ring claim — lists both
+        /// contributing ops + identities + a strong caveat enumerating
+        /// stdlib Numeric's full requirement set the two-monoid signals
+        /// don't on their own provide.
+        private func ringExplainability(
+            additiveOp: String,
+            multiplicativeOp: String,
+            additiveIdentity: String?,
+            multiplicativeIdentity: String?
+        ) -> ExplainabilityBlock {
+            var why: [String] = ["RefactorBridge claim: \(typeName) → Ring (stdlib Numeric)"]
+            why.append(
+                "additive op: \(additiveOp)(_:_:) "
+                + "with identity \(additiveIdentity ?? "<unknown>")"
+            )
+            why.append(
+                "multiplicative op: \(multiplicativeOp)(_:_:) "
+                + "with identity \(multiplicativeIdentity ?? "<unknown>")"
+            )
+            for suggestion in contributing {
+                why.append("from \(suggestion.templateName): \(suggestion.evidence.first?.displayName ?? "<unknown>")")
+            }
+            let caveats: [String] = [
+                "Both ops must satisfy associativity AND identity Strict laws "
+                + "for the kit-side per-op promotions; SwiftInfer's signal accumulation "
+                + "treats the union of per-op evidence as the Ring claim.",
+                "Distributivity (`a * (b + c) == a*b + a*c`) is NOT sample-verified — "
+                + "the curated additive/multiplicative naming is a structural hint, "
+                + "not a proof. Apply the conformance only if distributivity holds.",
+                "stdlib `Numeric` requires more than the two-monoid signals provide — "
+                + "`Numeric.init?(exactly:)`, `Magnitude` associated type, "
+                + "`Numeric.*=` / `Numeric.+=` mutating operators, `Numeric.-` (subtraction). "
+                + "Apply the conformance only if your type already implements the full "
+                + "Numeric surface; otherwise the extension fails to compile.",
+                "**FloatingPoint caveat**: integer-like exact-equality laws "
+                + "(`combineAssociativity`, distributivity) hold for `Int` but NOT "
+                + "for IEEE-754 floats — rounding noise causes spurious violations. "
+                + "Don't conform `Double` / `Float` / `BinaryFloatingPoint` types via "
+                + "this writeout; use kit v1.4's `FloatingPoint` law check instead."
+            ]
+            return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: caveats)
+        }
+
+        /// Curated additive-op names. Match the user's source-text
+        /// function name verbatim (the orchestrator extracts
+        /// `combineWitness` from `Evidence.displayName` via
+        /// `bareName(from:)`). Conservative list — `+`, `add`, `plus`,
+        /// `sum` cover the common Swift conventions. Project-vocabulary
+        /// extension (`additiveVerbs` / `multiplicativeVerbs`) is a
+        /// reasonable v1.1+ addition; M8.4.b.2 ships only the curated
+        /// list to keep the §16 #6 reproducibility surface narrow.
+        static let curatedAdditiveOpNames: Set<String> = [
+            "+", "add", "plus", "sum"
+        ]
+
+        /// Curated multiplicative-op names. Same posture as
+        /// `curatedAdditiveOpNames`. Excludes `concat` / `merge` which
+        /// are non-commutative semigroup-shaped ops, not Ring's
+        /// multiplicative-monoid shape.
+        static let curatedMultiplicativeOpNames: Set<String> = [
+            "*", "multiply", "times", "mul", "product"
+        ]
 
         /// Build a Semilattice proposal plus the SetAlgebra secondary
         /// when the binary op's name is in the curated set-shaped
@@ -543,4 +700,4 @@ public enum RefactorBridgeOrchestrator {
         return InteractiveTriage.paramType(from: signature)
     }
 }
-// swiftlint:enable file_length
+// swiftlint:enable file_length type_body_length cyclomatic_complexity

@@ -363,9 +363,21 @@ extension InteractiveTriage {
                 typeName: proposal.typeName,
                 explainability: proposal.explainability
             )
+        case "Numeric":
+            // Numeric (stdlib) — Ring arm (M8.4.b.2). Bare extension;
+            // the user's existing +/-/* operators + Numeric.init?(exactly:)
+            // satisfy the protocol. The §4.5 caveat enumerates what's
+            // not implied by the two-monoid signals + the IEEE-754
+            // caveat for floating-point types.
+            return LiftedConformanceEmitter.numeric(
+                typeName: proposal.typeName,
+                explainability: proposal.explainability
+            )
         default:
-            // Future arms (M8.4.b.2's Ring → stdlib Numeric) get
-            // dispatched here as that milestone lands.
+            // No remaining shipped protocol arms — every M8 promotion
+            // routes through one of the explicit cases above. Future
+            // protocol arms (kit-side CommutativeGroup, Group acting
+            // on T) would dispatch here.
             return "// SwiftInfer: unsupported protocol '\(proposal.protocolName)' in v1.\n"
         }
     }

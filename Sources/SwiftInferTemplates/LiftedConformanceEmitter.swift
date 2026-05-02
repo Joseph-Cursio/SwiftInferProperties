@@ -1,5 +1,14 @@
 import SwiftInferCore
 
+// swiftlint:disable file_length
+// M8.5 added 3 kit-protocol arms (CommutativeMonoid / Group /
+// Semilattice); M8.4.b.1 added SetAlgebra; M8.4.b.2 added Numeric.
+// Six emitter arms total now exceed the 400-line file cap. Splitting
+// further would scatter the kit/stdlib emitters across multiple
+// files for no reader benefit — every arm shares the
+// `makeExtension(...)` template + the §4.5 explainability header
+// rendering.
+
 /// Pure-function emit of a Swift `extension TypeName: Protocol {}`
 /// source string for SwiftInfer's RefactorBridge (PRD v0.4 §6 +
 /// M7.4 plan row). Parallel to `LiftedTestEmitter` but operates on
@@ -242,6 +251,41 @@ public enum LiftedConformanceEmitter {
         )
     }
 
+    /// Emit a stdlib `Numeric` conformance extension for `typeName`.
+    /// **Ring arm** (M8.4.b.2) — the orchestrator emits a Ring claim
+    /// when the type has two Monoid-shaped binary ops, one with a
+    /// curated additive name (`+` / `add` / `plus` / `sum`) and one
+    /// multiplicative (`*` / `multiply` / `times` / `mul` / `product`).
+    /// PRD §5.4 row 5: "two monoids on same type, distributive →
+    /// Ring → suggest Numeric (with caveats)".
+    ///
+    /// Like the M8.4.b.1 SetAlgebra arm, the emitted extension is
+    /// **bare** — `extension TypeName: Numeric {}` — relying on the
+    /// user's existing `+` / `*` / `-` operator implementations and
+    /// `Numeric.init?(exactly:)` / `Magnitude` associated type.
+    /// stdlib `Numeric` is a substantial protocol surface; the §4.5
+    /// caveat (added by the orchestrator) lists what's not implied
+    /// by the two-monoid signals so the user knows what to fill in
+    /// or drop the conformance over. Includes the IEEE-754 caveat
+    /// for floating-point types where exact-equality algebraic laws
+    /// don't hold.
+    ///
+    /// No witness aliasing — `Numeric`'s required operators have
+    /// canonical names (`+`, `-`, `*`) the user's type either provides
+    /// or doesn't. Aliasing would conflict with operator overload
+    /// resolution.
+    public static func numeric(
+        typeName: String,
+        explainability: ExplainabilityBlock
+    ) -> String {
+        makeExtension(
+            typeName: typeName,
+            protocolName: "Numeric",
+            body: nil,
+            explainability: explainability
+        )
+    }
+
     /// Path convention for RefactorBridge writeouts per PRD §16 #1's
     /// allowlist extension. M7.5's orchestrator composes the relative
     /// path as `<root>/<TypeName>/<ProtocolName>.swift`; M7.6's hard-
@@ -372,3 +416,4 @@ public enum LiftedConformanceEmitter {
         return lines.joined(separator: "\n")
     }
 }
+// swiftlint:enable file_length

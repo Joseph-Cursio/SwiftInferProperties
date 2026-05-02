@@ -414,6 +414,47 @@ struct LiftedConformanceEmitterTests {
         #expect(semilattice.contains("T: Semilattice"))
     }
 
+    // MARK: - M8.4.b.2 — numeric byte-stable golden (Ring arm)
+
+    @Test
+    func numericEmitsBareExtensionByteStable() {
+        // Numeric is the Ring arm — bare extension because the user's
+        // existing operator implementations satisfy stdlib Numeric's
+        // requirement set. Per M8.4.b.2 + open decision #4 default
+        // `(a)` for the claim, the §4.5 caveat enumerates Numeric's
+        // full surface + the IEEE-754 caveat.
+        let explainability = ExplainabilityBlock(
+            whySuggested: [
+                "RefactorBridge claim: Money → Ring (stdlib Numeric)",
+                "additive op: plus(_:_:) with identity zero",
+                "multiplicative op: times(_:_:) with identity one"
+            ],
+            whyMightBeWrong: [
+                "Distributivity is NOT sample-verified.",
+                "FloatingPoint caveat: don't conform Double / Float."
+            ]
+        )
+        let source = LiftedConformanceEmitter.numeric(
+            typeName: "Money",
+            explainability: explainability
+        )
+        let expected = """
+
+            // SwiftInfer RefactorBridge — Money: Numeric
+            //
+            // Why suggested:
+            //   - RefactorBridge claim: Money → Ring (stdlib Numeric)
+            //   - additive op: plus(_:_:) with identity zero
+            //   - multiplicative op: times(_:_:) with identity one
+            //
+            // Why this might be wrong:
+            //   - Distributivity is NOT sample-verified.
+            //   - FloatingPoint caveat: don't conform Double / Float.
+            extension Money: Numeric {}
+            """
+        #expect(source == expected)
+    }
+
     // MARK: - M8.4.b.1 — setAlgebra byte-stable golden
 
     @Test

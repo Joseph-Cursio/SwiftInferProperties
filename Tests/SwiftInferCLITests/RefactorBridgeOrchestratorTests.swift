@@ -405,6 +405,144 @@ struct RefactorBridgeOrchestratorTests {
         }
     }
 
+    // MARK: - M8.4.b.2 — Ring detection (two-op coordinated)
+
+    @Test("Two Monoid-shaped ops (additive + multiplicative) → Ring proposal")
+    func ringFiresOnAdditivePlusMultiplicative() throws {
+        // `Money` has two Monoid-shaped ops: `add` (additive name)
+        // and `multiply` (multiplicative name). Per PRD §5.4 row 5,
+        // this is the canonical Ring claim → stdlib `Numeric` writeout.
+        let addAssoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "add")
+        let addIdentity = makeIdentityElementSuggestion(
+            typeName: "Money",
+            opName: "add",
+            identityName: "zero",
+            identityDisplayName: "Money.zero"
+        )
+        let mulAssoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "multiply")
+        let mulIdentity = makeIdentityElementSuggestion(
+            typeName: "Money",
+            opName: "multiply",
+            identityName: "one",
+            identityDisplayName: "Money.one"
+        )
+        let proposals = RefactorBridgeOrchestrator.proposals(
+            from: [addAssoc, addIdentity, mulAssoc, mulIdentity]
+        )
+        let list = try #require(proposals["Money"])
+        #expect(list.count == 1)
+        #expect(list[0].protocolName == "Numeric")
+        // combineWitness carries the additive op name for display;
+        // identityWitness carries the additive identity (zero).
+        #expect(list[0].combineWitness == "add")
+        #expect(list[0].identityWitness == "zero")
+    }
+
+    @Test("Ring explainability lists both ops + Numeric requirement caveats")
+    func ringExplainabilityCovers() throws {
+        let addAssoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "plus")
+        let addIdentity = makeIdentityElementSuggestion(
+            typeName: "Money",
+            opName: "plus",
+            identityName: "zero"
+        )
+        let mulAssoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "times")
+        let mulIdentity = makeIdentityElementSuggestion(
+            typeName: "Money",
+            opName: "times",
+            identityName: "one"
+        )
+        let proposals = RefactorBridgeOrchestrator.proposals(
+            from: [addAssoc, addIdentity, mulAssoc, mulIdentity]
+        )
+        let proposal = try #require(proposals["Money"]?.first)
+        let why = proposal.explainability.whySuggested.joined(separator: "\n")
+        #expect(why.contains("RefactorBridge claim: Money → Ring"))
+        #expect(why.contains("additive op: plus(_:_:) with identity zero"))
+        #expect(why.contains("multiplicative op: times(_:_:) with identity one"))
+        let caveats = proposal.explainability.whyMightBeWrong.joined(separator: "\n")
+        #expect(caveats.contains("Distributivity"))
+        #expect(caveats.contains("NOT sample-verified"))
+        #expect(caveats.contains("FloatingPoint caveat"))
+    }
+
+    @Test("Single op with both additive AND multiplicative names doesn't fire Ring")
+    func ringRequiresTwoDistinctOps() throws {
+        // Edge case: a single op `combine` with both naming categories
+        // doesn't qualify (the curated lists don't include `combine`,
+        // so this won't actually fire — but the test pins the
+        // "two distinct ops" intent).
+        let assoc = makeSuggestion(template: "associativity", typeName: "T", funcName: "add")
+        let identity = makeIdentityElementSuggestion(typeName: "T", opName: "add", identityName: "zero")
+        let proposals = RefactorBridgeOrchestrator.proposals(from: [assoc, identity])
+        let proposal = try #require(proposals["T"]?.first)
+        // Only one op with Monoid shape → falls back to Monoid.
+        #expect(proposal.protocolName == "Monoid")
+    }
+
+    @Test("Two ops on the same type with non-curated names do NOT fire Ring")
+    func ringRequiresCuratedNaming() throws {
+        // `merge` and `combine` are both Monoid-shaped but neither is
+        // in the curated additive / multiplicative lists → no Ring claim.
+        // Falls back to Monoid (one of the ops wins witness extraction).
+        let mergeAssoc = makeSuggestion(template: "associativity", typeName: "T", funcName: "merge")
+        let mergeIdentity = makeIdentityElementSuggestion(
+            typeName: "T",
+            opName: "merge",
+            identityName: "empty"
+        )
+        let combineAssoc = makeSuggestion(template: "associativity", typeName: "T", funcName: "combine")
+        let combineIdentity = makeIdentityElementSuggestion(
+            typeName: "T",
+            opName: "combine",
+            identityName: "empty"
+        )
+        let proposals = RefactorBridgeOrchestrator.proposals(
+            from: [mergeAssoc, mergeIdentity, combineAssoc, combineIdentity]
+        )
+        let proposal = try #require(proposals["T"]?.first)
+        #expect(proposal.protocolName == "Monoid")
+        // Definitely not Ring.
+        #expect(proposals["T"]?.contains { $0.protocolName == "Numeric" } == false)
+    }
+
+    @Test("Ring requires BOTH ops to be Monoid-shaped (assoc + identity)")
+    func ringRequiresMonoidShapeOnBothOps() throws {
+        // `add` has assoc + identity; `multiply` has assoc only (no
+        // identity). Ring shouldn't fire — the multiplicative op
+        // doesn't have a Monoid shape.
+        let addAssoc = makeSuggestion(template: "associativity", typeName: "T", funcName: "add")
+        let addIdentity = makeIdentityElementSuggestion(typeName: "T", opName: "add", identityName: "zero")
+        let mulAssoc = makeSuggestion(template: "associativity", typeName: "T", funcName: "multiply")
+        // Note: NO identity for `multiply`.
+        let proposals = RefactorBridgeOrchestrator.proposals(
+            from: [addAssoc, addIdentity, mulAssoc]
+        )
+        let proposal = try #require(proposals["T"]?.first)
+        // Falls back to Monoid (the type-level promotion) — `add`
+        // contributes both signals, `multiply` only associativity.
+        #expect(proposal.protocolName == "Monoid")
+    }
+
+    @Test("Ring's relatedIdentities covers all contributing suggestions")
+    func ringRelatedIdentitiesCoverAll() throws {
+        let addAssoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "add")
+        let addIdentity = makeIdentityElementSuggestion(typeName: "Money", opName: "add", identityName: "zero")
+        let mulAssoc = makeSuggestion(template: "associativity", typeName: "Money", funcName: "multiply")
+        let mulIdentity = makeIdentityElementSuggestion(typeName: "Money", opName: "multiply", identityName: "one")
+        let proposals = RefactorBridgeOrchestrator.proposals(
+            from: [addAssoc, addIdentity, mulAssoc, mulIdentity]
+        )
+        let proposal = try #require(proposals["Money"]?.first)
+        // All four contributing suggestions surface in relatedIdentities
+        // so the prompt threads the `B` arm on every one of them.
+        #expect(proposal.relatedIdentities.count == 4)
+        #expect(proposal.relatedIdentities.contains(addAssoc.identity))
+        #expect(proposal.relatedIdentities.contains(addIdentity.identity))
+        #expect(proposal.relatedIdentities.contains(mulAssoc.identity))
+        #expect(proposal.relatedIdentities.contains(mulIdentity.identity))
+    }
+
     // MARK: - M8.4.a Helpers
 
     private func makeInversePair(
