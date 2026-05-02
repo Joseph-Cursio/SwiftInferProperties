@@ -40,13 +40,12 @@ public struct CheckPropertyMacro: PeerMacro {
                 inverseName: inverseName,
                 in: context
             )
-        case .preservesInvariant:
-            // M7.2 ships scanner-side recognition only — the macro impl
-            // matches the case so user code compiles, but emits no peer.
-            // The `swift-infer discover` scanner recognises the same
-            // attribute textually and surfaces a Strong-tier suggestion.
-            // Peer-test generation is M7.2.a per the M7 plan.
-            return []
+        case .preservesInvariant(let keyPath):
+            return expandPreservesInvariant(
+                function: function,
+                keyPath: keyPath,
+                in: context
+            )
         }
     }
 
@@ -219,6 +218,62 @@ public struct CheckPropertyMacro: PeerMacro {
     ) -> String {
         let sorted = [forwardName, inverseName].sorted().joined(separator: "|")
         return "checkProperty.roundTrip|\(sorted)|(\(forwardParam))->\(forwardReturn)"
+    }
+
+    // MARK: - Invariant-preservation expansion (M7.2.a)
+
+    /// Expand `@CheckProperty(.preservesInvariant(\.kp))` into a peer
+    /// `@Test func` that asserts `kp(input) -> kp(f(input))` over a
+    /// generated stream of inputs. Mirrors `expandIdempotent` /
+    /// `expandRoundTrip`'s shape — wraps `LiftedTestEmitter.invariantPreserving`
+    /// (M7.3) into a `DeclSyntax`. Same single-parameter / non-nil-
+    /// return shape requirement as the other arms; `T -> U` is allowed
+    /// (the keypath may apply to T and to U separately).
+    private static func expandPreservesInvariant(
+        function: FunctionDeclSyntax,
+        keyPath: String,
+        in context: some MacroExpansionContext
+    ) -> [DeclSyntax] {
+        guard function.signature.parameterClause.parameters.count == 1,
+              let parameter = function.signature.parameterClause.parameters.first,
+              let returnType = function.signature.returnClause?.type else {
+            context.diagnose(Diagnostic(
+                node: Syntax(function),
+                message: SwiftInferMacroDiagnostic.preservesInvariantRequiresUnaryShape
+            ))
+            return []
+        }
+        let paramTypeText = parameter.type.trimmedDescription
+        let returnTypeText = returnType.trimmedDescription
+        let funcName = function.name.text
+        let canonicalSignature = preservesInvariantCanonicalSignature(
+            funcName: funcName,
+            keyPath: keyPath,
+            paramType: paramTypeText,
+            returnType: returnTypeText
+        )
+        let source = LiftedTestEmitter.invariantPreserving(
+            funcName: funcName,
+            typeName: paramTypeText,
+            invariantName: keyPath,
+            seed: SamplingSeed.derive(fromIdentityHash: canonicalSignature),
+            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText)
+        )
+        return [DeclSyntax(stringLiteral: source)]
+    }
+
+    /// Build the canonical signature used for the invariant-preservation
+    /// seed. Includes the keypath text so the same function with two
+    /// different `@CheckProperty(.preservesInvariant)` annotations
+    /// (different keypaths on different test files) gets distinct seeds
+    /// — keeps trial sequences distinct per claim.
+    private static func preservesInvariantCanonicalSignature(
+        funcName: String,
+        keyPath: String,
+        paramType: String,
+        returnType: String
+    ) -> String {
+        "checkProperty.preservesInvariant|\(funcName)|\(keyPath)|(\(paramType))->\(returnType)"
     }
 
 }

@@ -4,12 +4,13 @@ import Testing
 @testable import SwiftInferCore
 @testable import SwiftInferMacroImpl
 
-// swiftlint:disable type_body_length
-// Test suite covers both .idempotent (M5.2) and .roundTrip (M5.3) arms
-// plus the diagnostics for both — splitting along the 250-line body
-// limit would scatter the per-arm assertions across multiple files for
-// no reader benefit.
-@Suite("@CheckProperty peer-macro expansion (M5.2 + M5.3)")
+// swiftlint:disable type_body_length file_length
+// Test suite covers .idempotent (M5.2), .roundTrip (M5.3), and
+// .preservesInvariant (M7.2.a) arms plus the diagnostics for each —
+// splitting along the 250-line body / 400-line file limits would
+// scatter the per-arm assertions across multiple files for no reader
+// benefit.
+@Suite("@CheckProperty peer-macro expansion (M5.2 + M5.3 + M7.2.a)")
 struct CheckPropertyMacroTests {
 
     let testMacros: [String: Macro.Type] = [
@@ -269,6 +270,65 @@ struct CheckPropertyMacroTests {
         #expect(forwardSeed == again)
     }
 
+    // MARK: - Invariant-preservation expansion shape (M7.2.a)
+
+    @Test
+    func preservesInvariantExpansionPicksRawTypeGeneratorForCustomType() {
+        let canonical = "checkProperty.preservesInvariant|adjust|\\.isValid|(Widget)->Widget"
+        let seed = SamplingSeed.derive(fromIdentityHash: canonical)
+        let expected = expectedPreservesInvariantExpansion(
+            sourceFunction: "func adjust(_ value: Widget) -> Widget { value }",
+            funcName: "adjust",
+            keyPath: "\\.isValid",
+            generator: "Widget.gen()",
+            seed: seed
+        )
+        assertMacroExpansion(
+            """
+            @CheckProperty(.preservesInvariant(\\.isValid))
+            func adjust(_ value: Widget) -> Widget { value }
+            """,
+            expandedSource: expected,
+            macros: testMacros
+        )
+    }
+
+    @Test
+    func preservesInvariantArmRequiresUnaryShape() {
+        assertMacroExpansion(
+            """
+            @CheckProperty(.preservesInvariant(\\.isValid))
+            func merge(_ a: Widget, _ b: Widget) -> Widget { a }
+            """,
+            expandedSource: """
+            func merge(_ a: Widget, _ b: Widget) -> Widget { a }
+            """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "@CheckProperty(.preservesInvariant(_:)) requires"
+                        + " `func name(_: T) -> U` — exactly one parameter and a non-nil"
+                        + " return type. The keypath must resolve against T (and against"
+                        + " U if it's a bool predicate on the output too).",
+                    line: 1,
+                    column: 1
+                )
+            ],
+            macros: testMacros
+        )
+    }
+
+    @Test
+    func preservesInvariantSeedDiffersAcrossKeypaths() {
+        // Same function with two different invariant keypaths produces
+        // distinct seeds — the canonical signature embeds the keypath
+        // text so trial sequences don't collide across claims.
+        let canonical1 = "checkProperty.preservesInvariant|adjust|\\.isValid|(Widget)->Widget"
+        let canonical2 = "checkProperty.preservesInvariant|adjust|\\.isNonNegative|(Widget)->Widget"
+        let seed1 = SamplingSeed.derive(fromIdentityHash: canonical1)
+        let seed2 = SamplingSeed.derive(fromIdentityHash: canonical2)
+        #expect(seed1 != seed2)
+    }
+
     // MARK: - Helpers
 
     /// Build the byte-stable expansion we expect for an `.idempotent`
@@ -353,9 +413,54 @@ struct CheckPropertyMacroTests {
             """
     }
 
+    /// Build the byte-stable expansion we expect for a `.preservesInvariant`
+    /// `@CheckProperty` attachment (M7.2.a). Mirrors the format
+    /// `CheckPropertyMacro.expandPreservesInvariant` emits via
+    /// `LiftedTestEmitter.invariantPreserving`.
+    private func expectedPreservesInvariantExpansion(
+        sourceFunction: String,
+        funcName: String,
+        keyPath: String,
+        generator: String,
+        seed: SamplingSeed.Value
+    ) -> String {
+        let stateA = hex(seed.stateA)
+        let stateB = hex(seed.stateB)
+        let stateC = hex(seed.stateC)
+        let stateD = hex(seed.stateD)
+        let suffix = keyPath
+            .replacingOccurrences(of: "\\.", with: "")
+            .replacingOccurrences(of: ".", with: "_")
+        return """
+            \(sourceFunction)
+
+            @Test func \(funcName)_preservesInvariant_\(suffix)() async {
+                let backend = SwiftPropertyBasedBackend()
+                let seed = Seed(
+                    stateA: 0x\(stateA),
+                    stateB: 0x\(stateB),
+                    stateC: 0x\(stateC),
+                    stateD: 0x\(stateD)
+                )
+                let result = await backend.check(
+                    trials: 100,
+                    seed: seed,
+                    sample: { rng in (\(generator)).run(&rng) },
+                    property: { value in !value[keyPath: \(keyPath)] || \(funcName)(value)[keyPath: \(keyPath)] }
+                )
+                if case let .failed(_, _, input, error) = result {
+                    Issue.record(
+                        "\(funcName)(_:) failed invariant preservation \(keyPath) at input \\(input)."
+                            + " \\(error?.message ?? \\"\\")"
+                    )
+                }
+            }
+            """
+    }
+
     private func hex(_ word: UInt64) -> String {
         let raw = String(word, radix: 16, uppercase: true)
         return String(repeating: "0", count: 16 - raw.count) + raw
     }
 }
-// swiftlint:enable type_body_length
+// swiftlint:enable type_body_length file_length

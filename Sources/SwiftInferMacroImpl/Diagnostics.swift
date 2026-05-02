@@ -10,6 +10,7 @@ enum SwiftInferMacroDiagnostic: String, DiagnosticMessage {
     case idempotentRequiresMatchingTypes
     case roundTripRequiresUnaryShape
     case roundTripRequiresDistinctTypes
+    case preservesInvariantRequiresUnaryShape
 
     var severity: DiagnosticSeverity { .error }
 
@@ -22,8 +23,8 @@ enum SwiftInferMacroDiagnostic: String, DiagnosticMessage {
         case .notAFunctionDecl:
             return "@CheckProperty can only attach to a function declaration."
         case .unrecognizedKind:
-            return "@CheckProperty's first argument must be `.idempotent` "
-                + "or `.roundTrip(pairedWith:)`."
+            return "@CheckProperty's first argument must be `.idempotent`, "
+                + "`.roundTrip(pairedWith:)`, or `.preservesInvariant(_:)`."
         case .idempotentRequiresUnaryShape:
             return "@CheckProperty(.idempotent) requires `func name(_: T) -> T` — "
                 + "exactly one parameter and a non-nil return type."
@@ -38,6 +39,11 @@ enum SwiftInferMacroDiagnostic: String, DiagnosticMessage {
             return "@CheckProperty(.roundTrip, pairedWith:) requires the parameter "
                 + "type and return type to differ. For T -> T use "
                 + "@CheckProperty(.idempotent)."
+        case .preservesInvariantRequiresUnaryShape:
+            return "@CheckProperty(.preservesInvariant(_:)) requires "
+                + "`func name(_: T) -> U` — exactly one parameter and a non-nil "
+                + "return type. The keypath must resolve against T (and against "
+                + "U if it's a bool predicate on the output too)."
         }
     }
 }
