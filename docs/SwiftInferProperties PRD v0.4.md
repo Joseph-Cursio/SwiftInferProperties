@@ -329,7 +329,20 @@ Type-flow analysis is intentionally light — syntactic pattern matching over th
 
 ### 5.4 Algebraic-Structure Composition
 
-Multiple per-template signals on the same type → structural claim (semigroup, monoid, group, semilattice, ring) → RefactorBridge suggestion. Detail unchanged from v0.2 §5.4. The RefactorBridge caveat about Numeric vs FloatingPoint (integer-like exact-equality laws vs IEEE-754 rounding) is now part of every ring-claim suggestion's explainability "why this might be wrong" block.
+Multiple per-template signals on the same type → structural claim (semigroup, monoid, group, semilattice, ring) → RefactorBridge suggestion. Detail unchanged from v0.2 §5.4 except where called out below. The RefactorBridge caveat about Numeric vs FloatingPoint (integer-like exact-equality laws vs IEEE-754 rounding) is now part of every ring-claim suggestion's explainability "why this might be wrong" block.
+
+**Post-v0.2 kit changes (SwiftProtocolLaws v1.8.0).** v0.2 §5.4's table listed Semigroup as "(no stdlib protocol — claim only)" and Monoid as "suggest `AdditiveArithmetic` if `+`/`zero`-shaped, otherwise informational." That posture left merge-shape Swift types (`merge`, `combine`, `concat`, `union` ops that don't fit `+` / `.zero`) with no real conformance path. **Kit v1.8.0 closes that gap** by shipping kit-defined `Semigroup` (with `combineAssociativity` Strict law) and `Monoid: Semigroup` (with `combineLeftIdentity` + `combineRightIdentity` Strict laws). The updated table reads:
+
+| Detected combination | Implies | RefactorBridge target |
+|---|---|---|
+| binary op `(T, T) → T` + associativity | **Semigroup** | **kit-defined `Semigroup`** (v1.8.0+) |
+| Semigroup + identity element | **Monoid** | **kit-defined `Monoid`** (v1.8.0+); `AdditiveArithmetic` still suggested as a *secondary* Option B when the `+` / `zero` shape fits |
+| Monoid + inverse function | **Group** | (no kit protocol yet — claim only; M8) |
+| Monoid + commutativity + idempotence | **Bounded join-semilattice** | suggest `SetAlgebra` if applicable |
+| Two monoids on same type, distributive | **Ring** | suggest `Numeric` (with caveats — see below) |
+| `T → T` + `T → T` inverse + identity | **Group acting on T** | (no kit protocol yet — informational) |
+
+The M7.5.a writeout path (`Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`) emits aliasing extensions that bridge the user's existing op / identity names into the kit's required `static func combine(_:_:)` / `static var identity`. The user's source compiles end-to-end against `import ProtocolLawKit`; SwiftProtocolLaws' discovery plugin then verifies the laws on every CI run thereafter.
 
 ### 5.5 Cross-Function Pairing Strategy
 
@@ -343,7 +356,7 @@ Same table as v0.2 §5.6. Contradictions surface in the explainability block as 
 
 Reuses the **`@Discoverable(group:)` attribute syntax** from `ProtoLawMacro`. SwiftInferProperties' scanner recognizes the attribute by name match during the SwiftSyntax walk — *no runtime dependency* on `ProtoLawMacro` is required at scan time, so users opting into `@Discoverable` solely for SwiftInfer scoping don't pay a forced second `import` (clarified in v0.4 — open decision #2 in `docs/M5 Plan.md`'s in-flight defaults). Users wanting compile-time validation of the attribute (the kit's macro-expansion guarantee) import `ProtoLawMacro` themselves.
 
-Introduces only `@CheckProperty(.idempotent)` / `@CheckProperty(.roundTrip, pairedWith:)` for direct stub generation. Implemented as a SwiftSyntax peer macro (lands in M5 per §5.8) that expands the tagged function decl into an `@Test func` peer in the user's source — not into `Tests/Generated/SwiftInfer/`. The latter is the M6 `--interactive` writeout path (§3.6 step 3 + §5.8 M6); `@CheckProperty` is the per-declaration opt-in path. Both paths consume the M4.3 sampling seed (§16 #6) and the M4.2 `GeneratorSelection` strategy.
+Introduces `@CheckProperty(.idempotent)` (M5.2) / `@CheckProperty(.roundTrip, pairedWith:)` (M5.3) / `@CheckProperty(.preservesInvariant(\.keyPath))` (M7.2 scanner-side recognition + M7.2.a peer-macro expansion) for direct stub generation. Implemented as a SwiftSyntax peer macro that expands the tagged function decl into an `@Test func` peer in the user's source — not into `Tests/Generated/SwiftInfer/`. The latter is the M6 `--interactive` writeout path (§3.6 step 3 + §5.8 M6); `@CheckProperty` is the per-declaration opt-in path. Both paths consume the M4.3 sampling seed (§16 #6) and the M4.2 `GeneratorSelection` strategy.
 
 ### 5.8 Milestones
 
