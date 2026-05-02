@@ -223,11 +223,20 @@ struct TemplateRegistryTests {
             bodySignals: .empty
         )
         let suggestions = TemplateRegistry.discover(in: [earlyNormalize, encode, decode])
-        // round-trip is anchored at encode (line 10), idempotence and
-        // monotonicity both anchor at the same `normalize` (line 50).
-        // Within identical (file, line), template-name ordering is
-        // alphabetical per `TemplateRegistry.lessThan`.
-        #expect(suggestions.map(\.templateName) == ["round-trip", "idempotence", "monotonicity"])
+        // round-trip and inverse-pair both anchor at encode (line 10) —
+        // M8.1's InversePairTemplate fires alongside RoundTripTemplate
+        // when T is `.unknown` (no corpus typeDecls supplied → MyType
+        // isn't classified as Equatable). idempotence and monotonicity
+        // both anchor at the same `normalize` (line 50). Within
+        // identical (file, line), template-name ordering is alphabetical
+        // per `TemplateRegistry.lessThan` — so inverse-pair < round-trip
+        // at line 10, idempotence < monotonicity at line 50.
+        #expect(suggestions.map(\.templateName) == [
+            "inverse-pair",
+            "round-trip",
+            "idempotence",
+            "monotonicity"
+        ])
     }
 
     @Test("Contradiction pass drops commutativity over non-Equatable return + emits stderr diagnostic")

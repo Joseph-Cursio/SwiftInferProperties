@@ -79,12 +79,17 @@ public enum TemplateRegistry {
         diagnostic: (String) -> Void = { _ in },
         crossValidationFromTestLifter: Set<SuggestionIdentity> = []
     ) -> [Suggestion] {
+        // M8.1 — InversePairTemplate needs the resolver to gate on
+        // `.equatable`, so it's built before `collectSuggestions` and
+        // threaded through. ContradictionDetector consumes the same
+        // resolver downstream; one construction covers both passes.
+        let resolver = EquatableResolver(typeDecls: typeDecls)
         let collector = collectSuggestions(
             summaries: summaries,
             identities: identities,
-            vocabulary: vocabulary
+            vocabulary: vocabulary,
+            equatableResolver: resolver
         )
-        let resolver = EquatableResolver(typeDecls: typeDecls)
         let outcome = ContradictionDetector.filter(
             collector.suggestions,
             typesToCheck: collector.contradictionTypes,
@@ -143,7 +148,8 @@ public enum TemplateRegistry {
     private static func collectSuggestions(
         summaries: [FunctionSummary],
         identities: [IdentityCandidate],
-        vocabulary: Vocabulary
+        vocabulary: Vocabulary,
+        equatableResolver: EquatableResolver
     ) -> SuggestionCollector {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -171,6 +177,19 @@ public enum TemplateRegistry {
                     contradictionTypes: roundTripTypes(for: pair),
                     generatorType: generatorType(for: pair)
                 )
+            }
+            // M8.1 — InversePairTemplate. Same `FunctionPair` input as
+            // RoundTrip; gates internally on `EquatableResolver` so
+            // Equatable T defers to RoundTrip and only `.notEquatable`
+            // / `.unknown` fire here. No `contradictionTypes` plumbed —
+            // ContradictionDetector would otherwise drop the very
+            // suggestions this template is designed to surface.
+            if let suggestion = InversePairTemplate.suggest(
+                for: pair,
+                vocabulary: vocabulary,
+                equatableResolver: equatableResolver
+            ) {
+                collector.record(suggestion, generatorType: generatorType(for: pair))
             }
         }
         for pair in IdentityElementPairing.candidates(in: summaries, identities: identities) {
