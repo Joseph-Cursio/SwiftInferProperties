@@ -50,11 +50,15 @@ let package = Package(
         // M7.4's RefactorBridge writeouts emit `extension TypeName:
         // Semigroup {}` / `Monoid {}` against `import ProtocolLawKit`,
         // requiring v1.8.0+ (the kit's first kit-defined protocol cluster).
+        // M8's RefactorBridge widens this surface to `extension TypeName:
+        // CommutativeMonoid {}` / `Group {}` / `Semilattice {}`, requiring
+        // **v1.9.0+** (the kit's second algebraic cluster — M8.0 prereq
+        // shipped at SwiftProtocolLaws tag `v1.9.0`, 2026-05-02).
         // `ProtocolLawKit` transitively pulls swift-testing's
         // `Testing.framework`, which would prevent the `swift-infer`
         // executable from running outside a test context — only the
         // generated test-target writeouts import it.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftProtocolLaws.git", from: "1.8.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftProtocolLaws.git", from: "1.9.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
