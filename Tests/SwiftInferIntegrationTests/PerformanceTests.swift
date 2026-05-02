@@ -16,17 +16,21 @@ import SwiftInferTemplates
 @Suite("Performance — PRD §13 budget enforcement")
 struct PerformanceTests {
 
-    /// 50-file synthetic corpus: each file fires every M2 template plus
-    /// the M3.4 contradiction pass. Per file:
+    /// 50-file synthetic corpus: each file fires every shipped template
+    /// plus the M3.4 contradiction pass. Per file:
     ///   - `normalize(_:)` — idempotence
     ///   - `encode(_:)` / `decode(_:)` — round-trip
     ///   - `merge(_:_:)` over a custom struct — commutativity + associativity
     ///   - `static let empty: T` + `merge` reduce — identity-element
     ///   - the `merge` is referenced via `xs.reduce(.empty, merge)` →
     ///     reducer/builder usage signal
-    /// All five M2 templates are active alongside the contradiction
-    /// detector on the same scan, matching the M3.6 acceptance bar's
-    /// "all five templates plus the new contradiction pass" requirement.
+    ///   - `length(_:)` — monotonicity (M7.1; type pattern + curated
+    ///     name `length`, fires at Possible tier)
+    ///   - `adjust(_:)` annotated with `@CheckProperty(.preservesInvariant(\.isValid))`
+    ///     — invariant-preservation (M7.2; annotation-only, Strong tier)
+    /// All seven shipped templates are active alongside the contradiction
+    /// detector on the same scan, matching the M7.6 acceptance bar (g)
+    /// "§13 budget holds *with* M7's two new templates active".
     @Test("Synthetic 50-file corpus discover completes within the §13 2-second budget")
     func syntheticFiftyFileCorpus() throws {
         let directory = try generateSyntheticCorpus(fileCount: 50)
@@ -48,6 +52,12 @@ struct PerformanceTests {
         #expect(templates.contains("commutativity"))
         #expect(templates.contains("associativity"))
         #expect(templates.contains("identity-element"))
+        // M7.6 acceptance bar (g): the perf re-check holds with M7's
+        // two new templates also active. The corpus's `length(_:)`
+        // fires monotonicity; the `@CheckProperty(.preservesInvariant)`
+        // annotation fires invariant-preservation.
+        #expect(templates.contains("monotonicity"))
+        #expect(templates.contains("invariant-preservation"))
         // M4.5 acceptance bar (b): the M4.2 generator-selection pass
         // is active on top of the contradiction pass. The synthetic
         // corpus's `Bag` struct has two stdlib stored members
@@ -191,6 +201,7 @@ struct PerformanceTests {
         return base
     }
 
+    // swiftlint:disable:next function_body_length
     private func syntheticFileSource(index: Int) -> String {
         // Per-file unique types keep cross-file pairing bounded — a
         // realistic module rarely lets every encoder pair with every
@@ -226,6 +237,20 @@ struct PerformanceTests {
             }
             func fold(_ items: [\(bag)]) -> \(bag) {
                 return items.reduce(.empty, \(bag).merge)
+            }
+            // M7.1 — curated `length` verb on `String -> Int` fires
+            // monotonicity at Possible tier (type pattern + curated
+            // naming match).
+            func length(_ value: String) -> Int {
+                return value.count
+            }
+            // M7.2 — annotation-only invariant-preservation. The
+            // scanner picks up the `@CheckProperty(.preservesInvariant(\\.isValid))`
+            // attribute by name match; the template fires Strong-tier
+            // because the annotation IS the signal.
+            @CheckProperty(.preservesInvariant(\\.isValid))
+            func adjust(_ value: \(payload)) -> \(payload) {
+                return value
             }
             func unrelated(_ first: Int, _ second: Int) -> Bool {
                 return first == second

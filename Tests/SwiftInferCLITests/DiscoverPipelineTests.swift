@@ -61,7 +61,10 @@ struct DiscoverPipelineTests {
             includePossible: true,
             output: recording
         )
-        #expect(recording.text.contains("1 suggestion."))
+        // `process: String -> String` fires both idempotence (type-pattern
+        // alone, score 30 = Possible) and monotonicity (M7.1 type-pattern
+        // alone, score 25 = Possible) under --include-possible.
+        #expect(recording.text.contains("2 suggestions."))
         #expect(recording.text.contains("(Possible)"))
         #expect(recording.text.contains("process(_:)"))
     }
@@ -372,7 +375,9 @@ struct DiscoverPipelineTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(recording.text.contains("1 suggestion."))
+        // `process: String -> String` fires both idempotence (Possible)
+        // and monotonicity (M7.1, Possible) under includePossible.
+        #expect(recording.text.contains("2 suggestions."))
         #expect(recording.text.contains("(Possible)"))
         #expect(diagnostics.lines.isEmpty)
     }

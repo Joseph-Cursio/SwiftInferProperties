@@ -4,6 +4,12 @@ import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
 
+// swiftlint:disable type_body_length file_length
+// Single-suite for §16 + §14 hard guarantees grows linearly with new
+// allowlist boundaries (M6 SwiftInfer, M7 SwiftInferRefactors, ...).
+// Splitting along the 400-line / 250-body limits would scatter the
+// allowlist assertions for no reader benefit.
+
 /// PRD v0.3 §16 hard-guarantee integration suite + the §14 telemetry
 /// boundary. The M1 acceptance bar §c (per the M1 Plan) calls out three
 /// guarantees as in-scope for M1.7:
@@ -149,6 +155,53 @@ struct HardGuaranteeTests {
         }
         // Source files untouched — snapshot equality on the original
         // source tree (everything under /Sources/) before vs after.
+        let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
+        let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
+        #expect(sourceBefore == sourceAfter)
+    }
+
+    // MARK: - §16 #1 — M7 RefactorBridge writeout allowlist
+
+    @Test("--interactive B accept writes only under Tests/Generated/SwiftInferRefactors/")
+    func interactiveBAcceptWritesOnlyUnderRefactorsAllowlist() throws {
+        let directory = try makeM7BridgeFixture(named: "BridgeAllowlist")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        let before = try fileSet(of: directory)
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            interactive: true,
+            // First prompt: B (accept conformance for the type). Second:
+            // s (skip; the next associativity-firing suggestion on the
+            // same type collapses to [A/s/n/?] per per-type aggregation).
+            promptInput: ScriptedPromptInput(scriptedLines: ["B", "s", "s", "s"]),
+            output: SilentOutput(),
+            diagnostics: SilentDiagnosticOutput()
+        )
+        let after = try fileSet(of: directory)
+        let added = after.subtracting(before)
+        // Allowed prefixes: SwiftInferRefactors writeout + decisions.json.
+        // The associativity / commutativity / identity-element templates
+        // ship no LiftedTestEmitter arm in v1, so A-arm accepts (skipped
+        // here) wouldn't write under Tests/Generated/SwiftInfer/ even if
+        // surfaced — the allowlist for B alone is what this test pins.
+        for path in added {
+            #expect(
+                path.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
+                    || path.hasPrefix("/.swiftinfer/decisions.json"),
+                "M7 --interactive B accept wrote outside the allowlist: \(path)"
+            )
+        }
+        // The file written must follow the per-PRD §16 #1 path convention:
+        // Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift.
+        let conformancePath = added.first {
+            $0.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
+        }
+        #expect(conformancePath != nil, "RefactorBridge B accept did not write a conformance file")
+        if let path = conformancePath {
+            #expect(path.contains("/Bag/Semigroup.swift") || path.contains("/Bag/Monoid.swift"))
+        }
+        // Source files untouched — same posture as the M6 allowlist test.
         let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
         let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
         #expect(sourceBefore == sourceAfter)
@@ -325,6 +378,35 @@ struct HardGuaranteeTests {
         return base
     }
 
+    /// Build a Package.swift-rooted fixture with a `Bag` type that
+    /// fires the M2 associativity template via `merge(_:_:)` and the
+    /// M2 identity-element template via `static let empty`. The
+    /// RefactorBridgeOrchestrator (M7.5) aggregates those signals into
+    /// a Monoid proposal on `Bag`; the `B` accept routes through
+    /// `LiftedConformanceEmitter.monoid` and writes to
+    /// `Tests/Generated/SwiftInferRefactors/Bag/Monoid.swift`.
+    private func makeM7BridgeFixture(named name: String) throws -> URL {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftInferM7Bridge-\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: base.appendingPathComponent("Package.swift")
+        )
+        let target = base.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try """
+        struct Bag: Equatable {
+            static let empty = Bag()
+            static func merge(_ first: Bag, _ second: Bag) -> Bag { first }
+        }
+        """.write(
+            to: target.appendingPathComponent("Bag.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        return base
+    }
+
     /// `Sources/` directory of the package, resolved against `#filePath`
     /// so the path holds regardless of `swift test`'s working directory.
     private static let packageSourcesRoot: URL = {
@@ -357,3 +439,4 @@ private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
         return remaining.removeFirst()
     }
 }
+// swiftlint:enable type_body_length file_length

@@ -94,6 +94,9 @@ public enum MonotonicityTemplate {
         if let accumulator = accumulatorBodySignal(for: summary) {
             signals.append(accumulator)
         }
+        if let veto = nonDeterministicVeto(for: summary) {
+            signals.append(veto)
+        }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
             return nil
@@ -176,6 +179,23 @@ public enum MonotonicityTemplate {
     private static func accumulatorBodySignal(for summary: FunctionSummary) -> Signal? {
         _ = summary
         return nil
+    }
+
+    /// PRD §4.1's -∞ counter-signal — a function whose body calls
+    /// non-deterministic APIs (`UUID()`, `Date()`, etc.) can't be
+    /// reliably monotonic; the second invocation may project to a
+    /// different point in the codomain regardless of input ordering.
+    /// Mirrors `IdempotenceTemplate.nonDeterministicVeto`.
+    private static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
+        guard summary.bodySignals.hasNonDeterministicCall else {
+            return nil
+        }
+        let calls = summary.bodySignals.nonDeterministicAPIsDetected.joined(separator: ", ")
+        return Signal(
+            kind: .nonDeterministicBody,
+            weight: Signal.vetoWeight,
+            detail: "Non-deterministic API in body: \(calls)"
+        )
     }
 
     /// `true` when `name` ends with `suffix` and has at least one

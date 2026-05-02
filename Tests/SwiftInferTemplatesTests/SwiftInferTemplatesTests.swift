@@ -53,8 +53,13 @@ struct TemplateRegistryTests {
             bodySignals: .empty
         )
         let suggestions = TemplateRegistry.discover(in: [matching, nonMatching])
-        #expect(suggestions.count == 1)
-        #expect(suggestions.first?.evidence.first?.location.file == "A.swift")
+        // `tickle(from: Int, to: String) -> Bool` matches no template
+        // (multi-arg, mismatched param/return). `normalize: String -> String`
+        // matches idempotence (M1) AND monotonicity (M7.1) — String is
+        // a curated Comparable codomain. Both are anchored on A.swift.
+        #expect(suggestions.allSatisfy { $0.evidence.first?.location.file == "A.swift" })
+        let templates = Set(suggestions.map(\.templateName))
+        #expect(templates == ["idempotence", "monotonicity"])
     }
 
     @Test("Directory scan integration over a single fixture file")
@@ -68,10 +73,14 @@ struct TemplateRegistryTests {
         """)
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = try TemplateRegistry.discover(in: directory)
-        #expect(suggestions.count == 1)
-        let suggestion = try #require(suggestions.first)
-        #expect(suggestion.templateName == "idempotence")
-        #expect(suggestion.score.tier == .strong)
+        // `normalize: String -> String` fires both idempotence (M1
+        // canonical example, Strong tier) and monotonicity (M7.1
+        // type-pattern only, Possible tier — String is a curated
+        // Comparable codomain).
+        let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
+        #expect(idempotence.score.tier == .strong)
+        let monotonicity = try #require(suggestions.first { $0.templateName == "monotonicity" })
+        #expect(monotonicity.score.tier == .possible)
     }
 
     @Test("Both idempotence and round-trip fire over a mixed corpus")
@@ -105,7 +114,9 @@ struct TemplateRegistryTests {
         let templates = suggestions.map(\.templateName)
         #expect(templates.contains("idempotence"))
         #expect(templates.contains("round-trip"))
-        #expect(suggestions.count == 2)
+        // M7.1 wired MonotonicityTemplate into the registry; `normalize:
+        // String -> String` matches its type pattern (Possible tier).
+        #expect(templates.contains("monotonicity"))
     }
 
     @Test("Associativity reducer-fold signal aggregates corpus-wide via TemplateRegistry.discover")
@@ -212,8 +223,11 @@ struct TemplateRegistryTests {
             bodySignals: .empty
         )
         let suggestions = TemplateRegistry.discover(in: [earlyNormalize, encode, decode])
-        // round-trip is anchored at encode (line 10), idempotence at line 50.
-        #expect(suggestions.map(\.templateName) == ["round-trip", "idempotence"])
+        // round-trip is anchored at encode (line 10), idempotence and
+        // monotonicity both anchor at the same `normalize` (line 50).
+        // Within identical (file, line), template-name ordering is
+        // alphabetical per `TemplateRegistry.lessThan`.
+        #expect(suggestions.map(\.templateName) == ["round-trip", "idempotence", "monotonicity"])
     }
 
     @Test("Contradiction pass drops commutativity over non-Equatable return + emits stderr diagnostic")
