@@ -23,7 +23,7 @@ During pre-1.0 development, `Package.swift` references SwiftProtocolLaws via a l
 | Question | File |
 |---|---|
 | Product scope, milestones (M1–M8), success criteria | `docs/SwiftInferProperties PRD v0.4.md` |
-| **Current milestone execution plan (M7 — not yet drafted)** | (to be created at the start of M7) |
+| **Current milestone execution plan (M7 sub-milestones, RefactorBridge + Option B + monotonicity / invariant-preservation scope)** | `docs/M7 Plan.md` |
 | Closed milestone plans | `docs/archive/M1 Plan.md` ... `docs/archive/M6 Plan.md` |
 | What v0.3 changed vs v0.1/v0.2 | The `Supersedes:` line points at git history of the SwiftProtocolLaws repo, where v0.1 and v0.2 lived before the split |
 | ProtocolLawKit / ProtoLawMacro source of truth | the SwiftProtocolLaws repo, not this one |
