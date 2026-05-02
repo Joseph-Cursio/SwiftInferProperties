@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
 
@@ -118,6 +119,58 @@ struct HardGuaranteeTests {
         #expect(normalizedA == normalizedB)
     }
 
+    // MARK: - §16 #1 — M6 writeouts respect the allowlist
+
+    @Test("--interactive accept writes only under Tests/Generated/SwiftInfer/")
+    func interactiveAcceptWritesOnlyUnderGeneratedTests() throws {
+        let directory = try makeM6Fixture(named: "InteractiveAcceptAllowlist")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        let before = try fileSet(of: directory)
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            interactive: true,
+            promptInput: ScriptedPromptInput(scriptedLines: ["A"]),
+            output: SilentOutput(),
+            diagnostics: SilentDiagnosticOutput()
+        )
+        let after = try fileSet(of: directory)
+        let added = after.subtracting(before)
+        // Two paths added: the property-test stub + the decisions.json
+        // record. Both match the M6 plan's allowlist (Tests/Generated/
+        // SwiftInfer/<Template>/<FunctionName>.swift +
+        // .swiftinfer/decisions.json under packageRoot).
+        for path in added {
+            #expect(
+                path.hasPrefix("/Tests/Generated/SwiftInfer/")
+                    || path.hasPrefix("/.swiftinfer/decisions.json"),
+                "M6 --interactive accept wrote outside the allowlist: \(path)"
+            )
+        }
+        // Source files untouched — snapshot equality on the original
+        // source tree (everything under /Sources/) before vs after.
+        let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
+        let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
+        #expect(sourceBefore == sourceAfter)
+    }
+
+    @Test("--update-baseline writes only .swiftinfer/baseline.json under packageRoot")
+    func updateBaselineWritesOnlyToConventionalPath() throws {
+        let directory = try makeM6Fixture(named: "UpdateBaselineAllowlist")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        let before = try fileSet(of: directory)
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            updateBaseline: true,
+            output: SilentOutput(),
+            diagnostics: SilentDiagnosticOutput()
+        )
+        let after = try fileSet(of: directory)
+        let added = after.subtracting(before)
+        #expect(added == ["/.swiftinfer/baseline.json"])
+    }
+
     // MARK: - §14 — no telemetry / no network
 
     @Test("Production source contains no networking-API usage patterns")
@@ -223,10 +276,53 @@ struct HardGuaranteeTests {
             at: directory,
             includingPropertiesForKeys: [.isRegularFileKey]
         )
+        // macOS resolves /tmp through the /private symlink during
+        // enumeration, so the enumerator's URLs carry that prefix while
+        // `directory.path` may not. Strip both candidates so the
+        // returned relative paths normalize identically. Also filter to
+        // regular files — directory entries pollute the diff with
+        // synthetic ".swiftinfer" hits when an M6 writeout creates a
+        // new sub-folder.
+        let raw = directory.path
+        let withPrivatePrefix = raw.hasPrefix("/private") ? raw : "/private" + raw
         for case let url as URL in enumerator ?? FileManager.DirectoryEnumerator() {
-            paths.insert(url.path.replacingOccurrences(of: directory.path, with: ""))
+            let isFile = (try? url.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile ?? false
+            guard isFile else { continue }
+            let stripped = url.path
+                .replacingOccurrences(of: withPrivatePrefix, with: "")
+                .replacingOccurrences(of: raw, with: "")
+            paths.insert(stripped)
         }
         return paths
+    }
+
+    /// Build a Package.swift-rooted fixture with one `Sources/Lib/`
+    /// target so the M6 `--interactive` / `--update-baseline` writeouts
+    /// have a real package boundary to anchor at. The DecisionsLoader /
+    /// BaselineLoader walk-up needs `Package.swift` at the root or it
+    /// falls back to the target directory (which the M6 tests
+    /// elsewhere exercise — here we want the conventional path).
+    private func makeM6Fixture(named name: String) throws -> URL {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftInferM6Guarantee-\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: base.appendingPathComponent("Package.swift")
+        )
+        let target = base.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """.write(
+            to: target.appendingPathComponent("Source.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        return base
     }
 
     /// `Sources/` directory of the package, resolved against `#filePath`
@@ -239,4 +335,25 @@ struct HardGuaranteeTests {
             .deletingLastPathComponent()  // SwiftInferProperties/
             .appendingPathComponent("Sources")
     }()
+}
+
+// MARK: - Silent stubs for the M6 hard-guarantee tests
+
+private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+    func write(_ text: String) {}
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_ text: String) {}
+}
+
+private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
 }

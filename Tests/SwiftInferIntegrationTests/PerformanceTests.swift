@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
 
@@ -68,6 +69,72 @@ struct PerformanceTests {
             suggestion.score.signals.contains { $0.kind == .discoverableAnnotation }
         }
         #expect(discoverableSeen, "@Discoverable signal did not fire on the synthetic corpus")
+    }
+
+    /// M6.6 acceptance bar (g): the §13 budget must hold *with* the
+    /// M6.1 decisions-load path active. The synthetic corpus gains a
+    /// sibling `.swiftinfer/decisions.json` (one decided record per
+    /// surfaced suggestion), and the test runs `Discover.run`
+    /// end-to-end so the decisions read happens inside the budget
+    /// alongside the discovery scan. M6.4's `--interactive` is a
+    /// developer-driven gesture and is excluded — the budget is for
+    /// the unattended discovery path the §13 PRD line targets.
+    @Test("Synthetic 50-file corpus discover stays under §13 with M6.1 decisions-load active")
+    func syntheticFiftyFileCorpusWithDecisionsLoad() throws {
+        let directory = try generateSyntheticCorpus(fileCount: 50)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        // Wrap the synthetic target into a Package.swift-rooted layout
+        // so DecisionsLoader's walk-up resolves the conventional path.
+        let packageRoot = directory.deletingLastPathComponent()
+            .appendingPathComponent("PerfPkg-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: packageRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: packageRoot) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: packageRoot.appendingPathComponent("Package.swift")
+        )
+        let target = packageRoot.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        try FileManager.default.createDirectory(
+            at: target.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        // Move (rename) the synthetic corpus into the package's
+        // Sources/Lib/ slot so the discover pipeline picks it up.
+        try FileManager.default.moveItem(at: directory, to: target)
+        // Pre-discover to capture identities, then write a fixture
+        // decisions.json with one .skipped record per surfaced
+        // suggestion. The skipped state is what M6.4's drift suppression
+        // path reads on every subsequent run.
+        let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: target,
+            diagnostics: SilentDiagnosticOutput()
+        )
+        let decisions = Decisions(records: pipeline.suggestions.map { suggestion in
+            DecisionRecord(
+                identityHash: suggestion.identity.normalized,
+                template: suggestion.templateName,
+                scoreAtDecision: suggestion.score.total,
+                tier: suggestion.score.tier,
+                decision: .skipped,
+                timestamp: Date(timeIntervalSince1970: 0)
+            )
+        })
+        try DecisionsLoader.write(
+            decisions,
+            to: packageRoot.appendingPathComponent(".swiftinfer/decisions.json")
+        )
+        // Now measure the full Discover.run path with the decisions
+        // file present.
+        let elapsed = try measureWall {
+            try SwiftInferCommand.Discover.run(
+                directory: target,
+                output: SilentOutput(),
+                diagnostics: SilentDiagnosticOutput()
+            )
+        }
+        #expect(
+            elapsed < 2.0,
+            "Discover.run with decisions.json took \(formatted(elapsed))s — over the §13 2s budget"
+        )
     }
 
     /// `swift-collections/Sources/DequeModule` is 44 `.swift` files —
@@ -178,4 +245,14 @@ struct PerformanceTests {
     private func formatted(_ seconds: Double) -> String {
         String(format: "%.3f", seconds)
     }
+}
+
+// MARK: - Silent stubs for the M6.6 perf re-check
+
+private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+    func write(_ text: String) {}
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_ text: String) {}
 }
