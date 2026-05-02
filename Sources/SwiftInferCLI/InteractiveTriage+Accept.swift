@@ -352,9 +352,20 @@ extension InteractiveTriage {
                 identityWitness: proposal.identityWitness ?? "identity",
                 explainability: proposal.explainability
             )
+        case "SetAlgebra":
+            // SetAlgebra (stdlib) — secondary arm for Semilattice
+            // claims with curated set-named ops (M8.4.b.1, open
+            // decision #3 default `(a)`). Bare extension — the user's
+            // existing methods satisfy the protocol's requirement set
+            // (insert / remove / contains / etc.); the §4.5 caveat
+            // lists what's not implied by the Semilattice signals.
+            return LiftedConformanceEmitter.setAlgebra(
+                typeName: proposal.typeName,
+                explainability: proposal.explainability
+            )
         default:
-            // Future arms (M8.4.b's Ring → stdlib Numeric, SetAlgebra
-            // secondary) get dispatched here as that milestone lands.
+            // Future arms (M8.4.b.2's Ring → stdlib Numeric) get
+            // dispatched here as that milestone lands.
             return "// SwiftInfer: unsupported protocol '\(proposal.protocolName)' in v1.\n"
         }
     }

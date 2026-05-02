@@ -208,6 +208,40 @@ public enum LiftedConformanceEmitter {
         )
     }
 
+    /// Emit a stdlib `SetAlgebra` conformance extension for `typeName`.
+    /// **Secondary arm** to a primary Semilattice claim per PRD §5.4
+    /// row 4's "suggest SetAlgebra if applicable" + M8 plan open
+    /// decision #3 default `(a)`. Surfaces alongside Semilattice in
+    /// the `[A/B/B'/s/n/?]` extended prompt when the type's binary op
+    /// has a curated set-shaped name (`union` / `intersect` /
+    /// `subtract` / etc.).
+    ///
+    /// Stdlib `SetAlgebra` requires far more than the bounded-join-
+    /// semilattice signals on their own provide (`insert`, `remove`,
+    /// `contains`, four `is*Subset(of:)` / `is*Superset(of:)` /
+    /// `isDisjoint(with:)` predicates). The emitted extension is
+    /// **bare** — `extension TypeName: SetAlgebra {}` — relying on the
+    /// user's existing implementation of those requirements. The §4.5
+    /// caveat (added by M8.4.b.1's orchestrator) lists the unmet
+    /// requirements explicitly so the user knows what to fill in or
+    /// drop the conformance over.
+    ///
+    /// No witness aliasing — SetAlgebra's required identifiers don't
+    /// have a single canonical-rename pattern like Semigroup's
+    /// `combine` / Monoid's `identity`. The user satisfies SetAlgebra
+    /// directly through their own type's declared methods.
+    public static func setAlgebra(
+        typeName: String,
+        explainability: ExplainabilityBlock
+    ) -> String {
+        makeExtension(
+            typeName: typeName,
+            protocolName: "SetAlgebra",
+            body: nil,
+            explainability: explainability
+        )
+    }
+
     /// Path convention for RefactorBridge writeouts per PRD §16 #1's
     /// allowlist extension. M7.5's orchestrator composes the relative
     /// path as `<root>/<TypeName>/<ProtocolName>.swift`; M7.6's hard-

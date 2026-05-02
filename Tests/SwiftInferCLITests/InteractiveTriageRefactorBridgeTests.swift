@@ -3,6 +3,12 @@ import SwiftInferCore
 import Testing
 @testable import SwiftInferCLI
 
+// swiftlint:disable type_body_length
+// M8.4.b.1 added 5 new tests covering the [A/B/B'/s/n/?] prompt
+// extension + b'/c choice parsing, pushing the suite past the 250-line
+// cap. Suite coheres around its subject — splitting along the body
+// limit would scatter the prompt-UI tests across multiple files.
+
 @Suite("InteractiveTriage — RefactorBridge [A/B/s/n/?] arm (M7.5c)")
 struct InteractiveTriageRefactorBridgeTests {
 
@@ -10,34 +16,121 @@ struct InteractiveTriageRefactorBridgeTests {
 
     @Test("Prompt collapses to [A/s/n/?] when no proposal is attached")
     func promptOmitsBWhenNoProposal() {
-        let line = InteractiveTriage.promptLine(position: 1, total: 1, proposalAvailable: false)
+        let line = InteractiveTriage.promptLine(position: 1, total: 1, primaryAvailable: false)
         #expect(line == "[1/1] Accept (A) / Skip (s) / Reject (n) / Help (?)")
     }
 
     @Test("Prompt extends to [A/B/s/n/?] when proposal is attached")
     func promptIncludesBWhenProposalAttached() {
-        let line = InteractiveTriage.promptLine(position: 2, total: 5, proposalAvailable: true)
+        let line = InteractiveTriage.promptLine(position: 2, total: 5, primaryAvailable: true)
         #expect(line == "[2/5] Accept (A) / Conformance (B) / Skip (s) / Reject (n) / Help (?)")
     }
 
     @Test("Help text mentions B only when proposal is attached")
     func helpTextConditional() {
-        let withB = InteractiveTriage.helpText(proposalAvailable: true)
-        let withoutB = InteractiveTriage.helpText(proposalAvailable: false)
+        let withB = InteractiveTriage.helpText(primaryAvailable: true)
+        let withoutB = InteractiveTriage.helpText(primaryAvailable: false)
         #expect(withB.contains("B — accept Option B (RefactorBridge"))
         #expect(withoutB.contains("B —") == false)
     }
 
+    // MARK: - M8.4.b.1 — extended [A/B/B'/s/n/?] prompt
+
+    @Test("Prompt extends to [A/B/B'/s/n/?] when secondary proposal is attached")
+    func promptExtendsWithSecondary() {
+        let line = InteractiveTriage.promptLine(
+            position: 1,
+            total: 1,
+            primaryAvailable: true,
+            secondaryAvailable: true
+        )
+        #expect(line.contains("Conformance' (B')"))
+    }
+
+    @Test("Prompt only shows B' when both primary AND secondary are available")
+    func promptDoesNotShowBPrimeWithoutPrimary() {
+        // Defensive: if only secondary is true (impossible by current
+        // dispatch but worth pinning), prompt doesn't surface B'.
+        let lineSecondaryOnly = InteractiveTriage.promptLine(
+            position: 1,
+            total: 1,
+            primaryAvailable: false,
+            secondaryAvailable: true
+        )
+        #expect(lineSecondaryOnly.contains("Conformance' (B')") == false)
+    }
+
+    @Test("Help text mentions B' only when secondaryAvailable is true")
+    func helpTextMentionsBPrimeOnlyWhenSecondaryAvailable() {
+        let withBPrime = InteractiveTriage.helpText(
+            primaryAvailable: true,
+            secondaryAvailable: true
+        )
+        let withoutBPrime = InteractiveTriage.helpText(
+            primaryAvailable: true,
+            secondaryAvailable: false
+        )
+        #expect(withBPrime.contains("B' — accept the secondary"))
+        #expect(withoutBPrime.contains("B' —") == false)
+    }
+
+    @Test("`b'` and `c` both return .conformancePrime when secondaryAvailable is true")
+    func bPrimeAndCAreEquivalent() {
+        let outputBPrime = TriageRecordingOutput()
+        let promptBPrime = TriageRecordingPromptInput(scriptedLines: ["b'"])
+        let choiceBPrime = InteractiveTriage.readChoice(
+            prompt: promptBPrime,
+            output: outputBPrime,
+            primaryAvailable: true,
+            secondaryAvailable: true
+        )
+        switch choiceBPrime {
+        case .conformancePrime: break
+        default: Issue.record("expected .conformancePrime for b', got \(choiceBPrime)")
+        }
+
+        let outputC = TriageRecordingOutput()
+        let promptC = TriageRecordingPromptInput(scriptedLines: ["c"])
+        let choiceC = InteractiveTriage.readChoice(
+            prompt: promptC,
+            output: outputC,
+            primaryAvailable: true,
+            secondaryAvailable: true
+        )
+        switch choiceC {
+        case .conformancePrime: break
+        default: Issue.record("expected .conformancePrime for c, got \(choiceC)")
+        }
+    }
+
+    @Test("`b'` is rejected when secondaryAvailable is false")
+    func bPrimeRequiresSecondaryAvailable() {
+        let output = TriageRecordingOutput()
+        // Script: `b'` (rejected — no secondary) → `s` advances.
+        let prompt = TriageRecordingPromptInput(scriptedLines: ["b'", "s"])
+        let choice = InteractiveTriage.readChoice(
+            prompt: prompt,
+            output: output,
+            primaryAvailable: true,
+            secondaryAvailable: false
+        )
+        switch choice {
+        case .skip: break
+        default: Issue.record("expected .skip fallthrough, got \(choice)")
+        }
+        #expect(output.lines.contains { $0.contains("Unrecognized input 'b''") })
+    }
+
     // MARK: - readChoice gating
 
-    @Test("`b` is recognized only when proposalAvailable is true")
+    @Test("`b` is recognized only when primaryAvailable is true")
     func bRequiresProposalAvailable() {
         let outputWithProposal = TriageRecordingOutput()
         let promptWithProposal = TriageRecordingPromptInput(scriptedLines: ["b"])
         let choiceWith = InteractiveTriage.readChoice(
             prompt: promptWithProposal,
             output: outputWithProposal,
-            proposalAvailable: true
+            primaryAvailable: true
         )
         switch choiceWith {
         case .conformance: break
@@ -51,7 +144,7 @@ struct InteractiveTriageRefactorBridgeTests {
         let choiceWithout = InteractiveTriage.readChoice(
             prompt: promptWithout,
             output: outputWithout,
-            proposalAvailable: false
+            primaryAvailable: false
         )
         switch choiceWithout {
         case .skip: break
@@ -81,7 +174,7 @@ struct InteractiveTriageRefactorBridgeTests {
             context: makeContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["B"]),
                 outputDirectory: directory,
-                proposalsByType: ["IntSet": proposal]
+                proposalsByType: ["IntSet": [proposal]]
             )
         )
         let stored = try #require(result.updatedDecisions.record(for: assoc.identity.normalized))
@@ -117,7 +210,7 @@ struct InteractiveTriageRefactorBridgeTests {
             context: makeContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["B"]),
                 outputDirectory: directory,
-                proposalsByType: ["IntSet": proposal]
+                proposalsByType: ["IntSet": [proposal]]
             )
         )
         let path = try #require(result.writtenFiles.first)
@@ -158,7 +251,7 @@ struct InteractiveTriageRefactorBridgeTests {
                 prompt: TriageRecordingPromptInput(scriptedLines: ["B", "s"]),
                 output: output,
                 outputDirectory: directory,
-                proposalsByType: ["IntSet": proposal]
+                proposalsByType: ["IntSet": [proposal]]
             )
         )
         let promptLines = output.lines.filter { $0.contains("/2]") }
@@ -191,7 +284,7 @@ struct InteractiveTriageRefactorBridgeTests {
                 prompt: TriageRecordingPromptInput(scriptedLines: ["s"]),
                 output: output,
                 outputDirectory: directory,
-                proposalsByType: ["IntSet": proposal]
+                proposalsByType: ["IntSet": [proposal]]
             )
         )
         let promptLines = output.lines.filter { $0.contains("/1]") }
@@ -222,7 +315,7 @@ struct InteractiveTriageRefactorBridgeTests {
                 output: output,
                 outputDirectory: directory,
                 dryRun: true,
-                proposalsByType: ["IntSet": proposal]
+                proposalsByType: ["IntSet": [proposal]]
             )
         )
         #expect(result.writtenFiles.isEmpty)
@@ -239,7 +332,7 @@ struct InteractiveTriageRefactorBridgeTests {
         diagnostics: TriageRecordingDiagnosticOutput = TriageRecordingDiagnosticOutput(),
         outputDirectory: URL,
         dryRun: Bool = false,
-        proposalsByType: [String: RefactorBridgeProposal] = [:]
+        proposalsByType: [String: [RefactorBridgeProposal]] = [:]
     ) -> InteractiveTriage.Context {
         InteractiveTriage.Context(
             prompt: prompt,
@@ -259,3 +352,4 @@ struct InteractiveTriageRefactorBridgeTests {
         return base
     }
 }
+// swiftlint:enable type_body_length

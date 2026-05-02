@@ -413,5 +413,41 @@ struct LiftedConformanceEmitterTests {
         #expect(cmon.contains("T: CommutativeMonoid"))
         #expect(semilattice.contains("T: Semilattice"))
     }
+
+    // MARK: - M8.4.b.1 — setAlgebra byte-stable golden
+
+    @Test
+    func setAlgebraEmitsBareExtensionByteStable() {
+        // SetAlgebra is the secondary arm to a primary Semilattice
+        // claim — the emitter produces a bare `extension T: SetAlgebra {}`
+        // because the user's existing methods satisfy the protocol's
+        // requirements (insert / remove / contains / etc.). Per M8.4.b.1
+        // open decision #3 default `(a)`, the §4.5 caveat lists what's
+        // not implied by the Semilattice signals.
+        let explainability = ExplainabilityBlock(
+            whySuggested: [
+                "RefactorBridge claim: Bag → SetAlgebra"
+            ],
+            whyMightBeWrong: [
+                "stdlib SetAlgebra requires insert / remove / contains."
+            ]
+        )
+        let source = LiftedConformanceEmitter.setAlgebra(
+            typeName: "Bag",
+            explainability: explainability
+        )
+        let expected = """
+
+            // SwiftInfer RefactorBridge — Bag: SetAlgebra
+            //
+            // Why suggested:
+            //   - RefactorBridge claim: Bag → SetAlgebra
+            //
+            // Why this might be wrong:
+            //   - stdlib SetAlgebra requires insert / remove / contains.
+            extension Bag: SetAlgebra {}
+            """
+        #expect(source == expected)
+    }
 }
 // swiftlint:enable type_body_length file_length line_length

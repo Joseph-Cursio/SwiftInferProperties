@@ -151,16 +151,33 @@ public enum RefactorBridgeOrchestrator {
     /// dictionary keyed by type name so the interactive prompt can
     /// look up `proposalsByType[type]` in O(1) per suggestion.
     ///
+    /// **M8.4.b.1**: each type can carry **multiple** proposals — open
+    /// decisions #3 + #6. Two cases trigger a list of length > 1:
+    /// - **Incomparable arms** (open decision #6): when both
+    ///   `CommutativeMonoid` and `Group` fire on the same type, the
+    ///   orchestrator emits both as peer proposals. Mathematically
+    ///   the type is a CommutativeGroup; v1.9.0 doesn't ship a kit
+    ///   `CommutativeGroup`, so the user picks one (or both, across
+    ///   sessions). A future v1.10+ kit-side `CommutativeGroup` would
+    ///   collapse this to a single proposal.
+    /// - **Semilattice + SetAlgebra secondary** (open decision #3):
+    ///   a Semilattice claim whose binary op is curated set-named
+    ///   (`union` / `intersect` / `subtract` / etc.) emits a
+    ///   secondary `SetAlgebra` proposal alongside. Mirrors PRD §5.4
+    ///   row 2's "Monoid + AdditiveArithmetic-secondary" pattern.
+    ///
+    /// The list ordering matters for the prompt UI: position 0 is
+    /// rendered as `B`, position 1 as `B'` in the
+    /// `[A/B/B'/s/n/?]` extended prompt. For incomparable arms the
+    /// ordering is alphabetical-ish (CommutativeMonoid before Group);
+    /// for primary/secondary cases the kit-defined arm comes first.
+    ///
     /// `inverseElementPairs` (M8.3 + M8.4.a) carries the unary-inverse
-    /// witnesses M8.3's `InverseElementPairing` produced. The
-    /// orchestrator records the inverse-element flag + the user's
-    /// inverse function name on the type's accumulator so the Group
-    /// promotion can fire when associativity + identity are also
-    /// present. Defaults to `[]` so M7.5-era callers compile unchanged.
+    /// witnesses. Defaults to `[]` so M7.5-era callers compile.
     public static func proposals(
         from suggestions: [Suggestion],
         inverseElementPairs: [InverseElementPair] = []
-    ) -> [String: RefactorBridgeProposal] {
+    ) -> [String: [RefactorBridgeProposal]] {
         var byType: [String: TypeAccumulator] = [:]
         for suggestion in suggestions {
             guard let signal = templateSignal(of: suggestion),
@@ -183,7 +200,10 @@ public enum RefactorBridgeOrchestrator {
             byType[typeText, default: TypeAccumulator(typeName: typeText)]
                 .recordInverseElement(witness: pair.inverse.name)
         }
-        return byType.compactMapValues(\.proposal)
+        return byType.compactMapValues { accumulator in
+            let list = accumulator.proposals
+            return list.isEmpty ? nil : list
+        }
     }
 
     /// Per-type accumulator — collects which structural signals fired
@@ -261,16 +281,110 @@ public enum RefactorBridgeOrchestrator {
             }
         }
 
-        /// Promote to a single `RefactorBridgeProposal` per the M8.4.a
-        /// strict-greatest ranking — Semilattice > Group > CommutativeMonoid >
-        /// Monoid > Semigroup. Incomparable arms (e.g. CommutativeMonoid AND
-        /// Group both apply) collapse to the higher-ranked one with a
-        /// forward-pointer in the explainability block; M8.4.b will lift
-        /// this to multi-proposal per open decision #6 default `(a)`.
-        var proposal: RefactorBridgeProposal? {
-            guard hasAssociativity, let combineWitness else { return nil }
-            let protocolName = strongestPromotion()
-            return RefactorBridgeProposal(
+        /// Promote the accumulated signal set to one or more
+        /// `RefactorBridgeProposal`s per PRD v0.4 §5.4 + the M8.4.b.1
+        /// open-decision resolutions:
+        /// - **Strict-greatest within each chain branch** — Semilattice
+        ///   beats CommutativeMonoid beats Monoid beats Semigroup;
+        ///   Group beats Monoid beats Semigroup.
+        /// - **Incomparable arms emit separately** (open decision #6)
+        ///   — when both `CommutativeMonoid` and `Group` apply on the
+        ///   same type, both surface as peer proposals.
+        /// - **Semilattice + SetAlgebra secondary** (open decision #3)
+        ///   — Semilattice claims whose binary op has a curated
+        ///   set-named verb (`union`, `intersect`, `subtract`, etc.)
+        ///   emit a secondary stdlib `SetAlgebra` proposal alongside.
+        ///
+        /// Returns `[]` when the signal set doesn't support any
+        /// proposal (e.g. commutativity-only with no associativity).
+        var proposals: [RefactorBridgeProposal] {
+            guard hasAssociativity, let combineWitness else { return [] }
+            // Cover the Semilattice branch first — its signal set is a
+            // superset of CommutativeMonoid + Monoid + Semigroup.
+            if hasAssociativity, hasIdentityElement, hasCommutativity, hasIdempotence {
+                return semilatticePromotion(combineWitness: combineWitness)
+            }
+            // Incomparable case — both CommutativeMonoid and Group fire.
+            // Per open decision #6, emit BOTH as peer proposals. Order
+            // is alphabetical-ish: CommutativeMonoid (B) then Group (B').
+            if hasAssociativity, hasIdentityElement, hasCommutativity, hasInverseElement {
+                return [
+                    makeProposal(protocolName: "CommutativeMonoid", combineWitness: combineWitness),
+                    makeProposal(protocolName: "Group", combineWitness: combineWitness)
+                ]
+            }
+            // Single-arm cases — exactly one promotion fires.
+            if hasAssociativity, hasIdentityElement, hasInverseElement {
+                return [makeProposal(protocolName: "Group", combineWitness: combineWitness)]
+            }
+            if hasAssociativity, hasIdentityElement, hasCommutativity {
+                return [makeProposal(protocolName: "CommutativeMonoid", combineWitness: combineWitness)]
+            }
+            if hasAssociativity, hasIdentityElement {
+                return [makeProposal(protocolName: "Monoid", combineWitness: combineWitness)]
+            }
+            return [makeProposal(protocolName: "Semigroup", combineWitness: combineWitness)]
+        }
+
+        /// Build a Semilattice proposal plus the SetAlgebra secondary
+        /// when the binary op's name is in the curated set-shaped
+        /// verb list. Per open decision #3 default `(a)`, both surface
+        /// at the prompt as `[A/B/B'/s/n/?]`; user picks either.
+        private func semilatticePromotion(combineWitness: String) -> [RefactorBridgeProposal] {
+            let primary = makeProposal(
+                protocolName: "Semilattice",
+                combineWitness: combineWitness
+            )
+            guard isCuratedSetAlgebraOp(combineWitness) else {
+                return [primary]
+            }
+            // SetAlgebra (stdlib) — reuses the same explainability +
+            // contributing-suggestion identities as the primary
+            // Semilattice claim. The §4.5 caveats list which SetAlgebra
+            // requirements aren't covered by the per-template signals
+            // (insert/remove/contains/etc.), pointing the user at what
+            // they need to fill in manually.
+            let secondary = RefactorBridgeProposal(
+                typeName: typeName,
+                protocolName: "SetAlgebra",
+                combineWitness: combineWitness,
+                identityWitness: nil,
+                inverseWitness: nil,
+                explainability: aggregatedExplainability(protocolName: "SetAlgebra"),
+                relatedIdentities: identities
+            )
+            return [primary, secondary]
+        }
+
+        /// Curated binary-op names that signal a set-algebra-shaped
+        /// type. Conservative list — only union / intersect / subtract
+        /// shapes (and their `form`-prefixed mutating peers, which
+        /// don't get classified here but the verbs cover the same
+        /// semantic concept). Semilattice claims with one of these
+        /// names earn the SetAlgebra secondary; other Semilattice
+        /// shapes (e.g. integer max, boolean OR) skip it.
+        private func isCuratedSetAlgebraOp(_ name: String) -> Bool {
+            let curated: Set<String> = [
+                "union",
+                "intersect",
+                "intersection",
+                "subtract",
+                "subtracting",
+                "formUnion",
+                "formIntersection",
+                "formSymmetricDifference",
+                "symmetricDifference"
+            ]
+            return curated.contains(name)
+        }
+
+        /// Helper to construct a proposal with all witnesses + the
+        /// per-protocol caveats threaded in.
+        private func makeProposal(
+            protocolName: String,
+            combineWitness: String
+        ) -> RefactorBridgeProposal {
+            RefactorBridgeProposal(
                 typeName: typeName,
                 protocolName: protocolName,
                 combineWitness: combineWitness,
@@ -279,31 +393,6 @@ public enum RefactorBridgeOrchestrator {
                 explainability: aggregatedExplainability(protocolName: protocolName),
                 relatedIdentities: identities
             )
-        }
-
-        /// Pick the strongest promotion the signal set supports. Order
-        /// matters — Semilattice's signal set is a superset of
-        /// CommutativeMonoid's (adds idempotence), so the Semilattice
-        /// check runs first. Group's signal set is incomparable with
-        /// CommutativeMonoid's (inverse vs commutativity); Group ranks
-        /// higher for the M8.4.a single-proposal collapse because the
-        /// inverse witness is the rarer signal — most everyday Swift
-        /// types satisfy CommutativeMonoid (counters, maxes, sets), but
-        /// Group requires an explicit unary inverse function.
-        private func strongestPromotion() -> String {
-            if hasAssociativity, hasIdentityElement, hasCommutativity, hasIdempotence {
-                return "Semilattice"
-            }
-            if hasAssociativity, hasIdentityElement, hasInverseElement {
-                return "Group"
-            }
-            if hasAssociativity, hasIdentityElement, hasCommutativity {
-                return "CommutativeMonoid"
-            }
-            if hasAssociativity, hasIdentityElement {
-                return "Monoid"
-            }
-            return "Semigroup"
         }
 
         /// Every kit-defined arm except Semigroup needs an identity
@@ -318,20 +407,8 @@ public enum RefactorBridgeOrchestrator {
             for suggestion in contributing {
                 why.append("from \(suggestion.templateName): \(suggestion.evidence.first?.displayName ?? "<unknown>")")
             }
-            if hasInverseElement, let inverseWitness {
+            if hasInverseElement, let inverseWitness, protocolName == "Group" {
                 why.append("from inverse-element pairing: \(inverseWitness)(_:) -> \(typeName)")
-            }
-            // Forward-pointer for the M8.4.a single-proposal collapse:
-            // when both CommutativeMonoid and Group apply, Group wins
-            // but we surface the alternative claim so the user knows
-            // the type has both structures.
-            if protocolName == "Group", hasCommutativity {
-                why.append(
-                    "Note: this type also satisfies CommutativeMonoid "
-                        + "(commutativity + identity + associativity). M8.4.b will "
-                        + "split incomparable arms into separate proposals; "
-                        + "v1.1+ kit-side CommutativeGroup would collapse them."
-                )
             }
             let caveats = perProtocolCaveats(for: protocolName)
             return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: caveats)
@@ -361,6 +438,16 @@ public enum RefactorBridgeOrchestrator {
                     + "`combine(a, a) == a` must hold for every a. Bounded join-semilattices "
                     + "(set union, integer max) and bounded meet-semilattices (set "
                     + "intersection, integer min) share this conformance."
+                )
+            case "SetAlgebra":
+                caveats.append(
+                    "stdlib `SetAlgebra` requires more than the bounded-join-semilattice "
+                    + "signals on their own provide — `insert`, `remove`, `contains`, "
+                    + "`isSubset(of:)`, `isStrictSubset(of:)`, `isSuperset(of:)`, "
+                    + "`isStrictSuperset(of:)`, `isDisjoint(with:)` are not implied by "
+                    + "the Semilattice claim. The user must fill these in or drop the "
+                    + "conformance. Surfaced as a secondary Option B alongside "
+                    + "Semilattice (PRD §5.4 row 2's primary-kit + secondary-stdlib pattern)."
                 )
             default:
                 break

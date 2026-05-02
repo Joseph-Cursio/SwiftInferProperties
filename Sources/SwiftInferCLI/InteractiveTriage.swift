@@ -2,6 +2,13 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
+// swiftlint:disable file_length type_body_length
+// M8.4.b.1 extended the prompt UX to `[A/B/B'/s/n/?]` and the Choice
+// enum to four cases, with extracted `resolveChoice` + `acceptConformance`
+// helpers keeping `processOne` under the complexity cap. The InteractiveTriage
+// enum's body now exceeds the 250-line cap; splitting further would
+// scatter the prompt-UI surface across multiple files.
+
 /// `swift-infer discover --interactive` triage orchestrator (M6.4 +
 /// M7.5 RefactorBridge extension).
 /// Walks each surviving suggestion, prompts the user with
@@ -80,11 +87,20 @@ public enum InteractiveTriage {
         public let dryRun: Bool
         public let clock: @Sendable () -> Date
         /// Per-type RefactorBridge proposals keyed by type name, built
-        /// by `RefactorBridgeOrchestrator.proposals(from:)` (M7.5b).
+        /// by `RefactorBridgeOrchestrator.proposals(from:)` (M7.5b +
+        /// M8.4.b.1). Each value is a list — M7.5 emitted a single
+        /// proposal per type; M8.4.b.1 widens to list-shaped for
+        /// incomparable arms (CommutativeMonoid + Group on the same
+        /// type) and primary/secondary pairs (Semilattice + SetAlgebra
+        /// when curated set-named ops fire). The prompt loop renders
+        /// position 0 as `B` and position 1 as `B'` in the extended
+        /// `[A/B/B'/s/n/?]` prompt; positions ≥ 2 aren't currently
+        /// surfaced (no M8 promotion produces ≥ 3 proposals per type).
+        ///
         /// Empty when the caller didn't run the orchestrator (M5.x and
         /// earlier non-CLI consumers); the prompt loop falls back to
         /// the M6.4 `[A/s/n/?]` shape when no proposal matches.
-        public let proposalsByType: [String: RefactorBridgeProposal]
+        public let proposalsByType: [String: [RefactorBridgeProposal]]
 
         public init(
             prompt: any PromptInput,
@@ -93,7 +109,7 @@ public enum InteractiveTriage {
             outputDirectory: URL,
             dryRun: Bool,
             clock: @escaping @Sendable () -> Date = { Date() },
-            proposalsByType: [String: RefactorBridgeProposal] = [:]
+            proposalsByType: [String: [RefactorBridgeProposal]] = [:]
         ) {
             self.prompt = prompt
             self.output = output
@@ -166,7 +182,7 @@ public enum InteractiveTriage {
         context: Context
     ) throws {
         context.output.write(SuggestionRenderer.render(suggestion))
-        let activeProposal = activeRefactorBridgeProposal(
+        let activeProposals = activeRefactorBridgeProposals(
             for: suggestion,
             state: state,
             context: context
@@ -174,41 +190,22 @@ public enum InteractiveTriage {
         context.output.write(promptLine(
             position: position,
             total: total,
-            proposalAvailable: activeProposal != nil
+            primaryAvailable: !activeProposals.isEmpty,
+            secondaryAvailable: activeProposals.count >= 2
         ))
         let choice = readChoice(
             prompt: context.prompt,
             output: context.output,
-            proposalAvailable: activeProposal != nil
+            primaryAvailable: !activeProposals.isEmpty,
+            secondaryAvailable: activeProposals.count >= 2
         )
-        let decision: Decision
-        switch choice {
-        case .accept:
-            if let path = try handleAccept(suggestion: suggestion, context: context) {
-                state.writtenFiles.append(path)
-            }
-            decision = .accepted
-        case .conformance:
-            // Guard rail: readChoice only returns `.conformance` when a
-            // proposal is offered, so activeProposal is always non-nil here.
-            guard let proposal = activeProposal else {
-                decision = .skipped
-                break
-            }
-            if let path = try handleConformanceAccept(
-                suggestion: suggestion,
-                proposal: proposal,
-                context: context
-            ) {
-                state.writtenFiles.append(path)
-            }
-            state.conformanceWrittenForTypes.insert(proposal.typeName)
-            decision = .acceptedAsConformance
-        case .skip:
-            decision = .skipped
-        case .reject:
-            decision = .rejected
-        }
+        let decision = try resolveChoice(
+            choice: choice,
+            suggestion: suggestion,
+            activeProposals: activeProposals,
+            state: &state,
+            context: context
+        )
         if !context.dryRun {
             state.decisions = state.decisions.upserting(makeRecord(
                 for: suggestion,
@@ -218,56 +215,145 @@ public enum InteractiveTriage {
         }
     }
 
-    /// Resolve the RefactorBridge proposal active for `suggestion`, if
-    /// any. Three conditions must hold:
-    ///   1. `context.proposalsByType` carries a proposal for the
+    /// Convert a parsed `Choice` into a `Decision`, side-effecting on
+    /// state (writing files, recording conformance-written types) as
+    /// needed. Extracted from `processOne` to keep the latter under
+    /// SwiftLint's complexity + body-length caps after M8.4.b.1 added
+    /// the `.conformancePrime` arm.
+    private static func resolveChoice(
+        choice: Choice,
+        suggestion: Suggestion,
+        activeProposals: [RefactorBridgeProposal],
+        state: inout State,
+        context: Context
+    ) throws -> Decision {
+        switch choice {
+        case .accept:
+            if let path = try handleAccept(suggestion: suggestion, context: context) {
+                state.writtenFiles.append(path)
+            }
+            return .accepted
+        case .conformance:
+            return try acceptConformance(
+                proposal: activeProposals.first,
+                suggestion: suggestion,
+                state: &state,
+                context: context
+            )
+        case .conformancePrime:
+            // activeProposals.count >= 2 is the readChoice gate
+            // condition; defensively read the index.
+            let secondary = activeProposals.count >= 2 ? activeProposals[1] : nil
+            return try acceptConformance(
+                proposal: secondary,
+                suggestion: suggestion,
+                state: &state,
+                context: context
+            )
+        case .skip:
+            return .skipped
+        case .reject:
+            return .rejected
+        }
+    }
+
+    /// Shared accept-conformance side-effect path — handleConformanceAccept
+    /// for the file write + conformanceWrittenForTypes update + decision
+    /// outcome. Single source of truth for the .conformance and
+    /// .conformancePrime arms; both differ only in which proposal index
+    /// they pluck from `activeProposals`.
+    private static func acceptConformance(
+        proposal: RefactorBridgeProposal?,
+        suggestion: Suggestion,
+        state: inout State,
+        context: Context
+    ) throws -> Decision {
+        guard let proposal else { return .skipped }
+        if let path = try handleConformanceAccept(
+            suggestion: suggestion,
+            proposal: proposal,
+            context: context
+        ) {
+            state.writtenFiles.append(path)
+        }
+        state.conformanceWrittenForTypes.insert(proposal.typeName)
+        return .acceptedAsConformance
+    }
+
+    /// Resolve the RefactorBridge proposals active for `suggestion`,
+    /// if any. M7.5 returned at most one proposal per type; M8.4.b.1
+    /// returns up to two — position 0 is the primary (`B`),
+    /// position 1 is the secondary (`B'`). Three conditions must hold
+    /// for each proposal in the type's list:
+    ///   1. `context.proposalsByType` carries a list for the
     ///      suggestion's candidate type (extracted via `paramType`).
     ///   2. The suggestion's identity is in `proposal.relatedIdentities`
     ///      — only suggestions that actually contributed signals to the
-    ///      proposal get the `B` arm.
-    ///   3. The user hasn't already chosen `B` for this type in the
-    ///      current run (per-type aggregation per M7 plan open
-    ///      decision #7).
-    static func activeRefactorBridgeProposal(
+    ///      proposal get the `B` / `B'` arm.
+    ///   3. The user hasn't already chosen any conformance for this
+    ///      type in the current run (per-type aggregation per M7 plan
+    ///      open decision #7 — preserved for M8.4.b.1).
+    static func activeRefactorBridgeProposals(
         for suggestion: Suggestion,
         state: State,
         context: Context
-    ) -> RefactorBridgeProposal? {
+    ) -> [RefactorBridgeProposal] {
         guard let signature = suggestion.evidence.first?.signature,
               let typeName = paramType(from: signature),
-              let proposal = context.proposalsByType[typeName],
-              proposal.relatedIdentities.contains(suggestion.identity),
+              let proposals = context.proposalsByType[typeName],
               !state.conformanceWrittenForTypes.contains(typeName) else {
-            return nil
+            return []
         }
-        return proposal
+        return proposals.filter { proposal in
+            proposal.relatedIdentities.contains(suggestion.identity)
+        }
     }
 
     // MARK: - Prompt rendering
 
-    static func promptLine(position: Int, total: Int, proposalAvailable: Bool) -> String {
-        let arms = proposalAvailable
-            ? "Accept (A) / Conformance (B) / Skip (s) / Reject (n) / Help (?)"
-            : "Accept (A) / Skip (s) / Reject (n) / Help (?)"
+    /// Compose the prompt line. M6.4 ships `[A/s/n/?]`; M7.5b extends
+    /// to `[A/B/s/n/?]` when a primary proposal is attached; M8.4.b.1
+    /// further extends to `[A/B/B'/s/n/?]` when a secondary proposal
+    /// is also attached (incomparable arms or the SetAlgebra
+    /// secondary). `B` and `B'` arms are ordered per the proposals
+    /// list — position 0 is primary, position 1 is secondary.
+    static func promptLine(
+        position: Int,
+        total: Int,
+        primaryAvailable: Bool,
+        secondaryAvailable: Bool = false
+    ) -> String {
+        let arms: String
+        if primaryAvailable && secondaryAvailable {
+            arms = "Accept (A) / Conformance (B) / Conformance' (B') "
+                + "/ Skip (s) / Reject (n) / Help (?)"
+        } else if primaryAvailable {
+            arms = "Accept (A) / Conformance (B) / Skip (s) / Reject (n) / Help (?)"
+        } else {
+            arms = "Accept (A) / Skip (s) / Reject (n) / Help (?)"
+        }
         return "[\(position)/\(total)] \(arms)"
     }
 
     // MARK: - Prompt-input parsing
 
     enum Choice {
-        case accept, conformance, skip, reject
+        case accept, conformance, conformancePrime, skip, reject
     }
 
     /// Read one valid choice from `prompt`, looping on `?` (help) and
     /// invalid input. Returns `.skip` on EOF as a safe default —
     /// piped input running out shouldn't auto-accept anything. `b` is
-    /// only recognized when `proposalAvailable` is `true`; otherwise
-    /// it falls through to the unrecognized-input branch (so users
+    /// only recognized when `primaryAvailable` is `true`; `b'` and `c`
+    /// (typing-friendly alias) are only recognized when
+    /// `secondaryAvailable` is `true`. Unrecognized input falls
+    /// through (so users
     /// don't accidentally trigger a non-existent conformance write).
     static func readChoice(
         prompt: any PromptInput,
         output: any DiscoverOutput,
-        proposalAvailable: Bool = false
+        primaryAvailable: Bool = false,
+        secondaryAvailable: Bool = false
     ) -> Choice {
         while true {
             output.write("> ")
@@ -275,27 +361,37 @@ public enum InteractiveTriage {
             let trimmed = line.trimmingCharacters(in: .whitespaces).lowercased()
             switch trimmed {
             case "a": return .accept
-            case "b" where proposalAvailable: return .conformance
+            case "b" where primaryAvailable: return .conformance
+            // M8.4.b.1 — `b'` matches the rendered prompt notation
+            // verbatim; `c` is a typing-friendly alias since some
+            // terminals/keyboards make the apostrophe awkward.
+            case "b'" where secondaryAvailable: return .conformancePrime
+            case "c" where secondaryAvailable: return .conformancePrime
             case "s", "": return .skip // empty line = skip-for-now (default-on-Enter)
             case "n": return .reject
             case "?", "h", "help":
-                output.write(helpText(proposalAvailable: proposalAvailable))
+                output.write(helpText(
+                    primaryAvailable: primaryAvailable,
+                    secondaryAvailable: secondaryAvailable
+                ))
             default:
                 output.write("Unrecognized input '\(trimmed)'. Type ? for help.")
             }
         }
     }
 
-    static func helpText(proposalAvailable: Bool) -> String {
+    static func helpText(
+        primaryAvailable: Bool,
+        secondaryAvailable: Bool = false
+    ) -> String {
         var text = """
             A — accept this suggestion. For idempotence / round-trip /
-                monotonicity / invariant-preservation, a property-test
-                stub is written to
+                monotonicity / invariant-preservation / commutativity /
+                associativity / identity-element / inverse-pair, a
+                property-test stub is written to
                 Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift.
-                For other templates the decision is recorded but no file
-                is written (M8 ships the algebraic-structure stubs).
             """
-        if proposalAvailable {
+        if primaryAvailable {
             text += "\n"
             text += """
                 B — accept Option B (RefactorBridge conformance). A
@@ -303,6 +399,17 @@ public enum InteractiveTriage {
                     Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift.
                     Once chosen for a type, subsequent suggestions on
                     that type collapse to [A/s/n/?].
+                """
+        }
+        if secondaryAvailable {
+            text += "\n"
+            text += """
+                B' — accept the secondary RefactorBridge conformance
+                    (incomparable arms or stdlib secondary like
+                    SetAlgebra). Type `b'` or `c` (alias). Same
+                    writeout shape as B; once chosen for a type,
+                    subsequent suggestions on that type collapse to
+                    [A/s/n/?].
                 """
         }
         text += "\n"
@@ -316,3 +423,4 @@ public enum InteractiveTriage {
     }
 
 }
+// swiftlint:enable file_length type_body_length
