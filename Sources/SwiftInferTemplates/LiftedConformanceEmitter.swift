@@ -93,6 +93,121 @@ public enum LiftedConformanceEmitter {
         )
     }
 
+    /// Emit a `CommutativeMonoid` conformance extension for `typeName`.
+    /// `CommutativeMonoid` is a kit v1.9.0 protocol that extends `Monoid`
+    /// with the `combineCommutativity` Strict law — no new requirements
+    /// beyond Monoid's `combine` + `identity`. M8.5 — first of the three
+    /// new kit-arm conformance writeouts.
+    ///
+    /// Same body shape as `monoid(...)` since `CommutativeMonoid: Monoid`
+    /// and the additional commutativity law doesn't introduce a new
+    /// witness — the kit verifies it via sampling at law-check time. The
+    /// per-protocol caveats in the §4.5 explainability block (added by
+    /// M8.4.a's orchestrator) tell the user the new law is active.
+    public static func commutativeMonoid(
+        typeName: String,
+        combineWitness: String,
+        identityWitness: String,
+        explainability: ExplainabilityBlock
+    ) -> String {
+        var bodyParts: [String] = []
+        if let combine = aliasingCombineBody(typeName: typeName, witness: combineWitness) {
+            bodyParts.append(combine)
+        }
+        if let identity = aliasingIdentityBody(typeName: typeName, witness: identityWitness) {
+            bodyParts.append(identity)
+        }
+        let body = bodyParts.isEmpty ? nil : bodyParts.joined(separator: "\n")
+        return makeExtension(
+            typeName: typeName,
+            protocolName: "CommutativeMonoid",
+            body: body,
+            explainability: explainability
+        )
+    }
+
+    /// Emit a `Group` conformance extension for `typeName`. `Group` is a
+    /// kit v1.9.0 protocol that extends `Monoid` with a `static func
+    /// inverse(_ value: Self) -> Self` requirement — verified via the
+    /// `combineLeftInverse` / `combineRightInverse` Strict laws.
+    ///
+    /// Aliases all three witnesses (`combineWitness`, `identityWitness`,
+    /// `inverseWitness`) into the kit's required statics. Witness names
+    /// matching `"combine"` / `"identity"` / `"inverse"` skip the
+    /// aliasing for that arm — same self-recursion concern as the
+    /// existing arms.
+    ///
+    /// Example: `group(typeName: "AdditiveInt", combineWitness: "plus",
+    /// identityWitness: "zero", inverseWitness: "negate", ...)` produces:
+    ///
+    /// ```swift
+    /// extension AdditiveInt: Group {
+    ///     public static func combine(_ lhs: AdditiveInt, _ rhs: AdditiveInt) -> AdditiveInt {
+    ///         Self.plus(lhs, rhs)
+    ///     }
+    ///     public static var identity: AdditiveInt { Self.zero }
+    ///     public static func inverse(_ value: AdditiveInt) -> AdditiveInt {
+    ///         Self.negate(value)
+    ///     }
+    /// }
+    /// ```
+    public static func group(
+        typeName: String,
+        combineWitness: String,
+        identityWitness: String,
+        inverseWitness: String,
+        explainability: ExplainabilityBlock
+    ) -> String {
+        var bodyParts: [String] = []
+        if let combine = aliasingCombineBody(typeName: typeName, witness: combineWitness) {
+            bodyParts.append(combine)
+        }
+        if let identity = aliasingIdentityBody(typeName: typeName, witness: identityWitness) {
+            bodyParts.append(identity)
+        }
+        if let inverse = aliasingInverseBody(typeName: typeName, witness: inverseWitness) {
+            bodyParts.append(inverse)
+        }
+        let body = bodyParts.isEmpty ? nil : bodyParts.joined(separator: "\n")
+        return makeExtension(
+            typeName: typeName,
+            protocolName: "Group",
+            body: body,
+            explainability: explainability
+        )
+    }
+
+    /// Emit a `Semilattice` conformance extension for `typeName`.
+    /// `Semilattice` is a kit v1.9.0 protocol that extends
+    /// `CommutativeMonoid` with the `combineIdempotence` Strict law —
+    /// no new requirements beyond the inherited `combine` + `identity`.
+    /// Same body shape as `monoid(...)` and `commutativeMonoid(...)`.
+    ///
+    /// Bounded join-semilattices (`(Set<T>, ∪, ∅)`, `(Int, max, .min)`)
+    /// and bounded meet-semilattices (`(Bool, &&, true)`, `(Int, min,
+    /// .max)`) share this conformance — the law is symmetric.
+    public static func semilattice(
+        typeName: String,
+        combineWitness: String,
+        identityWitness: String,
+        explainability: ExplainabilityBlock
+    ) -> String {
+        var bodyParts: [String] = []
+        if let combine = aliasingCombineBody(typeName: typeName, witness: combineWitness) {
+            bodyParts.append(combine)
+        }
+        if let identity = aliasingIdentityBody(typeName: typeName, witness: identityWitness) {
+            bodyParts.append(identity)
+        }
+        let body = bodyParts.isEmpty ? nil : bodyParts.joined(separator: "\n")
+        return makeExtension(
+            typeName: typeName,
+            protocolName: "Semilattice",
+            body: body,
+            explainability: explainability
+        )
+    }
+
     /// Path convention for RefactorBridge writeouts per PRD §16 #1's
     /// allowlist extension. M7.5's orchestrator composes the relative
     /// path as `<root>/<TypeName>/<ProtocolName>.swift`; M7.6's hard-
@@ -172,6 +287,22 @@ public enum LiftedConformanceEmitter {
         guard witness != "identity" else { return nil }
         return """
             public static var identity: \(typeName) { Self.\(witness) }
+        """
+    }
+
+    /// Render the body of a `static func inverse(_:)` aliasing the
+    /// user's unary inverse function (M8.5 — Group arm). Kit v1.9.0's
+    /// `Group.inverse(_ value: Self) -> Self` parameter label `value`
+    /// is used here so the emitted extension matches the protocol
+    /// declaration exactly. Returns `nil` when the user's static is
+    /// already named `inverse` — same self-recursion concern as
+    /// `aliasingCombineBody` / `aliasingIdentityBody`.
+    private static func aliasingInverseBody(typeName: String, witness: String) -> String? {
+        guard witness != "inverse" else { return nil }
+        return """
+            public static func inverse(_ value: \(typeName)) -> \(typeName) {
+                Self.\(witness)(value)
+            }
         """
     }
 

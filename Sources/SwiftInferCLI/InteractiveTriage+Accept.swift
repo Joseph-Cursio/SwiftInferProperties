@@ -293,10 +293,11 @@ extension InteractiveTriage {
 
     /// Build the conformance extension source via `LiftedConformanceEmitter`.
     /// Dispatches on `protocolName`; threads the proposal's witness
-    /// names (M7.5.a) into the emitter so the writeout aliases the
-    /// user's existing op + identity into the kit's required statics.
-    /// Returns the always-fail extension for unsupported protocols
-    /// (M8 will widen this surface).
+    /// names (M7.5.a + M8.5) into the emitter so the writeout aliases
+    /// the user's existing op / identity / inverse into the kit's
+    /// required statics. Returns the unsupported-protocol comment for
+    /// future protocol arms not yet covered by the emitter (M8.4.b's
+    /// Ring + SetAlgebra secondary will land here).
     private static func liftedConformanceSource(for proposal: RefactorBridgeProposal) -> String {
         switch proposal.protocolName {
         case "Semigroup":
@@ -317,10 +318,43 @@ extension InteractiveTriage {
                 identityWitness: proposal.identityWitness ?? "identity",
                 explainability: proposal.explainability
             )
+        case "CommutativeMonoid":
+            // CommutativeMonoid (kit v1.9.0) — same shape as Monoid; the
+            // commutativity law is verified at law-check time, no new
+            // requirement on the emitted extension.
+            return LiftedConformanceEmitter.commutativeMonoid(
+                typeName: proposal.typeName,
+                combineWitness: proposal.combineWitness,
+                identityWitness: proposal.identityWitness ?? "identity",
+                explainability: proposal.explainability
+            )
+        case "Group":
+            // Group (kit v1.9.0) — adds the `static func inverse(_:)`
+            // requirement on top of Monoid's combine + identity. M8.4.a's
+            // orchestrator threads inverseWitness from the M8.3
+            // InverseElementPair when the Group promotion fires.
+            // Defensive fallback to "inverse" if nil — same posture as
+            // Monoid's identityWitness fallback.
+            return LiftedConformanceEmitter.group(
+                typeName: proposal.typeName,
+                combineWitness: proposal.combineWitness,
+                identityWitness: proposal.identityWitness ?? "identity",
+                inverseWitness: proposal.inverseWitness ?? "inverse",
+                explainability: proposal.explainability
+            )
+        case "Semilattice":
+            // Semilattice (kit v1.9.0) — extends CommutativeMonoid with
+            // the idempotence Strict law. No new requirements; same body
+            // shape as Monoid / CommutativeMonoid.
+            return LiftedConformanceEmitter.semilattice(
+                typeName: proposal.typeName,
+                combineWitness: proposal.combineWitness,
+                identityWitness: proposal.identityWitness ?? "identity",
+                explainability: proposal.explainability
+            )
         default:
-            // M7.5 ships only Semigroup + Monoid arms. Future protocol
-            // arms (CommutativeMonoid, Group, Semilattice, Ring) get
-            // dispatched here as M8 lands them.
+            // Future arms (M8.4.b's Ring → stdlib Numeric, SetAlgebra
+            // secondary) get dispatched here as that milestone lands.
             return "// SwiftInfer: unsupported protocol '\(proposal.protocolName)' in v1.\n"
         }
     }
