@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import SwiftInferCore
 
-@Suite("Decisions — data model + Codable round-trip (M6.1)")
+@Suite("Decisions — data model + Codable round-trip (M6.1 + M7.5 schema v2)")
 struct DecisionsTests {
 
     // MARK: - Empty state
@@ -88,6 +88,69 @@ struct DecisionsTests {
             let decoded = try JSONDecoder().decode(Decision.self, from: data)
             #expect(decoded == decision)
         }
+    }
+
+    // MARK: - M7.5 schema v2
+
+    @Test("Decisions.currentSchemaVersion bumps to 2 for M7.5")
+    func currentSchemaVersionIs2() {
+        #expect(Decisions.currentSchemaVersion == 2)
+    }
+
+    @Test("Decision.acceptedAsConformance rawValue is stable")
+    func acceptedAsConformanceRawValueIsStable() {
+        #expect(Decision.acceptedAsConformance.rawValue == "acceptedAsConformance")
+    }
+
+    @Test("Decision.allCases includes the new acceptedAsConformance case")
+    func allCasesIncludesAcceptedAsConformance() {
+        #expect(Decision.allCases.contains(.acceptedAsConformance))
+        #expect(Decision.allCases.count == 4)
+    }
+
+    @Test("v1 records (no acceptedAsConformance) decode cleanly under v2 reader")
+    func v1RecordsBackCompatDecode() throws {
+        // Pre-M7.5 decisions.json shape: schemaVersion 1, only the
+        // M6.1 cases. v2 readers must load these without modification.
+        let json = """
+        {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "identityHash": "AAA1111111111111",
+              "template": "idempotence",
+              "scoreAtDecision": 70,
+              "tier": "likely",
+              "decision": "accepted",
+              "timestamp": 1700000000.0,
+              "signalWeights": []
+            }
+          ]
+        }
+        """
+        let decoded = try JSONDecoder().decode(Decisions.self, from: Data(json.utf8))
+        #expect(decoded.schemaVersion == 1)
+        #expect(decoded.records.count == 1)
+        #expect(decoded.records[0].decision == .accepted)
+    }
+
+    @Test("v2 records using acceptedAsConformance round-trip cleanly")
+    func v2AcceptedAsConformanceRoundTrip() throws {
+        let record = DecisionRecord(
+            identityHash: "BBB2222222222222",
+            template: "associativity",
+            scoreAtDecision: 85,
+            tier: .strong,
+            decision: .acceptedAsConformance,
+            timestamp: Date(timeIntervalSince1970: 1_700_000_000),
+            signalWeights: []
+        )
+        let original = Decisions(records: [record])
+        let encoded = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(Decisions.self, from: encoded)
+        #expect(decoded == original)
+        #expect(decoded.schemaVersion == 2)
+        #expect(decoded.records[0].decision == .acceptedAsConformance)
     }
 
     @Test

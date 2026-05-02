@@ -1,23 +1,35 @@
 import Foundation
 
 /// User decision recorded against a discovered suggestion. PRD §3.6
-/// step 8 + §8 + §17.1. Three states per the M6 plan's open decision
-/// #2 (`skipped` ≠ `rejected`):
+/// step 8 + §8 + §17.1. Four states per the M6 plan's open decision #2
+/// (`skipped` ≠ `rejected`) extended in the M7 plan's open decision #1:
 ///
 /// - `accepted` — user chose Option A in `--interactive` triage; M6.4
 ///   wrote the lifted property test stub to `Tests/Generated/SwiftInfer/`.
+/// - `acceptedAsConformance` — user chose Option B (M7.5 RefactorBridge);
+///   the conformance extension was written to
+///   `Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`.
+///   Distinct from `accepted` so `swift-infer metrics` (v1.1+, PRD §17.1)
+///   can split per-arm adoption rates and `drift` can distinguish "user
+///   took Option A" from "user took Option B" from "user took both."
+///   Drift treats this case as suppression-equivalent to `.accepted`.
 /// - `rejected` — user chose `n` in triage; suggestion is hidden from
 ///   future runs and from drift warnings.
 /// - `skipped` — user chose `s`; "decide later" — the suggestion will
 ///   re-surface in future `discover` runs but `drift` doesn't warn on
 ///   it (the user has acknowledged it).
 ///
-/// PRD v0.4 open decision #1 defers Option B (RefactorBridge protocol-
-/// conformance) to M7. When that ships, this enum gains a fourth case
-/// (`acceptedAsConformance` or similar). The string raw value stays
-/// stable across that change so v0.4 decisions.json files load cleanly.
+/// **Schema-version note.** The existing rawValues (`accepted`,
+/// `rejected`, `skipped`) stay stable across the v1 → v2 schema bump
+/// so v1 records load cleanly on v2 readers. The new
+/// `acceptedAsConformance` rawValue is additive: v2 records using it
+/// will fail to decode on v1 readers (the synthesized rawValue switch
+/// throws on unknown). The `Decisions.schemaVersion` field exists
+/// exactly for this — v2 writers stamp `2`, v1 readers see the higher
+/// number and warn.
 public enum Decision: String, Sendable, Equatable, Codable, CaseIterable {
     case accepted
+    case acceptedAsConformance
     case rejected
     case skipped
 }
@@ -103,10 +115,14 @@ public struct DecisionRecord: Sendable, Equatable, Codable {
 /// calibration discovers a need.
 public struct Decisions: Sendable, Equatable, Codable {
 
-    /// Bumped when the on-disk schema changes incompatibly. v1 ships
-    /// version `1`; loaders that see a higher number warn and load
-    /// what they can.
-    public static let currentSchemaVersion = 1
+    /// Bumped when the on-disk schema changes incompatibly. v1 shipped
+    /// version `1` (M6.1); v2 shipped version `2` (M7.5) — additive
+    /// extension adding the `Decision.acceptedAsConformance` case for
+    /// RefactorBridge Option B accepts. v1 records load cleanly on v2
+    /// readers; v2 records using the new case fail to decode on v1
+    /// readers (the synthesized rawValue switch throws). Loaders that
+    /// see a higher number warn and load what they can.
+    public static let currentSchemaVersion = 2
 
     public let schemaVersion: Int
     public let records: [DecisionRecord]
