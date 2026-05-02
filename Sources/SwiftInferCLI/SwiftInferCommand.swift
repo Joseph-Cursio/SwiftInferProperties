@@ -24,7 +24,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         See `docs/SwiftInferProperties PRD v0.3.md` for the full design.
         """,
         version: "0.0.0-scaffold",
-        subcommands: [Discover.self],
+        subcommands: [Discover.self, Drift.self],
         defaultSubcommand: Discover.self
     )
 
@@ -118,6 +118,20 @@ extension SwiftInferCommand {
         )
         public var interactive: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            Snapshot the current run's surface-suggestion identities to \
+            .swiftinfer/baseline.json. Used by `swift-infer drift` to \
+            compute "what's new since the last snapshot" — only Strong-tier \
+            suggestions added after this snapshot (and lacking a recorded \
+            decision) earn a drift warning. Mutually exclusive with \
+            --interactive in v1: triage and snapshot are different gestures. \
+            Honors --dry-run by skipping the write. (M6.5, PRD v0.4 §5.8.)
+            """
+        )
+        public var updateBaseline: Bool = false
+
         public init() {}
 
         public func run() async throws {
@@ -132,6 +146,7 @@ extension SwiftInferCommand {
                 statsOnly: statsOnly,
                 dryRun: dryRun,
                 interactive: interactive,
+                updateBaseline: updateBaseline,
                 output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -154,43 +169,28 @@ extension SwiftInferCommand {
             statsOnly: Bool = false,
             dryRun: Bool = false,
             interactive: Bool = false,
+            updateBaseline: Bool = false,
             promptInput: any PromptInput = StdinPromptInput(),
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
-            let configResult = ConfigLoader.load(
-                startingFrom: directory,
-                explicitPath: explicitConfigPath
+            let pipeline = try collectVisibleSuggestions(
+                directory: directory,
+                includePossible: includePossible,
+                explicitVocabularyPath: explicitVocabularyPath,
+                explicitConfigPath: explicitConfigPath,
+                diagnostics: diagnostics
             )
-            for warning in configResult.warnings {
-                diagnostics.writeDiagnostic("warning: \(warning)")
-            }
-            let effectiveIncludePossible =
-                includePossible ?? configResult.config.includePossible
-            let effectiveVocabularyPath = resolveVocabularyPath(
-                cliOverride: explicitVocabularyPath,
-                configValue: configResult.config.vocabularyPath,
-                packageRoot: configResult.packageRoot
-            )
+            let visible = pipeline.suggestions
 
-            let vocabResult = VocabularyLoader.load(
-                startingFrom: directory,
-                explicitPath: effectiveVocabularyPath
-            )
-            for warning in vocabResult.warnings {
-                diagnostics.writeDiagnostic("warning: \(warning)")
+            if interactive, updateBaseline {
+                diagnostics.writeDiagnostic(
+                    "warning: --interactive and --update-baseline are mutually exclusive; "
+                        + "--update-baseline ignored for this run"
+                )
             }
-            let all = try TemplateRegistry.discover(
-                in: directory,
-                vocabulary: vocabResult.vocabulary,
-                diagnostic: { diagnostics.writeDiagnostic($0) }
-            )
-            let visible = all.filter { suggestion in
-                effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
-            }
-
             if interactive {
-                let packageRoot = configResult.packageRoot ?? directory
+                let packageRoot = pipeline.packageRoot ?? directory
                 let context = InteractiveTriage.Context(
                     prompt: promptInput,
                     output: output,
@@ -205,6 +205,15 @@ extension SwiftInferCommand {
                 )
                 return
             }
+            if updateBaseline {
+                let packageRoot = pipeline.packageRoot ?? directory
+                try runUpdateBaseline(
+                    suggestions: visible,
+                    packageRoot: packageRoot,
+                    dryRun: dryRun,
+                    output: output
+                )
+            }
 
             let rendered = statsOnly
                 ? SuggestionRenderer.renderStats(visible)
@@ -212,57 +221,6 @@ extension SwiftInferCommand {
             output.write(rendered)
         }
 
-        /// Drive the M6.4 `--interactive` triage session: load the
-        /// existing decisions, walk surviving suggestions through the
-        /// `[A/s/n/?]` prompt loop, persist the updated decisions
-        /// (unless `--dry-run`).
-        private static func runInteractive(
-            suggestions: [Suggestion],
-            packageRoot: URL,
-            context: InteractiveTriage.Context
-        ) throws {
-            let decisionsResult = DecisionsLoader.load(startingFrom: packageRoot)
-            for warning in decisionsResult.warnings {
-                context.diagnostics.writeDiagnostic("warning: \(warning)")
-            }
-            let outcome = try InteractiveTriage.run(
-                suggestions: suggestions,
-                existingDecisions: decisionsResult.decisions,
-                context: context
-            )
-            if !context.dryRun, outcome.updatedDecisions != decisionsResult.decisions {
-                let path = decisionsResult.packageRoot.map(DecisionsLoader.defaultPath(for:))
-                    ?? DecisionsLoader.defaultPath(for: packageRoot)
-                try DecisionsLoader.write(outcome.updatedDecisions, to: path)
-            }
-        }
-
-        /// Resolve the vocabulary path with CLI > config > implicit-walk-up
-        /// precedence. Relative paths in config are resolved against the
-        /// package root the config loader walked up to; absolute paths
-        /// pass through unchanged. Absoluteness is checked on the raw
-        /// string — `URL(fileURLWithPath:)` would otherwise re-anchor a
-        /// relative path against the current working directory before we
-        /// got the chance to join it with the package root.
-        private static func resolveVocabularyPath(
-            cliOverride: URL?,
-            configValue: String?,
-            packageRoot: URL?
-        ) -> URL? {
-            if let cliOverride {
-                return cliOverride
-            }
-            guard let raw = configValue else {
-                return nil
-            }
-            if raw.hasPrefix("/") {
-                return URL(fileURLWithPath: raw)
-            }
-            if let packageRoot {
-                return packageRoot.appendingPathComponent(raw)
-            }
-            return URL(fileURLWithPath: raw)
-        }
     }
 }
 
