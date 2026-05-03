@@ -1,14 +1,15 @@
 /// SwiftInferCore — shared data model for type-directed property inference.
 ///
 /// Holds the records the rest of the package operates on: function summaries
-/// produced by the SwiftSyntax pipeline (M1.2), template suggestions
-/// (`Suggestion`, `Score`, `ExplainabilityBlock` — landing M1.3), and the
-/// `// swiftinfer: skip` marker representation (M1.5).
+/// (`FunctionSummary`), template suggestions (`Suggestion`, `Score`,
+/// `ExplainabilityBlock`), the suggestion-identity hash
+/// (`SuggestionIdentity`), the `// swiftinfer: skip` marker scanner
+/// (`SkipMarkerScanner`), and the `Vocabulary` schema. The full scope
+/// is documented in `docs/SwiftInferProperties PRD v0.4.md`.
 ///
-/// The full milestone breakdown lives in `docs/M1 Plan.md`; the product
-/// specification is `docs/SwiftInferProperties PRD v0.3.md`.
-public enum SwiftInferCore {
-    /// Marker for the unreleased pre-M1 scaffold. Removed once
-    /// Contribution 1 (TemplateEngine) lands a usable surface.
-    public static let version = "0.0.0-scaffold"
-}
+/// The module intentionally exposes no top-level enum / struct / class
+/// named `SwiftInferCore` — that name collision shadowed the module
+/// name in downstream consumers (TestLifter M1.1) and blocked
+/// `SwiftInferCore.SourceLocation` from resolving to the module's
+/// `SourceLocation` struct. Resolved here by leaving the file as a
+/// documentation-only marker.
