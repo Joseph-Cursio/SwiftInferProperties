@@ -1,27 +1,25 @@
 import SwiftInferCore
 
-/// One round-trip pattern surfaced by `AssertAfterTransformDetector`
-/// against a sliced test body, packaged with the cross-validation key
-/// the M1.5 CLI wiring threads into TemplateEngine's
-/// `crossValidationFromTestLifter` parameter.
+/// One pattern surfaced by TestLifter against a sliced test body,
+/// packaged with the cross-validation key the M1.5 CLI wiring threads
+/// into TemplateEngine's `crossValidationFromTestLifter` parameter.
 ///
-/// **Load-bearing invariant (M1.4):** the
-/// `crossValidationKey` produced here from a test-side detection
-/// matches — by `Hashable` equality — the `crossValidationKey` that
-/// TemplateEngine's `RoundTripTemplate` produces for the same function
-/// pair on the production side. The integration test in
-/// `LiftedSuggestionCrossValidationKeyTests` asserts the round-trip
-/// hash equality directly.
+/// **Load-bearing invariant (M1.4):** the `crossValidationKey` produced
+/// here from a test-side detection matches — by `Hashable` equality —
+/// the `crossValidationKey` that the matching TemplateEngine template
+/// produces for the same function (or function pair) on the production
+/// side. The integration tests in `LiftedSuggestionTests` and
+/// `SwiftInferIntegrationTests` assert the hash equality directly.
 ///
-/// M1's LiftedSuggestion intentionally does NOT enter the main
-/// `discover` suggestion stream — it contributes a key to the
-/// cross-validation set only (open decision #3 default `(a)` in the
-/// M1 plan). M2+ surfaces lifted suggestions in the discover output
-/// alongside TemplateEngine's structural suggestions.
+/// LiftedSuggestion intentionally does NOT enter the main `discover`
+/// suggestion stream through M2 — it contributes a key to the
+/// cross-validation set only (M2 plan's open decision #1 default `(a)`).
+/// M3+ surfaces lifted suggestions in the discover output alongside
+/// TemplateEngine's structural suggestions.
 public struct LiftedSuggestion: Sendable, Equatable {
 
-    /// Template ID for the surfaced pattern. M1 only ships
-    /// `"round-trip"`; M2+ adds `"idempotence"`, `"commutativity"`, etc.
+    /// Template ID for the surfaced pattern. M1 shipped `"round-trip"`;
+    /// M2 adds `"idempotence"` and `"commutativity"`.
     public let templateName: String
 
     /// Cross-validation key — `(templateName, sortedCalleeNames)`. The
@@ -30,18 +28,18 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public let crossValidationKey: CrossValidationKey
 
     /// The detection that produced this suggestion. Retained for
-    /// diagnostics + future M2+ shape extensions; not used by the M1
+    /// diagnostics + future stream-entry work; not used by the
     /// cross-validation matching path.
-    public let detectedRoundTrip: DetectedRoundTrip
+    public let pattern: DetectedPattern
 
     public init(
         templateName: String,
         crossValidationKey: CrossValidationKey,
-        detectedRoundTrip: DetectedRoundTrip
+        pattern: DetectedPattern
     ) {
         self.templateName = templateName
         self.crossValidationKey = crossValidationKey
-        self.detectedRoundTrip = detectedRoundTrip
+        self.pattern = pattern
     }
 
     /// Builds a LiftedSuggestion from a `DetectedRoundTrip`. The
@@ -58,7 +56,16 @@ public struct LiftedSuggestion: Sendable, Equatable {
         return LiftedSuggestion(
             templateName: "round-trip",
             crossValidationKey: key,
-            detectedRoundTrip: detection
+            pattern: .roundTrip(detection)
         )
     }
+}
+
+/// Discriminator for the detection that produced a `LiftedSuggestion`.
+/// One case per TestLifter pattern. M2.0 ships `.roundTrip` only;
+/// M2.1 adds `.idempotence`, M2.2 adds `.commutativity`. M5+ patterns
+/// (ordering, count-change, reduce-equivalence) extend the enum
+/// without growing `LiftedSuggestion`'s storage shape.
+public enum DetectedPattern: Sendable, Equatable {
+    case roundTrip(DetectedRoundTrip)
 }

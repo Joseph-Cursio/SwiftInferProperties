@@ -19,7 +19,7 @@ struct LiftedSuggestionTests {
         #expect(lifted.templateName == "round-trip")
         #expect(lifted.crossValidationKey.templateName == "round-trip")
         #expect(lifted.crossValidationKey.calleeNames == ["decode", "encode"])
-        #expect(lifted.detectedRoundTrip == detection)
+        #expect(lifted.pattern == .roundTrip(detection))
     }
 
     @Test("Forward/backward orientation collides to the same key")
