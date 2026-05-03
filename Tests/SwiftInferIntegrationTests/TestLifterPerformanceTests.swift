@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCLI
 import SwiftInferTestLifter
 import Testing
 
@@ -43,6 +44,46 @@ struct TestLifterPerformanceTests {
         #expect((templateCounts["round-trip"] ?? 0) >= 50, "round-trip detector contributed too few suggestions")
         #expect((templateCounts["idempotence"] ?? 0) >= 50, "idempotence detector contributed too few suggestions")
         #expect((templateCounts["commutativity"] ?? 0) >= 50, "commutativity detector contributed too few suggestions")
+    }
+
+    /// M3.4 §13 perf re-check: the M3.2 pipeline pass adds promotion +
+    /// type recovery + GeneratorSelection + suppression on top of the
+    /// existing TestLifter parse. Verifies the additional work stays
+    /// within a budget that's still useful for v0.1.0+ users — the
+    /// upper bound is set at `< 5s wall` for the 100-test-file corpus
+    /// (parse pass alone is already budgeted at < 3s; the M3.2
+    /// pipeline overhead must be sub-second to keep the headroom).
+    /// A regression beyond this would suggest the M3.2 pipeline pass
+    /// has algorithmic issues worth investigating before shipping.
+    @Test("Discover pipeline (CLI) on 100 test files stays under 5s with M3.2 lifted-pipeline pass active")
+    func discoverPipelineHundredTestFileBudgetWithM32Pipeline() throws {
+        let directory = try generateSyntheticTestCorpus(fileCount: 100)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        var pipelineResult: SwiftInferCommand.Discover.PipelineResult?
+        let elapsed = try measureWall {
+            pipelineResult = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+                directory: directory,
+                includePossible: true,
+                diagnostics: SilentPerfDiagnostics()
+            )
+        }
+        #expect(
+            elapsed < 5.0,
+            """
+            Discover pipeline on 100 test files took \(formatted(elapsed))s — \
+            over the M3.4 5s budget (parse < 3s + M3.2 overhead headroom)
+            """
+        )
+        // The M3.2 pipeline should produce at least 200 promoted lifted
+        // suggestions (matching the lifted-only assertion in
+        // syntheticHundredTestFileCorpus). Confirms the pipeline is
+        // actually doing the promotion work, not bypassing it.
+        let suggestions = pipelineResult?.suggestions ?? []
+        #expect(
+            suggestions.count >= 200,
+            "Discover pipeline surfaced only \(suggestions.count) suggestions on a 100-file corpus"
+        )
     }
 
     // MARK: - Synthetic corpus
@@ -120,4 +161,12 @@ struct TestLifterPerformanceTests {
     private func formatted(_ seconds: Double) -> String {
         String(format: "%.3f", seconds)
     }
+}
+
+/// Silent diagnostic sink for the M3.4 pipeline-budget test —
+/// suppresses ConfigLoader / VocabularyLoader warnings the synthetic
+/// fixtures would surface, since they're unrelated to perf
+/// measurement.
+private struct SilentPerfDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_ message: String) {}
 }

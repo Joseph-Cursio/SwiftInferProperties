@@ -1,4 +1,6 @@
 import Foundation
+import SwiftInferCLI
+import SwiftInferCore
 import SwiftInferTestLifter
 import Testing
 
@@ -107,6 +109,99 @@ struct TestLifterHardGuaranteeTests {
             file: "MergerTests.swift",
             decl: "func testCommutative()"
         )
+    }
+
+    /// PRD §16 #1 re-check for M3.3 — accepting a lifted-promoted
+    /// suggestion writes ONLY to `Tests/Generated/SwiftInfer/`.
+    /// The path is constructed by `InteractiveTriage+Accept` from
+    /// `outputDirectory.appendingPathComponent("Tests/Generated/
+    /// SwiftInfer/<template>/<file>")` — a regression where the
+    /// M3.3 file-naming logic accidentally escapes the sandbox
+    /// (e.g. via `..` in a sanitized name) would surface here.
+    /// Drives the full lifted-suggestion accept path: collect →
+    /// triage → accept.
+    @Test("Accept-flow writeouts for lifted suggestions stay under Tests/Generated/SwiftInfer/ (PRD §16 #1)")
+    func acceptedLiftedWriteoutStaysSandboxed() throws {
+        let directory = try makeFixtureWithUnmatchedRoundTrip()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: directory,
+            includePossible: true,
+            diagnostics: HGSilentDiagnosticOutput()
+        )
+        // Snapshot the source tree before accepting — the §16 #1
+        // contract is that the only files that appear are under
+        // Tests/Generated/SwiftInfer/.
+        let beforeFiles = try fileSet(in: directory)
+        let lifted = try #require(pipeline.suggestions.first { $0.liftedOrigin != nil })
+
+        let recordedOutput = HGSilentOutput()
+        let scripted = HGScriptedPromptInput(scriptedLines: ["A"])
+        let context = InteractiveTriage.Context(
+            prompt: scripted,
+            output: recordedOutput,
+            diagnostics: HGSilentDiagnosticOutput(),
+            outputDirectory: directory,
+            dryRun: false
+        )
+        let outcome = try InteractiveTriage.run(
+            suggestions: [lifted],
+            existingDecisions: .empty,
+            context: context
+        )
+
+        // Every written file must be rooted under
+        // Tests/Generated/SwiftInfer/ — the M3.3 file-naming logic
+        // produces the directory structure, but a regression that
+        // synthesized a path with ".." or an absolute prefix would
+        // surface here.
+        let sandboxRoot = directory
+            .appendingPathComponent("Tests/Generated/SwiftInfer")
+            .standardizedFileURL
+            .path
+        for written in outcome.writtenFiles {
+            let writtenStandardized = written.standardizedFileURL.path
+            #expect(
+                writtenStandardized.hasPrefix(sandboxRoot + "/"),
+                "Accept-flow writeout escaped Tests/Generated/SwiftInfer/: \(written.path)"
+            )
+        }
+        // Original source files unchanged.
+        let afterFiles = try fileSet(in: directory)
+        let newFiles = Set(afterFiles).subtracting(beforeFiles)
+        for newFile in newFiles {
+            let newStandardized = newFile.standardizedFileURL.path
+            #expect(
+                newStandardized.hasPrefix(sandboxRoot + "/"),
+                "M3.3 accept created a file outside Tests/Generated/SwiftInfer/: \(newFile.path)"
+            )
+        }
+    }
+
+    private func makeFixtureWithUnmatchedRoundTrip() throws -> URL {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftInferTestLifterHGAccept-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        let tests = base.appendingPathComponent("Tests").appendingPathComponent("FooTests")
+        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
+        try """
+        import XCTest
+
+        final class FooTests: XCTestCase {
+            func testRoundTrip() {
+                let original = "hello"
+                let serialized = serialize(original)
+                let deserialized = deserialize(serialized)
+                XCTAssertEqual(original, deserialized)
+            }
+        }
+        """.write(
+            to: tests.appendingPathComponent("FooTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        return base
     }
 
     private func assertMethodSurvived(
@@ -228,3 +323,8 @@ struct TestLifterHardGuaranteeTests {
         return files.sorted { $0.path < $1.path }
     }
 }
+
+// Test doubles `HGSilentOutput`, `HGSilentDiagnosticOutput`,
+// `HGScriptedPromptInput` are shared from `HardGuaranteeTests.swift`
+// at the integration-tests target scope — no per-suite duplicates
+// needed.
