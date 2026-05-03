@@ -25,13 +25,12 @@ struct SlicerFuzzTests {
     /// PRD §15 contract for detection passes is the same as the slicer's:
     /// never throws / crashes. M2.4 extended the M1.6 fuzz to also drive
     /// the two new M2 detectors (idempotence + commutativity) against
-    /// the same 100-AST corpus. M5.6 widens the all-detectors fuzz to
-    /// the full six-detector set (adds ordering-preserved + count-change
-    /// + reduce-equivalence) so a regression that introduced a
-    /// fatalError on a hostile shape in any of the M5 detectors
-    /// surfaces here too. Drives all six against the same corpus to
-    /// catch detector-interaction crashes if they ever appear.
-    @Test("100 random test-body ASTs all run all 6 detectors without throwing (M5.6)")
+    /// the same 100-AST corpus. M5.6 widened to all six positive
+    /// detectors. M7.2 widens to the full seven-detector set by adding
+    /// the M7.0 AsymmetricAssertionDetector — a regression that
+    /// introduced a fatalError on a hostile negative-form shape would
+    /// surface here.
+    @Test("100 random test-body ASTs all run all 7 detectors without throwing (M7.2)")
     func hundredRandomBodiesRunAllDetectors() {
         var generator = SeededGenerator(seed: 0xC0FFEE)
         for index in 0..<100 {
@@ -43,6 +42,7 @@ struct SlicerFuzzTests {
             _ = AssertOrderingPreservedDetector.detect(in: slice)
             _ = AssertCountChangeDetector.detect(in: slice)
             _ = AssertReduceEquivalenceDetector.detect(in: slice)
+            _ = AsymmetricAssertionDetector.detect(in: slice)
         }
     }
 

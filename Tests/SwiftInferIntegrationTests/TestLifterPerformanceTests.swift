@@ -120,17 +120,37 @@ struct TestLifterPerformanceTests {
             roundTripMethods(index: index),
             idempotentAndCommutativeMethods(index: index),
             m5DetectorMethods(index: index),
+            // M7.2 — every other file gets a counter-signal test
+            // (negative-form assertion) so the AsymmetricAssertionDetector
+            // pass is exercised through the perf budget. Distinct
+            // callees from the positive tests so no cross-contamination.
+            index.isMultiple(of: 2) ? counterSignalMethods(index: index) : "",
             nonDetectableMethod(),
             "}",
             "",
             swiftTestingRoundTripDecl(index: index)
-        ].joined(separator: "\n\n")
+        ].filter { !$0.isEmpty }.joined(separator: "\n\n")
         return """
         import XCTest
         import Testing
 
         final class FooTests\(index): XCTestCase {
         \(bodyLines)
+        """
+    }
+
+    /// M7.2 — negative-form counter-signal methods. Distinct callees
+    /// from the positive arms so the AsymmetricAssertionDetector
+    /// surfaces them without cross-contaminating the M2/M5 positive
+    /// detectors.
+    private func counterSignalMethods(index: Int) -> String {
+        let asymmetric = "asym\(index)"
+        return """
+            func testNotCommutative() {
+                let a = [1, 2]
+                let b = [3, 4]
+                XCTAssertNotEqual(\(asymmetric)(a, b), \(asymmetric)(b, a))
+            }
         """
     }
 
