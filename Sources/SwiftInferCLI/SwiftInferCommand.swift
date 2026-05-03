@@ -20,7 +20,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         See `docs/SwiftInferProperties PRD v0.4.md` for the full design.
         """,
         version: "0.1.0",
-        subcommands: [Discover.self, Drift.self],
+        subcommands: [Discover.self, Drift.self, ConvertCounterexample.self],
         defaultSubcommand: Discover.self
     )
 
