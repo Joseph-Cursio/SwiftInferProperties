@@ -7,15 +7,17 @@ import Testing
 /// "TestLifter parse of 100 test files" row mandates `< 3 seconds wall`.
 /// A regression test failure blocks release per PRD §13 conventions.
 ///
-/// M2.4 widens the synthetic corpus to include all three M1+M2
-/// detector shapes (round-trip, idempotence, commutativity) so the
-/// budget check exercises the full detector fan-out, not just the
-/// round-trip pass. Real-world test corpora carry a mix of patterns;
-/// budgeting against the mix is more representative.
-@Suite("TestLifter — PRD §13 100-test-file budget (M1.6 + M2.4)")
+/// M2.4 widened the synthetic corpus to include all three M1+M2
+/// detector shapes (round-trip, idempotence, commutativity); M5.6
+/// re-widens to all six (adds monotonicity, count-invariance,
+/// reduce-equivalence) so the budget check exercises the full M5
+/// detector fan-out — not just the M2 trio. Real-world test corpora
+/// carry a mix of patterns; budgeting against the mix is more
+/// representative.
+@Suite("TestLifter — PRD §13 100-test-file budget (M1.6 + M2.4 + M5.6)")
 struct TestLifterPerformanceTests {
 
-    @Test("TestLifter.discover on 100 synthetic test files completes in < 3s wall")
+    @Test("TestLifter.discover on 100 synthetic test files completes in < 3s wall (six detectors)")
     func syntheticHundredTestFileCorpus() throws {
         let directory = try generateSyntheticTestCorpus(fileCount: 100)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -28,13 +30,14 @@ struct TestLifterPerformanceTests {
             elapsed < 3.0,
             "TestLifter.discover on 100 test files took \(formatted(elapsed))s — over the §13 3s budget"
         )
-        // Each file contributes one round-trip + one idempotence + one
-        // commutativity test body, so the discover pass should produce
-        // ~300 lifted suggestions. Assert >= 200 for headroom against
+        // M5.6: each file contributes round-trip + idempotence +
+        // commutativity + monotonicity + count-invariance + reduce-
+        // equivalence test bodies, so the discover pass should produce
+        // ~600 lifted suggestions. Assert >= 400 for headroom against
         // future detector tightening; assert per-template surface to
-        // confirm all three detectors are wired through end-to-end.
+        // confirm all six detectors are wired through end-to-end.
         #expect(
-            artifacts.liftedSuggestions.count >= 200,
+            artifacts.liftedSuggestions.count >= 400,
             "TestLifter surfaced only \(artifacts.liftedSuggestions.count) lifted suggestions on a 100-file corpus"
         )
         let templateCounts = Dictionary(
@@ -44,6 +47,15 @@ struct TestLifterPerformanceTests {
         #expect((templateCounts["round-trip"] ?? 0) >= 50, "round-trip detector contributed too few suggestions")
         #expect((templateCounts["idempotence"] ?? 0) >= 50, "idempotence detector contributed too few suggestions")
         #expect((templateCounts["commutativity"] ?? 0) >= 50, "commutativity detector contributed too few suggestions")
+        #expect((templateCounts["monotonicity"] ?? 0) >= 50, "monotonicity detector contributed too few suggestions")
+        #expect(
+            (templateCounts["invariant-preservation"] ?? 0) >= 50,
+            "count-invariance detector contributed too few suggestions"
+        )
+        #expect(
+            (templateCounts["associativity"] ?? 0) >= 50,
+            "reduce-equivalence detector contributed too few suggestions"
+        )
     }
 
     /// M3.4 §13 perf re-check: the M3.2 pipeline pass adds promotion +
@@ -75,13 +87,14 @@ struct TestLifterPerformanceTests {
             over the M3.4 5s budget (parse < 3s + M3.2 overhead headroom)
             """
         )
-        // The M3.2 pipeline should produce at least 200 promoted lifted
-        // suggestions (matching the lifted-only assertion in
-        // syntheticHundredTestFileCorpus). Confirms the pipeline is
-        // actually doing the promotion work, not bypassing it.
+        // The M3.2 pipeline should produce at least 400 promoted lifted
+        // suggestions (matching the M5.6 lifted-only assertion in
+        // syntheticHundredTestFileCorpus — six detectors firing per file).
+        // Confirms the pipeline is actually doing the promotion work,
+        // not bypassing it.
         let suggestions = pipelineResult?.suggestions ?? []
         #expect(
-            suggestions.count >= 200,
+            suggestions.count >= 400,
             "Discover pipeline surfaced only \(suggestions.count) suggestions on a 100-file corpus"
         )
     }
@@ -103,15 +116,28 @@ struct TestLifterPerformanceTests {
     private func syntheticTestFileSource(index: Int) -> String {
         // Per-file unique callee names so per-file CrossValidationKeys
         // are distinct (reflects what real test corpora look like).
-        let forward = "encode\(index)"
-        let backward = "decode\(index)"
-        let unary = "normalize\(index)"
-        let binary = "merge\(index)"
+        let bodyLines = [
+            roundTripMethods(index: index),
+            idempotentAndCommutativeMethods(index: index),
+            m5DetectorMethods(index: index),
+            nonDetectableMethod(),
+            "}",
+            "",
+            swiftTestingRoundTripDecl(index: index)
+        ].joined(separator: "\n\n")
         return """
         import XCTest
         import Testing
 
         final class FooTests\(index): XCTestCase {
+        \(bodyLines)
+        """
+    }
+
+    private func roundTripMethods(index: Int) -> String {
+        let forward = "encode\(index)"
+        let backward = "decode\(index)"
+        return """
             func testRoundTripExplicit() {
                 let original = MyData()
                 let encoded = \(forward)(original)
@@ -123,7 +149,13 @@ struct TestLifterPerformanceTests {
                 let original = MyData()
                 XCTAssertEqual(\(backward)(\(forward)(original)), original)
             }
+        """
+    }
 
+    private func idempotentAndCommutativeMethods(index: Int) -> String {
+        let unary = "normalize\(index)"
+        let binary = "merge\(index)"
+        return """
             func testIdempotent() {
                 let s = "hello"
                 let once = \(unary)(s)
@@ -136,16 +168,47 @@ struct TestLifterPerformanceTests {
                 let b = [3, 4]
                 XCTAssertEqual(\(binary)(a, b), \(binary)(b, a))
             }
+        """
+    }
 
+    private func m5DetectorMethods(index: Int) -> String {
+        let mono = "score\(index)"
+        let count = "filter\(index)"
+        let reduce = "combine\(index)"
+        return """
+            func testMonotonic() {
+                let a = 5
+                let b = 10
+                XCTAssertLessThan(a, b)
+                XCTAssertLessThanOrEqual(\(mono)(a), \(mono)(b))
+            }
+
+            func testCountInvariance() {
+                let xs = [1, 2, 3, 4]
+                XCTAssertEqual(\(count)(xs).count, xs.count)
+            }
+
+            func testReduceEquivalence() {
+                let items = [1, 2, 3]
+                XCTAssertEqual(items.reduce(0, \(reduce)), items.reversed().reduce(0, \(reduce)))
+            }
+        """
+    }
+
+    private func nonDetectableMethod() -> String {
+        """
             func testNonDetectableHelper() {
                 let result = helper()
                 XCTAssertNotNil(result)
             }
-        }
+        """
+    }
 
+    private func swiftTestingRoundTripDecl(index: Int) -> String {
+        """
         @Test func swiftTestingRoundTrip\(index)() {
             let original = MyData()
-            #expect(\(backward)(\(forward)(original)) == original)
+            #expect(decode\(index)(encode\(index)(original)) == original)
         }
         """
     }

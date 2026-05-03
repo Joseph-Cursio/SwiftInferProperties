@@ -16,6 +16,11 @@ import Testing
 /// "no new files" test already covers the file-set delta direction;
 /// R1.1.d adds the per-test-method survival assertion that pins the
 /// "no in-place rewrite" half of the contract.
+///
+/// M5.6 extends the §16 #1 + #2 acceptance to the three M5 detector
+/// shapes (monotonicity, count-invariance, reduce-equivalence) via
+/// the parallel `TestLifterHardGuaranteeM5Tests` suite — separate
+/// file to keep this one under SwiftLint's file-length limit.
 @Suite("TestLifter — PRD §16 #1 + #2 source-tree-immutable (M1.6 + R1.1.d)")
 struct TestLifterHardGuaranteeTests {
 
