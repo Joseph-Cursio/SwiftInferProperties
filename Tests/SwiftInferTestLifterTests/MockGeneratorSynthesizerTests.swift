@@ -153,4 +153,42 @@ struct MockGeneratorSynthesizerTests {
         #expect(mock?.argumentSpec[1].label == "title")
         #expect(mock?.argumentSpec[1].observedLiterals == ["\"x\"", "\"y\"", "\"z\""])
     }
+
+    // MARK: - M9.2 — preconditionHints population
+
+    @Test("Synthesize populates preconditionHints from observed-literal patterns")
+    func synthesizePopulatesPreconditionHints() {
+        let docShape = Self.shape([(label: "count", kind: .integer)])
+        // Canonical position 0 = count. All observed values positive
+        // ints with ≥ 2 distinct → .intRange (most-specific wins per OD #4).
+        let entry = ConstructionRecordEntry(
+            typeName: "Doc",
+            shape: docShape,
+            siteCount: 5,
+            observedLiterals: [["1"], ["2"], ["3"], ["4"], ["5"]]
+        )
+        let record = ConstructionRecord(entries: [entry])
+        let synthesized = MockGeneratorSynthesizer.synthesize(typeName: "Doc", record: record)
+        let mock = try? #require(synthesized)
+        #expect(mock?.preconditionHints.count == 1)
+        #expect(mock?.preconditionHints[0].pattern == .intRange(low: 1, high: 5))
+        #expect(mock?.preconditionHints[0].argumentLabel == "count")
+        #expect(mock?.preconditionHints[0].siteCount == 5)
+    }
+
+    @Test("Synthesize emits empty preconditionHints when no pattern matches")
+    func synthesizePopulatesNoHintsWhenNoPattern() {
+        let docShape = Self.shape([(label: "flag", kind: .boolean)])
+        // Mixed bool — no constantBool hint can fire (one outlier kills).
+        let entry = ConstructionRecordEntry(
+            typeName: "Doc",
+            shape: docShape,
+            siteCount: 4,
+            observedLiterals: [["true"], ["false"], ["true"], ["false"]]
+        )
+        let record = ConstructionRecord(entries: [entry])
+        let synthesized = MockGeneratorSynthesizer.synthesize(typeName: "Doc", record: record)
+        let mock = try? #require(synthesized)
+        #expect(mock?.preconditionHints.isEmpty == true)
+    }
 }

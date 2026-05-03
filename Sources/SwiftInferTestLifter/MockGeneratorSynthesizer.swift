@@ -75,10 +75,15 @@ public enum MockGeneratorSynthesizer {
                 }
             )
         }
+        // M9.2 — populate inferred-precondition hints from the same
+        // entry. Empty array when no position's column matches a curated
+        // pattern; the renderer's lookup short-circuits on empty.
+        let preconditionHints = PreconditionInferrer.infer(from: entry)
         return MockGenerator(
             typeName: typeName,
             argumentSpec: argumentSpec,
-            siteCount: entry.siteCount
+            siteCount: entry.siteCount,
+            preconditionHints: preconditionHints
         )
     }
 

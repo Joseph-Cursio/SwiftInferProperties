@@ -52,16 +52,73 @@ public extension LiftedTestEmitter {
         if mock.argumentSpec.count == 1 {
             let argument = mock.argumentSpec[0]
             let labelPrefix = argument.label.map { "\($0): " } ?? ""
-            return "\(generators[0])\n            .map { \(typeName)(\(labelPrefix)$0) }"
+            // M9.2 — prepend an `// Inferred precondition:` comment line
+            // above the generator expression when the synthesizer
+            // surfaced a hint for position 0. Two-space indent matches
+            // the surrounding stub indentation pattern.
+            let hintComment = preconditionCommentLine(for: 0, in: mock).map { "  \($0)\n            " } ?? ""
+            return "\(hintComment)\(generators[0])\n            .map { \(typeName)(\(labelPrefix)$0) }"
         }
-        let zipArgs = generators.joined(separator: ", ")
+        // Multi-arg case — switch from single-line `zip(g1, g2)` to a
+        // multi-line shape so per-position `// Inferred precondition:`
+        // comments can sit above each generator expression. Without
+        // hints the multi-line shape still renders correctly; the
+        // hint-line emission is the only conditional bit.
+        let argumentLines = generators.enumerated().map { index, generatorExpr -> String in
+            let hintLine = preconditionCommentLine(for: index, in: mock)
+                .map { "                \($0)\n" } ?? ""
+            return "\(hintLine)                \(generatorExpr)"
+        }.joined(separator: ",\n")
         let constructionArgs = mock.argumentSpec.enumerated()
             .map { index, argument -> String in
                 let labelPrefix = argument.label.map { "\($0): " } ?? ""
                 return "\(labelPrefix)$0.\(index)"
             }
             .joined(separator: ", ")
-        return "zip(\(zipArgs))\n            .map { \(typeName)(\(constructionArgs)) }"
+        return "zip(\n\(argumentLines)\n            )\n            "
+            + ".map { \(typeName)(\(constructionArgs)) }"
+    }
+
+    /// Render a single `// Inferred precondition:` comment line for the
+    /// hint at `position` in `mock.preconditionHints`, or `nil` if no
+    /// hint was synthesized for that position. The line text is
+    /// self-explanatory: identifies the argument by label (or
+    /// `positional[N]` for nil-label), summarizes the detected pattern,
+    /// cites the site count, and surfaces the inferrer's pre-computed
+    /// `suggestedGenerator` expression. PRD §3.5 conservative posture:
+    /// the user-visible default generator is unchanged; the hint is
+    /// advisory.
+    private static func preconditionCommentLine(
+        for position: Int,
+        in mock: MockGenerator
+    ) -> String? {
+        guard let hint = mock.preconditionHints.first(where: { $0.position == position }) else {
+            return nil
+        }
+        let label = hint.argumentLabel ?? "positional[\(hint.position)]"
+        let description = describePattern(hint.pattern)
+        let sitesPlural = hint.siteCount == 1 ? "site" : "sites"
+        return "// Inferred precondition: \(label) — \(description) across "
+            + "\(hint.siteCount) \(sitesPlural) — consider \(hint.suggestedGenerator)"
+    }
+
+    private static func describePattern(_ pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .positiveInt:
+            return "all observed values are positive Int"
+        case .nonNegativeInt:
+            return "all observed values are non-negative Int"
+        case .negativeInt:
+            return "all observed values are negative Int"
+        case .intRange(let low, let high):
+            return "all observed values are in [\(low), \(high)]"
+        case .nonEmptyString:
+            return "all observed strings are non-empty"
+        case .stringLength(let low, let high):
+            return "all observed strings have length in [\(low), \(high)]"
+        case .constantBool(let value):
+            return "all observed values are \(value)"
+        }
     }
 
     /// Resolve `swiftTypeName` ("Int" / "String" / "Bool" / "Double")
