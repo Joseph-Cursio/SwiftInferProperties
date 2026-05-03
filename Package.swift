@@ -192,7 +192,7 @@ let package = Package(
         // equality.
         .testTarget(
             name: "SwiftInferTestLifterTests",
-            dependencies: ["SwiftInferTestLifter", "SwiftInferTemplates", "SwiftInferCore"]
+            dependencies: ["SwiftInferTestLifter", "SwiftInferTemplates", "SwiftInferCLI", "SwiftInferCore"]
         ),
         .testTarget(
             name: "SwiftInferCLITests",
