@@ -97,35 +97,55 @@ public extension LiftedSuggestion {
     private func makeEvidence(typeT: String, typeU: String) -> [Evidence] {
         switch pattern {
         case .roundTrip(let detection):
-            return [
-                Evidence(
-                    displayName: "\(detection.forwardCallee)(_:)",
-                    signature: "(\(typeT)) -> \(typeU)",
-                    location: detection.assertionLocation
-                ),
-                Evidence(
-                    displayName: "\(detection.backwardCallee)(_:)",
-                    signature: "(\(typeU)) -> \(typeT)",
-                    location: detection.assertionLocation
-                )
-            ]
+            return roundTripEvidence(detection: detection, typeT: typeT, typeU: typeU)
         case .idempotence(let detection):
-            return [
-                Evidence(
-                    displayName: "\(detection.calleeName)(_:)",
-                    signature: "(\(typeT)) -> \(typeT)",
-                    location: detection.assertionLocation
-                )
-            ]
+            return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
         case .commutativity(let detection):
-            return [
-                Evidence(
-                    displayName: "\(detection.calleeName)(_:_:)",
-                    signature: "(\(typeT), \(typeT)) -> \(typeT)",
-                    location: detection.assertionLocation
-                )
-            ]
+            return [binaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
+        case .monotonicity(let detection):
+            // (T) -> Comparable; codomain is unknown at promotion time
+            // until M5.5 widens recoverTypes to split domain/codomain.
+            return [Evidence(
+                displayName: "\(detection.calleeName)(_:)",
+                signature: "(\(typeT)) -> ?",
+                location: detection.assertionLocation
+            )]
+        case .countInvariance(let detection):
+            return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
+        case .reduceEquivalence(let detection):
+            return [binaryEvidence(callee: detection.opCalleeName, typeT: typeT, location: detection.assertionLocation)]
         }
+    }
+
+    private func roundTripEvidence(detection: DetectedRoundTrip, typeT: String, typeU: String) -> [Evidence] {
+        [
+            Evidence(
+                displayName: "\(detection.forwardCallee)(_:)",
+                signature: "(\(typeT)) -> \(typeU)",
+                location: detection.assertionLocation
+            ),
+            Evidence(
+                displayName: "\(detection.backwardCallee)(_:)",
+                signature: "(\(typeU)) -> \(typeT)",
+                location: detection.assertionLocation
+            )
+        ]
+    }
+
+    private func unaryEvidence(callee: String, typeT: String, location: SourceLocation) -> Evidence {
+        Evidence(
+            displayName: "\(callee)(_:)",
+            signature: "(\(typeT)) -> \(typeT)",
+            location: location
+        )
+    }
+
+    private func binaryEvidence(callee: String, typeT: String, location: SourceLocation) -> Evidence {
+        Evidence(
+            displayName: "\(callee)(_:_:)",
+            signature: "(\(typeT), \(typeT)) -> \(typeT)",
+            location: location
+        )
     }
 
     private func detailLabel() -> String {
@@ -136,6 +156,12 @@ public extension LiftedSuggestion {
             return "\(detection.calleeName)(\(detection.calleeName)(x)) == \(detection.calleeName)(x)"
         case .commutativity(let detection):
             return "\(detection.calleeName)(a, b) == \(detection.calleeName)(b, a)"
+        case .monotonicity(let detection):
+            return "a < b ⇒ \(detection.calleeName)(a) <= \(detection.calleeName)(b)"
+        case .countInvariance(let detection):
+            return "\(detection.calleeName)(xs).count == xs.count"
+        case .reduceEquivalence(let detection):
+            return "xs.reduce(_, \(detection.opCalleeName)) == xs.reversed().reduce(_, \(detection.opCalleeName))"
         }
     }
 
@@ -171,6 +197,20 @@ public extension LiftedSuggestion {
             assertionLine = "Test body asserts \(detection.calleeName)"
                 + "(\(detection.leftArgName), \(detection.rightArgName))"
                 + " == \(detection.calleeName)(\(detection.rightArgName), \(detection.leftArgName))"
+        case .monotonicity(let detection):
+            assertionLine = "Test body asserts \(detection.leftArgName)"
+                + " < \(detection.rightArgName) implies "
+                + "\(detection.calleeName)(\(detection.leftArgName))"
+                + " <= \(detection.calleeName)(\(detection.rightArgName))"
+        case .countInvariance(let detection):
+            assertionLine = "Test body asserts \(detection.calleeName)"
+                + "(\(detection.inputBindingName)).count"
+                + " == \(detection.inputBindingName).count"
+        case .reduceEquivalence(let detection):
+            assertionLine = "Test body asserts \(detection.collectionBindingName)"
+                + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
+                + " == \(detection.collectionBindingName).reversed()"
+                + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
         }
         let location = assertionLocation()
         let provenance = "Lifted from \(location.file):\(location.line)"
@@ -187,6 +227,12 @@ public extension LiftedSuggestion {
         case .idempotence(let detection):
             return detection.assertionLocation
         case .commutativity(let detection):
+            return detection.assertionLocation
+        case .monotonicity(let detection):
+            return detection.assertionLocation
+        case .countInvariance(let detection):
+            return detection.assertionLocation
+        case .reduceEquivalence(let detection):
             return detection.assertionLocation
         }
     }

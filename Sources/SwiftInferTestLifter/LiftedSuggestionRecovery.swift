@@ -139,55 +139,92 @@ public enum LiftedSuggestionRecovery {
     ) -> (typeName: String?, returnType: String?) {
         switch pattern {
         case .roundTrip(let detection):
-            let summaryTypes = roundTripTypes(
-                forward: detection.forwardCallee,
-                summariesByName: summariesByName
+            return recoverRoundTrip(
+                detection: detection,
+                summariesByName: summariesByName,
+                setupAnnotations: setupAnnotations
             )
-            if summaryTypes.typeName != nil {
-                return summaryTypes
-            }
-            // Fallback: annotation lookup on the input binding name.
-            // Round-trip carries no return-type info on the binding side
-            // (the binding holds T, not U), so annotation-only recovery
-            // returns (T, nil) — the promotion adapter synthesizes a
-            // backward-side `?` sentinel for the return type and the
-            // accept-flow renders `.todo` for the round-trip's U side.
-            // The forward-side T is recoverable; that's M4.2's bar.
-            if let annotated = setupAnnotations[detection.inputBindingName] {
-                return (annotated, nil)
-            }
-            return (nil, nil)
         case .idempotence(let detection):
-            let summaryType = unaryShapeType(
-                for: detection.calleeName,
-                summariesByName: summariesByName
+            return recoverIdempotence(
+                detection: detection,
+                summariesByName: summariesByName,
+                setupAnnotations: setupAnnotations
             )
-            if let summaryType {
-                return (summaryType, summaryType)
-            }
-            if let annotated = setupAnnotations[detection.inputBindingName] {
-                return (annotated, annotated)
-            }
-            return (nil, nil)
         case .commutativity(let detection):
-            let summaryType = binaryShapeType(
-                for: detection.calleeName,
-                summariesByName: summariesByName
+            return recoverCommutativity(
+                detection: detection,
+                summariesByName: summariesByName,
+                setupAnnotations: setupAnnotations
             )
-            if let summaryType {
-                return (summaryType, summaryType)
-            }
-            // For commutativity both operands share T. Try the leftArg
-            // first; if that misses, try rightArg. Either annotation
-            // hit recovers T.
-            if let annotated = setupAnnotations[detection.leftArgName] {
-                return (annotated, annotated)
-            }
-            if let annotated = setupAnnotations[detection.rightArgName] {
-                return (annotated, annotated)
-            }
+        case .monotonicity, .countInvariance, .reduceEquivalence:
+            // M5.0 lands the enum cases + factories; per-pattern
+            // type-recovery rules (codomain vs domain split for
+            // monotonicity, collection-type for countInvariance,
+            // accumulator-type for reduceEquivalence) land in M5.5
+            // alongside the discover-loop fan-out. Until then these
+            // patterns aren't constructed by `TestLifter.discover` so
+            // this branch is dormant.
             return (nil, nil)
         }
+    }
+
+    private static func recoverRoundTrip(
+        detection: DetectedRoundTrip,
+        summariesByName: [String: FunctionSummary],
+        setupAnnotations: [String: String]
+    ) -> (typeName: String?, returnType: String?) {
+        let summaryTypes = roundTripTypes(
+            forward: detection.forwardCallee,
+            summariesByName: summariesByName
+        )
+        if summaryTypes.typeName != nil {
+            return summaryTypes
+        }
+        // Fallback: annotation lookup on the input binding name.
+        // Round-trip carries no return-type info on the binding side
+        // (the binding holds T, not U), so annotation-only recovery
+        // returns (T, nil) — the promotion adapter synthesizes a
+        // backward-side `?` sentinel for the return type and the
+        // accept-flow renders `.todo` for the round-trip's U side.
+        // The forward-side T is recoverable; that's M4.2's bar.
+        if let annotated = setupAnnotations[detection.inputBindingName] {
+            return (annotated, nil)
+        }
+        return (nil, nil)
+    }
+
+    private static func recoverIdempotence(
+        detection: DetectedIdempotence,
+        summariesByName: [String: FunctionSummary],
+        setupAnnotations: [String: String]
+    ) -> (typeName: String?, returnType: String?) {
+        if let summaryType = unaryShapeType(for: detection.calleeName, summariesByName: summariesByName) {
+            return (summaryType, summaryType)
+        }
+        if let annotated = setupAnnotations[detection.inputBindingName] {
+            return (annotated, annotated)
+        }
+        return (nil, nil)
+    }
+
+    private static func recoverCommutativity(
+        detection: DetectedCommutativity,
+        summariesByName: [String: FunctionSummary],
+        setupAnnotations: [String: String]
+    ) -> (typeName: String?, returnType: String?) {
+        if let summaryType = binaryShapeType(for: detection.calleeName, summariesByName: summariesByName) {
+            return (summaryType, summaryType)
+        }
+        // For commutativity both operands share T. Try the leftArg
+        // first; if that misses, try rightArg. Either annotation
+        // hit recovers T.
+        if let annotated = setupAnnotations[detection.leftArgName] {
+            return (annotated, annotated)
+        }
+        if let annotated = setupAnnotations[detection.rightArgName] {
+            return (annotated, annotated)
+        }
+        return (nil, nil)
     }
 
     /// Round-trip: forward callee carries `(T) -> U`. Recover both
