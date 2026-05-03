@@ -75,4 +75,15 @@ public extension LiftedTestEmitter {
         }
         return "\(typeName).gen()"
     }
+
+    /// TestLifter M5.4 — emit the Codable round-trip generator scaffold
+    /// for `typeName`. Dispatched from `chooseGenerator(for:typeName:)`
+    /// when `Suggestion.generator.source == .derivedCodableRoundTrip`
+    /// (set by `GeneratorSelection.applyCodableRoundTripFallback(...)`).
+    /// The body uses `Foundation.JSONEncoder` / `JSONDecoder`; the
+    /// writeout wrapper widens its imports list to include
+    /// `Foundation` for this source so the rendered stub compiles.
+    static func codableRoundTripGenerator(for typeName: String) -> String {
+        CodableRoundTripGeneratorRenderer.renderGenerator(for: typeName)
+    }
 }

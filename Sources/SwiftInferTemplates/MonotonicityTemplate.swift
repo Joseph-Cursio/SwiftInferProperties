@@ -240,9 +240,7 @@ public enum MonotonicityTemplate {
                 + "M7.1 recognises.",
             "Possible-tier by default per the §5.2 caveat — explicit "
                 + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "
-                + "(M5 macro extension is the opt-in path).",
-            "TestLifter corroboration not yet wired (gated on TestLifter M1) — "
-                + "the +20 cross-validation escalation hook is dormant."
+                + "(M5 macro extension is the opt-in path)."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

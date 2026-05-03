@@ -93,8 +93,19 @@ public enum TemplateRegistry {
             generatorTypeByIdentity: collector.generatorTypes,
             shapesByName: shapesByName
         )
-        let crossValidated = applyCrossValidation(
+        // M5.4 — Codable round-trip fallback runs after the strategist
+        // pass. The TemplateEngine main path doesn't run the M4 mock
+        // fallback (mock-inferred is lifted-only per the M4.3 OD #2
+        // narrowing), so here the Codable pass is the second of two
+        // selection passes. Strategist-derived survivors are preserved
+        // by the .notYetComputed guard inside the fallback.
+        let withCodableFallback = GeneratorSelection.applyCodableRoundTripFallback(
             to: withGenerators,
+            generatorTypeByIdentity: collector.generatorTypes,
+            typeDecls: typeDecls
+        )
+        let crossValidated = applyCrossValidation(
+            to: withCodableFallback,
             matching: crossValidationFromTestLifter
         )
         return sortSuggestions(crossValidated)

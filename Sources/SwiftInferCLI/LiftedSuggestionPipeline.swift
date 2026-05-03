@@ -124,10 +124,22 @@ public enum LiftedSuggestionPipeline {
             generatorTypeByIdentity: generatorTypeByIdentity,
             shapesByName: shapesByName
         )
-        return applyMockInferredFallback(
+        let withMockFallback = applyMockInferredFallback(
             to: withStrategistGenerators,
             generatorTypeByIdentity: generatorTypeByIdentity,
             record: constructionRecord
+        )
+        // M5.4 — third pass. Walks survivors whose
+        // `generator.source == .notYetComputed` (after the strategist
+        // pass + the mock fallback pass have had their turns) and
+        // rebuilds the ones whose generator-relevant type conforms to
+        // Codable / Encodable+Decodable with .derivedCodableRoundTrip
+        // + .medium. Strategist + mock survivors are preserved by the
+        // .notYetComputed guard inside `applyCodableRoundTripFallback`.
+        return GeneratorSelection.applyCodableRoundTripFallback(
+            to: withMockFallback,
+            generatorTypeByIdentity: generatorTypeByIdentity,
+            typeDecls: typeDecls
         )
     }
 
