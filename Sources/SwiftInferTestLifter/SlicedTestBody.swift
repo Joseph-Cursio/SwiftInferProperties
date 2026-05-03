@@ -107,6 +107,11 @@ public struct AssertionInvocation {
         case xctAssertNotNil
         case xctAssertLessThan
         case xctAssertLessThanOrEqual
+        // M7.0 — negative-form assertion kinds for the
+        // `AsymmetricAssertionDetector` counter-signal pass.
+        case xctAssertNotEqual
+        case xctAssertGreaterThan
+        case xctAssertGreaterThanOrEqual
         case expectMacro
         case requireMacro
     }

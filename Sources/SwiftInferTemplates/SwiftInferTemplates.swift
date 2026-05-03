@@ -64,7 +64,8 @@ public enum TemplateRegistry {
         typeDecls: [TypeDecl] = [],
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in },
-        crossValidationFromTestLifter: Set<CrossValidationKey> = []
+        crossValidationFromTestLifter: Set<CrossValidationKey> = [],
+        counterSignalsFromTestLifter: Set<CrossValidationKey> = []
     ) -> [Suggestion] {
         // M8.1 — InversePairTemplate needs the resolver to gate on
         // `.equatable`, so it's built before `collectSuggestions` and
@@ -108,7 +109,16 @@ public enum TemplateRegistry {
             to: withCodableFallback,
             matching: crossValidationFromTestLifter
         )
-        return sortSuggestions(crossValidated)
+        // M7 — counter-signal pass runs AFTER cross-validation per
+        // M7 plan OD #5. Suggestions both cross-validated AND
+        // counter-signaled land at base+20-25 = base-5, preserving
+        // the relative weighting. The pass is a no-op when the set
+        // is empty.
+        let counterSignaled = applyCounterSignal(
+            to: crossValidated,
+            matching: counterSignalsFromTestLifter
+        )
+        return sortSuggestions(counterSignaled)
     }
 
     /// Convenience: scan `directory` recursively, run every shipped
@@ -120,13 +130,15 @@ public enum TemplateRegistry {
         in directory: URL,
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in },
-        crossValidationFromTestLifter: Set<CrossValidationKey> = []
+        crossValidationFromTestLifter: Set<CrossValidationKey> = [],
+        counterSignalsFromTestLifter: Set<CrossValidationKey> = []
     ) throws -> [Suggestion] {
         try discoverArtifacts(
             in: directory,
             vocabulary: vocabulary,
             diagnostic: diagnostic,
-            crossValidationFromTestLifter: crossValidationFromTestLifter
+            crossValidationFromTestLifter: crossValidationFromTestLifter,
+            counterSignalsFromTestLifter: counterSignalsFromTestLifter
         ).suggestions
     }
 
@@ -178,7 +190,8 @@ public enum TemplateRegistry {
         in directory: URL,
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in },
-        crossValidationFromTestLifter: Set<CrossValidationKey> = []
+        crossValidationFromTestLifter: Set<CrossValidationKey> = [],
+        counterSignalsFromTestLifter: Set<CrossValidationKey> = []
     ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
@@ -188,7 +201,8 @@ public enum TemplateRegistry {
             typeDecls: corpus.typeDecls,
             vocabulary: vocabulary,
             diagnostic: diagnostic,
-            crossValidationFromTestLifter: crossValidationFromTestLifter
+            crossValidationFromTestLifter: crossValidationFromTestLifter,
+            counterSignalsFromTestLifter: counterSignalsFromTestLifter
         ).filter { suggestion in
             !skipHashes.contains(suggestion.identity.normalized)
         }

@@ -8,10 +8,19 @@ extension TestLifter {
     /// detector pipeline — round-trip (M1), idempotence + commutativity
     /// (M2). M5+ patterns (ordering / count-change / reduce-equivalence)
     /// extend the same `liftedSuggestions` array without changing the
-    /// `Artifacts` shape.
+    /// `Artifacts` shape. M7 adds `counterSignals` for the negative-form
+    /// asymmetric-assertion mirror pass.
     public struct Artifacts: Sendable, Equatable {
 
         public let liftedSuggestions: [LiftedSuggestion]
+
+        /// M7 — counter-signals collected by the
+        /// `AsymmetricAssertionDetector` pass. Each detection is a
+        /// negative-form mirror of one of the six positive `LiftedSuggestion`
+        /// patterns; the discover pipeline applies the matching
+        /// `-25 .asymmetricAssertion` Signal to TE-side suggestions
+        /// and filters the lifted-side suggestions whose key matches.
+        public let counterSignals: [LiftedCounterSignal]
 
         /// M4.2 — per-origin setup-region annotation maps for the
         /// `LiftedSuggestionRecovery` annotation tier. One entry per
@@ -34,17 +43,20 @@ extension TestLifter {
         public init(
             liftedSuggestions: [LiftedSuggestion],
             setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
-            constructionRecord: ConstructionRecord = ConstructionRecord(entries: [])
+            constructionRecord: ConstructionRecord = ConstructionRecord(entries: []),
+            counterSignals: [LiftedCounterSignal] = []
         ) {
             self.liftedSuggestions = liftedSuggestions
             self.setupAnnotationsByOrigin = setupAnnotationsByOrigin
             self.constructionRecord = constructionRecord
+            self.counterSignals = counterSignals
         }
 
         public static let empty = Artifacts(
             liftedSuggestions: [],
             setupAnnotationsByOrigin: [:],
-            constructionRecord: ConstructionRecord(entries: [])
+            constructionRecord: ConstructionRecord(entries: []),
+            counterSignals: []
         )
 
         /// The cross-validation keys to feed into
@@ -53,6 +65,16 @@ extension TestLifter {
         /// `LiftedSuggestion.crossValidationKey` is `Hashable`.
         public var crossValidationKeys: Set<CrossValidationKey> {
             Set(liftedSuggestions.map(\.crossValidationKey))
+        }
+
+        /// M7 — counter-signal keys to feed into
+        /// `TemplateRegistry.discover(counterSignalsFromTestLifter:)`.
+        /// Same shape as `crossValidationKeys`; the discover pipeline
+        /// uses these to (a) apply `-25 .asymmetricAssertion` to
+        /// matching TE-side suggestions and (b) filter matching
+        /// lifted-side suggestions out of the visible stream.
+        public var counterSignalKeys: Set<CrossValidationKey> {
+            Set(counterSignals.map(\.crossValidationKey))
         }
     }
 
@@ -71,6 +93,7 @@ extension TestLifter {
     public static func discover(in directory: URL) throws -> Artifacts {
         let summaries = try TestSuiteParser.scanTests(directory: directory)
         var lifted: [LiftedSuggestion] = []
+        var counterSignals: [LiftedCounterSignal] = []
         var annotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
@@ -108,6 +131,16 @@ extension TestLifter {
             for detection in AssertReduceEquivalenceDetector.detect(in: slice) {
                 lifted.append(LiftedSuggestion.reduceEquivalence(from: detection, origin: origin))
             }
+            // M7 — seventh-detector pass. Asymmetric-assertion
+            // detector surfaces negative-form mirrors of the six
+            // positive patterns; each detection becomes a
+            // LiftedCounterSignal keyed on the same
+            // CrossValidationKey shape the positive detectors use.
+            for detection in AsymmetricAssertionDetector.detect(in: slice) {
+                counterSignals.append(
+                    counterSignal(from: detection, slice: slice, origin: origin)
+                )
+            }
         }
         // M4.3 — build the corpus-wide construction record once per
         // discover run; the CLI pipeline's mock-inferred fallback
@@ -118,7 +151,62 @@ extension TestLifter {
         return Artifacts(
             liftedSuggestions: lifted,
             setupAnnotationsByOrigin: annotationsByOrigin,
-            constructionRecord: constructionRecord
+            constructionRecord: constructionRecord,
+            counterSignals: counterSignals
         )
+    }
+
+    /// Lift a `DetectedAsymmetricAssertion` into a
+    /// `LiftedCounterSignal` carrying the source location of the
+    /// triggering assertion + the originating test method's origin.
+    /// One arm per positive pattern; sourceLocation is taken from the
+    /// slice's terminal assertion (`slice.assertion?.location`) which
+    /// is the negative-form assertion the detector matched on.
+    private static func counterSignal(
+        from detection: DetectedAsymmetricAssertion,
+        slice: SlicedTestBody,
+        origin: LiftedOrigin
+    ) -> LiftedCounterSignal {
+        let location = slice.assertion?.location
+            ?? SourceLocation(file: origin.sourceLocation.file, line: 0, column: 0)
+        switch detection {
+        case .roundTrip(let forwardCallee, let backwardCallee):
+            return .roundTrip(
+                forwardCallee: forwardCallee,
+                backwardCallee: backwardCallee,
+                sourceLocation: location,
+                origin: origin
+            )
+        case .idempotence(let calleeName):
+            return .idempotence(
+                calleeName: calleeName,
+                sourceLocation: location,
+                origin: origin
+            )
+        case .commutativity(let calleeName):
+            return .commutativity(
+                calleeName: calleeName,
+                sourceLocation: location,
+                origin: origin
+            )
+        case .monotonicity(let calleeName):
+            return .monotonicity(
+                calleeName: calleeName,
+                sourceLocation: location,
+                origin: origin
+            )
+        case .countInvariance(let calleeName):
+            return .countInvariance(
+                calleeName: calleeName,
+                sourceLocation: location,
+                origin: origin
+            )
+        case .reduceEquivalence(let opCalleeName):
+            return .reduceEquivalence(
+                opCalleeName: opCalleeName,
+                sourceLocation: location,
+                origin: origin
+            )
+        }
     }
 }

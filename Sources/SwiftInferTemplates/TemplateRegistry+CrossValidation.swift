@@ -52,6 +52,60 @@ extension TemplateRegistry {
         )
     }
 
+    /// Detail text rendered for the counter-signal Signal.
+    static var counterSignalDetail: String {
+        "Counter-signal: asymmetric assertion in test target"
+    }
+
+    /// M7 — walk `suggestions` and rebuild any whose
+    /// `crossValidationKey` is in `keys`, appending a `-25
+    /// .asymmetricAssertion` Signal and a matching `whyMightBeWrong`
+    /// line. Suggestions outside the set pass through. The set is
+    /// checked first so the fast path (empty set, no counter-signal)
+    /// is a no-op.
+    ///
+    /// Sequenced AFTER `applyCrossValidation` per M7 plan OD #5 so
+    /// suggestions both cross-validated AND counter-signaled land at
+    /// `base+20-25 = base-5`, preserving the relative weighting
+    /// (cross-validation `+20` < counter-signal `-25` in absolute
+    /// terms).
+    static func applyCounterSignal(
+        to suggestions: [Suggestion],
+        matching keys: Set<CrossValidationKey>
+    ) -> [Suggestion] {
+        if keys.isEmpty {
+            return suggestions
+        }
+        return suggestions.map { suggestion in
+            guard keys.contains(suggestion.crossValidationKey) else {
+                return suggestion
+            }
+            return rebuildWithCounterSignal(suggestion)
+        }
+    }
+
+    private static func rebuildWithCounterSignal(_ suggestion: Suggestion) -> Suggestion {
+        let signal = Signal(
+            kind: .asymmetricAssertion,
+            weight: -25,
+            detail: counterSignalDetail
+        )
+        let newScore = Score(signals: suggestion.score.signals + [signal])
+        let newCaveats = suggestion.explainability.whyMightBeWrong + [signal.formattedLine]
+        let newExplainability = ExplainabilityBlock(
+            whySuggested: suggestion.explainability.whySuggested,
+            whyMightBeWrong: newCaveats
+        )
+        return Suggestion(
+            templateName: suggestion.templateName,
+            evidence: suggestion.evidence,
+            score: newScore,
+            generator: suggestion.generator,
+            explainability: newExplainability,
+            identity: suggestion.identity
+        )
+    }
+
     /// Sort suggestions by (file path, line) of the first evidence row,
     /// breaking ties by template name. Supports the byte-identical-
     /// reproducibility guarantee (PRD §16 #6) — every `discover` returns

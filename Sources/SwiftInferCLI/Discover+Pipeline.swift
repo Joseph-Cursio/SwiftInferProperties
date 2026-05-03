@@ -68,7 +68,8 @@ extension SwiftInferCommand.Discover {
             in: directory,
             vocabulary: setup.vocabulary,
             diagnostic: { diagnostics.writeDiagnostic($0) },
-            crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys
+            crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys,
+            counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys
         )
         // TestLifter M3.2 — promote LiftedSuggestions to Suggestions,
         // apply the same `GeneratorSelection` pass TemplateEngine ran
@@ -87,12 +88,23 @@ extension SwiftInferCommand.Discover {
             setupAnnotationsByOrigin: liftedArtifacts.setupAnnotationsByOrigin,
             constructionRecord: liftedArtifacts.constructionRecord
         )
-        let filteredPromotedLifted = applyLiftedSkipMarkerFilter(
+        let skipFiltered = applyLiftedSkipMarkerFilter(
             to: promotedLifted,
             productionTarget: directory,
             testDirectory: setup.testDirectory,
             diagnostics: diagnostics
         )
+        // M7 — filter lifted-side suggestions whose key matches a
+        // counter-signal. Per M7 plan OD #1, the user's explicit
+        // negative assertion is dispositive on the lifted side: we
+        // don't surface a Possible-tier lifted suggestion the test
+        // author has actively contradicted. The TE side gets the
+        // -25 demotion via `applyCounterSignal` inside
+        // `discoverArtifacts`; lifted side filters entirely.
+        let counterSignalKeys = liftedArtifacts.counterSignalKeys
+        let filteredPromotedLifted = counterSignalKeys.isEmpty
+            ? skipFiltered
+            : skipFiltered.filter { !counterSignalKeys.contains($0.crossValidationKey) }
         let combined = artifacts.suggestions + filteredPromotedLifted
         let visible = combined.filter { suggestion in
             setup.includePossible || suggestion.score.tier.isVisibleByDefault

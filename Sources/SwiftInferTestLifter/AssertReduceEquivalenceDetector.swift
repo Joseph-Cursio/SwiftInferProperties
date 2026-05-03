@@ -74,7 +74,9 @@ public enum AssertReduceEquivalenceDetector {
             }
             return collapsedFromEqualityExpression(firstArg, location: assertion.location)
         case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
-                .xctAssertLessThan, .xctAssertLessThanOrEqual, .requireMacro:
+                .xctAssertLessThan, .xctAssertLessThanOrEqual,
+                .xctAssertNotEqual, .xctAssertGreaterThan,
+                .xctAssertGreaterThanOrEqual, .requireMacro:
             return nil
         }
     }

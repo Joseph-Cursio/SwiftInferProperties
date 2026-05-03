@@ -223,29 +223,27 @@ enum AssertionAnchor {
         return nil
     }
 
+    /// XCTest assertion-callee → kind dispatch table. Centralizing the
+    /// mapping in a static dictionary keeps `xctAssertKind` under
+    /// SwiftLint's cyclomatic-complexity cap as the kind list grows
+    /// (M5.1 added two; M7.0 adds three more).
+    private static let xctAssertKindByCallee: [String: AssertionInvocation.Kind] = [
+        "XCTAssertEqual": .xctAssertEqual,
+        "XCTAssertTrue": .xctAssertTrue,
+        "XCTAssert": .xctAssert,
+        "XCTAssertNotNil": .xctAssertNotNil,
+        "XCTAssertLessThan": .xctAssertLessThan,
+        "XCTAssertLessThanOrEqual": .xctAssertLessThanOrEqual,
+        "XCTAssertNotEqual": .xctAssertNotEqual,
+        "XCTAssertGreaterThan": .xctAssertGreaterThan,
+        "XCTAssertGreaterThanOrEqual": .xctAssertGreaterThanOrEqual
+    ]
+
     private static func xctAssertKind(of call: FunctionCallExprSyntax) -> AssertionInvocation.Kind? {
-        let calleeName: String
-        if let ref = call.calledExpression.as(DeclReferenceExprSyntax.self) {
-            calleeName = ref.baseName.text
-        } else {
+        guard let ref = call.calledExpression.as(DeclReferenceExprSyntax.self) else {
             return nil
         }
-        switch calleeName {
-        case "XCTAssertEqual":
-            return .xctAssertEqual
-        case "XCTAssertTrue":
-            return .xctAssertTrue
-        case "XCTAssert":
-            return .xctAssert
-        case "XCTAssertNotNil":
-            return .xctAssertNotNil
-        case "XCTAssertLessThan":
-            return .xctAssertLessThan
-        case "XCTAssertLessThanOrEqual":
-            return .xctAssertLessThanOrEqual
-        default:
-            return nil
-        }
+        return xctAssertKindByCallee[ref.baseName.text]
     }
 
     private static func swiftTestingMacroKind(of macro: MacroExpansionExprSyntax) -> AssertionInvocation.Kind? {
