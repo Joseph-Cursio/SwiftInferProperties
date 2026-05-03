@@ -2,18 +2,12 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length
-// Test suite coheres around its subject — splitting along the 250-line
-// body limit would scatter the monotonicity-template assertions across
-// multiple files for no reader benefit.
-@Suite("MonotonicityTemplate — type pattern, name match, vocabulary, tier policy")
-struct MonotonicityTemplateTests {
-
-    // MARK: - Type pattern (ordered codomain)
+@Suite("MonotonicityTemplate — type pattern (ordered codomain)")
+struct MonotonicityTemplateTypePatternTests {
 
     @Test("Single param T -> Int with no naming signal scores 25 (Possible)")
     func orderedCodomainAlone() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "calculate",
             paramType: "Widget",
             returnType: "Int"
@@ -26,7 +20,7 @@ struct MonotonicityTemplateTests {
     @Test("Each curated Comparable codomain matches the type pattern")
     func everyCuratedCodomainMatches() {
         for codomain in MonotonicityTemplate.comparableCodomains {
-            let summary = makeSummary(
+            let summary = makeMonotonicitySummary(
                 name: "calculate",
                 paramType: "Widget",
                 returnType: codomain
@@ -40,7 +34,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Non-Comparable codomain does not match")
     func nonComparableCodomainRejected() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "calculate",
             paramType: "Widget",
             returnType: "[String]"
@@ -50,7 +44,7 @@ struct MonotonicityTemplateTests {
 
     @Test("User-declared Comparable type is not recognised (textual cap per §5.2)")
     func userDeclaredComparableNotRecognised() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "score",
             paramType: "Widget",
             returnType: "MyScore"
@@ -60,7 +54,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Multi-parameter function does not match the type pattern")
     func multiParameterRejected() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "score",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Widget", isInout: false),
@@ -73,7 +67,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Zero-parameter function does not match the type pattern")
     func zeroParameterRejected() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "score",
             parameters: [],
             returnType: "Int"
@@ -83,7 +77,7 @@ struct MonotonicityTemplateTests {
 
     @Test("inout parameter disqualifies the type pattern")
     func inoutDisqualifies() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "score",
             parameters: [Parameter(label: nil, internalName: "v", typeText: "Widget", isInout: true)],
             returnType: "Int"
@@ -93,7 +87,7 @@ struct MonotonicityTemplateTests {
 
     @Test("mutating disqualifies the type pattern")
     func mutatingDisqualifies() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "score",
             paramType: "Widget",
             returnType: "Int",
@@ -104,7 +98,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Implicit Void return is rejected")
     func implicitVoidRejected() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "score",
             paramType: "Widget",
             returnType: nil
@@ -114,7 +108,7 @@ struct MonotonicityTemplateTests {
 
     @Test("T -> T over a Comparable codomain still matches (overlap with idempotence is fine)")
     func sameTypeComparableMatches() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "calculate",
             paramType: "Int",
             returnType: "Int"
@@ -123,12 +117,16 @@ struct MonotonicityTemplateTests {
         #expect(suggestion?.score.total == 25)
         #expect(suggestion?.score.tier == .possible)
     }
+}
+
+@Suite("MonotonicityTemplate — naming, vocabulary, tier policy")
+struct MonotonicityTemplateNamingTests {
 
     // MARK: - Curated naming verbs
 
     @Test("Curated verb on T -> Int scores 35 (Possible — still under 40 per §5.2)")
     func curatedVerbStaysPossible() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "length",
             paramType: "String",
             returnType: "Int"
@@ -141,7 +139,7 @@ struct MonotonicityTemplateTests {
     @Test("Every curated verb on a curated codomain produces a Possible-tier suggestion")
     func everyCuratedVerbProducesSuggestion() {
         for verb in MonotonicityTemplate.curatedVerbs {
-            let summary = makeSummary(
+            let summary = makeMonotonicitySummary(
                 name: verb,
                 paramType: "Widget",
                 returnType: "Int"
@@ -154,7 +152,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Curated verb does not match when codomain is unrecognised")
     func curatedVerbNeedsCuratedCodomain() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "length",
             paramType: "String",
             returnType: "[Character]"
@@ -166,7 +164,7 @@ struct MonotonicityTemplateTests {
 
     @Test("`userCount` matches the curated `Count` suffix")
     func curatedSuffixCountMatches() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "userCount",
             paramType: "Org",
             returnType: "Int"
@@ -178,7 +176,7 @@ struct MonotonicityTemplateTests {
 
     @Test("`pageSize` matches the curated `Size` suffix")
     func curatedSuffixSizeMatches() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "pageSize",
             paramType: "Document",
             returnType: "Int"
@@ -189,7 +187,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Bare suffix string (`Count`) does not match — curated exact-match handles `count`")
     func bareSuffixDoesNotDoubleMatch() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "Count",
             paramType: "Org",
             returnType: "Int"
@@ -204,7 +202,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Project-vocabulary verb match scores 35 when curated list misses")
     func projectVocabularyMatch() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "rank",
             paramType: "User",
             returnType: "Int"
@@ -217,7 +215,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Curated verb takes precedence — project vocab does not double-fire")
     func curatedVerbOverridesProjectVocab() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "length",
             paramType: "String",
             returnType: "Int"
@@ -230,7 +228,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Empty vocabulary falls back to curated set alone")
     func emptyVocabularyMatchesCuratedOnly() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "irrelevantName",
             paramType: "Widget",
             returnType: "Int"
@@ -243,7 +241,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Maximum signal combination without escalation stays in Possible (under 40)")
     func maxScoreStaysPossibleWithoutEscalation() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "length",
             paramType: "String",
             returnType: "Int"
@@ -256,7 +254,7 @@ struct MonotonicityTemplateTests {
 
     @Test("Suggestion identity reuses idempotence's canonical-signature shape under a monotonicity prefix")
     func identityReusesCanonicalSignature() {
-        let summary = makeSummary(
+        let summary = makeMonotonicitySummary(
             name: "length",
             paramType: "String",
             returnType: "Int"
@@ -268,52 +266,51 @@ struct MonotonicityTemplateTests {
         #expect(identity?.canonicalInput.hasPrefix("monotonicity|") == true)
         #expect(identity?.display.hasPrefix("0x") == true)
     }
-
-    // MARK: - Helpers
-
-    private func makeSummary(
-        name: String,
-        paramType: String? = nil,
-        parameters explicitParameters: [Parameter]? = nil,
-        returnType: String?,
-        isMutating: Bool = false,
-        bodySignals: BodySignals = .empty
-    ) -> FunctionSummary {
-        let parameters: [Parameter]
-        if let explicitParameters {
-            parameters = explicitParameters
-        } else if let paramType {
-            parameters = [Parameter(label: nil, internalName: "value", typeText: paramType, isInout: false)]
-        } else {
-            parameters = []
-        }
-        return FunctionSummary(
-            name: name,
-            parameters: parameters,
-            returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: isMutating,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-            containingTypeName: nil,
-            bodySignals: bodySignals
-        )
-    }
-
-    private func makeSummary(
-        name: String,
-        parameters: [Parameter],
-        returnType: String?
-    ) -> FunctionSummary {
-        makeSummary(
-            name: name,
-            paramType: nil,
-            parameters: parameters,
-            returnType: returnType,
-            isMutating: false,
-            bodySignals: .empty
-        )
-    }
 }
-// swiftlint:enable type_body_length
+
+// MARK: - Shared helpers
+
+private func makeMonotonicitySummary(
+    name: String,
+    paramType: String? = nil,
+    parameters explicitParameters: [Parameter]? = nil,
+    returnType: String?,
+    isMutating: Bool = false,
+    bodySignals: BodySignals = .empty
+) -> FunctionSummary {
+    let parameters: [Parameter]
+    if let explicitParameters {
+        parameters = explicitParameters
+    } else if let paramType {
+        parameters = [Parameter(label: nil, internalName: "value", typeText: paramType, isInout: false)]
+    } else {
+        parameters = []
+    }
+    return FunctionSummary(
+        name: name,
+        parameters: parameters,
+        returnTypeText: returnType,
+        isThrows: false,
+        isAsync: false,
+        isMutating: isMutating,
+        isStatic: false,
+        location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+        containingTypeName: nil,
+        bodySignals: bodySignals
+    )
+}
+
+private func makeMonotonicitySummary(
+    name: String,
+    parameters: [Parameter],
+    returnType: String?
+) -> FunctionSummary {
+    makeMonotonicitySummary(
+        name: name,
+        paramType: nil,
+        parameters: parameters,
+        returnType: returnType,
+        isMutating: false,
+        bodySignals: .empty
+    )
+}

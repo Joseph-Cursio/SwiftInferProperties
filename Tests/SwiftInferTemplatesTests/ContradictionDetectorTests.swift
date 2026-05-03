@@ -2,82 +2,8 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length
-// Test suites cohere around their subject — splitting along the 250-line
-// body limit would scatter the detector assertions across multiple files
-// for no reader benefit.
-@Suite("ContradictionDetector — PRD §5.6 #2/#3 cross-cutting filter (M3.4)")
-struct ContradictionDetectorTests {
-
-    // MARK: Helpers
-
-    private func makeSummary(
-        name: String,
-        paramTypes: [String],
-        returnType: String?,
-        file: String = "Test.swift",
-        line: Int = 1
-    ) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: paramTypes.enumerated().map { index, type in
-                Parameter(label: nil, internalName: "p\(index)", typeText: type, isInout: false)
-            },
-            returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: file, line: line, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
-        )
-    }
-
-    private func makeCommutativitySuggestion(
-        type: String,
-        name: String = "merge",
-        file: String = "Test.swift",
-        line: Int = 1
-    ) throws -> (Suggestion, FunctionSummary) {
-        let summary = makeSummary(
-            name: name,
-            paramTypes: [type, type],
-            returnType: type,
-            file: file,
-            line: line
-        )
-        let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
-        return (suggestion, summary)
-    }
-
-    private func makeRoundTripSuggestion(
-        domain: String,
-        codomain: String,
-        forwardName: String = "encode",
-        reverseName: String = "decode",
-        file: String = "Test.swift"
-    ) throws -> (Suggestion, FunctionPair) {
-        let forward = makeSummary(
-            name: forwardName,
-            paramTypes: [domain],
-            returnType: codomain,
-            file: file,
-            line: 1
-        )
-        let reverse = makeSummary(
-            name: reverseName,
-            paramTypes: [codomain],
-            returnType: domain,
-            file: file,
-            line: 5
-        )
-        let pair = FunctionPair(forward: forward, reverse: reverse)
-        let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
-        return (suggestion, pair)
-    }
-
-    // MARK: Empty / passthrough
+@Suite("ContradictionDetector — empty + passthrough cases")
+struct ContradictionDetectorEmptyTests {
 
     @Test
     func emptySuggestionsYieldEmptyOutcome() {
@@ -104,15 +30,17 @@ struct ContradictionDetectorTests {
         #expect(outcome.kept == [suggestion])
         #expect(outcome.dropped.isEmpty)
     }
+}
 
-    // MARK: Commutativity — PRD §5.6 #2
+@Suite("ContradictionDetector — commutativity (PRD §5.6 #2)")
+struct ContradictionDetectorCommutativityTests {
 
     @Test
     func commutativityKeptWhenAllTypesAreEquatable() throws {
         let (suggestion, summary) = try makeCommutativitySuggestion(type: "Int")
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(commutativity: summary)],
+            typesToCheck: [suggestion.identity: commutativityTypes(of: summary)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.kept == [suggestion])
@@ -126,7 +54,7 @@ struct ContradictionDetectorTests {
         let (suggestion, summary) = try makeCommutativitySuggestion(type: "Mystery")
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(commutativity: summary)],
+            typesToCheck: [suggestion.identity: commutativityTypes(of: summary)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.kept == [suggestion])
@@ -145,7 +73,7 @@ struct ContradictionDetectorTests {
         )
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(commutativity: summary)],
+            typesToCheck: [suggestion.identity: commutativityTypes(of: summary)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.kept.isEmpty)
@@ -164,7 +92,7 @@ struct ContradictionDetectorTests {
         let (suggestion, summary) = try makeCommutativitySuggestion(type: "Any", name: "merge")
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(commutativity: summary)],
+            typesToCheck: [suggestion.identity: commutativityTypes(of: summary)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.dropped.count == 1)
@@ -183,20 +111,22 @@ struct ContradictionDetectorTests {
         )
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(commutativity: summary)],
+            typesToCheck: [suggestion.identity: commutativityTypes(of: summary)],
             resolver: EquatableResolver(typeDecls: [typeDecl])
         )
         #expect(outcome.kept == [suggestion])
     }
+}
 
-    // MARK: Round-trip — PRD §5.6 #3
+@Suite("ContradictionDetector — round-trip (PRD §5.6 #3) + mixed corpora")
+struct ContradictionDetectorRoundTripTests {
 
     @Test
     func roundTripKeptWhenBothSidesAreEquatable() throws {
         let (suggestion, pair) = try makeRoundTripSuggestion(domain: "Int", codomain: "String")
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(roundTrip: pair)],
+            typesToCheck: [suggestion.identity: roundTripTypes(of: pair)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.kept == [suggestion])
@@ -215,7 +145,7 @@ struct ContradictionDetectorTests {
         )
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(roundTrip: pair)],
+            typesToCheck: [suggestion.identity: roundTripTypes(of: pair)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.kept.isEmpty)
@@ -230,7 +160,7 @@ struct ContradictionDetectorTests {
         let (suggestion, pair) = try makeRoundTripSuggestion(domain: "Int", codomain: "AnyObject")
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(roundTrip: pair)],
+            typesToCheck: [suggestion.identity: roundTripTypes(of: pair)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.dropped.count == 1)
@@ -242,13 +172,11 @@ struct ContradictionDetectorTests {
         let (suggestion, pair) = try makeRoundTripSuggestion(domain: "Foo", codomain: "Bar")
         let outcome = ContradictionDetector.filter(
             [suggestion],
-            typesToCheck: [suggestion.identity: types(roundTrip: pair)],
+            typesToCheck: [suggestion.identity: roundTripTypes(of: pair)],
             resolver: EquatableResolver(typeDecls: [])
         )
         #expect(outcome.kept == [suggestion])
     }
-
-    // MARK: Mixed corpora
 
     @Test
     func mixedSuggestionsPreserveInputOrder() throws {
@@ -272,9 +200,9 @@ struct ContradictionDetectorTests {
         let outcome = ContradictionDetector.filter(
             [commKeep, rtDrop, commDrop],
             typesToCheck: [
-                commKeep.identity: types(commutativity: commSummary),
-                rtDrop.identity: types(roundTrip: rtPair),
-                commDrop.identity: types(commutativity: commSummary2)
+                commKeep.identity: commutativityTypes(of: commSummary),
+                rtDrop.identity: roundTripTypes(of: rtPair),
+                commDrop.identity: commutativityTypes(of: commSummary2)
             ],
             resolver: EquatableResolver(typeDecls: [])
         )
@@ -284,28 +212,93 @@ struct ContradictionDetectorTests {
         #expect(outcome.dropped[0].suggestion == rtDrop)
         #expect(outcome.dropped[1].suggestion == commDrop)
     }
-
-    // MARK: Helpers — mirror TemplateRegistry's per-template type listing
-
-    private func types(commutativity summary: FunctionSummary) -> [String] {
-        var out = summary.parameters.map(\.typeText)
-        if let returnType = summary.returnTypeText {
-            out.append(returnType)
-        }
-        return out
-    }
-
-    private func types(roundTrip pair: FunctionPair) -> [String] {
-        var out: [String] = []
-        out.append(contentsOf: pair.forward.parameters.map(\.typeText))
-        if let returnType = pair.forward.returnTypeText {
-            out.append(returnType)
-        }
-        out.append(contentsOf: pair.reverse.parameters.map(\.typeText))
-        if let returnType = pair.reverse.returnTypeText {
-            out.append(returnType)
-        }
-        return out
-    }
 }
-// swiftlint:enable type_body_length
+
+// MARK: - Shared helpers
+
+private func makeContradictionSummary(
+    name: String,
+    paramTypes: [String],
+    returnType: String?,
+    file: String = "Test.swift",
+    line: Int = 1
+) -> FunctionSummary {
+    FunctionSummary(
+        name: name,
+        parameters: paramTypes.enumerated().map { index, type in
+            Parameter(label: nil, internalName: "p\(index)", typeText: type, isInout: false)
+        },
+        returnTypeText: returnType,
+        isThrows: false,
+        isAsync: false,
+        isMutating: false,
+        isStatic: false,
+        location: SourceLocation(file: file, line: line, column: 1),
+        containingTypeName: nil,
+        bodySignals: .empty
+    )
+}
+
+private func makeCommutativitySuggestion(
+    type: String,
+    name: String = "merge",
+    file: String = "Test.swift",
+    line: Int = 1
+) throws -> (Suggestion, FunctionSummary) {
+    let summary = makeContradictionSummary(
+        name: name,
+        paramTypes: [type, type],
+        returnType: type,
+        file: file,
+        line: line
+    )
+    let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
+    return (suggestion, summary)
+}
+
+private func makeRoundTripSuggestion(
+    domain: String,
+    codomain: String,
+    forwardName: String = "encode",
+    reverseName: String = "decode",
+    file: String = "Test.swift"
+) throws -> (Suggestion, FunctionPair) {
+    let forward = makeContradictionSummary(
+        name: forwardName,
+        paramTypes: [domain],
+        returnType: codomain,
+        file: file,
+        line: 1
+    )
+    let reverse = makeContradictionSummary(
+        name: reverseName,
+        paramTypes: [codomain],
+        returnType: domain,
+        file: file,
+        line: 5
+    )
+    let pair = FunctionPair(forward: forward, reverse: reverse)
+    let suggestion = try #require(RoundTripTemplate.suggest(for: pair))
+    return (suggestion, pair)
+}
+
+private func commutativityTypes(of summary: FunctionSummary) -> [String] {
+    var out = summary.parameters.map(\.typeText)
+    if let returnType = summary.returnTypeText {
+        out.append(returnType)
+    }
+    return out
+}
+
+private func roundTripTypes(of pair: FunctionPair) -> [String] {
+    var out: [String] = []
+    out.append(contentsOf: pair.forward.parameters.map(\.typeText))
+    if let returnType = pair.forward.returnTypeText {
+        out.append(returnType)
+    }
+    out.append(contentsOf: pair.reverse.parameters.map(\.typeText))
+    if let returnType = pair.reverse.returnTypeText {
+        out.append(returnType)
+    }
+    return out
+}

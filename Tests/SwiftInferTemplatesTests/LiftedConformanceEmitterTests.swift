@@ -2,14 +2,7 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length file_length line_length
-// M8.5 added three new arms (commutativeMonoid / group / semilattice)
-// with byte-stable goldens, pushing this suite past the body / file
-// length caps. line_length disabled because two golden lines render to
-// 120+ chars from the §4.5 explainability text — byte-stability
-// requires keeping the goldens in lockstep with the emitter output.
-
-@Suite("LiftedConformanceEmitter — pure-function conformance source emit (M7.4 + M7.5.a aliasing)")
+@Suite("LiftedConformanceEmitter — semigroup + monoid arms (M7.4 + M7.5.a)")
 struct LiftedConformanceEmitterTests {
 
     // MARK: - semigroup(...) byte-stable golden — aliasing combine witness
@@ -52,8 +45,6 @@ struct LiftedConformanceEmitterTests {
             """
         #expect(source == expected)
     }
-
-    // MARK: - semigroup(...) when witness is already named "combine"
 
     @Test
     func semigroupOmitsAliasingWhenWitnessIsCombine() {
@@ -110,8 +101,6 @@ struct LiftedConformanceEmitterTests {
             """
         #expect(source == expected)
     }
-
-    // MARK: - monoid(...) when both witnesses match the protocol's required identifiers
 
     @Test
     func monoidEmitsBareExtensionWhenWitnessesMatchProtocol() {
@@ -175,8 +164,6 @@ struct LiftedConformanceEmitterTests {
         #expect(first == second)
     }
 
-    // MARK: - Cross-arm independence
-
     @Test
     func semigroupAndMonoidProduceDistinctSource() {
         let explainability = ExplainabilityBlock(whySuggested: [], whyMightBeWrong: [])
@@ -212,283 +199,13 @@ struct LiftedConformanceEmitterTests {
     @Test
     func relativePathHandlesGenericLikeTypeNamesByPassingThrough() {
         // The emitter does not validate type-name shape — that's the
-        // orchestrator's job (M7.5). Probes that exercising bracket
-        // characters survives the path composition; M7.6's hard-
-        // guarantee tests pin the actual filesystem write to the
-        // SwiftInferRefactors/ allowlist.
+        // orchestrator's job (M7.5). M7.6's hard-guarantee tests pin
+        // the actual filesystem write to the SwiftInferRefactors/
+        // allowlist.
         let path = LiftedConformanceEmitter.relativePath(
             typeName: "Box<Int>",
             protocolName: "Semigroup"
         )
         #expect(path == "Tests/Generated/SwiftInferRefactors/Box<Int>/Semigroup.swift")
     }
-
-    // MARK: - M8.5 — commutativeMonoid byte-stable golden
-
-    @Test
-    func commutativeMonoidEmitsAliasingExtensionByteStable() {
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: Tally → CommutativeMonoid",
-                "from associativity: merge(_:_:)"
-            ],
-            whyMightBeWrong: [
-                "Commutativity is a Strict law per kit v1.9.0 — `combine(a, b) == combine(b, a)` must hold for every (a, b)."
-            ]
-        )
-        let source = LiftedConformanceEmitter.commutativeMonoid(
-            typeName: "Tally",
-            combineWitness: "merge",
-            identityWitness: "empty",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — Tally: CommutativeMonoid
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: Tally → CommutativeMonoid
-            //   - from associativity: merge(_:_:)
-            //
-            // Why this might be wrong:
-            //   - Commutativity is a Strict law per kit v1.9.0 — `combine(a, b) == combine(b, a)` must hold for every (a, b).
-            extension Tally: CommutativeMonoid {
-                public static func combine(_ lhs: Tally, _ rhs: Tally) -> Tally {
-                    Self.merge(lhs, rhs)
-                }
-                public static var identity: Tally { Self.empty }
-            }
-            """
-        #expect(source == expected)
-    }
-
-    // MARK: - M8.5 — group byte-stable golden (kit v1.9.0 inverse arm)
-
-    @Test
-    func groupEmitsAliasingExtensionByteStable() {
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: AdditiveInt → Group",
-                "from associativity: plus(_:_:)",
-                "from inverse-element pairing: negate(_:) -> AdditiveInt"
-            ],
-            whyMightBeWrong: [
-                "Inverse witness must satisfy both Strict laws."
-            ]
-        )
-        let source = LiftedConformanceEmitter.group(
-            typeName: "AdditiveInt",
-            combineWitness: "plus",
-            identityWitness: "zero",
-            inverseWitness: "negate",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — AdditiveInt: Group
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: AdditiveInt → Group
-            //   - from associativity: plus(_:_:)
-            //   - from inverse-element pairing: negate(_:) -> AdditiveInt
-            //
-            // Why this might be wrong:
-            //   - Inverse witness must satisfy both Strict laws.
-            extension AdditiveInt: Group {
-                public static func combine(_ lhs: AdditiveInt, _ rhs: AdditiveInt) -> AdditiveInt {
-                    Self.plus(lhs, rhs)
-                }
-                public static var identity: AdditiveInt { Self.zero }
-                public static func inverse(_ value: AdditiveInt) -> AdditiveInt {
-                    Self.negate(value)
-                }
-            }
-            """
-        #expect(source == expected)
-    }
-
-    // MARK: - M8.5 — semilattice byte-stable golden
-
-    @Test
-    func semilatticeEmitsAliasingExtensionByteStable() {
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: MaxInt → Semilattice"
-            ],
-            whyMightBeWrong: [
-                "Idempotence is a Strict law per kit v1.9.0."
-            ]
-        )
-        let source = LiftedConformanceEmitter.semilattice(
-            typeName: "MaxInt",
-            combineWitness: "maximum",
-            identityWitness: "minValue",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — MaxInt: Semilattice
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: MaxInt → Semilattice
-            //
-            // Why this might be wrong:
-            //   - Idempotence is a Strict law per kit v1.9.0.
-            extension MaxInt: Semilattice {
-                public static func combine(_ lhs: MaxInt, _ rhs: MaxInt) -> MaxInt {
-                    Self.maximum(lhs, rhs)
-                }
-                public static var identity: MaxInt { Self.minValue }
-            }
-            """
-        #expect(source == expected)
-    }
-
-    // MARK: - M8.5 — witness-already-canonical short-circuits
-
-    @Test
-    func groupSkipsAllAliasingWhenAllThreeWitnessesAreCanonical() {
-        let explainability = ExplainabilityBlock(whySuggested: [], whyMightBeWrong: [])
-        let source = LiftedConformanceEmitter.group(
-            typeName: "Bag",
-            combineWitness: "combine",
-            identityWitness: "identity",
-            inverseWitness: "inverse",
-            explainability: explainability
-        )
-        #expect(source.contains("extension Bag: Group {}"))
-        #expect(source.contains("public static func combine") == false)
-        #expect(source.contains("public static var identity") == false)
-        #expect(source.contains("public static func inverse") == false)
-    }
-
-    @Test
-    func groupSkipsOnlyMatchingWitnessesIndependently() {
-        // Mixed canonicality — combine is canonical, identity + inverse
-        // need aliasing. Each aliasing helper returns nil independently,
-        // so the body should contain identity + inverse stubs only.
-        let explainability = ExplainabilityBlock(whySuggested: [], whyMightBeWrong: [])
-        let source = LiftedConformanceEmitter.group(
-            typeName: "Mixed",
-            combineWitness: "combine",
-            identityWitness: "zero",
-            inverseWitness: "negate",
-            explainability: explainability
-        )
-        #expect(source.contains("public static func combine") == false)
-        #expect(source.contains("public static var identity: Mixed { Self.zero }"))
-        #expect(source.contains("public static func inverse(_ value: Mixed)"))
-    }
-
-    @Test
-    func commutativeMonoidAndSemilatticeAndMonoidProduceDistinctSource() {
-        // Three arms, identical witness inputs — the only diff is the
-        // protocol name in the extension declaration. Disambiguates
-        // the dispatch path: a writeout for the same witnesses under
-        // a different protocol must not be byte-identical to another
-        // arm's output.
-        let explainability = ExplainabilityBlock(whySuggested: [], whyMightBeWrong: [])
-        let monoid = LiftedConformanceEmitter.monoid(
-            typeName: "T",
-            combineWitness: "op",
-            identityWitness: "id",
-            explainability: explainability
-        )
-        let cmon = LiftedConformanceEmitter.commutativeMonoid(
-            typeName: "T",
-            combineWitness: "op",
-            identityWitness: "id",
-            explainability: explainability
-        )
-        let semilattice = LiftedConformanceEmitter.semilattice(
-            typeName: "T",
-            combineWitness: "op",
-            identityWitness: "id",
-            explainability: explainability
-        )
-        #expect(monoid != cmon)
-        #expect(monoid != semilattice)
-        #expect(cmon != semilattice)
-        #expect(monoid.contains("T: Monoid"))
-        #expect(cmon.contains("T: CommutativeMonoid"))
-        #expect(semilattice.contains("T: Semilattice"))
-    }
-
-    // MARK: - M8.4.b.2 — numeric byte-stable golden (Ring arm)
-
-    @Test
-    func numericEmitsBareExtensionByteStable() {
-        // Numeric is the Ring arm — bare extension because the user's
-        // existing operator implementations satisfy stdlib Numeric's
-        // requirement set. Per M8.4.b.2 + open decision #4 default
-        // `(a)` for the claim, the §4.5 caveat enumerates Numeric's
-        // full surface + the IEEE-754 caveat.
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: Money → Ring (stdlib Numeric)",
-                "additive op: plus(_:_:) with identity zero",
-                "multiplicative op: times(_:_:) with identity one"
-            ],
-            whyMightBeWrong: [
-                "Distributivity is NOT sample-verified.",
-                "FloatingPoint caveat: don't conform Double / Float."
-            ]
-        )
-        let source = LiftedConformanceEmitter.numeric(
-            typeName: "Money",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — Money: Numeric
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: Money → Ring (stdlib Numeric)
-            //   - additive op: plus(_:_:) with identity zero
-            //   - multiplicative op: times(_:_:) with identity one
-            //
-            // Why this might be wrong:
-            //   - Distributivity is NOT sample-verified.
-            //   - FloatingPoint caveat: don't conform Double / Float.
-            extension Money: Numeric {}
-            """
-        #expect(source == expected)
-    }
-
-    // MARK: - M8.4.b.1 — setAlgebra byte-stable golden
-
-    @Test
-    func setAlgebraEmitsBareExtensionByteStable() {
-        // SetAlgebra is the secondary arm to a primary Semilattice
-        // claim — the emitter produces a bare `extension T: SetAlgebra {}`
-        // because the user's existing methods satisfy the protocol's
-        // requirements (insert / remove / contains / etc.). Per M8.4.b.1
-        // open decision #3 default `(a)`, the §4.5 caveat lists what's
-        // not implied by the Semilattice signals.
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: Bag → SetAlgebra"
-            ],
-            whyMightBeWrong: [
-                "stdlib SetAlgebra requires insert / remove / contains."
-            ]
-        )
-        let source = LiftedConformanceEmitter.setAlgebra(
-            typeName: "Bag",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — Bag: SetAlgebra
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: Bag → SetAlgebra
-            //
-            // Why this might be wrong:
-            //   - stdlib SetAlgebra requires insert / remove / contains.
-            extension Bag: SetAlgebra {}
-            """
-        #expect(source == expected)
-    }
 }
-// swiftlint:enable type_body_length file_length line_length

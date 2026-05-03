@@ -2,32 +2,18 @@ import ProtoLawCore
 import SwiftInferCore
 
 /// Pure-function emit of a Swift Testing `@Test func` source string
-/// for a SwiftInfer-discovered property. Single source of truth for
-/// the lifted-test text shape consumed by:
+/// for a SwiftInfer-discovered property. Consumed by
+/// `SwiftInferMacroImpl.CheckPropertyMacro` (M5.2 + M5.3) and
+/// `SwiftInferCLI.InteractiveTriage` (M6.4) — see the M5/M6 plan rows.
 ///
-/// - `SwiftInferMacroImpl.CheckPropertyMacro` (M5.2 + M5.3) — wraps
-///   the returned string as a `DeclSyntax` peer at user compile time.
-/// - `SwiftInferCLI.InteractiveTriage` (M6.4) — wraps with file
-///   imports + provenance header and writes to
-///   `Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift`.
-///
-/// The emitter is *agnostic* about how the seed is derived. Callers
-/// supply a `SamplingSeed.Value` from whichever identity path is
-/// appropriate: the macro uses a `checkProperty.idempotent|…`-shaped
-/// canonical string (no Suggestion in scope at macro-expansion time);
-/// the M6.4 accept flow uses `SamplingSeed.derive(from: suggestion.identity)`
-/// directly (the suggestion identity is already the M1.5 canonical
-/// hash). Both paths are deterministic; the seeds intentionally
-/// differ because the identity-formation paths differ — re-running
-/// either path on unchanged source produces an identical seed and
-/// therefore an identical trial sequence per PRD §16 #6.
+/// The emitter is agnostic about seed derivation: callers supply a
+/// `SamplingSeed.Value` from whichever identity path is appropriate
+/// (macro-time canonical string vs. accept-flow `Suggestion.identity`).
+/// Both paths are deterministic per PRD §16 #6.
 ///
 /// Output is column-0 (no leading indent) and includes one leading
 /// newline so the emitted decl reads as a standalone block when
-/// concatenated with file-level imports. Callers needing a different
-/// indentation tier (e.g. nested inside a type body for the macro's
-/// peer-decl context) can re-indent with their preferred whitespace
-/// strategy.
+/// concatenated with file-level imports.
 public enum LiftedTestEmitter {
 
     /// Emit an idempotence test stub for `f: T -> T`. The body asserts
@@ -179,8 +165,15 @@ public enum LiftedTestEmitter {
             "                    return (one, two, three)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ triple in \(funcName)(\(funcName)(triple.0, triple.1), triple.2)"
-            + " == \(funcName)(triple.0, \(funcName)(triple.1, triple.2)) }"
+        // Multi-line property — the nested call shape would push a
+        // one-liner past 120 chars. Indents match the test-stub
+        // template's 8-space strip.
+        let property = [
+            "{ triple in",
+            "            \(funcName)(\(funcName)(triple.0, triple.1), triple.2)",
+            "                == \(funcName)(triple.0, \(funcName)(triple.1, triple.2))",
+            "        }"
+        ].joined(separator: "\n")
         let failureLabel = "\(funcName)(_:_:) failed associativity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,

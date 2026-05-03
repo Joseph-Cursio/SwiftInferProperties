@@ -3,20 +3,15 @@ import SwiftInferCore
 import Testing
 @testable import SwiftInferCLI
 
-// Tests for all four prompt arms (A/s/n/?), dry-run vs production
-// modes, file-write side effects, decisions-update side effects, and
-// the suggestion-field extraction helpers — splitting along the
-// 250-line limit would scatter the per-arm assertions across files.
-// swiftlint:disable type_body_length
-@Suite("InteractiveTriage — prompt loop + accept/skip/reject + dry-run (M6.4)")
-struct InteractiveTriageTests {
+@Suite("InteractiveTriage — empty/already-decided + accept paths (M6.4)")
+struct InteractiveTriageAcceptTests {
 
     // MARK: - Empty / no-pending paths
 
     @Test
     func emptySuggestionsReturnsImmediately() throws {
         let output = TriageRecordingOutput()
-        let context = makeContext(
+        let context = makeTriageContext(
             prompt: TriageRecordingPromptInput(scriptedLines: []),
             output: output
         )
@@ -46,7 +41,7 @@ struct InteractiveTriageTests {
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: already,
-            context: makeContext(prompt: TriageRecordingPromptInput(scriptedLines: []))
+            context: makeTriageContext(prompt: TriageRecordingPromptInput(scriptedLines: []))
         )
         #expect(result.updatedDecisions == already)
         #expect(result.writtenFiles.isEmpty)
@@ -56,13 +51,13 @@ struct InteractiveTriageTests {
 
     @Test
     func acceptOnIdempotenceWritesStubAndRecordsDecision() throws {
-        let directory = try makeFixtureDirectory(name: "AcceptIdempotent")
+        let directory = try makeTriageFixtureDirectory(name: "AcceptIdempotent")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["A"]),
                 outputDirectory: directory
             )
@@ -81,13 +76,13 @@ struct InteractiveTriageTests {
 
     @Test
     func acceptOnRoundTripWritesStubWithBothFunctionNames() throws {
-        let directory = try makeFixtureDirectory(name: "AcceptRoundTrip")
+        let directory = try makeTriageFixtureDirectory(name: "AcceptRoundTrip")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeRoundTripSuggestion(forwardName: "encode", inverseName: "decode")
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["A"]),
                 outputDirectory: directory
             )
@@ -103,18 +98,15 @@ struct InteractiveTriageTests {
     func acceptOnCommutativityWritesFileViaM8_2EmitterArm() throws {
         // M8.2 added the LiftedTestEmitter.commutative arm — accept now
         // writes a stub file rather than surfacing the v1 "no stub
-        // writeout available" diagnostic. This test pins the M8.2
-        // wiring: dispatch through `liftedTestStub(for:)` ->
-        // `commutativeStub(for:)` -> `LiftedTestEmitter.commutative(...)`
-        // -> Tests/Generated/SwiftInfer/commutativity/merge.swift.
-        let directory = try makeFixtureDirectory(name: "AcceptCommutativity")
+        // writeout available" diagnostic.
+        let directory = try makeTriageFixtureDirectory(name: "AcceptCommutativity")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeBinarySuggestion(template: "commutativity", funcName: "merge")
         let diagnostics = TriageRecordingDiagnosticOutput()
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["A"]),
                 diagnostics: diagnostics,
                 outputDirectory: directory
@@ -133,38 +125,42 @@ struct InteractiveTriageTests {
             line.contains("no stub writeout available")
         } == false)
     }
+}
+
+@Suite("InteractiveTriage — skip/reject/help/dry-run/extraction (M6.4)")
+struct InteractiveTriageBehaviorTests {
 
     // MARK: - Skip + Reject + Empty-line
 
     @Test
     func skipRecordsDecisionAndWritesNoFile() throws {
-        try assertSingleArmRecords(input: "s", expected: .skipped, name: "Skip")
+        try assertTriageSingleArmRecords(input: "s", expected: .skipped, name: "Skip")
     }
 
     @Test
     func rejectRecordsDecisionAndWritesNoFile() throws {
-        try assertSingleArmRecords(input: "n", expected: .rejected, name: "Reject")
+        try assertTriageSingleArmRecords(input: "n", expected: .rejected, name: "Reject")
     }
 
     @Test
     func emptyLineDefaultsToSkip() throws {
         // Pressing Enter with no input defaults to skip — the safe
         // action that doesn't commit anything.
-        try assertSingleArmRecords(input: "", expected: .skipped, name: "EmptyLineSkip")
+        try assertTriageSingleArmRecords(input: "", expected: .skipped, name: "EmptyLineSkip")
     }
 
     // MARK: - Help + invalid input
 
     @Test
     func helpReprompts() throws {
-        let directory = try makeFixtureDirectory(name: "Help")
+        let directory = try makeTriageFixtureDirectory(name: "Help")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
         let output = TriageRecordingOutput()
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["?", "s"]),
                 output: output,
                 outputDirectory: directory
@@ -177,14 +173,14 @@ struct InteractiveTriageTests {
 
     @Test
     func invalidInputReprompts() throws {
-        let directory = try makeFixtureDirectory(name: "Invalid")
+        let directory = try makeTriageFixtureDirectory(name: "Invalid")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
         let output = TriageRecordingOutput()
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["foo", "s"]),
                 output: output,
                 outputDirectory: directory
@@ -197,14 +193,14 @@ struct InteractiveTriageTests {
 
     @Test
     func eofMidPromptDefaultsToSkipForRemainingSuggestions() throws {
-        let directory = try makeFixtureDirectory(name: "EOF")
+        let directory = try makeTriageFixtureDirectory(name: "EOF")
         defer { try? FileManager.default.removeItem(at: directory) }
         let first = makeIdempotentSuggestion(funcName: "normalize", typeName: "String", file: "A.swift")
         let second = makeIdempotentSuggestion(funcName: "trim", typeName: "String", file: "B.swift")
         let result = try InteractiveTriage.run(
             suggestions: [first, second],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["A"]),
                 outputDirectory: directory
             )
@@ -217,14 +213,14 @@ struct InteractiveTriageTests {
 
     @Test
     func dryRunAcceptShowsWouldBePathButWritesNothing() throws {
-        let directory = try makeFixtureDirectory(name: "DryRunAccept")
+        let directory = try makeTriageFixtureDirectory(name: "DryRunAccept")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
         let output = TriageRecordingOutput()
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["A"]),
                 output: output,
                 outputDirectory: directory,
@@ -245,13 +241,13 @@ struct InteractiveTriageTests {
 
     @Test
     func dryRunSkipDoesNotUpdateDecisions() throws {
-        let directory = try makeFixtureDirectory(name: "DryRunSkip")
+        let directory = try makeTriageFixtureDirectory(name: "DryRunSkip")
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],
             existingDecisions: .empty,
-            context: makeContext(
+            context: makeTriageContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["s"]),
                 outputDirectory: directory,
                 dryRun: true
@@ -277,52 +273,51 @@ struct InteractiveTriageTests {
         #expect(InteractiveTriage.paramType(from: "(Int, Int) -> Int") == "Int")
         #expect(InteractiveTriage.paramType(from: "() -> Int") == nil)
     }
-
-    // MARK: - Helpers
-
-    private func assertSingleArmRecords(
-        input: String,
-        expected: Decision,
-        name: String
-    ) throws {
-        let directory = try makeFixtureDirectory(name: name)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
-        let result = try InteractiveTriage.run(
-            suggestions: [suggestion],
-            existingDecisions: .empty,
-            context: makeContext(
-                prompt: TriageRecordingPromptInput(scriptedLines: [input]),
-                outputDirectory: directory
-            )
-        )
-        let stored = try #require(result.updatedDecisions.record(for: suggestion.identity.normalized))
-        #expect(stored.decision == expected)
-        #expect(result.writtenFiles.isEmpty)
-    }
-
-    private func makeContext(
-        prompt: TriageRecordingPromptInput,
-        output: TriageRecordingOutput = TriageRecordingOutput(),
-        diagnostics: TriageRecordingDiagnosticOutput = TriageRecordingDiagnosticOutput(),
-        outputDirectory: URL = FileManager.default.temporaryDirectory,
-        dryRun: Bool = false
-    ) -> InteractiveTriage.Context {
-        InteractiveTriage.Context(
-            prompt: prompt,
-            output: output,
-            diagnostics: diagnostics,
-            outputDirectory: outputDirectory,
-            dryRun: dryRun,
-            clock: { Date(timeIntervalSince1970: 0) }
-        )
-    }
-
-    private func makeFixtureDirectory(name: String) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("InteractiveTriageTests-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        return base
-    }
 }
-// swiftlint:enable type_body_length
+
+// MARK: - Shared helpers
+
+func makeTriageContext(
+    prompt: TriageRecordingPromptInput,
+    output: TriageRecordingOutput = TriageRecordingOutput(),
+    diagnostics: TriageRecordingDiagnosticOutput = TriageRecordingDiagnosticOutput(),
+    outputDirectory: URL = FileManager.default.temporaryDirectory,
+    dryRun: Bool = false
+) -> InteractiveTriage.Context {
+    InteractiveTriage.Context(
+        prompt: prompt,
+        output: output,
+        diagnostics: diagnostics,
+        outputDirectory: outputDirectory,
+        dryRun: dryRun,
+        clock: { Date(timeIntervalSince1970: 0) }
+    )
+}
+
+func makeTriageFixtureDirectory(name: String) throws -> URL {
+    let base = FileManager.default.temporaryDirectory
+        .appendingPathComponent("InteractiveTriageTests-\(name)-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+    return base
+}
+
+private func assertTriageSingleArmRecords(
+    input: String,
+    expected: Decision,
+    name: String
+) throws {
+    let directory = try makeTriageFixtureDirectory(name: name)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
+    let result = try InteractiveTriage.run(
+        suggestions: [suggestion],
+        existingDecisions: .empty,
+        context: makeTriageContext(
+            prompt: TriageRecordingPromptInput(scriptedLines: [input]),
+            outputDirectory: directory
+        )
+    )
+    let stored = try #require(result.updatedDecisions.record(for: suggestion.identity.normalized))
+    #expect(stored.decision == expected)
+    #expect(result.writtenFiles.isEmpty)
+}

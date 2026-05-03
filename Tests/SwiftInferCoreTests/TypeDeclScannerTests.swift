@@ -3,12 +3,8 @@ import ProtoLawCore
 import Testing
 @testable import SwiftInferCore
 
-// swiftlint:disable type_body_length
-// Test suites cohere around their subject — splitting along the 250-line
-// body limit would scatter the M3.2 + M4.1 type-decl emission assertions
-// across multiple files for no reader benefit.
-@Suite("FunctionScanner.scanCorpus — type-decl emission (M3.2 + M4.1)")
-struct TypeDeclScannerTests {
+@Suite("FunctionScanner.scanCorpus — type-decl emission (M3.2)")
+struct TypeDeclScannerBasicsTests {
 
     // MARK: Primary type kinds
 
@@ -214,8 +210,10 @@ struct TypeDeclScannerTests {
         let kinds = corpus.typeDecls.map(\.kind)
         #expect(kinds == [.struct, .struct, .extension])
     }
+}
 
-    // MARK: M4.1 — stored members, hasUserInit, hasUserGen
+@Suite("FunctionScanner.scanCorpus — stored members + init/gen detection (M4.1)")
+struct TypeDeclScannerStoredMembersTests {
 
     @Test
     func capturesStoredMembersInSourceOrder() throws {
@@ -356,4 +354,3 @@ struct TypeDeclScannerTests {
         #expect(extn.hasUserGen == true)
     }
 }
-// swiftlint:enable type_body_length

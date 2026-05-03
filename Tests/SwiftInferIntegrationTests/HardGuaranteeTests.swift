@@ -4,38 +4,18 @@ import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
 
-// swiftlint:disable type_body_length file_length
-// Single-suite for §16 + §14 hard guarantees grows linearly with new
-// allowlist boundaries (M6 SwiftInfer, M7 SwiftInferRefactors, ...).
-// Splitting along the 400-line / 250-body limits would scatter the
-// allowlist assertions for no reader benefit.
-
-/// PRD v0.3 §16 hard-guarantee integration suite + the §14 telemetry
-/// boundary. The M1 acceptance bar §c (per the M1 Plan) calls out three
-/// guarantees as in-scope for M1.7:
-///
-///   1. **No source-file modification** (§16 #1). `discover` is read-
-///      only against the scanned target.
-///   2. **Byte-identical reproducibility** (§16 #6). Re-running
-///      `discover` on unchanged source produces identical output. The
-///      seeded sampling policy lands at M4; M1 verifies the property
-///      at the discovery layer where no sampling runs.
-///   3. **No telemetry / no network calls** (§14). Static check —
-///      production source contains none of the networking-API usage
-///      patterns we explicitly forbid.
-///
-/// Other §16 rows (no test deletion #2, no auto-accept #3, no silently-
-/// wrong code #4, target-scope refusal #5) are template / TestLifter /
-/// CLI-layer concerns and either covered by unit tests already
-/// (`discoverRequiresTargetOption`) or land with later milestones.
-@Suite("Hard guarantees — PRD §16 + §14 telemetry boundary")
+/// PRD v0.3 §16 hard-guarantee integration suite — §16 #1 no-modification,
+/// §16 #6 byte-identical reproducibility, §14 no-telemetry/no-network
+/// boundary. The §16 allowlist tests (M6 / M7 / M8 writeout paths) live in
+/// `HardGuaranteeAllowlistTests.swift`.
+@Suite("Hard guarantees — PRD §16 #1/#6 + §14 telemetry boundary")
 struct HardGuaranteeTests {
 
     // MARK: - §16 #1 — no source modification
 
     @Test("discover never modifies any file in the scanned target")
     func discoverDoesNotModifySource() throws {
-        let directory = try makeFixture(named: "NoModification")
+        let directory = try makeHardGuaranteeFixture(named: "NoModification")
         defer { try? FileManager.default.removeItem(at: directory) }
         let before = try snapshotContents(of: directory)
         _ = try TemplateRegistry.discover(in: directory)
@@ -45,7 +25,7 @@ struct HardGuaranteeTests {
 
     @Test("discover does not create new files in the scanned target")
     func discoverDoesNotCreateFiles() throws {
-        let directory = try makeFixture(named: "NoNewFiles")
+        let directory = try makeHardGuaranteeFixture(named: "NoNewFiles")
         defer { try? FileManager.default.removeItem(at: directory) }
         let before = try fileSet(of: directory)
         _ = try TemplateRegistry.discover(in: directory)
@@ -57,7 +37,7 @@ struct HardGuaranteeTests {
 
     @Test("Repeated discover runs return identical Suggestion lists")
     func suggestionsByteIdenticalAcrossRuns() throws {
-        let directory = try makeFixture(named: "Reproducibility")
+        let directory = try makeHardGuaranteeFixture(named: "Reproducibility")
         defer { try? FileManager.default.removeItem(at: directory) }
         let first = try TemplateRegistry.discover(in: directory)
         let second = try TemplateRegistry.discover(in: directory)
@@ -68,7 +48,7 @@ struct HardGuaranteeTests {
 
     @Test("Rendered output is byte-identical across runs")
     func renderedOutputByteIdentical() throws {
-        let directory = try makeFixture(named: "RenderedReproducibility")
+        let directory = try makeHardGuaranteeFixture(named: "RenderedReproducibility")
         defer { try? FileManager.default.removeItem(at: directory) }
         let first = SuggestionRenderer.render(try TemplateRegistry.discover(in: directory))
         let second = SuggestionRenderer.render(try TemplateRegistry.discover(in: directory))
@@ -79,21 +59,14 @@ struct HardGuaranteeTests {
     func samplingSeedReproducibleAcrossRuns() throws {
         // §16 #6 requires the sampling seed to be byte-identical for
         // unchanged source. M4.3 derives the seed from the suggestion
-        // identity (which is itself derived from the canonical signature),
-        // so re-running discover must produce identical seeds — and the
-        // rendered "lifted test seed: 0x..." line must match across runs.
-        let directory = try makeFixture(named: "SeedReproducibility")
+        // identity (which is itself derived from the canonical signature).
+        let directory = try makeHardGuaranteeFixture(named: "SeedReproducibility")
         defer { try? FileManager.default.removeItem(at: directory) }
         let firstRun = try TemplateRegistry.discover(in: directory)
         let secondRun = try TemplateRegistry.discover(in: directory)
         let firstSeeds = firstRun.map { SamplingSeed.derive(from: $0.identity) }
         let secondSeeds = secondRun.map { SamplingSeed.derive(from: $0.identity) }
         #expect(firstSeeds == secondSeeds, "Sampling seeds drifted across runs on unchanged source")
-        // Belt-and-suspenders: confirm the rendered text contains the
-        // same hex form across runs. The whole-output reproducibility
-        // test above implicitly covers this, but pinning the seed line
-        // explicitly catches regressions where the renderer might
-        // someday emit the seed conditionally.
         let firstRendered = SuggestionRenderer.render(firstRun)
         let secondRendered = SuggestionRenderer.render(secondRun)
         for seed in firstSeeds {
@@ -109,200 +82,27 @@ struct HardGuaranteeTests {
         // enumeration in FunctionScanner.scan(directory:) means the
         // file with the lexically smaller name is scanned first
         // regardless of which was created first.
-        let directoryA = try makeFixture(named: "OrderStable-A", layout: .alpha)
-        let directoryB = try makeFixture(named: "OrderStable-B", layout: .alpha)
+        let directoryA = try makeHardGuaranteeFixture(named: "OrderStable-A", layout: .alpha)
+        let directoryB = try makeHardGuaranteeFixture(named: "OrderStable-B", layout: .alpha)
         defer {
             try? FileManager.default.removeItem(at: directoryA)
             try? FileManager.default.removeItem(at: directoryB)
         }
         let renderA = SuggestionRenderer.render(try TemplateRegistry.discover(in: directoryA))
         let renderB = SuggestionRenderer.render(try TemplateRegistry.discover(in: directoryB))
-        // Strip the absolute path to the temp directory before comparing
-        // — the rendered location lines carry the directory path, which
-        // differs between fixtures by construction.
+        // Strip the absolute path before comparing — the rendered
+        // location lines carry the directory path, which differs by
+        // construction.
         let normalizedA = renderA.replacingOccurrences(of: directoryA.path, with: "<root>")
         let normalizedB = renderB.replacingOccurrences(of: directoryB.path, with: "<root>")
         #expect(normalizedA == normalizedB)
-    }
-
-    // MARK: - §16 #1 — M6 writeouts respect the allowlist
-
-    @Test("--interactive accept writes only under Tests/Generated/SwiftInfer/")
-    func interactiveAcceptWritesOnlyUnderGeneratedTests() throws {
-        let directory = try makeM6Fixture(named: "InteractiveAcceptAllowlist")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            interactive: true,
-            promptInput: ScriptedPromptInput(scriptedLines: ["A"]),
-            output: SilentOutput(),
-            diagnostics: SilentDiagnosticOutput()
-        )
-        let after = try fileSet(of: directory)
-        let added = after.subtracting(before)
-        // Two paths added: the property-test stub + the decisions.json
-        // record. Both match the M6 plan's allowlist (Tests/Generated/
-        // SwiftInfer/<Template>/<FunctionName>.swift +
-        // .swiftinfer/decisions.json under packageRoot).
-        for path in added {
-            #expect(
-                path.hasPrefix("/Tests/Generated/SwiftInfer/")
-                    || path.hasPrefix("/.swiftinfer/decisions.json"),
-                "M6 --interactive accept wrote outside the allowlist: \(path)"
-            )
-        }
-        // Source files untouched — snapshot equality on the original
-        // source tree (everything under /Sources/) before vs after.
-        let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
-        let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
-        #expect(sourceBefore == sourceAfter)
-    }
-
-    // MARK: - §16 #1 — M7 RefactorBridge writeout allowlist
-
-    @Test("--interactive B accept writes only under Tests/Generated/SwiftInferRefactors/")
-    func interactiveBAcceptWritesOnlyUnderRefactorsAllowlist() throws {
-        let directory = try makeM7BridgeFixture(named: "BridgeAllowlist")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            interactive: true,
-            // First prompt: B (accept conformance for the type). Second:
-            // s (skip; the next associativity-firing suggestion on the
-            // same type collapses to [A/s/n/?] per per-type aggregation).
-            promptInput: ScriptedPromptInput(scriptedLines: ["B", "s", "s", "s"]),
-            output: SilentOutput(),
-            diagnostics: SilentDiagnosticOutput()
-        )
-        let after = try fileSet(of: directory)
-        let added = after.subtracting(before)
-        // Allowed prefixes: SwiftInferRefactors writeout + decisions.json.
-        // The associativity / commutativity / identity-element templates
-        // ship no LiftedTestEmitter arm in v1, so A-arm accepts (skipped
-        // here) wouldn't write under Tests/Generated/SwiftInfer/ even if
-        // surfaced — the allowlist for B alone is what this test pins.
-        for path in added {
-            #expect(
-                path.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
-                    || path.hasPrefix("/.swiftinfer/decisions.json"),
-                "M7 --interactive B accept wrote outside the allowlist: \(path)"
-            )
-        }
-        // The file written must follow the per-PRD §16 #1 path convention:
-        // Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift.
-        let conformancePath = added.first {
-            $0.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
-        }
-        #expect(conformancePath != nil, "RefactorBridge B accept did not write a conformance file")
-        if let path = conformancePath {
-            #expect(path.contains("/Bag/Semigroup.swift") || path.contains("/Bag/Monoid.swift"))
-        }
-        // Source files untouched — same posture as the M6 allowlist test.
-        let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
-        let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
-        #expect(sourceBefore == sourceAfter)
-    }
-
-    // MARK: - §16 #1 — M8 RefactorBridge writeout allowlist (CMon / Group / Semilattice / Ring)
-
-    @Test("M8 --interactive B accept honors the SwiftInferRefactors/ allowlist for every new arm")
-    func interactiveBAcceptOnEachM8ArmHonorsAllowlist() throws {
-        // Builds a fixture corpus where each of the four M8 promotion
-        // arms (CommutativeMonoid / Group / Semilattice / Ring) fires on
-        // a distinct type. Runs `--interactive` with scripted "B" inputs
-        // for every prompt, then asserts every added file is under the
-        // SwiftInferRefactors/ allowlist + decisions.json. PRD §16 #1
-        // hard-guarantee — M8's expanded promotion surface must NOT
-        // accidentally write outside the allowlist for any arm.
-        let directory = try makeM8MultiArmFixture(named: "M8AllArmsAllowlist")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
-        // Script enough B / s answers to navigate every prompt the
-        // corpus surfaces. The exact prompt count depends on which
-        // suggestions fire; over-specify with "s" tail to handle any
-        // residual collapse-to-[A/s/n/?] prompts after the per-type
-        // conformance is decided.
-        let script = Array(repeating: "B", count: 10) + Array(repeating: "s", count: 30)
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            interactive: true,
-            promptInput: ScriptedPromptInput(scriptedLines: script),
-            output: SilentOutput(),
-            diagnostics: SilentDiagnosticOutput()
-        )
-        let after = try fileSet(of: directory)
-        let added = after.subtracting(before)
-        // Every added file must land under SwiftInferRefactors/ or be
-        // the decisions.json record. SwiftInfer/ test-stub writeouts
-        // are also permitted (the corpus may surface property-test
-        // suggestions on these types); the allowlist is the union.
-        for path in added {
-            let isInfer = path.hasPrefix("/Tests/Generated/SwiftInfer/")
-            let isRefactors = path.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
-            let isDecisions = path == "/.swiftinfer/decisions.json"
-            #expect(
-                isInfer || isRefactors || isDecisions,
-                "M8 --interactive accept wrote outside the allowlist: \(path)"
-            )
-        }
-        // At least one Refactors writeout must exist — the test would
-        // be vacuous otherwise. Spot-check that one of the M8 protocol
-        // arms surfaced.
-        let refactorsPaths = added.filter {
-            $0.hasPrefix("/Tests/Generated/SwiftInferRefactors/")
-        }
-        #expect(!refactorsPaths.isEmpty, "expected at least one M8 conformance writeout")
-        let m8Protocols = ["CommutativeMonoid", "Group", "Semilattice", "Numeric", "SetAlgebra"]
-        let firedM8Arm = refactorsPaths.contains { path in
-            m8Protocols.contains { path.contains("/\($0).swift") }
-        }
-        #expect(firedM8Arm, "expected at least one of \(m8Protocols) to surface; got: \(refactorsPaths)")
-        // The §16 #1 invariant we're pinning: every writeout under
-        // /Tests/Generated/SwiftInferRefactors/ matches the
-        // <TypeName>/<ProtocolName>.swift convention. Multi-arm
-        // single-session coverage is brittle (per-prompt scripting
-        // depends on suggestion ordering); per-arm integration tests
-        // live alongside the orchestrator unit tests.
-        for path in refactorsPaths {
-            let parts = path.components(separatedBy: "/").suffix(2)
-            #expect(parts.count == 2,
-                "expected /Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift; got: \(path)")
-            #expect(path.hasSuffix(".swift"),
-                "expected .swift extension; got: \(path)")
-        }
-        // Source files untouched.
-        let sourceBefore = before.filter { $0.hasPrefix("/Sources/") }
-        let sourceAfter = after.filter { $0.hasPrefix("/Sources/") }
-        #expect(sourceBefore == sourceAfter)
-    }
-
-    @Test("--update-baseline writes only .swiftinfer/baseline.json under packageRoot")
-    func updateBaselineWritesOnlyToConventionalPath() throws {
-        let directory = try makeM6Fixture(named: "UpdateBaselineAllowlist")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            updateBaseline: true,
-            output: SilentOutput(),
-            diagnostics: SilentDiagnosticOutput()
-        )
-        let after = try fileSet(of: directory)
-        let added = after.subtracting(before)
-        #expect(added == ["/.swiftinfer/baseline.json"])
     }
 
     // MARK: - §14 — no telemetry / no network
 
     @Test("Production source contains no networking-API usage patterns")
     func noNetworkingAPIsInProduction() throws {
-        let sourcesRoot = Self.packageSourcesRoot
+        let sourcesRoot = packageSourcesRoot
         let forbidden = [
             "URLSession(",
             "URLSession.shared.",
@@ -330,242 +130,122 @@ struct HardGuaranteeTests {
             "PRD §14 forbids networking-API usage in production source. Violations: \(violations)"
         )
     }
+}
 
-    // MARK: - Fixture helpers
+// MARK: - Shared fixture helpers
 
-    private enum Layout {
-        case standard
-        case alpha
-    }
+enum HardGuaranteeLayout {
+    case standard
+    case alpha
+}
 
-    private func makeFixture(named name: String, layout: Layout = .standard) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("SwiftInferGuarantee-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        switch layout {
-        case .standard:
-            try """
-            struct MyType {}
-
-            struct Codec {
-                func normalize(_ value: String) -> String {
-                    return normalize(normalize(value))
-                }
-                func encode(_ value: MyType) -> Data {
-                    return Data()
-                }
-                func decode(_ data: Data) -> MyType {
-                    return MyType()
-                }
-            }
-            """.write(
-                to: base.appendingPathComponent("Codec.swift"),
-                atomically: true,
-                encoding: .utf8
-            )
-        case .alpha:
-            try "struct AlphaType {}\n".write(
-                to: base.appendingPathComponent("Alpha.swift"),
-                atomically: true,
-                encoding: .utf8
-            )
-            try """
-            struct AlphaContainer {
-                func normalize(_ value: String) -> String {
-                    return normalize(normalize(value))
-                }
-            }
-            """.write(
-                to: base.appendingPathComponent("Container.swift"),
-                atomically: true,
-                encoding: .utf8
-            )
-        }
-        return base
-    }
-
-    private func snapshotContents(of directory: URL) throws -> [String: String] {
-        var snapshot: [String: String] = [:]
-        let enumerator = FileManager.default.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey]
-        )
-        for case let url as URL in enumerator ?? FileManager.DirectoryEnumerator() {
-            let relative = url.path.replacingOccurrences(of: directory.path, with: "")
-            snapshot[relative] = try String(contentsOf: url, encoding: .utf8)
-        }
-        return snapshot
-    }
-
-    private func fileSet(of directory: URL) throws -> Set<String> {
-        var paths: Set<String> = []
-        let enumerator = FileManager.default.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey]
-        )
-        // macOS resolves /tmp through the /private symlink during
-        // enumeration, so the enumerator's URLs carry that prefix while
-        // `directory.path` may not. Strip both candidates so the
-        // returned relative paths normalize identically. Also filter to
-        // regular files — directory entries pollute the diff with
-        // synthetic ".swiftinfer" hits when an M6 writeout creates a
-        // new sub-folder.
-        let raw = directory.path
-        let withPrivatePrefix = raw.hasPrefix("/private") ? raw : "/private" + raw
-        for case let url as URL in enumerator ?? FileManager.DirectoryEnumerator() {
-            let isFile = (try? url.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile ?? false
-            guard isFile else { continue }
-            let stripped = url.path
-                .replacingOccurrences(of: withPrivatePrefix, with: "")
-                .replacingOccurrences(of: raw, with: "")
-            paths.insert(stripped)
-        }
-        return paths
-    }
-
-    /// Build a Package.swift-rooted fixture with one `Sources/Lib/`
-    /// target so the M6 `--interactive` / `--update-baseline` writeouts
-    /// have a real package boundary to anchor at. The DecisionsLoader /
-    /// BaselineLoader walk-up needs `Package.swift` at the root or it
-    /// falls back to the target directory (which the M6 tests
-    /// elsewhere exercise — here we want the conventional path).
-    private func makeM6Fixture(named name: String) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("SwiftInferM6Guarantee-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        try Data("// swift-tools-version: 6.1\n".utf8).write(
-            to: base.appendingPathComponent("Package.swift")
-        )
-        let target = base.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+func makeHardGuaranteeFixture(
+    named name: String,
+    layout: HardGuaranteeLayout = .standard
+) throws -> URL {
+    let base = FileManager.default.temporaryDirectory
+        .appendingPathComponent("SwiftInferGuarantee-\(name)-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+    switch layout {
+    case .standard:
         try """
-        struct Sanitizer {
+        struct MyType {}
+
+        struct Codec {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """.write(
+            to: base.appendingPathComponent("Codec.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+    case .alpha:
+        try "struct AlphaType {}\n".write(
+            to: base.appendingPathComponent("Alpha.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        struct AlphaContainer {
             func normalize(_ value: String) -> String {
                 return normalize(normalize(value))
             }
         }
         """.write(
-            to: target.appendingPathComponent("Source.swift"),
+            to: base.appendingPathComponent("Container.swift"),
             atomically: true,
             encoding: .utf8
         )
-        return base
     }
-
-    /// Build a Package.swift-rooted fixture with a `Bag` type that
-    /// fires the M2 associativity template via `merge(_:_:)` and the
-    /// M2 identity-element template via `static let empty`. The
-    /// RefactorBridgeOrchestrator (M7.5) aggregates those signals into
-    /// a Monoid proposal on `Bag`; the `B` accept routes through
-    /// `LiftedConformanceEmitter.monoid` and writes to
-    /// `Tests/Generated/SwiftInferRefactors/Bag/Monoid.swift`.
-    private func makeM7BridgeFixture(named name: String) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("SwiftInferM7Bridge-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        try Data("// swift-tools-version: 6.1\n".utf8).write(
-            to: base.appendingPathComponent("Package.swift")
-        )
-        let target = base.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
-        try """
-        struct Bag: Equatable {
-            static let empty = Bag()
-            static func merge(_ first: Bag, _ second: Bag) -> Bag { first }
-        }
-        """.write(
-            to: target.appendingPathComponent("Bag.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
-        return base
-    }
-
-    /// M8.6 fixture — corpus exercising each new orchestrator promotion
-    /// arm on a distinct type:
-    ///
-    /// - **`Tally`** — `merge` is associative + commutative + has
-    ///   identity `empty` → fires CommutativeMonoid (kit v1.9.0).
-    /// - **`AdditiveInt`** — `plus` Monoid-shaped + `negate` curated
-    ///   inverse → fires Group (kit v1.9.0).
-    /// - **`MaxInt`** — `combine` (max-shape) is associative +
-    ///   commutative + idempotent + has identity → fires Semilattice
-    ///   (kit v1.9.0). Curated set-named ops not used; pure
-    ///   Semilattice without SetAlgebra secondary.
-    /// - **`Money`** — `add` + `multiply` both Monoid-shaped →
-    ///   fires Ring (stdlib `Numeric`).
-    private func makeM8MultiArmFixture(named name: String) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("SwiftInferM8MultiArm-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        try Data("// swift-tools-version: 6.1\n".utf8).write(
-            to: base.appendingPathComponent("Package.swift")
-        )
-        let target = base.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
-        // M2.5's IdentityElementTemplate requires explicit `: T` type
-        // annotation on identity-candidate declarations — the
-        // FunctionScanner's identity-candidate emit pass skips
-        // type-inferred decls. Every static let below carries an
-        // explicit annotation so the IdentityCandidate records emit.
-        try """
-        struct Tally: Equatable {
-            static let empty: Tally = Tally()
-            static func merge(_ lhs: Tally, _ rhs: Tally) -> Tally { lhs }
-            // M2.3 commutativity matches by name (`merge` is in the
-            // curated commutativity-verb list).
-        }
-
-        struct AdditiveInt: Equatable {
-            static let zero: AdditiveInt = AdditiveInt()
-            static func plus(_ lhs: AdditiveInt, _ rhs: AdditiveInt) -> AdditiveInt { lhs }
-            static func negate(_ value: AdditiveInt) -> AdditiveInt { value }
-        }
-
-        struct MaxInt: Equatable {
-            static let minimum: MaxInt = MaxInt()
-            static func combine(_ lhs: MaxInt, _ rhs: MaxInt) -> MaxInt { lhs }
-            // `combine` matches commutativity + idempotence verbs +
-            // is associative — fires the full Semilattice signal set.
-        }
-
-        struct Money: Equatable {
-            static let zero: Money = Money()
-            static let one: Money = Money()
-            static func add(_ lhs: Money, _ rhs: Money) -> Money { lhs }
-            static func multiply(_ lhs: Money, _ rhs: Money) -> Money { lhs }
-        }
-        """.write(
-            to: target.appendingPathComponent("M8Arms.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
-        return base
-    }
-
-    /// `Sources/` directory of the package, resolved against `#filePath`
-    /// so the path holds regardless of `swift test`'s working directory.
-    private static let packageSourcesRoot: URL = {
-        let testFile = URL(fileURLWithPath: #filePath, isDirectory: false)
-        return testFile
-            .deletingLastPathComponent()  // SwiftInferIntegrationTests/
-            .deletingLastPathComponent()  // Tests/
-            .deletingLastPathComponent()  // SwiftInferProperties/
-            .appendingPathComponent("Sources")
-    }()
+    return base
 }
 
-// MARK: - Silent stubs for the M6 hard-guarantee tests
+func snapshotContents(of directory: URL) throws -> [String: String] {
+    var snapshot: [String: String] = [:]
+    let enumerator = FileManager.default.enumerator(
+        at: directory,
+        includingPropertiesForKeys: [.isRegularFileKey]
+    )
+    for case let url as URL in enumerator ?? FileManager.DirectoryEnumerator() {
+        let relative = url.path.replacingOccurrences(of: directory.path, with: "")
+        snapshot[relative] = try String(contentsOf: url, encoding: .utf8)
+    }
+    return snapshot
+}
 
-private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+func fileSet(of directory: URL) throws -> Set<String> {
+    var paths: Set<String> = []
+    let enumerator = FileManager.default.enumerator(
+        at: directory,
+        includingPropertiesForKeys: [.isRegularFileKey]
+    )
+    // macOS resolves /tmp through the /private symlink during
+    // enumeration; strip both candidates so the returned relative paths
+    // normalize identically. Filter to regular files — directory
+    // entries pollute the diff with synthetic ".swiftinfer" hits.
+    let raw = directory.path
+    let withPrivatePrefix = raw.hasPrefix("/private") ? raw : "/private" + raw
+    for case let url as URL in enumerator ?? FileManager.DirectoryEnumerator() {
+        let isFile = (try? url.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile ?? false
+        guard isFile else { continue }
+        let stripped = url.path
+            .replacingOccurrences(of: withPrivatePrefix, with: "")
+            .replacingOccurrences(of: raw, with: "")
+        paths.insert(stripped)
+    }
+    return paths
+}
+
+/// `Sources/` directory of the package, resolved against `#filePath`
+/// so the path holds regardless of `swift test`'s working directory.
+let packageSourcesRoot: URL = {
+    let testFile = URL(fileURLWithPath: #filePath, isDirectory: false)
+    return testFile
+        .deletingLastPathComponent()  // SwiftInferIntegrationTests/
+        .deletingLastPathComponent()  // Tests/
+        .deletingLastPathComponent()  // SwiftInferProperties/
+        .appendingPathComponent("Sources")
+}()
+
+// MARK: - Silent stubs for hard-guarantee tests
+
+final class HGSilentOutput: DiscoverOutput, @unchecked Sendable {
     func write(_ text: String) {}
 }
 
-private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+final class HGSilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
     func writeDiagnostic(_ text: String) {}
 }
 
-private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
+final class HGScriptedPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
@@ -575,4 +255,3 @@ private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
         return remaining.removeFirst()
     }
 }
-// swiftlint:enable type_body_length file_length

@@ -201,7 +201,6 @@ struct PerformanceTests {
         return base
     }
 
-    // swiftlint:disable:next function_body_length
     private func syntheticFileSource(index: Int) -> String {
         // Per-file unique types keep cross-file pairing bounded — a
         // realistic module rarely lets every encoder pair with every
@@ -212,17 +211,40 @@ struct PerformanceTests {
         return """
         import Foundation
 
+        \(syntheticTypes(payload: payload, data: data, bag: bag))
+
+        \(syntheticBagExtension(bag: bag))
+
+        \(syntheticContainer(index: index, payload: payload, data: data, bag: bag))
+        """
+    }
+
+    private func syntheticTypes(payload: String, data: String, bag: String) -> String {
+        """
         struct \(payload) {}
         struct \(data) {}
         struct \(bag): Equatable {}
+        """
+    }
 
+    private func syntheticBagExtension(bag: String) -> String {
+        """
         extension \(bag) {
             static let empty: \(bag) = \(bag)()
             func merge(_ first: \(bag), _ second: \(bag)) -> \(bag) {
                 return first
             }
         }
+        """
+    }
 
+    private func syntheticContainer(
+        index: Int,
+        payload: String,
+        data: String,
+        bag: String
+    ) -> String {
+        """
         struct Container\(index) {
             func normalize(_ value: String) -> String {
                 return normalize(normalize(value))

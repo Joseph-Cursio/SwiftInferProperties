@@ -2,18 +2,12 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-// swiftlint:disable type_body_length
-// Test suites cohere around their subject — splitting along the 250-line
-// body limit would scatter the commutativity-template assertions across
-// multiple files for no reader benefit.
-@Suite("CommutativityTemplate — type pattern, name match, anti-commutativity counter, vetoes")
-struct CommutativityTemplateTests {
-
-    // MARK: - Type pattern
+@Suite("CommutativityTemplate — type pattern")
+struct CommutativityTemplateTypePatternTests {
 
     @Test("Two same-type params and matching return scores 30 (Possible) with no name signal")
     func typeShapeAlone() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "blend",
             paramTypes: ("Color", "Color"),
             returnType: "Color"
@@ -25,7 +19,7 @@ struct CommutativityTemplateTests {
 
     @Test("Curated commutativity verb on (T, T) -> T scores 70 (Likely)")
     func curatedVerbAdds40() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -37,7 +31,7 @@ struct CommutativityTemplateTests {
 
     @Test("Single-parameter function never matches the commutativity pattern")
     func singleParamDoesNotMatch() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             parameters: [Parameter(label: nil, internalName: "x", typeText: "Set", isInout: false)],
             returnType: "Set"
@@ -47,7 +41,7 @@ struct CommutativityTemplateTests {
 
     @Test("Three-parameter function never matches the commutativity pattern")
     func threeParamDoesNotMatch() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Set", isInout: false),
@@ -61,7 +55,7 @@ struct CommutativityTemplateTests {
 
     @Test("Mismatched parameter types do not match")
     func mismatchedParamTypesDoNotMatch() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Array"),
             returnType: "Set"
@@ -71,7 +65,7 @@ struct CommutativityTemplateTests {
 
     @Test("Return type that doesn't match params does not match")
     func mismatchedReturnTypeDoesNotMatch() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Bool"
@@ -81,7 +75,7 @@ struct CommutativityTemplateTests {
 
     @Test("inout on either parameter disqualifies")
     func inoutDisqualifies() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Set", isInout: true),
@@ -94,7 +88,7 @@ struct CommutativityTemplateTests {
 
     @Test("mutating disqualifies")
     func mutatingDisqualifies() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set",
@@ -105,19 +99,23 @@ struct CommutativityTemplateTests {
 
     @Test("Void return is rejected")
     func voidReturnRejected() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Void", "Void"),
             returnType: "Void"
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
     }
+}
+
+@Suite("CommutativityTemplate — anti-commutativity, vocabulary, vetoes")
+struct CommutativityTemplateBehaviorTests {
 
     // MARK: - Anti-commutativity counter-signal
 
     @Test("Curated anti-commutativity verb collapses score to suppressed")
     func antiCommutativitySuppresses() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "concatenate",
             paramTypes: ("Array", "Array"),
             returnType: "Array"
@@ -128,7 +126,7 @@ struct CommutativityTemplateTests {
 
     @Test("Curated anti-commutativity for `subtract` suppresses")
     func subtractAntiCommutativitySuppresses() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "subtract",
             paramTypes: ("Vector", "Vector"),
             returnType: "Vector"
@@ -138,7 +136,7 @@ struct CommutativityTemplateTests {
 
     @Test("Project-vocabulary anti-commutativity verb suppresses too")
     func projectVocabAntiCommutativitySuppresses() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "concatenateOrdered",
             paramTypes: ("Array", "Array"),
             returnType: "Array"
@@ -149,14 +147,11 @@ struct CommutativityTemplateTests {
 
     @Test("Anti-commutativity counter-signal renders with the project-vocab detail line")
     func projectVocabAntiCommutativityDetailLineIfVisible() throws {
-        // Use the --include-possible threshold check separately — here
-        // we construct a scenario where the score doesn't collapse so
-        // we can read the rendered detail line: type-symmetry (+30)
+        // Pathological scenario where the score doesn't collapse: type-symmetry (+30)
         // plus a project-vocab COMMUTATIVITY verb (+40) plus a curated
         // anti-commutativity (-30) on a function whose name happens to
         // be in the project's commutativity list. Net: 40, Possible.
-        // (Pathological but exercises the anti-commutativity code path.)
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "subtract",
             paramTypes: ("T", "T"),
             returnType: "T"
@@ -175,7 +170,7 @@ struct CommutativityTemplateTests {
 
     @Test("Project-vocabulary verb on (T, T) -> T scores 70 (Likely)")
     func projectVocabularyVerb() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "unionGraphs",
             paramTypes: ("Graph", "Graph"),
             returnType: "Graph"
@@ -188,7 +183,7 @@ struct CommutativityTemplateTests {
 
     @Test("Curated verb wins over project-vocabulary when both list the same name")
     func curatedTakesPrecedenceOverProjectVocabulary() throws {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -204,7 +199,7 @@ struct CommutativityTemplateTests {
 
     @Test("Empty vocabulary leaves curated behaviour unchanged")
     func emptyVocabularyLeavesCuratedAlone() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -217,7 +212,7 @@ struct CommutativityTemplateTests {
 
     @Test("Non-deterministic body veto suppresses regardless of name signal")
     func nonDeterministicVetoSuppresses() {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set",
@@ -229,12 +224,14 @@ struct CommutativityTemplateTests {
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
     }
+}
 
-    // MARK: - Suggestion shape
+@Suite("CommutativityTemplate — suggestion shape, identity, golden render")
+struct CommutativityTemplateShapeTests {
 
     @Test("Suggestion carries the function as Evidence and uses 'commutativity' template ID")
     func evidenceCarriesFunctionMetadata() throws {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -248,7 +245,7 @@ struct CommutativityTemplateTests {
 
     @Test("Generator and sampling are M1 placeholders (M3/M4 deferred)")
     func placeholderGeneratorAndSampling() throws {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -261,7 +258,7 @@ struct CommutativityTemplateTests {
 
     @Test("Equatable + class-equality caveats always populate the wrong-side block")
     func caveatsAlwaysPresent() throws {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -272,11 +269,9 @@ struct CommutativityTemplateTests {
         #expect(suggestion.explainability.whyMightBeWrong[1].contains("class"))
     }
 
-    // MARK: - Suggestion identity
-
     @Test("Suggestion identity is namespaced by the 'commutativity' template ID")
     func identityIncludesTemplateID() throws {
-        let summary = makeSummary(
+        let summary = makeCommutativitySummary(
             name: "merge",
             paramTypes: ("Set", "Set"),
             returnType: "Set"
@@ -289,8 +284,6 @@ struct CommutativityTemplateTests {
         )
         #expect(suggestion.identity != idempotenceIdentity)
     }
-
-    // MARK: - Golden render
 
     @Test("Likely commutativity suggestion renders byte-for-byte against the M2 acceptance-bar golden")
     func likelyCommutativityGoldenRender() throws {
@@ -334,55 +327,54 @@ Suppress:  // swiftinfer: skip \(suggestion.identity.display)
 """
         #expect(rendered == expected)
     }
-
-    // MARK: - Helpers
-
-    private func makeSummary(
-        name: String,
-        paramTypes: (String, String)? = nil,
-        parameters explicitParameters: [Parameter]? = nil,
-        returnType: String?,
-        isMutating: Bool = false,
-        bodySignals: BodySignals = .empty
-    ) -> FunctionSummary {
-        let parameters: [Parameter]
-        if let explicitParameters {
-            parameters = explicitParameters
-        } else if let paramTypes {
-            parameters = [
-                Parameter(label: nil, internalName: "lhs", typeText: paramTypes.0, isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false)
-            ]
-        } else {
-            parameters = []
-        }
-        return FunctionSummary(
-            name: name,
-            parameters: parameters,
-            returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: isMutating,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-            containingTypeName: nil,
-            bodySignals: bodySignals
-        )
-    }
-
-    private func makeSummary(
-        name: String,
-        parameters: [Parameter],
-        returnType: String?
-    ) -> FunctionSummary {
-        makeSummary(
-            name: name,
-            paramTypes: nil,
-            parameters: parameters,
-            returnType: returnType,
-            isMutating: false,
-            bodySignals: .empty
-        )
-    }
 }
-// swiftlint:enable type_body_length
+
+// MARK: - Shared helpers
+
+private func makeCommutativitySummary(
+    name: String,
+    paramTypes: (String, String)? = nil,
+    parameters explicitParameters: [Parameter]? = nil,
+    returnType: String?,
+    isMutating: Bool = false,
+    bodySignals: BodySignals = .empty
+) -> FunctionSummary {
+    let parameters: [Parameter]
+    if let explicitParameters {
+        parameters = explicitParameters
+    } else if let paramTypes {
+        parameters = [
+            Parameter(label: nil, internalName: "lhs", typeText: paramTypes.0, isInout: false),
+            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false)
+        ]
+    } else {
+        parameters = []
+    }
+    return FunctionSummary(
+        name: name,
+        parameters: parameters,
+        returnTypeText: returnType,
+        isThrows: false,
+        isAsync: false,
+        isMutating: isMutating,
+        isStatic: false,
+        location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+        containingTypeName: nil,
+        bodySignals: bodySignals
+    )
+}
+
+private func makeCommutativitySummary(
+    name: String,
+    parameters: [Parameter],
+    returnType: String?
+) -> FunctionSummary {
+    makeCommutativitySummary(
+        name: name,
+        paramTypes: nil,
+        parameters: parameters,
+        returnType: returnType,
+        isMutating: false,
+        bodySignals: .empty
+    )
+}
