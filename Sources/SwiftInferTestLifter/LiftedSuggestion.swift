@@ -11,15 +11,22 @@ import SwiftInferCore
 /// side. The integration tests in `LiftedSuggestionTests` and
 /// `SwiftInferIntegrationTests` assert the hash equality directly.
 ///
-/// LiftedSuggestion intentionally does NOT enter the main `discover`
-/// suggestion stream through M2 — it contributes a key to the
-/// cross-validation set only (M2 plan's open decision #1 default `(a)`).
-/// M3+ surfaces lifted suggestions in the discover output alongside
-/// TemplateEngine's structural suggestions.
+/// As of TestLifter M3.2, LiftedSuggestion records ALSO enter the main
+/// `discover` suggestion stream — promoted to `Suggestion` via
+/// `LiftedSuggestion.toSuggestion(typeName:returnType:origin:)` (M3.0)
+/// and routed through `Discover+Pipeline` with type recovery (M3.1) +
+/// `GeneratorSelection` + cross-validation suppression (M3.2). The
+/// cross-validation key contribution path stays load-bearing for the
+/// suppression filter — when both TemplateEngine and TestLifter
+/// surface the same template/callee key, TemplateEngine's suggestion
+/// wins and carries the +20 cross-validation signal; the lifted
+/// promotion is dropped to avoid double-counting.
 public struct LiftedSuggestion: Sendable, Equatable {
 
     /// Template ID for the surfaced pattern. M1 shipped `"round-trip"`;
-    /// M2 adds `"idempotence"` and `"commutativity"`.
+    /// M2 added `"idempotence"` and `"commutativity"`. M5+ patterns
+    /// (ordering / count-change / reduce-equivalence) extend without
+    /// changing the field's shape.
     public let templateName: String
 
     /// Cross-validation key — `(templateName, sortedCalleeNames)`. The
