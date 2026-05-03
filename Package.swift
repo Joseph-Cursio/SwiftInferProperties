@@ -180,10 +180,14 @@ let package = Package(
             dependencies: ["SwiftInferTemplates", "SwiftInferCore"]
         ),
         // TestLifter M1.0 — smoke test target. M1.1+ fill out the suites
-        // for parser, slicer, detector, identity-equality.
+        // for parser, slicer, detector, identity-equality. M1.4 adds
+        // the SwiftInferTemplates dep so the load-bearing
+        // CrossValidationKey-parity test can build a TemplateRegistry
+        // suggestion alongside a LiftedSuggestion and assert key
+        // equality.
         .testTarget(
             name: "SwiftInferTestLifterTests",
-            dependencies: ["SwiftInferTestLifter", "SwiftInferCore"]
+            dependencies: ["SwiftInferTestLifter", "SwiftInferTemplates", "SwiftInferCore"]
         ),
         .testTarget(
             name: "SwiftInferCLITests",

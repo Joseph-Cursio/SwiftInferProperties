@@ -45,18 +45,26 @@ public enum TemplateRegistry {
     /// `diagnostic` is a stderr sink for the dropped-contradiction
     /// stream (M3 plan open decision #4 default `(b)`).
     ///
-    /// `crossValidationFromTestLifter` is the M3.5 dormant seam for the
-    /// PRD §4.1 `+20` cross-validation signal. Suggestions whose
-    /// `identity` appears in the set get rebuilt with an additional
-    /// `Signal(kind: .crossValidation, weight: 20)` and a matching
-    /// `whySuggested` line.
+    /// `crossValidationFromTestLifter` is the seam for the PRD §4.1
+    /// `+20` cross-validation signal. Suggestions whose
+    /// `crossValidationKey` appears in the set get rebuilt with an
+    /// additional `Signal(kind: .crossValidation, weight: 20)` and a
+    /// matching `whySuggested` line.
+    ///
+    /// **TestLifter M1.4 widened this from `Set<SuggestionIdentity>`
+    /// to `Set<CrossValidationKey>`** because the full
+    /// `SuggestionIdentity`'s signature/type info isn't recoverable
+    /// from a test body — TestLifter has callee names but no
+    /// resolved parameter / return types. The lighter-weight key
+    /// captures the matchable surface (template + sorted callee
+    /// names) without forcing semantic resolution.
     public static func discover(
         in summaries: [FunctionSummary],
         identities: [IdentityCandidate] = [],
         typeDecls: [TypeDecl] = [],
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in },
-        crossValidationFromTestLifter: Set<SuggestionIdentity> = []
+        crossValidationFromTestLifter: Set<CrossValidationKey> = []
     ) -> [Suggestion] {
         // M8.1 — InversePairTemplate needs the resolver to gate on
         // `.equatable`, so it's built before `collectSuggestions` and
@@ -101,7 +109,7 @@ public enum TemplateRegistry {
         in directory: URL,
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in },
-        crossValidationFromTestLifter: Set<SuggestionIdentity> = []
+        crossValidationFromTestLifter: Set<CrossValidationKey> = []
     ) throws -> [Suggestion] {
         try discoverArtifacts(
             in: directory,
@@ -139,7 +147,7 @@ public enum TemplateRegistry {
         in directory: URL,
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in },
-        crossValidationFromTestLifter: Set<SuggestionIdentity> = []
+        crossValidationFromTestLifter: Set<CrossValidationKey> = []
     ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)

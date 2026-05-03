@@ -76,8 +76,8 @@ struct TemplateRegistryGeneratorTests {
 @Suite("TemplateRegistry — cross-validation seam (M3.5)")
 struct TemplateRegistryCrossValidationTests {
 
-    @Test("Cross-validation seam adds +20 signal to matching identities")
-    func crossValidationLiftsScoreOnMatchingIdentity() throws {
+    @Test("Cross-validation seam adds +20 signal to matching keys")
+    func crossValidationLiftsScoreOnMatchingKey() throws {
         let normalize = makeRegistryIdempotentSummary(file: "A.swift", line: 1)
         let baseline = TemplateRegistry.discover(in: [normalize])
         let target = try #require(baseline.first { $0.templateName == "idempotence" })
@@ -85,7 +85,7 @@ struct TemplateRegistryCrossValidationTests {
 
         let crossValidated = TemplateRegistry.discover(
             in: [normalize],
-            crossValidationFromTestLifter: [target.identity]
+            crossValidationFromTestLifter: [target.crossValidationKey]
         )
         let lifted = try #require(crossValidated.first { $0.templateName == "idempotence" })
         #expect(lifted.score.total == baselineTotal + 20)
@@ -98,7 +98,7 @@ struct TemplateRegistryCrossValidationTests {
     func crossValidationNoMatchIsByteStable() {
         let normalize = makeRegistryIdempotentSummary(file: "A.swift", line: 1)
         let baseline = TemplateRegistry.discover(in: [normalize])
-        let unrelated = SuggestionIdentity(canonicalInput: "irrelevant|never-matches")
+        let unrelated = CrossValidationKey(templateName: "never-matches", calleeNames: ["x"])
         let withCrossValidation = TemplateRegistry.discover(
             in: [normalize],
             crossValidationFromTestLifter: [unrelated]
@@ -129,7 +129,7 @@ struct TemplateRegistryCrossValidationTests {
         let droppedSuggestion = CommutativityTemplate.suggest(for: merge)
         let crossValidated = TemplateRegistry.discover(
             in: [merge],
-            crossValidationFromTestLifter: droppedSuggestion.map { [$0.identity] } ?? []
+            crossValidationFromTestLifter: droppedSuggestion.map { [$0.crossValidationKey] } ?? []
         )
         #expect(crossValidated.allSatisfy { $0.templateName != "commutativity" })
     }

@@ -2,25 +2,28 @@ import SwiftInferCore
 
 extension TemplateRegistry {
 
-    /// Detail text rendered for the M3.5 cross-validation signal. Kept
-    /// generic for the dormant seam — once TestLifter M1 ships, the
-    /// caller-side hook can pass a richer detail (e.g. the test name).
+    /// Detail text rendered for the cross-validation signal.
     static var crossValidationDetail: String { "Cross-validated by TestLifter" }
 
-    /// Walk `suggestions` and rebuild any whose `identity` is in
-    /// `identities`, appending a `+20` cross-validation signal and a
+    /// Walk `suggestions` and rebuild any whose `crossValidationKey` is
+    /// in `keys`, appending a `+20` cross-validation signal and a
     /// matching `whySuggested` line. Suggestions outside the set pass
     /// through by reference equality. The set is checked first so the
     /// fast path (empty set, no cross-validation) is a no-op.
+    ///
+    /// **TestLifter M1.4** widened the seam from `Set<SuggestionIdentity>`
+    /// to `Set<CrossValidationKey>` — the lighter-weight key
+    /// (template + sorted callee names) matches what TestLifter can
+    /// extract from a test body without semantic resolution.
     static func applyCrossValidation(
         to suggestions: [Suggestion],
-        matching identities: Set<SuggestionIdentity>
+        matching keys: Set<CrossValidationKey>
     ) -> [Suggestion] {
-        if identities.isEmpty {
+        if keys.isEmpty {
             return suggestions
         }
         return suggestions.map { suggestion in
-            guard identities.contains(suggestion.identity) else {
+            guard keys.contains(suggestion.crossValidationKey) else {
                 return suggestion
             }
             return rebuildWithCrossValidation(suggestion)
