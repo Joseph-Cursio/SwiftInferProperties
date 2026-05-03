@@ -37,6 +37,15 @@ public struct Suggestion: Sendable, Equatable {
     /// header. Opaque to TemplateEngine consumers.
     public let liftedOrigin: LiftedOrigin?
 
+    /// `nil` unless `generator.source == .inferredFromTests` (TestLifter
+    /// M4.3). Carries the synthesized argument-spec + observed-site
+    /// count the M4.4 accept-flow renderer uses to emit a `Gen<T> {
+    /// T(label: <Gen<...>>.run(), ...) }` stub body. Opaque to Core +
+    /// TemplateEngine consumers — only the renderer reads it. The
+    /// field mirrors the `liftedOrigin` placement decision: pure
+    /// additive optional, defaults `nil`.
+    public let mockGenerator: MockGenerator?
+
     public init(
         templateName: String,
         evidence: [Evidence],
@@ -44,7 +53,8 @@ public struct Suggestion: Sendable, Equatable {
         generator: GeneratorMetadata,
         explainability: ExplainabilityBlock,
         identity: SuggestionIdentity,
-        liftedOrigin: LiftedOrigin? = nil
+        liftedOrigin: LiftedOrigin? = nil,
+        mockGenerator: MockGenerator? = nil
     ) {
         self.templateName = templateName
         self.evidence = evidence
@@ -53,6 +63,7 @@ public struct Suggestion: Sendable, Equatable {
         self.explainability = explainability
         self.identity = identity
         self.liftedOrigin = liftedOrigin
+        self.mockGenerator = mockGenerator
     }
 }
 

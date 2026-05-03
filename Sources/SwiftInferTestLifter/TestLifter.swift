@@ -22,17 +22,29 @@ extension TestLifter {
         /// purely additive (FunctionSummary tier still runs first).
         public let setupAnnotationsByOrigin: [LiftedOrigin: [String: String]]
 
+        /// M4.3 — corpus-wide construction record built once per
+        /// `discover(in:)` run by `SetupRegionConstructionScanner.
+        /// record(over: testMethods)`. The CLI pipeline's mock-inferred
+        /// fallback queries this for `MockGeneratorSynthesizer.synthesize(
+        /// typeName:record:)` lookups when a lifted-promoted Suggestion
+        /// exits `GeneratorSelection.apply` with `.notYetComputed` source.
+        /// Empty when the test corpus has no `T(...)` constructor sites.
+        public let constructionRecord: ConstructionRecord
+
         public init(
             liftedSuggestions: [LiftedSuggestion],
-            setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
+            setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
+            constructionRecord: ConstructionRecord = ConstructionRecord(entries: [])
         ) {
             self.liftedSuggestions = liftedSuggestions
             self.setupAnnotationsByOrigin = setupAnnotationsByOrigin
+            self.constructionRecord = constructionRecord
         }
 
         public static let empty = Artifacts(
             liftedSuggestions: [],
-            setupAnnotationsByOrigin: [:]
+            setupAnnotationsByOrigin: [:],
+            constructionRecord: ConstructionRecord(entries: [])
         )
 
         /// The cross-validation keys to feed into
@@ -85,9 +97,16 @@ extension TestLifter {
                 lifted.append(LiftedSuggestion.commutativity(from: detection, origin: origin))
             }
         }
+        // M4.3 — build the corpus-wide construction record once per
+        // discover run; the CLI pipeline's mock-inferred fallback
+        // queries it after `GeneratorSelection.apply` to fire mock
+        // synthesis on lifted-promoted Suggestions whose type isn't
+        // memberwise-derivable from `corpus.typeDecls`.
+        let constructionRecord = SetupRegionConstructionScanner.record(over: summaries)
         return Artifacts(
             liftedSuggestions: lifted,
-            setupAnnotationsByOrigin: annotationsByOrigin
+            setupAnnotationsByOrigin: annotationsByOrigin,
+            constructionRecord: constructionRecord
         )
     }
 }

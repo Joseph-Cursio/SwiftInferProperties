@@ -49,12 +49,38 @@ public enum LiftedSuggestionPipeline {
     /// FunctionSummary lookup misses. Pure additive — the parameter
     /// defaults to empty, so existing callers (unit tests, the M3.2
     /// integration paths) work unchanged.
+    ///
+    /// **M4.3 — `constructionRecord` mock-inferred fallback.** When
+    /// non-empty, the corpus-wide construction record is queried by
+    /// `MockGeneratorSynthesizer.synthesize(typeName:record:)` for
+    /// every promoted Suggestion that exits `GeneratorSelection.apply`
+    /// with `.notYetComputed` source. On a §13 ≥3-site dominant-shape
+    /// hit, the Suggestion is rebuilt with `.inferredFromTests` source
+    /// + `.low` confidence + the `mockGenerator` field populated.
+    /// Strategist-derived generators are never overwritten — the
+    /// fallback only fires on `.notYetComputed` survivors.
+    ///
+    /// **Plan deviation note.** The M4 plan (§ Sub-milestones, M4.3)
+    /// called for the mock fallback to live as a `GeneratorSelection`
+    /// extension. `GeneratorSelection` lives in `SwiftInferTemplates`
+    /// which doesn't depend on `SwiftInferTestLifter` (where
+    /// `ConstructionRecord` lives), so the extension placement would
+    /// require a layering inversion. The mock fallback lives here in
+    /// the CLI-side pipeline instead. OD #2 (a) "fire on both"
+    /// (TemplateEngine + lifted) is *narrowed* to "lifted-only"
+    /// in this commit to avoid the deeper Templates-layer refactor;
+    /// the §13 numerical bar (≥50% of types with ≥3 same-shape
+    /// construction sites get a Gen<T>) is addressed by the
+    /// lifted-only path because lifted suggestions are the primary
+    /// mock-synthesis target (test-only types whose generators come
+    /// from observed test construction).
     public static func promote(
         lifted: [LiftedSuggestion],
         templateEngineSuggestions: [Suggestion],
         summaries: [FunctionSummary],
         typeDecls: [TypeDecl],
-        setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
+        setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
+        constructionRecord: ConstructionRecord = ConstructionRecord(entries: [])
     ) -> [Suggestion] {
         guard !lifted.isEmpty else {
             return []
@@ -93,10 +119,64 @@ public enum LiftedSuggestionPipeline {
                 generatorTypeByIdentity[pair.suggestion.identity] = typeName
             }
         }
-        return GeneratorSelection.apply(
+        let withStrategistGenerators = GeneratorSelection.apply(
             to: surviving.map(\.suggestion),
             generatorTypeByIdentity: generatorTypeByIdentity,
             shapesByName: shapesByName
+        )
+        return applyMockInferredFallback(
+            to: withStrategistGenerators,
+            generatorTypeByIdentity: generatorTypeByIdentity,
+            record: constructionRecord
+        )
+    }
+
+    /// Second-pass mock-inferred fallback (M4.3). Walks suggestions
+    /// whose `generator.source == .notYetComputed` after the M3
+    /// strategist pass and queries `MockGeneratorSynthesizer.synthesize(
+    /// typeName:record:)` for each. On a hit, the Suggestion is
+    /// rebuilt with `.inferredFromTests` source + `.low` confidence +
+    /// the `mockGenerator` field populated. Empty-record short-circuits
+    /// (no synthesis possible, return inputs unchanged).
+    private static func applyMockInferredFallback(
+        to suggestions: [Suggestion],
+        generatorTypeByIdentity: [SuggestionIdentity: String],
+        record: ConstructionRecord
+    ) -> [Suggestion] {
+        if record.entries.isEmpty {
+            return suggestions
+        }
+        return suggestions.map { suggestion in
+            guard suggestion.generator.source == .notYetComputed,
+                  let typeName = generatorTypeByIdentity[suggestion.identity],
+                  let mockGenerator = MockGeneratorSynthesizer.synthesize(
+                      typeName: typeName,
+                      record: record
+                  ) else {
+                return suggestion
+            }
+            return rebuild(suggestion, withMockGenerator: mockGenerator)
+        }
+    }
+
+    private static func rebuild(
+        _ suggestion: Suggestion,
+        withMockGenerator mockGenerator: MockGenerator
+    ) -> Suggestion {
+        let mockMetadata = GeneratorMetadata(
+            source: .inferredFromTests,
+            confidence: .low,
+            sampling: suggestion.generator.sampling
+        )
+        return Suggestion(
+            templateName: suggestion.templateName,
+            evidence: suggestion.evidence,
+            score: suggestion.score,
+            generator: mockMetadata,
+            explainability: suggestion.explainability,
+            identity: suggestion.identity,
+            liftedOrigin: suggestion.liftedOrigin,
+            mockGenerator: mockGenerator
         )
     }
 }

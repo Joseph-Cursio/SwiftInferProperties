@@ -82,9 +82,9 @@ public enum SetupRegionConstructionScanner {
 /// the same `ConstructionShape` after the canonical label-then-kind
 /// sort. Positional (unlabeled) arguments preserve their `nil` label
 /// and sort to the front of the fingerprint.
-public struct ConstructionShape: Hashable, Sendable {
+public struct ConstructionShape: Hashable, Sendable, Equatable {
 
-    public struct Argument: Hashable, Sendable {
+    public struct Argument: Hashable, Sendable, Equatable {
         /// `nil` for positional / unlabeled arguments; otherwise the
         /// label as written in source.
         public let label: String?
@@ -124,7 +124,7 @@ public struct ConstructionShape: Hashable, Sendable {
 /// constructed `typeName` with the same `shape` fingerprint.
 /// `siteCount == observedLiterals.count` always; the redundant field
 /// is kept for clarity at consumer sites.
-public struct ConstructionRecordEntry: Sendable {
+public struct ConstructionRecordEntry: Sendable, Equatable {
     public let typeName: String
     public let shape: ConstructionShape
     public let siteCount: Int
@@ -153,7 +153,7 @@ public struct ConstructionRecordEntry: Sendable {
 /// Corpus-wide aggregation of `T(...)` constructor sites observed
 /// across `[TestMethodSummary]`. M4.3's mock synthesizer queries this
 /// for the §13 ≥3-site dominant-shape rule.
-public struct ConstructionRecord: Sendable {
+public struct ConstructionRecord: Sendable, Equatable {
 
     public let entries: [ConstructionRecordEntry]
 
