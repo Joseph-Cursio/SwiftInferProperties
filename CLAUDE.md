@@ -46,7 +46,7 @@ SwiftInferProperties → SwiftProtocolLaws (PropertyBackend, DerivationStrategis
 
 | Question | File |
 |---|---|
-| Product scope, milestones (M1–M8), success criteria | `docs/SwiftInferProperties PRD v0.4.md` |
+| Product scope, milestones (M1–M9), success criteria | `docs/SwiftInferProperties PRD v1.0.md` (canonical; v0.1–v0.4 retained in `docs/` as historical) |
 | **Current milestone execution plan** | (none — TemplateEngine M1–M8 + TestLifter M1 + M2 + M3 + M4 + M5 + M6 + M7 + M8 + M9 + v0.1.0 release prep all closed. The v1 TestLifter surface is feature-complete plus the §7.8 first-example expanded output (preconditions); the remaining §7.8 examples (inferred domains, equivalence-class detection) are post-v1.0 scope and would land as future M10/M11. Next contributions are PRD §20 post-v0.1.0 trajectory or M10/M11 if the user wants to extend the §7.8 surface further.) |
 | v0.1.0 perf baseline (regression comparison anchor) | `docs/perf-baseline-v0.1.md` |
 | Closed milestone plans | `docs/archive/M1 Plan.md` ... `docs/archive/M8 Plan.md`, `docs/archive/TestLifter M1 Plan.md`, `docs/archive/TestLifter M2 Plan.md`, `docs/archive/TestLifter M3 Plan.md`, `docs/archive/TestLifter M4 Plan.md`, `docs/archive/TestLifter M5 Plan.md`, `docs/archive/TestLifter M6 Plan.md`, `docs/archive/TestLifter M7 Plan.md`, `docs/archive/TestLifter M8 Plan.md`, `docs/archive/TestLifter M9 Plan.md`, `docs/archive/v0.1.0 Release Plan.md` |
