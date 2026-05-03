@@ -29,13 +29,22 @@ public struct Suggestion: Sendable, Equatable {
     /// puts in a `// swiftinfer: skip <hash>` rejection marker.
     public let identity: SuggestionIdentity
 
+    /// `nil` for TemplateEngine-originated suggestions; populated for
+    /// TestLifter-originated suggestions promoted via
+    /// `LiftedSuggestion.toSuggestion(...)` (TestLifter M3.0). Carries the
+    /// originating test method name + source location so the M3.3
+    /// accept-flow can name the writeout file + emit a provenance comment
+    /// header. Opaque to TemplateEngine consumers.
+    public let liftedOrigin: LiftedOrigin?
+
     public init(
         templateName: String,
         evidence: [Evidence],
         score: Score,
         generator: GeneratorMetadata,
         explainability: ExplainabilityBlock,
-        identity: SuggestionIdentity
+        identity: SuggestionIdentity,
+        liftedOrigin: LiftedOrigin? = nil
     ) {
         self.templateName = templateName
         self.evidence = evidence
@@ -43,6 +52,7 @@ public struct Suggestion: Sendable, Equatable {
         self.generator = generator
         self.explainability = explainability
         self.identity = identity
+        self.liftedOrigin = liftedOrigin
     }
 }
 
