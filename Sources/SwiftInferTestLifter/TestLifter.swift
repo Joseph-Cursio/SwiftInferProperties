@@ -3,10 +3,12 @@ import SwiftInferCore
 
 extension TestLifter {
 
-    /// Result of a `TestLifter.discover(in:)` run. M1 carries lifted
-    /// round-trip suggestions only — M2+ extends with idempotence /
-    /// commutativity / etc. as additional patterns surface from the
-    /// detector pipeline.
+    /// Result of a `TestLifter.discover(in:)` run. Carries lifted
+    /// suggestions for every TestLifter pattern surfaced from the
+    /// detector pipeline — round-trip (M1), idempotence + commutativity
+    /// (M2). M5+ patterns (ordering / count-change / reduce-equivalence)
+    /// extend the same `liftedSuggestions` array without changing the
+    /// `Artifacts` shape.
     public struct Artifacts: Sendable, Equatable {
 
         public let liftedSuggestions: [LiftedSuggestion]
@@ -27,8 +29,8 @@ extension TestLifter {
     }
 
     /// Walk `directory` recursively, parse every `.swift` file as a
-    /// potential test source, slice each test method body, run the
-    /// `AssertAfterTransformDetector` round-trip pass, and collect the
+    /// potential test source, slice each test method body, run all
+    /// TestLifter detectors against the slice, and collect the
     /// surviving `LiftedSuggestion` records.
     ///
     /// **No directory filtering at this layer** — TestSuiteParser only
@@ -43,9 +45,14 @@ extension TestLifter {
         var lifted: [LiftedSuggestion] = []
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
-            let detections = AssertAfterTransformDetector.detect(in: slice)
-            for detection in detections {
+            for detection in AssertAfterTransformDetector.detect(in: slice) {
                 lifted.append(LiftedSuggestion.roundTrip(from: detection))
+            }
+            for detection in AssertAfterDoubleApplyDetector.detect(in: slice) {
+                lifted.append(LiftedSuggestion.idempotence(from: detection))
+            }
+            for detection in AssertSymmetryDetector.detect(in: slice) {
+                lifted.append(LiftedSuggestion.commutativity(from: detection))
             }
         }
         return Artifacts(liftedSuggestions: lifted)

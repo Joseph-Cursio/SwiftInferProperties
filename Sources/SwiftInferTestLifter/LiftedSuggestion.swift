@@ -59,13 +59,46 @@ public struct LiftedSuggestion: Sendable, Equatable {
             pattern: .roundTrip(detection)
         )
     }
+
+    /// Builds a LiftedSuggestion from a `DetectedIdempotence`. The
+    /// cross-validation key is `(templateName: "idempotence",
+    /// calleeNames: [calleeName])` — single-callee, mirrors the
+    /// production-side `IdempotenceTemplate`'s one-Evidence shape.
+    public static func idempotence(from detection: DetectedIdempotence) -> LiftedSuggestion {
+        let key = CrossValidationKey(
+            templateName: "idempotence",
+            calleeNames: [detection.calleeName]
+        )
+        return LiftedSuggestion(
+            templateName: "idempotence",
+            crossValidationKey: key,
+            pattern: .idempotence(detection)
+        )
+    }
+
+    /// Builds a LiftedSuggestion from a `DetectedCommutativity`. The
+    /// cross-validation key is `(templateName: "commutativity",
+    /// calleeNames: [calleeName])` — single-callee, mirrors the
+    /// production-side `CommutativityTemplate`'s one-Evidence shape.
+    public static func commutativity(from detection: DetectedCommutativity) -> LiftedSuggestion {
+        let key = CrossValidationKey(
+            templateName: "commutativity",
+            calleeNames: [detection.calleeName]
+        )
+        return LiftedSuggestion(
+            templateName: "commutativity",
+            crossValidationKey: key,
+            pattern: .commutativity(detection)
+        )
+    }
 }
 
 /// Discriminator for the detection that produced a `LiftedSuggestion`.
-/// One case per TestLifter pattern. M2.0 ships `.roundTrip` only;
-/// M2.1 adds `.idempotence`, M2.2 adds `.commutativity`. M5+ patterns
-/// (ordering, count-change, reduce-equivalence) extend the enum
-/// without growing `LiftedSuggestion`'s storage shape.
+/// One case per TestLifter pattern. M5+ patterns (ordering,
+/// count-change, reduce-equivalence) extend the enum without growing
+/// `LiftedSuggestion`'s storage shape.
 public enum DetectedPattern: Sendable, Equatable {
     case roundTrip(DetectedRoundTrip)
+    case idempotence(DetectedIdempotence)
+    case commutativity(DetectedCommutativity)
 }
