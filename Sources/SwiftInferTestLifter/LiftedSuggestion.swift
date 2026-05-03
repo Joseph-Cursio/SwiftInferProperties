@@ -32,14 +32,24 @@ public struct LiftedSuggestion: Sendable, Equatable {
     /// cross-validation matching path.
     public let pattern: DetectedPattern
 
+    /// Originating test method's name + source location, populated by
+    /// `TestLifter.discover` (M3.2 plumbing) so M3.3's accept-flow can
+    /// name the writeout file + emit a provenance comment header.
+    /// `nil` only for direct factory call sites in unit tests that
+    /// don't have a `TestMethodSummary` in scope; the discover loop
+    /// always supplies a non-nil origin.
+    public let origin: LiftedOrigin?
+
     public init(
         templateName: String,
         crossValidationKey: CrossValidationKey,
-        pattern: DetectedPattern
+        pattern: DetectedPattern,
+        origin: LiftedOrigin? = nil
     ) {
         self.templateName = templateName
         self.crossValidationKey = crossValidationKey
         self.pattern = pattern
+        self.origin = origin
     }
 
     /// Builds a LiftedSuggestion from a `DetectedRoundTrip`. The
@@ -48,7 +58,10 @@ public struct LiftedSuggestion: Sendable, Equatable {
     /// `CrossValidationKey.init` sorting the names lexicographically so
     /// the orientation `[encode, decode]` and `[decode, encode]` collide
     /// to the same key.
-    public static func roundTrip(from detection: DetectedRoundTrip) -> LiftedSuggestion {
+    public static func roundTrip(
+        from detection: DetectedRoundTrip,
+        origin: LiftedOrigin? = nil
+    ) -> LiftedSuggestion {
         let key = CrossValidationKey(
             templateName: "round-trip",
             calleeNames: [detection.forwardCallee, detection.backwardCallee]
@@ -56,7 +69,8 @@ public struct LiftedSuggestion: Sendable, Equatable {
         return LiftedSuggestion(
             templateName: "round-trip",
             crossValidationKey: key,
-            pattern: .roundTrip(detection)
+            pattern: .roundTrip(detection),
+            origin: origin
         )
     }
 
@@ -64,7 +78,10 @@ public struct LiftedSuggestion: Sendable, Equatable {
     /// cross-validation key is `(templateName: "idempotence",
     /// calleeNames: [calleeName])` — single-callee, mirrors the
     /// production-side `IdempotenceTemplate`'s one-Evidence shape.
-    public static func idempotence(from detection: DetectedIdempotence) -> LiftedSuggestion {
+    public static func idempotence(
+        from detection: DetectedIdempotence,
+        origin: LiftedOrigin? = nil
+    ) -> LiftedSuggestion {
         let key = CrossValidationKey(
             templateName: "idempotence",
             calleeNames: [detection.calleeName]
@@ -72,7 +89,8 @@ public struct LiftedSuggestion: Sendable, Equatable {
         return LiftedSuggestion(
             templateName: "idempotence",
             crossValidationKey: key,
-            pattern: .idempotence(detection)
+            pattern: .idempotence(detection),
+            origin: origin
         )
     }
 
@@ -80,7 +98,10 @@ public struct LiftedSuggestion: Sendable, Equatable {
     /// cross-validation key is `(templateName: "commutativity",
     /// calleeNames: [calleeName])` — single-callee, mirrors the
     /// production-side `CommutativityTemplate`'s one-Evidence shape.
-    public static func commutativity(from detection: DetectedCommutativity) -> LiftedSuggestion {
+    public static func commutativity(
+        from detection: DetectedCommutativity,
+        origin: LiftedOrigin? = nil
+    ) -> LiftedSuggestion {
         let key = CrossValidationKey(
             templateName: "commutativity",
             calleeNames: [detection.calleeName]
@@ -88,7 +109,8 @@ public struct LiftedSuggestion: Sendable, Equatable {
         return LiftedSuggestion(
             templateName: "commutativity",
             crossValidationKey: key,
-            pattern: .commutativity(detection)
+            pattern: .commutativity(detection),
+            origin: origin
         )
     }
 }

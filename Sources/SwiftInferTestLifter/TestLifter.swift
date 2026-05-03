@@ -45,14 +45,18 @@ extension TestLifter {
         var lifted: [LiftedSuggestion] = []
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
+            let origin = LiftedOrigin(
+                testMethodName: summary.methodName,
+                sourceLocation: summary.location
+            )
             for detection in AssertAfterTransformDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.roundTrip(from: detection))
+                lifted.append(LiftedSuggestion.roundTrip(from: detection, origin: origin))
             }
             for detection in AssertAfterDoubleApplyDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.idempotence(from: detection))
+                lifted.append(LiftedSuggestion.idempotence(from: detection, origin: origin))
             }
             for detection in AssertSymmetryDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.commutativity(from: detection))
+                lifted.append(LiftedSuggestion.commutativity(from: detection, origin: origin))
             }
         }
         return Artifacts(liftedSuggestions: lifted)

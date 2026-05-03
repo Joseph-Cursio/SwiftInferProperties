@@ -69,8 +69,8 @@ extension SwiftInferCommand.Discover {
             diagnostics.writeDiagnostic("warning: \(warning)")
         }
         // TestLifter M1.5 — scan the same directory for test bodies,
-        // run the slicer + round-trip detector, and convert the
-        // resulting LiftedSuggestions into CrossValidationKeys to feed
+        // run the slicer + detectors, and convert the resulting
+        // LiftedSuggestions into CrossValidationKeys to feed
         // TemplateRegistry's +20 cross-validation seam (PRD §4.1).
         // TestSuiteParser only emits summaries for files containing
         // recognized test methods, so production source naturally
@@ -82,7 +82,23 @@ extension SwiftInferCommand.Discover {
             diagnostic: { diagnostics.writeDiagnostic($0) },
             crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys
         )
-        let visible = artifacts.suggestions.filter { suggestion in
+        // TestLifter M3.2 — promote LiftedSuggestions to Suggestions,
+        // apply the same `GeneratorSelection` pass TemplateEngine ran
+        // internally, and suppress promoted entries whose
+        // crossValidationKey matches a TemplateEngine suggestion (the
+        // +20 cross-validation signal already communicates the
+        // corroboration; double-emitting would confuse the reader).
+        // Survivors enter the visible stream with a +50 testBodyPattern
+        // signal and the inferred generator (or `.todo` when type
+        // recovery failed — PRD §16 #4 invariant preserved).
+        let promotedLifted = LiftedSuggestionPipeline.promote(
+            lifted: liftedArtifacts.liftedSuggestions,
+            templateEngineSuggestions: artifacts.suggestions,
+            summaries: artifacts.summaries,
+            typeDecls: artifacts.typeDecls
+        )
+        let combined = artifacts.suggestions + promotedLifted
+        let visible = combined.filter { suggestion in
             effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
         }
         return PipelineResult(

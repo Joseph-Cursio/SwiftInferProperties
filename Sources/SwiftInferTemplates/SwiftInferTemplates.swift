@@ -130,12 +130,32 @@ public enum TemplateRegistry {
         public let suggestions: [Suggestion]
         public let inverseElementPairs: [InverseElementPair]
 
+        /// Function summaries the corpus scan produced. Exposed for
+        /// TestLifter M3.2's `LiftedSuggestionRecovery` pass — the
+        /// promoted lifted Suggestions need callee-type recovery from
+        /// the same `[FunctionSummary]` index TemplateEngine consumed
+        /// internally. Mirrors the M8.4.a `inverseElementPairs`
+        /// widening pattern: expose the pre-discovery state CLI
+        /// callers need to thread into downstream passes without a
+        /// second corpus scan.
+        public let summaries: [FunctionSummary]
+
+        /// Type declarations the corpus scan produced. Exposed for the
+        /// same M3.2 reason — the promoted lifted Suggestions go
+        /// through `GeneratorSelection` in CLI, which needs the
+        /// `[String: TypeShape]` index built from `typeDecls`.
+        public let typeDecls: [TypeDecl]
+
         public init(
             suggestions: [Suggestion],
-            inverseElementPairs: [InverseElementPair]
+            inverseElementPairs: [InverseElementPair],
+            summaries: [FunctionSummary] = [],
+            typeDecls: [TypeDecl] = []
         ) {
             self.suggestions = suggestions
             self.inverseElementPairs = inverseElementPairs
+            self.summaries = summaries
+            self.typeDecls = typeDecls
         }
     }
 
@@ -167,7 +187,9 @@ public enum TemplateRegistry {
         )
         return DiscoverArtifacts(
             suggestions: suggestions,
-            inverseElementPairs: inverseElementPairs
+            inverseElementPairs: inverseElementPairs,
+            summaries: corpus.summaries,
+            typeDecls: corpus.typeDecls
         )
     }
 }

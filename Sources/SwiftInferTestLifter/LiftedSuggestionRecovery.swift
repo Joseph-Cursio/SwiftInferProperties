@@ -60,9 +60,11 @@ public enum LiftedSuggestionRecovery {
     ///     we can't tell which overload the test body referred to
     ///     without semantic resolution, so the conservative choice is
     ///     to recover *some* type rather than no type.
-    ///   - origin: The originating test method's name + source location.
-    ///     Threaded through to `Suggestion.liftedOrigin` per M3.3's
-    ///     accept-flow file-naming + provenance contract.
+    ///   - origin: Optional override for the originating test method's
+    ///     `LiftedOrigin`. Defaults to `lifted.origin` (populated by
+    ///     `TestLifter.discover` during the M3.2 plumbing pass); unit
+    ///     tests with hand-built `LiftedSuggestion`s without origin can
+    ///     pass an explicit value here.
     public static func recover(
         _ lifted: LiftedSuggestion,
         summariesByName: [String: FunctionSummary],
@@ -72,8 +74,26 @@ public enum LiftedSuggestionRecovery {
         return lifted.toSuggestion(
             typeName: typeName,
             returnType: returnType,
-            origin: origin
+            origin: origin ?? lifted.origin
         )
+    }
+
+    /// Returns just the recovered `typeName` (the generator-relevant
+    /// T) for `lifted` per the per-pattern derivation rules. `nil`
+    /// when FunctionSummary lookup fails (or the matched summary's
+    /// shape doesn't fit the expected per-pattern arity).
+    ///
+    /// M3.2's `Discover+Pipeline` calls this to build the
+    /// `[SuggestionIdentity: String]` index `GeneratorSelection`
+    /// requires — same `T` the promoted Suggestion's evidence already
+    /// carries, just exposed as a structured value rather than parsed
+    /// back out of a signature string.
+    public static func recoveredTypeName(
+        for lifted: LiftedSuggestion,
+        summariesByName: [String: FunctionSummary]
+    ) -> String? {
+        let (typeName, _) = recoverTypes(for: lifted.pattern, summariesByName: summariesByName)
+        return typeName
     }
 
     // MARK: - Per-pattern type recovery
