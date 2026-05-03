@@ -69,9 +69,23 @@ public struct MockGenerator: Sendable, Equatable {
     /// bodies — low confidence").
     public let siteCount: Int
 
-    public init(typeName: String, argumentSpec: [Argument], siteCount: Int) {
+    /// TestLifter M9.0 — per-position inferred-precondition hints.
+    /// Default empty so M4-era call sites compile unchanged.
+    /// Populated by the M9.2 pipeline wiring (`PreconditionInferrer.
+    /// infer(from:)`); surfaced by the M9.2 accept-flow renderer as
+    /// `// Inferred precondition:` provenance comment lines above
+    /// each affected argument's generator expression.
+    public let preconditionHints: [PreconditionHint]
+
+    public init(
+        typeName: String,
+        argumentSpec: [Argument],
+        siteCount: Int,
+        preconditionHints: [PreconditionHint] = []
+    ) {
         self.typeName = typeName
         self.argumentSpec = argumentSpec
         self.siteCount = siteCount
+        self.preconditionHints = preconditionHints
     }
 }
