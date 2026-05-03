@@ -20,6 +20,17 @@ let package = Package(
             name: "SwiftInferTemplates",
             targets: ["SwiftInferTemplates"]
         ),
+        // TestLifter M1.0: PRD §7 Contribution 2 — analyzes existing
+        // XCTest + Swift Testing suites, slices test bodies into setup +
+        // property regions (PRD §7.2), and emits LiftedSuggestions whose
+        // identities feed TemplateEngine's `crossValidationFromTestLifter`
+        // parameter for the +20 PRD §4.1 cross-validation signal. M1
+        // ships parser + slicer + assert-after-transform → round-trip
+        // detection only; M2+ add idempotence / commutativity / etc.
+        .library(
+            name: "SwiftInferTestLifter",
+            targets: ["SwiftInferTestLifter"]
+        ),
         .library(
             name: "SwiftInferCLI",
             targets: ["SwiftInferCLI"]
@@ -92,6 +103,17 @@ let package = Package(
                 .product(name: "ProtoLawCore", package: "SwiftProtocolLaws")
             ]
         ),
+        // SwiftInferTestLifter — TestLifter M1.0. Mirror of SwiftInferTemplates'
+        // dep shape (Core + swift-syntax). Stays out of SwiftInferCLI's deps
+        // until M1.5 wires the discover subcommand to scan tests too.
+        .target(
+            name: "SwiftInferTestLifter",
+            dependencies: [
+                "SwiftInferCore",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax")
+            ]
+        ),
         // SwiftInferCLI — ArgumentParser-driven command surface. Subcommands
         // (discover, drift, etc.) live here; the executable target is a thin
         // entry point.
@@ -156,6 +178,12 @@ let package = Package(
         .testTarget(
             name: "SwiftInferTemplatesTests",
             dependencies: ["SwiftInferTemplates", "SwiftInferCore"]
+        ),
+        // TestLifter M1.0 — smoke test target. M1.1+ fill out the suites
+        // for parser, slicer, detector, identity-equality.
+        .testTarget(
+            name: "SwiftInferTestLifterTests",
+            dependencies: ["SwiftInferTestLifter", "SwiftInferCore"]
         ),
         .testTarget(
             name: "SwiftInferCLITests",
