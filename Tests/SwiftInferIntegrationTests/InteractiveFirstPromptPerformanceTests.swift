@@ -41,7 +41,10 @@ struct InteractiveFirstPromptPerformanceTests {
         )
         let firstPromptAt = try #require(
             prompt.firstPromptTimestamp(),
-            "Interactive triage finished without invoking PromptInput.readLine() — the synthetic corpus produced no triagable suggestions"
+            """
+            Interactive triage finished without invoking PromptInput.readLine() \
+            — the synthetic corpus produced no triagable suggestions
+            """
         )
         let elapsed = firstPromptAt.timeIntervalSince(start)
         #expect(

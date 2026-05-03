@@ -37,18 +37,29 @@ struct TodoFallbackHardGuaranteeTests {
 
         for suggestion in idempotence {
             let source = suggestion.generator.source
+            let displayName = suggestion.evidence[0].displayName
+            let confidence = String(describing: suggestion.generator.confidence)
             #expect(
                 source == .todo,
-                "Suggestion for \(suggestion.evidence[0].displayName) used generator source \(source) instead of .todo — §16 #4 forbids approximate fallbacks"
+                """
+                Suggestion for \(displayName) used generator source \(source) \
+                instead of .todo — §16 #4 forbids approximate fallbacks
+                """
             )
             #expect(
                 suggestion.generator.confidence == nil,
-                ".todo suggestions must carry confidence == nil (the explainability block renders the no-confidence case); got \(String(describing: suggestion.generator.confidence))"
+                """
+                .todo suggestions must carry confidence == nil \
+                (the explainability block renders the no-confidence case); got \(confidence)
+                """
             )
             let rendered = SuggestionRenderer.render(suggestion)
             #expect(
                 rendered.contains("Generator: .todo"),
-                "Rendered output for \(suggestion.evidence[0].displayName) does not surface .todo to the developer:\n\(rendered)"
+                """
+                Rendered output for \(displayName) does not surface .todo to the developer:
+                \(rendered)
+                """
             )
             for forbidden in [
                 "Generator: .derivedMemberwise",
@@ -58,7 +69,10 @@ struct TodoFallbackHardGuaranteeTests {
             ] {
                 #expect(
                     !rendered.contains(forbidden),
-                    "Rendered output for \(suggestion.evidence[0].displayName) used a non-todo generator alongside the fallthrough path: \(forbidden)"
+                    """
+                    Rendered output for \(displayName) used a non-todo generator \
+                    alongside the fallthrough path: \(forbidden)
+                    """
                 )
             }
         }

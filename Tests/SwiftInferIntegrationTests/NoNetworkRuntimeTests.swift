@@ -64,9 +64,13 @@ struct NoNetworkRuntimeTests {
         _ = try TestLifter.discover(in: packageRoot)
 
         let captured = NetworkInterceptor.captured()
+        let urls = captured.map(\.absoluteString)
         #expect(
             captured.isEmpty,
-            "Runtime network interception caught \(captured.count) URLSession request(s) during discover/drift/TestLifter — §14 + §19 forbid any: \(captured.map(\.absoluteString))"
+            """
+            Runtime network interception caught \(captured.count) URLSession request(s) \
+            during discover/drift/TestLifter — §14 + §19 forbid any: \(urls)
+            """
         )
     }
 
@@ -151,6 +155,11 @@ private final class NetworkInterceptor: URLProtocol {
         return capturedRequests.compactMap(\.url)
     }
 
+    // URLProtocol declares these as `class func`; subclasses must
+    // override using the same dispatch keyword. SwiftLint's
+    // `static_over_final_class` rule doesn't model the inherited-API
+    // constraint — silence per occurrence.
+    // swiftlint:disable:next static_over_final_class
     override class func canInit(with request: URLRequest) -> Bool {
         lock.lock()
         capturedRequests.append(request)
@@ -158,6 +167,7 @@ private final class NetworkInterceptor: URLProtocol {
         return true
     }
 
+    // swiftlint:disable:next static_over_final_class
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }

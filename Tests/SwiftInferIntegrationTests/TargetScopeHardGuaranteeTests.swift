@@ -46,7 +46,7 @@ struct TargetScopeHardGuaranteeTests {
         }
     }
 
-    @Test("discover only scans the named target's source root, never sibling targets or files above Sources/ (PRD §16 #5)")
+    @Test("discover scopes scan to the named target's source root only (PRD §16 #5)")
     func discoverDoesNotScanOutsideNamedTarget() throws {
         let packageRoot = try makePackageRoot()
         defer { try? FileManager.default.removeItem(at: packageRoot) }
