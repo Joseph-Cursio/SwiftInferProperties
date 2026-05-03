@@ -45,6 +45,7 @@ extension SwiftInferCommand.Discover {
         includePossible: Bool? = nil,
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
+        explicitTestDirectory: URL? = nil,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         let configResult = ConfigLoader.load(
@@ -68,14 +69,25 @@ extension SwiftInferCommand.Discover {
         for warning in vocabResult.warnings {
             diagnostics.writeDiagnostic("warning: \(warning)")
         }
-        // TestLifter M1.5 — scan the same directory for test bodies,
-        // run the slicer + detectors, and convert the resulting
+        // TestLifter M6.0 — resolve the test directory separately from
+        // the production target. Default walk-up looks for
+        // <package-root>/Tests/; the user can override with --test-dir.
+        // Without M6.0, real CLI invocations (which resolve --target Foo
+        // to Sources/Foo/) never see test files at all — the
+        // cross-validation seam silently never fires for them.
+        let testDirectory = effectiveTestDirectory(
+            productionTarget: directory,
+            explicitTestDir: explicitTestDirectory,
+            diagnostic: { diagnostics.writeDiagnostic("warning: \($0)") }
+        )
+        // TestLifter M1.5 — scan the resolved test directory for test
+        // bodies, run the slicer + detectors, and convert the resulting
         // LiftedSuggestions into CrossValidationKeys to feed
         // TemplateRegistry's +20 cross-validation seam (PRD §4.1).
         // TestSuiteParser only emits summaries for files containing
         // recognized test methods, so production source naturally
         // produces no lifted records.
-        let liftedArtifacts = try TestLifter.discover(in: directory)
+        let liftedArtifacts = try TestLifter.discover(in: testDirectory)
         let artifacts = try TemplateRegistry.discoverArtifacts(
             in: directory,
             vocabulary: vocabResult.vocabulary,
@@ -191,5 +203,72 @@ extension SwiftInferCommand.Discover {
             return packageRoot.appendingPathComponent(raw)
         }
         return URL(fileURLWithPath: raw)
+    }
+
+    /// TestLifter M6.0 — resolve the directory TestLifter scans for
+    /// tests with CLI > walk-up > production-target precedence.
+    ///
+    /// Precedence:
+    /// 1. **Explicit `--test-dir <path>`** wins when the path exists
+    ///    on disk. When the path doesn't exist, emit a warning and
+    ///    fall through to walk-up resolution (matches the
+    ///    `--vocabulary` warn-and-degrade posture).
+    /// 2. **Walk-up to package root + `<root>/Tests/`** — walk parent
+    ///    directories from `productionTarget` looking for
+    ///    `Package.swift`, and on hit return `<root>/Tests/` if it
+    ///    exists.
+    /// 3. **Fallback to `productionTarget`** — current pre-M6.0
+    ///    behavior (degraded but not broken). Real CLI users won't
+    ///    hit this in practice; integration test fixtures that pass
+    ///    a tmpdir without `Package.swift` will.
+    ///
+    /// Pure function over its inputs (modulo the `diagnostic`
+    /// closure). Exposed at module scope so the
+    /// `DiscoverCLITestDirTests` suite can exercise the resolver
+    /// directly.
+    public static func effectiveTestDirectory(
+        productionTarget: URL,
+        explicitTestDir: URL?,
+        diagnostic: (String) -> Void
+    ) -> URL {
+        let fileManager = FileManager.default
+        if let explicit = explicitTestDir {
+            if fileManager.fileExists(atPath: explicit.path) {
+                return explicit
+            }
+            diagnostic(
+                "--test-dir path '\(explicit.path)' does not exist; "
+                    + "falling back to walk-up resolution"
+            )
+        }
+        if let packageRoot = findPackageRootForTestDir(startingFrom: productionTarget) {
+            let tests = packageRoot.appendingPathComponent("Tests")
+            if fileManager.fileExists(atPath: tests.path) {
+                return tests
+            }
+        }
+        return productionTarget
+    }
+
+    /// Walk up parent directories looking for `Package.swift`. Same
+    /// shape as `ConfigLoader.findPackageRoot` /
+    /// `VocabularyLoader.findPackageRoot` — kept as a private helper
+    /// here so the three resolvers stay independent (each can be
+    /// invoked in isolation by tests without setting up the others'
+    /// fixture trees).
+    private static func findPackageRootForTestDir(startingFrom directory: URL) -> URL? {
+        let fileManager = FileManager.default
+        var current = directory.standardizedFileURL
+        while true {
+            let manifest = current.appendingPathComponent("Package.swift")
+            if fileManager.fileExists(atPath: manifest.path) {
+                return current
+            }
+            let parent = current.deletingLastPathComponent().standardizedFileURL
+            if parent == current {
+                return nil
+            }
+            current = parent
+        }
     }
 }

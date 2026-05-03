@@ -128,17 +128,31 @@ extension SwiftInferCommand {
         )
         public var updateBaseline: Bool = false
 
+        @Option(
+            name: .long,
+            help: """
+            Path to the directory TestLifter scans for tests. When omitted, \
+            swift-infer walks up from the --target directory to find \
+            Package.swift, then scans <package-root>/Tests/ if it exists. \
+            When the explicit path is missing, swift-infer warns and falls \
+            back to the walk-up resolver. (TestLifter M6.0, PRD v0.4 §7.9.)
+            """
+        )
+        public var testDir: String?
+
         public init() {}
 
         public func run() async throws {
             let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
             let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
             let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }
+            let explicitTestDirPath = testDir.map { URL(fileURLWithPath: $0) }
             try Self.run(
                 directory: directory,
                 includePossible: includePossible,
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
+                explicitTestDirectory: explicitTestDirPath,
                 statsOnly: statsOnly,
                 dryRun: dryRun,
                 interactive: interactive,
@@ -162,6 +176,7 @@ extension SwiftInferCommand {
             includePossible: Bool? = nil,
             explicitVocabularyPath: URL? = nil,
             explicitConfigPath: URL? = nil,
+            explicitTestDirectory: URL? = nil,
             statsOnly: Bool = false,
             dryRun: Bool = false,
             interactive: Bool = false,
@@ -175,6 +190,7 @@ extension SwiftInferCommand {
                 includePossible: includePossible,
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
+                explicitTestDirectory: explicitTestDirectory,
                 diagnostics: diagnostics
             )
             let visible = pipeline.suggestions
