@@ -67,7 +67,8 @@ public enum AssertSymmetryDetector {
                 return nil
             }
             return collapsedFromEqualityExpression(firstArg, location: assertion.location)
-        case .xctAssertTrue, .xctAssert, .xctAssertNotNil, .requireMacro:
+        case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
+                .xctAssertLessThan, .xctAssertLessThanOrEqual, .requireMacro:
             return nil
         }
     }

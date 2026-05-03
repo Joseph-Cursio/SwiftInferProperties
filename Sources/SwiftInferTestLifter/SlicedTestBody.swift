@@ -105,6 +105,8 @@ public struct AssertionInvocation {
         case xctAssertTrue
         case xctAssert
         case xctAssertNotNil
+        case xctAssertLessThan
+        case xctAssertLessThanOrEqual
         case expectMacro
         case requireMacro
     }

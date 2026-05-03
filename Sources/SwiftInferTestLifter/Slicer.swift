@@ -239,6 +239,10 @@ enum AssertionAnchor {
             return .xctAssert
         case "XCTAssertNotNil":
             return .xctAssertNotNil
+        case "XCTAssertLessThan":
+            return .xctAssertLessThan
+        case "XCTAssertLessThanOrEqual":
+            return .xctAssertLessThanOrEqual
         default:
             return nil
         }
