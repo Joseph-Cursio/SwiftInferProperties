@@ -319,7 +319,11 @@ public enum LiftedTestEmitter {
     /// to enforce: any future change to the surrounding scaffold
     /// (e.g. switching to a different backend or a richer
     /// `Issue.record` shape) lands in one place.
-    private static func makeTestStubExpression(
+    ///
+    /// **Module-private (not file-private)** so the M5.5 lifted-only
+    /// arms in `LiftedTestEmitter+M5.swift` can share the same scaffold
+    /// without duplicating it.
+    static func makeTestStubExpression(
         testFunctionName: String,
         seed: SamplingSeed.Value,
         sampleExpression: String,
@@ -366,7 +370,7 @@ public enum LiftedTestEmitter {
         return sanitized.replacingOccurrences(of: ".", with: "_")
     }
 
-    private static func hex(_ word: UInt64) -> String {
+    static func hex(_ word: UInt64) -> String {
         let raw = String(word, radix: 16, uppercase: true)
         return String(repeating: "0", count: 16 - raw.count) + raw
     }

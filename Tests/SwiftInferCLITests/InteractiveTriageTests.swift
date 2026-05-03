@@ -273,6 +273,34 @@ struct InteractiveTriageBehaviorTests {
         #expect(InteractiveTriage.paramType(from: "(Int, Int) -> Int") == "Int")
         #expect(InteractiveTriage.paramType(from: "() -> Int") == nil)
     }
+
+    @Test
+    func returnTypeStripsTrailingPreservingClause() {
+        // Existing M7.3 contract — preserved alongside the new `seed`
+        // suffix handling.
+        #expect(InteractiveTriage.returnType(from: "(Widget) -> Widget preserving \\.isValid") == "Widget")
+    }
+
+    @Test
+    func returnTypeStripsTrailingSeedClauseFromLiftedReduceEquivalence() {
+        // M5.5 — lifted reduceEquivalence promotion encodes the seed in
+        // the signature as ` seed <expr>` after the return type. The
+        // returnType extractor must strip this suffix so the upstream
+        // `paramType` / `returnType` consumers see the `(T, T) -> T`
+        // shape they expect.
+        #expect(InteractiveTriage.returnType(from: "(Int, Int) -> Int seed 0") == "Int")
+        #expect(InteractiveTriage.returnType(from: "(Money, Money) -> Money seed .zero") == "Money")
+    }
+
+    @Test
+    func seedSourceExtractsLiftedReduceEquivalenceSeedSuffix() {
+        // M5.5 — `liftedReduceEquivalenceStub` consumes this extractor
+        // to thread the test-body's seed expression into the rendered
+        // `xs.reduce(<seed>, <op>)` test.
+        #expect(InteractiveTriage.seedSource(from: "(Int, Int) -> Int seed 0") == "0")
+        #expect(InteractiveTriage.seedSource(from: "(Money, Money) -> Money seed .zero") == ".zero")
+        #expect(InteractiveTriage.seedSource(from: "(Int, Int) -> Int") == nil)
+    }
 }
 
 // MARK: - Shared helpers

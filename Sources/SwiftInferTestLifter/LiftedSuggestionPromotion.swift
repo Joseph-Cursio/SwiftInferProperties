@@ -113,8 +113,27 @@ public extension LiftedSuggestion {
         case .countInvariance(let detection):
             return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
         case .reduceEquivalence(let detection):
-            return [binaryEvidence(callee: detection.opCalleeName, typeT: typeT, location: detection.assertionLocation)]
+            return [reduceEquivalenceEvidence(detection: detection, typeT: typeT)]
         }
+    }
+
+    /// Reduce-equivalence evidence carries the seed expression in the
+    /// signature so the M5.5 `liftedReduceEquivalenceStub` accept-flow
+    /// dispatcher can extract it (mirrors how
+    /// `InvariantPreservationTemplate` encodes its keypath via
+    /// `" preserving \\.foo"` on the signature). Without the seed in the
+    /// signature, the lifted reduce-equivalence stub would have to
+    /// hard-code a placeholder seed (losing the test-body fidelity
+    /// PRD §3.5 prescribes).
+    private func reduceEquivalenceEvidence(
+        detection: DetectedReduceEquivalence,
+        typeT: String
+    ) -> Evidence {
+        Evidence(
+            displayName: "\(detection.opCalleeName)(_:_:)",
+            signature: "(\(typeT), \(typeT)) -> \(typeT) seed \(detection.seedSource)",
+            location: detection.assertionLocation
+        )
     }
 
     private func roundTripEvidence(detection: DetectedRoundTrip, typeT: String, typeU: String) -> [Evidence] {

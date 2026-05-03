@@ -96,6 +96,18 @@ extension TestLifter {
             for detection in AssertSymmetryDetector.detect(in: slice) {
                 lifted.append(LiftedSuggestion.commutativity(from: detection, origin: origin))
             }
+            // M5.5 — second-wave detectors. Same per-summary slice
+            // surface as the M2 trio; each detection fans out to a
+            // LiftedSuggestion via the matching M5.0 factory.
+            for detection in AssertOrderingPreservedDetector.detect(in: slice) {
+                lifted.append(LiftedSuggestion.monotonicity(from: detection, origin: origin))
+            }
+            for detection in AssertCountChangeDetector.detect(in: slice) {
+                lifted.append(LiftedSuggestion.countInvariance(from: detection, origin: origin))
+            }
+            for detection in AssertReduceEquivalenceDetector.detect(in: slice) {
+                lifted.append(LiftedSuggestion.reduceEquivalence(from: detection, origin: origin))
+            }
         }
         // M4.3 — build the corpus-wide construction record once per
         // discover run; the CLI pipeline's mock-inferred fallback

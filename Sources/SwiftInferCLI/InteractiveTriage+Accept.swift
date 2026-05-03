@@ -48,6 +48,16 @@ extension InteractiveTriage {
     /// arm — the `default` branch becomes a defensive fallback for
     /// future templates rather than a v1 limitation.
     private static func liftedTestStub(for suggestion: Suggestion) -> String? {
+        // M5.5 — lifted-only fast path. Promoted countInvariance (→
+        // "invariant-preservation") and reduceEquivalence (→
+        // "associativity") suggestions render through dedicated arms
+        // that emit the property the test body actually claimed
+        // rather than the stronger algebraic shape the
+        // TemplateEngine-side arms emit. Production-side suggestions
+        // (no `liftedOrigin`) continue through the existing switch.
+        if let liftedOnly = liftedOnlyTestStub(for: suggestion) {
+            return liftedOnly
+        }
         switch suggestion.templateName {
         case "idempotence":
             return idempotentStub(for: suggestion)
@@ -222,7 +232,11 @@ extension InteractiveTriage {
     /// into a `zip(...).map { Type(...) }` shape using the kit's
     /// RawType generator factories. All other suggestions fall back to
     /// `defaultGenerator(for:)` — the M3.3 behavior preserved.
-    private static func chooseGenerator(
+    ///
+    /// **Module-private (not file-private)** so the M5.5 lifted-only
+    /// dispatch helpers in `InteractiveTriage+AcceptM5.swift` can
+    /// share the same dispatch without duplicating the priority order.
+    static func chooseGenerator(
         for suggestion: Suggestion,
         typeName: String
     ) -> String {

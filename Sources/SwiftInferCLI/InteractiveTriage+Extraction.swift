@@ -33,13 +33,18 @@ extension InteractiveTriage {
 
     /// Pull the return type out of a signature like
     /// `"(String) -> Int"` — returns `"Int"`. Strips any trailing
-    /// `preserving X` clause that the invariant-preservation template
-    /// appends. Returns `nil` if no `->` separator exists.
+    /// `preserving X` clause (`InvariantPreservationTemplate`) or
+    /// ` seed X` clause (M5.5 lifted reduce-equivalence promotion) that
+    /// the templates encode after the return-type position. Returns
+    /// `nil` if no `->` separator exists.
     static func returnType(from signature: String) -> String? {
         guard let arrowRange = signature.range(of: "->") else { return nil }
         var tail = signature[arrowRange.upperBound...].trimmingCharacters(in: .whitespaces)
         if let preservingRange = tail.range(of: " preserving ") {
             tail = String(tail[..<preservingRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+        }
+        if let seedRange = tail.range(of: " seed ") {
+            tail = String(tail[..<seedRange.lowerBound]).trimmingCharacters(in: .whitespaces)
         }
         return tail.isEmpty ? nil : tail
     }
@@ -51,6 +56,21 @@ extension InteractiveTriage {
     static func invariantKeypath(from signature: String) -> String? {
         guard let preservingRange = signature.range(of: " preserving ") else { return nil }
         let tail = signature[preservingRange.upperBound...].trimmingCharacters(in: .whitespaces)
+        return tail.isEmpty ? nil : tail
+    }
+
+    /// Pull the seed expression out of a lifted reduce-equivalence
+    /// signature like `"(Int, Int) -> Int seed 0"` — returns `"0"`.
+    /// `LiftedSuggestionPromotion.reduceEquivalenceEvidence` encodes
+    /// the seed here so the M5.5 lifted reduce-equivalence stub can
+    /// thread it into the rendered `xs.reduce(<seed>, <op>)` test
+    /// without losing the seed the test body actually used (PRD §3.5
+    /// — emit the property the body claimed, not a stronger one).
+    /// Returns `nil` if the ` seed ` marker is absent (signature not
+    /// from a lifted reduce-equivalence promotion).
+    static func seedSource(from signature: String) -> String? {
+        guard let seedRange = signature.range(of: " seed ") else { return nil }
+        let tail = signature[seedRange.upperBound...].trimmingCharacters(in: .whitespaces)
         return tail.isEmpty ? nil : tail
     }
 
