@@ -69,6 +69,87 @@ struct LiftedAcceptFlowMockGeneratorTests {
         #expect(!contents.contains("?.gen()"), "Mock generator should not fall through to ? sentinel")
     }
 
+    @Test("Idempotence pattern fires mock-inferred fallback when type recovered via annotation")
+    func idempotenceMockInferredEndToEnd() throws {
+        let directory = try makeFixtureDirectory(name: "IdempotenceMock")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let tests = directory.appendingPathComponent("Tests").appendingPathComponent("FooTests")
+        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
+        try """
+        import XCTest
+
+        final class FooTests: XCTestCase {
+            func testIdempotent() {
+                let doc: Doc = Doc(title: "x", count: 1)
+                let once = normalizeDoc(doc)
+                let twice = normalizeDoc(once)
+                XCTAssertEqual(once, twice)
+            }
+            func testFixtureA() {
+                let a = Doc(title: "y", count: 2)
+                XCTAssertNotNil(a)
+            }
+            func testFixtureB() {
+                let b = Doc(title: "z", count: 3)
+                XCTAssertNotNil(b)
+            }
+        }
+        """.write(
+            to: tests.appendingPathComponent("FooTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: directory,
+            includePossible: true,
+            diagnostics: SilentMockDiagnostics()
+        )
+        let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
+        #expect(lifted.generator.source == .inferredFromTests)
+        #expect(lifted.mockGenerator?.typeName == "Doc")
+    }
+
+    @Test("Commutativity pattern fires mock-inferred fallback when leftArg recovered via annotation")
+    func commutativityMockInferredEndToEnd() throws {
+        let directory = try makeFixtureDirectory(name: "CommutativityMock")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let tests = directory.appendingPathComponent("Tests").appendingPathComponent("FooTests")
+        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
+        try """
+        import XCTest
+
+        final class FooTests: XCTestCase {
+            func testCommutative() {
+                let a: Doc = Doc(title: "x", count: 1)
+                let b: Doc = Doc(title: "y", count: 2)
+                XCTAssertEqual(mergeDoc(a, b), mergeDoc(b, a))
+            }
+            func testFixtureA() {
+                let c = Doc(title: "p", count: 3)
+                XCTAssertNotNil(c)
+            }
+            func testFixtureB() {
+                let d = Doc(title: "q", count: 4)
+                XCTAssertNotNil(d)
+            }
+        }
+        """.write(
+            to: tests.appendingPathComponent("FooTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: directory,
+            includePossible: true,
+            diagnostics: SilentMockDiagnostics()
+        )
+        let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
+        #expect(lifted.generator.source == .inferredFromTests)
+        #expect(lifted.mockGenerator?.typeName == "Doc")
+    }
+
     @Test("Mock-inferred siteCount is reflected in the provenance comment")
     func provenanceLineCarriesSiteCount() throws {
         let directory = try makeFixtureDirectory(name: "ProvenanceSiteCount")
