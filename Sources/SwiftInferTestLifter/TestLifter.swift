@@ -13,11 +13,27 @@ extension TestLifter {
 
         public let liftedSuggestions: [LiftedSuggestion]
 
-        public init(liftedSuggestions: [LiftedSuggestion]) {
+        /// M4.2 — per-origin setup-region annotation maps for the
+        /// `LiftedSuggestionRecovery` annotation tier. One entry per
+        /// `LiftedOrigin` with at least one detection; entries are
+        /// computed once per slice and reused across all detectors that
+        /// fired on that slice. Empty for projects with no annotated /
+        /// bare-constructor bindings — the recovery pass treats it as
+        /// purely additive (FunctionSummary tier still runs first).
+        public let setupAnnotationsByOrigin: [LiftedOrigin: [String: String]]
+
+        public init(
+            liftedSuggestions: [LiftedSuggestion],
+            setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
+        ) {
             self.liftedSuggestions = liftedSuggestions
+            self.setupAnnotationsByOrigin = setupAnnotationsByOrigin
         }
 
-        public static let empty = Artifacts(liftedSuggestions: [])
+        public static let empty = Artifacts(
+            liftedSuggestions: [],
+            setupAnnotationsByOrigin: [:]
+        )
 
         /// The cross-validation keys to feed into
         /// `TemplateRegistry.discover(crossValidationFromTestLifter:)`.
@@ -43,12 +59,22 @@ extension TestLifter {
     public static func discover(in directory: URL) throws -> Artifacts {
         let summaries = try TestSuiteParser.scanTests(directory: directory)
         var lifted: [LiftedSuggestion] = []
+        var annotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
             let origin = LiftedOrigin(
                 testMethodName: summary.methodName,
                 sourceLocation: summary.location
             )
+            // M4.2 — per-test-method annotation map for the
+            // `LiftedSuggestionRecovery` annotation tier. Populated
+            // unconditionally (cheap walk, linear in slice size); the
+            // recovery pass only consults it when the FunctionSummary
+            // tier misses, so empty maps are fine.
+            let annotations = SetupRegionTypeAnnotationScanner.annotations(in: slice)
+            if !annotations.isEmpty {
+                annotationsByOrigin[origin] = annotations
+            }
             for detection in AssertAfterTransformDetector.detect(in: slice) {
                 lifted.append(LiftedSuggestion.roundTrip(from: detection, origin: origin))
             }
@@ -59,6 +85,9 @@ extension TestLifter {
                 lifted.append(LiftedSuggestion.commutativity(from: detection, origin: origin))
             }
         }
-        return Artifacts(liftedSuggestions: lifted)
+        return Artifacts(
+            liftedSuggestions: lifted,
+            setupAnnotationsByOrigin: annotationsByOrigin
+        )
     }
 }

@@ -1,6 +1,7 @@
 import SwiftInferCore
 
-/// TestLifter M3.1 — type recovery + promotion in one pass.
+/// TestLifter M3.1 — type recovery + promotion in one pass; widened
+/// in M4.2 with a setup-region annotation tier.
 ///
 /// Looks up each lifted suggestion's callee name(s) in a
 /// `[FunctionSummary]` index (the same index `TemplateEngine`
@@ -8,14 +9,27 @@ import SwiftInferCore
 /// `(typeName, returnType)` pair to feed into
 /// `LiftedSuggestion.toSuggestion(typeName:returnType:origin:)`.
 ///
-/// **Strict FunctionSummary lookup only.** When the callee isn't in
-/// the index, recovery returns `nil` for the missing types and the
-/// promotion adapter synthesizes `?` sentinel evidence. The downstream
-/// `GeneratorSelection` pass (M3.2 in `Discover+Pipeline`) sees no
-/// `TypeShape` for `?` and leaves the generator at `.notYetComputed`,
-/// which the M3.3 accept-flow renders as `.todo<?>()`. M3 plan open
-/// decision #2 default `(a)` — setup-region annotation walking is
-/// deferred to TestLifter M4 alongside mock-based generator synthesis.
+/// **Three-tier recovery ladder (M4.2):**
+/// 1. **FunctionSummary match.** Strict callee-name lookup against the
+///    production-side scanner index. When matched, parameter / return /
+///    receiver types come from the summary directly.
+/// 2. **Setup-region annotation.** When the FunctionSummary tier
+///    misses, look up the *binding name* the detection referred to
+///    (round-trip's `inputBindingName`, idempotence's
+///    `inputBindingName`, commutativity's `leftArgName`/`rightArgName`)
+///    in a `[bindingName: typeName]` map produced by
+///    `SetupRegionTypeAnnotationScanner.annotations(in: slice)`. The
+///    map covers `let x: T = ...` typed bindings + `let x = T(...)`
+///    bare-constructor bindings. M4.2 plan default — strict FunctionSummary
+///    is preferred, annotation is the fallback.
+/// 3. **`nil` → `?`-sentinel evidence.** When neither tier matches,
+///    promotion synthesizes `?` sentinel evidence and the downstream
+///    `GeneratorSelection` pass (M3.2 in `Discover+Pipeline`) leaves
+///    the generator at `.notYetComputed`, which the M3.3 accept-flow
+///    renders as `.todo<?>()`. M4.3's `MockGeneratorSynthesizer`
+///    extends this last rung with mock-inferred `Gen<T>` synthesis
+///    when the type's construction record meets the §13 ≥3-site
+///    threshold.
 ///
 /// **Per-pattern type derivation:**
 /// - **Idempotence** (`f: (T) -> T`):
@@ -44,10 +58,13 @@ import SwiftInferCore
 public enum LiftedSuggestionRecovery {
 
     /// Promote `lifted` to a `Suggestion`, recovering callee types from
-    /// `summariesByName` (a name → first-match `FunctionSummary` map).
-    /// Returns the promoted Suggestion regardless of whether recovery
-    /// succeeded — failed lookups produce `?`-sentinel evidence and
-    /// `.notYetComputed` generator metadata.
+    /// `summariesByName` (a name → first-match `FunctionSummary` map),
+    /// falling back to `setupAnnotations` (M4.2's binding-name → typeName
+    /// map produced by `SetupRegionTypeAnnotationScanner`) when the
+    /// FunctionSummary lookup misses. Returns the promoted Suggestion
+    /// regardless of whether recovery succeeded — when neither tier
+    /// matches, `?`-sentinel evidence + `.notYetComputed` generator
+    /// metadata flow through.
     ///
     /// - Parameters:
     ///   - lifted: The TestLifter-side detection record.
@@ -60,6 +77,12 @@ public enum LiftedSuggestionRecovery {
     ///     we can't tell which overload the test body referred to
     ///     without semantic resolution, so the conservative choice is
     ///     to recover *some* type rather than no type.
+    ///   - setupAnnotations: M4.2 second-tier fallback — the per-test-method
+    ///     `[bindingName: typeName]` map from
+    ///     `SetupRegionTypeAnnotationScanner.annotations(in:)`. Consulted
+    ///     only when FunctionSummary lookup fails. Defaulted empty for
+    ///     callers that don't compute the map (unit tests with hand-built
+    ///     LiftedSuggestions).
     ///   - origin: Optional override for the originating test method's
     ///     `LiftedOrigin`. Defaults to `lifted.origin` (populated by
     ///     `TestLifter.discover` during the M3.2 plumbing pass); unit
@@ -68,9 +91,14 @@ public enum LiftedSuggestionRecovery {
     public static func recover(
         _ lifted: LiftedSuggestion,
         summariesByName: [String: FunctionSummary],
+        setupAnnotations: [String: String] = [:],
         origin: LiftedOrigin? = nil
     ) -> Suggestion {
-        let (typeName, returnType) = recoverTypes(for: lifted.pattern, summariesByName: summariesByName)
+        let (typeName, returnType) = recoverTypes(
+            for: lifted.pattern,
+            summariesByName: summariesByName,
+            setupAnnotations: setupAnnotations
+        )
         return lifted.toSuggestion(
             typeName: typeName,
             returnType: returnType,
@@ -80,8 +108,9 @@ public enum LiftedSuggestionRecovery {
 
     /// Returns just the recovered `typeName` (the generator-relevant
     /// T) for `lifted` per the per-pattern derivation rules. `nil`
-    /// when FunctionSummary lookup fails (or the matched summary's
-    /// shape doesn't fit the expected per-pattern arity).
+    /// when neither FunctionSummary lookup nor `setupAnnotations`
+    /// fallback yields a type (or the matched summary's shape doesn't
+    /// fit the expected per-pattern arity).
     ///
     /// M3.2's `Discover+Pipeline` calls this to build the
     /// `[SuggestionIdentity: String]` index `GeneratorSelection`
@@ -90,9 +119,14 @@ public enum LiftedSuggestionRecovery {
     /// back out of a signature string.
     public static func recoveredTypeName(
         for lifted: LiftedSuggestion,
-        summariesByName: [String: FunctionSummary]
+        summariesByName: [String: FunctionSummary],
+        setupAnnotations: [String: String] = [:]
     ) -> String? {
-        let (typeName, _) = recoverTypes(for: lifted.pattern, summariesByName: summariesByName)
+        let (typeName, _) = recoverTypes(
+            for: lifted.pattern,
+            summariesByName: summariesByName,
+            setupAnnotations: setupAnnotations
+        )
         return typeName
     }
 
@@ -100,17 +134,59 @@ public enum LiftedSuggestionRecovery {
 
     private static func recoverTypes(
         for pattern: DetectedPattern,
-        summariesByName: [String: FunctionSummary]
+        summariesByName: [String: FunctionSummary],
+        setupAnnotations: [String: String]
     ) -> (typeName: String?, returnType: String?) {
         switch pattern {
         case .roundTrip(let detection):
-            return roundTripTypes(forward: detection.forwardCallee, summariesByName: summariesByName)
+            let summaryTypes = roundTripTypes(
+                forward: detection.forwardCallee,
+                summariesByName: summariesByName
+            )
+            if summaryTypes.typeName != nil {
+                return summaryTypes
+            }
+            // Fallback: annotation lookup on the input binding name.
+            // Round-trip carries no return-type info on the binding side
+            // (the binding holds T, not U), so annotation-only recovery
+            // returns (T, nil) — the promotion adapter synthesizes a
+            // backward-side `?` sentinel for the return type and the
+            // accept-flow renders `.todo` for the round-trip's U side.
+            // The forward-side T is recoverable; that's M4.2's bar.
+            if let annotated = setupAnnotations[detection.inputBindingName] {
+                return (annotated, nil)
+            }
+            return (nil, nil)
         case .idempotence(let detection):
-            let typeName = unaryShapeType(for: detection.calleeName, summariesByName: summariesByName)
-            return (typeName, typeName)
+            let summaryType = unaryShapeType(
+                for: detection.calleeName,
+                summariesByName: summariesByName
+            )
+            if let summaryType {
+                return (summaryType, summaryType)
+            }
+            if let annotated = setupAnnotations[detection.inputBindingName] {
+                return (annotated, annotated)
+            }
+            return (nil, nil)
         case .commutativity(let detection):
-            let typeName = binaryShapeType(for: detection.calleeName, summariesByName: summariesByName)
-            return (typeName, typeName)
+            let summaryType = binaryShapeType(
+                for: detection.calleeName,
+                summariesByName: summariesByName
+            )
+            if let summaryType {
+                return (summaryType, summaryType)
+            }
+            // For commutativity both operands share T. Try the leftArg
+            // first; if that misses, try rightArg. Either annotation
+            // hit recovers T.
+            if let annotated = setupAnnotations[detection.leftArgName] {
+                return (annotated, annotated)
+            }
+            if let annotated = setupAnnotations[detection.rightArgName] {
+                return (annotated, annotated)
+            }
+            return (nil, nil)
         }
     }
 

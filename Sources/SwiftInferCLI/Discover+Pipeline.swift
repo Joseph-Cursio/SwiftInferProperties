@@ -95,7 +95,8 @@ extension SwiftInferCommand.Discover {
             lifted: liftedArtifacts.liftedSuggestions,
             templateEngineSuggestions: artifacts.suggestions,
             summaries: artifacts.summaries,
-            typeDecls: artifacts.typeDecls
+            typeDecls: artifacts.typeDecls,
+            setupAnnotationsByOrigin: liftedArtifacts.setupAnnotationsByOrigin
         )
         let combined = artifacts.suggestions + promotedLifted
         let visible = combined.filter { suggestion in

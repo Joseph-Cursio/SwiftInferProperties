@@ -41,11 +41,20 @@ public enum LiftedSuggestionPipeline {
     /// and return the survivors. The caller (`Discover+Pipeline`)
     /// unions the result with the TemplateEngine suggestions before
     /// the tier filter.
+    ///
+    /// **M4.2 — `setupAnnotationsByOrigin` second-tier recovery.** When
+    /// non-empty, the per-`LiftedOrigin` annotation map (built by
+    /// `TestLifter.discover` from `SetupRegionTypeAnnotationScanner`)
+    /// is consulted by `LiftedSuggestionRecovery` when the
+    /// FunctionSummary lookup misses. Pure additive — the parameter
+    /// defaults to empty, so existing callers (unit tests, the M3.2
+    /// integration paths) work unchanged.
     public static func promote(
         lifted: [LiftedSuggestion],
         templateEngineSuggestions: [Suggestion],
         summaries: [FunctionSummary],
-        typeDecls: [TypeDecl]
+        typeDecls: [TypeDecl],
+        setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
     ) -> [Suggestion] {
         guard !lifted.isEmpty else {
             return []
@@ -56,7 +65,15 @@ public enum LiftedSuggestionPipeline {
         // the SuggestionIdentity → typeName index for GeneratorSelection
         // without parsing the synthetic evidence signature back out.
         let pairs = lifted.map { liftedItem -> (lifted: LiftedSuggestion, suggestion: Suggestion) in
-            (liftedItem, LiftedSuggestionRecovery.recover(liftedItem, summariesByName: summariesByName))
+            let annotations = liftedItem.origin.flatMap { setupAnnotationsByOrigin[$0] } ?? [:]
+            return (
+                liftedItem,
+                LiftedSuggestionRecovery.recover(
+                    liftedItem,
+                    summariesByName: summariesByName,
+                    setupAnnotations: annotations
+                )
+            )
         }
         let surviving = pairs.filter { !suppressionKeys.contains($0.suggestion.crossValidationKey) }
         guard !surviving.isEmpty else {
@@ -67,9 +84,11 @@ public enum LiftedSuggestionPipeline {
         )
         var generatorTypeByIdentity: [SuggestionIdentity: String] = [:]
         for pair in surviving {
+            let annotations = pair.lifted.origin.flatMap { setupAnnotationsByOrigin[$0] } ?? [:]
             if let typeName = LiftedSuggestionRecovery.recoveredTypeName(
                 for: pair.lifted,
-                summariesByName: summariesByName
+                summariesByName: summariesByName,
+                setupAnnotations: annotations
             ) {
                 generatorTypeByIdentity[pair.suggestion.identity] = typeName
             }

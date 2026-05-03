@@ -136,7 +136,7 @@ public struct Parameter: Sendable, Equatable {
 
 /// File-relative source location. `file` is the path passed to
 /// `FunctionScanner.scan(source:file:)`; `line` and `column` are 1-based.
-public struct SourceLocation: Sendable, Equatable {
+public struct SourceLocation: Sendable, Equatable, Hashable {
 
     public let file: String
     public let line: Int

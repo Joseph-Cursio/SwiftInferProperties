@@ -16,7 +16,7 @@
 /// `SwiftInferCore` to depend on `SwiftInferTestLifter` (which would be
 /// a layering inversion). The field is opaque to Core — Core never
 /// reads it; only `SwiftInferCLI`'s accept-flow does.
-public struct LiftedOrigin: Sendable, Equatable {
+public struct LiftedOrigin: Sendable, Equatable, Hashable {
 
     /// Name of the originating test method (e.g. `"testRoundTrip"`).
     /// Used by `InteractiveTriage+Accept`'s file-naming function (M3.3)
