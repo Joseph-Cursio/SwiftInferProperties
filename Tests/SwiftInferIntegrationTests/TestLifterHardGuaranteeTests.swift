@@ -70,7 +70,10 @@ struct TestLifterHardGuaranteeTests {
         let surviving = try fileSet(in: directory)
         #expect(
             surviving.count == originalCount,
-            "TestLifter.discover deleted or replaced a source test file (before=\(originalCount), after=\(surviving.count))"
+            """
+            TestLifter.discover deleted or replaced a source test file \
+            (before=\(originalCount), after=\(surviving.count))
+            """
         )
         #expect(
             Set(surviving.map(\.lastPathComponent)) == Set(originalFiles.map(\.lastPathComponent)),
@@ -80,22 +83,44 @@ struct TestLifterHardGuaranteeTests {
         // Per-method survival: each originally-declared test method
         // must still be textually present in its file. Catches the
         // "TestLifter rewrites the file to splice in a lifted property
-        // alongside the original test" failure mode.
-        let codecBody = try String(
-            contentsOf: directory.appendingPathComponent("CodecTests.swift"),
+        // alongside the original test" failure mode. M2.4 widens the
+        // per-method survival pin to all three pattern files (round-trip,
+        // idempotence, commutativity) — a regression in any M2 detector
+        // path that wrote back to source would surface here.
+        try assertMethodSurvived(
+            directory: directory,
+            file: "CodecTests.swift",
+            decl: "func testRoundTrip()"
+        )
+        try assertMethodSurvived(
+            directory: directory,
+            file: "OtherTests.swift",
+            decl: "func swiftTestingRoundTrip()"
+        )
+        try assertMethodSurvived(
+            directory: directory,
+            file: "NormalizerTests.swift",
+            decl: "func testIdempotent()"
+        )
+        try assertMethodSurvived(
+            directory: directory,
+            file: "MergerTests.swift",
+            decl: "func testCommutative()"
+        )
+    }
+
+    private func assertMethodSurvived(
+        directory: URL,
+        file: String,
+        decl: String
+    ) throws {
+        let body = try String(
+            contentsOf: directory.appendingPathComponent(file),
             encoding: .utf8
         )
         #expect(
-            codecBody.contains("func testRoundTrip()"),
-            "TestLifter.discover removed or rewrote the testRoundTrip declaration"
-        )
-        let otherBody = try String(
-            contentsOf: directory.appendingPathComponent("OtherTests.swift"),
-            encoding: .utf8
-        )
-        #expect(
-            otherBody.contains("func swiftTestingRoundTrip()"),
-            "TestLifter.discover removed or rewrote the swiftTestingRoundTrip declaration"
+            body.contains(decl),
+            "TestLifter.discover removed or rewrote the \(decl) declaration in \(file)"
         )
     }
 
@@ -105,6 +130,15 @@ struct TestLifterHardGuaranteeTests {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("SwiftInferTestLifterHG-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        try writeRoundTripFixtureFiles(in: base)
+        // M2.4: extend the fixture with idempotence + commutativity test
+        // methods so the §16 #1 + #2 guarantees re-validate against the
+        // M2 detector paths, not just M1's round-trip path.
+        try writeM2DetectorFixtureFiles(in: base)
+        return base
+    }
+
+    private func writeRoundTripFixtureFiles(in base: URL) throws {
         try """
         import XCTest
 
@@ -133,7 +167,40 @@ struct TestLifterHardGuaranteeTests {
             atomically: true,
             encoding: .utf8
         )
-        return base
+    }
+
+    private func writeM2DetectorFixtureFiles(in base: URL) throws {
+        try """
+        import XCTest
+
+        final class NormalizerTests: XCTestCase {
+            func testIdempotent() {
+                let s = "hello"
+                let once = normalize(s)
+                let twice = normalize(once)
+                XCTAssertEqual(once, twice)
+            }
+        }
+        """.write(
+            to: base.appendingPathComponent("NormalizerTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        import XCTest
+
+        final class MergerTests: XCTestCase {
+            func testCommutative() {
+                let a = [1, 2]
+                let b = [3, 4]
+                XCTAssertEqual(merge(a, b), merge(b, a))
+            }
+        }
+        """.write(
+            to: base.appendingPathComponent("MergerTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
     }
 
     private func snapshot(directory: URL) throws -> [String: Data] {

@@ -5,7 +5,13 @@ import Testing
 /// PRD v0.4 §13 performance budget enforcement for TestLifter — the
 /// "TestLifter parse of 100 test files" row mandates `< 3 seconds wall`.
 /// A regression test failure blocks release per PRD §13 conventions.
-@Suite("TestLifter — PRD §13 100-test-file budget (M1.6)")
+///
+/// M2.4 widens the synthetic corpus to include all three M1+M2
+/// detector shapes (round-trip, idempotence, commutativity) so the
+/// budget check exercises the full detector fan-out, not just the
+/// round-trip pass. Real-world test corpora carry a mix of patterns;
+/// budgeting against the mix is more representative.
+@Suite("TestLifter — PRD §13 100-test-file budget (M1.6 + M2.4)")
 struct TestLifterPerformanceTests {
 
     @Test("TestLifter.discover on 100 synthetic test files completes in < 3s wall")
@@ -21,14 +27,22 @@ struct TestLifterPerformanceTests {
             elapsed < 3.0,
             "TestLifter.discover on 100 test files took \(formatted(elapsed))s — over the §13 3s budget"
         )
-        // Each file contributes one round-trip test body; the discover
-        // pass should produce ~100 lifted suggestions. Assert >= 50 to
-        // give headroom for any future detector tightening that might
-        // narrow the recall.
+        // Each file contributes one round-trip + one idempotence + one
+        // commutativity test body, so the discover pass should produce
+        // ~300 lifted suggestions. Assert >= 200 for headroom against
+        // future detector tightening; assert per-template surface to
+        // confirm all three detectors are wired through end-to-end.
         #expect(
-            artifacts.liftedSuggestions.count >= 50,
+            artifacts.liftedSuggestions.count >= 200,
             "TestLifter surfaced only \(artifacts.liftedSuggestions.count) lifted suggestions on a 100-file corpus"
         )
+        let templateCounts = Dictionary(
+            grouping: artifacts.liftedSuggestions,
+            by: \.templateName
+        ).mapValues(\.count)
+        #expect((templateCounts["round-trip"] ?? 0) >= 50, "round-trip detector contributed too few suggestions")
+        #expect((templateCounts["idempotence"] ?? 0) >= 50, "idempotence detector contributed too few suggestions")
+        #expect((templateCounts["commutativity"] ?? 0) >= 50, "commutativity detector contributed too few suggestions")
     }
 
     // MARK: - Synthetic corpus
@@ -50,6 +64,8 @@ struct TestLifterPerformanceTests {
         // are distinct (reflects what real test corpora look like).
         let forward = "encode\(index)"
         let backward = "decode\(index)"
+        let unary = "normalize\(index)"
+        let binary = "merge\(index)"
         return """
         import XCTest
         import Testing
@@ -67,7 +83,20 @@ struct TestLifterPerformanceTests {
                 XCTAssertEqual(\(backward)(\(forward)(original)), original)
             }
 
-            func testNonRoundTripHelper() {
+            func testIdempotent() {
+                let s = "hello"
+                let once = \(unary)(s)
+                let twice = \(unary)(once)
+                XCTAssertEqual(once, twice)
+            }
+
+            func testCommutative() {
+                let a = [1, 2]
+                let b = [3, 4]
+                XCTAssertEqual(\(binary)(a, b), \(binary)(b, a))
+            }
+
+            func testNonDetectableHelper() {
                 let result = helper()
                 XCTAssertNotNil(result)
             }
