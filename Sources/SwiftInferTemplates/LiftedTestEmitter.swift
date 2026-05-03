@@ -283,21 +283,6 @@ public enum LiftedTestEmitter {
         )
     }
 
-    /// Pick the canonical generator expression for `typeName`. If it
-    /// matches a `ProtoLawCore.RawType` (stdlib `Int`, `String`,
-    /// `Bool`, etc.), emit the kit's `RawType.generatorExpression` so
-    /// the M4.2 generator-selection convention holds. Otherwise emit
-    /// `\(typeName).gen()` — same fallback the
-    /// `DerivationStrategist` produces for non-derivable types,
-    /// requiring the user to provide `static func gen() -> Gen<T>`
-    /// or take the missing-symbol compile error.
-    public static func defaultGenerator(for typeName: String) -> String {
-        if let rawType = RawType(typeName: typeName) {
-            return rawType.generatorExpression
-        }
-        return "\(typeName).gen()"
-    }
-
     // MARK: - Shared stub shape
 
     /// Convenience overload for the unary-property arms (idempotent,
