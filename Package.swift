@@ -116,12 +116,17 @@ let package = Package(
         ),
         // SwiftInferCLI — ArgumentParser-driven command surface. Subcommands
         // (discover, drift, etc.) live here; the executable target is a thin
-        // entry point.
+        // entry point. M1.5 of TestLifter adds the SwiftInferTestLifter
+        // dep so the discover pipeline can scan the test target and feed
+        // CrossValidationKey records into TemplateRegistry's
+        // `crossValidationFromTestLifter` parameter (the +20 PRD §4.1
+        // signal lights up here).
         .target(
             name: "SwiftInferCLI",
             dependencies: [
                 "SwiftInferCore",
                 "SwiftInferTemplates",
+                "SwiftInferTestLifter",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),
@@ -210,9 +215,13 @@ let package = Package(
         // integration suite has room to scale. SwiftInferCLI dep added in
         // M6.2 so the discover→snapshot→reload integration test can call
         // BaselineLoader without re-implementing its read+write path.
+        // TestLifter M1.5 adds SwiftInferTestLifter dep so the
+        // end-to-end cross-validation +20 light-up integration test
+        // can synthesize fixtures and call TestLifter.discover directly
+        // alongside the CLI pipeline path.
         .testTarget(
             name: "SwiftInferIntegrationTests",
-            dependencies: ["SwiftInferTemplates", "SwiftInferCore", "SwiftInferCLI"]
+            dependencies: ["SwiftInferTemplates", "SwiftInferTestLifter", "SwiftInferCore", "SwiftInferCLI"]
         )
     ]
 )

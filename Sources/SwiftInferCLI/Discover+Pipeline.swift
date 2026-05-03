@@ -1,6 +1,7 @@
 import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
+import SwiftInferTestLifter
 
 /// Pipeline-side helpers for `swift-infer discover`. Split out of
 /// `SwiftInferCommand.swift` so the main file stays focused on the
@@ -67,10 +68,19 @@ extension SwiftInferCommand.Discover {
         for warning in vocabResult.warnings {
             diagnostics.writeDiagnostic("warning: \(warning)")
         }
+        // TestLifter M1.5 — scan the same directory for test bodies,
+        // run the slicer + round-trip detector, and convert the
+        // resulting LiftedSuggestions into CrossValidationKeys to feed
+        // TemplateRegistry's +20 cross-validation seam (PRD §4.1).
+        // TestSuiteParser only emits summaries for files containing
+        // recognized test methods, so production source naturally
+        // produces no lifted records.
+        let liftedArtifacts = try TestLifter.discover(in: directory)
         let artifacts = try TemplateRegistry.discoverArtifacts(
             in: directory,
             vocabulary: vocabResult.vocabulary,
-            diagnostic: { diagnostics.writeDiagnostic($0) }
+            diagnostic: { diagnostics.writeDiagnostic($0) },
+            crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys
         )
         let visible = artifacts.suggestions.filter { suggestion in
             effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault

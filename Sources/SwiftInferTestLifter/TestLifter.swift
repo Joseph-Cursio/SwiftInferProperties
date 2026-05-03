@@ -1,0 +1,53 @@
+import Foundation
+import SwiftInferCore
+
+extension TestLifter {
+
+    /// Result of a `TestLifter.discover(in:)` run. M1 carries lifted
+    /// round-trip suggestions only — M2+ extends with idempotence /
+    /// commutativity / etc. as additional patterns surface from the
+    /// detector pipeline.
+    public struct Artifacts: Sendable, Equatable {
+
+        public let liftedSuggestions: [LiftedSuggestion]
+
+        public init(liftedSuggestions: [LiftedSuggestion]) {
+            self.liftedSuggestions = liftedSuggestions
+        }
+
+        public static let empty = Artifacts(liftedSuggestions: [])
+
+        /// The cross-validation keys to feed into
+        /// `TemplateRegistry.discover(crossValidationFromTestLifter:)`.
+        /// Sorted-array → set conversion is collision-free because
+        /// `LiftedSuggestion.crossValidationKey` is `Hashable`.
+        public var crossValidationKeys: Set<CrossValidationKey> {
+            Set(liftedSuggestions.map(\.crossValidationKey))
+        }
+    }
+
+    /// Walk `directory` recursively, parse every `.swift` file as a
+    /// potential test source, slice each test method body, run the
+    /// `AssertAfterTransformDetector` round-trip pass, and collect the
+    /// surviving `LiftedSuggestion` records.
+    ///
+    /// **No directory filtering at this layer** — TestSuiteParser only
+    /// emits summaries for files containing recognized test methods
+    /// (XCTestCase subclasses or `@Test func`), so production source
+    /// files naturally produce no summaries and contribute nothing to
+    /// the artifacts. M1.5 calls this with the same `discover` target
+    /// directory the TemplateEngine uses; the M1 plan's open
+    /// decision #1 default `(a)` resolves the layering.
+    public static func discover(in directory: URL) throws -> Artifacts {
+        let summaries = try TestSuiteParser.scanTests(directory: directory)
+        var lifted: [LiftedSuggestion] = []
+        for summary in summaries {
+            let slice = Slicer.slice(summary.body)
+            let detections = AssertAfterTransformDetector.detect(in: slice)
+            for detection in detections {
+                lifted.append(LiftedSuggestion.roundTrip(from: detection))
+            }
+        }
+        return Artifacts(liftedSuggestions: lifted)
+    }
+}
