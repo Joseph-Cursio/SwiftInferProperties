@@ -13,7 +13,7 @@ import SwiftInferTemplates
 /// for-byte goldens, but had no explicit release-gate test pinning
 /// the contract under multiple inference-fallthrough types.
 ///
-/// R1.1.f — closes the §16 #4 gap before the v1.0 cut.
+/// R1.1.f — closes the §16 #4 gap before the v0.1.0 cut.
 @Suite("Generator inference — PRD §16 #4 .todo fallback (R1.1.f)")
 struct TodoFallbackHardGuaranteeTests {
 

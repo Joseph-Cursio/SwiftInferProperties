@@ -18,7 +18,7 @@ import SwiftInferTemplates
 ///    or above the `Sources/` tree (`Helpers.swift` next to
 ///    `Package.swift`) are not scanned.
 ///
-/// R1.1.g — closes the §16 #5 gap before the v1.0 cut.
+/// R1.1.g — closes the §16 #5 gap before the v0.1.0 cut.
 @Suite("Discover — PRD §16 #5 target scope (R1.1.g)")
 struct TargetScopeHardGuaranteeTests {
 

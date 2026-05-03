@@ -10,7 +10,7 @@ import SwiftInferTemplates
 /// the budget asserts that on a typical small project the full scan
 /// fits inside the latency budget the PRD documents.
 ///
-/// R1.1.a — closes the §13 row 3 gap before the v1.0 cut.
+/// R1.1.a — closes the §13 row 3 gap before the v0.1.0 cut.
 @Suite("Performance — PRD §13 drift incremental budget (R1.1.a)")
 struct DriftIncrementalPerformanceTests {
 

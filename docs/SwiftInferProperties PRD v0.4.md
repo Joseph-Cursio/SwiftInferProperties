@@ -559,12 +559,12 @@ Per Copilot's critique, contributors will accidentally build something too slow 
 | `swift-infer discover` on 50-file module | < 2 seconds wall | regression test fails; release blocked |
 | TestLifter parse of 100 test files | < 3 seconds wall | regression test fails |
 | `swift-infer drift` re-run after one-file change | < 500ms (incremental) | regression test fails |
-| Memory ceiling on 500-file module | < 600 MB resident (calibrated in v1.0 — see note below) | regression test fails |
+| Memory ceiling on 500-file module | < 600 MB resident (calibrated at the v0.1.0 cut — see note below) | regression test fails |
 | `swift-infer discover --interactive` first-prompt latency | < 1 second after process start | release blocked |
 
 Numbers are deliberately Swift-realistic (SwiftSyntax parsing dominates), not aspirational. Calibrate against `swift-collections` and `swift-algorithms` as the reference corpora during M1 — if the targets are already missed there, raise them in v0.4 rather than ship a tool that can't keep up with `swift package protolawcheck discover`.
 
-**v1.0 calibration note (row 4).** The v0.3 spec set the memory ceiling at "< 200 MB resident" without measurement. The R1.1.b release-prep measurement on the 500-file synthetic corpus that exercises every shipped template found delta ~492 MB; per the line above ("if the targets are already missed there, raise them"), the row 4 budget was revised to **600 MB** (current measurement + ~25% headroom matching the regression rule below). The v1.1 perf-tuning candidates surfaced during R1.1.b are recorded in `docs/perf-baseline-v1.0.md`. The other §13 rows hit their original v0.3 targets at the v1.0 cut.
+**v0.1.0 calibration note (row 4).** The v0.3 spec set the memory ceiling at "< 200 MB resident" without measurement. The R1.1.b release-prep measurement on the 500-file synthetic corpus that exercises every shipped template found delta ~492 MB; per the line above ("if the targets are already missed there, raise them"), the row 4 budget was revised to **600 MB** (current measurement + ~25% headroom matching the regression rule below). The post-v0.1.0 perf-tuning candidates surfaced during R1.1.b are recorded in `docs/perf-baseline-v0.1.md`. The other §13 rows hit their original v0.3 targets at the v0.1.0 cut.
 
 A **performance regression test suite** runs in CI: the discovery and drift commands are timed against fixed input corpora, results recorded, and a 25% regression in any number fails the build.
 

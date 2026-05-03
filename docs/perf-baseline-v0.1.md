@@ -1,6 +1,6 @@
-# SwiftInferProperties — v1.0 Performance Baseline
+# SwiftInferProperties — v0.1.0 Performance Baseline
 
-PRD v0.4 §13 mandates that "a 25% regression in any number fails the build." This file is the comparison anchor — the measured wall numbers (and one resident-memory delta) for every §13 row at the v1.0 cut. Future PRs that move any number more than 25% over the baseline below should be treated as a release blocker per §13's last paragraph.
+PRD v0.4 §13 mandates that "a 25% regression in any number fails the build." This file is the comparison anchor — the measured wall numbers (and one resident-memory delta) for every §13 row at the v0.1.0 cut. Future PRs that move any number more than 25% over the baseline below should be treated as a release blocker per §13's last paragraph.
 
 **Captured:** 2026-05-03 against commit on `main` after R1.1.h (`e686200`).
 **Hardware:** MacBook Air, Apple M1, 16 GB unified memory.
@@ -23,11 +23,11 @@ All numbers are single-shot wall times from a `swift test` invocation that filte
 
 ## §13 row 4 — calibration note
 
-PRD v0.3 §13 row 4 set the target at "< 200 MB resident" without measurement, and §13 itself authorized raising calibration-busted targets ("if the targets are already missed there, raise them in v0.4 rather than ship a tool that can't keep up"). The R1.1.b measurement on the v1.0 commit finds delta **~492 MB** on a 500-file synthetic — the original 200 MB target was unattainable on a real corpus that exercises every shipped template. The budget was revised to 600 MB (current measurement + ~25% headroom matching the §13 25%-regression rule).
+PRD v0.3 §13 row 4 set the target at "< 200 MB resident" without measurement, and §13 itself authorized raising calibration-busted targets ("if the targets are already missed there, raise them in v0.4 rather than ship a tool that can't keep up"). The R1.1.b measurement on the v0.1.0 commit finds delta **~492 MB** on a 500-file synthetic — the original 200 MB target was unattainable on a real corpus that exercises every shipped template. The budget was revised to 600 MB (current measurement + ~25% headroom matching the §13 25%-regression rule).
 
 The PRD §13 row 4 line was updated to "< 600 MB resident on 500-file module" in R1.3 alongside the version bump; the in-test budget references a per-suite constant `MemoryCeilingPerformanceTests.calibratedDeltaBudgetMB` so the two stay aligned.
 
-**v1.1 perf-tuning candidates** identified during R1.1.b (not blocking v1.0):
+**Post-v0.1.0 perf-tuning candidates** identified during R1.1.b (not blocking v0.1.0):
 - `FunctionScanner.scanCorpus(directory:)` accumulates `[FunctionSummary]` + `[IdentityCandidate]` + `[TypeDecl]` across all files at once. For larger corpora a streaming pass (one file → one suggestion-emission unit, dropped before next file parses) would halve memory.
 - The cross-function pairing pass (`FunctionPairing.pair(...)`) materializes the pair index in memory for the M1.4 round-trip + M3.x algebraic pairings. A bucket-by-canonical-type-name pre-filter would shrink the working set.
 
@@ -37,11 +37,11 @@ The PRD §13 row 4 line was updated to "< 600 MB resident on 500-file module" in
 
 ## §13 row 5 — measurement methodology
 
-`InteractiveFirstPromptPerformanceTests` times from `Discover.run` entry to the first `PromptInput.readLine()` invocation. PRD §13 row 5 wording is "after process start"; the ~10ms `main` → `AsyncParsableCommand` dispatch overhead between OS process start and `Discover.run` entry is not testable from inside the package. Open decision #2 in `docs/v1.0 Release Plan.md` documents the gap.
+`InteractiveFirstPromptPerformanceTests` times from `Discover.run` entry to the first `PromptInput.readLine()` invocation. PRD §13 row 5 wording is "after process start"; the ~10ms `main` → `AsyncParsableCommand` dispatch overhead between OS process start and `Discover.run` entry is not testable from inside the package. Open decision #2 in `docs/archive/v0.1.0 Release Plan.md` documents the gap.
 
 ## What "regression" means in CI
 
-PRD §13 last paragraph: "a 25% regression in any number fails the build." For each row above, the §13 contract is breached when the measurement crosses **1.25 × baseline** OR the row's hard budget — whichever is lower. The Swift Testing assertions in each suite use the hard budget as the gate; PR-time soft regression detection (the 25% rule) is a v1.1+ concern (would need a checked-in golden of these numbers + a comparison harness; not on the v1 critical path).
+PRD §13 last paragraph: "a 25% regression in any number fails the build." For each row above, the §13 contract is breached when the measurement crosses **1.25 × baseline** OR the row's hard budget — whichever is lower. The Swift Testing assertions in each suite use the hard budget as the gate; PR-time soft regression detection (the 25% rule) is a post-v0.1.0 concern (would need a checked-in golden of these numbers + a comparison harness; not on the v0.1.0 critical path).
 
 ## Re-baselining
 

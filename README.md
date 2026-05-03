@@ -2,7 +2,7 @@
 
 Type-directed property inference for Swift. Surfaces idempotence, round-trip pairs, and algebraic-structure (semigroup / monoid / group / semilattice / ring) candidates from function signatures, cross-function pairs, and existing unit tests — for human review, never silent execution.
 
-> **Status:** v1.0. The full design lives in [`docs/SwiftInferProperties PRD v0.4.md`](docs/SwiftInferProperties%20PRD%20v0.4.md). Performance baselines for the v1.0 cut: [`docs/perf-baseline-v1.0.md`](docs/perf-baseline-v1.0.md).
+> **Status:** v0.1.0 (first pre-release — SemVer 0.x; API may break in 0.2.x). The full design lives in [`docs/SwiftInferProperties PRD v0.4.md`](docs/SwiftInferProperties%20PRD%20v0.4.md). Performance baselines for the v0.1.0 cut: [`docs/perf-baseline-v0.1.md`](docs/perf-baseline-v0.1.md).
 
 ## What it does
 
@@ -18,12 +18,12 @@ SwiftInfer is a one-way downstream of [SwiftProtocolLaws](https://github.com/Jos
 SwiftInferProperties → SwiftProtocolLaws (PropertyBackend, DerivationStrategist) → swift-property-based
 ```
 
-Where SwiftProtocolLaws verifies the laws of *declared* protocol conformances, SwiftInfer surfaces *implicit* properties — and, when enough algebraic evidence accumulates on a type, suggests the standard-library or kit-defined protocol the type could conform to so SwiftProtocolLaws keeps verifying the laws on every CI run thereafter (RefactorBridge). v1.0 emits conformance proposals against `Equatable`, `Comparable`, `Numeric`, `SetAlgebra`, and (kit-defined in SwiftProtocolLaws v1.8.0+v1.9.0) `Semigroup`, `Monoid`, `CommutativeMonoid`, `Group`, `Semilattice`.
+Where SwiftProtocolLaws verifies the laws of *declared* protocol conformances, SwiftInfer surfaces *implicit* properties — and, when enough algebraic evidence accumulates on a type, suggests the standard-library or kit-defined protocol the type could conform to so SwiftProtocolLaws keeps verifying the laws on every CI run thereafter (RefactorBridge). v0.1.0 emits conformance proposals against `Equatable`, `Comparable`, `Numeric`, `SetAlgebra`, and (kit-defined in SwiftProtocolLaws v1.8.0+v1.9.0) `Semigroup`, `Monoid`, `CommutativeMonoid`, `Group`, `Semilattice`.
 
 ## Add to your project
 
 ```swift
-.package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "1.0.0")
+.package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "0.1.0")
 ```
 
 Or run as a one-off against an existing target:

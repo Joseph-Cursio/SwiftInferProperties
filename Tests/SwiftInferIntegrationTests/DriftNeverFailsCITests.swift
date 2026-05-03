@@ -11,7 +11,7 @@ import SwiftInferCore
 /// surfaces means the process would exit 0) but had no explicit
 /// release-gate test pinning the contract under heavy divergence.
 ///
-/// R1.1.e — closes the §16 #3 gap before the v1.0 cut.
+/// R1.1.e — closes the §16 #3 gap before the v0.1.0 cut.
 @Suite("Drift — PRD §16 #3 never fails CI (R1.1.e)")
 struct DriftNeverFailsCITests {
 

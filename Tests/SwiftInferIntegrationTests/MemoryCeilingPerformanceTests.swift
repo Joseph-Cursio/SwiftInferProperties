@@ -11,11 +11,11 @@ import SwiftInferTemplates
 /// 50ms during the scan and asserts that the **peak delta over the
 /// pre-discover baseline** stays inside the budget.
 ///
-/// **v0.3 → v1.0 calibration.** PRD v0.3 §13 row 4 set the target at
+/// **v0.3 → v0.1.0 calibration.** PRD v0.3 §13 row 4 set the target at
 /// "< 200 MB resident on 500-file module" — the line explicitly
 /// authorized raising calibration-busted targets ("if the targets are
 /// already missed there, raise them in v0.4 rather than ship a tool
-/// that can't keep up"). R1.1.b's measurement on the v1.0 commit
+/// that can't keep up"). R1.1.b's measurement on the v0.1.0 commit
 /// finds delta ~492 MB on a 500-file synthetic; the budget is revised
 /// to 600 MB (current + ~25% headroom, matching the §13 "25%
 /// regression fails the build" rule). The PRD §13 row 4 update lands
@@ -30,14 +30,14 @@ import SwiftInferTemplates
 /// the discover scan adds on top of that baseline — that delta is
 /// what regresses if discover starts allocating egregiously, which is
 /// the contract the §13 row gates. The absolute-RSS measurement
-/// against the real binary is captured in `docs/perf-baseline-v1.0.md`
+/// against the real binary is captured in `docs/perf-baseline-v0.1.md`
 /// (R1.2).
 ///
-/// R1.1.b — closes the §13 row 4 gap before the v1.0 cut.
+/// R1.1.b — closes the §13 row 4 gap before the v0.1.0 cut.
 @Suite("Performance — PRD §13 500-file memory ceiling (R1.1.b)")
 struct MemoryCeilingPerformanceTests {
 
-    /// 600 MB is the v1.0-calibrated target (revised from v0.3's
+    /// 600 MB is the v0.1.0-calibrated target (revised from v0.3's
     /// 200 MB — see suite docstring). Future regressions trip the
     /// PRD §13 25% rule against this number.
     static let calibratedDeltaBudgetMB: Double = 600.0
@@ -112,7 +112,7 @@ struct MemoryCeilingPerformanceTests {
 /// every 50ms. Captures the running peak so a transient mid-scan
 /// allocation isn't lost to a late single sample. The PRD §13 budget
 /// is "memory ceiling" — peak is the conservative read (open decision
-/// #1 in `docs/v1.0 Release Plan.md`).
+/// #1 in `docs/archive/v0.1.0 Release Plan.md`).
 private final class MemorySampler: @unchecked Sendable {
 
     private let lock = NSLock()

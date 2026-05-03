@@ -14,9 +14,9 @@ import SwiftInferCore
 /// times from `Discover.run` entry. The `main` → `AsyncParsableCommand`
 /// dispatch overhead between process start and `Discover.run` entry
 /// is < 10ms in practice and is not testable from inside the package
-/// — open decision #2 in `docs/v1.0 Release Plan.md`.
+/// — open decision #2 in `docs/archive/v0.1.0 Release Plan.md`.
 ///
-/// R1.1.c — closes the §13 row 5 gap before the v1.0 cut.
+/// R1.1.c — closes the §13 row 5 gap before the v0.1.0 cut.
 @Suite("Performance — PRD §13 --interactive first-prompt budget (R1.1.c)")
 struct InteractiveFirstPromptPerformanceTests {
 
