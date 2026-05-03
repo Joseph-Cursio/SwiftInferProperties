@@ -48,6 +48,83 @@ extension SwiftInferCommand.Discover {
         explicitTestDirectory: URL? = nil,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
+        let setup = resolvePipelineSetup(
+            directory: directory,
+            includePossible: includePossible,
+            explicitVocabularyPath: explicitVocabularyPath,
+            explicitConfigPath: explicitConfigPath,
+            explicitTestDirectory: explicitTestDirectory,
+            diagnostics: diagnostics
+        )
+        // TestLifter M1.5 — scan the resolved test directory for test
+        // bodies, run the slicer + detectors, and convert the resulting
+        // LiftedSuggestions into CrossValidationKeys to feed
+        // TemplateRegistry's +20 cross-validation seam (PRD §4.1).
+        // TestSuiteParser only emits summaries for files containing
+        // recognized test methods, so production source naturally
+        // produces no lifted records.
+        let liftedArtifacts = try TestLifter.discover(in: setup.testDirectory)
+        let artifacts = try TemplateRegistry.discoverArtifacts(
+            in: directory,
+            vocabulary: setup.vocabulary,
+            diagnostic: { diagnostics.writeDiagnostic($0) },
+            crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys
+        )
+        // TestLifter M3.2 — promote LiftedSuggestions to Suggestions,
+        // apply the same `GeneratorSelection` pass TemplateEngine ran
+        // internally, and suppress promoted entries whose
+        // crossValidationKey matches a TemplateEngine suggestion (the
+        // +20 cross-validation signal already communicates the
+        // corroboration; double-emitting would confuse the reader).
+        // Survivors enter the visible stream with a +50 testBodyPattern
+        // signal and the inferred generator (or `.todo` when type
+        // recovery failed — PRD §16 #4 invariant preserved).
+        let promotedLifted = LiftedSuggestionPipeline.promote(
+            lifted: liftedArtifacts.liftedSuggestions,
+            templateEngineSuggestions: artifacts.suggestions,
+            summaries: artifacts.summaries,
+            typeDecls: artifacts.typeDecls,
+            setupAnnotationsByOrigin: liftedArtifacts.setupAnnotationsByOrigin,
+            constructionRecord: liftedArtifacts.constructionRecord
+        )
+        let filteredPromotedLifted = applyLiftedSkipMarkerFilter(
+            to: promotedLifted,
+            productionTarget: directory,
+            testDirectory: setup.testDirectory,
+            diagnostics: diagnostics
+        )
+        let combined = artifacts.suggestions + filteredPromotedLifted
+        let visible = combined.filter { suggestion in
+            setup.includePossible || suggestion.score.tier.isVisibleByDefault
+        }
+        return PipelineResult(
+            suggestions: visible,
+            packageRoot: setup.packageRoot,
+            inverseElementPairs: artifacts.inverseElementPairs
+        )
+    }
+
+    /// Bundle of resolved settings the discover pipeline pulls from
+    /// `ConfigLoader` + `VocabularyLoader` + `effectiveTestDirectory`
+    /// before invoking the discover passes. Extracted out of
+    /// `collectVisibleSuggestions` to keep that function under
+    /// SwiftLint's body-length cap.
+    private struct PipelineSetup {
+        let includePossible: Bool
+        let vocabulary: Vocabulary
+        let testDirectory: URL
+        let packageRoot: URL?
+    }
+
+    // swiftlint:disable:next function_parameter_count
+    private static func resolvePipelineSetup(
+        directory: URL,
+        includePossible: Bool?,
+        explicitVocabularyPath: URL?,
+        explicitConfigPath: URL?,
+        explicitTestDirectory: URL?,
+        diagnostics: any DiagnosticOutput
+    ) -> PipelineSetup {
         let configResult = ConfigLoader.load(
             startingFrom: directory,
             explicitPath: explicitConfigPath
@@ -69,56 +146,19 @@ extension SwiftInferCommand.Discover {
         for warning in vocabResult.warnings {
             diagnostics.writeDiagnostic("warning: \(warning)")
         }
-        // TestLifter M6.0 — resolve the test directory separately from
-        // the production target. Default walk-up looks for
+        // TestLifter M6.0 — resolve the test directory separately
+        // from the production target. Default walk-up looks for
         // <package-root>/Tests/; the user can override with --test-dir.
-        // Without M6.0, real CLI invocations (which resolve --target Foo
-        // to Sources/Foo/) never see test files at all — the
-        // cross-validation seam silently never fires for them.
         let testDirectory = effectiveTestDirectory(
             productionTarget: directory,
             explicitTestDir: explicitTestDirectory,
             diagnostic: { diagnostics.writeDiagnostic("warning: \($0)") }
         )
-        // TestLifter M1.5 — scan the resolved test directory for test
-        // bodies, run the slicer + detectors, and convert the resulting
-        // LiftedSuggestions into CrossValidationKeys to feed
-        // TemplateRegistry's +20 cross-validation seam (PRD §4.1).
-        // TestSuiteParser only emits summaries for files containing
-        // recognized test methods, so production source naturally
-        // produces no lifted records.
-        let liftedArtifacts = try TestLifter.discover(in: testDirectory)
-        let artifacts = try TemplateRegistry.discoverArtifacts(
-            in: directory,
+        return PipelineSetup(
+            includePossible: effectiveIncludePossible,
             vocabulary: vocabResult.vocabulary,
-            diagnostic: { diagnostics.writeDiagnostic($0) },
-            crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys
-        )
-        // TestLifter M3.2 — promote LiftedSuggestions to Suggestions,
-        // apply the same `GeneratorSelection` pass TemplateEngine ran
-        // internally, and suppress promoted entries whose
-        // crossValidationKey matches a TemplateEngine suggestion (the
-        // +20 cross-validation signal already communicates the
-        // corroboration; double-emitting would confuse the reader).
-        // Survivors enter the visible stream with a +50 testBodyPattern
-        // signal and the inferred generator (or `.todo` when type
-        // recovery failed — PRD §16 #4 invariant preserved).
-        let promotedLifted = LiftedSuggestionPipeline.promote(
-            lifted: liftedArtifacts.liftedSuggestions,
-            templateEngineSuggestions: artifacts.suggestions,
-            summaries: artifacts.summaries,
-            typeDecls: artifacts.typeDecls,
-            setupAnnotationsByOrigin: liftedArtifacts.setupAnnotationsByOrigin,
-            constructionRecord: liftedArtifacts.constructionRecord
-        )
-        let combined = artifacts.suggestions + promotedLifted
-        let visible = combined.filter { suggestion in
-            effectiveIncludePossible || suggestion.score.tier.isVisibleByDefault
-        }
-        return PipelineResult(
-            suggestions: visible,
-            packageRoot: configResult.packageRoot,
-            inverseElementPairs: artifacts.inverseElementPairs
+            testDirectory: testDirectory,
+            packageRoot: configResult.packageRoot
         )
     }
 
@@ -248,6 +288,67 @@ extension SwiftInferCommand.Discover {
             }
         }
         return productionTarget
+    }
+
+    /// TestLifter M6.1 — apply `// swiftinfer: skip <hash>` filtering
+    /// to the promoted lifted suggestions. The TE side already
+    /// filtered against production-target markers inside
+    /// `discoverArtifacts`; the lifted side needs both (a) the same
+    /// production-target markers re-scanned (since `discoverArtifacts`
+    /// doesn't expose them) AND (b) any markers in the resolved test
+    /// directory. The user can put `// swiftinfer: skip <lifted-hash>`
+    /// in either place to suppress a lifted suggestion.
+    static func applyLiftedSkipMarkerFilter(
+        to promotedLifted: [Suggestion],
+        productionTarget: URL,
+        testDirectory: URL,
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        let liftedSkipHashes = collectLiftedSkipHashes(
+            productionTarget: productionTarget,
+            testDirectory: testDirectory,
+            diagnostics: diagnostics
+        )
+        if liftedSkipHashes.isEmpty {
+            return promotedLifted
+        }
+        return promotedLifted.filter { suggestion in
+            !liftedSkipHashes.contains(suggestion.identity.normalized)
+        }
+    }
+
+    /// Union of `// swiftinfer: skip <hash>` markers found in the
+    /// production-target tree + the resolved test directory tree
+    /// (when the two are distinct). The union feeds the
+    /// post-promotion filter that suppresses lifted suggestions the
+    /// user marked for skip. Errors during the scan are logged to
+    /// diagnostics and the partial result is returned — same posture
+    /// `discoverArtifacts` takes for its prod-target scan.
+    static func collectLiftedSkipHashes(
+        productionTarget: URL,
+        testDirectory: URL,
+        diagnostics: any DiagnosticOutput
+    ) -> Set<String> {
+        var hashes: Set<String> = []
+        do {
+            hashes.formUnion(try SkipMarkerScanner.skipHashes(in: productionTarget))
+        } catch {
+            diagnostics.writeDiagnostic(
+                "warning: failed to scan production target for // swiftinfer: skip"
+                    + " markers: \(error.localizedDescription)"
+            )
+        }
+        if testDirectory.standardizedFileURL != productionTarget.standardizedFileURL {
+            do {
+                hashes.formUnion(try SkipMarkerScanner.skipHashes(in: testDirectory))
+            } catch {
+                diagnostics.writeDiagnostic(
+                    "warning: failed to scan test directory for // swiftinfer: skip"
+                        + " markers: \(error.localizedDescription)"
+                )
+            }
+        }
+        return hashes
     }
 
     /// Walk up parent directories looking for `Package.swift`. Same
