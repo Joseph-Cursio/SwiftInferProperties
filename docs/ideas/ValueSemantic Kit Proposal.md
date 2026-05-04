@@ -1,7 +1,7 @@
 # ValueSemantic Kit Proposal
 
 **Status:** Draft / proposal — not yet committed to any milestone.
-**Target:** SwiftProtocolLaws (kit) + swift-property-based (engine), pre-requisite to a SwiftInferProperties §8 PRD section.
+**Target:** SwiftPropertyLaws (kit, currently at v2.0.0 — the rename release) + swift-property-based (engine); pre-requisite to a SwiftInferProperties §8 PRD section.
 **Date:** 2026-05-04
 
 ## 1. Summary
@@ -235,7 +235,7 @@ Three K-prep series, mirroring the M7-prep / M8-prep pattern.
 3. **V1.2** — Macro extension for mutating-method discovery.
 4. **V1.3** — Auto-generated property tests (one sub-test per mutating operation).
 5. **V1.4** — Validation suite + release docs.
-6. **Ship as kit v1.10.0.**
+6. **Ship as kit v2.1.0** (next minor after the v2.0.0 rename release).
 
 ### K-prep-V2 — Shrinking (engine, breaking)
 
@@ -246,11 +246,11 @@ Three K-prep series, mirroring the M7-prep / M8-prep pattern.
 5. **V2.4** — `Gen.filter(_:retries:)` migration.
 6. **V2.5** — Failure-message provenance (shrunk vs. original counterexample).
 7. **V2.6** — Validation suite + release docs.
-8. **Ship as kit v2.0.0** (major bump — `Gen<T>` API breaks).
+8. **Ship as kit v3.0.0** (major bump — `Gen<T>` API breaks; the v2.x line stays on the post-rename pre-shrinking shape).
 
 ### K-prep-V3 — Primitives (kit, non-breaking)
 
-Each primitive ships as a minor bump after V2.0. No architectural commitments; ship as user demand surfaces. Suggested order: `frequency` → `recursive` → Foundation generators (`date`, `url`, `data`, `uuid`) → `sized` → others.
+Each primitive ships as a minor bump after V2 (so v3.1.0, v3.2.0, …). No architectural commitments; ship as user demand surfaces. Suggested order: `frequency` → `recursive` → Foundation generators (`date`, `url`, `data`, `uuid`) → `sized` → others.
 
 ### Then SwiftInferProperties-side
 
@@ -288,7 +288,7 @@ Each primitive ships as a minor bump after V2.0. No architectural commitments; s
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| `Gen<T>` refactor breaks existing kit consumers | High (it's an API break) | V2 ships as kit v2.0.0; coordinate with downstream consumers; keep the migration trivial via deprecated shims for one minor cycle |
+| `Gen<T>` refactor breaks existing kit consumers | High (it's an API break) | V2 ships as kit v3.0.0; coordinate with downstream consumers; keep the migration trivial via deprecated shims for one minor cycle |
 | Mutation enumeration misses an operation, false-passes a leaky type | Medium | Macro discovery should err on the side of over-enumeration; tests for the enumerator itself |
 | Shrinker for user types diverges from generator | Low if integrated; high if external | Integrated architecture eliminates this by construction |
 | CoW types still false-positive after opt-in (CoW path not exercised in test) | Medium | Open decision #3 — explicit `triggerCoWForTesting` may be required |

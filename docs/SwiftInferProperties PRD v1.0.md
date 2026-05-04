@@ -5,7 +5,7 @@
 **Version:** 1.0
 **Status:** Shipped (v1 surface complete; v1.1+ trajectory described in §20)
 **Audience:** Open Source Contributors, Swift Ecosystem
-**Depends On:** SwiftProtocolLaws (ProtocolLawKit + ProtoLawMacro + ProtoLawCore), v1.9.0+
+**Depends On:** SwiftPropertyLaws (PropertyLawKit + PropertyLawMacro + PropertyLawCore), v2.0.0+
 
 > This document describes the v1 SwiftInfer surface as it exists today: TemplateEngine + RefactorBridge + TestLifter, plus the §7.8 first-example expanded output (preconditions). Where features are shipped, the prose is descriptive ("the system does"). Where features are deferred to v1.1+, the prose is forward-looking ("would" / "is planned"). The §5.8, §5.9, and §7.9 milestone tables call out the **STATUS** column for each row so readers can see at a glance what's done versus what's named-but-deferred.
 
@@ -13,7 +13,7 @@
 
 ## 1. Overview
 
-SwiftProtocolLaws addresses the lowest-hanging fruit in automated property testing: if a type declares a protocol, verify that the implementation satisfies the protocol's semantic laws. That project is intentionally scoped to the *explicit* — conformances the developer has already declared.
+SwiftPropertyLaws addresses the lowest-hanging fruit in automated property testing: if a type declares a protocol, verify that the implementation satisfies the protocol's semantic laws. That project is intentionally scoped to the *explicit* — conformances the developer has already declared.
 
 SwiftInfer addresses what comes next: the *implicit*. Properties that are meaningful and testable, but are not encoded in any protocol declaration. They live in the structure of function signatures, in the relationships between functions, in the algebraic shape of operations, and in the patterns visible in existing unit tests.
 
@@ -21,7 +21,7 @@ This document describes **SwiftInfer**, a Swift package delivering three v1 cont
 
 - **Contribution 1 — TemplateEngine** (shipped): A library of named property templates matched against function signatures via SwiftSyntax + light type-flow analysis, emitting candidate property tests for human review. Includes algebraic-structure detectors (semigroup, monoid, group, semilattice, ring) that drive both test generation *and* protocol-conformance refactoring suggestions.
 - **Contribution 2 — TestLifter** (shipped): A tool that analyzes existing XCTest and Swift Testing unit test suites, slices each test body into "setup" and "property" regions, and suggests generalized property tests derived from the property region — including generator candidates inferred from how values were constructed in the test, and inferred preconditions surfaced as advisory comments inside generated `Gen<T>` bodies.
-- **Contribution 3 — RefactorBridge** (shipped): When TemplateEngine accumulates enough algebraic evidence on a type, SwiftInfer suggests the corresponding standard-library or kit-supported protocol conformance so the property can be verified by SwiftProtocolLaws on every CI run.
+- **Contribution 3 — RefactorBridge** (shipped): When TemplateEngine accumulates enough algebraic evidence on a type, SwiftInfer suggests the corresponding standard-library or kit-supported protocol conformance so the property can be verified by SwiftPropertyLaws on every CI run.
 - **Contribution 4 (v1.1) — SemanticIndex** (deferred): A persistent, queryable graph of inferred properties and relationships across runs. Discussed in §20 Future Directions, deliberately out of v1 scope. Mentioned here so the v1 architecture leaves the door open.
 
 All shipped contributions produce *suggestions for human review*, not silently executed tests. The developer is always in the loop.
@@ -63,7 +63,7 @@ Algebraic structures (semigroups, monoids, groups, semilattices, rings) are not 
 - **Concurrency primitives (task merging, cancellation)** → semigroup or monoid
 - **String/Array/Log/Dictionary accumulators** → monoid with `empty` identity
 
-When SwiftInfer detects these patterns, it generates the corresponding properties **and** points the developer at the standard-library or kit-supported protocol they could conform to so SwiftProtocolLaws verifies the laws on every run thereafter. That bridge — discovery now, enforcement forever — is RefactorBridge.
+When SwiftInfer detects these patterns, it generates the corresponding properties **and** points the developer at the standard-library or kit-supported protocol they could conform to so SwiftPropertyLaws verifies the laws on every run thereafter. That bridge — discovery now, enforcement forever — is RefactorBridge.
 
 ### 2.3 The Unit Test as an Underused Signal
 
@@ -71,9 +71,9 @@ Real-world tests are messy. A `testRoundTrip` may include five lines of `JSONEnc
 
 ### 2.4 The Gap SwiftInfer Fills
 
-SwiftProtocolLaws handles: *"you declared a protocol, does your implementation honor its laws?"*
+SwiftPropertyLaws handles: *"you declared a protocol, does your implementation honor its laws?"*
 
-SwiftInfer handles: *"given what your code looks like and what your tests say, what properties are you implicitly claiming, and is there a protocol you should be conforming to so SwiftProtocolLaws can keep verifying them?"*
+SwiftInfer handles: *"given what your code looks like and what your tests say, what properties are you implicitly claiming, and is there a protocol you should be conforming to so SwiftPropertyLaws can keep verifying them?"*
 
 -----
 
@@ -83,19 +83,19 @@ SwiftInfer handles: *"given what your code looks like and what your tests say, w
 
 - Identify candidate properties from function signatures and types without requiring developer annotation
 - Surface round-trip pairs, idempotence candidates, and **algebraic structures** through structural analysis
-- Suggest protocol conformances that would let SwiftProtocolLaws verify discovered algebraic laws on every CI run (RefactorBridge)
+- Suggest protocol conformances that would let SwiftPropertyLaws verify discovered algebraic laws on every CI run (RefactorBridge)
 - Analyze existing unit test suites and suggest lifted property tests, slicing test bodies into setup/property regions
-- Infer generator candidates from how values were constructed in existing tests, delegating to SwiftProtocolLaws' shared `DerivationStrategist`
+- Infer generator candidates from how values were constructed in existing tests, delegating to SwiftPropertyLaws' shared `DerivationStrategist`
 - Surface inferred preconditions on those generators as advisory comments when the test corpus shows a homogeneous literal pattern (e.g. `value: positive Int` across every test site)
 - Produce human-reviewable output with weighted-score provenance, counter-signals, and **first-class explainability** (§4.5)
 - Operate as a CLI discovery tool with an interactive triage mode, and as a non-fatal CI drift checker
-- Integrate with SwiftProtocolLaws' `PropertyBackend` abstraction for test execution
+- Integrate with SwiftPropertyLaws' `PropertyBackend` abstraction for test execution
 - Track adoption decisions so the scoring engine can be empirically tuned (§17, v1.1+)
 
 ### Non-Goals
 
 - Automatically executing inferred properties without human review
-- Replacing unit tests or SwiftProtocolLaws protocol law checks
+- Replacing unit tests or SwiftPropertyLaws protocol law checks
 - Full runtime invariant inference (Daikon-style instrumentation)
 - Stateful / model-based test generation (separate project scope)
 - Correctness guarantees on inferred properties — all output is probabilistic suggestion
@@ -147,7 +147,7 @@ A suggestion's score is the sum of contributing signals (positive and negative).
 | **Type-symmetry signature** | +30 | `T → U` paired with `U → T` in the same scope (type, file, or module). For unary templates, `T → T` for idempotence; `(T, T) → T` for binary-op templates. |
 | **Algebraic-structure cluster** | +25 per element | Type exposes a binary op `(T, T) → T` *and* an identity-shaped constant. Each additional element (associativity confirmed by signature; inverse function present; idempotence detected) adds +25. |
 | **Reduce/fold usage** | +20 | The type is used in `.reduce(identity, op)` or a manual `for`/accumulator builder pattern at least once in the analyzed corpus. |
-| **`@Discoverable(group:)` annotation** | +35 | Two functions share an explicit `@Discoverable(group:)` from SwiftProtocolLaws — promoted to HIGH in `ProtoLawMacro`'s discovery and re-used here. |
+| **`@Discoverable(group:)` annotation** | +35 | Two functions share an explicit `@Discoverable(group:)` from SwiftPropertyLaws — promoted to HIGH in `PropertyLawMacro`'s discovery and re-used here. |
 | **Test-body pattern** | +50 | TestLifter detects the same structural pattern in 3+ distinct test methods. Configurable; default is 2. |
 | **Cross-validation** | +20 | TemplateEngine (signature) and TestLifter (test) independently arrive at the same template for the same function. Capped at +20. |
 | **Sampling pass under derived generator** | +10 | A trial run of 25 samples passes using a `DerivationStrategist`-supplied generator. Deliberately small — see §4.3. |
@@ -332,7 +332,7 @@ Multiple per-template signals on the same type → structural claim (semigroup, 
 
 | Detected combination | Implies | RefactorBridge target |
 |---|---|---|
-| binary op `(T, T) → T` + associativity | **Semigroup** | **kit-defined `Semigroup`** (SwiftProtocolLaws v1.8.0+) |
+| binary op `(T, T) → T` + associativity | **Semigroup** | **kit-defined `Semigroup`** (SwiftPropertyLaws v1.8.0+) |
 | Semigroup + identity element | **Monoid** | **kit-defined `Monoid`** (v1.8.0+); `AdditiveArithmetic` still suggested as a *secondary* Option B when the `+` / `zero` shape fits |
 | Monoid + commutativity | **CommutativeMonoid** | **kit-defined `CommutativeMonoid`** (v1.9.0+) — adds `combineCommutativity` Strict law on top of Monoid |
 | Monoid + inverse function | **Group** | **kit-defined `Group`** (v1.9.0+) — adds `static func inverse(_:)` requirement + `combineLeftInverse` / `combineRightInverse` Strict laws |
@@ -340,7 +340,7 @@ Multiple per-template signals on the same type → structural claim (semigroup, 
 | Two monoids on same type, distributive | **Ring** | suggest stdlib `Numeric` (with caveats — see below) |
 | `T → T` + `T → T` inverse + identity | **Group acting on T** | (no kit protocol — informational; function-space carrier doesn't fit the kit's per-type protocol shape) |
 
-The writeout path (`Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`) emits aliasing extensions that bridge the user's existing op / identity names into the kit's required `static func combine(_:_:)` / `static var identity` / `static func inverse(_:)`. The user's source compiles end-to-end against `import ProtocolLawKit`; SwiftProtocolLaws' discovery plugin then verifies the laws on every CI run thereafter.
+The writeout path (`Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`) emits aliasing extensions that bridge the user's existing op / identity names into the kit's required `static func combine(_:_:)` / `static var identity` / `static func inverse(_:)`. The user's source compiles end-to-end against `import PropertyLawKit`; SwiftPropertyLaws' discovery plugin then verifies the laws on every CI run thereafter.
 
 The orchestrator → emitter → InteractiveTriage chain handles each row above end-to-end. The `[A/B/B'/s/n/?]` extended prompt surfaces the Semilattice + SetAlgebra dual when curated set-named ops fire, plus the incomparable-arm split for types that satisfy both CommutativeMonoid AND Group simultaneously (mathematically a CommutativeGroup; v1.9.0 doesn't ship a kit `CommutativeGroup`, so the orchestrator emits both as peer proposals). Ring detection consumes a per-(type, op-set) signal accumulator + curated additive (`+` / `add` / `plus` / `sum`) and multiplicative (`*` / `multiply` / `times` / `mul` / `product`) naming lists; the writeout targets stdlib `Numeric` with a strong §4.5 caveat covering the FloatingPoint / IEEE-754 trap.
 
@@ -354,7 +354,7 @@ When a function accumulates signals for multiple templates whose properties are 
 
 ### 5.7 Annotation API
 
-Reuses the **`@Discoverable(group:)` attribute syntax** from `ProtoLawMacro`. SwiftInferProperties' scanner recognizes the attribute by name match during the SwiftSyntax walk — *no runtime dependency* on `ProtoLawMacro` is required at scan time, so users opting into `@Discoverable` solely for SwiftInfer scoping don't pay a forced second `import`. Users wanting compile-time validation of the attribute (the kit's macro-expansion guarantee) import `ProtoLawMacro` themselves.
+Reuses the **`@Discoverable(group:)` attribute syntax** from `PropertyLawMacro`. SwiftInferProperties' scanner recognizes the attribute by name match during the SwiftSyntax walk — *no runtime dependency* on `PropertyLawMacro` is required at scan time, so users opting into `@Discoverable` solely for SwiftInfer scoping don't pay a forced second `import`. Users wanting compile-time validation of the attribute (the kit's macro-expansion guarantee) import `PropertyLawMacro` themselves.
 
 Introduces `@CheckProperty(.idempotent)` / `@CheckProperty(.roundTrip, pairedWith:)` / `@CheckProperty(.preservesInvariant(\.keyPath))` for direct stub generation. Implemented as a SwiftSyntax peer macro that expands the tagged function decl into an `@Test func` peer in the user's source — not into `Tests/Generated/SwiftInfer/`. The latter is the `--interactive` writeout path (§3.6 step 3); `@CheckProperty` is the per-declaration opt-in path. Both paths consume the sampling seed (§16 #6) and the `GeneratorSelection` strategy.
 
@@ -364,7 +364,7 @@ Introduces `@CheckProperty(.idempotent)` / `@CheckProperty(.roundTrip, pairedWit
 |-----------|-------------|--------|
 | **M1** | SwiftSyntax pipeline; CLI discovery tool (`swift-infer discover`); round-trip + idempotence templates wired through the §4 scoring engine and §4.5 explainability block; basic cross-function pairing (type + naming filter); `// swiftinfer: skip` rejection markers honored; performance budget hit on the §13 reference corpora (`swift-collections`, `swift-algorithms`). | **Shipped** |
 | **M2** | Commutativity, associativity, identity-element templates; project configuration (`.swiftinfer/config.toml`); pluggable naming vocabulary (§4.5) loaded from `.swiftinfer/vocabulary.json`. | **Shipped** |
-| **M3** | Contradiction detection (§5.6); cross-validation with TestLifter (+20 signal per §4.1) once TestLifter M1 lands. Prerequisite: `DerivationStrategist` exposed publicly from SwiftProtocolLaws. | **Shipped** |
+| **M3** | Contradiction detection (§5.6); cross-validation with TestLifter (+20 signal per §4.1) once TestLifter M1 lands. Prerequisite: `DerivationStrategist` exposed publicly from SwiftPropertyLaws. | **Shipped** |
 | **M4** | Scoring model surfaced fully in output (per-signal weights in the explainability block); sampling-before-suggesting (§4.3) using the seeded policy of §16 #6. | **Shipped** |
 | **M5** | `@CheckProperty` and `@Discoverable` annotation API (§5.7); `--dry-run` / `--stats-only` modes. | **Shipped** |
 | **M6** | Workflow operationalization. `swift-infer discover --interactive` triage mode (§8) walking suggestions with `[A/B/s/n/?]` prompts; the §3.6 step 3 writeout — accepted suggestions emit property-test stubs to `Tests/Generated/SwiftInfer/`; `swift-infer drift` mode (§9) with `.swiftinfer/baseline.json` baseline + non-fatal drift warnings; `.swiftinfer/decisions.json` infrastructure (read + write + schema). | **Shipped** |
@@ -418,7 +418,7 @@ Single-source ownership for every CLI subcommand, generated-files path, `.swifti
 
 | Attribute | Owner (definition) | Owner (consumption) |
 |---|---|---|
-| `@Discoverable(group:)` | SwiftProtocolLaws (`ProtoLawMacro`) | TemplateEngine M5 — recognizes by name match, no runtime dep |
+| `@Discoverable(group:)` | SwiftPropertyLaws (`PropertyLawMacro`) | TemplateEngine M5 — recognizes by name match, no runtime dep |
 | `@CheckProperty(.idempotent)` | TemplateEngine M5 | M5 peer-macro expansion at user compile time |
 | `@CheckProperty(.roundTrip, pairedWith:)` | TemplateEngine M5 | M5 peer-macro expansion |
 | `@CheckProperty(.preservesInvariant(\.keyPath))` | TemplateEngine M7.2 | M7.2 peer-macro expansion |
@@ -427,7 +427,7 @@ Single-source ownership for every CLI subcommand, generated-files path, `.swifti
 
 ## 6. Contribution 3: RefactorBridge
 
-The bridge: TemplateEngine accumulates strong evidence for a monoid/ring/semilattice → RefactorBridge proposes both a one-off property test (Option A) and a protocol conformance (Option B) that SwiftProtocolLaws then verifies on every CI run. Both options are presented; the developer chooses; the choice is logged to `.swiftinfer/decisions.json`. RefactorBridge writes conformance stubs only to `Tests/Generated/SwiftInferRefactors/`, never to existing source files (see §16 Hard Guarantees).
+The bridge: TemplateEngine accumulates strong evidence for a monoid/ring/semilattice → RefactorBridge proposes both a one-off property test (Option A) and a protocol conformance (Option B) that SwiftPropertyLaws then verifies on every CI run. Both options are presented; the developer chooses; the choice is logged to `.swiftinfer/decisions.json`. RefactorBridge writes conformance stubs only to `Tests/Generated/SwiftInferRefactors/`, never to existing source files (see §16 Hard Guarantees).
 
 When two structures fire on the same type and one strictly subsumes the other (Monoid + Semilattice → Semilattice wins; Semigroup + Monoid → Monoid wins), the orchestrator emits the strongest-only Option B. When two structures are incomparable (CommutativeMonoid + Group on the same type — mathematically a CommutativeGroup but no kit `CommutativeGroup` ships in v1.9.0), both proposals emit as peer Option B's via the `[A/B/B'/s/n/?]` extended prompt. When a curated secondary fires alongside a kit primary (Semilattice + curated set-named `union`/`intersect`/`subtract` ops → SetAlgebra; Monoid + `+`/`zero` shape → AdditiveArithmetic), both are surfaced.
 
@@ -459,7 +459,7 @@ Seven detectors run over the sliced property region:
 
 Tiered fallback for generator inference, ordered most-trusted first:
 
-1. **`DerivationStrategist`** (memberwise / `CaseIterable` / `RawRepresentable`) — delegated to SwiftProtocolLaws' shared strategist. Highest confidence.
+1. **`DerivationStrategist`** (memberwise / `CaseIterable` / `RawRepresentable`) — delegated to SwiftPropertyLaws' shared strategist. Highest confidence.
 2. **Codable round-trip** (`Gen<T> { JSONEncoder/JSONDecoder ... }`) — fires when the type conforms to `Codable` or `Encodable + Decodable`. Medium confidence; emits a fixture-placeholder TODO that the user replaces.
 3. **Mock-inferred from observed test construction** — the §13 calibrated rule: when ≥3 test sites construct the type with the same dominant argument shape, synthesize a `Gen<T> { _ in T(label: <Gen<...>>.run(), ...) }` stub from the kit's `RawType.generatorExpression` factories. Low confidence; surfaced with a "Mock-inferred from N construction sites in test bodies — low confidence (verify the generator covers your domain)" provenance line. Multi-shape ambiguity → no synthesis. Constructor sites with non-literal arguments are skipped at the scanner level; a curated non-determinism patterns list (`Date()`, `UUID()`, `arc4random()`, etc.) belt-and-suspenders the rejection at synthesis time. **v1 coverage:** this rung fires on lifted suggestions only — TemplateEngine-side suggestions still emit `?.gen()` placeholders even when the test corpus has the data. Routing the synthesizer to the TE path requires exposing `generatorTypeByIdentity` from `TemplateRegistry.discoverArtifacts`; deferred to v1.1+ (§20.9).
 4. **`.todo` placeholder** — when no other strategy applies, the stub emits `?.gen()` which doesn't compile. The user supplies the generator. Forces conscious adoption rather than silently-wrong code (PRD §16 #4).
@@ -550,32 +550,32 @@ Decisions logged to `.swiftinfer/decisions.json`.
 
 | Concern | Owner | Notes |
 |---|---|---|
-| Conformance detection | SwiftProtocolLaws (`ProtoLawMacro` discovery plugin) | SwiftInfer never re-implements |
-| Protocol-law verification | SwiftProtocolLaws (`ProtocolLawKit`) | All test execution goes through `PropertyBackend` |
-| Memberwise generator derivation | SwiftProtocolLaws (`DerivationStrategist`) | **Shared** between `ProtoLawMacro` and SwiftInfer; exposed publicly from `ProtoLawCore` |
-| Test execution | SwiftProtocolLaws (`PropertyBackend`) | Single backend (`swift-property-based`); abstraction stays public |
+| Conformance detection | SwiftPropertyLaws (`PropertyLawMacro` discovery plugin) | SwiftInfer never re-implements |
+| Protocol-law verification | SwiftPropertyLaws (`PropertyLawKit`) | All test execution goes through `PropertyBackend` |
+| Memberwise generator derivation | SwiftPropertyLaws (`DerivationStrategist`) | **Shared** between `PropertyLawMacro` and SwiftInfer; exposed publicly from `PropertyLawCore` |
+| Test execution | SwiftPropertyLaws (`PropertyBackend`) | Single backend (`swift-property-based`); abstraction stays public |
 | Signature-based property inference | SwiftInfer (`TemplateEngine`) | Includes type-flow analysis |
 | Algebraic-structure composition | SwiftInfer (`TemplateEngine` §5.4) | Drives RefactorBridge |
-| Conformance suggestions back to SwiftProtocolLaws | SwiftInfer (`RefactorBridge`) | Writes only to `Tests/Generated/SwiftInferRefactors/` |
+| Conformance suggestions back to SwiftPropertyLaws | SwiftInfer (`RefactorBridge`) | Writes only to `Tests/Generated/SwiftInferRefactors/` |
 | Test-body inference | SwiftInfer (`TestLifter`) | Includes slicing, mock-based generator synthesis, inferred preconditions |
 | CLI / triage / drift / decisions persistence | SwiftInfer (CLI surface) | `.swiftinfer/` directory is SwiftInfer-owned |
 | Naming vocabulary | SwiftInfer (`.swiftinfer/vocabulary.json`) | Project-extensible per §4.5 |
 
-A type rule of thumb for contributors: **contractual** properties live in SwiftProtocolLaws (you said you conform to X, X has laws, the kit verifies them). **Structural and behavioral** properties live in SwiftInfer (the code looks like X, the tests behave like X, both are probabilistic claims).
+A type rule of thumb for contributors: **contractual** properties live in SwiftPropertyLaws (you said you conform to X, X has laws, the kit verifies them). **Structural and behavioral** properties live in SwiftInfer (the code looks like X, the tests behave like X, both are probabilistic claims).
 
 -----
 
-## 11. Relationship to SwiftProtocolLaws
+## 11. Relationship to SwiftPropertyLaws
 
-Bidirectional via RefactorBridge: SwiftInfer detects algebraic structure → suggests protocol conformance → SwiftProtocolLaws' discovery plugin emits the law-check on the next regeneration → laws are enforced on every CI run thereafter.
+Bidirectional via RefactorBridge: SwiftInfer detects algebraic structure → suggests protocol conformance → SwiftPropertyLaws' discovery plugin emits the law-check on the next regeneration → laws are enforced on every CI run thereafter.
 
-The shared `DerivationStrategist` enum lives in `ProtoLawCore` at `public` visibility — the prerequisite promotion shipped on the SwiftProtocolLaws side and SwiftInfer M3 consumes it.
+The shared `DerivationStrategist` enum lives in `PropertyLawCore` at `public` visibility — the prerequisite promotion shipped on the SwiftPropertyLaws side and SwiftInfer M3 consumes it.
 
-The overlap with SwiftProtocolLaws' own round-trip advisory is intentional — different confidence regimes (HIGH-confidence syntactic in SwiftProtocolLaws, weighted full-spectrum in SwiftInfer). When both fire on the same pair, SwiftInfer adds +20 for cross-validation.
+The overlap with SwiftPropertyLaws' own round-trip advisory is intentional — different confidence regimes (HIGH-confidence syntactic in SwiftPropertyLaws, weighted full-spectrum in SwiftInfer). When both fire on the same pair, SwiftInfer adds +20 for cross-validation.
 
 Single-backend by design: `swift-property-based` only.
 
-`Package.swift` references SwiftProtocolLaws via a versioned URL dep (`from: "1.9.0"`). The dep tracked v1.8.0 from the M7.4 ship (when the kit's Semigroup + Monoid landed) until M8.0 shipped v1.9.0's second kit-defined cluster (CommutativeMonoid + Group + Semilattice). Out of v1.9.0 scope and deferred to a future kit minor: kit-side `Ring` (two-op shape — Numeric stays the canonical Ring writeout target per §5.4); kit-side `CommutativeGroup` (rare in idiomatic Swift; M8's incomparable-arm split emits separate CommutativeMonoid + Group proposals when both apply); kit-side `Group acting on T` (function-space carrier doesn't fit the per-type protocol shape).
+`Package.swift` references SwiftPropertyLaws via a versioned URL dep (`from: "2.0.0"`). The kit was renamed at v2.0.0 (a `refactor!`-only release; library products `ProtocolLawKit` / `ProtoLawCore` / `ProtoLawMacro` became `PropertyLawKit` / `PropertyLawCore` / `PropertyLawMacro`). The pre-rename dep tracked v1.8.0 from the M7.4 ship (when the kit's Semigroup + Monoid landed) and bumped to v1.9.0 when M8.0 shipped the second kit-defined cluster (CommutativeMonoid + Group + Semilattice); v2.0.0 is functionally equivalent to v1.9.0 with the rename applied. Still deferred to a future kit minor: kit-side `Ring` (two-op shape — Numeric stays the canonical Ring writeout target per §5.4); kit-side `CommutativeGroup` (rare in idiomatic Swift; M8's incomparable-arm split emits separate CommutativeMonoid + Group proposals when both apply); kit-side `Group acting on T` (function-space carrier doesn't fit the per-type protocol shape).
 
 -----
 
@@ -665,7 +665,7 @@ SwiftInfer ships with the following hard guarantees, enforced by code review and
 3. **SwiftInfer never auto-accepts suggestions.** Even in CI mode, `drift` emits warnings, not failures. The accept/reject step is always human.
 4. **SwiftInfer never emits silently-wrong code.** When generator inference fails, the stub is emitted with `.todo`, which does not compile. There is no "approximately correct" generator fallback. Inferred-precondition hints (§7.8) surface as advisory comments only — they never substitute the generator under the user's feet.
 5. **SwiftInfer never operates outside the configured target.** `--target` is required for `discover`; the tool refuses to scan files outside the named target's source roots. The walk-up resolver for `--test-dir` (TestLifter M6.0) walks parent dirs from the production target looking for `Package.swift` then returns `<root>/Tests/` if present — a missing test directory warn-and-degrades, never silently widens scope.
-6. **SwiftInfer's output is reproducible.** Re-running `discover` on unchanged source produces byte-identical output (modulo the timestamp recorded in decisions.json on accept). Same property as SwiftProtocolLaws' discovery plugin. **Seed policy:** all sampling that contributes to a suggestion's score (§4.1 sampling-pass row, §4.3 `samplingResult`) uses a deterministic seed derived from the suggestion-identity hash (§7.5) — concretely, **all 256 bits of `SHA256(suggestionIdentityHash || "sampling")` packed as four big-endian `UInt64`s for the Xoshiro256\*\* state**. The seed is rendered in the explainability block of every emitted stub so a developer can re-run sampling under the same conditions. **`--seed-override` is v1.1+** (not in any v1 milestone); when shipped, it'll be supported for debugging only and never persisted to `decisions.json`. **`--show-suppressed` is also v1.1+**.
+6. **SwiftInfer's output is reproducible.** Re-running `discover` on unchanged source produces byte-identical output (modulo the timestamp recorded in decisions.json on accept). Same property as SwiftPropertyLaws' discovery plugin. **Seed policy:** all sampling that contributes to a suggestion's score (§4.1 sampling-pass row, §4.3 `samplingResult`) uses a deterministic seed derived from the suggestion-identity hash (§7.5) — concretely, **all 256 bits of `SHA256(suggestionIdentityHash || "sampling")` packed as four big-endian `UInt64`s for the Xoshiro256\*\* state**. The seed is rendered in the explainability block of every emitted stub so a developer can re-run sampling under the same conditions. **`--seed-override` is v1.1+** (not in any v1 milestone); when shipped, it'll be supported for debugging only and never persisted to `decisions.json`. **`--show-suppressed` is also v1.1+**.
 
 These guarantees are tested by the integration suite (§18). Violation is a release-blocking bug.
 
@@ -740,7 +740,7 @@ Golden-file tests are particularly important for the explainability block (§4.5
 - Running discovery on a real-world Swift module of 50+ functions produces fewer than 10 Strong-tier suggestions, of which at least 80% are judged useful by a Swift developer unfamiliar with the tool.
 - Round-trip, idempotence, and commutativity templates correctly identify known patterns in at least 3 open-source Swift packages used as benchmarks (one of which should be a sufficiently algebraic library).
 - Algebraic-structure composition (§5.4) correctly identifies at least 2 monoid candidates and 1 semilattice candidate in the chosen benchmarks.
-- For at least one benchmark, the RefactorBridge suggestion (option B) results in a successful protocol conformance addition that SwiftProtocolLaws then verifies on subsequent runs, end-to-end. **This is the loop-closure check.**
+- For at least one benchmark, the RefactorBridge suggestion (option B) results in a successful protocol conformance addition that SwiftPropertyLaws then verifies on subsequent runs, end-to-end. **This is the loop-closure check.**
 - Counter-signals correctly veto at least one false-positive that a naïve matcher would have surfaced, in each benchmark.
 - Contradiction detection catches idempotent+involutive and at least 2 other contradictory combinations.
 - Acceptance rate (per §17.2) ≥ 70% on the benchmark corpora after 6 months of dogfooding. Below that, the philosophy hasn't held.
@@ -865,7 +865,7 @@ The §7.4 mock-inferred rung shipped in TestLifter M4 fires on lifted suggestion
 
 ## 22. References
 
-- [SwiftProtocolLaws PRD](https://github.com/Joseph-Cursio/SwiftProtocolLaws/blob/main/docs/SwiftProtocolLaws%20PRD.md) — upstream dependency
+- [SwiftPropertyLaws PRD](https://github.com/Joseph-Cursio/SwiftPropertyLaws/blob/main/docs/Protocols/SwiftPropertyLaws%20PRD.md) — upstream dependency
 - [swift-property-based](https://github.com/x-sheep/swift-property-based) — single execution backend
 - [SwiftSyntax](https://github.com/apple/swift-syntax)
 - [EvoSuite](https://www.evosuite.org)

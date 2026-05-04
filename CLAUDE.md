@@ -21,16 +21,16 @@ Shipped (each line points at its archive plan for the full story):
 
 Out of v1 scope (post-v0.1.0): §7.8 inferred domains (would-be M10), equivalence-class detection (M11), and PRD §20 v1.1+ trajectory items (SemanticIndex, IDE integration, `swift-infer apply`, `swift-infer metrics`). No active milestone plan is open.
 
-**Kit-side coordination.** `Package.swift` references SwiftProtocolLaws as `from: "1.9.0"` (commit `69e6618`, 2026-05-02). v1.9.0 added `CommutativeMonoid` + `Group` + `Semilattice` for M8.5's writeouts. Out of v1.9.0 scope: kit-side `Ring` (Numeric stays the canonical writeout target per PRD §5.4 row 5), kit-side `CommutativeGroup` (M8.4.b.1 emits separate proposals when both apply), kit-side `Group acting on T` (function-space carrier doesn't fit the per-type protocol shape).
+**Kit-side coordination.** `Package.swift` references **SwiftPropertyLaws** as `from: "2.0.0"`. The kit was renamed from SwiftProtocolLaws at v2.0.0 (a `refactor!`-only release — no behavioral changes; library products `ProtocolLawKit` / `ProtoLawCore` / `ProtoLawMacro` became `PropertyLawKit` / `PropertyLawCore` / `PropertyLawMacro`). The pre-rename v1.9.0 had added `CommutativeMonoid` + `Group` + `Semilattice` for M8.5's writeouts (commit `69e6618` pinned that). Still deferred: kit-side `Ring` (Numeric stays the canonical writeout target per PRD §5.4 row 5), kit-side `CommutativeGroup` (M8.4.b.1 emits separate proposals when both apply), kit-side `Group acting on T` (function-space carrier doesn't fit the per-type protocol shape).
 
 ## What this repo is
 
 **SwiftInferProperties** — type-directed property inference for Swift. Surfaces idempotence, round-trip pairs, and algebraic-structure (semigroup / monoid / group / semilattice / ring) candidates from function signatures, cross-function pairs, and existing unit tests. All output is human-reviewed; nothing auto-executes.
 
-The package is a one-way downstream of [SwiftProtocolLaws](https://github.com/Joseph-Cursio/SwiftProtocolLaws):
+The package is a one-way downstream of [SwiftPropertyLaws](https://github.com/Joseph-Cursio/SwiftPropertyLaws):
 
 ```
-SwiftInferProperties → SwiftProtocolLaws (PropertyBackend, DerivationStrategist) → swift-property-based
+SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategist) → swift-property-based
 ```
 
 ## Where to look
@@ -41,7 +41,7 @@ SwiftInferProperties → SwiftProtocolLaws (PropertyBackend, DerivationStrategis
 | Current milestone execution plan | None open — see "Repository state" above for what's next |
 | v0.1.0 perf baseline (regression comparison anchor) | `docs/perf-baseline-v0.1.md` |
 | Closed milestone plans | `docs/archive/*.md` |
-| ProtocolLawKit / ProtoLawMacro source of truth | The SwiftProtocolLaws repo, not this one |
+| PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |
 
 ## Design decisions baked into v0.3
 
@@ -52,10 +52,10 @@ A future Claude implementing the package should follow these decisions rather th
 - **The Daikon trap is the failure mode to avoid.** If benchmark calibration shows we're producing too many suggestions, the answer is to raise thresholds, not to add filters on top.
 - **Three v1 contributions, one v1.1.** TemplateEngine + RefactorBridge + TestLifter ship in v1. SemanticIndex is deferred to v1.1 with the Constraint Engine, Domain Template Packs, IDE integration, and Semantic Linting bridge listed as the v1.1+ trajectory in PRD §20.
 - **Explainability is a first-class output.** Every suggestion ships both "why suggested" and "why this might be wrong." PRD §4.5.
-- **Generator inference delegates to SwiftProtocolLaws.** Don't reimplement the priority list — call into the shared `DerivationStrategist`. PRD §11.
+- **Generator inference delegates to SwiftPropertyLaws.** Don't reimplement the priority list — call into the shared `DerivationStrategist`. PRD §11.
 
 ## Build & test
 
 - `swift package clean && swift test` (per the global `~/CLAUDE.md`) on session start.
-- The skeleton expects `../SwiftProtocolLaws` to exist as a sibling checkout of [Joseph-Cursio/SwiftProtocolLaws](https://github.com/Joseph-Cursio/SwiftProtocolLaws). CI checks both repos out side-by-side; locally, your `~/xcode_projects/` should already have both.
+- The skeleton expects `../SwiftPropertyLaws` to exist as a sibling checkout of [Joseph-Cursio/SwiftPropertyLaws](https://github.com/Joseph-Cursio/SwiftPropertyLaws). CI checks both repos out side-by-side; locally, your `~/xcode_projects/` should already have both.
 - SwiftLint config lives at `.swiftlint.yml`; `swiftlint lint --quiet` should be silent.
