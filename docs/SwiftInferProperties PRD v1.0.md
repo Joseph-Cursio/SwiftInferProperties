@@ -461,7 +461,7 @@ Tiered fallback for generator inference, ordered most-trusted first:
 
 1. **`DerivationStrategist`** (memberwise / `CaseIterable` / `RawRepresentable`) — delegated to SwiftProtocolLaws' shared strategist. Highest confidence.
 2. **Codable round-trip** (`Gen<T> { JSONEncoder/JSONDecoder ... }`) — fires when the type conforms to `Codable` or `Encodable + Decodable`. Medium confidence; emits a fixture-placeholder TODO that the user replaces.
-3. **Mock-inferred from observed test construction** — the §13 calibrated rule: when ≥3 test sites construct the type with the same dominant argument shape, synthesize a `Gen<T> { _ in T(label: <Gen<...>>.run(), ...) }` stub from the kit's `RawType.generatorExpression` factories. Low confidence; surfaced with a "Mock-inferred from N construction sites in test bodies — low confidence (verify the generator covers your domain)" provenance line. Multi-shape ambiguity → no synthesis. Constructor sites with non-literal arguments are skipped at the scanner level; a curated non-determinism patterns list (`Date()`, `UUID()`, `arc4random()`, etc.) belt-and-suspenders the rejection at synthesis time.
+3. **Mock-inferred from observed test construction** — the §13 calibrated rule: when ≥3 test sites construct the type with the same dominant argument shape, synthesize a `Gen<T> { _ in T(label: <Gen<...>>.run(), ...) }` stub from the kit's `RawType.generatorExpression` factories. Low confidence; surfaced with a "Mock-inferred from N construction sites in test bodies — low confidence (verify the generator covers your domain)" provenance line. Multi-shape ambiguity → no synthesis. Constructor sites with non-literal arguments are skipped at the scanner level; a curated non-determinism patterns list (`Date()`, `UUID()`, `arc4random()`, etc.) belt-and-suspenders the rejection at synthesis time. **v1 coverage:** this rung fires on lifted suggestions only — TemplateEngine-side suggestions still emit `?.gen()` placeholders even when the test corpus has the data. Routing the synthesizer to the TE path requires exposing `generatorTypeByIdentity` from `TemplateRegistry.discoverArtifacts`; deferred to v1.1+ (§20.9).
 4. **`.todo` placeholder** — when no other strategy applies, the stub emits `?.gen()` which doesn't compile. The user supplies the generator. Forces conscious adoption rather than silently-wrong code (PRD §16 #4).
 
 Generator confidence (`high` / `medium` / `low`) flows into the explainability block.
@@ -847,6 +847,10 @@ When tests for `decode` only pass strings produced by `encode`, TestLifter could
 ### 20.8 TestLifter M11 — Equivalence-Class Detection (v1.1+)
 
 Tests that group inputs into "valid" / "invalid" buckets via parallel construction patterns hint at equivalence classes worth parameterizing the property over. Requires test-method-name partition heuristics that go beyond the M1–M9 detector model and a concrete detection algorithm that the v1 surface doesn't yet have.
+
+### 20.9 TemplateEngine-side Mock-Inferred Generator Fallback (v1.1+)
+
+The §7.4 mock-inferred rung shipped in TestLifter M4 fires on lifted suggestions only. TemplateEngine-side suggestions (production functions surfaced by TemplateEngine without TestLifter corroboration) still emit `?.gen()` placeholders even when the test corpus has cleared the ≥3-site dominant-shape threshold for the type. The narrowing was a layering call: routing `MockGeneratorSynthesizer` to the TE path requires exposing `generatorTypeByIdentity` from `TemplateRegistry.discoverArtifacts`, which is a deeper Templates-layer refactor than M4 wanted to take on. Closing this gap in v1.1+ would extend mock-inferred coverage to every suggestion type without changing the calibrated rule itself.
 
 -----
 
