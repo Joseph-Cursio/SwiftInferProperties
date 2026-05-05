@@ -53,18 +53,32 @@ extension TestLifter {
         /// Empty when the test corpus has no relevant call sites.
         public let domainCallSitesByConsumer: [String: [DomainCallSite]]
 
+        /// M11.2 — corpus-wide partition candidates built once per
+        /// `discover(in:)` run by `EquivalenceClassMarkerExtractor.extract(
+        /// methods:slices:markerTable:)` over the parsed test target.
+        /// Each candidate is one `(predicateName, markerPair)` partition;
+        /// the CLI pipeline's `applyEquivalenceClassEmission(...)` runs
+        /// the M11.1 `PredicateEquivalenceClassDetector` against each
+        /// (with `summariesByName` for the predicate-shape veto) and
+        /// emits one `LiftedSuggestion` per surviving partition into the
+        /// promotion stream. Empty when the test corpus has no methods
+        /// carrying a curated marker.
+        public let equivalenceClassCandidates: [PartitionCandidate]
+
         public init(
             liftedSuggestions: [LiftedSuggestion],
             setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
             constructionRecord: ConstructionRecord = ConstructionRecord(entries: []),
             counterSignals: [LiftedCounterSignal] = [],
-            domainCallSitesByConsumer: [String: [DomainCallSite]] = [:]
+            domainCallSitesByConsumer: [String: [DomainCallSite]] = [:],
+            equivalenceClassCandidates: [PartitionCandidate] = []
         ) {
             self.liftedSuggestions = liftedSuggestions
             self.setupAnnotationsByOrigin = setupAnnotationsByOrigin
             self.constructionRecord = constructionRecord
             self.counterSignals = counterSignals
             self.domainCallSitesByConsumer = domainCallSitesByConsumer
+            self.equivalenceClassCandidates = equivalenceClassCandidates
         }
 
         public static let empty = Artifacts(
@@ -72,7 +86,8 @@ extension TestLifter {
             setupAnnotationsByOrigin: [:],
             constructionRecord: ConstructionRecord(entries: []),
             counterSignals: [],
-            domainCallSitesByConsumer: [:]
+            domainCallSitesByConsumer: [:],
+            equivalenceClassCandidates: []
         )
 
         /// The cross-validation keys to feed into
@@ -112,8 +127,16 @@ extension TestLifter {
         var counterSignals: [LiftedCounterSignal] = []
         var annotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
         var sliceArtifactsList: [DomainCorpusScanner.SliceArtifacts] = []
+        // M11.2 — streaming aggregator avoids retaining all `[SlicedTestBody]`
+        // for the discover run (each slice carries SwiftSyntax tree refs).
+        // Per §13 row 4 memory ceiling: M11.0's eager (methods, slices)
+        // extractor regressed by ~65MB on the 500-file corpus.
+        var equivalenceClassAggregator = PartitionAggregator()
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
+            equivalenceClassAggregator.observe(
+                method: summary, slice: slice, markerTable: MarkerPair.defaultTable
+            )
             sliceArtifactsList.append(DomainCorpusScanner.artifacts(in: slice))
             let origin = LiftedOrigin(
                 testMethodName: summary.methodName,
@@ -128,37 +151,12 @@ extension TestLifter {
             if !annotations.isEmpty {
                 annotationsByOrigin[origin] = annotations
             }
-            for detection in AssertAfterTransformDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.roundTrip(from: detection, origin: origin))
-            }
-            for detection in AssertAfterDoubleApplyDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.idempotence(from: detection, origin: origin))
-            }
-            for detection in AssertSymmetryDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.commutativity(from: detection, origin: origin))
-            }
-            // M5.5 — second-wave detectors. Same per-summary slice
-            // surface as the M2 trio; each detection fans out to a
-            // LiftedSuggestion via the matching M5.0 factory.
-            for detection in AssertOrderingPreservedDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.monotonicity(from: detection, origin: origin))
-            }
-            for detection in AssertCountChangeDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.countInvariance(from: detection, origin: origin))
-            }
-            for detection in AssertReduceEquivalenceDetector.detect(in: slice) {
-                lifted.append(LiftedSuggestion.reduceEquivalence(from: detection, origin: origin))
-            }
-            // M7 — seventh-detector pass. Asymmetric-assertion
-            // detector surfaces negative-form mirrors of the six
-            // positive patterns; each detection becomes a
-            // LiftedCounterSignal keyed on the same
-            // CrossValidationKey shape the positive detectors use.
-            for detection in AsymmetricAssertionDetector.detect(in: slice) {
-                counterSignals.append(
-                    counterSignal(from: detection, slice: slice, origin: origin)
-                )
-            }
+            collectDetections(
+                in: slice,
+                origin: origin,
+                lifted: &lifted,
+                counterSignals: &counterSignals
+            )
         }
         // M4.3 — build the corpus-wide construction record once per
         // discover run; the CLI pipeline's mock-inferred fallback
@@ -167,13 +165,58 @@ extension TestLifter {
         // memberwise-derivable from `corpus.typeDecls`.
         let constructionRecord = SetupRegionConstructionScanner.record(over: summaries)
         let domainCallSitesByConsumer = DomainCorpusScanner.mergeCallSites(sliceArtifactsList)
+        // M11.2 — finalize the partition candidates collected
+        // streaming-style by `equivalenceClassAggregator.observe` above.
+        let equivalenceClassCandidates = equivalenceClassAggregator.finalize()
         return Artifacts(
             liftedSuggestions: lifted,
             setupAnnotationsByOrigin: annotationsByOrigin,
             constructionRecord: constructionRecord,
             counterSignals: counterSignals,
-            domainCallSitesByConsumer: domainCallSitesByConsumer
+            domainCallSitesByConsumer: domainCallSitesByConsumer,
+            equivalenceClassCandidates: equivalenceClassCandidates
         )
+    }
+
+    /// Per-slice detector fan-out. Extracted from `discover(in:)` to
+    /// keep that function under SwiftLint's 50-line body cap; the M11.2
+    /// streaming-aggregator addition crossed the threshold.
+    private static func collectDetections(
+        in slice: SlicedTestBody,
+        origin: LiftedOrigin,
+        lifted: inout [LiftedSuggestion],
+        counterSignals: inout [LiftedCounterSignal]
+    ) {
+        for detection in AssertAfterTransformDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.roundTrip(from: detection, origin: origin))
+        }
+        for detection in AssertAfterDoubleApplyDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.idempotence(from: detection, origin: origin))
+        }
+        for detection in AssertSymmetryDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.commutativity(from: detection, origin: origin))
+        }
+        // M5.5 — second-wave detectors. Same per-summary slice surface
+        // as the M2 trio; each detection fans out to a LiftedSuggestion
+        // via the matching M5.0 factory.
+        for detection in AssertOrderingPreservedDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.monotonicity(from: detection, origin: origin))
+        }
+        for detection in AssertCountChangeDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.countInvariance(from: detection, origin: origin))
+        }
+        for detection in AssertReduceEquivalenceDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.reduceEquivalence(from: detection, origin: origin))
+        }
+        // M7 — seventh-detector pass. Asymmetric-assertion detector
+        // surfaces negative-form mirrors of the six positive patterns;
+        // each detection becomes a LiftedCounterSignal keyed on the
+        // same CrossValidationKey shape the positive detectors use.
+        for detection in AsymmetricAssertionDetector.detect(in: slice) {
+            counterSignals.append(
+                counterSignal(from: detection, slice: slice, origin: origin)
+            )
+        }
     }
 
     /// Lift a `DetectedAsymmetricAssertion` into a

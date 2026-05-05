@@ -112,6 +112,13 @@ public struct AssertionInvocation {
         case xctAssertNotEqual
         case xctAssertGreaterThan
         case xctAssertGreaterThanOrEqual
+        // M11.0 — negative-polarity boolean assertion. Paired with
+        // `.xctAssertTrue` for the M11
+        // `PredicateEquivalenceClassDetector` polarity-homogeneity check
+        // (per M11 plan OD #2: `XCTAssertFalse` as a first-class kind
+        // beats parsing `XCTAssert(!predicate(x))` via expression-shape
+        // inspection).
+        case xctAssertFalse
         case expectMacro
         case requireMacro
     }

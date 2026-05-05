@@ -80,7 +80,18 @@ public extension LiftedSuggestion {
             weight: 50,
             detail: "Lifted from test body — \(detailLabel())"
         )
-        let score = Score(signals: [signal])
+        // M11.2 — equivalence-class suggestions surface with `.advisory`
+        // tier per PRD §7.8 (documentation, not a runnable property).
+        // All other patterns flow through the standard score-to-tier
+        // mapping with the +50 testBodyPattern weight.
+        let score: Score
+        switch pattern {
+        case .equivalenceClass:
+            score = Score(advisorySignals: [signal])
+        case .roundTrip, .idempotence, .commutativity,
+                .monotonicity, .countInvariance, .reduceEquivalence:
+            score = Score(signals: [signal])
+        }
         return Suggestion(
             templateName: templateName,
             evidence: evidence,
@@ -114,6 +125,16 @@ public extension LiftedSuggestion {
             return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
         case .reduceEquivalence(let detection):
             return [reduceEquivalenceEvidence(detection: detection, typeT: typeT)]
+        case .equivalenceClass(let hint):
+            // M11.2 — synthesize a single Evidence carrying the predicate's
+            // signature `(T) -> Bool`. Location is a placeholder (the M11
+            // detector aggregates across many test sites; no single
+            // assertion location is canonical).
+            return [Evidence(
+                displayName: "\(hint.predicateName)(_:)",
+                signature: "(\(hint.argTypeName)) -> Bool",
+                location: SourceLocation(file: "<corpus>", line: 0, column: 0)
+            )]
         }
     }
 
@@ -181,6 +202,9 @@ public extension LiftedSuggestion {
             return "\(detection.calleeName)(xs).count == xs.count"
         case .reduceEquivalence(let detection):
             return "xs.reduce(_, \(detection.opCalleeName)) == xs.reversed().reduce(_, \(detection.opCalleeName))"
+        case .equivalenceClass(let hint):
+            return "\(hint.predicateName) partitions \(hint.positiveMarker)/\(hint.negativeMarker)"
+                + " (\(hint.positiveSiteCount)+\(hint.negativeSiteCount) sites)"
         }
     }
 
@@ -202,6 +226,9 @@ public extension LiftedSuggestion {
     // MARK: - Explainability
 
     private func makeExplainability() -> ExplainabilityBlock {
+        if case .equivalenceClass(let hint) = pattern {
+            return equivalenceClassExplainability(hint: hint)
+        }
         let assertionLine: String
         switch pattern {
         case .roundTrip(let detection):
@@ -230,6 +257,9 @@ public extension LiftedSuggestion {
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
                 + " == \(detection.collectionBindingName).reversed()"
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
+        case .equivalenceClass:
+            // Handled by the early-return above.
+            assertionLine = ""
         }
         let location = assertionLocation()
         let provenance = "Lifted from \(location.file):\(location.line)"
@@ -237,6 +267,38 @@ public extension LiftedSuggestion {
             whySuggested: [assertionLine, provenance],
             whyMightBeWrong: []
         )
+    }
+
+    /// M11.2 — equivalence-class explainability surfaces the corpus
+    /// observation (predicate, marker pair, bucket counts) plus either
+    /// the suggested filter generators or the predicate-shape veto
+    /// reason. Distinct from the assertion-line shape used for the
+    /// other six patterns because equivalence-class findings aren't
+    /// anchored on a single test-body assertion.
+    private func equivalenceClassExplainability(hint: EquivalenceClassHint) -> ExplainabilityBlock {
+        let header = "Predicate \(hint.predicateName)(_: \(hint.argTypeName)) -> Bool"
+            + " partitions Valid/Invalid across the test corpus:"
+        let positiveLine = "  • \(hint.positiveSiteCount) sites named \(hint.positiveMarker)*"
+            + " assert \(hint.predicateName)(x) is true"
+        let negativeLine = "  • \(hint.negativeSiteCount) sites named \(hint.negativeMarker)*"
+            + " assert \(hint.predicateName)(x) is false"
+        var why = [header, positiveLine, negativeLine]
+        if let veto = hint.predicateVeto {
+            why.append("Generator narrowing skipped: \(veto.advisoryReason).")
+        } else {
+            why.append("Suggested generator for \(hint.positiveMarker) class: "
+                + hint.suggestedPositiveGenerator)
+            why.append("Suggested generator for \(hint.negativeMarker) class: "
+                + hint.suggestedNegativeGenerator)
+        }
+        let advisoryCaveat = "Advisory only — the equivalence class is documentation,"
+            + " not a runnable property. Author per-class properties"
+            + " manually using the suggested filter generators."
+        let rejectionCaveat = "Filter rejection rate: \(hint.predicateName) may reject most"
+            + " random \(hint.argTypeName)s; if so, prefer constructing"
+            + " a custom Gen for the \(hint.positiveMarker) class instead"
+            + " of relying on filter."
+        return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: [advisoryCaveat, rejectionCaveat])
     }
 
     private func assertionLocation() -> SourceLocation {
@@ -253,6 +315,9 @@ public extension LiftedSuggestion {
             return detection.assertionLocation
         case .reduceEquivalence(let detection):
             return detection.assertionLocation
+        case .equivalenceClass:
+            // M11.2 — corpus-level finding; no single assertion location.
+            return SourceLocation(file: "<corpus>", line: 0, column: 0)
         }
     }
 }

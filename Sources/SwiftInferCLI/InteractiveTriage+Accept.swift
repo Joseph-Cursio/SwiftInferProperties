@@ -15,6 +15,15 @@ extension InteractiveTriage {
         suggestion: Suggestion,
         context: Context
     ) throws -> URL? {
+        if suggestion.templateName == "equivalence-class",
+           let hint = context.equivalenceClassHintsByIdentity[suggestion.identity] {
+            // M11.2 — equivalence-class suggestions write a comment-only
+            // documentation block. The hint is carried out-of-band on the
+            // Context (rather than inline on Suggestion) to keep
+            // Suggestion's per-instance size unchanged and preserve the
+            // §13 row 4 memory ceiling.
+            return try writeEquivalenceClassDocument(hint: hint, context: context)
+        }
         guard let stub = liftedTestStub(for: suggestion) else {
             context.diagnostics.writeDiagnostic(
                 "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "

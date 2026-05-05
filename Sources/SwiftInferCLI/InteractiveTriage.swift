@@ -77,6 +77,23 @@ public enum InteractiveTriage {
         /// the M6.4 `[A/s/n/?]` shape when no proposal matches.
         public let proposalsByType: [String: [RefactorBridgeProposal]]
 
+        /// M11.2 — equivalence-class hints keyed by the promoted
+        /// suggestion's identity. Carried out-of-band on the Context
+        /// (rather than inline on `Suggestion`) so the per-instance
+        /// suggestion size stays unchanged — the §13 row 4 memory
+        /// ceiling regression test caught a 65MB delta when the hint
+        /// was inlined as an optional struct field on every Suggestion
+        /// (each TemplateEngine suggestion paid the optional's storage
+        /// even when nil; the corpus has thousands of suggestions and
+        /// many transient copies during pipeline). The side-map shape
+        /// trades one hash lookup at accept-flow time for a flat
+        /// allocation profile.
+        ///
+        /// Empty when the caller isn't running the M11.1 detector pass
+        /// (M11.0 / M5.x callers) — the M11.2 accept-flow falls back
+        /// to a no-op writeout in that case.
+        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHint]
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -84,7 +101,8 @@ public enum InteractiveTriage {
             outputDirectory: URL,
             dryRun: Bool,
             clock: @escaping @Sendable () -> Date = { Date() },
-            proposalsByType: [String: [RefactorBridgeProposal]] = [:]
+            proposalsByType: [String: [RefactorBridgeProposal]] = [:],
+            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHint] = [:]
         ) {
             self.prompt = prompt
             self.output = output
@@ -93,6 +111,7 @@ public enum InteractiveTriage {
             self.dryRun = dryRun
             self.clock = clock
             self.proposalsByType = proposalsByType
+            self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
         }
     }
 

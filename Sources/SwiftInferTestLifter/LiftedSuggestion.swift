@@ -190,12 +190,39 @@ public struct LiftedSuggestion: Sendable, Equatable {
             origin: origin
         )
     }
+
+    /// TestLifter M11.2 — builds a LiftedSuggestion from an
+    /// `EquivalenceClassHint` (PRD §7.8 third example). The
+    /// `templateName` is `"equivalence-class"` — a synthetic key that
+    /// no TemplateEngine template uses, so the M3.2 cross-validation
+    /// suppression filter never matches it (the equivalence-class
+    /// finding has no production-side counterpart to corroborate
+    /// against). The `Suggestion` produced from this lifted record
+    /// surfaces with `.advisory` tier per PRD §7.8 — documentation,
+    /// not a runnable property.
+    public static func equivalenceClass(
+        hint: EquivalenceClassHint,
+        origin: LiftedOrigin? = nil
+    ) -> LiftedSuggestion {
+        let key = CrossValidationKey(
+            templateName: "equivalence-class",
+            calleeNames: [hint.predicateName]
+        )
+        return LiftedSuggestion(
+            templateName: "equivalence-class",
+            crossValidationKey: key,
+            pattern: .equivalenceClass(hint),
+            origin: origin
+        )
+    }
 }
 
 /// Discriminator for the detection that produced a `LiftedSuggestion`.
 /// One case per TestLifter pattern. M5 added monotonicity /
-/// countInvariance / reduceEquivalence; M5+ patterns extend the enum
-/// without growing `LiftedSuggestion`'s storage shape.
+/// countInvariance / reduceEquivalence; M11 adds equivalenceClass —
+/// the §7.8 third-example advisory finding without a TemplateEngine
+/// counterpart. M5+ patterns extend the enum without growing
+/// `LiftedSuggestion`'s storage shape.
 public enum DetectedPattern: Sendable, Equatable {
     case roundTrip(DetectedRoundTrip)
     case idempotence(DetectedIdempotence)
@@ -203,6 +230,12 @@ public enum DetectedPattern: Sendable, Equatable {
     case monotonicity(DetectedMonotonicity)
     case countInvariance(DetectedCountInvariance)
     case reduceEquivalence(DetectedReduceEquivalence)
+    /// TestLifter M11.2 — predicate equivalence-class advisory finding.
+    /// Carries the `EquivalenceClassHint` produced by the M11.1
+    /// `PredicateEquivalenceClassDetector`. The promoted `Suggestion`
+    /// surfaces with `.advisory` tier (PRD §7.8) — documentation, not a
+    /// runnable property; comment-only writeout on accept.
+    case equivalenceClass(EquivalenceClassHint)
 }
 
 /// PRD §7.3 Assert-Ordering-Preserved → monotonicity. Carries the single

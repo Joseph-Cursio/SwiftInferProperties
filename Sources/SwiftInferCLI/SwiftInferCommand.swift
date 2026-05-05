@@ -213,7 +213,8 @@ extension SwiftInferCommand {
                     diagnostics: diagnostics,
                     outputDirectory: packageRoot,
                     dryRun: dryRun,
-                    proposalsByType: proposalsByType
+                    proposalsByType: proposalsByType,
+                    equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity
                 )
                 try runInteractive(
                     suggestions: visible,

@@ -111,7 +111,8 @@ public enum AssertOrderingPreservedDetector {
             return parseSwiftTestingConclusion(assertion.arguments.first)
         case .xctAssertEqual, .xctAssertTrue, .xctAssert, .xctAssertNotNil,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
-                .xctAssertGreaterThanOrEqual, .requireMacro:
+                .xctAssertGreaterThanOrEqual, .xctAssertFalse,
+                .requireMacro:
             return nil
         }
     }

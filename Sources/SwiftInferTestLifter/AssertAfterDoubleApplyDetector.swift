@@ -66,7 +66,8 @@ public enum AssertAfterDoubleApplyDetector {
         case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
-                .xctAssertGreaterThanOrEqual, .requireMacro:
+                .xctAssertGreaterThanOrEqual, .xctAssertFalse,
+                .requireMacro:
             return nil
         }
     }

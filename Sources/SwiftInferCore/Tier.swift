@@ -18,6 +18,16 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
     /// Score < 20 or any veto fired. Never shown.
     case suppressed
 
+    /// TestLifter M11.0 — informational tier for stand-alone advisory
+    /// findings that don't carry a runnable property (today: equivalence-
+    /// class detection per §7.8 third example). Never returned by
+    /// `Tier(score:)` — set explicitly by the surfacing pipeline. Shown by
+    /// default so users see the documentation surface in the discover
+    /// stream; CLI rendering distinguishes `[Advisory]` from
+    /// `[Strong]`/`[Likely]`/`[Possible]` so consumers don't conflate it
+    /// with a runnable suggestion.
+    case advisory
+
     /// Tier mapping per PRD v0.3 §4.2.
     public init(score: Int) {
         switch score {
@@ -39,14 +49,17 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
         case .likely: return "Likely"
         case .possible: return "Possible"
         case .suppressed: return "Suppressed"
+        case .advisory: return "Advisory"
         }
     }
 
     /// `false` for `.possible` and `.suppressed`; CLI hides those by default
-    /// (the latter unconditionally per §4.2).
+    /// (the latter unconditionally per §4.2). `.advisory` is shown by
+    /// default — the equivalence-class documentation surface needs to
+    /// reach users without an opt-in flag.
     public var isVisibleByDefault: Bool {
         switch self {
-        case .strong, .likely: return true
+        case .strong, .likely, .advisory: return true
         case .possible, .suppressed: return false
         }
     }

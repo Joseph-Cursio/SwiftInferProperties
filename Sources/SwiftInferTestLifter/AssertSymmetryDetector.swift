@@ -70,7 +70,8 @@ public enum AssertSymmetryDetector {
         case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
-                .xctAssertGreaterThanOrEqual, .requireMacro:
+                .xctAssertGreaterThanOrEqual, .xctAssertFalse,
+                .requireMacro:
             return nil
         }
     }

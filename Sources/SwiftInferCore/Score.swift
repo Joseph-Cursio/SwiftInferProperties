@@ -30,4 +30,20 @@ public struct Score: Sendable, Equatable {
         self.isVetoed = vetoed
         self.tier = vetoed ? .suppressed : Tier(score: total)
     }
+
+    /// TestLifter M11.2 — construct a Score with explicit `.advisory`
+    /// tier, bypassing the score-to-tier mapping. Used by the
+    /// equivalence-class suggestion path (PRD §7.8 third example) where
+    /// the suggestion is a documentation surface rather than a runnable
+    /// property — the tier signals to the renderer / accept-flow that
+    /// this is informational, not graded by score thresholds. Vetoed
+    /// signals are not allowed (advisory + veto would be contradictory);
+    /// callers ensure no `.isVeto` signals reach this path.
+    public init(advisorySignals: [Signal]) {
+        self.signals = advisorySignals
+        let total = advisorySignals.map(\.weight).reduce(0, +)
+        self.total = total
+        self.isVetoed = false
+        self.tier = .advisory
+    }
 }

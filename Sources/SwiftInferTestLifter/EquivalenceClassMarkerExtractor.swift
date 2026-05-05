@@ -1,0 +1,371 @@
+import SwiftInferCore
+import SwiftSyntax
+
+/// TestLifter M11.1 — pure-function pass that walks a paired
+/// `[TestMethodSummary]` + `[SlicedTestBody]` corpus, classifies each
+/// method against a curated marker table (per M11 plan OD #1, the v1.1
+/// table is `Valid`/`Invalid` only), and aggregates positive/negative
+/// matches into one `PartitionCandidate` per `(predicateName, markerPair)`
+/// the M11.2 `PredicateEquivalenceClassDetector` then verifies and turns
+/// into an `EquivalenceClassHint`.
+///
+/// **Hard contract (PRD §15):** never throws. Empty / unrecognized inputs
+/// produce an empty result.
+///
+/// **Tokenization (M11 plan OD #7):** the marker is recognized as a
+/// complete identifier sub-token of `methodName`. `testValid_simple`,
+/// `testIsValidWithPlus`, and `testEmail_valid` all match `Valid`;
+/// `testValidate_simple` does NOT (the token continues into `ate`).
+/// Boundaries are camelCase + snake_case.
+public enum EquivalenceClassMarkerExtractor {
+
+    public static func extract(
+        methods: [TestMethodSummary],
+        slices: [SlicedTestBody],
+        markerTable: [MarkerPair]
+    ) -> [PartitionCandidate] {
+        guard methods.count == slices.count else { return [] }
+        var accumulator = PartitionAggregator()
+        for (method, slice) in zip(methods, slices) {
+            accumulator.observe(
+                method: method, slice: slice, markerTable: markerTable
+            )
+        }
+        return accumulator.finalize()
+    }
+
+    /// Classifies a single (method, slice) pair against ONE marker pair.
+    /// Returns `nil` when the method's name carries no marker from this
+    /// pair. When the name carries a marker but the polarity / predicate-
+    /// shape doesn't match, returns `.outlier(...)` so the detector's
+    /// "one outlier kills" rule fires per PRD §3.5 conservative bias.
+    ///
+    /// The outlier's `predicateName` is populated when the body still
+    /// yielded a clean unary predicate call (i.e. only the polarity
+    /// disagreed with the marker bucket) — the aggregator routes such
+    /// outliers to the partition keyed on that predicate so the kill
+    /// signal lands on the right candidate. Outliers from unparseable
+    /// assertion shapes carry `nil` and are dropped during aggregation
+    /// (they don't unambiguously belong to any partition).
+    static func classify(
+        method: TestMethodSummary,
+        slice: SlicedTestBody,
+        markerPair: MarkerPair
+    ) -> Classification? {
+        let tokens = tokenize(method.methodName)
+        let hasPositive = tokens.contains(markerPair.positive)
+        let hasNegative = tokens.contains(markerPair.negative)
+        guard hasPositive || hasNegative else { return nil }
+        guard !(hasPositive && hasNegative) else {
+            return .outlier(predicateName: nil, reason: .ambiguousMarker)
+        }
+        let expectedPolarity: Polarity = hasPositive ? .positive : .negative
+        guard let assertion = slice.assertion else {
+            return .outlier(predicateName: nil, reason: .noTerminalAssertion)
+        }
+        guard let extracted = extractPredicate(from: assertion) else {
+            return .outlier(predicateName: nil, reason: .nonPredicateAssertion)
+        }
+        guard extracted.polarity == expectedPolarity else {
+            return .outlier(predicateName: extracted.predicateName, reason: .polarityMismatch)
+        }
+        return .matched(predicateName: extracted.predicateName, polarity: expectedPolarity)
+    }
+
+    /// Tokenizes a Swift identifier on camelCase + snake_case boundaries.
+    /// `testIsValidWithPlus` → `["test", "Is", "Valid", "With", "Plus"]`;
+    /// `testValidate_simple` → `["test", "Validate", "simple"]`. Per M11
+    /// plan OD #7, this is the boundary algorithm that distinguishes
+    /// `Valid` (matches) from `Validate` (does not).
+    static func tokenize(_ identifier: String) -> [String] {
+        var tokens: [String] = []
+        var current = ""
+        for character in identifier {
+            if character == "_" {
+                if !current.isEmpty {
+                    tokens.append(current)
+                    current = ""
+                }
+                continue
+            }
+            if character.isUppercase, let last = current.last, last.isLowercase {
+                tokens.append(current)
+                current = ""
+            }
+            current.append(character)
+        }
+        if !current.isEmpty {
+            tokens.append(current)
+        }
+        return tokens
+    }
+
+    /// Extracts `(predicateName, polarity)` from a recognized boolean
+    /// assertion. Handles direct unary calls (`predicate(x)`) and the
+    /// negated form (`!predicate(x)`); rejects compound boolean
+    /// expressions, multi-arg comparisons, and non-boolean assertions.
+    static func extractPredicate(
+        from assertion: AssertionInvocation
+    ) -> (predicateName: String, polarity: Polarity)? {
+        switch assertion.kind {
+        case .xctAssertTrue, .xctAssert:
+            guard let first = assertion.arguments.first else { return nil }
+            return interpretBooleanArgument(first, baseAssertedTrue: true)
+        case .xctAssertFalse:
+            guard let first = assertion.arguments.first else { return nil }
+            return interpretBooleanArgument(first, baseAssertedTrue: false)
+        case .expectMacro, .requireMacro:
+            guard let first = assertion.arguments.first else { return nil }
+            return interpretBooleanArgument(first, baseAssertedTrue: true)
+        case .xctAssertEqual, .xctAssertNotNil,
+                .xctAssertLessThan, .xctAssertLessThanOrEqual,
+                .xctAssertNotEqual, .xctAssertGreaterThan,
+                .xctAssertGreaterThanOrEqual:
+            return nil
+        }
+    }
+
+    private static func interpretBooleanArgument(
+        _ expr: ExprSyntax,
+        baseAssertedTrue: Bool
+    ) -> (predicateName: String, polarity: Polarity)? {
+        if let prefix = expr.as(PrefixOperatorExprSyntax.self),
+           prefix.operator.text == "!" {
+            guard let inner = unaryPredicateCall(in: ExprSyntax(prefix.expression)) else {
+                return nil
+            }
+            return (inner, baseAssertedTrue ? .negative : .positive)
+        }
+        guard let predicateName = unaryPredicateCall(in: expr) else { return nil }
+        return (predicateName, baseAssertedTrue ? .positive : .negative)
+    }
+
+    private static func unaryPredicateCall(in expr: ExprSyntax) -> String? {
+        // M11.2 — peek through `try`/`try!`/`try?` so corpora that
+        // exercise a throwing predicate (e.g. `XCTAssertTrue(try! isValid(x))`)
+        // still classify the inner call as the unary predicate site.
+        // The detector's predicate-shape veto then fires on the
+        // throwing `FunctionSummary` and emits a comment-only advisory.
+        if let tryExpr = expr.as(TryExprSyntax.self) {
+            return unaryPredicateCall(in: tryExpr.expression)
+        }
+        guard let call = expr.as(FunctionCallExprSyntax.self) else { return nil }
+        guard call.arguments.count == 1 else { return nil }
+        return trailingIdentifier(of: call.calledExpression)
+    }
+
+    private static func trailingIdentifier(of expr: ExprSyntax) -> String? {
+        if let ident = expr.as(DeclReferenceExprSyntax.self) {
+            return ident.baseName.text
+        }
+        if let member = expr.as(MemberAccessExprSyntax.self) {
+            return member.declName.baseName.text
+        }
+        return nil
+    }
+}
+
+/// One built-in or user-supplied `(positive, negative)` marker pair the
+/// extractor scans for. Per M11 plan OD #1, the v1.1 default table holds
+/// only `("Valid", "Invalid")`; future v1.x marker-table-expansion plans
+/// can populate additional pairs without changing the extractor surface.
+public struct MarkerPair: Sendable, Equatable, Hashable {
+
+    public let positive: String
+    public let negative: String
+
+    public init(positive: String, negative: String) {
+        self.positive = positive
+        self.negative = negative
+    }
+
+    /// The v1.1 default marker table per M11 plan OD #1 — `Valid`/`Invalid`
+    /// only. Synonyms (`Success`/`Failure`, `Accept`/`Reject`, etc.) stay
+    /// deferred behind a future v1.x marker-expansion plan.
+    public static let defaultTable: [MarkerPair] = [
+        MarkerPair(positive: "Valid", negative: "Invalid")
+    ]
+}
+
+/// Polarity surfaced by `EquivalenceClassMarkerExtractor.extractPredicate`
+/// — the assertion's effective truth value over the predicate call. The
+/// extractor combines the assertion's kind (`xctAssertTrue` /
+/// `xctAssertFalse` / `expect` / `require`) with optional `!` negation in
+/// the argument expression so `XCTAssertTrue(!isValid(x))` and
+/// `XCTAssertFalse(isValid(x))` both classify as `.negative` (the M11.1
+/// detector then matches polarity against the marker bucket — positive
+/// marker expects `.positive`, negative marker expects `.negative`).
+public enum Polarity: Sendable, Equatable {
+    case positive
+    case negative
+}
+
+/// One classified test method ready for partition aggregation. Either
+/// the method matched the marker pair cleanly (becoming a `PartitionSite`),
+/// or it carried a marker but the body failed one of the polarity /
+/// predicate-shape checks (becoming an outlier — the M11.1 detector's
+/// "one outlier kills" rule fires per PRD §3.5 conservative bias).
+///
+/// The outlier's `predicateName` is populated only when the body still
+/// yielded a clean unary predicate call (i.e. polarity-mismatch). Other
+/// outlier kinds — `noTerminalAssertion`, `nonPredicateAssertion`,
+/// `ambiguousMarker` — carry `nil` and are dropped during aggregation
+/// because they don't unambiguously belong to any partition.
+public enum Classification: Sendable, Equatable {
+
+    case matched(predicateName: String, polarity: Polarity)
+
+    case outlier(predicateName: String?, reason: OutlierReason)
+
+    var routingPredicateName: String? {
+        switch self {
+        case .matched(let name, _): return name
+        case .outlier(let name, _): return name
+        }
+    }
+}
+
+/// Why a marker-bearing test method failed to become a `PartitionSite`.
+/// Surfaced for diagnostics; the M11.1 detector treats any outlier as a
+/// partition-kill signal regardless of reason.
+public enum OutlierReason: Sendable, Equatable {
+
+    /// Method's name carried BOTH the positive AND negative marker
+    /// (e.g. `testValidInvalid_*`). Treated as outlier rather than
+    /// double-counted to either bucket.
+    case ambiguousMarker
+
+    /// Slicer found no recognized terminal assertion in the method body.
+    /// The method might be a setup helper or a non-property test.
+    case noTerminalAssertion
+
+    /// Terminal assertion was recognized but didn't yield a unary
+    /// predicate call (e.g. `XCTAssertEqual`, compound boolean, multi-arg
+    /// expression).
+    case nonPredicateAssertion
+
+    /// Marker bucket and assertion polarity disagreed (e.g. a `Valid`-
+    /// marked test that asserts `XCTAssertFalse(predicate(x))`).
+    case polarityMismatch
+}
+
+/// One verified positive- or negative-bucket site inside a
+/// `PartitionCandidate`. Carries the originating method name for
+/// diagnostics; the M11.1 detector uses bucket counts (not site detail)
+/// to apply threshold + homogeneity.
+public struct PartitionSite: Sendable, Equatable {
+
+    public let methodName: String
+
+    public init(methodName: String) {
+        self.methodName = methodName
+    }
+}
+
+/// One aggregated `(predicate, markerPair)` partition emitted by the
+/// extractor. The M11.1 detector consumes one of these per call;
+/// `outlierSiteCount > 0` means at least one marker-bearing method
+/// failed the polarity / predicate-shape checks and the partition will
+/// be killed by the conservative-bias rule regardless of how many clean
+/// sites the buckets hold.
+public struct PartitionCandidate: Sendable, Equatable {
+
+    public let predicateName: String
+    public let markerPair: MarkerPair
+    public let positiveSites: [PartitionSite]
+    public let negativeSites: [PartitionSite]
+    public let outlierSiteCount: Int
+
+    public init(
+        predicateName: String,
+        markerPair: MarkerPair,
+        positiveSites: [PartitionSite],
+        negativeSites: [PartitionSite],
+        outlierSiteCount: Int
+    ) {
+        self.predicateName = predicateName
+        self.markerPair = markerPair
+        self.positiveSites = positiveSites
+        self.negativeSites = negativeSites
+        self.outlierSiteCount = outlierSiteCount
+    }
+}
+
+private struct PartitionKey: Hashable {
+    let predicateName: String
+    let markerPair: MarkerPair
+}
+
+private struct PartitionAccumulator {
+    let markerPair: MarkerPair
+    var positiveSites: [PartitionSite] = []
+    var negativeSites: [PartitionSite] = []
+    var outlierSiteCount: Int = 0
+
+    mutating func add(classification: Classification, methodName: String) {
+        switch classification {
+        case .matched(_, .positive):
+            positiveSites.append(PartitionSite(methodName: methodName))
+        case .matched(_, .negative):
+            negativeSites.append(PartitionSite(methodName: methodName))
+        case .outlier:
+            outlierSiteCount += 1
+        }
+    }
+}
+
+/// Streaming aggregator the M11.2 `TestLifter.discover(in:)` loop drives
+/// per-method so it doesn't have to retain `[SlicedTestBody]` for the
+/// full discover run. Each call to `observe(method:slice:markerTable:)`
+/// classifies the method against every marker pair, routes the result
+/// into the per-`(predicateName, markerPair)` accumulator, and discards
+/// the slice when the call returns. `finalize()` produces the final
+/// `[PartitionCandidate]` array sorted by predicate name.
+///
+/// Restructured from the eager `extract(methods:slices:markerTable:)`
+/// shape after the §13 row 4 memory test caught a 65MB regression — the
+/// eager shape required the discover loop to accumulate `[SlicedTestBody]`
+/// across all 500 corpus files, which transitively retained the SwiftSyntax
+/// tree references that the original (per-iteration-discarded) detector
+/// passes had been deallocating. Streaming aggregation reverts the
+/// allocation profile to the pre-M11 baseline.
+struct PartitionAggregator {
+
+    private var bucketsByKey: [PartitionKey: PartitionAccumulator] = [:]
+
+    mutating func observe(
+        method: TestMethodSummary,
+        slice: SlicedTestBody,
+        markerTable: [MarkerPair]
+    ) {
+        for pair in markerTable {
+            guard let classification = EquivalenceClassMarkerExtractor.classify(
+                method: method, slice: slice, markerPair: pair
+            ) else {
+                continue
+            }
+            guard let predicateName = classification.routingPredicateName else {
+                break
+            }
+            let key = PartitionKey(predicateName: predicateName, markerPair: pair)
+            bucketsByKey[key, default: PartitionAccumulator(markerPair: pair)]
+                .add(classification: classification, methodName: method.methodName)
+            break
+        }
+    }
+
+    func finalize() -> [PartitionCandidate] {
+        bucketsByKey.map { key, accumulator in
+            PartitionCandidate(
+                predicateName: key.predicateName,
+                markerPair: accumulator.markerPair,
+                positiveSites: accumulator.positiveSites,
+                negativeSites: accumulator.negativeSites,
+                outlierSiteCount: accumulator.outlierSiteCount
+            )
+        }.sorted { lhs, rhs in
+            (lhs.predicateName, lhs.markerPair.positive)
+                < (rhs.predicateName, rhs.markerPair.positive)
+        }
+    }
+}

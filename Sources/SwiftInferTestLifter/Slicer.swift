@@ -236,7 +236,8 @@ enum AssertionAnchor {
         "XCTAssertLessThanOrEqual": .xctAssertLessThanOrEqual,
         "XCTAssertNotEqual": .xctAssertNotEqual,
         "XCTAssertGreaterThan": .xctAssertGreaterThan,
-        "XCTAssertGreaterThanOrEqual": .xctAssertGreaterThanOrEqual
+        "XCTAssertGreaterThanOrEqual": .xctAssertGreaterThanOrEqual,
+        "XCTAssertFalse": .xctAssertFalse
     ]
 
     private static func xctAssertKind(of call: FunctionCallExprSyntax) -> AssertionInvocation.Kind? {

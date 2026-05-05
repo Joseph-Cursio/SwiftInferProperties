@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**v0.1.0 cut; v1.1 trajectory open with TestLifter M10 shipped (round-trip-pair domain narrowing, the §7.8 second example).** Per-milestone narratives, sub-commit breakdowns, and plan deviations live in `docs/archive/*.md` and the git log; this section is a pointer-only index.
+**v0.1.0 cut; TestLifter M10 + M11 shipped on the v1.1 trajectory; v1.1 release plan open (the §7.8 expanded-outputs row is now fully closed — preconditions M9 + inferred domains M10 + equivalence-class detection M11).** Per-milestone narratives, sub-commit breakdowns, and plan deviations live in `docs/archive/*.md` and the git log; this section is a pointer-only index.
 
 Shipped (each line points at its archive plan for the full story):
 
@@ -19,8 +19,9 @@ Shipped (each line points at its archive plan for the full story):
 - **TestLifter M9** — inferred preconditions surface as advisory comments in mock-inferred generators (PRD §7.8 first example) → `docs/archive/TestLifter M9 Plan.md`.
 - **v0.1.0 release** — version bumped, CHANGELOG added, perf baselines pinned, §13 row 4 budget recalibrated to 600 MB → `docs/archive/v0.1.0 Release Plan.md`, `docs/perf-baseline-v0.1.md`.
 - **TestLifter M10 (v1.1)** — round-trip-pair domain narrowing (PRD §7.8 second example, scope B). Round-trip suggestions whose reverse-side test corpus uniformly receives forward-side output get a `DomainHint` that overrides the generator with `Gen<T>.map(forward)` plus a `// Inferred domain:` provenance comment. Hard-veto on throws / async / multi-arg producers (comment-only fallback names the veto reason) → `docs/archive/TestLifter M10 Plan.md`.
+- **TestLifter M11 (v1.1)** — predicate equivalence-class detection (PRD §7.8 third example, scope B). `Valid`/`Invalid` method-name partitions with both buckets reaching the M4.3 ≥3 threshold + homogeneous predicate + matched polarity surface as `equivalence-class` advisory suggestions; comment-only writeout to `Tests/Generated/SwiftInfer/equivalence-class/EquivalenceClasses_<predicate>.swift` on accept. Adds `Tier.advisory`, `AssertionInvocation.Kind.xctAssertFalse`, and the side-map carrier shape (hint travels via `InteractiveTriage.Context.equivalenceClassHintsByIdentity` to keep the §13 row 4 memory ceiling). General partition surface (arbitrary markers, N-class, multi-predicate, cross-class relations) deferred → `docs/archive/TestLifter M11 Plan.md`.
 
-Open: equivalence-class detection (M11, the §7.8 third example) and PRD §20 v1.1+ trajectory items (SemanticIndex, IDE integration, `swift-infer apply`, `swift-infer metrics`, plus the speculative consumer-producer chain detection that M10's narrow scope deferred). No active milestone plan is open.
+Active: **v1.1 release plan** (`docs/v1.1 Release Plan.md`) — version bump + CHANGELOG entry + perf re-baseline + archive pass; the M10 + M11 features are already on `main`, so v1.1 is mechanical. Open beyond v1.1: PRD §20 v1.1+ trajectory items (SemanticIndex, IDE integration, `swift-infer apply`, `swift-infer metrics`) plus the deferred general data-flow tracing from M10 + general partition surface from M11.
 
 **Kit-side coordination.** `Package.swift` references **SwiftPropertyLaws** as `from: "2.0.0"`. The kit was renamed from SwiftProtocolLaws at v2.0.0 (a `refactor!`-only release — no behavioral changes; library products `ProtocolLawKit` / `ProtoLawCore` / `ProtoLawMacro` became `PropertyLawKit` / `PropertyLawCore` / `PropertyLawMacro`). The pre-rename v1.9.0 had added `CommutativeMonoid` + `Group` + `Semilattice` for M8.5's writeouts (commit `69e6618` pinned that). Still deferred: kit-side `Ring` (Numeric stays the canonical writeout target per PRD §5.4 row 5), kit-side `CommutativeGroup` (M8.4.b.1 emits separate proposals when both apply), kit-side `Group acting on T` (function-space carrier doesn't fit the per-type protocol shape).
 
@@ -39,7 +40,7 @@ SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategis
 | Question | File |
 |---|---|
 | Product scope, milestones, success criteria | `docs/SwiftInferProperties PRD v1.0.md` (canonical; v0.1–v0.4 retained as historical) |
-| Current milestone execution plan | None open — see "Repository state" above for what's next |
+| Current milestone execution plan | `docs/v1.1 Release Plan.md` (active) |
 | v0.1.0 perf baseline (regression comparison anchor) | `docs/perf-baseline-v0.1.md` |
 | Closed milestone plans | `docs/archive/*.md` |
 | PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |

@@ -32,12 +32,13 @@ struct TierTests {
         #expect(Tier(score: -100) == .suppressed)
     }
 
-    @Test("Strong and Likely are visible by default; Possible and Suppressed are not")
+    @Test("Strong, Likely, and Advisory are visible by default; Possible and Suppressed are not")
     func defaultVisibility() {
         #expect(Tier.strong.isVisibleByDefault)
         #expect(Tier.likely.isVisibleByDefault)
         #expect(!Tier.possible.isVisibleByDefault)
         #expect(!Tier.suppressed.isVisibleByDefault)
+        #expect(Tier.advisory.isVisibleByDefault)
     }
 
     @Test("Tier labels match the explainability-block header strings")
@@ -46,5 +47,13 @@ struct TierTests {
         #expect(Tier.likely.label == "Likely")
         #expect(Tier.possible.label == "Possible")
         #expect(Tier.suppressed.label == "Suppressed")
+        #expect(Tier.advisory.label == "Advisory")
+    }
+
+    @Test("Tier(score:) never returns .advisory — advisory is set explicitly by the surfacing pipeline")
+    func scoreInitNeverReturnsAdvisory() {
+        for score in stride(from: -100, through: 200, by: 13) {
+            #expect(Tier(score: score) != .advisory)
+        }
     }
 }

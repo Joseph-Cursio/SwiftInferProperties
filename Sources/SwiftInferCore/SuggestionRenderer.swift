@@ -135,7 +135,7 @@ public enum SuggestionRenderer {
         for suggestion in suggestions {
             counts[suggestion.score.tier, default: 0] += 1
         }
-        let parts: [String] = [Tier.strong, .likely, .possible].compactMap { tier in
+        let parts: [String] = [Tier.strong, .likely, .possible, .advisory].compactMap { tier in
             guard let value = counts[tier], value > 0 else { return nil }
             return "\(value) \(tier.label)"
         }

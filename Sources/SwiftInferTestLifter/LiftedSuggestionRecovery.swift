@@ -165,6 +165,14 @@ public enum LiftedSuggestionRecovery {
             // patterns aren't constructed by `TestLifter.discover` so
             // this branch is dormant.
             return (nil, nil)
+        case .equivalenceClass(let hint):
+            // M11.2 — the predicate equivalence-class hint already
+            // carries the `argTypeName` resolved by the M11.1 detector
+            // (from the predicate's `FunctionSummary.parameters[0].typeText`,
+            // or `"T"` when the production-side scan didn't find the
+            // predicate). The `returnType` is `Bool` — every
+            // equivalence-class predicate is unary returning Bool.
+            return (hint.argTypeName, "Bool")
         }
     }
 

@@ -36,6 +36,11 @@ import SwiftInferTestLifter
 /// accept-flow stub per PRD §16 #4.
 public enum LiftedSuggestionPipeline {
 
+    /// Tuple shape used by `promote(...)` to pair each input lifted record
+    /// with its post-recovery `Suggestion`. Named so the `.map` closure
+    /// stays under SwiftLint's 120-char line cap.
+    fileprivate typealias LiftedPair = (lifted: LiftedSuggestion, suggestion: Suggestion)
+
     /// Promote each LiftedSuggestion, apply GeneratorSelection,
     /// suppress entries whose key matches a TemplateEngine suggestion,
     /// and return the survivors. The caller (`Discover+Pipeline`)
@@ -81,27 +86,24 @@ public enum LiftedSuggestionPipeline {
         typeDecls: [TypeDecl],
         setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
         constructionRecord: ConstructionRecord = ConstructionRecord(entries: []),
-        domainCallSitesByConsumer: [String: [DomainCallSite]] = [:]
+        domainCallSitesByConsumer: [String: [DomainCallSite]] = [:],
+        equivalenceClassCandidates: [PartitionCandidate] = []
     ) -> [Suggestion] {
-        guard !lifted.isEmpty else {
+        let summariesByName = LiftedSuggestionRecovery.summariesByName(summaries)
+        let liftedWithEquivalenceClasses = unionLiftedWithEquivalenceClasses(
+            lifted: lifted,
+            candidates: equivalenceClassCandidates,
+            summariesByName: summariesByName
+        )
+        guard !liftedWithEquivalenceClasses.isEmpty else {
             return []
         }
         let suppressionKeys = Set(templateEngineSuggestions.map(\.crossValidationKey))
-        let summariesByName = LiftedSuggestionRecovery.summariesByName(summaries)
-        // Pair each lifted with its promoted Suggestion so we can build
-        // the SuggestionIdentity → typeName index for GeneratorSelection
-        // without parsing the synthetic evidence signature back out.
-        let pairs = lifted.map { liftedItem -> (lifted: LiftedSuggestion, suggestion: Suggestion) in
-            let annotations = liftedItem.origin.flatMap { setupAnnotationsByOrigin[$0] } ?? [:]
-            return (
-                liftedItem,
-                LiftedSuggestionRecovery.recover(
-                    liftedItem,
-                    summariesByName: summariesByName,
-                    setupAnnotations: annotations
-                )
-            )
-        }
+        let pairs = pairLiftedWithRecoveredSuggestions(
+            liftedWithEquivalenceClasses,
+            summariesByName: summariesByName,
+            setupAnnotationsByOrigin: setupAnnotationsByOrigin
+        )
         let surviving = pairs.filter { !suppressionKeys.contains($0.suggestion.crossValidationKey) }
         guard !surviving.isEmpty else {
             return []
@@ -148,6 +150,40 @@ public enum LiftedSuggestionPipeline {
             generatorTypeByIdentity: generatorTypeByIdentity,
             typeDecls: typeDecls
         )
+    }
+
+    /// M11.2 — fold equivalence-class lifted suggestions into the
+    /// promotion stream BEFORE the empty-input early return. Their
+    /// synthetic crossValidationKey (`templateName: "equivalence-class"`)
+    /// never matches any TemplateEngine template, so the suppression
+    /// filter naturally lets them through.
+    private static func unionLiftedWithEquivalenceClasses(
+        lifted: [LiftedSuggestion],
+        candidates: [PartitionCandidate],
+        summariesByName: [String: FunctionSummary]
+    ) -> [LiftedSuggestion] {
+        lifted + equivalenceClassLifted(from: candidates, summariesByName: summariesByName)
+    }
+
+    /// Pair each lifted with its promoted Suggestion so we can build
+    /// the `SuggestionIdentity → typeName` index for GeneratorSelection
+    /// without parsing the synthetic evidence signature back out.
+    private static func pairLiftedWithRecoveredSuggestions(
+        _ lifted: [LiftedSuggestion],
+        summariesByName: [String: FunctionSummary],
+        setupAnnotationsByOrigin: [LiftedOrigin: [String: String]]
+    ) -> [LiftedPair] {
+        lifted.map { liftedItem in
+            let annotations = liftedItem.origin.flatMap { setupAnnotationsByOrigin[$0] } ?? [:]
+            return (
+                liftedItem,
+                LiftedSuggestionRecovery.recover(
+                    liftedItem,
+                    summariesByName: summariesByName,
+                    setupAnnotations: annotations
+                )
+            )
+        }
     }
 
     private static func buildGeneratorTypeIndex(
@@ -319,4 +355,5 @@ public enum LiftedSuggestionPipeline {
             mockGenerator: mockGenerator
         )
     }
+
 }
