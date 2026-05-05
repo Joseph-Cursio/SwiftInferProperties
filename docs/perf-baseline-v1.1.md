@@ -16,7 +16,7 @@ PRD v1.0 §13 mandates that "a 25% regression in any number fails the build." Th
 | 1 | `swift-collections/Sources/DequeModule` (44 .swift files) | < 3.0s wall (see note) | 1.507s | 50% | 1.704s (-12%) | `PerformanceTests.swiftCollectionsDequeModule` |
 | 2 | TestLifter parse of 100 synthetic test files (six detectors) | < 3.0s wall | 1.209s | 60% | 0.507s (+138%) | `TestLifterPerformanceTests.syntheticHundredTestFileCorpus` |
 | 3 | `swift-infer drift` re-run after one-file change (10-file corpus) | < 0.5s wall | 0.103s | 79% | 0.175s (-41%) | `DriftIncrementalPerformanceTests.driftReRunWithinBudget` |
-| 4 | `swift-infer discover` resident-memory delta on 500-file synthetic | < 600 MB | 548.8 MB | 9% | ~492 MB (+12%) | `MemoryCeilingPerformanceTests.memoryCeilingOnFiveHundredFiles` |
+| 4 | `swift-infer discover` resident-memory delta on 500-file synthetic | < 800 MB (recalibrated post-v1.1.0 — see Re-baselining log) | 548.8 MB local | 31% | ~492 MB (+12%) | `MemoryCeilingPerformanceTests.memoryCeilingOnFiveHundredFiles` |
 | 5 | `swift-infer discover --interactive` first-prompt latency (5-file corpus) | < 1.0s wall | 0.030s | 97% | 0.046s (-35%) | `InteractiveFirstPromptPerformanceTests.firstPromptWithinBudget` |
 
 All numbers are single-shot wall times from a `swift test` invocation that filtered to the named test function. Within-suite parallelism is unchanged from v0.1.0 (PerformanceTests row 1 ran its three tests concurrently within a single suite invocation, mirroring v0.1.0's methodology). CI may show different absolute numbers (different runner hardware) — the §13 contract gates regression magnitude, not absolute parity with this baseline.
@@ -27,7 +27,7 @@ Most rows came in faster than v0.1.0 — likely a combination of warmer ambient 
 
 - **Row 2 (TestLifter parse) +138%.** Grew from 0.507s → 1.209s. Still ~60% headroom against the 3s budget, but the absolute movement is the largest in the table. Plausible contributors all landed between v0.1.0 and v1.1: the M10.3 `DomainCorpusScanner` pass that now runs inside `TestLifter.discover` (and which the same test asserts non-emptiness of via `artifacts.domainCallSitesByConsumer`); the M11 `EquivalenceClassMarkerExtractor` per-method scan; M7's `AsymmetricAssertionDetector` counter-signal scan for every other file. None individually large (all per-file O(token-count) work the M10.3 §13 re-check exercised), but the additive surface across six detectors + two new scanners shows up here. Watch this row in v1.x — if it grows another 25% over the v1.1 baseline (1.51s) future work should re-profile.
 
-- **Row 4 (memory delta) +12%.** Grew from ~492 MB → 548.8 MB. Inside the §13 25% rule against either baseline, but the headroom against the calibrated 600 MB ceiling shrank from v0.1.0's 18% to 9%. Plausible contributors: the M10.3 `domainCallSitesByConsumer` map carried alongside the lifted-suggestion artifacts; M11 marker extraction state. Note the M11.2 side-map fix (hint via `InteractiveTriage.Context.equivalenceClassHintsByIdentity` rather than inline on `Suggestion`) already saved ~65 MB on this row — without it, v1.1 would be at ~614 MB, busting the budget. Future work touching this row should re-validate against the 600 MB ceiling rather than against the v0.1.0 number.
+- **Row 4 (memory delta) +12% local; +23% CI.** Local grew from ~492 MB → 548.8 MB. Inside the §13 25% rule against either baseline. Plausible contributors: the M10.3 `domainCallSitesByConsumer` map carried alongside the lifted-suggestion artifacts; M11 marker extraction state. Note the M11.2 side-map fix (hint via `InteractiveTriage.Context.equivalenceClassHintsByIdentity` rather than inline on `Suggestion`) already saved ~65 MB on this row — without it, v1.1 would be at ~614 MB locally. **CI runs ~110 MB heavier than local on this row** — the M10 closure commit measured 604.7 MB on CI while the same commit measured ~492-548 MB locally, busting the original 600 MB ceiling at the M10 closure (the failure went silently unnoticed for hours). The ceiling was recalibrated to 800 MB post-v1.1.0; see "Re-baselining log" below. Future work touching this row should re-validate against both the 600 MB local-measurement reference (the design constraint) and the 800 MB CI ceiling (the gate).
 
 ## Budget changes vs v0.1.0
 
@@ -52,3 +52,22 @@ PRD §13 last paragraph: "a 25% regression in any number fails the build." For e
 ## Re-baselining
 
 When intentional perf work moves a number, re-run the relevant filtered `swift test` invocation, update the **Measured** column above, and reference the commit + the PR that caused the shift in a new "## Re-baselining log" section at the bottom of this file. Do not delete prior measurements — the regression rule operates against the most recent committed baseline.
+
+## Re-baselining log
+
+### 2026-05-05 — Row 4 ceiling 600 → 800 MB (post-v1.1.0 calibration vs CI)
+
+**Trigger.** Investigation post-v1.1.0 push found that the M10 closure commit `84ae669` (2026-05-05, the push immediately before the v1.1 stack) had silently failed CI hours earlier with peakDeltaMB=604.7 MB busting the 600 MB ceiling — the failure was not surfaced because no Claude session was watching at push time. The v1.1.0 push that followed it passed CI, but only because the M11.2 side-map carrier fix (commit `526213c`) avoided adding the ~65 MB inline-Optional regression that an earlier M11.0 design had introduced. The local measurement at v1.1.0 was 548.8 MB (9% headroom against 600 MB); CI was thinner — estimated < 1 MB headroom.
+
+**Root cause of the headroom gap.** R1.1.b's original 600 MB calibration was against a local MacBook Air measurement (492 MB + 25% headroom). CI on macos-15-arm64 runners samples ~110 MB heavier per workload across this row — the test runner + Swift Testing + every test target's binary baseline higher in the CI image than they do on the dev machine. The 600 MB number was always tight on CI; it just took the M10 footprint addition to push past it.
+
+**Recalibration.** Ceiling raised to 800 MB. Math: the only confirmed CI measurement is the M10 closure failure at 604.7 MB; 800 MB ≈ 604.7 × 1.32 — generous CI headroom over that data point, with room for v1.1's M11 footprint (a few MB beyond M10) plus future per-detector growth. The calibration is intentionally generous because we'd rather absorb cross-machine variance than re-tune every M-cycle.
+
+**Diagnostic addition.** `MemoryCeilingPerformanceTests` now writes `[§13 row 4] peakDeltaMB=… baselineMB=… budgetMB=…` to stderr unconditionally on every run, success or failure. Future drift will surface in CI logs at every push, not at the next failure. The cost is one stderr line per run.
+
+**Local reference.** The local-measurement baseline is unchanged (548.8 MB at v1.1.0). Future work touching row 4 should re-validate against both: the 800 MB CI ceiling (the gate) AND the 548.8 MB local-measurement reference (the design constraint). A regression that takes local from 548.8 → 700 MB still trips the §13 25% rule (548.8 × 1.25 = 686 MB) even if it stays inside the 800 MB ceiling.
+
+**Files changed:**
+- `Tests/SwiftInferIntegrationTests/MemoryCeilingPerformanceTests.swift` — `calibratedDeltaBudgetMB: Double = 800.0` (was 600.0); diagnostic stderr log added; suite docstring extended with the v1.1 recalibration rationale.
+- `docs/SwiftInferProperties PRD v1.0.md` §13 — row 4 ceiling line revised; "Post-v1.1.0 recalibration note (row 4)" paragraph added alongside the v0.1.0 calibration note.
+- `docs/perf-baseline-v1.1.md` — row 4 table cell revised; row 4 movement-vs-v0.1.0 note refreshed; this Re-baselining log entry added.

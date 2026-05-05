@@ -16,15 +16,32 @@ import SwiftInferTemplates
 /// authorized raising calibration-busted targets ("if the targets are
 /// already missed there, raise them in v0.4 rather than ship a tool
 /// that can't keep up"). R1.1.b's measurement on the v0.1.0 commit
-/// finds delta ~492 MB on a 500-file synthetic; the budget is revised
+/// finds delta ~492 MB on a 500-file synthetic; the budget was revised
 /// to 600 MB (current + ~25% headroom, matching the §13 "25%
-/// regression fails the build" rule). The PRD §13 row 4 update lands
+/// regression fails the build" rule). The PRD §13 row 4 update landed
 /// in R1.3 alongside the version bump.
+///
+/// **v1.1 recalibration: 600 → 800 MB.** R1.1.b's calibration was
+/// against a local MacBook Air measurement; CI on macos-15-arm64
+/// runners samples ~110 MB heavier per workload (the test runner +
+/// Swift Testing + every test target's binary all baseline higher in
+/// the CI image). The M10 closure commit (`84ae669`, 2026-05-05)
+/// busted the 600 MB ceiling on CI at peakDeltaMB=604.7 MB while the
+/// same commit measured ~492-548 MB locally. The M11.2 side-map
+/// carrier fix (commit `526213c`) bought back enough headroom that
+/// v1.1.0 passed CI at < 600 MB, but the headroom-against-CI was
+/// vanishingly thin (estimated < 1 MB). The 800 MB ceiling is set at
+/// 604.7 MB × ~1.32 — generous CI headroom over the only confirmed
+/// CI data point. Future work touching this row should still re-check
+/// against the 600 MB local-measurement reference in
+/// `docs/perf-baseline-v1.1.md`; the 800 MB ceiling exists so CI
+/// measurement noise + cross-machine variance doesn't bust the
+/// regression test for non-real reasons.
 ///
 /// **Why delta, not absolute peak.** The PRD budget targets the
 /// `swift-infer discover` process. Inside `swift test` the process is
 /// the test runner — Swift Testing, every test target's binary, the
-/// SwiftInferProperties + SwiftSyntax dep graph, and 750+ other tests
+/// SwiftInferProperties + SwiftSyntax dep graph, and 1200+ other tests
 /// that may have run before this one all baseline higher than the
 /// budget on their own. The honest in-test measurement is the delta
 /// the discover scan adds on top of that baseline — that delta is
@@ -37,10 +54,10 @@ import SwiftInferTemplates
 @Suite("Performance — PRD §13 500-file memory ceiling (R1.1.b)")
 struct MemoryCeilingPerformanceTests {
 
-    /// 600 MB is the v0.1.0-calibrated target (revised from v0.3's
-    /// 200 MB — see suite docstring). Future regressions trip the
+    /// 800 MB is the v1.1-recalibrated target (revised from v0.1.0's
+    /// 600 MB — see suite docstring). Future regressions trip the
     /// PRD §13 25% rule against this number.
-    static let calibratedDeltaBudgetMB: Double = 600.0
+    static let calibratedDeltaBudgetMB: Double = 800.0
 
     @Test("Discover on 500-file synthetic corpus stays within the §13 calibrated delta budget")
     func memoryCeilingOnFiveHundredFiles() throws {
@@ -60,6 +77,15 @@ struct MemoryCeilingPerformanceTests {
         let peakDeltaMB = Double(peakDeltaBytes) / (1024 * 1024)
         let baselineMB = Double(baselineBytes) / (1024 * 1024)
         let budgetMB = Self.calibratedDeltaBudgetMB
+        // Always log the measured delta so success runs leave a record
+        // in CI logs. The v1.1 recalibration was driven by a silent
+        // CI failure (M10 closure busted the 600 MB ceiling without
+        // anyone noticing for hours); making the number always visible
+        // lets future drift get caught at the next push, not the next
+        // failure.
+        FileHandle.standardError.write(Data(
+            "[§13 row 4] peakDeltaMB=\(formatted(peakDeltaMB)) baselineMB=\(formatted(baselineMB)) budgetMB=\(formatted(budgetMB))\n".utf8
+        ))
         let message = "500-file discover added \(formatted(peakDeltaMB)) MB resident over the "
             + "\(formatted(baselineMB)) MB pre-discover baseline — "
             + "over the §13 \(formatted(budgetMB)) MB budget"

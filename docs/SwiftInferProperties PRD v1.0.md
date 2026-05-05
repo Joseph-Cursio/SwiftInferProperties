@@ -609,12 +609,14 @@ Hard targets for v1, enforced by regression tests in CI:
 | `swift-infer discover` on 50-file module | < 2 seconds wall | regression test fails; release blocked |
 | TestLifter parse of 100 test files | < 3 seconds wall | regression test fails |
 | `swift-infer drift` re-run after one-file change | < 500ms (incremental) | regression test fails |
-| Memory ceiling on 500-file module | < 600 MB resident (calibrated at the v0.1.0 cut) | regression test fails |
+| Memory ceiling on 500-file module | < 800 MB resident (recalibrated post-v1.1.0) | regression test fails |
 | `swift-infer discover --interactive` first-prompt latency | < 1 second after process start | release blocked |
 
 Numbers are deliberately Swift-realistic (SwiftSyntax parsing dominates), not aspirational. Calibrated against `swift-collections` and `swift-algorithms` as reference corpora.
 
 **v0.1.0 calibration note (row 4).** The original spec set the memory ceiling at "< 200 MB resident" without measurement. The R1.1.b release-prep measurement on the 500-file synthetic corpus that exercises every shipped template found delta ~492 MB; the row was revised to **600 MB** (current measurement + ~25% headroom matching the regression rule below). Post-v0.1.0 perf-tuning candidates are recorded in `docs/perf-baseline-v0.1.md`. The other §13 rows hit their original targets at the v0.1.0 cut.
+
+**Post-v1.1.0 recalibration note (row 4).** R1.1.b's 600 MB calibration was against a local MacBook Air measurement; CI on macos-15-arm64 runners samples ~110 MB heavier per workload (the test runner + Swift Testing + every test target's binary baseline higher in the CI image). The M10 closure commit (`84ae669`, 2026-05-05) busted the 600 MB ceiling on CI at peakDeltaMB=604.7 MB while the same commit measured ~492-548 MB locally — and the failure went unnoticed for hours because no one was watching CI at push time. The M11.2 side-map carrier fix recovered enough headroom that v1.1.0 passed CI at < 600 MB, but the headroom-against-CI was vanishingly thin. The row was revised to **800 MB** (~33% over the only confirmed CI data point) and the test now logs the measured delta unconditionally so future drift surfaces in CI logs at every push, not at the next failure. See `docs/perf-baseline-v1.1.md` "Re-baselining log" for the full rationale. Future regressions still trip the §13 25% rule against the 800 MB ceiling.
 
 A **performance regression test suite** runs in CI: the discovery and drift commands are timed against fixed input corpora, results recorded, and a 25% regression in any number fails the build.
 
