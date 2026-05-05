@@ -56,6 +56,16 @@ struct TestLifterPerformanceTests {
             (templateCounts["associativity"] ?? 0) >= 50,
             "reduce-equivalence detector contributed too few suggestions"
         )
+        // M10.3 §13 re-check: confirm DomainCorpusScanner ran inside
+        // the discover pass and produced a non-empty call-site map
+        // within the 3s budget. Each synthetic file has unique
+        // `decode<index>` names so the map carries one entry per file
+        // (plus any other call sites the slicer kept) — non-emptiness
+        // proves the M10.3 wiring is observable from the perf path.
+        #expect(
+            !artifacts.domainCallSitesByConsumer.isEmpty,
+            "DomainCorpusScanner produced no call-site entries on the 100-file corpus"
+        )
     }
 
     /// M3.4 §13 perf re-check: the M3.2 pipeline pass adds promotion +
