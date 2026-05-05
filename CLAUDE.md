@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**v0.1.0 cut. The v1 surface is feature-complete: TemplateEngine M1–M8, TestLifter M1–M9, plus the §7.8 first-example expanded output (preconditions).** Per-milestone narratives, sub-commit breakdowns, and plan deviations live in `docs/archive/*.md` and the git log; this section is a pointer-only index.
+**v0.1.0 cut; v1.1 trajectory open with TestLifter M10 shipped (round-trip-pair domain narrowing, the §7.8 second example).** Per-milestone narratives, sub-commit breakdowns, and plan deviations live in `docs/archive/*.md` and the git log; this section is a pointer-only index.
 
 Shipped (each line points at its archive plan for the full story):
 
@@ -18,8 +18,9 @@ Shipped (each line points at its archive plan for the full story):
 - **TestLifter M8** — `swift-infer convert-counterexample` CLI subcommand → `docs/archive/TestLifter M8 Plan.md`.
 - **TestLifter M9** — inferred preconditions surface as advisory comments in mock-inferred generators (PRD §7.8 first example) → `docs/archive/TestLifter M9 Plan.md`.
 - **v0.1.0 release** — version bumped, CHANGELOG added, perf baselines pinned, §13 row 4 budget recalibrated to 600 MB → `docs/archive/v0.1.0 Release Plan.md`, `docs/perf-baseline-v0.1.md`.
+- **TestLifter M10 (v1.1)** — round-trip-pair domain narrowing (PRD §7.8 second example, scope B). Round-trip suggestions whose reverse-side test corpus uniformly receives forward-side output get a `DomainHint` that overrides the generator with `Gen<T>.map(forward)` plus a `// Inferred domain:` provenance comment. Hard-veto on throws / async / multi-arg producers (comment-only fallback names the veto reason) → `docs/archive/TestLifter M10 Plan.md`.
 
-Out of v1 scope (post-v0.1.0): §7.8 inferred domains (would-be M10), equivalence-class detection (M11), and PRD §20 v1.1+ trajectory items (SemanticIndex, IDE integration, `swift-infer apply`, `swift-infer metrics`). No active milestone plan is open.
+Open: equivalence-class detection (M11, the §7.8 third example) and PRD §20 v1.1+ trajectory items (SemanticIndex, IDE integration, `swift-infer apply`, `swift-infer metrics`, plus the speculative consumer-producer chain detection that M10's narrow scope deferred). No active milestone plan is open.
 
 **Kit-side coordination.** `Package.swift` references **SwiftPropertyLaws** as `from: "2.0.0"`. The kit was renamed from SwiftProtocolLaws at v2.0.0 (a `refactor!`-only release — no behavioral changes; library products `ProtocolLawKit` / `ProtoLawCore` / `ProtoLawMacro` became `PropertyLawKit` / `PropertyLawCore` / `PropertyLawMacro`). The pre-rename v1.9.0 had added `CommutativeMonoid` + `Group` + `Semilattice` for M8.5's writeouts (commit `69e6618` pinned that). Still deferred: kit-side `Ring` (Numeric stays the canonical writeout target per PRD §5.4 row 5), kit-side `CommutativeGroup` (M8.4.b.1 emits separate proposals when both apply), kit-side `Group acting on T` (function-space carrier doesn't fit the per-type protocol shape).
 
