@@ -1,8 +1,8 @@
-import ProtoLawCore
+import PropertyLawCore
 
 /// Bridge from SwiftInfer's per-decl `TypeDecl` records (M3.2 + M4.1) to
-/// `ProtoLawCore.TypeShape` — the strategist's input contract per
-/// `Sources/ProtoLawCore/DerivationStrategy.swift:120` in SwiftProtocolLaws.
+/// `PropertyLawCore.TypeShape` — the strategist's input contract per
+/// `Sources/PropertyLawCore/DerivationStrategy.swift:120` in SwiftPropertyLaws.
 /// M4.2's `GeneratorSelection` calls `DerivationStrategist.strategy(for:)`
 /// against the `TypeShape`s this enum produces.
 ///

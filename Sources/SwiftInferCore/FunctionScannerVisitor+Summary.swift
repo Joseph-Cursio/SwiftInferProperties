@@ -1,4 +1,4 @@
-import ProtoLawCore
+import PropertyLawCore
 import SwiftSyntax
 
 extension FunctionScannerVisitor {

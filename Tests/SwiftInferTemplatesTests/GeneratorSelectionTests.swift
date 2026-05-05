@@ -1,4 +1,4 @@
-import ProtoLawCore
+import PropertyLawCore
 import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates

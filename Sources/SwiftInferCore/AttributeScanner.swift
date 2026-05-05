@@ -4,8 +4,8 @@ import SwiftSyntax
 /// `@CheckProperty(.preservesInvariant(\..))` attributes that downstream
 /// templates and bridge arms consume. Recognize-only per PRD v0.4 §5.7 —
 /// SwiftInferProperties does not take a runtime dependency on
-/// `ProtoLawMacro`'s definitions; attribute-name matching tolerates
-/// fully-qualified `@ProtoLawMacro.Discoverable(...)` by checking the
+/// `PropertyLawMacro`'s definitions; attribute-name matching tolerates
+/// fully-qualified `@PropertyLawMacro.Discoverable(...)` by checking the
 /// trailing identifier component.
 enum AttributeScanner {
 

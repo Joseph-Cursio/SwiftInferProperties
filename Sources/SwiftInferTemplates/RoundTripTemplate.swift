@@ -134,7 +134,7 @@ public enum RoundTripTemplate {
     /// PRD §4.1 `+35` cross-pair signal — fires when both halves of
     /// the pair share the same non-nil `@Discoverable(group:)` value.
     /// M5.1 introduces this signal in the recognize-only mode per
-    /// PRD v0.4 §5.7 (no runtime dep on `ProtoLawMacro`). The detail
+    /// PRD v0.4 §5.7 (no runtime dep on `PropertyLawMacro`). The detail
     /// line cites the matched group name so the §4.5 explainability
     /// block can show what the signal was scoped to.
     private static func discoverableSignal(for pair: FunctionPair) -> Signal? {

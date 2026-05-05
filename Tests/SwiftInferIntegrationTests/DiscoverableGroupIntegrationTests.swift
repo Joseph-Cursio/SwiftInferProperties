@@ -6,7 +6,7 @@ import SwiftInferTemplates
 /// PRD v0.4 §4.1 + §5.7 / M5.6 acceptance-bar (a) integration suite
 /// for `@Discoverable(group:)` recognition. Closes the bar by
 /// exercising the recognize-only attribute detection (no runtime dep
-/// on `ProtoLawMacro`) over real on-disk fixture corpora — scanner →
+/// on `PropertyLawMacro`) over real on-disk fixture corpora — scanner →
 /// `FunctionPair.sharedDiscoverableGroup` → +35 signal end-to-end.
 ///
 /// The unit-level path is covered by `DiscoverableAnnotationScannerTests`

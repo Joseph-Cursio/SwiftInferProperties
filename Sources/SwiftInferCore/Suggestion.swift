@@ -97,7 +97,7 @@ public struct GeneratorMetadata: Sendable, Equatable {
 
     /// Where the generator came from. M1 always reports
     /// `.notYetComputed` — selection is gated on `DerivationStrategist`
-    /// being publicly exposed from SwiftProtocolLaws (PRD §11, §21 OQ #4)
+    /// being publicly exposed from SwiftPropertyLaws (PRD §11, §21 OQ #4)
     /// and lands at M3.
     public enum Source: String, Sendable, Equatable {
         case derivedCaseIterable

@@ -181,7 +181,7 @@ struct InteractiveTriageBridgeAcceptTests {
         #expect(contents.contains("extension IntSet: Semigroup {"))
         #expect(contents.contains("public static func combine(_ lhs: IntSet, _ rhs: IntSet) -> IntSet {"))
         #expect(contents.contains("Self.merge(lhs, rhs)"))
-        #expect(contents.contains("import ProtocolLawKit"))
+        #expect(contents.contains("import PropertyLawKit"))
         #expect(contents.contains("RefactorBridge proposal: IntSet → Semigroup"))
     }
 

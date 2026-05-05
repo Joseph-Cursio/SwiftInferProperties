@@ -1,10 +1,10 @@
 // `@CheckProperty(...)` peer macro — user-facing declaration. The macro
 // implementation lives in `SwiftInferMacroImpl`; this file is the only
-// surface library callers import. Re-exports `ProtocolLawKit` so the
+// surface library callers import. Re-exports `PropertyLawKit` so the
 // macro-emitted test stub's `SwiftPropertyBasedBackend` + `Seed`
 // references resolve in the user's test target without a second
 // `import` line.
-@_exported import ProtocolLawKit
+@_exported import PropertyLawKit
 
 /// Property the `@CheckProperty(...)` macro should generate a test
 /// stub for. Each case maps to one M5/M7 sub-milestone:
@@ -42,7 +42,7 @@ public enum CheckPropertyKind: @unchecked Sendable {
 /// The macro expands at *the user's* compile time (it's a peer macro
 /// in the user's source), not at SwiftInferProperties build time.
 /// Counterexamples are reported via Swift Testing's `Issue.record`,
-/// matching the kit's `@ProtoLawSuite` convention.
+/// matching the kit's `@PropertyLawSuite` convention.
 @attached(peer, names: arbitrary)
 public macro CheckProperty(_ kind: CheckPropertyKind) =
     #externalMacro(module: "SwiftInferMacroImpl", type: "CheckPropertyMacro")

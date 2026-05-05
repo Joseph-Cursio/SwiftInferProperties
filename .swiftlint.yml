@@ -7,7 +7,7 @@ excluded:
   - docs
   - Package.swift
 
-# Match SwiftProtocolLaws's identifier_name relaxations: keep the idiomatic
+# Match SwiftPropertyLaws's identifier_name relaxations: keep the idiomatic
 # `id` two-letter name and lift max_length to 50 to accommodate downstream
 # integration with the kit's `check<Protocol>ProtocolLaws` family.
 identifier_name:

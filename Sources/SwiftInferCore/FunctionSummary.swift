@@ -52,7 +52,7 @@ public struct FunctionSummary: Sendable, Equatable {
     /// function carries no `@Discoverable` attribute or the attribute
     /// has no `group:` argument. PRD v0.4 §5.7 + §4.1: SwiftInferProperties
     /// recognizes the attribute *by name match* during the SwiftSyntax
-    /// walk — no runtime dep on `ProtoLawMacro`. Two functions sharing
+    /// walk — no runtime dep on `PropertyLawMacro`. Two functions sharing
     /// the same non-nil `discoverableGroup` earn a `+35` cross-pair
     /// signal at the round-trip-template scoring layer.
     /// Defaults to `nil` so M1–M4 call sites that don't yet populate

@@ -1,10 +1,10 @@
 import Testing
-import ProtoLawCore
+import PropertyLawCore
 
-@Suite("ProtoLawCore dep wiring — M3.1 smoke test")
+@Suite("PropertyLawCore dep wiring — M3.1 smoke test")
 struct DerivationStrategistSmokeTests {
 
-    // PRD §11 / M3.1: prove the `../SwiftProtocolLaws` package dep resolves
+    // PRD §11 / M3.1: prove the `../SwiftPropertyLaws` package dep resolves
     // and `DerivationStrategist.strategy(for:)` is reachable from
     // SwiftInferCore's test target. Strategy A (user-provided `gen()`) is
     // the cheapest path through the strategist — it short-circuits before

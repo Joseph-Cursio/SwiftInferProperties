@@ -1,4 +1,4 @@
-import ProtoLawCore
+import PropertyLawCore
 import SwiftInferCore
 
 /// `LiftedTestEmitter` generator-expression helpers — split out of
@@ -11,7 +11,7 @@ import SwiftInferCore
 public extension LiftedTestEmitter {
 
     /// Pick the canonical generator expression for `typeName`. If it
-    /// matches a `ProtoLawCore.RawType` (stdlib `Int`, `String`,
+    /// matches a `PropertyLawCore.RawType` (stdlib `Int`, `String`,
     /// `Bool`, etc.), emit the kit's `RawType.generatorExpression` so
     /// the M4.2 generator-selection convention holds. Otherwise emit
     /// `\(typeName).gen()` — same fallback the

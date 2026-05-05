@@ -1,11 +1,11 @@
-import ProtoLawCore
+import PropertyLawCore
 import SwiftInferCore
 
 /// Generator-selection layer per the M4 plan §M4.2. Walks
 /// post-contradiction-filter `[Suggestion]` records and, for each
 /// suggestion whose generator-relevant type appears in the corpus's
 /// `TypeShape` index (M4.1), calls
-/// `ProtoLawCore.DerivationStrategist.strategy(for:)` and rebuilds the
+/// `PropertyLawCore.DerivationStrategist.strategy(for:)` and rebuilds the
 /// suggestion with a populated `GeneratorMetadata.source` +
 /// `confidence`. Suggestions whose type isn't in the index pass
 /// through with their existing `m1Placeholder` metadata — per the M4

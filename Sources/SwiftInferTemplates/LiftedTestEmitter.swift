@@ -1,4 +1,4 @@
-import ProtoLawCore
+import PropertyLawCore
 import SwiftInferCore
 
 /// Pure-function emit of a Swift Testing `@Test func` source string

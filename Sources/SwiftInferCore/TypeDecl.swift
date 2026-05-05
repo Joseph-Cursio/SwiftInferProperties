@@ -1,4 +1,4 @@
-import ProtoLawCore
+import PropertyLawCore
 
 /// Type-declaration record emitted by `FunctionScanner` alongside
 /// `FunctionSummary` and `IdentityCandidate`. Captures the source-textual
@@ -23,7 +23,7 @@ import ProtoLawCore
 public struct TypeDecl: Sendable, Equatable {
 
     /// Surface-syntactic kind of the source declaration. Mirrors
-    /// `ProtoLawCore.TypeShape.Kind` for `struct` / `class` / `enum` /
+    /// `PropertyLawCore.TypeShape.Kind` for `struct` / `class` / `enum` /
     /// `actor`, and adds `.extension` so extension conformances stay
     /// distinguishable from primary declarations during resolver merging.
     public enum Kind: String, Sendable, Equatable {

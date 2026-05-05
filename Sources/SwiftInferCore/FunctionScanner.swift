@@ -1,5 +1,5 @@
 import Foundation
-import ProtoLawCore
+import PropertyLawCore
 import SwiftParser
 import SwiftSyntax
 

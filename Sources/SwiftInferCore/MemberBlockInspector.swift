@@ -1,8 +1,8 @@
-import ProtoLawCore
+import PropertyLawCore
 import SwiftSyntax
 
 /// Member-block inspection helpers that feed `TypeDecl` construction.
-/// Ported from SwiftProtocolLaws's `ProtoLawMacroImpl.MemberBlockInspector`
+/// Ported from SwiftPropertyLaws's `PropertyLawMacroImpl.MemberBlockInspector`
 /// — the macro impl can't be a runtime dep here, so the logic is
 /// duplicated by design (matches the in-tree port the discovery plugin
 /// uses for the same reason).

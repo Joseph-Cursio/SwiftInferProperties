@@ -323,7 +323,7 @@ extension InteractiveTriage {
 
         \(foundationImport)import Testing
         import PropertyBased
-        import ProtocolLawKit
+        import PropertyLawKit
         \(stub)
         """
     }

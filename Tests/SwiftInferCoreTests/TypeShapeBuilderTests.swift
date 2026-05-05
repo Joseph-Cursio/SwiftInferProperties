@@ -1,8 +1,8 @@
-import ProtoLawCore
+import PropertyLawCore
 import Testing
 @testable import SwiftInferCore
 
-@Suite("TypeShapeBuilder — TypeDecl → ProtoLawCore.TypeShape fold (M4.1)")
+@Suite("TypeShapeBuilder — TypeDecl → PropertyLawCore.TypeShape fold (M4.1)")
 struct TypeShapeBuilderTests {
 
     private func decl(

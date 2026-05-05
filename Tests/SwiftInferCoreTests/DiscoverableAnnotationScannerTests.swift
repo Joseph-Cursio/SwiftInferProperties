@@ -28,7 +28,7 @@ struct DiscoverableAnnotationScannerTests {
     @Test
     func discoverableAttributeWithoutGroupArgumentLeavesGroupNil() throws {
         // The kit's `@Discoverable` macro lets users omit the `group:`
-        // argument entirely (per ProtoLawMacro's M5 advisory). When
+        // argument entirely (per PropertyLawMacro's M5 advisory). When
         // that happens there's no group to scope on — recognize-only
         // mode treats the attribute as absent for SwiftInfer's purposes.
         let source = """
@@ -70,10 +70,10 @@ struct DiscoverableAnnotationScannerTests {
     @Test
     func qualifiedDiscoverableAttributeIsRecognized() throws {
         // Users who want explicit qualification can write
-        // `@ProtoLawMacro.Discoverable(...)`. Recognize-only matches
+        // `@PropertyLawMacro.Discoverable(...)`. Recognize-only matches
         // the trailing identifier component, not the full dotted path.
         let source = """
-        @ProtoLawMacro.Discoverable(group: "graph")
+        @PropertyLawMacro.Discoverable(group: "graph")
         func unionGraphs(_ a: Graph, _ b: Graph) -> Graph { a }
         """
         let summaries = FunctionScanner.scan(source: source, file: "Test.swift")

@@ -142,7 +142,7 @@ extension InteractiveTriage {
         \(provenance)
         // RefactorBridge proposal: \(proposal.typeName) → \(proposal.protocolName)
 
-        import ProtocolLawKit
+        import PropertyLawKit
         \(extensionSource)
         """
     }

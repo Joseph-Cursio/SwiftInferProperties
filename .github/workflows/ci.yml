@@ -15,19 +15,19 @@ jobs:
     name: Test (macOS)
     runs-on: macos-15
     steps:
-      # SwiftInferProperties depends on SwiftProtocolLaws via a local path
-      # (`../SwiftProtocolLaws`) during pre-1.0 development. Check both repos
+      # SwiftInferProperties depends on SwiftPropertyLaws via a local path
+      # (`../SwiftPropertyLaws`) during pre-1.0 development. Check both repos
       # out side-by-side so SPM can resolve the path dep.
       - name: Checkout SwiftInferProperties
         uses: actions/checkout@v6
         with:
           path: SwiftInferProperties
-      - name: Checkout SwiftProtocolLaws
+      - name: Checkout SwiftPropertyLaws
         uses: actions/checkout@v6
         with:
-          repository: Joseph-Cursio/SwiftProtocolLaws
+          repository: Joseph-Cursio/SwiftPropertyLaws
           ref: main
-          path: SwiftProtocolLaws
+          path: SwiftPropertyLaws
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable

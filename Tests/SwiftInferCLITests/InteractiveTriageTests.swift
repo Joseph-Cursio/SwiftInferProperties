@@ -71,7 +71,7 @@ struct InteractiveTriageAcceptTests {
         let contents = try String(contentsOf: stubPath, encoding: .utf8)
         #expect(contents.contains("@Test func normalize_isIdempotent()"))
         #expect(contents.contains("normalize(normalize(value)) == normalize(value)"))
-        #expect(contents.contains("import ProtocolLawKit"))
+        #expect(contents.contains("import PropertyLawKit"))
     }
 
     @Test

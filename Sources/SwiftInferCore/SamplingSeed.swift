@@ -12,8 +12,8 @@ import Foundation
 /// big-endian `UInt64`s for the `Xoshiro256**` state. The v0.3 spec
 /// read "low 64 bits of SHA256(...)"; v0.4 widened to 256 bits because
 /// that's the upstream `Xoshiro256**` state-space size, and the
-/// K-prep-M2 audit on the SwiftProtocolLaws side surfaced the API
-/// mismatch (`ProtocolLawKit.Seed(stateA:stateB:stateC:stateD:)` takes
+/// K-prep-M2 audit on the SwiftPropertyLaws side surfaced the API
+/// mismatch (`PropertyLawKit.Seed(stateA:stateB:stateC:stateD:)` takes
 /// four `UInt64`s).
 ///
 /// The `|` separator between the identity hash and the literal
@@ -21,21 +21,21 @@ import Foundation
 /// `|`-separated convention `SuggestionIdentity.canonicalInput` uses.
 ///
 /// Returned type is `SamplingSeed.Value` (this enum's nested
-/// 4-`UInt64` value type) rather than `ProtocolLawKit.Seed` directly
-/// — `ProtocolLawKit` transitively pulls `Testing.framework`, which
+/// 4-`UInt64` value type) rather than `PropertyLawKit.Seed` directly
+/// — `PropertyLawKit` transitively pulls `Testing.framework`, which
 /// the SwiftInfer runtime targets explicitly exclude (see
 /// `Package.swift:35-38`). Downstream consumers
 /// (M5.2's `@CheckProperty` macro expansion, anywhere that wants to
 /// hand the seed to `SwiftPropertyBasedBackend.check(seed:)`)
 /// translate `Value` to `Seed` at the test-emission site, where
-/// `import ProtocolLawKit` is appropriate.
+/// `import PropertyLawKit` is appropriate.
 ///
 /// `--seed-override` (PRD §16 #6 debugging-only override) is *not*
 /// modelled here. Per the PRD v0.4 it is v1.1+ — no v1 milestone owner.
 public enum SamplingSeed {
 
     /// 256-bit Xoshiro state, four `UInt64`s. Matches the layout of
-    /// `ProtocolLawKit.Seed` 1:1 so a downstream test target can
+    /// `PropertyLawKit.Seed` 1:1 so a downstream test target can
     /// construct `Seed(stateA:stateB:stateC:stateD:)` field-for-field.
     /// Equatable + Sendable + Hashable so it composes cleanly into
     /// suggestion-rendering equality checks.
