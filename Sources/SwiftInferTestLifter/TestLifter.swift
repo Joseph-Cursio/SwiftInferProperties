@@ -40,23 +40,39 @@ extension TestLifter {
         /// Empty when the test corpus has no `T(...)` constructor sites.
         public let constructionRecord: ConstructionRecord
 
+        /// M10.3 — corpus-wide call-site map built once per
+        /// `discover(in:)` run by `DomainCorpusScanner.artifacts(in:)`
+        /// over each slice + `mergeCallSites(...)` to flatten. Keyed by
+        /// the consumer function's trailing-identifier name; each
+        /// site's `argument` classification has already been resolved
+        /// against its originating slice's setup bindings (so corpus
+        /// merge is safe — identifiers that don't resolve in their own
+        /// slice degrade to `.other` and become outliers). The CLI
+        /// pipeline's `applyDomainInference(...)` queries this map per
+        /// round-trip suggestion to populate `MockGenerator.domainHint`.
+        /// Empty when the test corpus has no relevant call sites.
+        public let domainCallSitesByConsumer: [String: [DomainCallSite]]
+
         public init(
             liftedSuggestions: [LiftedSuggestion],
             setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
             constructionRecord: ConstructionRecord = ConstructionRecord(entries: []),
-            counterSignals: [LiftedCounterSignal] = []
+            counterSignals: [LiftedCounterSignal] = [],
+            domainCallSitesByConsumer: [String: [DomainCallSite]] = [:]
         ) {
             self.liftedSuggestions = liftedSuggestions
             self.setupAnnotationsByOrigin = setupAnnotationsByOrigin
             self.constructionRecord = constructionRecord
             self.counterSignals = counterSignals
+            self.domainCallSitesByConsumer = domainCallSitesByConsumer
         }
 
         public static let empty = Artifacts(
             liftedSuggestions: [],
             setupAnnotationsByOrigin: [:],
             constructionRecord: ConstructionRecord(entries: []),
-            counterSignals: []
+            counterSignals: [],
+            domainCallSitesByConsumer: [:]
         )
 
         /// The cross-validation keys to feed into
@@ -95,8 +111,10 @@ extension TestLifter {
         var lifted: [LiftedSuggestion] = []
         var counterSignals: [LiftedCounterSignal] = []
         var annotationsByOrigin: [LiftedOrigin: [String: String]] = [:]
+        var sliceArtifactsList: [DomainCorpusScanner.SliceArtifacts] = []
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
+            sliceArtifactsList.append(DomainCorpusScanner.artifacts(in: slice))
             let origin = LiftedOrigin(
                 testMethodName: summary.methodName,
                 sourceLocation: summary.location
@@ -148,11 +166,13 @@ extension TestLifter {
         // synthesis on lifted-promoted Suggestions whose type isn't
         // memberwise-derivable from `corpus.typeDecls`.
         let constructionRecord = SetupRegionConstructionScanner.record(over: summaries)
+        let domainCallSitesByConsumer = DomainCorpusScanner.mergeCallSites(sliceArtifactsList)
         return Artifacts(
             liftedSuggestions: lifted,
             setupAnnotationsByOrigin: annotationsByOrigin,
             constructionRecord: constructionRecord,
-            counterSignals: counterSignals
+            counterSignals: counterSignals,
+            domainCallSitesByConsumer: domainCallSitesByConsumer
         )
     }
 

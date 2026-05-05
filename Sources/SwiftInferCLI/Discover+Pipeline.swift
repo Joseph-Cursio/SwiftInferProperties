@@ -86,7 +86,8 @@ extension SwiftInferCommand.Discover {
             summaries: artifacts.summaries,
             typeDecls: artifacts.typeDecls,
             setupAnnotationsByOrigin: liftedArtifacts.setupAnnotationsByOrigin,
-            constructionRecord: liftedArtifacts.constructionRecord
+            constructionRecord: liftedArtifacts.constructionRecord,
+            domainCallSitesByConsumer: liftedArtifacts.domainCallSitesByConsumer
         )
         let skipFiltered = applyLiftedSkipMarkerFilter(
             to: promotedLifted,

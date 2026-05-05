@@ -39,6 +39,18 @@ public extension LiftedTestEmitter {
     /// these four names; if the M5+ literal classifier widens the
     /// shape, this path needs the corresponding update.)
     static func mockInferredGenerator(_ mock: MockGenerator) -> String {
+        // M10.3 — when `mock.domainHint` carries an unvetoed hint, the
+        // entire mock-inferred generator is overridden with
+        // `Gen<T>.map(forward)` per PRD §7.8 second example. The
+        // override surfaces a `// Inferred domain:` provenance comment
+        // line above the generator. When vetoed, the mock-inferred
+        // generator continues unchanged but the comment surfaces inside
+        // the rendered stub via `domainHintCommentLine(for:)` (called
+        // by `LiftedTestEmitter` at the test-stub assembly layer).
+        if let hint = mock.domainHint, hint.producerVeto == nil {
+            let comment = domainCommentLine(for: hint)
+            return "// \(comment)\n            \(hint.suggestedGenerator)"
+        }
         let typeName = mock.typeName
         guard !mock.argumentSpec.isEmpty else {
             // Empty-constructor mock — the test corpus consistently
@@ -77,6 +89,32 @@ public extension LiftedTestEmitter {
             .joined(separator: ", ")
         return "zip(\n\(argumentLines)\n            )\n            "
             + ".map { \(typeName)(\(constructionArgs)) }"
+    }
+
+    /// M10.3 — render the `// Inferred domain:` provenance comment line
+    /// (without the leading `// ` prefix) for a `DomainHint`. Two
+    /// shapes: when not vetoed, narrates the override; when vetoed,
+    /// names the veto reason so the user knows why the generator
+    /// substitution was skipped.
+    static func domainCommentLine(for hint: DomainHint) -> String {
+        let sitesPlural = hint.siteCount == 1 ? "site" : "sites"
+        if let veto = hint.producerVeto {
+            return "Inferred domain: \(hint.reverseName)'s argument was always "
+                + "\(hint.forwardName)'s output across \(hint.siteCount) \(sitesPlural) — "
+                + "narrowing skipped: \(describeVeto(veto)) — consider \(hint.suggestedGenerator)"
+        }
+        return "Inferred domain: \(hint.reverseName)'s argument was always "
+            + "\(hint.forwardName)'s output across \(hint.siteCount) \(sitesPlural) — "
+            + "narrowing to \(hint.suggestedGenerator)"
+    }
+
+    private static func describeVeto(_ veto: ProducerVetoReason) -> String {
+        switch veto {
+        case .producerThrows: return "\(veto) (the runner can't shrink through `try!`)"
+        case .producerAsync: return "\(veto) (`Gen<_>.map(_:)` is synchronous)"
+        case .producerMultiArg: return "\(veto) (`Gen<_>.map(_:)` is unary)"
+        case .producerArgNotGeneratable: return "\(veto) (no Gen<T> source for the producer's argument)"
+        }
     }
 
     /// Render a single `// Inferred precondition:` comment line for the

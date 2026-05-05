@@ -80,7 +80,8 @@ public enum LiftedSuggestionPipeline {
         summaries: [FunctionSummary],
         typeDecls: [TypeDecl],
         setupAnnotationsByOrigin: [LiftedOrigin: [String: String]] = [:],
-        constructionRecord: ConstructionRecord = ConstructionRecord(entries: [])
+        constructionRecord: ConstructionRecord = ConstructionRecord(entries: []),
+        domainCallSitesByConsumer: [String: [DomainCallSite]] = [:]
     ) -> [Suggestion] {
         guard !lifted.isEmpty else {
             return []
@@ -108,17 +109,11 @@ public enum LiftedSuggestionPipeline {
         let shapesByName = Dictionary(
             uniqueKeysWithValues: TypeShapeBuilder.shapes(from: typeDecls).map { ($0.name, $0) }
         )
-        var generatorTypeByIdentity: [SuggestionIdentity: String] = [:]
-        for pair in surviving {
-            let annotations = pair.lifted.origin.flatMap { setupAnnotationsByOrigin[$0] } ?? [:]
-            if let typeName = LiftedSuggestionRecovery.recoveredTypeName(
-                for: pair.lifted,
-                summariesByName: summariesByName,
-                setupAnnotations: annotations
-            ) {
-                generatorTypeByIdentity[pair.suggestion.identity] = typeName
-            }
-        }
+        let generatorTypeByIdentity = buildGeneratorTypeIndex(
+            from: surviving,
+            summariesByName: summariesByName,
+            setupAnnotationsByOrigin: setupAnnotationsByOrigin
+        )
         let withStrategistGenerators = GeneratorSelection.apply(
             to: surviving.map(\.suggestion),
             generatorTypeByIdentity: generatorTypeByIdentity,
@@ -129,6 +124,18 @@ public enum LiftedSuggestionPipeline {
             generatorTypeByIdentity: generatorTypeByIdentity,
             record: constructionRecord
         )
+        // M10.3 — domain inference pass. Walks each round-trip
+        // suggestion that exited the mock-fallback pass with a populated
+        // `mockGenerator`, queries `domainCallSitesByConsumer` for the
+        // reverse function's call sites, and (when homogeneity holds)
+        // attaches a `DomainHint` to `MockGenerator.domainHint`. No-op
+        // when the map is empty (default-empty parameter; existing
+        // callers pre-M10.3 are unchanged).
+        let withDomainHints = applyDomainInference(
+            to: withMockFallback,
+            summariesByName: summariesByName,
+            domainCallSitesByConsumer: domainCallSitesByConsumer
+        )
         // M5.4 — third pass. Walks survivors whose
         // `generator.source == .notYetComputed` (after the strategist
         // pass + the mock fallback pass have had their turns) and
@@ -137,9 +144,130 @@ public enum LiftedSuggestionPipeline {
         // + .medium. Strategist + mock survivors are preserved by the
         // .notYetComputed guard inside `applyCodableRoundTripFallback`.
         return GeneratorSelection.applyCodableRoundTripFallback(
-            to: withMockFallback,
+            to: withDomainHints,
             generatorTypeByIdentity: generatorTypeByIdentity,
             typeDecls: typeDecls
+        )
+    }
+
+    private static func buildGeneratorTypeIndex(
+        from pairs: [(lifted: LiftedSuggestion, suggestion: Suggestion)],
+        summariesByName: [String: FunctionSummary],
+        setupAnnotationsByOrigin: [LiftedOrigin: [String: String]]
+    ) -> [SuggestionIdentity: String] {
+        var index: [SuggestionIdentity: String] = [:]
+        for pair in pairs {
+            let annotations = pair.lifted.origin.flatMap { setupAnnotationsByOrigin[$0] } ?? [:]
+            if let typeName = LiftedSuggestionRecovery.recoveredTypeName(
+                for: pair.lifted,
+                summariesByName: summariesByName,
+                setupAnnotations: annotations
+            ) {
+                index[pair.suggestion.identity] = typeName
+            }
+        }
+        return index
+    }
+
+    /// M10.3 — for each round-trip suggestion (`templateName == "round-trip"`)
+    /// whose `mockGenerator` was populated by the M4.3 fallback,
+    /// derives the `(forward, reverse)` pair from the suggestion's
+    /// `evidence` (`evidence[0]` is forward, `evidence[1]` is reverse),
+    /// looks up the reverse function's call sites in
+    /// `domainCallSitesByConsumer`, runs the inferrer with the forward
+    /// function's `FunctionSummary`, and rebuilds the suggestion with
+    /// `MockGenerator.domainHint` populated. Suggestions without a
+    /// mock generator, non-round-trip suggestions, missing pair info,
+    /// and inferrer-rejected cases pass through unchanged.
+    ///
+    /// **Limitation (deferred):** the producer-arg-generatable veto
+    /// (M10 plan OD #4) is not currently computed — the pass passes
+    /// `producerArgGeneratable: true` unconditionally. The other three
+    /// vetoes (throws / async / multi-arg) ARE checked. A `.todo` type
+    /// override falls back to the existing `\(typeName).gen()`
+    /// surface, matching the M3+ `.todo` posture.
+    ///
+    /// Exposed for testing via the `applyDomainInferenceForTesting(...)`
+    /// `internal` wrapper below; production callers reach this path
+    /// through `promote(...)`'s pipeline composition.
+    private static func applyDomainInference(
+        to suggestions: [Suggestion],
+        summariesByName: [String: FunctionSummary],
+        domainCallSitesByConsumer: [String: [DomainCallSite]]
+    ) -> [Suggestion] {
+        guard !domainCallSitesByConsumer.isEmpty else {
+            return suggestions
+        }
+        return suggestions.map { suggestion in
+            guard suggestion.templateName == "round-trip",
+                  let mockGenerator = suggestion.mockGenerator,
+                  suggestion.evidence.count == 2 else {
+                return suggestion
+            }
+            let forwardName = bareFunctionName(suggestion.evidence[0].displayName)
+            let reverseName = bareFunctionName(suggestion.evidence[1].displayName)
+            guard let forwardSummary = summariesByName[forwardName] else {
+                return suggestion
+            }
+            let sites = domainCallSitesByConsumer[reverseName] ?? []
+            let pair = RoundTripPair(
+                forwardName: forwardName,
+                reverseName: reverseName,
+                domainTypeName: mockGenerator.typeName
+            )
+            guard let hint = DomainInferrer.infer(
+                pair: pair,
+                forwardSummary: forwardSummary,
+                sites: sites,
+                setupBindings: [:],
+                producerArgGeneratable: true
+            ) else {
+                return suggestion
+            }
+            let updated = MockGenerator(
+                typeName: mockGenerator.typeName,
+                argumentSpec: mockGenerator.argumentSpec,
+                siteCount: mockGenerator.siteCount,
+                preconditionHints: mockGenerator.preconditionHints,
+                domainHint: hint
+            )
+            return Suggestion(
+                templateName: suggestion.templateName,
+                evidence: suggestion.evidence,
+                score: suggestion.score,
+                generator: suggestion.generator,
+                explainability: suggestion.explainability,
+                identity: suggestion.identity,
+                liftedOrigin: suggestion.liftedOrigin,
+                mockGenerator: updated
+            )
+        }
+    }
+
+    /// Strip parameter labels from an `Evidence.displayName` like
+    /// `"encode(_:)"` to recover the bare function name `"encode"` for
+    /// `summariesByName` lookup + matching against the M10.3 corpus
+    /// call-site map's trailing-identifier keys.
+    private static func bareFunctionName(_ displayName: String) -> String {
+        if let openParen = displayName.firstIndex(of: "(") {
+            return String(displayName[..<openParen])
+        }
+        return displayName
+    }
+
+    /// Internal surface for `DomainInferencePipelineTests`. Forwards
+    /// to the private `applyDomainInference(...)` so the test target
+    /// can exercise the M10.3 pass with synthetic inputs without
+    /// staging the full M4.3 mock-fallback prerequisite path.
+    internal static func applyDomainInferenceForTesting(
+        to suggestions: [Suggestion],
+        summariesByName: [String: FunctionSummary],
+        domainCallSitesByConsumer: [String: [DomainCallSite]]
+    ) -> [Suggestion] {
+        applyDomainInference(
+            to: suggestions,
+            summariesByName: summariesByName,
+            domainCallSitesByConsumer: domainCallSitesByConsumer
         )
     }
 
