@@ -77,15 +77,28 @@ public struct MockGenerator: Sendable, Equatable {
     /// each affected argument's generator expression.
     public let preconditionHints: [PreconditionHint]
 
+    /// TestLifter M10.0 — inferred-domain hint when the corpus shows
+    /// the round-trip's reverse-side argument is uniformly the forward-
+    /// side's output. Default `nil` so M4/M9-era call sites compile
+    /// unchanged (round-trip suggestions carry at most one domain
+    /// hint per M10 plan OD #7). Populated by the M10.3 pipeline
+    /// wiring (`DomainInferrer.infer(...)`); surfaced by the M10.3
+    /// accept-flow renderer as a `// Inferred domain:` provenance
+    /// comment line and, when `producerVeto == nil`, as a
+    /// `Gen<T>.map(forward)` generator-expression substitution.
+    public let domainHint: DomainHint?
+
     public init(
         typeName: String,
         argumentSpec: [Argument],
         siteCount: Int,
-        preconditionHints: [PreconditionHint] = []
+        preconditionHints: [PreconditionHint] = [],
+        domainHint: DomainHint? = nil
     ) {
         self.typeName = typeName
         self.argumentSpec = argumentSpec
         self.siteCount = siteCount
         self.preconditionHints = preconditionHints
+        self.domainHint = domainHint
     }
 }
