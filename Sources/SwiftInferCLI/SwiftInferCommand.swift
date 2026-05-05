@@ -3,11 +3,10 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
-/// Root command for the `swift-infer` executable. v0.1.0 (first
-/// pre-release) ships `discover` + `drift`; the post-v0.1.0
-/// subcommand surface (`metrics`, `apply`, `convert-counterexample`)
-/// is sketched in PRD §17 + §20.6 + §7.9 M8 respectively under
-/// the PRD's "v1.1+ trajectory" heading.
+/// Root command for the `swift-infer` executable. v1.1.0 ships
+/// `discover` + `drift` + `convert-counterexample`; the remaining
+/// post-v1.1 subcommand surface (`metrics`, `apply`) is sketched in
+/// PRD §17 + §20.6 under the PRD's "v1.1+ trajectory" heading.
 public struct SwiftInferCommand: AsyncParsableCommand {
 
     public static let configuration = CommandConfiguration(
@@ -17,9 +16,9 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         Surfaces idempotence, round-trip, and algebraic-structure candidates \
         from function signatures, cross-function pairs, and existing tests. \
         All output is suggestions for human review; nothing auto-executes. \
-        See `docs/SwiftInferProperties PRD v0.4.md` for the full design.
+        See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: "0.1.0",
+        version: "1.1.0",
         subcommands: [Discover.self, Drift.self, ConvertCounterexample.self],
         defaultSubcommand: Discover.self
     )
