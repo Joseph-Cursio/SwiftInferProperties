@@ -34,6 +34,29 @@ public enum EquivalenceClassMarkerExtractor {
         return accumulator.finalize()
     }
 
+    /// M13.2 unified overload — runs both the two-class scan (over
+    /// `table.pairs`) and the N-class scan (over `table.sets`) in a
+    /// single pass per method. The discover loop's pipeline-wiring
+    /// (M13.3) consumes this signature once `Vocabulary.markerSets` is
+    /// piped into `TestLifter.discover(in:)`.
+    public static func extract(
+        methods: [TestMethodSummary],
+        slices: [SlicedTestBody],
+        markerTable: MarkerTable
+    ) -> [PartitionCandidate] {
+        guard methods.count == slices.count else { return [] }
+        var accumulator = PartitionAggregator()
+        for (method, slice) in zip(methods, slices) {
+            accumulator.observe(
+                method: method, slice: slice, markerTable: markerTable.pairs
+            )
+            accumulator.observeNClass(
+                method: method, slice: slice, markerSets: markerTable.sets
+            )
+        }
+        return accumulator.finalize()
+    }
+
     /// Classifies a single (method, slice) pair against ONE marker pair.
     /// Returns `nil` when the method's name carries no marker from this
     /// pair. When the name carries a marker but the polarity / predicate-
@@ -140,7 +163,12 @@ public enum EquivalenceClassMarkerExtractor {
         return (predicateName, baseAssertedTrue ? .positive : .negative)
     }
 
-    private static func unaryPredicateCall(in expr: ExprSyntax) -> String? {
+    /// Internal-visibility (was `private` pre-M13.2) so the N-class
+    /// extractor in `EquivalenceClassMarkerExtractor+NClass.swift` can
+    /// share the unary-predicate parsing — the M13.2 N-class assertion
+    /// shape `XCTAssertEqual(predicate(x), .case)` reuses this same
+    /// inner call recognition for the predicate side.
+    static func unaryPredicateCall(in expr: ExprSyntax) -> String? {
         // M11.2 — peek through `try`/`try!`/`try?` so corpora that
         // exercise a throwing predicate (e.g. `XCTAssertTrue(try! isValid(x))`)
         // still classify the inner call as the unary predicate site.
@@ -154,7 +182,9 @@ public enum EquivalenceClassMarkerExtractor {
         return trailingIdentifier(of: call.calledExpression)
     }
 
-    private static func trailingIdentifier(of expr: ExprSyntax) -> String? {
+    /// Internal-visibility (was `private` pre-M13.2) so the N-class
+    /// extractor can reuse the same trailing-identifier extraction.
+    static func trailingIdentifier(of expr: ExprSyntax) -> String? {
         if let ident = expr.as(DeclReferenceExprSyntax.self) {
             return ident.baseName.text
         }
@@ -247,21 +277,21 @@ public struct PartitionSite: Sendable, Equatable {
     }
 }
 
-/// One aggregated `(predicate, markerPair)` partition emitted by the
-/// extractor. The M11.1 detector consumes one of these per call;
-/// `outlierSiteCount > 0` means at least one marker-bearing method
-/// failed the polarity / predicate-shape checks and the partition will
-/// be killed by the conservative-bias rule regardless of how many clean
-/// sites the buckets hold.
+/// One aggregated `(predicate, markerPair)` or `(predicate, markerSet)`
+/// partition emitted by the extractor. The M11.1 / M13.2 detectors
+/// consume one of these per call; `outlierSiteCount > 0` means at least
+/// one marker-bearing method failed the polarity / shape / case-literal
+/// checks and the partition will be killed by the conservative-bias
+/// rule (PRD §3.5) regardless of how many clean sites the buckets hold.
 ///
-/// **Carrier shape (M13.1):** `markerPair` and `markerSet` are
-/// mutually exclusive — exactly one is non-nil. M11/M13 two-class
-/// candidates carry `markerPair`; M13.2's N-class candidates carry
-/// `markerSet`. The `positiveSites`/`negativeSites`/`outlierSiteCount`
-/// triple describes the two-class layout; N-class M13.2 candidates
-/// will store buckets in a separate companion field landed alongside
-/// the M13.2 detector. At M13.1, every emitted candidate has
-/// `markerPair != nil` and `markerSet == nil`.
+/// **Carrier shape:** `markerPair` and `markerSet` are mutually
+/// exclusive — exactly one is non-nil. M11/M13 two-class candidates
+/// carry `markerPair` and populate `positiveSites` / `negativeSites`;
+/// M13.2's N-class candidates carry `markerSet` and populate
+/// `nClassBucketsByMarker`. The other field group stays empty / nil
+/// for that candidate's variant. The M11.1 / M13.2 detectors guard on
+/// the carrier shape and only fire on candidates carrying their
+/// expected variant.
 public struct PartitionCandidate: Sendable, Equatable {
 
     public let predicateName: String
@@ -269,14 +299,20 @@ public struct PartitionCandidate: Sendable, Equatable {
     public let markerSet: MarkerSet?
     public let positiveSites: [PartitionSite]
     public let negativeSites: [PartitionSite]
+    /// N-class per-marker bucket sites — non-nil only for candidates
+    /// where `markerSet != nil`. Keyed by marker name from the marker
+    /// set (verbatim, not lowercased — the detector consults the
+    /// `MarkerSet.markers` order separately for ordering).
+    public let nClassBucketsByMarker: [String: [PartitionSite]]?
     public let outlierSiteCount: Int
 
     public init(
         predicateName: String,
         markerPair: MarkerPair? = nil,
         markerSet: MarkerSet? = nil,
-        positiveSites: [PartitionSite],
-        negativeSites: [PartitionSite],
+        positiveSites: [PartitionSite] = [],
+        negativeSites: [PartitionSite] = [],
+        nClassBucketsByMarker: [String: [PartitionSite]]? = nil,
         outlierSiteCount: Int
     ) {
         self.predicateName = predicateName
@@ -284,6 +320,7 @@ public struct PartitionCandidate: Sendable, Equatable {
         self.markerSet = markerSet
         self.positiveSites = positiveSites
         self.negativeSites = negativeSites
+        self.nClassBucketsByMarker = nClassBucketsByMarker
         self.outlierSiteCount = outlierSiteCount
     }
 }

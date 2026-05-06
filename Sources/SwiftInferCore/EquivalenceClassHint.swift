@@ -133,6 +133,13 @@ public enum PredicateVetoReason: Sendable, Equatable, Codable {
     /// the hint will then re-fire without the veto.
     case predicateArgNotGeneratable
 
+    /// TestLifter M13.2 — predicate's return type is not `Equatable` per
+    /// the `FunctionSummary` introspection (return-type identifier doesn't
+    /// match a known Equatable stdlib type or carry an `Equatable`
+    /// conformance). Surfaced only by `NClassEquivalenceClassDetector`;
+    /// the M11.1 two-class detector never emits this case.
+    case predicateReturnNotEquatable
+
     /// User-facing reason text surfaced in the M11.2 explainability
     /// block + the accept-flow comment-only writeout. Mirrors the
     /// `DomainHint.ProducerVetoReason` advisory-text pattern.
@@ -146,6 +153,8 @@ public enum PredicateVetoReason: Sendable, Equatable, Codable {
             return "predicate takes multiple arguments — Gen<T>.filter is unary"
         case .predicateArgNotGeneratable:
             return "predicate's argument type isn't auto-generatable"
+        case .predicateReturnNotEquatable:
+            return "predicate's return type isn't Equatable — N-class equality classification needs ==(_:_:)"
         }
     }
 }

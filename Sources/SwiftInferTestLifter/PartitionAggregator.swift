@@ -30,6 +30,31 @@ struct PartitionKey: Hashable {
     let markerPair: MarkerPair
 }
 
+/// Per-`(predicateName, markerSetName)` accumulator backing the
+/// N-class branch of `PartitionAggregator.nClassBucketsByKey`. Records
+/// per-marker bucket sites + an outlier count consumed by the M13.2
+/// `NClassEquivalenceClassDetector`.
+struct NClassPartitionAccumulator {
+
+    let markerSet: MarkerSet
+    var bucketsByMarker: [String: [PartitionSite]] = [:]
+    var outlierSiteCount: Int = 0
+
+    mutating func add(classification: NClassClassification, methodName: String) {
+        switch classification {
+        case .matched(_, let marker):
+            bucketsByMarker[marker, default: []].append(PartitionSite(methodName: methodName))
+        case .outlier:
+            outlierSiteCount += 1
+        }
+    }
+}
+
+struct NClassPartitionKey: Hashable {
+    let predicateName: String
+    let markerSetName: String
+}
+
 /// Streaming aggregator the M11.2 `TestLifter.discover(in:)` loop drives
 /// per-method so it doesn't have to retain `[SlicedTestBody]` for the
 /// full discover run. Each call to `observe(method:slice:markerTable:)`
@@ -53,6 +78,7 @@ struct PartitionKey: Hashable {
 struct PartitionAggregator {
 
     private var bucketsByKey: [PartitionKey: PartitionAccumulator] = [:]
+    private var nClassBucketsByKey: [NClassPartitionKey: NClassPartitionAccumulator] = [:]
 
     mutating func observe(
         method: TestMethodSummary,
@@ -75,6 +101,34 @@ struct PartitionAggregator {
         }
     }
 
+    /// M13.2 N-class observe pass — runs in parallel with the two-class
+    /// `observe(method:slice:markerTable:)` for the same method. Different
+    /// marker sets keep separate bucket accumulators; the M13.2 detector
+    /// consumes one N-class candidate per `(predicate, markerSet)`.
+    mutating func observeNClass(
+        method: TestMethodSummary,
+        slice: SlicedTestBody,
+        markerSets: [MarkerSet]
+    ) {
+        for markerSet in markerSets {
+            guard let classification = EquivalenceClassMarkerExtractor.classifyNClass(
+                method: method, slice: slice, markerSet: markerSet
+            ) else {
+                continue
+            }
+            guard let predicateName = classification.routingPredicateName else {
+                break
+            }
+            let key = NClassPartitionKey(
+                predicateName: predicateName,
+                markerSetName: markerSet.name
+            )
+            nClassBucketsByKey[key, default: NClassPartitionAccumulator(markerSet: markerSet)]
+                .add(classification: classification, methodName: method.methodName)
+            break
+        }
+    }
+
     /// Per-predicate ranking dedup (M11 open-decision #8 / M13.1
     /// acceptance): when the same predicate fires under multiple marker
     /// pairs, emit ONE candidate — the one with the highest combined
@@ -83,7 +137,21 @@ struct PartitionAggregator {
     /// `Success` < `Valid` ordering is deterministic across runs.
     /// Output sorted by `predicateName` for byte-stable downstream
     /// suggestion ordering (PRD §16 reproducibility).
+    ///
+    /// **M13.2 union:** the two-class candidates from `bucketsByKey` are
+    /// concatenated with the N-class candidates from `nClassBucketsByKey`.
+    /// Per M13 plan OD #8 a predicate firing under both a two-class pair
+    /// AND an N-class set emits two candidates (different artifacts).
+    /// Sort order: predicateName ascending; same-predicate two-class
+    /// candidates sort before N-class; N-class ties broken by markerSet
+    /// name.
     func finalize() -> [PartitionCandidate] {
+        let twoClass = finalizeTwoClass()
+        let nClass = finalizeNClass()
+        return (twoClass + nClass).sorted(by: PartitionAggregator.sortCandidates)
+    }
+
+    private func finalizeTwoClass() -> [PartitionCandidate] {
         var winnerByPredicate: [String: RankedCandidate] = [:]
         for (key, accumulator) in bucketsByKey {
             let candidate = PartitionCandidate(
@@ -103,11 +171,33 @@ struct PartitionAggregator {
                 winnerByPredicate[key.predicateName] = ranked
             }
         }
-        return winnerByPredicate.values
-            .map(\.candidate)
-            .sorted { lhs, rhs in
-                lhs.predicateName < rhs.predicateName
-            }
+        return winnerByPredicate.values.map(\.candidate)
+    }
+
+    private func finalizeNClass() -> [PartitionCandidate] {
+        nClassBucketsByKey.map { key, accumulator in
+            PartitionCandidate(
+                predicateName: key.predicateName,
+                markerPair: nil,
+                markerSet: accumulator.markerSet,
+                positiveSites: [],
+                negativeSites: [],
+                nClassBucketsByMarker: accumulator.bucketsByMarker,
+                outlierSiteCount: accumulator.outlierSiteCount
+            )
+        }
+    }
+
+    private static func sortCandidates(_ lhs: PartitionCandidate, _ rhs: PartitionCandidate) -> Bool {
+        if lhs.predicateName != rhs.predicateName {
+            return lhs.predicateName < rhs.predicateName
+        }
+        let lhsIsTwoClass = lhs.markerPair != nil
+        let rhsIsTwoClass = rhs.markerPair != nil
+        if lhsIsTwoClass != rhsIsTwoClass {
+            return lhsIsTwoClass
+        }
+        return (lhs.markerSet?.name ?? "") < (rhs.markerSet?.name ?? "")
     }
 }
 
