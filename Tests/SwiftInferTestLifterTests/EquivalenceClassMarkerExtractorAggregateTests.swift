@@ -110,4 +110,64 @@ struct ECMarkerExtractorAggregateTests {
         )
         #expect(result.isEmpty)
     }
+
+    // MARK: - M13.3 coversDomain (axis 4 syntactic exhaustiveness)
+
+    @Test("Pure XCTAssertTrue/XCTAssertFalse corpus yields coversDomainSyntactic = true")
+    func aggregateCoversDomainPureCanonical() {
+        let (methods, slices) = Self.parsedCorpus([
+            (name: "testValid_a", body: "XCTAssertTrue(isValid(\"a\"))"),
+            (name: "testValid_b", body: "XCTAssertTrue(isValid(\"b\"))"),
+            (name: "testValid_c", body: "XCTAssertTrue(isValid(\"c\"))"),
+            (name: "testInvalid_a", body: "XCTAssertFalse(isValid(\"x\"))"),
+            (name: "testInvalid_b", body: "XCTAssertFalse(isValid(\"y\"))"),
+            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"z\"))")
+        ])
+        let candidates = EquivalenceClassMarkerExtractor.extract(
+            methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
+        )
+        #expect(candidates.count == 1)
+        #expect(candidates[0].coversDomainSyntactic == true)
+    }
+
+    @Test("Corpus with `XCTAssertTrue(!predicate(x))` negation drops coversDomainSyntactic")
+    func aggregateCoversDomainBrokenByNegation() {
+        let (methods, slices) = Self.parsedCorpus([
+            (name: "testValid_a", body: "XCTAssertTrue(isValid(\"a\"))"),
+            (name: "testValid_b", body: "XCTAssertTrue(isValid(\"b\"))"),
+            (name: "testValid_c", body: "XCTAssertTrue(isValid(\"c\"))"),
+            // Negative bucket uses XCTAssertTrue(!pred(x)) — same effective
+            // polarity but non-canonical syntactic form. coversDomain
+            // requires literal `XCTAssertFalse(predicate(x))` instead.
+            (name: "testInvalid_a", body: "XCTAssertTrue(!isValid(\"x\"))"),
+            (name: "testInvalid_b", body: "XCTAssertTrue(!isValid(\"y\"))"),
+            (name: "testInvalid_c", body: "XCTAssertTrue(!isValid(\"z\"))")
+        ])
+        let candidates = EquivalenceClassMarkerExtractor.extract(
+            methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
+        )
+        #expect(candidates.count == 1)
+        #expect(candidates[0].coversDomainSyntactic == false)
+    }
+
+    @Test("XCTAssert (generic) corpus does NOT count as canonical XCTAssertTrue")
+    func aggregateCoversDomainXCTAssertGenericNonCanonical() {
+        let (methods, slices) = Self.parsedCorpus([
+            // XCTAssert is generic, treated as truthy but not canonical
+            // for syntactic-coverage detection per the M13 plan §"What
+            // M13 ships" axis 4 (the rule names XCTAssertTrue / XCTAssertFalse
+            // specifically).
+            (name: "testValid_a", body: "XCTAssert(isValid(\"a\"))"),
+            (name: "testValid_b", body: "XCTAssert(isValid(\"b\"))"),
+            (name: "testValid_c", body: "XCTAssert(isValid(\"c\"))"),
+            (name: "testInvalid_a", body: "XCTAssertFalse(isValid(\"x\"))"),
+            (name: "testInvalid_b", body: "XCTAssertFalse(isValid(\"y\"))"),
+            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"z\"))")
+        ])
+        let candidates = EquivalenceClassMarkerExtractor.extract(
+            methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
+        )
+        #expect(candidates.count == 1)
+        #expect(candidates[0].coversDomainSyntactic == false)
+    }
 }

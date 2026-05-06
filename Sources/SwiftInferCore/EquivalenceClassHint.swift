@@ -75,6 +75,17 @@ public struct EquivalenceClassHint: Sendable, Equatable, Codable {
     /// Same render-or-suppress contract as `suggestedPositiveGenerator`.
     public let suggestedNegativeGenerator: String
 
+    /// TestLifter M13.3 — `true` when the partition syntactically
+    /// covers the domain `T` (positive bucket asserts via
+    /// `XCTAssertTrue(predicate(x))` AND negative bucket asserts via
+    /// `XCTAssertFalse(predicate(x))` for every site, no `!` negation).
+    /// `negative = ¬positive` syntactically; the union of buckets
+    /// covers `T`. Surfaced in the rendered comment block as the
+    /// additional exhaustiveness property: `forAll x: T. p(x) ∨ ¬p(x)`.
+    /// Defaults to `false` for back-compat — pre-M13.3 callers / tests
+    /// don't need to set the field.
+    public let coversDomain: Bool
+
     public init(
         predicateName: String,
         argTypeName: String,
@@ -84,7 +95,8 @@ public struct EquivalenceClassHint: Sendable, Equatable, Codable {
         negativeSiteCount: Int,
         predicateVeto: PredicateVetoReason?,
         suggestedPositiveGenerator: String,
-        suggestedNegativeGenerator: String
+        suggestedNegativeGenerator: String,
+        coversDomain: Bool = false
     ) {
         self.predicateName = predicateName
         self.argTypeName = argTypeName
@@ -95,6 +107,7 @@ public struct EquivalenceClassHint: Sendable, Equatable, Codable {
         self.predicateVeto = predicateVeto
         self.suggestedPositiveGenerator = suggestedPositiveGenerator
         self.suggestedNegativeGenerator = suggestedNegativeGenerator
+        self.coversDomain = coversDomain
     }
 }
 

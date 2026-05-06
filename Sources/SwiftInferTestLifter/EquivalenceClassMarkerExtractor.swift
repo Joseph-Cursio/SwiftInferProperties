@@ -163,6 +163,37 @@ public enum EquivalenceClassMarkerExtractor {
         return (predicateName, baseAssertedTrue ? .positive : .negative)
     }
 
+    /// TestLifter M13.3 — `true` if the slice's terminal assertion
+    /// uses the strict canonical form for syntactic-coverage detection:
+    /// `XCTAssertTrue(predicate(x))` for positive sites or
+    /// `XCTAssertFalse(predicate(x))` for negative sites, both without
+    /// `!` prefix. The M11.1 detector aggregates per-bucket "all
+    /// canonical?" booleans to decide `EquivalenceClassHint.coversDomain`.
+    ///
+    /// Strict by design — Swift Testing `#expect(predicate(x))` and
+    /// `XCTAssert(predicate(x))` are NOT canonical because they don't
+    /// syntactically pair with a `XCTAssertFalse` negative bucket. The
+    /// plan's §"What M13 ships" axis 4 names XCTAssertTrue / XCTAssertFalse
+    /// specifically.
+    static func isCanonicalCoversDomainForm(
+        assertion: AssertionInvocation?,
+        polarity: Polarity
+    ) -> Bool {
+        guard let assertion else { return false }
+        guard let firstArg = assertion.arguments.first else { return false }
+        if let prefix = firstArg.as(PrefixOperatorExprSyntax.self),
+           prefix.operator.text == "!" {
+            return false
+        }
+        switch (assertion.kind, polarity) {
+        case (.xctAssertTrue, .positive),
+                (.xctAssertFalse, .negative):
+            return true
+        default:
+            return false
+        }
+    }
+
     /// Internal-visibility (was `private` pre-M13.2) so the N-class
     /// extractor in `EquivalenceClassMarkerExtractor+NClass.swift` can
     /// share the unary-predicate parsing — the M13.2 N-class assertion
@@ -305,6 +336,12 @@ public struct PartitionCandidate: Sendable, Equatable {
     /// `MarkerSet.markers` order separately for ordering).
     public let nClassBucketsByMarker: [String: [PartitionSite]]?
     public let outlierSiteCount: Int
+    /// M13.3 — `true` when every two-class site uses the canonical
+    /// `XCTAssertTrue(predicate(x))` (positive) /
+    /// `XCTAssertFalse(predicate(x))` (negative) form. The M11.1
+    /// detector reads this to set `EquivalenceClassHint.coversDomain`.
+    /// Defaults to `false`; only meaningful for two-class candidates.
+    public let coversDomainSyntactic: Bool
 
     public init(
         predicateName: String,
@@ -313,7 +350,8 @@ public struct PartitionCandidate: Sendable, Equatable {
         positiveSites: [PartitionSite] = [],
         negativeSites: [PartitionSite] = [],
         nClassBucketsByMarker: [String: [PartitionSite]]? = nil,
-        outlierSiteCount: Int
+        outlierSiteCount: Int,
+        coversDomainSyntactic: Bool = false
     ) {
         self.predicateName = predicateName
         self.markerPair = markerPair
@@ -322,6 +360,7 @@ public struct PartitionCandidate: Sendable, Equatable {
         self.negativeSites = negativeSites
         self.nClassBucketsByMarker = nClassBucketsByMarker
         self.outlierSiteCount = outlierSiteCount
+        self.coversDomainSyntactic = coversDomainSyntactic
     }
 }
 

@@ -12,6 +12,16 @@ struct PartitionAccumulator {
     var positiveSites: [PartitionSite] = []
     var negativeSites: [PartitionSite] = []
     var outlierSiteCount: Int = 0
+    /// M13.3 — `false` once any positive site is observed using a
+    /// non-canonical assertion form (e.g. `XCTAssertTrue(!predicate(x))`,
+    /// `#expect(predicate(x))`, `XCTAssert(predicate(x))`). The detector
+    /// reads `allPositiveCanonical && allNegativeCanonical` to decide
+    /// `EquivalenceClassHint.coversDomain`. Only `XCTAssertTrue(predicate(x))`
+    /// (positive bucket) and `XCTAssertFalse(predicate(x))` (negative
+    /// bucket) without `!` negation count as canonical, matching the M13
+    /// plan §"What M13 ships" axis 4 syntactic-coverage rule.
+    var allPositiveCanonical: Bool = true
+    var allNegativeCanonical: Bool = true
 
     mutating func add(classification: Classification, methodName: String) {
         switch classification {
@@ -21,6 +31,14 @@ struct PartitionAccumulator {
             negativeSites.append(PartitionSite(methodName: methodName))
         case .outlier:
             outlierSiteCount += 1
+        }
+    }
+
+    mutating func recordCanonical(polarity: Polarity, isCanonical: Bool) {
+        guard !isCanonical else { return }
+        switch polarity {
+        case .positive: allPositiveCanonical = false
+        case .negative: allNegativeCanonical = false
         }
     }
 }
@@ -97,6 +115,16 @@ struct PartitionAggregator {
             let key = PartitionKey(predicateName: predicateName, markerPair: pair)
             bucketsByKey[key, default: PartitionAccumulator(markerPair: pair)]
                 .add(classification: classification, methodName: method.methodName)
+            // M13.3 — track canonical-form per matched site so the M11.1
+            // detector can set `coversDomain` when both buckets exclusively
+            // use `XCTAssertTrue(predicate(x))` / `XCTAssertFalse(predicate(x))`
+            // without `!` negation.
+            if case .matched(_, let polarity) = classification {
+                let canonical = EquivalenceClassMarkerExtractor.isCanonicalCoversDomainForm(
+                    assertion: slice.assertion, polarity: polarity
+                )
+                bucketsByKey[key]?.recordCanonical(polarity: polarity, isCanonical: canonical)
+            }
             break
         }
     }
@@ -154,13 +182,18 @@ struct PartitionAggregator {
     private func finalizeTwoClass() -> [PartitionCandidate] {
         var winnerByPredicate: [String: RankedCandidate] = [:]
         for (key, accumulator) in bucketsByKey {
+            let coversDomainSyntactic = accumulator.allPositiveCanonical
+                && accumulator.allNegativeCanonical
+                && !accumulator.positiveSites.isEmpty
+                && !accumulator.negativeSites.isEmpty
             let candidate = PartitionCandidate(
                 predicateName: key.predicateName,
                 markerPair: accumulator.markerPair,
                 markerSet: nil,
                 positiveSites: accumulator.positiveSites,
                 negativeSites: accumulator.negativeSites,
-                outlierSiteCount: accumulator.outlierSiteCount
+                outlierSiteCount: accumulator.outlierSiteCount,
+                coversDomainSyntactic: coversDomainSyntactic
             )
             let ranked = RankedCandidate(candidate: candidate, accumulator: accumulator)
             if let existing = winnerByPredicate[key.predicateName] {

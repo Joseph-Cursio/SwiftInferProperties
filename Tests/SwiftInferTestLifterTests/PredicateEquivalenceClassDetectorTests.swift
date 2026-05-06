@@ -39,14 +39,16 @@ struct PredicateEquivalenceClassDetectorTests {
         predicateName: String = "isValid",
         positiveCount: Int = 5,
         negativeCount: Int = 4,
-        outlierCount: Int = 0
+        outlierCount: Int = 0,
+        coversDomainSyntactic: Bool = false
     ) -> PartitionCandidate {
         PartitionCandidate(
             predicateName: predicateName,
             markerPair: Self.validInvalidPair,
             positiveSites: (0..<positiveCount).map { PartitionSite(methodName: "testValid_\($0)") },
             negativeSites: (0..<negativeCount).map { PartitionSite(methodName: "testInvalid_\($0)") },
-            outlierSiteCount: outlierCount
+            outlierSiteCount: outlierCount,
+            coversDomainSyntactic: coversDomainSyntactic
         )
     }
 
@@ -205,5 +207,27 @@ struct PredicateEquivalenceClassDetectorTests {
         )
         #expect(hint?.suggestedPositiveGenerator == "Gen<Int>.gen().filter(isPositive)")
         #expect(hint?.suggestedNegativeGenerator == "Gen<Int>.gen().filter { !isPositive($0) }")
+    }
+
+    // MARK: - M13.3 coversDomain (axis 4 syntactic exhaustiveness)
+
+    @Test("coversDomain defaults to false when candidate doesn't carry the syntactic-coverage flag")
+    func coversDomainDefaultsFalse() {
+        let hint = PredicateEquivalenceClassDetector.detect(
+            candidate: Self.candidate(),
+            predicateSummary: Self.unaryPredicate(),
+            predicateArgGeneratable: true
+        )
+        #expect(hint?.coversDomain == false)
+    }
+
+    @Test("coversDomain == true when candidate carries the syntactic-coverage flag")
+    func coversDomainPropagatesFromCandidate() {
+        let hint = PredicateEquivalenceClassDetector.detect(
+            candidate: Self.candidate(coversDomainSyntactic: true),
+            predicateSummary: Self.unaryPredicate(),
+            predicateArgGeneratable: true
+        )
+        #expect(hint?.coversDomain == true)
     }
 }

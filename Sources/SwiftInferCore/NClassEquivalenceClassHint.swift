@@ -63,6 +63,15 @@ public struct NClassEquivalenceClassHint: Sendable, Equatable, Codable {
     /// in the documentation block and omits the generator suggestion.
     public let suggestedGeneratorsByMarker: [String: String]
 
+    /// TestLifter M13.3 — `true` when the partition syntactically
+    /// covers the domain `T` (markers cover every case of the
+    /// predicate's enum return type, when that enum is declared in
+    /// the same target). Surfaced in the rendered comment block as
+    /// the additional exhaustiveness property:
+    /// `forAll x: T. p(x) == .case₁ ∨ p(x) == .case₂ ∨ … ∨ p(x) == .caseₙ`.
+    /// Defaults to `false`.
+    public let coversDomain: Bool
+
     public init(
         predicateName: String,
         argTypeName: String,
@@ -71,7 +80,8 @@ public struct NClassEquivalenceClassHint: Sendable, Equatable, Codable {
         markers: [String],
         siteCountsByMarker: [String: Int],
         predicateVeto: PredicateVetoReason?,
-        suggestedGeneratorsByMarker: [String: String]
+        suggestedGeneratorsByMarker: [String: String],
+        coversDomain: Bool = false
     ) {
         self.predicateName = predicateName
         self.argTypeName = argTypeName
@@ -81,5 +91,36 @@ public struct NClassEquivalenceClassHint: Sendable, Equatable, Codable {
         self.siteCountsByMarker = siteCountsByMarker
         self.predicateVeto = predicateVeto
         self.suggestedGeneratorsByMarker = suggestedGeneratorsByMarker
+        self.coversDomain = coversDomain
+    }
+}
+
+/// TestLifter M13.3 — sum-type carrier for the per-suggestion-identity
+/// equivalence-class hint side-map. M11 two-class hints and M13.2
+/// N-class hints flow through the same `InteractiveTriage.Context`
+/// side-map shape, dispatching at the renderer + accept-flow level.
+/// Codable so the side-map persists alongside the §13 row 4 memory
+/// budget posture (the union case picks up a small fixed overhead per
+/// entry; per-entry payload size is unchanged).
+public enum EquivalenceClassHintKind: Sendable, Equatable, Codable {
+    case twoClass(EquivalenceClassHint)
+    case nClass(NClassEquivalenceClassHint)
+
+    /// The predicate name common to both kinds — surfaced in the
+    /// renderer header + accept-flow file naming.
+    public var predicateName: String {
+        switch self {
+        case .twoClass(let hint): return hint.predicateName
+        case .nClass(let hint): return hint.predicateName
+        }
+    }
+
+    /// `true` when the hint's `coversDomain` flag is set; the renderer
+    /// uses this to emit the exhaustiveness comment block.
+    public var coversDomain: Bool {
+        switch self {
+        case .twoClass(let hint): return hint.coversDomain
+        case .nClass(let hint): return hint.coversDomain
+        }
     }
 }

@@ -73,7 +73,8 @@ public enum PredicateEquivalenceClassDetector {
             suggestedNegativeGenerator: negativeGeneratorExpr(
                 argTypeName: argTypeName,
                 predicateName: candidate.predicateName
-            )
+            ),
+            coversDomain: candidate.coversDomainSyntactic
         )
     }
 
