@@ -33,6 +33,18 @@ extension FunctionScannerVisitor {
         // storedMembers: extensions can't add stored properties to a
         // struct (compile error), so always empty for `.extension`.
         let storedMembers = (kind == .extension) ? [] : MemberBlockInspector.storedMembers(in: memberBlock)
+        // M14.0 — enumCaseNames: populated for primary enum decls AND
+        // extensions that add cases to a same-name enum. Other kinds
+        // (.struct / .class / .actor) get [] — they can't declare
+        // `case` members. The M14.1 detector unions cases across
+        // primary + extension records keyed by `name`.
+        let enumCaseNames: [String]
+        switch kind {
+        case .enum, .extension:
+            enumCaseNames = MemberBlockInspector.enumCaseNames(in: memberBlock)
+        case .struct, .class, .actor:
+            enumCaseNames = []
+        }
         return TypeDecl(
             name: name,
             kind: kind,
@@ -40,7 +52,8 @@ extension FunctionScannerVisitor {
             location: location,
             hasUserGen: MemberBlockInspector.hasUserGen(in: memberBlock),
             storedMembers: storedMembers,
-            hasUserInit: hasUserInit
+            hasUserInit: hasUserInit,
+            enumCaseNames: enumCaseNames
         )
     }
 }

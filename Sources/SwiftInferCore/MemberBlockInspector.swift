@@ -57,6 +57,26 @@ enum MemberBlockInspector {
         return false
     }
 
+    /// TestLifter M14.0 — case identifiers declared in `memberBlock`,
+    /// in source order. Walks `EnumCaseDeclSyntax` nodes and reads each
+    /// element's identifier from `EnumCaseElementListSyntax`. Strips
+    /// associated-value parameter clauses (`case small(Int)` → `small`)
+    /// and raw-value initializers (`case small = "S"` → `small`).
+    /// Multi-binding lines (`case small, medium, large`) produce one
+    /// entry per binding. The caller (M14.0c `FunctionScannerVisitor`)
+    /// invokes this only for `kind == .enum` and `kind == .extension`
+    /// (the extension may add cases to a same-name enum).
+    static func enumCaseNames(in memberBlock: MemberBlockSyntax) -> [String] {
+        var result: [String] = []
+        for member in memberBlock.members {
+            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
+            for element in caseDecl.elements {
+                result.append(element.name.text)
+            }
+        }
+        return result
+    }
+
     private static func isStaticOrClass(_ modifiers: DeclModifierListSyntax) -> Bool {
         modifiers.contains { mod in
             mod.name.tokenKind == .keyword(.static) || mod.name.tokenKind == .keyword(.class)

@@ -76,6 +76,20 @@ public struct TypeDecl: Sendable, Equatable {
     /// of the extension body. Defaults to `false`.
     public let hasUserInit: Bool
 
+    /// TestLifter M14.0 — case identifiers declared in this decl's
+    /// member block, in source order. Populated for `kind == .enum`
+    /// (and `kind == .extension` over an enum, when the extension
+    /// adds cases). Empty for non-enum kinds, for enums with no
+    /// declared cases, and for any decl whose body the scanner didn't
+    /// see. Multi-binding case lines (`case small, medium, large`)
+    /// produce one entry per binding. Associated-value parameter
+    /// clauses (`case small(Int)`) and raw-value initializers
+    /// (`case small = "S"`) are stripped — only the case identifier
+    /// is retained. Consumed by `NClassEquivalenceClassDetector`
+    /// (M14.1) for the M13 plan §"What M13 ships" axis 4 same-target
+    /// exhaustiveness check.
+    public let enumCaseNames: [String]
+
     public init(
         name: String,
         kind: Kind,
@@ -83,7 +97,8 @@ public struct TypeDecl: Sendable, Equatable {
         location: SourceLocation,
         hasUserGen: Bool = false,
         storedMembers: [StoredMember] = [],
-        hasUserInit: Bool = false
+        hasUserInit: Bool = false,
+        enumCaseNames: [String] = []
     ) {
         self.name = name
         self.kind = kind
@@ -92,5 +107,6 @@ public struct TypeDecl: Sendable, Equatable {
         self.hasUserGen = hasUserGen
         self.storedMembers = storedMembers
         self.hasUserInit = hasUserInit
+        self.enumCaseNames = enumCaseNames
     }
 }
