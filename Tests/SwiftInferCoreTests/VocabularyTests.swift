@@ -7,7 +7,7 @@ struct VocabularyTests {
 
     // MARK: - Decoding
 
-    @Test("Full schema decodes all six keys")
+    @Test("Full schema decodes all eight keys")
     func fullSchemaDecode() throws {
         let json = """
         {
@@ -19,7 +19,13 @@ struct VocabularyTests {
           "commutativityVerbs": ["unionGraphs"],
           "antiCommutativityVerbs": ["concatenateOrdered"],
           "monotonicityVerbs": ["rank", "tally"],
-          "inverseElementVerbs": ["mirror", "antipodal"]
+          "inverseElementVerbs": ["mirror", "antipodal"],
+          "markerPairs": [
+            { "positive": "Open", "negative": "Closed" }
+          ],
+          "markerSets": [
+            { "name": "Sizes", "markers": ["small", "medium", "large"] }
+          ]
         }
         """
         let vocab = try decode(json)
@@ -32,6 +38,12 @@ struct VocabularyTests {
         #expect(vocab.antiCommutativityVerbs == ["concatenateOrdered"])
         #expect(vocab.monotonicityVerbs == ["rank", "tally"])
         #expect(vocab.inverseElementVerbs == ["mirror", "antipodal"])
+        #expect(vocab.markerPairs == [
+            MarkerPair(positive: "Open", negative: "Closed")
+        ])
+        #expect(vocab.markerSets == [
+            MarkerSet(name: "Sizes", markers: ["small", "medium", "large"])
+        ])
     }
 
     @Test("Empty object decodes to .empty")
@@ -52,6 +64,33 @@ struct VocabularyTests {
         #expect(vocab.antiCommutativityVerbs.isEmpty)
         #expect(vocab.monotonicityVerbs.isEmpty)
         #expect(vocab.inverseElementVerbs.isEmpty)
+        #expect(vocab.markerPairs.isEmpty)
+        #expect(vocab.markerSets.isEmpty)
+    }
+
+    @Test("Pre-M13 vocabulary files (no markerPairs / markerSets keys) decode cleanly with empty defaults")
+    func preM13SchemaDecodeBackCompat() throws {
+        // Forward-compat probe — a v1.1 vocabulary.json on disk that
+        // pre-dates the M13.0 markerPairs / markerSets addition must
+        // continue to load with both fields == []. Same posture as the
+        // pre-M7 / pre-M8 back-compat probes above.
+        let json = """
+        {
+          "inversePairs": [["encode", "decode"]],
+          "idempotenceVerbs": ["normalize"],
+          "commutativityVerbs": [],
+          "antiCommutativityVerbs": [],
+          "monotonicityVerbs": ["score"],
+          "inverseElementVerbs": ["mirror"]
+        }
+        """
+        let vocab = try decode(json)
+        #expect(vocab.markerPairs.isEmpty)
+        #expect(vocab.markerSets.isEmpty)
+        // Other fields still load normally.
+        #expect(vocab.inversePairs.count == 1)
+        #expect(vocab.idempotenceVerbs == ["normalize"])
+        #expect(vocab.inverseElementVerbs == ["mirror"])
     }
 
     @Test("Pre-M8 vocabulary files (no inverseElementVerbs key) decode cleanly with empty default")
@@ -130,7 +169,7 @@ struct VocabularyTests {
 
     // MARK: - Encoding
 
-    @Test("Round-trip encode then decode preserves all six lists")
+    @Test("Round-trip encode then decode preserves all eight lists")
     func roundTripPreservesContents() throws {
         let original = Vocabulary(
             inversePairs: [InversePair(forward: "open", reverse: "close")],
@@ -138,7 +177,15 @@ struct VocabularyTests {
             commutativityVerbs: ["mergeSets"],
             antiCommutativityVerbs: ["concatenateOrdered"],
             monotonicityVerbs: ["rank", "tally"],
-            inverseElementVerbs: ["mirror"]
+            inverseElementVerbs: ["mirror"],
+            markerPairs: [
+                MarkerPair(positive: "Open", negative: "Closed",
+                           positiveSynonyms: ["Active"],
+                           negativeSynonyms: ["Inactive"])
+            ],
+            markerSets: [
+                MarkerSet(name: "Sizes", markers: ["small", "medium", "large"])
+            ]
         )
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(Vocabulary.self, from: data)

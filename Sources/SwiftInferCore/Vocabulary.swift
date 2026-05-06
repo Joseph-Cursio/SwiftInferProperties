@@ -58,13 +58,29 @@ public struct Vocabulary: Sendable, Equatable {
     /// the "inverse" half of that signal.
     public let inverseElementVerbs: [String]
 
+    /// Project-supplied two-class equivalence-class marker pairs (TestLifter
+    /// M13.0). Extends `MarkerTable.curatedPairs` (`Valid`/`Invalid`,
+    /// `Success`/`Failure`, `Accept`/`Reject`, `Pass`/`Fail`,
+    /// `Allowed`/`Forbidden`); the M13.1 extractor consumes the
+    /// concatenation, so an empty project list still inherits the curated
+    /// defaults — no project-level config required.
+    public let markerPairs: [MarkerPair]
+
+    /// Project-supplied N-class equivalence-class marker sets (TestLifter
+    /// M13.0). No curated defaults per M13 plan OD #2 — N-class partitions
+    /// are domain-specific. The M13.2 detector reads the project list
+    /// directly.
+    public let markerSets: [MarkerSet]
+
     public init(
         inversePairs: [InversePair] = [],
         idempotenceVerbs: [String] = [],
         commutativityVerbs: [String] = [],
         antiCommutativityVerbs: [String] = [],
         monotonicityVerbs: [String] = [],
-        inverseElementVerbs: [String] = []
+        inverseElementVerbs: [String] = [],
+        markerPairs: [MarkerPair] = [],
+        markerSets: [MarkerSet] = []
     ) {
         self.inversePairs = inversePairs
         self.idempotenceVerbs = idempotenceVerbs
@@ -72,6 +88,8 @@ public struct Vocabulary: Sendable, Equatable {
         self.antiCommutativityVerbs = antiCommutativityVerbs
         self.monotonicityVerbs = monotonicityVerbs
         self.inverseElementVerbs = inverseElementVerbs
+        self.markerPairs = markerPairs
+        self.markerSets = markerSets
     }
 
     /// The default vocabulary — every list empty. Templates fall back to
@@ -88,6 +106,8 @@ extension Vocabulary: Codable {
         case antiCommutativityVerbs
         case monotonicityVerbs
         case inverseElementVerbs
+        case markerPairs
+        case markerSets
     }
 
     public init(from decoder: any Decoder) throws {
@@ -98,7 +118,9 @@ extension Vocabulary: Codable {
             commutativityVerbs: try container.decodeIfPresent([String].self, forKey: .commutativityVerbs) ?? [],
             antiCommutativityVerbs: try container.decodeIfPresent([String].self, forKey: .antiCommutativityVerbs) ?? [],
             monotonicityVerbs: try container.decodeIfPresent([String].self, forKey: .monotonicityVerbs) ?? [],
-            inverseElementVerbs: try container.decodeIfPresent([String].self, forKey: .inverseElementVerbs) ?? []
+            inverseElementVerbs: try container.decodeIfPresent([String].self, forKey: .inverseElementVerbs) ?? [],
+            markerPairs: try container.decodeIfPresent([MarkerPair].self, forKey: .markerPairs) ?? [],
+            markerSets: try container.decodeIfPresent([MarkerSet].self, forKey: .markerSets) ?? []
         )
     }
 
@@ -110,6 +132,8 @@ extension Vocabulary: Codable {
         try container.encode(antiCommutativityVerbs, forKey: .antiCommutativityVerbs)
         try container.encode(monotonicityVerbs, forKey: .monotonicityVerbs)
         try container.encode(inverseElementVerbs, forKey: .inverseElementVerbs)
+        try container.encode(markerPairs, forKey: .markerPairs)
+        try container.encode(markerSets, forKey: .markerSets)
     }
 }
 

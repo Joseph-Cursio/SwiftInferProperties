@@ -165,27 +165,12 @@ public enum EquivalenceClassMarkerExtractor {
     }
 }
 
-/// One built-in or user-supplied `(positive, negative)` marker pair the
-/// extractor scans for. Per M11 plan OD #1, the v1.1 default table holds
-/// only `("Valid", "Invalid")`; future v1.x marker-table-expansion plans
-/// can populate additional pairs without changing the extractor surface.
-public struct MarkerPair: Sendable, Equatable, Hashable {
-
-    public let positive: String
-    public let negative: String
-
-    public init(positive: String, negative: String) {
-        self.positive = positive
-        self.negative = negative
-    }
-
-    /// The v1.1 default marker table per M11 plan OD #1 — `Valid`/`Invalid`
-    /// only. Synonyms (`Success`/`Failure`, `Accept`/`Reject`, etc.) stay
-    /// deferred behind a future v1.x marker-expansion plan.
-    public static let defaultTable: [MarkerPair] = [
-        MarkerPair(positive: "Valid", negative: "Invalid")
-    ]
-}
+// `MarkerPair` was lifted to `SwiftInferCore.MarkerTable.swift` at M13.0
+// so the CLI's `Vocabulary` schema and the TestLifter detectors share one
+// source of truth. The constant `MarkerPair.defaultTable` (still
+// `[Valid/Invalid]`) is preserved at the M13.0 cut and consumed by this
+// extractor unchanged; M13.1's refactor switches the discover loop to
+// consume `MarkerTable.curatedPairs` (the broader v1.x default).
 
 /// Polarity surfaced by `EquivalenceClassMarkerExtractor.extractPredicate`
 /// — the assertion's effective truth value over the predicate call. The
