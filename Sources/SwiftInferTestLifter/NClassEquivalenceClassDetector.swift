@@ -46,7 +46,8 @@ public enum NClassEquivalenceClassDetector {
     public static func detect(
         candidate: PartitionCandidate,
         predicateSummary: FunctionSummary?,
-        predicateArgGeneratable: Bool
+        predicateArgGeneratable: Bool,
+        typeDecls: [TypeDecl] = []
     ) -> NClassEquivalenceClassHint? {
         guard let markerSet = candidate.markerSet,
               let bucketsByMarker = candidate.nClassBucketsByMarker else {
@@ -75,6 +76,11 @@ public enum NClassEquivalenceClassDetector {
                 marker: marker
             ))
         })
+        let coversDomain = computeCoversDomain(
+            returnTypeText: predicateSummary?.returnTypeText,
+            markerNames: activeMarkers,
+            typeDecls: typeDecls
+        )
         return NClassEquivalenceClassHint(
             predicateName: candidate.predicateName,
             argTypeName: argTypeName,
@@ -83,8 +89,61 @@ public enum NClassEquivalenceClassDetector {
             markers: activeMarkers,
             siteCountsByMarker: siteCounts,
             predicateVeto: veto,
-            suggestedGeneratorsByMarker: generators
+            suggestedGeneratorsByMarker: generators,
+            coversDomain: coversDomain
         )
+    }
+
+    /// M14.1 — same-target enum coverage check. `coversDomain == true`
+    /// when the predicate's return type resolves to a same-target enum
+    /// (across primary + extension `TypeDecl` records merged by name)
+    /// AND every enum case is covered by some marker in `markerNames`
+    /// (case-insensitive identifier match per M13 plan OD #4).
+    ///
+    /// Conservative-by-default: cross-target / unresolved return type
+    /// → `false`; empty enum case set → `false`; partial coverage →
+    /// `false`. The renderer's exhaustiveness comment block fires only
+    /// on the strict-yes path.
+    static func computeCoversDomain(
+        returnTypeText: String?,
+        markerNames: [String],
+        typeDecls: [TypeDecl]
+    ) -> Bool {
+        guard let raw = returnTypeText?.trimmingCharacters(in: .whitespaces),
+              !raw.isEmpty else {
+            return false
+        }
+        // M14 plan OD #6 — strip a trailing `?` so `Size?`-returning
+        // predicates can resolve to a same-target `Size` enum. The `nil`
+        // value isn't part of the marker set, so partition coverage of
+        // the un-optional cases doesn't imply domain coverage; M14 still
+        // reports `false` for `Size?` because the union with `nil`
+        // exceeds what the markers can cover. Keep the un-optional
+        // lookup so the path is reachable; the case-coverage check
+        // below decides the final answer.
+        let typeName = raw.hasSuffix("?") ? String(raw.dropLast()) : raw
+        // Reject obvious non-identifier shapes (function types, tuples,
+        // arrays, dictionaries) before scanning typeDecls.
+        if typeName.contains("->") || typeName.hasPrefix("(") || typeName.hasPrefix("[") {
+            return false
+        }
+        let unionedCases = typeDecls
+            .filter { decl in
+                decl.name == typeName
+                    && (decl.kind == .enum || decl.kind == .extension)
+            }
+            .flatMap(\.enumCaseNames)
+        guard !unionedCases.isEmpty else { return false }
+        let lowercaseMarkers = Set(markerNames.map { $0.lowercased() })
+        // Optional lookup: if the original return type was optional,
+        // `nil` is in the value space too — markers can't cover it,
+        // so optional-return predicates fall through to `false`.
+        if raw.hasSuffix("?") {
+            return false
+        }
+        return unionedCases.allSatisfy { caseName in
+            lowercaseMarkers.contains(caseName.lowercased())
+        }
     }
 
     private static func computeVeto(
