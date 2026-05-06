@@ -131,11 +131,19 @@ extension TestLifter {
         // for the discover run (each slice carries SwiftSyntax tree refs).
         // Per §13 row 4 memory ceiling: M11.0's eager (methods, slices)
         // extractor regressed by ~65MB on the 500-file corpus.
+        // M13.1 — broadened from MarkerPair.defaultTable (M11 narrow
+        // [Valid/Invalid]) to MarkerTable.curatedPairs (the v1.x five-pair
+        // curated set: Valid/Invalid + Success/Failure + Accept/Reject +
+        // Pass/Fail + Allowed/Forbidden). User-extensible vocabulary
+        // plumbing through .swiftinfer/vocabulary.json is left as a
+        // follow-up; M13.0's Vocabulary.markerPairs field already carries
+        // the user-supplied surface but isn't yet merged into the
+        // discover loop's effective table.
         var equivalenceClassAggregator = PartitionAggregator()
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
             equivalenceClassAggregator.observe(
-                method: summary, slice: slice, markerTable: MarkerPair.defaultTable
+                method: summary, slice: slice, markerTable: MarkerTable.curatedPairs
             )
             sliceArtifactsList.append(DomainCorpusScanner.artifacts(in: slice))
             let origin = LiftedOrigin(

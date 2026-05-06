@@ -253,104 +253,44 @@ public struct PartitionSite: Sendable, Equatable {
 /// failed the polarity / predicate-shape checks and the partition will
 /// be killed by the conservative-bias rule regardless of how many clean
 /// sites the buckets hold.
+///
+/// **Carrier shape (M13.1):** `markerPair` and `markerSet` are
+/// mutually exclusive — exactly one is non-nil. M11/M13 two-class
+/// candidates carry `markerPair`; M13.2's N-class candidates carry
+/// `markerSet`. The `positiveSites`/`negativeSites`/`outlierSiteCount`
+/// triple describes the two-class layout; N-class M13.2 candidates
+/// will store buckets in a separate companion field landed alongside
+/// the M13.2 detector. At M13.1, every emitted candidate has
+/// `markerPair != nil` and `markerSet == nil`.
 public struct PartitionCandidate: Sendable, Equatable {
 
     public let predicateName: String
-    public let markerPair: MarkerPair
+    public let markerPair: MarkerPair?
+    public let markerSet: MarkerSet?
     public let positiveSites: [PartitionSite]
     public let negativeSites: [PartitionSite]
     public let outlierSiteCount: Int
 
     public init(
         predicateName: String,
-        markerPair: MarkerPair,
+        markerPair: MarkerPair? = nil,
+        markerSet: MarkerSet? = nil,
         positiveSites: [PartitionSite],
         negativeSites: [PartitionSite],
         outlierSiteCount: Int
     ) {
         self.predicateName = predicateName
         self.markerPair = markerPair
+        self.markerSet = markerSet
         self.positiveSites = positiveSites
         self.negativeSites = negativeSites
         self.outlierSiteCount = outlierSiteCount
     }
 }
 
-private struct PartitionKey: Hashable {
-    let predicateName: String
-    let markerPair: MarkerPair
-}
-
-private struct PartitionAccumulator {
-    let markerPair: MarkerPair
-    var positiveSites: [PartitionSite] = []
-    var negativeSites: [PartitionSite] = []
-    var outlierSiteCount: Int = 0
-
-    mutating func add(classification: Classification, methodName: String) {
-        switch classification {
-        case .matched(_, .positive):
-            positiveSites.append(PartitionSite(methodName: methodName))
-        case .matched(_, .negative):
-            negativeSites.append(PartitionSite(methodName: methodName))
-        case .outlier:
-            outlierSiteCount += 1
-        }
-    }
-}
-
-/// Streaming aggregator the M11.2 `TestLifter.discover(in:)` loop drives
-/// per-method so it doesn't have to retain `[SlicedTestBody]` for the
-/// full discover run. Each call to `observe(method:slice:markerTable:)`
-/// classifies the method against every marker pair, routes the result
-/// into the per-`(predicateName, markerPair)` accumulator, and discards
-/// the slice when the call returns. `finalize()` produces the final
-/// `[PartitionCandidate]` array sorted by predicate name.
-///
-/// Restructured from the eager `extract(methods:slices:markerTable:)`
-/// shape after the §13 row 4 memory test caught a 65MB regression — the
-/// eager shape required the discover loop to accumulate `[SlicedTestBody]`
-/// across all 500 corpus files, which transitively retained the SwiftSyntax
-/// tree references that the original (per-iteration-discarded) detector
-/// passes had been deallocating. Streaming aggregation reverts the
-/// allocation profile to the pre-M11 baseline.
-struct PartitionAggregator {
-
-    private var bucketsByKey: [PartitionKey: PartitionAccumulator] = [:]
-
-    mutating func observe(
-        method: TestMethodSummary,
-        slice: SlicedTestBody,
-        markerTable: [MarkerPair]
-    ) {
-        for pair in markerTable {
-            guard let classification = EquivalenceClassMarkerExtractor.classify(
-                method: method, slice: slice, markerPair: pair
-            ) else {
-                continue
-            }
-            guard let predicateName = classification.routingPredicateName else {
-                break
-            }
-            let key = PartitionKey(predicateName: predicateName, markerPair: pair)
-            bucketsByKey[key, default: PartitionAccumulator(markerPair: pair)]
-                .add(classification: classification, methodName: method.methodName)
-            break
-        }
-    }
-
-    func finalize() -> [PartitionCandidate] {
-        bucketsByKey.map { key, accumulator in
-            PartitionCandidate(
-                predicateName: key.predicateName,
-                markerPair: accumulator.markerPair,
-                positiveSites: accumulator.positiveSites,
-                negativeSites: accumulator.negativeSites,
-                outlierSiteCount: accumulator.outlierSiteCount
-            )
-        }.sorted { lhs, rhs in
-            (lhs.predicateName, lhs.markerPair.positive)
-                < (rhs.predicateName, rhs.markerPair.positive)
-        }
-    }
-}
+// `PartitionAggregator` (the streaming aggregator that the M11.2
+// `TestLifter.discover(in:)` loop drives per-method) and its supporting
+// internal types `PartitionKey` / `PartitionAccumulator` /
+// `RankedCandidate` live in `PartitionAggregator.swift`. Split out at
+// M13.1 to keep this file under SwiftLint's 400-line cap once the M13.1
+// per-predicate ranking dedup landed.

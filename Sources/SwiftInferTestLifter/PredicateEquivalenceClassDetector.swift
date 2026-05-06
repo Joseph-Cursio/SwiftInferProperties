@@ -42,6 +42,12 @@ public enum PredicateEquivalenceClassDetector {
         predicateSummary: FunctionSummary?,
         predicateArgGeneratable: Bool
     ) -> EquivalenceClassHint? {
+        // M13.1 — `PartitionCandidate.markerPair` widened to optional so
+        // M13.2's N-class candidates can share the carrier shape. The
+        // M11.1 two-class detector only fires on candidates that carry a
+        // `markerPair`; N-class candidates flow through the M13.2
+        // `NClassEquivalenceClassDetector` instead.
+        guard let markerPair = candidate.markerPair else { return nil }
         guard candidate.outlierSiteCount == 0 else { return nil }
         guard candidate.positiveSites.count >= 3,
               candidate.negativeSites.count >= 3 else { return nil }
@@ -55,8 +61,8 @@ public enum PredicateEquivalenceClassDetector {
         return EquivalenceClassHint(
             predicateName: candidate.predicateName,
             argTypeName: argTypeName,
-            positiveMarker: candidate.markerPair.positive,
-            negativeMarker: candidate.markerPair.negative,
+            positiveMarker: markerPair.positive,
+            negativeMarker: markerPair.negative,
             positiveSiteCount: candidate.positiveSites.count,
             negativeSiteCount: candidate.negativeSites.count,
             predicateVeto: veto,
