@@ -93,7 +93,8 @@ public enum LiftedSuggestionPipeline {
         let liftedWithEquivalenceClasses = unionLiftedWithEquivalenceClasses(
             lifted: lifted,
             candidates: equivalenceClassCandidates,
-            summariesByName: summariesByName
+            summariesByName: summariesByName,
+            typeDecls: typeDecls
         )
         guard !liftedWithEquivalenceClasses.isEmpty else {
             return []
@@ -160,9 +161,14 @@ public enum LiftedSuggestionPipeline {
     private static func unionLiftedWithEquivalenceClasses(
         lifted: [LiftedSuggestion],
         candidates: [PartitionCandidate],
-        summariesByName: [String: FunctionSummary]
+        summariesByName: [String: FunctionSummary],
+        typeDecls: [TypeDecl]
     ) -> [LiftedSuggestion] {
-        lifted + equivalenceClassLifted(from: candidates, summariesByName: summariesByName)
+        lifted + equivalenceClassLifted(
+            from: candidates,
+            summariesByName: summariesByName,
+            typeDecls: typeDecls
+        )
     }
 
     /// Pair each lifted with its promoted Suggestion so we can build

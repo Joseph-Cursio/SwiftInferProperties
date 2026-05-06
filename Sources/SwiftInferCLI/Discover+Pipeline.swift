@@ -105,7 +105,8 @@ extension SwiftInferCommand.Discover {
         // the same inputs; doesn't allocate per-Suggestion.
         let equivalenceClassHints = LiftedSuggestionPipeline.equivalenceClassHintMap(
             from: liftedArtifacts.equivalenceClassCandidates,
-            summaries: artifacts.summaries
+            summaries: artifacts.summaries,
+            typeDecls: artifacts.typeDecls
         )
         return PipelineResult(
             suggestions: visible,

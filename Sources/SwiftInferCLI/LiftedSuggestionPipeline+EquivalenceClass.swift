@@ -28,7 +28,8 @@ extension LiftedSuggestionPipeline {
     /// finding; no single test method is canonical).
     static func equivalenceClassLifted(
         from candidates: [PartitionCandidate],
-        summariesByName: [String: FunctionSummary]
+        summariesByName: [String: FunctionSummary],
+        typeDecls: [TypeDecl] = []
     ) -> [LiftedSuggestion] {
         candidates.compactMap { candidate -> LiftedSuggestion? in
             let predicateSummary = summariesByName[candidate.predicateName]
@@ -47,12 +48,15 @@ extension LiftedSuggestionPipeline {
                 ) else { return nil }
                 return LiftedSuggestion.equivalenceClass(hint: hint, origin: origin)
             }
-            // M13.2 N-class branch.
+            // M13.2 N-class branch — M14.2 threads `typeDecls` through
+            // so the detector can compute `coversDomain` against same-
+            // target enum case sets.
             if candidate.markerSet != nil {
                 guard let hint = NClassEquivalenceClassDetector.detect(
                     candidate: candidate,
                     predicateSummary: predicateSummary,
-                    predicateArgGeneratable: true
+                    predicateArgGeneratable: true,
+                    typeDecls: typeDecls
                 ) else { return nil }
                 return LiftedSuggestion.nClassEquivalenceClass(hint: hint, origin: origin)
             }
@@ -69,7 +73,8 @@ extension LiftedSuggestionPipeline {
     /// exactly the post-promotion suggestion's `identity`.
     public static func equivalenceClassHintMap(
         from candidates: [PartitionCandidate],
-        summaries: [FunctionSummary]
+        summaries: [FunctionSummary],
+        typeDecls: [TypeDecl] = []
     ) -> [SuggestionIdentity: EquivalenceClassHintKind] {
         let summariesByName = LiftedSuggestionRecovery.summariesByName(summaries)
         var map: [SuggestionIdentity: EquivalenceClassHintKind] = [:]
@@ -89,7 +94,8 @@ extension LiftedSuggestionPipeline {
                 guard let hint = NClassEquivalenceClassDetector.detect(
                     candidate: candidate,
                     predicateSummary: predicateSummary,
-                    predicateArgGeneratable: true
+                    predicateArgGeneratable: true,
+                    typeDecls: typeDecls
                 ) else { continue }
                 // Identity mirrors LiftedSuggestion.nClassEquivalenceClass
                 // — calleeNames sorted is `[predicateName, "set:<markerSet>"]`.

@@ -149,7 +149,20 @@ struct EquivalenceClassRenderingNClassTests {
         #expect(contents.contains("filter { size($0) == .small }"))
         #expect(contents.contains("filter { size($0) == .medium }"))
         #expect(contents.contains("filter { size($0) == .large }"))
+        // M14.2 — same-target enum case enumeration is now wired through
+        // the discover pipeline; the markerSet covers every case of
+        // Size, so the renderer surfaces the exhaustiveness comment.
+        #expect(hint.coversDomain == true)
+        #expect(contents.contains("Exhaustiveness: forAll x: Box."))
+        #expect(contents.contains("p(x) == .small ∨ p(x) == .medium ∨ p(x) == .large"))
     }
+
+    // The "partial enum coverage → coversDomain false" companion test
+    // lives in `EquivalenceClassRenderingNClassCoversDomainTests` —
+    // moved out at M14.2 to keep this struct under SwiftLint's
+    // `type_body_length` cap. The fixture-builder helpers stay here
+    // since both files share the same `writeSizerVocabulary` /
+    // `writeSizerTests` shape.
 
     // MARK: - Fixtures
 
@@ -232,12 +245,17 @@ struct EquivalenceClassRenderingNClassTests {
             case small, medium, large
         }
 
-        public func size(_ box: String) -> Size {
+        public func size(_ box: Box) -> Size {
             switch box.count {
             case 0..<10: return .small
             case 10..<100: return .medium
             default: return .large
             }
+        }
+
+        public struct Box: Equatable {
+            public let count: Int
+            public init(count: Int) { self.count = count }
         }
         """.write(to: sources.appendingPathComponent("Sizer.swift"), atomically: true, encoding: .utf8)
     }
