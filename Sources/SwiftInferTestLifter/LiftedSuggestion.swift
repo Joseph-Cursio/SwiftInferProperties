@@ -215,6 +215,29 @@ public struct LiftedSuggestion: Sendable, Equatable {
             origin: origin
         )
     }
+
+    /// TestLifter M13.3 — N-class equivalence-class lifted suggestion
+    /// from `NClassEquivalenceClassDetector`. Cross-validation key is
+    /// `(templateName: "equivalence-class", calleeNames: [predicateName, markerSetName])`
+    /// — the markerSet-name suffix disambiguates the identity from the
+    /// two-class hint when the same predicate also fires under a
+    /// markerPair (per M13 plan OD #8 cross-class behavior — both
+    /// suggestions emit, distinct artifacts).
+    public static func nClassEquivalenceClass(
+        hint: NClassEquivalenceClassHint,
+        origin: LiftedOrigin? = nil
+    ) -> LiftedSuggestion {
+        let key = CrossValidationKey(
+            templateName: "equivalence-class",
+            calleeNames: [hint.predicateName, "set:\(hint.markerSetName)"]
+        )
+        return LiftedSuggestion(
+            templateName: "equivalence-class",
+            crossValidationKey: key,
+            pattern: .nClassEquivalenceClass(hint),
+            origin: origin
+        )
+    }
 }
 
 /// Discriminator for the detection that produced a `LiftedSuggestion`.
@@ -236,6 +259,12 @@ public enum DetectedPattern: Sendable, Equatable {
     /// surfaces with `.advisory` tier (PRD §7.8) — documentation, not a
     /// runnable property; comment-only writeout on accept.
     case equivalenceClass(EquivalenceClassHint)
+    /// TestLifter M13.3 — N-class equivalence-class advisory finding.
+    /// Same `.advisory`-tier posture as `.equivalenceClass`; the
+    /// promoted Suggestion shares the `"equivalence-class"` template
+    /// name so the M11.2 cross-validation suppression filter applies
+    /// uniformly to both kinds.
+    case nClassEquivalenceClass(NClassEquivalenceClassHint)
 }
 
 /// PRD §7.3 Assert-Ordering-Preserved → monotonicity. Carries the single

@@ -86,7 +86,7 @@ public extension LiftedSuggestion {
         // mapping with the +50 testBodyPattern weight.
         let score: Score
         switch pattern {
-        case .equivalenceClass:
+        case .equivalenceClass, .nClassEquivalenceClass:
             score = Score(advisorySignals: [signal])
         case .roundTrip, .idempotence, .commutativity,
                 .monotonicity, .countInvariance, .reduceEquivalence:
@@ -133,6 +133,14 @@ public extension LiftedSuggestion {
             return [Evidence(
                 displayName: "\(hint.predicateName)(_:)",
                 signature: "(\(hint.argTypeName)) -> Bool",
+                location: SourceLocation(file: "<corpus>", line: 0, column: 0)
+            )]
+        case .nClassEquivalenceClass(let hint):
+            // M13.3 — same shape as two-class equivalence-class evidence
+            // but the signature names the predicate's actual return type.
+            return [Evidence(
+                displayName: "\(hint.predicateName)(_:)",
+                signature: "(\(hint.argTypeName)) -> \(hint.returnTypeName)",
                 location: SourceLocation(file: "<corpus>", line: 0, column: 0)
             )]
         }
@@ -205,6 +213,11 @@ public extension LiftedSuggestion {
         case .equivalenceClass(let hint):
             return "\(hint.predicateName) partitions \(hint.positiveMarker)/\(hint.negativeMarker)"
                 + " (\(hint.positiveSiteCount)+\(hint.negativeSiteCount) sites)"
+        case .nClassEquivalenceClass(let hint):
+            let counts = hint.markers.map { marker in
+                "\(marker)=\(hint.siteCountsByMarker[marker] ?? 0)"
+            }.joined(separator: ", ")
+            return "\(hint.predicateName) partitions \(hint.markerSetName) [\(counts)]"
         }
     }
 
@@ -228,6 +241,9 @@ public extension LiftedSuggestion {
     private func makeExplainability() -> ExplainabilityBlock {
         if case .equivalenceClass(let hint) = pattern {
             return equivalenceClassExplainability(hint: hint)
+        }
+        if case .nClassEquivalenceClass(let hint) = pattern {
+            return nClassEquivalenceClassExplainability(hint: hint)
         }
         let assertionLine: String
         switch pattern {
@@ -257,7 +273,7 @@ public extension LiftedSuggestion {
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
                 + " == \(detection.collectionBindingName).reversed()"
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
-        case .equivalenceClass:
+        case .equivalenceClass, .nClassEquivalenceClass:
             // Handled by the early-return above.
             assertionLine = ""
         }
@@ -315,9 +331,52 @@ public extension LiftedSuggestion {
             return detection.assertionLocation
         case .reduceEquivalence(let detection):
             return detection.assertionLocation
-        case .equivalenceClass:
-            // M11.2 — corpus-level finding; no single assertion location.
+        case .equivalenceClass, .nClassEquivalenceClass:
+            // M11.2 / M13.3 — corpus-level finding; no single assertion location.
             return SourceLocation(file: "<corpus>", line: 0, column: 0)
         }
+    }
+
+    /// M13.3 — explainability for N-class equivalence-class advisory.
+    /// Mirrors `equivalenceClassExplainability(hint:)` for the two-class
+    /// case but lists per-bucket marker counts and per-bucket suggested
+    /// generators (or the predicate-shape veto reason).
+    private func nClassEquivalenceClassExplainability(hint: NClassEquivalenceClassHint) -> ExplainabilityBlock {
+        let header = "Predicate \(hint.predicateName)(_: \(hint.argTypeName))"
+            + " -> \(hint.returnTypeName) partitions \(hint.markerSetName)"
+            + " across the test corpus:"
+        var why = [header]
+        for marker in hint.markers {
+            let count = hint.siteCountsByMarker[marker] ?? 0
+            why.append("  • \(count) sites named \(marker)*"
+                + " assert \(hint.predicateName)(x) == .\(marker.lowercasedFirst())")
+        }
+        if let veto = hint.predicateVeto {
+            why.append("Generator narrowing skipped: \(veto.advisoryReason).")
+        } else {
+            for marker in hint.markers {
+                if let generator = hint.suggestedGeneratorsByMarker[marker] {
+                    why.append("Suggested generator for \(marker) class: \(generator)")
+                }
+            }
+        }
+        if hint.coversDomain {
+            why.append("Exhaustiveness: forAll x: \(hint.argTypeName)."
+                + " disjunction over \(hint.markers.count) buckets covers"
+                + " every case of \(hint.returnTypeName).")
+        }
+        let advisoryCaveat = "Advisory only — the equivalence class is documentation,"
+            + " not a runnable property. Author per-class properties manually using"
+            + " the suggested filter generators."
+        return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: [advisoryCaveat])
+    }
+}
+
+private extension String {
+    /// Marker text in vocabulary is conventionally Title-cased; Swift
+    /// enum cases are lowercase-first. Used in renderer output.
+    func lowercasedFirst() -> String {
+        guard let first = self.first else { return self }
+        return first.lowercased() + self.dropFirst()
     }
 }

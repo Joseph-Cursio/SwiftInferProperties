@@ -92,7 +92,7 @@ public enum InteractiveTriage {
         /// Empty when the caller isn't running the M11.1 detector pass
         /// (M11.0 / M5.x callers) — the M11.2 accept-flow falls back
         /// to a no-op writeout in that case.
-        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHint]
+        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind]
 
         public init(
             prompt: any PromptInput,
@@ -102,7 +102,7 @@ public enum InteractiveTriage {
             dryRun: Bool,
             clock: @escaping @Sendable () -> Date = { Date() },
             proposalsByType: [String: [RefactorBridgeProposal]] = [:],
-            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHint] = [:]
+            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:]
         ) {
             self.prompt = prompt
             self.output = output

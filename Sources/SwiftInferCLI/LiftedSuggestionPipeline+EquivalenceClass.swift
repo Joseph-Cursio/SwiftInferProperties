@@ -18,61 +18,87 @@ import SwiftInferTestLifter
 ///    the §13 row 4 memory ceiling).
 extension LiftedSuggestionPipeline {
 
-    /// Runs the M11.1 detector against each partition candidate (with
-    /// `summariesByName` for the predicate-shape veto + `true` for
+    /// Runs the M11.1 + M13.2 detectors against each partition candidate
+    /// (with `summariesByName` for the predicate-shape veto + `true` for
     /// `predicateArgGeneratable` per the M10.3 deferred-veto posture)
-    /// and emits one `LiftedSuggestion.equivalenceClass(...)` per
-    /// surviving partition. The lifted records use a synthetic
-    /// `LiftedOrigin` keyed on the predicate name (the partition is a
-    /// corpus-level finding; no single test method is canonical).
+    /// and emits one `LiftedSuggestion.equivalenceClass(...)` /
+    /// `LiftedSuggestion.nClassEquivalenceClass(...)` per surviving
+    /// partition. The lifted records use a synthetic `LiftedOrigin`
+    /// keyed on the predicate name (the partition is a corpus-level
+    /// finding; no single test method is canonical).
     static func equivalenceClassLifted(
         from candidates: [PartitionCandidate],
         summariesByName: [String: FunctionSummary]
     ) -> [LiftedSuggestion] {
         candidates.compactMap { candidate -> LiftedSuggestion? in
             let predicateSummary = summariesByName[candidate.predicateName]
-            guard let hint = PredicateEquivalenceClassDetector.detect(
-                candidate: candidate,
-                predicateSummary: predicateSummary,
-                predicateArgGeneratable: true
-            ) else {
-                return nil
-            }
             let originLocation = predicateSummary?.location
                 ?? SourceLocation(file: "<corpus>", line: 0, column: 0)
             let origin = LiftedOrigin(
                 testMethodName: "equivalence-class:\(candidate.predicateName)",
                 sourceLocation: originLocation
             )
-            return LiftedSuggestion.equivalenceClass(hint: hint, origin: origin)
+            // M11.1 two-class branch.
+            if candidate.markerPair != nil {
+                guard let hint = PredicateEquivalenceClassDetector.detect(
+                    candidate: candidate,
+                    predicateSummary: predicateSummary,
+                    predicateArgGeneratable: true
+                ) else { return nil }
+                return LiftedSuggestion.equivalenceClass(hint: hint, origin: origin)
+            }
+            // M13.2 N-class branch.
+            if candidate.markerSet != nil {
+                guard let hint = NClassEquivalenceClassDetector.detect(
+                    candidate: candidate,
+                    predicateSummary: predicateSummary,
+                    predicateArgGeneratable: true
+                ) else { return nil }
+                return LiftedSuggestion.nClassEquivalenceClass(hint: hint, origin: origin)
+            }
+            return nil
         }
     }
 
-    /// Runs the M11.1 detector against the same candidate set
-    /// `equivalenceClassLifted(from:summariesByName:)` consumes, but
+    /// Runs both M11.1 and M13.2 detectors against the same candidate
+    /// set `equivalenceClassLifted(from:summariesByName:)` consumes, but
     /// returns the per-suggestion-identity hint map the
     /// `InteractiveTriage.Context` carries to the accept-flow renderer.
-    /// The identity input matches `LiftedSuggestion.equivalenceClass(...)`'s
-    /// `makeIdentity()` shape — `"lifted|equivalence-class|<predicate>"` —
-    /// so the lookup at accept-flow time hits exactly the post-promotion
-    /// suggestion's `identity`.
+    /// Identity matches `LiftedSuggestion.equivalenceClass`/`nClassEquivalenceClass`'s
+    /// `makeIdentity()` shape so the lookup at accept-flow time hits
+    /// exactly the post-promotion suggestion's `identity`.
     public static func equivalenceClassHintMap(
         from candidates: [PartitionCandidate],
         summaries: [FunctionSummary]
-    ) -> [SuggestionIdentity: EquivalenceClassHint] {
+    ) -> [SuggestionIdentity: EquivalenceClassHintKind] {
         let summariesByName = LiftedSuggestionRecovery.summariesByName(summaries)
-        var map: [SuggestionIdentity: EquivalenceClassHint] = [:]
+        var map: [SuggestionIdentity: EquivalenceClassHintKind] = [:]
         for candidate in candidates {
             let predicateSummary = summariesByName[candidate.predicateName]
-            guard let hint = PredicateEquivalenceClassDetector.detect(
-                candidate: candidate,
-                predicateSummary: predicateSummary,
-                predicateArgGeneratable: true
-            ) else { continue }
-            let identity = SuggestionIdentity(
-                canonicalInput: "lifted|equivalence-class|\(hint.predicateName)"
-            )
-            map[identity] = hint
+            if candidate.markerPair != nil {
+                guard let hint = PredicateEquivalenceClassDetector.detect(
+                    candidate: candidate,
+                    predicateSummary: predicateSummary,
+                    predicateArgGeneratable: true
+                ) else { continue }
+                let identity = SuggestionIdentity(
+                    canonicalInput: "lifted|equivalence-class|\(hint.predicateName)"
+                )
+                map[identity] = .twoClass(hint)
+            } else if candidate.markerSet != nil {
+                guard let hint = NClassEquivalenceClassDetector.detect(
+                    candidate: candidate,
+                    predicateSummary: predicateSummary,
+                    predicateArgGeneratable: true
+                ) else { continue }
+                // Identity mirrors LiftedSuggestion.nClassEquivalenceClass
+                // — calleeNames sorted is `[predicateName, "set:<markerSet>"]`.
+                let calleeNames = [hint.predicateName, "set:\(hint.markerSetName)"].sorted()
+                let identity = SuggestionIdentity(
+                    canonicalInput: "lifted|equivalence-class|\(calleeNames.joined(separator: ","))"
+                )
+                map[identity] = .nClass(hint)
+            }
         }
         return map
     }

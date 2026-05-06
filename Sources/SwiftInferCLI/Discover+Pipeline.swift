@@ -35,13 +35,13 @@ extension SwiftInferCommand.Discover {
         /// so the accept-flow renderer (M11.2d) can reach the hint
         /// without paying a per-suggestion storage cost on every
         /// `Suggestion` instance (the §13 row 4 memory ceiling rule).
-        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHint]
+        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind]
 
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
             inverseElementPairs: [InverseElementPair] = [],
-            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHint] = [:]
+            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:]
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
@@ -73,7 +73,10 @@ extension SwiftInferCommand.Discover {
         // TestSuiteParser only emits summaries for files containing
         // recognized test methods, so production source naturally
         // produces no lifted records.
-        let liftedArtifacts = try TestLifter.discover(in: setup.testDirectory)
+        let liftedArtifacts = try TestLifter.discover(
+            in: setup.testDirectory,
+            markerTable: effectiveMarkerTable(for: setup.vocabulary)
+        )
         let artifacts = try TemplateRegistry.discoverArtifacts(
             in: directory,
             vocabulary: setup.vocabulary,
@@ -90,6 +93,39 @@ extension SwiftInferCommand.Discover {
         // Survivors enter the visible stream with a +50 testBodyPattern
         // signal and the inferred generator (or `.todo` when type
         // recovery failed — PRD §16 #4 invariant preserved).
+        let visible = combineAndFilter(
+            artifacts: artifacts,
+            liftedArtifacts: liftedArtifacts,
+            setup: setup,
+            directory: directory,
+            diagnostics: diagnostics
+        )
+        // M11.2 — derive the per-identity hint map for the accept-flow
+        // renderer alongside the lifted promotion. Pure function over
+        // the same inputs; doesn't allocate per-Suggestion.
+        let equivalenceClassHints = LiftedSuggestionPipeline.equivalenceClassHintMap(
+            from: liftedArtifacts.equivalenceClassCandidates,
+            summaries: artifacts.summaries
+        )
+        return PipelineResult(
+            suggestions: visible,
+            packageRoot: setup.packageRoot,
+            inverseElementPairs: artifacts.inverseElementPairs,
+            equivalenceClassHintsByIdentity: equivalenceClassHints
+        )
+    }
+
+    /// Combine TE + lifted suggestions, skip-filter, counter-signal-filter,
+    /// and apply the include-possible visibility cut. Extracted out of
+    /// `collectVisibleSuggestions` to keep that function under SwiftLint's
+    /// body-length cap (M13.3 vocabulary plumbing pushed it over).
+    private static func combineAndFilter(
+        artifacts: TemplateRegistry.DiscoverArtifacts,
+        liftedArtifacts: TestLifter.Artifacts,
+        setup: PipelineSetup,
+        directory: URL,
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
         let promotedLifted = LiftedSuggestionPipeline.promote(
             lifted: liftedArtifacts.liftedSuggestions,
             templateEngineSuggestions: artifacts.suggestions,
@@ -108,32 +144,15 @@ extension SwiftInferCommand.Discover {
         )
         // M7 — filter lifted-side suggestions whose key matches a
         // counter-signal. Per M7 plan OD #1, the user's explicit
-        // negative assertion is dispositive on the lifted side: we
-        // don't surface a Possible-tier lifted suggestion the test
-        // author has actively contradicted. The TE side gets the
-        // -25 demotion via `applyCounterSignal` inside
-        // `discoverArtifacts`; lifted side filters entirely.
+        // negative assertion is dispositive on the lifted side.
         let counterSignalKeys = liftedArtifacts.counterSignalKeys
         let filteredPromotedLifted = counterSignalKeys.isEmpty
             ? skipFiltered
             : skipFiltered.filter { !counterSignalKeys.contains($0.crossValidationKey) }
         let combined = artifacts.suggestions + filteredPromotedLifted
-        let visible = combined.filter { suggestion in
+        return combined.filter { suggestion in
             setup.includePossible || suggestion.score.tier.isVisibleByDefault
         }
-        // M11.2 — derive the per-identity hint map for the accept-flow
-        // renderer alongside the lifted promotion. Pure function over
-        // the same inputs; doesn't allocate per-Suggestion.
-        let equivalenceClassHints = LiftedSuggestionPipeline.equivalenceClassHintMap(
-            from: liftedArtifacts.equivalenceClassCandidates,
-            summaries: artifacts.summaries
-        )
-        return PipelineResult(
-            suggestions: visible,
-            packageRoot: setup.packageRoot,
-            inverseElementPairs: artifacts.inverseElementPairs,
-            equivalenceClassHintsByIdentity: equivalenceClassHints
-        )
     }
 
     /// Bundle of resolved settings the discover pipeline pulls from
@@ -146,6 +165,18 @@ extension SwiftInferCommand.Discover {
         let vocabulary: Vocabulary
         let testDirectory: URL
         let packageRoot: URL?
+    }
+
+    /// M13.3 — vocabulary-driven marker-table extension. User-supplied
+    /// `markerPairs` / `markerSets` from `.swiftinfer/vocabulary.json`
+    /// are appended to `MarkerTable.curatedPairs` /
+    /// `MarkerTable.curatedSets` so vocab is additive (curated defaults
+    /// always apply).
+    private static func effectiveMarkerTable(for vocabulary: Vocabulary) -> MarkerTable {
+        MarkerTable(
+            pairs: MarkerTable.curatedPairs + vocabulary.markerPairs,
+            sets: MarkerTable.curatedSets + vocabulary.markerSets
+        )
     }
 
     // swiftlint:disable:next function_parameter_count

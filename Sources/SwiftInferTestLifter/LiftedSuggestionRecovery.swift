@@ -173,6 +173,11 @@ public enum LiftedSuggestionRecovery {
             // predicate). The `returnType` is `Bool` — every
             // equivalence-class predicate is unary returning Bool.
             return (hint.argTypeName, "Bool")
+        case .nClassEquivalenceClass(let hint):
+            // M13.3 — N-class hint carries argTypeName + returnTypeName
+            // already resolved by the M13.2 detector. Same posture as
+            // the two-class case above.
+            return (hint.argTypeName, hint.returnTypeName)
         }
     }
 

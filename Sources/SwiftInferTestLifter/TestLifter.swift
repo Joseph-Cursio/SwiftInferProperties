@@ -121,7 +121,13 @@ extension TestLifter {
     /// the artifacts. M1.5 calls this with the same `discover` target
     /// directory the TemplateEngine uses; the M1 plan's open
     /// decision #1 default `(a)` resolves the layering.
-    public static func discover(in directory: URL) throws -> Artifacts {
+    public static func discover(
+        in directory: URL,
+        markerTable: MarkerTable = MarkerTable(
+            pairs: MarkerTable.curatedPairs,
+            sets: MarkerTable.curatedSets
+        )
+    ) throws -> Artifacts {
         let summaries = try TestSuiteParser.scanTests(directory: directory)
         var lifted: [LiftedSuggestion] = []
         var counterSignals: [LiftedCounterSignal] = []
@@ -131,19 +137,18 @@ extension TestLifter {
         // for the discover run (each slice carries SwiftSyntax tree refs).
         // Per §13 row 4 memory ceiling: M11.0's eager (methods, slices)
         // extractor regressed by ~65MB on the 500-file corpus.
-        // M13.1 — broadened from MarkerPair.defaultTable (M11 narrow
-        // [Valid/Invalid]) to MarkerTable.curatedPairs (the v1.x five-pair
-        // curated set: Valid/Invalid + Success/Failure + Accept/Reject +
-        // Pass/Fail + Allowed/Forbidden). User-extensible vocabulary
-        // plumbing through .swiftinfer/vocabulary.json is left as a
-        // follow-up; M13.0's Vocabulary.markerPairs field already carries
-        // the user-supplied surface but isn't yet merged into the
-        // discover loop's effective table.
+        // M13.3 — `markerTable` carries both M11/M13.1 two-class pairs
+        // and M13.2 N-class sets. Default is `MarkerTable.curatedPairs`
+        // + empty sets; the CLI's `Discover+Pipeline` constructs an
+        // effective table by appending vocabulary-supplied entries.
         var equivalenceClassAggregator = PartitionAggregator()
         for summary in summaries {
             let slice = Slicer.slice(summary.body)
             equivalenceClassAggregator.observe(
-                method: summary, slice: slice, markerTable: MarkerTable.curatedPairs
+                method: summary, slice: slice, markerTable: markerTable.pairs
+            )
+            equivalenceClassAggregator.observeNClass(
+                method: summary, slice: slice, markerSets: markerTable.sets
             )
             sliceArtifactsList.append(DomainCorpusScanner.artifacts(in: slice))
             let origin = LiftedOrigin(

@@ -30,7 +30,10 @@ struct EquivalenceClassRenderingTests {
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         #expect(advisory.score.tier == .advisory)
         #expect(advisory.identity.canonicalInput.contains("equivalence-class"))
-        let hint = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
+        let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
+        guard case .twoClass(let hint) = kind else {
+            Issue.record("expected two-class hint kind"); return
+        }
         #expect(hint.predicateName == "isValid")
         #expect(hint.positiveSiteCount == 3)
         #expect(hint.negativeSiteCount == 3)
@@ -79,7 +82,10 @@ struct EquivalenceClassRenderingTests {
             diagnostics: SilentECDiagnostics()
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
-        let hint = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
+        let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
+        guard case .twoClass(let hint) = kind else {
+            Issue.record("expected two-class hint kind"); return
+        }
         #expect(hint.predicateVeto == .predicateThrows)
 
         let recorded = RecordingECOutput()
