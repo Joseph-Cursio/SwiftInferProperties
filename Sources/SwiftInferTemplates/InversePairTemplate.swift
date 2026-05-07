@@ -217,17 +217,21 @@ public enum InversePairTemplate {
         }
         let stripped = FloatingPointStorageNames.strippingGenericParameters(fpType)
         if FloatingPointStorageNames.isKitSupported(fpType) {
-            return "Pair type \(stripped) conforms to FloatingPoint — exact-equality "
-                + "inverse-pair fires spurious violations under IEEE 754 rounding "
-                + "(PropertyLawKit's FloatingPointLaws.swift commentary). Use "
-                + "`checkFloatingPointPropertyLaws(for: \(stripped).self, using: gen)` "
-                + "from PropertyLawKit instead of the emitted exact-equality stub."
+            return "Pair type \(stripped) conforms to FloatingPoint. Round-trip "
+                + "identity holds in principle; exact-equality auto-sampling fails on "
+                + "IEEE 754 precision loss / NaN edge cases. Verify via a finite-only "
+                + "generator (e.g. `Gen<Double>.double(in: -1e6...1e6)`) per "
+                + "PropertyLawKit's `FloatingPointLaws.swift` posture — kit "
+                + "`checkFloatingPointPropertyLaws` covers FP-specific laws (NaN, "
+                + "infinity), algebraic inverse-pair needs the finite-only opt-in. "
+                + "v1.5+ will surface the generator override automatically."
         }
-        return "Pair type \(stripped) has IEEE 754 floating-point storage but "
-            + "doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality "
-            + "template arm; this finding is suppressed pending v1.5+'s approximate-"
-            + "equality work. To author manually, see PropertyLawKit's "
-            + "FloatingPointLaws.swift for the kit's tolerance posture."
+        return "Pair type \(stripped) has IEEE 754 floating-point storage. Round-"
+            + "trip identity holds in principle; exact-equality auto-sampling fails on "
+            + "rounding / NaN edge cases. Verify via a finite-only generator (e.g. "
+            + "`Gen<Double>.double(in: -1e6...1e6)` lifted into \(stripped)) per "
+            + "PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ "
+            + "will surface the generator override automatically."
     }
 
     // MARK: - Suggestion construction

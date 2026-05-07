@@ -12,7 +12,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x9AF76763F07CBA464BABBA4E4346385E31ECEE764F3452E829F769912FEBE873
@@ -31,7 +31,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x508F9A42E39A0C34A2BED142216ED5934FA55D755A5B33B4327D6E744035DF5E
@@ -70,7 +70,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0xD862782BE7C59F847452B93F8FEBE0FD302F2D7F0917F5DDCDCC22FB6BC53CAF
@@ -89,7 +89,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0xBA81A0CCFB1A13CF2A79F8DB02EE8F8D4E4F9372416C3EDC416237F8E0AA9E54
@@ -128,7 +128,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x365C20324D083170FF12070304B31DEE6A80BE6601CC7597CC78E84C4576D900
@@ -147,7 +147,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x544D5B6E67C4768CD8FC54D513ADD3BB88B621679DE9E083900295EB87CC4CC9
@@ -186,7 +186,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0xB2E0369C94B9A310AA0C1B09A70CF96D92441EFF14263CBEF39C99A24DDFDBD2
@@ -205,7 +205,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x9A73473CF9BC39CF6FF179FCA7D0DE779DEB95D3FF76F5450B584BD4B1EB5876
@@ -3034,7 +3034,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x5CE35CA3281131D6B7394E582BAEE6766700221A09E1FA3F025CE178869CB373
@@ -3053,7 +3053,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x733B865F8B329C34B7C5C12B49727637DBAC526715956D14B899986E6381C400
@@ -3109,7 +3109,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0x0CB2766FF24A27F092CC7EB2D195CDE17C13E8583DC151F0E1EF7674A776A404
@@ -3128,7 +3128,7 @@ Why suggested:
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
-  ⚠ T = Complex has IEEE 754 floating-point storage but doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality template arm; this finding is suppressed at Possible-tier floor pending v1.5+'s approximate-equality work. To author manually, see PropertyLawKit's FloatingPointLaws.swift for the kit's tolerance posture.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
 
 Generator: .todo
 Sampling:  not run; lifted test seed: 0xF90E170F6F1D7849BE598274BB19DD7E172C9104E6494B2CA8EC7984CDD11FA1

@@ -234,17 +234,21 @@ public enum AssociativityTemplate {
         }
         let stripped = FloatingPointStorageNames.strippingGenericParameters(first.typeText)
         if FloatingPointStorageNames.isKitSupported(first.typeText) {
-            return "T = \(stripped) conforms to FloatingPoint — exact-equality associativity "
-                + "fires spurious violations under IEEE 754 rounding (PropertyLawKit's "
-                + "FloatingPointLaws.swift commentary). Use "
-                + "`checkFloatingPointPropertyLaws(for: \(stripped).self, using: gen)` "
-                + "from PropertyLawKit instead of the emitted exact-equality stub."
+            return "T = \(stripped) conforms to FloatingPoint. Associativity holds "
+                + "in principle; exact-equality auto-sampling fails on IEEE 754 rounding. "
+                + "Verify via a finite-only generator (e.g. "
+                + "`Gen<Double>.double(in: -1e6...1e6)`) per PropertyLawKit's "
+                + "`FloatingPointLaws.swift` posture — kit "
+                + "`checkFloatingPointPropertyLaws` covers FP-specific laws (NaN, "
+                + "infinity), algebraic associativity needs the finite-only opt-in. "
+                + "v1.5+ will surface the generator override automatically."
         }
-        return "T = \(stripped) has IEEE 754 floating-point storage but doesn't "
-            + "conform to `FloatingPoint`. v1.4 lacks an approximate-equality template "
-            + "arm; this finding is suppressed at Possible-tier floor pending v1.5+'s "
-            + "approximate-equality work. To author manually, see PropertyLawKit's "
-            + "FloatingPointLaws.swift for the kit's tolerance posture."
+        return "T = \(stripped) has IEEE 754 floating-point storage. Associativity "
+            + "holds in principle; exact-equality auto-sampling fails on rounding. "
+            + "Verify via a finite-only generator (e.g. "
+            + "`Gen<Double>.double(in: -1e6...1e6)` lifted into \(stripped)) per "
+            + "PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ "
+            + "will surface the generator override automatically."
     }
 
     // MARK: - Display helpers

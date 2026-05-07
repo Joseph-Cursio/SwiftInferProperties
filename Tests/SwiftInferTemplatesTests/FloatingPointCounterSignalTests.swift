@@ -79,16 +79,20 @@ struct FloatingPointCounterSignalTests {
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
         #expect(caveats.contains("conforms to FloatingPoint"))
+        #expect(caveats.contains("finite-only generator"))
         #expect(caveats.contains("checkFloatingPointPropertyLaws"))
+        #expect(caveats.contains("Associativity holds in principle"))
     }
 
-    @Test("Associativity on Complex surfaces non-kit advisory (cycle-2 deferral)")
+    @Test("Associativity on Complex surfaces tolerance-posture advisory (cycle-2 generator override)")
     func associativityComplexNonKitAdvisory() throws {
         let summary = Self.binaryOp(typeText: "Complex")
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
-        #expect(caveats.contains("doesn't conform to `FloatingPoint`"))
-        #expect(caveats.contains("approximate-equality template arm"))
+        #expect(caveats.contains("IEEE 754 floating-point storage"))
+        #expect(caveats.contains("finite-only generator"))
+        #expect(caveats.contains("FloatingPointLaws.swift"))
+        #expect(caveats.contains("Associativity holds in principle"))
     }
 
     // MARK: - Commutativity
@@ -109,12 +113,14 @@ struct FloatingPointCounterSignalTests {
         #expect(!suggestion.score.signals.contains { $0.kind == .floatingPointStorage })
     }
 
-    @Test("Commutativity on Decimal surfaces non-kit advisory")
+    @Test("Commutativity on Decimal surfaces tolerance-posture advisory")
     func commutativityDecimalNonKitAdvisory() throws {
         let summary = Self.binaryOp(typeText: "Decimal")
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
         let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
-        #expect(caveats.contains("doesn't conform to `FloatingPoint`"))
+        #expect(caveats.contains("IEEE 754 floating-point storage"))
+        #expect(caveats.contains("finite-only generator"))
+        #expect(caveats.contains("Commutativity holds in principle"))
     }
 
     // MARK: - Inverse-pair
