@@ -153,4 +153,29 @@ public struct Decisions: Sendable, Equatable, Codable {
         let withoutPrior = records.filter { $0.identityHash != record.identityHash }
         return Decisions(schemaVersion: schemaVersion, records: withoutPrior + [record])
     }
+
+    /// Fold another `Decisions` into this one (V1.4.1). Used by
+    /// `swift-infer metrics` to aggregate `.swiftinfer/decisions.json`
+    /// across multiple benchmark corpora into one in-memory
+    /// `Decisions` for §17.2 reporting. Identity-keyed; on collision
+    /// the record with the later `timestamp` wins (mirrors the
+    /// `upserting(_:)` "latest decision in effect" posture).
+    public func merge(_ other: Decisions) -> Decisions {
+        var byHash: [String: DecisionRecord] = [:]
+        for record in records + other.records {
+            if let existing = byHash[record.identityHash],
+               existing.timestamp >= record.timestamp {
+                continue
+            }
+            byHash[record.identityHash] = record
+        }
+        let merged = byHash.values.sorted { lhs, rhs in
+            if lhs.timestamp != rhs.timestamp { return lhs.timestamp < rhs.timestamp }
+            return lhs.identityHash < rhs.identityHash
+        }
+        return Decisions(
+            schemaVersion: max(schemaVersion, other.schemaVersion),
+            records: merged
+        )
+    }
 }
