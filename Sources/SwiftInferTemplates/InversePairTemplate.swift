@@ -60,6 +60,9 @@ public enum InversePairTemplate {
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
             signals.append(name)
         }
+        if let fpCounter = floatingPointStorageCounterSignal(for: pair) {
+            signals.append(fpCounter)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
@@ -171,6 +174,62 @@ public enum InversePairTemplate {
         }
     }
 
+    /// V1.4.3 — fires when either side of the pair's parameter type
+    /// is FP-storage (forward's `(T) -> U` domain T, or equivalently
+    /// reverse's `(U) -> T` codomain). For inverse-pair both directions
+    /// matter: `sqrt(x*x) ≠ x` for negative x, etc. Drops Score 25 → 15
+    /// (Suppressed) — slightly more aggressive than assoc/comm because
+    /// inverse-pair already has lower baseline (25 not 30); -10 lands
+    /// in Suppressed (< 20) here. The kit-pointer in the explainability
+    /// is still surfaced because the suggestion was filtered AFTER
+    /// score computation, but `--include-possible` users won't see it.
+    /// Acceptable trade-off: inverse-pair is rare on FP corpora and
+    /// the cycle-2 approximate-equality template arm is the proper fix.
+    private static func floatingPointStorageCounterSignal(
+        for pair: FunctionPair
+    ) -> Signal? {
+        let domain = pair.forward.parameters.first?.typeText
+        let codomain = pair.forward.returnTypeText
+        let candidates = [domain, codomain].compactMap { $0 }
+        guard candidates.contains(where: { FloatingPointStorageNames.contains($0) }) else {
+            return nil
+        }
+        let stripped = candidates
+            .first(where: { FloatingPointStorageNames.contains($0) })
+            .map(FloatingPointStorageNames.strippingGenericParameters)
+            ?? "?"
+        return Signal(
+            kind: .floatingPointStorage,
+            weight: -10,
+            detail: "Floating-point storage in inverse pair (T = \(stripped)) — "
+                + "exact-equality round-trip is not bit-exact under IEEE 754"
+        )
+    }
+
+    /// V1.4.3 — type-aware FP advisory paralleling the assoc/comm
+    /// helpers. `nil` when neither side of the pair is FP-storage.
+    private static func floatingPointAdvisory(for pair: FunctionPair) -> String? {
+        let domain = pair.forward.parameters.first?.typeText
+        let codomain = pair.forward.returnTypeText
+        let candidates = [domain, codomain].compactMap { $0 }
+        guard let fpType = candidates.first(where: { FloatingPointStorageNames.contains($0) }) else {
+            return nil
+        }
+        let stripped = FloatingPointStorageNames.strippingGenericParameters(fpType)
+        if FloatingPointStorageNames.isKitSupported(fpType) {
+            return "Pair type \(stripped) conforms to FloatingPoint — exact-equality "
+                + "inverse-pair fires spurious violations under IEEE 754 rounding "
+                + "(PropertyLawKit's FloatingPointLaws.swift commentary). Use "
+                + "`checkFloatingPointPropertyLaws(for: \(stripped).self, using: gen)` "
+                + "from PropertyLawKit instead of the emitted exact-equality stub."
+        }
+        return "Pair type \(stripped) has IEEE 754 floating-point storage but "
+            + "doesn't conform to `FloatingPoint`. v1.4 lacks an approximate-equality "
+            + "template arm; this finding is suppressed pending v1.5+'s approximate-"
+            + "equality work. To author manually, see PropertyLawKit's "
+            + "FloatingPointLaws.swift for the kit's tolerance posture."
+    }
+
     // MARK: - Suggestion construction
 
     private static func makeEvidence(_ summary: FunctionSummary) -> Evidence {
@@ -199,7 +258,7 @@ public enum InversePairTemplate {
         for signal in signals {
             whySuggested.append(signal.formattedLine)
         }
-        let caveats: [String] = [
+        var caveats: [String] = [
             "Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — "
                 + "the suggestion is name-and-type-pattern only.",
             "TestLifter corroboration not yet wired (gated on TestLifter M1).",
@@ -209,6 +268,9 @@ public enum InversePairTemplate {
                 + "with stronger evidence — inverse-pair only fires when "
                 + "EquatableResolver returns .notEquatable or .unknown for T."
         ]
+        if let fpCaveat = floatingPointAdvisory(for: pair) {
+            caveats.append(fpCaveat)
+        }
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
 

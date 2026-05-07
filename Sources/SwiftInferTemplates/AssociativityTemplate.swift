@@ -61,6 +61,9 @@ public enum AssociativityTemplate {
         if let reducer = reducerUsageSignal(for: summary, reducerOps: reducerOps) {
             signals.append(reducer)
         }
+        if let fpCounter = floatingPointStorageCounterSignal(for: summary) {
+            signals.append(fpCounter)
+        }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
         }
@@ -147,6 +150,28 @@ public enum AssociativityTemplate {
         )
     }
 
+    /// V1.4.3 — fires when the candidate's parameter type is a
+    /// curated IEEE 754 floating-point-storage name (Float / Double /
+    /// Float16-80 / CGFloat / Complex / Decimal). Drops Score 30 → 20
+    /// (Possible-tier floor) so the suggestion stays surfaced under
+    /// `--include-possible` for the explainability kit-pointer to be
+    /// visible. Calibration cycle 1 tuning patch.
+    private static func floatingPointStorageCounterSignal(
+        for summary: FunctionSummary
+    ) -> Signal? {
+        guard let first = summary.parameters.first,
+              FloatingPointStorageNames.contains(first.typeText) else {
+            return nil
+        }
+        let stripped = FloatingPointStorageNames.strippingGenericParameters(first.typeText)
+        return Signal(
+            kind: .floatingPointStorage,
+            weight: -10,
+            detail: "Floating-point storage: T = \(stripped) — exact-equality "
+                + "associativity is not bit-exact under IEEE 754 sampling"
+        )
+    }
+
     private static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
         guard summary.bodySignals.hasNonDeterministicCall else {
             return nil
@@ -181,14 +206,45 @@ public enum AssociativityTemplate {
         for signal in signals {
             whySuggested.append(signal.formattedLine)
         }
-        let caveats: [String] = [
+        var caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
-            "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
-            "Floating-point operations are typically not exactly associative under IEEE 754 — "
-                + "a Double-typed candidate may pass the type pattern but fail sampling under M4."
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
+        if let fpCaveat = floatingPointAdvisory(for: summary) {
+            caveats.append(fpCaveat)
+        } else {
+            caveats.append(
+                "Floating-point operations are typically not exactly associative under IEEE 754 — "
+                    + "a Double-typed candidate may pass the type pattern but fail sampling under M4."
+            )
+        }
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
+    }
+
+    /// V1.4.3 — produces a type-aware floating-point caveat when the
+    /// candidate's parameter type is FP-storage, replacing the static
+    /// "may fail sampling" warning with a more specific kit-pointer or
+    /// cycle-2 deferral note. Returns `nil` when T isn't FP-storage —
+    /// the caller falls back to the static M1-era warning.
+    private static func floatingPointAdvisory(for summary: FunctionSummary) -> String? {
+        guard let first = summary.parameters.first,
+              FloatingPointStorageNames.contains(first.typeText) else {
+            return nil
+        }
+        let stripped = FloatingPointStorageNames.strippingGenericParameters(first.typeText)
+        if FloatingPointStorageNames.isKitSupported(first.typeText) {
+            return "T = \(stripped) conforms to FloatingPoint — exact-equality associativity "
+                + "fires spurious violations under IEEE 754 rounding (PropertyLawKit's "
+                + "FloatingPointLaws.swift commentary). Use "
+                + "`checkFloatingPointPropertyLaws(for: \(stripped).self, using: gen)` "
+                + "from PropertyLawKit instead of the emitted exact-equality stub."
+        }
+        return "T = \(stripped) has IEEE 754 floating-point storage but doesn't "
+            + "conform to `FloatingPoint`. v1.4 lacks an approximate-equality template "
+            + "arm; this finding is suppressed at Possible-tier floor pending v1.5+'s "
+            + "approximate-equality work. To author manually, see PropertyLawKit's "
+            + "FloatingPointLaws.swift for the kit's tolerance posture."
     }
 
     // MARK: - Display helpers

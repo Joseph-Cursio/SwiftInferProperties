@@ -30,6 +30,19 @@ public struct Signal: Sendable, Equatable {
         case asymmetricAssertion
         case antiCommutativityNaming
         case partialFunction
+        /// V1.4.3 — fires on candidates whose parameter type is a curated
+        /// IEEE 754 floating-point-storage type (Float / Double / Float16 /
+        /// Float32 / Float64 / Float80 / CGFloat / Complex / Decimal). Emitted
+        /// by associativity / commutativity / inverse-pair templates with
+        /// weight `-10` (PRD §17.3 step-2 magnitude). Drops Score 30 →
+        /// Score 20 (Possible-tier floor) so the suggestion stays surfaced
+        /// under `--include-possible` and the explainability block can point
+        /// users at PropertyLawKit's `checkFloatingPointPropertyLaws` (kit-
+        /// supported types) or document the cycle-2-deferred approximate-
+        /// equality template arm (non-kit-supported types). Identity-element
+        /// is intentionally exempt — exact identity on FP is reliably true
+        /// (`x + 0.0 == x` modulo NaN).
+        case floatingPointStorage
 
         // Veto (collapses score to suppressed)
         case nonDeterministicBody

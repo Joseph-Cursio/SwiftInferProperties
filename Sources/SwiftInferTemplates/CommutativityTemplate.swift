@@ -65,6 +65,9 @@ public enum CommutativityTemplate {
         if let counter = antiCommutativitySignal(for: summary, vocabulary: vocabulary) {
             signals.append(counter)
         }
+        if let fpCounter = floatingPointStorageCounterSignal(for: summary) {
+            signals.append(fpCounter)
+        }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
         }
@@ -170,6 +173,50 @@ public enum CommutativityTemplate {
         )
     }
 
+    /// V1.4.3 — fires when the candidate's parameter type is a
+    /// curated IEEE 754 floating-point-storage name. Drops Score 30 →
+    /// 20 (Possible-tier floor) so the explainability kit-pointer
+    /// stays visible under `--include-possible`. Mirrors
+    /// AssociativityTemplate.floatingPointStorageCounterSignal.
+    private static func floatingPointStorageCounterSignal(
+        for summary: FunctionSummary
+    ) -> Signal? {
+        guard let first = summary.parameters.first,
+              FloatingPointStorageNames.contains(first.typeText) else {
+            return nil
+        }
+        let stripped = FloatingPointStorageNames.strippingGenericParameters(first.typeText)
+        return Signal(
+            kind: .floatingPointStorage,
+            weight: -10,
+            detail: "Floating-point storage: T = \(stripped) — exact-equality "
+                + "commutativity is not bit-exact under IEEE 754 sampling on edge values"
+        )
+    }
+
+    /// V1.4.3 — type-aware FP advisory paralleling
+    /// AssociativityTemplate.floatingPointAdvisory. `nil` when T isn't
+    /// FP-storage; caller skips the FP caveat in that case.
+    private static func floatingPointAdvisory(for summary: FunctionSummary) -> String? {
+        guard let first = summary.parameters.first,
+              FloatingPointStorageNames.contains(first.typeText) else {
+            return nil
+        }
+        let stripped = FloatingPointStorageNames.strippingGenericParameters(first.typeText)
+        if FloatingPointStorageNames.isKitSupported(first.typeText) {
+            return "T = \(stripped) conforms to FloatingPoint — exact-equality commutativity "
+                + "fires spurious violations under IEEE 754 rounding (PropertyLawKit's "
+                + "FloatingPointLaws.swift commentary). Use "
+                + "`checkFloatingPointPropertyLaws(for: \(stripped).self, using: gen)` "
+                + "from PropertyLawKit instead of the emitted exact-equality stub."
+        }
+        return "T = \(stripped) has IEEE 754 floating-point storage but doesn't "
+            + "conform to `FloatingPoint`. v1.4 lacks an approximate-equality template "
+            + "arm; this finding is suppressed at Possible-tier floor pending v1.5+'s "
+            + "approximate-equality work. To author manually, see PropertyLawKit's "
+            + "FloatingPointLaws.swift for the kit's tolerance posture."
+    }
+
     // MARK: - Suggestion construction
 
     private static func makeEvidence(_ summary: FunctionSummary) -> Evidence {
@@ -192,11 +239,14 @@ public enum CommutativityTemplate {
         for signal in signals {
             whySuggested.append(signal.formattedLine)
         }
-        let caveats: [String] = [
+        var caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
+        if let fpCaveat = floatingPointAdvisory(for: summary) {
+            caveats.append(fpCaveat)
+        }
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
 
