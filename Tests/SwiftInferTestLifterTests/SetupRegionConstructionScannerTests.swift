@@ -250,7 +250,7 @@ struct SetupRegionConstructionScannerTests {
 
     // MARK: - Acceptance: § 13 perf re-check
 
-    @Test("Record building over 100 synthetic test files completes in < 250ms")
+    @Test("Record building over 100 synthetic test files completes in < 400ms")
     func hundredFilePerf() throws {
         var allMethods: [TestMethodSummary] = []
         for index in 0..<100 {
@@ -273,15 +273,21 @@ struct SetupRegionConstructionScannerTests {
         let start = Date()
         let record = SetupRegionConstructionScanner.record(over: allMethods)
         let elapsed = Date().timeIntervalSince(start)
-        // 250ms budget calibrated against parallel-test-load behavior:
-        // in isolation the scanner pass over 200 methods takes ~70ms,
-        // but parallel test execution (default `swift test` mode)
-        // routinely doubles the wall-clock for visitor-heavy work.
-        // 250ms gives ~2× headroom over the parallel-load baseline.
-        // The §13 row-2 budget (TestLifter parse 100 files < 3s wall)
-        // is the load-bearing perf check; this unit perf is a
-        // sanity guard against algorithmic regression.
-        #expect(elapsed < 0.25, "Record building took \(elapsed)s — over the M4.1 250ms unit-perf budget")
+        // 400ms budget calibrated against CI-runner parallel-test-load
+        // behavior. Local-isolation: ~70ms; local-parallel: ~140ms;
+        // CI-parallel: routinely 250-280ms (one V1.2.3 push hit 261ms,
+        // tipping the prior 250ms budget). 400ms ≈ 261ms × 1.53 — same
+        // generous-CI-headroom posture as the post-v1.1.0 row-4 800 MB
+        // recalibration. The §13 row-2 budget (TestLifter parse 100
+        // files < 3s wall) is the load-bearing perf check; this unit
+        // perf is a sanity guard against algorithmic regression.
+        // Diagnostic: emit elapsed every run so future drift surfaces
+        // in CI logs at every push, not at the next failure (mirrors
+        // the v1.1 row-4 [§13 row 4] stderr log pattern).
+        FileHandle.standardError.write(Data(
+            "[unit-perf] SetupRegionConstructionScanner.record over 200 methods: \(elapsed)s budget=0.4s\n".utf8
+        ))
+        #expect(elapsed < 0.4, "Record building took \(elapsed)s — over the M4.1 400ms unit-perf budget")
         // Sanity-check the record is non-trivial: 100 files × 2 Doc()
         // sites each = 200 sites, all sharing a shape.
         let docEntries = record.entries(for: "Doc")
