@@ -58,6 +58,14 @@ public struct DomainHint: Sendable, Equatable {
     /// the generator. Pre-computed by the inferrer.
     public let suggestedGenerator: String
 
+    /// TestLifter M16.0 — discriminator for which detector emitted this
+    /// hint. M10's `DomainInferrer` emits with `.roundTripPair` (the
+    /// default for back-compat); M16's `ConsumerProducerChainDetector`
+    /// emits with `.consumerProducerChain`. Renderer + accept-flow
+    /// dispatch on this field rather than re-parsing the (forward,
+    /// reverse, producer) name triple to tell the two surfaces apart.
+    public let origin: HintOrigin
+
     public init(
         forwardName: String,
         reverseName: String,
@@ -65,7 +73,8 @@ public struct DomainHint: Sendable, Equatable {
         domainTypeName: String,
         siteCount: Int,
         producerVeto: ProducerVetoReason?,
-        suggestedGenerator: String
+        suggestedGenerator: String,
+        origin: HintOrigin = .roundTripPair
     ) {
         self.forwardName = forwardName
         self.reverseName = reverseName
@@ -74,7 +83,33 @@ public struct DomainHint: Sendable, Equatable {
         self.siteCount = siteCount
         self.producerVeto = producerVeto
         self.suggestedGenerator = suggestedGenerator
+        self.origin = origin
     }
+}
+
+/// TestLifter M16.0 — provenance discriminator on `DomainHint` so the
+/// renderer + accept-flow can distinguish M10's round-trip-pair surface
+/// from M16's general consumer-producer chain surface without re-
+/// parsing the hint's `(forwardName, reverseName, producerName)` triple.
+///
+/// Default is `.roundTripPair` — every M10 call site stays correct
+/// without modification (M16 plan §"M16 ships" item 1; back-compat
+/// invariant per item 6).
+public enum HintOrigin: Sendable, Equatable {
+
+    /// M10's `DomainInferrer` surface — the hint was emitted because a
+    /// known M5 round-trip pair `(forward, reverse)` had every reverse-
+    /// side test site receiving `forward(...)` output. Generator
+    /// override (`Gen<T>.map(forward)`) applies when not vetoed.
+    case roundTripPair
+
+    /// TestLifter M16's `ConsumerProducerChainDetector` surface — the
+    /// hint was emitted because some consumer in the corpus had every
+    /// observed call-site argument being the same producer's output,
+    /// outside the M5 round-trip-pair set. Comment-only advisory; no
+    /// generator override (M10 owns that surface end-to-end per the
+    /// M16 plan's "M16 explicitly defers" §).
+    case consumerProducerChain
 }
 
 /// Reasons the M10.2 inferrer can mark a domain hint's producer as
@@ -108,4 +143,21 @@ public enum ProducerVetoReason: Sendable, Equatable {
     /// providing `static func gen()` themselves and re-running discover;
     /// the hint will then re-fire without the veto.
     case producerArgNotGeneratable
+
+    /// TestLifter M16.2 — user-facing reason text surfaced in the
+    /// consumer-producer chain explainability block + the M16.3 accept-
+    /// flow comment-only writeout. Mirrors `PredicateVetoReason.advisoryReason`'s
+    /// shape.
+    public var advisoryReason: String {
+        switch self {
+        case .producerThrows:
+            return "producer throws — Gen<T>.map cannot apply throwing functions"
+        case .producerAsync:
+            return "producer is async — Gen<T>.map is synchronous"
+        case .producerMultiArg:
+            return "producer takes multiple arguments — Gen<T>.map is unary"
+        case .producerArgNotGeneratable:
+            return "producer's argument type isn't auto-generatable"
+        }
+    }
 }

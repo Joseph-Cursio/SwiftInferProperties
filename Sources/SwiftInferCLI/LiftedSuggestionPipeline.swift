@@ -90,18 +90,25 @@ public enum LiftedSuggestionPipeline {
         equivalenceClassCandidates: [PartitionCandidate] = []
     ) -> [Suggestion] {
         let summariesByName = LiftedSuggestionRecovery.summariesByName(summaries)
-        let liftedWithEquivalenceClasses = unionLiftedWithEquivalenceClasses(
+        // M16.2 — fold consumer-producer chain advisories alongside
+        // equivalence-class advisories before the empty-input
+        // early return. Both produce `Tier.advisory` lifted suggestions
+        // with synthetic `templateName`s that no TemplateEngine
+        // template uses, so the M3.2 cross-validation suppression
+        // filter naturally lets them through.
+        let liftedWithAdvisories = unionLiftedWithAdvisories(
             lifted: lifted,
-            candidates: equivalenceClassCandidates,
+            equivalenceClassCandidates: equivalenceClassCandidates,
             summariesByName: summariesByName,
-            typeDecls: typeDecls
+            typeDecls: typeDecls,
+            domainCallSitesByConsumer: domainCallSitesByConsumer
         )
-        guard !liftedWithEquivalenceClasses.isEmpty else {
+        guard !liftedWithAdvisories.isEmpty else {
             return []
         }
         let suppressionKeys = Set(templateEngineSuggestions.map(\.crossValidationKey))
         let pairs = pairLiftedWithRecoveredSuggestions(
-            liftedWithEquivalenceClasses,
+            liftedWithAdvisories,
             summariesByName: summariesByName,
             setupAnnotationsByOrigin: setupAnnotationsByOrigin
         )
@@ -153,22 +160,32 @@ public enum LiftedSuggestionPipeline {
         )
     }
 
-    /// M11.2 — fold equivalence-class lifted suggestions into the
-    /// promotion stream BEFORE the empty-input early return. Their
-    /// synthetic crossValidationKey (`templateName: "equivalence-class"`)
-    /// never matches any TemplateEngine template, so the suppression
-    /// filter naturally lets them through.
-    private static func unionLiftedWithEquivalenceClasses(
+    /// M11.2 / M16.2 — fold equivalence-class + consumer-producer chain
+    /// lifted suggestions into the promotion stream BEFORE the empty-
+    /// input early return. Their synthetic crossValidationKeys
+    /// (`templateName: "equivalence-class"` / `"consumer-producer-chain"`)
+    /// never match any TemplateEngine template, so the suppression
+    /// filter naturally lets them through. Anti-double-fire with M10
+    /// is enforced inside `consumerProducerChainLifted(...)` against
+    /// the `lifted` round-trip pairs (M16 plan §"M16 ships" criterion 5).
+    private static func unionLiftedWithAdvisories(
         lifted: [LiftedSuggestion],
-        candidates: [PartitionCandidate],
+        equivalenceClassCandidates: [PartitionCandidate],
         summariesByName: [String: FunctionSummary],
-        typeDecls: [TypeDecl]
+        typeDecls: [TypeDecl],
+        domainCallSitesByConsumer: [String: [DomainCallSite]]
     ) -> [LiftedSuggestion] {
-        lifted + equivalenceClassLifted(
-            from: candidates,
+        let equivalenceClassLifted = equivalenceClassLifted(
+            from: equivalenceClassCandidates,
             summariesByName: summariesByName,
             typeDecls: typeDecls
         )
+        let chainLifted = consumerProducerChainLifted(
+            from: domainCallSitesByConsumer,
+            roundTripPairs: Self.roundTripPairs(from: lifted),
+            summariesByName: summariesByName
+        )
+        return lifted + equivalenceClassLifted + chainLifted
     }
 
     /// Pair each lifted with its promoted Suggestion so we can build

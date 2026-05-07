@@ -216,7 +216,8 @@ extension SwiftInferCommand {
                     outputDirectory: packageRoot,
                     dryRun: dryRun,
                     proposalsByType: proposalsByType,
-                    equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity
+                    equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
+                    consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity
                 )
                 try runInteractive(
                     suggestions: visible,
@@ -226,15 +227,13 @@ extension SwiftInferCommand {
                 return
             }
             if updateBaseline {
-                let packageRoot = pipeline.packageRoot ?? directory
                 try runUpdateBaseline(
                     suggestions: visible,
-                    packageRoot: packageRoot,
+                    packageRoot: pipeline.packageRoot ?? directory,
                     dryRun: dryRun,
                     output: output
                 )
             }
-
             let rendered = statsOnly
                 ? SuggestionRenderer.renderStats(visible)
                 : SuggestionRenderer.render(visible)

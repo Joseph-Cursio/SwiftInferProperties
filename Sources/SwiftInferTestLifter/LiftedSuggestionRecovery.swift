@@ -178,6 +178,15 @@ public enum LiftedSuggestionRecovery {
             // already resolved by the M13.2 detector. Same posture as
             // the two-class case above.
             return (hint.argTypeName, hint.returnTypeName)
+        case .consumerProducerChain(let hint):
+            // M16.2 — comment-only advisory; carry the consumer's
+            // first-arg type (which equals the chain's `domainTypeName`
+            // by the M16.1 type-alignment criterion) so the promotion
+            // adapter's evidence shape compiles. The accept-flow
+            // doesn't materialize a generator for this surface — M10
+            // owns generator overrides per the M16 plan §"M16
+            // explicitly defers".
+            return (hint.domainTypeName, nil)
         }
     }
 

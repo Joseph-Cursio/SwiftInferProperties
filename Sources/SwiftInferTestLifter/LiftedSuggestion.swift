@@ -238,6 +238,30 @@ public struct LiftedSuggestion: Sendable, Equatable {
             origin: origin
         )
     }
+
+    /// TestLifter M16.2 — general consumer-producer chain lifted
+    /// suggestion from `ConsumerProducerChainDetector`. Cross-validation
+    /// key is `(templateName: "consumer-producer-chain", calleeNames:
+    /// [producerName, reverseName])` — synthetic, doesn't match any
+    /// TemplateEngine template, so the M3.2 cross-validation
+    /// suppression filter naturally lets it through. Promoted
+    /// `Suggestion` surfaces with `.advisory` tier per PRD §7.8 — the
+    /// chain is documentation, not a runnable property.
+    public static func consumerProducerChain(
+        hint: DomainHint,
+        origin: LiftedOrigin? = nil
+    ) -> LiftedSuggestion {
+        let key = CrossValidationKey(
+            templateName: "consumer-producer-chain",
+            calleeNames: [hint.producerName, hint.reverseName]
+        )
+        return LiftedSuggestion(
+            templateName: "consumer-producer-chain",
+            crossValidationKey: key,
+            pattern: .consumerProducerChain(hint),
+            origin: origin
+        )
+    }
 }
 
 /// Discriminator for the detection that produced a `LiftedSuggestion`.
@@ -265,6 +289,14 @@ public enum DetectedPattern: Sendable, Equatable {
     /// name so the M11.2 cross-validation suppression filter applies
     /// uniformly to both kinds.
     case nClassEquivalenceClass(NClassEquivalenceClassHint)
+    /// TestLifter M16.2 — general consumer-producer chain advisory
+    /// finding (PRD §7.8 second example, generalized). Carries a
+    /// `DomainHint` whose `origin == .consumerProducerChain`. Same
+    /// `.advisory`-tier posture as the equivalence-class cases; the
+    /// promoted Suggestion's `templateName == "consumer-producer-chain"`
+    /// is synthetic so cross-validation suppression naturally lets it
+    /// through (M16 plan §"M16 ships" item 3).
+    case consumerProducerChain(DomainHint)
 }
 
 /// PRD §7.3 Assert-Ordering-Preserved → monotonicity. Carries the single

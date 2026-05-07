@@ -81,7 +81,12 @@ public enum DomainInferrer {
         return resolve(resolved, in: setupBindings, depth: depth + 1)
     }
 
-    private static func computeVeto(
+    /// Apply the four hard-veto checks in M10's documented priority
+    /// order (throws > async > multi-arg > non-generatable arg). The
+    /// helper is `internal` so the M16 `ConsumerProducerChainDetector`
+    /// can reuse it verbatim per its plan ("M10's `computeVeto(...)`
+    /// helper is reused as-is" — M16 plan §"M16 ships" item 2).
+    static func computeVeto(
         forwardSummary: FunctionSummary,
         producerArgGeneratable: Bool
     ) -> ProducerVetoReason? {

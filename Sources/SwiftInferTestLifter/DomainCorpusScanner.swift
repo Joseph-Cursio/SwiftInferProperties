@@ -128,11 +128,26 @@ private final class ScannerVisitor: SyntaxVisitor {
     }
 
     private func classify(_ expr: ExprSyntax) -> ArgumentClassification {
-        if let call = expr.as(FunctionCallExprSyntax.self),
+        // M16.3 follow-up — peel `try`/`try!`/`try?`/`await` wrappers
+        // so producer-throws / producer-async chains still surface
+        // (with the matching veto). Without this, `validate(try
+        // format(doc))` would classify as `.other` and homogeneity
+        // would kill the chain before veto computation. M10's
+        // round-trip-pair surface benefits identically — vetoed
+        // throws-producer round-trips now render their advisory
+        // comment instead of being silently skipped.
+        var inner = expr
+        while let tryExpr = inner.as(TryExprSyntax.self) {
+            inner = tryExpr.expression
+        }
+        while let awaitExpr = inner.as(AwaitExprSyntax.self) {
+            inner = awaitExpr.expression
+        }
+        if let call = inner.as(FunctionCallExprSyntax.self),
            let producer = trailingIdentifier(of: call.calledExpression) {
             return .callOutput(producerName: producer)
         }
-        if let ident = expr.as(DeclReferenceExprSyntax.self) {
+        if let ident = inner.as(DeclReferenceExprSyntax.self) {
             return .identifier(name: ident.baseName.text)
         }
         return .other

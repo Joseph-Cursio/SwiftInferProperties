@@ -80,13 +80,13 @@ public extension LiftedSuggestion {
             weight: 50,
             detail: "Lifted from test body — \(detailLabel())"
         )
-        // M11.2 — equivalence-class suggestions surface with `.advisory`
-        // tier per PRD §7.8 (documentation, not a runnable property).
-        // All other patterns flow through the standard score-to-tier
-        // mapping with the +50 testBodyPattern weight.
+        // M11.2 / M13.3 / M16.2 — corpus-wide advisory findings surface
+        // with `.advisory` tier per PRD §7.8 (documentation, not a
+        // runnable property). All other patterns flow through the
+        // standard score-to-tier mapping with +50 testBodyPattern.
         let score: Score
         switch pattern {
-        case .equivalenceClass, .nClassEquivalenceClass:
+        case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
             score = Score(advisorySignals: [signal])
         case .roundTrip, .idempotence, .commutativity,
                 .monotonicity, .countInvariance, .reduceEquivalence:
@@ -141,6 +141,17 @@ public extension LiftedSuggestion {
             return [Evidence(
                 displayName: "\(hint.predicateName)(_:)",
                 signature: "(\(hint.argTypeName)) -> \(hint.returnTypeName)",
+                location: SourceLocation(file: "<corpus>", line: 0, column: 0)
+            )]
+        case .consumerProducerChain(let hint):
+            // M16.2 — synthesize a single Evidence carrying the
+            // consumer's signature `(domainTypeName) -> ?`. Like the
+            // equivalence-class case the location is a placeholder —
+            // the chain is a corpus-wide finding, not anchored at a
+            // single test-body assertion.
+            return [Evidence(
+                displayName: "\(hint.reverseName)(_:)",
+                signature: "(\(hint.domainTypeName)) -> ?",
                 location: SourceLocation(file: "<corpus>", line: 0, column: 0)
             )]
         }
@@ -218,6 +229,9 @@ public extension LiftedSuggestion {
                 "\(marker)=\(hint.siteCountsByMarker[marker] ?? 0)"
             }.joined(separator: ", ")
             return "\(hint.predicateName) partitions \(hint.markerSetName) [\(counts)]"
+        case .consumerProducerChain(let hint):
+            return "\(hint.reverseName)'s argument was always \(hint.producerName)'s output"
+                + " across \(hint.siteCount) sites"
         }
     }
 
@@ -244,6 +258,9 @@ public extension LiftedSuggestion {
         }
         if case .nClassEquivalenceClass(let hint) = pattern {
             return nClassEquivalenceClassExplainability(hint: hint)
+        }
+        if case .consumerProducerChain(let hint) = pattern {
+            return consumerProducerChainExplainability(hint: hint)
         }
         let assertionLine: String
         switch pattern {
@@ -273,7 +290,7 @@ public extension LiftedSuggestion {
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
                 + " == \(detection.collectionBindingName).reversed()"
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
-        case .equivalenceClass, .nClassEquivalenceClass:
+        case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
             // Handled by the early-return above.
             assertionLine = ""
         }
@@ -331,8 +348,9 @@ public extension LiftedSuggestion {
             return detection.assertionLocation
         case .reduceEquivalence(let detection):
             return detection.assertionLocation
-        case .equivalenceClass, .nClassEquivalenceClass:
-            // M11.2 / M13.3 — corpus-level finding; no single assertion location.
+        case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
+            // M11.2 / M13.3 / M16.2 — corpus-level finding; no single
+            // assertion location.
             return SourceLocation(file: "<corpus>", line: 0, column: 0)
         }
     }

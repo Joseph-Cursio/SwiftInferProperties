@@ -15,19 +15,20 @@ extension InteractiveTriage {
         suggestion: Suggestion,
         context: Context
     ) throws -> URL? {
+        // M11.2 / M13.3 / M16.3 — advisory writeouts dispatched on
+        // templateName; hints carried out-of-band on Context (§13 row 4).
         if suggestion.templateName == "equivalence-class",
            let kind = context.equivalenceClassHintsByIdentity[suggestion.identity] {
-            // M11.2 / M13.3 — equivalence-class suggestions write a
-            // comment-only documentation block. The hint is carried
-            // out-of-band on the Context (rather than inline on
-            // Suggestion) to keep Suggestion's per-instance size
-            // unchanged and preserve the §13 row 4 memory ceiling.
             switch kind {
             case .twoClass(let hint):
                 return try writeEquivalenceClassDocument(hint: hint, context: context)
             case .nClass(let hint):
                 return try writeNClassEquivalenceClassDocument(hint: hint, context: context)
             }
+        }
+        if suggestion.templateName == "consumer-producer-chain",
+           let hint = context.consumerProducerChainHintsByIdentity[suggestion.identity] {
+            return try writeConsumerProducerChainDocument(hint: hint, context: context)
         }
         guard let stub = liftedTestStub(for: suggestion) else {
             context.diagnostics.writeDiagnostic(

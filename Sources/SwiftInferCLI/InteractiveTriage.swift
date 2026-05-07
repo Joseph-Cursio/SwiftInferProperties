@@ -94,6 +94,16 @@ public enum InteractiveTriage {
         /// to a no-op writeout in that case.
         public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind]
 
+        /// TestLifter M16.3 — consumer-producer chain `DomainHint`s
+        /// keyed by promoted suggestion identity, carried out-of-band
+        /// for the same §13 row 4 reason as `equivalenceClassHintsByIdentity`
+        /// (avoids inflating `Suggestion`'s per-instance storage with
+        /// an optional that's nil for every TemplateEngine suggestion).
+        /// Empty when the caller isn't running the M16.1 detector;
+        /// the M16.3 accept-flow falls back to a no-op writeout in
+        /// that case.
+        public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -102,7 +112,8 @@ public enum InteractiveTriage {
             dryRun: Bool,
             clock: @escaping @Sendable () -> Date = { Date() },
             proposalsByType: [String: [RefactorBridgeProposal]] = [:],
-            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:]
+            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
+            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:]
         ) {
             self.prompt = prompt
             self.output = output
@@ -112,6 +123,7 @@ public enum InteractiveTriage {
             self.clock = clock
             self.proposalsByType = proposalsByType
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
+            self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
         }
     }
 

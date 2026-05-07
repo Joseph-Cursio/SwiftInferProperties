@@ -37,16 +37,25 @@ extension SwiftInferCommand.Discover {
         /// `Suggestion` instance (the §13 row 4 memory ceiling rule).
         public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind]
 
+        /// M16.3 — consumer-producer chain hints keyed by the promoted
+        /// suggestion's identity. Same §13-row-4 out-of-band carrier
+        /// posture as `equivalenceClassHintsByIdentity`; the M16.3
+        /// accept-flow renderer reads this map by identity to reach
+        /// the `DomainHint` for the writeout.
+        public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
+
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
             inverseElementPairs: [InverseElementPair] = [],
-            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:]
+            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
+            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:]
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
             self.inverseElementPairs = inverseElementPairs
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
+            self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
         }
     }
 
@@ -108,11 +117,22 @@ extension SwiftInferCommand.Discover {
             summaries: artifacts.summaries,
             typeDecls: artifacts.typeDecls
         )
+        // M16.3 — same posture: derive consumer-producer-chain hint
+        // map keyed on promoted suggestion identity for the accept-
+        // flow renderer to consult on accept.
+        let chainHints = LiftedSuggestionPipeline.consumerProducerChainHintMap(
+            from: liftedArtifacts.domainCallSitesByConsumer,
+            roundTripPairs: LiftedSuggestionPipeline.roundTripPairs(
+                from: liftedArtifacts.liftedSuggestions
+            ),
+            summaries: artifacts.summaries
+        )
         return PipelineResult(
             suggestions: visible,
             packageRoot: setup.packageRoot,
             inverseElementPairs: artifacts.inverseElementPairs,
-            equivalenceClassHintsByIdentity: equivalenceClassHints
+            equivalenceClassHintsByIdentity: equivalenceClassHints,
+            consumerProducerChainHintsByIdentity: chainHints
         )
     }
 
