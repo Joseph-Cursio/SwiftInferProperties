@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-05-07
+
+Closes the PRD §7.8 trio for the v1.x scanner shape: with M16 shipping the general consumer-producer chain detection (closing M10's deferred Option A), all three §7.8 examples now have full v1.x coverage — preconditions across all four `ParameterizedValue.Kind` cases (M9 + M15), inferred domains for both round-trip-pair narrowing (M10 with generator override) and general consumer-producer chains (M16 comment-only advisory), and equivalence classes across three of four Option A axes (M11 + M13 + M14). Same hard-guarantee + perf-budget posture as v1.2 — §16 guarantees unchanged; §13 budgets re-baselined at [`docs/perf-baseline-v1.3.md`](docs/perf-baseline-v1.3.md).
+
+### TestLifter
+
+- **M16 — General consumer-producer chain detection (PRD §7.8 second example, generalized; closes M10's deferred Option A).** Lifts M10's round-trip-pair filter on the corpus-wide `[String: [DomainCallSite]]` map to surface advisory chains for any (consumer, producer) chain meeting a five-criterion narrow scope: ≥3 sites + homogeneous producer + producer-existence (`FunctionSummary` lookup) + textual type-alignment (`producerSummary.returnTypeText == consumer.parameters[0].typeText`) + anti-double-fire vs. M5 round-trip pairs. M16.0 added `HintOrigin` (`.roundTripPair` / `.consumerProducerChain`) on `DomainHint` with default-back-compat (every M10 call site keeps compiling). M16.1 ships `ConsumerProducerChainDetector` enforcing all five criteria; reuses M10's `ProducerVetoReason` + `DomainInferrer.computeVeto` verbatim for the four producer-veto checks (throws / async / multi-arg / non-generatable). M16.2 wires the detector through `LiftedSuggestionPipeline.promote(...)` as a sibling to the M11 advisory union; promoted suggestions enter the discover stream with `templateName == "consumer-producer-chain"` + `Tier.advisory` per PRD §7.8 (documentation, not a runnable property). M16.3 adds the accept-flow renderer arm — comment-only writeout to `Tests/Generated/SwiftInfer/consumer-producer/<consumer>_<producer>.swift` via the M11-shaped out-of-band `consumerProducerChainHintsByIdentity` side-map (preserves §13 row 4). Includes the M10 follow-up for `DomainCorpusScanner.classify(_:)` — peeling `try`/`try!`/`try?`/`await` wrappers so producer-throws / producer-async chains surface with the matching veto comment instead of falling silent (was a pre-existing M10 gap; M10 + M16 both benefit). Cross-test data-flow correlation (`let x = format(t)` in `testA` and `validate(x)` in `testB`) deferred — natural sequencing is post-SemanticIndex.
+
+### Documentation
+
+- **Performance baseline re-pinned.** `docs/perf-baseline-v1.3.md` is the canonical regression anchor for v1.3+. All §13 rows within ±5% of the v1.2 baseline — well inside the 25% regression rule. Row 2 (TestLifter parse +1.1%) and row 4 (memory delta +0.6%) confirm the perf-neutral posture: M16's chain detector runs once per discover invocation over already-aggregated input, and the `consumerProducerChainHintsByIdentity` side-map carrier follows the M11 posture (keyed only on qualifying chains, not on every Suggestion). v1.2 baseline retained at `docs/perf-baseline-v1.2.md` for forensic comparison; v1.1 + v0.1.0 baselines retained for the longer trajectory window.
+- **CLAUDE.md repo-state pointer index extended.** M16 entry points at `docs/archive/TestLifter M16 Plan.md`; "Where to look" perf-baseline pointer updated to `docs/perf-baseline-v1.3.md`.
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — M16 wrote only to allowlisted `Tests/Generated/SwiftInfer/consumer-producer/` paths (sibling slot to the existing `Tests/Generated/SwiftInfer/equivalence-class/`) and never modified existing source.
+- All PRD §13 performance budgets hold at v1.3; see `docs/perf-baseline-v1.3.md` for the row-by-row numbers. Row 4 ceiling stays at the post-v1.1.0 800 MB CI calibration.
+- PRD §14 + §19 runtime no-network guarantee unchanged; no networking-API touches in the M16 surface.
+
+[1.3.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.3.0
+
 ## [1.2.0] — 2026-05-07
 
 Closes the PRD §7.8 trio for the v1.x scanner shape: M9 preconditions now cover all four `ParameterizedValue.Kind` cases (M15 adds `Float`/`Double`), and the §7.8 third example covers three of four Option A axes via M13 + M14 with same-target enum exhaustiveness annotation fully wired. Same hard-guarantee + perf-budget posture as v1.1 — §16 guarantees unchanged; §13 budgets re-baselined at [`docs/perf-baseline-v1.2.md`](docs/perf-baseline-v1.2.md).
