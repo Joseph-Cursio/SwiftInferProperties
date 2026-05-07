@@ -183,16 +183,8 @@ struct PreconditionInferrerTests {
         #expect(PreconditionInferrer.infer(from: entry).isEmpty)
     }
 
-    // MARK: - Float (deferred per OD #1)
-
-    @Test("Float column emits no hint (OD #1: Int-only for v1.0)")
-    func floatColumnDeferred() {
-        let entry = Self.entry(
-            shape: Self.shape([(label: "ratio", kind: .float)]),
-            rows: [["1.5"], ["2.5"], ["3.5"]]
-        )
-        #expect(PreconditionInferrer.infer(from: entry).isEmpty)
-    }
+    // Float-pattern tests live in PreconditionInferrerFloatTests.swift
+    // (M15.1 closes the M9 plan OD #1 deferral).
 
     // MARK: - Multi-position fan-out
 

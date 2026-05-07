@@ -73,7 +73,7 @@ public enum PreconditionInferrer {
         case .integer: return detectIntegerPattern(column)
         case .string:  return detectStringPattern(column)
         case .boolean: return detectBooleanPattern(column)
-        case .float:   return nil  // OD #1: deferred to v1.x — precision-class concerns
+        case .float:   return detectFloatPattern(column)
         }
     }
 
@@ -119,6 +119,62 @@ public enum PreconditionInferrer {
     private static func parseIntLiteral(_ literal: String) -> Int? {
         let cleaned = literal.replacingOccurrences(of: "_", with: "")
         return Int(cleaned)
+    }
+
+    // MARK: - Float / Double patterns (M15.1)
+
+    /// TestLifter M15.1 — closes M9 plan OD #1 deferral. The M4.1
+    /// scanner classifies `FloatLiteralExprSyntax` instances under
+    /// `ParameterizedValue.Kind.float`; `Double.nan` / `Double.infinity`
+    /// / `1.0 / 0.0` aren't `FloatLiteralExpr` so they don't reach
+    /// this column. Defensive bail-outs (parse failure, non-finite)
+    /// kill the column per PRD §3.5.
+    private static func detectFloatPattern(_ column: [String]) -> PreconditionPattern? {
+        var values: [Double] = []
+        for literal in column {
+            guard let value = parseDoubleLiteral(literal) else {
+                return nil
+            }
+            guard value.isFinite else {
+                return nil
+            }
+            values.append(value)
+        }
+        guard let minVal = values.min(), let maxVal = values.max() else {
+            return nil
+        }
+        let distinctCount = Set(values).count
+        // Most-specific: range with ≥ 2 distinct values (M9 plan OD #4).
+        if distinctCount >= 2 {
+            return .doubleRange(low: minVal, high: maxVal)
+        }
+        // Single-distinct value → fall through to sign-bound patterns.
+        if values.allSatisfy({ $0 > 0 }) {
+            return .positiveDouble
+        }
+        if values.allSatisfy({ $0 >= 0 }) {
+            return .nonNegativeDouble
+        }
+        if values.allSatisfy({ $0 < 0 }) {
+            return .negativeDouble
+        }
+        return nil
+    }
+
+    /// Mirrors `parseIntLiteral`'s shape — strip underscore separators
+    /// and parse via `Double.init(_:)`. Explicit hex-prefix rejection
+    /// because Swift's `Double.init(_:)` accepts hex-float forms like
+    /// `0x1.0p2` (= 4.0); M15 mirrors `parseIntLiteral`'s hex-radix
+    /// kill posture for consistency. Per PRD §3.5 conservative bias,
+    /// anything we can't read back from observed source as an
+    /// unambiguous decimal `Double` kills the column.
+    private static func parseDoubleLiteral(_ literal: String) -> Double? {
+        let cleaned = literal.replacingOccurrences(of: "_", with: "")
+        let unsigned = cleaned.hasPrefix("-") ? String(cleaned.dropFirst()) : cleaned
+        if unsigned.hasPrefix("0x") || unsigned.hasPrefix("0X") {
+            return nil
+        }
+        return Double(cleaned)
     }
 
     // MARK: - String patterns
@@ -197,20 +253,42 @@ public enum PreconditionInferrer {
     /// should read as plausible Swift.
     private static func suggestedGenerator(for pattern: PreconditionPattern) -> String {
         switch pattern {
-        case .positiveInt:
-            return "Gen.int(in: 1...)"
-        case .nonNegativeInt:
-            return "Gen.int(in: 0...)"
-        case .negativeInt:
-            return "Gen.int(in: ...(-1))"
-        case .intRange(let low, let high):
-            return "Gen.int(in: \(low)...\(high))"
-        case .nonEmptyString:
-            return "Gen.string()  // verify empty-string case is acceptable"
-        case .stringLength(let low, let high):
-            return "Gen.string(of: \(low)...\(high))"
+        case .positiveInt, .nonNegativeInt, .negativeInt, .intRange:
+            return suggestedIntGenerator(for: pattern)
+        case .nonEmptyString, .stringLength:
+            return suggestedStringGenerator(for: pattern)
         case .constantBool(let value):
             return "Gen.always(\(value))  // observed only \(value) — opposite case may be untested"
+        case .positiveDouble, .nonNegativeDouble, .negativeDouble, .doubleRange:
+            return suggestedDoubleGenerator(for: pattern)
+        }
+    }
+
+    private static func suggestedIntGenerator(for pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .positiveInt: return "Gen.int(in: 1...)"
+        case .nonNegativeInt: return "Gen.int(in: 0...)"
+        case .negativeInt: return "Gen.int(in: ...(-1))"
+        case .intRange(let low, let high): return "Gen.int(in: \(low)...\(high))"
+        default: return ""
+        }
+    }
+
+    private static func suggestedStringGenerator(for pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .nonEmptyString: return "Gen.string()  // verify empty-string case is acceptable"
+        case .stringLength(let low, let high): return "Gen.string(of: \(low)...\(high))"
+        default: return ""
+        }
+    }
+
+    private static func suggestedDoubleGenerator(for pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .positiveDouble: return "Gen.double(in: 0.0.nextUp...)"
+        case .nonNegativeDouble: return "Gen.double(in: 0.0...)"
+        case .negativeDouble: return "Gen.double(in: ...0.0.nextDown)"
+        case .doubleRange(let low, let high): return "Gen.double(in: \(low)...\(high))"
+        default: return ""
         }
     }
 }

@@ -94,4 +94,30 @@ public enum PreconditionPattern: Sendable, Equatable {
     /// may be untested" (M9 plan OD #2 — emit advisory hint, no
     /// generator change).
     case constantBool(value: Bool)
+
+    /// TestLifter M15 — every observed `Float`/`Double` literal is
+    /// `> 0` (and finite). Suggested generator: `Gen.double(in: 0.0.nextUp...)`.
+    /// Defensive against future scanner widening; the M4.1
+    /// `SetupRegionConstructionScanner` doesn't yet admit negative
+    /// `FloatLiteralExpr`s (they parse as `PrefixOperatorExpr` and
+    /// fall to `.other` kind), so today's columns can't fire
+    /// `negativeDouble` either.
+    case positiveDouble
+
+    /// Every observed `Float`/`Double` literal is `>= 0` (and finite).
+    /// Suggested generator: `Gen.double(in: 0.0...)`.
+    case nonNegativeDouble
+
+    /// Every observed `Float`/`Double` literal is `< 0` (and finite).
+    /// Suggested generator: `Gen.double(in: ...0.0.nextDown)`.
+    /// Defensive — see `positiveDouble`.
+    case negativeDouble
+
+    /// Every observed `Float`/`Double` literal falls within `[low, high]`
+    /// where the range is bounded and at least 2 distinct values were
+    /// observed. Suggested generator: `Gen.double(in: low...high)`.
+    /// Most-specific pattern; preempts `positiveDouble` /
+    /// `nonNegativeDouble` when both apply (mirrors M9 plan OD #4 for
+    /// `intRange`).
+    case doubleRange(low: Double, high: Double)
 }

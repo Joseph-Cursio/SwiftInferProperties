@@ -142,20 +142,42 @@ public extension LiftedTestEmitter {
 
     private static func describePattern(_ pattern: PreconditionPattern) -> String {
         switch pattern {
-        case .positiveInt:
-            return "all observed values are positive Int"
-        case .nonNegativeInt:
-            return "all observed values are non-negative Int"
-        case .negativeInt:
-            return "all observed values are negative Int"
-        case .intRange(let low, let high):
-            return "all observed values are in [\(low), \(high)]"
-        case .nonEmptyString:
-            return "all observed strings are non-empty"
-        case .stringLength(let low, let high):
-            return "all observed strings have length in [\(low), \(high)]"
+        case .positiveInt, .nonNegativeInt, .negativeInt, .intRange:
+            return describeIntPattern(pattern)
+        case .nonEmptyString, .stringLength:
+            return describeStringPattern(pattern)
         case .constantBool(let value):
             return "all observed values are \(value)"
+        case .positiveDouble, .nonNegativeDouble, .negativeDouble, .doubleRange:
+            return describeDoublePattern(pattern)
+        }
+    }
+
+    private static func describeIntPattern(_ pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .positiveInt: return "all observed values are positive Int"
+        case .nonNegativeInt: return "all observed values are non-negative Int"
+        case .negativeInt: return "all observed values are negative Int"
+        case .intRange(let low, let high): return "all observed values are in [\(low), \(high)]"
+        default: return ""
+        }
+    }
+
+    private static func describeStringPattern(_ pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .nonEmptyString: return "all observed strings are non-empty"
+        case .stringLength(let low, let high): return "all observed strings have length in [\(low), \(high)]"
+        default: return ""
+        }
+    }
+
+    private static func describeDoublePattern(_ pattern: PreconditionPattern) -> String {
+        switch pattern {
+        case .positiveDouble: return "all observed values are positive Double"
+        case .nonNegativeDouble: return "all observed values are non-negative Double"
+        case .negativeDouble: return "all observed values are negative Double"
+        case .doubleRange(let low, let high): return "all observed values are in [\(low), \(high)]"
+        default: return ""
         }
     }
 

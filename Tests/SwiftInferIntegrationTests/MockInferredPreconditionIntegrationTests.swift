@@ -115,6 +115,48 @@ struct MockInferredPreconditionIntegrationTests {
         #expect(!contents.contains("flag —"))
     }
 
+    @Test("M15.2 — float-literal corpus surfaces .doubleRange hint with rendered comment")
+    func acceptMockInferredFloatLiteralRendersDoubleRangeHint() throws {
+        let directory = try makeFixtureDirectory(name: "AcceptMockFloatPreconditions")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFloatPreconditionFixtureFile(in: directory)
+
+        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: directory,
+            includePossible: true,
+            diagnostics: SilentPreconditionDiagnostics()
+        )
+        let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
+        let mock = try #require(lifted.mockGenerator)
+        // Expect two hints — title (string-length range) and ratio
+        // (.doubleRange). M15.1's detectFloatPattern fires on the
+        // five distinct Double literals.
+        #expect(mock.preconditionHints.count == 2)
+
+        let recorded = RecordingPreconditionOutput()
+        let scripted = ScriptedPreconditionPromptInput(scriptedLines: ["A"])
+        let context = InteractiveTriage.Context(
+            prompt: scripted,
+            output: recorded,
+            diagnostics: SilentPreconditionDiagnosticOutput(),
+            outputDirectory: directory,
+            dryRun: false
+        )
+        let outcome = try InteractiveTriage.run(
+            suggestions: [lifted],
+            existingDecisions: .empty,
+            context: context
+        )
+
+        let writtenPath = try #require(outcome.writtenFiles.first)
+        let contents = try String(contentsOf: writtenPath, encoding: .utf8)
+        let hintLines = contents.components(separatedBy: "\n")
+            .filter { $0.contains("// Inferred precondition:") }
+        #expect(hintLines.count == 2, "expected 2 hint comment lines, got \(hintLines.count): \(hintLines)")
+        #expect(contents.contains("ratio — all observed values are in [1.5, 5.5]"))
+        #expect(contents.contains("Gen.double(in: 1.5...5.5)"))
+    }
+
     // MARK: - Fixtures
 
     private func makeFixtureDirectory(name: String) throws -> URL {
@@ -162,6 +204,53 @@ struct MockInferredPreconditionIntegrationTests {
 
             func testFixtureD() {
                 let d = Doc(title: "epsilon", count: 5)
+                XCTAssertNotNil(d)
+            }
+        }
+        """.write(
+            to: tests.appendingPathComponent("FooTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+
+    /// M15.2 — round-trip fixture with five `Doc(title:, ratio:)`
+    /// construction sites where ratio is a distinct positive Double
+    /// range [1.5, 5.5] → `.doubleRange(low: 1.5, high: 5.5)` per
+    /// the M15.1 most-specific rule. Title carries a separate
+    /// `.stringLength` hint as a sanity-check that the multi-arg
+    /// fan-out from M9.1 still works once the float arm is live.
+    private func writeFloatPreconditionFixtureFile(in directory: URL) throws {
+        let tests = directory.appendingPathComponent("Tests").appendingPathComponent("FooTests")
+        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
+        try """
+        import XCTest
+
+        final class FooTests: XCTestCase {
+            func testRoundTrip() {
+                let original: Doc = Doc(title: "alpha", ratio: 1.5)
+                let serialized = serializeDoc(original)
+                let deserialized = deserializeDoc(serialized)
+                XCTAssertEqual(original, deserialized)
+            }
+
+            func testFixtureA() {
+                let a = Doc(title: "betas", ratio: 2.5)
+                XCTAssertNotNil(a)
+            }
+
+            func testFixtureB() {
+                let b = Doc(title: "gammas", ratio: 3.5)
+                XCTAssertNotNil(b)
+            }
+
+            func testFixtureC() {
+                let c = Doc(title: "deltas!", ratio: 4.5)
+                XCTAssertNotNil(c)
+            }
+
+            func testFixtureD() {
+                let d = Doc(title: "epsilon", ratio: 5.5)
                 XCTAssertNotNil(d)
             }
         }
