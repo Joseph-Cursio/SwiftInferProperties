@@ -3,10 +3,13 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
-/// Root command for the `swift-infer` executable. v1.1.0 ships
-/// `discover` + `drift` + `convert-counterexample`; the remaining
-/// post-v1.1 subcommand surface (`metrics`, `apply`) is sketched in
-/// PRD §17 + §20.6 under the PRD's "v1.1+ trajectory" heading.
+/// Root command for the `swift-infer` executable. v1.2.0 ships
+/// `discover` + `drift` + `convert-counterexample` (subcommand surface
+/// unchanged from v1.1; v1.2 widens the M13 + M14 generalized-partition
+/// + N-class enum-coverage surface and closes the M15 `Float`/`Double`
+/// numerical-bound preconditions). The remaining post-v1.2 subcommand
+/// surface (`metrics`, `apply`) is sketched in PRD §17 + §20.6 under the
+/// PRD's "v1.1+ trajectory" heading.
 public struct SwiftInferCommand: AsyncParsableCommand {
 
     public static let configuration = CommandConfiguration(
@@ -18,7 +21,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         All output is suggestions for human review; nothing auto-executes. \
         See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: "1.1.0",
+        version: "1.2.0",
         subcommands: [Discover.self, Drift.self, ConvertCounterexample.self],
         defaultSubcommand: Discover.self
     )
