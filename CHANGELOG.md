@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] — 2026-05-08
+
+Maintenance patch bundling three orthogonal cycle-4 cleanups: (a) extends V1.6.1's pair-formation skip-list filter to math-library op names (closes the cycle-3 ComplexModule survivors `pow` and `**`); (b) makes the V1.5.2 protocol-coverage citation deterministic across runs; (c) widens two perf budgets that flaked on consecutive CI pushes. No new calibration cycle, no new structural rules. Same hard-guarantee posture as v1.6.0 — §16 guarantees unchanged; §13 budget changes documented in [`docs/perf-baseline-v1.6.md`](docs/perf-baseline-v1.6.md)'s Re-baselining log.
+
+### Cycle-4 maintenance
+
+- **Math-library op-name gate extension (cycle-4 priority #2).** `IdentityElementPairing.stdlibBinaryOperators` extended from `{+, -, *, /, %}` to `{+, -, *, /, %, pow, **}`. Closes one of the two cycle-3 ComplexModule identity-element survivors: `(zero, pow)` × `Complex.zero` is now filtered. The other survivor — `(zero, rescaledDivide)` × `Complex.zero` — stays surfaced because `rescaledDivide` is a user-named op outside the curated math-library set; suppressing it would risk false-positives on user types where `rescaledDivide` could be a legitimate monoid combine. Rationale for `pow` / `**`: `pow(x, 0) == 1` (not `x`), so `(zero, pow)` is the same kind of cross-product mismatch as `(zero, *)`; users would not name a custom monoid combine op `pow` (math convention is well-established). Updated tests in `IdentityElementPairingFilterTests.swift` move `(zero, pow)` and `(zero, **)` into the filtered-pairs section; one prior test in the user-named-ops section was removed (now covered by the filter).
+- **Citation determinism in `firstCoveringProtocol(...)` (cycle-4 priority #6).** V1.5.2's `ProtocolCoverageMap.firstCoveringProtocol(in:for:)` walked `Set<String>` non-deterministically when called from `coverageVetoSignal(...)` — suppressed-suggestion Decisions records cited different protocols across runs (e.g. cycle-1 might cite "Numeric", cycle-2 "Hashable"). Suppressed suggestions don't appear in stdout (so byte-stability of user-visible output already held), but the Decisions citation field was non-deterministic. Fixed by sorting `inheritedTypes.sorted().first { ... }` before scanning. New regression-guard test `firstCoveringProtocolIsDeterministic` confirms the fix; existing `firstCoveringProtocolReturnsFirst` test updated to expect lexicographic-first match (was input-order-first).
+- **Perf budget widening for two CI-flaky tests (cycle-4 priority #7).** Two tests in `Tests/SwiftInferIntegrationTests/TestLifterPerformanceTests.swift` had structurally tight ceilings on GitHub Actions hardware:
+  - **Row 2 (`syntheticHundredTestFileCorpus`): 3.0s → 4.0s.** Flaked once on the v1.5.7 push (3.115s).
+  - **`discoverPipelineHundredTestFileBudgetWithM32Pipeline`: 5.0s → 6.0s.** Flaked twice in consecutive pushes (v1.5.7 at 5.189s, v1.6.6 at 5.076s).
+
+  CI runs ~1.4–2.5× slower than Apple M1 baseline; the original ceilings provided effectively zero CI headroom. New budgets keep ≥1s headroom on the worst observed CI measurement, matching v1.1's "flake-resistant 3.0s" precedent for Row 1c (DequeModule). Local Apple M1 measurements unchanged at 1.222s (Row 2) / ~3.6s (integration test); the 25% regression rule still operates against those numbers. Documented in `docs/perf-baseline-v1.6.md`'s Re-baselining log.
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged.
+- All PRD §13 performance budgets hold at v1.6.1 with the documented widenings; see `docs/perf-baseline-v1.6.md` for the row-by-row numbers + Re-baselining log.
+- PRD §14 + §19 runtime no-network guarantee unchanged; v1.6.1 is pure code/test/budget changes — no telemetry, no networking touches.
+
+[1.6.1]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.6.1
+
 ## [1.6.0] — 2026-05-08
 
 The third calibration cycle. v1.6 ships one structural rule — a pair-formation skip-list filter on `IdentityElementPairing` — *complementary* to v1.5's coverage veto: where v1.5 suppressed pairs the kit already verifies, v1.6 suppresses pairs whose `(kit-blessed-constant, stdlib-operator)` combo doesn't bind to a kit-published identity law. Surgical empirical effect: −3 of 353 surfaced suggestions (−0.85% aggregate), all on swift-numerics/ComplexModule identity-element template. Combined with v1.5: ComplexModule identity-element 6 → 2 (−66.7%) over two calibration cycles. Same hard-guarantee posture as v1.5 — §16 guarantees unchanged; §13 budgets re-baselined at [`docs/perf-baseline-v1.6.md`](docs/perf-baseline-v1.6.md), all rows within ±5% of v1.5.
