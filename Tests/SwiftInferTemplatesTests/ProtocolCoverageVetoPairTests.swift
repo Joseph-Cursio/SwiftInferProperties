@@ -313,4 +313,6 @@ struct RoundTripProtocolCoverageVetoTests {
         ))
         #expect(!suggestion.score.signals.contains { $0.kind == .protocolCoveredProperty })
     }
+
+    // V1.8.1 shape-gate tests live in `RoundTripCodableShapeGateTests.swift`.
 }

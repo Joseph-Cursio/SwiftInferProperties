@@ -237,19 +237,41 @@ public enum RoundTripTemplate {
         )
     }
 
-    /// V1.5.2 — fires when the forward type conforms to `Codable`
-    /// (via `inheritedTypesByName`). Kit's
-    /// `checkCodablePropertyLaws(for:)` verifies the JSON round-trip
-    /// directly, making the suggestion redundant. Non-Codable
-    /// round-trip pairs (`parse`/`format` on a custom Doc, custom
-    /// codec types) fall through unsuppressed per v1.5 plan open-
-    /// decision #4 default ("yes, but only for Codable").
+    /// V1.5.2 / **V1.8.1 — shape-gated**. Fires when the pair has an
+    /// actual Codable encoder/decoder shape (`(T) -> Codec` ↔
+    /// `(Codec) -> T` for `Codec ∈ {Data, String}`) AND the carrier
+    /// type `T` conforms to `Codable` via `inheritedTypesByName`.
+    /// Kit's `checkCodablePropertyLaws(for:)` verifies the JSON
+    /// round-trip directly, making the suggestion redundant when
+    /// the suggestion *is* a Codable round-trip.
+    ///
+    /// **V1.8.1 cycle-5 tightening.** V1.5.2 fired this veto whenever
+    /// `pair.forward.parameters.first?.typeText` covered
+    /// `codableRoundTrip` — which over-suppressed user-defined
+    /// inverse pairs on Codable carriers (the cycle-4 finding:
+    /// 22 OrderedCollections suggestions like
+    /// `minimumCapacity(forScale:) ↔ scale(forCapacity:)` on
+    /// `(Int) -> Int` were suppressed because `Int: Codable`, not
+    /// because they were Codable round-trips). The shape gate
+    /// restricts the veto to pairs where the kit law actually
+    /// applies — true encode/decode pairs.
+    ///
+    /// Non-Codable round-trip pairs and `(T) -> T` user-inverse
+    /// pairs on Codable carriers fall through unsuppressed.
+    /// **V1.8.1.** The shape-gate helper
+    /// `codableRoundTrippedType(for:)` and the curated
+    /// `codableCodecFormats` set live in
+    /// `RoundTripCodableShapeGate.swift` (split for SwiftLint's
+    /// 400-line file budget per the V1.7.1 split precedent).
     private static func protocolCoverageVeto(
         for pair: FunctionPair,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
-        ProtocolCoverageMap.coverageVetoSignal(
-            forTypeText: pair.forward.parameters.first?.typeText,
+        guard let typeText = codableRoundTrippedType(for: pair) else {
+            return nil
+        }
+        return ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [.codableRoundTrip]
         )

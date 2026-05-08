@@ -147,4 +147,63 @@ struct ProtocolCoverageDiscoverIntegrationTests {
         // means the bake-in doesn't suppress it.
         #expect(suggestions.contains { $0.templateName == "commutativity" })
     }
+
+    // MARK: - V1.8.1 round-trip shape-gated veto end-to-end
+
+    @Test("V1.8.1 — (Int) -> Int user-inverse pair on Codable Int now surfaces")
+    func discoverSurfacesIntInversePairAfterShapeGate() {
+        // The cycle-4 false-positive case in end-to-end form. Two
+        // Int-typed user-inverse functions with paired naming should
+        // now produce a round-trip Possible-tier suggestion (where
+        // pre-V1.8.1 they were suppressed by V1.7.1's bake-in fanning
+        // V1.5.2's unconditional Codable veto).
+        let minimumCapacity = makeUnaryOp(name: "minimumCapacity", from: "Int", to: "Int")
+        let scaleForCapacity = makeUnaryOp(name: "scale", from: "Int", to: "Int")
+        let suggestions = TemplateRegistry.discover(
+            in: [minimumCapacity, scaleForCapacity],
+            typeDecls: []
+        )
+        // The pair should surface as a round-trip suggestion (Possible
+        // tier — Score 30 from type-symmetry alone, no curated name
+        // bonus).
+        #expect(suggestions.contains { $0.templateName == "round-trip" })
+    }
+
+    @Test("V1.8.1 — (T) -> Data + (Data) -> T on Codable T still suppressed")
+    func discoverStillSuppressesCodableEncoderDecoderShape() {
+        // The genuine Codable round-trip surface — kit covers it via
+        // checkCodablePropertyLaws, so it should still be suppressed.
+        let encode = makeUnaryOp(name: "encode", from: "Doc", to: "Data")
+        let decode = makeUnaryOp(name: "decode", from: "Data", to: "Doc")
+        let typeDecl = TypeDecl(
+            name: "Doc",
+            kind: .struct,
+            inheritedTypes: ["Codable"],
+            location: SourceLocation(file: "A.swift", line: 1, column: 1)
+        )
+        let suggestions = TemplateRegistry.discover(
+            in: [encode, decode],
+            typeDecls: [typeDecl]
+        )
+        // No round-trip suggestion should appear — V1.5.2's veto still fires
+        // on the encoder/decoder shape with Codable carrier.
+        #expect(!suggestions.contains { $0.templateName == "round-trip" })
+    }
+}
+
+// MARK: - V1.8.1 fixture helpers
+
+private func makeUnaryOp(name: String, from inputType: String, to outputType: String) -> FunctionSummary {
+    FunctionSummary(
+        name: name,
+        parameters: [Parameter(label: nil, internalName: "x", typeText: inputType, isInout: false)],
+        returnTypeText: outputType,
+        isThrows: false,
+        isAsync: false,
+        isMutating: false,
+        isStatic: false,
+        location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+        containingTypeName: nil,
+        bodySignals: .empty
+    )
 }
