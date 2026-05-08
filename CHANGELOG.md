@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] — 2026-05-08
+
+The sixth calibration cycle. **Empirical-only release** — no Sources/ changes, no test changes, no behavior changes. The headline deliverable is the first measured Possible-tier acceptance rate from a 50-decision single-runner triage of the 349-surface: **26.7%** (12 accept / 33 reject / 5 unknown). v1.9 is binary-equivalent to v1.8.0 except the version-string bump; the §13 measurements carry forward unchanged. Same hard-guarantee posture as v1.8 — §16 guarantees unchanged; §13 budgets unchanged; §14 privacy unchanged. Five prior cycles operated on conjectural per-template false-positive rates; cycle 6 is the empirical baseline they all referenced as "future work."
+
+### Calibration cycle 6 — empirical Possible-tier triage
+
+- **Triage rubric (V1.9.1).** New `docs/cycle-6-triage-rubric.md` defines accept/reject/unknown criteria per template (round-trip / idempotence / commutativity / associativity / inverse-pair / monotonicity / identity-element). Acceptance-rate computation: `accept / (accept + reject)` excludes `unknown` from the denominator (matches PRD §19's implicit assumption that triaged decisions are made; uncertainty rate tracked as a separate quality metric). Single-runner triage caveats explicit (one rater, public-API + commit-history evidence only, no test execution, no internal-implementation reading, no multi-rater consensus). Decisions JSON schema mirrors `.swiftinfer/decisions.json` shape so cycle-6 data is in principle replayable against the v1.8 binary.
+- **50-decision stratified sample (V1.9.2).** New `docs/calibration-cycle-6-data/sample-manifest.md` lists 50 picks stratified by template × corpus (16 round-trip / 12 idempotence / 5 commutativity / 5 associativity / 6 monotonicity / 5 inverse-pair / 1 identity-element; 22 OC / 15 CM / 10 Algo / 3 PLK). Per-cell minimum 1, per-template minimum 5. Sample-selection prioritizes V1.7.1 cycle-5-re-emergence subjects (the most cycle-context-rich subset) and source-file diversity within each cell. Per-decision rationale + verdict committed at `docs/calibration-cycle-6-data/triage-notes.md`; machine-readable decisions at `docs/calibration-cycle-6-data/triage-decisions.json` mirroring `.swiftinfer/decisions.json` schema.
+- **Cycle-6 findings doc (V1.9.3).** New `docs/calibration-cycle-6-findings.md` documents the 26.7% headline rate + per-template breakdown:
+  - **monotonicity** (4/5 = **80%**) — calibrated tightly; OC HashTable scale/capacity functions are textbook monotonic.
+  - **round-trip** (6/14 = **43%**) — V1.8.1's shape gate works; Collection-protocol `index(after:) ↔ index(before:)` accepts; cross-product elementary-functions noise on Complex rejects; `(Int) -> Int` directional surface still produces noise.
+  - **associativity** (2/5 = **40%**) — `_relaxedAdd` family accepts at abstract math level; subtraction/distance reject.
+  - **commutativity** (1/5 = **20%**) — same `_relaxedAdd` accept; OC `index(_:offsetBy:)` / `distance(from:to:)` directional rejects.
+  - **idempotence** (0/10 = **0%**) — strongest scoring-tuning signal; all 10 sampled `(T) -> T` directional ops (`index(after:)`, `bucket(after:)`, `endOfChunk(startingAt:)`, etc.) reject. Type-symmetry `+30` is too permissive on direction-style ops.
+  - **inverse-pair** (0/5 = **0%**) — same shape; SetAlgebra and Index ops over-fire.
+  - **identity-element** (0/1 = 0%) — single Score 70 Likely-tier survivor (`rescaledDivide × Complex.zero`); cycle-7 op-name gate extension target.
+- **Cycle-7 priority list (V1.9.3).** First data-driven priority list in the calibration trajectory:
+  1. Idempotence template counter-signal on direction-named `(T) -> T` ops (after/before/next/prev/advance/succ/pred) — addresses the 0/10 rate.
+  2. Inverse-pair template tightening (same shape, pair-level).
+  3. FP approximate-equality template arm — `_relaxedAdd` / `_relaxedMul` are textbook examples.
+  4. Math-library op-name gate extension to user-named ops (`rescaledDivide`, `_relaxed*` family) — addresses the cycle-6 #50 reject.
+  5. Round-trip template counter-signal on direction-named `(T) -> T` pairs.
+  6. `surfacedAt` plumbing — now meaningful with measured-rate baseline.
+  7. Multi-rater triage methodology — addresses single-runner caveat.
+
+### Documentation
+
+- **Performance baseline carry-forward (V1.9.4).** `docs/perf-baseline-v1.9.md` documents that v1.9 ships zero Sources/ changes; §13 measurements are byte-equivalent to v1.8.0. Re-running the suite would consume 10+ minutes for zero signal. v1.8 baseline retained at `docs/perf-baseline-v1.8.md` as the substantive regression anchor; v1.9+ commits gate against either equivalently.
+- **CLAUDE.md repo-state pointer index extended.** v1.9.0 release entry points at `docs/archive/v1.9 Calibration Plan.md`; "Where to look" perf-baseline pointer updated to `docs/perf-baseline-v1.9.md`; cycle-6 findings + data + rubric pointers added.
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.9 ships zero accept-flow writeout paths, zero new templates, zero new signals.
+- All PRD §13 performance budgets hold at v1.9 (carried forward from v1.8). Row 4 ceiling stays at the post-v1.1.0 800 MB CI calibration. V1.6.1 flake-resistant 4.0s/6.0s budgets carry forward.
+- PRD §14 + §19 runtime no-network guarantee unchanged; the cycle-6 triage data is in-source — no telemetry, no networking touches.
+
+[1.9.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.9.0
+
 ## [1.8.0] — 2026-05-08
 
 The fifth calibration cycle and the **first non-monotonic cycle in the calibration trajectory**. v1.8 ships one structural rule — a shape-gated Codable veto on `RoundTripTemplate.protocolCoverageVeto(...)` — that narrows V1.5.2's unconditional `[codableRoundTrip]` veto to fire only when the pair's forward/reverse signatures actually match a Codable encoder/decoder shape (`(T) -> Codec` ↔ `(Codec) -> T` for `Codec ∈ {Data, String}`). User-defined inverse pairs on Codable carriers (`(Int) -> Int`, `(Double) -> Double`, `(UInt64) -> Int?`) now fall through unsuppressed because they're not Codable round-trips by intent. Surgical empirical effect: **+23 of 326 surfaced suggestions** (+7.0% aggregate; first surface *increase* in the calibration loop), all on the round-trip template — closing the inherited V1.5.2 design question that V1.7.1's stdlib bake-in had surfaced. Cumulative across cycles 1–5: 1167 → 349 (−70.1%). Same hard-guarantee posture as v1.7 — §16 guarantees unchanged; §13 budgets re-baselined at [`docs/perf-baseline-v1.8.md`](docs/perf-baseline-v1.8.md), all rows within ±5% of v1.7.
