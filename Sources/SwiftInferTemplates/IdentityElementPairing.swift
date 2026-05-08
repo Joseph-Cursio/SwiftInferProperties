@@ -92,17 +92,26 @@ public enum IdentityElementPairing {
     /// publishes (kit binds `.zero` to `+`, `.one` to `*`). When the op
     /// is in this set, a (kit-blessed-constant, op) combo not in V1.5.2's
     /// mapping is a known cross-product mismatch worth filtering.
-    /// User-named ops (`merge`, `combine`, `intersect`, `pow`, etc.) fall
+    /// User-named ops (`merge`, `combine`, `intersect`, etc.) fall
     /// outside this set — pair-formation defers to v1.5's coverage veto
     /// downstream rather than filtering syntactically.
     ///
     /// Limited to the five arithmetic operators that have published
-    /// identity laws on `Numeric` / `AdditiveArithmetic`. Bitwise (`&`,
-    /// `|`, `^`) and shift (`<<`, `>>`) operators are excluded — they
-    /// have identity laws on `BinaryInteger` but the kit doesn't yet
-    /// model `BinaryInteger`-specific laws separately.
+    /// identity laws on `Numeric` / `AdditiveArithmetic`, plus the
+    /// curated math-library names `pow` and `**` (V1.6.1 maintenance
+    /// patch — closes the cycle-3 ComplexModule survivor `(zero, pow)`).
+    /// Bitwise (`&`, `|`, `^`) and shift (`<<`, `>>`) operators are
+    /// excluded — they have identity laws on `BinaryInteger` but the
+    /// kit doesn't yet model `BinaryInteger`-specific laws separately.
+    ///
+    /// **`pow` rationale:** `pow(x, 0) == 1` (not `x`), so `(zero, pow)`
+    /// is structurally the same kind of cross-product mismatch as
+    /// `(zero, *)` — `.zero` is not pow's identity. The risk a user
+    /// defines `pow` with monoid-style identity semantics is small;
+    /// they would not name such an op `pow` (the math convention is
+    /// well-established). `**` is the curated alternative spelling.
     private static let stdlibBinaryOperators: Set<String> = [
-        "+", "-", "*", "/", "%"
+        "+", "-", "*", "/", "%", "pow", "**"
     ]
 
     /// V1.6.1 — returns `true` when the pair-formation layer should

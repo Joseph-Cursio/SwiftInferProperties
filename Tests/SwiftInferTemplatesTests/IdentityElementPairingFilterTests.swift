@@ -43,6 +43,23 @@ struct IdentityElementPairingFilterTests {
         #expect(pairs.isEmpty)
     }
 
+    @Test("(zero, pow) is filtered (V1.6.1 patch — math-library op-name gate)")
+    func zeroPowIsFiltered() {
+        // V1.6.1 maintenance patch added `pow` to `stdlibBinaryOperators`.
+        // `pow(x, 0) == 1` (not `x`), so `.zero` is not pow's identity —
+        // structurally the same kind of cross-product mismatch as
+        // `(zero, *)`. Closes the cycle-3 ComplexModule survivor that
+        // V1.6.1 originally couldn't reach.
+        let pairs = makePairs(opName: "pow", typeText: "T", identityName: "zero")
+        #expect(pairs.isEmpty)
+    }
+
+    @Test("(zero, **) is filtered (V1.6.1 patch — `**` exponent alternative spelling)")
+    func zeroExponentIsFiltered() {
+        let pairs = makePairs(opName: "**", typeText: "T", identityName: "zero")
+        #expect(pairs.isEmpty)
+    }
+
     // MARK: - (b) Kit-blessed combos still emit (v1.5 veto handles coverage)
 
     @Test("(zero, +) emits — kit-blessed combo, v1.5 veto handles coverage downstream")
@@ -94,16 +111,6 @@ struct IdentityElementPairingFilterTests {
     @Test("(empty, intersect) emits — user-named op, deferred to v1.5 veto / cycle-4")
     func emptyIntersectEmits() {
         let pairs = makePairs(opName: "intersect", typeText: "T", identityName: "empty")
-        #expect(pairs.count == 1)
-    }
-
-    @Test("(zero, pow) emits — cycle-1 noise; user-named op falls through filter")
-    func zeroPowEmits() {
-        // ComplexModule's cycle-2 surface had `pow(_:_:)` × `Complex.zero`
-        // surviving v1.5's coverage veto. v1.6's pair-formation filter
-        // *also* doesn't catch it because `pow` isn't a stdlib operator.
-        // Cycle-4 may extend the filter's op-name vocabulary.
-        let pairs = makePairs(opName: "pow", typeText: "T", identityName: "zero")
         #expect(pairs.count == 1)
     }
 
