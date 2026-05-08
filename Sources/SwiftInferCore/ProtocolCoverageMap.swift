@@ -160,11 +160,22 @@ public enum ProtocolCoverageMap {
     /// `"Property already covered by conformance to 'AdditiveArithmetic'"`).
     /// First-match-wins is fine because the veto fires identically
     /// regardless of which parent supplies the coverage.
+    ///
+    /// **V1.6.1 patch — citation determinism.** When the caller passes
+    /// a `Set<String>` (non-deterministic iteration order across
+    /// process invocations), we sort the members lexicographically
+    /// before scanning so the cited protocol in the veto's `detail`
+    /// string is stable across runs. Sequence callers (Array, etc.)
+    /// retain their input order. Cycle-2 finding: suppressed
+    /// suggestions don't appear in stdout (so byte-stability of
+    /// user-visible output already held), but Decisions records that
+    /// introspect veto reasons saw different cited protocols across
+    /// runs. Closes that gap.
     public static func firstCoveringProtocol<S: Sequence>(
         in inheritedTypes: S,
         for property: KnownProperty
     ) -> String? where S.Element == String {
-        inheritedTypes.first { covers($0, property) }
+        inheritedTypes.sorted().first { covers($0, property) }
     }
 
     /// V1.5.2 — fold a flat `[TypeDecl]` corpus into a `name → union of

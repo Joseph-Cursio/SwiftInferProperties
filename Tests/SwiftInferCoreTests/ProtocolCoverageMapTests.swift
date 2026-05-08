@@ -178,13 +178,39 @@ struct ProtocolCoverageMapTests {
         #expect(!ProtocolCoverageMap.anyCovers(empty, .equatableReflexive))
     }
 
-    @Test("firstCoveringProtocol returns the first matching conformance")
+    @Test("firstCoveringProtocol returns the lexicographically-first matching conformance")
     func firstCoveringProtocolReturnsFirst() {
-        // Order matters — the conformance list is walked left-to-right.
+        // V1.6.1 patch — citation determinism. Input order is no longer
+        // load-bearing; firstCoveringProtocol sorts the input
+        // lexicographically before scanning so suppressed-suggestion
+        // Decisions records cite a stable protocol across runs.
         let inherited = ["Sendable", "Numeric", "Hashable"]
-        // Both Numeric and Hashable cover equatableReflexive; Numeric
-        // is encountered first.
-        #expect(ProtocolCoverageMap.firstCoveringProtocol(in: inherited, for: .equatableReflexive) == "Numeric")
+        // Sorted: ["Hashable", "Numeric", "Sendable"]. Both Hashable
+        // and Numeric cover equatableReflexive; Hashable comes first
+        // alphabetically.
+        #expect(
+            ProtocolCoverageMap.firstCoveringProtocol(in: inherited, for: .equatableReflexive)
+                == "Hashable"
+        )
+    }
+
+    @Test("firstCoveringProtocol citation is deterministic across input orderings")
+    func firstCoveringProtocolIsDeterministic() {
+        // V1.6.1 patch regression guard — same conformance set in
+        // different input orders should cite the same protocol.
+        let orderA = ["Sendable", "Numeric", "Hashable"]
+        let orderB = ["Hashable", "Sendable", "Numeric"]
+        let orderC = ["Numeric", "Hashable", "Sendable"]
+        let resultA = ProtocolCoverageMap.firstCoveringProtocol(in: orderA, for: .equatableReflexive)
+        let resultB = ProtocolCoverageMap.firstCoveringProtocol(in: orderB, for: .equatableReflexive)
+        let resultC = ProtocolCoverageMap.firstCoveringProtocol(in: orderC, for: .equatableReflexive)
+        #expect(resultA == resultB)
+        #expect(resultB == resultC)
+        // Set<String>'s iteration order is implementation-defined; this
+        // should still cite a stable result.
+        let setOrder: Set<String> = ["Sendable", "Numeric", "Hashable"]
+        let resultSet = ProtocolCoverageMap.firstCoveringProtocol(in: setOrder, for: .equatableReflexive)
+        #expect(resultSet == resultA)
     }
 
     @Test("firstCoveringProtocol returns nil when no conformance matches")
