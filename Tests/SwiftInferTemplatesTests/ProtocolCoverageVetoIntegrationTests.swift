@@ -100,4 +100,51 @@ struct ProtocolCoverageDiscoverIntegrationTests {
         // preserves it.
         #expect(suggestions.contains { $0.templateName == "commutativity" })
     }
+
+    // MARK: - V1.7.1 stdlib bake-in end-to-end
+
+    @Test("V1.7.1 — Int-typed `+` is suppressed via stdlib bake-in (no corpus typeDecls)")
+    func discoverSuppressesIntPlusViaBakeIn() {
+        // No corpus typeDecls — the bake-in alone should reach Int's
+        // AdditiveArithmetic / Numeric conformances and suppress
+        // commutativity + associativity emissions.
+        let plus = makeBinaryOp(name: "+", typeText: "Int")
+        let suggestions = TemplateRegistry.discover(
+            in: [plus],
+            typeDecls: []
+        )
+        let templates = Set(suggestions.map(\.templateName))
+        #expect(!templates.contains("commutativity"))
+        #expect(!templates.contains("associativity"))
+    }
+
+    @Test("V1.7.1 — Double-typed `*` is suppressed via stdlib bake-in")
+    func discoverSuppressesDoubleMulViaBakeIn() {
+        let mul = makeBinaryOp(name: "*", typeText: "Double")
+        let suggestions = TemplateRegistry.discover(
+            in: [mul],
+            typeDecls: []
+        )
+        let templates = Set(suggestions.map(\.templateName))
+        #expect(!templates.contains("commutativity"))
+        #expect(!templates.contains("associativity"))
+    }
+
+    @Test("V1.7.1 — user-named `combine` on Int still emits (op-class fall-through)")
+    func discoverPreservesUserNamedCombineOnInt() {
+        // Critical false-positive guard from V1.5.2 carries forward:
+        // user-named `combine` on a Numeric carrier is preserved
+        // because the kit covers `+`/`*` specifically, not arbitrary
+        // commutative functions on stdlib-typed carriers. The bake-in
+        // doesn't change this — `Int: Numeric` only covers
+        // `additive*` / `multiplicative*` op-classes.
+        let combine = makeBinaryOp(name: "combine", typeText: "Int")
+        let suggestions = TemplateRegistry.discover(
+            in: [combine],
+            typeDecls: []
+        )
+        // `combine` is a curated commutativity verb; op-class fall-through
+        // means the bake-in doesn't suppress it.
+        #expect(suggestions.contains { $0.templateName == "commutativity" })
+    }
 }

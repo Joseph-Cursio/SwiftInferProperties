@@ -189,8 +189,27 @@ public enum ProtocolCoverageMap {
     /// Built once per `discover()` pass, threaded through
     /// `collectSuggestions(...)` to each algebraic template's
     /// `protocolCoverageVeto(...)` helper.
+    ///
+    /// **V1.7.1 — curated stdlib bake-in.** The result is seeded with
+    /// `stdlibConformances` so a `let x: Int` candidate resolves to
+    /// `Int`'s known conformances (`AdditiveArithmetic` / `Numeric` /
+    /// `Comparable` / `Hashable` / `Codable` / `Equatable` etc.) even
+    /// when the corpus doesn't declare any `extension Int: ...`.
+    /// Closes cycle-2's headline 0-delta finding on stdlib-typed
+    /// carriers across OrderedCollections / Algorithms / PropertyLawKit.
+    /// Per-key `formUnion` semantics preserved — a corpus
+    /// `extension Int: SomeProto` adds `SomeProto` to `Int`'s curated
+    /// set rather than replacing it.
     public static func inheritedTypesIndex(from typeDecls: [TypeDecl]) -> [String: Set<String>] {
         var index: [String: Set<String>] = [:]
+        // V1.7.1 — seed with curated stdlib bake-in. Order is stable:
+        // every key in `stdlibConformances` lands first, then corpus
+        // typeDecls union in. `formUnion` on the seeded set means
+        // corpus `extension Int: SomeProto` lifts to
+        // `Int → {curated... ∪ SomeProto}`.
+        for (typeName, conformances) in stdlibConformances {
+            index[typeName] = conformances
+        }
         for decl in typeDecls {
             guard !decl.inheritedTypes.isEmpty else { continue }
             let key = strippingGenericParameters(decl.name)
