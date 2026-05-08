@@ -1,0 +1,3000 @@
+167 suggestions.
+
+[Suggestion]
+Template: associativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ -(z:w:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AdditiveArithmetic.swift:29
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality associativity is not bit-exact under IEEE 754 sampling (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD862782BE7C59F847452B93F8FEBE0FD302F2D7F0917F5DDCDCC22FB6BC53CAF
+Identity:  0xB8DE422242F3793A
+Suppress:  // swiftinfer: skip 0xB8DE422242F3793A
+
+[Suggestion]
+Template: commutativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ -(z:w:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AdditiveArithmetic.swift:29
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality commutativity is not bit-exact under IEEE 754 sampling on edge values (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xBA81A0CCFB1A13CF2A79F8DB02EE8F8D4E4F9372416C3EDC416237F8E0AA9E54
+Identity:  0xF19AF076BEC75B25
+Suppress:  // swiftinfer: skip 0xF19AF076BEC75B25
+
+[Suggestion]
+Template: associativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ /(z:w:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:37
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality associativity is not bit-exact under IEEE 754 sampling (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x365C20324D083170FF12070304B31DEE6A80BE6601CC7597CC78E84C4576D900
+Identity:  0xD8D360226C41CE34
+Suppress:  // swiftinfer: skip 0xD8D360226C41CE34
+
+[Suggestion]
+Template: commutativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ /(z:w:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:37
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality commutativity is not bit-exact under IEEE 754 sampling on edge values (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x544D5B6E67C4768CD8FC54D513ADD3BB88B621679DE9E083900295EB87CC4CC9
+Identity:  0x89A940C41092CADE
+Suppress:  // swiftinfer: skip 0x89A940C41092CADE
+
+[Suggestion]
+Template: associativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ rescaledDivide(_:_:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:48
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality associativity is not bit-exact under IEEE 754 sampling (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xB2E0369C94B9A310AA0C1B09A70CF96D92441EFF14263CBEF39C99A24DDFDBD2
+Identity:  0xE724B37606AAF2CE
+Suppress:  // swiftinfer: skip 0xE724B37606AAF2CE
+
+[Suggestion]
+Template: commutativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ rescaledDivide(_:_:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:48
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality commutativity is not bit-exact under IEEE 754 sampling on edge values (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x9A73473CF9BC39CF6FF179FCA7D0DE779DEB95D3FF76F5450B584BD4B1EB5876
+Identity:  0xD6C69F2BF84F3390
+Suppress:  // swiftinfer: skip 0xD6C69F2BF84F3390
+
+[Suggestion]
+Template: identity-element
+Score:    70 (Likely)
+
+Why suggested:
+  ✓ rescaledDivide(_:_:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:48
+  ✓ Complex.zero: Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AdditiveArithmetic.swift:19
+  ✓ Type-symmetry signature: (T, T) -> T with identity T.zero (T = Complex) (+30)
+  ✓ Curated identity-element constant: 'Complex.zero' on type Complex (+40)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ The identity property is two-sided: f(t, e) == t AND f(e, t) == t. A one-sided identity (e.g. left-identity only) will pass the type pattern but fail one of the emitted assertions under M4 sampling.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x7A190E48238ED499623845C9FD412215031CB947E330D65A0ACD82D9E3B0210E
+Identity:  0x9964626EA35C4B60
+Suppress:  // swiftinfer: skip 0x9964626EA35C4B60
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ _relaxedAdd(_:_:) (Self, Self) -> Self — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:171
+  ✓ Type-symmetry signature: (T, T) -> T (T = Self) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xF8476656225185FD7015391BF4EF0827878C6A6089A6D6BB45C8684901A8FE26
+Identity:  0x26D2FD96A4FB2B01
+Suppress:  // swiftinfer: skip 0x26D2FD96A4FB2B01
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ _relaxedAdd(_:_:) (Self, Self) -> Self — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:171
+  ✓ Type-symmetry signature: (T, T) -> T (T = Self) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x4D47CCCE9CDAE28B048BD78ABC7BC26556384394F872866F2572CC07C9F01E97
+Identity:  0x1C94EE2FCC17B783
+Suppress:  // swiftinfer: skip 0x1C94EE2FCC17B783
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ _relaxedMul(_:_:) (Self, Self) -> Self — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:176
+  ✓ Type-symmetry signature: (T, T) -> T (T = Self) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x516F21BB7E8F58E7127B0699FD5CABAA1278EEA45137BAD9FDFF104B1AB83E46
+Identity:  0x60A0CD20B1C8D1C0
+Suppress:  // swiftinfer: skip 0x60A0CD20B1C8D1C0
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ _relaxedMul(_:_:) (Self, Self) -> Self — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:176
+  ✓ Type-symmetry signature: (T, T) -> T (T = Self) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x150E3B6049AF4344E39D786960F2DFCE54A2CED09B7FEB24C24AB7DDC36C1D65
+Identity:  0x7748FE51C18B2CD5
+Suppress:  // swiftinfer: skip 0x7748FE51C18B2CD5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3F8A69A03F1DABAE989443C61D00CADE124CEC39575E456A2FC9D900486CB28B
+Identity:  0x6CD51B09CE724FF3
+Suppress:  // swiftinfer: skip 0x6CD51B09CE724FF3
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x43ECC5CC4CCB185E30B382571AFFCE0EAA26956A1ADFA0CA25A5C433C3C750CC
+Identity:  0x9A95A2CB7CA3902E
+Suppress:  // swiftinfer: skip 0x9A95A2CB7CA3902E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3D64BA4E7C408C61CFA71C417CB34BEAF991FA9039D8C4E2A91671A67403950F
+Identity:  0x0EEF60AF734D4B73
+Suppress:  // swiftinfer: skip 0x0EEF60AF734D4B73
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xDC91EF3F59F5506048887484AEED2097784BB9B87F347F045EAEBFC4E544098A
+Identity:  0x832D99B502E82FC8
+Suppress:  // swiftinfer: skip 0x832D99B502E82FC8
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x45EA04BD0D8F0ADEC24F879F7C52D01D351E684CA6B72EF88CCA23A80949872C
+Identity:  0xDC7BA5E248045BEC
+Suppress:  // swiftinfer: skip 0xDC7BA5E248045BEC
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8E8CFC7351212D9CC2C5DAF54E46ED9266CD0FAB899482563ECE14307620E89C
+Identity:  0x7F5C561869A23631
+Suppress:  // swiftinfer: skip 0x7F5C561869A23631
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4C8E6776A17B4B76244BD70F8862B1A2982548371086E4109435902869D13962
+Identity:  0x808302F3C4B3FC3C
+Suppress:  // swiftinfer: skip 0x808302F3C4B3FC3C
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x44A8607B0C01119FD634699E310209A07DCBDA72A352145BBD81BA419889C3FC
+Identity:  0x34CE3C637381B2E0
+Suppress:  // swiftinfer: skip 0x34CE3C637381B2E0
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC6426F848433B233F0AD43258916A7CB8D7FC90B9FD4B7DFAEC92D4EC9E93791
+Identity:  0xB72E7362FA5FB419
+Suppress:  // swiftinfer: skip 0xB72E7362FA5FB419
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA7DF815818464244D64D16CD5A81A672460D80212CF16198485FBE77B10DD471
+Identity:  0x4949D576A215E8C1
+Suppress:  // swiftinfer: skip 0x4949D576A215E8C1
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4FCA2089D6375AA9E82D9D9F91A5B34E143C156187E174FA23AC9502B0227B7A
+Identity:  0x697C0EE3AB41112D
+Suppress:  // swiftinfer: skip 0x697C0EE3AB41112D
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD020CD181A97C25E18B9A4DF20BAADD84C5EAA6F455120A8DCF381C8E04693E4
+Identity:  0x22D5FA793DF21747
+Suppress:  // swiftinfer: skip 0x22D5FA793DF21747
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xEE2EA7C29DECC2DF6A8ADCE1737E714624F40283B607A3080102091DE568DADD
+Identity:  0x550E752FA93C5EF1
+Suppress:  // swiftinfer: skip 0x550E752FA93C5EF1
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0C76C25BD0D1B2BF0C6696EAE8AFD0B2F9D6369E5C9D46F733CED6995CBC370E
+Identity:  0x120E3B4C676A0B96
+Suppress:  // swiftinfer: skip 0x120E3B4C676A0B96
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3BCB130DCF5101809EFBFCA2B766D82A518891B22FB684F30941F5E528367491
+Identity:  0x681C3322DACA055B
+Suppress:  // swiftinfer: skip 0x681C3322DACA055B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD3EE9964E5631FED724AD7C8D3EBD5D37E1E5B4B5627041744A6A7C2D496381D
+Identity:  0x727E924FB2D84C3E
+Suppress:  // swiftinfer: skip 0x727E924FB2D84C3E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ exp(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x727617F60099077D76A35B5DB7FF43571046869D75E1C414BD95A0229BFE66D3
+Identity:  0x1A4AC529111D032B
+Suppress:  // swiftinfer: skip 0x1A4AC529111D032B
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC86A597F8275EE2A254C3244B27094287F14A170F3ECEE934CEA1D6ECED999AD
+Identity:  0xC17808FA46AA81A2
+Suppress:  // swiftinfer: skip 0xC17808FA46AA81A2
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x844184023FAD57CAE6353E5DBDCFAC60E36EB5B73B52C471D69F363C8D728AC6
+Identity:  0xD37775AFF2B6BF3C
+Suppress:  // swiftinfer: skip 0xD37775AFF2B6BF3C
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xFFF800C4EDBD944436A77DBCB29B382438D7DD33F892F6171DF8371D214BAC16
+Identity:  0x77B7AC9095B29BCC
+Suppress:  // swiftinfer: skip 0x77B7AC9095B29BCC
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0E67CD4F2D0D36C1E15B9FC62546639501BCBCC0146D4AD49DD01692AEA966B7
+Identity:  0x71E4B17733C80ABB
+Suppress:  // swiftinfer: skip 0x71E4B17733C80ABB
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xCC1A1B934F7BEE518FA504B277B2DC319310BEF5267D99B2EAD1D647746ADFE0
+Identity:  0x6427C8F5593A5488
+Suppress:  // swiftinfer: skip 0x6427C8F5593A5488
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0078DA53099BB8AD4A89B790A982EAC7A86B066C2B72F2F830829D52A0EBAEDC
+Identity:  0x8A62B14FE693ACAC
+Suppress:  // swiftinfer: skip 0x8A62B14FE693ACAC
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x6E3460991CFE116F3DBB51992704C517324B0A6FE05B6F0F9E42467176C41870
+Identity:  0x6BAE5CABF4E2C0CF
+Suppress:  // swiftinfer: skip 0x6BAE5CABF4E2C0CF
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA41AE80182C34E95C3CECF3231A6A88443A1D433F44E8F20902F09E2B401A05F
+Identity:  0x192CAB6485048108
+Suppress:  // swiftinfer: skip 0x192CAB6485048108
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x320CAD070AA531D82EE438BACA0D4E982C7566FCFFED22D9CCB836DC75B86544
+Identity:  0x241725A5B8806208
+Suppress:  // swiftinfer: skip 0x241725A5B8806208
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xBB72A4E5BA74301EF0D194146E0BB6B8C15969FA2086867E59EAF8A99771D705
+Identity:  0x4EAE441128C16F0A
+Suppress:  // swiftinfer: skip 0x4EAE441128C16F0A
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x29ABC8C129A0FB9105FFE8476167B1F3AC6BC188B93076694070810CAFCA63F0
+Identity:  0xC05891E173A6B768
+Suppress:  // swiftinfer: skip 0xC05891E173A6B768
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x14ABFC70B0C74ED420BB83C2D0FD2BCB965C661903D7E37AFF2764885CA92106
+Identity:  0x5DE9B7E31440D25E
+Suppress:  // swiftinfer: skip 0x5DE9B7E31440D25E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD4B675A07F6C4F39E4AC6F7725241601F69AB3279B39B946C69763B8CD8CCA30
+Identity:  0x58985EA5FACBAE60
+Suppress:  // swiftinfer: skip 0x58985EA5FACBAE60
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x244687F17EE13B75AB8ED13FC4E8406567CB813A602CEBE34373FB3517729671
+Identity:  0x8CF3E6CEA17CECEB
+Suppress:  // swiftinfer: skip 0x8CF3E6CEA17CECEB
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8EB05DE1EB840FE3418B7352348E3D2C470DE5C130C4BF527BBAA66E56732A0D
+Identity:  0x2F660A9FE96EB547
+Suppress:  // swiftinfer: skip 0x2F660A9FE96EB547
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ expMinusOne(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:71
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC2D60238A30B737A2E0E5F23A33ACB61889DE5A8940D389E8B55F036A6D40978
+Identity:  0x56C2D804DAE9BBA5
+Suppress:  // swiftinfer: skip 0x56C2D804DAE9BBA5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0130B810010A7C74C7119C438CA3D56A335988BDA9D5FA21AFF657DDB7874894
+Identity:  0xC5B5FFBA33FEC7B7
+Suppress:  // swiftinfer: skip 0xC5B5FFBA33FEC7B7
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8E61A2ECBACFF9A2D1BE887A40C57B519600E071EF5A7A2965CA8D3D0F9B159E
+Identity:  0x90C6A15A856D75A2
+Suppress:  // swiftinfer: skip 0x90C6A15A856D75A2
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x640F943EC44800A494385E6D1C4154F02587A6DA2DB29996872B748F5CEE0E1C
+Identity:  0x67DDD7F5099B3C82
+Suppress:  // swiftinfer: skip 0x67DDD7F5099B3C82
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x40055C1921866C97EA15A3F1E6D0DC32DBAA4183148FDE1FB4D97DB8012966F9
+Identity:  0x1E1655D9E5381F3A
+Suppress:  // swiftinfer: skip 0x1E1655D9E5381F3A
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x369C6E6D8AD732406BA40433637F6EC353D3424B84986C4BD82D4224DC38D9EE
+Identity:  0x8DE7AA6DDF8C9CA2
+Suppress:  // swiftinfer: skip 0x8DE7AA6DDF8C9CA2
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x1C56016A6281427D63865724DFE60C77A2B77900866CEA90A6CFE3C116AD1DCF
+Identity:  0x66A5C36542CFC1EE
+Suppress:  // swiftinfer: skip 0x66A5C36542CFC1EE
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x5AB7EF631A84782F39D468361EAD8EE87C1204C7095DF2D911A6230CD29DB828
+Identity:  0xD456F93D39224B35
+Suppress:  // swiftinfer: skip 0xD456F93D39224B35
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD71076EDE7E508FCC18D1B9AEA3BFE24EABBC18C2F2D68BFE50BD93157E0F0AE
+Identity:  0xB7128B27CF7420C7
+Suppress:  // swiftinfer: skip 0xB7128B27CF7420C7
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF5FC7E7B01F67EF474D8FC648B09551F62A247F5A57A828FD064E62C6D570796
+Identity:  0x59A54003EDB32F5E
+Suppress:  // swiftinfer: skip 0x59A54003EDB32F5E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xDE2AED12735531BD06DFBA94C045FBAD479537D8F08F2614BAA7697DCFCFB1CD
+Identity:  0x59858CC118BB4FAB
+Suppress:  // swiftinfer: skip 0x59858CC118BB4FAB
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC2CF950C942B5E17105582C6772F0151D63CBEF15DCC33420954F79B2A3BCB40
+Identity:  0xCD26BB07809EA513
+Suppress:  // swiftinfer: skip 0xCD26BB07809EA513
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x78C9AA3283EAB2D637E729C5A9257A052D880FBD506F566C68A172CB990EFDE5
+Identity:  0x56A303C3E0347225
+Suppress:  // swiftinfer: skip 0x56A303C3E0347225
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE608FAD5BA0E1094AAE0F3DB801EC1F61E40884D3A2C84E85DF6417BC9C4F944
+Identity:  0xBA3B85981D4823EF
+Suppress:  // swiftinfer: skip 0xBA3B85981D4823EF
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x234C1D31C0A8A96966CBAF7D10F662940D3A5CD1C1932FE99355838220AF83EA
+Identity:  0x8667EC9B6778C1DE
+Suppress:  // swiftinfer: skip 0x8667EC9B6778C1DE
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x43BD679AF739EB70FED768DC00E0CE7477E71EDCFDFBA7483BE6E222D90C27D6
+Identity:  0xCC7AD9A56FF266C5
+Suppress:  // swiftinfer: skip 0xCC7AD9A56FF266C5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF55A7BF235358613D95A7D56292A7F6B5291AC2E7241B15BAFCEB869A5191FB8
+Identity:  0x0936BD2ACB38DAD2
+Suppress:  // swiftinfer: skip 0x0936BD2ACB38DAD2
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF3B216676E0E5705DCB7F666714717E8097A45D02C43F1C5991A04D8D42B8223
+Identity:  0x7E2BE3F9179CDE0B
+Suppress:  // swiftinfer: skip 0x7E2BE3F9179CDE0B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4BE5286A42FD0CF1F8CC22161FCD4FE44D7BED07542543866DB2E3EFE4769DD0
+Identity:  0xA999A81964C66E98
+Suppress:  // swiftinfer: skip 0xA999A81964C66E98
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4FA060828F4DC77659A1DA03B4E27FDF939533341BD99BA16333939FFC455124
+Identity:  0x318EA1D3548165EB
+Suppress:  // swiftinfer: skip 0x318EA1D3548165EB
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC5975FAE473A73FA486CA08CFF9E6413019D50DA58794695358E53972ADF3827
+Identity:  0x742331B0FD7A9C1C
+Suppress:  // swiftinfer: skip 0x742331B0FD7A9C1C
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x797A0F87AC4372DFC36BBD6F16A273639ED21E33243FB68736DDB6ECFB288128
+Identity:  0x6739CAEA24D36E55
+Suppress:  // swiftinfer: skip 0x6739CAEA24D36E55
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x585419CC66E82521B300F7AC340E81C3567C04BF11BF920887C0C527AF41C546
+Identity:  0xB4C6346728AE59B7
+Suppress:  // swiftinfer: skip 0xB4C6346728AE59B7
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x12B9D8F158BB84FF6958E4F022FCBBCA4CC1967DD2F751D60BBDA02D48236334
+Identity:  0x2F83F2674A2D3EA8
+Suppress:  // swiftinfer: skip 0x2F83F2674A2D3EA8
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xABA4D78C8CD4116D9750B85CE14CFA25D7326143C4D64F3C9B0CC07CCDDA8A36
+Identity:  0x6CE63A5F0CB49541
+Suppress:  // swiftinfer: skip 0x6CE63A5F0CB49541
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x83D97DBC7717FB9E29670BCAF12E9FAD716EE4524C5BD71A9FE627C4CB9ABEEF
+Identity:  0x7FB4BDA2051ED2BD
+Suppress:  // swiftinfer: skip 0x7FB4BDA2051ED2BD
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x7859FC86BF3E69A8F3A4AA127F3462216829F712AF0B01FB5A1CAC74CAFFB71E
+Identity:  0x16740D4B38959CA1
+Suppress:  // swiftinfer: skip 0x16740D4B38959CA1
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x962484BE550C4B96DD116E2374B0309B94128136652CFD12277F29EC459FA902
+Identity:  0x51D592C8CBCA0831
+Suppress:  // swiftinfer: skip 0x51D592C8CBCA0831
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xDC1B9BC83D53EF406C06CE2D3E71CD0D649887CA953B927CAD5A46FB499897E3
+Identity:  0x21C23ECF5C7C6C0B
+Suppress:  // swiftinfer: skip 0x21C23ECF5C7C6C0B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3C112F501D0F5F3C87A8A6914AFE53B930B835A810E6CB935C29FB1CDDFD03F4
+Identity:  0xD87B5DB3FDA255FF
+Suppress:  // swiftinfer: skip 0xD87B5DB3FDA255FF
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8A94802F312F77EAE809D8DA00E57B7C11B40085C8EEF8D0E1312F9582E9BFC3
+Identity:  0x9B5597DD574CE737
+Suppress:  // swiftinfer: skip 0x9B5597DD574CE737
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x6D3AD8AB7054D7A31F3F79172ED755C323B0BA8DB5EE2BC4D208F003E8E690B4
+Identity:  0xB998961FBCE58F0C
+Suppress:  // swiftinfer: skip 0xB998961FBCE58F0C
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x44C551C0AB196C03564BA2E5B968AEE36FD645C271FE9A328972A77D148480FD
+Identity:  0xCCB2C187E8D9E1FC
+Suppress:  // swiftinfer: skip 0xCCB2C187E8D9E1FC
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x9D00F2AED250BFAAF9644843688FB3BC114C416E788DE841C44CCDD4B8427BC1
+Identity:  0xA34CCF674EBF88BB
+Suppress:  // swiftinfer: skip 0xA34CCF674EBF88BB
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x7567AC2B4634D1BD4D68CCB005DE47290CDD4B886E19FB731C26E1595C7A46EB
+Identity:  0x470AA39FFB7738B6
+Suppress:  // swiftinfer: skip 0x470AA39FFB7738B6
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xFD8646C470901A94925F20D39859ECAC590E7F9DB2B8C6C712F3E742BAAF4535
+Identity:  0x3DC53611EEDC1991
+Suppress:  // swiftinfer: skip 0x3DC53611EEDC1991
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE58C91835C504A1C6EE582B9FFA4D7CC9F05C1A3EB27555584476166B6BF1554
+Identity:  0x91BA142518A6CBE4
+Suppress:  // swiftinfer: skip 0x91BA142518A6CBE4
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE2C671E9059F1C29C0CB4495A251B8FC133BB123A3E3C2BB498E3F75CE345577
+Identity:  0x8F9FD51DEE8AFDDD
+Suppress:  // swiftinfer: skip 0x8F9FD51DEE8AFDDD
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x71EFC2745707E0179A8C23F19C6BD6FD9AB6895F282DA0C34BCD5731933FBB58
+Identity:  0x24E79493BA5D93CC
+Suppress:  // swiftinfer: skip 0x24E79493BA5D93CC
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF7F45EB3488B87225A07BE177DE745EC6A22BE7DF812C3747036BE696F644DCC
+Identity:  0xBC7448D6ABC74237
+Suppress:  // swiftinfer: skip 0xBC7448D6ABC74237
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0D5A666248B8D225491BFD93D5086925AADEE5FB113CDDC8F8F635EB6BCF976C
+Identity:  0xE39BE036D4AD44C2
+Suppress:  // swiftinfer: skip 0xE39BE036D4AD44C2
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x1398FE65AF045441EFE7DA274C69F85A08609EE96136E850384C1F4C7655A40B
+Identity:  0xC6E1010A10F99897
+Suppress:  // swiftinfer: skip 0xC6E1010A10F99897
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x2B03ED2D818C697EA6AAFAC26C8DC33B14489029AC30C073D4B5AE69D5232EBB
+Identity:  0x2CA2739FFC0217AC
+Suppress:  // swiftinfer: skip 0x2CA2739FFC0217AC
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xCB3B9E82C787FB3855F9520107ACFF1735495EA4F2A1075E234F1D7DDD1CB7AD
+Identity:  0x6A0637DCC3AF2AF4
+Suppress:  // swiftinfer: skip 0x6A0637DCC3AF2AF4
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE991E5E4CB6824EDEF32AA9AF39E183F7F18BE69B03AD027F174704541DFAA0F
+Identity:  0xF42FF0F9697432B3
+Suppress:  // swiftinfer: skip 0xF42FF0F9697432B3
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4884BE560FFD4A8CF87A51EB8DD84E96997E0D9D3E4E6378FD1AAAF957778594
+Identity:  0x8305E78142C90626
+Suppress:  // swiftinfer: skip 0x8305E78142C90626
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC9A42E8871072D25679973F441D6182F3833CA6210D987C1ACF9D607C3C9ACE9
+Identity:  0xA0FC362786938211
+Suppress:  // swiftinfer: skip 0xA0FC362786938211
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xB16BE7E60FC3C9CA54790DEEB654B48A28BE960F855091DF6B6967FCC5440977
+Identity:  0x9FBEBBAD81EA8897
+Suppress:  // swiftinfer: skip 0x9FBEBBAD81EA8897
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x36D75F911F70162D33360D3DB68431639A55A390073A3735E39D1E688DE140C2
+Identity:  0x6D310ED906336577
+Suppress:  // swiftinfer: skip 0x6D310ED906336577
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD080C02F8E9D551ECFB77261A24251B3CD6ABE982B571955738E768BDB7DC517
+Identity:  0xF95CD4D0FC7F1975
+Suppress:  // swiftinfer: skip 0xF95CD4D0FC7F1975
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x68279FB3452CECE60C7C72CF6B5A72F117306A7404B56790D1D3BEEBB8F5C10E
+Identity:  0xE546164941D71A29
+Suppress:  // swiftinfer: skip 0xE546164941D71A29
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x579F672FF30E973D2DC431F7ADCDFD167D998F2D28834D0869BDC362999C889C
+Identity:  0x096E37A9E6E41BE3
+Suppress:  // swiftinfer: skip 0x096E37A9E6E41BE3
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x6140E8084A1323AF01AC658251C3F92F6248FA40DEFC994D0BC807F342A3FC47
+Identity:  0x2037F0E7E069F26B
+Suppress:  // swiftinfer: skip 0x2037F0E7E069F26B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xB99F0799BF93E570BC5FF82D812A8F88D7D19887759873FDAFFF5422C2BF76D2
+Identity:  0x9D9A2A48BD1ACE6D
+Suppress:  // swiftinfer: skip 0x9D9A2A48BD1ACE6D
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ cos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC77E9E17A5884B66F2356A03AFFF5DB61A39FB7FC0229F86C5275F3E2A1CE845
+Identity:  0xAAF7D6378DFBE6A4
+Suppress:  // swiftinfer: skip 0xAAF7D6378DFBE6A4
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC128F3A4B25F4180F8EAC79781D9D36A8FD5FB11D8AD5E26A29CDC2CAAAD321A
+Identity:  0x6EBEF516C014FD97
+Suppress:  // swiftinfer: skip 0x6EBEF516C014FD97
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4EF109C00AB15A7BB52EA55165802EF8661A1768AC6A9D72F575D90456D1AA27
+Identity:  0xE70AF5DC4D478950
+Suppress:  // swiftinfer: skip 0xE70AF5DC4D478950
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC93FF1230221F89839E80BFFAE5DDAD228F40ADEAF52DCD028895F7502E9D454
+Identity:  0xADB4841174F8D195
+Suppress:  // swiftinfer: skip 0xADB4841174F8D195
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA93F211BA3B74EB8ADF9B77C89EEEA43C18FE9D3D581BC4EFBC7BF2D4B491A53
+Identity:  0x9CFDF93C53C82522
+Suppress:  // swiftinfer: skip 0x9CFDF93C53C82522
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE36168AA975CAD0A756B062EF6F24C1CE3BB03C1537AD8F0BE8210F83977B8D1
+Identity:  0xDE63B0C152710E4E
+Suppress:  // swiftinfer: skip 0xDE63B0C152710E4E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8EA3F78B5EBE273B3858DCF48D97375978F57CA5D0E4A1764028909D200197FF
+Identity:  0x68D500860718049A
+Suppress:  // swiftinfer: skip 0x68D500860718049A
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x80B673AB78C64D38C24B450D3EE650CEC83694A99CB187C3CE7D6F69E4E62BD4
+Identity:  0xD0430AD3C97A2128
+Suppress:  // swiftinfer: skip 0xD0430AD3C97A2128
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x18843522D885FA94426487AEC6696D9B474F6FA2B91C058445F5F6030A43C1AF
+Identity:  0x09E7CBA9D961D4FA
+Suppress:  // swiftinfer: skip 0x09E7CBA9D961D4FA
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA7EEC50FF0FB44F08EAAD9110BE5272BF20ED9514592919C6DD1585BED58940D
+Identity:  0x658CC2FC74DD25F9
+Suppress:  // swiftinfer: skip 0x658CC2FC74DD25F9
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xBAA13A6CEE38AE7496C0B09D08111394D7E338F401ADA54B80B90F24CB7701BD
+Identity:  0x60040C137EFB04BB
+Suppress:  // swiftinfer: skip 0x60040C137EFB04BB
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x86756AED423CE3A29DB4B57CE67C70777B211BBA2B0890D3FBAEA346FF94ED19
+Identity:  0x9EFB07431B353072
+Suppress:  // swiftinfer: skip 0x9EFB07431B353072
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC698AD78BA3703B77987351A289F3F7FCF4635A1914F26CE719C529FAE9D4972
+Identity:  0xBC6366588126C290
+Suppress:  // swiftinfer: skip 0xBC6366588126C290
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x368224E08EA68CB451E43AA1E40024FCEEB9A5F17850C3E8581B6755998D457E
+Identity:  0x0F2849DF7719DFF0
+Suppress:  // swiftinfer: skip 0x0F2849DF7719DFF0
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x986AA00DC36BCA7AB4B8602A73E9E29D0B02A072013B3393F7AECEBDB85D5CC2
+Identity:  0x5BC0A653CF73CBED
+Suppress:  // swiftinfer: skip 0x5BC0A653CF73CBED
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x21C75E644396260BDEEB25E60DC404A77DDCF7BDD5C77A647FED1439296B1DAA
+Identity:  0xFB3356498CE960CD
+Suppress:  // swiftinfer: skip 0xFB3356498CE960CD
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x2A721736C95E756C73ED0CD8D31915D63AFCF4728727FCE6E031189C7BEE6F88
+Identity:  0x0C29EFC9B2773C38
+Suppress:  // swiftinfer: skip 0x0C29EFC9B2773C38
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x524C7737E64117D18E4576E7088C9C244B6B7788D453D0878869AFAA8D642235
+Identity:  0x22C45BA51D4DA777
+Suppress:  // swiftinfer: skip 0x22C45BA51D4DA777
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x91199E2C5F7E8802D3CB32032958D302175D46D589E613FB645416A7F09E741F
+Identity:  0x3E5CC917C0F4546F
+Suppress:  // swiftinfer: skip 0x3E5CC917C0F4546F
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x354F4219875013E3694EF7AF716C369C9B4F6F0B6DB1FE7F37DA940E18499FB0
+Identity:  0x87E75A5630D8A4AE
+Suppress:  // swiftinfer: skip 0x87E75A5630D8A4AE
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3C153C75869FF32D957DC6E6CEAD8DA1CF6AB7CF0DDB96CE3705F28BC21C4568
+Identity:  0x46FC010CB4A9B575
+Suppress:  // swiftinfer: skip 0x46FC010CB4A9B575
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ tan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x1AA891E9EA67C1063220471804864E98AFC6FE7ADFA19C337888A4636519734E
+Identity:  0x5521CC810A640F8B
+Suppress:  // swiftinfer: skip 0x5521CC810A640F8B
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x37005434722108A50D1D8FA295906D58339BA93DF971970EB4D9E511477FD05B
+Identity:  0x150E75C70C2893FC
+Suppress:  // swiftinfer: skip 0x150E75C70C2893FC
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD29CFB7CAD791DCCF001AA398CBF16C8A26A49D1A6C225F9EF9337066F25D67E
+Identity:  0xDA7919ACCBF9A07F
+Suppress:  // swiftinfer: skip 0xDA7919ACCBF9A07F
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x66DDBEC65E5EBD6A7C4FEE1CE59C79BEF8873B0BC83416D69AC773D234E9672B
+Identity:  0x05CE21CB0394CF6A
+Suppress:  // swiftinfer: skip 0x05CE21CB0394CF6A
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x264B0A21E926515FC1BE4A179D34744BCF53FA81AB252F852513A64965AD2CB1
+Identity:  0xCBF0FA9B5D4A86C9
+Suppress:  // swiftinfer: skip 0xCBF0FA9B5D4A86C9
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA62F2F85D03BB4908785C2053142F868E048D81C1078A48F7B38D84D3674767A
+Identity:  0x75B38B7F6EFECCE8
+Suppress:  // swiftinfer: skip 0x75B38B7F6EFECCE8
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x58599066083BCE53C90BD70ECDDA6F90D215385AE9EBE067393C490341235A07
+Identity:  0x49F91863F132644E
+Suppress:  // swiftinfer: skip 0x49F91863F132644E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x72970C1EE332601C364F20CA0657B9F90FB419B279FFE7A04BF9965EF738BF5A
+Identity:  0x109EAAAAFC142A8E
+Suppress:  // swiftinfer: skip 0x109EAAAAFC142A8E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xB0E1333CD15CF1739ED08855C06E3AE65148346F51B8196B3C91918F9CAEB6A3
+Identity:  0x23F158BD14DDFD5D
+Suppress:  // swiftinfer: skip 0x23F158BD14DDFD5D
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:231
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x794FF84B317304DDCB3E018E6814B1FE59C77647AD946F01CC919695034CCF09
+Identity:  0x6A795C791E42DFDE
+Suppress:  // swiftinfer: skip 0x6A795C791E42DFDE
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x6DF0EC54FCE69A3590A581D73F3AAAFDD3637C47C4E895115175C597596198F6
+Identity:  0xF02F71542377053E
+Suppress:  // swiftinfer: skip 0xF02F71542377053E
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x93C9EE7EDFC042BD22C1973A77574A88FA3083A3B061F19FA0A7C978DA1D3C43
+Identity:  0x00277C68E0BB910D
+Suppress:  // swiftinfer: skip 0x00277C68E0BB910D
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4346D2A7BA34D4F80B8221398261996D84C5F1E7D024ADE04E2D8E121EB0DF97
+Identity:  0xD6ADC50DDA322FEE
+Suppress:  // swiftinfer: skip 0xD6ADC50DDA322FEE
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x56D0286270516DB1C52C3175407CCB4806B498885F40AF4139911411B6104317
+Identity:  0x62CE1B3688B71182
+Suppress:  // swiftinfer: skip 0x62CE1B3688B71182
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xDED2C4341732FDC4C335EE938A5B28D17E0402E74F225A366929CCE9490A4FD0
+Identity:  0x37AC2312A463BA7B
+Suppress:  // swiftinfer: skip 0x37AC2312A463BA7B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xCB272D8E5DBF70FD93631FDF05157F3BBBBEF5B9DF3D5B7FA6EEA1A1DA975719
+Identity:  0x32D792DF508A72F8
+Suppress:  // swiftinfer: skip 0x32D792DF508A72F8
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x44F5C502BD227408EB7EC26CFFED979E8903115A1933CA4A5D3F1A4250D24B72
+Identity:  0xFEE326F57E87F4F7
+Suppress:  // swiftinfer: skip 0xFEE326F57E87F4F7
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:331
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8721C4BE01EA673A3A7636571E7727BAE538F055A6708C78234B4BC4B7C13176
+Identity:  0xBCFE950E3350BDC5
+Suppress:  // swiftinfer: skip 0xBCFE950E3350BDC5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x58DC00B25E4508D336670A471F30D4125E3AA7F301E5F3AAF31E4EEA0E336738
+Identity:  0xC4FDDDB6AF270A8F
+Suppress:  // swiftinfer: skip 0xC4FDDDB6AF270A8F
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xFEF299588427F1EC1F189B63B359522E893ABDA7DB812F25A4079790C4C18376
+Identity:  0x64A59EF34838E952
+Suppress:  // swiftinfer: skip 0x64A59EF34838E952
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x073E9ABCC0EC2591A7E1F55DE1723BE7E738EEE4033AEC6BEB40D05E2B22F50F
+Identity:  0x4AD53637E1EDE76B
+Suppress:  // swiftinfer: skip 0x4AD53637E1EDE76B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD9579583E54DCF610D1703880F7B7BDD5C28EA3B27134EE2CB27628B9F1E0B6B
+Identity:  0xABA066FD5F302581
+Suppress:  // swiftinfer: skip 0xABA066FD5F302581
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x93E89288BC3E85245FC5E2B45FF25522A056724ED841CC5F0FFFE30FFB998832
+Identity:  0x183125F2EA8F9FB3
+Suppress:  // swiftinfer: skip 0x183125F2EA8F9FB3
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x6B27F1463A4AF09419240397D0E929A09BC7D21965A81A01C7B159E4B3A0F216
+Identity:  0x0081BE084735609D
+Suppress:  // swiftinfer: skip 0x0081BE084735609D
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acos(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:364
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4C6D5E9863833F692245417FEACC4C290289E09C3918A06894A1A4C65CDEF0C2
+Identity:  0xE53A97DDAFB4B7C2
+Suppress:  // swiftinfer: skip 0xE53A97DDAFB4B7C2
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xAC1E1ABDDA78A2C405B7623E17BE9C11B4709D067CC07D270C75BD0A23796922
+Identity:  0x1E626CF396E61A03
+Suppress:  // swiftinfer: skip 0x1E626CF396E61A03
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA10DF44966618389B3C6E9948BA2F983C3BF7A0B20E68F59FAA13D00B65121DE
+Identity:  0x041AD8B64F71FB2A
+Suppress:  // swiftinfer: skip 0x041AD8B64F71FB2A
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x573AB3509EF976BCE7B5DCDBFFFC7B609AE028CDA1DA020BCF046E9C97657BE9
+Identity:  0x6B12F6DBCB1A0BAF
+Suppress:  // swiftinfer: skip 0x6B12F6DBCB1A0BAF
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x29F6D1A71C1C32EE014F1A750C4D8108EB9270B6040D74EA4F3DFA77AF8803BA
+Identity:  0xBA0E22076BFE7D07
+Suppress:  // swiftinfer: skip 0xBA0E22076BFE7D07
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x7B54493B7ED8345988DB62B9F9DF9DAAD133D4F3A39556C3E60CFF4306EA6EF9
+Identity:  0x39359B7B659E124A
+Suppress:  // swiftinfer: skip 0x39359B7B659E124A
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asin(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:372
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4A6FE7978AD1E2AEE1AEE45709823112A59FB296BFCBBCA16239F77D9E6479FC
+Identity:  0x481D162D5EFAC19E
+Suppress:  // swiftinfer: skip 0x481D162D5EFAC19E
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x53313062D900B1D7BD1C0585A6E58BFE51BA8ED501909726F2A627725534083D
+Identity:  0x44128742B9B3D4C0
+Suppress:  // swiftinfer: skip 0x44128742B9B3D4C0
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x5CF50AA58E7CD1B8142B4C0D126FFC8BC2070E1F97BBAA62684887444AC6B882
+Identity:  0xD76CE66A3E0CE9D5
+Suppress:  // swiftinfer: skip 0xD76CE66A3E0CE9D5
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x55C7191DAB05383E4D87F81BDB3397D60FCBA642DEDDEE8ABF81F0C96A9C878F
+Identity:  0x63EC4BF9D3788F32
+Suppress:  // swiftinfer: skip 0x63EC4BF9D3788F32
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xB749A5C81D1962C1843DAAE4549DB7BF5254DD706BED37C4EBA7EF3F82018C52
+Identity:  0xD354269922787007
+Suppress:  // swiftinfer: skip 0xD354269922787007
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atan(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:381
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xADCCD203DECAB82E190E59AD0AA21B20F40CE7BCB837C28F48F3483ECE952A73
+Identity:  0xB6837A5671386EA3
+Suppress:  // swiftinfer: skip 0xB6837A5671386EA3
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xEA5576FEB5EBC46D131AD439C45378B6D088C79C06BAC6B546C8C7EAF4143489
+Identity:  0x7945704E50CA85F3
+Suppress:  // swiftinfer: skip 0x7945704E50CA85F3
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x4A4A440EF046A1E9A9C9D106D0710E804333A8C4C5412E87161ABC9D5D58AE9C
+Identity:  0xFCE3BABB8C3FAF5B
+Suppress:  // swiftinfer: skip 0xFCE3BABB8C3FAF5B
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD9741E5B89AC5C0F08DC134D820668DC87A1DAFC2AF5536A534AC39E6A4F1510
+Identity:  0x9C942D7A6DA454E7
+Suppress:  // swiftinfer: skip 0x9C942D7A6DA454E7
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ acosh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:387
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xCD4DA8B031A32741921067046DC213A32D5E11A3582352B4F19A7756E234F32E
+Identity:  0x8B79853B78365DA0
+Suppress:  // swiftinfer: skip 0x8B79853B78365DA0
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE5E28C44A91D945876B796CE778B61F084DF245FB3A7EDF1EA9519DE3A3D5CD9
+Identity:  0x72884165E56755D1
+Suppress:  // swiftinfer: skip 0x72884165E56755D1
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x82D1830FBF862E8FAD6672765DC2E95BB440C7D2A5B3D0404612A0BA132FE46F
+Identity:  0x4E852DB0E45F237C
+Suppress:  // swiftinfer: skip 0x4E852DB0E45F237C
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ asinh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:396
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xAFCEEC6540AF47C51C730FAED4BC464FEC77E26D6A46223251630BB72793B174
+Identity:  0xB508ED9EAA904B8B
+Suppress:  // swiftinfer: skip 0xB508ED9EAA904B8B
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x19877099D046EE17C2819913D15302C00784993624E23AE936F3CA569543AAEB
+Identity:  0x2A75D6471A284E69
+Suppress:  // swiftinfer: skip 0x2A75D6471A284E69
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ atanh(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:402
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: Complex -> Complex ↔ Complex -> Complex (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x12F9CC195265AF0E20383057A919A3F1D1F954660C70A440CEA002F299ACDFDC
+Identity:  0xAFB578CE041AAC67
+Suppress:  // swiftinfer: skip 0xAFB578CE041AAC67
+
+[Suggestion]
+Template: associativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ pow(_:_:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:423
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality associativity is not bit-exact under IEEE 754 sampling (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Associativity holds in principle; exact-equality auto-sampling fails on rounding. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x5CE35CA3281131D6B7394E582BAEE6766700221A09E1FA3F025CE178869CB373
+Identity:  0x0EE19DA4B456B0F5
+Suppress:  // swiftinfer: skip 0x0EE19DA4B456B0F5
+
+[Suggestion]
+Template: commutativity
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ pow(_:_:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:423
+  ✓ Type-symmetry signature: (T, T) -> T (T = Complex) (+30)
+  ✓ Floating-point storage: T = Complex — exact-equality commutativity is not bit-exact under IEEE 754 sampling on edge values (-10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ T = Complex has IEEE 754 floating-point storage. Commutativity holds in principle; exact-equality auto-sampling fails on NaN edge cases. Verify via a finite-only generator (e.g. `Gen<Double>.double(in: -1e6...1e6)` lifted into Complex) per PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ will surface the generator override automatically.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x733B865F8B329C34B7C5C12B49727637DBAC526715956D14B899986E6381C400
+Identity:  0xB8FE8FAB14F3C1A8
+Suppress:  // swiftinfer: skip 0xB8FE8FAB14F3C1A8
+
+[Suggestion]
+Template: identity-element
+Score:    70 (Likely)
+
+Why suggested:
+  ✓ pow(_:_:) (Complex, Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:423
+  ✓ Complex.zero: Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+AdditiveArithmetic.swift:19
+  ✓ Type-symmetry signature: (T, T) -> T with identity T.zero (T = Complex) (+30)
+  ✓ Curated identity-element constant: 'Complex.zero' on type Complex (+40)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ The identity property is two-sided: f(t, e) == t AND f(e, t) == t. A one-sided identity (e.g. left-identity only) will pass the type pattern but fail one of the emitted assertions under M4 sampling.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x5607FD8BD147E68F4C5C92EFC8DF50304E509DC197F998DC74757822EDA658A9
+Identity:  0x6295E8311EBEB04A
+Suppress:  // swiftinfer: skip 0x6295E8311EBEB04A
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sqrt(_:) (Complex) -> Complex — /Users/joecursio/calibration/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:442
+  ✓ Type-symmetry signature: T -> T (T = Complex) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3DD8479DFF4C5A2D4772DAD56CD549B793626D0E040D7F013113EF4471FAE1CB
+Identity:  0x4202E3BDE07803A8
+Suppress:  // swiftinfer: skip 0x4202E3BDE07803A8
