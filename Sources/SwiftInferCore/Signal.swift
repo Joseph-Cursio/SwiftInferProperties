@@ -66,6 +66,21 @@ public struct Signal: Sendable, Equatable {
         // Veto (collapses score to suppressed)
         case nonDeterministicBody
         case nonEquatableOutput
+        /// V1.5.1 — fires when the candidate's primary type already
+        /// conforms to a protocol whose published laws cover the
+        /// `KnownProperty` the template would emit (looked up via
+        /// `ProtocolCoverageMap.covers(_:_:)`). The kit's
+        /// `check<Protocol>PropertyLaws` is authoritative when a textual
+        /// conformance match exists, so the suggestion is genuinely
+        /// redundant — full veto rather than a heavy counter-signal.
+        /// Calibration record preserved (the suggestion still scores;
+        /// it just lands in Suppressed and gets filtered) so cycle-3
+        /// metrics can introspect "how many suggestions did
+        /// `: AdditiveArithmetic` suppress?". Detail names the matching
+        /// conformance + the kit check, e.g. `"Property already covered
+        /// by conformance to 'AdditiveArithmetic' — checked by
+        /// PropertyLawKit's checkAdditiveArithmeticPropertyLaws"`.
+        case protocolCoveredProperty
     }
 
     /// Sentinel weight that marks a veto. Score arithmetic never sums this
