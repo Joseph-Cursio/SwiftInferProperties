@@ -141,23 +141,55 @@ Possible-tier sampling was scoped out of cycle 1 per the V1.4.0 plan's minimum-s
 
 ## Cycle-2 priority list (in expected impact order)
 
-1. **Operator-aware identity-element pairing.** Cycle 1 found 16.7% acceptance — 5 of 6 false positives are wrong-constant cases. The fix is structural — but post-cycle-1 review sharpens *how* it should be structured.
+1. **Protocol-conformance-driven property suppression.** *(Added post-cycle-1; supersedes the original priority-#1 framing as a strict generalization — operator-aware identity-element pairing now falls out of this mechanism for free.)*
 
-   **Refinement (added post-cycle-1).** When I first framed this fix I proposed "curated additive-vs-multiplicative op-name lists" — a hand-maintained allowlist parallel to the FP-storage one. That's worse than necessary. The cycle-1 engine ignores protocol conformances *as positive signals* almost entirely: `EquatableResolver` reads `inheritedTypes` only as a *negative gate* on `InversePairTemplate`; `GeneratorSelection` reads `inheritedTypes` only *after* scoring for generator selection; `Signal.Kind.algebraicStructureCluster` exists in the catalog but is never emitted by any template. The protocol info that `TypeDecl.inheritedTypes` already captures from SwiftSyntax is sitting there unused for property scoring. The cycle-2 fix should use it as the primary mechanism:
+   PropertyLawKit publishes 40 law surfaces (stdlib protocols + kit-defined `Semigroup` / `Monoid` / `CommutativeMonoid` / `Group` / `Semilattice`). Each conformance is a contract: a type that conforms gets verified properties for free via the kit's `check<Protocol>PropertyLaws` function. The cycle-1 engine doesn't read this catalog as a positive signal at all (per the Methodology-gaps "Protocol-conformance blindness" note above), so it surfaces redundant suggestions on types that already conform to a covering protocol.
 
-   - If `T: AdditiveArithmetic` / `: Numeric` / `: SignedNumeric`: `T.zero` is the documented *additive* identity. Pair only with `+` / `add`-verb-family ops. The protocol's own laws guarantee both-sided identity, so the IdentityElement template's two-sided caveat is also automatically satisfied for these types.
-   - If `T: Numeric`: `T.one` is the documented *multiplicative* identity. Pair only with `*` / `multiply`-verb-family ops.
-   - If `T: SetAlgebra`: pair `.empty` with `union` (the SetAlgebra additive analogue); intersection's identity (the universal set) has no Swift name and is skipped.
-   - If T conforms to none of the above: fall back to a small curated op-class list as the cycle-2 secondary path, not the primary one.
+   Concrete example from cycle 1: Complex declares `: AdditiveArithmetic` in `Complex+AdditiveArithmetic.swift`. The kit's `checkAdditiveArithmeticPropertyLaws(for: Complex.self, …)` already verifies additive associativity / commutativity / identity (`.zero`). SwiftInfer's cycle-1 default-tier identity-element suggestion on `+(z:w:) + Complex.zero` (which I accepted as a property) was redundant — the kit covers it without any new property test. That redundancy is part of why the identity-element acceptance rate looked low; the *property* is correct but the *suggestion* duplicates the conformance's verification.
 
-   This is sharper than a curated allowlist because it uses authoritative source-of-truth that's already in the scan. It also generalizes — types like `BigInt` or `Decimal` that conform to `Numeric` get the same treatment automatically without requiring new curation. Estimated scope: read `TypeDecl.inheritedTypes` in `IdentityElementTemplate.suggest`, gate the curated-identity-constant signal on the protocol match, fall back to the verb-family list. Tests exercise the protocol-match path on `Complex` (`: Numeric`) plus the fallback path on user-types-without-conformance. ~half a day of code.
-2. **Approximate-equality template arm for FP types.** Cycle 1 surfaces FP candidates with the kit-pointer advisory; cycle 2 could ship a real `KitFloatingPointTemplate` that emits `checkFloatingPointPropertyLaws(for: T.self, using: gen)` stubs directly. Already designed; ~1 day of code.
-3. **Possible-tier sampling on the remaining ~358 surface.** Triage 20-30 round-trips + 20 idempotence + the FP commutativity/associativity survivors. With acceptance/rejection data, cycle 2 can confirm or reject the cycle-1 hypotheses about which templates over-fire.
+   Cycle-2 fix: a curated `protocolName → [coveredProperty]` map driving a `protocolCoveredProperty` counter-signal (-∞ veto when the candidate's `(template, type)` pair is already covered). Sketch:
+
+   ```swift
+   let map: [String: Set<KnownProperty>] = [
+       "AdditiveArithmetic": [.additiveAssociative, .additiveCommutative, .additiveIdentityZero],
+       "Numeric":            [/* above */
+                              .multiplicativeAssociative, .multiplicativeCommutative,
+                              .multiplicativeIdentityOne, .distributivity],
+       "SignedNumeric":      [/* above + */ .additiveInverse],
+       "Equatable":          [.equatableReflexive, .equatableSymmetric, .equatableTransitive],
+       "Comparable":         [/* above + */ .comparableTotal],
+       "Hashable":           [.hashableConsistent],
+       "SetAlgebra":         [.setUnionAssociative, .setUnionCommutative,
+                              .setUnionEmptyIdentity, .setIntersectionIdempotent],
+       "Semigroup":          [.associativity],
+       "Monoid":             [.associativity, .identity],
+       "CommutativeMonoid":  [.associativity, .commutativity, .identity],
+       "Group":              [.associativity, .identity, .inverse],
+       "Semilattice":        [.associativity, .commutativity, .idempotence]
+   ]
+   ```
+
+   For each candidate suggestion, the templates query `inheritedTypes` (already on `TypeDecl`) against this map. If the candidate property is in any covered set, suppress (-∞ veto) — the kit already tests it. If the type's nearest match has *some* of the candidate's conformances but not the one that would cover this property, surface as normal (potentially Likely tier with a kit-pointer advisory: "consider conforming to `Monoid` to get this verified by `checkMonoidPropertyLaws`").
+
+   This single mechanism drives three things at once:
+   - **Suppression** (the new direction): redundant suggestions on already-conforming types are filtered. Likely the largest cycle-1-noise reducer.
+   - **Operator-aware identity-element pairing** (the original priority-#1): `Numeric.zero` is paired with additive ops because Numeric's covered-properties set includes `.additiveIdentityZero`, not `.multiplicativeIdentityOne`. Falls out without separate curation.
+   - **RefactorBridge complement**: the inverse direction (structural evidence for property + type doesn't conform → propose conformance) is what RefactorBridge already does. Same protocol map could feed both.
+
+   Estimated cycle-2 scope: ~1 day. The map is hand-maintained but stable (kit additions are infrequent and a one-line PR away). Empirical effect on the cycle-1 baseline: most of the visible identity-element / commutativity / associativity / inverse-pair / round-trip hits on Complex / Float / Double / Decimal / collection types likely fall under some existing conformance — cycle 2 should re-run the 4 corpora after this lands and re-measure.
+
+2. **Approximate-equality template arm for FP types.** Cycle 1 surfaces FP candidates with the kit-pointer advisory; cycle 2 could ship a real `KitFloatingPointTemplate` that emits `checkFloatingPointPropertyLaws(for: T.self, using: gen)` stubs directly. Already designed; ~1 day of code. Synergizes with priority #1 — once the protocol-coverage map suppresses Numeric/AdditiveArithmetic-covered suggestions, FP-conforming types will be the largest remaining FP-scoring class.
+
+3. **Possible-tier sampling on the remaining surface (after priority #1 lands).** Triage 20-30 round-trips + 20 idempotence + the FP commutativity/associativity survivors. With acceptance/rejection data, cycle 2 can confirm or reject the cycle-1 hypotheses about which templates over-fire. The post-priority-#1 surface should be much smaller and higher-signal than the cycle-1 raw 358-suggestion surface, making this triage round more tractable.
+
 4. **`surfacedAt` plumbing.** Unblocks PRD §17.2's time-to-adoption metric. ~half a day.
+
 5. **Cross-target enum coverage** (M14 deferred bit) and **multi-predicate equivalence classes** (M13 axis 3) — both still SemanticIndex-blocked.
 
 ## Summary
 
-Cycle 1 validated the calibration loop end-to-end and shipped two structural tunings + one explainability extension that drop the `--include-possible` surface by 69.3%. The minimum-scope triage data corroborates one cycle-2 hypothesis (operator-aware identity-element pairing). The most important narrative shift was reframing FP-storage suggestions from "noise to suppress" to "valid-given-finite-only-generator" — a calibration nuance that came from user domain context, not from data alone.
+Cycle 1 validated the calibration loop end-to-end and shipped two structural tunings + one explainability extension that drop the `--include-possible` surface by 69.3%. The minimum-scope triage data plus post-cycle-1 design review (during the V1.4.4 writeup pass) generated the cycle-2 priority list, with the headline finding being the *protocol-conformance blindness* gap: the engine ignores the kit's 40-protocol law catalog as a source-of-truth for already-verified properties, surfacing redundant suggestions on conforming types. Closing that gap (priority #1) is a strict generalization that subsumes the originally-framed operator-aware identity-element pairing as a special case.
+
+Two narrative shifts mattered most, both from user framing rather than data alone: (a) reframing FP-storage suggestions from "noise to suppress" to "valid-given-finite-only-generator" per the kit's `FloatingPointLaws.swift` posture, and (b) recognizing that the kit's protocol catalog is the property-source-of-truth that SwiftInfer should treat as primary input for both suppression (already-covered properties) and structural recognition (RefactorBridge proposals). Cycle-1 didn't ship either of these as code; they're cycle-2's priority #1 and #2.
 
 Cycle 2 has a clear priority list. Time to next cycle: aim for the v1.5 cut (~2-3 months).
