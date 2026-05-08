@@ -1,0 +1,113 @@
+{
+  "records" : [
+    {
+      "decision" : "accepted",
+      "identityHash" : "169DCACD6FC44746",
+      "scoreAtDecision" : 70,
+      "signalWeights" : [
+        {
+          "kind" : "typeSymmetrySignature",
+          "weight" : 30
+        },
+        {
+          "kind" : "exactNameMatch",
+          "weight" : 40
+        }
+      ],
+      "template" : "identity-element",
+      "tier" : "likely",
+      "timestamp" : "2026-05-08T01:48:48Z"
+    },
+    {
+      "decision" : "rejected",
+      "identityHash" : "613EDBB79D34E9A3",
+      "scoreAtDecision" : 70,
+      "signalWeights" : [
+        {
+          "kind" : "typeSymmetrySignature",
+          "weight" : 30
+        },
+        {
+          "kind" : "exactNameMatch",
+          "weight" : 40
+        }
+      ],
+      "template" : "identity-element",
+      "tier" : "likely",
+      "timestamp" : "2026-05-08T01:48:48Z"
+    },
+    {
+      "decision" : "rejected",
+      "identityHash" : "7A7BB4425A1A6C65",
+      "scoreAtDecision" : 70,
+      "signalWeights" : [
+        {
+          "kind" : "typeSymmetrySignature",
+          "weight" : 30
+        },
+        {
+          "kind" : "exactNameMatch",
+          "weight" : 40
+        }
+      ],
+      "template" : "identity-element",
+      "tier" : "likely",
+      "timestamp" : "2026-05-08T01:48:48Z"
+    },
+    {
+      "decision" : "rejected",
+      "identityHash" : "9964626EA35C4B60",
+      "scoreAtDecision" : 70,
+      "signalWeights" : [
+        {
+          "kind" : "typeSymmetrySignature",
+          "weight" : 30
+        },
+        {
+          "kind" : "exactNameMatch",
+          "weight" : 40
+        }
+      ],
+      "template" : "identity-element",
+      "tier" : "likely",
+      "timestamp" : "2026-05-08T01:48:48Z"
+    },
+    {
+      "decision" : "rejected",
+      "identityHash" : "6295E8311EBEB04A",
+      "scoreAtDecision" : 70,
+      "signalWeights" : [
+        {
+          "kind" : "typeSymmetrySignature",
+          "weight" : 30
+        },
+        {
+          "kind" : "exactNameMatch",
+          "weight" : 40
+        }
+      ],
+      "template" : "identity-element",
+      "tier" : "likely",
+      "timestamp" : "2026-05-08T01:48:48Z"
+    },
+    {
+      "decision" : "rejected",
+      "identityHash" : "4A3F0E84A328855C",
+      "scoreAtDecision" : 70,
+      "signalWeights" : [
+        {
+          "kind" : "typeSymmetrySignature",
+          "weight" : 30
+        },
+        {
+          "kind" : "exactNameMatch",
+          "weight" : 40
+        }
+      ],
+      "template" : "identity-element",
+      "tier" : "likely",
+      "timestamp" : "2026-05-08T01:48:48Z"
+    }
+  ],
+  "schemaVersion" : 2
+}
