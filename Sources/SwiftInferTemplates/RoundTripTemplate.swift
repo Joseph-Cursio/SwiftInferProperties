@@ -47,6 +47,9 @@ public enum RoundTripTemplate {
         if let discoverable = discoverableSignal(for: pair) {
             signals.append(discoverable)
         }
+        if let crossType = crossTypeRoundTripCounterSignal(for: pair) {
+            signals.append(crossType)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
@@ -143,6 +146,62 @@ public enum RoundTripTemplate {
             kind: .discoverableAnnotation,
             weight: 35,
             detail: "Both halves carry @Discoverable(group: \"\(group)\")"
+        )
+    }
+
+    /// V1.4.3b — fires when forward and reverse functions belong to
+    /// different containing types (e.g. `AdjacentPairsCollection.index(after:)`
+    /// paired with `Chain2Sequence.index(before:)` — both have `Index`
+    /// nested member types but the `Index`es are distinct, so the round-
+    /// trip property cannot type-check). Drops Score 30 → 5 (well into
+    /// Suppressed) so the cross-type pair is filtered from both default-
+    /// tier and `--include-possible` output.
+    ///
+    /// **Three exemptions** (the rule fires only when none apply):
+    /// 1. **Both `containingTypeName == nil`** — top-level free-function
+    ///    pair like `func encode(_:) -> Data` + `func decode(_:) -> Doc`
+    ///    is a legitimate module-scope round-trip. `nil == nil` falls
+    ///    through cleanly via the `!=` guard.
+    /// 2. **Same `containingTypeName`** — cross-extension on the same
+    ///    type (`extension Doc { encode }` + `extension Doc { decode }`)
+    ///    both record `"Doc"` and pair fine.
+    /// 3. **Shared `@Discoverable(group:)` annotation** — the user's
+    ///    explicit grouping signal overrides the structural cross-type
+    ///    rule. A `struct Encoder` and `struct Decoder` paired via
+    ///    `@Discoverable(group: "codec")` is a legitimate round-trip
+    ///    despite different containing types; the user has opted in
+    ///    by tagging both halves.
+    ///
+    /// Empirical motivation: V1.4.2 cycle-1 baseline showed 673 round-
+    /// trip Possible-tier hits on `swift-algorithms` (the vast majority
+    /// signature-only matches across distinct `Index` member types).
+    /// SemanticIndex would catch this via type resolution; this rule is
+    /// a cheap pre-SemanticIndex approximation using the textual
+    /// `containingTypeName` field already on `FunctionSummary`.
+    private static func crossTypeRoundTripCounterSignal(
+        for pair: FunctionPair
+    ) -> Signal? {
+        let forwardContainer = pair.forward.containingTypeName
+        let reverseContainer = pair.reverse.containingTypeName
+        guard forwardContainer != reverseContainer else { return nil }
+        // Exemption 3: shared `@Discoverable(group:)` is the user's
+        // explicit "these go together" signal — overrides the structural
+        // cross-type rule. The +35 discoverableAnnotation signal already
+        // captures the positive evidence; adding a -25 here would
+        // double-count the cross-type concern the user already addressed.
+        if let forwardGroup = pair.forward.discoverableGroup,
+           let reverseGroup = pair.reverse.discoverableGroup,
+           forwardGroup == reverseGroup {
+            return nil
+        }
+        let forwardLabel = forwardContainer ?? "<top-level>"
+        let reverseLabel = reverseContainer ?? "<top-level>"
+        return Signal(
+            kind: .crossTypeRoundTripPair,
+            weight: -25,
+            detail: "Cross-type round-trip pair: forward in \(forwardLabel), "
+                + "reverse in \(reverseLabel) — property cannot type-check "
+                + "across distinct containing types (cycle-1 calibration)"
         )
     }
 
