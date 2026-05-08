@@ -2,7 +2,7 @@
 
 Type-directed property inference for Swift. Surfaces idempotence, round-trip pairs, and algebraic-structure (semigroup / monoid / group / semilattice / ring) candidates from function signatures, cross-function pairs, and existing unit tests — for human review, never silent execution.
 
-> **Status:** v1.7.0 (fourth calibration cycle — curated 14-key stdlib-conformance bake-in extends V1.5.2's coverage veto reach to stdlib-typed (`Int` / `Double` / `UInt64` / etc.) carriers; cycle-4 −24 of 350 surfaced suggestions, with 22 round-trip suppressions on swift-collections/OrderedCollections via `Int: Codable`. Cumulative across cycles 1–4: 1167 → 326 (−72.1%)). The full design lives in [`docs/SwiftInferProperties PRD v1.0.md`](docs/SwiftInferProperties%20PRD%20v1.0.md). Current performance baseline: [`docs/perf-baseline-v1.7.md`](docs/perf-baseline-v1.7.md) (v1.6 + v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v0.1.0 baselines retained for forensic comparison).
+> **Status:** v1.8.0 (fifth calibration cycle — shape-gated `RoundTripTemplate` Codable veto fires only on encoder/decoder pairs `(T) -> Codec` ↔ `(Codec) -> T` for `Codec ∈ {Data, String}`; cycle-5 +23 re-emergences (22 OrderedCollections + 1 Algorithms) closing the V1.5.2 over-suppression that V1.7.1's bake-in had surfaced. First non-monotonic cycle in the calibration trajectory — and intentional. Cumulative across cycles 1–5: 1167 → 349 (−70.1%)). The full design lives in [`docs/SwiftInferProperties PRD v1.0.md`](docs/SwiftInferProperties%20PRD%20v1.0.md). Current performance baseline: [`docs/perf-baseline-v1.8.md`](docs/perf-baseline-v1.8.md) (v1.7 + v1.6 + v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v0.1.0 baselines retained for forensic comparison).
 
 ## What it does
 
@@ -10,7 +10,7 @@ Type-directed property inference for Swift. Surfaces idempotence, round-trip pai
 
 `swift-infer drift --target Foo` diffs current discovery output against a `.swiftinfer/baseline.json` snapshot and emits non-fatal CI-friendly warnings for new Strong-tier suggestions that lack a recorded decision (PRD §9). Drift never fails the build.
 
-`swift-infer metrics` aggregates `.swiftinfer/decisions.json` files into per-template acceptance / rejection / suppression rates (PRD §17.2). Useful for the empirical-tuning loop SwiftInfer's signal weights are calibrated against — see [`docs/calibration-cycle-1-findings.md`](docs/calibration-cycle-1-findings.md), [`docs/calibration-cycle-2-findings.md`](docs/calibration-cycle-2-findings.md), [`docs/calibration-cycle-3-findings.md`](docs/calibration-cycle-3-findings.md), and [`docs/calibration-cycle-4-findings.md`](docs/calibration-cycle-4-findings.md) for cycle-1 through cycle-4 results.
+`swift-infer metrics` aggregates `.swiftinfer/decisions.json` files into per-template acceptance / rejection / suppression rates (PRD §17.2). Useful for the empirical-tuning loop SwiftInfer's signal weights are calibrated against — see [`docs/calibration-cycle-1-findings.md`](docs/calibration-cycle-1-findings.md), [`docs/calibration-cycle-2-findings.md`](docs/calibration-cycle-2-findings.md), [`docs/calibration-cycle-3-findings.md`](docs/calibration-cycle-3-findings.md), [`docs/calibration-cycle-4-findings.md`](docs/calibration-cycle-4-findings.md), and [`docs/calibration-cycle-5-findings.md`](docs/calibration-cycle-5-findings.md) for cycle-1 through cycle-5 results.
 
 ## Relationship to SwiftPropertyLaws
 
@@ -25,7 +25,7 @@ Where SwiftPropertyLaws verifies the laws of *declared* protocol conformances, S
 ## Add to your project
 
 ```swift
-.package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "1.7.0")
+.package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "1.8.0")
 ```
 
 Or run as a one-off against an existing target:
