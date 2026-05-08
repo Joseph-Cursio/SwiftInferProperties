@@ -74,6 +74,9 @@ public enum InversePairTemplate {
         if let fpCounter = floatingPointStorageCounterSignal(for: pair) {
             signals.append(fpCounter)
         }
+        if let direction = directionLabelCounterSignal(for: pair) {
+            signals.append(direction)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
