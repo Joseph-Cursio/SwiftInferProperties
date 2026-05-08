@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-05-08
+
+The first calibration cycle. v1.4 operationalizes PRD §17.3's empirical-tuning loop, ships the long-deferred PRD §17.2 `swift-infer metrics` subcommand, and lands two structural tunings derived from the cycle-1 surface analysis. Most user-visible effect: `swift-infer discover --include-possible` total surface drops 69.3% across the four cycle-1 benchmark corpora (1167 → 358 surfaced suggestions); resident memory on the 500-file synthetic perf row drops 75.4% (551.8 → 136.0 MB) from the cross-type rule eliminating Suggestion-struct allocations before tier-filter. Same hard-guarantee posture as v1.3 — §16 guarantees unchanged; §13 budgets re-baselined at [`docs/perf-baseline-v1.4.md`](docs/perf-baseline-v1.4.md).
+
+### `swift-infer metrics` (PRD §17.2)
+
+- **New subcommand** that aggregates one or more `.swiftinfer/decisions.json` files into per-template acceptance / rejection / suppression rates plus tier-mix acceptance. Three of PRD §17.2's five metrics ship in this MVP — the missing two (time-to-adoption + post-acceptance failure rate) require new fields on `DecisionRecord` and stay deferred to v1.5+.
+- Default mode walks up to `<package-root>/.swiftinfer/decisions.json`. Aggregation mode takes one or more `--decisions <path>` flags and merges via the new `Decisions.merge(_:)` helper (identity-keyed, latest-timestamp wins on collision). Per PRD §17.2 the renderer surfaces a low-count advisory (< 20 decisions) and a retirement-candidate flag (≥ 20 decisions and < 50% acceptance).
+
+### Calibration cycle 1 — empirical tunings
+
+- **Cross-type round-trip counter-signal (V1.4.3b).** New `Signal.Kind.crossTypeRoundTripPair` (-25 weight) fires on `RoundTripTemplate` pairs where `forward.containingTypeName != reverse.containingTypeName`. Score 30 → 5 (Suppressed). Three exemptions: (a) both `nil` (free-function pair), (b) same containing type (cross-extension), (c) shared `@Discoverable(group:)` annotation. Empirical effect across the 4 cycle-1 corpora: round-trip Possible 990 → 181 (-81.7%); biggest cuts on swift-algorithms (728 → 75) and swift-collections (257 → 101); single-type corpora unchanged. SemanticIndex would catch the cross-type case via type resolution; this rule is the cheap pre-SemanticIndex approximation using `containingTypeName`.
+- **FP-storage counter-signal + kit-FP-laws explainability pointer (V1.4.3 + V1.4.3a).** New `Signal.Kind.floatingPointStorage` (-10 weight; PRD §17.3 step-2 magnitude) fires on associativity / commutativity / inverse-pair candidates whose parameter type is in the curated FP-storage list (Float / Double / Float16-80 / CGFloat / Complex / Decimal). Drops Score 30 → 20 (Possible-tier floor) — the suggestion stays surfaced under `--include-possible` so the explainability kit-pointer is visible. The advisory text reframes FP suggestions as real algebraic candidates that need a verification-mode adjustment (finite-only generator) per PropertyLawKit's `FloatingPointLaws.swift` posture, not as noise to suppress. Identity-element exempt (FP additive identity is reliable). Round-trip / idempotence / monotonicity / reduce-equivalence exempt for cycle 1.
+- **Calibration findings writeup (V1.4.4).** New `docs/calibration-cycle-1-findings.md` documents the cycle-1 narrative: corpus selection (swift-collections + swift-numerics + swift-algorithms + SwiftPropertyLaws), pre-triage observations (identity-element is the only template that escapes Score 30 without test-body cross-validation; round-trip is 84.8% of Possible-tier surface; score distribution is highly compressed), the 6-decision minimum-scope triage findings (16.7% acceptance on identity-element template), and the cycle-2 priority list (operator-aware identity-element pairing → approximate-equality template arm → Possible-tier sampling → `surfacedAt` plumbing). Decisions data committed at `docs/calibration-cycle-1-data/swift-numerics-ComplexModule.decisions.json`; pre/post-tune discover outputs for all 4 corpora committed at `docs/calibration-cycle-1-data/*.discover.txt` for cycle-2 diff target.
+
+### Documentation
+
+- **Performance baseline re-pinned.** `docs/perf-baseline-v1.4.md` is the canonical regression anchor for v1.4+. Headline: Row 4 (500-file memory delta) drops -75.4% (551.8 → 136.0 MB) — the cross-type round-trip rule suppresses pairs *before* `Suggestion` construction in `RoundTripTemplate.suggest`, reclaiming ~415 MB of peak resident memory on the synthetic perf corpus. Rows 1–3 within ±5% of v1.3. The post-v1.1.0 800 MB CI ceiling stays; cycle 2 may revisit if the gain holds in CI. v1.3 baseline retained for forensic comparison.
+- **CLAUDE.md repo-state pointer index extended.** v1.4.0 release entry points at `docs/archive/v1.4 Calibration Plan.md`; "Where to look" perf-baseline pointer updated to `docs/perf-baseline-v1.4.md`. The `swift-infer metrics` mention drops from the open-trajectory list (it ships in this release).
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.4 ships no new accept-flow writeout paths; the cycle-1 tunings only change scoring (signal weights) and explainability text.
+- All PRD §13 performance budgets hold at v1.4; see `docs/perf-baseline-v1.4.md` for the row-by-row numbers. Row 4 ceiling stays at the post-v1.1.0 800 MB CI calibration despite the dramatic (-75.4%) headroom gain.
+- PRD §14 + §19 runtime no-network guarantee unchanged; metrics aggregation is purely local — `NoNetworkRuntimeTests` still passes.
+
+[1.4.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.4.0
+
 ## [1.3.0] — 2026-05-07
 
 Closes the PRD §7.8 trio for the v1.x scanner shape: with M16 shipping the general consumer-producer chain detection (closing M10's deferred Option A), all three §7.8 examples now have full v1.x coverage — preconditions across all four `ParameterizedValue.Kind` cases (M9 + M15), inferred domains for both round-trip-pair narrowing (M10 with generator override) and general consumer-producer chains (M16 comment-only advisory), and equivalence classes across three of four Option A axes (M11 + M13 + M14). Same hard-guarantee + perf-budget posture as v1.2 — §16 guarantees unchanged; §13 budgets re-baselined at [`docs/perf-baseline-v1.3.md`](docs/perf-baseline-v1.3.md).
