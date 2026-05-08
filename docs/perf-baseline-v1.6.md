@@ -14,7 +14,7 @@ PRD v1.0 §13 mandates that "a 25% regression in any number fails the build." Th
 | 1 | 50-file synthetic discover (all 8 templates active + contradiction pass) | < 2.0s wall | 0.495s | 75% | 0.492s (+0.6%) | `PerformanceTests.syntheticFiftyFileCorpus` |
 | 1 | 50-file synthetic discover with `.swiftinfer/decisions.json` load | < 2.0s wall | 1.465s | 27% | 1.467s (-0.1%) | `PerformanceTests.syntheticFiftyFileCorpusWithDecisionsLoad` |
 | 1 | `swift-collections/Sources/DequeModule` (44 .swift files) | < 3.0s wall (see note) | 1.410s | 53% | 1.399s (+0.8%) | `PerformanceTests.swiftCollectionsDequeModule` |
-| 2 | TestLifter parse of 100 synthetic test files (six detectors + chain-detector pass) | < 3.0s wall | 1.222s | 59% | 1.224s (-0.2%) | `TestLifterPerformanceTests.syntheticHundredTestFileCorpus` |
+| 2 | TestLifter parse of 100 synthetic test files (six detectors + chain-detector pass) | < 4.0s wall (V1.6.1 flake-resistant) | 1.222s | 70% | 1.224s (-0.2%) | `TestLifterPerformanceTests.syntheticHundredTestFileCorpus` |
 | 3 | `swift-infer drift` re-run after one-file change (10-file corpus) | < 0.5s wall | 0.101s | 80% | 0.100s (+1.0%) | `DriftIncrementalPerformanceTests.driftReRunWithinBudget` |
 | 4 | `swift-infer discover` resident-memory delta on 500-file synthetic | < 800 MB (post-v1.1.0 calibration) | 134.8 MB local | 83% | 134.6 MB (+0.1%) | `MemoryCeilingPerformanceTests.memoryCeilingOnFiveHundredFiles` |
 | 5 | `swift-infer discover --interactive` first-prompt latency (5-file corpus) | < 1.0s wall | 0.025s | 98% | 0.024s (+4.2%) | `InteractiveFirstPromptPerformanceTests.firstPromptWithinBudget` |
@@ -35,7 +35,12 @@ All numbers are single-shot wall times from a `swift test` invocation that filte
 
 ## Budget changes vs v1.5
 
-None. All §13 budgets are unchanged from the post-v1.1.0 calibration (row 4 ceiling = 800 MB; all other rows at their v0.1.0 budgets, with row 1c's flake-resistant 3.0s budget unchanged from v1.1).
+None at v1.6.0. **V1.6.1 maintenance patch widened two budgets** for CI flake resistance — see the Re-baselining log at the bottom of this file:
+
+- **Row 2 (TestLifter 100-file parse): 3.0s → 4.0s.** Flaked once on the v1.5.7 push (3.115s).
+- **Discover pipeline 100-file integration test (`discoverPipelineHundredTestFileBudgetWithM32Pipeline`): 5.0s → 6.0s.** Flaked twice in consecutive pushes (v1.5.7 at 5.189s, v1.6.6 at 5.076s). This integration test isn't formally a §13 row (the `MemoryCeilingPerformanceTests` `[§13 row 4]` diagnostic line names the rows) but lives in the same Swift Testing suite as Row 2 and runs alongside it.
+
+Both bumps follow the cycle-1 v1.1 precedent of bumping Row 1c (DequeModule) to a "flake-resistant 3.0s" budget for the same reason. Local Apple M1 measurements unchanged; only the assertion ceilings move.
 
 ## §13 row 4 — measurement methodology (unchanged from v1.1)
 
@@ -54,3 +59,18 @@ PRD §13 last paragraph: "a 25% regression in any number fails the build." For e
 ## Re-baselining
 
 When intentional perf work moves a number, re-run the relevant filtered `swift test` invocation, update the **Measured** column above, and reference the commit + the PR that caused the shift in a new "## Re-baselining log" section at the bottom of this file. Do not delete prior measurements — the regression rule operates against the most recent committed baseline.
+
+## Re-baselining log
+
+### v1.6.1 — flake-resistant budget bumps for Row 2 and the 100-file pipeline integration test
+
+Two empirical CI failures on consecutive pushes (v1.5.7 + v1.6.6) confirmed the 3.0s / 5.0s ceilings on these two tests were structurally too tight for GitHub Actions hardware. Both passed locally on Apple M1 with comfortable headroom; both crossed the ceiling on CI by 1.5–3.8%.
+
+| Test | Old budget | New budget | CI evidence |
+|---|---|---|---|
+| `syntheticHundredTestFileCorpus` (Row 2) | 3.0s | **4.0s** | v1.5.7 push: 3.115s, failed |
+| `discoverPipelineHundredTestFileBudgetWithM32Pipeline` | 5.0s | **6.0s** | v1.5.7: 5.189s, v1.6.6: 5.076s — both failed |
+
+CI runs Row 2 at ~2.5× slower than M1 (1.22s → 3.1s) and the 100-file pipeline integration test at ~1.4–1.5× slower (3.6s → 5.1s). The new budgets keep ≥1s headroom on the worst observed CI measurement, matching v1.1's posture for Row 1c (DequeModule, bumped to "flake-resistant 3.0s" for the same reason).
+
+No measured numbers move — only the assertion ceilings change. Local Apple M1 measurements remain at 1.222s (Row 2) / ~3.6s (integration test); the 25% regression rule still operates against those numbers.

@@ -17,7 +17,7 @@ import Testing
 @Suite("TestLifter — PRD §13 100-test-file budget (M1.6 + M2.4 + M5.6)")
 struct TestLifterPerformanceTests {
 
-    @Test("TestLifter.discover on 100 synthetic test files completes in < 3s wall (six detectors)")
+    @Test("TestLifter.discover on 100 test files < 4s (V1.6.1 flake-resistant; six detectors)")
     func syntheticHundredTestFileCorpus() throws {
         let directory = try generateSyntheticTestCorpus(fileCount: 100)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -26,9 +26,15 @@ struct TestLifterPerformanceTests {
         let elapsed = try measureWall {
             artifacts = try TestLifter.discover(in: directory)
         }
+        // V1.6.1 patch — flake-resistant 4.0s budget (cycle-3 priority #7).
+        // CI runs at ~2.5× slower than Apple M1 (1.22s → 3.1s); the
+        // original 3.0s ceiling left effectively zero headroom. Flaked
+        // once on the v1.5.7 push (3.115s). Bumped to 4.0s following the
+        // cycle-1 v1.1 precedent that bumped Row 1c (DequeModule) to a
+        // "flake-resistant 3.0s" budget for the same reason.
         #expect(
-            elapsed < 3.0,
-            "TestLifter.discover on 100 test files took \(formatted(elapsed))s — over the §13 3s budget"
+            elapsed < 4.0,
+            "TestLifter.discover on 100 test files took \(formatted(elapsed))s — over the §13 flake-resistant 4s budget"
         )
         // M5.6: each file contributes round-trip + idempotence +
         // commutativity + monotonicity + count-invariance + reduce-
@@ -77,7 +83,7 @@ struct TestLifterPerformanceTests {
     /// pipeline overhead must be sub-second to keep the headroom).
     /// A regression beyond this would suggest the M3.2 pipeline pass
     /// has algorithmic issues worth investigating before shipping.
-    @Test("Discover pipeline (CLI) on 100 test files stays under 5s with M3.2 lifted-pipeline pass active")
+    @Test("Discover pipeline on 100 test files < 6s (V1.6.1 flake-resistant; M3.2 active)")
     func discoverPipelineHundredTestFileBudgetWithM32Pipeline() throws {
         let directory = try generateSyntheticTestCorpus(fileCount: 100)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -90,11 +96,18 @@ struct TestLifterPerformanceTests {
                 diagnostics: SilentPerfDiagnostics()
             )
         }
+        // V1.6.1 patch — flake-resistant 6.0s budget (cycle-3 priority #7).
+        // CI runs at ~1.4-1.5× slower than Apple M1 (3.6s → 5.1s); the
+        // original 5.0s ceiling provided effectively zero CI headroom.
+        // Flaked twice in two consecutive pushes (v1.5.7 at 5.189s,
+        // v1.6.6 at 5.076s). Bumped to 6.0s — keeps ≥1s headroom on
+        // the worst observed CI measurement. Same flake-resistant
+        // posture as Row 2's 4.0s and Row 1c's 3.0s.
         #expect(
-            elapsed < 5.0,
+            elapsed < 6.0,
             """
             Discover pipeline on 100 test files took \(formatted(elapsed))s — \
-            over the M3.4 5s budget (parse < 3s + M3.2 overhead headroom)
+            over the M3.4 flake-resistant 6s budget (parse < 4s + M3.2 overhead headroom)
             """
         )
         // The M3.2 pipeline should produce at least 400 promoted lifted
