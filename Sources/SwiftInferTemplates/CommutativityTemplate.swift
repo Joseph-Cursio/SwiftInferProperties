@@ -51,9 +51,21 @@ public enum CommutativityTemplate {
 
     /// Build a suggestion for `summary`, or return `nil` if the type
     /// pattern doesn't match or the score collapses to `.suppressed`.
+    ///
+    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
+    /// veto. Op-class-aware: `+` on a `: AdditiveArithmetic` type maps
+    /// to `additiveCommutative` (kit `checkAdditiveArithmeticPropertyLaws`);
+    /// `*` on a `: Numeric` type maps to `multiplicativeCommutative`
+    /// (kit `checkNumericPropertyLaws`); `union` / `formUnion` on a
+    /// `: SetAlgebra` type maps to `setUnionCommutative` (kit
+    /// `checkSetAlgebraPropertyLaws`). User-named ops (`combine`,
+    /// `merge`, etc.) on Numeric types fall through unsuppressed —
+    /// the kit covers `+` / `*` specifically, not arbitrary
+    /// commutative functions on Numeric carriers.
     public static func suggest(
         for summary: FunctionSummary,
-        vocabulary: Vocabulary = .empty
+        vocabulary: Vocabulary = .empty,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         guard let typeShape = typeShapeSignal(for: summary) else {
             return nil
@@ -70,6 +82,12 @@ public enum CommutativityTemplate {
         }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
+        }
+        if let coverageVeto = protocolCoverageVeto(
+            for: summary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
         }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
@@ -171,6 +189,44 @@ public enum CommutativityTemplate {
             weight: Signal.vetoWeight,
             detail: "Non-deterministic API in body: \(calls)"
         )
+    }
+
+    /// V1.5.2 — fires when the candidate type's existing protocol
+    /// conformances cover the commutativity property the template
+    /// would emit, mapped op-class-aware: `+` → additive, `*` →
+    /// multiplicative, `union`/`formUnion` → set-union. Other ops
+    /// don't bind to a kit-published commutativity law (e.g. a
+    /// user-named `combine` on Int isn't covered by Numeric's `+`/`*`
+    /// commutativity laws), so they fall through unsuppressed.
+    private static func protocolCoverageVeto(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        let candidates = commutativityCoverageCandidates(forOp: summary.name)
+        guard !candidates.isEmpty else { return nil }
+        return ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: summary.parameters.first?.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: candidates
+        )
+    }
+
+    /// V1.5.2 — op-class → KnownProperty candidate set for the
+    /// commutativity veto. `static internal` so AssociativityTemplate
+    /// can reuse the same op-class shape (commutativity / associativity
+    /// share the curated verb list per the AssociativityTemplate type
+    /// doc).
+    static func commutativityCoverageCandidates(forOp opName: String) -> [KnownProperty] {
+        switch opName {
+        case "+":
+            return [.additiveCommutative]
+        case "*":
+            return [.multiplicativeCommutative]
+        case "union", "formUnion":
+            return [.setUnionCommutative]
+        default:
+            return []
+        }
     }
 
     /// V1.4.3 — fires when the candidate's parameter type is a

@@ -36,9 +36,20 @@ public enum RoundTripTemplate {
     /// the template consults `vocabulary.inversePairs` alongside the
     /// curated list. Defaults to `.empty` so M1 call sites compile
     /// unchanged.
+    ///
+    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
+    /// veto. Forward type's `: Codable` conformance (or `: Codable`
+    /// inherited transitively — the curated table only lists
+    /// `Codable`, not `Encodable`+`Decodable` as a pair, see the
+    /// V1.5.1 ProtocolCoverageMap doc) covers `codableRoundTrip` —
+    /// kit `checkCodablePropertyLaws` verifies the JSONEncoder/Decoder
+    /// round-trip directly. Non-Codable round-trips (custom
+    /// encode/decode on a domain type) fall through unsuppressed per
+    /// the v1.5 plan open-decision #4 default.
     public static func suggest(
         for pair: FunctionPair,
-        vocabulary: Vocabulary = .empty
+        vocabulary: Vocabulary = .empty,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
@@ -52,6 +63,12 @@ public enum RoundTripTemplate {
         }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
+        }
+        if let coverageVeto = protocolCoverageVeto(
+            for: pair,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
         }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
@@ -217,6 +234,24 @@ public enum RoundTripTemplate {
             kind: .nonDeterministicBody,
             weight: Signal.vetoWeight,
             detail: "Non-deterministic API in \(side): \(both.joined(separator: ", "))"
+        )
+    }
+
+    /// V1.5.2 — fires when the forward type conforms to `Codable`
+    /// (via `inheritedTypesByName`). Kit's
+    /// `checkCodablePropertyLaws(for:)` verifies the JSON round-trip
+    /// directly, making the suggestion redundant. Non-Codable
+    /// round-trip pairs (`parse`/`format` on a custom Doc, custom
+    /// codec types) fall through unsuppressed per v1.5 plan open-
+    /// decision #4 default ("yes, but only for Codable").
+    private static func protocolCoverageVeto(
+        for pair: FunctionPair,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: pair.forward.parameters.first?.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: [.codableRoundTrip]
         )
     }
 

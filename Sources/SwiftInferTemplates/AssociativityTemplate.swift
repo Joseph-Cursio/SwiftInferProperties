@@ -46,10 +46,20 @@ public enum AssociativityTemplate {
     /// as the closure-position argument of any `.reduce(_, X)` call;
     /// callers that haven't computed this set (e.g. unit tests for the
     /// pure type-pattern path) can pass the empty default.
+    ///
+    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
+    /// veto. Mirrors `CommutativityTemplate`'s op-class-aware shape,
+    /// targeting the `*Associative` properties: `+` →
+    /// `additiveAssociative` (kit `checkAdditiveArithmeticPropertyLaws`);
+    /// `*` → `multiplicativeAssociative` (kit
+    /// `checkNumericPropertyLaws`); `union` / `formUnion` →
+    /// `setUnionAssociative` (kit `checkSetAlgebraPropertyLaws`).
+    /// User-named ops fall through unsuppressed.
     public static func suggest(
         for summary: FunctionSummary,
         vocabulary: Vocabulary = .empty,
-        reducerOps: Set<String> = []
+        reducerOps: Set<String> = [],
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         guard let typeShape = typeShapeSignal(for: summary) else {
             return nil
@@ -66,6 +76,12 @@ public enum AssociativityTemplate {
         }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
+        }
+        if let coverageVeto = protocolCoverageVeto(
+            for: summary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
         }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
@@ -182,6 +198,43 @@ public enum AssociativityTemplate {
             weight: Signal.vetoWeight,
             detail: "Non-deterministic API in body: \(calls)"
         )
+    }
+
+    /// V1.5.2 — fires when the candidate type's existing protocol
+    /// conformances cover the associativity property the template
+    /// would emit, mapped op-class-aware: `+` → additive, `*` →
+    /// multiplicative, `union`/`formUnion` → set-union. Mirrors
+    /// CommutativityTemplate's helper but targets the `*Associative`
+    /// properties.
+    private static func protocolCoverageVeto(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        let candidates = associativityCoverageCandidates(forOp: summary.name)
+        guard !candidates.isEmpty else { return nil }
+        return ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: summary.parameters.first?.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: candidates
+        )
+    }
+
+    /// V1.5.2 — op-class → KnownProperty candidate set for the
+    /// associativity veto. Same op classification as commutativity;
+    /// kept as its own table for clarity (and so a future per-template
+    /// op-class change doesn't accidentally split commutativity from
+    /// associativity).
+    static func associativityCoverageCandidates(forOp opName: String) -> [KnownProperty] {
+        switch opName {
+        case "+":
+            return [.additiveAssociative]
+        case "*":
+            return [.multiplicativeAssociative]
+        case "union", "formUnion":
+            return [.setUnionAssociative]
+        default:
+            return []
+        }
     }
 
     // MARK: - Suggestion construction

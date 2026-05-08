@@ -43,9 +43,23 @@ public enum IdentityElementTemplate {
     /// once per discover from `BodySignals.reducerOpsWithIdentitySeed`.
     /// Defaults to the empty set so unit tests for the type-pattern path
     /// don't need to thread it through.
+    ///
+    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
+    /// veto. Op-class-aware on the (identity-constant name, op name)
+    /// pair: `.zero` + `+` → `additiveIdentityZero` (covered by
+    /// AdditiveArithmetic / Numeric); `.one` + `*` →
+    /// `multiplicativeIdentityOne` (covered by Numeric); `.empty` +
+    /// `union`/`formUnion`/`+` → `setUnionEmptyIdentity` (covered by
+    /// SetAlgebra); `.identity` + any kit-shaped op →
+    /// `monoidIdentity` (covered by kit Monoid / CommutativeMonoid /
+    /// Group / Semilattice). Other (constant, op) pairs fall through
+    /// unsuppressed — closes the cycle-1 cross-product false-positive
+    /// (16.7% acceptance) by requiring op-class match before the
+    /// veto fires.
     public static func suggest(
         for pair: IdentityElementPair,
-        opsWithIdentitySeed: Set<String> = []
+        opsWithIdentitySeed: Set<String> = [],
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         var signals: [Signal] = [typeShapeSignal(for: pair)]
         signals.append(identityNamingSignal(for: pair))
@@ -54,6 +68,12 @@ public enum IdentityElementTemplate {
         }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
+        }
+        if let coverageVeto = protocolCoverageVeto(
+            for: pair,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
         }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
@@ -128,6 +148,61 @@ public enum IdentityElementTemplate {
             weight: Signal.vetoWeight,
             detail: "Non-deterministic API in body: \(calls)"
         )
+    }
+
+    /// V1.5.2 — fires when the candidate (op, identity-constant) pair
+    /// matches a curated op-class AND the carrier type's existing
+    /// conformances cover that property. Closes cycle-1's
+    /// "operator-aware identity-element pairing" gap: the cross-product
+    /// of curated identity constants × ops produced 16.7%-acceptance
+    /// noise; v1.5 narrows by requiring the (constant, op) pair to map
+    /// to a specific KnownProperty before checking conformance coverage.
+    private static func protocolCoverageVeto(
+        for pair: IdentityElementPair,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        guard let candidate = identityCoverageCandidate(
+            identityName: pair.identity.name,
+            opName: pair.operation.name
+        ) else {
+            return nil
+        }
+        return ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: pair.identity.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: [candidate]
+        )
+    }
+
+    /// V1.5.2 — (identity-constant name, op name) → KnownProperty
+    /// candidate. Returns `nil` for combinations that don't bind to a
+    /// kit-published identity law (e.g. `.none` constant or
+    /// `.default` constant on arbitrary ops). Internal so tests can
+    /// exercise the mapping table directly.
+    static func identityCoverageCandidate(
+        identityName: String,
+        opName: String
+    ) -> KnownProperty? {
+        switch (identityName, opName) {
+        // Additive: .zero + "+" → AdditiveArithmetic / Numeric / SignedNumeric
+        case ("zero", "+"):
+            return .additiveIdentityZero
+        // Multiplicative: .one + "*" → Numeric / SignedNumeric
+        case ("one", "*"):
+            return .multiplicativeIdentityOne
+        // Set-union: .empty + union-shaped ops → SetAlgebra
+        case ("empty", "union"), ("empty", "formUnion"), ("empty", "+"):
+            return .setUnionEmptyIdentity
+        // Kit-monoid: .identity + arbitrary op → Monoid / CommutativeMonoid /
+        // Group / Semilattice. The kit's `combine` op is type-bound, not
+        // syntactic, so we don't constrain by op name here — any op paired
+        // with a `.identity` constant and a `: Monoid`-family conforming
+        // type is the kit's intended posture.
+        case ("identity", _):
+            return .monoidIdentity
+        default:
+            return nil
+        }
     }
 
     private static func displayedIdentity(for pair: IdentityElementPair) -> String {

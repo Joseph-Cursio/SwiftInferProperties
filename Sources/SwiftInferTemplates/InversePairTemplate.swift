@@ -39,10 +39,21 @@ public enum InversePairTemplate {
     /// so callers without corpus type-decls (tests, programmatic
     /// callers) still surface the suggestion; CLI / `discover(in:)`
     /// passes a real resolver built from the scanned `typeDecls`.
+    ///
+    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
+    /// veto. Forward type's conformance set drives the lookup;
+    /// candidate properties are `additiveInverse` (covered by
+    /// SignedNumeric — the kit's `checkSignedNumericPropertyLaws`
+    /// verifies `a + (-a) == .zero`) + `groupInverse` (covered by kit
+    /// Group — the kit's `checkGroupPropertyLaws` verifies the
+    /// abstract `combine(x, x⁻¹) == .identity`). Other inverse pairs
+    /// (e.g. `parse/format` on a custom Doc type) fall through
+    /// unsuppressed.
     public static func suggest(
         for pair: FunctionPair,
         vocabulary: Vocabulary = .empty,
-        equatableResolver: EquatableResolver? = nil
+        equatableResolver: EquatableResolver? = nil,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         // Forward param type — `T` in the `f: T -> U` pair.
         guard let domain = pair.forward.parameters.first?.typeText else {
@@ -65,6 +76,12 @@ public enum InversePairTemplate {
         }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
+        }
+        if let coverageVeto = protocolCoverageVeto(
+            for: pair,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
         }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
@@ -172,6 +189,25 @@ public enum InversePairTemplate {
         case (false, true): return "\(pair.reverse.name) body"
         case (false, false): return "neither body"
         }
+    }
+
+    /// V1.5.2 — fires when the forward type's existing conformances
+    /// cover the inverse-pair property the template would emit.
+    /// Candidate properties: `additiveInverse` (kit
+    /// `checkSignedNumericPropertyLaws`) + `groupInverse` (kit
+    /// `checkGroupPropertyLaws`). Inverse-pair templates on custom
+    /// non-algebraic types (`parse/format`, `encode/decode` on a
+    /// non-Codable carrier) fall through unsuppressed because no
+    /// kit-published inverse law applies.
+    private static func protocolCoverageVeto(
+        for pair: FunctionPair,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: pair.forward.parameters.first?.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: [.additiveInverse, .groupInverse]
+        )
     }
 
     /// V1.4.3 — fires when either side of the pair's parameter type

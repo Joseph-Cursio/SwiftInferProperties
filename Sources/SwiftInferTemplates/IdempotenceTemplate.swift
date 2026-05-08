@@ -38,9 +38,19 @@ public enum IdempotenceTemplate {
     /// the template consults `vocabulary.idempotenceVerbs` alongside the
     /// curated list. Defaults to `.empty` so M1 call sites compile
     /// unchanged.
+    ///
+    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
+    /// veto. Idempotence on a `: SetAlgebra` type is covered by
+    /// `setIntersectionIdempotent` (kit
+    /// `checkSetAlgebraPropertyLaws`); idempotence on a kit
+    /// `: Semilattice` type is covered by `semilatticeIdempotence`
+    /// (kit `checkSemilatticePropertyLaws`). Other types fall through
+    /// — generic `f(f(x)) == f(x)` doesn't have a one-to-one stdlib
+    /// protocol mapping, so the template stays surfaced.
     public static func suggest(
         for summary: FunctionSummary,
-        vocabulary: Vocabulary = .empty
+        vocabulary: Vocabulary = .empty,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         guard let typeSymmetry = typeSymmetrySignal(for: summary) else {
             return nil
@@ -54,6 +64,12 @@ public enum IdempotenceTemplate {
         }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
+        }
+        if let coverageVeto = protocolCoverageVeto(
+            for: summary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
         }
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
@@ -155,6 +171,25 @@ public enum IdempotenceTemplate {
             kind: .nonDeterministicBody,
             weight: Signal.vetoWeight,
             detail: "Non-deterministic API in body: \(calls)"
+        )
+    }
+
+    /// V1.5.2 — fires when the candidate type already conforms to a
+    /// protocol whose published laws cover the idempotence property
+    /// the template would emit. Candidate properties span
+    /// `setIntersectionIdempotent` (covered by SetAlgebra) +
+    /// `semilatticeIdempotence` (covered by kit Semilattice). Generic
+    /// `f(f(x))` on arbitrary types isn't covered — the veto fires
+    /// only when the type's conformance set intersects the curated
+    /// idempotence-bearing protocols.
+    private static func protocolCoverageVeto(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: summary.parameters.first?.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: [.setIntersectionIdempotent, .semilatticeIdempotence]
         )
     }
 

@@ -34,11 +34,19 @@ extension TemplateRegistry {
     /// type context. Pulled out of `discover` so the orchestration
     /// function stays readable as a five-step pipeline (collect →
     /// drop → select generator → cross-validate → sort).
+    ///
+    /// V1.5.2 — `inheritedTypesByName` is the corpus-wide name →
+    /// inheritance-clause-union index built by
+    /// `ProtocolCoverageMap.inheritedTypesIndex(from:)`; threaded into
+    /// the six algebraic templates whose `protocolCoverageVeto(...)`
+    /// helpers suppress suggestions whose property is already covered
+    /// by the candidate type's existing conformance.
     static func collectSuggestions(
         summaries: [FunctionSummary],
         identities: [IdentityCandidate],
         vocabulary: Vocabulary,
-        equatableResolver: EquatableResolver
+        equatableResolver: EquatableResolver,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> SuggestionCollector {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -56,6 +64,7 @@ extension TemplateRegistry {
                 summary: summary,
                 vocabulary: vocabulary,
                 reducerOps: reducerOps,
+                inheritedTypesByName: inheritedTypesByName,
                 into: &collector
             )
         }
@@ -64,13 +73,15 @@ extension TemplateRegistry {
                 pair: pair,
                 vocabulary: vocabulary,
                 equatableResolver: equatableResolver,
+                inheritedTypesByName: inheritedTypesByName,
                 into: &collector
             )
         }
         for pair in IdentityElementPairing.candidates(in: summaries, identities: identities) {
             if let suggestion = IdentityElementTemplate.suggest(
                 for: pair,
-                opsWithIdentitySeed: opsWithIdentitySeed
+                opsWithIdentitySeed: opsWithIdentitySeed,
+                inheritedTypesByName: inheritedTypesByName
             ) {
                 collector.record(suggestion, generatorType: generatorType(for: pair.operation))
             }
@@ -85,13 +96,22 @@ extension TemplateRegistry {
         summary: FunctionSummary,
         vocabulary: Vocabulary,
         reducerOps: Set<String>,
+        inheritedTypesByName: [String: Set<String>],
         into collector: inout SuggestionCollector
     ) {
         let summaryGenType = generatorType(for: summary)
-        if let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary) {
+        if let suggestion = IdempotenceTemplate.suggest(
+            for: summary,
+            vocabulary: vocabulary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
-        if let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary) {
+        if let suggestion = CommutativityTemplate.suggest(
+            for: summary,
+            vocabulary: vocabulary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
             collector.record(
                 suggestion,
                 contradictionTypes: commutativityTypes(for: summary),
@@ -101,7 +121,8 @@ extension TemplateRegistry {
         if let suggestion = AssociativityTemplate.suggest(
             for: summary,
             vocabulary: vocabulary,
-            reducerOps: reducerOps
+            reducerOps: reducerOps,
+            inheritedTypesByName: inheritedTypesByName
         ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
@@ -123,9 +144,14 @@ extension TemplateRegistry {
         pair: FunctionPair,
         vocabulary: Vocabulary,
         equatableResolver: EquatableResolver,
+        inheritedTypesByName: [String: Set<String>],
         into collector: inout SuggestionCollector
     ) {
-        if let suggestion = RoundTripTemplate.suggest(for: pair, vocabulary: vocabulary) {
+        if let suggestion = RoundTripTemplate.suggest(
+            for: pair,
+            vocabulary: vocabulary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
             collector.record(
                 suggestion,
                 contradictionTypes: roundTripTypes(for: pair),
@@ -135,7 +161,8 @@ extension TemplateRegistry {
         if let suggestion = InversePairTemplate.suggest(
             for: pair,
             vocabulary: vocabulary,
-            equatableResolver: equatableResolver
+            equatableResolver: equatableResolver,
+            inheritedTypesByName: inheritedTypesByName
         ) {
             collector.record(suggestion, generatorType: generatorType(for: pair))
         }

@@ -72,11 +72,17 @@ public enum TemplateRegistry {
         // threaded through. ContradictionDetector consumes the same
         // resolver downstream; one construction covers both passes.
         let resolver = EquatableResolver(typeDecls: typeDecls)
+        // V1.5.2 — corpus-wide `name → union of inherited types` index
+        // feeds the protocol-coverage veto across the six algebraic
+        // templates. Built once here so per-summary template calls are
+        // O(|inheritedTypes|) ≈ 1–4 lookups per candidate.
+        let inheritedTypesByName = ProtocolCoverageMap.inheritedTypesIndex(from: typeDecls)
         let collector = collectSuggestions(
             summaries: summaries,
             identities: identities,
             vocabulary: vocabulary,
-            equatableResolver: resolver
+            equatableResolver: resolver,
+            inheritedTypesByName: inheritedTypesByName
         )
         let outcome = ContradictionDetector.filter(
             collector.suggestions,
