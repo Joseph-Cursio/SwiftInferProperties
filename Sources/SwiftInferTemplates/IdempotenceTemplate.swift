@@ -31,6 +31,26 @@ public enum IdempotenceTemplate {
         "format"
     ]
 
+    /// V1.10.1 — curated set of argument labels that strongly suggest a
+    /// directional `(T) -> T` operation rather than a fixed-point /
+    /// idempotent one. When any matches the candidate's first-parameter
+    /// label, the template emits a `-15` `directionLabel` counter-signal
+    /// that drops Score 30 (typeSymmetry alone) into Suppressed tier
+    /// (< 20). Curated-verb matches (`normalize`, `canonicalize`, etc.)
+    /// override the counter via their `+40` weight: net `+55` → Likely
+    /// tier still surfaces.
+    ///
+    /// **Cycle-6 motivation.** The cycle-6 single-runner triage showed
+    /// idempotence acceptance at 0/10 = 0% on the post-V1.8.1 surface;
+    /// 5 of 10 rejected picks had argument labels in this set
+    /// (`index(after:)`, `bucket(after:)`, `index(before:)`). The
+    /// counter-signal closes the dominant rejection sub-pattern.
+    public static let directionLabels: Set<String> = [
+        "after", "before",
+        "next", "prev", "previous",
+        "advance", "succ", "pred", "successor", "predecessor"
+    ]
+
     /// Build a suggestion for `summary`, or return `nil` if the type
     /// pattern doesn't match or the score collapses to `.suppressed`.
     ///
@@ -61,6 +81,9 @@ public enum IdempotenceTemplate {
         }
         if let composition = selfCompositionSignal(for: summary) {
             signals.append(composition)
+        }
+        if let direction = directionLabelCounterSignal(for: summary) {
+            signals.append(direction)
         }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
@@ -159,6 +182,27 @@ public enum IdempotenceTemplate {
             kind: .selfComposition,
             weight: 20,
             detail: "Self-composition detected in body: \(summary.name)(\(summary.name)(x))"
+        )
+    }
+
+    /// V1.10.1 — fires when the candidate's first-parameter argument label
+    /// is in `directionLabels` (e.g., `index(after:)`, `bucket(before:)`).
+    /// Emits weight `-15` so type-symmetry's `+30` collapses to `+15` →
+    /// Suppressed tier (< 20). Curated-verb matches add `+40` and override
+    /// (net `+55` → Likely tier preserved). Closes the cycle-6 0/10
+    /// idempotence rejection pattern's dominant 5-of-10 sub-pattern.
+    private static func directionLabelCounterSignal(
+        for summary: FunctionSummary
+    ) -> Signal? {
+        guard let label = summary.parameters.first?.label,
+              directionLabels.contains(label) else {
+            return nil
+        }
+        return Signal(
+            kind: .directionLabel,
+            weight: -15,
+            detail: "Direction-label argument: '\(label)' — function is likely "
+                + "directional (increment/decrement) rather than idempotent"
         )
     }
 

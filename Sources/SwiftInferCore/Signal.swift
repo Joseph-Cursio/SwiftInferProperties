@@ -62,6 +62,24 @@ public struct Signal: Sendable, Equatable {
         /// is a cheap pre-SemanticIndex approximation using the textual
         /// `containingTypeName` field already on `FunctionSummary`.
         case crossTypeRoundTripPair
+        /// V1.10.1 — fires on `IdempotenceTemplate` candidates whose first
+        /// parameter argument label is in a curated direction-label set
+        /// (`{after, before, next, prev, previous, advance, succ, pred,
+        /// successor, predecessor}`). Emitted with weight `-15` — drops
+        /// Score 30 → Score 15 (Suppressed tier, < 20) so Collection-
+        /// protocol-style `(T) -> T` increment / decrement ops are filtered
+        /// from `--include-possible` output. Curated-verb matches override
+        /// (`normalize` etc. produce +40, net +55 → Likely tier preserved).
+        ///
+        /// **Cycle-6 motivation.** The cycle-6 single-runner triage (50
+        /// decisions on the 349-surface) showed idempotence acceptance at
+        /// 0/10 = 0%; all 10 rejected idempotence claims were directional
+        /// `(T) -> T` ops. Per-decision rationale in
+        /// `docs/calibration-cycle-6-data/triage-notes.md`. The counter-
+        /// signal closes the dominant 5-of-10 sub-pattern (direction-
+        /// labeled args); the remaining 3-of-10 domain-mismatch sub-pattern
+        /// (HashTable scale-vs-capacity) is a cycle-8 concern.
+        case directionLabel
 
         // Veto (collapses score to suppressed)
         case nonDeterministicBody
