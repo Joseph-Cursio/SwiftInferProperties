@@ -4,15 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.14.0** — eleventh calibration cycle (SetAlgebra-shape veto on inverse-pair; first function-name + type-shape composite mechanism; first cycle to fully eliminate a template's per-corpus surface — OC inverse-pair 6 → 0). Cumulative surface 1167 → 251 (−78.5%) across 11 cycles, 7 mechanism classes (textual type-name counter, cross-type counter, protocol-coverage veto, pair-formation skip-list, stdlib-conformance bake-in, shape-gated veto, parameter-label counter family, function-name + type-shape composite). Per-cycle narratives in `docs/archive/*.md` + `docs/calibration-cycle-*-findings.md` + git log; this file is a pointer-only index.
+**Current: v1.15.0** — twelfth calibration cycle (domain-marker counter on three templates simultaneously; first cycle to compress cycles 7-9's three-release direction-counter cadence into a single release; near-miss on the 80% cumulative reduction milestone at 79.86%). Cumulative surface 1167 → 235 (−79.86%) across 12 cycles, 8 mechanism classes (textual type-name counter, cross-type counter, protocol-coverage veto, pair-formation skip-list, stdlib-conformance bake-in, shape-gated veto, function-name + type-shape composite, parameter-label counter family — now with two empirically-validated sub-classes: direction-label spatial-sequence + domain-marker semantic-intent). Three consecutive plan-vs-actual exact matches (v1.12 → v1.14 → v1.15). Per-cycle narratives in `docs/archive/*.md` + `docs/calibration-cycle-*-findings.md` + git log; this file is a pointer-only index.
 
-No active milestone plan. Cycle-12 priorities (domain-mismatch family across three templates, stride-style label extension, post-v1.14 Possible-tier re-sampling, reference-type carrier counter) + open SemanticIndex-blocked trajectory (multi-predicate equivalence classes, cross-target enum coverage, cross-test data-flow correlation) live in `docs/calibration-cycle-11-findings.md`. PRD §20 v1.1+ work (SemanticIndex, IDE integration, `swift-infer apply`) deferred until SemanticIndex lands — its arrival lifts most current textual-only approximations (v1.5 coverage, v1.6 op-name gate, v1.7 stdlib bake-in, v1.8 codec gate, v1.10/11/12 direction labels, v1.14 SetAlgebra ops).
+No active milestone plan. Cycle-13 priorities (SetAlgebra-shape veto extension to round-trip + idempotence — promoted to #1, crosses 80% unambiguously; stride-style label extension; post-v1.15 Possible-tier re-sampling; reference-type carrier counter) + open SemanticIndex-blocked trajectory (multi-predicate equivalence classes, cross-target enum coverage, cross-test data-flow correlation) live in `docs/calibration-cycle-12-findings.md`. PRD §20 v1.1+ work (SemanticIndex, IDE integration, `swift-infer apply`) deferred until SemanticIndex lands — its arrival lifts most current textual-only approximations (v1.5 coverage, v1.6 op-name gate, v1.7 stdlib bake-in, v1.8 codec gate, v1.10/11/12 direction labels, v1.14 SetAlgebra ops, v1.15 domain markers).
 
 ## Shipped
 
 - **TemplateEngine M1–M8**, **TestLifter M1–M16** — full v1 surface; per-milestone plans in `docs/archive/`.
 - **Releases v0.1.0, v1.1.0, v1.2.0, v1.3.0** — initial release through TestLifter M16; plans in `docs/archive/v*.md`.
-- **Releases v1.4.0–v1.14.0** — calibration cycles 1–11 (cycle 10 was the v1.13 hoist refactor, zero behavior change). Each cycle has a plan in `docs/archive/v1.N Calibration Plan.md`, findings in `docs/calibration-cycle-N-findings.md`, raw data in `docs/calibration-cycle-N-data/`, and a perf baseline in `docs/perf-baseline-v1.N.md`.
+- **Releases v1.4.0–v1.15.0** — calibration cycles 1–12 (cycle 10 was the v1.13 hoist refactor, zero behavior change). Each cycle has a plan in `docs/archive/v1.N Calibration Plan.md`, findings in `docs/calibration-cycle-N-findings.md`, raw data in `docs/calibration-cycle-N-data/`, and a perf baseline in `docs/perf-baseline-v1.N.md`.
 
 ## Kit-side coordination
 
@@ -34,8 +34,8 @@ SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategis
 |---|---|
 | Product scope, milestones, success criteria | `docs/SwiftInferProperties PRD v1.0.md` (canonical; v0.1–v0.4 retained as historical) |
 | Current milestone plan | None open — see "Repository state" above |
-| Current perf baseline | `docs/perf-baseline-v1.14.md` (prior baselines retained for forensic comparison) |
-| Calibration cycle N findings + data | `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/` (cycles 1–11; cycle 10 = v1.13 hoist, no findings doc) |
+| Current perf baseline | `docs/perf-baseline-v1.15.md` (prior baselines retained for forensic comparison) |
+| Calibration cycle N findings + data | `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/` (cycles 1–12; cycle 10 = v1.13 hoist, no findings doc) |
 | Cycle-6 triage rubric | `docs/cycle-6-triage-rubric.md` |
 | Closed milestone plans | `docs/archive/*.md` |
 | PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |
