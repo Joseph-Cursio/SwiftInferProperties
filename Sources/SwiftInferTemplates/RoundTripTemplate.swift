@@ -64,6 +64,9 @@ public enum RoundTripTemplate {
         if let direction = directionLabelCounterSignal(for: pair) {
             signals.append(direction)
         }
+        if let domainMarker = domainMarkerCounterSignal(for: pair) {
+            signals.append(domainMarker)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }

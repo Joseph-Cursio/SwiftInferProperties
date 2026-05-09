@@ -180,12 +180,19 @@ struct RoundTripDirectionLabelCounterTests {
         #expect(suggestion?.score.signals.contains { $0.kind == .exactNameMatch } ?? false)
     }
 
-    @Test("V1.12.1 — non-direction-labeled pair (`forScale`) does not fire counter")
-    func nonDirectionLabelDoesNotSuppress() {
-        // OC HashTable Constants survivors shape: `minimumCapacity(forScale:)`
-        // — `forScale` not in curated set. Counter does not fire.
-        // Baseline typeSymmetry +30 → Possible. Cycle-10 domain-mismatch
-        // mechanism is the eventual fix here.
+    @Test("V1.12.1 — `forScale ↔ forCapacity` not in V1.13.1 direction-label set (counter does not fire)")
+    func directionCounterDoesNotFireOnDomainMarkers() {
+        // OC HashTable Constants survivors shape: `minimumCapacity(forScale:)
+        // ↔ scale(forCapacity:)`. The V1.13.1 direction-label set
+        // (`{after, before, next, prev, ...}`) is disjoint from the
+        // V1.15.1 domain-marker set; the V1.12.1 direction-label counter
+        // does not fire on these labels.
+        //
+        // **V1.15.1 update**: this case is now suppressed by the V1.15.1
+        // domain-marker counter (separate mechanism on the same Signal.Kind
+        // case). The test verifies the V1.12.1 contract — direction counter
+        // doesn't fire — while the V1.15.1 RoundTripDomainMarkerCounterTests
+        // suite verifies the v1.15 suppression separately.
         let pair = makePair(
             forwardName: "minimumCapacity",
             forwardLabel: "forScale",
@@ -194,10 +201,15 @@ struct RoundTripDirectionLabelCounterTests {
             forwardParam: "Int",
             forwardReturn: "Int"
         )
+        // V1.15.1: pair is now Suppressed via the domain-marker counter.
+        // Verify the V1.12.1 direction counter specifically didn't fire by
+        // asking it directly — the round-level suggest() returns nil because
+        // the domain-marker counter suppresses, but the direction-counter
+        // helper itself returns nil for these labels.
+        let directionSignal = RoundTripTemplate.directionLabelCounterSignal(for: pair)
+        #expect(directionSignal == nil, "V1.13.1 direction-label set must not contain forScale/forCapacity")
         let suggestion = RoundTripTemplate.suggest(for: pair)
-        #expect(suggestion?.score.total == 30)
-        #expect(suggestion?.score.tier == .possible)
-        #expect(!(suggestion?.score.signals.contains { $0.kind == .directionLabel } ?? false))
+        #expect(suggestion == nil, "V1.15.1 domain-marker counter suppresses this case")
     }
 
     @Test("V1.12.1 — both nil labels → no direction counter (+30 Possible)")

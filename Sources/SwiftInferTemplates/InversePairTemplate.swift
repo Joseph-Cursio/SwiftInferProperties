@@ -77,6 +77,9 @@ public enum InversePairTemplate {
         if let direction = directionLabelCounterSignal(for: pair) {
             signals.append(direction)
         }
+        if let domainMarker = domainMarkerCounterSignal(for: pair) {
+            signals.append(domainMarker)
+        }
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
