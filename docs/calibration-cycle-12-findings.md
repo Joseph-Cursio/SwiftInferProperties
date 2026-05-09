@@ -114,7 +114,7 @@ The cycle-11 findings' priority-#1 candidate set (12 OC round-trip + 7 OC idempo
 | OC round-trip with SetAlgebra shape | 2 | preserved (out of scope) | cycle-13 priority #1 |
 | OC idempotence with domain markers | 7 | **all suppressed** | V1.15.1 idempotence counter |
 | OC idempotence non-domain | 4 | preserved (different cause-of-noise) | (not targeted) |
-| OC idempotence with SetAlgebra shape | 2 | preserved (out of scope) | cycle-13 priority #1 |
+| OC idempotence with SetAlgebra shape | 4 | preserved (out of scope) | cycle-13 priority #1 |
 
 **16 of 16 V1.15.1-targeted candidates suppressed; 3 of 3 deliberately-preserved candidates remain surfaced.** The both-sides design choice from open decision #2 paid off — preserves the asymmetric `_value(forBucketContents:) ↔ _bucketContents(for:)` candidate as a possible true-positive for human triage at zero aggregate cost.
 
