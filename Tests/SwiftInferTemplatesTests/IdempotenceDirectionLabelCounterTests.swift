@@ -152,17 +152,20 @@ struct IdempotenceDirectionLabelCounterTests {
         #expect(Signal.Kind.allCases.contains(.directionLabel))
     }
 
-    @Test("V1.10.1 — directionLabels curated set has 10 entries")
+    @Test("V1.13.1 — DirectionLabels.curated set has 10 entries (hoisted from IdempotenceTemplate)")
     func curatedSetSize() {
         // Pinning the count guards against silent set drift; future
         // additions should update this assertion + the rubric.
-        #expect(IdempotenceTemplate.directionLabels.count == 10)
+        // V1.13.1 hoisted from `IdempotenceTemplate.directionLabels`
+        // to `SwiftInferCore.DirectionLabels.curated` once round-trip
+        // became the third consumer in cycle 9.
+        #expect(DirectionLabels.curated.count == 10)
         let expected: Set<String> = [
             "after", "before",
             "next", "prev", "previous",
             "advance", "succ", "pred", "successor", "predecessor"
         ]
-        #expect(IdempotenceTemplate.directionLabels == expected)
+        #expect(DirectionLabels.curated == expected)
     }
 }
 

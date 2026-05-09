@@ -4,20 +4,24 @@ import SwiftInferCore
 /// `RoundTripTemplate`. Closes cycle-9 priority #1 from
 /// `docs/calibration-cycle-8-findings.md` (round-trip template
 /// direction-label counter — third consumer of `Signal.Kind.directionLabel`
-/// + `IdempotenceTemplate.directionLabels`). Mirrors v1.10's
-/// `IdempotenceTemplate` direction-label counter at the same `-15`
-/// weight because round-trip's `+30` typeSymmetry baseline matches
-/// idempotence's (not inverse-pair's `+25`, which justified v1.11's
-/// `-10`).
+/// + `DirectionLabels.curated`). Mirrors v1.10's `IdempotenceTemplate`
+/// direction-label counter at the same `-15` weight because round-trip's
+/// `+30` typeSymmetry baseline matches idempotence's (not inverse-pair's
+/// `+25`, which justified v1.11's `-10`).
 ///
 /// File-split per the V1.6.1 / V1.8.1 / V1.10.1 / V1.11.1 file-length
 /// precedent: `RoundTripTemplate.swift` was 348 lines (332-line enum
 /// body, well over swiftlint's `type_body_length: 250` warning and
 /// within 17 lines of the 350 hard error). Inlining would breach.
+///
+/// **V1.13.1.** Updated to consume `SwiftInferCore.DirectionLabels.curated`
+/// (hoisted from `IdempotenceTemplate.directionLabels` once round-trip
+/// became the third consumer in cycle 9 — this very template's
+/// landing was what triggered the hoist).
 extension RoundTripTemplate {
 
     /// Fires when *either* side of the pair's first-parameter argument
-    /// label is in `IdempotenceTemplate.directionLabels` (e.g.,
+    /// label is in `DirectionLabels.curated` (e.g.,
     /// `index(after:) ↔ index(before:)`,
     /// `bucket(after:) ↔ bucket(before:)`,
     /// `transform(_:) ↔ untransform(after:)` — the asymmetric case).
@@ -62,7 +66,7 @@ extension RoundTripTemplate {
         let reverseLabel = pair.reverse.parameters.first?.label
         let matched = [forwardLabel, reverseLabel]
             .compactMap { $0 }
-            .first(where: { IdempotenceTemplate.directionLabels.contains($0) })
+            .first(where: { DirectionLabels.curated.contains($0) })
         guard let label = matched else {
             return nil
         }

@@ -7,9 +7,13 @@ import SwiftInferCore
 // docs/calibration-cycle-7-findings.md (inverse-pair 0/5 acceptance
 // rate per cycle-6's measurement; counter-signal targets the dominant
 // 2-of-5 direction-labeled rejection sub-pattern). Mirrors v1.10's
-// IdempotenceDirectionLabelCounterTests shape; reuses
-// IdempotenceTemplate.directionLabels via cross-template static access
-// (open decision #2 in v1.11 plan).
+// IdempotenceDirectionLabelCounterTests shape.
+//
+// V1.13.1 — direction-label set hoisted from
+// IdempotenceTemplate.directionLabels to
+// SwiftInferCore.DirectionLabels.curated once round-trip became the
+// third consumer in cycle 9. Cross-template assertions below reference
+// the new canonical home.
 
 @Suite("InversePairTemplate — V1.11.1 direction-label counter-signal")
 struct InversePairDirectionLabelCounterTests {
@@ -214,18 +218,20 @@ struct InversePairDirectionLabelCounterTests {
         #expect(InversePairTemplate.suggest(for: pair) == nil)
     }
 
-    @Test("V1.11.1 — directionLabels reused from IdempotenceTemplate (open decision #2)")
-    func reusesIdempotenceCuratedSet() {
-        // v1.11 reuses the v1.10 curated set as-is rather than
-        // duplicating. Hoisting to a shared namespace lands at v1.13
-        // when round-trip becomes the third consumer.
-        #expect(IdempotenceTemplate.directionLabels.count == 10)
+    @Test("V1.13.1 — directionLabels hoisted to SwiftInferCore.DirectionLabels.curated")
+    func reusesSharedDirectionLabels() {
+        // v1.11 originally consumed IdempotenceTemplate.directionLabels
+        // via cross-template static access (the v1.11 plan's open
+        // decision #2 deferred hoisting to v1.13). v1.13 executes the
+        // hoist: the set now lives at SwiftInferCore.DirectionLabels.
+        // curated, factored alongside Signal.Kind.directionLabel.
+        #expect(DirectionLabels.curated.count == 10)
         let expected: Set<String> = [
             "after", "before",
             "next", "prev", "previous",
             "advance", "succ", "pred", "successor", "predecessor"
         ]
-        #expect(IdempotenceTemplate.directionLabels == expected)
+        #expect(DirectionLabels.curated == expected)
     }
 
     // MARK: - Fixtures

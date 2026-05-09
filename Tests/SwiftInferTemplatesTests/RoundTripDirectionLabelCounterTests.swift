@@ -6,12 +6,17 @@ import SwiftInferCore
 // Closes cycle-9 priority #1 from
 // docs/calibration-cycle-8-findings.md (round-trip template direction-
 // label counter — third consumer of Signal.Kind.directionLabel +
-// IdempotenceTemplate.directionLabels).
+// the curated direction set).
 //
 // Mirrors v1.10's IdempotenceDirectionLabelCounterTests and v1.11's
-// InversePairDirectionLabelCounterTests shape; reuses
-// IdempotenceTemplate.directionLabels via cross-template static access
-// (open decision #2 in v1.12 plan; v1.13 hoists to a shared namespace).
+// InversePairDirectionLabelCounterTests shape.
+//
+// V1.13.1 — direction-label set hoisted from
+// IdempotenceTemplate.directionLabels to
+// SwiftInferCore.DirectionLabels.curated; round-trip's landing as the
+// third consumer in cycle 9 was the trigger for the hoist. The set
+// now lives alongside Signal.Kind.directionLabel in core, factored as
+// a shared three-template utility.
 //
 // Score arithmetic (round-trip baseline +30 typeSymmetry, matching
 // idempotence's +30 — not inverse-pair's +25 which justified v1.11's
@@ -256,19 +261,20 @@ struct RoundTripDirectionLabelCounterTests {
         #expect(RoundTripTemplate.suggest(for: bare) == nil)
     }
 
-    @Test("V1.12.1 — directionLabels reused from IdempotenceTemplate (third consumer)")
-    func reusesIdempotenceCuratedSet() {
-        // v1.12 reuses the v1.10 curated set as-is rather than
-        // duplicating. With round-trip making the third consumer,
-        // hoisting to a shared `SwiftInferCore.DirectionLabels` namespace
-        // becomes the natural v1.13 atomic refactor (zero behavior change).
-        #expect(IdempotenceTemplate.directionLabels.count == 10)
+    @Test("V1.13.1 — directionLabels live at SwiftInferCore.DirectionLabels.curated (post-hoist)")
+    func reusesSharedDirectionLabels() {
+        // v1.12 originally consumed IdempotenceTemplate.directionLabels
+        // via cross-template static access. V1.13.1 hoisted the set to
+        // SwiftInferCore.DirectionLabels.curated once round-trip made
+        // it a three-consumer utility — the hoist is zero-behavior-change
+        // (set elements identical), pure site-of-truth cleanup.
+        #expect(DirectionLabels.curated.count == 10)
         let expected: Set<String> = [
             "after", "before",
             "next", "prev", "previous",
             "advance", "succ", "pred", "successor", "predecessor"
         ]
-        #expect(IdempotenceTemplate.directionLabels == expected)
+        #expect(DirectionLabels.curated == expected)
     }
 
     // MARK: - Fixtures

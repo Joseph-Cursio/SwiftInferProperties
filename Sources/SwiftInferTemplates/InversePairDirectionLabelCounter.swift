@@ -5,16 +5,20 @@ import SwiftInferCore
 /// `docs/calibration-cycle-7-findings.md` (inverse-pair 0/5 acceptance
 /// rate per cycle-6's measurement). Mirrors v1.10's
 /// `IdempotenceTemplate` direction-label counter; reuses the curated
-/// 10-element `IdempotenceTemplate.directionLabels` set verbatim —
-/// cross-template signal reuse per cycle-8's design intent.
+/// 10-element `DirectionLabels.curated` set verbatim — cross-template
+/// signal reuse per cycle-8's design intent.
 ///
 /// File-split per the V1.6.1 / V1.8.1 / V1.10.1 file-length precedent
 /// (`InversePairTemplate.swift` was 1 line over swiftlint's
 /// `type_body_length: 250` budget when this helper landed inline).
+///
+/// **V1.13.1.** Updated to consume `SwiftInferCore.DirectionLabels.curated`
+/// (hoisted from `IdempotenceTemplate.directionLabels` once round-trip
+/// became the third consumer in cycle 9).
 extension InversePairTemplate {
 
     /// Fires when *either* side of the pair's first-parameter argument
-    /// label is in `IdempotenceTemplate.directionLabels` (e.g.,
+    /// label is in `DirectionLabels.curated` (e.g.,
     /// `index(after:) ↔ index(before:)`,
     /// `bucket(after:) ↔ bucket(before:)`).
     ///
@@ -49,7 +53,7 @@ extension InversePairTemplate {
         let reverseLabel = pair.reverse.parameters.first?.label
         let matched = [forwardLabel, reverseLabel]
             .compactMap { $0 }
-            .first(where: { IdempotenceTemplate.directionLabels.contains($0) })
+            .first(where: { DirectionLabels.curated.contains($0) })
         guard let label = matched else {
             return nil
         }
