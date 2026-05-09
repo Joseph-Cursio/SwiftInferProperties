@@ -67,6 +67,9 @@ public enum RoundTripTemplate {
         if let domainMarker = domainMarkerCounterSignal(for: pair) {
             signals.append(domainMarker)
         }
+        if let setAlgebra = setAlgebraShapeVeto(for: pair) {
+            signals.append(setAlgebra)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }

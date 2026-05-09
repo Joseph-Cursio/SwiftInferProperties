@@ -50,4 +50,22 @@ public enum SetAlgebraShape {
         "symmetricDifference",
         "subtracting"
     ]
+
+    /// Returns `true` when `summary`'s first parameter type and return
+    /// type are both `"Self"` — the structural shape that SetAlgebra's
+    /// non-mutating binary ops carry in protocol-extension declaration
+    /// sites.
+    ///
+    /// **Hoisted in V1.16.1** from `InversePairSetAlgebraShapeGate.swift`
+    /// (where it landed in V1.14.1 as a private helper). When round-trip
+    /// + idempotence became consumers in cycle 13, the helper crossed
+    /// the second-consumer threshold that the v1.13 `DirectionLabels`
+    /// hoist established as the trigger for moving template-agnostic
+    /// curated/structural helpers into `SwiftInferCore`.
+    public static func isSelfTypedBinaryOp(_ summary: FunctionSummary) -> Bool {
+        guard let paramType = summary.parameters.first?.typeText else {
+            return false
+        }
+        return paramType == "Self" && summary.returnTypeText == "Self"
+    }
 }

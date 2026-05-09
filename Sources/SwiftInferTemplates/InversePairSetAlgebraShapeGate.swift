@@ -58,8 +58,8 @@ extension InversePairTemplate {
     static func setAlgebraShapeVeto(
         for pair: FunctionPair
     ) -> Signal? {
-        guard isSelfTypedBinaryOp(pair.forward),
-              isSelfTypedBinaryOp(pair.reverse),
+        guard SetAlgebraShape.isSelfTypedBinaryOp(pair.forward),
+              SetAlgebraShape.isSelfTypedBinaryOp(pair.reverse),
               SetAlgebraShape.binaryOps.contains(pair.forward.name),
               SetAlgebraShape.binaryOps.contains(pair.reverse.name) else {
             return nil
@@ -72,16 +72,5 @@ extension InversePairTemplate {
                 + "SetAlgebra operations do not form an inverse pair "
                 + "(intersection ∘ subtracting ≠ identity)"
         )
-    }
-
-    /// Returns `true` when `summary`'s first parameter type and return
-    /// type are both `"Self"` — the structural shape that SetAlgebra's
-    /// non-mutating binary ops carry in protocol-extension declaration
-    /// sites.
-    private static func isSelfTypedBinaryOp(_ summary: FunctionSummary) -> Bool {
-        guard let paramType = summary.parameters.first?.typeText else {
-            return false
-        }
-        return paramType == "Self" && summary.returnTypeText == "Self"
     }
 }

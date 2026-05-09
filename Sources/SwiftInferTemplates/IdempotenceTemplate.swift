@@ -68,6 +68,9 @@ public enum IdempotenceTemplate {
         if let domainMarker = domainMarkerCounterSignal(for: summary) {
             signals.append(domainMarker)
         }
+        if let setAlgebra = setAlgebraShapeVeto(for: summary) {
+            signals.append(setAlgebra)
+        }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
         }
