@@ -2,7 +2,7 @@
 
 Type-directed property inference for Swift. Surfaces idempotence, round-trip pairs, and algebraic-structure (semigroup / monoid / group / semilattice / ring) candidates from function signatures, cross-function pairs, and existing unit tests — for human review, never silent execution.
 
-> **Status:** v1.12.0 (ninth calibration cycle — first cycle to *complete a three-template direction-counter family*. V1.12.1 lands `Signal.Kind.directionLabel` on its third template (`RoundTripTemplate`) with a `-15` counter-signal mirroring v1.10's idempotence weight verbatim because round-trip's `+30` baseline matches idempotence's; surface drops 288 → 257 (−31, −10.8%; **largest single-cycle structural-rule delta to date**, reflecting round-trip being the largest-surface template at 181 of 288 = 62.8% post-v1.11). The cycle-7 → cycle-8 → cycle-9 mechanism-development cadence (introduce → replicate → complete the family) confirms `Signal.Kind.directionLabel` as load-bearing across three consumers; v1.13 will execute the planned hoist-to-shared-namespace refactor as the queued zero-behavior-change cleanup. Plan-vs-actual: point-for-point exact match across all four corpora (first time in the calibration loop's history). Cumulative across cycles 1–9: 1167 → 257 (−78.0%) — crosses the 75% milestone). The full design lives in [`docs/SwiftInferProperties PRD v1.0.md`](docs/SwiftInferProperties%20PRD%20v1.0.md). Current performance baseline: [`docs/perf-baseline-v1.12.md`](docs/perf-baseline-v1.12.md) (v1.11 + v1.10 + v1.9 + v1.8 + v1.7 + v1.6 + v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v0.1.0 baselines retained for forensic comparison).
+> **Status:** v1.13.0 (refactor release — closes the four-cycle abstraction-development cadence opened by v1.10). Cycle 10 of PRD §17.3's empirical-tuning loop, with refactor character rather than mechanism character. V1.13.1 hoists the curated `directionLabels` set from `IdempotenceTemplate.directionLabels` to `SwiftInferCore.DirectionLabels.curated` — the canonical home alongside `Signal.Kind.directionLabel` — satisfying the v1.11 + v1.12 plans' open-decision-#2 commitments. **Zero behavior change**: byte-identical discover() output verified on the Algorithms corpus (largest direction-counter consumer at 90.0% of round-trip surface eliminated in cycle 9); set elements unchanged (10-element verbatim); per-template counter-signal weights unchanged. Public API breakage: `IdempotenceTemplate.directionLabels` removed (clean cut per V1.13.0 plan; replacement: `SwiftInferCore.DirectionLabels.curated`). Surface count unchanged: cumulative 1167 → 257 (−78.0%) across 9 mechanism cycles + 1 refactor cycle. The full design lives in [`docs/SwiftInferProperties PRD v1.0.md`](docs/SwiftInferProperties%20PRD%20v1.0.md). Current performance baseline: [`docs/perf-baseline-v1.13.md`](docs/perf-baseline-v1.13.md) (carry-forward from v1.12; v1.11 + v1.10 + v1.9 + v1.8 + v1.7 + v1.6 + v1.5 + v1.4 + v1.3 + v1.2 + v1.1 + v0.1.0 baselines retained for forensic comparison).
 
 ## What it does
 
@@ -25,7 +25,7 @@ Where SwiftPropertyLaws verifies the laws of *declared* protocol conformances, S
 ## Add to your project
 
 ```swift
-.package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "1.12.0")
+.package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "1.13.0")
 ```
 
 Or run as a one-off against an existing target:
