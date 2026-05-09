@@ -61,6 +61,9 @@ public enum RoundTripTemplate {
         if let crossType = crossTypeRoundTripCounterSignal(for: pair) {
             signals.append(crossType)
         }
+        if let direction = directionLabelCounterSignal(for: pair) {
+            signals.append(direction)
+        }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
