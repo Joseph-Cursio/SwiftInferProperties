@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0] — 2026-05-10
+
+The nineteenth calibration cycle and the **second consecutive measurement-driven mechanism cycle** (cycle 18 = v1.21 was the first; cycles 15-16 mechanism choices were projected from non-empirical reasoning). Four independently-mergeable workstreams shipped in one release. Surface 165 → **152** (-13 = -7.9%) — second consecutive new cumulative-reduction low at **-86.97%** vs cycle-1's 1167-baseline (prior low: -85.86% at cycle 18; -80.4% at cycle 13 before that). First cycle to cross the -86% threshold. Mechanism-class taxonomy 13 → **14** (first new class since v1.19's class 13 composition-template additive-monoid scoring). Class 14 (fixed-point-name positive signal) is the **first recall-positive signal in the post-V1.4.3 era** — all prior 13 classes were suppression-only.
+
+### Calibration cycle 19 — cycle-18 findings + carry-forward priorities
+
+- **Workstream A (V1.22.A): BucketIterator name extension on V1.21.A.** Direct cycle-18 finding closure (3 surviving OC `_HashTable.BucketIterator.{advance, findNext, advanceToNextUnoccupiedBucket}` picks at v1.21 used non-curated method names + carrier ending in `.BucketIterator`, not `.Iterator`). Two extensions to V1.21.A's `iteratorProtocolCarrierVeto`: (a) `iteratorMethodNames` curated set adds `findNext` + `advanceToNextUnoccupiedBucket`; (b) carrier-name fallback rule extends `hasSuffix(".Iterator")` → `hasSuffix("Iterator")` (without the dot). Joint match (curated method name + Iterator-shape carrier) preserved from V1.21.A as false-positive guardrail. Mechanism class extension: V1.21.A's class 7 carrier-protocol-conformance veto sub-class. Surface impact: **-3 OC** (matches plan exactly). 10 new unit tests in `IdempotenceTemplateBucketIteratorTests.swift`.
+
+- **Workstream B (V1.22.B): RoundTripTemplate both-sides direction-counter -15 → -25 magnitude bump.** Direct cycle-18 finding closure. Modified V1.12.1's `RoundTripTemplate.directionLabelCounterSignal(for:)` from "fires at -15 when EITHER pair side has a direction-labeled first parameter" to "fires at -25 (full veto-equivalent) when BOTH pair sides are direction-labeled; -15 single-side path preserved verbatim." Score arithmetic: 30 typeSymmetry + 5 carrier - 25 V1.22.B = +10 → Suppressed (clean margin from +20 boundary). Mechanism class extension: class 6 (parameter-label direction-counter, V1.10.1/V1.12.1 lineage) with magnitude variation. Surface impact: **-8 (7 OC + 1 Algo `EitherSequence.index(after:) × index(before:)`)**. Variance from plan's projected -12: asymmetric cross-pair noise (e.g., `index(after:) × _minimumCapacity(forScale:)`) survives at single-side -15 path → cycle-20 priority #2. 10 new unit tests in `RoundTripTemplateBothSidesDirectionTests.swift`.
+
+- **Workstream C (V1.22.C): Fixed-point-name positive signal on non-lifted idempotence.** **First recall-positive signal in the post-V1.4.3 era** — all prior cycles (V1.4.3 onward) shipped suppression-only mechanisms. Mechanism class **NEW class 14**. Three-cycle carry-forward priority (cycles 15/16/17/18). New `Sources/SwiftInferCore/FixedPointNames.swift` curated set `{dedupe, simplify, clamp, truncate, standardize}` + new `Signal.Kind.fixedPointName` case at `+10` weight. Score arithmetic: 30 typeSymmetry + 5 carrier + 10 fixed-point = +45 → Likely (was +35 → Possible at v1.21). Wired into `IdempotenceTemplate.suggest(for:)` non-lifted path; lifted path already covers fixed-point names via V1.19.B curated verbs. Set is intentionally non-overlapping with V1.4.1 `IdempotenceTemplate.curatedVerbs` (which already covers `normalize`, `canonicalize`, `flatten`, `sanitize` etc. at +40); FixedPointNames focuses on lower-confidence indicators. Surface impact: **0** (recall-positive infrastructure ready; no functions in `FixedPointNames.curated` surface on the four cycle-1..14 corpora). 10 new unit tests in `IdempotenceTemplateFixedPointNamesTests.swift`.
+
+- **Workstream D (V1.22.D): Stride-style label both-sides veto on round-trip + inverse-pair.** Cycle-14 demotion target finally shipped after **4 cycles of carry-forward** (cycle-14 priority #1 → demoted to v1.18 → not shipped in cycles 15-18 → shipped here). New `Sources/SwiftInferCore/StrideStyleLabels.swift` curated set `{startingAt, endingAt, fromIndex, toIndex, startingFrom, from, to}`. Two consumer extensions: `RoundTripTemplate+StrideStyleVeto.swift` + `InversePairTemplate+StrideStyleVeto.swift`; both fire `-25` (full veto magnitude) when **both** pair sides have first-param labels in the curated set. Distinct from `DirectionLabels.curated` (cursor-incremental: `after:`/`before:`); stride-style is range-bounded (`startingAt:`/`endingAt:`). Mechanism class extension: class 6 with new curated content. Surface impact: **-2 Algo** (closes the cycle-14-demoted `endOfChunk(startingAt:) × startOfChunk(endingAt:)` round-trip + inverse-pair on the same site; cycle-14/17 measured ACCEPT — calibration trade-off documented per v1.22 plan §"Risks", suppression target is auto-emit usability, not correctness). 11 new unit tests in `StrideStyleLabelTests.swift` + 1 V1.12.1 test updated.
+
+- **Mechanism-class taxonomy update:** 13 → **14** (NEW class 14 = fixed-point-name positive signal). Workstreams A/B/D extend existing classes 6 + 7. Class 14 is the **first taxonomic shift to a positive-signal class** since the loop began — all prior cycles (V1.4.3 onward) were suppression-only. v1.22 establishes the precedent: cycle-20+ work can introduce more recall-positive signals.
+
+- **Per-corpus surface delta:**
+  - ComplexModule: 21 → 21 (byte-stable; no v1.22 mechanism targets).
+  - OrderedCollections: 124 → 114 (-10 = -8.1%).
+  - Algorithms: 13 → 10 (-3 = -23.1%).
+  - PropertyLawKit: 7 → 7 (byte-stable).
+
+- **Cumulative trajectory:** cycles 1-18 went 1167 → 165 (-85.9%); cycle 19 = v1.22 reaches 1167 → 152 = **-86.97%** (new low). The post-cycle-17 mechanism cadence produces steady incremental progress — cycle 18's -50.7% surface delta + cycle 19's -7.9% = cumulative -54.6% across the two-mechanism-cycle window.
+
+- **Cycle-20 priority list (rotated post-v1.22, in expected impact order):**
+  1. v1.23 = cycle 20 empirical-only re-measurement (provisional aggregate projection 57-65% from cycle-17's 52.3% baseline).
+  2. **NEW (cycle-19 finding):** Asymmetric label class mismatch counter on round-trip — closes the 5-10 OC cross-pair noise where one side direction-labeled, one domain-marker-labeled.
+  3. FP approximate-equality template arm (6-cycle carry-forward; required for production CM round-trip property tests on the 7 surviving canonical-inverse anchors).
+  4. Math-library op-name extension to `rescaledDivide` / `_relaxed*` (4-cycle carry-forward).
+  5. CompositionTemplate non-numeric monoid extension (carry-forward from v1.19).
+  6. Lift admission relaxation from strict to permissive (carry-forward).
+  7. `Signal.Kind.liftedFromMutation` magnitude re-baselining (carry-forward).
+
+### Documentation
+
+- **v1.22 calibration plan (V1.22.0).** `docs/v1.22 Calibration Plan.md` — four-workstream mechanism cycle plan; cycle-18-finding-driven priorities + 4-cycle stride-style carry-forward + 3-cycle fixed-point carry-forward.
+- **Cycle-19 findings (V1.22.E).** `docs/calibration-cycle-19-findings.md` — surface delta, per-workstream contribution table, mechanism-class taxonomy update (13 → 14 with class 14 = first recall-positive post-V1.4.3), per-mechanism effectiveness ranking, cycle-18 picks status at v1.22, cycle-20 priority list rotated.
+- **Cycle-19 capture (V1.22.E).** `docs/calibration-cycle-19-data/post-v1.22-*.discover.txt` — four per-corpus discover snapshots at the V1.22.D commit.
+- **Performance baseline re-measured (V1.22.E).** `docs/perf-baseline-v1.22.md` — re-measured at commit `e22f076`. Every row within ±5% of v1.21 baseline; v1.22 plan §6 ≤+5% budget met. Row 4 peak delta 135.8 MB (vs v1.21's 135.5 MB).
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.22 ships zero new accept-flow writeout paths (all four workstreams are veto-only or signal-only mechanisms; no template emission changes).
+- All PRD §13 performance budgets hold at v1.22 (re-measured at [`docs/perf-baseline-v1.22.md`](docs/perf-baseline-v1.22.md)). Every row within ±5% of v1.21; v1.22 release-blocking criterion (≤+5% wall vs v1.21) met.
+- PRD §14 + §19 runtime no-network guarantee unchanged.
+
+[1.22.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.22.0
+
 ## [1.21.0] — 2026-05-10
 
 The eighteenth calibration cycle and the **first mechanism cycle whose priorities are directly informed by cycle-17 measured reject classes** (cycles 15 + 16 priorities were projected from non-empirical value-semantics reasoning). Three independently-mergeable workstreams shipped in one release. Surface 335 → **165** (-170 = -50.7%) — **first descending move since cycle 13** and a new cumulative-reduction low at -85.86% vs cycle-1's 1167-baseline (prior low: -80.4% at cycle 13; first cycle to cross the 85% threshold). Restored the descending surface trend that v1.18 + v1.19's recall-positive workstreams had reversed at cycle 17. Plan-vs-actual: -170 vs projected -171 (within ±1).
