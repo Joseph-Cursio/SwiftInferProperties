@@ -196,6 +196,17 @@ extension TemplateRegistry {
                 collector.record(suggestion, generatorType: pair.operation.carrier)
             }
         }
+        for pair in InverseLiftedPairing.candidates(
+            in: lifted,
+            vocabulary: context.vocabulary
+        ) {
+            if let suggestion = InversePairTemplate.suggest(
+                forLifted: pair,
+                carrierKindResolver: resolver
+            ) {
+                collector.record(suggestion, generatorType: pair.forward.carrier)
+            }
+        }
     }
 
     /// Per-`LiftedTransformation` template fan-out. Idempotence (V1.19.B)
