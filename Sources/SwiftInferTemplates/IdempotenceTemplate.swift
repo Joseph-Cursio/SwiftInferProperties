@@ -60,6 +60,12 @@ public enum IdempotenceTemplate {
         if let name = nameSignal(for: summary, vocabulary: vocabulary) {
             signals.append(name)
         }
+        // V1.22.C — fixed-point-name positive signal (recall-positive).
+        // First positive signal in the post-V1.4.3 era; introduces accepts
+        // on lower-confidence idempotence names not in V1.4.1 curatedVerbs.
+        if let fixedPoint = fixedPointNameSignal(for: summary) {
+            signals.append(fixedPoint)
+        }
         if let composition = selfCompositionSignal(for: summary) {
             signals.append(composition)
         }

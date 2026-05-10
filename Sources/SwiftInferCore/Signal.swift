@@ -131,6 +131,24 @@ public struct Signal: Sendable, Equatable {
         /// for the new `CompositionTemplate` matches the v1.18-plan
         /// suggestion-rendering specification.
         case liftedFromMutation
+        /// V1.22.C — fires on `IdempotenceTemplate.suggest(for:)` when
+        /// the function name is in `FixedPointNames.curated` — names
+        /// like `dedupe` / `simplify` / `clamp` / `truncate` /
+        /// `standardize` that signal "transform input into a canonical
+        /// form whose application is idempotent" but aren't in the
+        /// V1.4.1 `IdempotenceTemplate.curatedVerbs` set. Emitted at
+        /// `+10` weight per the v1.22 plan §"Workstream A" lean —
+        /// modest recall-positive boost (smaller than curatedVerbs's
+        /// `+40` because fixed-point names are lower-confidence
+        /// idempotence indicators; clamp/truncate can be parameterized
+        /// non-idempotently).
+        ///
+        /// **First recall-positive signal in the post-V1.4.3 era.** All
+        /// prior cycles (V1.4.3 onward) shipped suppression-only
+        /// mechanisms; V1.22.C is the first cycle to introduce a
+        /// positive signal class. Mechanism class 14 in the cycle-19
+        /// taxonomy.
+        case fixedPointName
 
         // Veto (collapses score to suppressed)
         case nonDeterministicBody
