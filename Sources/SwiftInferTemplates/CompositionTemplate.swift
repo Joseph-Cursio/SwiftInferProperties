@@ -69,6 +69,35 @@ public enum CompositionTemplate {
         "append", "deposit"
     ]
 
+    /// V1.21.B — first-parameter labels that signal **monotone-bounded**
+    /// rather than additive semantics. Direct cycle-17 finding closure
+    /// (1/1 reject on `BucketIterator.advance(until: Int)`): the
+    /// composition property `op(s, a).op(s, b) == op(s, a + b)` requires
+    /// the parameter to contribute additively, but a label like `until:`
+    /// signals "advance state up to a target" — `op(s, a).op(s, b)`
+    /// produces `max(a, b)`-bounded state, not `a + b`-additive state.
+    ///
+    /// Veto magnitude `-25`: net `30 + 40 + 5 + 10 - 25 = 60` → Likely
+    /// (not Suppressed). Demotes Strong → Likely so the calibration
+    /// record is preserved at small-n; cycle-19 measurement may motivate
+    /// promotion to `-40` (full Suppressed) if false-negative rate stays
+    /// at 0/N on broader corpora. Per the v1.21 plan §"Open decisions"
+    /// #2 lean.
+    ///
+    /// **Why these labels:** all signal "advance / move state up to a
+    /// target", not "add a quantity additively." `by:` is deliberately
+    /// excluded — `advance(by: n)` IS additive. The exclusion list is
+    /// conservative; cycle-19 measurement may extend (e.g., `forSteps:`
+    /// in stepper-builder DSLs).
+    public static let monotoneBoundedLabels: Set<String> = [
+        "until",
+        "to",
+        "at",
+        "upTo",
+        "before",
+        "through"
+    ]
+
     /// Build a suggestion for `lifted`, or return `nil` when the lifted
     /// shape isn't a composition candidate or the score collapses.
     public static func suggest(
@@ -87,6 +116,13 @@ public enum CompositionTemplate {
             signals.append(carrier)
         }
         signals.append(liftedFromMutationSignal(for: lifted))
+        // V1.21.B — monotone-bounded label counter. Demotes Strong → Likely
+        // when the first non-self parameter's label signals monotone-
+        // bounded semantics (advance(until:) shape) rather than additive
+        // composition.
+        if let monotoneBounded = monotoneBoundedLabelSignal(for: lifted) {
+            signals.append(monotoneBounded)
+        }
         if let veto = nonDeterministicVeto(for: lifted) {
             signals.append(veto)
         }
@@ -163,6 +199,35 @@ public enum CompositionTemplate {
             kind: .liftedFromMutation,
             weight: 10,
             detail: "Lifted from `mutating func \(lifted.carrier).\(lifted.originalSummary.name)(\(labels))`"
+        )
+    }
+
+    /// V1.21.B — fires when the first non-self parameter's label is in
+    /// `monotoneBoundedLabels`. Returns a `-25` counter-signal that
+    /// demotes a curated-verb composition Strong (85) to Likely (60),
+    /// preserving the calibration record while filtering from default-
+    /// visible Strong tier. Returns `nil` for non-monotone-bounded labels
+    /// (including `nil` label and `by:`).
+    ///
+    /// The lift's `liftedParameters[0]` is always the implicit-self
+    /// binding (per `LiftedTransformation.lift`); the user-facing first
+    /// parameter is `originalSummary.parameters[0]`. The composition
+    /// shape gate already enforces `originalParams.count == 1`, so we
+    /// safely read `[0]`.
+    private static func monotoneBoundedLabelSignal(
+        for lifted: LiftedTransformation
+    ) -> Signal? {
+        guard let firstParam = lifted.originalSummary.parameters.first,
+              let label = firstParam.label,
+              monotoneBoundedLabels.contains(label) else {
+            return nil
+        }
+        return Signal(
+            kind: .directionLabel,
+            weight: -25,
+            detail: "Monotone-bounded parameter label '\(label)' — "
+                + "`op(s, a).op(s, b) = max(a, b)`-bounded state, not "
+                + "additive composition `op(s, a + b)`"
         )
     }
 
