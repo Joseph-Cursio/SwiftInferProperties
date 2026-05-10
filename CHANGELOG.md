@@ -4,6 +4,60 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0] — 2026-05-10
+
+The eighteenth calibration cycle and the **first mechanism cycle whose priorities are directly informed by cycle-17 measured reject classes** (cycles 15 + 16 priorities were projected from non-empirical value-semantics reasoning). Three independently-mergeable workstreams shipped in one release. Surface 335 → **165** (-170 = -50.7%) — **first descending move since cycle 13** and a new cumulative-reduction low at -85.86% vs cycle-1's 1167-baseline (prior low: -80.4% at cycle 13; first cycle to cross the 85% threshold). Restored the descending surface trend that v1.18 + v1.19's recall-positive workstreams had reversed at cycle 17. Plan-vs-actual: -170 vs projected -171 (within ±1).
+
+### Calibration cycle 18 — cycle-17 findings + math-library carry-forward
+
+- **Workstream A (V1.21.A): IteratorProtocol carrier veto on `idempotence-lifted`.** Direct cycle-17 finding closure (4/4 reject Iterator-shape class in V1.20.C 46-decision triage). New `IdempotenceTemplate+IteratorVeto.swift` extension method `iteratorProtocolCarrierVeto(for:inheritedTypesByName:)`. Two detection paths: (a) primary — textual `IteratorProtocol` conformance via the V1.5.2-built `inheritedTypesByName` index (with generic-parameter stripping); (b) name fallback — carrier name `Iterator` or `*.Iterator` suffix joint-match with method name in curated `iteratorMethodNames = {next, advance, nextState, step}`. Full veto via `Signal.vetoWeight` collapses score to Suppressed; calibration record preserved per V1.5.2 reuse posture. Mechanism class extension: class 7 (function-name + type-shape composite) extended to a "carrier-protocol-conformance veto" sub-class. Surface impact: -22 candidates (20 Algo Iterator + 2 nested OC Iterator). 12 new unit tests in `IdempotenceTemplateIteratorVetoTests.swift`. **Plan-vs-actual:** -22 vs projected ~24 (BucketIterator-named OC picks survive — carrier ends in `.BucketIterator` not `.Iterator`; cycle-19 priority #4 candidate).
+
+- **Workstream B (V1.21.B): `composition-lifted` monotone-bounded parameter-label counter.** Direct cycle-17 finding closure (1/1 reject on `BucketIterator.advance(until: Int)` in V1.20.C pick #46). New `monotoneBoundedLabels = {until, to, at, upTo, before, through}` curated set on `CompositionTemplate`. New `monotoneBoundedLabelSignal(for:)` private helper fires at `-25` weight when first non-self parameter's label matches. Score posture: 30 + 40 + 5 + 10 - 25 = 60 → Likely (NOT full Suppressed) — demotes Strong → Likely so the calibration record is preserved at small-n; cycle-19 may motivate promotion to -40 if false-negative rate stays at 0/N on broader corpora. Mechanism class extension: class 8 (parameter-label semantic-intent counter, V1.15.1 lineage) extended to V1.19.C composition template. Surface impact: 0 (demote-only; the cycle-17 reject is now Likely-tier visible-but-flagged instead of Strong-tier default-confident). 6 new unit tests in `CompositionTemplateMonotoneBoundedTests.swift`.
+
+- **Workstream C (V1.21.C): Math-library forward-function counter on idempotence + round-trip non-lifted paths.** Three-cycle carry-forward (cycles 15/16/17) closed by the cycle-17 measurement which confirmed `exp`/`log`/`sqrt` non-lifted idempotence at 0/3 = 0% (V1.20.C picks #18, #19, #20 all reject). **Largest single mechanism in v1.21 by surface impact.** New `Sources/SwiftInferCore/MathForwardFunctions.swift` curated set + canonical-inverse-pair allowlist:
+  - `MathForwardFunctions.curated` (~22 names) — exponential family (`exp`, `exp2`, `expMinusOne`), logarithm family (`log`, `log2`, `log10`, `log1p`), trigonometric forward + inverse (`sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`), hyperbolic + inverse-hyperbolic (`sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh`), roots (`sqrt`, `cbrt`), and `hypot`. Excludes `abs` / `negate` (idempotent on real inputs).
+  - `MathForwardFunctions.canonicalInversePairs` (10 entries) — preserves the cycle-17 7 anchors (`exp×log`, `cos×acos`, `sin×asin`, `tan×atan`, `cosh×acosh`, `sinh×asinh`, `tanh×atanh`) plus 3 numerics-extension variants (`exp2×log2`, `expMinusOne×log1p`, `expMinusOne×onePlus`). Orientation-insensitive matching mirrors V1.18.C `DualStylePairing` posture.
+  - Two consumer extensions: `IdempotenceTemplate.mathForwardFunctionVeto(for:)` fires veto when name+`(T)→T` shape matches; `RoundTripTemplate.mathForwardFunctionPairVeto(for:)` fires veto when both pair sides match AND pair is not in canonical allowlist (orientation-insensitive).
+  - Mechanism class extension: class 7 (function-name + type-shape composite, V1.14.1 / V1.16.1 lineage) — third-template extension paralleling V1.16.1's posture.
+  - Surface impact: -148 candidates (-145 ComplexModule + -3 Algorithms). The 8 surviving CM round-trip suggestions are the 7 cycle-17 canonical-inverse anchors + 1 numerics extension. 29 new unit tests across `MathForwardFunctionsTests.swift` + `IdempotenceTemplateMathForwardVetoTests.swift` + `RoundTripTemplateMathForwardVetoTests.swift`.
+
+- **Mechanism-class taxonomy update:** 13 → **13** (no new classes; **three extensions of existing classes** per the v1.21 plan §3 design). v1.21 returns to extension-of-existing-class as the post-cycle-17 pattern after v1.18 + v1.19 added 5 new classes (9-13) in 2 cycles.
+
+- **Per-corpus surface delta** (cycle-17 → cycle-18):
+  - ComplexModule: 166 → 21 (-145; the dominant CM elementary-functions noise class fully addressed).
+  - OrderedCollections: 126 → 124 (-2; Iterator nested picks closed; BucketIterator survivors are cycle-19 candidates).
+  - Algorithms: 36 → 13 (-23; 20 Iterator-shape lifted-idempotence + 3 math-forward closures).
+  - PropertyLawKit: 7 → 7 (byte-stable; no v1.21 mechanism targets).
+
+- **Per-template surface delta** (cycle-17 → cycle-18): `round-trip` 156 → 27 (-129); `idempotence (non-lifted)` 88 → 23 (-65); `idempotence-lifted` 44 → 24 (-20). All other templates byte-stable.
+
+- **Cycle-19 priority list (rotated post-v1.21, in expected impact order):**
+  1. Fixed-point-name positive signal on non-lifted idempotence (3-cycle carry-forward; cycle-18 confirms 1 OC formatter still surfaces).
+  2. FP approximate-equality template arm (cycle-14 priority #4 carry-forward; required for production CM round-trip property tests on the surviving 7 canonical anchors).
+  3. Stride-style label extension (cycle-14 demotion carry-forward).
+  4. **NEW (cycle-18 finding):** BucketIterator name extension on V1.21.A — extend curated set with `findNext`, `advanceToNextUnoccupiedBucket`, OR extend carrier-name fallback to `*Iterator` suffix. Magnitude: ~3 OC candidates.
+  5. **NEW (cycle-18 finding):** OC `index(after:) × index(before:)` direction-pair full-veto extension on V1.12.1 — change firing rule from "either side direction-labeled" (-15) to "both sides direction-labeled" (-25). Magnitude: ~12 OC candidates.
+  6. Math-library op-name gate extension to `rescaledDivide` / `_relaxed*` (carried forward).
+  7. CompositionTemplate non-numeric monoid extension (NEW carry-forward from v1.19; cycle-18 measurement does not motivate yet).
+  8. Lift admission relaxation from strict to permissive (carry-forward; v1.21 V1.21.A precision-positive movement does not motivate further relaxation).
+  9. `Signal.Kind.liftedFromMutation` magnitude re-baselining (carry-forward; cycle-18 lifted-idempotence projection ~67% does not motivate +10 → +5 demotion).
+  10. v1.23 = cycle 19 empirical-only re-measurement (after v1.22 mechanism release).
+
+### Documentation
+
+- **v1.21 calibration plan (V1.21.0).** `docs/v1.21 Calibration Plan.md` — three-workstream mechanism cycle plan; cycle-17-finding-driven priorities + 3-cycle carry-forward.
+- **Cycle-18 findings (V1.21.D).** `docs/calibration-cycle-18-findings.md` — surface delta, per-workstream contribution table, mechanism-class taxonomy update (13 → 13 extensions-only), per-mechanism effectiveness ranking (V1.21.C is largest single-cycle contributor in loop history at -148), cycle-17 picks status at v1.21, cycle-19 priority list rotated.
+- **Cycle-18 capture (V1.21.D).** `docs/calibration-cycle-18-data/post-v1.21-*.discover.txt` — four per-corpus discover snapshots at the V1.21.C commit.
+- **Performance baseline re-measured (V1.21.D).** `docs/perf-baseline-v1.21.md` — re-measured at commit `d3bed65`. Every row measures faster than v1.19 (-3% across; the suppressed-suggestion short-circuit on -170 closed candidates outweighs per-call O(1) veto-evaluation overhead). v1.21 plan §"Open decisions" #6 ≤+5% budget met with wide margin. Row 4 peak delta 135.5 MB (vs v1.19's 136.3 MB).
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.21 ships zero new accept-flow writeout paths (all three workstreams are veto-only or counter-only mechanisms).
+- All PRD §13 performance budgets hold at v1.21 (re-measured at [`docs/perf-baseline-v1.21.md`](docs/perf-baseline-v1.21.md)). Every row faster than v1.19; v1.21 release-blocking criterion (≤+5% wall vs v1.19) met with wide margin.
+- PRD §14 + §19 runtime no-network guarantee unchanged.
+
+[1.21.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.21.0
+
 ## [1.20.0] — 2026-05-10
 
 The seventeenth calibration cycle and **third empirical-only release** in the loop's history (after cycle 6 = v1.9 and cycle 14 = v1.17). v1.20 is binary-equivalent to v1.19.0 except the version-string bump — zero `Sources/` changes, zero test changes, zero behavior changes. The cycle's deliverable is **per-template + per-corpus acceptance-rate data on the post-v1.19 335-surface**, comparable point-for-point to cycle-6's measurement on the post-V1.8.1 349-surface (26.7%) and cycle-14's measurement on the post-V1.16.1 229-surface (34.8%). Headline: **23/44 = 52.3%** Possible-tier acceptance rate — outcome **A** under the v1.20 plan thresholds (Aggregate ≥ 50%; on trajectory toward the §19 ≥70% target). Three-point trajectory established: 26.7% → 34.8% → 52.3%, with the cycle-14 → cycle-17 delta (+17.5pp / 3 mechanism cycles) **larger** than the cycle-6 → cycle-14 delta (+8.1pp / 8 mechanism cycles) — the loop is accelerating, not plateauing.
