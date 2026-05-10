@@ -1,0 +1,689 @@
+36 suggestions.
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ AdjacentPairsSequence.Iterator.next() mutating () -> Void  // lifted to (AdjacentPairsSequence.Iterator) -> AdjacentPairsSequence.Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/AdjacentPairs.swift:102
+  ✓ Lifted from `mutating func AdjacentPairsSequence.Iterator.next()`. Property holds iff `AdjacentPairsSequence.Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (AdjacentPairsSequence.Iterator) -> AdjacentPairsSequence.Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (AdjacentPairsSequence.Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func AdjacentPairsSequence.Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `AdjacentPairsSequence.Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x7D28AEBD97B0BAA4E0962EDD43194E6075FA8899B503C76122D48E03913534F2
+Identity:  0x64613F2632FE0739
+Suppress:  // swiftinfer: skip 0x64613F2632FE0739
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chain.swift:46
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x64F1D941701740B4577B8749D59EBF153070F7829878812F7CA2E4D5C528C143
+Identity:  0x8B20805909511155
+Suppress:  // swiftinfer: skip 0x8B20805909511155
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ endOfChunk(startingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:79
+  ✓ Type-symmetry signature: T -> T (T = Base.Index) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x0408417ECAD93517F3937EB1E65481EE9DCC6992089F11E30F886DF4832992CB
+Identity:  0x3543E69FA981193D
+Suppress:  // swiftinfer: skip 0x3543E69FA981193D
+
+[Suggestion]
+Template: inverse-pair
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ endOfChunk(startingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:79
+  ✓ startOfChunk(endingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:122
+  ✓ Type-symmetry signature: Base.Index -> Base.Index ↔ Base.Index -> Base.Index (non-Equatable T) (+25)
+
+Why this might be wrong:
+  ⚠ Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — the suggestion is name-and-type-pattern only.
+  ⚠ TestLifter corroboration not yet wired (gated on TestLifter M1).
+  ⚠ Possible-tier by default — escalation requires a custom equality witness or annotation API extension.
+  ⚠ If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case with stronger evidence — inverse-pair only fires when EquatableResolver returns .notEquatable or .unknown for T.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xFDF3DE20A598E7246A35CA413A4E307A37A959B5F352DE3456670DE848A3C59A
+Identity:  0x95C875F3302EBD59
+Suppress:  // swiftinfer: skip 0x95C875F3302EBD59
+
+[Suggestion]
+Template: round-trip
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ endOfChunk(startingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:79
+  ✓ startOfChunk(endingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:122
+  ✓ Type-symmetry signature: Base.Index -> Base.Index ↔ Base.Index -> Base.Index (+30)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xEDA634504C1344593475A8BEC8C0BBD5029077A36FDB7B55AFA36B1A58F5A341
+Identity:  0xDC5B180ADAD82DC5
+Suppress:  // swiftinfer: skip 0xDC5B180ADAD82DC5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ startOfChunk(endingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:122
+  ✓ Type-symmetry signature: T -> T (T = Base.Index) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x65915FAF0CF7F96FF3C43110D9D11A7E1FA59786C7F7817AC72335B600F458D0
+Identity:  0x40C830C81337F0F5
+Suppress:  // swiftinfer: skip 0x40C830C81337F0F5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sizeOfChunk(offset:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:243
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xAFFA6D947AF41681C1B1DBC67FD0E2C18CC652BFD6121C7356FCF855D15621F5
+Identity:  0xED77E1F06B342709
+Suppress:  // swiftinfer: skip 0xED77E1F06B342709
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ sizeOfChunk(offset:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:243
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x158034D147D1C80A180728B2EA83C0A1AF511077DDD4C4F581FE5310374ADCFE
+Identity:  0x1BEF8F676F88EF18
+Suppress:  // swiftinfer: skip 0x1BEF8F676F88EF18
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ binomial(n:k:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Combinations.swift:70
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x631A2C1B53B95F7ABAA6F41712993163D35E8F3792C477C34F1864269D8D5FB8
+Identity:  0xE574CB2D65C86A66
+Suppress:  // swiftinfer: skip 0xE574CB2D65C86A66
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ binomial(n:k:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Combinations.swift:70
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xFA1F84A72561E77EA29850A2CC9208F81853F386E95D5CAD8FD5380F7ABC25FE
+Identity:  0xB56C450591E30313
+Suppress:  // swiftinfer: skip 0xB56C450591E30313
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.advance() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Combinations.swift:138
+  ✓ Lifted from `mutating func Iterator.advance()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.advance(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.advance()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x1E466F3C071927E3601914D1B9B125CE278132A642F026903552ED3AC256DB85
+Identity:  0xF1D7D289938064B4
+Suppress:  // swiftinfer: skip 0xF1D7D289938064B4
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Combinations.swift:182
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xEBFC00AA4980C89CDA2B3E3C33954D8D80BD5D2779107EE9BFC46CF0B15885B8
+Identity:  0x7D83BC86CAAEA9DE
+Suppress:  // swiftinfer: skip 0x7D83BC86CAAEA9DE
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Compacted.swift:35
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x1F8052E1B3621C28FEBA4F32E796071F1A492600E1A73BF3A70E52E349A369F2
+Identity:  0x9C01930B2F188F26
+Suppress:  // swiftinfer: skip 0x9C01930B2F188F26
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Cycle.swift:40
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x48EE9375D0B8D2FA243A759A641549C5266B0E806E16841CFA1DB818D5CDFFEA
+Identity:  0xB10008263C33E90B
+Suppress:  // swiftinfer: skip 0xB10008263C33E90B
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/EitherSequence.swift:75
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x2544853EB145837EF3A4C14C1980205B3CAF3C2AF2C3B49CAFE64DA91290B77B
+Identity:  0x0228CB8A67FA94C0
+Suppress:  // swiftinfer: skip 0x0228CB8A67FA94C0
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Index) -> Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/EitherSequence.swift:129
+  ✓ Type-symmetry signature: T -> T (T = Index) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (EitherSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x7EC6C8FA4631D8370DF969CFD1878DD8316010375E565B5BE9C80B50D56D7E10
+Identity:  0x40A00783B1F344B6
+Suppress:  // swiftinfer: skip 0x40A00783B1F344B6
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Index) -> Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/EitherSequence.swift:129
+  ✓ index(before:) (Index) -> Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/EitherSequence.swift:184
+  ✓ Type-symmetry signature: Index -> Index ↔ Index -> Index (+30)
+  ✓ Direction-label argument: 'after' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (EitherSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x041FC8ADEC2E5117EB9417574EB5505D65D0495F82BFD1A03BB7FDEE4BAE0346
+Identity:  0xE9A94ADC7D33AE2A
+Suppress:  // swiftinfer: skip 0xE9A94ADC7D33AE2A
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Index) -> Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/EitherSequence.swift:184
+  ✓ Type-symmetry signature: T -> T (T = Index) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (EitherSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA4DCAF3B58D431917BDF78AF738899C06F731B61C29FBE3A7EBFA4B4BE911DED
+Identity:  0xF077C206088EB8C0
+Suppress:  // swiftinfer: skip 0xF077C206088EB8C0
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Intersperse.swift:58
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x48EE9375D0B8D2FA243A759A641549C5266B0E806E16841CFA1DB818D5CDFFEA
+Identity:  0xB10008263C33E90B
+Suppress:  // swiftinfer: skip 0xB10008263C33E90B
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Intersperse.swift:345
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x730C952E7061E98ACCE4BB774C78D17B83F74B7B89728AF0DFD0F0E75919B50B
+Identity:  0x0F705FC7E5536693
+Suppress:  // swiftinfer: skip 0x0F705FC7E5536693
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Joined.swift:50
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0050CCFB423FA74EB880610B08FC27D312E6EF5E3C15A35B3C7D5FE709973523
+Identity:  0x7C1D6BE0D556B21D
+Suppress:  // swiftinfer: skip 0x7C1D6BE0D556B21D
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Joined.swift:108
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0050CCFB423FA74EB880610B08FC27D312E6EF5E3C15A35B3C7D5FE709973523
+Identity:  0x7C1D6BE0D556B21D
+Suppress:  // swiftinfer: skip 0x7C1D6BE0D556B21D
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.nextState() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Permutations.swift:187
+  ✓ Lifted from `mutating func Iterator.nextState()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.nextState(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.nextState()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x22FDE53A9257656C121113BD17DCDC523204D2A430974C0A48F6396B1C9D185B
+Identity:  0xB0B9AA8D3222E9A6
+Suppress:  // swiftinfer: skip 0xB0B9AA8D3222E9A6
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Permutations.swift:223
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xEBFC00AA4980C89CDA2B3E3C33954D8D80BD5D2779107EE9BFC46CF0B15885B8
+Identity:  0x7D83BC86CAAEA9DE
+Suppress:  // swiftinfer: skip 0x7D83BC86CAAEA9DE
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Permutations.swift:484
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xEBFC00AA4980C89CDA2B3E3C33954D8D80BD5D2779107EE9BFC46CF0B15885B8
+Identity:  0x7D83BC86CAAEA9DE
+Suppress:  // swiftinfer: skip 0x7D83BC86CAAEA9DE
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Product.swift:52
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF7FC2A654D720E6410456D7BA36B59EDD6719FF95C1AEA52CDBB2E0042BB028D
+Identity:  0x4ED2D57B428708D9
+Suppress:  // swiftinfer: skip 0x4ED2D57B428708D9
+
+[Suggestion]
+Template: idempotence
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:25
+  ✓ Type-symmetry signature: T -> T (T = Double) (+30)
+  ✓ Value-semantic carrier (Double) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x360D924F142312C755D0DD9ABB727842B00F6EFA1FA5620D09D2801C0F3EC2C3
+Identity:  0xF691EC3C45BD208B
+Suppress:  // swiftinfer: skip 0xF691EC3C45BD208B
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:25
+  ✓ Ordered-codomain signature: Double -> Double (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x46E9CD1AE81DCDAC4D24DB1E92CD576AB2E5EC1405631A5F7F3EB809DCA9451F
+Identity:  0xE0626CEF04CEE3AC
+Suppress:  // swiftinfer: skip 0xE0626CEF04CEE3AC
+
+[Suggestion]
+Template: round-trip
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:25
+  ✓ log(onePlus:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:30
+  ✓ Type-symmetry signature: Double -> Double ↔ Double -> Double (+30)
+  ✓ Value-semantic carrier (Double) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x94DDB5681340D089471C70FF58C499936BB2CDA4540401D2916AC2F671048C5A
+Identity:  0x921A7F6458439422
+Suppress:  // swiftinfer: skip 0x921A7F6458439422
+
+[Suggestion]
+Template: idempotence
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:30
+  ✓ Type-symmetry signature: T -> T (T = Double) (+30)
+  ✓ Value-semantic carrier (Double) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xDEB711D0698744C968C83BAEB73BD3ECD130DE40F52B6E9A0879FDE2A9AF1A48
+Identity:  0xE794E35091B221AB
+Suppress:  // swiftinfer: skip 0xE794E35091B221AB
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:30
+  ✓ Ordered-codomain signature: Double -> Double (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x5682470ADF707FFD686E6BB7AC57A1B2DEC196EC7E10145DC7E218EF5E91AFA7
+Identity:  0xA9ADEC19AF2787F4
+Suppress:  // swiftinfer: skip 0xA9ADEC19AF2787F4
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Reductions.swift:225
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x730C952E7061E98ACCE4BB774C78D17B83F74B7B89728AF0DFD0F0E75919B50B
+Identity:  0x0F705FC7E5536693
+Suppress:  // swiftinfer: skip 0x0F705FC7E5536693
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Reductions.swift:464
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x48EE9375D0B8D2FA243A759A641549C5266B0E806E16841CFA1DB818D5CDFFEA
+Identity:  0xB10008263C33E90B
+Suppress:  // swiftinfer: skip 0xB10008263C33E90B
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ SplitSequence.Iterator.next() mutating () -> Void  // lifted to (SplitSequence.Iterator) -> SplitSequence.Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Split.swift:103
+  ✓ Lifted from `mutating func SplitSequence.Iterator.next()`. Property holds iff `SplitSequence.Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (SplitSequence.Iterator) -> SplitSequence.Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (SplitSequence.Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func SplitSequence.Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `SplitSequence.Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x32AEA216D86608BCCA99A787306D5F93615631052E7BD3995743717CEE67776C
+Identity:  0xA83C072AB2412797
+Suppress:  // swiftinfer: skip 0xA83C072AB2412797
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Stride.swift:98
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x48EE9375D0B8D2FA243A759A641549C5266B0E806E16841CFA1DB818D5CDFFEA
+Identity:  0xB10008263C33E90B
+Suppress:  // swiftinfer: skip 0xB10008263C33E90B
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ Iterator.next() mutating () -> Void  // lifted to (Iterator) -> Iterator — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Unique.swift:51
+  ✓ Lifted from `mutating func Iterator.next()`. Property holds iff `Iterator` has value semantics — `var copy = original; copy.next(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (Iterator) -> Iterator (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (Iterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func Iterator.next()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `Iterator` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x48EE9375D0B8D2FA243A759A641549C5266B0E806E16841CFA1DB818D5CDFFEA
+Identity:  0xB10008263C33E90B
+Suppress:  // swiftinfer: skip 0xB10008263C33E90B
