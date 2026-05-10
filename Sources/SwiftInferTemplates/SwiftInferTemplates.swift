@@ -83,13 +83,23 @@ public enum TemplateRegistry {
         // type (Idempotence, RoundTrip, InversePair, IdentityElement).
         // Same single-build pattern as `EquatableResolver`.
         let carrierKindResolver = CarrierKindResolver(typeDecls: typeDecls)
+        // V1.19.A — corpus-wide lifted-transformation set, derived once
+        // from the mutating-func summaries that pass the strict
+        // value-semantic carrier gate. Threaded into V1.19.B-D template
+        // fan-out (Idempotence, IdentityElement, Composition, InversePair).
+        // Same single-build pattern as the resolvers above.
+        let liftedTransformations = LiftedTransformation.derive(
+            from: summaries,
+            carrierKindResolver: carrierKindResolver
+        )
         let collector = collectSuggestions(
             summaries: summaries,
             identities: identities,
             vocabulary: vocabulary,
             equatableResolver: resolver,
             inheritedTypesByName: inheritedTypesByName,
-            carrierKindResolver: carrierKindResolver
+            carrierKindResolver: carrierKindResolver,
+            liftedTransformations: liftedTransformations
         )
         let outcome = ContradictionDetector.filter(
             collector.suggestions,

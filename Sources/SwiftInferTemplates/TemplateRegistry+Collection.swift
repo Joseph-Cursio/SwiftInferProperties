@@ -4,14 +4,19 @@ import SwiftInferCore
 /// V1.18.A — read-only resolver context threaded into per-summary and
 /// per-pair collection helpers. Bundled to keep helper signatures under
 /// SwiftLint's parameter-count ceiling as more resolvers are added (the
-/// v1.18 plan adds `carrierKindResolver`; v1.19's mutating-method lift
-/// adds another). Mirrors `EquatableResolver` + `inheritedTypesByName`
-/// being built once per `discover` call and reused across every
-/// per-template `suggest` invocation.
+/// v1.18 plan adds `carrierKindResolver`; v1.19 adds `liftedTransformations`).
+/// Mirrors `EquatableResolver` + `inheritedTypesByName` being built once
+/// per `discover` call and reused across every per-template `suggest`
+/// invocation.
 struct CollectionResolverContext {
     let vocabulary: Vocabulary
     let inheritedTypesByName: [String: Set<String>]
     let carrierKindResolver: CarrierKindResolver?
+    /// V1.19.A — corpus-wide lifted-transformation set, available to the
+    /// V1.19.B-D template fan-out sites (Idempotence, IdentityElement,
+    /// Composition, InversePair). Empty when no mutating-func summaries
+    /// pass the strict value-semantic carrier gate.
+    let liftedTransformations: [LiftedTransformation]
 }
 
 /// Mutable accumulator used inside `collectSuggestions`. Keeps the
@@ -60,7 +65,8 @@ extension TemplateRegistry {
         vocabulary: Vocabulary,
         equatableResolver: EquatableResolver,
         inheritedTypesByName: [String: Set<String>] = [:],
-        carrierKindResolver: CarrierKindResolver? = nil
+        carrierKindResolver: CarrierKindResolver? = nil,
+        liftedTransformations: [LiftedTransformation] = []
     ) -> SuggestionCollector {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -75,7 +81,8 @@ extension TemplateRegistry {
         let context = CollectionResolverContext(
             vocabulary: vocabulary,
             inheritedTypesByName: inheritedTypesByName,
-            carrierKindResolver: carrierKindResolver
+            carrierKindResolver: carrierKindResolver,
+            liftedTransformations: liftedTransformations
         )
         var collector = SuggestionCollector()
         for summary in summaries {

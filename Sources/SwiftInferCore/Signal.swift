@@ -115,6 +115,22 @@ public struct Signal: Sendable, Equatable {
         /// value-semantic structurally and would falsely score positive
         /// otherwise.
         case valueSemanticCarrier
+        /// V1.19.B — fires on suggestions emitted against a
+        /// `LiftedTransformation` (a mutating method exposed in its
+        /// pure-shadow `(T) -> T` form). Emitted with weight `+10`
+        /// per the v1.19 plan open decision #5 lean — modest positive
+        /// rewarding the structural soundness check that admitting the
+        /// lift requires (strict admission gate filters most noise).
+        ///
+        /// **Decoupled from `valueSemanticCarrier`.** The `+5`
+        /// `valueSemanticCarrier` signal also fires (always — it's the
+        /// admission gate); the two contribute independently. A lifted
+        /// suggestion's score baseline is therefore the non-lifted
+        /// template's baseline + 5 (carrier) + 10 (lift admission), so
+        /// the canonical Strong-tier baseline `30 + 40 + 5 + 10 = 85`
+        /// for the new `CompositionTemplate` matches the v1.18-plan
+        /// suggestion-rendering specification.
+        case liftedFromMutation
 
         // Veto (collapses score to suppressed)
         case nonDeterministicBody
