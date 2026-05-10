@@ -141,7 +141,7 @@ public enum IdempotenceTemplate {
         )
     }
 
-    private static func nameSignal(
+    static func nameSignal(
         for summary: FunctionSummary,
         vocabulary: Vocabulary
     ) -> Signal? {
@@ -189,7 +189,7 @@ public enum IdempotenceTemplate {
     /// to `SwiftInferCore.DirectionLabels.curated` once round-trip became
     /// the third consumer in cycle 9. See `DirectionLabels` for the
     /// historical motivation.
-    private static func directionLabelCounterSignal(
+    static func directionLabelCounterSignal(
         for summary: FunctionSummary
     ) -> Signal? {
         guard let label = summary.parameters.first?.label,
@@ -204,7 +204,7 @@ public enum IdempotenceTemplate {
         )
     }
 
-    private static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
+    static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
         guard summary.bodySignals.hasNonDeterministicCall else {
             return nil
         }
@@ -224,7 +224,7 @@ public enum IdempotenceTemplate {
     /// `f(f(x))` on arbitrary types isn't covered — the veto fires
     /// only when the type's conformance set intersects the curated
     /// idempotence-bearing protocols.
-    private static func protocolCoverageVeto(
+    static func protocolCoverageVeto(
         for summary: FunctionSummary,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {

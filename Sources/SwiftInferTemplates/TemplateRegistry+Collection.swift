@@ -101,20 +101,58 @@ extension TemplateRegistry {
                 into: &collector
             )
         }
+        collectIdentityElementSuggestions(
+            summaries: summaries,
+            identities: identities,
+            opsWithIdentitySeed: opsWithIdentitySeed,
+            context: context,
+            into: &collector
+        )
+        collectDualStyleSuggestions(
+            summaries: summaries,
+            context: context,
+            into: &collector
+        )
+        collectLiftedSuggestions(
+            lifted: liftedTransformations,
+            context: context,
+            into: &collector
+        )
+        return collector
+    }
+
+    /// IdentityElement template fan-out — kept as a helper so
+    /// `collectSuggestions` stays under the SwiftLint function-body
+    /// budget as new template fan-outs accumulate (V1.18.C dual-style,
+    /// V1.19.B lift admission).
+    private static func collectIdentityElementSuggestions(
+        summaries: [FunctionSummary],
+        identities: [IdentityCandidate],
+        opsWithIdentitySeed: Set<String>,
+        context: CollectionResolverContext,
+        into collector: inout SuggestionCollector
+    ) {
         for pair in IdentityElementPairing.candidates(in: summaries, identities: identities) {
             if let suggestion = IdentityElementTemplate.suggest(
                 for: pair,
                 opsWithIdentitySeed: opsWithIdentitySeed,
-                inheritedTypesByName: inheritedTypesByName,
-                carrierKindResolver: carrierKindResolver
+                inheritedTypesByName: context.inheritedTypesByName,
+                carrierKindResolver: context.carrierKindResolver
             ) {
                 collector.record(suggestion, generatorType: generatorType(for: pair.operation))
             }
         }
-        for pair in DualStylePairing.candidates(in: summaries, vocabulary: vocabulary) {
+    }
+
+    private static func collectDualStyleSuggestions(
+        summaries: [FunctionSummary],
+        context: CollectionResolverContext,
+        into collector: inout SuggestionCollector
+    ) {
+        for pair in DualStylePairing.candidates(in: summaries, vocabulary: context.vocabulary) {
             if let suggestion = DualStyleConsistencyTemplate.suggest(
                 for: pair,
-                carrierKindResolver: carrierKindResolver
+                carrierKindResolver: context.carrierKindResolver
             ) {
                 collector.record(
                     suggestion,
@@ -122,7 +160,31 @@ extension TemplateRegistry {
                 )
             }
         }
-        return collector
+    }
+
+    /// V1.19.B — emit lifted-mutation suggestions for each admissible
+    /// `LiftedTransformation`. v1.19 ships IdempotenceTemplate's lift
+    /// admission; V1.19.C-D will fan out to CompositionTemplate +
+    /// IdentityElementPairing + InversePairTemplate from this same site.
+    /// No-op when no carrier-kind resolver is supplied (the lifted-
+    /// suggest path always emits the carrier signal so the resolver is
+    /// load-bearing).
+    private static func collectLiftedSuggestions(
+        lifted: [LiftedTransformation],
+        context: CollectionResolverContext,
+        into collector: inout SuggestionCollector
+    ) {
+        guard let resolver = context.carrierKindResolver else { return }
+        for transformation in lifted {
+            if let suggestion = IdempotenceTemplate.suggest(
+                forLifted: transformation,
+                vocabulary: context.vocabulary,
+                inheritedTypesByName: context.inheritedTypesByName,
+                carrierKindResolver: resolver
+            ) {
+                collector.record(suggestion, generatorType: transformation.carrier)
+            }
+        }
     }
 
     /// Idempotence + commutativity + associativity all fire per
