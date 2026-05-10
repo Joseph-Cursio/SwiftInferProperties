@@ -64,12 +64,34 @@ extension RoundTripTemplate {
     ) -> Signal? {
         let forwardLabel = pair.forward.parameters.first?.label
         let reverseLabel = pair.reverse.parameters.first?.label
-        let matched = [forwardLabel, reverseLabel]
-            .compactMap { $0 }
-            .first(where: { DirectionLabels.curated.contains($0) })
-        guard let label = matched else {
+        let forwardIsDirectional = forwardLabel.map { DirectionLabels.curated.contains($0) } ?? false
+        let reverseIsDirectional = reverseLabel.map { DirectionLabels.curated.contains($0) } ?? false
+        guard forwardIsDirectional || reverseIsDirectional else {
             return nil
         }
+        // V1.22.B — both-sides direction-labeled bumps to -25 (full veto
+        // magnitude). Direct cycle-18 finding closure: 17 OC round-trip
+        // survivors at v1.21 are mostly `index(after:) × index(before:)`
+        // cross-cell directional pairs; cycle-9 V1.12.1 -15 left them at
+        // +30 + 5 (carrier) - 15 = +20 (right at Possible boundary, lifted
+        // above visibility by V1.18.A carrier-kind +5). The -25 magnitude
+        // sends both-sides-directional pairs to +15 → Suppressed with a
+        // clean 5-point margin.
+        if forwardIsDirectional && reverseIsDirectional {
+            // Both labels in the curated set — render both for clarity.
+            // Force-unwrapped because the boolean guards above already
+            // confirmed both labels exist + match the curated set.
+            return Signal(
+                kind: .directionLabel,
+                weight: -25,
+                detail: "Both pair sides direction-labeled "
+                    + "('\(forwardLabel!)' / '\(reverseLabel!)') — paired "
+                    + "index advance, not a round-trip codec"
+            )
+        }
+        // V1.12.1 single-side path preserved verbatim — score arithmetic
+        // unchanged when only one side is direction-labeled.
+        let label = forwardIsDirectional ? forwardLabel! : reverseLabel!
         return Signal(
             kind: .directionLabel,
             weight: -15,
