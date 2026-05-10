@@ -1,0 +1,2161 @@
+114 suggestions.
+
+[Suggestion]
+Template: composition
+Score:    60 (Likely)
+
+Why suggested:
+  ✓ _HashTable.BucketIterator.advance(until:) mutating (Int) -> Void  // composition: op(op(s, a), b) == op(s, a + b) — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+BucketIterator.swift:252
+  ✓ Lifted from `mutating func _HashTable.BucketIterator.advance(until:)`. Property holds iff `_HashTable.BucketIterator` has value semantics — `var copy = original; copy.advance(...)` does not alias original's state.
+  ✓ Composition shape: lifted (_HashTable.BucketIterator, Int) -> _HashTable.BucketIterator with X in curated additive-monoid set (+30)
+  ✓ Curated additive-action verb: 'advance' (+40)
+  ✓ Value-semantic carrier (_HashTable.BucketIterator) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func _HashTable.BucketIterator.advance(until:)` (+10)
+  ✓ Monotone-bounded parameter label 'until' — `op(s, a).op(s, b) = max(a, b)`-bounded state, not additive composition `op(s, a + b)` (-25)
+
+Why this might be wrong:
+  ⚠ X must conform to AdditiveArithmetic for `a + b` in the property body to compile. Curated set is restricted to stdlib AdditiveArithmetic conformers + Decimal + Duration.
+  ⚠ Property holds iff the mutating method's effect is exactly additive on the parameter — i.e. `op(s, a + b)` is semantically equivalent to `op(op(s, a), b)`. A method named `increment` that clamps at a maximum or non-linearly transforms its argument will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x381BB4E3579BBADFA04F40CC0CD08B42694C123100A2C1D963DAE9DB179C7F39
+Identity:  0x8C31B1B9D4D3A76C
+Suppress:  // swiftinfer: skip 0x8C31B1B9D4D3A76C
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:58
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x3DEC0D52C33F03D2F778E8830C5871FE57626BC21377E9A39EB08655786E8DBB
+Identity:  0xD259DD76B5D19FBE
+Suppress:  // swiftinfer: skip 0xD259DD76B5D19FBE
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:67
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x2EE1D5CD1B6180B15A2196EB696A99D16FE41A94FF4F335DBB81227E1CD784C0
+Identity:  0xD722DD4D9ADC90BF
+Suppress:  // swiftinfer: skip 0xD722DD4D9ADC90BF
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:76
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x9C151C10ED9603AB3A31F4D40AE58D6C2C3C3B2B421A9B3955DDA603AEC6B33C
+Identity:  0xD70D8AB68ADE6C07
+Suppress:  // swiftinfer: skip 0xD70D8AB68ADE6C07
+
+[Suggestion]
+Template: monotonicity
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ wordCount(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:97
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+  ✓ Curated monotonicity suffix match: 'wordCount' (suffix 'Count') (+10)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x52BC19C298A1872B03EB78EE7D228B2509338FB1F3AD330C8E6AAA6EAA734D28
+Identity:  0x024EC8BD5F216271
+Suppress:  // swiftinfer: skip 0x024EC8BD5F216271
+
+[Suggestion]
+Template: idempotence
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ _description(type:) (String) -> String — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+CustomStringConvertible.swift:29
+  ✓ Type-symmetry signature: T -> T (T = String) (+30)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xD015D5C13687FF025096488DC2D115B5CB332EC5ACEA669D2DB68C6A21EB6F47
+Identity:  0xD1E396F9EF8195E7
+Suppress:  // swiftinfer: skip 0xD1E396F9EF8195E7
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ _description(type:) (String) -> String — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+CustomStringConvertible.swift:29
+  ✓ Ordered-codomain signature: String -> String (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x85A459B3AFA5FB5D047043A1A4BCC9B2B86C66E5C4B3EA979F0DC58E8D1EA6F5
+Identity:  0xA78807354D8573A9
+Suppress:  // swiftinfer: skip 0xA78807354D8573A9
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ bucket(after:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:137
+  ✓ Type-symmetry signature: T -> T (T = Bucket) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xBA76371DA3CBB4E098BA8D105AE2F9BE81658A8A8FE5BCD88FAEC67C3011EF2E
+Identity:  0x27FA40F4A3CE0E52
+Suppress:  // swiftinfer: skip 0x27FA40F4A3CE0E52
+
+[Suggestion]
+Template: inverse-pair
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ bucket(after:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:137
+  ✓ bucket(before:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:149
+  ✓ Type-symmetry signature: Bucket -> Bucket ↔ Bucket -> Bucket (non-Equatable T) (+25)
+  ✓ Direction-label argument: 'after' — pair side is likely directional (increment/decrement) rather than a true inverse pair (-10)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — the suggestion is name-and-type-pattern only.
+  ⚠ TestLifter corroboration not yet wired (gated on TestLifter M1).
+  ⚠ Possible-tier by default — escalation requires a custom equality witness or annotation API extension.
+  ⚠ If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case with stronger evidence — inverse-pair only fires when EquatableResolver returns .notEquatable or .unknown for T.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x5B5496AF1DB09D69BB21BA0EFAFEEC032D5B5085228DFD4A05587C5FAA062C57
+Identity:  0xF6FFDFCA6084D794
+Suppress:  // swiftinfer: skip 0xF6FFDFCA6084D794
+
+[Suggestion]
+Template: inverse-pair
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ bucket(after:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:137
+  ✓ firstOccupiedBucketInChain(with:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:325
+  ✓ Type-symmetry signature: Bucket -> Bucket ↔ Bucket -> Bucket (non-Equatable T) (+25)
+  ✓ Direction-label argument: 'after' — pair side is likely directional (increment/decrement) rather than a true inverse pair (-10)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — the suggestion is name-and-type-pattern only.
+  ⚠ TestLifter corroboration not yet wired (gated on TestLifter M1).
+  ⚠ Possible-tier by default — escalation requires a custom equality witness or annotation API extension.
+  ⚠ If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case with stronger evidence — inverse-pair only fires when EquatableResolver returns .notEquatable or .unknown for T.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x6A58E35680A57CA5C6F4B3B0A7EA7445D94EE0D527B6E936F8B2FEA26E21DB59
+Identity:  0xD77C1CCCD1CE086A
+Suppress:  // swiftinfer: skip 0xD77C1CCCD1CE086A
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ bucket(before:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:149
+  ✓ Type-symmetry signature: T -> T (T = Bucket) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xB332A5EE5141DD2726521C6A5EC040E1F120A8AEC5559E282C4432332D54E68A
+Identity:  0x5957ABA3611B2217
+Suppress:  // swiftinfer: skip 0x5957ABA3611B2217
+
+[Suggestion]
+Template: inverse-pair
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ bucket(before:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:149
+  ✓ firstOccupiedBucketInChain(with:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:325
+  ✓ Type-symmetry signature: Bucket -> Bucket ↔ Bucket -> Bucket (non-Equatable T) (+25)
+  ✓ Direction-label argument: 'before' — pair side is likely directional (increment/decrement) rather than a true inverse pair (-10)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — the suggestion is name-and-type-pattern only.
+  ⚠ TestLifter corroboration not yet wired (gated on TestLifter M1).
+  ⚠ Possible-tier by default — escalation requires a custom equality witness or annotation API extension.
+  ⚠ If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case with stronger evidence — inverse-pair only fires when EquatableResolver returns .notEquatable or .unknown for T.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xAE066CB402B109CEAECB20ED6E82A7ABD8E4340D5777941DE29FE6942FD993F5
+Identity:  0xBCE379651F30DD56
+Suppress:  // swiftinfer: skip 0xBCE379651F30DD56
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ word(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:160
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x88DD02CC4DFAE0513FC4BAA2C0DB1707DD1B5A9D07FF98422C274EAB674A70E1
+Identity:  0x25A3C9FD6058CFB4
+Suppress:  // swiftinfer: skip 0x25A3C9FD6058CFB4
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ word(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:160
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x9D41C6905FF01BA684B6051BF288DAF3E5D5F1974F3CFBBD3B4AE814A4A511E2
+Identity:  0x77ABEB3E80E39BE1
+Suppress:  // swiftinfer: skip 0x77ABEB3E80E39BE1
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ word(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:174
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x7622301411E18937CC7AB623C1B90E90788CA5FCB696F0E219772DC46D14AF0A
+Identity:  0x98CF6B968EFF96F1
+Suppress:  // swiftinfer: skip 0x98CF6B968EFF96F1
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ word(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:174
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xCB0949C4C81D0E9CBA35E917ECAD71F7542C59B3CCE3F2C13F35ECBF3F48BE15
+Identity:  0x9C09220A07524450
+Suppress:  // swiftinfer: skip 0x9C09220A07524450
+
+[Suggestion]
+Template: round-trip
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ _value(forBucketContents:) (UInt64) -> Int? — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:201
+  ✓ _bucketContents(for:) (Int?) -> UInt64 — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:219
+  ✓ Type-symmetry signature: UInt64 -> Int? ↔ Int? -> UInt64 (+30)
+  ✓ Value-semantic carrier (_HashTable.UnsafeHandle) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x58D600603110205E7DE624B72D054FE41BC4F8CB382F6D49C3A7915497113112
+Identity:  0xBC43359C0574816B
+Suppress:  // swiftinfer: skip 0xBC43359C0574816B
+
+[Suggestion]
+Template: idempotence
+Score:    35 (Possible)
+
+Why suggested:
+  ✓ firstOccupiedBucketInChain(with:) (Bucket) -> Bucket — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:325
+  ✓ Type-symmetry signature: T -> T (T = Bucket) (+30)
+  ✓ Value-semantic carrier (_UnsafeHashTable) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x0139111B82A2A40226BCF85E0E6174E2024D5D583E58DF507E7CF5876174591C
+Identity:  0xE54F0D92F01DC623
+Suppress:  // swiftinfer: skip 0xE54F0D92F01DC623
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:206
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements.SubSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x0FEB03E3591B88A933BD3D24D59A7601FDECDF9C455FA15517BC5D5C5BE6BAEA
+Identity:  0x4F7101D9AFF40EB8
+Suppress:  // swiftinfer: skip 0x4F7101D9AFF40EB8
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:206
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x2C64BC9AEAD8751CA6D821F7A13019EA05AD69D5D9E15F539CBDD7077A339FAA
+Identity:  0x4935E0E0B52AAB78
+Suppress:  // swiftinfer: skip 0x4935E0E0B52AAB78
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:220
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements.SubSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x3E2FFF72022682855DB931848D219F67B7B3CD5F52D149DB9C119457EE2D79A5
+Identity:  0x68C5E87C7B9EA32E
+Suppress:  // swiftinfer: skip 0x68C5E87C7B9EA32E
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:220
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x553BE54E53E5720487F5DD69FA970639065E9070121967003F9BAF19C47CA599
+Identity:  0xD73F898399AE3E4E
+Suppress:  // swiftinfer: skip 0xD73F898399AE3E4E
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:263
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x2C29C74E76D2BBAC3DDA5B23BDFAF5366A0BEF638DCD04FD89EE2930DFB30D79
+Identity:  0x2074913DD61C9477
+Suppress:  // swiftinfer: skip 0x2074913DD61C9477
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:263
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x2BE81AEBA954C1EAAC10625DD9EA8E40D36A7ADA9F8114E52B3E71CA05093526
+Identity:  0xA48308B395A07123
+Suppress:  // swiftinfer: skip 0xA48308B395A07123
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:309
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x394785145DC54320596653F7405ACBBEF126935E2F3724519BC812589120CBBD
+Identity:  0x518A1B6980755C21
+Suppress:  // swiftinfer: skip 0x518A1B6980755C21
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:309
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x72B4128A2726EB72E8381E07B6C56E729E05BC315BC703095B1B6BEC14D95CD9
+Identity:  0xFCB18682347DB3CC
+Suppress:  // swiftinfer: skip 0xFCB18682347DB3CC
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:169
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x3DF6564580AE93009A5326E844CFD082293C6A2CC3FE0EC61BC15C67DE286315
+Identity:  0x2E64AAB5497F9088
+Suppress:  // swiftinfer: skip 0x2E64AAB5497F9088
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:169
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x3A954268572645D98C8FE415C5923B98EFC778E7BC07E352BF9E943B1AD2ED06
+Identity:  0xCD6FA47C309B25DB
+Suppress:  // swiftinfer: skip 0xCD6FA47C309B25DB
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:183
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xE46946A404F664064D5D396388EAEC7322DB72188A0F6A4AD66ACDD7BA5BAB08
+Identity:  0x686FDBA64FB24BFE
+Suppress:  // swiftinfer: skip 0x686FDBA64FB24BFE
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:183
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xC7BC934DAD6D31B79F3B76F8A405F5D21EA7F5A74F956A3D6BF944011AFBDB42
+Identity:  0xA6E673318B7D41A5
+Suppress:  // swiftinfer: skip 0xA6E673318B7D41A5
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:226
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x26A6CF970CD163A4C5E262936903994E1D6A64050B696B73FDB192DBA22E67B2
+Identity:  0x1A2EB97DEE1146E1
+Suppress:  // swiftinfer: skip 0x1A2EB97DEE1146E1
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:226
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x6D64F099A70EE3FEF95B9675964871628C546BCD0CC7C6109DEC410398CF13DC
+Identity:  0xF3A7DBD9B12ED6FB
+Suppress:  // swiftinfer: skip 0xF3A7DBD9B12ED6FB
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:272
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x19BCD559DB2E3A9F6457EC2ED83F233CB3CA9E9CD98AA77AD3327D61C52654F5
+Identity:  0xC351D23824327898
+Suppress:  // swiftinfer: skip 0xC351D23824327898
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:272
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x1B150D67F501302BAF8E0D1D67EF1E56FBA2DCA9D9D46A024A9338A6B4F94D94
+Identity:  0x9F0FBC53CEC24D15
+Suppress:  // swiftinfer: skip 0x9F0FBC53CEC24D15
+
+[Suggestion]
+Template: idempotence
+Score:    85 (Strong)
+
+Why suggested:
+  ✓ OrderedDictionary.Elements.sort() mutating () -> Void  // lifted to (OrderedDictionary.Elements) -> OrderedDictionary.Elements — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:482
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.sort()`. Property holds iff `OrderedDictionary.Elements` has value semantics — `var copy = original; copy.sort(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary.Elements) -> OrderedDictionary.Elements (lifted from no-param mutating method) (+30)
+  ✓ Curated idempotence verb match: 'sort' (+40)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.sort()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary.Elements` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x2AED57ACF14A57120D085006F0498003C22950781D61B81CB6B094AC24DCE1C7
+Identity:  0xE750C48C0E345E19
+Suppress:  // swiftinfer: skip 0xE750C48C0E345E19
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.Elements.shuffle() mutating () -> Void  // lifted to (OrderedDictionary.Elements) -> OrderedDictionary.Elements — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:498
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.shuffle()`. Property holds iff `OrderedDictionary.Elements` has value semantics — `var copy = original; copy.shuffle(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary.Elements) -> OrderedDictionary.Elements (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.shuffle()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary.Elements` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xDDD67EF2C07C42093F14C52618951A1C762C49E1120433CED58AE279E83B42F9
+Identity:  0x9671571BE7BC8E33
+Suppress:  // swiftinfer: skip 0x9671571BE7BC8E33
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.Elements.reverse() mutating () -> Void  // lifted to (OrderedDictionary.Elements) -> OrderedDictionary.Elements — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:532
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.reverse()`. Property holds iff `OrderedDictionary.Elements` has value semantics — `var copy = original; copy.reverse(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary.Elements) -> OrderedDictionary.Elements (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.reverse()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary.Elements` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xD591E8C8731A0E4B55A4C9DDFD229D45A0C5ECEB6560D4872A43D1BA97499DB2
+Identity:  0x15E326DA9B9BD51A
+Suppress:  // swiftinfer: skip 0x15E326DA9B9BD51A
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.Elements.removeLast() mutating () -> Void  // lifted to (OrderedDictionary.Elements) -> OrderedDictionary.Elements — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:607
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.removeLast()`. Property holds iff `OrderedDictionary.Elements` has value semantics — `var copy = original; copy.removeLast(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary.Elements) -> OrderedDictionary.Elements (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.removeLast()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary.Elements` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x79EF00B96D74FF9A100A23C128FB1E7597F254C96B84BB83B99CD3633144004F
+Identity:  0x836789CE1D0D29EE
+Suppress:  // swiftinfer: skip 0x836789CE1D0D29EE
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.Elements.removeFirst() mutating () -> Void  // lifted to (OrderedDictionary.Elements) -> OrderedDictionary.Elements — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:632
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.removeFirst()`. Property holds iff `OrderedDictionary.Elements` has value semantics — `var copy = original; copy.removeFirst(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary.Elements) -> OrderedDictionary.Elements (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary.Elements) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.Elements.removeFirst()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary.Elements` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xCF2882ADBA0771E265E4C1C48B5CB8F3D1D686108339112B48E6887451BE14C6
+Identity:  0x8909783DEA7ACBBB
+Suppress:  // swiftinfer: skip 0x8909783DEA7ACBBB
+
+[Suggestion]
+Template: idempotence
+Score:    85 (Strong)
+
+Why suggested:
+  ✓ OrderedDictionary.sort() mutating () -> Void  // lifted to (OrderedDictionary) -> OrderedDictionary — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Partial MutableCollection.swift:126
+  ✓ Lifted from `mutating func OrderedDictionary.sort()`. Property holds iff `OrderedDictionary` has value semantics — `var copy = original; copy.sort(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary) -> OrderedDictionary (lifted from no-param mutating method) (+30)
+  ✓ Curated idempotence verb match: 'sort' (+40)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.sort()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xA718B7E574AC38DEBA50B9DED170DE748243AB7D2D85130459AE8234990E4E36
+Identity:  0xDBB22A3D3D3549C0
+Suppress:  // swiftinfer: skip 0xDBB22A3D3D3549C0
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.shuffle() mutating () -> Void  // lifted to (OrderedDictionary) -> OrderedDictionary — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Partial MutableCollection.swift:142
+  ✓ Lifted from `mutating func OrderedDictionary.shuffle()`. Property holds iff `OrderedDictionary` has value semantics — `var copy = original; copy.shuffle(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary) -> OrderedDictionary (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.shuffle()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x53179B8584E3E9604BD29CE1282BB213B173F022B818242848D77CDB16FFC192
+Identity:  0xB7898345153F242F
+Suppress:  // swiftinfer: skip 0xB7898345153F242F
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.reverse() mutating () -> Void  // lifted to (OrderedDictionary) -> OrderedDictionary — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Partial MutableCollection.swift:190
+  ✓ Lifted from `mutating func OrderedDictionary.reverse()`. Property holds iff `OrderedDictionary` has value semantics — `var copy = original; copy.reverse(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary) -> OrderedDictionary (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.reverse()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x8C1A94A99DFFA99A205D91CED8BE305ADF5ADC30824A340C27A3B8A88A88F9FB
+Identity:  0xD30A2B2DA71DC5C6
+Suppress:  // swiftinfer: skip 0xD30A2B2DA71DC5C6
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.removeLast() mutating () -> Void  // lifted to (OrderedDictionary) -> OrderedDictionary — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Partial RangeReplaceableCollection.swift:111
+  ✓ Lifted from `mutating func OrderedDictionary.removeLast()`. Property holds iff `OrderedDictionary` has value semantics — `var copy = original; copy.removeLast(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary) -> OrderedDictionary (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.removeLast()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF3C6B4C41220D7AFC03B978E154B92C88A5362A894B7536E43366F6F858AB26E
+Identity:  0x86CC1F7384574F90
+Suppress:  // swiftinfer: skip 0x86CC1F7384574F90
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedDictionary.removeFirst() mutating () -> Void  // lifted to (OrderedDictionary) -> OrderedDictionary — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Partial RangeReplaceableCollection.swift:140
+  ✓ Lifted from `mutating func OrderedDictionary.removeFirst()`. Property holds iff `OrderedDictionary` has value semantics — `var copy = original; copy.removeFirst(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedDictionary) -> OrderedDictionary (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedDictionary.removeFirst()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedDictionary` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x5C456991F034804BE94DE252FBFBDDC4F044F617451D752336E84D91BBC2A013
+Identity:  0xF94B2EB17464D229
+Suppress:  // swiftinfer: skip 0xF94B2EB17464D229
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:171
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedDictionary.Values) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x898822E2AE4911CA8EFFAE185CD083AC1135685E442956C1B9F7C4B568E7DCC4
+Identity:  0xC9F58ACBC6B3BF89
+Suppress:  // swiftinfer: skip 0xC9F58ACBC6B3BF89
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:171
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x68FFF89D37935938C09B802A2C26820E43B6F0E9808135EE7BB115C9EDB5C724
+Identity:  0x59D6E9A804BF9A7B
+Suppress:  // swiftinfer: skip 0x59D6E9A804BF9A7B
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:185
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedDictionary.Values) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x788AEA2BE3758F9E8CB85D60B76F3ED52146713B4CE866AAEB5527417DB26354
+Identity:  0xEDDD70EA8B390C66
+Suppress:  // swiftinfer: skip 0xEDDD70EA8B390C66
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:185
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x5F93553A896493562CABB3E08B19CE1E8667BEADCA00CE4424CB361017DF990A
+Identity:  0xDD74883C0D627E95
+Suppress:  // swiftinfer: skip 0xDD74883C0D627E95
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:228
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x6FADFAD917C10890F17DD2F12026929501EE3D0D678D64AE2DC60958E3530FB5
+Identity:  0xDBB72D4ECA3D89EB
+Suppress:  // swiftinfer: skip 0xDBB72D4ECA3D89EB
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:228
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x672A2041001F0B443CC5DA423D45C38B110FDF4316472BFF6D7AEB2E22E3E0F4
+Identity:  0xBDC8024D684D1B56
+Suppress:  // swiftinfer: skip 0xBDC8024D684D1B56
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:274
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x6A4CA2A67EF623676D81738335F0899516A34B73CA44436286E53AB3C7AD341B
+Identity:  0x7756BB702E3A609D
+Suppress:  // swiftinfer: skip 0x7756BB702E3A609D
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:274
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x54CBF0B5243AA9D452543102797792D84319C3720C378588D2D32CF53C19F18A
+Identity:  0xF22ACE5E2EB2F2E0
+Suppress:  // swiftinfer: skip 0xF22ACE5E2EB2F2E0
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ merge(_:uniquingKeysWith:) (__owned some Sequence<(key: Key, value: Value)>, (Value, Value) throws -> Value) throws -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary.swift:826
+  ✓ merging(_:uniquingKeysWith:) (__owned some Sequence<(key: Key, value: Value)>, (Value, Value) throws -> Value) throws -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary.swift:922
+  ✓ Dual-style shape: OrderedDictionary.merge (mutating) ↔ OrderedDictionary.merging -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'merge' / 'merging' (+40)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x763EE2BA20FEE86FDB1D75836C40CF6D27848B44DBD7A010C37FC81C53B2EB5C
+Identity:  0x44079B3ADA944F72
+Suppress:  // swiftinfer: skip 0x44079B3ADA944F72
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ merge(_:uniquingKeysWith:) (__owned some Sequence<(Key, Value)>, (Value, Value) throws -> Value) throws -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary.swift:876
+  ✓ merging(_:uniquingKeysWith:) (__owned some Sequence<(Key, Value)>, (Value, Value) throws -> Value) throws -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary.swift:967
+  ✓ Dual-style shape: OrderedDictionary.merge (mutating) ↔ OrderedDictionary.merging -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'merge' / 'merging' (+40)
+  ✓ Value-semantic carrier (OrderedDictionary) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD518382041B13007377F0DEB17AB0258D224AE6844A0366746F6EE894D661B43
+Identity:  0xAC399387FD5E9E28
+Suppress:  // swiftinfer: skip 0xAC399387FD5E9E28
+
+[Suggestion]
+Template: idempotence
+Score:    85 (Strong)
+
+Why suggested:
+  ✓ OrderedSet.sort() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial MutableCollection.swift:280
+  ✓ Lifted from `mutating func OrderedSet.sort()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy.sort(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Curated idempotence verb match: 'sort' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet.sort()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x1386E15A7E333F37EBB82A254799FBA0AAABE67E84B3700323CDD1CDBF58E5E8
+Identity:  0xDA90F9E6856741DC
+Suppress:  // swiftinfer: skip 0xDA90F9E6856741DC
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet.shuffle() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial MutableCollection.swift:309
+  ✓ Lifted from `mutating func OrderedSet.shuffle()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy.shuffle(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet.shuffle()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC445695D8726E0DA00F497F57CB59097AACDDAB761DC5A3B754A369C4AC2D63E
+Identity:  0xE78D8BFC3D6933BE
+Suppress:  // swiftinfer: skip 0xE78D8BFC3D6933BE
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet.reverse() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial MutableCollection.swift:351
+  ✓ Lifted from `mutating func OrderedSet.reverse()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy.reverse(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet.reverse()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xE3E51EC2E80F4645BB19AFBABE798D60990F7552C9C7D6878BE679E66313DD6A
+Identity:  0x729AA78FDAFF3F55
+Suppress:  // swiftinfer: skip 0x729AA78FDAFF3F55
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet.removeLast() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial RangeReplaceableCollection.swift:126
+  ✓ Lifted from `mutating func OrderedSet.removeLast()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy.removeLast(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet.removeLast()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x627F06B8D3005D0A4EFB2CF7C24459307707B04614CEE742908618DD35CD4888
+Identity:  0x386E8ADBC0F12ECF
+Suppress:  // swiftinfer: skip 0x386E8ADBC0F12ECF
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet.removeFirst() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial RangeReplaceableCollection.swift:175
+  ✓ Lifted from `mutating func OrderedSet.removeFirst()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy.removeFirst(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet.removeFirst()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x9B5F76E5E2A7BC5F8822CFE407569F94EF588C5CEE7324E24625D9B47011278E
+Identity:  0xF4EC39A87E424C2E
+Suppress:  // swiftinfer: skip 0xF4EC39A87E424C2E
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formIntersection(_:) (Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formIntersection.swift:40
+  ✓ intersection(_:) (Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra intersection.swift:46
+  ✓ Dual-style shape: OrderedSet.formIntersection (mutating) ↔ OrderedSet.intersection -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formIntersection' / 'intersection' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC407FDCEE58106D92D40595D0CDE4C244AF06E7A6721CA93C7DA732336E833CD
+Identity:  0xCCCD9EBCA611BD7A
+Suppress:  // swiftinfer: skip 0xCCCD9EBCA611BD7A
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formIntersection(_:) (UnorderedView) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formIntersection.swift:63
+  ✓ intersection(_:) (UnorderedView) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra intersection.swift:78
+  ✓ Dual-style shape: OrderedSet.formIntersection (mutating) ↔ OrderedSet.intersection -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formIntersection' / 'intersection' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x9BBBF7E85346A046EAB788D431C12381F72BBE93F9419A4354E8B5266440B668
+Identity:  0xED146732CB38DCDF
+Suppress:  // swiftinfer: skip 0xED146732CB38DCDF
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formIntersection(_:) (some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formIntersection.swift:82
+  ✓ intersection(_:) (some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra intersection.swift:99
+  ✓ Dual-style shape: OrderedSet.formIntersection (mutating) ↔ OrderedSet.intersection -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formIntersection' / 'intersection' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x324AAB37F046786BD4EB3BB00F78A414A73DAA53F799104FEB4BF1DA5C0793C8
+Identity:  0xB34BD9B8F8AAC239
+Suppress:  // swiftinfer: skip 0xB34BD9B8F8AAC239
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formSymmetricDifference(_:) (__owned Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:40
+  ✓ symmetricDifference(_:) (__owned Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra symmetricDifference.swift:45
+  ✓ Dual-style shape: OrderedSet.formSymmetricDifference (mutating) ↔ OrderedSet.symmetricDifference -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formSymmetricDifference' / 'symmetricDifference' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x3A04080A947F2FE21D3733C3D10EC76CEDC22266E098F2C36345A103AAD5C56F
+Identity:  0xEC357857FD9090EA
+Suppress:  // swiftinfer: skip 0xEC357857FD9090EA
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formSymmetricDifference(_:) (__owned UnorderedView) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:63
+  ✓ symmetricDifference(_:) (__owned UnorderedView) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra symmetricDifference.swift:91
+  ✓ Dual-style shape: OrderedSet.formSymmetricDifference (mutating) ↔ OrderedSet.symmetricDifference -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formSymmetricDifference' / 'symmetricDifference' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x89A0383FF0704EEFC8DA49DC2D3363ADE47C9703D3F15FF217192BF7E9E6AECE
+Identity:  0xE32D06B86F4ECFCD
+Suppress:  // swiftinfer: skip 0xE32D06B86F4ECFCD
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formSymmetricDifference(_:) (__owned some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:84
+  ✓ symmetricDifference(_:) (__owned some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra symmetricDifference.swift:118
+  ✓ Dual-style shape: OrderedSet.formSymmetricDifference (mutating) ↔ OrderedSet.symmetricDifference -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formSymmetricDifference' / 'symmetricDifference' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xF405855D56D355C8D95E01FB1D96D6F9BDA40A4325BB50A984A24C1DC5FB3EB1
+Identity:  0x28C62EECFCE653AD
+Suppress:  // swiftinfer: skip 0x28C62EECFCE653AD
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formUnion(_:) (__owned Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formUnion.swift:44
+  ✓ union(_:) (__owned Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra union.swift:38
+  ✓ Dual-style shape: OrderedSet.formUnion (mutating) ↔ OrderedSet.union -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formUnion' / 'union' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x639C9F0FF8D9F0CD13D4D0EEE4E65CB78686AC0ADC4ACBF676835174F2E26DE8
+Identity:  0xD81E952EBCD8CA1F
+Suppress:  // swiftinfer: skip 0xD81E952EBCD8CA1F
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formUnion(_:) (__owned UnorderedView) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formUnion.swift:71
+  ✓ union(_:) (__owned UnorderedView) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra union.swift:61
+  ✓ Dual-style shape: OrderedSet.formUnion (mutating) ↔ OrderedSet.union -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formUnion' / 'union' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x07B27D4C2D2C9DD71E97FDF5A5AE5A68571A695BA8348B398D3848F917891C72
+Identity:  0x57B82FC46EA980A9
+Suppress:  // swiftinfer: skip 0x57B82FC46EA980A9
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formUnion(_:) (__owned some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formUnion.swift:99
+  ✓ union(_:) (__owned some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra union.swift:79
+  ✓ Dual-style shape: OrderedSet.formUnion (mutating) ↔ OrderedSet.union -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formUnion' / 'union' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x2747D2B7B06DE007E369546B162D5BF2C67887B0202F8BA0448226E9420C65BE
+Identity:  0x630213A9E5A8F780
+Suppress:  // swiftinfer: skip 0x630213A9E5A8F780
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ subtract(_:) (Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:37
+  ✓ subtracting(_:) (Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtracting.swift:45
+  ✓ Dual-style shape: OrderedSet.subtract (mutating) ↔ OrderedSet.subtracting -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'subtract' / 'subtracting' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x9193360B5D72078FDA8BB18F4888C6F2EB3D001E5B7DD259F87B033EAA33C789
+Identity:  0xC0B0A68F141A3C6D
+Suppress:  // swiftinfer: skip 0xC0B0A68F141A3C6D
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ subtract(_:) (UnorderedView) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:56
+  ✓ subtracting(_:) (UnorderedView) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtracting.swift:68
+  ✓ Dual-style shape: OrderedSet.subtract (mutating) ↔ OrderedSet.subtracting -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'subtract' / 'subtracting' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x742747686E689C454AB78DB3EE483FC8CBA4A76D9F83F982B2935AEC4E77CE21
+Identity:  0x45D61B79277AD072
+Suppress:  // swiftinfer: skip 0x45D61B79277AD072
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ subtract(_:) (some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:73
+  ✓ subtracting(_:) (some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtracting.swift:88
+  ✓ Dual-style shape: OrderedSet.subtract (mutating) ↔ OrderedSet.subtracting -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'subtract' / 'subtracting' (+40)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x7FB6AEFC8B74ADCC1EE67E28D5A07FE6EA573E1521E9409FC1CB2E92DFFED8A2
+Identity:  0xBB5255C3E15CDD73
+Suppress:  // swiftinfer: skip 0xBB5255C3E15CDD73
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:119
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x16DA63C72AFE516B99395A3E95D7026CEB9FC2599382FD1850D0B514C8CD52EE
+Identity:  0xBFE66509A57250A9
+Suppress:  // swiftinfer: skip 0xBFE66509A57250A9
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:119
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x4E7E86A664FA0A0BA0BB5E45CE57CDD6FCBEFAAF2DFFC4B8ABBC8B037712FE37
+Identity:  0x5F9B7214CBE810A5
+Suppress:  // swiftinfer: skip 0x5F9B7214CBE810A5
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:119
+  ✓ _minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Direction-label argument: 'after' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x36A2EC9FDCBF56AD75CCCD367BF9E68B8DBECC0F99AD48D106A9FFA685700704
+Identity:  0xB28ED115EFC30534
+Suppress:  // swiftinfer: skip 0xB28ED115EFC30534
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:119
+  ✓ _maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Direction-label argument: 'after' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xEE45DD4125CEBA26A4AE5FCB99EC915F27DAB60835F96F0DFA84F36E8979B6BB
+Identity:  0x7885D28D8B6A6AE2
+Suppress:  // swiftinfer: skip 0x7885D28D8B6A6AE2
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:119
+  ✓ _scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Direction-label argument: 'after' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xCA8BB96CA11B25DADD252E34C2F1483B3ABB80A614EA82C8E12FEF8F3547F5A4
+Identity:  0x3A77783500E94065
+Suppress:  // swiftinfer: skip 0x3A77783500E94065
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:133
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xD38C2FE05C4B0BF9C650B196A84B653DDF54F3F28272A395B7C0D078D8933596
+Identity:  0x4F52176C1B91DEEC
+Suppress:  // swiftinfer: skip 0x4F52176C1B91DEEC
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:133
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x06FBC7710C6621FC5B8F6ADCDBF18F556F973C01D27A759CE6B6866BE435D0E0
+Identity:  0x4B1E6B1E17779FB9
+Suppress:  // swiftinfer: skip 0x4B1E6B1E17779FB9
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:133
+  ✓ _minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Direction-label argument: 'before' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x70355D1125798470ACFCF2222E217D0DD5C220FF2A0AB663129B35C4C270E647
+Identity:  0x7B2EAAA54E64AC93
+Suppress:  // swiftinfer: skip 0x7B2EAAA54E64AC93
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:133
+  ✓ _maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Direction-label argument: 'before' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x5A4FEA31965404993D04D6CD42CB0D37D4E2CFC196394B2365682887186B13B9
+Identity:  0xBB33DC9A5FA3E775
+Suppress:  // swiftinfer: skip 0xBB33DC9A5FA3E775
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:133
+  ✓ _scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Direction-label argument: 'before' — pair side is likely directional (increment/decrement) rather than a true round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xC749EEB9F9799EE691EECCAC8F4C1AA85271C9774CF6C514F598496C7B8FC505
+Identity:  0x5B4022D345D7FB92
+Suppress:  // swiftinfer: skip 0x5B4022D345D7FB92
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:176
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x2616EA2640EEBFD67A1C2B45971BF09F47A12AE11780F4B5F9E6EDFE7D3ABEE7
+Identity:  0xA459C8D9F7531064
+Suppress:  // swiftinfer: skip 0xA459C8D9F7531064
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:176
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xC37209F89EDBCBF97866F3A7429B00FFC4E995ADABB5339AEB65ACFF9E532416
+Identity:  0x52EE0CC699032D33
+Suppress:  // swiftinfer: skip 0x52EE0CC699032D33
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:222
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x4DB7D9B22CB6E016A3C3E7EA5A4BA8DF38ABEC3950621217D7A25EEC12ADB039
+Identity:  0xF3869C08573BDDA1
+Suppress:  // swiftinfer: skip 0xF3869C08573BDDA1
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:222
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xBDBBBDA38D4DB7A66C8FA406A613BB93B2904D4AE006986BA13DE9B4E7C4FC0B
+Identity:  0xD51DAD720E3D46B9
+Suppress:  // swiftinfer: skip 0xD51DAD720E3D46B9
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:183
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'after' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet.SubSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xB9A8D787D4CA33DDC40ADB2590EDBE8501058AFDF70D9A000552291D1092239C
+Identity:  0x9095FC2D86CD4D4D
+Suppress:  // swiftinfer: skip 0x9095FC2D86CD4D4D
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(after:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:183
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x4C1EC50E48E070A6E64B378C36C0EFB851BEEC2BCE91E1B67B257A538D510AE8
+Identity:  0xD64135D91EF930C7
+Suppress:  // swiftinfer: skip 0xD64135D91EF930C7
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:197
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Direction-label argument: 'before' — function is likely directional (increment/decrement) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet.SubSequence) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xC6640E964FED74EDA315E7B79D601194F8108054B6EB5D411B51F72A74DBFB4F
+Identity:  0xC14E9CB91CE32021
+Suppress:  // swiftinfer: skip 0xC14E9CB91CE32021
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ index(before:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:197
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x8845C5F33D5A5CD0830909E3A61E1F68EA0C4689A2C641655BFB16E75B5195A6
+Identity:  0x8DC4D4EA04EA3091
+Suppress:  // swiftinfer: skip 0x8DC4D4EA04EA3091
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:240
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x526110B780304859CE2A331F577779B6117B572D9BC8201CD670AC7F035C5FE8
+Identity:  0x06A2761D2E509FC7
+Suppress:  // swiftinfer: skip 0x06A2761D2E509FC7
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ index(_:offsetBy:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:240
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xCB620D3E3E0E66684F3AEECDB4E863A0D9999937CCB5844D3491AEAFFCAA5A19
+Identity:  0x9DE97AD2E2C4547A
+Suppress:  // swiftinfer: skip 0x9DE97AD2E2C4547A
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:286
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x164E84486E6BD0C9B09A2EE6B45856C36D4B16BD8A46A401DC2A4EF5BE1BA1A3
+Identity:  0xE907D73766335014
+Suppress:  // swiftinfer: skip 0xE907D73766335014
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ distance(from:to:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:286
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xFC955BAF2217AD3D0AA00612D071498CB6306582413135B64351DE28432633DE
+Identity:  0xF16FD2125933F37C
+Suppress:  // swiftinfer: skip 0xF16FD2125933F37C
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ _minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Domain-marker label: 'forScale' — function is likely a cross-domain conversion (named-domain input) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x5DF21627D80F744C9B4E88FB8CB0BCD512E3B433334B81A2DD90712853689894
+Identity:  0xBD89A0B483297255
+Suppress:  // swiftinfer: skip 0xBD89A0B483297255
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ _minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x3046ECF72FD182CA625A315E1501F98F7BD6AE278A1D6F6C78329DFB5B57E01A
+Identity:  0xD99D1D742C24B42B
+Suppress:  // swiftinfer: skip 0xD99D1D742C24B42B
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ _minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39
+  ✓ _maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Domain-marker labels: 'forScale' ↔ 'forScale' — both sides are cross-domain conversions, not a round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x713BE2A5A572090A3BE87624BB1FD4623415F42E9DB39A6C2E57B7C9F66BDB32
+Identity:  0xA5C1F58768F24FBB
+Suppress:  // swiftinfer: skip 0xA5C1F58768F24FBB
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ _minimumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39
+  ✓ _scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Domain-marker labels: 'forScale' ↔ 'forCapacity' — both sides are cross-domain conversions, not a round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x69004E73C25CD8E5D7082AFF94DF486C9F8EC504A93ADE997CBCF451A7DFD2E3
+Identity:  0xBAD090569541B6A9
+Suppress:  // swiftinfer: skip 0xBAD090569541B6A9
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ _maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Domain-marker label: 'forScale' — function is likely a cross-domain conversion (named-domain input) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x53C485311C44475B65D081F76A5E787DA99F6ADCDF2A95A6527D037B4EC63998
+Identity:  0x24BA0D5F531DCE26
+Suppress:  // swiftinfer: skip 0x24BA0D5F531DCE26
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ _maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x140152EC02A385EAC62D588B224A90C213E9CA0E57FA2C896648F4E01C1948C5
+Identity:  0x8AF59F8224E5120E
+Suppress:  // swiftinfer: skip 0x8AF59F8224E5120E
+
+[Suggestion]
+Template: round-trip
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ _maximumCapacity(forScale:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45
+  ✓ _scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51
+  ✓ Type-symmetry signature: Int -> Int ↔ Int -> Int (+30)
+  ✓ Domain-marker labels: 'forScale' ↔ 'forCapacity' — both sides are cross-domain conversions, not a round-trip pair (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ Throws on either side narrows the property's domain to the success set of the inner function; a generator that produces values outside that set will surface false-positive failures (Appendix B.4).
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xFF088E2FED903BEAFF1DCEEAEE029277AD0A5104ED23D3CE3AE9B88693CC0ED9
+Identity:  0xDFD6A2CA98762D02
+Suppress:  // swiftinfer: skip 0xDFD6A2CA98762D02
+
+[Suggestion]
+Template: idempotence
+Score:    20 (Possible)
+
+Why suggested:
+  ✓ _scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+  ✓ Domain-marker label: 'forCapacity' — function is likely a cross-domain conversion (named-domain input) rather than idempotent (-15)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x507E4387F26748D45A55A2F448238FD209FFEEE175780602925387BB2D4D7066
+Identity:  0x052A87D692EFFCAE
+Suppress:  // swiftinfer: skip 0x052A87D692EFFCAE
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ _scale(forCapacity:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x6CFBF75CE1BC0AF823600721686F4C7F355F66E088194A7DFA67FF446D9154B2
+Identity:  0x5B893808F4A5C610
+Suppress:  // swiftinfer: skip 0x5B893808F4A5C610
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formUnion(_:) (__owned Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:339
+  ✓ union(_:) (__owned Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:357
+  ✓ Dual-style shape: OrderedSet.UnorderedView.formUnion (mutating) ↔ OrderedSet.UnorderedView.union -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formUnion' / 'union' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xED42830CAC4C7C29A0F989F229106905E0876FB250D3C483A33BB5F089786BE9
+Identity:  0x01FF9BEFB4BDEC2F
+Suppress:  // swiftinfer: skip 0x01FF9BEFB4BDEC2F
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formUnion(_:) (__owned some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:377
+  ✓ union(_:) (__owned some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:394
+  ✓ Dual-style shape: OrderedSet.UnorderedView.formUnion (mutating) ↔ OrderedSet.UnorderedView.union -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formUnion' / 'union' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x9FD3B824CA7283BD022A3E9514EC85577E8E695C5C4AD02A21370A0ABF3E2365
+Identity:  0x63266F720D01E9A2
+Suppress:  // swiftinfer: skip 0x63266F720D01E9A2
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formIntersection(_:) (Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:432
+  ✓ intersection(_:) (Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:416
+  ✓ Dual-style shape: OrderedSet.UnorderedView.formIntersection (mutating) ↔ OrderedSet.UnorderedView.intersection -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formIntersection' / 'intersection' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xF35FFCD87E2A332858D2BB2340BBBB2D066C2E2A8C91D6516A18286CFD28B13F
+Identity:  0x39BEE56059637823
+Suppress:  // swiftinfer: skip 0x39BEE56059637823
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formIntersection(_:) (some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:468
+  ✓ intersection(_:) (some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:451
+  ✓ Dual-style shape: OrderedSet.UnorderedView.formIntersection (mutating) ↔ OrderedSet.UnorderedView.intersection -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formIntersection' / 'intersection' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x4D6875EAE2F6EB61C9700D1E2907584BABB5B6114FA9F2A3A93083A612EF88F6
+Identity:  0x5AF3B2B951D2A768
+Suppress:  // swiftinfer: skip 0x5AF3B2B951D2A768
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formSymmetricDifference(_:) (__owned Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:513
+  ✓ symmetricDifference(_:) (__owned Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:493
+  ✓ Dual-style shape: OrderedSet.UnorderedView.formSymmetricDifference (mutating) ↔ OrderedSet.UnorderedView.symmetricDifference -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formSymmetricDifference' / 'symmetricDifference' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x76F4EF38A4614D0369FC0D63D54A8682E198756E9DF356C3D82236BF50669C69
+Identity:  0xFAE7957C96C040A8
+Suppress:  // swiftinfer: skip 0xFAE7957C96C040A8
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ formSymmetricDifference(_:) (__owned some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:559
+  ✓ symmetricDifference(_:) (__owned some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:536
+  ✓ Dual-style shape: OrderedSet.UnorderedView.formSymmetricDifference (mutating) ↔ OrderedSet.UnorderedView.symmetricDifference -> Self (+30)
+  ✓ form-prefix / bare dual-style pair: 'formSymmetricDifference' / 'symmetricDifference' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x36D718925318521E0DCE2E718ECA6A353ED9880C5729566FB2F20EDF71D490B3
+Identity:  0xA271032EE79F8993
+Suppress:  // swiftinfer: skip 0xA271032EE79F8993
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ subtract(_:) (Self) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:599
+  ✓ subtracting(_:) (Self) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:583
+  ✓ Dual-style shape: OrderedSet.UnorderedView.subtract (mutating) ↔ OrderedSet.UnorderedView.subtracting -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'subtract' / 'subtracting' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x143E8C10371F397D426997BB0924AC2D05A1AC134BAA39F03D1742088EB02BA5
+Identity:  0x73A9C029E1A5207F
+Suppress:  // swiftinfer: skip 0x73A9C029E1A5207F
+
+[Suggestion]
+Template: dual-style-consistency
+Score:    75 (Strong)
+
+Why suggested:
+  ✓ subtract(_:) (some Sequence<Element>) -> Void — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:636
+  ✓ subtracting(_:) (some Sequence<Element>) -> Self — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:620
+  ✓ Dual-style shape: OrderedSet.UnorderedView.subtract (mutating) ↔ OrderedSet.UnorderedView.subtracting -> Self (+30)
+  ✓ Active / present-participle dual-style pair: 'subtract' / 'subtracting' (+40)
+  ✓ Value-semantic carrier (OrderedSet.UnorderedView) — algebraic property is well-defined under aliasing (+5)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.18 does not verify protocol conformance — confirm before applying.
+  ⚠ Property assumes the non-mutating member is the value-returning counterpart of the mutating member — i.e. both implementations describe the same logical operation. A sibling pair with the matching name shape but divergent semantics will fail at sampling time.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x02D6A89B4B143ED7B76A4016010D571EFE2E2DF442C1008F6D0E107121058C50
+Identity:  0xB683CA3FC5E39ACC
+Suppress:  // swiftinfer: skip 0xB683CA3FC5E39ACC
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet._regenerateHashTable() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:385
+  ✓ Lifted from `mutating func OrderedSet._regenerateHashTable()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy._regenerateHashTable(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet._regenerateHashTable()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x604528E3A71003A481A49B826FD5AB70C9CF0C8D54C9E4704530125C547AA572
+Identity:  0x5C7D1C8D560E326D
+Suppress:  // swiftinfer: skip 0x5C7D1C8D560E326D
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet._regenerateExistingHashTable() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:399
+  ✓ Lifted from `mutating func OrderedSet._regenerateExistingHashTable()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy._regenerateExistingHashTable(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet._regenerateExistingHashTable()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xC065871B789661249969E97D84E8DD7FBC0B4C95EA04D08D9578E4A018A8344A
+Identity:  0xA275D2385A136BAD
+Suppress:  // swiftinfer: skip 0xA275D2385A136BAD
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet._isUnique() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:415
+  ✓ Lifted from `mutating func OrderedSet._isUnique()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy._isUnique(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet._isUnique()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0x67849E98D3A9E36CB810B6B9FC96BA820EE108B15D143AD0C31792B9AD8C0D17
+Identity:  0x4CE1969DD55F9FA4
+Suppress:  // swiftinfer: skip 0x4CE1969DD55F9FA4
+
+[Suggestion]
+Template: idempotence
+Score:    45 (Likely)
+
+Why suggested:
+  ✓ OrderedSet._ensureUnique() mutating () -> Void  // lifted to (OrderedSet) -> OrderedSet — /Users/josephcursio/GitHub_projects/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:420
+  ✓ Lifted from `mutating func OrderedSet._ensureUnique()`. Property holds iff `OrderedSet` has value semantics — `var copy = original; copy._ensureUnique(...)` does not alias original's state.
+  ✓ Type-symmetry signature: (OrderedSet) -> OrderedSet (lifted from no-param mutating method) (+30)
+  ✓ Value-semantic carrier (OrderedSet) — algebraic property is well-defined under aliasing (+5)
+  ✓ Lifted from `mutating func OrderedSet._ensureUnique()` (+10)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer V1.19 does not verify protocol conformance — confirm before applying.
+  ⚠ Property holds iff `OrderedSet` has value semantics — a broken copy-on-write implementation or a class-typed stored property would invalidate the lift even though the type passed the structural admission gate.
+
+Generator: .todo
+Sampling:  not run; lifted test seed: 0xD11171AB05DEF4F9BF3392B8011FF2A47F0A34CB30C7E89EADFAEC832E40F5E1
+Identity:  0x0ADF4CC755508749
+Suppress:  // swiftinfer: skip 0x0ADF4CC755508749
