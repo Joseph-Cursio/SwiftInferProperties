@@ -71,6 +71,13 @@ public enum RoundTripTemplate {
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
+        // V1.21.C — math-library forward-function pair veto. Suppresses
+        // CM cross-product noise (forward × forward like exp × cosh)
+        // while preserving the canonical-inverse anchor pairs (exp × log,
+        // cos × acos, etc.) cycle-17 measured at 7/7 = 100% accept.
+        if let mathForward = mathForwardFunctionPairVeto(for: pair) {
+            signals.append(mathForward)
+        }
         // Carrier-kind signal — keyed off the forward half's containing
         // type. The cross-type counter-signal already demotes pairs whose
         // halves disagree on container, so anchoring on `forward` is safe.

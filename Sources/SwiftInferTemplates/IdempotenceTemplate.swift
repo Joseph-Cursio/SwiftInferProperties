@@ -72,6 +72,12 @@ public enum IdempotenceTemplate {
         if let setAlgebra = setAlgebraShapeVeto(for: summary) {
             signals.append(setAlgebra)
         }
+        // V1.21.C — math-library forward-function veto (3-cycle carry-
+        // forward; closes the CM elementary-functions noise class
+        // measured at 0/3 = 0% in cycle-17).
+        if let mathForward = mathForwardFunctionVeto(for: summary) {
+            signals.append(mathForward)
+        }
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: summary.containingTypeName
         ) {
