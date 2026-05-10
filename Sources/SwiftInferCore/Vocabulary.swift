@@ -72,6 +72,13 @@ public struct Vocabulary: Sendable, Equatable {
     /// directly.
     public let markerSets: [MarkerSet]
 
+    /// V1.18.C — project-supplied dual-style member-name pairs that
+    /// extend `DualStylePairing`'s curated rules (`X`/`Xing`,
+    /// `formX`/`X`, `X`/`Xed`). Literal `(mutating, nonMutating)` pairs
+    /// only per the v1.18 plan open decision #6 lean — regex-pattern
+    /// extension is a v1.21+ candidate.
+    public let dualStyleNamePairs: [DualStyleNamePair]
+
     public init(
         inversePairs: [InversePair] = [],
         idempotenceVerbs: [String] = [],
@@ -80,7 +87,8 @@ public struct Vocabulary: Sendable, Equatable {
         monotonicityVerbs: [String] = [],
         inverseElementVerbs: [String] = [],
         markerPairs: [MarkerPair] = [],
-        markerSets: [MarkerSet] = []
+        markerSets: [MarkerSet] = [],
+        dualStyleNamePairs: [DualStyleNamePair] = []
     ) {
         self.inversePairs = inversePairs
         self.idempotenceVerbs = idempotenceVerbs
@@ -90,6 +98,7 @@ public struct Vocabulary: Sendable, Equatable {
         self.inverseElementVerbs = inverseElementVerbs
         self.markerPairs = markerPairs
         self.markerSets = markerSets
+        self.dualStyleNamePairs = dualStyleNamePairs
     }
 
     /// The default vocabulary — every list empty. Templates fall back to
@@ -108,6 +117,7 @@ extension Vocabulary: Codable {
         case inverseElementVerbs
         case markerPairs
         case markerSets
+        case dualStyleNamePairs
     }
 
     public init(from decoder: any Decoder) throws {
@@ -120,7 +130,10 @@ extension Vocabulary: Codable {
             monotonicityVerbs: try container.decodeIfPresent([String].self, forKey: .monotonicityVerbs) ?? [],
             inverseElementVerbs: try container.decodeIfPresent([String].self, forKey: .inverseElementVerbs) ?? [],
             markerPairs: try container.decodeIfPresent([MarkerPair].self, forKey: .markerPairs) ?? [],
-            markerSets: try container.decodeIfPresent([MarkerSet].self, forKey: .markerSets) ?? []
+            markerSets: try container.decodeIfPresent([MarkerSet].self, forKey: .markerSets) ?? [],
+            dualStyleNamePairs: try container.decodeIfPresent(
+                [DualStyleNamePair].self, forKey: .dualStyleNamePairs
+            ) ?? []
         )
     }
 
@@ -134,6 +147,45 @@ extension Vocabulary: Codable {
         try container.encode(inverseElementVerbs, forKey: .inverseElementVerbs)
         try container.encode(markerPairs, forKey: .markerPairs)
         try container.encode(markerSets, forKey: .markerSets)
+        try container.encode(dualStyleNamePairs, forKey: .dualStyleNamePairs)
+    }
+}
+
+/// V1.18.C — project-supplied dual-style member-name pair, encoded as a
+/// two-element JSON array `["mutating", "nonMutating"]` to match
+/// `InversePair`'s schema posture.
+public struct DualStyleNamePair: Sendable, Equatable {
+
+    public let mutating: String
+    public let nonMutating: String
+
+    public init(mutating: String, nonMutating: String) {
+        self.mutating = mutating
+        self.nonMutating = nonMutating
+    }
+}
+
+extension DualStyleNamePair: Codable {
+
+    public init(from decoder: any Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        let mutatingName = try container.decode(String.self)
+        let nonMutatingName = try container.decode(String.self)
+        guard container.isAtEnd else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription:
+                    "DualStyleNamePair must be a two-element array "
+                    + "[mutating, nonMutating]; got more than two strings."
+            )
+        }
+        self.init(mutating: mutatingName, nonMutating: nonMutatingName)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.unkeyedContainer()
+        try container.encode(mutating)
+        try container.encode(nonMutating)
     }
 }
 

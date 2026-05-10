@@ -104,6 +104,17 @@ extension TemplateRegistry {
                 collector.record(suggestion, generatorType: generatorType(for: pair.operation))
             }
         }
+        for pair in DualStylePairing.candidates(in: summaries, vocabulary: vocabulary) {
+            if let suggestion = DualStyleConsistencyTemplate.suggest(
+                for: pair,
+                carrierKindResolver: carrierKindResolver
+            ) {
+                collector.record(
+                    suggestion,
+                    generatorType: pair.mutatingMember.containingTypeName
+                )
+            }
+        }
         return collector
     }
 
