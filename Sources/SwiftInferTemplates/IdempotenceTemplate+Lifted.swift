@@ -139,6 +139,15 @@ extension IdempotenceTemplate {
         ) {
             signals.append(coverageVeto)
         }
+        // V1.21.A — IteratorProtocol carrier veto. Cycle-17 finding
+        // closure: 4/4 Iterator-shape lifted-idempotence picks reject
+        // because Iterator.next()/advance() advance state per call.
+        if let iteratorVeto = iteratorProtocolCarrierVeto(
+            for: lifted,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(iteratorVeto)
+        }
         return signals
     }
 
