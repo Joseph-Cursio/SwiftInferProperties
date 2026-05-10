@@ -120,12 +120,16 @@ struct RoundTripDirectionLabelCounterTests {
 
     // MARK: - Non-suppression cases (preserve well-named round-trip pairs)
 
-    @Test("V1.12.1 — `endOfChunk(startingAt:) ↔ startOfChunk(endingAt:)` (stride labels) still emits Possible")
-    func strideStyleLabelsDoNotSuppress() {
-        // Stride-style labels (`startingAt`, `endingAt`) are NOT in the
-        // curated direction set per v1.11 open decision #4 carried
-        // forward into v1.12. Counter does not fire; baseline typeSymmetry
-        // +30 → Possible. Cycle-10 candidate to extend the curated set.
+    @Test("V1.12.1 — `endOfChunk(startingAt:) ↔ startOfChunk(endingAt:)` (stride labels) — V1.12.1 direction-counter does NOT fire (stride labels aren't in DirectionLabels.curated)")
+    func strideStyleLabelsDoNotFireDirectionCounter() {
+        // V1.12.1's direction-counter does NOT fire on stride-style
+        // labels (which are in StrideStyleLabels.curated, NOT
+        // DirectionLabels.curated). The pair was previously surfaced
+        // at score 30 → Possible — but V1.22.D's stride-style both-sides
+        // veto now fires at -25, suppressing the suggestion entirely.
+        // This test verifies V1.12.1's directionLabelCounterSignal
+        // does NOT fire on stride labels (the V1.22.D veto fires
+        // separately and is tested in StrideStyleLabelTests).
         let pair = makePair(
             forwardName: "endOfChunk",
             forwardLabel: "startingAt",
@@ -134,9 +138,14 @@ struct RoundTripDirectionLabelCounterTests {
             forwardParam: "Index",
             forwardReturn: "Index"
         )
-        let suggestion = RoundTripTemplate.suggest(for: pair)
-        #expect(suggestion?.score.tier == .possible)
-        #expect(!(suggestion?.score.signals.contains { $0.kind == .directionLabel } ?? false))
+        // V1.12.1 directionLabelCounterSignal returns nil — stride
+        // labels aren't in DirectionLabels.curated.
+        #expect(RoundTripTemplate.directionLabelCounterSignal(for: pair) == nil)
+        // V1.22.D strideStyleLabelCounterSignal fires at -25 — both
+        // labels are in StrideStyleLabels.curated.
+        #expect(RoundTripTemplate.strideStyleLabelCounterSignal(for: pair)?.weight == -25)
+        // End-to-end suggest is now Suppressed (not Possible like pre-V1.22.D).
+        #expect(RoundTripTemplate.suggest(for: pair) == nil)
     }
 
     @Test("V1.12.1 — curated `encode/decode` pair (no direction labels) still surfaces Likely")

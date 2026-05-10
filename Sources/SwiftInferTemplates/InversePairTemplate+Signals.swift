@@ -28,6 +28,12 @@ extension InversePairTemplate {
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
+        // V1.22.D — stride-style label both-sides veto. Closes the
+        // cycle-14-demoted Algo `endOfChunk(startingAt:) × startOfChunk
+        // (endingAt:)` inverse-pair pick.
+        if let strideStyle = strideStyleLabelCounterSignal(for: pair) {
+            signals.append(strideStyle)
+        }
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: pair.forward.containingTypeName
         ) {

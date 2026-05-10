@@ -71,6 +71,12 @@ public enum RoundTripTemplate {
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
+        // V1.22.D — stride-style label both-sides veto. Closes the
+        // cycle-14-demoted Algo `endOfChunk(startingAt:) × startOfChunk
+        // (endingAt:)` round-trip pick.
+        if let strideStyle = strideStyleLabelCounterSignal(for: pair) {
+            signals.append(strideStyle)
+        }
         // V1.21.C — math-library forward-function pair veto. Suppresses
         // CM cross-product noise (forward × forward like exp × cosh)
         // while preserving the canonical-inverse anchor pairs (exp × log,
