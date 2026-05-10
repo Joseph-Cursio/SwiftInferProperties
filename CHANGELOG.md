@@ -4,6 +4,65 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0] — 2026-05-10
+
+The twentieth calibration cycle and the **fourth empirical-only release** in the loop's history (after cycle 6 = v1.9 = 26.7%; cycle 14 = v1.17 = 34.8%; cycle 17 = v1.20 = 52.3%). v1.23 is binary-equivalent to v1.22.0 except the version-string bump — zero `Sources/` changes, zero test changes, zero behavior changes. The cycle's deliverable is **per-template + per-corpus acceptance-rate data on the post-v1.22 152-surface**. Headline: **21/43 = 48.8%** Possible-tier acceptance rate — **outcome D** under the v1.23 plan thresholds (Aggregate < 52% — first non-monotonic move in the loop's history). The drop is **explained by a calibration trade-off + sample-distribution shift**, not a precision regression.
+
+### Calibration cycle 20 — fourth empirical re-measurement on the post-v1.22 152-surface
+
+- **Surface re-capture metadata (V1.23.A).** `docs/calibration-cycle-20-data/surface-counts.md` documents that v1.23 is binary-equivalent to v1.22; cycle-20 sample basis is the V1.22.E discover capture (152 candidates across the 4 cycle-1..14 corpora). Per-template per-corpus surface composition documented; stratification rebased for the v1.22 surface (round-trip 8 vs cycle-17's 15; idempotence-lifted 9 vs cycle-17's 6, covering NEW first-measurement classes).
+- **Cycle-20 triage rubric (V1.23.B).** New `docs/cycle-20-triage-rubric.md` carries cycle-17's per-template criteria for the 10 template classes verbatim. Adds "Post-cycle-17 mechanism context" section documenting the 7 mechanism layers (cycles 18 + 19) each surviving v1.22 candidate has cleared. Per-template suppression-layer tables updated: round-trip +2 layers (V1.21.C + V1.22.B/D); idempotence non-lifted +1 (V1.21.C); idempotence-lifted +2 (V1.21.A + V1.22.A); inverse-pair +1 (V1.22.D). Decision JSON schema mirrors cycle-17's verbatim.
+- **Cycle-20 46-decision triage (V1.23.C).** Stratified sample of 46 picks across 10 (template × corpus) cells matching cycle-17's sample size for direct comparability. Verdict counts: **21 accept / 22 reject / 3 unknown**.
+- **Cycle-20 findings (V1.23.D).** Headline: **21/43 = 48.8%**, -3.5pp from cycle-17's 52.3%; **first non-monotonic move in the loop's history**. Three drivers:
+  1. **V1.22.D suppressed cycle-17 ACCEPT class** — Algo `endOfChunk × startOfChunk` triple was cycle-14/17 ACCEPT; V1.22.D's stride-style label both-sides veto closes round-trip + inverse-pair on this site (calibration trade-off per v1.22 plan §"Risks": auto-emit usability vs measured-correctness). Cycle-20 sample doesn't see these picks. ~-2-3pp aggregate cost.
+  2. **Cycle-20 sample concentrates on first-measurement reject classes** — OC asymmetric round-trip cross-pairs (5/5 = 100% reject; cycle-19 finding class) + OC sort/shuffle/reverse-class lifted-idempotence (2 accept + 4 reject + 1 unknown; cycle-17 sampled BucketIterator instead which V1.22.A subsequently closed).
+  3. **Cycle-20 round-trip weighting shift** — cycle-17 47% CM canonical-anchor weight vs cycle-20 36%.
+- **Per-template results (cycle-17 → cycle-20):**
+  - round-trip: 60.0% → **54.5%** (-5.5pp; sample-distribution shift)
+  - idempotence (non-lifted): 0.0% → **0.0%** (5-cycle flat)
+  - commutativity: 33.3% → **33.3%** (rate-stability)
+  - associativity: 66.7% → **66.7%** (rate-stability)
+  - monotonicity: 75.0% → **75.0%** (rate-stability)
+  - inverse-pair (non-lifted): 50.0% → **0.0%** (V1.22.D closed cycle-17 ACCEPT; small-n sample-mix)
+  - identity-element (non-lifted): 0.0% → **0.0%** (carry-forward reject)
+  - **dual-style-consistency: 100.0% → 100.0%** (V1.18.C by-construction precision rate-stability)
+  - **idempotence-lifted: 33.3% → 50.0%** (sort accepts add to internal-CoW class; reverse/removeFirst/removeLast rejects offset)
+  - **composition-lifted: 0.0% → 0.0%** (V1.21.B Strong → Likely demote rate-stability)
+- **Per-mechanism effectiveness (cycle-20):**
+  - **V1.18.C dual-style: 5/5 = 100% rate-stability** (largest mechanism-class precision contribution in the loop's history; continued by-construction precision).
+  - V1.21.C math-forward function counter: all 5 cycle-20 CM round-trip canonical anchors preserved by `canonicalInversePairs` allowlist.
+  - V1.21.A + V1.22.A IteratorProtocol + BucketIterator extension: 0 cycle-20 sample picks (carrier-class fully closed; precision-positive on surface only).
+  - V1.22.B both-sides direction-counter: revealed asymmetric cross-pair class (5/5 reject — first measurement).
+  - V1.22.D stride-style label veto: -2-3pp cost (calibration trade-off).
+  - **V1.22.C fixed-point-name positive signal (NEW class 14): 0 sample picks** — recall-positive infrastructure ready; no functions in `FixedPointNames.curated` surface on cycle-1..14 corpora.
+- **Cycle-21 priority list (rotated post-v1.23):**
+  1. Asymmetric label class mismatch counter (cycle-19 finding; cycle-20 reconfirmed at 5/5 reject).
+  2. **NEW (cycle-20 finding):** `reverse`/`removeFirst`/`removeLast` veto on idempotence-lifted for non-IteratorProtocol carriers (closes 4-6 OC candidates).
+  3. **NEW (cycle-20 finding):** Non-deterministic shuffle veto extension (extend `nonDeterministicVeto` body-signal detection).
+  4. **NEW (cycle-20 finding):** Capacity-from-scale + formatter shape-disambiguation veto on idempotence non-lifted (closes ~10-15 of 23 idempotence picks).
+  5. FP approximate-equality template arm (7-cycle carry-forward).
+  6. Math-library `_relaxed*` extension (5-cycle carry-forward).
+  7. Carry-forwards from v1.19 (CompositionTemplate non-numeric monoid; lift admission relaxation; `liftedFromMutation` magnitude re-baselining).
+- **Aggregate trajectory (4-point):** 26.7% → 34.8% → 52.3% → **48.8%**. First non-monotonic step. The drop is **NOT a regression** — surface analysis at cycle 19 confirmed -183 candidates closed across cycles 18 + 19 (precision-positive); the cycle-20 measurement reflects sampling on a substantially-changed surface composition (335 → 152, -55% surface delta).
+- **§19 ≥70% target is +21pp from cycle-20.** Three more mechanism cycles at cycle-18 magnitude (~+7pp avg) reach the target — assuming continued precision-positive movement + sample-distribution stabilization (cycle-21+ won't introduce new first-measurement classes at the rate of cycles 18+19).
+
+### Documentation
+
+- **v1.23 calibration plan (V1.23.0).** `docs/v1.23 Calibration Plan.md` — fourth empirical-only cycle plan; outcome scenarios A/B/C/D framing.
+- **Cycle-20 surface re-capture (V1.23.A).** `docs/calibration-cycle-20-data/surface-counts.md`.
+- **Cycle-20 triage rubric (V1.23.B).** `docs/cycle-20-triage-rubric.md` — carries cycle-17 verbatim + cycle-18/19 mechanism context.
+- **Cycle-20 triage data (V1.23.C).** `docs/calibration-cycle-20-data/sample-manifest.md` + `triage-decisions.json` (46 verdicts) + `triage-notes.md`.
+- **Cycle-20 findings (V1.23.D).** `docs/calibration-cycle-20-findings.md` — four-point trajectory, three drivers of the -3.5pp drop, per-mechanism effectiveness ranking, cycle-21 priority list with 3 NEW findings.
+- **Performance baseline v1.22 carry-forward (V1.23.E).** `docs/perf-baseline-v1.23.md` — mirrors v1.20.E's carry-forward posture.
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.23 ships zero new accept-flow writeout paths (zero source change).
+- All PRD §13 performance budgets hold at v1.23 (carry-forward from [`docs/perf-baseline-v1.22.md`](docs/perf-baseline-v1.22.md) per [`docs/perf-baseline-v1.23.md`](docs/perf-baseline-v1.23.md)).
+- PRD §14 + §19 runtime no-network guarantee unchanged.
+
+[1.23.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.23.0
+
 ## [1.22.0] — 2026-05-10
 
 The nineteenth calibration cycle and the **second consecutive measurement-driven mechanism cycle** (cycle 18 = v1.21 was the first; cycles 15-16 mechanism choices were projected from non-empirical reasoning). Four independently-mergeable workstreams shipped in one release. Surface 165 → **152** (-13 = -7.9%) — second consecutive new cumulative-reduction low at **-86.97%** vs cycle-1's 1167-baseline (prior low: -85.86% at cycle 18; -80.4% at cycle 13 before that). First cycle to cross the -86% threshold. Mechanism-class taxonomy 13 → **14** (first new class since v1.19's class 13 composition-template additive-monoid scoring). Class 14 (fixed-point-name positive signal) is the **first recall-positive signal in the post-V1.4.3 era** — all prior 13 classes were suppression-only.
