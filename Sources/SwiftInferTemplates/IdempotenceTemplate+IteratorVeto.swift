@@ -46,11 +46,18 @@ extension IdempotenceTemplate {
     /// `IteratorProtocol` conformance match doesn't consult this set
     /// (any `mutating func` on an Iterator-conforming carrier is
     /// state-advancing by protocol contract).
+    ///
+    /// **V1.22.A extension** — adds `findNext` + `advanceToNextUnoccupiedBucket`
+    /// per the cycle-18 finding (3 surviving OC `_HashTable.BucketIterator`
+    /// picks at v1.21 used these non-curated method names). Both are
+    /// stateful-incremental by Iterator-pattern convention.
     static let iteratorMethodNames: Set<String> = [
         "next",
         "advance",
         "nextState",
-        "step"
+        "step",
+        "findNext",
+        "advanceToNextUnoccupiedBucket"
     ]
 
     /// Returns a veto `Signal` (weight `Signal.vetoWeight`) when the
@@ -87,7 +94,15 @@ extension IdempotenceTemplate {
         // Iterator-shape types whose conformance the corpus index didn't
         // capture (e.g., conformance declared in a non-scanned source file
         // or implicit via a foreign extension).
-        let isIteratorNamed = carrier == "Iterator" || carrier.hasSuffix(".Iterator")
+        //
+        // **V1.22.A extension** — match `*Iterator` suffix (without the dot)
+        // so `BucketIterator`, `HashIterator`, `MyArrayIterator` etc. are
+        // caught alongside `Iterator` and `Foo.Iterator`. The joint match
+        // (curated method name AND Iterator-shape carrier) preserves the
+        // false-positive guardrail from V1.21.A.
+        let isIteratorNamed = carrier == "Iterator"
+            || carrier.hasSuffix(".Iterator")
+            || carrier.hasSuffix("Iterator")
         if isIteratorNamed && iteratorMethodNames.contains(methodName) {
             return Signal(
                 kind: .protocolCoveredProperty,
