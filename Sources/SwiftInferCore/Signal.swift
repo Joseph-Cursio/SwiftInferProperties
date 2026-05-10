@@ -80,6 +80,41 @@ public struct Signal: Sendable, Equatable {
         /// labeled args); the remaining 3-of-10 domain-mismatch sub-pattern
         /// (HashTable scale-vs-capacity) is a cycle-8 concern.
         case directionLabel
+        /// V1.18.A — fires when the candidate's containing-type carrier
+        /// resolves via `CarrierKindResolver` to `.referenceType` (i.e.
+        /// `TypeDecl.kind == .class || .actor`). Emitted with weight `-10`
+        /// — drops Score 30 → 20 (Possible-tier floor) so reference-type
+        /// candidates still earn `--include-possible` surface but are
+        /// demoted out of the Likely tier. Algebraic and round-trip
+        /// properties are *aliasing-sensitive* on reference types: shared
+        /// state through stored references means `var copy = x; copy.op();
+        /// x == before(x)` doesn't hold the way it does on value types.
+        ///
+        /// **Cycle-15 motivation.** Carried forward four cycles
+        /// (post-v1.13 priority #5 → post-v1.16 #3 → cycle-14 priority #3)
+        /// as a small-projected-effect precision tweak. The v1.18 plan
+        /// reframes this as the *necessary structural precondition* for
+        /// the workstream-B mutating-method lift (v1.19). See
+        /// `docs/v1.18 Calibration Plan.md` workstream A.
+        case referenceTypeCarrier
+        /// V1.18.A — fires when the candidate's containing-type carrier
+        /// resolves via `CarrierKindResolver` to `.valueSemantic`
+        /// (`kind == .struct || .enum` AND every stored member is
+        /// recursively value-typed per the curated allow-list +
+        /// same-corpus `TypeDecl` lookup, depth-bounded 3 levels). Emitted
+        /// with weight `+5` — small positive bump that confirms the
+        /// algebraic property's structural soundness. Magnitude is
+        /// intentionally smaller than `referenceTypeCarrier`'s `-10`
+        /// because false positives on reference types are sharper bugs
+        /// than missed value-semantic positives.
+        ///
+        /// Mixed carriers (struct with a class-typed or closure-typed
+        /// stored property) emit no signal — conservative; the worked
+        /// examples in `docs/ideas/ValueSemantic Kit Proposal.md` §2.2
+        /// (broken CoW / closure-captured state) are bugs that look
+        /// value-semantic structurally and would falsely score positive
+        /// otherwise.
+        case valueSemanticCarrier
 
         // Veto (collapses score to suppressed)
         case nonDeterministicBody

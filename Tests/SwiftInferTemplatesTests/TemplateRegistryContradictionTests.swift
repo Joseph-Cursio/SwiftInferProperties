@@ -124,8 +124,9 @@ struct TemplateRegistryDiscoverableTests {
         )
         #expect(discoverable.weight == 35)
         #expect(discoverable.detail.contains("codec"))
-        // 30 type + 40 curated encode/decode + 35 discoverable = 105 → Strong.
-        #expect(roundTrip.score.total == 105)
+        // 30 type + 40 curated + 35 discoverable + 5 value-semantic
+        // (V1.18.A; struct Codec is value-semantic) = 110 → Strong.
+        #expect(roundTrip.score.total == 110)
     }
 
     @Test("Mismatched @Discoverable groups across the pair leave the +35 signal off")
@@ -147,6 +148,7 @@ struct TemplateRegistryDiscoverableTests {
         let suggestions = try TemplateRegistry.discover(in: directory)
         let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
         #expect(!roundTrip.score.signals.contains { $0.kind == .discoverableAnnotation })
-        #expect(roundTrip.score.total == 70)
+        // 30 type + 40 curated + 5 value-semantic carrier (V1.18.A) = 75.
+        #expect(roundTrip.score.total == 75)
     }
 }

@@ -53,7 +53,8 @@ public enum InversePairTemplate {
         for pair: FunctionPair,
         vocabulary: Vocabulary = .empty,
         equatableResolver: EquatableResolver? = nil,
-        inheritedTypesByName: [String: Set<String>] = [:]
+        inheritedTypesByName: [String: Set<String>] = [:],
+        carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
         // Forward param type — `T` in the `f: T -> U` pair.
         guard let domain = pair.forward.parameters.first?.typeText else {
@@ -68,30 +69,12 @@ public enum InversePairTemplate {
             return nil
         }
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
-        if let name = nameSignal(for: pair, vocabulary: vocabulary) {
-            signals.append(name)
-        }
-        if let fpCounter = floatingPointStorageCounterSignal(for: pair) {
-            signals.append(fpCounter)
-        }
-        if let direction = directionLabelCounterSignal(for: pair) {
-            signals.append(direction)
-        }
-        if let domainMarker = domainMarkerCounterSignal(for: pair) {
-            signals.append(domainMarker)
-        }
-        if let setAlgebra = setAlgebraShapeVeto(for: pair) {
-            signals.append(setAlgebra)
-        }
-        if let veto = nonDeterministicVeto(for: pair) {
-            signals.append(veto)
-        }
-        if let coverageVeto = protocolCoverageVeto(
+        signals.append(contentsOf: counterAndCoverageSignals(
             for: pair,
-            inheritedTypesByName: inheritedTypesByName
-        ) {
-            signals.append(coverageVeto)
-        }
+            vocabulary: vocabulary,
+            inheritedTypesByName: inheritedTypesByName,
+            carrierKindResolver: carrierKindResolver
+        ))
         let score = Score(signals: signals)
         guard score.tier != .suppressed else {
             return nil
@@ -131,7 +114,7 @@ public enum InversePairTemplate {
         )
     }
 
-    private static func nameSignal(
+    static func nameSignal(
         for pair: FunctionPair,
         vocabulary: Vocabulary
     ) -> Signal? {
@@ -174,7 +157,7 @@ public enum InversePairTemplate {
         return direct || swapped
     }
 
-    private static func nonDeterministicVeto(for pair: FunctionPair) -> Signal? {
+    static func nonDeterministicVeto(for pair: FunctionPair) -> Signal? {
         let forwardCalls = pair.forward.bodySignals.nonDeterministicAPIsDetected
         let reverseCalls = pair.reverse.bodySignals.nonDeterministicAPIsDetected
         let both = Array(Set(forwardCalls).union(reverseCalls)).sorted()
@@ -208,7 +191,7 @@ public enum InversePairTemplate {
     /// non-algebraic types (`parse/format`, `encode/decode` on a
     /// non-Codable carrier) fall through unsuppressed because no
     /// kit-published inverse law applies.
-    private static func protocolCoverageVeto(
+    static func protocolCoverageVeto(
         for pair: FunctionPair,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
@@ -230,7 +213,7 @@ public enum InversePairTemplate {
     /// score computation, but `--include-possible` users won't see it.
     /// Acceptable trade-off: inverse-pair is rare on FP corpora and
     /// the cycle-2 approximate-equality template arm is the proper fix.
-    private static func floatingPointStorageCounterSignal(
+    static func floatingPointStorageCounterSignal(
         for pair: FunctionPair
     ) -> Signal? {
         let domain = pair.forward.parameters.first?.typeText

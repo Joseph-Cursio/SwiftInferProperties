@@ -50,7 +50,8 @@ public enum IdempotenceTemplate {
     public static func suggest(
         for summary: FunctionSummary,
         vocabulary: Vocabulary = .empty,
-        inheritedTypesByName: [String: Set<String>] = [:]
+        inheritedTypesByName: [String: Set<String>] = [:],
+        carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
         guard let typeSymmetry = typeSymmetrySignal(for: summary) else {
             return nil
@@ -70,6 +71,11 @@ public enum IdempotenceTemplate {
         }
         if let setAlgebra = setAlgebraShapeVeto(for: summary) {
             signals.append(setAlgebra)
+        }
+        if let carrier = carrierKindResolver?.carrierKindSignal(
+            forContainingTypeName: summary.containingTypeName
+        ) {
+            signals.append(carrier)
         }
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)

@@ -128,7 +128,9 @@ struct DiscoverPipelineConfigTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(recording.text.contains("Score:    70 (Likely)"))
+        // 30 type + 40 project-vocab + 5 value-semantic carrier (V1.18.A) = 75
+        // → Strong (Tier.strong threshold is ≥75).
+        #expect(recording.text.contains("Score:    75 (Strong)"))
         #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
         #expect(diagnostics.lines.isEmpty)
     }

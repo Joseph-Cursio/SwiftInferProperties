@@ -34,8 +34,10 @@ struct DiscoverableGroupIntegrationTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = try TemplateRegistry.discover(in: directory)
         let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
-        // 30 type + 40 curated encode/decode + 35 discoverable = 105 → Strong.
-        #expect(roundTrip.score.total == 105)
+        // 30 type + 40 curated encode/decode + 35 discoverable + 5 value-
+        // semantic carrier (V1.18.A; struct Codec is value-semantic) = 110
+        // → Strong.
+        #expect(roundTrip.score.total == 110)
         #expect(roundTrip.score.tier == .strong)
         let signal = try #require(
             roundTrip.score.signals.first { $0.kind == .discoverableAnnotation }
@@ -70,7 +72,8 @@ struct DiscoverableGroupIntegrationTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = try TemplateRegistry.discover(in: directory)
         let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
-        #expect(roundTrip.score.total == 105)
+        // 30 type + 40 curated + 35 discoverable + 5 value-semantic = 110.
+        #expect(roundTrip.score.total == 110)
         let signal = try #require(
             roundTrip.score.signals.first { $0.kind == .discoverableAnnotation }
         )
@@ -96,7 +99,8 @@ struct DiscoverableGroupIntegrationTests {
         let suggestions = try TemplateRegistry.discover(in: directory)
         let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
         #expect(!roundTrip.score.signals.contains { $0.kind == .discoverableAnnotation })
-        #expect(roundTrip.score.total == 70) // 30 type + 40 curated, no discoverable
+        // 30 type + 40 curated + 5 value-semantic carrier (V1.18.A); no discoverable.
+        #expect(roundTrip.score.total == 75)
     }
 
     @Test("One-sided annotation skips the +35 signal")
@@ -136,8 +140,9 @@ struct DiscoverableGroupIntegrationTests {
         let suggestions = try TemplateRegistry.discover(in: directory)
         let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
         #expect(!roundTrip.score.signals.contains { $0.kind == .discoverableAnnotation })
-        // 30 type + 40 curated encode/decode = 70 → Likely.
-        #expect(roundTrip.score.total == 70)
+        // 30 type + 40 curated encode/decode + 5 value-semantic carrier
+        // (V1.18.A) = 75 → Likely.
+        #expect(roundTrip.score.total == 75)
     }
 
     @Test("Annotation lifts non-curated naming pair from Possible to Likely")
@@ -161,7 +166,8 @@ struct DiscoverableGroupIntegrationTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = try TemplateRegistry.discover(in: directory)
         let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
-        #expect(roundTrip.score.total == 65)
+        // 30 type + 35 discoverable + 5 value-semantic = 70 → Likely.
+        #expect(roundTrip.score.total == 70)
         #expect(roundTrip.score.tier == .likely)
     }
 

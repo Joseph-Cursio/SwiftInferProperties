@@ -49,7 +49,8 @@ public enum RoundTripTemplate {
     public static func suggest(
         for pair: FunctionPair,
         vocabulary: Vocabulary = .empty,
-        inheritedTypesByName: [String: Set<String>] = [:]
+        inheritedTypesByName: [String: Set<String>] = [:],
+        carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
@@ -69,6 +70,14 @@ public enum RoundTripTemplate {
         }
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
+        }
+        // Carrier-kind signal — keyed off the forward half's containing
+        // type. The cross-type counter-signal already demotes pairs whose
+        // halves disagree on container, so anchoring on `forward` is safe.
+        if let carrier = carrierKindResolver?.carrierKindSignal(
+            forContainingTypeName: pair.forward.containingTypeName
+        ) {
+            signals.append(carrier)
         }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)

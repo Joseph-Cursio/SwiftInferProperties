@@ -77,12 +77,19 @@ public enum TemplateRegistry {
         // templates. Built once here so per-summary template calls are
         // O(|inheritedTypes|) ≈ 1–4 lookups per candidate.
         let inheritedTypesByName = ProtocolCoverageMap.inheritedTypesIndex(from: typeDecls)
+        // V1.18.A — corpus-wide carrier-kind resolver feeds the
+        // value-semantic / reference-type carrier signals across the four
+        // suggestion-emitting templates that score against a containing
+        // type (Idempotence, RoundTrip, InversePair, IdentityElement).
+        // Same single-build pattern as `EquatableResolver`.
+        let carrierKindResolver = CarrierKindResolver(typeDecls: typeDecls)
         let collector = collectSuggestions(
             summaries: summaries,
             identities: identities,
             vocabulary: vocabulary,
             equatableResolver: resolver,
-            inheritedTypesByName: inheritedTypesByName
+            inheritedTypesByName: inheritedTypesByName,
+            carrierKindResolver: carrierKindResolver
         )
         let outcome = ContradictionDetector.filter(
             collector.suggestions,

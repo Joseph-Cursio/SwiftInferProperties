@@ -33,11 +33,16 @@ struct DiscoverPipelineStatsTests {
             output: recording
         )
         // Header line + per-template lines, no per-suggestion blocks.
-        #expect(recording.text.hasPrefix("2 suggestions across 2 templates."))
+        // V1.18.A — value-semantic carrier signal pushes the round-trip
+        // pair from 70 → 75 (Strong) and lifts inverse-pair from 35 → 40
+        // (Likely, becomes visible by default), so the corpus surfaces
+        // 3 suggestions across 3 templates instead of 2/2.
+        #expect(recording.text.hasPrefix("3 suggestions across 3 templates."))
         #expect(recording.text.contains("idempotence"))
+        #expect(recording.text.contains("inverse-pair"))
         #expect(recording.text.contains("round-trip"))
-        #expect(recording.text.contains("(1 Strong)"))
-        #expect(recording.text.contains("(1 Likely)"))
+        #expect(recording.text.contains("Strong"))
+        #expect(recording.text.contains("Likely"))
         // No explainability-block markers should appear in stats mode.
         #expect(!recording.text.contains("Why suggested:"))
         #expect(!recording.text.contains("[Suggestion]"))

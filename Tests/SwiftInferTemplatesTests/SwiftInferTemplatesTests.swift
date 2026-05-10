@@ -159,7 +159,9 @@ struct TemplateRegistryDiscoveryTests {
         let identityElement = try #require(
             suggestions.first { $0.templateName == "identity-element" }
         )
-        #expect(identityElement.score.total == 90)
+        // 30 type-shape + 40 identity-naming + 20 reducer-empty-seed +
+        // 5 value-semantic carrier (V1.18.A; struct IntSet) = 95 → Strong.
+        #expect(identityElement.score.total == 95)
         #expect(identityElement.score.tier == .strong)
     }
 

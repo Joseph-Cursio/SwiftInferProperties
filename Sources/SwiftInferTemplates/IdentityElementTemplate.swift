@@ -59,12 +59,21 @@ public enum IdentityElementTemplate {
     public static func suggest(
         for pair: IdentityElementPair,
         opsWithIdentitySeed: Set<String> = [],
-        inheritedTypesByName: [String: Set<String>] = [:]
+        inheritedTypesByName: [String: Set<String>] = [:],
+        carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
         var signals: [Signal] = [typeShapeSignal(for: pair)]
         signals.append(identityNamingSignal(for: pair))
         if let emptySeed = emptySeedSignal(for: pair, opsWithIdentitySeed: opsWithIdentitySeed) {
             signals.append(emptySeed)
+        }
+        // Carrier kind is the operation's containing type — the identity
+        // element is a constant, not a function, so the property's
+        // testability hinges on the operation's carrier semantics.
+        if let carrier = carrierKindResolver?.carrierKindSignal(
+            forContainingTypeName: pair.operation.containingTypeName
+        ) {
+            signals.append(carrier)
         }
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)

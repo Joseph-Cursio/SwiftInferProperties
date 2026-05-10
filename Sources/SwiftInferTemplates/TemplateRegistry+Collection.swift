@@ -1,6 +1,19 @@
 import Foundation
 import SwiftInferCore
 
+/// V1.18.A — read-only resolver context threaded into per-summary and
+/// per-pair collection helpers. Bundled to keep helper signatures under
+/// SwiftLint's parameter-count ceiling as more resolvers are added (the
+/// v1.18 plan adds `carrierKindResolver`; v1.19's mutating-method lift
+/// adds another). Mirrors `EquatableResolver` + `inheritedTypesByName`
+/// being built once per `discover` call and reused across every
+/// per-template `suggest` invocation.
+struct CollectionResolverContext {
+    let vocabulary: Vocabulary
+    let inheritedTypesByName: [String: Set<String>]
+    let carrierKindResolver: CarrierKindResolver?
+}
+
 /// Mutable accumulator used inside `collectSuggestions`. Keeps the
 /// three parallel collections in one place so the per-summary /
 /// per-pair helpers don't have to thread three `inout` parameters
@@ -46,7 +59,8 @@ extension TemplateRegistry {
         identities: [IdentityCandidate],
         vocabulary: Vocabulary,
         equatableResolver: EquatableResolver,
-        inheritedTypesByName: [String: Set<String>] = [:]
+        inheritedTypesByName: [String: Set<String>] = [:],
+        carrierKindResolver: CarrierKindResolver? = nil
     ) -> SuggestionCollector {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -58,22 +72,25 @@ extension TemplateRegistry {
         let opsWithIdentitySeed: Set<String> = Set(
             summaries.flatMap(\.bodySignals.reducerOpsWithIdentitySeed)
         )
+        let context = CollectionResolverContext(
+            vocabulary: vocabulary,
+            inheritedTypesByName: inheritedTypesByName,
+            carrierKindResolver: carrierKindResolver
+        )
         var collector = SuggestionCollector()
         for summary in summaries {
             collectPerSummarySuggestions(
                 summary: summary,
-                vocabulary: vocabulary,
                 reducerOps: reducerOps,
-                inheritedTypesByName: inheritedTypesByName,
+                context: context,
                 into: &collector
             )
         }
         for pair in FunctionPairing.candidates(in: summaries) {
             collectPerPairSuggestions(
                 pair: pair,
-                vocabulary: vocabulary,
                 equatableResolver: equatableResolver,
-                inheritedTypesByName: inheritedTypesByName,
+                context: context,
                 into: &collector
             )
         }
@@ -81,7 +98,8 @@ extension TemplateRegistry {
             if let suggestion = IdentityElementTemplate.suggest(
                 for: pair,
                 opsWithIdentitySeed: opsWithIdentitySeed,
-                inheritedTypesByName: inheritedTypesByName
+                inheritedTypesByName: inheritedTypesByName,
+                carrierKindResolver: carrierKindResolver
             ) {
                 collector.record(suggestion, generatorType: generatorType(for: pair.operation))
             }
@@ -94,23 +112,23 @@ extension TemplateRegistry {
     /// by encapsulating the constructions in one place.
     private static func collectPerSummarySuggestions(
         summary: FunctionSummary,
-        vocabulary: Vocabulary,
         reducerOps: Set<String>,
-        inheritedTypesByName: [String: Set<String>],
+        context: CollectionResolverContext,
         into collector: inout SuggestionCollector
     ) {
         let summaryGenType = generatorType(for: summary)
         if let suggestion = IdempotenceTemplate.suggest(
             for: summary,
-            vocabulary: vocabulary,
-            inheritedTypesByName: inheritedTypesByName
+            vocabulary: context.vocabulary,
+            inheritedTypesByName: context.inheritedTypesByName,
+            carrierKindResolver: context.carrierKindResolver
         ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
         if let suggestion = CommutativityTemplate.suggest(
             for: summary,
-            vocabulary: vocabulary,
-            inheritedTypesByName: inheritedTypesByName
+            vocabulary: context.vocabulary,
+            inheritedTypesByName: context.inheritedTypesByName
         ) {
             collector.record(
                 suggestion,
@@ -120,13 +138,13 @@ extension TemplateRegistry {
         }
         if let suggestion = AssociativityTemplate.suggest(
             for: summary,
-            vocabulary: vocabulary,
+            vocabulary: context.vocabulary,
             reducerOps: reducerOps,
-            inheritedTypesByName: inheritedTypesByName
+            inheritedTypesByName: context.inheritedTypesByName
         ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
-        if let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: vocabulary) {
+        if let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: context.vocabulary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
         if let suggestion = InvariantPreservationTemplate.suggest(for: summary) {
@@ -142,15 +160,15 @@ extension TemplateRegistry {
     /// designed to surface.
     private static func collectPerPairSuggestions(
         pair: FunctionPair,
-        vocabulary: Vocabulary,
         equatableResolver: EquatableResolver,
-        inheritedTypesByName: [String: Set<String>],
+        context: CollectionResolverContext,
         into collector: inout SuggestionCollector
     ) {
         if let suggestion = RoundTripTemplate.suggest(
             for: pair,
-            vocabulary: vocabulary,
-            inheritedTypesByName: inheritedTypesByName
+            vocabulary: context.vocabulary,
+            inheritedTypesByName: context.inheritedTypesByName,
+            carrierKindResolver: context.carrierKindResolver
         ) {
             collector.record(
                 suggestion,
@@ -160,9 +178,10 @@ extension TemplateRegistry {
         }
         if let suggestion = InversePairTemplate.suggest(
             for: pair,
-            vocabulary: vocabulary,
+            vocabulary: context.vocabulary,
             equatableResolver: equatableResolver,
-            inheritedTypesByName: inheritedTypesByName
+            inheritedTypesByName: context.inheritedTypesByName,
+            carrierKindResolver: context.carrierKindResolver
         ) {
             collector.record(suggestion, generatorType: generatorType(for: pair))
         }

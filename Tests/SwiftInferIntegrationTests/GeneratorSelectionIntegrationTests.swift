@@ -33,6 +33,7 @@ struct GeneratorSelectionIntegrationTests {
         let expected = expectedRender(
             generatorLine: "Generator: .derivedMemberwise, confidence: .medium",
             type: "Money",
+            carrier: "Sanitizer",
             suggestion: suggestion
         )
         #expect(rendered == expected)
@@ -56,6 +57,7 @@ struct GeneratorSelectionIntegrationTests {
         let expected = expectedRender(
             generatorLine: "Generator: .derivedCaseIterable, confidence: .high",
             type: "Side",
+            carrier: "Helpers",
             suggestion: suggestion
         )
         #expect(rendered == expected)
@@ -79,6 +81,7 @@ struct GeneratorSelectionIntegrationTests {
         let expected = expectedRender(
             generatorLine: "Generator: .derivedRawRepresentable, confidence: .high",
             type: "StatusCode",
+            carrier: "Helpers",
             suggestion: suggestion
         )
         #expect(rendered == expected)
@@ -103,6 +106,7 @@ struct GeneratorSelectionIntegrationTests {
         let expected = expectedRender(
             generatorLine: "Generator: .registered, confidence: .high",
             type: "Widget",
+            carrier: "Helpers",
             suggestion: suggestion
         )
         #expect(rendered == expected)
@@ -126,6 +130,7 @@ struct GeneratorSelectionIntegrationTests {
         let expected = expectedRender(
             generatorLine: "Generator: .todo",
             type: "Logger",
+            carrier: "Helpers",
             suggestion: suggestion
         )
         #expect(rendered == expected)
@@ -151,20 +156,27 @@ struct GeneratorSelectionIntegrationTests {
     private func expectedRender(
         generatorLine: String,
         type: String,
+        carrier: String,
         suggestion: Suggestion
     ) -> String {
         let evidence = suggestion.evidence[0]
         let seedHex = SamplingSeed.renderHex(SamplingSeed.derive(from: suggestion.identity))
+        // V1.18.A — value-semantic carrier signal (+5) fires on every
+        // fixture below: each `normalize(_:)` lives on a struct
+        // ("Sanitizer" or "Helpers") whose stored members (or empty
+        // body) recursively classify as value-semantic. Total: 30 type
+        // + 40 curated + 20 self-comp + 5 carrier = 95 → Strong.
         return """
 [Suggestion]
 Template: idempotence
-Score:    90 (Strong)
+Score:    95 (Strong)
 
 Why suggested:
   ✓ normalize(_:) (\(type)) -> \(type) — \(evidence.location.file):\(evidence.location.line)
   ✓ Type-symmetry signature: T -> T (T = \(type)) (+30)
   ✓ Curated idempotence verb match: 'normalize' (+40)
   ✓ Self-composition detected in body: normalize(normalize(x)) (+20)
+  ✓ Value-semantic carrier (\(carrier)) — algebraic property is well-defined under aliasing (+5)
 
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile. \

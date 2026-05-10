@@ -81,10 +81,13 @@ struct DiscoverPipelineTests {
         )
         #expect(recording.text.contains("1 suggestion."))
         #expect(recording.text.contains("Template: idempotence"))
-        #expect(recording.text.contains("Score:    90 (Strong)"))
+        // 30 type + 40 curated + 20 self-composition + 5 value-semantic
+        // carrier (V1.18.A; struct Sanitizer) = 95 → Strong.
+        #expect(recording.text.contains("Score:    95 (Strong)"))
         #expect(recording.text.contains("✓ Type-symmetry signature: T -> T (T = String) (+30)"))
         #expect(recording.text.contains("✓ Curated idempotence verb match: 'normalize' (+40)"))
         #expect(recording.text.contains("✓ Self-composition detected in body"))
+        #expect(recording.text.contains("✓ Value-semantic carrier (Sanitizer)"))
         #expect(recording.text.contains("⚠ T must conform to Equatable"))
         #expect(recording.text.contains("Generator: not yet computed (M3 prerequisite)"))
         #expect(recording.text.contains("Sampling:  not run; lifted test seed: 0x"))
@@ -131,7 +134,9 @@ struct DiscoverPipelineTests {
             output: recording
         )
         #expect(recording.text.contains("Template: round-trip"))
-        #expect(recording.text.contains("Score:    70 (Likely)"))
+        // 30 type + 40 curated + 5 value-semantic carrier (V1.18.A;
+        // struct Codec) = 75 → Strong (Tier.strong threshold is ≥75).
+        #expect(recording.text.contains("Score:    75 (Strong)"))
         #expect(recording.text.contains("encode(_:)"))
         #expect(recording.text.contains("decode(_:)"))
         #expect(recording.text.contains("✓ Curated inverse name pair: encode/decode (+40)"))
@@ -177,7 +182,8 @@ struct DiscoverPipelineTests {
             output: recording
         )
         #expect(recording.text.contains("Template: idempotence"))
-        #expect(recording.text.contains("Score:    90 (Strong)"))
+        // 30 type + 40 curated + 20 self-comp + 5 value-semantic = 95.
+        #expect(recording.text.contains("Score:    95 (Strong)"))
     }
 
     @Test("Round-trip skip marker suppresses the pair regardless of orientation")
@@ -254,7 +260,9 @@ struct DiscoverPipelineVocabularyTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(recording.text.contains("Score:    70 (Likely)"))
+        // 30 type + 40 project-vocab + 5 value-semantic = 75 → Strong
+        // (Tier.strong threshold is ≥75).
+        #expect(recording.text.contains("Score:    75 (Strong)"))
         #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
         #expect(diagnostics.lines.isEmpty)
     }
