@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] — 2026-05-10
+
+The seventeenth calibration cycle and **third empirical-only release** in the loop's history (after cycle 6 = v1.9 and cycle 14 = v1.17). v1.20 is binary-equivalent to v1.19.0 except the version-string bump — zero `Sources/` changes, zero test changes, zero behavior changes. The cycle's deliverable is **per-template + per-corpus acceptance-rate data on the post-v1.19 335-surface**, comparable point-for-point to cycle-6's measurement on the post-V1.8.1 349-surface (26.7%) and cycle-14's measurement on the post-V1.16.1 229-surface (34.8%). Headline: **23/44 = 52.3%** Possible-tier acceptance rate — outcome **A** under the v1.20 plan thresholds (Aggregate ≥ 50%; on trajectory toward the §19 ≥70% target). Three-point trajectory established: 26.7% → 34.8% → 52.3%, with the cycle-14 → cycle-17 delta (+17.5pp / 3 mechanism cycles) **larger** than the cycle-6 → cycle-14 delta (+8.1pp / 8 mechanism cycles) — the loop is accelerating, not plateauing.
+
+### Calibration cycle 17 — empirical re-measurement on the post-v1.19 335-surface
+
+- **Cycle-17 surface re-capture (V1.20.A).** First reversal of the descending trend (cycles 1-13: 1167 → 229 = -80.4%; cycle 17: 335 = -71.3%). Surface 229 → 335 (+106 = +46.3%) attributes to v1.18.C dual-style consistency (+22 candidates) + v1.19.B-D lifted-mutation admission (+45 candidates: 44 idempotence-lifted + 1 composition-lifted; identity-element-lifted and inverse-pair-lifted both surfaced zero candidates) plus modest upstream-corpus drift (~36 unattributed on OC; ~3 on Algorithms; ComplexModule + PropertyLawKit byte-stable). Cycle-13's `joecursio` paths were not reproducible; v1.20.A pins HEAD commits for the four corpora at `~/GitHub_projects/swift-{algorithms,collections,numerics}` + `~/xcode_projects/SwiftPropertyLaws` for future replay.
+- **Cycle-17 triage rubric (V1.20.B).** Carries cycle-14's per-template criteria for the 7 cycle-14-baseline templates verbatim (round-trip, idempotence-non-lifted, commutativity, associativity, monotonicity, inverse-pair-non-lifted, identity-element-non-lifted) — methodologically identical so cycle-14 → cycle-17 rate-shifts on these templates attribute purely to cycles 15 + 16 mechanism work, not triage methodology drift. Adds new sections for `dual-style-consistency` (V1.18.C), `idempotence-lifted` (V1.19.B), `composition-lifted` (V1.19.C); plus completeness-only sections for the zero-surface `identity-element-lifted` + `inverse-pair-lifted`.
+- **Cycle-17 50-decision triage → 46-decision rebased triage (V1.20.C).** Sample size dropped 50 → 46 because two of v1.19's new lifted sub-templates have zero v1.19 surface; freed picks not redistributed (existing classes are adequately sampled). Stratification: 35 existing-class picks (round-trip 15 + idempotence 6 + commutativity 3 + associativity 3 + monotonicity 4 + inverse-pair 2 + identity-element 1 + lifted-non-mech-class) + 11 new-class picks (5 dual-style + 6 idempotence-lifted + 1 composition-lifted = 12 minus 1 from the existing-class allocation that overlapped). 23 accept / 21 reject / 2 unknown verdicts. Per-template rates:
+  - `round-trip`: 9/15 = **60.0%** (cycle-14: 45%; +15pp from sample-mix).
+  - `idempotence (non-lifted)`: 0/4 = **0.0%** (cycle-14: 0%; flat — CM elementary-functions noise class still dominates).
+  - `commutativity`: 1/3 = **33.3%** (cycle-14: 20%; small-n).
+  - `associativity`: 2/3 = **66.7%** (cycle-14: 60%; small-n).
+  - `monotonicity`: 3/4 = **75.0%** (cycle-14: 50%; small-n).
+  - `inverse-pair (non-lifted)`: 1/2 = **50.0%** (cycle-14: 100% n=1; sample size doubled with new-visibility direction-pair reject).
+  - `identity-element (non-lifted)`: 0/1 = **0.0%** (carry-forward reject across all three measurement points).
+  - **`dual-style-consistency` (NEW v1.18.C): 5/5 = 100.0%.** Highest acceptance rate of any template in the cycle-17 sample. By-construction precision via curated naming-rule pairing constraint. Largest single-mechanism contributor to the +17.5pp cycle-14 → cycle-17 shift (+6.4pp aggregate contribution).
+  - **`idempotence-lifted` (NEW v1.19.B): 2/6 = 33.3%.** 4/4 Iterator-shape picks reject (`Iterator.next()`, `BucketIterator.advance()` advance state per call); 2/2 internal-CoW-helper picks accept (`OrderedSet._isUnique()`, `OrderedSet._regenerateHashTable()`). **V1.19.B no-param admission is over-broad on `IteratorProtocol` carriers — confirmed precision-negative.**
+  - **`composition-lifted` (NEW v1.19.C): 0/1 = 0.0%.** Lone candidate (`_HashTable.BucketIterator.advance(until: Int)`) rejects because `advance(until:)` is monotone-bounded, not additive. **V1.19.C curated additive-action verb gate is over-broad on `until:` / `to:` / `at:` parameter labels.**
+- **Cycle-17 findings writeup (V1.20.D).** Three-point trajectory analysis: 26.7% → 34.8% → 52.3% — acceleration. Per-mechanism effectiveness ranking: Workstream C (V1.18.C dual-style) is the largest single-mechanism contributor (+6.4pp); Workstream B (V1.19.B-D lifted) is mixed (-0.8pp at current gate; over-broad admission identified); Workstream A (V1.18.A carrier-kind) is precision-modulator (~0pp aggregate effect). Sample-composition + unknown-resolution + measurement-stability accounts for the +11.9pp residual. The §19 ≥70% target is +17.7pp from cycle-17; at the cycle-15/16 average magnitude (+5.8pp/cycle), three more mechanism cycles get there.
+- **Cycle-18 priority list (rotated post-v1.20, in expected impact order):**
+  1. **NEW (cycle-17 finding): Iterator-shape suppression on `idempotence-lifted`.** Detect `mutating func next()` / `mutating func advance()` shapes where carrier conforms to `IteratorProtocol` (textual conformance match via the V1.5.2 `inheritedTypesByName` index) and veto from the lifted-idempotence path. Magnitude: closes ~24 v1.19 candidates; lifts lifted-idempotence acceptance rate from 33% to ~67% projected. **High-confidence priority.**
+  2. **NEW (cycle-17 finding): `composition-lifted` monotone-bounded suppression.** Add `until:` / `to:` / `at:` first-parameter-label counter-signal at -25 to `CompositionTemplate.suggest(forLifted:)`. Closes the 1 v1.19 candidate.
+  3. **Math-library forward-function counter on idempotence + round-trip** (carried forward from v1.18 / cycle-15 / cycle-16; cycle-17 reconfirms). Cycle-17 measures `exp` / `log` / `sqrt` non-lifted idempotence at 0% rate; the counter would suppress these directly.
+  4. **Fixed-point-name positive signal on idempotence (non-lifted path)** (carried forward; lifted path already covers it via curated verbs).
+  5. **FP approximate-equality template arm** (carried forward).
+  6. **Stride-style label extension** (carried forward from cycle-14 demotion; not shipped in cycles 15 + 16).
+  7. **Math-library op-name gate extension to `rescaledDivide` / `_relaxed*`** (carried forward).
+  8. **`CompositionTemplate` non-numeric monoid-shaped extension** (NEW carry-forward from v1.19; cycle-17 measurement does not yet motivate).
+  9. **Lift admission relaxation from strict to permissive** (NEW carry-forward from v1.19 plan; cycle-17 33% rate does not motivate further relaxation).
+  10. **`Signal.Kind.liftedFromMutation` magnitude re-baselining** (NEW carry-forward; cycle-17 measurement does not motivate +10 → +5 demotion).
+
+### Documentation
+
+- **v1.20 calibration plan (V1.20.0).** `docs/v1.20 Calibration Plan.md` — third empirical-only cycle plan; mirrors v1.17 sequencing.
+- **Cycle-17 surface re-capture (V1.20.A).** `docs/calibration-cycle-17-data/surface-counts.md` + 4 per-corpus `post-v1.19-*.discover.txt` captures. First reversal of the descending trend (229 → 335 = +46.3%); per-corpus + per-template counts split lifted vs non-lifted; rebased V1.20.C stratification.
+- **Cycle-17 triage rubric (V1.20.B).** `docs/cycle-17-triage-rubric.md` — carries cycle-14 verbatim for the 7 baseline templates; new sections for v1.18.C dual-style + v1.19.B-D lifted sub-templates.
+- **Cycle-17 triage data (V1.20.C).** `docs/calibration-cycle-17-data/sample-manifest.md` + `triage-decisions.json` (46 verdicts) + `triage-notes.md` (per-decision rationale + summary tables).
+- **Cycle-17 findings (V1.20.D).** `docs/calibration-cycle-17-findings.md` — three-point trajectory, per-mechanism effectiveness ranking, cycle-18 priority list rotated.
+- **Performance baseline v1.19 carry-forward (V1.20.E).** `docs/perf-baseline-v1.20.md` — mirrors v1.17's empirical-only carry-forward posture.
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.20 ships zero new accept-flow writeout paths (zero source change).
+- All PRD §13 performance budgets hold at v1.20 (carry-forward from [`docs/perf-baseline-v1.19.md`](docs/perf-baseline-v1.19.md) per [`docs/perf-baseline-v1.20.md`](docs/perf-baseline-v1.20.md)).
+- PRD §14 + §19 runtime no-network guarantee unchanged.
+
+[1.20.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.20.0
+
 ## [1.19.0] — 2026-05-10
 
 The sixteenth calibration cycle and the **single-workstream follow-on to v1.18** — ships Workstream B from the v1.18 plan §2 (mutating-method lift admission), the third and final v1.18-plan workstream and the largest behavioral change since M8.5's kit `Group` + `CommutativeMonoid` writeouts (v1.9). v1.19 re-admits the entire `mutating func` surface to the algebraic-property scoring pipeline that pre-v1.19 gated on `!summary.isMutating` at every template entry point. Mechanism-class taxonomy 11 → **13 classes** (class 12 lift admission via value-semantic gate; class 13 composition-template additive-monoid scoring — the second new template family added since M8.5, after v1.18.C's dual-style consistency template). v1.20 will be the empirical-only re-measurement cycle that runs the harness against the four cycle-1..14 corpora on the cumulative v1.18 + v1.19 surface and reports per-template + per-corpus acceptance-rate movement vs cycle 6 (26.7%) and cycle 14 (34.8%).
