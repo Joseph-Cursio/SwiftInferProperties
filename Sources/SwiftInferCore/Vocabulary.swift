@@ -79,6 +79,15 @@ public struct Vocabulary: Sendable, Equatable {
     /// extension is a v1.21+ candidate.
     public let dualStyleNamePairs: [DualStyleNamePair]
 
+    /// V1.19.C — project-supplied additive-action verbs that extend
+    /// `CompositionTemplate`'s curated list (`increment`, `add`,
+    /// `accumulate`, `accrue`, `advance`, `step`, ...). Names matched
+    /// here earn the same +40 canonical-naming signal the curated list
+    /// produces. The template's numeric-only param-type gate (curated
+    /// additive-monoid set) still applies — adding a verb here doesn't
+    /// override the type-shape filter.
+    public let compositionVerbs: [String]
+
     public init(
         inversePairs: [InversePair] = [],
         idempotenceVerbs: [String] = [],
@@ -88,7 +97,8 @@ public struct Vocabulary: Sendable, Equatable {
         inverseElementVerbs: [String] = [],
         markerPairs: [MarkerPair] = [],
         markerSets: [MarkerSet] = [],
-        dualStyleNamePairs: [DualStyleNamePair] = []
+        dualStyleNamePairs: [DualStyleNamePair] = [],
+        compositionVerbs: [String] = []
     ) {
         self.inversePairs = inversePairs
         self.idempotenceVerbs = idempotenceVerbs
@@ -99,6 +109,7 @@ public struct Vocabulary: Sendable, Equatable {
         self.markerPairs = markerPairs
         self.markerSets = markerSets
         self.dualStyleNamePairs = dualStyleNamePairs
+        self.compositionVerbs = compositionVerbs
     }
 
     /// The default vocabulary — every list empty. Templates fall back to
@@ -118,6 +129,7 @@ extension Vocabulary: Codable {
         case markerPairs
         case markerSets
         case dualStyleNamePairs
+        case compositionVerbs
     }
 
     public init(from decoder: any Decoder) throws {
@@ -133,6 +145,9 @@ extension Vocabulary: Codable {
             markerSets: try container.decodeIfPresent([MarkerSet].self, forKey: .markerSets) ?? [],
             dualStyleNamePairs: try container.decodeIfPresent(
                 [DualStyleNamePair].self, forKey: .dualStyleNamePairs
+            ) ?? [],
+            compositionVerbs: try container.decodeIfPresent(
+                [String].self, forKey: .compositionVerbs
             ) ?? []
         )
     }
@@ -148,6 +163,7 @@ extension Vocabulary: Codable {
         try container.encode(markerPairs, forKey: .markerPairs)
         try container.encode(markerSets, forKey: .markerSets)
         try container.encode(dualStyleNamePairs, forKey: .dualStyleNamePairs)
+        try container.encode(compositionVerbs, forKey: .compositionVerbs)
     }
 }
 

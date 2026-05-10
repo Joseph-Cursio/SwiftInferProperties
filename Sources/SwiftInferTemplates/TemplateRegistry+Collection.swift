@@ -115,6 +115,7 @@ extension TemplateRegistry {
         )
         collectLiftedSuggestions(
             lifted: liftedTransformations,
+            identities: identities,
             context: context,
             into: &collector
         )
@@ -162,28 +163,65 @@ extension TemplateRegistry {
         }
     }
 
-    /// V1.19.B — emit lifted-mutation suggestions for each admissible
-    /// `LiftedTransformation`. v1.19 ships IdempotenceTemplate's lift
-    /// admission; V1.19.C-D will fan out to CompositionTemplate +
-    /// IdentityElementPairing + InversePairTemplate from this same site.
-    /// No-op when no carrier-kind resolver is supplied (the lifted-
-    /// suggest path always emits the carrier signal so the resolver is
-    /// load-bearing).
+    /// V1.19.B-D — emit lifted-mutation suggestions for each admissible
+    /// `LiftedTransformation`. v1.19 fans out across IdempotenceTemplate
+    /// (V1.19.B), CompositionTemplate (V1.19.C), LiftedIdentityElementPairing +
+    /// IdentityElementTemplate (V1.19.C). InversePairTemplate lift admission
+    /// (V1.19.D) hooks in here next. No-op when no carrier-kind resolver is
+    /// supplied (the lifted-suggest path always emits the carrier signal so
+    /// the resolver is load-bearing).
     private static func collectLiftedSuggestions(
         lifted: [LiftedTransformation],
+        identities: [IdentityCandidate],
         context: CollectionResolverContext,
         into collector: inout SuggestionCollector
     ) {
         guard let resolver = context.carrierKindResolver else { return }
         for transformation in lifted {
-            if let suggestion = IdempotenceTemplate.suggest(
-                forLifted: transformation,
-                vocabulary: context.vocabulary,
-                inheritedTypesByName: context.inheritedTypesByName,
+            collectLiftedTemplatesForOne(
+                transformation: transformation,
+                context: context,
+                resolver: resolver,
+                into: &collector
+            )
+        }
+        for pair in LiftedIdentityElementPairing.candidates(
+            in: lifted,
+            identities: identities
+        ) {
+            if let suggestion = IdentityElementTemplate.suggest(
+                forLifted: pair,
                 carrierKindResolver: resolver
             ) {
-                collector.record(suggestion, generatorType: transformation.carrier)
+                collector.record(suggestion, generatorType: pair.operation.carrier)
             }
+        }
+    }
+
+    /// Per-`LiftedTransformation` template fan-out. Idempotence (V1.19.B)
+    /// and Composition (V1.19.C) both score against a single transformation;
+    /// pair-based templates (LiftedIdentityElementPairing, V1.19.D's
+    /// InverseLiftedPairing) iterate at the call site.
+    private static func collectLiftedTemplatesForOne(
+        transformation: LiftedTransformation,
+        context: CollectionResolverContext,
+        resolver: CarrierKindResolver,
+        into collector: inout SuggestionCollector
+    ) {
+        if let suggestion = IdempotenceTemplate.suggest(
+            forLifted: transformation,
+            vocabulary: context.vocabulary,
+            inheritedTypesByName: context.inheritedTypesByName,
+            carrierKindResolver: resolver
+        ) {
+            collector.record(suggestion, generatorType: transformation.carrier)
+        }
+        if let suggestion = CompositionTemplate.suggest(
+            forLifted: transformation,
+            vocabulary: context.vocabulary,
+            carrierKindResolver: resolver
+        ) {
+            collector.record(suggestion, generatorType: transformation.carrier)
         }
     }
 
