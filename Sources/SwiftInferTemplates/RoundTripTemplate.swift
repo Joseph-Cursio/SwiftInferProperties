@@ -68,6 +68,12 @@ public enum RoundTripTemplate {
         if let domainMarker = domainMarkerCounterSignal(for: pair) {
             signals.append(domainMarker)
         }
+        // V1.24.A — asymmetric label class mismatch counter. Closes the
+        // cycle-19 finding / cycle-20-reconfirmed OC asymmetric cross-
+        // pair class (`index(after:) × _minimumCapacity(forScale:)`-shape).
+        if let asymmetric = asymmetricLabelClassMismatchCounterSignal(for: pair) {
+            signals.append(asymmetric)
+        }
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
