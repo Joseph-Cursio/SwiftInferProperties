@@ -62,13 +62,69 @@ public enum CommutativityTemplate {
     /// `merge`, etc.) on Numeric types fall through unsuppressed —
     /// the kit covers `+` / `*` specifically, not arbitrary
     /// commutative functions on Numeric carriers.
+    /// V1.36.C — migrated to the Constraint Engine (PRD §20.2). The
+    /// template now expresses itself as a `Constraint<FunctionSummary>`
+    /// via `makeConstraint(vocabulary:inheritedTypesByName:)`, and
+    /// `suggest(for:)` is a thin wrapper that orchestrates the
+    /// constraint through `ConstraintRunner.suggest`. Behavior is
+    /// preserved bit-for-bit (verified by
+    /// `CommutativityConstraintEquivalenceTests`).
     public static func suggest(
         for summary: FunctionSummary,
         vocabulary: Vocabulary = .empty,
         inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
+        let constraint = makeConstraint(
+            vocabulary: vocabulary,
+            inheritedTypesByName: inheritedTypesByName
+        )
+        return ConstraintRunner.suggest(constraint: constraint, subject: summary)
+    }
+
+    /// V1.36.C — Constraint factory. Captures the runtime
+    /// `vocabulary` + `inheritedTypesByName` inputs into the
+    /// constraint's @Sendable closures. The constraint is recreated
+    /// per-call rather than memoised; this matches the existing
+    /// per-call behaviour and keeps the v1.36 migration scope narrow.
+    /// Future cycles can cache constraints if profiling motivates.
+    public static func makeConstraint(
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Constraint<FunctionSummary> {
+        Constraint<FunctionSummary>(
+            templateName: "commutativity",
+            appliesTo: { summary in
+                Self.typeShapeSignal(for: summary) != nil
+            },
+            signals: { summary in
+                Self.accumulatedSignals(
+                    for: summary,
+                    vocabulary: vocabulary,
+                    inheritedTypesByName: inheritedTypesByName
+                )
+            },
+            evidence: { summary in
+                [Self.makeEvidence(summary)]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.containingTypeName },
+            caveats: { summary in
+                Self.makeCaveats(for: summary)
+            }
+        )
+    }
+
+    /// V1.36.C — accumulates all signals in the same order the
+    /// pre-migration bespoke `suggest(for:)` did. Helper kept package-
+    /// internal (not file-private) so equivalence-test fixtures can
+    /// drive it directly without going through the runner.
+    static func accumulatedSignals(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> [Signal] {
         guard let typeShape = typeShapeSignal(for: summary) else {
-            return nil
+            return []
         }
         var signals: [Signal] = [typeShape]
         if let name = nameSignal(for: summary, vocabulary: vocabulary) {
@@ -89,19 +145,24 @@ public enum CommutativityTemplate {
         ) {
             signals.append(coverageVeto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
+        return signals
+    }
+
+    /// V1.36.C — caveat list builder used by `makeConstraint`. The
+    /// runner's default `makeExplainability` appends these to the
+    /// emitted Suggestion's `whyMightBeWrong`. Format preserves the
+    /// pre-migration bespoke `makeExplainability` order: base
+    /// caveats first, FP advisory last when applicable.
+    static func makeCaveats(for summary: FunctionSummary) -> [String] {
+        var caveats: [String] = [
+            "T must conform to Equatable for the emitted property to compile. "
+                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+        ]
+        if let fpCaveat = floatingPointAdvisory(for: summary) {
+            caveats.append(fpCaveat)
         }
-        return Suggestion(
-            templateName: "commutativity",
-            evidence: [makeEvidence(summary)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: summary, signals: signals),
-            identity: makeIdentity(for: summary),
-            carrier: summary.containingTypeName
-        )
+        return caveats
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical
