@@ -121,31 +121,61 @@ public enum RefactorClusterAnalyzer {
 
     /// Module-internal so V1.35.A unit tests can drive classification
     /// directly without building fixture entry lists.
+    ///
+    /// **V1.41.A — dominant-pattern classification rule.** Two-layer:
+    ///
+    /// 1. **Algebraic-collective dominance**: 2+ distinct algebraic
+    ///    templates AND their *sum* ≥50% of total → `algebraicStructure`.
+    ///    Preserves the v1.36/v1.40 ComplexModule classification (where
+    ///    `comm 6 + assoc 6 = 12 of 20 = 60%`).
+    ///
+    /// 2. **Single-template-dominance**: among the per-template shapes
+    ///    (idempotence / dual-style / round-trip) that meet their ≥3
+    ///    threshold, the one with the **highest count** wins. This
+    ///    reclassifies OrderedSet's 29-entry cluster (dual-style 12 ≥
+    ///    idempotence 5) from the pre-v1.41 misclassified
+    ///    `algebraicStructure` to the v1.35-cycle-32-finding-intended
+    ///    `dualStyleCluster`.
+    ///
+    /// 3. Catch-all: ≥4 total → `generalCluster`.
+    ///
+    /// The pre-v1.41 fixed priority order (idempotence before
+    /// dual-style before round-trip) is retained as the **tie-breaker**
+    /// when two per-template shapes have the same count.
     static func classify(
         perTemplateCounts: [String: Int],
         total: Int
     ) -> ClusterShape? {
-        // Priority 1: algebraic structure (2+ distinct algebraic templates).
-        let algebraic: Set<String> = [
+        // Layer 1: algebraic-collective dominance.
+        let algebraicTemplates: Set<String> = [
             "commutativity", "associativity", "identity-element"
         ]
-        let presentAlgebraic = algebraic.filter { (perTemplateCounts[$0] ?? 0) > 0 }
-        if presentAlgebraic.count >= 2 {
+        let algebraicSum = algebraicTemplates.reduce(0) { sum, name in
+            sum + (perTemplateCounts[name] ?? 0)
+        }
+        let presentAlgebraicCount = algebraicTemplates
+            .filter { (perTemplateCounts[$0] ?? 0) > 0 }
+            .count
+        if presentAlgebraicCount >= 2, algebraicSum * 2 >= total {
             return .algebraicStructure
         }
-        // Priority 2: idempotence cluster (≥3 idempotence suggestions).
-        if (perTemplateCounts["idempotence"] ?? 0) >= 3 {
-            return .idempotenceCluster
+        // Layer 2: per-template most-numerous-above-threshold.
+        // The tuple's `tieBreakerIndex` preserves the pre-v1.41 priority
+        // order on equal counts (idempotence 0 > dual-style 1 > round-trip 2).
+        let candidates: [(shape: ClusterShape, count: Int, tieBreakerIndex: Int)] = [
+            (.idempotenceCluster,    perTemplateCounts["idempotence"]            ?? 0, 0),
+            (.dualStyleCluster,      perTemplateCounts["dual-style-consistency"] ?? 0, 1),
+            (.roundTripCluster,      perTemplateCounts["round-trip"]             ?? 0, 2)
+        ]
+        let firing = candidates.filter { $0.count >= 3 }
+        if let winner = firing.max(by: { (lhs, rhs) in
+            // Higher count wins; on ties, lower tieBreakerIndex wins.
+            if lhs.count != rhs.count { return lhs.count < rhs.count }
+            return lhs.tieBreakerIndex > rhs.tieBreakerIndex
+        }) {
+            return winner.shape
         }
-        // Priority 3: dual-style cluster (≥3 dual-style suggestions).
-        if (perTemplateCounts["dual-style-consistency"] ?? 0) >= 3 {
-            return .dualStyleCluster
-        }
-        // Priority 4: round-trip cluster (≥3 round-trip pairs).
-        if (perTemplateCounts["round-trip"] ?? 0) >= 3 {
-            return .roundTripCluster
-        }
-        // Priority 5: general (≥4 total).
+        // Layer 3: general (≥4 total).
         if total >= 4 {
             return .generalCluster
         }

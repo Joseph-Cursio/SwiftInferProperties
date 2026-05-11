@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.41.0] — 2026-05-11
+
+The thirty-eighth calibration cycle. **Closes the v1.35 cycle-32 finding**: `RefactorClusterAnalyzer.classify` now uses a two-layer dominant-pattern rule. OrderedSet's 29-suggestion cluster reclassifies from the misleading `algebraicStructure` (14% algebraic — fired only because the pre-v1.41 rule was "any 2 distinct algebraic templates wins") to `dual-style-consistency cluster` (dual-style 12 entries is the dominant single template). The curated suggestion text now correctly points the user at SetAlgebra conformance.
+
+### Calibration cycle 38 — dominant-pattern classification (1-workstream)
+
+- **V1.41.A — `RefactorClusterAnalyzer.classify` refactor**. Two-layer rule:
+  1. **Algebraic-collective dominance**: 2+ distinct algebraic templates AND their sum ≥50% of total → `algebraicStructure`. Preserves Complex's classification (12/20 = 60%).
+  2. **Single-template most-numerous wins**: among per-template shapes meeting their ≥3 threshold, the one with the highest count wins. Reclassifies OrderedSet (dual-style 12 > idempotence 5) to `dualStyleCluster`.
+  3. Catch-all: ≥4 total → `generalCluster`.
+
+  The pre-v1.41 priority order (idempotence > dual-style > round-trip) is retained as the **tie-breaker** when two per-template shapes have the same count.
+
+### End-to-end verification
+
+- **OrderedCollections**: OrderedSet reclassifies from `algebraicStructure` to `dualStyleCluster`. Every other cluster (OrderedDictionary.Elements 57%, OrderedSet.SubSequence 67%, etc.) stays as `algebraicStructure` because they have genuine algebraic dominance.
+- **ComplexModule**: unchanged at `algebraic-structure cluster` (60% algebraic).
+
+### Tests
+
+6 new tests added covering the two boundary cases (49% / 50%), the OrderedSet-shaped reclassification, the Complex-shaped non-reclassification, the tie-breaker behavior. Two pre-existing tests rewritten to reflect the new dominant-pattern semantics. Test count 2097 → 2103 (+6).
+
+### Cycle-39 priority
+
+User's call from open paths: higher-order property composition (PRD §20.2 lookahead), project-vocabulary constraint registration, cross-type abstraction discovery, incremental indexing, NL query DSL, SQLite backend, or test-execution evidence.
+
+### Documentation
+
+- **v1.41 plan (V1.41.0).** Archived.
+- **Cycle-38 findings.** `docs/calibration-cycle-38-findings.md`.
+- **Performance baseline v1.41.** O(1) per classify call delta.
+
+[1.41.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.41.0
+
 ## [1.40.0] — 2026-05-11
 
 The thirty-seventh calibration cycle. **Constraint Engine refactor complete** (PRD §20.2). Final batch-migration cycle: the last 5 suggest entry points (InversePair non-lifted + lifted, IdentityElement non-lifted + lifted, Composition) ship as Constraint-based implementations. **Templates migrated: 10/10 (template-name); 13/13 (suggest entry points).** Behavior preserved bit-for-bit.

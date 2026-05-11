@@ -118,14 +118,26 @@ struct RefactorClusterAnalyzerTests {
 
     // MARK: - Priority order
 
-    @Test("V1.35.A — algebraicStructure wins over generalCluster (priority)")
-    func priorityAlgebraicBeatsGeneral() {
-        // 5 total, 2 distinct algebraic templates AND total ≥ 4.
+    @Test("V1.41.A — algebraicStructure wins when algebraic ≥50% of total (dominant)")
+    func priorityAlgebraicWinsWhenDominant() {
+        // 5 total, algebraic sum = 4 (80%) — algebraicStructure dominates.
+        let shape = RefactorClusterAnalyzer.classify(
+            perTemplateCounts: ["commutativity": 2, "associativity": 2, "monotonicity": 1],
+            total: 5
+        )
+        #expect(shape == .algebraicStructure)
+    }
+
+    @Test("V1.41.A — algebraicStructure falls through to generalCluster when algebraic < 50%")
+    func priorityAlgebraicFallsThroughWhenNotDominant() {
+        // 5 total, algebraic sum = 2 (40%) < 50% — algebraicStructure does
+        // NOT fire. Falls through to monotonicity (no priority match) then
+        // generalCluster (≥4 total).
         let shape = RefactorClusterAnalyzer.classify(
             perTemplateCounts: ["commutativity": 1, "associativity": 1, "monotonicity": 3],
             total: 5
         )
-        #expect(shape == .algebraicStructure)
+        #expect(shape == .generalCluster)
     }
 
     @Test("V1.35.A — idempotenceCluster wins over generalCluster (priority)")
@@ -137,13 +149,103 @@ struct RefactorClusterAnalyzerTests {
         #expect(shape == .idempotenceCluster)
     }
 
-    @Test("V1.35.A — algebraicStructure wins over idempotenceCluster (priority)")
-    func priorityAlgebraicBeatsIdempotence() {
+    @Test("V1.41.A — algebraicStructure falls through to idempotenceCluster when algebraic < 50%")
+    func priorityIdempotenceBeatsLowAlgebraic() {
+        // 5 total, algebraic sum = 2 (40%) < 50% — falls through to
+        // idempotence ≥ 3 → idempotenceCluster. Pre-V1.41 this was
+        // algebraicStructure under the "any 2 distinct templates wins"
+        // rule; V1.41.A's dominant-pattern rule reclassifies.
         let shape = RefactorClusterAnalyzer.classify(
             perTemplateCounts: ["commutativity": 1, "associativity": 1, "idempotence": 3],
             total: 5
         )
+        #expect(shape == .idempotenceCluster)
+    }
+
+    @Test("V1.41.A — OrderedSet-shaped 29-entry cluster reclassifies to dualStyleCluster (most-numerous wins)")
+    func orderedSetReclassification() {
+        // Reproduces the v1.35 cycle-32 finding shape exactly:
+        //   - 29 total entries
+        //   - 12 dual-style-consistency  (dominant at 41%)
+        //   - 5 idempotence
+        //   - 5 monotonicity
+        //   - 3 round-trip
+        //   - 2 commutativity
+        //   - 2 associativity
+        // Layer 1 algebraic-collective: sum 4 (14%) < 50% → falls through.
+        // Layer 2 most-numerous: idempotence 5 / dual-style 12 / round-trip 3 → dual-style wins.
+        let shape = RefactorClusterAnalyzer.classify(
+            perTemplateCounts: [
+                "dual-style-consistency": 12,
+                "idempotence": 5,
+                "monotonicity": 5,
+                "round-trip": 3,
+                "commutativity": 2,
+                "associativity": 2
+            ],
+            total: 29
+        )
+        #expect(shape == .dualStyleCluster)
+    }
+
+    @Test("V1.41.A — tie-break: equal idempotence + dual-style counts → idempotenceCluster (pre-v1.41 priority retained)")
+    func tieBreakPreservesPrePriorityOrder() {
+        let shape = RefactorClusterAnalyzer.classify(
+            perTemplateCounts: [
+                "idempotence": 4,
+                "dual-style-consistency": 4
+            ],
+            total: 8
+        )
+        #expect(shape == .idempotenceCluster)
+    }
+
+    @Test("V1.41.A — Complex-shaped 20-entry cluster stays as algebraicStructure (dominant 60%)")
+    func complexStaysAlgebraic() {
+        // Reproduces ComplexModule cycle-32 shape:
+        //   - 20 total
+        //   - 8 round-trip
+        //   - 6 commutativity
+        //   - 6 associativity
+        // Algebraic sum = 12 (60%) ≥ 50% → algebraicStructure fires.
+        let shape = RefactorClusterAnalyzer.classify(
+            perTemplateCounts: [
+                "round-trip": 8,
+                "commutativity": 6,
+                "associativity": 6
+            ],
+            total: 20
+        )
         #expect(shape == .algebraicStructure)
+    }
+
+    @Test("V1.41.A — exactly-50% algebraic count fires algebraicStructure (boundary)")
+    func exactlyFiftyPercentFires() {
+        // 10 total; algebraic sum = 5 (50%). The `algebraicSum * 2 >= total`
+        // check fires at exactly 50%.
+        let shape = RefactorClusterAnalyzer.classify(
+            perTemplateCounts: [
+                "commutativity": 3,
+                "associativity": 2,
+                "idempotence": 5
+            ],
+            total: 10
+        )
+        #expect(shape == .algebraicStructure)
+    }
+
+    @Test("V1.41.A — 49% algebraic count does NOT fire algebraicStructure (boundary)")
+    func fortyNinePercentDoesNotFire() {
+        // 100 total; algebraic sum = 49 (49%). Falls through.
+        let shape = RefactorClusterAnalyzer.classify(
+            perTemplateCounts: [
+                "commutativity": 25,
+                "associativity": 24,
+                "idempotence": 51
+            ],
+            total: 100
+        )
+        #expect(shape == .idempotenceCluster)
     }
 
     // MARK: - analyze(...) end-to-end
