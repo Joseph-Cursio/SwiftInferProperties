@@ -214,6 +214,29 @@ public enum IdempotenceTemplate {
               DirectionLabels.curated.contains(label) else {
             return nil
         }
+        // V1.25.A — name-prefix gated magnitude bump. When the function
+        // name starts with an index-advance prefix (`index*`, `bucket*`,
+        // `word*`), the joint match (direction-label + index-advance
+        // name) is high-confidence non-idempotent — bump -15 → -25 (full
+        // veto-equivalent). Closes the cycle-21 finding: 13+ OC
+        // `index(after:)`/`index(before:)` direction-op idempotence
+        // rejects dominate the residual idempotence non-lifted pool.
+        // Cycle-21 finding doc: identified post-v1.24 as the next
+        // priority.
+        let name = summary.name
+        let isIndexAdvanceName = name.hasPrefix("index")
+            || name.hasPrefix("bucket")
+            || name.hasPrefix("word")
+        if isIndexAdvanceName {
+            return Signal(
+                kind: .directionLabel,
+                weight: -25,
+                detail: "Index-advance direction-label: '\(name)(\(label):)' — "
+                    + "name-prefix + direction-label joint match identifies "
+                    + "positional cursor advance, not a fixed-point operation; "
+                    + "lifted shadow not idempotent"
+            )
+        }
         return Signal(
             kind: .directionLabel,
             weight: -15,
