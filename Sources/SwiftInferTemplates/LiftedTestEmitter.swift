@@ -16,17 +16,39 @@ import SwiftInferCore
 /// concatenated with file-level imports.
 public enum LiftedTestEmitter {
 
+    /// V1.31.B — equality-form for emitted property assertions.
+    /// `.strict` (default; current behavior) emits `lhs == rhs`. `.approximate`
+    /// emits `lhs.isApproximatelyEqual(to: rhs)` — required for FP types
+    /// (`Double`, `Float`, `Complex<Real>`, etc.) where strict `==` fails
+    /// under IEEE 754 rounding even on canonical inverse pairs. Detected
+    /// via `SwiftInferCore.FloatingPointEquatableTypes.isFloatingPointEquatable(typeText:)`
+    /// at dispatch time (V1.31.C wiring in `InteractiveTriage+Accept`).
+    ///
+    /// First emit-side mechanism (class 16) in the loop's mechanism-class
+    /// taxonomy.
+    public enum EqualityKind: Sendable {
+        case strict
+        case approximate
+    }
+
     /// Emit an idempotence test stub for `f: T -> T`. The body asserts
     /// `f(f(x)) == f(x)` over the supplied generator, surfacing
-    /// counterexamples via Swift Testing's `Issue.record`.
+    /// counterexamples via Swift Testing's `Issue.record`. V1.31.B —
+    /// when `equalityKind == .approximate`, the assertion becomes
+    /// `f(f(value)).isApproximatelyEqual(to: f(value))`.
     public static func idempotent(
         funcName: String,
         typeName: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        equalityKind: EqualityKind = .strict
     ) -> String {
         let testFunctionName = "\(funcName)_isIdempotent"
-        let property = "\(funcName)(\(funcName)(value)) == \(funcName)(value)"
+        let property = equalityExpression(
+            lhs: "\(funcName)(\(funcName)(value))",
+            rhs: "\(funcName)(value)",
+            kind: equalityKind
+        )
         let failureLabel = "\(funcName)(_:) failed idempotence"
         return makeTestStub(
             testFunctionName: testFunctionName,
@@ -42,15 +64,23 @@ public enum LiftedTestEmitter {
     /// `inverse(forward(value)) == value` over the supplied generator
     /// (which produces values of the *forward* parameter type).
     /// `forwardName` is the wrapper-then-unwrapper applied first;
-    /// `inverseName` is the unwrapper applied to its output.
+    /// `inverseName` is the unwrapper applied to its output. V1.31.B —
+    /// when `equalityKind == .approximate`, the assertion becomes
+    /// `inverse(forward(value)).isApproximatelyEqual(to: value)` to
+    /// support FP type round-trips (`exp/log`, `cos/acos`, etc.).
     public static func roundTrip(
         forwardName: String,
         inverseName: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        equalityKind: EqualityKind = .strict
     ) -> String {
         let testFunctionName = "\(forwardName)_\(inverseName)_roundTrip"
-        let property = "\(inverseName)(\(forwardName)(value)) == value"
+        let property = equalityExpression(
+            lhs: "\(inverseName)(\(forwardName)(value))",
+            rhs: "value",
+            kind: equalityKind
+        )
         let failureLabel = "\(forwardName)/\(inverseName) round-trip failed"
         return makeTestStub(
             testFunctionName: testFunctionName,
@@ -233,11 +263,16 @@ public enum LiftedTestEmitter {
         inverseName: String,
         typeName: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        equalityKind: EqualityKind = .strict
     ) -> String {
         _ = typeName
         let testFunctionName = "\(forwardName)_\(inverseName)_inversePair"
-        let property = "\(inverseName)(\(forwardName)(value)) == value"
+        let property = equalityExpression(
+            lhs: "\(inverseName)(\(forwardName)(value))",
+            rhs: "value",
+            kind: equalityKind
+        )
         let failureLabel = "\(forwardName)/\(inverseName) inverse-pair failed"
         return makeTestStub(
             testFunctionName: testFunctionName,
@@ -373,5 +408,29 @@ public enum LiftedTestEmitter {
     static func hex(_ word: UInt64) -> String {
         let raw = String(word, radix: 16, uppercase: true)
         return String(repeating: "0", count: 16 - raw.count) + raw
+    }
+
+    /// V1.31.B — produces the equality assertion for the emitted property
+    /// expression. `.strict` produces the canonical `lhs == rhs` shape;
+    /// `.approximate` produces `lhs.isApproximatelyEqual(to: rhs)` for FP
+    /// types where IEEE 754 rounding makes strict `==` impractical even
+    /// on canonical inverse pairs.
+    ///
+    /// The emitted test file must have `import Numerics` (or the
+    /// relevant swift-numerics surface) for `isApproximatelyEqual(to:)`
+    /// to resolve — `Real` types get it via the `Real` protocol;
+    /// `Complex<Real>` gets it via `AlgebraicField`. Both protocols ship
+    /// with swift-numerics.
+    static func equalityExpression(
+        lhs: String,
+        rhs: String,
+        kind: EqualityKind
+    ) -> String {
+        switch kind {
+        case .strict:
+            return "\(lhs) == \(rhs)"
+        case .approximate:
+            return "\(lhs).isApproximatelyEqual(to: \(rhs))"
+        }
     }
 }
