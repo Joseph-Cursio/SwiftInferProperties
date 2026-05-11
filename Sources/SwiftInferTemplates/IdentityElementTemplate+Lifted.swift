@@ -112,10 +112,66 @@ public enum LiftedIdentityElementPairing {
 /// on canonical numeric-identity cases (`Counter.increment(by: 0) == c`).
 extension IdentityElementTemplate {
 
+    /// V1.40.D — migrated to the Constraint Engine (PRD §20.2). Uses
+    /// the **wrapper migration pattern** (same reason as V1.40.C
+    /// IdentityElementTemplate non-lifted): the lifted identity-
+    /// evidence row also joins `displayName` + `signature` without
+    /// a space.
     public static func suggest(
         forLifted pair: LiftedIdentityElementPair,
         carrierKindResolver: CarrierKindResolver
     ) -> Suggestion? {
+        let constraint = makeLiftedConstraint(carrierKindResolver: carrierKindResolver)
+        guard let runnerSuggestion = ConstraintRunner.suggest(
+            constraint: constraint, subject: pair
+        ) else {
+            return nil
+        }
+        return Suggestion(
+            templateName: runnerSuggestion.templateName,
+            evidence: runnerSuggestion.evidence,
+            score: runnerSuggestion.score,
+            generator: runnerSuggestion.generator,
+            explainability: makeLiftedExplainability(
+                for: pair,
+                signals: runnerSuggestion.score.signals
+            ),
+            identity: runnerSuggestion.identity,
+            carrier: runnerSuggestion.carrier
+        )
+    }
+
+    /// V1.40.D — Constraint factory for the lifted identity-element
+    /// variant. Drives signals + evidence + identity + carrier; the
+    /// wrapper `suggest` overrides explainability rendering.
+    public static func makeLiftedConstraint(
+        carrierKindResolver: CarrierKindResolver
+    ) -> Constraint<LiftedIdentityElementPair> {
+        Constraint<LiftedIdentityElementPair>(
+            templateName: "identity-element",
+            appliesTo: { _ in true },
+            signals: { pair in
+                Self.liftedAccumulatedSignals(
+                    for: pair,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { pair in
+                [
+                    Self.makeLiftedOperationEvidence(pair),
+                    Self.makeLiftedIdentityEvidence(pair)
+                ]
+            },
+            identity: Self.makeLiftedIdentity(for:),
+            carrier: { $0.operation.carrier }
+        )
+    }
+
+    /// V1.40.D — preserves the pre-migration signal-accumulation order.
+    static func liftedAccumulatedSignals(
+        for pair: LiftedIdentityElementPair,
+        carrierKindResolver: CarrierKindResolver
+    ) -> [Signal] {
         var signals: [Signal] = [liftedTypeShapeSignal(for: pair)]
         signals.append(liftedIdentityNamingSignal(for: pair))
         if let carrier = carrierKindResolver.carrierKindSignal(
@@ -127,22 +183,7 @@ extension IdentityElementTemplate {
         if let veto = liftedNonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "identity-element",
-            evidence: [
-                makeLiftedOperationEvidence(pair),
-                makeLiftedIdentityEvidence(pair)
-            ],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeLiftedExplainability(for: pair, signals: signals),
-            identity: makeLiftedIdentity(for: pair),
-            carrier: pair.operation.carrier
-        )
+        return signals
     }
 
     // MARK: - Signals

@@ -24,10 +24,51 @@ import SwiftInferCore
 /// equality on `x`).
 extension InversePairTemplate {
 
+    /// V1.40.B — migrated to the Constraint Engine (PRD §20.2). First
+    /// `Constraint<LiftedInversePair>` migration. Uses
+    /// `additionalWhySuggested` to insert `pair.forward.rationale`
+    /// between evidence and signal lines.
     public static func suggest(
         forLifted pair: LiftedInversePair,
         carrierKindResolver: CarrierKindResolver
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeLiftedConstraint(carrierKindResolver: carrierKindResolver),
+            subject: pair
+        )
+    }
+
+    /// V1.40.B — Constraint factory for the lifted inverse-pair variant.
+    public static func makeLiftedConstraint(
+        carrierKindResolver: CarrierKindResolver
+    ) -> Constraint<LiftedInversePair> {
+        Constraint<LiftedInversePair>(
+            templateName: "inverse-pair",
+            appliesTo: { _ in true },
+            signals: { pair in
+                Self.liftedAccumulatedSignals(
+                    for: pair,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { pair in
+                [
+                    Self.makeLiftedEvidence(pair.forward, role: "forward"),
+                    Self.makeLiftedEvidence(pair.reverse, role: "reverse")
+                ]
+            },
+            identity: Self.makeLiftedIdentity(for:),
+            carrier: { $0.forward.carrier },
+            caveats: { pair in Self.makeLiftedCaveats(for: pair) },
+            additionalWhySuggested: { [$0.forward.rationale] }
+        )
+    }
+
+    /// V1.40.B — preserves the pre-migration signal-accumulation order.
+    static func liftedAccumulatedSignals(
+        for pair: LiftedInversePair,
+        carrierKindResolver: CarrierKindResolver
+    ) -> [Signal] {
         var signals: [Signal] = [
             liftedTypeShapeSignal(for: pair),
             liftedNamingSignal(for: pair)
@@ -41,22 +82,24 @@ extension InversePairTemplate {
         if let veto = liftedNonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "inverse-pair",
-            evidence: [
-                makeLiftedEvidence(pair.forward, role: "forward"),
-                makeLiftedEvidence(pair.reverse, role: "reverse")
-            ],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeLiftedExplainability(for: pair, signals: signals),
-            identity: makeLiftedIdentity(for: pair),
-            carrier: pair.forward.carrier
-        )
+        return signals
+    }
+
+    /// V1.40.B — caveat list builder (3 entries with carrier embedded).
+    static func makeLiftedCaveats(for pair: LiftedInversePair) -> [String] {
+        [
+            "X must conform to Equatable for the property body to compile — "
+                + "the assertion compares \(pair.forward.carrier) values that "
+                + "depend on X equality semantics.",
+            "Property holds iff the two mutating siblings are functional "
+                + "inverses on the lifted shadows: removing the just-added `x` "
+                + "fully undoes the addition. Implementations with hidden "
+                + "ordering, multiset semantics, or capacity-bounded behavior "
+                + "may fail at sampling time.",
+            "Property holds iff `\(pair.forward.carrier)` has value semantics "
+                + "— the lift's `var copy = original; copy.<add>(...)` does "
+                + "not alias original's state."
+        ]
     }
 
     // MARK: - Signals

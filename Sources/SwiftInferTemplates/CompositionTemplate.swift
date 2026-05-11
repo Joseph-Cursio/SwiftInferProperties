@@ -99,16 +99,59 @@ public enum CompositionTemplate {
         "through"
     ]
 
-    /// Build a suggestion for `lifted`, or return `nil` when the lifted
-    /// shape isn't a composition candidate or the score collapses.
+    /// V1.40.E — migrated to the Constraint Engine (PRD §20.2).
+    /// Uses `additionalWhySuggested` to insert `lifted.rationale`
+    /// between evidence and signal lines.
     public static func suggest(
         forLifted lifted: LiftedTransformation,
         vocabulary: Vocabulary = .empty,
         carrierKindResolver: CarrierKindResolver
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(
+                vocabulary: vocabulary,
+                carrierKindResolver: carrierKindResolver
+            ),
+            subject: lifted
+        )
+    }
+
+    /// V1.40.E — Constraint factory.
+    public static func makeConstraint(
+        vocabulary: Vocabulary,
+        carrierKindResolver: CarrierKindResolver
+    ) -> Constraint<LiftedTransformation> {
+        Constraint<LiftedTransformation>(
+            templateName: "composition",
+            appliesTo: { lifted in
+                Self.typeShapeSignal(for: lifted) != nil
+                    && Self.nameSignal(for: lifted, vocabulary: vocabulary) != nil
+            },
+            signals: { lifted in
+                Self.accumulatedSignals(
+                    for: lifted,
+                    vocabulary: vocabulary,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { lifted in [Self.makeEvidence(lifted)] },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.carrier },
+            caveats: { _ in Self.makeCaveats() },
+            additionalWhySuggested: { [$0.rationale] }
+        )
+    }
+
+    /// V1.40.E — preserves the pre-migration signal-accumulation order.
+    /// The gate guarantees `typeShape` and `nameSignal` are non-nil.
+    static func accumulatedSignals(
+        for lifted: LiftedTransformation,
+        vocabulary: Vocabulary,
+        carrierKindResolver: CarrierKindResolver
+    ) -> [Signal] {
         guard let typeShape = typeShapeSignal(for: lifted),
               let nameSignal = nameSignal(for: lifted, vocabulary: vocabulary) else {
-            return nil
+            return []
         }
         var signals: [Signal] = [typeShape, nameSignal]
         if let carrier = carrierKindResolver.carrierKindSignal(
@@ -117,29 +160,28 @@ public enum CompositionTemplate {
             signals.append(carrier)
         }
         signals.append(liftedFromMutationSignal(for: lifted))
-        // V1.21.B — monotone-bounded label counter. Demotes Strong → Likely
-        // when the first non-self parameter's label signals monotone-
-        // bounded semantics (advance(until:) shape) rather than additive
-        // composition.
         if let monotoneBounded = monotoneBoundedLabelSignal(for: lifted) {
             signals.append(monotoneBounded)
         }
         if let veto = nonDeterministicVeto(for: lifted) {
             signals.append(veto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "composition",
-            evidence: [makeEvidence(lifted)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: lifted, signals: signals),
-            identity: makeIdentity(for: lifted),
-            carrier: lifted.carrier
-        )
+        return signals
+    }
+
+    /// V1.40.E — caveat list (2 constant entries).
+    static func makeCaveats() -> [String] {
+        [
+            "X must conform to AdditiveArithmetic for `a + b` in the property "
+                + "body to compile. Curated set is restricted to stdlib "
+                + "AdditiveArithmetic conformers + Decimal + Duration.",
+            "Property holds iff the mutating method's effect is exactly "
+                + "additive on the parameter — i.e. `op(s, a + b)` is "
+                + "semantically equivalent to `op(op(s, a), b)`. A method "
+                + "named `increment` that clamps at a maximum or "
+                + "non-linearly transforms its argument will fail at "
+                + "sampling time."
+        ]
     }
 
     // MARK: - Signals

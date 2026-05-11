@@ -56,20 +56,90 @@ public enum IdentityElementTemplate {
     /// unsuppressed — closes the cycle-1 cross-product false-positive
     /// (16.7% acceptance) by requiring op-class match before the
     /// veto fires.
+    /// V1.40.C — migrated to the Constraint Engine (PRD §20.2). Uses
+    /// the **wrapper migration pattern** because the identity-evidence
+    /// row's `whySuggested` rendering omits the space between
+    /// `displayName` and `signature` (signature is `": Complex"` with
+    /// a leading colon that's pre-formatted into the row). The runner's
+    /// canonical "displayName signature" join would insert a space and
+    /// break bit-for-bit equivalence. The wrapper drives all
+    /// Constraint-based work (signals, evidence, identity, carrier) +
+    /// rebuilds the Suggestion with the bespoke `makeExplainability`
+    /// preserving the no-space rendering.
     public static func suggest(
         for pair: IdentityElementPair,
         opsWithIdentitySeed: Set<String> = [],
         inheritedTypesByName: [String: Set<String>] = [:],
         carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
+        let constraint = makeConstraint(
+            opsWithIdentitySeed: opsWithIdentitySeed,
+            inheritedTypesByName: inheritedTypesByName,
+            carrierKindResolver: carrierKindResolver
+        )
+        guard let runnerSuggestion = ConstraintRunner.suggest(
+            constraint: constraint, subject: pair
+        ) else {
+            return nil
+        }
+        // Rebuild with bespoke explainability to preserve the no-space
+        // identity-evidence rendering.
+        return Suggestion(
+            templateName: runnerSuggestion.templateName,
+            evidence: runnerSuggestion.evidence,
+            score: runnerSuggestion.score,
+            generator: runnerSuggestion.generator,
+            explainability: makeExplainability(
+                for: pair,
+                signals: runnerSuggestion.score.signals
+            ),
+            identity: runnerSuggestion.identity,
+            carrier: runnerSuggestion.carrier
+        )
+    }
+
+    /// V1.40.C — Constraint factory. Drives signals + evidence +
+    /// identity + carrier; the wrapper `suggest` overrides
+    /// explainability rendering.
+    public static func makeConstraint(
+        opsWithIdentitySeed: Set<String>,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> Constraint<IdentityElementPair> {
+        Constraint<IdentityElementPair>(
+            templateName: "identity-element",
+            appliesTo: { _ in true },
+            signals: { pair in
+                Self.accumulatedSignals(
+                    for: pair,
+                    opsWithIdentitySeed: opsWithIdentitySeed,
+                    inheritedTypesByName: inheritedTypesByName,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { pair in
+                [
+                    Self.makeEvidence(operation: pair.operation),
+                    Self.makeEvidence(identity: pair.identity)
+                ]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.operation.containingTypeName }
+        )
+    }
+
+    /// V1.40.C — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(
+        for pair: IdentityElementPair,
+        opsWithIdentitySeed: Set<String>,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
         var signals: [Signal] = [typeShapeSignal(for: pair)]
         signals.append(identityNamingSignal(for: pair))
         if let emptySeed = emptySeedSignal(for: pair, opsWithIdentitySeed: opsWithIdentitySeed) {
             signals.append(emptySeed)
         }
-        // Carrier kind is the operation's containing type — the identity
-        // element is a constant, not a function, so the property's
-        // testability hinges on the operation's carrier semantics.
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: pair.operation.containingTypeName
         ) {
@@ -87,19 +157,7 @@ public enum IdentityElementTemplate {
         ) {
             signals.append(coverageVeto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "identity-element",
-            evidence: [makeEvidence(operation: pair.operation), makeEvidence(identity: pair.identity)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: pair, signals: signals),
-            identity: makeIdentity(for: pair),
-            carrier: pair.operation.containingTypeName
-        )
+        return signals
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | operation

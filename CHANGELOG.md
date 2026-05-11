@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.0] — 2026-05-11
+
+The thirty-seventh calibration cycle. **Constraint Engine refactor complete** (PRD §20.2). Final batch-migration cycle: the last 5 suggest entry points (InversePair non-lifted + lifted, IdentityElement non-lifted + lifted, Composition) ship as Constraint-based implementations. **Templates migrated: 10/10 (template-name); 13/13 (suggest entry points).** Behavior preserved bit-for-bit.
+
+### Calibration cycle 37 — Constraint Engine refactor complete (6-workstream)
+
+- **V1.40.A — InversePairTemplate non-lifted**. 4 runtime inputs incl. EquatableResolver (new runtime-input type). Gate combines forward-param-exists + non-equatable-domain checks.
+- **V1.40.B — InversePairTemplate+Lifted**. First `Constraint<LiftedInversePair>` migration. Uses `additionalWhySuggested` for `pair.forward.rationale`.
+- **V1.40.C — IdentityElementTemplate non-lifted**. First `Constraint<IdentityElementPair>` migration. Introduces the **wrapper migration pattern**: Constraint drives signals + evidence + identity + carrier; wrapper rebuilds the Suggestion with bespoke `makeExplainability` to preserve the no-space identity-evidence rendering. No further Constraint API extension required.
+- **V1.40.D — IdentityElementTemplate+Lifted**. First `Constraint<LiftedIdentityElementPair>` migration. Same wrapper pattern.
+- **V1.40.E — CompositionTemplate**. Migration via `additionalWhySuggested` for `lifted.rationale`.
+- **V1.40.F — equivalence tests**.
+
+### Migration pattern stability (5-cycle final validation)
+
+Across V1.36–V1.40, the pattern held across **5 runtime-input cardinalities** (0/1/2/3/4), **7 Subject shapes**, **5 caveat patterns**, with only **1 Constraint API extension** during the refactor (V1.39's `additionalWhySuggested`) plus the V1.40 wrapper migration pattern as an escape hatch.
+
+### What's next
+
+The Constraint Engine refactor closes. v1.41+ opens onto: higher-order property composition (PRD §20.2 lookahead); backlog items; or the still-deferred test-execution evidence architectural shift.
+
+### Documentation
+
+- **v1.40 plan (V1.40.0).** Archived to `docs/archive/`.
+- **Cycle-37 findings.** `docs/calibration-cycle-37-findings.md`.
+- **Performance baseline v1.40.** Test count 2093 → 2097 (+4).
+
+[1.40.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.40.0
+
 ## [1.39.0] — 2026-05-11
 
 The thirty-sixth calibration cycle. **Second batch-migration cycle** for the Constraint Engine refactor (PRD §20.2). Three suggest entry points migrated (RoundTripTemplate + IdempotenceTemplate non-lifted + IdempotenceTemplate lifted). Constraint API extended with one new field to support templates that insert per-suggestion narrative between evidence and signal lines.

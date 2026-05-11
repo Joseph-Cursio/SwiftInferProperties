@@ -49,6 +49,9 @@ public enum InversePairTemplate {
     /// abstract `combine(x, x⁻¹) == .identity`). Other inverse pairs
     /// (e.g. `parse/format` on a custom Doc type) fall through
     /// unsuppressed.
+    /// V1.40.A — migrated to the Constraint Engine (PRD §20.2). 4
+    /// runtime inputs incl. EquatableResolver (new). Behavior preserved
+    /// bit-for-bit.
     public static func suggest(
         for pair: FunctionPair,
         vocabulary: Vocabulary = .empty,
@@ -56,18 +59,69 @@ public enum InversePairTemplate {
         inheritedTypesByName: [String: Set<String>] = [:],
         carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
-        // Forward param type — `T` in the `f: T -> U` pair.
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(
+                vocabulary: vocabulary,
+                equatableResolver: equatableResolver,
+                inheritedTypesByName: inheritedTypesByName,
+                carrierKindResolver: carrierKindResolver
+            ),
+            subject: pair
+        )
+    }
+
+    /// V1.40.A — Constraint factory.
+    public static func makeConstraint(
+        vocabulary: Vocabulary,
+        equatableResolver: EquatableResolver?,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> Constraint<FunctionPair> {
+        Constraint<FunctionPair>(
+            templateName: "inverse-pair",
+            appliesTo: { pair in
+                Self.passesInverseGate(for: pair, equatableResolver: equatableResolver)
+            },
+            signals: { pair in
+                Self.accumulatedSignals(
+                    for: pair,
+                    vocabulary: vocabulary,
+                    inheritedTypesByName: inheritedTypesByName,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { pair in
+                [Self.makeEvidence(pair.forward), Self.makeEvidence(pair.reverse)]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.forward.containingTypeName },
+            caveats: { pair in Self.makeCaveats(for: pair) }
+        )
+    }
+
+    /// V1.40.A — gate: forward param exists AND T is NOT classified
+    /// as `.equatable` (the .equatable case defers to RoundTripTemplate).
+    static func passesInverseGate(
+        for pair: FunctionPair,
+        equatableResolver: EquatableResolver?
+    ) -> Bool {
         guard let domain = pair.forward.parameters.first?.typeText else {
-            return nil
+            return false
         }
-        // Equatable T → defer to RoundTripTemplate. `.notEquatable` and
-        // `.unknown` both fire — the latter because the resolver can't
-        // confirm Equatable conformance for arbitrary corpus types, and
-        // the surfaced caveat in the §4.5 block tells the user why.
         if let resolver = equatableResolver,
            resolver.classify(typeText: domain) == .equatable {
-            return nil
+            return false
         }
+        return true
+    }
+
+    /// V1.40.A — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(
+        for pair: FunctionPair,
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
         signals.append(contentsOf: counterAndCoverageSignals(
             for: pair,
@@ -75,19 +129,25 @@ public enum InversePairTemplate {
             inheritedTypesByName: inheritedTypesByName,
             carrierKindResolver: carrierKindResolver
         ))
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
+        return signals
+    }
+
+    /// V1.40.A — caveat list (4 base + optional FP advisory).
+    static func makeCaveats(for pair: FunctionPair) -> [String] {
+        var caveats: [String] = [
+            "Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — "
+                + "the suggestion is name-and-type-pattern only.",
+            "TestLifter corroboration not yet wired (gated on TestLifter M1).",
+            "Possible-tier by default — escalation requires a custom equality witness "
+                + "or annotation API extension.",
+            "If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case "
+                + "with stronger evidence — inverse-pair only fires when "
+                + "EquatableResolver returns .notEquatable or .unknown for T."
+        ]
+        if let fpCaveat = floatingPointAdvisory(for: pair) {
+            caveats.append(fpCaveat)
         }
-        return Suggestion(
-            templateName: "inverse-pair",
-            evidence: [makeEvidence(pair.forward), makeEvidence(pair.reverse)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: pair, signals: signals),
-            identity: makeIdentity(for: pair),
-            carrier: pair.forward.containingTypeName
-        )
+        return caveats
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical
