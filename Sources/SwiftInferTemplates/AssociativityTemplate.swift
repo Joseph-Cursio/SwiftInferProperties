@@ -55,14 +55,69 @@ public enum AssociativityTemplate {
     /// `checkNumericPropertyLaws`); `union` / `formUnion` →
     /// `setUnionAssociative` (kit `checkSetAlgebraPropertyLaws`).
     /// User-named ops fall through unsuppressed.
+    /// V1.38.A — migrated to the Constraint Engine (PRD §20.2). The
+    /// template now expresses itself as a `Constraint<FunctionSummary>`
+    /// via `makeConstraint(vocabulary:reducerOps:inheritedTypesByName:)`,
+    /// and `suggest(for:...)` is a thin wrapper that orchestrates the
+    /// constraint through `ConstraintRunner.suggest`. Behavior preserved
+    /// bit-for-bit (verified by the existing AssociativityTemplate test
+    /// suite + V1.38.D equivalence tests).
     public static func suggest(
         for summary: FunctionSummary,
         vocabulary: Vocabulary = .empty,
         reducerOps: Set<String> = [],
         inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(
+                vocabulary: vocabulary,
+                reducerOps: reducerOps,
+                inheritedTypesByName: inheritedTypesByName
+            ),
+            subject: summary
+        )
+    }
+
+    /// V1.38.A — Constraint factory. Captures runtime inputs into
+    /// @Sendable closures.
+    public static func makeConstraint(
+        vocabulary: Vocabulary,
+        reducerOps: Set<String>,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Constraint<FunctionSummary> {
+        Constraint<FunctionSummary>(
+            templateName: "associativity",
+            appliesTo: { summary in
+                Self.typeShapeSignal(for: summary) != nil
+            },
+            signals: { summary in
+                Self.accumulatedSignals(
+                    for: summary,
+                    vocabulary: vocabulary,
+                    reducerOps: reducerOps,
+                    inheritedTypesByName: inheritedTypesByName
+                )
+            },
+            evidence: { summary in
+                [Self.makeEvidence(summary)]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.containingTypeName },
+            caveats: { summary in
+                Self.makeCaveats(for: summary)
+            }
+        )
+    }
+
+    /// V1.38.A — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary,
+        reducerOps: Set<String>,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> [Signal] {
         guard let typeShape = typeShapeSignal(for: summary) else {
-            return nil
+            return []
         }
         var signals: [Signal] = [typeShape]
         if let name = nameSignal(for: summary, vocabulary: vocabulary) {
@@ -83,19 +138,26 @@ public enum AssociativityTemplate {
         ) {
             signals.append(coverageVeto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
+        return signals
+    }
+
+    /// V1.38.A — caveat list for the Constraint's `caveats` closure.
+    /// Always 3 entries: base 2 + (FP advisory OR fallback FP warning).
+    static func makeCaveats(for summary: FunctionSummary) -> [String] {
+        var caveats: [String] = [
+            "T must conform to Equatable for the emitted property to compile. "
+                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+        ]
+        if let fpCaveat = floatingPointAdvisory(for: summary) {
+            caveats.append(fpCaveat)
+        } else {
+            caveats.append(
+                "Floating-point operations are typically not exactly associative under IEEE 754 — "
+                    + "a Double-typed candidate may pass the type pattern but fail sampling under M4."
+            )
         }
-        return Suggestion(
-            templateName: "associativity",
-            evidence: [makeEvidence(summary)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: summary, signals: signals),
-            identity: makeIdentity(for: summary),
-            carrier: summary.containingTypeName
-        )
+        return caveats
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical

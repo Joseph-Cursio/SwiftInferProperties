@@ -26,13 +26,53 @@ import SwiftInferCore
 /// total to 60 → Likely; mixed/unknown carriers hold at 70 → Likely.
 public enum DualStyleConsistencyTemplate {
 
-    /// Build a suggestion for `pair`, or return `nil` if the score
-    /// collapses to `.suppressed` (only happens when the mutating
-    /// member's body fires a non-deterministic veto).
+    /// V1.38.C — migrated to the Constraint Engine (PRD §20.2). The
+    /// template now expresses itself as a `Constraint<DualStylePair>`
+    /// via `makeConstraint(carrierKindResolver:)`. First pair-template
+    /// migrated (Commutativity / Monotonicity / Associativity /
+    /// InvariantPreservation are all `Constraint<FunctionSummary>`).
+    /// Behavior preserved bit-for-bit.
     public static func suggest(
         for pair: DualStylePair,
         carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(carrierKindResolver: carrierKindResolver),
+            subject: pair
+        )
+    }
+
+    /// V1.38.C — Constraint factory. Captures the optional
+    /// `carrierKindResolver` into the constraint's @Sendable closures.
+    public static func makeConstraint(
+        carrierKindResolver: CarrierKindResolver?
+    ) -> Constraint<DualStylePair> {
+        Constraint<DualStylePair>(
+            templateName: "dual-style-consistency",
+            appliesTo: { _ in true },   // pairing layer already gated
+            signals: { pair in
+                Self.accumulatedSignals(
+                    for: pair,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { pair in
+                [
+                    Self.makeEvidence(pair.mutatingMember),
+                    Self.makeEvidence(pair.nonMutatingMember)
+                ]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.mutatingMember.containingTypeName },
+            caveats: { _ in Self.makeCaveats() }
+        )
+    }
+
+    /// V1.38.C — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(
+        for pair: DualStylePair,
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
         var signals: [Signal] = [
             typeShapeSignal(for: pair),
             namingPairSignal(for: pair)
@@ -45,22 +85,21 @@ public enum DualStyleConsistencyTemplate {
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "dual-style-consistency",
-            evidence: [
-                makeEvidence(pair.mutatingMember),
-                makeEvidence(pair.nonMutatingMember)
-            ],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: pair, signals: signals),
-            identity: makeIdentity(for: pair),
-            carrier: pair.mutatingMember.containingTypeName
-        )
+        return signals
+    }
+
+    /// V1.38.C — caveat list (2 constant entries).
+    static func makeCaveats() -> [String] {
+        [
+            "T must conform to Equatable for the emitted property to compile. "
+                + "SwiftInfer V1.18 does not verify protocol conformance — "
+                + "confirm before applying.",
+            "Property assumes the non-mutating member is the value-returning "
+                + "counterpart of the mutating member — i.e. both implementations "
+                + "describe the same logical operation. A sibling pair with the "
+                + "matching name shape but divergent semantics will fail at "
+                + "sampling time."
+        ]
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | container.mutating

@@ -33,30 +33,70 @@ import SwiftInferCore
 /// to close.
 public enum InvariantPreservationTemplate {
 
-    /// Build a suggestion for `summary`, or return `nil` if the function
-    /// carries no `@CheckProperty(.preservesInvariant(\.foo))` annotation
-    /// or if the score collapses to `.suppressed` via a veto.
+    /// V1.38.B — migrated to the Constraint Engine (PRD §20.2). The
+    /// template's keypath dependency is derived from
+    /// `summary.invariantKeypath` inside each constraint closure
+    /// rather than threaded through `suggest(...)`. No runtime inputs
+    /// (simplest of all migrated templates). Behavior preserved bit-
+    /// for-bit.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
+        ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
+    }
+
+    /// V1.38.B — Constraint factory. No runtime inputs.
+    public static func makeConstraint() -> Constraint<FunctionSummary> {
+        Constraint<FunctionSummary>(
+            templateName: "invariant-preservation",
+            appliesTo: { summary in
+                summary.invariantKeypath != nil
+            },
+            signals: { summary in
+                Self.accumulatedSignals(for: summary)
+            },
+            evidence: { summary in
+                guard let keyPath = summary.invariantKeypath else { return [] }
+                return [Self.makeEvidence(summary, keyPath: keyPath)]
+            },
+            identity: { summary in
+                guard let keyPath = summary.invariantKeypath else {
+                    // Defensive — gate already required non-nil keypath.
+                    return SuggestionIdentity(canonicalInput: "invariant-preservation|<missing>")
+                }
+                return Self.makeIdentity(for: summary, keyPath: keyPath)
+            },
+            carrier: { $0.containingTypeName },
+            caveats: { summary in
+                guard let keyPath = summary.invariantKeypath else { return [] }
+                return Self.makeCaveats(keyPath: keyPath)
+            }
+        )
+    }
+
+    /// V1.38.B — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(for summary: FunctionSummary) -> [Signal] {
         guard let keyPath = summary.invariantKeypath else {
-            return nil
+            return []
         }
         var signals: [Signal] = [annotationSignal(keyPath: keyPath)]
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "invariant-preservation",
-            evidence: [makeEvidence(summary, keyPath: keyPath)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: summary, keyPath: keyPath, signals: signals),
-            identity: makeIdentity(for: summary, keyPath: keyPath),
-            carrier: summary.containingTypeName
-        )
+        return signals
+    }
+
+    /// V1.38.B — caveat list (3 constant entries; depends on keyPath
+    /// for the first caveat's display text).
+    static func makeCaveats(keyPath: String) -> [String] {
+        [
+            "Keypath \(keyPath) is opaque text — user-side compile error if it doesn't "
+                + "resolve against the parameter type. M7.2 does not validate keypaths at "
+                + "scan time per M7 plan open decision #5(a); SemanticIndex (PRD §20.1) "
+                + "lifts that to scan-time in v1.1+.",
+            "Doesn't fire without explicit @CheckProperty(.preservesInvariant(_:)) "
+                + "annotation per the §5.2 caveat — the M5.2 macro is the opt-in path.",
+            "if invariant(x) then invariant(f(x)) is a *one-way* implication; the test "
+                + "does not verify that f rejects invalid inputs."
+        ]
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical
