@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.33.0] — 2026-05-11
+
+The thirtieth calibration cycle and **third design-completion release**. Closes **PRD §20.1 SemanticIndex** — persistent, queryable index of inferred properties across runs, JSON-backed at `.swiftinfer/index.json`. Two new CLI subcommands ship (`index`, `query`). **No acceptance-rate re-measurement** — v1.33 is infrastructure work that doesn't change per-template inference precision.
+
+### Calibration cycle 30 — SemanticIndex (4-workstream)
+
+- **Workstream A (V1.33.A): `SemanticIndexEntry` data model.** New `Sources/SwiftInferCore/SemanticIndexEntry.swift`. Pure value type, Codable + Sendable + Equatable. Schema expands PRD §20.1's 6-field sketch into 11 structured columns (`identityHash`, `templateName`, `typeName`, `score`, `tier`, `primaryFunctionName`, `location`, `decision`, `decisionAt`, `firstSeenAt`, `lastSeenAt`). `updated(from:)` helper performs upsert merge preserving `firstSeenAt`.
+
+- **Workstream B (V1.33.B): `IndexStore` JSON persistence.** New `Sources/SwiftInferCLI/IndexStore.swift`. Mirrors `DecisionsLoader` shape — `load` returns a `LoadResult` bundle (index + warnings + path); `save` writes atomically with sorted-keys/pretty-printed JSON for clean diffs. `upsert` semantics: merge on `identityHash`; preserve `firstSeenAt` from existing rows; historical entries NOT pruned (kept for v1.34+ "what disappeared since" queries). Entries sorted by `identityHash` in the persisted output.
+
+- **Workstream C (V1.33.C): `swift-infer index` subcommand.** New AsyncParsableCommand registered alongside `discover`/`drift`/`convert-counterexample`/`metrics`. Builds or updates `.swiftinfer/index.json` from a fresh discover pass joined with `.swiftinfer/decisions.json`. Inherits the full discover pipeline (vocabulary, config, packs, test-dir). `--dry-run` for CI dashboards. End-to-end verified against ComplexModule.
+
+- **Workstream D (V1.33.D): `swift-infer query` subcommand.** Reads the index and applies basic flag-based filters (`--template`, `--type`, `--tier`, `--decision`, `--min-score`, `--limit`). Renders entries sorted by score descending. Supports `--type none` for free functions, `--decision untriaged` for rows without a recorded decision. AND combination of flags.
+
+### Storage-format decision
+
+PRD §20.1 sketches `.swiftinfer/index.sqlite`. v1.33 ships **JSON-first** because (1) no new dependency, (2) Codable infrastructure already exists, (3) schema-migration design deferred to a SQLite cycle when query complexity warrants it. The SQLite upgrade is non-breaking — pure `IndexStore` implementation swap.
+
+### End-to-end behavior
+
+```sh
+swift-infer index --target ComplexModule
+# → Indexed 20 suggestion(s) → /.../.swiftinfer/index.json (20 new, 0 updated)
+
+swift-infer index --target ComplexModule --packs serialization --dry-run
+# → Indexed 8 suggestion(s) (8 new, 0 updated; --dry-run, no write)
+
+swift-infer query --template round-trip --tier Possible
+swift-infer query --decision untriaged --min-score 50
+swift-infer query --type none   # free functions only
+```
+
+### Scope boundaries observed
+
+- **In scope**: JSON storage, `index` build, `query` filter, full-rebuild semantics, non-pruning upsert.
+- **Out of scope**: SQLite backend; incremental analysis; natural-language query DSL; `typeName` enrichment (always nil in v1.33-emitted entries); DocC export; refactoring suggestions. Each is a discrete v1.34+ feature.
+
+### Cycle-31 priority
+
+Per the three-cycle design-completion sequence: v1.32 → v1.33 → **v1.34 Constraint Engine upgrade (PRD §20.2)**.
+
+### Documentation
+
+- **v1.33 plan (V1.33.0).** Third design-completion cycle plan.
+- **Cycle-30 findings (V1.33.D).** `docs/calibration-cycle-30-findings.md` — schema design + storage-format decision + cycle-31 priority.
+- **Performance baseline (V1.33.E).** Zero discover-time impact; v1.33 additions are pure infrastructure. Test count 1994 → 2027 (+33).
+
+[1.33.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.33.0
+
 ## [1.32.0] — 2026-05-11
 
 The twenty-ninth calibration cycle and **second design-completion release**. Closes **PRD §20.3 Domain Template Packs** — splits the monolithic 10-template registry into 5 named domain packs (`numeric`, `serialization`, `collections`, `algebraic`, `concurrency`). Cycles 1–28 are the prerequisite benchmark data the PRD required. **No acceptance-rate re-measurement** — v1.32 is a user-facing surface change; per-template inference precision is unchanged.
