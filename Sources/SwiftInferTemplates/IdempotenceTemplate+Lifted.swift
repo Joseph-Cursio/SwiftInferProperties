@@ -148,6 +148,13 @@ extension IdempotenceTemplate {
         ) {
             signals.append(iteratorVeto)
         }
+        // V1.24.B — explicit non-idempotent mutator-name veto. Cycle-20
+        // finding closure: 4/4 reject on OC reverse()/removeFirst()/
+        // removeLast() lifted-idempotence picks. Generalizes V1.21.A
+        // from Iterator-conforming carriers to any value-semantic carrier.
+        if let mutatorVeto = mutatorBlocklistVeto(forLifted: lifted) {
+            signals.append(mutatorVeto)
+        }
         return signals
     }
 
