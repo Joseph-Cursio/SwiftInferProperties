@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.31.0] — 2026-05-11
+
+The twenty-eighth calibration cycle and the **first design-completion release** (post-§19-achievement). Closes the **13-cycle longest-running carry-forward** "FP approximate-equality template arm" (cycle-14 priority #4). v1.31 is correctness-emission work — doesn't shift the acceptance rate (CM round-trips already accept 8/8 across cycles 25 + 27) but unblocks production CM round-trip property-test emission. Mechanism-class taxonomy 15 → **16** (class 16 = emit-time equality-form dispatch; first emit-side mechanism class in the loop's history).
+
+### Calibration cycle 28 — FP approximate-equality template arm (3-workstream)
+
+- **Workstream A (V1.31.A): `FloatingPointEquatableTypes` curated set + detector.** New `Sources/SwiftInferCore/FloatingPointEquatableTypes.swift`. Curated set covers stdlib `Real` types (Double, Float, Float16, Float80, CGFloat) and swift-numerics `Complex` variants (bare + qualified `ComplexModule.Complex`). Detector `isFloatingPointEquatable(typeText:)` strips generic parameters at lookup so `Complex<Double>` and `Complex<RealType>` resolve to the bare `Complex` entry. Whitespace-trimmed. Optional types (`Double?`) intentionally return `false`.
+
+- **Workstream B (V1.31.B): `EqualityKind` enum + approximate-equality emit.** New `LiftedTestEmitter.EqualityKind` (.strict / .approximate). Added optional `equalityKind: EqualityKind = .strict` parameter to the three unary-property emit arms (`roundTrip`, `idempotent`, `inversePair`). When `.approximate`, emits `lhs.isApproximatelyEqual(to: rhs)` (swift-numerics' `AlgebraicField` method available on `Real` + `Complex<Real>`) instead of strict `==`. **Backward compatibility: default is `.strict`; all 35 pre-existing emitter tests pass bit-for-bit.**
+
+- **Workstream C (V1.31.C): Dispatch wiring in accept-path + macro.** `InteractiveTriage+Accept` (3 sites: idempotent / round-trip / inverse-pair stubs) + `CheckPropertyMacro` (2 sites: expandIdempotent / expandRoundTrip) now consult `FloatingPointEquatableTypes` on the suggestion's carrier or forward-parameter type and pass the resulting `EqualityKind` to the emitter. Internal `InteractiveTriage.equalityKind(forTypeText:)` helper for test verification.
+
+### Emit-correctness change for FP types
+
+A future `exp/log` Complex round-trip pair accepted via `swift-infer discover --interactive` now emits:
+
+```swift
+property: { value in log(exp(value)).isApproximatelyEqual(to: value) }
+```
+
+Previously emitted `log(exp(value)) == value`, which fails under IEEE 754 rounding even on canonical inverse pairs.
+
+### Scope boundaries observed
+
+- **In scope**: round-trip, idempotent, inverse-pair (unary-property arms).
+- **Out of scope**: commutativity, associativity, monotonicity, identity-element, dual-style-consistency (FP-affected only via `_relaxedAdd`/`_relaxedMul` which are commutative/associative bit-for-bit; monotonicity uses `<=` which is exact). Counter-example regression emitters (different shape). Module imports in emitted test files (assume `import Numerics` present).
+
+### Cycle-29 priorities
+
+Pivot to design-completion (post-calibration-era):
+1. `swift-infer apply` (PRD §20.6).
+2. SemanticIndex integration (PRD §20.4).
+3. Test-execution evidence (architectural shift; needs design discussion).
+4. Domain Template Packs (PRD §20.5).
+
+### Documentation
+
+- **v1.31 plan (V1.31.0).** First design-completion cycle plan.
+- **Cycle-28 findings (V1.31.D).** `docs/calibration-cycle-28-findings.md` — design-completion cycle entry; no rate re-measurement.
+- **Performance baseline (V1.31.E).** Re-measured; all §13 budgets hold. Test count 1923 → 1959 (+36).
+
+[1.31.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.31.0
+
 ## [1.30.0] — 2026-05-11
 
 The twenty-seventh calibration cycle and the **seventh empirical-only release** (after cycles 6 = 26.7%, 14 = 34.8%, 17 = 52.3%, 20 = 48.8%, 23 = 67.6%, 25 = 63.6%). v1.30 binary-equivalent to v1.29.0. **Headline: 21/29 = 72.4% Possible-tier acceptance rate — outcome A; §19 ≥70% TARGET REACHED.** The empirical-tuning loop has achieved its design intent within 27 calibration cycles.
