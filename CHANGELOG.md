@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.25.0] — 2026-05-10
+
+The twenty-second calibration cycle and the **fourth consecutive measurement-driven mechanism cycle** (cycles 18 + 19 + 21 + 22 = v1.21 + v1.22 + v1.24 + v1.25). Single-workstream cycle closing the cycle-21 finding (`index*`/`bucket*`/`word*` direction-op idempotence non-lifted reject class). Surface 130 → **114** (-16 = -12.3%) — first cycle to cross **-90% cumulative reduction** vs cycle-1's 1167-baseline (prior low: -88.86% at cycle 21). Plan-vs-actual: -16 vs projected -13 to -15 (slightly exceeded; V1.25.A caught 2 Algo picks the plan didn't enumerate).
+
+### Calibration cycle 22 — cycle-21 finding (single workstream)
+
+- **Workstream A (V1.25.A): Index-advance direction-op idempotence veto.** Direct cycle-21 finding closure. Modified `IdempotenceTemplate.directionLabelCounterSignal(for:)` to bump V1.10.1's -15 magnitude to -25 (full veto-equivalent) when: (1) function name starts with `index`, `bucket`, or `word`, AND (2) first-param label is in `DirectionLabels.curated`. Joint match limits false-positive risk; non-matching direction-labeled functions preserve V1.10.1's -15 magnitude verbatim. Mirrors V1.22.B's both-sides direction full-veto pattern on round-trip, applied here to idempotence with name-prefix gate. Mechanism class 6 extension (no new class). Surface impact: **-14 OC + -2 Algo = -16 candidates**. 9 new unit tests in `IdempotenceTemplateIndexAdvanceVetoTests.swift`.
+
+- **Per-template surface delta:**
+  - Idempotence (non-lifted): 19 → 3 (-16 = **-84%**, the single largest per-template percentage reduction in the loop's history).
+  - All other templates byte-stable.
+
+- **Cumulative trajectory** cycle 22 sets new low at **-90.23%** vs cycle-1's 1167-baseline (prior: -88.86% at cycle 21; -86.97% at cycle 19; -80.4% at cycle 13). **First cycle to cross -90% threshold.** Cumulative aggregate movement across cycles 17 → 22 (5 cycles since cycle-17 measurement): 335 → 114 = **-66.0%**.
+
+- **Cycle-23 priority list (rotated post-v1.25):**
+  1. **v1.26 = cycle 23 empirical-only re-measurement** (5th measurement point in the loop's history). Provisional aggregate projection: 55-65% from cycle-20's 48.8% baseline + cycles 21+22's -38 reject closures.
+  2. FP approximate-equality template arm (9-cycle carry-forward).
+  3. Math-library `_relaxed*` extension (7-cycle carry-forward).
+  4. CompositionTemplate non-numeric monoid extension (v1.19 carry-forward).
+  5-6. Lift admission relaxation; `liftedFromMutation` magnitude re-baselining (v1.19 carry-forwards).
+
+### Documentation
+
+- **v1.25 calibration plan (V1.25.0).** `docs/v1.25 Calibration Plan.md` — single-workstream mechanism cycle plan.
+- **Cycle-22 findings (V1.25.B).** `docs/calibration-cycle-22-findings.md` — surface delta, per-mechanism effectiveness, cycle-23 priority list (top = v1.26 empirical re-measurement).
+- **Cycle-22 capture (V1.25.B).** `docs/calibration-cycle-22-data/post-v1.25-*.discover.txt`.
+- **Performance baseline re-measured (V1.25.B).** `docs/perf-baseline-v1.25.md` — re-measured at commit `308245e`; every row within ±5% of v1.24 baseline.
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged.
+- All PRD §13 performance budgets hold at v1.25.
+- PRD §14 + §19 runtime no-network guarantee unchanged.
+
+[1.25.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.25.0
+
 ## [1.24.0] — 2026-05-10
 
 The twenty-first calibration cycle and the **third consecutive measurement-driven mechanism cycle** (cycle 18 = v1.21 closed cycle-17 findings; cycle 19 = v1.22 closed cycle-18 findings; cycle 21 = v1.24 closes cycle-19 + cycle-20 findings). Four independently-mergeable workstreams shipped in one release. Surface 152 → **130** (-22 = -14.5%) — new cumulative-reduction low at **-88.86%** vs cycle-1's 1167-baseline (prior low: -86.97% at cycle 19). First cycle to cross the -88% threshold. Plan-vs-actual: -22 vs projected -21 to -32 (solidly in range). Mechanism-class taxonomy 14 → **14** (no new classes; four extensions of existing classes 6 + 7).
