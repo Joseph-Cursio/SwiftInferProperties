@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.34.0] — 2026-05-11
+
+The thirty-first calibration cycle and **a focused follow-up release** to v1.33's PRD §20.1 SemanticIndex. Closes the v1.33-deferred `typeName` field: v1.33 shipped `typeName: String?` in the SemanticIndex schema but every emitted entry had `typeName == nil`. v1.34 wires the carrier-type metadata through the templates so `swift-infer query --type Foo` works end-to-end. **No acceptance-rate re-measurement** — v1.34 is data-model widening with no per-template inference precision change.
+
+### Calibration cycle 31 — typeName enrichment (3-workstream)
+
+- **Workstream A (V1.34.A): `carrier: String?` field on `Suggestion`.** New optional field in `Sources/SwiftInferCore/Suggestion.swift`. Default nil; existing call sites compile unchanged.
+
+- **Workstream B (V1.34.B): Thread carrier through 16 construction sites.** 11 template `suggest()` emitters populate from the natural input field (unary: `summary.containingTypeName`; pair: `pair.forward.containingTypeName`; identity-element: `pair.operation.containingTypeName`; lifted: `lifted.carrier`; dual-style: `pair.mutatingMember.containingTypeName`). 4 post-template rebuilders (`GeneratorSelection.rebuild`, `GeneratorSelection.rebuildWithCodableRoundTrip`, two `LiftedSuggestionPipeline` rebuilders) preserve `suggestion.carrier` from input. TestLifter promotion (`LiftedSuggestionPromotion.toSuggestion`) populates from the recovered domain type.
+
+- **Workstream C (V1.34.C): `IndexCommand.buildEntry` consumes `suggestion.carrier`.** Replaces v1.33's nil-stub `carrierType(for:)` implementation. The carrier flows through to `SemanticIndexEntry.typeName`.
+
+### End-to-end verification
+
+**swift-numerics ComplexModule (20 suggestions)**: 0% → 100% of entries have `typeName` populated. `query --type Complex` matches all 20; `query --type none` matches 0.
+
+**swift-collections OrderedCollections (74 suggestions)**: 10 distinct carrier types surfaced, including nested type paths (`OrderedDictionary.Elements.SubSequence`, `_HashTable.UnsafeHandle`). `query --type OrderedDictionary` → 3 matches; `query --type OrderedSet` → 29 matches.
+
+### Cycle-32 priority
+
+Per the 4-cycle design-completion sequence: v1.32 → v1.33 → v1.34 → **v1.35 Constraint Engine upgrade (PRD §20.2)**.
+
+### Documentation
+
+- **v1.34 plan (V1.34.0).**
+- **Cycle-31 findings (V1.34.D).** `docs/calibration-cycle-31-findings.md` — 16-site thread-through + 10-carrier OC surface analysis.
+- **Performance baseline (V1.34.E).** Zero hot-path impact; ~30-byte per-entry JSON overhead when typeName populated.
+
+[1.34.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.34.0
+
 ## [1.33.0] — 2026-05-11
 
 The thirtieth calibration cycle and **third design-completion release**. Closes **PRD §20.1 SemanticIndex** — persistent, queryable index of inferred properties across runs, JSON-backed at `.swiftinfer/index.json`. Two new CLI subcommands ship (`index`, `query`). **No acceptance-rate re-measurement** — v1.33 is infrastructure work that doesn't change per-template inference precision.
