@@ -80,6 +80,19 @@ extension SwiftInferCommand {
         )
         public var config: String?
 
+        @Option(
+            name: .long,
+            help: """
+            Comma-separated list of template packs to enable: \
+            numeric, serialization, collections, algebraic, concurrency \
+            (PRD §20.3). When omitted, all packs are enabled (the v1 \
+            monolithic-registry default). Falls back to the path in \
+            .swiftinfer/config.toml's [discover].packs string when set. \
+            Unknown pack names emit a diagnostic warning and are ignored.
+            """
+        )
+        public var packs: String?
+
         @Flag(
             name: .long,
             help: """
@@ -155,6 +168,7 @@ extension SwiftInferCommand {
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
                 explicitTestDirectory: explicitTestDirPath,
+                packsOverride: packs,
                 statsOnly: statsOnly,
                 dryRun: dryRun,
                 interactive: interactive,
@@ -173,12 +187,14 @@ extension SwiftInferCommand {
         /// shape for `explicitVocabularyPath`: when nil, the CLI looks
         /// at `[discover].vocabularyPath` in config; when also unset
         /// there, falls back to the conventional walk-up location.
+        // swiftlint:disable:next function_parameter_count
         public static func run(
             directory: URL,
             includePossible: Bool? = nil,
             explicitVocabularyPath: URL? = nil,
             explicitConfigPath: URL? = nil,
             explicitTestDirectory: URL? = nil,
+            packsOverride: String? = nil,
             statsOnly: Bool = false,
             dryRun: Bool = false,
             interactive: Bool = false,
@@ -193,6 +209,7 @@ extension SwiftInferCommand {
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
                 explicitTestDirectory: explicitTestDirectory,
+                packsOverride: packsOverride,
                 diagnostics: diagnostics
             )
             let visible = pipeline.suggestions

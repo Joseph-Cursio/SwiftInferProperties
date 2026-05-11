@@ -65,6 +65,7 @@ extension SwiftInferCommand.Discover {
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,
+        packsOverride: String? = nil,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         let setup = resolvePipelineSetup(
@@ -73,6 +74,7 @@ extension SwiftInferCommand.Discover {
             explicitVocabularyPath: explicitVocabularyPath,
             explicitConfigPath: explicitConfigPath,
             explicitTestDirectory: explicitTestDirectory,
+            packsOverride: packsOverride,
             diagnostics: diagnostics
         )
         // TestLifter M1.5 — scan the resolved test directory for test
@@ -91,7 +93,8 @@ extension SwiftInferCommand.Discover {
             vocabulary: setup.vocabulary,
             diagnostic: { diagnostics.writeDiagnostic($0) },
             crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys,
-            counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys
+            counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys,
+            templateFilter: setup.templateFilter
         )
         // TestLifter M3.2 — promote LiftedSuggestions to Suggestions,
         // apply the same `GeneratorSelection` pass TemplateEngine ran
@@ -186,6 +189,11 @@ extension SwiftInferCommand.Discover {
         let vocabulary: Vocabulary
         let testDirectory: URL
         let packageRoot: URL?
+        /// V1.32.C — Domain Template Packs (PRD §20.3). `nil` = no
+        /// filter applied (all 10 templates run; current monolithic-
+        /// registry behavior). Non-nil = post-discover filter to the
+        /// supplied set of `templateName` values.
+        let templateFilter: Set<String>?
     }
 
     /// M13.3 — vocabulary-driven marker-table extension. User-supplied
@@ -207,6 +215,7 @@ extension SwiftInferCommand.Discover {
         explicitVocabularyPath: URL?,
         explicitConfigPath: URL?,
         explicitTestDirectory: URL?,
+        packsOverride: String?,
         diagnostics: any DiagnosticOutput
     ) -> PipelineSetup {
         let configResult = ConfigLoader.load(
@@ -238,12 +247,53 @@ extension SwiftInferCommand.Discover {
             explicitTestDir: explicitTestDirectory,
             diagnostic: { diagnostics.writeDiagnostic("warning: \($0)") }
         )
+        // V1.32.C — Domain Template Packs (PRD §20.3). Precedence
+        // CLI > config > nil (no filter; all templates run).
+        let templateFilter = resolveTemplateFilter(
+            cliOverride: packsOverride,
+            configValue: configResult.config.packs,
+            diagnostics: diagnostics
+        )
         return PipelineSetup(
             includePossible: effectiveIncludePossible,
             vocabulary: vocabResult.vocabulary,
             testDirectory: testDirectory,
-            packageRoot: configResult.packageRoot
+            packageRoot: configResult.packageRoot,
+            templateFilter: templateFilter
         )
+    }
+
+    /// V1.32.C — resolve the effective template-filter set from the
+    /// CLI `--packs` flag, the config `[discover].packs` value, or
+    /// `nil` (all templates run). Emits per-name diagnostic warnings
+    /// for any unknown pack names and an empty-effective-set warning
+    /// so a misconfigured pipeline doesn't silently surface zero
+    /// suggestions.
+    private static func resolveTemplateFilter(
+        cliOverride: String?,
+        configValue: String?,
+        diagnostics: any DiagnosticOutput
+    ) -> Set<String>? {
+        let effective = cliOverride ?? configValue
+        guard let effective else {
+            return nil
+        }
+        for unknown in TemplatePack.unknownPackNames(in: effective) {
+            diagnostics.writeDiagnostic(
+                "warning: unknown template pack '\(unknown)' (known: "
+                    + "numeric, serialization, collections, algebraic, "
+                    + "concurrency) — ignoring"
+            )
+        }
+        let packs = TemplatePack.parse(effective)
+        let resolved = TemplatePack.resolve(packs)
+        if resolved.isEmpty {
+            diagnostics.writeDiagnostic(
+                "warning: no template packs enabled after parsing '\(effective)'"
+                    + " — no suggestions will surface. Did you misspell a pack name?"
+            )
+        }
+        return resolved
     }
 
     /// Snapshot the current run's surface-suggestion identities to

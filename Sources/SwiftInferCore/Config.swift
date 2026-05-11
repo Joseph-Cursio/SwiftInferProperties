@@ -31,15 +31,34 @@ public struct Config: Sendable, Equatable {
     /// `VocabularyLoader`.
     public let vocabularyPath: String?
 
+    /// V1.32.C — Domain Template Packs (PRD §20.3). Comma-separated
+    /// pack names that scope `discover` to a subset of the 5 shipped
+    /// packs (numeric, serialization, collections, algebraic,
+    /// concurrency). Example: `"numeric,serialization"`.
+    ///
+    /// Stored as the raw string so the same parser
+    /// (`TemplatePack.parse(_:)`) handles both the CLI `--packs` flag
+    /// and this config value uniformly. `nil` (default) means "all
+    /// packs enabled" — the current monolithic-registry behavior.
+    ///
+    /// The MinimalTOMLParser doesn't support TOML arrays in v1; this
+    /// string-encoded form is a pragmatic alternative consistent with
+    /// the parser's existing scope. Future TOML-array support is a
+    /// non-breaking upgrade (the array form would be additive).
+    public let packs: String?
+
     public init(
         includePossible: Bool = false,
-        vocabularyPath: String? = nil
+        vocabularyPath: String? = nil,
+        packs: String? = nil
     ) {
         self.includePossible = includePossible
         self.vocabularyPath = vocabularyPath
+        self.packs = packs
     }
 
     /// PRD-defined defaults: Possible tier hidden, no vocabulary
-    /// override. Used when no `.swiftinfer/config.toml` is present.
+    /// override, all packs enabled. Used when no
+    /// `.swiftinfer/config.toml` is present.
     public static let defaults = Config()
 }

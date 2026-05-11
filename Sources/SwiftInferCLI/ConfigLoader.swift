@@ -129,6 +129,7 @@ public enum ConfigLoader {
         var warnings: [String] = []
         var includePossible = Config.defaults.includePossible
         var vocabularyPath = Config.defaults.vocabularyPath
+        var packs = Config.defaults.packs
 
         if let value = discover["includePossible"] {
             switch value {
@@ -150,8 +151,24 @@ public enum ConfigLoader {
                 )
             }
         }
+        // V1.32.C — Domain Template Packs. Comma-separated string form
+        // (the MinimalTOMLParser doesn't support arrays in v1).
+        if let value = discover["packs"] {
+            switch value {
+            case .string(let str):
+                packs = str
+            case .boolean:
+                warnings.append(
+                    "config at \(path.path): expected string for [discover].packs, ignoring"
+                )
+            }
+        }
 
-        let config = Config(includePossible: includePossible, vocabularyPath: vocabularyPath)
+        let config = Config(
+            includePossible: includePossible,
+            vocabularyPath: vocabularyPath,
+            packs: packs
+        )
         return Result(config: config, warnings: warnings, packageRoot: packageRoot)
     }
 
