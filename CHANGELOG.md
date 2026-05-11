@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.35.0] — 2026-05-11
+
+The thirty-second calibration cycle. Ships **carrier-aware refactor suggestions** built on the v1.34-enriched SemanticIndex — closes the PRD §20.1 motivating use case ("you have three monoids; consider unifying them under a custom Monoid protocol"). New `swift-infer suggest-refactors` subcommand surfaces per-type clusters with curated refactor prompts. **No acceptance-rate re-measurement** — v1.35 is a query/render layer on top of the existing SemanticIndex; per-template inference precision unchanged.
+
+### Calibration cycle 32 — carrier-aware refactor suggestions (2-workstream)
+
+- **Workstream A (V1.35.A): `RefactorCluster` + `ClusterShape` + `RefactorClusterAnalyzer`.** New `Sources/SwiftInferCLI/RefactorClusterAnalyzer.swift`. 5-shape priority-ordered taxonomy:
+  - `algebraicStructure` — 2+ of `{commutativity, associativity, identity-element}` on the same type.
+  - `idempotenceCluster` — ≥3 idempotence suggestions.
+  - `dualStyleCluster` — ≥3 dual-style-consistency.
+  - `roundTripCluster` — ≥3 round-trip.
+  - `generalCluster` — ≥4 total, no named match.
+
+  Pure-function `analyze(_:)` groups `[SemanticIndexEntry]` by `typeName`, classifies, sorts by size descending, filters nil-typeName entries (free functions don't cluster).
+
+- **Workstream B (V1.35.B): `swift-infer suggest-refactors` subcommand.** Read-only AsyncParsableCommand. CLI flags: `--min-suggestions` (default 3), `--shape`, `--limit`, `--directory`, `--index-path`. Renders human-readable per-cluster output with stable curated suggestion text per shape (so users can grep for it in PR descriptions).
+
+### End-to-end behavior
+
+**swift-numerics ComplexModule (20 entries)**: 1 cluster — `[Complex] 20 inferred properties — algebraic-structure cluster`. Curated text correctly points at Semigroup/Monoid/CommutativeMonoid/Semilattice conformance.
+
+**swift-collections OrderedCollections (74 entries)**: 8 clusters across 6 distinct carrier types (`OrderedSet`, `OrderedSet.UnorderedView`, `OrderedDictionary.Elements`, `OrderedSet.SubSequence`, `OrderedDictionary.Elements.SubSequence`, `OrderedDictionary.Values`, `_HashTable`, `_HashTable.UnsafeHandle`). Nested type paths work transparently.
+
+### Cycle-33 priority
+
+Per the design-completion plan: v1.32 → v1.33 → v1.34 → v1.35 → **v1.36 Constraint Engine upgrade (PRD §20.2)** — the multi-cycle architectural refactor.
+
+### Documentation
+
+- **v1.35 plan (V1.35.0).**
+- **Cycle-32 findings (V1.35.C).** `docs/calibration-cycle-32-findings.md` — end-to-end verification + classification observations (the algebraicStructure-vs-dualStyleCluster priority observation surfaces a v1.36+ "dominant pattern" refinement candidate).
+- **Performance baseline (V1.35.D).** Zero discover/index hot-path impact; suggest-refactors completes in ~5ms on the OC 74-entry index. Test count 2027 → 2059 (+32).
+
+[1.35.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.35.0
+
 ## [1.34.0] — 2026-05-11
 
 The thirty-first calibration cycle and **a focused follow-up release** to v1.33's PRD §20.1 SemanticIndex. Closes the v1.33-deferred `typeName` field: v1.33 shipped `typeName: String?` in the SemanticIndex schema but every emitted entry had `typeName == nil`. v1.34 wires the carrier-type metadata through the templates so `swift-infer query --type Foo` works end-to-end. **No acceptance-rate re-measurement** — v1.34 is data-model widening with no per-template inference precision change.
