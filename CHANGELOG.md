@@ -4,6 +4,53 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.32.0] — 2026-05-11
+
+The twenty-ninth calibration cycle and **second design-completion release**. Closes **PRD §20.3 Domain Template Packs** — splits the monolithic 10-template registry into 5 named domain packs (`numeric`, `serialization`, `collections`, `algebraic`, `concurrency`). Cycles 1–28 are the prerequisite benchmark data the PRD required. **No acceptance-rate re-measurement** — v1.32 is a user-facing surface change; per-template inference precision is unchanged.
+
+### Calibration cycle 29 — Domain Template Packs (3-workstream)
+
+- **Workstream A (V1.32.A): `TemplatePack` enum + pack-to-templates resolver.** New `Sources/SwiftInferCore/TemplatePack.swift`. Five named packs with non-exclusive membership (a template can be in multiple packs — `monotonicity` ∈ `{numeric, collections}`; `commutativity` ∈ `{numeric, algebraic}`; `idempotence` ∈ `{collections, algebraic}`; `composition` ∈ `{collections, algebraic}`). Helpers: `resolve(_:Set<TemplatePack>) -> Set<String>`, `parse(_:String) -> Set<TemplatePack>`, `allTemplateNames`, `unknownPackNames(in:)`. 21 unit tests.
+
+- **Workstream B (V1.32.B): `templateFilter: Set<String>?` parameter on `TemplateRegistry.discover`.** Added to all three public entry points (`discover(in:[FunctionSummary], ...)`, `discover(in:URL, ...)`, `discoverArtifacts(in:URL, ...)`). Nil filter preserves the monolithic-registry behavior bit-for-bit; non-nil filters post-sort to the allowed templates. Backward-compatible — all 1959 pre-existing tests pass. 7 new V1.32.B tests.
+
+- **Workstream C (V1.32.C): CLI `--packs` flag + config TOML wiring.** New `--packs <comma,separated,list>` option on the `Discover` subcommand. New `[discover].packs` string value in `.swiftinfer/config.toml` (comma-separated form; MinimalTOMLParser doesn't support arrays in v1). Resolver precedence: CLI > config > nil (no filter; current default). Diagnostic warnings for unknown pack names + effective-empty-set surfaces. 7 unit tests + end-to-end verification.
+
+### Pack groupings
+
+| Pack | Templates |
+|---|---|
+| `numeric` | commutativity, associativity, identity-element, monotonicity |
+| `serialization` | round-trip, inverse-pair |
+| `collections` | idempotence, monotonicity, dual-style-consistency, composition, invariant-preservation |
+| `algebraic` | commutativity, associativity, identity-element, idempotence, composition |
+| `concurrency` | (empty — aspirational per PRD §20.3) |
+
+### End-to-end behavior
+
+`swift-infer discover --target ComplexModule --include-possible --packs <X>`:
+
+| Flag | Surface |
+|---|---:|
+| (none — default) | 20 |
+| `--packs numeric` | 12 |
+| `--packs serialization` | 8 |
+| `--packs algebraic` | 12 |
+| `--packs concurrency` | 0 (empty pack) |
+| `--packs bogus` | 0 + 2 diagnostic warnings |
+
+### Cycle-30 priorities
+
+Per the three-cycle design-completion sequence: v1.32 → **v1.33 SemanticIndex (PRD §20.1)** → v1.34 Constraint Engine upgrade (PRD §20.2).
+
+### Documentation
+
+- **v1.32 plan (V1.32.0).** Second design-completion cycle plan.
+- **Cycle-29 findings (V1.32.D).** `docs/calibration-cycle-29-findings.md` — pack-rationale + end-to-end verification.
+- **Performance baseline (V1.32.E).** O(1) per-suggestion when filter active; zero overhead when nil. Test count 1959 → 1994 (+35).
+
+[1.32.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.32.0
+
 ## [1.31.0] — 2026-05-11
 
 The twenty-eighth calibration cycle and the **first design-completion release** (post-§19-achievement). Closes the **13-cycle longest-running carry-forward** "FP approximate-equality template arm" (cycle-14 priority #4). v1.31 is correctness-emission work — doesn't shift the acceptance rate (CM round-trips already accept 8/8 across cycles 25 + 27) but unblocks production CM round-trip property-test emission. Mechanism-class taxonomy 15 → **16** (class 16 = emit-time equality-form dispatch; first emit-side mechanism class in the loop's history).
