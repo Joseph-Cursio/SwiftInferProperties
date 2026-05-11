@@ -119,6 +119,8 @@ public enum VerifyError: Error, CustomStringConvertible {
     case indexMissing(expectedPath: URL)
     case indexEmpty(path: URL?)
     case unsupportedCarrier(carrier: String, expected: [String])
+    case buildFailed(exitCode: Int32, stderr: String)
+    case runnerCrashed(reason: String)
 
     public var description: String {
         switch self {
@@ -153,6 +155,16 @@ public enum VerifyError: Error, CustomStringConvertible {
             return "swift-infer verify: carrier type '\(carrier)' is not supported in v1.42. "
                 + "Supported carriers: \(expectedList). Wider carrier support lands in v1.44 "
                 + "once the kit-side generators for additional carriers ship."
+
+        case let .buildFailed(exitCode, stderr):
+            let snippet = stderr.isEmpty
+                ? "(no stderr captured)"
+                : stderr.split(separator: "\n").suffix(20).joined(separator: "\n")
+            return "swift-infer verify: `swift build` in the verifier workdir failed with "
+                + "exit code \(exitCode). Last 20 lines of stderr:\n\(snippet)"
+
+        case let .runnerCrashed(reason):
+            return "swift-infer verify: verifier subprocess could not run: \(reason)"
         }
     }
 }

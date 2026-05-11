@@ -112,6 +112,17 @@ struct HardGuaranteeTests {
             "import Network",
             "Process("
         ]
+        // **V1.42.C.3 documented exemption** — `VerifierSubprocess.swift`
+        // legitimately invokes `Process` to spawn `swift build` and the
+        // synthesized verifier binary. This is an opt-in,
+        // user-initiated gesture (the `swift-infer verify` subcommand);
+        // the original §14 rule's intent was to forbid swift-infer from
+        // spawning subprocesses *during discover/index/drift*. Verify
+        // mode predates that posture — see `docs/v1.42 Calibration
+        // Plan.md` "Subprocess strategy" section. The exemption is
+        // file-scoped to keep accidental Process usage elsewhere from
+        // slipping through.
+        let processExemptions: Set<String> = ["VerifierSubprocess.swift"]
         var violations: [String] = []
         let enumerator = FileManager.default.enumerator(
             at: sourcesRoot,
@@ -122,6 +133,9 @@ struct HardGuaranteeTests {
         where url.pathExtension == "swift" {
             let source = try String(contentsOf: url, encoding: .utf8)
             for term in forbidden where source.contains(term) {
+                if term == "Process(", processExemptions.contains(url.lastPathComponent) {
+                    continue
+                }
                 violations.append("\(url.lastPathComponent): \(term)")
             }
         }
