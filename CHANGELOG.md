@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.30.0] — 2026-05-11
+
+The twenty-seventh calibration cycle and the **seventh empirical-only release** (after cycles 6 = 26.7%, 14 = 34.8%, 17 = 52.3%, 20 = 48.8%, 23 = 67.6%, 25 = 63.6%). v1.30 binary-equivalent to v1.29.0. **Headline: 21/29 = 72.4% Possible-tier acceptance rate — outcome A; §19 ≥70% TARGET REACHED.** The empirical-tuning loop has achieved its design intent within 27 calibration cycles.
+
+### Calibration cycle 27 — seventh empirical re-measurement
+
+- **Seven-point trajectory:** 26.7% → 34.8% → 52.3% → 48.8% → 67.6% → 63.6% → **72.4%**. The cycle-25 plateau confirmation (-4.0pp settle from cycle-23) followed by v1.29's targeted -4 REJECT closures lifts the aggregate above the §19 70% threshold. **+8.8pp from cycle-25.**
+
+- **Projection-vs-measurement: exact match.** The cycle-26 findings projected 72.4% on the v1.29-trimmed surface (cycle-25's 21 Accept / 12 Reject minus 4 REJECT closures = 21 Accept / 8 Reject). Cycle-27 measured exactly 72.4%. The match is mechanism-precision-driven (per-template rates stable across cycles 25 + 27; only surface composition changed).
+
+- **Per-template results:**
+  - dual-style-consistency: 5/5 = **100%** (**5-cycle 100% rate-stability** across cycles 17 + 20 + 23 + 25 + 27 — the gold standard mechanism class).
+  - idempotence-lifted: 6/6 = **100%** (3-cycle 100% rate-stability).
+  - monotonicity: 3/3 = **100%** (3-cycle stable high).
+  - round-trip: 5/6 = 83.3% (3-cycle stable high).
+  - commutativity: 1/3 = 33.3% (4-cycle stable 33%).
+  - associativity: 1/3 = 33.3% (sample-shift back to C25 rate).
+  - idempotence non-lifted: 0/3 = 0.0% (7-cycle 0% continues).
+  - inverse-pair / identity-element / composition-lifted: empty (mechanism classes closed at v1.29).
+
+- **§19 reachability achieved.** 72.4% is +2.4pp above the threshold and represents the precision asymptote of the name-based architecture — residual ~7-8 REJECT picks are type/name-pattern false-positives that name-based heuristics structurally cannot close further.
+
+- **Cycle-28 priority list pivots from precision-tuning to design-completion:**
+  1. **Architectural pivot to PRD §20 v1.1+** — test-execution evidence path (raised earlier by the user; now the highest-leverage gain available).
+  2. FP approximate-equality template arm (13-cycle carry-forward; correctness-emission work).
+  3. `swift-infer apply` (PRD §20.6).
+  4. SemanticIndex integration (PRD §20.4).
+  5. Domain Template Packs (PRD §20.5).
+
+### Documentation
+
+- **v1.30 plan (V1.30.0).** Seventh empirical-only cycle plan.
+- **Cycle-27 surface re-capture (V1.30.A).** `docs/calibration-cycle-27-data/surface-counts.md`.
+- **Cycle-27 triage rubric (V1.30.B).** `docs/cycle-27-triage-rubric.md` carries cycle-25 verbatim + post-cycle-25 mechanism context.
+- **Cycle-27 triage data (V1.30.C).** 32-pick triage; 21 accept / 8 reject / 3 unknown.
+- **Cycle-27 findings (V1.30.D).** `docs/calibration-cycle-27-findings.md` — seven-point trajectory + §19 milestone framing + cycle-28 priority list.
+- **Performance baseline (V1.30.E).** v1.29 carry-forward (v1.30 binary-equivalent).
+
+[1.30.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.30.0
+
 ## [1.29.0] — 2026-05-11
 
 The twenty-sixth calibration cycle and the **fifth consecutive measurement-driven mechanism release** (cycles 18+19+21+22+24+26 = v1.21+v1.22+v1.24+v1.25+v1.27+v1.29). Three independently-mergeable workstreams targeting cycle-25 findings; surface 113 → **109** (-4 / -3.5%). **Exact plan-vs-actual match** (-4 / -4). Cumulative reduction **-90.66%** vs cycle-1's 1167-baseline (new low; prior: -90.32% at cycle 24). Mechanism-class taxonomy 14 → **15** (class 15 = algebraic-family-mismatch veto on identity-element).
