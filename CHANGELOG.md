@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.36.0] — 2026-05-11
+
+The thirty-third calibration cycle and the **first cycle of the multi-cycle Constraint Engine refactor** (PRD §20.2). Lays the foundation: introduces the `Constraint<Subject>` abstraction + `ConstraintRunner` orchestrator + migrates `CommutativityTemplate` as proof-of-concept. **Behavior preserved bit-for-bit** — all 54 pre-existing CommutativityTemplate tests pass without modification. **No acceptance-rate re-measurement** — architectural refactor with no inference-precision change.
+
+### Calibration cycle 33 — Constraint Engine foundation (3-workstream)
+
+- **Workstream A (V1.36.A): `Constraint<Subject>` data model in SwiftInferCore.** Generic over Subject (FunctionSummary / FunctionPair / LiftedTransformation / IdentityElementPair / DualStylePair). 6 closure-typed fields: `appliesTo`, `signals`, `evidence`, `identity`, `carrier` (defaults nil), `caveats` (defaults []). All `@Sendable` for future-safe parallel evaluation.
+
+- **Workstream B (V1.36.B): `ConstraintRunner.suggest(constraint:subject:)` orchestrator.** Pure function: `(constraint, subject) → Suggestion?`. Returns nil on gate-false (short-circuits before signals) OR `Score(signals:)` landing in `.suppressed` tier. Default `makeExplainability` assembles the §4.5 block from evidence + signals + caveats.
+
+- **Workstream C (V1.36.C): `CommutativityTemplate` migration.** `suggest(for:)` becomes a 4-line wrapper around `ConstraintRunner.suggest`. New `makeConstraint(vocabulary:inheritedTypesByName:)` factory captures runtime inputs into `@Sendable` closures. Migration verified by:
+  - All 54 pre-existing CommutativityTemplate tests passing without modification.
+  - 4 new equivalence tests verifying bit-for-bit Suggestion output across a 7-fixture corpus.
+
+### Migration pattern (reusable for v1.37+)
+
+The CommutativityTemplate migration establishes a mechanical pattern for the remaining 9 templates:
+1. Extract `makeConstraint(<runtime-inputs>) -> Constraint<Subject>` factory.
+2. Extract signal-accumulation helper and caveat-list helper.
+3. Rewrite `suggest(...)` as a 4-line `ConstraintRunner.suggest` wrapper.
+4. Run existing tests + add equivalence tests against a fixture corpus.
+
+### Templates migrated: 1 / 10
+
+Remaining: round-trip, idempotence (non-lifted + lifted), monotonicity, associativity, inverse-pair (non-lifted + lifted), identity-element (non-lifted + lifted), dual-style-consistency, composition, invariant-preservation.
+
+### Cycle-34 priority
+
+**v1.37 — second template migration** (likely MonotonicityTemplate). After 2 migrated templates the abstraction is validated against 2 representative shapes; v1.38+ can batch-migrate the remaining 8 if confidence is high.
+
+### Documentation
+
+- **v1.36 plan (V1.36.0).**
+- **Cycle-33 findings (V1.36.D).** `docs/calibration-cycle-33-findings.md` — migration pattern + cycle-34 priority.
+- **Performance baseline (V1.36.E).** ~6 closure-indirect calls per Commutativity suggestion (vs inline). Negligible. Test count 2059 → 2077 (+18).
+
+[1.36.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.36.0
+
 ## [1.35.0] — 2026-05-11
 
 The thirty-second calibration cycle. Ships **carrier-aware refactor suggestions** built on the v1.34-enriched SemanticIndex — closes the PRD §20.1 motivating use case ("you have three monoids; consider unifying them under a custom Monoid protocol"). New `swift-infer suggest-refactors` subcommand surfaces per-type clusters with curated refactor prompts. **No acceptance-rate re-measurement** — v1.35 is a query/render layer on top of the existing SemanticIndex; per-template inference precision unchanged.
