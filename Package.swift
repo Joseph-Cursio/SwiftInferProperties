@@ -65,12 +65,18 @@ let package = Package(
         // CommutativeMonoid {}` / `Group {}` / `Semilattice {}`, requiring
         // **v1.9.0+** (the kit's second algebraic cluster — M8.0 prereq
         // shipped at the kit's `v1.9.0` tag, 2026-05-02; v2.0.0 is the
-        // post-rename equivalent and what we pin against).
+        // post-rename equivalent).
+        // **v2.1.0+** required from v1.42 onward — kit-side opt-in
+        // `PropertyLawComplex` library product shipping
+        // `Gen<Complex<Double>>.edgeCaseBiased()` for the Phase 1 test-
+        // execution verify mode. The kit's main `PropertyLawKit` line
+        // keeps a zero `swift-numerics` footprint; we only `import
+        // PropertyLawComplex` from the verify harness (V1.43+).
         // `PropertyLawKit` transitively pulls swift-testing's
         // `Testing.framework`, which would prevent the `swift-infer`
         // executable from running outside a test context — only the
         // generated test-target writeouts import it.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.0.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.1.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
