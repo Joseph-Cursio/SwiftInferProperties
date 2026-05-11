@@ -106,7 +106,8 @@ extension InteractiveTriage {
             funcName: funcName,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            equalityKind: equalityKind(forTypeText: typeName)
         )
     }
 
@@ -124,7 +125,8 @@ extension InteractiveTriage {
             forwardName: forwardName,
             inverseName: inverseName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: forwardParam)
+            generator: chooseGenerator(for: suggestion, typeName: forwardParam),
+            equalityKind: equalityKind(forTypeText: forwardParam)
         )
     }
 
@@ -236,8 +238,29 @@ extension InteractiveTriage {
             inverseName: inverseName,
             typeName: forwardParam,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: forwardParam)
+            generator: chooseGenerator(for: suggestion, typeName: forwardParam),
+            equalityKind: equalityKind(forTypeText: forwardParam)
         )
+    }
+
+    /// V1.31.C — derives the `LiftedTestEmitter.EqualityKind` from a
+    /// suggestion's carrier or forward-parameter type text. Returns
+    /// `.approximate` when the type is in
+    /// `FloatingPointEquatableTypes.curated` (with generic-parameter
+    /// stripping) — required for `Complex`, `Double`, `Float`, etc.
+    /// round-trip / idempotent / inverse-pair assertions to compile and
+    /// pass under IEEE 754 rounding. Returns `.strict` otherwise
+    /// (current behavior preserved for all non-FP carriers).
+    ///
+    /// **Module-internal** so the V1.31.C integration tests can verify
+    /// the dispatch table directly without round-tripping through the
+    /// full `liftedTestStub(for:)` path.
+    static func equalityKind(
+        forTypeText typeText: String
+    ) -> LiftedTestEmitter.EqualityKind {
+        FloatingPointEquatableTypes.isFloatingPointEquatable(typeText: typeText)
+            ? .approximate
+            : .strict
     }
 
     /// TestLifter M4.4 — pick the right generator string based on the

@@ -150,7 +150,9 @@ public struct CheckPropertyMacro: PeerMacro {
             funcName: funcName,
             typeName: paramTypeText,
             seed: seed,
-            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText)
+            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText),
+            equalityKind: FloatingPointEquatableTypes.isFloatingPointEquatable(typeText: paramTypeText)
+                ? .approximate : .strict
         )
         return [DeclSyntax(stringLiteral: source)]
     }
@@ -195,7 +197,9 @@ public struct CheckPropertyMacro: PeerMacro {
             forwardName: forwardName,
             inverseName: inverseName,
             seed: SamplingSeed.derive(fromIdentityHash: canonicalSignature),
-            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText)
+            generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText),
+            equalityKind: FloatingPointEquatableTypes.isFloatingPointEquatable(typeText: paramTypeText)
+                ? .approximate : .strict
         )
         return [DeclSyntax(stringLiteral: source)]
     }
