@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.28.0] — 2026-05-11
+
+The twenty-fifth calibration cycle and the **sixth empirical-only release** (after cycles 6 = 26.7%, 14 = 34.8%, 17 = 52.3%, 20 = 48.8%, 23 = 67.6%). v1.28 binary-equivalent to v1.27.0. Headline: **21/33 = 63.6%** Possible-tier acceptance rate — **outcome B** (60-69% plateau range); -4.0pp from cycle-23's 67.6%. **§19 ≥70% target NOT reached within 25 cycles.**
+
+### Calibration cycle 25 — sixth empirical re-measurement
+
+- **Six-point trajectory:** 26.7% → 34.8% → 52.3% → 48.8% → 67.6% → **63.6%**. Cycle-23's 67.6% was the upper edge of sample-noise on n=40; cycle-25's 63.6% on n=36 brackets the true rate at **63-68%**. First plateau confirmation in the loop's history.
+
+- **Sample composition.** 36-pick stratified sample on the post-v1.27 113-surface (vs cycle-23's 40 / 114). Sampling rate 31.9%. Surface recount reclassified the 3 Algo chunk methods as idempotence non-lifted (cycle-23 had mis-bucketed them as lifted).
+
+- **Three mechanism classes carry the rate at 100%:** idempotence-lifted (6/6; sample-composition shift from cycle-23 66.7%), monotonicity (3/3; cycle-23 80%), dual-style-consistency (5/5; **4-cycle 100% rate-stability** at cycles 17 + 20 + 23 + 25 — the gold standard mechanism class).
+
+- **Four mechanism classes at 0%** (lone-outlier rejects): idempotence non-lifted (0/3), inverse-pair (0/2), identity-element (0/1), composition-lifted (0/1).
+
+- **Two new cycle-25 mechanism findings:**
+  1. **V1.27.B closure gap:** `bucket(after:|before:) × firstOccupiedBucketInChain(with:)` pairs survive because the both-sides-match name-prefix gate doesn't fire on asymmetric (direction-op × search-op) pairs.
+  2. **Identity-element curated-constant match too lax for non-additive operators:** `rescaledDivide(_:_:) × Complex.zero` is a 6-cycle stable reject — the curated `T.zero` match should be narrowed to additive-verb operators.
+
+- **Cycle-26 priority list (post-v1.28):**
+  1. Inverse-pair asymmetric-pair extension (cycle-25 finding 1; projected -2 OC).
+  2. Identity-element algebraic-family narrow (cycle-25 finding 2; projected -1 CM).
+  3. Composition-lifted monotone-bounded full-veto (3-cycle stable reject; projected -1 OC).
+  4. FP approximate-equality template arm (12-cycle carry-forward; correctness-emission work).
+  5. **Architectural reconsideration:** the precision ceiling around 65% suggests name-based heuristics have approached the asymptote — the user's earlier raised question (test-execution evidence) becomes a higher-priority option than additional mechanism cycles.
+
+### Documentation
+
+- **v1.28 plan (V1.28.0).** Sixth empirical-only cycle plan.
+- **Cycle-25 surface re-capture (V1.28.A).** `docs/calibration-cycle-25-data/surface-counts.md`. Corrects cycle-23's mis-bucketed Algo chunk methods (idempotence-lifted → non-lifted).
+- **Cycle-25 triage rubric (V1.28.B).** `docs/cycle-25-triage-rubric.md` carries cycle-23 verbatim + post-cycle-23 mechanism context.
+- **Cycle-25 triage data (V1.28.C).** 36-pick triage; 21 accept / 12 reject / 3 unknown.
+- **Cycle-25 findings (V1.28.D).** `docs/calibration-cycle-25-findings.md` — six-point trajectory + plateau confirmation + 2 mechanism findings + cycle-26 priority list.
+- **Performance baseline (V1.28.E).** v1.27 carry-forward (v1.28 binary-equivalent).
+
+[1.28.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.28.0
+
 ## [1.27.0] — 2026-05-11
 
 The twenty-fourth calibration cycle and **measurement-driven mechanism cycle** closing the two cycle-23 findings (Algo Iterator-like Sequence-conformance survivors + OC bucket/word inverse-pair direction-pair). Two small workstreams; surface 114 → **113** (-1). Plan-vs-actual: -1 vs projected -4 (cycle-23 sample-manifest enumeration error on one projected pick; V1.27.A infrastructure didn't fire on current corpora).
