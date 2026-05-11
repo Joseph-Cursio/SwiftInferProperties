@@ -46,12 +46,60 @@ public enum RoundTripTemplate {
     /// round-trip directly. Non-Codable round-trips (custom
     /// encode/decode on a domain type) fall through unsuppressed per
     /// the v1.5 plan open-decision #4 default.
+    /// V1.39.A — migrated to the Constraint Engine (PRD §20.2). First
+    /// `Constraint<FunctionPair>` migration where the type-shape signal
+    /// is always non-nil (round-trip uses a constant-true gate; the
+    /// pre-migration code unconditionally seeds `typeSymmetrySignal`).
+    /// Behavior preserved bit-for-bit.
     public static func suggest(
         for pair: FunctionPair,
         vocabulary: Vocabulary = .empty,
         inheritedTypesByName: [String: Set<String>] = [:],
         carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(
+                vocabulary: vocabulary,
+                inheritedTypesByName: inheritedTypesByName,
+                carrierKindResolver: carrierKindResolver
+            ),
+            subject: pair
+        )
+    }
+
+    /// V1.39.A — Constraint factory.
+    public static func makeConstraint(
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> Constraint<FunctionPair> {
+        Constraint<FunctionPair>(
+            templateName: "round-trip",
+            appliesTo: { _ in true },   // pre-migration unconditionally accepted shape
+            signals: { pair in
+                Self.accumulatedSignals(
+                    for: pair,
+                    vocabulary: vocabulary,
+                    inheritedTypesByName: inheritedTypesByName,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { pair in
+                [Self.makeEvidence(pair.forward), Self.makeEvidence(pair.reverse)]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.forward.containingTypeName },
+            caveats: { _ in Self.makeCaveats() }
+        )
+    }
+
+    /// V1.39.A — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(
+        for pair: FunctionPair,
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
             signals.append(name)
@@ -68,31 +116,18 @@ public enum RoundTripTemplate {
         if let domainMarker = domainMarkerCounterSignal(for: pair) {
             signals.append(domainMarker)
         }
-        // V1.24.A — asymmetric label class mismatch counter. Closes the
-        // cycle-19 finding / cycle-20-reconfirmed OC asymmetric cross-
-        // pair class (`index(after:) × _minimumCapacity(forScale:)`-shape).
         if let asymmetric = asymmetricLabelClassMismatchCounterSignal(for: pair) {
             signals.append(asymmetric)
         }
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
-        // V1.22.D — stride-style label both-sides veto. Closes the
-        // cycle-14-demoted Algo `endOfChunk(startingAt:) × startOfChunk
-        // (endingAt:)` round-trip pick.
         if let strideStyle = strideStyleLabelCounterSignal(for: pair) {
             signals.append(strideStyle)
         }
-        // V1.21.C — math-library forward-function pair veto. Suppresses
-        // CM cross-product noise (forward × forward like exp × cosh)
-        // while preserving the canonical-inverse anchor pairs (exp × log,
-        // cos × acos, etc.) cycle-17 measured at 7/7 = 100% accept.
         if let mathForward = mathForwardFunctionPairVeto(for: pair) {
             signals.append(mathForward)
         }
-        // Carrier-kind signal — keyed off the forward half's containing
-        // type. The cross-type counter-signal already demotes pairs whose
-        // halves disagree on container, so anchoring on `forward` is safe.
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: pair.forward.containingTypeName
         ) {
@@ -107,19 +142,18 @@ public enum RoundTripTemplate {
         ) {
             signals.append(coverageVeto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "round-trip",
-            evidence: [makeEvidence(pair.forward), makeEvidence(pair.reverse)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: pair, signals: signals),
-            identity: makeIdentity(for: pair),
-            carrier: pair.forward.containingTypeName
-        )
+        return signals
+    }
+
+    /// V1.39.A — caveat list (2 constant entries).
+    static func makeCaveats() -> [String] {
+        [
+            "Throws on either side narrows the property's domain to the success set "
+                + "of the inner function; a generator that produces values outside that "
+                + "set will surface false-positive failures (Appendix B.4).",
+            "T must conform to Equatable for the emitted property to compile. "
+                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying."
+        ]
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical

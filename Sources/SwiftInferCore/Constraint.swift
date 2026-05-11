@@ -82,6 +82,16 @@ public struct Constraint<Subject>: Sendable {
     /// — templates that need caveats override this.
     public let caveats: @Sendable (Subject) -> [String]
 
+    /// V1.39 — template-specific lines inserted into `whySuggested`
+    /// BETWEEN the evidence-display lines and the signal-formatted
+    /// lines. Used by templates that surface a per-suggestion
+    /// narrative the signals alone don't capture — e.g.
+    /// `IdempotenceTemplate+Lifted` inserts `lifted.rationale` (the
+    /// "Property holds iff X has value semantics…" prose) at this
+    /// position. Defaults to empty for the majority of templates whose
+    /// evidence + signals are self-documenting.
+    public let additionalWhySuggested: @Sendable (Subject) -> [String]
+
     public init(
         templateName: String,
         appliesTo: @Sendable @escaping (Subject) -> Bool,
@@ -89,7 +99,8 @@ public struct Constraint<Subject>: Sendable {
         evidence: @Sendable @escaping (Subject) -> [Evidence],
         identity: @Sendable @escaping (Subject) -> SuggestionIdentity,
         carrier: @Sendable @escaping (Subject) -> String? = { _ in nil },
-        caveats: @Sendable @escaping (Subject) -> [String] = { _ in [] }
+        caveats: @Sendable @escaping (Subject) -> [String] = { _ in [] },
+        additionalWhySuggested: @Sendable @escaping (Subject) -> [String] = { _ in [] }
     ) {
         self.templateName = templateName
         self.appliesTo = appliesTo
@@ -98,5 +109,6 @@ public struct Constraint<Subject>: Sendable {
         self.identity = identity
         self.carrier = carrier
         self.caveats = caveats
+        self.additionalWhySuggested = additionalWhySuggested
     }
 }

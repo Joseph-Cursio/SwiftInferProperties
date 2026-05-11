@@ -23,16 +23,63 @@ import SwiftInferCore
 /// incremented(c, a + b)`), both V1.19.C.
 extension IdempotenceTemplate {
 
-    /// Build a suggestion for `lifted`, or return `nil` when the lifted
-    /// shape isn't an idempotence candidate or the score collapses.
+    /// V1.39.C — migrated to the Constraint Engine (PRD §20.2). First
+    /// `Constraint<LiftedTransformation>` migration; introduces the
+    /// `additionalWhySuggested` Constraint field to thread
+    /// `lifted.rationale` between the evidence and signal lines in the
+    /// emitted explainability block. Behavior preserved bit-for-bit.
     public static func suggest(
         forLifted lifted: LiftedTransformation,
         vocabulary: Vocabulary = .empty,
         inheritedTypesByName: [String: Set<String>] = [:],
         carrierKindResolver: CarrierKindResolver
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeLiftedConstraint(
+                vocabulary: vocabulary,
+                inheritedTypesByName: inheritedTypesByName,
+                carrierKindResolver: carrierKindResolver
+            ),
+            subject: lifted
+        )
+    }
+
+    /// V1.39.C — Constraint factory for the lifted-idempotence variant.
+    public static func makeLiftedConstraint(
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver
+    ) -> Constraint<LiftedTransformation> {
+        Constraint<LiftedTransformation>(
+            templateName: "idempotence",
+            appliesTo: { lifted in
+                Self.liftedTypeSymmetrySignal(for: lifted) != nil
+            },
+            signals: { lifted in
+                Self.liftedAccumulatedSignals(
+                    for: lifted,
+                    vocabulary: vocabulary,
+                    inheritedTypesByName: inheritedTypesByName,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { lifted in [Self.makeLiftedEvidence(lifted)] },
+            identity: Self.makeLiftedIdentity(for:),
+            carrier: { $0.carrier },
+            caveats: { lifted in Self.makeLiftedCaveats(for: lifted) },
+            additionalWhySuggested: { [$0.rationale] }
+        )
+    }
+
+    /// V1.39.C — preserves the pre-migration signal-accumulation order.
+    static func liftedAccumulatedSignals(
+        for lifted: LiftedTransformation,
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver
+    ) -> [Signal] {
         guard let typeShape = liftedTypeSymmetrySignal(for: lifted) else {
-            return nil
+            return []
         }
         var signals: [Signal] = [typeShape]
         signals.append(contentsOf: liftedAuxiliarySignals(
@@ -41,19 +88,21 @@ extension IdempotenceTemplate {
             inheritedTypesByName: inheritedTypesByName,
             carrierKindResolver: carrierKindResolver
         ))
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "idempotence",
-            evidence: [makeLiftedEvidence(lifted)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeLiftedExplainability(for: lifted, signals: signals),
-            identity: makeLiftedIdentity(for: lifted),
-            carrier: lifted.carrier
-        )
+        return signals
+    }
+
+    /// V1.39.C — caveat list for the lifted variant. The second caveat
+    /// embeds the carrier type name.
+    static func makeLiftedCaveats(for lifted: LiftedTransformation) -> [String] {
+        [
+            "T must conform to Equatable for the emitted property to compile. "
+                + "SwiftInfer V1.19 does not verify protocol conformance — "
+                + "confirm before applying.",
+            "Property holds iff `\(lifted.carrier)` has value semantics — a "
+                + "broken copy-on-write implementation or a class-typed stored "
+                + "property would invalidate the lift even though the type "
+                + "passed the structural admission gate."
+        ]
     }
 
     // MARK: - Type-shape

@@ -47,22 +47,65 @@ public enum IdempotenceTemplate {
     /// (kit `checkSemilatticePropertyLaws`). Other types fall through
     /// — generic `f(f(x)) == f(x)` doesn't have a one-to-one stdlib
     /// protocol mapping, so the template stays surfaced.
+    /// V1.39.B — migrated to the Constraint Engine (PRD §20.2).
+    /// Behavior preserved bit-for-bit (existing IdempotenceTemplate test
+    /// suite + V1.39.D equivalence tests).
     public static func suggest(
         for summary: FunctionSummary,
         vocabulary: Vocabulary = .empty,
         inheritedTypesByName: [String: Set<String>] = [:],
         carrierKindResolver: CarrierKindResolver? = nil
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(
+                vocabulary: vocabulary,
+                inheritedTypesByName: inheritedTypesByName,
+                carrierKindResolver: carrierKindResolver
+            ),
+            subject: summary
+        )
+    }
+
+    /// V1.39.B — Constraint factory.
+    public static func makeConstraint(
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> Constraint<FunctionSummary> {
+        Constraint<FunctionSummary>(
+            templateName: "idempotence",
+            appliesTo: { summary in
+                Self.typeSymmetrySignal(for: summary) != nil
+            },
+            signals: { summary in
+                Self.accumulatedSignals(
+                    for: summary,
+                    vocabulary: vocabulary,
+                    inheritedTypesByName: inheritedTypesByName,
+                    carrierKindResolver: carrierKindResolver
+                )
+            },
+            evidence: { summary in [Self.makeEvidence(summary)] },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.containingTypeName },
+            caveats: { _ in Self.makeCaveats() }
+        )
+    }
+
+    /// V1.39.B — preserves the pre-migration signal-accumulation order.
+    static func accumulatedSignals(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
         guard let typeSymmetry = typeSymmetrySignal(for: summary) else {
-            return nil
+            return []
         }
         var signals: [Signal] = [typeSymmetry]
         if let name = nameSignal(for: summary, vocabulary: vocabulary) {
             signals.append(name)
         }
-        // V1.22.C — fixed-point-name positive signal (recall-positive).
-        // First positive signal in the post-V1.4.3 era; introduces accepts
-        // on lower-confidence idempotence names not in V1.4.1 curatedVerbs.
         if let fixedPoint = fixedPointNameSignal(for: summary) {
             signals.append(fixedPoint)
         }
@@ -78,15 +121,9 @@ public enum IdempotenceTemplate {
         if let setAlgebra = setAlgebraShapeVeto(for: summary) {
             signals.append(setAlgebra)
         }
-        // V1.21.C — math-library forward-function veto (3-cycle carry-
-        // forward; closes the CM elementary-functions noise class
-        // measured at 0/3 = 0% in cycle-17).
         if let mathForward = mathForwardFunctionVeto(for: summary) {
             signals.append(mathForward)
         }
-        // V1.24.D — capacity-from-scale + formatter shape-disambiguation
-        // veto. Cycle-20 finding closure: 5-cycle-flat 0% idempotence
-        // non-lifted rate is dominated by these shape-coincidence patterns.
         if let shapeVeto = shapeDisambiguationVeto(for: summary) {
             signals.append(shapeVeto)
         }
@@ -104,19 +141,16 @@ public enum IdempotenceTemplate {
         ) {
             signals.append(coverageVeto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "idempotence",
-            evidence: [makeEvidence(summary)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: summary, signals: signals),
-            identity: makeIdentity(for: summary),
-            carrier: summary.containingTypeName
-        )
+        return signals
+    }
+
+    /// V1.39.B — caveat list (2 constant entries).
+    static func makeCaveats() -> [String] {
+        [
+            "T must conform to Equatable for the emitted property to compile. "
+                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+        ]
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical

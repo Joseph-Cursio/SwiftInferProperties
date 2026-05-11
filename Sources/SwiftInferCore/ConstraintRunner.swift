@@ -39,6 +39,7 @@ public enum ConstraintRunner {
         let evidence = constraint.evidence(subject)
         let explainability = makeExplainability(
             evidence: evidence,
+            additionalWhySuggested: constraint.additionalWhySuggested(subject),
             signals: signals,
             caveats: constraint.caveats(subject)
         )
@@ -65,8 +66,14 @@ public enum ConstraintRunner {
     ///
     /// Module-internal so the V1.36.B unit tests can verify the
     /// rendering shape without going through `suggest(...)`.
+    /// V1.39 — extended with `additionalWhySuggested` for templates
+    /// (e.g. `IdempotenceTemplate+Lifted`) that insert a per-suggestion
+    /// narrative between the evidence-display lines and the signal
+    /// lines. Defaults to empty for templates whose evidence + signals
+    /// are self-documenting.
     static func makeExplainability(
         evidence: [Evidence],
+        additionalWhySuggested: [String] = [],
         signals: [Signal],
         caveats: [String]
     ) -> ExplainabilityBlock {
@@ -77,6 +84,7 @@ public enum ConstraintRunner {
                     + "\(row.location.file):\(row.location.line)"
             )
         }
+        whySuggested.append(contentsOf: additionalWhySuggested)
         for signal in signals {
             whySuggested.append(signal.formattedLine)
         }
