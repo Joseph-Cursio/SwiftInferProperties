@@ -8,7 +8,7 @@ import SwiftInferCore
 /// finding closure (5-cycle-flat 0% idempotence non-lifted rate is
 /// dominated by shape-coincidence patterns).
 @Suite("IdempotenceTemplate — V1.24.D shape-disambiguation veto")
-struct IdempotenceTemplateShapeDisambiguationTests {
+struct IdempotenceShapeDisambiguationTests {
 
     private func summary(
         _ name: String,
@@ -31,11 +31,11 @@ struct IdempotenceTemplateShapeDisambiguationTests {
     // MARK: - Pattern 1: capacity / scale domain conversion
 
     @Test("'_minimumCapacity(forScale:)' fires veto (cycle-20 case; name contains 'Capacity')")
-    func minimumCapacityVetoes() {
+    func minimumCapacityVetoes() throws {
         let signal = IdempotenceTemplate.shapeDisambiguationVeto(
             for: summary("_minimumCapacity", paramLabel: "forScale")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("cross-domain Int conversion"))
     }
@@ -104,12 +104,12 @@ struct IdempotenceTemplateShapeDisambiguationTests {
     // MARK: - Pattern 2: formatter
 
     @Test("'_description(type:)' fires veto (cycle-17/20 #16/#12 case)")
-    func descriptionFormatterVetoes() {
+    func descriptionFormatterVetoes() throws {
         let signal = IdempotenceTemplate.shapeDisambiguationVeto(
             for: summary("_description", paramLabel: "type",
                          paramType: "String", returnType: "String")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("formatter"))
     }

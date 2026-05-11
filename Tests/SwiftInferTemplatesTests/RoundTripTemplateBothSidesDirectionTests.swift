@@ -24,7 +24,7 @@ struct RoundTripTemplateBothSidesDirectionTests {
         reverseLabel: String?,
         type: String = "Int"
     ) -> FunctionPair {
-        let f = FunctionSummary(
+        let forwardSummary = FunctionSummary(
             name: forward,
             parameters: [Parameter(label: forwardLabel, internalName: "x", typeText: type, isInout: false)],
             returnTypeText: type,
@@ -33,7 +33,7 @@ struct RoundTripTemplateBothSidesDirectionTests {
             containingTypeName: "OrderedSet",
             bodySignals: .empty
         )
-        let r = FunctionSummary(
+        let reverseSummary = FunctionSummary(
             name: reverse,
             parameters: [Parameter(label: reverseLabel, internalName: "x", typeText: type, isInout: false)],
             returnTypeText: type,
@@ -42,17 +42,17 @@ struct RoundTripTemplateBothSidesDirectionTests {
             containingTypeName: "OrderedSet",
             bodySignals: .empty
         )
-        return FunctionPair(forward: f, reverse: r)
+        return FunctionPair(forward: forwardSummary, reverse: reverseSummary)
     }
 
     // MARK: - Both-sides direction-labeled fires at -25
 
     @Test("'after' / 'before' both-sides direction-labeled fires -25 veto (cycle-18 case)")
-    func indexAfterBeforeFiresMinus25() {
+    func indexAfterBeforeFiresMinus25() throws {
         let signal = RoundTripTemplate.directionLabelCounterSignal(
             for: directionPair(forwardLabel: "after", reverseLabel: "before")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.weight == -25)
         #expect(veto.detail.contains("Both pair sides direction-labeled"))
         #expect(veto.detail.contains("after"))
@@ -78,11 +78,11 @@ struct RoundTripTemplateBothSidesDirectionTests {
     // MARK: - Single-side direction-labeled preserves V1.12.1 -15
 
     @Test("Single-side direction-labeled preserves V1.12.1 -15 magnitude")
-    func singleSidePreservesMinus15() {
+    func singleSidePreservesMinus15() throws {
         let signal = RoundTripTemplate.directionLabelCounterSignal(
             for: directionPair(forwardLabel: "after", reverseLabel: nil)
         )
-        let counter = try! #require(signal)
+        let counter = try #require(signal)
         #expect(counter.weight == -15)
         #expect(counter.detail.contains("Direction-label argument"))
         // Single-side detail string format preserved exactly (cycle-9

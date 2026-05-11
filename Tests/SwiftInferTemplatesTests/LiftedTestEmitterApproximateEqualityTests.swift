@@ -11,7 +11,7 @@ import SwiftInferCore
 /// `log(exp(z))`; the `.approximate` variant emits
 /// `isApproximatelyEqual(to:)` for FP-equatable types.
 @Suite("LiftedTestEmitter — V1.31.B EqualityKind dispatch")
-struct LiftedTestEmitterApproximateEqualityTests {
+struct LiftedTestEmitterApproxEqualityTests {
 
     private static let dummySeed = SamplingSeed.Value(
         stateA: 0xAAAA_BBBB_CCCC_DDDD,

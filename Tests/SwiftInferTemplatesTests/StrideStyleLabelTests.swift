@@ -16,7 +16,7 @@ struct StrideStyleLabelTests {
         reverse: String = "startOfChunk",
         reverseLabel: String?
     ) -> FunctionPair {
-        let f = FunctionSummary(
+        let forwardSummary = FunctionSummary(
             name: forward,
             parameters: [Parameter(label: forwardLabel, internalName: "x", typeText: "Base.Index", isInout: false)],
             returnTypeText: "Base.Index",
@@ -25,7 +25,7 @@ struct StrideStyleLabelTests {
             containingTypeName: "ChunkedSequence",
             bodySignals: .empty
         )
-        let r = FunctionSummary(
+        let reverseSummary = FunctionSummary(
             name: reverse,
             parameters: [Parameter(label: reverseLabel, internalName: "x", typeText: "Base.Index", isInout: false)],
             returnTypeText: "Base.Index",
@@ -34,7 +34,7 @@ struct StrideStyleLabelTests {
             containingTypeName: "ChunkedSequence",
             bodySignals: .empty
         )
-        return FunctionPair(forward: f, reverse: r)
+        return FunctionPair(forward: forwardSummary, reverse: reverseSummary)
     }
 
     // MARK: - Curated set membership
@@ -55,11 +55,11 @@ struct StrideStyleLabelTests {
     // MARK: - RoundTripTemplate stride-style veto
 
     @Test("RoundTrip 'endOfChunk(startingAt:) × startOfChunk(endingAt:)' fires -25 (cycle-14 case)")
-    func roundTripCycle14CaseFires() {
+    func roundTripCycle14CaseFires() throws {
         let signal = RoundTripTemplate.strideStyleLabelCounterSignal(
             for: stridePair(forwardLabel: "startingAt", reverseLabel: "endingAt")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.weight == -25)
         #expect(veto.detail.contains("Both pair sides stride-style-labeled"))
         #expect(veto.detail.contains("startingAt"))
@@ -101,11 +101,11 @@ struct StrideStyleLabelTests {
     // MARK: - InversePairTemplate stride-style veto
 
     @Test("InversePair 'endOfChunk(startingAt:) × startOfChunk(endingAt:)' fires -25")
-    func inversePairCycle14CaseFires() {
+    func inversePairCycle14CaseFires() throws {
         let signal = InversePairTemplate.strideStyleLabelCounterSignal(
             for: stridePair(forwardLabel: "startingAt", reverseLabel: "endingAt")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.weight == -25)
         #expect(veto.detail.contains("Both pair sides stride-style-labeled"))
     }

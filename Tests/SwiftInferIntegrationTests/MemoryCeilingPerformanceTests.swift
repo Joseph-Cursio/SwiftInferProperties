@@ -83,9 +83,10 @@ struct MemoryCeilingPerformanceTests {
         // anyone noticing for hours); making the number always visible
         // lets future drift get caught at the next push, not the next
         // failure.
-        FileHandle.standardError.write(Data(
-            "[§13 row 4] peakDeltaMB=\(formatted(peakDeltaMB)) baselineMB=\(formatted(baselineMB)) budgetMB=\(formatted(budgetMB))\n".utf8
-        ))
+        let summary = "[§13 row 4] peakDeltaMB=\(formatted(peakDeltaMB)) "
+            + "baselineMB=\(formatted(baselineMB)) "
+            + "budgetMB=\(formatted(budgetMB))\n"
+        FileHandle.standardError.write(Data(summary.utf8))
         let message = "500-file discover added \(formatted(peakDeltaMB)) MB resident over the "
             + "\(formatted(baselineMB)) MB pre-discover baseline — "
             + "over the §13 \(formatted(budgetMB)) MB budget"

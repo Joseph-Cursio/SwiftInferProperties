@@ -35,11 +35,11 @@ struct IdempotenceTemplateIndexAdvanceVetoTests {
     // MARK: - Index-advance + direction label fires -25
 
     @Test("'index(after:)' fires -25 veto (cycle-21 case)")
-    func indexAfterFiresMinus25() {
+    func indexAfterFiresMinus25() throws {
         let signal = IdempotenceTemplate.directionLabelCounterSignal(
             for: summary("index", paramLabel: "after")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.weight == -25)
         #expect(veto.detail.contains("Index-advance direction-label"))
         #expect(veto.detail.contains("index"))
@@ -73,13 +73,13 @@ struct IdempotenceTemplateIndexAdvanceVetoTests {
     // MARK: - Non-index-advance direction labels preserve V1.10.1 -15
 
     @Test("Non-index-advance direction-labeled function preserves V1.10.1 -15")
-    func nonIndexAdvancePreservesMinus15() {
+    func nonIndexAdvancePreservesMinus15() throws {
         // 'advance' is a direction-label adjacent verb but doesn't have
         // the index/bucket/word prefix — preserved at V1.10.1 -15.
         let signal = IdempotenceTemplate.directionLabelCounterSignal(
             for: summary("seek", paramLabel: "after")
         )
-        let counter = try! #require(signal)
+        let counter = try #require(signal)
         #expect(counter.weight == -15)
         // Detail string format preserved exactly (V1.10.1 wording).
         #expect(counter.detail.contains("Direction-label argument"))

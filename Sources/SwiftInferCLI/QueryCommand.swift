@@ -106,8 +106,8 @@ extension SwiftInferCommand {
             public let matchedCount: Int
         }
 
-        /// Pure-function surface so unit tests can drive the query
-        /// path without the AsyncParsableCommand shell.
+        // Pure-function surface so unit tests can drive the query
+        // path without the AsyncParsableCommand shell.
         // swiftlint:disable:next function_parameter_count
         static func runQuery(
             directoryOverride: String?,

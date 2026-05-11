@@ -67,9 +67,9 @@ struct IdempotenceTemplateMutatorBlocklistTests {
     // MARK: - Veto fires on curated names (cycle-20 cases)
 
     @Test("'reverse' on OrderedDictionary fires veto (cycle-20 #41 case)")
-    func reverseOnOrderedDictionaryVetoes() {
+    func reverseOnOrderedDictionaryVetoes() throws {
         let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "reverse"))
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("'reverse'"))
     }

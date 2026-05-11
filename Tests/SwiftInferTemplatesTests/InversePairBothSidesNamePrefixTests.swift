@@ -19,7 +19,7 @@ struct InversePairBothSidesNamePrefixTests {
         reverseName: String,
         reverseLabel: String?
     ) -> FunctionPair {
-        let f = FunctionSummary(
+        let forwardSummary = FunctionSummary(
             name: forwardName,
             parameters: [Parameter(label: forwardLabel, internalName: "x", typeText: "Bucket", isInout: false)],
             returnTypeText: "Bucket",
@@ -28,7 +28,7 @@ struct InversePairBothSidesNamePrefixTests {
             containingTypeName: "_HashTable.UnsafeHandle",
             bodySignals: .empty
         )
-        let r = FunctionSummary(
+        let reverseSummary = FunctionSummary(
             name: reverseName,
             parameters: [Parameter(label: reverseLabel, internalName: "x", typeText: "Bucket", isInout: false)],
             returnTypeText: "Bucket",
@@ -37,16 +37,16 @@ struct InversePairBothSidesNamePrefixTests {
             containingTypeName: "_HashTable.UnsafeHandle",
             bodySignals: .empty
         )
-        return FunctionPair(forward: f, reverse: r)
+        return FunctionPair(forward: forwardSummary, reverse: reverseSummary)
     }
 
     @Test("'bucket(after:) × bucket(before:)' fires full veto (cycle-23 #26 case)")
-    func bucketBothSidesFiresFullVeto() {
+    func bucketBothSidesFiresFullVeto() throws {
         let signal = InversePairTemplate.directionLabelCounterSignal(
             for: pair(forwardName: "bucket", forwardLabel: "after",
                       reverseName: "bucket", reverseLabel: "before")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("name-prefix match"))
     }
@@ -70,7 +70,7 @@ struct InversePairBothSidesNamePrefixTests {
     }
 
     @Test("V1.29.A — asymmetric cursor × non-direction pair fires full veto")
-    func asymmetricCursorFiresFullVeto() {
+    func asymmetricCursorFiresFullVeto() throws {
         // 'bucket(after:) × firstOccupiedBucketInChain(with:)': forward
         // side is cursor-advance (direction-prefix-name + direction-label),
         // reverse side is non-direction lookup. V1.29.A's asymmetric-pair
@@ -79,7 +79,7 @@ struct InversePairBothSidesNamePrefixTests {
             for: pair(forwardName: "bucket", forwardLabel: "after",
                       reverseName: "firstOccupiedBucketInChain", reverseLabel: "with")
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("Asymmetric direction-pair"))
     }

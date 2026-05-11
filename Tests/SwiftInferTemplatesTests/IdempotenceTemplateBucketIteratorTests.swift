@@ -81,13 +81,13 @@ struct IdempotenceTemplateBucketIteratorTests {
     // MARK: - Carrier-name suffix extension
 
     @Test("`BucketIterator` carrier + `advance` method fires veto via name fallback")
-    func bucketIteratorAdvanceVetoes() {
+    func bucketIteratorAdvanceVetoes() throws {
         let lift = lifted(method: "advance", carrier: "_HashTable.BucketIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("Iterator-shape name"))
     }

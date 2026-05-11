@@ -163,9 +163,9 @@ public enum RefactorClusterAnalyzer {
         // The tuple's `tieBreakerIndex` preserves the pre-v1.41 priority
         // order on equal counts (idempotence 0 > dual-style 1 > round-trip 2).
         let candidates: [(shape: ClusterShape, count: Int, tieBreakerIndex: Int)] = [
-            (.idempotenceCluster,    perTemplateCounts["idempotence"]            ?? 0, 0),
-            (.dualStyleCluster,      perTemplateCounts["dual-style-consistency"] ?? 0, 1),
-            (.roundTripCluster,      perTemplateCounts["round-trip"]             ?? 0, 2)
+            (.idempotenceCluster, perTemplateCounts["idempotence"] ?? 0, 0),
+            (.dualStyleCluster, perTemplateCounts["dual-style-consistency"] ?? 0, 1),
+            (.roundTripCluster, perTemplateCounts["round-trip"] ?? 0, 2)
         ]
         let firing = candidates.filter { $0.count >= 3 }
         if let winner = firing.max(by: { (lhs, rhs) in

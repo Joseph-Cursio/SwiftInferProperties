@@ -32,10 +32,10 @@ struct AssociativityConstraintEquivalenceTests {
     @Test("V1.38.D — Associativity: wrapper matches Constraint output across corpus")
     func equivalence() {
         let corpus: [(label: String, summary: FunctionSummary)] = [
-            ("curated_combine",       Self.summary(name: "combine")),
-            ("curated_merge",         Self.summary(name: "merge")),
-            ("bare_userOp",           Self.summary(name: "someOp")),
-            ("mutating_combine",      Self.summary(name: "combine", isMutating: true))
+            ("curated_combine", Self.summary(name: "combine")),
+            ("curated_merge", Self.summary(name: "merge")),
+            ("bare_userOp", Self.summary(name: "someOp")),
+            ("mutating_combine", Self.summary(name: "combine", isMutating: true))
         ]
         for (label, summary) in corpus {
             let wrapper = AssociativityTemplate.suggest(for: summary)
@@ -71,7 +71,7 @@ struct AssociativityConstraintEquivalenceTests {
 }
 
 @Suite("InvariantPreservationTemplate — V1.38.D Constraint equivalence")
-struct InvariantPreservationConstraintEquivalenceTests {
+struct InvariantPreservationEquivTests {
 
     private static let location = SourceLocation(file: "T.swift", line: 1, column: 1)
 
@@ -97,9 +97,9 @@ struct InvariantPreservationConstraintEquivalenceTests {
     @Test("V1.38.D — InvariantPreservation: wrapper matches Constraint output across corpus")
     func equivalence() {
         let corpus: [(label: String, summary: FunctionSummary)] = [
-            ("missingKeypath_noFire",  Self.summary()),
-            ("withKeypath_isValid",    Self.summary(invariantKeypath: "\\.isValid")),
-            ("nonDeterministic_veto",  Self.summary(
+            ("missingKeypath_noFire", Self.summary()),
+            ("withKeypath_isValid", Self.summary(invariantKeypath: "\\.isValid")),
+            ("nonDeterministic_veto", Self.summary(
                 invariantKeypath: "\\.isValid",
                 bodySignals: BodySignals(
                     hasNonDeterministicCall: true,
@@ -134,7 +134,7 @@ struct InvariantPreservationConstraintEquivalenceTests {
 }
 
 @Suite("DualStyleConsistencyTemplate — V1.38.D Constraint equivalence")
-struct DualStyleConsistencyConstraintEquivalenceTests {
+struct DualStyleConsistencyEquivTests {
 
     private static let location = SourceLocation(file: "T.swift", line: 1, column: 1)
 
@@ -172,7 +172,10 @@ struct DualStyleConsistencyConstraintEquivalenceTests {
         let corpus: [(label: String, pair: DualStylePair)] = [
             ("formUnion_union", Self.makePair(mutatingName: "formUnion", nonMutatingName: "union")),
             ("subtract_subtracting", Self.makePair(mutatingName: "subtract", nonMutatingName: "subtracting")),
-            ("formIntersection_intersection", Self.makePair(mutatingName: "formIntersection", nonMutatingName: "intersection"))
+            (
+                "formIntersection_intersection",
+                Self.makePair(mutatingName: "formIntersection", nonMutatingName: "intersection")
+            )
         ]
         for (label, pair) in corpus {
             let wrapper = DualStyleConsistencyTemplate.suggest(for: pair, carrierKindResolver: nil)

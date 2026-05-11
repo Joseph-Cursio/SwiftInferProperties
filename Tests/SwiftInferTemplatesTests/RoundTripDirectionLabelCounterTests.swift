@@ -120,7 +120,9 @@ struct RoundTripDirectionLabelCounterTests {
 
     // MARK: - Non-suppression cases (preserve well-named round-trip pairs)
 
-    @Test("V1.12.1 — `endOfChunk(startingAt:) ↔ startOfChunk(endingAt:)` (stride labels) — V1.12.1 direction-counter does NOT fire (stride labels aren't in DirectionLabels.curated)")
+    // V1.12.1 — `endOfChunk(startingAt:) ↔ startOfChunk(endingAt:)` (stride labels)
+    // — direction-counter does NOT fire (stride labels aren't in DirectionLabels.curated)
+    @Test("V1.12.1 — stride-style labels do NOT fire the direction-counter")
     func strideStyleLabelsDoNotFireDirectionCounter() {
         // V1.12.1's direction-counter does NOT fire on stride-style
         // labels (which are in StrideStyleLabels.curated, NOT

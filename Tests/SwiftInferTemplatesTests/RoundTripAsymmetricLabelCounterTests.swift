@@ -16,7 +16,7 @@ struct RoundTripAsymmetricLabelCounterTests {
         reverseName: String,
         reverseLabel: String?
     ) -> FunctionPair {
-        let f = FunctionSummary(
+        let forwardSummary = FunctionSummary(
             name: forwardName,
             parameters: [Parameter(label: forwardLabel, internalName: "x", typeText: "Int", isInout: false)],
             returnTypeText: "Int",
@@ -25,7 +25,7 @@ struct RoundTripAsymmetricLabelCounterTests {
             containingTypeName: "OrderedSet",
             bodySignals: .empty
         )
-        let r = FunctionSummary(
+        let reverseSummary = FunctionSummary(
             name: reverseName,
             parameters: [Parameter(label: reverseLabel, internalName: "x", typeText: "Int", isInout: false)],
             returnTypeText: "Int",
@@ -34,20 +34,20 @@ struct RoundTripAsymmetricLabelCounterTests {
             containingTypeName: "OrderedSet",
             bodySignals: .empty
         )
-        return FunctionPair(forward: f, reverse: r)
+        return FunctionPair(forward: forwardSummary, reverse: reverseSummary)
     }
 
     // MARK: - Asymmetric fires -25 (both orientations)
 
     @Test("'after:' (direction) × 'forScale:' (domain-marker) fires -25 (cycle-19/20 case)")
-    func directionThenDomainFires() {
+    func directionThenDomainFires() throws {
         let signal = RoundTripTemplate.asymmetricLabelClassMismatchCounterSignal(
             for: pair(
                 forwardName: "index", forwardLabel: "after",
                 reverseName: "_minimumCapacity", reverseLabel: "forScale"
             )
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.weight == -25)
         #expect(veto.detail.contains("Asymmetric label class mismatch"))
         #expect(veto.detail.contains("after"))

@@ -188,7 +188,9 @@ struct RefactorClusterAnalyzerTests {
         #expect(shape == .dualStyleCluster)
     }
 
-    @Test("V1.41.A — tie-break: equal idempotence + dual-style counts → idempotenceCluster (pre-v1.41 priority retained)")
+    // V1.41.A — tie-break: equal idempotence + dual-style counts → idempotenceCluster
+    // (pre-v1.41 priority retained).
+    @Test("V1.41.A — tie-break: equal counts → idempotenceCluster (pre-v1.41 priority)")
     func tieBreakPreservesPrePriorityOrder() {
         let shape = RefactorClusterAnalyzer.classify(
             perTemplateCounts: [
@@ -298,8 +300,14 @@ struct RefactorClusterAnalyzerTests {
             entry(identityHex: "0x01", templateName: "idempotence", typeName: "Foo", score: 30, funcName: "lowScore()"),
             entry(identityHex: "0x02", templateName: "idempotence", typeName: "Foo", score: 85, funcName: "topScore()"),
             entry(identityHex: "0x03", templateName: "idempotence", typeName: "Foo", score: 45, funcName: "midScore()"),
-            entry(identityHex: "0x04", templateName: "idempotence", typeName: "Foo", score: 70, funcName: "highScore()"),
-            entry(identityHex: "0x05", templateName: "idempotence", typeName: "Foo", score: 25, funcName: "low2Score()"),
+            entry(
+                identityHex: "0x04", templateName: "idempotence", typeName: "Foo",
+                score: 70, funcName: "highScore()"
+            ),
+            entry(
+                identityHex: "0x05", templateName: "idempotence", typeName: "Foo",
+                score: 25, funcName: "low2Score()"
+            ),
             entry(identityHex: "0x06", templateName: "idempotence", typeName: "Foo", score: 60, funcName: "above5()"),
             entry(identityHex: "0x07", templateName: "idempotence", typeName: "Foo", score: 20, funcName: "alsoBelow()")
         ]

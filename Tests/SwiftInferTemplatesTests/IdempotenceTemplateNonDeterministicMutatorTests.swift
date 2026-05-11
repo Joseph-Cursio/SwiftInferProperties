@@ -9,7 +9,7 @@ import SwiftInferCore
 /// being non-deterministic because the existing body-signal detector
 /// missed the OC RNG pattern).
 @Suite("IdempotenceTemplate — V1.24.C non-deterministic mutator veto")
-struct IdempotenceTemplateNonDeterministicMutatorTests {
+struct IdempotenceNonDeterministicMutatorTests {
 
     private func summary(
         _ name: String,
@@ -55,9 +55,9 @@ struct IdempotenceTemplateNonDeterministicMutatorTests {
     // MARK: - Veto fires on 'shuffle'
 
     @Test("'shuffle' on OrderedDictionary fires veto (cycle-20 #40 case)")
-    func shuffleOnOrderedDictionaryVetoes() {
+    func shuffleOnOrderedDictionaryVetoes() throws {
         let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: lifted(method: "shuffle"))
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.kind == .nonDeterministicBody)
         #expect(veto.detail.contains("'shuffle'"))

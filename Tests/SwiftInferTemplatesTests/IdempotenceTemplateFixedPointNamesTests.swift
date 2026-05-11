@@ -65,13 +65,13 @@ struct IdempotenceTemplateFixedPointNamesTests {
     // MARK: - Signal fires on curated names
 
     @Test("'dedupe' fires +10 fixed-point signal")
-    func dedupeFires() {
+    func dedupeFires() throws {
         let signal = IdempotenceTemplate.fixedPointNameSignal(for: summary("dedupe"))
-        let fp = try! #require(signal)
-        #expect(fp.weight == 10)
-        #expect(fp.kind == .fixedPointName)
-        #expect(fp.detail.contains("'dedupe'"))
-        #expect(fp.detail.contains("idempotent"))
+        let fixedPoint = try #require(signal)
+        #expect(fixedPoint.weight == 10)
+        #expect(fixedPoint.kind == .fixedPointName)
+        #expect(fixedPoint.detail.contains("'dedupe'"))
+        #expect(fixedPoint.detail.contains("idempotent"))
     }
 
     @Test("All 5 curated fixed-point names fire +10")

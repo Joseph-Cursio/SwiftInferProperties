@@ -95,8 +95,8 @@ struct IdempotenceConstraintEquivalenceTests {
     func equivalence() {
         let corpus: [(label: String, summary: FunctionSummary)] = [
             ("curated_normalize", Self.summary(name: "normalize")),
-            ("bare_someOp",       Self.summary(name: "someOp")),
-            ("math_log",          Self.summary(name: "log", type: "Double"))
+            ("bare_someOp", Self.summary(name: "someOp")),
+            ("math_log", Self.summary(name: "log", type: "Double"))
         ]
         for (label, summary) in corpus {
             let wrapper = IdempotenceTemplate.suggest(for: summary)
@@ -114,7 +114,7 @@ struct IdempotenceConstraintEquivalenceTests {
 }
 
 @Suite("IdempotenceTemplate (lifted) — V1.39.D Constraint equivalence")
-struct IdempotenceLiftedConstraintEquivalenceTests {
+struct IdempotenceLiftedConstraintEquivTests {
 
     private static let loc = SourceLocation(file: "T.swift", line: 1, column: 1)
 
@@ -156,7 +156,7 @@ struct IdempotenceLiftedConstraintEquivalenceTests {
         ])
         let corpus: [(label: String, lifted: LiftedTransformation)] = [
             ("removeAll", Self.liftedTransformation(mutatingFuncName: "removeAll")),
-            ("sort",      Self.liftedTransformation(mutatingFuncName: "sort")),
+            ("sort", Self.liftedTransformation(mutatingFuncName: "sort")),
             ("normalize", Self.liftedTransformation(mutatingFuncName: "normalize"))
         ]
         for (label, lifted) in corpus {

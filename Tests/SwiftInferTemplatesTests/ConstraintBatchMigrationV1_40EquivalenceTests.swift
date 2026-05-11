@@ -66,7 +66,7 @@ struct InversePairConstraintEquivalenceTests {
 }
 
 @Suite("InversePairTemplate+Lifted — V1.40.F Constraint equivalence")
-struct InversePairLiftedConstraintEquivalenceTests {
+struct InversePairLiftedEquivTests {
 
     private static let loc = SourceLocation(file: "T.swift", line: 1, column: 1)
 
@@ -120,7 +120,7 @@ struct InversePairLiftedConstraintEquivalenceTests {
 }
 
 @Suite("IdentityElementTemplate non-lifted — V1.40.F wrapper-pattern equivalence")
-struct IdentityElementConstraintEquivalenceTests {
+struct IdentityElementEquivTests {
 
     private static let loc = SourceLocation(file: "T.swift", line: 1, column: 1)
 

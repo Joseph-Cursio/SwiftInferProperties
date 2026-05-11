@@ -9,7 +9,7 @@ import SwiftInferCore
 /// carriers that expose `next()`/`advance()` directly without explicit
 /// IteratorProtocol conformance.
 @Suite("IdempotenceTemplate — V1.27.A Sequence-conformance fallback")
-struct IdempotenceTemplateSequenceConformanceTests {
+struct IdempotenceSequenceConformanceTests {
 
     private func summary(
         _ name: String,
@@ -46,13 +46,13 @@ struct IdempotenceTemplateSequenceConformanceTests {
     }
 
     @Test("Sequence-conforming carrier + 'next' fires veto (cycle-23 case)")
-    func sequenceCarrierNextFires() {
+    func sequenceCarrierNextFires() throws {
         let lift = lifted(method: "next", carrier: "ChainSequence")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: ["ChainSequence": ["Sequence"]]
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("Sequence"))
     }
@@ -89,23 +89,23 @@ struct IdempotenceTemplateSequenceConformanceTests {
     }
 
     @Test("V1.21.A IteratorProtocol path still fires (Sequence path doesn't interfere)")
-    func iteratorProtocolPathStillFires() {
+    func iteratorProtocolPathStillFires() throws {
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lifted(method: "next", carrier: "Iterator"),
             inheritedTypesByName: ["Iterator": ["IteratorProtocol"]]
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("conforms to IteratorProtocol"))
     }
 
     @Test("Both Sequence + IteratorProtocol → fires (IteratorProtocol path wins; detail prefers IteratorProtocol)")
-    func bothProtocolsCarrierFires() {
+    func bothProtocolsCarrierFires() throws {
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lifted(method: "next", carrier: "MyIter"),
             inheritedTypesByName: ["MyIter": ["IteratorProtocol", "Sequence"]]
         )
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         // IteratorProtocol path is checked first; its detail string fires.
         #expect(veto.detail.contains("IteratorProtocol"))

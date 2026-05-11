@@ -15,7 +15,7 @@ struct RoundTripTemplateMathForwardVetoTests {
         _ reverse: String,
         type: String = "Complex"
     ) -> FunctionPair {
-        let f = FunctionSummary(
+        let forwardSummary = FunctionSummary(
             name: forward,
             parameters: [Parameter(label: nil, internalName: "z", typeText: type, isInout: false)],
             returnTypeText: type,
@@ -24,7 +24,7 @@ struct RoundTripTemplateMathForwardVetoTests {
             containingTypeName: type,
             bodySignals: .empty
         )
-        let r = FunctionSummary(
+        let reverseSummary = FunctionSummary(
             name: reverse,
             parameters: [Parameter(label: nil, internalName: "z", typeText: type, isInout: false)],
             returnTypeText: type,
@@ -33,15 +33,15 @@ struct RoundTripTemplateMathForwardVetoTests {
             containingTypeName: type,
             bodySignals: .empty
         )
-        return FunctionPair(forward: f, reverse: r)
+        return FunctionPair(forward: forwardSummary, reverse: reverseSummary)
     }
 
     // MARK: - Veto fires on cross-product noise
 
     @Test("'exp × cosh' vetoes (cycle-17 #12 cross-product)")
-    func expCoshVetoes() {
+    func expCoshVetoes() throws {
         let signal = RoundTripTemplate.mathForwardFunctionPairVeto(for: mathPair("exp", "cosh"))
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("cross-product"))
     }
@@ -110,7 +110,7 @@ struct RoundTripTemplateMathForwardVetoTests {
     func asymmetricShapeDoesNotVeto() {
         // 'exp' as a Complex -> Double encoder shape — even though 'exp'
         // is curated, the shape isn't (T) -> T so the veto skips.
-        let f = FunctionSummary(
+        let forwardSummary = FunctionSummary(
             name: "exp",
             parameters: [Parameter(label: nil, internalName: "z", typeText: "Complex", isInout: false)],
             returnTypeText: "Double",
@@ -119,7 +119,7 @@ struct RoundTripTemplateMathForwardVetoTests {
             containingTypeName: "Math",
             bodySignals: .empty
         )
-        let r = FunctionSummary(
+        let reverseSummary = FunctionSummary(
             name: "log",
             parameters: [Parameter(label: nil, internalName: "x", typeText: "Double", isInout: false)],
             returnTypeText: "Complex",
@@ -128,7 +128,9 @@ struct RoundTripTemplateMathForwardVetoTests {
             containingTypeName: "Math",
             bodySignals: .empty
         )
-        #expect(RoundTripTemplate.mathForwardFunctionPairVeto(for: FunctionPair(forward: f, reverse: r)) == nil)
+        #expect(RoundTripTemplate.mathForwardFunctionPairVeto(
+            for: FunctionPair(forward: forwardSummary, reverse: reverseSummary)
+        ) == nil)
     }
 
     // MARK: - End-to-end suggest()
@@ -140,8 +142,8 @@ struct RoundTripTemplateMathForwardVetoTests {
     }
 
     @Test("End-to-end: canonical inverse 'exp × log' still surfaces with normal scoring")
-    func endToEndExpLogPreserved() {
-        let suggestion = try! #require(RoundTripTemplate.suggest(for: mathPair("exp", "log")))
+    func endToEndExpLogPreserved() throws {
+        let suggestion = try #require(RoundTripTemplate.suggest(for: mathPair("exp", "log")))
         #expect(suggestion.templateName == "round-trip")
         // Score should NOT reflect a math-forward veto (would be Suppressed
         // if it did). Type-symmetry signal fires (+30) at minimum.

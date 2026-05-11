@@ -196,7 +196,6 @@ extension SwiftInferCommand {
         /// shape for `explicitVocabularyPath`: when nil, the CLI looks
         /// at `[discover].vocabularyPath` in config; when also unset
         /// there, falls back to the conventional walk-up location.
-        // swiftlint:disable:next function_parameter_count
         public static func run(
             directory: URL,
             includePossible: Bool? = nil,

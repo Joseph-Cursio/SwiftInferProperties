@@ -31,9 +31,9 @@ struct IdempotenceTemplateMathForwardVetoTests {
     // MARK: - Veto fires on (T) -> T math-forward functions
 
     @Test("'exp' vetoes (cycle-17 #18 rate-stability)")
-    func expVetoes() {
+    func expVetoes() throws {
         let signal = IdempotenceTemplate.mathForwardFunctionVeto(for: mathSummary("exp"))
-        let veto = try! #require(signal)
+        let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("'exp'"))
         #expect(veto.detail.contains("not idempotent"))
@@ -130,7 +130,7 @@ struct IdempotenceTemplateMathForwardVetoTests {
     }
 
     @Test("End-to-end: non-math 'normalize' (T) -> T still surfaces as Strong")
-    func endToEndNormalizePreserved() {
+    func endToEndNormalizePreserved() throws {
         let summary = FunctionSummary(
             name: "normalize",
             parameters: [Parameter(label: nil, internalName: "v", typeText: "Vector", isInout: false)],
@@ -140,7 +140,7 @@ struct IdempotenceTemplateMathForwardVetoTests {
             containingTypeName: "Vector",
             bodySignals: .empty
         )
-        let suggestion = try! #require(IdempotenceTemplate.suggest(for: summary))
+        let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
         // 30 type-symmetry + 40 curated verb 'normalize' = 70 → Likely
         // (Strong threshold is ≥75 per Tier mapping). The point of this
         // test is that the suggestion surfaces — V1.21.C math-forward
