@@ -84,6 +84,12 @@ public enum IdempotenceTemplate {
         if let mathForward = mathForwardFunctionVeto(for: summary) {
             signals.append(mathForward)
         }
+        // V1.24.D — capacity-from-scale + formatter shape-disambiguation
+        // veto. Cycle-20 finding closure: 5-cycle-flat 0% idempotence
+        // non-lifted rate is dominated by these shape-coincidence patterns.
+        if let shapeVeto = shapeDisambiguationVeto(for: summary) {
+            signals.append(shapeVeto)
+        }
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: summary.containingTypeName
         ) {
