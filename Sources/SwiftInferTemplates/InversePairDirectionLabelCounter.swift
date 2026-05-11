@@ -56,26 +56,50 @@ extension InversePairTemplate {
         guard forwardIsDirection || reverseIsDirection else {
             return nil
         }
+        let cursorPrefixes = ["index", "bucket", "word"]
+        let forwardName = pair.forward.name
+        let reverseName = pair.reverse.name
+        let forwardNameMatch = cursorPrefixes.contains { forwardName.hasPrefix($0) }
+        let reverseNameMatch = cursorPrefixes.contains { reverseName.hasPrefix($0) }
         // V1.27.B — name-prefix-gated full veto. Direct cycle-23 finding
         // closure (cycle-23 #26 `bucket(after:) × bucket(before:)` +
         // #27 `word(after:) × word(before:)` REJECT). When BOTH pair
         // sides are direction-labeled AND both function names start with
         // `index`/`bucket`/`word`, fire full veto. Mirrors V1.25.A on
         // idempotence + V1.22.B on round-trip.
-        if forwardIsDirection && reverseIsDirection {
-            let prefixes = ["index", "bucket", "word"]
-            let forwardName = pair.forward.name
-            let reverseName = pair.reverse.name
-            let forwardNameMatch = prefixes.contains { forwardName.hasPrefix($0) }
-            let reverseNameMatch = prefixes.contains { reverseName.hasPrefix($0) }
-            if forwardNameMatch && reverseNameMatch {
+        if forwardIsDirection && reverseIsDirection,
+           forwardNameMatch && reverseNameMatch {
+            return Signal(
+                kind: .directionLabel,
+                weight: Signal.vetoWeight,
+                detail: "Both pair sides direction-labeled + name-prefix "
+                    + "match ('\(forwardName)(\(forwardLabel!):)' × "
+                    + "'\(reverseName)(\(reverseLabel!):)') — positional "
+                    + "cursor-advance pair, not a functional-inverse pair"
+            )
+        }
+        // V1.29.A — asymmetric-pair full veto. Direct cycle-25 finding 1
+        // closure (cycle-25 #28 `bucket(after:) × firstOccupiedBucketInChain`
+        // + #29 `bucket(before:) × firstOccupiedBucketInChain` REJECT). When
+        // ONE side is a cursor-advance shape (direction-labeled + name in
+        // {index,bucket,word}) and the OTHER side is not direction-labeled,
+        // the pair is structurally asymmetric (cursor-advance × search-shape)
+        // rather than functional-inverse. Fire full veto. Mirrors V1.27.B's
+        // symmetric-veto pattern.
+        if forwardIsDirection != reverseIsDirection {
+            let cursorSideIsForward = forwardIsDirection
+            let cursorSideName = cursorSideIsForward ? forwardName : reverseName
+            let cursorSideLabel = cursorSideIsForward ? forwardLabel! : reverseLabel!
+            let otherSideName = cursorSideIsForward ? reverseName : forwardName
+            let cursorSideNameMatch = cursorSideIsForward ? forwardNameMatch : reverseNameMatch
+            if cursorSideNameMatch {
                 return Signal(
                     kind: .directionLabel,
                     weight: Signal.vetoWeight,
-                    detail: "Both pair sides direction-labeled + name-prefix "
-                        + "match ('\(forwardName)(\(forwardLabel!):)' × "
-                        + "'\(reverseName)(\(reverseLabel!):)') — positional "
-                        + "cursor-advance pair, not a functional-inverse pair"
+                    detail: "Asymmetric direction-pair: cursor-advance side "
+                        + "'\(cursorSideName)(\(cursorSideLabel):)' × non-direction "
+                        + "side '\(otherSideName)(...)' — cursor advance is not a "
+                        + "functional-inverse partner to a search-shape lookup"
                 )
             }
         }

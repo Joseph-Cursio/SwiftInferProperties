@@ -69,17 +69,42 @@ struct InversePairBothSidesNamePrefixTests {
         #expect(signal?.isVeto == true)
     }
 
-    @Test("Asymmetric direction + non-direction pair preserves V1.11.1 -10")
-    func asymmetricPreservesMinus10() {
-        // 'bucket(after:) × firstOccupiedBucketInChain(with:)': only
-        // forward direction-labeled. Falls through to V1.11.1 either-
-        // side -10 path; V1.27.B's both-sides full-veto doesn't apply.
+    @Test("V1.29.A — asymmetric cursor × non-direction pair fires full veto")
+    func asymmetricCursorFiresFullVeto() {
+        // 'bucket(after:) × firstOccupiedBucketInChain(with:)': forward
+        // side is cursor-advance (direction-prefix-name + direction-label),
+        // reverse side is non-direction lookup. V1.29.A's asymmetric-pair
+        // full-veto closes the cycle-25 #28 + #29 reject pattern.
         let signal = InversePairTemplate.directionLabelCounterSignal(
             for: pair(forwardName: "bucket", forwardLabel: "after",
                       reverseName: "firstOccupiedBucketInChain", reverseLabel: "with")
         )
-        let counter = try! #require(signal)
-        #expect(counter.weight == -10)
+        let veto = try! #require(signal)
+        #expect(veto.isVeto)
+        #expect(veto.detail.contains("Asymmetric direction-pair"))
+    }
+
+    @Test("V1.29.A — asymmetric on reverse side also fires full veto")
+    func asymmetricCursorOnReverseFiresFullVeto() {
+        // 'firstOccupiedBucketInChain(with:) × bucket(before:)': reverse
+        // side is the cursor-advance shape. Symmetric to the forward case.
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "firstOccupiedBucketInChain", forwardLabel: "with",
+                      reverseName: "bucket", reverseLabel: "before")
+        )
+        #expect(signal?.isVeto == true)
+    }
+
+    @Test("V1.29.A — asymmetric direction-label on non-cursor-prefix name preserves -10")
+    func asymmetricNonCursorPreservesMinus10() {
+        // 'transform(after:) × untransform(_:)': forward direction-labeled
+        // but name doesn't match cursor-prefix list. V1.29.A's asymmetric
+        // veto doesn't fire; falls through to V1.11.1 either-side -10.
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "transform", forwardLabel: "after",
+                      reverseName: "untransform", reverseLabel: nil)
+        )
+        #expect(signal?.weight == -10)
     }
 
     @Test("Both sides direction-labeled but non-index-advance name preserves -10")
