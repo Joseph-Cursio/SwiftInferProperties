@@ -209,19 +209,16 @@ extension SwiftInferCommand {
             )
         }
 
-        /// Best-effort carrier-type extraction from the evidence
-        /// signature. The Evidence struct stores a "trimmed function
-        /// signature" string like `"(String) -> String"`; the carrier
-        /// type isn't a separate column on Suggestion. v1.33 doesn't
-        /// re-parse the signature — returns `nil`, which renders as
-        /// "(none)" in query output. v1.34+ can enrich this when the
-        /// Suggestion data model widens.
+        /// V1.34.C — carrier-type extraction. v1.33 deferred this by
+        /// returning nil (no `--type` query support). v1.34.A widened
+        /// the `Suggestion` data model with `carrier: String?`, and
+        /// v1.34.B threaded it through every template's suggest()
+        /// emitter + post-template rebuilder + TestLifter promotion.
+        /// v1.34.C reads it directly here. `nil` flows through to the
+        /// emitted `SemanticIndexEntry.typeName`, which renders as
+        /// `(none)` in `query` output and matches `query --type none`.
         private static func carrierType(for suggestion: Suggestion) -> String? {
-            // Cycle-25/27 evidence shows carrier-aware suggestions
-            // (Idempotence-lifted, RoundTrip, InversePair) carry a
-            // "Value-semantic carrier (X)" line in whySuggested. v1.33
-            // doesn't re-parse that — defer enrichment to v1.34+.
-            nil
+            suggestion.carrier
         }
 
         private static func humanReadableTier(_ tier: Tier) -> String {
