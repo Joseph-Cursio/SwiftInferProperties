@@ -78,6 +78,9 @@ public enum IdentityElementTemplate {
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
+        if let familyVeto = algebraicFamilyMismatchVeto(for: pair) {
+            signals.append(familyVeto)
+        }
         if let coverageVeto = protocolCoverageVeto(
             for: pair,
             inheritedTypesByName: inheritedTypesByName
@@ -144,6 +147,40 @@ public enum IdentityElementTemplate {
             kind: .reduceFoldUsage,
             weight: 20,
             detail: "Accumulator-with-empty-seed: '\(pair.operation.name)' used in .reduce(<identity-shape>, op)"
+        )
+    }
+
+    /// V1.29.B — algebraic-family-mismatch veto. Closes cycle-25 finding 2:
+    /// `rescaledDivide(_:_:) × Complex.zero` was a 6-cycle stable reject
+    /// because the `+40` curated-identity-constant signal in
+    /// `identityNamingSignal` fires unconditionally on type-shape match
+    /// without checking that the operator and identity-constant belong to
+    /// a compatible algebraic family.
+    ///
+    /// Fires `Signal.vetoWeight` when:
+    ///   - identity name is `zero` and the op name is NOT in
+    ///     `IdentityOperatorAlgebra.additiveOperatorNames`, OR
+    ///   - identity name is `one` and the op name is NOT in
+    ///     `IdentityOperatorAlgebra.multiplicativeOperatorNames`.
+    ///
+    /// `.empty` and `.identity` constants are unaffected (handled by the
+    /// V1.5.2 `identityCoverageCandidate` op-class map). `.none` and
+    /// `.default` fall through without veto.
+    static func algebraicFamilyMismatchVeto(for pair: IdentityElementPair) -> Signal? {
+        let identityName = pair.identity.name
+        let opName = pair.operation.name
+        guard IdentityOperatorAlgebra.isIncompatibleFamily(
+            identityName: identityName, opName: opName
+        ) else {
+            return nil
+        }
+        let family = identityName == "zero" ? "additive" : "multiplicative"
+        return Signal(
+            kind: .protocolCoveredProperty,
+            weight: Signal.vetoWeight,
+            detail: "Algebraic-family mismatch: identity 'T.\(identityName)' is the "
+                + "\(family) identity but operator '\(opName)' is not "
+                + "\(family) — type-shape false-positive"
         )
     }
 

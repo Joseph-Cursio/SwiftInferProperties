@@ -82,13 +82,18 @@ struct IdentityElementProtocolCoverageVetoTests {
         #expect(result == nil)
     }
 
-    @Test("(.zero, \"*\") on : Numeric does NOT veto — cycle-1 cross-product noise was here")
-    func zeroTimesOnNumericDoesNotVeto() throws {
-        // The cycle-2 priority #1 fix: previously the cross-product of
-        // curated identity constants × ops produced false-positive
-        // suggestions. (.zero, "*") doesn't bind to a kit-published
-        // law, so no veto fires. The suggestion still surfaces — v1.5
-        // narrows the veto, doesn't blanket-suppress the surface.
+    @Test("V1.29.B — (.zero, \"*\") on : Numeric is now suppressed via algebraic-family veto")
+    func zeroTimesOnNumericNowSuppressed() {
+        // V1.5.2: protocol-coverage veto narrowing didn't fire on this
+        // cross-product pair because the (zero, *) tuple doesn't bind
+        // to a kit-published law — the suggestion surfaced as Possible.
+        // V1.29.B (cycle-25 finding 2): the (zero, *) pair is now
+        // suppressed at signal-construction time because zero is the
+        // additive identity and * is multiplicative — algebraic-family
+        // mismatch fires Signal.vetoWeight. The V1.5.2 protocol-coverage
+        // narrowing is preserved at the implementation level (op-class-
+        // aware), but the suggestion no longer surfaces because the
+        // earlier algebraic-family veto wins.
         let pair = makeIdentityElementPair(
             opName: "*",
             paramTypes: ("BigInt", "BigInt"),
@@ -96,15 +101,17 @@ struct IdentityElementProtocolCoverageVetoTests {
             identityName: "zero",
             identityType: "BigInt"
         )
-        let suggestion = try #require(IdentityElementTemplate.suggest(
+        #expect(IdentityElementTemplate.suggest(
             for: pair,
             inheritedTypesByName: makeInheritedIndex("BigInt", conformances: ["Numeric"])
-        ))
-        #expect(!suggestion.score.signals.contains { $0.kind == .protocolCoveredProperty })
+        ) == nil)
     }
 
-    @Test("(.one, \"+\") on : Numeric does NOT veto — same cross-product narrowing")
-    func onePlusOnNumericDoesNotVeto() throws {
+    @Test("V1.29.B — (.one, \"+\") on : Numeric is now suppressed via algebraic-family veto")
+    func onePlusOnNumericNowSuppressed() {
+        // Symmetric to zeroTimesOnNumericNowSuppressed: V1.29.B's
+        // algebraic-family-mismatch veto fires because one is the
+        // multiplicative identity but + is additive.
         let pair = makeIdentityElementPair(
             opName: "+",
             paramTypes: ("BigInt", "BigInt"),
@@ -112,11 +119,10 @@ struct IdentityElementProtocolCoverageVetoTests {
             identityName: "one",
             identityType: "BigInt"
         )
-        let suggestion = try #require(IdentityElementTemplate.suggest(
+        #expect(IdentityElementTemplate.suggest(
             for: pair,
             inheritedTypesByName: makeInheritedIndex("BigInt", conformances: ["Numeric"])
-        ))
-        #expect(!suggestion.score.signals.contains { $0.kind == .protocolCoveredProperty })
+        ) == nil)
     }
 
     @Test("(.none, \"+\") on : Numeric does NOT veto — .none is not curated")
