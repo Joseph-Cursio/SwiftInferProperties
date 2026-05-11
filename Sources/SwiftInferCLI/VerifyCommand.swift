@@ -110,14 +110,15 @@ extension SwiftInferCommand {
 ///
 /// **Cycle progression.** V1.42.B shipped `.harnessNotYetWired` only.
 /// V1.42.C.1 adds `.suggestionNotFound`, `.ambiguousPrefix`,
-/// `.indexMissing`, `.indexEmpty`. V1.42.C.2/.C.3 add
-/// `.unsupportedCarrier`, `.buildFailed`, `.runnerCrashed`.
+/// `.indexMissing`, `.indexEmpty`. V1.42.C.2 adds `.unsupportedCarrier`.
+/// V1.42.C.3 adds `.buildFailed`, `.runnerCrashed`.
 public enum VerifyError: Error, CustomStringConvertible {
     case harnessNotYetWired
     case suggestionNotFound(prefix: String, closest: [String])
     case ambiguousPrefix(prefix: String, matches: [String])
     case indexMissing(expectedPath: URL)
     case indexEmpty(path: URL?)
+    case unsupportedCarrier(carrier: String, expected: [String])
 
     public var description: String {
         switch self {
@@ -146,6 +147,12 @@ public enum VerifyError: Error, CustomStringConvertible {
             let location = path.map { "at \($0.path)" } ?? "(default path)"
             return "swift-infer verify: SemanticIndex \(location) has zero entries. "
                 + "Run `swift-infer index --target <X>` to populate it."
+
+        case let .unsupportedCarrier(carrier, expected):
+            let expectedList = expected.joined(separator: ", ")
+            return "swift-infer verify: carrier type '\(carrier)' is not supported in v1.42. "
+                + "Supported carriers: \(expectedList). Wider carrier support lands in v1.44 "
+                + "once the kit-side generators for additional carriers ship."
         }
     }
 }
