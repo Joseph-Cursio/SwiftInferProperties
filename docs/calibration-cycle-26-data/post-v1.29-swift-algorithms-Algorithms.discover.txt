@@ -1,0 +1,138 @@
+8 suggestions.
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ endOfChunk(startingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:79
+  ✓ Type-symmetry signature: T -> T (T = Base.Index) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x0408417ECAD93517F3937EB1E65481EE9DCC6992089F11E30F886DF4832992CB
+Identity:  0x3543E69FA981193D
+Suppress:  // swiftinfer: skip 0x3543E69FA981193D
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ startOfChunk(endingAt:) (Base.Index) -> Base.Index — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:122
+  ✓ Type-symmetry signature: T -> T (T = Base.Index) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x65915FAF0CF7F96FF3C43110D9D11A7E1FA59786C7F7817AC72335B600F458D0
+Identity:  0x40C830C81337F0F5
+Suppress:  // swiftinfer: skip 0x40C830C81337F0F5
+
+[Suggestion]
+Template: idempotence
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ sizeOfChunk(offset:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:243
+  ✓ Type-symmetry signature: T -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xAFFA6D947AF41681C1B1DBC67FD0E2C18CC652BFD6121C7356FCF855D15621F5
+Identity:  0xED77E1F06B342709
+Suppress:  // swiftinfer: skip 0xED77E1F06B342709
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ sizeOfChunk(offset:) (Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Chunked.swift:243
+  ✓ Ordered-codomain signature: Int -> Int (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x158034D147D1C80A180728B2EA83C0A1AF511077DDD4C4F581FE5310374ADCFE
+Identity:  0x1BEF8F676F88EF18
+Suppress:  // swiftinfer: skip 0x1BEF8F676F88EF18
+
+[Suggestion]
+Template: associativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ binomial(n:k:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Combinations.swift:70
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+  ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — a Double-typed candidate may pass the type pattern but fail sampling under M4.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x631A2C1B53B95F7ABAA6F41712993163D35E8F3792C477C34F1864269D8D5FB8
+Identity:  0xE574CB2D65C86A66
+Suppress:  // swiftinfer: skip 0xE574CB2D65C86A66
+
+[Suggestion]
+Template: commutativity
+Score:    30 (Possible)
+
+Why suggested:
+  ✓ binomial(n:k:) (Int, Int) -> Int — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/Combinations.swift:70
+  ✓ Type-symmetry signature: (T, T) -> T (T = Int) (+30)
+
+Why this might be wrong:
+  ⚠ T must conform to Equatable for the emitted property to compile. SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+  ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0xFA1F84A72561E77EA29850A2CC9208F81853F386E95D5CAD8FD5380F7ABC25FE
+Identity:  0xB56C450591E30313
+Suppress:  // swiftinfer: skip 0xB56C450591E30313
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ log(_:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:25
+  ✓ Ordered-codomain signature: Double -> Double (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x46E9CD1AE81DCDAC4D24DB1E92CD576AB2E5EC1405631A5F7F3EB809DCA9451F
+Identity:  0xE0626CEF04CEE3AC
+Suppress:  // swiftinfer: skip 0xE0626CEF04CEE3AC
+
+[Suggestion]
+Template: monotonicity
+Score:    25 (Possible)
+
+Why suggested:
+  ✓ log(onePlus:) (Double) -> Double — /Users/josephcursio/GitHub_projects/swift-algorithms/Sources/Algorithms/RandomSample.swift:30
+  ✓ Ordered-codomain signature: Double -> Double (Comparable) (+25)
+
+Why this might be wrong:
+  ⚠ Ordered-codomain assumption breaks under custom Comparable conformances that don't satisfy strict order; the curated codomain set (Int, Double, Float, String, Date, Duration) is the only one M7.1 recognises.
+  ⚠ Possible-tier by default per the §5.2 caveat — explicit @CheckProperty(.monotonic(over:)) annotation escalates to Likely (M5 macro extension is the opt-in path).
+
+Generator: not yet computed (M3 prerequisite)
+Sampling:  not run; lifted test seed: 0x5682470ADF707FFD686E6BB7AC57A1B2DEC196EC7E10145DC7E218EF5E91AFA7
+Identity:  0xA9ADEC19AF2787F4
+Suppress:  // swiftinfer: skip 0xA9ADEC19AF2787F4
