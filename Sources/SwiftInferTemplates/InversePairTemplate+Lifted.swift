@@ -54,7 +54,8 @@ extension InversePairTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeLiftedExplainability(for: pair, signals: signals),
-            identity: makeLiftedIdentity(for: pair)
+            identity: makeLiftedIdentity(for: pair),
+            carrier: pair.forward.carrier
         )
     }
 

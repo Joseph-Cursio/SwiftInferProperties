@@ -99,7 +99,15 @@ public extension LiftedSuggestion {
             generator: .m1Placeholder,
             explainability: makeExplainability(),
             identity: makeIdentity(),
-            liftedOrigin: origin
+            liftedOrigin: origin,
+            // V1.34.B — TestLifter-promoted carrier defaults to the
+            // domain type recovered from the test body (typeT). For
+            // round-trip / idempotence / commutativity / monotonicity
+            // this is the type the property is parameterized over.
+            // `typeName == nil` falls through as `"?"` and we pass nil
+            // so query --type filters skip these (matching free-
+            // function semantics).
+            carrier: typeName
         )
     }
 

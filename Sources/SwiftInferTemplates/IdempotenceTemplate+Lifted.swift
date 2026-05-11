@@ -51,7 +51,8 @@ extension IdempotenceTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeLiftedExplainability(for: lifted, signals: signals),
-            identity: makeLiftedIdentity(for: lifted)
+            identity: makeLiftedIdentity(for: lifted),
+            carrier: lifted.carrier
         )
     }
 

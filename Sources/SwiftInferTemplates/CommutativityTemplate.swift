@@ -99,7 +99,8 @@ public enum CommutativityTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeExplainability(for: summary, signals: signals),
-            identity: makeIdentity(for: summary)
+            identity: makeIdentity(for: summary),
+            carrier: summary.containingTypeName
         )
     }
 

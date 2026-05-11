@@ -54,7 +54,8 @@ public enum InvariantPreservationTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeExplainability(for: summary, keyPath: keyPath, signals: signals),
-            identity: makeIdentity(for: summary, keyPath: keyPath)
+            identity: makeIdentity(for: summary, keyPath: keyPath),
+            carrier: summary.containingTypeName
         )
     }
 

@@ -117,7 +117,8 @@ public enum RoundTripTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeExplainability(for: pair, signals: signals),
-            identity: makeIdentity(for: pair)
+            identity: makeIdentity(for: pair),
+            carrier: pair.forward.containingTypeName
         )
     }
 

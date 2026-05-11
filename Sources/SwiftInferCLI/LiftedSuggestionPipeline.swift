@@ -298,7 +298,8 @@ public enum LiftedSuggestionPipeline {
                 explainability: suggestion.explainability,
                 identity: suggestion.identity,
                 liftedOrigin: suggestion.liftedOrigin,
-                mockGenerator: updated
+                mockGenerator: updated,
+                carrier: suggestion.carrier
             )
         }
     }
@@ -375,7 +376,8 @@ public enum LiftedSuggestionPipeline {
             explainability: suggestion.explainability,
             identity: suggestion.identity,
             liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: mockGenerator
+            mockGenerator: mockGenerator,
+            carrier: suggestion.carrier
         )
     }
 

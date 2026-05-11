@@ -140,7 +140,8 @@ extension IdentityElementTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeLiftedExplainability(for: pair, signals: signals),
-            identity: makeLiftedIdentity(for: pair)
+            identity: makeLiftedIdentity(for: pair),
+            carrier: pair.operation.carrier
         )
     }
 

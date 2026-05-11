@@ -98,7 +98,10 @@ public enum GeneratorSelection {
             score: suggestion.score,
             generator: metadata,
             explainability: suggestion.explainability,
-            identity: suggestion.identity
+            identity: suggestion.identity,
+            liftedOrigin: suggestion.liftedOrigin,
+            mockGenerator: suggestion.mockGenerator,
+            carrier: suggestion.carrier
         )
     }
 
@@ -186,7 +189,8 @@ public enum GeneratorSelection {
             explainability: suggestion.explainability,
             identity: suggestion.identity,
             liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: suggestion.mockGenerator
+            mockGenerator: suggestion.mockGenerator,
+            carrier: suggestion.carrier
         )
     }
 }

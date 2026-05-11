@@ -137,7 +137,8 @@ public enum CompositionTemplate {
             score: score,
             generator: .m1Placeholder,
             explainability: makeExplainability(for: lifted, signals: signals),
-            identity: makeIdentity(for: lifted)
+            identity: makeIdentity(for: lifted),
+            carrier: lifted.carrier
         )
     }
 
