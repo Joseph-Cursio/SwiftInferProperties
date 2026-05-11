@@ -1,7 +1,7 @@
 # Edge-Case-Biased Generators Kit Proposal
 
-**Status:** Draft / proposal — not yet committed to any milestone.
-**Target:** SwiftPropertyLaws (kit, currently at v2.0.x); prerequisite for SwiftInferProperties' test-execution-evidence Phase 1 (v1.42 candidate).
+**Status:** ✅ **Kit-side landed in `SwiftPropertyLaws v2.1.0`** (commit `ba19ab7`, 2026-05-11). Downstream consumption now queued for SwiftInferProperties v1.42 — see §8 below.
+**Target (now landed):** SwiftPropertyLaws v2.1.0 — opt-in `PropertyLawComplex` library product. Main `PropertyLawKit` line keeps a zero `swift-numerics` footprint.
 **Date:** 2026-05-11
 
 ## 1. Summary
@@ -169,21 +169,27 @@ The two repos stay independently shippable. Kit `2.1.0` is useful on its own (an
 
 -----
 
-## 7. Open Decisions for the Owner
+## 7. Open Decisions — RESOLVED 2026-05-11
 
-Three points where opinion lives and where the proposal could go either way:
+1. **The 12-entry curated set**: ✅ **Approved as-is.** No additions or removals.
 
-1. **The 12-entry curated set**. The omissions list in §3.2 calls out deliberate exclusions. Are there failure modes I've missed? Particularly: does the kit's existing FP testing surface know about any Complex-specific bugs that aren't in this list?
+2. **Bias ratio**: ✅ **90/10.** Standard PBT default; produces sharper row-2 outcomes in the two-pass verification design.
 
-2. **90/10 vs 85/15 vs 80/20 bias ratio**. The standard PBT pattern is 90/10; some libraries default to 80/20. The two-pass verification design (row 2 specifically) gets sharper with a smaller edge fraction — 90/10 makes "fails on edge cases" mean *every* edge case is hit, while 80/20 mixes signal with noise.
-
-3. **Shrinking on edge-case path**. The proposal says edge cases don't shrink (they're already minimal). But for two-pass verification's row 2 outcome ("holds for finite values; fails on edge cases"), it would be useful to know *which* edge case failed. Currently `complexEdgeCases[index]` gives us that — the index itself is the shrinking result. Is this enough, or should the API expose "the failing edge case's index in the curated list" as part of the counterexample report?
+3. **Shrinking representation**: ✅ **Deferred / value-only.** The counterexample report carries the failing `Complex<Double>` value; callers that need to know "edge case #N" do an index lookup against `complexEdgeCases`. If SwiftInfer's Phase 1 verify-mode reporting motivates a first-class index field later, the API can extend backward-compatibly (additive).
 
 -----
 
 ## 8. Sequencing
 
-1. Owner reviews this proposal; resolves the §7 open decisions.
-2. Kit-side: land `Gen<Complex<Double>>.edgeCaseBiased` + tests + version bump to `2.1.0`. Half-day of work.
-3. SwiftInferProperties: v1.42 plan consumes the kit's `2.1.0` pin; Phase 1 verify subcommand uses `edgeCaseBiased` for the two-pass design. ~2–3 cycles of v1.4x work.
+1. ✅ Owner reviews this proposal; resolves the §7 open decisions. *(Done 2026-05-11.)*
+2. ✅ Kit-side: land `Gen<Complex<Double>>.edgeCaseBiased` + tests + version bump to `2.1.0`. *(Done 2026-05-11 — `SwiftPropertyLaws` commit `ba19ab7`, tag `v2.1.0`. Shipped as opt-in `PropertyLawComplex` library product. 3 tests pass; full kit suite at 445/445; lint silent.)*
+
+   **Departures from the original sketch:**
+
+   - `edgeCaseBiased` is a **static func** (`Gen<Complex<Double>>.edgeCaseBiased()`), not a static `var`, to match the existing kit convention from `Gen<Double>.doubleWithNaN()` / `Gen<Float>.floatWithNaN()`. Callers write `.edgeCaseBiased()` with parens.
+   - Return type is `Generator<Complex<Double>, some SendableSequenceType>` (the kit's actual `swift-property-based`-flavored shape) rather than the proposal-§3.1 sketch's `Gen<Complex<Double>>` shorthand.
+   - Bias driver: a single seeded `Gen<Int>.int(in: 0 ..< 120)` call. Tags `0 ..< 12` map 1-to-1 to `complexEdgeCases` entries (so each entry is equally represented within the 10% slice); tags `12 ..< 120` fall through to a bounded-magnitude finite Complex value. The finite-path components use non-seeded `Double.random(in:)`, matching the existing `doubleWithNaN` convention; this means determinism is partial — the edge-vs-finite decision and which-edge-case selection are fully reproducible from the Xoshiro seed, but the finite-Complex values are not.
+   - Carved out as a new library product (`PropertyLawComplex`) rather than landing in `PropertyLawKit` proper, so the kit's main line keeps a zero `swift-numerics` footprint. Downstream consumers `import PropertyLawComplex` explicitly. (User-chosen architecture; see SwiftInfer's tracking issue / git log for the AskUserQuestion prompt that surfaced the three options.)
+
+3. SwiftInferProperties: v1.42 plan consumes the kit's `2.1.0` pin; Phase 1 verify subcommand uses `edgeCaseBiased` for the two-pass design. ~2–3 cycles of v1.4x work. *(Now the next step — `docs/v1.42 Calibration Plan.md`.)*
 4. Phase 2+ kit-side: extend to `Double` / `Float` / `Complex<Float>` once Phase 1 establishes patterns.
