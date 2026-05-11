@@ -170,6 +170,19 @@ struct RoundTripStubEmitterTests {
         #expect(source.contains("Gen<Complex<Double>>.complexEdgeCases"))
     }
 
+    @Test("edge-index resolution uses rawStorage (NaN-aware, non-finite-distinguishing)")
+    func stubMatchesEdgeIndexViaRawStorage() throws {
+        let source = try RoundTripStubEmitter.emit(Self.inputs())
+        // The .real / .imaginary getters collapse to .nan for any
+        // non-finite Complex, so they can't distinguish entries #0–#7.
+        // Use .rawStorage instead — the load-bearing accessor for
+        // edge-case-index resolution.
+        #expect(source.contains("value.rawStorage"))
+        #expect(source.contains(".rawStorage"))
+        #expect(!source.contains("entry.real.isNaN"))
+        #expect(!source.contains("entry.imaginary.isNaN"))
+    }
+
     @Test("stub exits 1 on FAIL and 0 on PASS")
     func stubExitsWithCorrectCodes() throws {
         let source = try RoundTripStubEmitter.emit(Self.inputs())

@@ -227,20 +227,32 @@ public enum RoundTripStubEmitter {
         """
     }
 
+    /// Pass 2 stub source.
+    ///
+    /// **`.rawStorage`-based matching.** The `matchEdgeCaseIndex`
+    /// helper uses `Complex.rawStorage` (the underlying `(x, y)`
+    /// tuple) rather than the public `.real` / `.imaginary` getters.
+    /// swift-numerics normalizes non-finite values via the getters
+    /// (any non-finite Complex reads as `.nan` on both components),
+    /// which would collapse the 8 distinct non-finite curated entries
+    /// (#0–#7) into one indistinguishable class. `.rawStorage`
+    /// preserves the original initializer arguments so each curated
+    /// entry resolves to its own index.
     private static func edgePassSection(forwardCall: String, inverseCall: String) -> String {
         """
         // --- Pass 2: edge-case-biased ---
 
         func matchEdgeCaseIndex(_ value: Complex<Double>) -> Int {
             let entries = Gen<Complex<Double>>.complexEdgeCases
+            let valueStorage = value.rawStorage
             for index in entries.indices {
-                let entry = entries[index]
-                let realMatch = entry.real.isNaN
-                    ? value.real.isNaN
-                    : entry.real == value.real
-                let imagMatch = entry.imaginary.isNaN
-                    ? value.imaginary.isNaN
-                    : entry.imaginary == value.imaginary
+                let entryStorage = entries[index].rawStorage
+                let realMatch = entryStorage.x.isNaN
+                    ? valueStorage.x.isNaN
+                    : entryStorage.x == valueStorage.x
+                let imagMatch = entryStorage.y.isNaN
+                    ? valueStorage.y.isNaN
+                    : entryStorage.y == valueStorage.y
                 if realMatch && imagMatch { return index }
             }
             return -1

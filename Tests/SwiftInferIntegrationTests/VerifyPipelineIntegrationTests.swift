@@ -127,4 +127,48 @@ struct VerifyPipelineIntegrationTests {
             Issue.record("expected .defaultFails; got \(outcome)")
         }
     }
+
+    // MARK: - E.3.b edge-case-advisory
+
+    /// **V1.43.E.3.b — edge-case-advisory integration.** Property that
+    /// holds for finite inputs but breaks on non-finite ones:
+    /// `forward = { z in z.isFinite ? z : Complex(0, 0) }`,
+    /// `inverse = { z in z }`.
+    ///
+    /// The default pass uses `Double.random(in: -1e6...1e6)` so it
+    /// only ever samples finite Complex values, and the property
+    /// is identity on finite values — Pass 1 always passes.
+    ///
+    /// The edge pass samples the kit's curated 12-entry set. Entries
+    /// #0–#7 are non-finite (NaN / ±Inf in at least one component);
+    /// entries #8–#11 are finite (`Complex(0, 0)`, `Complex(-0.0, 0)`,
+    /// `Complex(greatestFiniteMagnitude, 0)`,
+    /// `Complex(leastNonzeroMagnitude, 0)`). The property fails on the
+    /// first non-finite entry sampled, fires `.edgeCaseAdvisory`, and
+    /// the runner's `.rawStorage`-based `matchEdgeCaseIndex` resolves
+    /// the index into `[0, 7]`.
+    @Test("edge-case advisory: finite-only property fires on first non-finite curated entry")
+    func edgeCaseAdvisoryOnNonFiniteEntry() throws {
+        let outcome = try Self.runPipeline(
+            forwardCall:
+                "{ (zedValue: Complex<Double>) in "
+                + "zedValue.isFinite ? zedValue : Complex(0, 0) }",
+            inverseCall: "{ (zedValue: Complex<Double>) in zedValue }"
+        )
+        if case let .edgeCaseAdvisory(defaultTrials, _, _, _, _, edgeCaseIndex) = outcome {
+            #expect(defaultTrials == 100)
+            // The first failing trial is determined by the kit's
+            // seeded `Gen<Int>.int(in: 0 ..< 120)` tag sequence; at
+            // a fixed seed the resolved index is deterministic but
+            // depends on Pass 1's RNG-state arithmetic. We pin the
+            // contract that it must be one of the 8 non-finite
+            // curated entries (#0–#7). A value of -1 here would
+            // indicate the property failed on a finite-slice
+            // non-curated value, which the property by construction
+            // can never do.
+            #expect((0...7).contains(edgeCaseIndex))
+        } else {
+            Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
+        }
+    }
 }
