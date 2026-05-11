@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.26.0] — 2026-05-10
+
+The twenty-third calibration cycle and the **fifth empirical-only release** (after cycles 6 = 26.7%, 14 = 34.8%, 17 = 52.3%, 20 = 48.8%). v1.26 binary-equivalent to v1.25.0. Headline: **25/37 = 67.6%** Possible-tier acceptance rate — **outcome A**; +18.8pp from cycle-20's 48.8% (the largest single-cycle aggregate jump in the loop's history). **§19 ≥70% target now within +2.4pp** — sample-noise band on n=40.
+
+### Calibration cycle 23 — fifth empirical re-measurement
+
+- **Five-point trajectory:** 26.7% → 34.8% → 52.3% → 48.8% → **67.6%**. The cycle-20 non-monotonic step (-3.5pp) is now followed by the loop's largest single-cycle jump (+18.8pp). Cycle 20's drop was attributed at the time to V1.22.D calibration trade-off + cycle-20 first-measurement of 2 NEW reject classes + round-trip weighting shift — cycle 23 validates that interpretation: the surviving v1.25 surface composition has materially higher per-template accept rates.
+
+- **Drivers of the +18.8pp acceleration:** four mechanism cycles between 20 and 23 closed -38 candidates with high precision-positive density:
+  - V1.21.C + V1.22.B/D + V1.24.A removed cross-product round-trip noise → round-trip rate 60% → 85.7%.
+  - V1.24.B + V1.24.C + V1.25.A removed direction-op + non-deterministic lifted-idempotence rejects → lifted-idempotence rate 50% → 66.7%.
+  - V1.24.D + V1.25.A reduced idempotence non-lifted from 23 picks (5-cycle 0%) to 3 picks (all unknown) → 0% drag eliminated from aggregate.
+  - V1.18.C dual-style 5/5 = 100% (3-cycle rate-stability).
+
+- **Per-template results:**
+  - round-trip: 60.0% → **85.7%** (+25.7pp)
+  - idempotence (non-lifted): 0% → n/a (surface evaporation; 23 → 3 picks)
+  - idempotence-lifted: 50.0% → **66.7%** (+16.7pp)
+  - dual-style-consistency: 100% → 100% (3-cycle rate-stability)
+  - All other templates within ±5pp of cycle-20.
+
+- **Cycle-24 priority list (post-v1.26):**
+  1. FP approximate-equality template arm (10-cycle carry-forward; cycle-14 priority #4).
+  2. **NEW (cycle-23 finding):** Algo idempotence-lifted Iterator-like survivors veto (extends V1.21.A; closes 2).
+  3. **NEW (cycle-23 finding):** OC bucket/word direction-pair veto on inverse-pair template (extends V1.25.A's name-prefix gate; closes 2).
+  4. Math-library `_relaxed*` (defer indefinitely).
+  5-7. v1.19 carry-forwards.
+
+### Documentation
+
+- **v1.26 plan (V1.26.0).** Fifth empirical-only cycle plan.
+- **Cycle-23 surface re-capture (V1.26.A).** `docs/calibration-cycle-23-data/surface-counts.md`.
+- **Cycle-23 triage rubric (V1.26.B).** `docs/cycle-23-triage-rubric.md` carries cycle-20 verbatim + post-cycle-20 mechanism context.
+- **Cycle-23 triage data (V1.26.C).** 40-pick triage; 25 accept / 12 reject / 3 unknown.
+- **Cycle-23 findings (V1.26.D).** `docs/calibration-cycle-23-findings.md` — five-point trajectory + per-mechanism effectiveness + cycle-24 priority list.
+- **Performance baseline v1.25 carry-forward (V1.26.E).**
+
+### Hard guarantees + performance
+
+All PRD §16 hard guarantees + §13 perf budgets + §14 privacy unchanged.
+
+[1.26.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.26.0
+
 ## [1.25.0] — 2026-05-10
 
 The twenty-second calibration cycle and the **fourth consecutive measurement-driven mechanism cycle** (cycles 18 + 19 + 21 + 22 = v1.21 + v1.22 + v1.24 + v1.25). Single-workstream cycle closing the cycle-21 finding (`index*`/`bucket*`/`word*` direction-op idempotence non-lifted reject class). Surface 130 → **114** (-16 = -12.3%) — first cycle to cross **-90% cumulative reduction** vs cycle-1's 1167-baseline (prior low: -88.86% at cycle 21). Plan-vs-actual: -16 vs projected -13 to -15 (slightly exceeded; V1.25.A caught 2 Algo picks the plan didn't enumerate).
