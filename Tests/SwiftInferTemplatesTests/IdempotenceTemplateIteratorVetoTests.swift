@@ -192,14 +192,15 @@ struct IdempotenceTemplateIteratorVetoTests {
         #expect(signal == nil)
     }
 
-    @Test("Curated method name on non-Iterator-shaped carrier does NOT fire name fallback")
+    @Test("Curated method name on non-Iterator-shaped carrier does NOT fire name fallback (no Sequence/IteratorProtocol conformance)")
     func nameFallbackRequiresIteratorCarrierShape() {
-        // Method is "next" but carrier is "Bag" (not Iterator-shaped) and
-        // no IteratorProtocol conformance in index → no veto.
+        // Method is "next" but carrier "Bag" isn't IteratorProtocol-conforming,
+        // Sequence-conforming (V1.27.A path), or `*Iterator`-suffixed.
+        // No veto fires.
         let lift = lifted(method: "next", carrier: "Bag")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
-            inheritedTypesByName: ["Bag": ["Sequence"]]
+            inheritedTypesByName: ["Bag": ["Comparable"]]
         )
         #expect(signal == nil)
     }

@@ -90,6 +90,27 @@ extension IdempotenceTemplate {
             )
         }
 
+        // V1.27.A — Sequence-conformance fallback. Cycle-23 finding closure:
+        // 2 Algo idempotence-lifted picks reject (cycle-23 #14, #15) on
+        // Sequence-conforming carriers that expose `next()`/`advance()`
+        // directly without explicit IteratorProtocol conformance. By
+        // Sequence's contract, types defining `mutating func next()` on
+        // themselves follow the same stateful-iterator pattern as
+        // IteratorProtocol conformers — the lifted shadow advances state
+        // and is not idempotent.
+        if let inherited = inheritedTypesByName[strippedCarrier],
+           inherited.contains("Sequence"),
+           iteratorMethodNames.contains(methodName) {
+            return Signal(
+                kind: .protocolCoveredProperty,
+                weight: Signal.vetoWeight,
+                detail: "Carrier '\(carrier)' conforms to Sequence + method "
+                    + "'\(methodName)' is a canonical Iterator-pattern advance — "
+                    + "Sequence's contract implies stateful iteration; lifted "
+                    + "shadow not idempotent"
+            )
+        }
+
         // Name fallback: carrier-name + method-name joint match. Catches
         // Iterator-shape types whose conformance the corpus index didn't
         // capture (e.g., conformance declared in a non-scanned source file
