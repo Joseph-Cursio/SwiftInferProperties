@@ -80,12 +80,54 @@ public enum MonotonicityTemplate {
     /// the template consults `vocabulary.monotonicityVerbs` alongside the
     /// curated list and suffix patterns. Defaults to `.empty` so callers
     /// not yet threading vocabulary keep compiling.
+    /// V1.37.A — migrated to the Constraint Engine (PRD §20.2). The
+    /// template now expresses itself as a `Constraint<FunctionSummary>`
+    /// via `makeConstraint(vocabulary:)`, and `suggest(for:vocabulary:)`
+    /// is a thin wrapper that orchestrates the constraint through
+    /// `ConstraintRunner.suggest`. Behavior preserved bit-for-bit
+    /// (verified by the existing MonotonicityTemplate test suite +
+    /// `MonotonicityConstraintEquivalenceTests`).
     public static func suggest(
         for summary: FunctionSummary,
         vocabulary: Vocabulary = .empty
     ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(vocabulary: vocabulary),
+            subject: summary
+        )
+    }
+
+    /// V1.37.A — Constraint factory. Captures `vocabulary` into the
+    /// constraint's @Sendable closures. Recreated per-call (matches
+    /// the pre-migration per-call behaviour); future cycles can cache.
+    public static func makeConstraint(
+        vocabulary: Vocabulary
+    ) -> Constraint<FunctionSummary> {
+        Constraint<FunctionSummary>(
+            templateName: "monotonicity",
+            appliesTo: { summary in
+                Self.orderedCodomainSignal(for: summary) != nil
+            },
+            signals: { summary in
+                Self.accumulatedSignals(for: summary, vocabulary: vocabulary)
+            },
+            evidence: { summary in
+                [Self.makeEvidence(summary)]
+            },
+            identity: Self.makeIdentity(for:),
+            carrier: { $0.containingTypeName },
+            caveats: { _ in Self.makeCaveats() }
+        )
+    }
+
+    /// V1.37.A — signal-accumulation order preserved from the pre-
+    /// migration bespoke `suggest(for:vocabulary:)`.
+    static func accumulatedSignals(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary
+    ) -> [Signal] {
         guard let codomainSignal = orderedCodomainSignal(for: summary) else {
-            return nil
+            return []
         }
         var signals: [Signal] = [codomainSignal]
         if let name = nameSignal(for: summary, vocabulary: vocabulary) {
@@ -97,19 +139,22 @@ public enum MonotonicityTemplate {
         if let veto = nonDeterministicVeto(for: summary) {
             signals.append(veto)
         }
-        let score = Score(signals: signals)
-        guard score.tier != .suppressed else {
-            return nil
-        }
-        return Suggestion(
-            templateName: "monotonicity",
-            evidence: [makeEvidence(summary)],
-            score: score,
-            generator: .m1Placeholder,
-            explainability: makeExplainability(for: summary, signals: signals),
-            identity: makeIdentity(for: summary),
-            carrier: summary.containingTypeName
-        )
+        return signals
+    }
+
+    /// V1.37.A — caveat list for the Constraint's `caveats` closure.
+    /// Constant per-suggestion (monotonicity has no input-dependent
+    /// caveats, unlike Commutativity's FP advisory).
+    static func makeCaveats() -> [String] {
+        [
+            "Ordered-codomain assumption breaks under custom Comparable conformances "
+                + "that don't satisfy strict order; the curated codomain set "
+                + "(Int, Double, Float, String, Date, Duration) is the only one "
+                + "M7.1 recognises.",
+            "Possible-tier by default per the §5.2 caveat — explicit "
+                + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "
+                + "(M5 macro extension is the opt-in path)."
+        ]
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical
