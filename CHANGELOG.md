@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.29.0] — 2026-05-11
+
+The twenty-sixth calibration cycle and the **fifth consecutive measurement-driven mechanism release** (cycles 18+19+21+22+24+26 = v1.21+v1.22+v1.24+v1.25+v1.27+v1.29). Three independently-mergeable workstreams targeting cycle-25 findings; surface 113 → **109** (-4 / -3.5%). **Exact plan-vs-actual match** (-4 / -4). Cumulative reduction **-90.66%** vs cycle-1's 1167-baseline (new low; prior: -90.32% at cycle 24). Mechanism-class taxonomy 14 → **15** (class 15 = algebraic-family-mismatch veto on identity-element).
+
+### Calibration cycle 26 — cycle-25 findings closure (3-workstream)
+
+- **Workstream A (V1.29.A): Inverse-pair asymmetric-pair full-veto.** Extends V1.27.B's both-sides name-prefix gate to also fire `Signal.vetoWeight` on asymmetric (cursor-advance × non-direction) pairs. **Surface impact: -2 OC** (cycle-25 #28 + #29: `bucket(after:|before:) × firstOccupiedBucketInChain(with:)`). Mechanism class 6 extension.
+
+- **Workstream B (V1.29.B): Identity-element algebraic-family mismatch veto.** New `IdentityOperatorAlgebra` curated set + `algebraicFamilyMismatchVeto`. Fires `Signal.vetoWeight` when `T.zero` pairs with a non-additive operator (or `T.one` with a non-multiplicative operator). **Surface impact: -1 CM** (cycle-25 #30: `rescaledDivide(_:_:) × Complex.zero`). Also closes legacy V1.5.2 cross-product cases (zero × *, one × +) at signal-construction time. New mechanism class 15.
+
+- **Workstream C (V1.29.C): Composition-lifted monotone-bounded full-veto promotion.** V1.21.B's `-25` counter on `monotoneBoundedLabels` (`until/to/at/upTo/before/through`) promoted to `Signal.vetoWeight`. The cycle-17 plan §"Open decisions" #2 anticipated this promotion if false-negative rate stayed at 0/N on broader corpora; cycles 17 + 20 + 23 + 25 all measured REJECT (4-cycle-stable 0%). **Surface impact: -1 OC** (cycle-25 #36: `_HashTable.BucketIterator.advance(until:)`).
+
+### Aggregate-rate projection for cycle 27
+
+Cycle-25 measured 21 Accept / 12 Reject / 3 Unknown on the 113-surface. The 4 picks v1.29 closes were all REJECT. Replacing them with 4 absent picks:
+- Accept = 21 (unchanged)
+- Reject = 12 - 4 = 8
+- **Projected acceptance rate = 21 / (21 + 8) = 72.4%**
+
+If cycle-27 (v1.30) confirms this projection, **§19 ≥70% target is reached** after 27 calibration cycles. Sample-noise band ±5pp on n≈33-36; mechanism-precision-driven projection at high confidence.
+
+### Three mechanism classes now empty on cycle-1..14 corpora
+
+For the first time in the loop's history:
+- inverse-pair: 0 picks (V1.27.B + V1.29.A)
+- identity-element: 0 picks (V1.29.B)
+- composition-lifted: 0 picks (V1.29.C)
+
+### Documentation
+
+- **v1.29 plan (V1.29.0).** Cycle-26 priority closure (3 workstreams).
+- **Cycle-26 findings (V1.29.D).** `docs/calibration-cycle-26-findings.md` — exact plan-vs-actual match + aggregate-rate projection + cycle-27 priority list.
+- **Post-v1.29 capture.** `docs/calibration-cycle-26-data/post-v1.29-*.discover.txt`.
+- **Performance baseline (V1.29.E).** Re-measured; all §13 budgets hold.
+
+[1.29.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.29.0
+
 ## [1.28.0] — 2026-05-11
 
 The twenty-fifth calibration cycle and the **sixth empirical-only release** (after cycles 6 = 26.7%, 14 = 34.8%, 17 = 52.3%, 20 = 48.8%, 23 = 67.6%). v1.28 binary-equivalent to v1.27.0. Headline: **21/33 = 63.6%** Possible-tier acceptance rate — **outcome B** (60-69% plateau range); -4.0pp from cycle-23's 67.6%. **§19 ≥70% target NOT reached within 25 cycles.**
