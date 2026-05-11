@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.38.0] — 2026-05-11
+
+The thirty-fifth calibration cycle. **First batch-migration cycle** for the Constraint Engine refactor (PRD §20.2). Three templates migrated in one cycle (Associativity + InvariantPreservation + DualStyleConsistency) via the V1.36.D mechanical pattern; behavior preserved bit-for-bit across all three.
+
+### Calibration cycle 35 — Constraint Engine batch migration (4-workstream)
+
+- **V1.38.A — AssociativityTemplate**. 3 runtime inputs (vocabulary, reducerOps, inheritedTypesByName). Always-3-caveat shape replicates the pre-migration conditional FP-advisory vs fallback logic.
+- **V1.38.B — InvariantPreservationTemplate**. 0 runtime inputs (simplest migration). Keypath derived from `summary.invariantKeypath` inside each closure.
+- **V1.38.C — DualStyleConsistencyTemplate**. First non-FunctionSummary Subject migration: `Constraint<DualStylePair>`. Validates the abstraction's generic Subject parameter against a pair-shaped input.
+- **V1.38.D — equivalence tests**. 8 tests across 3 nested suites; per-template equivalence + runtime-input propagation + caveat-count invariants.
+
+### Migration pattern stability
+
+After 5 migrations across 3 cycles, the V1.36.D pattern has held without modification across **3 runtime-input cardinalities** (0/1/2/3 inputs), **2 Subject shapes** (FunctionSummary, DualStylePair), and **3 caveat patterns** (constant, keypath-conditional, FP-conditional).
+
+### Templates migrated: 5 / 10
+
+Remaining 5: round-trip, idempotence ×2, inverse-pair ×2, identity-element ×2, composition.
+
+### Cycle-36 priority
+
+**v1.39 — batch-migrate round-trip + idempotence ×2.** Round-trip is FunctionPair-shaped (like DualStyleConsistency); idempotence non-lifted is FunctionSummary-shaped (like Commutativity); idempotence lifted introduces `LiftedTransformation` as a new Subject shape.
+
+### Documentation
+
+- **v1.38 plan (V1.38.0).**
+- **Cycle-35 findings (V1.38.E).** `docs/calibration-cycle-35-findings.md` — pattern stability across 3 cardinalities + 2 Subject shapes + 3 caveat patterns.
+- **Performance baseline (V1.38.F).** Test count 2080 → 2088 (+8).
+
+[1.38.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.38.0
+
 ## [1.37.0] — 2026-05-11
 
 The thirty-fourth calibration cycle. **Second Constraint Engine migration** (PRD §20.2): `MonotonicityTemplate` migrated via the V1.36.D mechanical pattern. Behavior preserved bit-for-bit — all 32 pre-existing MonotonicityTemplate tests pass without modification + 3 new equivalence tests on a 7-fixture corpus. **Templates migrated: 2 / 10.**
