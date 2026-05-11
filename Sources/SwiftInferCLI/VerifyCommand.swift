@@ -108,11 +108,16 @@ extension SwiftInferCommand {
 /// violate the rule. Public so tests can pattern-match on the case
 /// rather than the rendered text.
 ///
-/// V1.42.B ships only `.harnessNotYetWired`; V1.42.C adds the real
-/// error vocabulary (`.suggestionNotFound`, `.ambiguousPrefix`,
-/// `.unsupportedCarrier`, `.buildFailed`, `.runnerCrashed`).
+/// **Cycle progression.** V1.42.B shipped `.harnessNotYetWired` only.
+/// V1.42.C.1 adds `.suggestionNotFound`, `.ambiguousPrefix`,
+/// `.indexMissing`, `.indexEmpty`. V1.42.C.2/.C.3 add
+/// `.unsupportedCarrier`, `.buildFailed`, `.runnerCrashed`.
 public enum VerifyError: Error, CustomStringConvertible {
     case harnessNotYetWired
+    case suggestionNotFound(prefix: String, closest: [String])
+    case ambiguousPrefix(prefix: String, matches: [String])
+    case indexMissing(expectedPath: URL)
+    case indexEmpty(path: URL?)
 
     public var description: String {
         switch self {
@@ -120,6 +125,27 @@ public enum VerifyError: Error, CustomStringConvertible {
             return "swift-infer verify: V1.42.B argument surface is in place but "
                 + "the harness pipeline lands in V1.42.C. Try again after the next "
                 + "v1.42 deliverable."
+
+        case let .suggestionNotFound(prefix, closest):
+            let suffix = closest.isEmpty
+                ? ""
+                : ". Nearest known hashes: \(closest.joined(separator: ", "))"
+            return "swift-infer verify: no suggestion found with identity-hash prefix '\(prefix)'\(suffix)"
+
+        case let .ambiguousPrefix(prefix, matches):
+            return "swift-infer verify: identity-hash prefix '\(prefix)' is ambiguous — "
+                + "matches \(matches.count) entries: \(matches.joined(separator: ", ")). "
+                + "Lengthen the prefix to disambiguate."
+
+        case let .indexMissing(path):
+            return "swift-infer verify: SemanticIndex not found at \(path.path). "
+                + "Run `swift-infer index --target <X>` first to build it. "
+                + "(V1.42.C.5 will reindex on demand; not yet wired.)"
+
+        case let .indexEmpty(path):
+            let location = path.map { "at \($0.path)" } ?? "(default path)"
+            return "swift-infer verify: SemanticIndex \(location) has zero entries. "
+                + "Run `swift-infer index --target <X>` to populate it."
         }
     }
 }
