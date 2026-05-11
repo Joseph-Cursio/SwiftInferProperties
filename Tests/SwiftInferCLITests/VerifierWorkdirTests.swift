@@ -85,6 +85,7 @@ struct VerifierWorkdirTests {
         #expect(rendered.contains("name: \"SwiftInferVerifier\""))
         #expect(rendered.contains("swift-numerics"))
         #expect(rendered.contains("swift-property-based"))
+        #expect(rendered.contains("SwiftPropertyLaws"))
         #expect(!rendered.contains(".package(path:"))
     }
 
@@ -101,12 +102,13 @@ struct VerifierWorkdirTests {
         #expect(rendered.contains(".product(name: \"MyLib\", package: \"MyPackage\")"))
     }
 
-    @Test("Package.swift always depends on the three V1.42-mandatory products")
+    @Test("Package.swift always depends on the four mandatory products")
     func packageSwiftMandatoryProducts() {
         let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil)
         #expect(rendered.contains(".product(name: \"ComplexModule\""))
         #expect(rendered.contains(".product(name: \"RealModule\""))
         #expect(rendered.contains(".product(name: \"PropertyBased\""))
+        #expect(rendered.contains(".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"))
     }
 
     @Test("escapedLiteral escapes backslashes and double quotes")

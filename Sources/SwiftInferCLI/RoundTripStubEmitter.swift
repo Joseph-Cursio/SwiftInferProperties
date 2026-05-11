@@ -198,10 +198,13 @@ public enum RoundTripStubEmitter {
     }
 
     /// Build the import block. `ComplexModule`, `RealModule`,
-    /// `PropertyBased`, and `Foundation` are V1.42-mandatory; user-
-    /// supplied imports append in stable (de-duplicated, sorted) order.
+    /// `PropertyBased`, and `Foundation` are V1.42-mandatory.
+    /// `PropertyLawComplex` is V1.43.A-mandatory — it gates the
+    /// `Gen<Complex<Double>>.edgeCaseBiased()` reference that V1.43.B
+    /// emits for the edge-case-biased second pass. User-supplied
+    /// imports append in stable (de-duplicated, sorted) order.
     private static func importsSection(_ extra: [String]) -> String {
-        let base = ["ComplexModule", "Foundation", "PropertyBased", "RealModule"]
+        let base = ["ComplexModule", "Foundation", "PropertyBased", "PropertyLawComplex", "RealModule"]
         let extraTrimmed = extra
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }

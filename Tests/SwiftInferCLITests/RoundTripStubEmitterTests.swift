@@ -69,12 +69,13 @@ struct RoundTripStubEmitterTests {
 
     // MARK: - Mandatory imports
 
-    @Test("stub imports the V1.42-mandatory modules")
+    @Test("stub imports the mandatory modules (V1.42 + V1.43.A)")
     func stubContainsMandatoryImports() throws {
         let source = try RoundTripStubEmitter.emit(Self.inputs())
         #expect(source.contains("import ComplexModule"))
         #expect(source.contains("import RealModule"))
         #expect(source.contains("import PropertyBased"))
+        #expect(source.contains("import PropertyLawComplex"))
         #expect(source.contains("import Foundation"))
     }
 

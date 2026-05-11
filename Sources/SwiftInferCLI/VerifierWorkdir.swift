@@ -113,6 +113,15 @@ public enum VerifierWorkdir {
     /// swift-property-based pin to the same minor lines as the kit's
     /// own `SwiftPropertyLaws` v2.1.0 deps so the verifier's resolved
     /// graph matches what the kit would build.
+    ///
+    /// **V1.43.A** — the workdir now additionally depends on
+    /// `SwiftPropertyLaws` for the `PropertyLawComplex` library
+    /// product. Pinned `from: "2.1.0"` to match the user-side
+    /// `Package.swift` (V1.42.A). `PropertyLawComplex` ships
+    /// `Gen<Complex<Double>>.edgeCaseBiased()` + the curated 12-entry
+    /// `complexEdgeCases` set, which V1.43.B consumes for the two-pass
+    /// design. The dep is additive; existing `swift-numerics` and
+    /// `swift-property-based` lines are untouched.
     static func renderPackageSwift(userPackage: UserPackageReference?) -> String {
         let dependenciesBlock = renderDependenciesBlock(userPackage: userPackage)
         let targetDependenciesBlock = renderTargetDependenciesBlock(userPackage: userPackage)
@@ -149,7 +158,8 @@ public enum VerifierWorkdir {
     private static func renderDependenciesBlock(userPackage: UserPackageReference?) -> String {
         var entries = [
             ".package(url: \"https://github.com/apple/swift-numerics.git\", from: \"1.0.0\")",
-            ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")"
+            ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+            ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.1.0\")"
         ]
         if let userPackage {
             entries.append(".package(path: \(escapedLiteral(userPackage.packagePath.path)))")
@@ -159,14 +169,19 @@ public enum VerifierWorkdir {
             .joined(separator: ",\n")
     }
 
-    /// Build the comma-joined target `dependencies:` array. The three
-    /// kit deps (`ComplexModule`, `RealModule`, `PropertyBased`) are
-    /// always present; user products append when supplied.
+    /// Build the comma-joined target `dependencies:` array. Four kit
+    /// deps (`ComplexModule`, `RealModule`, `PropertyBased`,
+    /// `PropertyLawComplex`) are always present from V1.43.A; user
+    /// products append when supplied. `PropertyLawComplex` is the
+    /// opt-in library product introduced at `SwiftPropertyLaws v2.1.0`
+    /// that exposes `Gen<Complex<Double>>.edgeCaseBiased()` for the
+    /// V1.43.B two-pass design.
     private static func renderTargetDependenciesBlock(userPackage: UserPackageReference?) -> String {
         var entries = [
             ".product(name: \"ComplexModule\", package: \"swift-numerics\")",
             ".product(name: \"RealModule\", package: \"swift-numerics\")",
-            ".product(name: \"PropertyBased\", package: \"swift-property-based\")"
+            ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
+            ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"
         ]
         if let userPackage {
             for productName in userPackage.productNames {
