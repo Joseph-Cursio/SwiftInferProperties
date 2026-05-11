@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.24.0] — 2026-05-10
+
+The twenty-first calibration cycle and the **third consecutive measurement-driven mechanism cycle** (cycle 18 = v1.21 closed cycle-17 findings; cycle 19 = v1.22 closed cycle-18 findings; cycle 21 = v1.24 closes cycle-19 + cycle-20 findings). Four independently-mergeable workstreams shipped in one release. Surface 152 → **130** (-22 = -14.5%) — new cumulative-reduction low at **-88.86%** vs cycle-1's 1167-baseline (prior low: -86.97% at cycle 19). First cycle to cross the -88% threshold. Plan-vs-actual: -22 vs projected -21 to -32 (solidly in range). Mechanism-class taxonomy 14 → **14** (no new classes; four extensions of existing classes 6 + 7).
+
+### Calibration cycle 21 — cycle-19 + cycle-20 findings (4-workstream mechanism)
+
+- **Workstream A (V1.24.A): Asymmetric label class mismatch counter on round-trip.** Direct cycle-19 finding + cycle-20 reconfirmed at 5/5 = 100% reject. New `Sources/SwiftInferTemplates/RoundTripAsymmetricLabelCounter.swift` adds `asymmetricLabelClassMismatchCounterSignal(for:)` that fires at -25 when one side direction-labeled and the other side domain-marker-labeled (or vice versa). Closes the OC `index(after:) × _minimumCapacity(forScale:)`-shape cross-product noise class. Score arithmetic: 30 + 5 - 15 (V1.12.1) - 25 (V1.24.A) = -5 → Suppressed. Mechanism class 6 extension. Surface impact: **-6 OC**. 8 new unit tests in `RoundTripAsymmetricLabelCounterTests.swift`.
+
+- **Workstream B (V1.24.B): Explicit non-idempotent mutator-name veto on idempotence-lifted.** Direct cycle-20 finding closure (V1.20.C 4/4 reject on OC `reverse()`/`removeFirst()`/`removeLast()` lifted-idempotence picks). New `Sources/SwiftInferCore/MutatorBlockedFromIdempotence.swift` curated set `{reverse, removeFirst, removeLast, popFirst, popLast, dropFirst, dropLast}`. New `IdempotenceTemplate+MutatorBlocklistVeto.swift` extension fires `Signal.vetoWeight` when the lift's underlying method name is in the curated set — on **any** value-semantic carrier (no protocol-conformance requirement). Generalizes V1.21.A's class 7 carrier-protocol-conformance sub-class from Iterator-conforming carriers to any value-semantic carrier with curated-method-name match. Surface impact: **-9 OC** (exceeded plan projection of 4-6 because pop*/drop* variants caught extra candidates). 11 new unit tests in `IdempotenceTemplateMutatorBlocklistTests.swift`.
+
+- **Workstream C (V1.24.C): Non-deterministic shuffle veto extension.** Direct cycle-20 finding closure (V1.20.C #40 unknown verdict on `OrderedDictionary.shuffle()`; surfaced despite being non-deterministic because the existing body-signal RNG detector missed the OC pattern). Name-fallback approach per the v1.24 plan §"Open decisions" #2 lean. New `Sources/SwiftInferCore/NonDeterministicMutatorNames.swift` curated set `{shuffle}`. New `IdempotenceTemplate+NonDeterministicMutatorVeto.swift` extension fires `Signal.vetoWeight` (`Signal.Kind.nonDeterministicBody`) on the canonical `shuffle()` mutator on any value-semantic carrier. Surface impact: **-3 OC** (all 3 OC shuffle variants closed). 6 new unit tests in `IdempotenceTemplateNonDeterministicMutatorTests.swift`.
+
+- **Workstream D (V1.24.D): Capacity/formatter shape-disambiguation veto on idempotence non-lifted.** Direct cycle-20 finding closure (5-cycle-flat 0% idempotence non-lifted rate is dominated by shape-coincidence patterns). New `IdempotenceTemplate+ShapeDisambiguationVeto.swift` extension fires `Signal.vetoWeight` on two patterns: (1) capacity/scale domain conversion — `(Int) -> Int` shape AND name contains domain-conversion token (Capacity / Count / Scale / scale) AND first-param label is `forScale:` or `forCapacity:`. Both conditions required to avoid false positives on V1.15.1 curated verbs like `normalize(forScale:)`. (2) Formatter — name has prefix `_description*` or `format*` AND single-param shape. Catches `_description(type:)`, `format(_:)`, `formatBuckets(_:)`. Mechanism class 7 extension (third in lineage: V1.14.1 SetAlgebra → V1.21.C math-forward → V1.24.D capacity/formatter). Surface impact: **-4 OC** (under-projected vs plan's 10-15; direction-op idempotence rejects dominate the residual pool — cycle-22+ priority). 14 new unit tests in `IdempotenceTemplateShapeDisambiguationTests.swift`.
+
+- **Per-corpus surface delta:**
+  - ComplexModule: 21 → 21 (byte-stable; no v1.24 mechanism targets CM).
+  - OrderedCollections: 114 → 92 (-22 = -19.3%); absorbs 100% of v1.24 closure.
+  - Algorithms: 10 → 10 (byte-stable).
+  - PropertyLawKit: 7 → 7 (byte-stable).
+
+- **Per-template surface delta** (cycle-20 → cycle-21):
+  - `round-trip`: 18 → 12 (-6; V1.24.A).
+  - `idempotence (non-lifted)`: 23 → 19 (-4; V1.24.D).
+  - `idempotence-lifted`: 21 → 9 (-12; V1.24.B + V1.24.C; **largest per-template delta**).
+  - All other templates byte-stable.
+
+- **Cumulative trajectory:** cycles 1-20 went 1167 → 152 (-86.97%); cycle 21 = v1.24 reaches 1167 → 130 = **-88.86%** (new low). Cumulative aggregate movement across cycles 17 → 21 (4 cycles since the cycle-17 measurement): 335 → 130 = -61.2%.
+
+- **Cycle-22 priority list (rotated post-v1.24, in expected impact order):**
+  1. v1.25 = cycle 22 (empirical-only re-measurement OR mechanism cycle; loop choice).
+  2. **NEW (cycle-21 finding):** `index(after:)` / `index(before:)` direction-op idempotence non-lifted veto. The residual 19-pick idempotence non-lifted pool is dominated by 13+ OC direction-op rejects. Mechanism: extend V1.10.1's direction-label counter from -15 to -25 (full veto) on `index*`/`bucket*`/`word*` names + direction-labeled. Magnitude: closes ~13 OC candidates.
+  3. FP approximate-equality template arm (8-cycle carry-forward).
+  4. Math-library `_relaxed*` extension (6-cycle carry-forward).
+  5-7. Carry-forwards from v1.19 (CompositionTemplate non-numeric monoid; lift admission relaxation; `liftedFromMutation` magnitude re-baselining).
+
+### Documentation
+
+- **v1.24 calibration plan (V1.24.0).** `docs/v1.24 Calibration Plan.md` — four-workstream mechanism cycle plan; cycle-19+20-finding-driven priorities.
+- **Cycle-21 findings (V1.24.E).** `docs/calibration-cycle-21-findings.md` — surface delta, per-workstream contribution table, mechanism-class taxonomy update (14 → 14 with 4 extensions), per-mechanism effectiveness ranking, cycle-20 picks status at v1.24, cycle-22 priority list with NEW cycle-21 finding.
+- **Cycle-21 capture (V1.24.E).** `docs/calibration-cycle-21-data/post-v1.24-*.discover.txt` — four per-corpus discover snapshots at the V1.24.D commit.
+- **Performance baseline re-measured (V1.24.E).** `docs/perf-baseline-v1.24.md` — re-measured at commit `7efcced`. Every row within ±5% of v1.22 baseline; ≤+5% budget met. Most rows faster than v1.22 (suppression short-circuit on -22 closed candidates outweighs per-call O(1) veto-evaluation overhead). Row 4 peak delta 135.9 MB (vs v1.22's 135.8 MB).
+
+### Hard guarantees + performance
+
+- All PRD §16 hard guarantees unchanged — v1.24 ships zero new accept-flow writeout paths (all four workstreams are veto-only or counter-only mechanisms).
+- All PRD §13 performance budgets hold at v1.24 (re-measured at [`docs/perf-baseline-v1.24.md`](docs/perf-baseline-v1.24.md)). v1.24 release-blocking criterion (≤+5% wall vs v1.22) met with margin.
+- PRD §14 + §19 runtime no-network guarantee unchanged.
+
+[1.24.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.24.0
+
 ## [1.23.0] — 2026-05-10
 
 The twentieth calibration cycle and the **fourth empirical-only release** in the loop's history (after cycle 6 = v1.9 = 26.7%; cycle 14 = v1.17 = 34.8%; cycle 17 = v1.20 = 52.3%). v1.23 is binary-equivalent to v1.22.0 except the version-string bump — zero `Sources/` changes, zero test changes, zero behavior changes. The cycle's deliverable is **per-template + per-corpus acceptance-rate data on the post-v1.22 152-surface**. Headline: **21/43 = 48.8%** Possible-tier acceptance rate — **outcome D** under the v1.23 plan thresholds (Aggregate < 52% — first non-monotonic move in the loop's history). The drop is **explained by a calibration trade-off + sample-distribution shift**, not a precision regression.
