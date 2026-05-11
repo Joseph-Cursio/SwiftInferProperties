@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.37.0] — 2026-05-11
+
+The thirty-fourth calibration cycle. **Second Constraint Engine migration** (PRD §20.2): `MonotonicityTemplate` migrated via the V1.36.D mechanical pattern. Behavior preserved bit-for-bit — all 32 pre-existing MonotonicityTemplate tests pass without modification + 3 new equivalence tests on a 7-fixture corpus. **Templates migrated: 2 / 10.**
+
+### Calibration cycle 34 — MonotonicityTemplate migration (2-workstream)
+
+- **V1.37.A**: `MonotonicityTemplate.suggest(for:vocabulary:)` is now a 4-line `ConstraintRunner.suggest` wrapper. New factories: `makeConstraint(vocabulary:)`, `accumulatedSignals(for:vocabulary:)`, `makeCaveats()` (constant; no FP-conditional path).
+- **V1.37.B**: 3 equivalence tests verify bit-for-bit Suggestion output across a 7-fixture corpus + vocabulary propagation + constant-caveats invariant.
+
+### Migration pattern validation
+
+The V1.36.D mechanical pattern held without modification on Monotonicity (different runtime-input shape from Commutativity — single `vocabulary` input vs Commutativity's `(vocabulary, inheritedTypesByName)` pair). Two of the more disparate single-summary signal shapes now validated.
+
+### Cycle-35 priority
+
+**v1.38 batch-migrate the next 3 simplest templates** (Associativity + InvariantPreservation + DualStyleConsistency). Per-cycle pacing remains an option.
+
+### Documentation
+
+- **v1.37 plan (V1.37.0).**
+- **Cycle-34 findings (V1.37.C).** `docs/calibration-cycle-34-findings.md` — pattern stability + v1.38+ batch-migration roadmap.
+- **Performance baseline (V1.37.D).** Test count 2077 → 2080 (+3).
+
+[1.37.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.37.0
+
 ## [1.36.0] — 2026-05-11
 
 The thirty-third calibration cycle and the **first cycle of the multi-cycle Constraint Engine refactor** (PRD §20.2). Lays the foundation: introduces the `Constraint<Subject>` abstraction + `ConstraintRunner` orchestrator + migrates `CommutativityTemplate` as proof-of-concept. **Behavior preserved bit-for-bit** — all 54 pre-existing CommutativityTemplate tests pass without modification. **No acceptance-rate re-measurement** — architectural refactor with no inference-precision change.
