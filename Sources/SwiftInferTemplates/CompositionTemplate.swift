@@ -69,26 +69,27 @@ public enum CompositionTemplate {
         "append", "deposit"
     ]
 
-    /// V1.21.B — first-parameter labels that signal **monotone-bounded**
-    /// rather than additive semantics. Direct cycle-17 finding closure
-    /// (1/1 reject on `BucketIterator.advance(until: Int)`): the
-    /// composition property `op(s, a).op(s, b) == op(s, a + b)` requires
-    /// the parameter to contribute additively, but a label like `until:`
-    /// signals "advance state up to a target" — `op(s, a).op(s, b)`
-    /// produces `max(a, b)`-bounded state, not `a + b`-additive state.
+    /// V1.21.B / **V1.29.C** — first-parameter labels that signal
+    /// **monotone-bounded** rather than additive semantics. Direct
+    /// cycle-17 finding closure (1/1 reject on
+    /// `BucketIterator.advance(until: Int)`): the composition property
+    /// `op(s, a).op(s, b) == op(s, a + b)` requires the parameter to
+    /// contribute additively, but a label like `until:` signals
+    /// "advance state up to a target" — `op(s, a).op(s, b)` produces
+    /// `max(a, b)`-bounded state, not `a + b`-additive state.
     ///
-    /// Veto magnitude `-25`: net `30 + 40 + 5 + 10 - 25 = 60` → Likely
-    /// (not Suppressed). Demotes Strong → Likely so the calibration
-    /// record is preserved at small-n; cycle-19 measurement may motivate
-    /// promotion to `-40` (full Suppressed) if false-negative rate stays
-    /// at 0/N on broader corpora. Per the v1.21 plan §"Open decisions"
-    /// #2 lean.
+    /// **V1.29.C promotes the counter to a full veto.** Cycles 17 + 20 +
+    /// 23 + 25 all measured REJECT on `advance(until:)` (4-cycle stable
+    /// 0% accept rate). The cycle-17 plan §"Open decisions" #2 anticipated
+    /// this promotion if false-negative rate stayed at 0/N on broader
+    /// corpora; cycle-25 confirms it. Veto magnitude: `Signal.vetoWeight`
+    /// (previously `-25` → net 60 Likely).
     ///
     /// **Why these labels:** all signal "advance / move state up to a
     /// target", not "add a quantity additively." `by:` is deliberately
     /// excluded — `advance(by: n)` IS additive. The exclusion list is
-    /// conservative; cycle-19 measurement may extend (e.g., `forSteps:`
-    /// in stepper-builder DSLs).
+    /// conservative; future cycles may extend (e.g., `forSteps:` in
+    /// stepper-builder DSLs).
     public static let monotoneBoundedLabels: Set<String> = [
         "until",
         "to",
@@ -202,12 +203,13 @@ public enum CompositionTemplate {
         )
     }
 
-    /// V1.21.B — fires when the first non-self parameter's label is in
-    /// `monotoneBoundedLabels`. Returns a `-25` counter-signal that
-    /// demotes a curated-verb composition Strong (85) to Likely (60),
-    /// preserving the calibration record while filtering from default-
-    /// visible Strong tier. Returns `nil` for non-monotone-bounded labels
-    /// (including `nil` label and `by:`).
+    /// V1.21.B / **V1.29.C** — fires when the first non-self parameter's
+    /// label is in `monotoneBoundedLabels`. V1.21.B introduced a `-25`
+    /// counter-signal demoting Strong → Likely. V1.29.C promotes to a
+    /// full `Signal.vetoWeight` veto per the cycle-25 4-cycle-stable-
+    /// reject finding on `advance(until:)` (cycles 17 + 20 + 23 + 25).
+    /// Returns `nil` for non-monotone-bounded labels (including `nil`
+    /// label and `by:`).
     ///
     /// The lift's `liftedParameters[0]` is always the implicit-self
     /// binding (per `LiftedTransformation.lift`); the user-facing first
@@ -224,7 +226,7 @@ public enum CompositionTemplate {
         }
         return Signal(
             kind: .directionLabel,
-            weight: -25,
+            weight: Signal.vetoWeight,
             detail: "Monotone-bounded parameter label '\(label)' — "
                 + "`op(s, a).op(s, b) = max(a, b)`-bounded state, not "
                 + "additive composition `op(s, a + b)`"

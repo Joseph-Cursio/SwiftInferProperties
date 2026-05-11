@@ -3,14 +3,16 @@ import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
 
-/// V1.21.B — monotone-bounded label counter on `CompositionTemplate`.
-/// Direct cycle-17 finding closure (1/1 reject on `BucketIterator.advance(until: Int)`):
-/// labels like `until:`, `to:`, `at:` signal monotone-bounded semantics
-/// (`op(s, a).op(s, b) == max(a, b)`-bounded), not additive composition
-/// (`op(s, a).op(s, b) == op(s, a + b)`). Demotes Strong → Likely (-25
-/// counter, not full veto) so the calibration record is preserved at
-/// small-n.
-@Suite("CompositionTemplate — V1.21.B monotone-bounded label counter")
+/// V1.21.B / **V1.29.C** — monotone-bounded label gate on
+/// `CompositionTemplate`. Labels like `until:`, `to:`, `at:` signal
+/// monotone-bounded semantics (`op(s, a).op(s, b) == max(a, b)`-bounded),
+/// not additive composition (`op(s, a).op(s, b) == op(s, a + b)`).
+///
+/// V1.21.B introduced a -25 counter (Strong → Likely demote). **V1.29.C
+/// promotes the counter to a full Signal.vetoWeight veto** per the
+/// cycle-25 4-cycle-stable-reject finding on `advance(until:)` (cycles
+/// 17 + 20 + 23 + 25 all measured REJECT).
+@Suite("CompositionTemplate — V1.29.C monotone-bounded label full veto")
 struct CompositionTemplateMonotoneBoundedTests {
 
     // MARK: - Helpers
@@ -56,38 +58,28 @@ struct CompositionTemplateMonotoneBoundedTests {
         )!
     }
 
-    // MARK: - Veto fires on each curated label
+    // MARK: - V1.29.C — veto fires on each curated label
 
-    @Test("'advance(until: Int)' demotes 85 → 60 (Strong → Likely)")
-    func untilLabelDemotes() throws {
-        let suggestion = try #require(CompositionTemplate.suggest(
+    @Test("V1.29.C — 'advance(until: Int)' fires full veto (Suppressed)")
+    func untilLabelFiresVeto() {
+        let suggestion = CompositionTemplate.suggest(
             forLifted: liftedAdvance(paramLabel: "until"),
             carrierKindResolver: valueSemanticResolver()
-        ))
-        // 30 type-shape + 40 curated verb 'advance' + 5 carrier + 10 lift
-        // - 25 monotone-bounded = 60 → Likely (not Suppressed).
-        #expect(suggestion.score.total == 60)
-        #expect(suggestion.score.tier == .likely)
-        // Detail string mentions monotone-bounded rationale.
-        let monotoneSignal = suggestion.explainability.whySuggested.first(where: {
-            $0.contains("Monotone-bounded")
-        })
-        #expect(monotoneSignal != nil, "monotone-bounded counter should appear in whySuggested")
+        )
+        #expect(suggestion == nil, "monotone-bounded 'until' should fire full veto (Suppressed)")
     }
 
-    @Test("All curated labels demote (until, to, at, upTo, before, through)")
-    func allCuratedLabelsDemote() {
+    @Test("V1.29.C — all curated labels fire full veto (until, to, at, upTo, before, through)")
+    func allCuratedLabelsFireVeto() {
         for label in CompositionTemplate.monotoneBoundedLabels {
             let suggestion = CompositionTemplate.suggest(
                 forLifted: liftedAdvance(paramLabel: label),
                 carrierKindResolver: valueSemanticResolver()
             )
-            let result = try! #require(suggestion, "Expected suggestion for label '\(label)'")
             #expect(
-                result.score.total == 60,
-                "Label '\(label)' should demote to 60; got \(result.score.total)"
+                suggestion == nil,
+                "Label '\(label)' should fire full veto (Suppressed); got non-nil"
             )
-            #expect(result.score.tier == .likely)
         }
     }
 
@@ -105,7 +97,7 @@ struct CompositionTemplateMonotoneBoundedTests {
         #expect(suggestion.score.tier == .strong)
     }
 
-    @Test("Unlabeled parameter (`_`) does not fire monotone-bounded counter")
+    @Test("Unlabeled parameter (`_`) does not fire monotone-bounded veto")
     func unlabeledParamPreservesStrong() throws {
         let suggestion = try #require(CompositionTemplate.suggest(
             forLifted: liftedAdvance(paramLabel: nil),
@@ -114,7 +106,7 @@ struct CompositionTemplateMonotoneBoundedTests {
         #expect(suggestion.score.total == 85)
     }
 
-    @Test("Non-curated label (e.g., 'amount') does not fire counter")
+    @Test("Non-curated label (e.g., 'amount') does not fire veto")
     func nonCuratedLabelPreservesStrong() throws {
         let suggestion = try #require(CompositionTemplate.suggest(
             forLifted: liftedAdvance(paramLabel: "amount"),
@@ -123,20 +115,19 @@ struct CompositionTemplateMonotoneBoundedTests {
         #expect(suggestion.score.total == 85)
     }
 
-    // MARK: - Cycle-17 BucketIterator.advance(until:) end-to-end
+    // MARK: - Cycle-17 / cycle-25 BucketIterator.advance(until:) end-to-end
 
-    @Test("Cycle-17 BucketIterator.advance(until: Int) demotes from Strong to Likely")
-    func cycle17BucketIteratorEndToEnd() throws {
-        // Reproduces the cycle-17 V1.20.C pick #46: lifted form
+    @Test("V1.29.C — cycle-25 #36 BucketIterator.advance(until:) is now Suppressed")
+    func cycle25BucketIteratorEndToEnd() {
+        // Reproduces the cycle-25 V1.28.C pick #36: lifted form
         // (BucketIterator, Int) -> BucketIterator on `advance(until:)`.
-        // V1.21.B demotes the score from 85 (Strong, default-visible) to
-        // 60 (Likely, default-visible-but-cycle-17-rejected).
-        let suggestion = try #require(CompositionTemplate.suggest(
+        // V1.21.B previously demoted Strong (85) → Likely (60); V1.29.C
+        // now suppresses outright (full veto). 4-cycle-stable-reject
+        // (cycles 17 + 20 + 23 + 25) justifies the promotion.
+        let suggestion = CompositionTemplate.suggest(
             forLifted: liftedAdvance(paramLabel: "until", carrier: "BucketIterator"),
             carrierKindResolver: valueSemanticResolver(carrier: "BucketIterator")
-        ))
-        #expect(suggestion.score.total == 60)
-        #expect(suggestion.score.tier == .likely)
-        #expect(suggestion.templateName == "composition")
+        )
+        #expect(suggestion == nil)
     }
 }
