@@ -1,0 +1,105 @@
+import PropertyLawCore
+import Testing
+import SwiftInferCore
+@testable import SwiftInferTemplates
+
+/// V1.27.B — name-prefix-gated both-sides direction-label full-veto on
+/// InversePairTemplate. Direct cycle-23 finding closure: cycle-23 #26
+/// `bucket(after:) × bucket(before:)` REJECT.
+///
+/// Mirrors V1.25.A pattern on idempotence + V1.22.B pattern on round-trip:
+/// when both pair sides direction-labeled AND both names have curated
+/// index-advance prefix (`index`/`bucket`/`word`), fire full veto.
+@Suite("InversePairTemplate — V1.27.B both-sides direction + name-prefix veto")
+struct InversePairBothSidesNamePrefixTests {
+
+    private func pair(
+        forwardName: String,
+        forwardLabel: String?,
+        reverseName: String,
+        reverseLabel: String?
+    ) -> FunctionPair {
+        let f = FunctionSummary(
+            name: forwardName,
+            parameters: [Parameter(label: forwardLabel, internalName: "x", typeText: "Bucket", isInout: false)],
+            returnTypeText: "Bucket",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: "_HashTable.UnsafeHandle",
+            bodySignals: .empty
+        )
+        let r = FunctionSummary(
+            name: reverseName,
+            parameters: [Parameter(label: reverseLabel, internalName: "x", typeText: "Bucket", isInout: false)],
+            returnTypeText: "Bucket",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 5, column: 1),
+            containingTypeName: "_HashTable.UnsafeHandle",
+            bodySignals: .empty
+        )
+        return FunctionPair(forward: f, reverse: r)
+    }
+
+    @Test("'bucket(after:) × bucket(before:)' fires full veto (cycle-23 #26 case)")
+    func bucketBothSidesFiresFullVeto() {
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "bucket", forwardLabel: "after",
+                      reverseName: "bucket", reverseLabel: "before")
+        )
+        let veto = try! #require(signal)
+        #expect(veto.isVeto)
+        #expect(veto.detail.contains("name-prefix match"))
+    }
+
+    @Test("'word(after:) × word(before:)' fires full veto")
+    func wordBothSidesFiresFullVeto() {
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "word", forwardLabel: "after",
+                      reverseName: "word", reverseLabel: "before")
+        )
+        #expect(signal?.isVeto == true)
+    }
+
+    @Test("'index(after:) × index(before:)' fires full veto")
+    func indexBothSidesFiresFullVeto() {
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "index", forwardLabel: "after",
+                      reverseName: "index", reverseLabel: "before")
+        )
+        #expect(signal?.isVeto == true)
+    }
+
+    @Test("Asymmetric direction + non-direction pair preserves V1.11.1 -10")
+    func asymmetricPreservesMinus10() {
+        // 'bucket(after:) × firstOccupiedBucketInChain(with:)': only
+        // forward direction-labeled. Falls through to V1.11.1 either-
+        // side -10 path; V1.27.B's both-sides full-veto doesn't apply.
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "bucket", forwardLabel: "after",
+                      reverseName: "firstOccupiedBucketInChain", reverseLabel: "with")
+        )
+        let counter = try! #require(signal)
+        #expect(counter.weight == -10)
+    }
+
+    @Test("Both sides direction-labeled but non-index-advance name preserves -10")
+    func bothDirectionNonPrefixPreservesMinus10() {
+        // 'transform(after:) × untransform(before:)': both direction-
+        // labeled but neither name has index/bucket/word prefix.
+        // V1.27.B doesn't fire; falls through to either-side -10.
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "transform", forwardLabel: "after",
+                      reverseName: "untransform", reverseLabel: "before")
+        )
+        #expect(signal?.weight == -10)
+    }
+
+    @Test("Neither side labeled returns nil")
+    func neitherLabeledReturnsNil() {
+        let signal = InversePairTemplate.directionLabelCounterSignal(
+            for: pair(forwardName: "encode", forwardLabel: nil,
+                      reverseName: "decode", reverseLabel: nil)
+        )
+        #expect(signal == nil)
+    }
+}

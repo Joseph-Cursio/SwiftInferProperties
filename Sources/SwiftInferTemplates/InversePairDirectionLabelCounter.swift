@@ -51,12 +51,37 @@ extension InversePairTemplate {
     ) -> Signal? {
         let forwardLabel = pair.forward.parameters.first?.label
         let reverseLabel = pair.reverse.parameters.first?.label
-        let matched = [forwardLabel, reverseLabel]
-            .compactMap { $0 }
-            .first(where: { DirectionLabels.curated.contains($0) })
-        guard let label = matched else {
+        let forwardIsDirection = forwardLabel.map { DirectionLabels.curated.contains($0) } ?? false
+        let reverseIsDirection = reverseLabel.map { DirectionLabels.curated.contains($0) } ?? false
+        guard forwardIsDirection || reverseIsDirection else {
             return nil
         }
+        // V1.27.B — name-prefix-gated full veto. Direct cycle-23 finding
+        // closure (cycle-23 #26 `bucket(after:) × bucket(before:)` +
+        // #27 `word(after:) × word(before:)` REJECT). When BOTH pair
+        // sides are direction-labeled AND both function names start with
+        // `index`/`bucket`/`word`, fire full veto. Mirrors V1.25.A on
+        // idempotence + V1.22.B on round-trip.
+        if forwardIsDirection && reverseIsDirection {
+            let prefixes = ["index", "bucket", "word"]
+            let forwardName = pair.forward.name
+            let reverseName = pair.reverse.name
+            let forwardNameMatch = prefixes.contains { forwardName.hasPrefix($0) }
+            let reverseNameMatch = prefixes.contains { reverseName.hasPrefix($0) }
+            if forwardNameMatch && reverseNameMatch {
+                return Signal(
+                    kind: .directionLabel,
+                    weight: Signal.vetoWeight,
+                    detail: "Both pair sides direction-labeled + name-prefix "
+                        + "match ('\(forwardName)(\(forwardLabel!):)' × "
+                        + "'\(reverseName)(\(reverseLabel!):)') — positional "
+                        + "cursor-advance pair, not a functional-inverse pair"
+                )
+            }
+        }
+        // V1.11.1 either-side path preserved verbatim: single-side or
+        // non-prefix-match direction labels fire at -10.
+        let label = forwardIsDirection ? forwardLabel! : reverseLabel!
         return Signal(
             kind: .directionLabel,
             weight: -10,
