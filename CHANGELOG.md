@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.39.0] — 2026-05-11
+
+The thirty-sixth calibration cycle. **Second batch-migration cycle** for the Constraint Engine refactor (PRD §20.2). Three suggest entry points migrated (RoundTripTemplate + IdempotenceTemplate non-lifted + IdempotenceTemplate lifted). Constraint API extended with one new field to support templates that insert per-suggestion narrative between evidence and signal lines.
+
+### Calibration cycle 36 — Constraint Engine batch migration #2 (5-workstream)
+
+- **Constraint API extension**: new optional `additionalWhySuggested: @Sendable (Subject) -> [String]` field on `Constraint`. Inserted by `ConstraintRunner` between evidence-display lines and signal-formatted lines in the emitted explainability block. Default `{ _ in [] }` preserves prior behavior for the 5 templates migrated in v1.36–v1.38.
+
+- **V1.39.A — RoundTripTemplate**. First `Constraint<FunctionPair>` migration with always-passing gate (pre-migration unconditionally seeded the typeSymmetry signal). 3 runtime inputs.
+
+- **V1.39.B — IdempotenceTemplate (non-lifted)**. Standard `Constraint<FunctionSummary>` migration. 3 runtime inputs.
+
+- **V1.39.C — IdempotenceTemplate (lifted)**. **First `Constraint<LiftedTransformation>` migration** — third Subject shape. Uses the new `additionalWhySuggested` field to insert `lifted.rationale` between evidence and signals, preserving the pre-migration whySuggested ordering bit-for-bit.
+
+- **V1.39.D — equivalence tests**. 7 tests across 3 nested suites + a dedicated test verifying the new `additionalWhySuggested` field correctly inserts `lifted.rationale` between evidence and signal lines.
+
+### Templates migrated: 7 / 10 (template-name); 8 / 13 (suggest entry points)
+
+Remaining 5 entry points / 3 template names: inverse-pair ×2 + identity-element ×2 + composition.
+
+### Cycle-37 priority
+
+**v1.40 batch-migrate the last 5 suggest entry points** to complete the 10-template Constraint Engine refactor.
+
+### Documentation
+
+- **v1.39 plan (V1.39.0).**
+- **Cycle-36 findings (V1.39.E).** `docs/calibration-cycle-36-findings.md` — clarifies template-name vs entry-point counting.
+- **Performance baseline (V1.39.F).** Test count 2088 → 2093 (+5).
+
+[1.39.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.39.0
+
 ## [1.38.0] — 2026-05-11
 
 The thirty-fifth calibration cycle. **First batch-migration cycle** for the Constraint Engine refactor (PRD §20.2). Three templates migrated in one cycle (Associativity + InvariantPreservation + DualStyleConsistency) via the V1.36.D mechanical pattern; behavior preserved bit-for-bit across all three.
