@@ -155,6 +155,13 @@ extension IdempotenceTemplate {
         if let mutatorVeto = mutatorBlocklistVeto(forLifted: lifted) {
             signals.append(mutatorVeto)
         }
+        // V1.24.C — non-deterministic mutator-name veto. Cycle-20 finding
+        // closure: the OC shuffle() picks surface despite being non-
+        // deterministic (existing body-signal detector misses the OC RNG
+        // pattern). Name-fallback closes the gap on canonical `shuffle`.
+        if let nonDeterministicVeto = nonDeterministicMutatorVeto(forLifted: lifted) {
+            signals.append(nonDeterministicVeto)
+        }
         return signals
     }
 
