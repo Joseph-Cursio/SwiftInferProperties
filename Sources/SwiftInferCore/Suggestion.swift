@@ -46,6 +46,24 @@ public struct Suggestion: Sendable, Equatable {
     /// additive optional, defaults `nil`.
     public let mockGenerator: MockGenerator?
 
+    /// **V1.34.A** — carrier type name for SemanticIndex `--type` query
+    /// filtering (PRD §20.1 follow-up). Populated from the natural
+    /// per-template source:
+    ///   - Unary templates (Idempotence, Monotonicity,
+    ///     InvariantPreservation, DualStyleConsistency): the originating
+    ///     `FunctionSummary.containingTypeName`.
+    ///   - Pair templates (RoundTrip, InversePair, Commutativity,
+    ///     Associativity): the forward side's `containingTypeName`.
+    ///   - IdentityElement: the operation's `containingTypeName`.
+    ///   - Lifted templates (`+Lifted` variants, Composition): the
+    ///     `LiftedTransformation.carrier` string.
+    ///
+    /// `nil` for free functions (top-level functions not nested in a
+    /// type) and templates that don't expose a meaningful carrier.
+    /// Backward-compatible: existing Suggestion construction sites
+    /// that don't pass this argument receive the default-nil value.
+    public let carrier: String?
+
     public init(
         templateName: String,
         evidence: [Evidence],
@@ -54,7 +72,8 @@ public struct Suggestion: Sendable, Equatable {
         explainability: ExplainabilityBlock,
         identity: SuggestionIdentity,
         liftedOrigin: LiftedOrigin? = nil,
-        mockGenerator: MockGenerator? = nil
+        mockGenerator: MockGenerator? = nil,
+        carrier: String? = nil
     ) {
         self.templateName = templateName
         self.evidence = evidence
@@ -64,6 +83,7 @@ public struct Suggestion: Sendable, Equatable {
         self.identity = identity
         self.liftedOrigin = liftedOrigin
         self.mockGenerator = mockGenerator
+        self.carrier = carrier
     }
 }
 
