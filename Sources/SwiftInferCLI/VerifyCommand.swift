@@ -91,12 +91,216 @@ extension SwiftInferCommand {
         public init() {}
 
         public func run() async throws {
-            // V1.42.B placeholder. The actual harness (subprocess
-            // synthesis + stub emission + result rendering) lands in
-            // V1.42.C; we surface a clear diagnostic here so anyone
-            // running the subcommand against a V1.42.B build sees a
-            // load-bearing error rather than a silent no-op.
-            throw VerifyError.harnessNotYetWired
+            let outcome = try Self.runPipeline(
+                suggestionPrefix: suggestion,
+                indexPathOverride: indexPath,
+                budgetString: budget,
+                workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            )
+            print(outcome)
+        }
+
+        /// V1.42.C.6 — orchestration glue. Pure-ish entry point so
+        /// tests can drive verify end-to-end without going through
+        /// the AsyncParsableCommand shell. Returns the rendered
+        /// outcome string; the CLI's run() just prints it.
+        ///
+        /// Pipeline steps in order:
+        ///   1. Resolve packageRoot by walking up from
+        ///      `workingDirectory` to find `Package.swift`.
+        ///   2. Resolve the SemanticIndex (`VerifyHarness.resolveIndex`).
+        ///   3. Look up the suggestion by hash prefix
+        ///      (`VerifyHarness.lookupSuggestion`).
+        ///   4. Resolve forward/inverse via the curated pair list
+        ///      (`RoundTripPairResolver.resolve`).
+        ///   5. Derive an Xoshiro seed deterministically from the
+        ///      suggestion's identity hash.
+        ///   6. Emit stub (`RoundTripStubEmitter.emit`).
+        ///   7. Synthesize verifier workdir at
+        ///      `<packageRoot>/.swiftinfer/verify-workdir/<prefix>/`.
+        ///   8. Run `swift build` + the verifier binary
+        ///      (`VerifierSubprocess`).
+        ///   9. Parse + render the outcome (`VerifyResult*`).
+        static func runPipeline(
+            suggestionPrefix: String,
+            indexPathOverride: String?,
+            budgetString: String,
+            workingDirectory: URL
+        ) throws -> String {
+            let packageRoot = findPackageRoot(startingFrom: workingDirectory)
+                ?? workingDirectory
+            let entry = try resolveEntry(
+                suggestionPrefix: suggestionPrefix,
+                indexPathOverride: indexPathOverride,
+                packageRoot: packageRoot
+            )
+            let pair = try RoundTripPairResolver.resolve(entry)
+            let stubSource = try RoundTripStubEmitter.emit(
+                RoundTripStubEmitter.Inputs(
+                    forwardCall: pair.forwardCall,
+                    inverseCall: pair.inverseCall,
+                    extraImports: [],
+                    carrierType: entry.typeName ?? "(none)",
+                    seedHex: makeSeedHex(from: entry.identityHash),
+                    trialBudget: parseBudget(budgetString)
+                )
+            )
+            let workdir = packageRoot
+                .appendingPathComponent(".swiftinfer")
+                .appendingPathComponent("verify-workdir")
+                .appendingPathComponent(workdirSegment(for: entry.identityHash))
+            _ = try VerifierWorkdir.synthesize(
+                VerifierWorkdir.Inputs(
+                    workdir: workdir,
+                    userPackage: nil,
+                    stubSource: stubSource
+                )
+            )
+            let runOutput = try buildAndRun(workdir: workdir)
+            let context = VerifyResultRenderer.Context(
+                forwardName: pair.forwardCall,
+                inverseName: pair.inverseCall,
+                carrierType: entry.typeName ?? "(none)"
+            )
+            return VerifyResultRenderer.render(
+                VerifyResultParser.parse(runOutput),
+                context: context
+            )
+        }
+
+        /// Sub-step 1 of the pipeline: load the SemanticIndex + look
+        /// up the suggestion by prefix. Surfaces any stale-index or
+        /// lookup warnings on stderr; returns the matched entry.
+        private static func resolveEntry(
+            suggestionPrefix: String,
+            indexPathOverride: String?,
+            packageRoot: URL
+        ) throws -> SemanticIndexEntry {
+            let now = ISO8601DateFormatter().string(from: Date())
+            let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
+            let resolved = try VerifyHarness.resolveIndex(
+                packageRoot: packageRoot,
+                explicitIndexPath: explicitIndexPath,
+                now: now
+            )
+            let lookup = try VerifyHarness.lookupSuggestion(
+                hashPrefix: suggestionPrefix,
+                in: resolved.index,
+                staleWarnings: resolved.warnings,
+                indexPath: resolved.path
+            )
+            for warning in lookup.warnings {
+                FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
+            }
+            return lookup.entry
+        }
+
+        /// Sub-step 2 of the pipeline: build the synthesized workdir
+        /// and run the resulting verifier binary. Build failures
+        /// surface as `.buildFailed`; the captured run output is
+        /// returned for the parser to consume.
+        private static func buildAndRun(workdir: URL) throws -> VerifierSubprocess.Output {
+            let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+            guard buildOutput.exitCode == 0 else {
+                throw VerifyError.buildFailed(
+                    exitCode: buildOutput.exitCode,
+                    stderr: buildOutput.stderr
+                )
+            }
+            return try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+        }
+
+        // MARK: - Helpers
+
+        /// Walk up parent directories looking for `Package.swift`.
+        /// Mirrors `BaselineLoader.findPackageRoot` / `DecisionsLoader.
+        /// findPackageRoot` / `VocabularyLoader.findPackageRoot` —
+        /// inlined here rather than extracted because each loader's
+        /// posture is to stay independent.
+        static func findPackageRoot(startingFrom directory: URL) -> URL? {
+            var current = directory.standardizedFileURL
+            while true {
+                let manifest = current.appendingPathComponent("Package.swift")
+                if FileManager.default.fileExists(atPath: manifest.path) {
+                    return current
+                }
+                let parent = current.deletingLastPathComponent().standardizedFileURL
+                if parent == current {
+                    return nil
+                }
+                current = parent
+            }
+        }
+
+        /// Map the user-facing `--budget` string to the emitter's
+        /// `TrialBudget` enum. Unknown values fall back to `.small`
+        /// with a diagnostic on stderr (the v1.42 default; matches
+        /// the plan's "Unknown values emit a diagnostic and fall back
+        /// to `small`" sketch).
+        static func parseBudget(_ raw: String) -> RoundTripStubEmitter.TrialBudget {
+            switch raw.lowercased() {
+            case "small":
+                return .small
+            case "standard":
+                return .standard
+            default:
+                FileHandle.standardError.write(
+                    Data("warning: unknown --budget '\(raw)'; defaulting to 'small'\n".utf8)
+                )
+                return .small
+            }
+        }
+
+        /// Derive a deterministic Xoshiro seed quadruple from the
+        /// suggestion's identity hash. The identity hash is
+        /// 16 hex chars (after the `0x` prefix); we partition it into
+        /// 4 chunks of 4 hex chars each, each chunk extended via
+        /// FNV-like spreading to a full UInt64. Pure function — same
+        /// hash always yields the same seed, so verify runs are
+        /// reproducible.
+        static func makeSeedHex(from identityHash: String) -> RoundTripStubEmitter.SeedHex {
+            let stripped = identityHash.hasPrefix("0x")
+                ? String(identityHash.dropFirst(2))
+                : identityHash
+            let padded = (stripped + String(repeating: "0", count: 16)).prefix(16)
+            let stateA = UInt64(padded.prefix(4), radix: 16) ?? 0
+            let restAfterA = padded.dropFirst(4)
+            let stateB = UInt64(restAfterA.prefix(4), radix: 16) ?? 0
+            let restAfterB = restAfterA.dropFirst(4)
+            let stateC = UInt64(restAfterB.prefix(4), radix: 16) ?? 0
+            let stateD = UInt64(restAfterB.dropFirst(4), radix: 16) ?? 0
+            return RoundTripStubEmitter.SeedHex(
+                stateA: spread(stateA),
+                stateB: spread(stateB),
+                stateC: spread(stateC),
+                stateD: spread(stateD)
+            )
+        }
+
+        /// FNV-like spread of a small UInt64 nibble to a full 64-bit
+        /// state. Prevents the first 16 bits of Xoshiro state from
+        /// being all-zero (which would produce a poor RNG sequence)
+        /// while preserving determinism. Mixing constants borrowed
+        /// from xxhash's avalanche step.
+        private static func spread(_ word: UInt64) -> UInt64 {
+            var hash = word ^ 0xCBF2_9CE4_8422_2325
+            hash = hash &* 0x100_0000_01B3
+            hash ^= hash >> 32
+            return hash | 1
+        }
+
+        /// `0xBC43359C0574816B` → `"BC43"`. The first 4 hex chars
+        /// after the `0x` prefix make a stable, filename-safe
+        /// segment. Collisions are theoretically possible but
+        /// `lookupSuggestion`'s prefix-match already failed with
+        /// `.ambiguousPrefix` if two entries share a 4-hex prefix at
+        /// the lookup stage, so we won't reach here for ambiguous
+        /// cases.
+        static func workdirSegment(for identityHash: String) -> String {
+            let stripped = identityHash.hasPrefix("0x")
+                ? String(identityHash.dropFirst(2))
+                : identityHash
+            return String(stripped.prefix(4))
         }
     }
 }
@@ -111,7 +315,8 @@ extension SwiftInferCommand {
 /// **Cycle progression.** V1.42.B shipped `.harnessNotYetWired` only.
 /// V1.42.C.1 adds `.suggestionNotFound`, `.ambiguousPrefix`,
 /// `.indexMissing`, `.indexEmpty`. V1.42.C.2 adds `.unsupportedCarrier`.
-/// V1.42.C.3 adds `.buildFailed`, `.runnerCrashed`.
+/// V1.42.C.3 adds `.buildFailed`, `.runnerCrashed`. V1.42.C.6 adds
+/// `.unsupportedTemplate`, `.unsupportedPair`.
 public enum VerifyError: Error, CustomStringConvertible {
     case harnessNotYetWired
     case suggestionNotFound(prefix: String, closest: [String])
@@ -121,6 +326,8 @@ public enum VerifyError: Error, CustomStringConvertible {
     case unsupportedCarrier(carrier: String, expected: [String])
     case buildFailed(exitCode: Int32, stderr: String)
     case runnerCrashed(reason: String)
+    case unsupportedTemplate(template: String, expected: [String])
+    case unsupportedPair(forward: String, supported: [String])
 
     public var description: String {
         switch self {
@@ -165,6 +372,17 @@ public enum VerifyError: Error, CustomStringConvertible {
 
         case let .runnerCrashed(reason):
             return "swift-infer verify: verifier subprocess could not run: \(reason)"
+
+        case let .unsupportedTemplate(template, expected):
+            let expectedList = expected.joined(separator: ", ")
+            return "swift-infer verify: suggestion template '\(template)' is not supported in v1.42. "
+                + "Supported templates: \(expectedList). Wider template support lands in v1.44."
+
+        case let .unsupportedPair(forward, supported):
+            let supportedList = supported.joined(separator: ", ")
+            return "swift-infer verify: forward-side function '\(forward)' is not in v1.42's "
+                + "curated round-trip pair list. Supported forwards: \(supportedList). "
+                + "Pair-list expansion lands in v1.43."
         }
     }
 }

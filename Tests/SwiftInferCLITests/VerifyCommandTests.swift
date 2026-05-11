@@ -61,16 +61,38 @@ struct VerifyCommandTests {
         #expect(command.indexPath == "/tmp/custom-index.json")
     }
 
-    @Test("run() throws .harnessNotYetWired in V1.42.B")
-    func runThrowsHarnessNotYetWiredPlaceholder() async throws {
-        let command = try SwiftInferCommand.Verify.parse(["--suggestion", "abc123"])
-        await #expect(throws: VerifyError.self) {
-            try await command.run()
+    @Test("runPipeline against a directory without Package.swift / index → .indexMissing")
+    func runPipelineSurfacesIndexMissingWithoutSetup() throws {
+        // V1.42.C.6 rewires run() through the full pipeline; the
+        // earliest failure point against a bare temp directory is
+        // VerifyHarness.resolveIndex returning .indexMissing.
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("verify-no-index-tests")
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        do {
+            _ = try SwiftInferCommand.Verify.runPipeline(
+                suggestionPrefix: "0xBC43",
+                indexPathOverride: nil,
+                budgetString: "small",
+                workingDirectory: temp
+            )
+            Issue.record("expected .indexMissing")
+        } catch let error as VerifyError {
+            switch error {
+            case .indexMissing:
+                break
+            default:
+                Issue.record("expected .indexMissing; got \(error)")
+            }
         }
     }
 
-    @Test("placeholder error description is load-bearing user guidance")
+    @Test("placeholder .harnessNotYetWired description still load-bearing")
     func harnessNotYetWiredDescriptionMentionsV142C() {
+        // V1.42.C.6 no longer raises this from run(), but the case
+        // remains in the VerifyError enum for potential v1.43 use.
         let error = VerifyError.harnessNotYetWired
         let description = String(describing: error)
         #expect(description.contains("V1.42"))
