@@ -1,29 +1,45 @@
 import Foundation
 
-/// V1.42.C.4 — parses the verifier subprocess output into a structured
-/// `VerifyOutcome` and renders it for human consumption.
+/// V1.43.C — parses the two-pass verifier subprocess output into a
+/// structured `VerifyOutcome` and renders it for human consumption.
 ///
-/// **Three v1.42 outcomes** (the four-outcome two-pass table lands in
-/// v1.43 when the edge-case-biased generator pass joins):
+/// **Four v1.43 outcomes** (extends v1.42's 3-way pass/fail/error):
 ///
-///   - `.pass(trials:)` — all trials passed.
-///   - `.fail(trial:input:forwardResult:inverseResult:)` — a trial's
-///     `inverse(forward(value))` didn't round-trip to `value` (within
-///     `isApproximatelyEqual`).
+///   - `.bothPass(defaultTrials:edgeTrials:edgeSampled:)` — strong
+///     evidence; default + edge passes both clean.
+///   - `.edgeCaseAdvisory(defaultTrials:edgeTrial:edgeInput:edgeForward:`
+///     `edgeInverse:edgeCaseIndex:)` — default pass clean, edge pass
+///     surfaced a counterexample at a curated edge case (or, less
+///     commonly, a finite-path value on the 90% slice — `edgeCaseIndex
+///     == -1`). Property holds for normal inputs but breaks at a
+///     boundary.
+///   - `.defaultFails(trial:input:forwardResult:inverseResult:)` —
+///     default pass surfaced a counterexample; edge pass was skipped
+///     by the runner per the proposal §2.2 row 3 short-circuit.
 ///   - `.error(reason:)` — build failure, runner crash, missing
-///     markers in stdout, or unexpected exit code. The reason string
-///     is load-bearing; v1.42 callers print it on stderr.
+///     markers, or unexpected exit code.
 ///
-/// **Parsing convention.** The C.2 stub emits one `VERIFY_<KEY>: <value>`
-/// line per data point. The parser is tolerant of extra lines (build
-/// chatter, debug prints, etc.) — it locates each marker by line
-/// prefix and ignores anything else. Multiple matches of the same
-/// marker take the *first* hit (the stub never emits a second pass /
-/// fail block in v1.42 since `exit(1)` runs after the first failing
-/// trial).
+/// **Parsing convention.** The V1.43.B stub emits one
+/// `VERIFY_DEFAULT_<KEY>:` or `VERIFY_EDGE_<KEY>:` line per data point.
+/// The parser is tolerant of extra lines (build chatter, debug prints,
+/// etc.) — it locates each marker by line prefix and ignores anything
+/// else. Multiple matches of the same marker take the *first* hit.
 public enum VerifyOutcome: Equatable, Sendable {
-    case pass(trials: Int)
-    case fail(trial: Int, input: String, forwardResult: String, inverseResult: String)
+    case bothPass(defaultTrials: Int, edgeTrials: Int, edgeSampled: Int)
+    case edgeCaseAdvisory(
+        defaultTrials: Int,
+        edgeTrial: Int,
+        edgeInput: String,
+        edgeForward: String,
+        edgeInverse: String,
+        edgeCaseIndex: Int
+    )
+    case defaultFails(
+        trial: Int,
+        input: String,
+        forwardResult: String,
+        inverseResult: String
+    )
     case error(reason: String)
 }
 
@@ -31,28 +47,27 @@ public enum VerifyResultParser {
 
     /// Parse a `VerifierSubprocess.Output` into a `VerifyOutcome`.
     ///
-    /// Decision order:
-    ///   1. If stdout contains `"VERIFY_RESULT: PASS"` AND exit code
-    ///      is 0 → `.pass(trials:)` using the `VERIFY_TRIALS:` value.
-    ///   2. If stdout contains `"VERIFY_RESULT: FAIL"` AND exit code
-    ///      is 1 → `.fail(...)` populated from the per-marker values.
-    ///   3. Otherwise → `.error(reason:)` with a load-bearing message
-    ///      including the exit code and a short stdout snippet.
+    /// Decision order (mutually exclusive by stub-side short-circuit):
+    ///   1. `VERIFY_DEFAULT_RESULT: FAIL` + exit 1 → `.defaultFails`.
+    ///   2. `VERIFY_DEFAULT_RESULT: PASS` + `VERIFY_EDGE_RESULT: FAIL`
+    ///      + exit 1 → `.edgeCaseAdvisory`.
+    ///   3. `VERIFY_DEFAULT_RESULT: PASS` + `VERIFY_EDGE_RESULT: PASS`
+    ///      + exit 0 → `.bothPass`.
+    ///   4. Otherwise → `.error` with a load-bearing reason including
+    ///      the exit code and a short stdout snippet.
     public static func parse(_ output: VerifierSubprocess.Output) -> VerifyOutcome {
         let lines = output.stdout.split(separator: "\n").map(String.init)
-        let pass = lines.first(where: { $0.hasPrefix("VERIFY_RESULT: PASS") }) != nil
-        let fail = lines.first(where: { $0.hasPrefix("VERIFY_RESULT: FAIL") }) != nil
+        let defaultPass = lines.first(where: { $0.hasPrefix("VERIFY_DEFAULT_RESULT: PASS") }) != nil
+        let defaultFail = lines.first(where: { $0.hasPrefix("VERIFY_DEFAULT_RESULT: FAIL") }) != nil
+        let edgePass = lines.first(where: { $0.hasPrefix("VERIFY_EDGE_RESULT: PASS") }) != nil
+        let edgeFail = lines.first(where: { $0.hasPrefix("VERIFY_EDGE_RESULT: FAIL") }) != nil
 
-        if pass, output.exitCode == 0 {
-            let trials = Int(value(forMarker: "VERIFY_TRIALS:", in: lines) ?? "") ?? 0
-            return .pass(trials: trials)
-        }
-        if fail, output.exitCode == 1 {
-            let trial = Int(value(forMarker: "VERIFY_TRIAL:", in: lines) ?? "") ?? -1
-            let input = value(forMarker: "VERIFY_INPUT:", in: lines) ?? "(missing)"
-            let forwardResult = value(forMarker: "VERIFY_FORWARD:", in: lines) ?? "(missing)"
-            let inverseResult = value(forMarker: "VERIFY_INVERSE:", in: lines) ?? "(missing)"
-            return .fail(
+        if defaultFail, output.exitCode == 1 {
+            let trial = Int(value(forMarker: "VERIFY_DEFAULT_TRIAL:", in: lines) ?? "") ?? -1
+            let input = value(forMarker: "VERIFY_DEFAULT_INPUT:", in: lines) ?? "(missing)"
+            let forwardResult = value(forMarker: "VERIFY_DEFAULT_FORWARD:", in: lines) ?? "(missing)"
+            let inverseResult = value(forMarker: "VERIFY_DEFAULT_INVERSE:", in: lines) ?? "(missing)"
+            return .defaultFails(
                 trial: trial,
                 input: input,
                 forwardResult: forwardResult,
@@ -60,7 +75,34 @@ public enum VerifyResultParser {
             )
         }
 
-        // Otherwise: missing markers, exit code mismatch, or both.
+        if defaultPass, edgeFail, output.exitCode == 1 {
+            let defaultTrials = Int(value(forMarker: "VERIFY_DEFAULT_TRIALS:", in: lines) ?? "") ?? 0
+            let edgeTrial = Int(value(forMarker: "VERIFY_EDGE_TRIAL:", in: lines) ?? "") ?? -1
+            let edgeInput = value(forMarker: "VERIFY_EDGE_INPUT:", in: lines) ?? "(missing)"
+            let edgeForward = value(forMarker: "VERIFY_EDGE_FORWARD:", in: lines) ?? "(missing)"
+            let edgeInverse = value(forMarker: "VERIFY_EDGE_INVERSE:", in: lines) ?? "(missing)"
+            let edgeCaseIndex = Int(value(forMarker: "VERIFY_EDGE_INDEX:", in: lines) ?? "") ?? -1
+            return .edgeCaseAdvisory(
+                defaultTrials: defaultTrials,
+                edgeTrial: edgeTrial,
+                edgeInput: edgeInput,
+                edgeForward: edgeForward,
+                edgeInverse: edgeInverse,
+                edgeCaseIndex: edgeCaseIndex
+            )
+        }
+
+        if defaultPass, edgePass, output.exitCode == 0 {
+            let defaultTrials = Int(value(forMarker: "VERIFY_DEFAULT_TRIALS:", in: lines) ?? "") ?? 0
+            let edgeTrials = Int(value(forMarker: "VERIFY_EDGE_TRIALS:", in: lines) ?? "") ?? 0
+            let edgeSampled = Int(value(forMarker: "VERIFY_EDGE_SAMPLED:", in: lines) ?? "") ?? 0
+            return .bothPass(
+                defaultTrials: defaultTrials,
+                edgeTrials: edgeTrials,
+                edgeSampled: edgeSampled
+            )
+        }
+
         let snippet = lines.suffix(5).joined(separator: " | ")
         let reason = "verifier subprocess exited with code \(output.exitCode), "
             + "stdout (last 5 lines, pipe-joined): \(snippet)"
@@ -68,8 +110,7 @@ public enum VerifyResultParser {
     }
 
     /// Extract the value following a `MARKER:` prefix on the first
-    /// matching line. The marker is matched against the line's full
-    /// prefix to avoid false positives from the stub's own log lines.
+    /// matching line.
     private static func value(forMarker marker: String, in lines: [String]) -> String? {
         for line in lines where line.hasPrefix(marker) {
             let value = String(line.dropFirst(marker.count))
@@ -82,10 +123,6 @@ public enum VerifyResultParser {
 public enum VerifyResultRenderer {
 
     /// Context the renderer needs to produce a human-readable line.
-    /// V1.42 supplies `forwardName` / `inverseName` from the
-    /// caller's pair-resolution (currently the curated round-trip
-    /// pair list; future C.6 may resolve from Evidence directly),
-    /// and `carrierType` from the `SemanticIndexEntry.typeName`.
     public struct Context: Equatable, Sendable {
         public let forwardName: String
         public let inverseName: String
@@ -98,19 +135,70 @@ public enum VerifyResultRenderer {
         }
     }
 
-    /// Render the outcome as a multi-line user-facing string. Pass +
-    /// error are single-line; fail spans 5 lines (header + 4
-    /// counterexample rows).
+    /// Curated-entry labels mirroring `Gen<Complex<Double>>.complexEdgeCases`
+    /// order. Used to humanize the edge-case-advisory rendering; index
+    /// 0..11 maps 1-to-1 against the kit's array. Adding entries on
+    /// the kit side appends here in the same order — existing indices
+    /// are stable per the kit's API contract.
+    static let edgeCaseLabels: [String] = [
+        "Complex(NaN, NaN)",
+        "Complex(NaN, 0)",
+        "Complex(0, NaN)",
+        "Complex(+Infinity, 0)",
+        "Complex(-Infinity, 0)",
+        "Complex(0, +Infinity)",
+        "Complex(0, -Infinity)",
+        "Complex(+Infinity, +Infinity)",
+        "Complex(0, 0)",
+        "Complex(-0.0, 0)",
+        "Complex(greatestFiniteMagnitude, 0)",
+        "Complex(leastNonzeroMagnitude, 0)"
+    ]
+
+    /// Render the outcome as a multi-line user-facing string. Both
+    /// strong-pass and edge-advisory cases span multiple lines; the
+    /// fail and error cases match v1.42's shape.
     public static func render(_ outcome: VerifyOutcome, context: Context) -> String {
         switch outcome {
-        case let .pass(trials):
-            return "✓ verify holds: round-trip \(context.forwardName)/\(context.inverseName) "
-                + "over \(context.carrierType), \(trials) trial\(trials == 1 ? "" : "s"), all pass"
+        case let .bothPass(defaultTrials, edgeTrials, edgeSampled):
+            return [
+                "✓ verify holds (strong): round-trip \(context.forwardName)/\(context.inverseName) "
+                    + "over \(context.carrierType),",
+                "    \(defaultTrials) default \(trialWord(defaultTrials)) + "
+                    + "\(edgeTrials) edge-case-biased \(trialWord(edgeTrials)), all pass",
+                "    (\(edgeSampled) / \(edgeCaseLabels.count) curated edge cases sampled)"
+            ].joined(separator: "\n")
 
-        case let .fail(trial, input, forwardResult, inverseResult):
+        case let .edgeCaseAdvisory(
+            defaultTrials,
+            edgeTrial,
+            edgeInput,
+            edgeForward,
+            edgeInverse,
+            edgeCaseIndex
+        ):
+            let edgeTag: String
+            if edgeCaseIndex >= 0, edgeCaseIndex < edgeCaseLabels.count {
+                edgeTag = "edge case #\(edgeCaseIndex) (\(edgeCaseLabels[edgeCaseIndex]))"
+            } else {
+                edgeTag = "a non-curated value"
+            }
+            return [
+                "⚠ verify holds for finite domain; edge-case advisory: "
+                    + "round-trip \(context.forwardName)/\(context.inverseName) "
+                    + "over \(context.carrierType),",
+                "    default pass \(defaultTrials)/\(defaultTrials), "
+                    + "edge pass failed at trial \(edgeTrial) on \(edgeTag):",
+                "    input  = \(edgeInput)",
+                "    \(context.forwardName)(input)  = \(edgeForward)",
+                "    \(context.inverseName)(\(context.forwardName)(input)) = \(edgeInverse)",
+                "    expected ≈ input (within \(context.carrierType).isApproximatelyEqual)"
+            ].joined(separator: "\n")
+
+        case let .defaultFails(trial, input, forwardResult, inverseResult):
             return [
                 "✗ verify fails: round-trip \(context.forwardName)/\(context.inverseName) "
-                    + "over \(context.carrierType), counterexample at trial \(trial):",
+                    + "over \(context.carrierType), counterexample at trial \(trial) (default pass):",
                 "    input  = \(input)",
                 "    \(context.forwardName)(input)  = \(forwardResult)",
                 "    \(context.inverseName)(\(context.forwardName)(input)) = \(inverseResult)",
@@ -120,5 +208,9 @@ public enum VerifyResultRenderer {
         case let .error(reason):
             return "! verify error: \(reason)"
         }
+    }
+
+    private static func trialWord(_ count: Int) -> String {
+        count == 1 ? "trial" : "trials"
     }
 }

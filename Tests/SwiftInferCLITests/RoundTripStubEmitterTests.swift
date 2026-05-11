@@ -138,18 +138,36 @@ struct RoundTripStubEmitterTests {
         #expect(source.contains("let trials = 1000"))
     }
 
-    // MARK: - V1.42.C.4 result markers
+    // MARK: - V1.43.B two-pass result markers
 
-    @Test("stub emits the VERIFY_RESULT markers the harness parses")
+    @Test("stub emits the per-pass VERIFY_* markers the harness parses")
     func stubEmitsVerifyResultMarkers() throws {
         let source = try RoundTripStubEmitter.emit(Self.inputs())
-        #expect(source.contains("VERIFY_RESULT: FAIL"))
-        #expect(source.contains("VERIFY_RESULT: PASS"))
-        #expect(source.contains("VERIFY_TRIAL:"))
-        #expect(source.contains("VERIFY_INPUT:"))
-        #expect(source.contains("VERIFY_FORWARD:"))
-        #expect(source.contains("VERIFY_INVERSE:"))
-        #expect(source.contains("VERIFY_TRIALS:"))
+        // Pass 1 (default) marker surface
+        #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))
+        #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
+        #expect(source.contains("VERIFY_DEFAULT_TRIAL:"))
+        #expect(source.contains("VERIFY_DEFAULT_INPUT:"))
+        #expect(source.contains("VERIFY_DEFAULT_FORWARD:"))
+        #expect(source.contains("VERIFY_DEFAULT_INVERSE:"))
+        #expect(source.contains("VERIFY_DEFAULT_TRIALS:"))
+        // Pass 2 (edge) marker surface
+        #expect(source.contains("VERIFY_EDGE_RESULT: FAIL"))
+        #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
+        #expect(source.contains("VERIFY_EDGE_TRIAL:"))
+        #expect(source.contains("VERIFY_EDGE_INPUT:"))
+        #expect(source.contains("VERIFY_EDGE_FORWARD:"))
+        #expect(source.contains("VERIFY_EDGE_INVERSE:"))
+        #expect(source.contains("VERIFY_EDGE_INDEX:"))
+        #expect(source.contains("VERIFY_EDGE_TRIALS:"))
+        #expect(source.contains("VERIFY_EDGE_SAMPLED:"))
+    }
+
+    @Test("stub references the kit's edgeCaseBiased() generator")
+    func stubReferencesEdgeCaseBiased() throws {
+        let source = try RoundTripStubEmitter.emit(Self.inputs())
+        #expect(source.contains("Gen<Complex<Double>>.edgeCaseBiased()"))
+        #expect(source.contains("Gen<Complex<Double>>.complexEdgeCases"))
     }
 
     @Test("stub exits 1 on FAIL and 0 on PASS")

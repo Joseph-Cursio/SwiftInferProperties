@@ -15,26 +15,35 @@ import Foundation
 /// extending the carrier set means landing matching kit-side generators
 /// first.
 ///
-/// **Generator choice in V1.42.** The emitted stub uses an inline
-/// finite-domain generator (`Double.random(in: -1e6 ... 1e6)` for each
-/// component). V1.43 swaps this for
-/// `Gen<Complex<Double>>.edgeCaseBiased()` from `PropertyLawComplex` —
-/// the swap is one-line per the v1.42 plan §"Why default-pass only".
+/// **Generator choice (V1.43.B).** Two consecutive passes share the
+/// same `Xoshiro` RNG:
 ///
-/// **Output shape.** The stub:
-///   1. Reads `Xoshiro` from a hardcoded seed.
-///   2. Loops for `trialBudget` trials, sampling a `Complex<Double>`
-///      per trial.
-///   3. Computes `inverse(forward(value))` and compares to `value` via
-///      `isApproximatelyEqual(to:)` (IEEE 754 rounding makes `==`
-///      unsuitable for FP).
-///   4. On counterexample: prints `VERIFY_RESULT: FAIL` + the
-///      trial / input / forward / inverse / expected, exits 1.
-///   5. On clean pass: prints `VERIFY_RESULT: PASS` + the trial count,
-///      exits 0.
+///   - **Default pass** — inline finite-domain generator
+///     (`Double.random(in: -1e6 ... 1e6)` for each component). Behavior
+///     is bit-for-bit identical to v1.42's single pass so cycle-27-era
+///     expectations don't shift.
+///   - **Edge-case pass** — `Gen<Complex<Double>>.edgeCaseBiased()`
+///     from `PropertyLawComplex` (90/10 mix of finite-domain + curated
+///     12-entry edge cases). Only runs if the default pass passed
+///     (short-circuit per the proposal §2.2 row 3 — "Property is
+///     wrong; skip edge pass").
 ///
-/// V1.42.C.4 parses the `VERIFY_*` lines to render the user-facing
-/// result.
+/// **Output shape.** The stub emits per-pass `VERIFY_DEFAULT_*` and
+/// `VERIFY_EDGE_*` markers:
+///
+///   - Default fail → exit 1 with `VERIFY_DEFAULT_RESULT: FAIL` +
+///     trial / input / forward / inverse (no `VERIFY_EDGE_*` lines).
+///   - Edge fail → exit 1 with `VERIFY_DEFAULT_RESULT: PASS` +
+///     `VERIFY_EDGE_RESULT: FAIL` + trial / input / forward / inverse
+///     / index. The index is the 0-based position into
+///     `Gen<Complex<Double>>.complexEdgeCases` (NaN-aware match), or
+///     `-1` if the failing value came from the 90% finite-path slice.
+///   - Both pass → exit 0 with `VERIFY_DEFAULT_RESULT: PASS` +
+///     `VERIFY_EDGE_RESULT: PASS` + per-pass trial counts +
+///     `VERIFY_EDGE_SAMPLED: <N>` (distinct curated entries hit).
+///
+/// V1.43.C/D parse the `VERIFY_*` lines and render the 4-outcome table
+/// (`bothPass` / `edgeCaseAdvisory` / `defaultFails` / `error`).
 public enum RoundTripStubEmitter {
 
     /// Hex-formatted Xoshiro seed quadruple. A nominal type so callers
@@ -148,28 +157,50 @@ public enum RoundTripStubEmitter {
     private static func composeSource(_ inputs: Inputs) -> String {
         let importsBlock = importsSection(inputs.extraImports)
         let trials = inputs.trialBudget.count
-        let seedLine = """
-            var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
-                0x\(hex(inputs.seedHex.stateA)),
-                0x\(hex(inputs.seedHex.stateB)),
-                0x\(hex(inputs.seedHex.stateC)),
-                0x\(hex(inputs.seedHex.stateD))
-            ))
-            """
-        return """
-        // V1.42.C.2 — auto-generated round-trip verify stub.
+        let header = headerSection(inputs: inputs)
+        let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
+        let defaultPass = defaultPassSection(
+            forwardCall: inputs.forwardCall,
+            inverseCall: inputs.inverseCall
+        )
+        let edgePass = edgePassSection(
+            forwardCall: inputs.forwardCall,
+            inverseCall: inputs.inverseCall
+        )
+        return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
+    }
+
+    private static func headerSection(inputs: Inputs) -> String {
+        """
+        // V1.43.B — auto-generated two-pass round-trip verify stub.
         // Carrier: \(inputs.carrierType)
         // Forward: \(inputs.forwardCall) / Inverse: \(inputs.inverseCall)
-        // Generator: inline finite-domain (Double.random in ±1e6);
-        // V1.43 swaps to Gen<Complex<Double>>.edgeCaseBiased() for the
-        // two-pass design.
+        // Pass 1 (default): inline finite-domain (Double.random in ±1e6).
+        // Pass 2 (edge):    Gen<Complex<Double>>.edgeCaseBiased() from
+        //                   PropertyLawComplex v2.1.0+. Skipped on default fail.
+        """
+    }
 
+    private static func setupSection(importsBlock: String, seed: SeedHex, trials: Int) -> String {
+        """
         \(importsBlock)
 
-        \(seedLine)
+        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
+            0x\(hex(seed.stateA)),
+            0x\(hex(seed.stateB)),
+            0x\(hex(seed.stateC)),
+            0x\(hex(seed.stateD))
+        ))
 
         let trials = \(trials)
-        let generator: Generator<Complex<Double>, some SendableSequenceType> =
+        """
+    }
+
+    private static func defaultPassSection(forwardCall: String, inverseCall: String) -> String {
+        """
+        // --- Pass 1: default (inline finite-domain) ---
+
+        let defaultGenerator: Generator<Complex<Double>, some SendableSequenceType> =
             Gen<Int>.int(in: 0 ..< 1).map { _ in
                 Complex(
                     Double.random(in: -1_000_000.0 ... 1_000_000.0),
@@ -178,21 +209,68 @@ public enum RoundTripStubEmitter {
             }
 
         for trial in 0 ..< trials {
-            let value = generator.run(using: &rng)
-            let forwardResult = \(inputs.forwardCall)(value)
-            let inverseResult = \(inputs.inverseCall)(forwardResult)
+            let value = defaultGenerator.run(using: &rng)
+            let forwardResult = \(forwardCall)(value)
+            let inverseResult = \(inverseCall)(forwardResult)
             if !inverseResult.isApproximatelyEqual(to: value) {
-                print("VERIFY_RESULT: FAIL")
-                print("VERIFY_TRIAL: \\(trial)")
-                print("VERIFY_INPUT: \\(value)")
-                print("VERIFY_FORWARD: \\(forwardResult)")
-                print("VERIFY_INVERSE: \\(inverseResult)")
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(value)")
+                print("VERIFY_DEFAULT_FORWARD: \\(forwardResult)")
+                print("VERIFY_DEFAULT_INVERSE: \\(inverseResult)")
                 exit(1)
             }
         }
 
-        print("VERIFY_RESULT: PASS")
-        print("VERIFY_TRIALS: \\(trials)")
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    private static func edgePassSection(forwardCall: String, inverseCall: String) -> String {
+        """
+        // --- Pass 2: edge-case-biased ---
+
+        func matchEdgeCaseIndex(_ value: Complex<Double>) -> Int {
+            let entries = Gen<Complex<Double>>.complexEdgeCases
+            for index in entries.indices {
+                let entry = entries[index]
+                let realMatch = entry.real.isNaN
+                    ? value.real.isNaN
+                    : entry.real == value.real
+                let imagMatch = entry.imaginary.isNaN
+                    ? value.imaginary.isNaN
+                    : entry.imaginary == value.imaginary
+                if realMatch && imagMatch { return index }
+            }
+            return -1
+        }
+
+        let edgeGenerator: Generator<Complex<Double>, some SendableSequenceType> =
+            Gen<Complex<Double>>.edgeCaseBiased()
+
+        var sampledEdgeIndices: Set<Int> = []
+
+        for trial in 0 ..< trials {
+            let value = edgeGenerator.run(using: &rng)
+            let matchedIndex = matchEdgeCaseIndex(value)
+            if matchedIndex >= 0 { sampledEdgeIndices.insert(matchedIndex) }
+            let forwardResult = \(forwardCall)(value)
+            let inverseResult = \(inverseCall)(forwardResult)
+            if !inverseResult.isApproximatelyEqual(to: value) {
+                print("VERIFY_EDGE_RESULT: FAIL")
+                print("VERIFY_EDGE_TRIAL: \\(trial)")
+                print("VERIFY_EDGE_INPUT: \\(value)")
+                print("VERIFY_EDGE_FORWARD: \\(forwardResult)")
+                print("VERIFY_EDGE_INVERSE: \\(inverseResult)")
+                print("VERIFY_EDGE_INDEX: \\(matchedIndex)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_EDGE_RESULT: PASS")
+        print("VERIFY_EDGE_TRIALS: \\(trials)")
+        print("VERIFY_EDGE_SAMPLED: \\(sampledEdgeIndices.count)")
         exit(0)
         """
     }
