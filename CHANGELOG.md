@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.27.0] — 2026-05-11
+
+The twenty-fourth calibration cycle and **measurement-driven mechanism cycle** closing the two cycle-23 findings (Algo Iterator-like Sequence-conformance survivors + OC bucket/word inverse-pair direction-pair). Two small workstreams; surface 114 → **113** (-1). Plan-vs-actual: -1 vs projected -4 (cycle-23 sample-manifest enumeration error on one projected pick; V1.27.A infrastructure didn't fire on current corpora).
+
+### Calibration cycle 24 — cycle-23 findings (2-workstream)
+
+- **Workstream A (V1.27.A): Sequence-conformance fallback on V1.21.A IteratorProtocol veto.** New path: when carrier conforms to `Sequence` (via `inheritedTypesByName`) AND method name in `iteratorMethodNames`, fire full veto. Mechanism class 7 extension. **Surface impact: 0** (cycle-23 Algo Iterator-like picks already caught by V1.21.A/V1.22.A by V1.27.A discover time; infrastructure for future Sequence-conforming carriers).
+
+- **Workstream B (V1.27.B): Name-prefix-gated full-veto on InversePairTemplate direction-counter.** Extended V1.11.1 to fire `Signal.vetoWeight` when both pair sides direction-labeled AND both names start with `index`/`bucket`/`word`. Mirrors V1.22.B (round-trip) + V1.25.A (idempotence). **Surface impact: -1 OC** (`bucket(after:) × bucket(before:)`; cycle-23 #26 closure). The `word × word` pick listed in cycle-23 sample-manifest didn't exist in v1.25 surface (manifest enumeration error).
+
+### Documentation
+
+- **v1.27 plan (V1.27.0).**
+- **Cycle-24 findings (V1.27.C).**
+- **Cycle-24 capture.** `docs/calibration-cycle-24-data/post-v1.27-*.discover.txt`.
+- **Performance baseline (V1.27.C).**
+
+[1.27.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.27.0
+
 ## [1.26.0] — 2026-05-10
 
 The twenty-third calibration cycle and the **fifth empirical-only release** (after cycles 6 = 26.7%, 14 = 34.8%, 17 = 52.3%, 20 = 48.8%). v1.26 binary-equivalent to v1.25.0. Headline: **25/37 = 67.6%** Possible-tier acceptance rate — **outcome A**; +18.8pp from cycle-20's 48.8% (the largest single-cycle aggregate jump in the loop's history). **§19 ≥70% target now within +2.4pp** — sample-noise band on n=40.
