@@ -14,15 +14,17 @@ import Testing
 @Suite("VerifyCommand — V1.42.B argument surface")
 struct VerifyCommandTests {
 
-    @Test("--suggestion is required; absence is a parse failure")
-    func suggestionRequired() throws {
-        // ArgumentParser raises a CleanExit/ValidationError at parse time
-        // when a required @Option is missing. We don't pattern-match the
-        // exact error type — it's an ArgumentParser implementation
-        // detail — only that parse() rejects empty arguments.
-        #expect(throws: (any Error).self) {
-            _ = try SwiftInferCommand.Verify.parse([])
-        }
+    @Test("--suggestion is optional at parse time; the run-time validator rejects empty")
+    func suggestionOptionalAtParseTime() throws {
+        // V1.50.B made --suggestion optional at parse time (mutually
+        // exclusive with --all-from-index). The empty-args case
+        // therefore parses successfully; the run-time check in
+        // Verify.run() throws VerifyError.invalidArguments. This test
+        // pins the parse-time success — the run-time rejection is
+        // covered by V1.50.E's VerifyAllFromIndexTests.
+        let command = try SwiftInferCommand.Verify.parse([])
+        #expect(command.suggestion == nil)
+        #expect(command.allFromIndex == false)
     }
 
     @Test("--suggestion <hash> parses with all other options at defaults")
