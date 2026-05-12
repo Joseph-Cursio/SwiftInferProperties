@@ -1,5 +1,6 @@
 import Foundation
 import SwiftInferCLI
+import SwiftInferCore
 import Testing
 
 /// V1.42.D — end-to-end verify-pipeline integration tests.
@@ -477,6 +478,151 @@ struct VerifyPipelineIntegrationTests {
             #expect(edgeSampled == 0)
         } else {
             Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+    // MARK: - V1.47.G.6 strategist-routed × {Int, String, bound, .todo}
+
+    /// Build + run the strategist-routed verify pipeline against the
+    /// supplied function-call expression on the given carrier. Mirrors
+    /// `runIdempotencePipeline` but uses `StrategistDispatchEmitter`
+    /// directly so the test exercises the v1.47 dispatch path
+    /// end-to-end.
+    private static func runStrategistPipeline(
+        functionCalls: [String],
+        carrier: String,
+        typeShape: IndexedTypeShape? = nil,
+        template: String,
+        budget: StrategistDispatchEmitter.TrialBudget = .small
+    ) throws -> VerifyOutcome {
+        let workdir = try makeWorkdir()
+        defer { cleanUp(workdir) }
+        let stubSource = try StrategistDispatchEmitter.emit(
+            StrategistDispatchEmitter.Inputs(
+                carrier: carrier,
+                typeShape: typeShape,
+                template: template,
+                functionCalls: functionCalls,
+                extraImports: [],
+                seedHex: canonicalSeed,
+                trialBudget: budget
+            )
+        )
+        _ = try VerifierWorkdir.synthesize(
+            VerifierWorkdir.Inputs(
+                workdir: workdir,
+                userPackage: nil,
+                stubSource: stubSource
+            )
+        )
+        let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+        guard buildOutput.exitCode == 0 else {
+            return .error(reason: "build failed: \(buildOutput.stderr)")
+        }
+        let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+        return VerifyResultParser.parse(runOutput)
+    }
+
+    /// **V1.47.G.6.a — strategist × Int × idempotence × bothPass.**
+    /// Identity function on `Int` via the strategist's direct-RawType
+    /// fast path (carrier "Int" matches `RawType.int` → emit
+    /// `Gen<Int>.int()`). Zero-edge sentinel applies.
+    @Test("strategist × Int × idempotence: identity passes single-pass")
+    func strategistIntIdempotenceBothPass() throws {
+        let outcome = try Self.runStrategistPipeline(
+            functionCalls: ["{ (value: Int) in value }"],
+            carrier: "Int",
+            template: "idempotence"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+    /// **V1.47.G.6.b — strategist × String × idempotence × bothPass.**
+    /// Identity function on `String` via the strategist's direct-RawType
+    /// fast path. Confirms the new carrier surface beyond v1.46's
+    /// `{Complex<Double>, Double, Int}` works end-to-end.
+    @Test("strategist × String × idempotence: identity passes single-pass")
+    func strategistStringIdempotenceBothPass() throws {
+        let outcome = try Self.runStrategistPipeline(
+            functionCalls: ["{ (value: String) in value }"],
+            carrier: "String",
+            template: "idempotence"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+    /// **V1.47.G.6.c — strategist × bound generic carrier × idempotence
+    /// × bothPass.** Simulates the cycle-27 chunked-Index path
+    /// post-GenericBindingResolver: `Base.Index` would resolve to
+    /// `Int`. The test directly emits with `carrier: "Int"` (the
+    /// resolved form) and an identity function; this exercises the
+    /// same strategist code path the verify harness takes after the
+    /// resolver fires.
+    @Test("strategist × bound carrier (Int via Base.Index) × idempotence: identity passes")
+    func strategistBoundCarrierIdempotenceBothPass() throws {
+        // Sanity: confirm the binding resolver actually maps Base.Index → Int.
+        #expect(GenericBindingResolver.bound("Base.Index") == "Int")
+        // Run with the bound carrier name — same code path the harness
+        // takes post-rebound.
+        let outcome = try Self.runStrategistPipeline(
+            functionCalls: ["{ (idx: Int) in idx }"],
+            carrier: GenericBindingResolver.bound("Base.Index"),
+            template: "idempotence"
+        )
+        if case .bothPass = outcome {
+            // Success — bound carrier flows through the strategist
+            // single-pass path identically to a literal Int carrier.
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+    /// **V1.47.G.6.d — strategist × `.todo` strategy → fallback path.**
+    /// A struct typeShape with a non-stdlib stored-property type
+    /// trips the strategist's `.todo` branch
+    /// (`Cannot derive a generator for ...`). The
+    /// `StrategistDispatchEmitter` translates that into a
+    /// `VerifyError.unsupportedCarrier`, which the V1.47.F router
+    /// catches and falls back to the v1.46 hardcoded path. Since
+    /// neither carrier matches the v1.46 set either, the final
+    /// emit throws — this test pins that throw at the emitter level
+    /// (not subprocess), avoiding a deliberately failed build.
+    @Test("strategist × .todo strategy → emitter throws .unsupportedCarrier")
+    func strategistTodoFallback() throws {
+        let shape = IndexedTypeShape(
+            name: "Unsupported",
+            kind: .struct,
+            inheritedTypes: [],
+            hasUserGen: false,
+            storedMembers: [
+                IndexedTypeShape.StoredMember(name: "x", typeName: "URL")
+            ],
+            hasUserInit: false
+        )
+        #expect(throws: VerifyError.self) {
+            _ = try StrategistDispatchEmitter.emit(
+                StrategistDispatchEmitter.Inputs(
+                    carrier: "Unsupported",
+                    typeShape: shape,
+                    template: "idempotence",
+                    functionCalls: ["{ (x: Unsupported) in x }"],
+                    extraImports: [],
+                    seedHex: Self.canonicalSeed,
+                    trialBudget: .small
+                )
+            )
         }
     }
 }
