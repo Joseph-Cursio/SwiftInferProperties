@@ -260,7 +260,7 @@ public enum VerifyResultRenderer {
             "    input  = \(payload.edgeInput)",
             "    \(shape.forwardExpression(context: context)) = \(payload.edgeForward)",
             "    \(shape.inverseExpression(context: context)) = \(payload.edgeInverse)",
-            "    expected ≈ \(shape.expectedExpression) "
+            "    expected ≈ \(shape.expectedExpression(context: context)) "
                 + "(within \(context.carrierType).isApproximatelyEqual)"
         ].joined(separator: "\n")
     }
@@ -279,7 +279,7 @@ public enum VerifyResultRenderer {
             "    input  = \(input)",
             "    \(shape.forwardExpression(context: context)) = \(forwardResult)",
             "    \(shape.inverseExpression(context: context)) = \(inverseResult)",
-            "    expected ≈ \(shape.expectedExpression) "
+            "    expected ≈ \(shape.expectedExpression(context: context)) "
                 + "(within \(context.carrierType).isApproximatelyEqual)"
         ].joined(separator: "\n")
     }
@@ -287,9 +287,11 @@ public enum VerifyResultRenderer {
     // MARK: - Template/carrier-aware phrasing
 
     fileprivate static func renderShape(for context: Context) -> RenderShape {
-        context.templateName == "idempotence"
-            ? RenderShape(kind: .idempotence)
-            : RenderShape(kind: .roundTrip)
+        switch context.templateName {
+        case "idempotence": return RenderShape(kind: .idempotence)
+        case "commutativity": return RenderShape(kind: .commutativity)
+        default: return RenderShape(kind: .roundTrip)
+        }
     }
 
     /// Edge-coverage line for `.bothPass`. The integer carrier emits a
@@ -351,11 +353,10 @@ public enum VerifyResultRenderer {
     }
 }
 
-/// Per-template render-time phrasing helper. File-scoped (not nested
-/// in `VerifyResultRenderer`) to keep the type-hierarchy within
-/// SwiftLint's `nesting` rule.
+/// Per-template render-time phrasing helper. File-scoped to keep
+/// the type-hierarchy within SwiftLint's `nesting` rule.
 private struct RenderShape {
-    enum Kind { case roundTrip, idempotence }
+    enum Kind { case roundTrip, idempotence, commutativity }
     let kind: Kind
 
     func subjectLine(context: VerifyResultRenderer.Context) -> String {
@@ -365,35 +366,35 @@ private struct RenderShape {
                 + "over \(context.carrierType)"
         case .idempotence:
             return "idempotence on \(context.forwardName) over \(context.carrierType)"
+        case .commutativity:
+            return "commutativity on \(context.forwardName) over \(context.carrierType)"
         }
     }
 
-    /// First value line — for both round-trip and idempotence this is
-    /// `f(input)` where `f` is the forward function.
+    /// First value line. RT/idempotence: `f(input)`; commutativity: `f(lhs, rhs)`.
     func forwardExpression(context: VerifyResultRenderer.Context) -> String {
-        "\(context.forwardName)(input) "
+        switch kind {
+        case .roundTrip, .idempotence: return "\(context.forwardName)(input) "
+        case .commutativity: return "\(context.forwardName)(lhs, rhs) "
+        }
     }
 
-    /// Second value line — `reverse(forward(input))` for round-trip,
-    /// `f(f(input))` for idempotence (same function applied twice).
-    /// For idempotence, `inverseName == forwardName` per the V1.44.D
-    /// pipeline context construction.
+    /// Second value line — `reverse(forward(input))` / `f(f(input))` /
+    /// `f(rhs, lhs)` respectively.
     func inverseExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
-        case .roundTrip:
-            return "\(context.inverseName)(\(context.forwardName)(input))"
-        case .idempotence:
-            return "\(context.forwardName)(\(context.forwardName)(input))"
+        case .roundTrip: return "\(context.inverseName)(\(context.forwardName)(input))"
+        case .idempotence: return "\(context.forwardName)(\(context.forwardName)(input))"
+        case .commutativity: return "\(context.forwardName)(rhs, lhs)"
         }
     }
 
-    /// Target of the equality check — `"input"` for round-trip
-    /// (`reverse(forward(x)) ≈ x`) or `"f(input)"` for idempotence
-    /// (`f(f(x)) ≈ f(x)`).
-    var expectedExpression: String {
+    /// `input` / `f(input)` / `f(rhs, lhs)` per template.
+    func expectedExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip: return "input"
         case .idempotence: return "f(input)"
+        case .commutativity: return "\(context.forwardName)(rhs, lhs)"
         }
     }
 }

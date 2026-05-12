@@ -58,6 +58,39 @@ struct RoundTripPairResolverTests {
         #expect(tanResult.inverseCall == "Complex.atan")
     }
 
+    // V1.45.D — hyperbolic pairs added to the curated list. Unblocks
+    // cycle-27 picks #4 (sinh/asinh) and #5 (tanh/atanh).
+
+    @Test("V1.45.D — hyperbolic sinh/asinh pair resolves in both directions")
+    func resolvesSinhAsinhPair() throws {
+        let sinhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "sinh(_:)"))
+        #expect(sinhResult.forwardCall == "Complex.sinh")
+        #expect(sinhResult.inverseCall == "Complex.asinh")
+        let asinhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "asinh(_:)"))
+        #expect(asinhResult.forwardCall == "Complex.asinh")
+        #expect(asinhResult.inverseCall == "Complex.sinh")
+    }
+
+    @Test("V1.45.D — hyperbolic cosh/acosh pair resolves in both directions")
+    func resolvesCoshAcoshPair() throws {
+        let coshResult = try RoundTripPairResolver.resolve(Self.entry(primary: "cosh(_:)"))
+        #expect(coshResult.forwardCall == "Complex.cosh")
+        #expect(coshResult.inverseCall == "Complex.acosh")
+        let acoshResult = try RoundTripPairResolver.resolve(Self.entry(primary: "acosh(_:)"))
+        #expect(acoshResult.forwardCall == "Complex.acosh")
+        #expect(acoshResult.inverseCall == "Complex.cosh")
+    }
+
+    @Test("V1.45.D — hyperbolic tanh/atanh pair resolves in both directions")
+    func resolvesTanhAtanhPair() throws {
+        let tanhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "tanh(_:)"))
+        #expect(tanhResult.forwardCall == "Complex.tanh")
+        #expect(tanhResult.inverseCall == "Complex.atanh")
+        let atanhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "atanh(_:)"))
+        #expect(atanhResult.forwardCall == "Complex.atanh")
+        #expect(atanhResult.inverseCall == "Complex.tanh")
+    }
+
     // MARK: - resolve(_:) — error paths
 
     @Test("non-round-trip template → .unsupportedTemplate")

@@ -16,8 +16,8 @@ struct VerifyStubBundle {
 extension SwiftInferCommand.Verify {
 
     /// Dispatch on `entry.templateName` to the per-template builder.
-    /// Unsupported templates (`commutativity`, `dual-style-consistency`,
-    /// etc.) raise `.unsupportedTemplate`; v1.45+ will widen the
+    /// Unsupported templates (associativity, dual-style-consistency,
+    /// monotonicity) raise `.unsupportedTemplate`; v1.46+ widens the
     /// supported set.
     static func buildStubBundle(
         entry: SemanticIndexEntry,
@@ -28,10 +28,12 @@ extension SwiftInferCommand.Verify {
             return try roundTripStubBundle(entry: entry, budget: budget)
         case "idempotence":
             return try idempotenceStubBundle(entry: entry, budget: budget)
+        case "commutativity":
+            return try commutativityStubBundle(entry: entry, budget: budget)
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
-                expected: ["round-trip", "idempotence"]
+                expected: ["round-trip", "idempotence", "commutativity"]
             )
         }
     }
@@ -76,6 +78,33 @@ extension SwiftInferCommand.Verify {
         )
         let context = VerifyResultRenderer.Context(
             templateName: "idempotence",
+            forwardName: resolved.functionCall,
+            inverseName: resolved.functionCall,
+            carrierType: entry.typeName ?? "(none)"
+        )
+        return VerifyStubBundle(source: source, rendererContext: context)
+    }
+
+    private static func commutativityStubBundle(
+        entry: SemanticIndexEntry,
+        budget: CommutativityStubEmitter.TrialBudget
+    ) throws -> VerifyStubBundle {
+        let resolved = try CommutativityPairResolver.resolve(entry)
+        let source = try CommutativityStubEmitter.emit(
+            CommutativityStubEmitter.Inputs(
+                functionCall: resolved.functionCall,
+                extraImports: [],
+                carrierType: entry.typeName ?? "(none)",
+                seedHex: makeSeedHex(from: entry.identityHash),
+                trialBudget: budget
+            )
+        )
+        // For commutativity, both `forwardName` and `inverseName` slots
+        // hold the same single function call. The renderer's
+        // `RenderShape.commutativity` reads it once and produces
+        // `f(lhs, rhs)` and `f(rhs, lhs)` for the two value lines.
+        let context = VerifyResultRenderer.Context(
+            templateName: "commutativity",
             forwardName: resolved.functionCall,
             inverseName: resolved.functionCall,
             carrierType: entry.typeName ?? "(none)"

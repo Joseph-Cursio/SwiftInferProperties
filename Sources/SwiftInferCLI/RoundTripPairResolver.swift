@@ -36,10 +36,12 @@ public enum RoundTripPairResolver {
         public let inverseName: String
     }
 
-    /// V1.42 curated set. 4 bidirectional pairs = 8 entries. The
-    /// hyperbolic versions (`cosh/acosh`, etc.) follow the same
-    /// shape and are easy v1.43 additions if the calibration corpus
-    /// motivates them.
+    /// V1.42 curated set + V1.45.D hyperbolic expansion. 7
+    /// bidirectional pairs = 14 entries. Cycle-41 findings (`docs/
+    /// calibration-cycle-41-findings.md`) flagged the hyperbolic
+    /// pairs as low-effort high-coverage additions — picks #4
+    /// (`sinh/asinh`) and #5 (`tanh/atanh`) on the cycle-27 corpus
+    /// land in-scope after this expansion.
     public static let curated: [Pair] = [
         Pair(forwardName: "exp(_:)", inverseName: "log(_:)"),
         Pair(forwardName: "log(_:)", inverseName: "exp(_:)"),
@@ -48,7 +50,14 @@ public enum RoundTripPairResolver {
         Pair(forwardName: "sin(_:)", inverseName: "asin(_:)"),
         Pair(forwardName: "asin(_:)", inverseName: "sin(_:)"),
         Pair(forwardName: "tan(_:)", inverseName: "atan(_:)"),
-        Pair(forwardName: "atan(_:)", inverseName: "tan(_:)")
+        Pair(forwardName: "atan(_:)", inverseName: "tan(_:)"),
+        // V1.45.D hyperbolic additions.
+        Pair(forwardName: "sinh(_:)", inverseName: "asinh(_:)"),
+        Pair(forwardName: "asinh(_:)", inverseName: "sinh(_:)"),
+        Pair(forwardName: "cosh(_:)", inverseName: "acosh(_:)"),
+        Pair(forwardName: "acosh(_:)", inverseName: "cosh(_:)"),
+        Pair(forwardName: "tanh(_:)", inverseName: "atanh(_:)"),
+        Pair(forwardName: "atanh(_:)", inverseName: "tanh(_:)")
     ]
 
     /// Resolution result. Carries the inverse name + the qualified
