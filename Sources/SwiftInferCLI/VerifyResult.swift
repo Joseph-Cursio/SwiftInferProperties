@@ -123,12 +123,27 @@ public enum VerifyResultParser {
 public enum VerifyResultRenderer {
 
     /// Context the renderer needs to produce a human-readable line.
+    /// V1.44.D adds `templateName` so the renderer can adapt the
+    /// "round-trip" vs "idempotence" phrasing — `forwardName` /
+    /// `inverseName` retain their names but for idempotence the two
+    /// fields hold the same single function call (the renderer prints
+    /// `f(input)` / `f(f(input))` instead of `forward(input)` /
+    /// `reverse(forward(input))`).
     public struct Context: Equatable, Sendable {
+        /// `"round-trip"` or `"idempotence"`. Other values render via
+        /// the round-trip code path (best-effort fallback).
+        public let templateName: String
         public let forwardName: String
         public let inverseName: String
         public let carrierType: String
 
-        public init(forwardName: String, inverseName: String, carrierType: String) {
+        public init(
+            templateName: String,
+            forwardName: String,
+            inverseName: String,
+            carrierType: String
+        ) {
+            self.templateName = templateName
             self.forwardName = forwardName
             self.inverseName = inverseName
             self.carrierType = carrierType
@@ -155,19 +170,19 @@ public enum VerifyResultRenderer {
         "Complex(leastNonzeroMagnitude, 0)"
     ]
 
-    /// Render the outcome as a multi-line user-facing string. Both
-    /// strong-pass and edge-advisory cases span multiple lines; the
-    /// fail and error cases match v1.42's shape.
+    /// Render the outcome as a multi-line user-facing string. V1.44.D
+    /// adapts the phrasing per template (`round-trip` vs `idempotence`)
+    /// and per carrier (FP edge-pass-sampled count vs the integer
+    /// "edge pass not applicable" sentinel).
     public static func render(_ outcome: VerifyOutcome, context: Context) -> String {
         switch outcome {
         case let .bothPass(defaultTrials, edgeTrials, edgeSampled):
-            return [
-                "✓ verify holds (strong): round-trip \(context.forwardName)/\(context.inverseName) "
-                    + "over \(context.carrierType),",
-                "    \(defaultTrials) default \(trialWord(defaultTrials)) + "
-                    + "\(edgeTrials) edge-case-biased \(trialWord(edgeTrials)), all pass",
-                "    (\(edgeSampled) / \(edgeCaseLabels.count) curated edge cases sampled)"
-            ].joined(separator: "\n")
+            return renderBothPass(
+                defaultTrials: defaultTrials,
+                edgeTrials: edgeTrials,
+                edgeSampled: edgeSampled,
+                context: context
+            )
 
         case let .edgeCaseAdvisory(
             defaultTrials,
@@ -177,40 +192,208 @@ public enum VerifyResultRenderer {
             edgeInverse,
             edgeCaseIndex
         ):
-            let edgeTag: String
-            if edgeCaseIndex >= 0, edgeCaseIndex < edgeCaseLabels.count {
-                edgeTag = "edge case #\(edgeCaseIndex) (\(edgeCaseLabels[edgeCaseIndex]))"
-            } else {
-                edgeTag = "a non-curated value"
-            }
-            return [
-                "⚠ verify holds for finite domain; edge-case advisory: "
-                    + "round-trip \(context.forwardName)/\(context.inverseName) "
-                    + "over \(context.carrierType),",
-                "    default pass \(defaultTrials)/\(defaultTrials), "
-                    + "edge pass failed at trial \(edgeTrial) on \(edgeTag):",
-                "    input  = \(edgeInput)",
-                "    \(context.forwardName)(input)  = \(edgeForward)",
-                "    \(context.inverseName)(\(context.forwardName)(input)) = \(edgeInverse)",
-                "    expected ≈ input (within \(context.carrierType).isApproximatelyEqual)"
-            ].joined(separator: "\n")
+            let payload = EdgeAdvisoryPayload(
+                defaultTrials: defaultTrials,
+                edgeTrial: edgeTrial,
+                edgeInput: edgeInput,
+                edgeForward: edgeForward,
+                edgeInverse: edgeInverse,
+                edgeCaseIndex: edgeCaseIndex
+            )
+            return renderEdgeCaseAdvisory(payload: payload, context: context)
 
         case let .defaultFails(trial, input, forwardResult, inverseResult):
-            return [
-                "✗ verify fails: round-trip \(context.forwardName)/\(context.inverseName) "
-                    + "over \(context.carrierType), counterexample at trial \(trial) (default pass):",
-                "    input  = \(input)",
-                "    \(context.forwardName)(input)  = \(forwardResult)",
-                "    \(context.inverseName)(\(context.forwardName)(input)) = \(inverseResult)",
-                "    expected ≈ input (within \(context.carrierType).isApproximatelyEqual)"
-            ].joined(separator: "\n")
+            return renderDefaultFails(
+                trial: trial,
+                input: input,
+                forwardResult: forwardResult,
+                inverseResult: inverseResult,
+                context: context
+            )
 
         case let .error(reason):
             return "! verify error: \(reason)"
         }
     }
 
+    // MARK: - Per-outcome renderers
+
+    private static func renderBothPass(
+        defaultTrials: Int,
+        edgeTrials: Int,
+        edgeSampled: Int,
+        context: Context
+    ) -> String {
+        let shape = renderShape(for: context)
+        let header = "✓ verify holds (strong): \(shape.subjectLine(context: context)),"
+        let trialLine =
+            "    \(defaultTrials) default \(trialWord(defaultTrials)) + "
+            + "\(edgeTrials) edge-case-biased \(trialWord(edgeTrials)), all pass"
+        let coverageLine = edgeCoverageLine(
+            edgeTrials: edgeTrials,
+            edgeSampled: edgeSampled,
+            context: context
+        )
+        return [header, trialLine, coverageLine].joined(separator: "\n")
+    }
+
+    fileprivate struct EdgeAdvisoryPayload {
+        let defaultTrials: Int
+        let edgeTrial: Int
+        let edgeInput: String
+        let edgeForward: String
+        let edgeInverse: String
+        let edgeCaseIndex: Int
+    }
+
+    private static func renderEdgeCaseAdvisory(
+        payload: EdgeAdvisoryPayload,
+        context: Context
+    ) -> String {
+        let shape = renderShape(for: context)
+        let edgeTag = edgeIndexTag(edgeCaseIndex: payload.edgeCaseIndex, context: context)
+        return [
+            "⚠ verify holds for finite domain; edge-case advisory: "
+                + "\(shape.subjectLine(context: context)),",
+            "    default pass \(payload.defaultTrials)/\(payload.defaultTrials), "
+                + "edge pass failed at trial \(payload.edgeTrial) on \(edgeTag):",
+            "    input  = \(payload.edgeInput)",
+            "    \(shape.forwardExpression(context: context)) = \(payload.edgeForward)",
+            "    \(shape.inverseExpression(context: context)) = \(payload.edgeInverse)",
+            "    expected ≈ \(shape.expectedExpression) "
+                + "(within \(context.carrierType).isApproximatelyEqual)"
+        ].joined(separator: "\n")
+    }
+
+    private static func renderDefaultFails(
+        trial: Int,
+        input: String,
+        forwardResult: String,
+        inverseResult: String,
+        context: Context
+    ) -> String {
+        let shape = renderShape(for: context)
+        return [
+            "✗ verify fails: \(shape.subjectLine(context: context)), "
+                + "counterexample at trial \(trial) (default pass):",
+            "    input  = \(input)",
+            "    \(shape.forwardExpression(context: context)) = \(forwardResult)",
+            "    \(shape.inverseExpression(context: context)) = \(inverseResult)",
+            "    expected ≈ \(shape.expectedExpression) "
+                + "(within \(context.carrierType).isApproximatelyEqual)"
+        ].joined(separator: "\n")
+    }
+
+    // MARK: - Template/carrier-aware phrasing
+
+    fileprivate static func renderShape(for context: Context) -> RenderShape {
+        context.templateName == "idempotence"
+            ? RenderShape(kind: .idempotence)
+            : RenderShape(kind: .roundTrip)
+    }
+
+    /// Edge-coverage line for `.bothPass`. The integer carrier emits a
+    /// zero-edge sentinel (`edgeTrials == 0` per V1.44.B/C); the
+    /// renderer detects it and reports the n/a phrasing instead of the
+    /// curated-cases-sampled count. FP carriers map to their curated
+    /// list size — 12 entries for `Complex<Double>`, 1 entry
+    /// (`Double.nan`) for `Double`.
+    private static func edgeCoverageLine(
+        edgeTrials: Int,
+        edgeSampled: Int,
+        context: Context
+    ) -> String {
+        if edgeTrials == 0 {
+            return "    (integer carrier — edge pass not applicable)"
+        }
+        let curatedCount = curatedEdgeCaseCount(for: context.carrierType)
+        return "    (\(edgeSampled) / \(curatedCount) curated edge cases sampled)"
+    }
+
+    /// Per-carrier curated edge-case index tag for `.edgeCaseAdvisory`.
+    /// `Complex<Double>` uses the 12-entry `edgeCaseLabels` table;
+    /// `Double` uses a single-entry `[Double.nan]` synthesized label.
+    private static func edgeIndexTag(
+        edgeCaseIndex: Int,
+        context: Context
+    ) -> String {
+        guard edgeCaseIndex >= 0 else {
+            return "a non-curated value"
+        }
+        switch context.carrierType {
+        case "Complex<Double>":
+            guard edgeCaseIndex < edgeCaseLabels.count else {
+                return "a non-curated value"
+            }
+            return "edge case #\(edgeCaseIndex) (\(edgeCaseLabels[edgeCaseIndex]))"
+        case "Double":
+            // Single-entry curated list — index 0 is NaN per V1.44.B.
+            return edgeCaseIndex == 0
+                ? "edge case #0 (Double.nan)"
+                : "a non-curated value"
+        default:
+            // Int carrier shouldn't fire `.edgeCaseAdvisory` (no edge
+            // pass) — defensive fallback.
+            return "a non-curated value"
+        }
+    }
+
+    private static func curatedEdgeCaseCount(for carrierType: String) -> Int {
+        switch carrierType {
+        case "Complex<Double>": return edgeCaseLabels.count
+        case "Double": return 1
+        default: return 0
+        }
+    }
+
     private static func trialWord(_ count: Int) -> String {
         count == 1 ? "trial" : "trials"
+    }
+}
+
+/// Per-template render-time phrasing helper. File-scoped (not nested
+/// in `VerifyResultRenderer`) to keep the type-hierarchy within
+/// SwiftLint's `nesting` rule.
+private struct RenderShape {
+    enum Kind { case roundTrip, idempotence }
+    let kind: Kind
+
+    func subjectLine(context: VerifyResultRenderer.Context) -> String {
+        switch kind {
+        case .roundTrip:
+            return "round-trip \(context.forwardName)/\(context.inverseName) "
+                + "over \(context.carrierType)"
+        case .idempotence:
+            return "idempotence on \(context.forwardName) over \(context.carrierType)"
+        }
+    }
+
+    /// First value line — for both round-trip and idempotence this is
+    /// `f(input)` where `f` is the forward function.
+    func forwardExpression(context: VerifyResultRenderer.Context) -> String {
+        "\(context.forwardName)(input) "
+    }
+
+    /// Second value line — `reverse(forward(input))` for round-trip,
+    /// `f(f(input))` for idempotence (same function applied twice).
+    /// For idempotence, `inverseName == forwardName` per the V1.44.D
+    /// pipeline context construction.
+    func inverseExpression(context: VerifyResultRenderer.Context) -> String {
+        switch kind {
+        case .roundTrip:
+            return "\(context.inverseName)(\(context.forwardName)(input))"
+        case .idempotence:
+            return "\(context.forwardName)(\(context.forwardName)(input))"
+        }
+    }
+
+    /// Target of the equality check — `"input"` for round-trip
+    /// (`reverse(forward(x)) ≈ x`) or `"f(input)"` for idempotence
+    /// (`f(f(x)) ≈ f(x)`).
+    var expectedExpression: String {
+        switch kind {
+        case .roundTrip: return "input"
+        case .idempotence: return "f(input)"
+        }
     }
 }

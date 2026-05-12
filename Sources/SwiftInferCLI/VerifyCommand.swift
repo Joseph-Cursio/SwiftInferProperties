@@ -134,16 +134,14 @@ extension SwiftInferCommand {
                 indexPathOverride: indexPathOverride,
                 packageRoot: packageRoot
             )
-            let pair = try RoundTripPairResolver.resolve(entry)
-            let stubSource = try RoundTripStubEmitter.emit(
-                RoundTripStubEmitter.Inputs(
-                    forwardCall: pair.forwardCall,
-                    inverseCall: pair.inverseCall,
-                    extraImports: [],
-                    carrierType: entry.typeName ?? "(none)",
-                    seedHex: makeSeedHex(from: entry.identityHash),
-                    trialBudget: parseBudget(budgetString)
-                )
+            // V1.44.D — template dispatch. round-trip uses the v1.42 +
+            // v1.43 + v1.44.B path; idempotence uses the V1.44.A/C
+            // emitter + V1.44.D's single-function resolver. Other
+            // templates surface as `.unsupportedTemplate` for v1.45+.
+            // Builder lives in `VerifyCommand+TemplateDispatch.swift`.
+            let stubBundle = try Self.buildStubBundle(
+                entry: entry,
+                budget: parseBudget(budgetString)
             )
             let workdir = packageRoot
                 .appendingPathComponent(".swiftinfer")
@@ -153,18 +151,13 @@ extension SwiftInferCommand {
                 VerifierWorkdir.Inputs(
                     workdir: workdir,
                     userPackage: nil,
-                    stubSource: stubSource
+                    stubSource: stubBundle.source
                 )
             )
             let runOutput = try buildAndRun(workdir: workdir)
-            let context = VerifyResultRenderer.Context(
-                forwardName: pair.forwardCall,
-                inverseName: pair.inverseCall,
-                carrierType: entry.typeName ?? "(none)"
-            )
             return VerifyResultRenderer.render(
                 VerifyResultParser.parse(runOutput),
-                context: context
+                context: stubBundle.rendererContext
             )
         }
 
