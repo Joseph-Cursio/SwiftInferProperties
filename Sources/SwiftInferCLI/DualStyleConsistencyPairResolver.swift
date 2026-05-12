@@ -36,9 +36,28 @@ public enum DualStyleConsistencyPairResolver {
     }
 
     public static let curated: [Pair] = [
+        // V1.48.B initial 3 entries (Collection family).
         Pair(nonMutating: "sorted()", mutating: "sort"),
         Pair(nonMutating: "reversed()", mutating: "reverse"),
-        Pair(nonMutating: "shuffled()", mutating: "shuffle")
+        Pair(nonMutating: "shuffled()", mutating: "shuffle"),
+        // V1.51.B cycle-27-evidenced additions — OC's
+        // `OrderedSet.UnorderedView` exposes set-algebra mutating /
+        // non-mutating siblings. Per cycle-27 surface evidence the
+        // non-mutating spelling is `form*(_:)` and the mutating
+        // spelling is the same `form*` name acting via in-place
+        // mutation on the receiver. The `formUnion` family pairs
+        // resolve to `(self.form*(_:), copy.form*(_:))`-shaped checks
+        // where the non-mutating call returns a new value and the
+        // mutating call updates `var copy` in place.
+        Pair(nonMutating: "formIntersection(_:)", mutating: "formIntersection"),
+        Pair(nonMutating: "formUnion(_:)", mutating: "formUnion"),
+        Pair(nonMutating: "formSymmetricDifference(_:)", mutating: "formSymmetricDifference"),
+        Pair(nonMutating: "subtract(_:)", mutating: "subtract"),
+        // `OrderedDictionary.merge` family — non-mutating `merging`
+        // returns a new dictionary; mutating `merge` updates in place.
+        // Cycle-27 surfaces both call shapes.
+        Pair(nonMutating: "merge(_:uniquingKeysWith:)", mutating: "merge"),
+        Pair(nonMutating: "merging(_:uniquingKeysWith:)", mutating: "merge")
     ]
 
     /// Resolution result. Carries the pair of expressions the V1.48.A

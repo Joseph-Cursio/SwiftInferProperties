@@ -43,7 +43,15 @@ public enum GenericBindingResolver {
         // IteratorProtocol's `Element` associated type. Iterator
         // instances rarely escape, but lifted suggestions reference
         // them by name.
-        "Iterator.Element": "Int"
+        "Iterator.Element": "Int",
+        // V1.51.A — bare→qualified canonicalization. The
+        // discover/index path strips generic argument lists from
+        // declarations (`struct Complex<RealType>` → `"Complex"`); the
+        // v1.49 emitter expects the qualified form. V1.51.A maps the
+        // bare form to the v1.46 hardcoded path's expected
+        // `Complex<Double>` carrier. Bare→`<Float>` and `<Float80>`
+        // variants stay unsupported in v1.51 (no v1.46 hardcoded path).
+        "Complex": "Complex<Double>"
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,

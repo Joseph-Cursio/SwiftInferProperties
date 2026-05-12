@@ -58,8 +58,18 @@ extension SwiftInferCommand.Verify {
         }
         let rawCarrier = entry.typeName ?? "(none)"
         let boundCarrier = GenericBindingResolver.bound(rawCarrier)
-        // Route 1: v1.46 hardcoded carriers keep their existing path.
-        if v1_46HardcodedCarriers.contains(boundCarrier) {
+        // Route 1: v1.46 hardcoded carriers + v1.46-supported templates
+        // keep their existing path. **V1.51.C routing flip**: v1.48
+        // templates (idempotence-lifted / dual-style-consistency /
+        // monotonicity) always route through the strategist even when
+        // the carrier is in v1_46HardcodedCarriers — the v1.46
+        // hardcoded path doesn't implement them and the strategist
+        // handles them via the v1.49 emitter family. Cycle-47 found 2
+        // monotonicity × Double picks misrouted to v1_46HardcodedBundle's
+        // default branch; v1.51.C closes that gap.
+        let isV1_46TemplateOnV1_46Carrier = v1_46HardcodedCarriers.contains(boundCarrier)
+            && v1_46HardcodedTemplates.contains(entry.templateName)
+        if isV1_46TemplateOnV1_46Carrier {
             return try v1_46HardcodedBundle(
                 entry: rebound(entry, toCarrier: boundCarrier),
                 budget: budget
