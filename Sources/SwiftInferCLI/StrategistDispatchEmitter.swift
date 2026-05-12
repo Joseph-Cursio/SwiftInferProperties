@@ -68,6 +68,11 @@ public enum StrategistDispatchEmitter {
         /// Trial count for Pass 1.
         public let trialBudget: TrialBudget
 
+        /// V1.49.A — verbatim Swift source rendered between the
+        /// imports + the `var rng = ...` line. See
+        /// `RoundTripStubEmitter.Inputs.preamble` for the load-bearing docstring.
+        public let preamble: String
+
         public init(
             carrier: String,
             typeShape: IndexedTypeShape?,
@@ -75,7 +80,8 @@ public enum StrategistDispatchEmitter {
             functionCalls: [String],
             extraImports: [String] = [],
             seedHex: SeedHex,
-            trialBudget: TrialBudget
+            trialBudget: TrialBudget,
+            preamble: String = ""
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -84,6 +90,7 @@ public enum StrategistDispatchEmitter {
             self.extraImports = extraImports
             self.seedHex = seedHex
             self.trialBudget = trialBudget
+            self.preamble = preamble
         }
     }
 
@@ -98,7 +105,8 @@ public enum StrategistDispatchEmitter {
         let setup = setupSection(
             importsBlock: importsBlock,
             seed: inputs.seedHex,
-            trials: trials
+            trials: trials,
+            preamble: inputs.preamble
         )
         let defaultPass = try defaultPassSection(inputs: inputs, recipe: recipe)
         let edgeSentinel = edgeSentinelSection()
@@ -205,16 +213,18 @@ public enum StrategistDispatchEmitter {
         """
     }
 
-    /// Imports + Xoshiro RNG seeded from the V1.7.5 identity hash +
-    /// trial count.
+    /// Imports + optional V1.49.A preamble + Xoshiro RNG seeded from
+    /// the V1.7.5 identity hash + trial count.
     private static func setupSection(
         importsBlock: String,
         seed: SeedHex,
-        trials: Int
+        trials: Int,
+        preamble: String = ""
     ) -> String {
-        """
+        let preambleBlock = preamble.isEmpty ? "" : "\n\(preamble)\n"
+        return """
         \(importsBlock)
-
+        \(preambleBlock)
         var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
             0x\(hex(seed.stateA)),
             0x\(hex(seed.stateB)),

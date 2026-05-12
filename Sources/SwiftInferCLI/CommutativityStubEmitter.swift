@@ -54,18 +54,25 @@ public enum CommutativityStubEmitter {
 
         public let trialBudget: TrialBudget
 
+        /// V1.49.A — verbatim Swift source rendered between the
+        /// imports + the `var rng = ...` line. See
+        /// `RoundTripStubEmitter.Inputs.preamble` for the load-bearing docstring.
+        public let preamble: String
+
         public init(
             functionCall: String,
             extraImports: [String],
             carrierType: String,
             seedHex: SeedHex,
-            trialBudget: TrialBudget
+            trialBudget: TrialBudget,
+            preamble: String = ""
         ) {
             self.functionCall = functionCall
             self.extraImports = extraImports
             self.carrierType = carrierType
             self.seedHex = seedHex
             self.trialBudget = trialBudget
+            self.preamble = preamble
         }
     }
 
@@ -117,7 +124,12 @@ extension CommutativityStubEmitter {
         let importsBlock = importsForComplexDouble(inputs.extraImports)
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, carrierBlurb: complexDoubleHeaderBlurb)
-        let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
+        let setup = setupSection(
+            importsBlock: importsBlock,
+            seed: inputs.seedHex,
+            trials: trials,
+            preamble: inputs.preamble
+        )
         let defaultPass = complexDoubleDefaultPass(functionCall: inputs.functionCall)
         let edgePass = complexDoubleEdgePass(functionCall: inputs.functionCall)
         return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
@@ -247,10 +259,16 @@ extension CommutativityStubEmitter {
         """
     }
 
-    static func setupSection(importsBlock: String, seed: SeedHex, trials: Int) -> String {
-        """
+    static func setupSection(
+        importsBlock: String,
+        seed: SeedHex,
+        trials: Int,
+        preamble: String = ""
+    ) -> String {
+        let preambleBlock = preamble.isEmpty ? "" : "\n\(preamble)\n"
+        return """
         \(importsBlock)
-
+        \(preambleBlock)
         var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
             0x\(hex(seed.stateA)),
             0x\(hex(seed.stateB)),

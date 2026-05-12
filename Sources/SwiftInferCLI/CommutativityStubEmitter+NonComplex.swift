@@ -12,7 +12,12 @@ extension CommutativityStubEmitter {
         let importsBlock = importsForDouble(inputs.extraImports)
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, carrierBlurb: doubleHeaderBlurb)
-        let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
+        let setup = setupSection(
+            importsBlock: importsBlock,
+            seed: inputs.seedHex,
+            trials: trials,
+            preamble: inputs.preamble
+        )
         let defaultPass = doubleDefaultPass(functionCall: inputs.functionCall)
         let edgePass = doubleEdgePass(functionCall: inputs.functionCall)
         return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
@@ -112,7 +117,12 @@ extension CommutativityStubEmitter {
         let importsBlock = importsForInt(inputs.extraImports)
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, carrierBlurb: intHeaderBlurb)
-        let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
+        let setup = setupSection(
+            importsBlock: importsBlock,
+            seed: inputs.seedHex,
+            trials: trials,
+            preamble: inputs.preamble
+        )
         let defaultPass = intDefaultPass(functionCall: inputs.functionCall)
         let edgeSentinel = intEdgeSentinel()
         return [header, setup, defaultPass, edgeSentinel].joined(separator: "\n\n")
