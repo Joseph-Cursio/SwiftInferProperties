@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 @testable import SwiftInferCLI
 
@@ -15,7 +16,8 @@ struct IndexCommandBuildEntryTests {
         functionName: String = "encode(_:)",
         file: String = "/foo/Bar.swift",
         line: Int = 10,
-        scoreSignals: [Signal] = [Signal(kind: .typeSymmetrySignature, weight: 30, detail: "shape")]
+        scoreSignals: [Signal] = [Signal(kind: .typeSymmetrySignature, weight: 30, detail: "shape")],
+        carrier: String? = nil
     ) -> Suggestion {
         let evidence = Evidence(
             displayName: functionName,
@@ -35,7 +37,8 @@ struct IndexCommandBuildEntryTests {
                 whySuggested: ["why"],
                 whyMightBeWrong: ["caveat"]
             ),
-            identity: SuggestionIdentity(canonicalInput: "test|\(functionName)|\(file):\(line)")
+            identity: SuggestionIdentity(canonicalInput: "test|\(functionName)|\(file):\(line)"),
+            carrier: carrier
         )
     }
 
@@ -155,5 +158,90 @@ struct IndexCommandBuildEntryTests {
             now: "2026-05-11T12:00:00Z"
         )
         #expect(likelyEntry.tier == "Likely")
+    }
+
+    // MARK: - V1.47.C typeShape population
+
+    @Test("V1.47.C — typeShape is nil when no map is provided (default arg)")
+    func typeShapeNilWithDefaultArg() {
+        let suggestion = Self.makeSuggestion(carrier: "Foo")
+        let entry = SwiftInferCommand.Index.buildEntry(
+            from: suggestion,
+            decisionsByHash: [:],
+            now: "2026-05-11T12:00:00Z"
+        )
+        #expect(entry.typeShape == nil)
+    }
+
+    @Test("V1.47.C — typeShape is nil when carrier not in shapesByName")
+    func typeShapeNilWhenCarrierMissing() {
+        let suggestion = Self.makeSuggestion(carrier: "UnknownType")
+        let entry = SwiftInferCommand.Index.buildEntry(
+            from: suggestion,
+            decisionsByHash: [:],
+            typeShapesByName: [:],
+            now: "2026-05-11T12:00:00Z"
+        )
+        #expect(entry.typeShape == nil)
+    }
+
+    @Test("V1.47.C — typeShape is populated when carrier matches a TypeShape entry")
+    func typeShapePopulatedOnMatch() {
+        let kitShape = TypeShape(
+            name: "Foo", kind: .struct,
+            inheritedTypes: ["Equatable"],
+            hasUserGen: false,
+            storedMembers: [
+                PropertyLawCore.StoredMember(name: "value", typeName: "Int")
+            ]
+        )
+        let suggestion = Self.makeSuggestion(carrier: "Foo")
+        let entry = SwiftInferCommand.Index.buildEntry(
+            from: suggestion,
+            decisionsByHash: [:],
+            typeShapesByName: ["Foo": kitShape],
+            now: "2026-05-11T12:00:00Z"
+        )
+        #expect(entry.typeShape?.name == "Foo")
+        #expect(entry.typeShape?.kind == .struct)
+        #expect(entry.typeShape?.inheritedTypes == ["Equatable"])
+        #expect(entry.typeShape?.storedMembers.count == 1)
+    }
+
+    @Test("V1.47.C — generic carrier matches bare-name TypeShape entry (OrderedSet<Element> → OrderedSet)")
+    func typeShapeLookupStripsGenericArgs() {
+        let kitShape = TypeShape(
+            name: "OrderedSet", kind: .struct, inheritedTypes: [], hasUserGen: false
+        )
+        let suggestion = Self.makeSuggestion(carrier: "OrderedSet<Element>")
+        let entry = SwiftInferCommand.Index.buildEntry(
+            from: suggestion,
+            decisionsByHash: [:],
+            typeShapesByName: ["OrderedSet": kitShape],
+            now: "2026-05-11T12:00:00Z"
+        )
+        #expect(entry.typeShape?.name == "OrderedSet")
+    }
+
+    @Test("V1.47.C — typeShape is nil for free functions (suggestion.carrier == nil)")
+    func typeShapeNilForFreeFunction() {
+        let suggestion = Self.makeSuggestion(carrier: nil)
+        let entry = SwiftInferCommand.Index.buildEntry(
+            from: suggestion,
+            decisionsByHash: [:],
+            typeShapesByName: ["Foo": TypeShape(
+                name: "Foo", kind: .struct, inheritedTypes: [], hasUserGen: false
+            )],
+            now: "2026-05-11T12:00:00Z"
+        )
+        #expect(entry.typeShape == nil)
+    }
+
+    @Test("V1.47.C — bareTypeName strips generic args correctly")
+    func bareTypeNameStripsGenericArgs() {
+        #expect(SwiftInferCommand.Index.bareTypeName(from: "Complex<Double>") == "Complex")
+        #expect(SwiftInferCommand.Index.bareTypeName(from: "OrderedSet<Element>") == "OrderedSet")
+        #expect(SwiftInferCommand.Index.bareTypeName(from: "Int") == "Int")
+        #expect(SwiftInferCommand.Index.bareTypeName(from: "") == "")
     }
 }

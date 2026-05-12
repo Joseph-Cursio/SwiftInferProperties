@@ -192,7 +192,12 @@ let package = Package(
         ),
         .testTarget(
             name: "SwiftInferCoreTests",
-            dependencies: ["SwiftInferCore"]
+            dependencies: [
+                "SwiftInferCore",
+                // V1.47.G.1 — tests of IndexedTypeShape ↔ TypeShape
+                // conversion need PropertyLawCore symbols visible.
+                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws")
+            ]
         ),
         .testTarget(
             name: "SwiftInferTemplatesTests",
@@ -212,6 +217,11 @@ let package = Package(
             name: "SwiftInferCLITests",
             dependencies: [
                 "SwiftInferCLI",
+                "SwiftInferCore",
+                // V1.47.G.5 — StrategistDispatchEmitter tests need
+                // PropertyLawCore symbols (TypeShape construction)
+                // for the recipe-resolution coverage.
+                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),

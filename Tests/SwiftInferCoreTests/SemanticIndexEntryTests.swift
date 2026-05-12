@@ -165,4 +165,116 @@ struct SemanticIndexEntryTests {
         )
         #expect(entry1 != entry3)
     }
+
+    // MARK: - V1.47.B typeShape field — schema migration
+
+    @Test("V1.47.B — pre-v1.47 JSON (no typeShape) decodes cleanly with nil")
+    func v1MigrationDecodesWithoutTypeShape() throws {
+        // Verbatim pre-v1.47 entry JSON — no typeShape key.
+        let json = """
+        {
+            "decision": "accept",
+            "decisionAt": "2026-05-11T12:34:56Z",
+            "firstSeenAt": "2026-05-10T00:00:00Z",
+            "identityHash": "0xBC43359C0574816B",
+            "lastSeenAt": "2026-05-11T12:34:56Z",
+            "location": "/foo/bar/_HashTable+UnsafeHandle.swift:201",
+            "primaryFunctionName": "_value(forBucketContents:)",
+            "score": 35,
+            "templateName": "round-trip",
+            "tier": "Possible",
+            "typeName": "_HashTable.UnsafeHandle"
+        }
+        """
+        let data = Data(json.utf8)
+        let decoded = try JSONDecoder().decode(SemanticIndexEntry.self, from: data)
+        #expect(decoded.typeShape == nil)
+        // All other fields preserved.
+        #expect(decoded.identityHash == "0xBC43359C0574816B")
+        #expect(decoded.templateName == "round-trip")
+        #expect(decoded.score == 35)
+    }
+
+    @Test("V1.47.B — v1.47 JSON with non-nil typeShape round-trips bit-for-bit")
+    func v2JsonWithTypeShapeRoundTrips() throws {
+        let shape = IndexedTypeShape(
+            name: "Foo",
+            kind: .struct,
+            inheritedTypes: ["Equatable"],
+            hasUserGen: false,
+            storedMembers: [
+                IndexedTypeShape.StoredMember(name: "value", typeName: "Int")
+            ],
+            hasUserInit: false
+        )
+        let entry = SemanticIndexEntry(
+            identityHash: "0xBC43359C0574816B",
+            templateName: "idempotence",
+            typeName: "Foo",
+            score: 30,
+            tier: "Possible",
+            primaryFunctionName: "normalize(_:)",
+            location: "/a.swift:1",
+            decision: nil,
+            decisionAt: nil,
+            firstSeenAt: "2026-05-12T00:00:00Z",
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeShape: shape
+        )
+        let data = try JSONEncoder().encode(entry)
+        let decoded = try JSONDecoder().decode(SemanticIndexEntry.self, from: data)
+        #expect(decoded.typeShape == shape)
+        #expect(decoded == entry)
+    }
+
+    @Test("V1.47.B — typeShape == nil on encode omits the field (vs. emits null)")
+    func nilTypeShapeOmitsFieldOnEncode() throws {
+        let entry = SemanticIndexEntry(
+            identityHash: "0xBC43359C0574816B",
+            templateName: "round-trip",
+            typeName: "Complex<Double>",
+            score: 30,
+            tier: "Possible",
+            primaryFunctionName: "exp(_:)",
+            location: "/a.swift:1",
+            firstSeenAt: "2026-05-12T00:00:00Z",
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeShape: nil
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(entry)
+        let jsonString = String(data: data, encoding: .utf8) ?? ""
+        // The default JSONEncoder + encodeIfPresent omits nil-Optional keys.
+        // Either omitted-key or "typeShape":null would be acceptable on the
+        // wire, but encodeIfPresent specifically takes the omitted path.
+        #expect(!jsonString.contains("\"typeShape\""))
+    }
+
+    @Test("V1.47.B — updated(from:) propagates typeShape from other")
+    func updatedPropagatesTypeShape() {
+        let original = Self.exampleEntry
+        let newShape = IndexedTypeShape(
+            name: "_HashTable.UnsafeHandle",
+            kind: .struct,
+            inheritedTypes: [],
+            hasUserGen: false
+        )
+        let newer = SemanticIndexEntry(
+            identityHash: original.identityHash,
+            templateName: original.templateName,
+            typeName: original.typeName,
+            score: original.score,
+            tier: original.tier,
+            primaryFunctionName: original.primaryFunctionName,
+            location: original.location,
+            decision: original.decision,
+            decisionAt: original.decisionAt,
+            firstSeenAt: original.firstSeenAt,
+            lastSeenAt: original.lastSeenAt,
+            typeShape: newShape
+        )
+        let merged = original.updated(from: newer)
+        #expect(merged.typeShape == newShape)
+    }
 }
