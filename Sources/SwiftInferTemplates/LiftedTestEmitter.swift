@@ -91,17 +91,10 @@ public enum LiftedTestEmitter {
         )
     }
 
-    /// Emit a monotonicity test stub for `f: T -> U` where `U: Comparable`.
-    /// The body draws a pair `(T, T)` from `generator`, sorts the pair
-    /// via Swift's `<` (T must conform to Comparable for the test to
-    /// compile), then asserts `f(small) <= f(large)`. Counter-examples
-    /// surface via Swift Testing's `Issue.record`.
-    ///
-    /// `returnType` is part of the M7.3 plan-row signature; it is
-    /// reserved for future surface (e.g. emitting a `Comparable` hint in
-    /// the failure message). The current body doesn't reference it
-    /// because Swift's `<=` infers the operand type from the function's
-    /// declared return type at the call site.
+    /// Emit a monotonicity test stub for `f: T -> U` (U: Comparable):
+    /// draws a `(T, T)` pair, sorts via `<`, asserts `f(small) <= f(large)`.
+    /// `returnType` is reserved for future failure-message hints — Swift's
+    /// `<=` already infers from the function's declared return type.
     public static func monotonic(
         funcName: String,
         typeName: String,
@@ -111,13 +104,7 @@ public enum LiftedTestEmitter {
     ) -> String {
         _ = (typeName, returnType)
         let testFunctionName = "\(funcName)_isMonotonic"
-        // T must conform to Comparable for this sample to typecheck —
-        // mirrors the per-template caveat surfaced by the explainability
-        // block. Sample emitted as a multi-line block so the generated
-        // test file reads naturally; indent levels match the surrounding
-        // backend.check(...) body (line continuations at column 20 in
-        // the output, closing brace at column 16, matching the
-        // `property:` line above).
+        // T must conform to Comparable for this sample to typecheck.
         let sample = [
             "{ rng in",
             "                    let lhs = (\(generator)).run(&rng)",
@@ -246,18 +233,11 @@ public enum LiftedTestEmitter {
         )
     }
 
-    /// Emit an inverse-pair test stub for `forward: T -> U` paired
-    /// with `inverse: U -> T`. Body shape matches `roundTrip` —
-    /// `inverse(forward(value)) == value` over a `T` generator —
-    /// because the structural assertion is identical. The non-Equatable
-    /// caveat that distinguishes M8.1's inverse-pair from M1.4's
-    /// round-trip lives in the §4.5 explainability block surfaced at
-    /// CLI render time, *before* the user accepts: if `T` doesn't
-    /// conform to `Equatable`, the user supplies a custom equality
-    /// witness or the emitted test fails to compile (the explicit
-    /// signal pointing them at the gap). Distinct test-function name
-    /// + failure label so the two arms remain disambiguable in test
-    /// runner output.
+    /// Emit an inverse-pair test stub. Body shape matches `roundTrip`
+    /// (`inverse(forward(value)) == value`); distinct test-function
+    /// name + failure label keep the two arms disambiguable in test
+    /// runner output. The non-Equatable caveat lives in the §4.5
+    /// explainability block surfaced before accept.
     public static func inversePair(
         forwardName: String,
         inverseName: String,
@@ -317,15 +297,17 @@ public enum LiftedTestEmitter {
             failureLabel: failureLabel
         )
     }
+}
+
+// V1.43 cleanup — private builders live here so the primary
+// enum body stays under SwiftLint's type_body_length cap.
+extension LiftedTestEmitter {
 
     // MARK: - Shared stub shape
 
-    /// Convenience overload for the unary-property arms (idempotent,
-    /// round-trip, invariant-preservation, identity-element, inverse-pair)
-    /// where the sample expression is the canonical
-    /// `{ rng in (generator).run(&rng) }` shape and the property closure
-    /// binds a single `value` parameter. Forwards to
-    /// `makeTestStubExpression` after composing the wrappers.
+    /// Convenience overload for unary-property arms — wraps the canonical
+    /// `{ rng in (generator).run(&rng) }` sample and a single-value
+    /// property closure, then forwards to `makeTestStubExpression`.
     private static func makeTestStub(
         testFunctionName: String,
         seed: SamplingSeed.Value,
@@ -344,20 +326,10 @@ public enum LiftedTestEmitter {
         )
     }
 
-    /// One template covers every arm — idempotent, round-trip,
-    /// monotonic, invariant-preserving, commutative, associative,
-    /// identity-element, and inverse-pair share the backend-
-    /// construction + check-call + failure-recording scaffold; they
-    /// only differ in the sample/property closure shape and the
-    /// failure-label string. Keeping a single template makes the
-    /// "match the existing Swift Testing convention" requirement easy
-    /// to enforce: any future change to the surrounding scaffold
-    /// (e.g. switching to a different backend or a richer
-    /// `Issue.record` shape) lands in one place.
-    ///
-    /// **Module-private (not file-private)** so the M5.5 lifted-only
-    /// arms in `LiftedTestEmitter+M5.swift` can share the same scaffold
-    /// without duplicating it.
+    /// Shared scaffold for every arm — they differ only in the sample /
+    /// property closure shape and failure-label string. Module-private
+    /// (not file-private) so the M5.5 lifted-only arms in
+    /// `LiftedTestEmitter+M5.swift` can reuse it.
     static func makeTestStubExpression(
         testFunctionName: String,
         seed: SamplingSeed.Value,
@@ -391,12 +363,9 @@ public enum LiftedTestEmitter {
         """
     }
 
-    /// Strip the leading `\.` from a key-path source-text and rewrite
-    /// `.` separators as `_` so the resulting fragment is a valid Swift
-    /// identifier. `\.isValid` → `isValid`; `\.account.balance` →
-    /// `account_balance`. Used for the monotonicity / invariant-
-    /// preservation test-function names; never for the keypath itself
-    /// (which is emitted verbatim into the property closure).
+    /// `\.isValid` → `isValid`; `\.account.balance` → `account_balance`.
+    /// Used only for test-function-name suffixes; the keypath itself is
+    /// emitted verbatim into the property closure.
     private static func sanitizeKeyPathForIdentifier(_ keyPath: String) -> String {
         var sanitized = keyPath
         if sanitized.hasPrefix("\\.") {
@@ -410,17 +379,10 @@ public enum LiftedTestEmitter {
         return String(repeating: "0", count: 16 - raw.count) + raw
     }
 
-    /// V1.31.B — produces the equality assertion for the emitted property
-    /// expression. `.strict` produces the canonical `lhs == rhs` shape;
-    /// `.approximate` produces `lhs.isApproximatelyEqual(to: rhs)` for FP
-    /// types where IEEE 754 rounding makes strict `==` impractical even
-    /// on canonical inverse pairs.
-    ///
-    /// The emitted test file must have `import Numerics` (or the
-    /// relevant swift-numerics surface) for `isApproximatelyEqual(to:)`
-    /// to resolve — `Real` types get it via the `Real` protocol;
-    /// `Complex<Real>` gets it via `AlgebraicField`. Both protocols ship
-    /// with swift-numerics.
+    /// V1.31.B equality assertion. `.strict` → `lhs == rhs`;
+    /// `.approximate` → `lhs.isApproximatelyEqual(to: rhs)` for FP types
+    /// where IEEE 754 rounding makes strict `==` impractical. Emitted
+    /// test files need `import Numerics` for the approximate form.
     static func equalityExpression(
         lhs: String,
         rhs: String,

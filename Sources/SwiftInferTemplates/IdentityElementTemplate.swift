@@ -174,6 +174,11 @@ public enum IdentityElementTemplate {
         }
         return SuggestionIdentity(canonicalInput: "identity-element|\(opSig)|\(identityKey)")
     }
+}
+
+// V1.43 cleanup — signals/vetoes/builders live here so the primary
+// enum body stays under SwiftLint's type_body_length cap.
+extension IdentityElementTemplate {
 
     // MARK: - Signals
 

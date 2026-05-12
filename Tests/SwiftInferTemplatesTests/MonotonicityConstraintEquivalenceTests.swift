@@ -12,98 +12,49 @@ struct MonotonicityConstraintEquivalenceTests {
 
     // MARK: - Fixture corpus
 
+    private static let location = SourceLocation(file: "Test.swift", line: 1, column: 1)
+
+    private static func unarySummary(
+        name: String,
+        paramName: String = "x",
+        paramType: String = "Foo",
+        returnType: String = "Int",
+        isMutating: Bool = false,
+        parameters: [Parameter]? = nil,
+        bodySignals: BodySignals = .empty
+    ) -> FunctionSummary {
+        let params = parameters ?? [
+            Parameter(label: nil, internalName: paramName, typeText: paramType, isInout: false)
+        ]
+        return FunctionSummary(
+            name: name,
+            parameters: params,
+            returnTypeText: returnType,
+            isThrows: false, isAsync: false, isMutating: isMutating, isStatic: false,
+            location: location,
+            containingTypeName: "Container",
+            bodySignals: bodySignals
+        )
+    }
+
     private static func fixtureCorpus() -> [(label: String, summary: FunctionSummary)] {
-        let location = SourceLocation(file: "Test.swift", line: 1, column: 1)
+        let nonDeterministic = BodySignals(
+            hasNonDeterministicCall: true,
+            hasSelfComposition: false,
+            nonDeterministicAPIsDetected: ["Date()"]
+        )
+        let twoParams = [
+            Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false),
+            Parameter(label: nil, internalName: "y", typeText: "Foo", isInout: false)
+        ]
         return [
-            // Curated verb 'count' + Int codomain → accept, 25+10 = 35 Possible
-            ("curatedVerb_count", FunctionSummary(
-                name: "count",
-                parameters: [
-                    Parameter(label: nil, internalName: "items", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: .empty
-            )),
-            // Curated suffix 'userCount' + Int codomain → accept, 25+10 = 35
-            ("curatedSuffix_userCount", FunctionSummary(
-                name: "userCount",
-                parameters: [
-                    Parameter(label: nil, internalName: "group", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: .empty
-            )),
-            // Bare-shape no-name + curated codomain → accept (just type signal), 25 Possible
-            ("bareShape", FunctionSummary(
-                name: "someProjection",
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Double",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: .empty
-            )),
-            // Non-curated codomain (Bool) → gate fails, nil
-            ("nonComparableCodomain", FunctionSummary(
-                name: "isFresh",
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Bool",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: .empty
-            )),
-            // Multi-param → gate fails
-            ("multiParam", FunctionSummary(
-                name: "count",
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false),
-                    Parameter(label: nil, internalName: "y", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: .empty
-            )),
-            // Mutating → gate fails
-            ("mutating", FunctionSummary(
-                name: "count",
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: true, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: .empty
-            )),
-            // Non-deterministic body → veto
-            ("nonDeterministic", FunctionSummary(
-                name: "count",
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Container",
-                bodySignals: BodySignals(
-                    hasNonDeterministicCall: true,
-                    hasSelfComposition: false,
-                    nonDeterministicAPIsDetected: ["Date()"]
-                )
-            ))
+            ("curatedVerb_count", unarySummary(name: "count", paramName: "items")),
+            ("curatedSuffix_userCount", unarySummary(name: "userCount", paramName: "group")),
+            ("bareShape", unarySummary(name: "someProjection", returnType: "Double")),
+            ("nonComparableCodomain", unarySummary(name: "isFresh", returnType: "Bool")),
+            ("multiParam", unarySummary(name: "count", parameters: twoParams)),
+            ("mutating", unarySummary(name: "count", isMutating: true)),
+            ("nonDeterministic", unarySummary(name: "count", bodySignals: nonDeterministic))
         ]
     }
 

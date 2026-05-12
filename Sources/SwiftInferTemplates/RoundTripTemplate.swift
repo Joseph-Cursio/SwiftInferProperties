@@ -32,25 +32,12 @@ public enum RoundTripTemplate {
         ("lock", "unlock")
     ]
 
-    /// `vocabulary` is the project-extensible naming layer per PRD §4.5;
-    /// the template consults `vocabulary.inversePairs` alongside the
-    /// curated list. Defaults to `.empty` so M1 call sites compile
-    /// unchanged.
-    ///
-    /// V1.5.2 — `inheritedTypesByName` feeds the protocol-coverage
-    /// veto. Forward type's `: Codable` conformance (or `: Codable`
-    /// inherited transitively — the curated table only lists
-    /// `Codable`, not `Encodable`+`Decodable` as a pair, see the
-    /// V1.5.1 ProtocolCoverageMap doc) covers `codableRoundTrip` —
-    /// kit `checkCodablePropertyLaws` verifies the JSONEncoder/Decoder
-    /// round-trip directly. Non-Codable round-trips (custom
-    /// encode/decode on a domain type) fall through unsuppressed per
-    /// the v1.5 plan open-decision #4 default.
-    /// V1.39.A — migrated to the Constraint Engine (PRD §20.2). First
-    /// `Constraint<FunctionPair>` migration where the type-shape signal
-    /// is always non-nil (round-trip uses a constant-true gate; the
-    /// pre-migration code unconditionally seeds `typeSymmetrySignal`).
-    /// Behavior preserved bit-for-bit.
+    /// `vocabulary` extends the curated list with project-defined inverse
+    /// pairs (PRD §4.5). `inheritedTypesByName` feeds the V1.5.2
+    /// protocol-coverage veto: `: Codable` conformance covers
+    /// `codableRoundTrip` (kit's `checkCodablePropertyLaws` verifies
+    /// JSONEncoder/Decoder round-trip directly). V1.39.A migrated this
+    /// to the Constraint Engine (PRD §20.2); behavior preserved.
     public static func suggest(
         for pair: FunctionPair,
         vocabulary: Vocabulary = .empty,
@@ -94,6 +81,8 @@ public enum RoundTripTemplate {
     }
 
     /// V1.39.A — preserves the pre-migration signal-accumulation order.
+    /// Split into name- and veto-side helpers to keep each function
+    /// within SwiftLint's cyclomatic_complexity cap.
     static func accumulatedSignals(
         for pair: FunctionPair,
         vocabulary: Vocabulary,
@@ -101,6 +90,20 @@ public enum RoundTripTemplate {
         carrierKindResolver: CarrierKindResolver?
     ) -> [Signal] {
         var signals: [Signal] = [typeSymmetrySignal(for: pair)]
+        signals.append(contentsOf: nameSideSignals(for: pair, vocabulary: vocabulary))
+        signals.append(contentsOf: vetoSideSignals(
+            for: pair,
+            inheritedTypesByName: inheritedTypesByName,
+            carrierKindResolver: carrierKindResolver
+        ))
+        return signals
+    }
+
+    private static func nameSideSignals(
+        for pair: FunctionPair,
+        vocabulary: Vocabulary
+    ) -> [Signal] {
+        var signals: [Signal] = []
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
             signals.append(name)
         }
@@ -119,6 +122,15 @@ public enum RoundTripTemplate {
         if let asymmetric = asymmetricLabelClassMismatchCounterSignal(for: pair) {
             signals.append(asymmetric)
         }
+        return signals
+    }
+
+    private static func vetoSideSignals(
+        for pair: FunctionPair,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
+        var signals: [Signal] = []
         if let setAlgebra = setAlgebraShapeVeto(for: pair) {
             signals.append(setAlgebra)
         }
@@ -167,6 +179,11 @@ public enum RoundTripTemplate {
         let sorted = [forwardSig, reverseSig].sorted()
         return SuggestionIdentity(canonicalInput: "round-trip|" + sorted.joined(separator: "|"))
     }
+}
+
+// V1.43 cleanup — signals/vetoes/builders live here so the primary
+// enum body stays under SwiftLint's type_body_length cap.
+extension RoundTripTemplate {
 
     // MARK: - Signals
 
@@ -239,45 +256,21 @@ public enum RoundTripTemplate {
     }
 
     /// V1.4.3b — fires when forward and reverse functions belong to
-    /// different containing types (e.g. `AdjacentPairsCollection.index(after:)`
-    /// paired with `Chain2Sequence.index(before:)` — both have `Index`
-    /// nested member types but the `Index`es are distinct, so the round-
-    /// trip property cannot type-check). Drops Score 30 → 5 (well into
-    /// Suppressed) so the cross-type pair is filtered from both default-
-    /// tier and `--include-possible` output.
-    ///
-    /// **Three exemptions** (the rule fires only when none apply):
-    /// 1. **Both `containingTypeName == nil`** — top-level free-function
-    ///    pair like `func encode(_:) -> Data` + `func decode(_:) -> Doc`
-    ///    is a legitimate module-scope round-trip. `nil == nil` falls
-    ///    through cleanly via the `!=` guard.
-    /// 2. **Same `containingTypeName`** — cross-extension on the same
-    ///    type (`extension Doc { encode }` + `extension Doc { decode }`)
-    ///    both record `"Doc"` and pair fine.
-    /// 3. **Shared `@Discoverable(group:)` annotation** — the user's
-    ///    explicit grouping signal overrides the structural cross-type
-    ///    rule. A `struct Encoder` and `struct Decoder` paired via
-    ///    `@Discoverable(group: "codec")` is a legitimate round-trip
-    ///    despite different containing types; the user has opted in
-    ///    by tagging both halves.
-    ///
-    /// Empirical motivation: V1.4.2 cycle-1 baseline showed 673 round-
-    /// trip Possible-tier hits on `swift-algorithms` (the vast majority
-    /// signature-only matches across distinct `Index` member types).
-    /// SemanticIndex would catch this via type resolution; this rule is
-    /// a cheap pre-SemanticIndex approximation using the textual
-    /// `containingTypeName` field already on `FunctionSummary`.
+    /// distinct containing types. Drops Score 30 → 5 (Suppressed).
+    /// Three exemptions: both containers nil (free-function pair), same
+    /// container (cross-extension on the same type), or shared
+    /// `@Discoverable(group:)` annotation (user's explicit grouping
+    /// overrides the structural rule). Empirical motivation: V1.4.2
+    /// cycle-1 baseline showed 673 round-trip Possible-tier hits on
+    /// `swift-algorithms` from cross-type `Index` member mismatches.
     private static func crossTypeRoundTripCounterSignal(
         for pair: FunctionPair
     ) -> Signal? {
         let forwardContainer = pair.forward.containingTypeName
         let reverseContainer = pair.reverse.containingTypeName
         guard forwardContainer != reverseContainer else { return nil }
-        // Exemption 3: shared `@Discoverable(group:)` is the user's
-        // explicit "these go together" signal — overrides the structural
-        // cross-type rule. The +35 discoverableAnnotation signal already
-        // captures the positive evidence; adding a -25 here would
-        // double-count the cross-type concern the user already addressed.
+        // Exemption 3: shared @Discoverable(group:) overrides the structural
+        // cross-type rule (+35 already captures the positive evidence).
         if let forwardGroup = pair.forward.discoverableGroup,
            let reverseGroup = pair.reverse.discoverableGroup,
            forwardGroup == reverseGroup {
@@ -309,32 +302,13 @@ public enum RoundTripTemplate {
         )
     }
 
-    /// V1.5.2 / **V1.8.1 — shape-gated**. Fires when the pair has an
-    /// actual Codable encoder/decoder shape (`(T) -> Codec` ↔
-    /// `(Codec) -> T` for `Codec ∈ {Data, String}`) AND the carrier
-    /// type `T` conforms to `Codable` via `inheritedTypesByName`.
-    /// Kit's `checkCodablePropertyLaws(for:)` verifies the JSON
-    /// round-trip directly, making the suggestion redundant when
-    /// the suggestion *is* a Codable round-trip.
-    ///
-    /// **V1.8.1 cycle-5 tightening.** V1.5.2 fired this veto whenever
-    /// `pair.forward.parameters.first?.typeText` covered
-    /// `codableRoundTrip` — which over-suppressed user-defined
-    /// inverse pairs on Codable carriers (the cycle-4 finding:
-    /// 22 OrderedCollections suggestions like
-    /// `minimumCapacity(forScale:) ↔ scale(forCapacity:)` on
-    /// `(Int) -> Int` were suppressed because `Int: Codable`, not
-    /// because they were Codable round-trips). The shape gate
-    /// restricts the veto to pairs where the kit law actually
-    /// applies — true encode/decode pairs.
-    ///
-    /// Non-Codable round-trip pairs and `(T) -> T` user-inverse
-    /// pairs on Codable carriers fall through unsuppressed.
-    /// **V1.8.1.** The shape-gate helper
-    /// `codableRoundTrippedType(for:)` and the curated
-    /// `codableCodecFormats` set live in
-    /// `RoundTripCodableShapeGate.swift` (split for SwiftLint's
-    /// 400-line file budget per the V1.7.1 split precedent).
+    /// V1.5.2 / V1.8.1 shape-gated coverage veto. Fires when the pair
+    /// has an actual Codable encoder/decoder shape AND the carrier
+    /// type conforms to `Codable` — kit's `checkCodablePropertyLaws`
+    /// already verifies the JSON round-trip. The shape gate prevents
+    /// over-suppression of user-defined `(Int) -> Int` inverse pairs
+    /// on Codable carriers. Shape helpers live in
+    /// `RoundTripCodableShapeGate.swift`.
     private static func protocolCoverageVeto(
         for pair: FunctionPair,
         inheritedTypesByName: [String: Set<String>]

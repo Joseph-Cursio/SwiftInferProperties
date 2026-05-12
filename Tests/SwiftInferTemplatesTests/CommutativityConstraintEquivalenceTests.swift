@@ -20,103 +20,53 @@ struct CommutativityConstraintEquivalenceTests {
 
     // MARK: - Fixture corpus
 
+    private static let location = SourceLocation(file: "Test.swift", line: 1, column: 1)
+
+    private static func binarySummary(
+        name: String,
+        lhsType: String = "Int",
+        rhsType: String = "Int",
+        returnType: String = "Int",
+        containingType: String,
+        bodySignals: BodySignals = .empty
+    ) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [
+                Parameter(label: nil, internalName: "lhs", typeText: lhsType, isInout: false),
+                Parameter(label: nil, internalName: "rhs", typeText: rhsType, isInout: false)
+            ],
+            returnTypeText: returnType,
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: location,
+            containingTypeName: containingType,
+            bodySignals: bodySignals
+        )
+    }
+
     private static func fixtureCorpus() -> [(name: String, summary: FunctionSummary)] {
-        let location = SourceLocation(file: "Test.swift", line: 1, column: 1)
+        let nonDeterministic = BodySignals(
+            hasNonDeterministicCall: true,
+            hasSelfComposition: false,
+            nonDeterministicAPIsDetected: ["Date()"]
+        )
         return [
-            // Commutative-shaped: curated name 'merge', should accept
-            ("merge", FunctionSummary(
-                name: "merge",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Bag",
-                bodySignals: .empty
+            ("merge", binarySummary(name: "merge", containingType: "Bag")),
+            ("subtract", binarySummary(name: "subtract", containingType: "Math")),
+            ("voidReturn", binarySummary(name: "combine", returnType: "Void", containingType: "Foo")),
+            ("paramMismatch", binarySummary(
+                name: "combine", rhsType: "String", returnType: "String", containingType: "Foo"
             )),
-            // Anti-commutative-shaped: 'subtract' fires -30 counter
-            ("subtract", FunctionSummary(
-                name: "subtract",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Math",
-                bodySignals: .empty
+            ("nonDeterministic", binarySummary(
+                name: "combine", containingType: "Foo", bodySignals: nonDeterministic
             )),
-            // Type-shape mismatch: returns Void, gate fails
-            ("voidReturn", FunctionSummary(
-                name: "combine",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
-                ],
-                returnTypeText: "Void",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Foo",
-                bodySignals: .empty
+            ("bareShape", binarySummary(
+                name: "someUserOp", lhsType: "BigInt", rhsType: "BigInt",
+                returnType: "BigInt", containingType: "BigInt"
             )),
-            // Type-shape mismatch: param types differ
-            ("paramMismatch", FunctionSummary(
-                name: "combine",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "String", isInout: false)
-                ],
-                returnTypeText: "String",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Foo",
-                bodySignals: .empty
-            )),
-            // Non-deterministic body: veto
-            ("nonDeterministic", FunctionSummary(
-                name: "combine",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
-                ],
-                returnTypeText: "Int",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Foo",
-                bodySignals: BodySignals(
-                    hasNonDeterministicCall: true,
-                    hasSelfComposition: false,
-                    nonDeterministicAPIsDetected: ["Date()"]
-                )
-            )),
-            // Bare-shape with no curated name: Possible-tier (score 30)
-            ("bareShape", FunctionSummary(
-                name: "someUserOp",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "BigInt", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "BigInt", isInout: false)
-                ],
-                returnTypeText: "BigInt",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "BigInt",
-                bodySignals: .empty
-            )),
-            // FP storage type: -10 FP counter signal + FP advisory caveat
-            ("fpStorage", FunctionSummary(
-                name: "add",
-                parameters: [
-                    Parameter(label: nil, internalName: "lhs", typeText: "Double", isInout: false),
-                    Parameter(label: nil, internalName: "rhs", typeText: "Double", isInout: false)
-                ],
-                returnTypeText: "Double",
-                isThrows: false, isAsync: false, isMutating: false, isStatic: false,
-                location: location,
-                containingTypeName: "Math",
-                bodySignals: .empty
+            ("fpStorage", binarySummary(
+                name: "add", lhsType: "Double", rhsType: "Double",
+                returnType: "Double", containingType: "Math"
             ))
         ]
     }

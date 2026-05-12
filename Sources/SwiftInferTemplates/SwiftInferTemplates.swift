@@ -129,23 +129,32 @@ public enum TemplateRegistry {
             generatorTypeByIdentity: collector.generatorTypes,
             typeDecls: typeDecls
         )
-        let crossValidated = applyCrossValidation(
-            to: withCodableFallback,
-            matching: crossValidationFromTestLifter
+        return finalizeSuggestions(
+            withCodableFallback,
+            crossValidation: crossValidationFromTestLifter,
+            counterSignals: counterSignalsFromTestLifter,
+            templateFilter: templateFilter
         )
-        // M7 — counter-signal pass runs AFTER cross-validation per
-        // M7 plan OD #5. Suggestions both cross-validated AND
-        // counter-signaled land at base+20-25 = base-5, preserving
-        // the relative weighting. The pass is a no-op when the set
-        // is empty.
-        let counterSignaled = applyCounterSignal(
-            to: crossValidated,
-            matching: counterSignalsFromTestLifter
-        )
-        // V1.32.B — Domain Template Packs (PRD §20.3). When a filter is
-        // supplied, drop suggestions whose templateName isn't in the
-        // allowed set. Applied AFTER cross-validation + counter-signal
-        // passes so filtering doesn't alter those passes' inputs. Nil
+    }
+
+    /// V1.43 cleanup helper — extracted from `discover` to keep that
+    /// function body within SwiftLint's `function_body_length` cap.
+    /// Runs the three post-selection passes (cross-validation,
+    /// counter-signal, template-filter) and the final sort. No
+    /// behavior change.
+    private static func finalizeSuggestions(
+        _ suggestions: [Suggestion],
+        crossValidation: Set<CrossValidationKey>,
+        counterSignals: Set<CrossValidationKey>,
+        templateFilter: Set<String>?
+    ) -> [Suggestion] {
+        let crossValidated = applyCrossValidation(to: suggestions, matching: crossValidation)
+        // M7 counter-signal pass runs AFTER cross-validation (M7 plan
+        // OD #5): suggestions both cross-validated AND counter-signaled
+        // land at base+20-25 = base-5, preserving relative weighting.
+        let counterSignaled = applyCounterSignal(to: crossValidated, matching: counterSignals)
+        // V1.32.B Domain Template Packs (PRD §20.3) — applied AFTER the
+        // signal passes so filtering doesn't alter their inputs. Nil
         // filter preserves the monolithic-registry behavior bit-for-bit.
         let filtered: [Suggestion]
         if let templateFilter {

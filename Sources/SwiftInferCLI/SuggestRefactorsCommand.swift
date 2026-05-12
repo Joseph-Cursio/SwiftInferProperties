@@ -9,6 +9,16 @@ import SwiftInferCore
 /// Read-only over the SemanticIndex output. Per PRD §16 #1, v1
 /// subcommands never modify source — `suggest-refactors` is a render
 /// surface.
+
+/// Pure-function result of `SwiftInferCommand.SuggestRefactors.runSuggestRefactors`.
+/// At file scope (rather than nested under `SuggestRefactors`) to keep
+/// the type hierarchy within SwiftLint's `nesting` rule.
+public struct SuggestRefactorsOutcome: Equatable {
+    public let rendered: String
+    public let warnings: [String]
+    public let clusterCount: Int
+}
+
 extension SwiftInferCommand {
 
     public struct SuggestRefactors: AsyncParsableCommand {
@@ -76,12 +86,6 @@ extension SwiftInferCommand {
             print(result.rendered, terminator: "")
         }
 
-        public struct Outcome: Equatable {
-            public let rendered: String
-            public let warnings: [String]
-            public let clusterCount: Int
-        }
-
         /// Pure-function surface so unit tests can drive the subcommand
         /// without the AsyncParsableCommand shell.
         static func runSuggestRefactors(
@@ -90,13 +94,13 @@ extension SwiftInferCommand {
             minSuggestions: Int,
             shape: String?,
             limit: Int?
-        ) throws -> Outcome {
+        ) throws -> SuggestRefactorsOutcome {
             let directory = URL(fileURLWithPath: directoryOverride ?? ".")
             let explicitPath = explicitIndexPath.map { URL(fileURLWithPath: $0) }
             let now = SwiftInferCommand.Index.isoTimestamp(from: Date())
             let resolvedPath = explicitPath ?? Self.resolveIndexPath(startingFrom: directory)
             guard let resolvedPath else {
-                return Outcome(
+                return SuggestRefactorsOutcome(
                     rendered: "No .swiftinfer/index.json found. Run `swift-infer index --target <X>` to build one.\n",
                     warnings: [],
                     clusterCount: 0
@@ -116,7 +120,7 @@ extension SwiftInferCommand {
                 capped = filtered
             }
             let rendered = renderClusters(capped, totalMatched: filtered.count)
-            return Outcome(rendered: rendered, warnings: load.warnings, clusterCount: filtered.count)
+            return SuggestRefactorsOutcome(rendered: rendered, warnings: load.warnings, clusterCount: filtered.count)
         }
 
         // MARK: - Filtering

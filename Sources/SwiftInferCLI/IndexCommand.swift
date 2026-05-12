@@ -9,6 +9,16 @@ import SwiftInferCore
 /// **No incremental analysis in v1.33.** The index rebuilds from a full
 /// discover each run. PRD §20.1 mentions incremental as a future
 /// optimization; deferred until profiling shows it's needed.
+
+/// Diff between a freshly-discovered entry set and the prior on-disk
+/// index. At file scope (rather than nested under `Index`) to keep
+/// the type hierarchy within SwiftLint's `nesting` rule.
+private struct IndexDiff {
+    let priorCount: Int
+    let newCount: Int
+    let updatedCount: Int
+}
+
 extension SwiftInferCommand {
 
     public struct Index: AsyncParsableCommand {
@@ -120,52 +130,84 @@ extension SwiftInferCommand {
             let now = Self.isoTimestampNow()
             let indexPath = IndexStore.defaultPath(for: packageRoot)
             let indexLoad = IndexStore.load(from: indexPath, nowTimestamp: now)
-            for warning in indexLoad.warnings {
-                diagnostics.writeDiagnostic("warning: \(warning)")
-            }
             let decisionsLoad = DecisionsLoader.load(startingFrom: directory)
-            for warning in decisionsLoad.warnings {
-                diagnostics.writeDiagnostic("warning: \(warning)")
-            }
-            let decisionsByHash = Dictionary(
-                uniqueKeysWithValues: decisionsLoad.decisions.records.map {
-                    ($0.identityHash, $0)
-                }
-            )
-
-            // Project Suggestions → SemanticIndexEntry. The fresh
-            // firstSeenAt is `now` for new entries; IndexStore.upsert
-            // preserves the prior firstSeenAt for already-known entries.
+            Self.replayWarnings(indexLoad.warnings + decisionsLoad.warnings, to: diagnostics)
+            let decisionsByHash = Self.decisionsByHash(from: decisionsLoad.decisions)
+            // Project Suggestions → SemanticIndexEntry. fresh `firstSeenAt`
+            // is `now` for new entries; IndexStore.upsert preserves the
+            // prior firstSeenAt for already-known entries.
             let freshEntries = pipeline.suggestions.map { suggestion in
-                Self.buildEntry(
-                    from: suggestion,
-                    decisionsByHash: decisionsByHash,
-                    now: now
-                )
+                Self.buildEntry(from: suggestion, decisionsByHash: decisionsByHash, now: now)
             }
-            let priorCount = indexLoad.index.entries.count
-            let priorHashes = Set(indexLoad.index.entries.map(\SemanticIndexEntry.identityHash))
-            let freshHashes = Set(freshEntries.map(\SemanticIndexEntry.identityHash))
-            let newCount = freshHashes.subtracting(priorHashes).count
-            let updatedCount = freshHashes.intersection(priorHashes).count
+            let diff = Self.computeDiff(
+                priorIndex: indexLoad.index,
+                freshEntries: freshEntries
+            )
             let merged = IndexStore.upsert(
                 freshEntries,
                 into: indexLoad.index,
                 at: now
             )
+            try Self.reportAndPersist(
+                merged: merged,
+                indexPath: indexPath,
+                freshCount: freshEntries.count,
+                diff: diff,
+                dryRun: dryRun
+            )
+        }
+
+        // MARK: - V1.43 cleanup helpers — split out of `run()` to
+        // keep the body within SwiftLint's function_body_length cap.
+
+        private static func replayWarnings(
+            _ warnings: [String],
+            to diagnostics: any DiagnosticOutput
+        ) {
+            for warning in warnings {
+                diagnostics.writeDiagnostic("warning: \(warning)")
+            }
+        }
+
+        private static func decisionsByHash(from decisions: Decisions) -> [String: DecisionRecord] {
+            Dictionary(
+                uniqueKeysWithValues: decisions.records.map { ($0.identityHash, $0) }
+            )
+        }
+
+        private static func computeDiff(
+            priorIndex: IndexStore.Index,
+            freshEntries: [SemanticIndexEntry]
+        ) -> IndexDiff {
+            let priorHashes = Set(priorIndex.entries.map(\SemanticIndexEntry.identityHash))
+            let freshHashes = Set(freshEntries.map(\SemanticIndexEntry.identityHash))
+            return IndexDiff(
+                priorCount: priorIndex.entries.count,
+                newCount: freshHashes.subtracting(priorHashes).count,
+                updatedCount: freshHashes.intersection(priorHashes).count
+            )
+        }
+
+        private static func reportAndPersist(
+            merged: IndexStore.Index,
+            indexPath: URL,
+            freshCount: Int,
+            diff: IndexDiff,
+            dryRun: Bool
+        ) throws {
             if dryRun {
                 print(
-                    "Indexed \(freshEntries.count) suggestion(s) "
-                        + "(\(newCount) new, \(updatedCount) updated; "
-                        + "prior index had \(priorCount); --dry-run, "
+                    "Indexed \(freshCount) suggestion(s) "
+                        + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
+                        + "prior index had \(diff.priorCount); --dry-run, "
                         + "no write)"
                 )
                 return
             }
             try IndexStore.save(merged, to: indexPath)
             print(
-                "Indexed \(freshEntries.count) suggestion(s) → \(indexPath.path) "
-                    + "(\(newCount) new, \(updatedCount) updated; "
+                "Indexed \(freshCount) suggestion(s) → \(indexPath.path) "
+                    + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
                     + "total entries \(merged.entries.count))"
             )
         }

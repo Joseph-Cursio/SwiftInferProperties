@@ -142,6 +142,12 @@ public enum RefactorClusterAnalyzer {
     /// The pre-v1.41 fixed priority order (idempotence before
     /// dual-style before round-trip) is retained as the **tie-breaker**
     /// when two per-template shapes have the same count.
+    private struct Candidate {
+        let shape: ClusterShape
+        let count: Int
+        let tieBreakerIndex: Int
+    }
+
     static func classify(
         perTemplateCounts: [String: Int],
         total: Int
@@ -160,15 +166,19 @@ public enum RefactorClusterAnalyzer {
             return .algebraicStructure
         }
         // Layer 2: per-template most-numerous-above-threshold.
-        // The tuple's `tieBreakerIndex` preserves the pre-v1.41 priority
-        // order on equal counts (idempotence 0 > dual-style 1 > round-trip 2).
-        let candidates: [(shape: ClusterShape, count: Int, tieBreakerIndex: Int)] = [
-            (.idempotenceCluster, perTemplateCounts["idempotence"] ?? 0, 0),
-            (.dualStyleCluster, perTemplateCounts["dual-style-consistency"] ?? 0, 1),
-            (.roundTripCluster, perTemplateCounts["round-trip"] ?? 0, 2)
+        // `tieBreakerIndex` preserves the pre-v1.41 priority order on
+        // equal counts (idempotence 0 > dual-style 1 > round-trip 2).
+        let candidates: [Candidate] = [
+            Candidate(shape: .idempotenceCluster, count: perTemplateCounts["idempotence"] ?? 0, tieBreakerIndex: 0),
+            Candidate(
+                shape: .dualStyleCluster,
+                count: perTemplateCounts["dual-style-consistency"] ?? 0,
+                tieBreakerIndex: 1
+            ),
+            Candidate(shape: .roundTripCluster, count: perTemplateCounts["round-trip"] ?? 0, tieBreakerIndex: 2)
         ]
         let firing = candidates.filter { $0.count >= 3 }
-        if let winner = firing.max(by: { (lhs, rhs) in
+        if let winner = firing.max(by: { lhs, rhs in
             // Higher count wins; on ties, lower tieBreakerIndex wins.
             if lhs.count != rhs.count { return lhs.count < rhs.count }
             return lhs.tieBreakerIndex > rhs.tieBreakerIndex

@@ -173,6 +173,11 @@ public enum CommutativityTemplate {
     private static func makeIdentity(for summary: FunctionSummary) -> SuggestionIdentity {
         SuggestionIdentity(canonicalInput: "commutativity|" + IdempotenceTemplate.canonicalSignature(of: summary))
     }
+}
+
+// V1.43 cleanup — signals/vetoes/builders live here so the primary
+// enum body stays under SwiftLint's type_body_length cap.
+extension CommutativityTemplate {
 
     // MARK: - Signals
 

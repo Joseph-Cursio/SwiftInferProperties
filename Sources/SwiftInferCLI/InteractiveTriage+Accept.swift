@@ -54,21 +54,13 @@ extension InteractiveTriage {
         return path
     }
 
-    /// Build the lifted-test source text for `suggestion` if its
-    /// template arm has a `LiftedTestEmitter` writeout in v1. M6.3
-    /// ships `idempotent` + `roundTrip`; M7.3 adds `monotonicity` +
-    /// `invariant-preservation`; M8.2 closes the gap with
-    /// `commutativity`, `associativity`, `identity-element`, and
-    /// `inverse-pair`. After M8.2 every shipped template has a stub
-    /// arm — the `default` branch becomes a defensive fallback for
-    /// future templates rather than a v1 limitation.
+    /// Build the lifted-test source text for `suggestion`. After M8.2
+    /// every shipped template has a stub arm — `default` is a
+    /// defensive fallback for future templates.
     private static func liftedTestStub(for suggestion: Suggestion) -> String? {
-        // M5.5 — lifted-only fast path. Promoted countInvariance (→
-        // "invariant-preservation") and reduceEquivalence (→
-        // "associativity") suggestions render through dedicated arms
-        // that emit the property the test body actually claimed
-        // rather than the stronger algebraic shape the
-        // TemplateEngine-side arms emit. Production-side suggestions
+        // M5.5 — lifted-only fast path for countInvariance + reduce-
+        // Equivalence: emit what the test body actually claimed rather
+        // than the stronger algebraic shape. Production-side suggestions
         // (no `liftedOrigin`) continue through the existing switch.
         if let liftedOnly = liftedOnlyTestStub(for: suggestion) {
             return liftedOnly
@@ -194,9 +186,8 @@ extension InteractiveTriage {
         )
     }
 
-    /// IdentityElementTemplate emits a 2-row evidence: row 0 is the
-    /// binary op (signature `(T, T) -> T`), row 1 is the identity
-    /// element (displayName like `"IntSet.empty"` or `"empty"`,
+    /// IdentityElementTemplate emits 2-row evidence: row 0 binary op,
+    /// row 1 identity element (displayName like `"IntSet.empty"` or `"empty"`,
     /// signature `": T"`). Mirror of
     /// `WitnessExtractor.identityWitnessName(from:)` — strips the
     /// optional type prefix so the emitter receives the bare member
@@ -299,15 +290,10 @@ extension InteractiveTriage {
     }
 
     /// Wrap the bare `@Test func` block from `LiftedTestEmitter` with
-    /// the file-level imports + provenance header that the
-    /// `Tests/Generated/SwiftInfer/` writeout needs. Lifted-origin
-    /// suggestions get an extra "Lifted from" line pointing at the
-    /// originating test method (TestLifter M3.3) so the writeout is
-    /// self-explanatory about its TestLifter provenance — distinct
-    /// from the existing `// Source:` line which points at the
-    /// promoted Suggestion's `evidence[0].location` (which for lifted
-    /// suggestions is the assertion site, not the test method
-    /// declaration).
+    /// the file-level imports + provenance header for the
+    /// `Tests/Generated/SwiftInfer/` writeout. Lifted-origin suggestions
+    /// get an extra "Lifted from" line (TestLifter M3.3) distinct from
+    /// the `// Source:` assertion-site pointer.
     private static func wrappedFileContents(
         stub: String,
         suggestion: Suggestion
@@ -318,11 +304,8 @@ extension InteractiveTriage {
             "// Lifted from \(origin.sourceLocation.file):\(origin.sourceLocation.line)"
                 + " \(origin.testMethodName)()"
         } ?? ""
-        // TestLifter M4.4 — mock-inferred suggestions get an extra
-        // provenance line surfacing the synthesized generator's
-        // construction-site count + the .low confidence the user
-        // should treat the generator with. PRD §3.5 conservative-bias
-        // reinforcement at the writeout layer.
+        // TestLifter M4.4 — mock-inferred suggestions get a provenance
+        // line surfacing construction-site count + .low confidence.
         let mockLine: String = {
             guard suggestion.generator.source == .inferredFromTests,
                   let mock = suggestion.mockGenerator else {
@@ -367,13 +350,9 @@ extension InteractiveTriage {
     }
 
     private static func stubFileName(for suggestion: Suggestion) -> String? {
-        // TestLifter M3.3 — lifted-origin suggestions get a
-        // `<TestMethodName>_lifted_<TemplateName>.swift` name so they
-        // disambiguate from TemplateEngine-accepted writeouts in the
-        // same `<template>/` subdirectory (M3 plan OD #6 default).
-        // The `_lifted_` infix is the load-bearing token — avoids
-        // collision when one test method body lifts multiple patterns
-        // (rare but possible).
+        // TestLifter M3.3 — lifted-origin suggestions get
+        // `<TestMethodName>_lifted_<TemplateName>.swift` to disambiguate
+        // from TemplateEngine writeouts in the same `<template>/` dir.
         if let origin = suggestion.liftedOrigin {
             let sanitizedMethod = sanitizeForFileName(origin.testMethodName)
             let sanitizedTemplate = sanitizeForFileName(suggestion.templateName)
@@ -391,10 +370,8 @@ extension InteractiveTriage {
             }
             return "\(funcName)_\(reverseName).swift"
         case "invariant-preservation":
-            // Same function with two different keypaths is two distinct
-            // suggestions per InvariantPreservationTemplate's identity
-            // rule — the file name carries the keypath suffix so accept
-            // doesn't overwrite a previous accept on the other keypath.
+            // File name carries the keypath suffix so distinct invariants
+            // on the same function don't overwrite each other.
             guard let keyPath = invariantKeypath(from: evidence.signature) else {
                 return "\(funcName).swift"
             }

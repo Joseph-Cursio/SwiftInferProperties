@@ -230,25 +230,20 @@ extension SwiftInferCommand {
             }
             if interactive {
                 let packageRoot = pipeline.packageRoot ?? directory
-                let proposalsByType = RefactorBridgeOrchestrator.proposals(
-                    from: visible,
-                    inverseElementPairs: pipeline.inverseElementPairs
-                )
                 let context = InteractiveTriage.Context(
                     prompt: promptInput,
                     output: output,
                     diagnostics: diagnostics,
                     outputDirectory: packageRoot,
                     dryRun: dryRun,
-                    proposalsByType: proposalsByType,
+                    proposalsByType: RefactorBridgeOrchestrator.proposals(
+                        from: visible,
+                        inverseElementPairs: pipeline.inverseElementPairs
+                    ),
                     equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
                     consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity
                 )
-                try runInteractive(
-                    suggestions: visible,
-                    packageRoot: packageRoot,
-                    context: context
-                )
+                try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
                 return
             }
             if updateBaseline {

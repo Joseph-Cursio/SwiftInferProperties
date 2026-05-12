@@ -8,46 +8,18 @@ import SwiftInferCore
 /// records (M3 plan open decision #1 default `(a)` — single suggestion
 /// stream, not parallel renderer arms).
 ///
-/// **Promotion produces a `Suggestion` whose:**
-/// - `templateName` matches the lifted suggestion's (`"round-trip"` /
-///   `"idempotence"` / `"commutativity"`).
-/// - `evidence` array carries one synthetic `Evidence` per detection
-///   callee with the recovered (or `?`-sentinel) types. Round-trip
-///   produces two-element evidence (forward + backward); idempotence and
-///   commutativity produce one-element evidence.
-/// - `score` carries one `Signal(kind: .testBodyPattern, weight: 50)`
-///   per PRD §4.1's "+50 test-body pattern" row. No structural-base
-///   signal is synthesized (M3 plan open decision #5 default `(a)` —
-///   honest about what TestLifter actually saw; tier lands at `~ Likely`
-///   without TemplateEngine corroboration).
-/// - `generator` defaults to `.m1Placeholder` (`.notYetComputed` source).
-///   The downstream `GeneratorSelection` pass (M3.1) overwrites this with
-///   the inferred metadata when the recovered type appears in the
-///   corpus's `TypeShape` index; otherwise the `.todo` source survives
-///   into the accept-flow stub (PRD §16 #4 — `.todo` never silently
-///   compiles).
-/// - `identity` uses a `lifted|<template>|<sortedCalleeNames>` canonical
-///   input that namespaces lifted identities away from TemplateEngine
-///   identities (which use `<template>|<canonicalSignature>`). M6
-///   (TestLifter persistence) will extend identity to include test
-///   method name to disambiguate same-template-same-callees lifted
-///   suggestions across multiple test methods; M3 doesn't need that
-///   because lifted suggestions don't enter `.swiftinfer/decisions.json`
-///   in M3.
-/// - `liftedOrigin` is the caller-supplied `LiftedOrigin?` (M3.0 plumbs
-///   the parameter; M3.1's `Discover+Pipeline` caller populates it from
-///   the originating `TestMethodSummary`).
+/// **Promotion produces a `Suggestion`** whose `templateName` matches
+/// the lifted record, `evidence` carries per-callee synthetic Evidence,
+/// `score` adds one `+50 testBodyPattern` signal (PRD §4.1), `generator`
+/// defaults to `.m1Placeholder` (later overwritten by GeneratorSelection
+/// or kept as `.todo` per PRD §16 #4), `identity` uses
+/// `lifted|<template>|<sortedCalleeNames>` to namespace away from
+/// TemplateEngine, and `liftedOrigin` is the caller-supplied origin.
 ///
-/// **Type-recovery contract.** M3.0's adapter does not perform recovery
-/// itself — callers (M3.1's `Discover+Pipeline.collectVisibleSuggestions`)
-/// supply the `typeName` / `returnType` from a `[FunctionSummary]`
-/// lookup. M3.0 accepts `nil` for either parameter and synthesizes a
-/// `?` sentinel in the evidence signature; the resulting suggestion
-/// flows through `GeneratorSelection` and gets `.todo` because the `?`
-/// type isn't in the corpus's `TypeShape` index. This honors the M3
-/// plan's open decision #2 default `(a)` — strict FunctionSummary
-/// lookup, no setup-region annotation walking (deferred to M4 with the
-/// PRD-row mock-based generator synthesis).
+/// **Type-recovery contract.** M3.0 does not perform recovery itself;
+/// callers supply `typeName` / `returnType` from a FunctionSummary
+/// lookup. `nil` parameters produce a `?` sentinel that flows through
+/// `GeneratorSelection` to `.todo` (PRD §16 #4 — never silently compiles).
 public extension LiftedSuggestion {
 
     /// Promote this lifted suggestion to a `Suggestion` for stream

@@ -77,13 +77,9 @@ extension SwiftInferCommand.Discover {
             packsOverride: packsOverride,
             diagnostics: diagnostics
         )
-        // TestLifter M1.5 — scan the resolved test directory for test
-        // bodies, run the slicer + detectors, and convert the resulting
-        // LiftedSuggestions into CrossValidationKeys to feed
-        // TemplateRegistry's +20 cross-validation seam (PRD §4.1).
-        // TestSuiteParser only emits summaries for files containing
-        // recognized test methods, so production source naturally
-        // produces no lifted records.
+        // TestLifter M1.5 — scan tests for slices feeding the +20 cross-
+        // validation seam (PRD §4.1). Production source naturally
+        // produces no lifted records (no recognized test methods).
         let liftedArtifacts = try TestLifter.discover(
             in: setup.testDirectory,
             markerTable: effectiveMarkerTable(for: setup.vocabulary)
@@ -96,15 +92,9 @@ extension SwiftInferCommand.Discover {
             counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys,
             templateFilter: setup.templateFilter
         )
-        // TestLifter M3.2 — promote LiftedSuggestions to Suggestions,
-        // apply the same `GeneratorSelection` pass TemplateEngine ran
-        // internally, and suppress promoted entries whose
-        // crossValidationKey matches a TemplateEngine suggestion (the
-        // +20 cross-validation signal already communicates the
-        // corroboration; double-emitting would confuse the reader).
-        // Survivors enter the visible stream with a +50 testBodyPattern
-        // signal and the inferred generator (or `.todo` when type
-        // recovery failed — PRD §16 #4 invariant preserved).
+        // TestLifter M3.2 — promote LiftedSuggestions, share TemplateEngine's
+        // GeneratorSelection pass, suppress duplicates already covered by
+        // the +20 cross-validation seam. Survivors get +50 testBodyPattern.
         let visible = combineAndFilter(
             artifacts: artifacts,
             liftedArtifacts: liftedArtifacts,
@@ -140,9 +130,8 @@ extension SwiftInferCommand.Discover {
     }
 
     /// Combine TE + lifted suggestions, skip-filter, counter-signal-filter,
-    /// and apply the include-possible visibility cut. Extracted out of
-    /// `collectVisibleSuggestions` to keep that function under SwiftLint's
-    /// body-length cap (M13.3 vocabulary plumbing pushed it over).
+    /// and apply the include-possible visibility cut. Extracted from
+    /// `collectVisibleSuggestions` for SwiftLint's body-length cap.
     private static func combineAndFilter(
         artifacts: TemplateRegistry.DiscoverArtifacts,
         liftedArtifacts: TestLifter.Artifacts,
@@ -180,10 +169,7 @@ extension SwiftInferCommand.Discover {
     }
 
     /// Bundle of resolved settings the discover pipeline pulls from
-    /// `ConfigLoader` + `VocabularyLoader` + `effectiveTestDirectory`
-    /// before invoking the discover passes. Extracted out of
-    /// `collectVisibleSuggestions` to keep that function under
-    /// SwiftLint's body-length cap.
+    /// `ConfigLoader` + `VocabularyLoader` + `effectiveTestDirectory`.
     private struct PipelineSetup {
         let includePossible: Bool
         let vocabulary: Vocabulary
@@ -379,27 +365,11 @@ extension SwiftInferCommand.Discover {
         return URL(fileURLWithPath: raw)
     }
 
-    /// TestLifter M6.0 — resolve the directory TestLifter scans for
-    /// tests with CLI > walk-up > production-target precedence.
-    ///
-    /// Precedence:
-    /// 1. **Explicit `--test-dir <path>`** wins when the path exists
-    ///    on disk. When the path doesn't exist, emit a warning and
-    ///    fall through to walk-up resolution (matches the
-    ///    `--vocabulary` warn-and-degrade posture).
-    /// 2. **Walk-up to package root + `<root>/Tests/`** — walk parent
-    ///    directories from `productionTarget` looking for
-    ///    `Package.swift`, and on hit return `<root>/Tests/` if it
-    ///    exists.
-    /// 3. **Fallback to `productionTarget`** — current pre-M6.0
-    ///    behavior (degraded but not broken). Real CLI users won't
-    ///    hit this in practice; integration test fixtures that pass
-    ///    a tmpdir without `Package.swift` will.
-    ///
-    /// Pure function over its inputs (modulo the `diagnostic`
-    /// closure). Exposed at module scope so the
-    /// `DiscoverCLITestDirTests` suite can exercise the resolver
-    /// directly.
+    /// TestLifter M6.0 — resolve TestLifter's scan directory with
+    /// precedence: explicit `--test-dir` (warn + fall through if path
+    /// doesn't exist) > walk-up to `<package-root>/Tests/` > the
+    /// production target itself (degraded fallback for tmpdir fixtures
+    /// without `Package.swift`). Pure function over its inputs.
     public static func effectiveTestDirectory(
         productionTarget: URL,
         explicitTestDir: URL?,

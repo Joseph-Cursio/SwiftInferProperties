@@ -13,6 +13,42 @@ import SwiftInferCore
 ///
 /// **Flag combinations AND together.** All non-default flags must
 /// match for an entry to be returned.
+
+/// Pure-function result of `SwiftInferCommand.Query.runQuery`. At
+/// file scope (rather than nested under `Query`) to keep the type
+/// hierarchy within SwiftLint's `nesting` rule.
+public struct QueryOutcome: Equatable {
+    public let rendered: String
+    public let warnings: [String]
+    public let matchedCount: Int
+}
+
+/// Bundle for `Query.applyFilters`'s six filter params, keeping the
+/// function under the `function_parameter_count` cap. Each field is
+/// optional with the same "nil means don't filter" semantics as the
+/// original parameters.
+public struct QueryFilters: Equatable {
+    public let template: String?
+    public let type: String?
+    public let tier: String?
+    public let decision: String?
+    public let minScore: Int?
+
+    public init(
+        template: String? = nil,
+        type: String? = nil,
+        tier: String? = nil,
+        decision: String? = nil,
+        minScore: Int? = nil
+    ) {
+        self.template = template
+        self.type = type
+        self.tier = tier
+        self.decision = decision
+        self.minScore = minScore
+    }
+}
+
 extension SwiftInferCommand {
 
     public struct Query: AsyncParsableCommand {
@@ -100,12 +136,6 @@ extension SwiftInferCommand {
             print(result.rendered, terminator: "")
         }
 
-        public struct Outcome: Equatable {
-            public let rendered: String
-            public let warnings: [String]
-            public let matchedCount: Int
-        }
-
         // Pure-function surface so unit tests can drive the query
         // path without the AsyncParsableCommand shell.
         // swiftlint:disable:next function_parameter_count
@@ -118,27 +148,27 @@ extension SwiftInferCommand {
             decision: String?,
             minScore: Int?,
             limit: Int?
-        ) throws -> Outcome {
+        ) throws -> QueryOutcome {
             let directory = URL(fileURLWithPath: directoryOverride ?? ".")
             let explicitPath = explicitIndexPath.map { URL(fileURLWithPath: $0) }
             let now = SwiftInferCommand.Index.isoTimestamp(from: Date())
             let resolvedPath = explicitPath ?? Self.resolveIndexPath(startingFrom: directory)
             guard let resolvedPath else {
-                return Outcome(
+                return QueryOutcome(
                     rendered: "No .swiftinfer/index.json found. Run `swift-infer index --target <X>` to build one.\n",
                     warnings: [],
                     matchedCount: 0
                 )
             }
             let load = IndexStore.load(from: resolvedPath, nowTimestamp: now)
-            let filtered = applyFilters(
-                load.index.entries,
+            let filters = QueryFilters(
                 template: template,
                 type: type,
                 tier: tier,
                 decision: decision,
                 minScore: minScore
             )
+            let filtered = applyFilters(load.index.entries, filters: filters)
             let sorted = filtered.sorted { $0.score > $1.score }
             let capped: [SemanticIndexEntry]
             if let limit, limit >= 0, limit < sorted.count {
@@ -147,40 +177,53 @@ extension SwiftInferCommand {
                 capped = sorted
             }
             let rendered = renderEntries(capped, totalMatched: filtered.count)
-            return Outcome(rendered: rendered, warnings: load.warnings, matchedCount: filtered.count)
+            return QueryOutcome(rendered: rendered, warnings: load.warnings, matchedCount: filtered.count)
         }
 
         // MARK: - Filtering
 
-        /// Module-internal for V1.33.D unit tests.
+        /// Module-internal for V1.33.D unit tests. Per-criterion gates
+        /// are split into pure helpers to keep the predicate within
+        /// SwiftLint's `cyclomatic_complexity` cap.
         static func applyFilters(
             _ entries: [SemanticIndexEntry],
-            template: String?,
-            type: String?,
-            tier: String?,
-            decision: String?,
-            minScore: Int?
+            filters: QueryFilters
         ) -> [SemanticIndexEntry] {
             entries.filter { entry in
-                if let template, entry.templateName != template { return false }
-                if let type {
-                    if type == "none" {
-                        if entry.typeName != nil { return false }
-                    } else if entry.typeName != type {
-                        return false
-                    }
-                }
-                if let tier, entry.tier != tier { return false }
-                if let decision {
-                    if decision == "untriaged" {
-                        if entry.decision != nil { return false }
-                    } else if entry.decision != decision {
-                        return false
-                    }
-                }
-                if let minScore, entry.score < minScore { return false }
+                guard matchesTemplate(entry, filter: filters.template) else { return false }
+                guard matchesType(entry, filter: filters.type) else { return false }
+                guard matchesTier(entry, filter: filters.tier) else { return false }
+                guard matchesDecision(entry, filter: filters.decision) else { return false }
+                guard matchesMinScore(entry, threshold: filters.minScore) else { return false }
                 return true
             }
+        }
+
+        private static func matchesTemplate(_ entry: SemanticIndexEntry, filter: String?) -> Bool {
+            guard let filter else { return true }
+            return entry.templateName == filter
+        }
+
+        private static func matchesType(_ entry: SemanticIndexEntry, filter: String?) -> Bool {
+            guard let filter else { return true }
+            if filter == "none" { return entry.typeName == nil }
+            return entry.typeName == filter
+        }
+
+        private static func matchesTier(_ entry: SemanticIndexEntry, filter: String?) -> Bool {
+            guard let filter else { return true }
+            return entry.tier == filter
+        }
+
+        private static func matchesDecision(_ entry: SemanticIndexEntry, filter: String?) -> Bool {
+            guard let filter else { return true }
+            if filter == "untriaged" { return entry.decision == nil }
+            return entry.decision == filter
+        }
+
+        private static func matchesMinScore(_ entry: SemanticIndexEntry, threshold: Int?) -> Bool {
+            guard let threshold else { return true }
+            return entry.score >= threshold
         }
 
         // MARK: - Rendering

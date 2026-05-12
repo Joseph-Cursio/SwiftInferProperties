@@ -162,6 +162,11 @@ public enum InversePairTemplate {
         let sorted = [forwardSig, reverseSig].sorted()
         return SuggestionIdentity(canonicalInput: "inverse-pair|" + sorted.joined(separator: "|"))
     }
+}
+
+// V1.43 cleanup — signals/vetoes/builders live here so the primary
+// enum body stays under SwiftLint's type_body_length cap.
+extension InversePairTemplate {
 
     // MARK: - Signals
 

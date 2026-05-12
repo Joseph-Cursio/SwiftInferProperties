@@ -93,6 +93,8 @@ public enum IdempotenceTemplate {
     }
 
     /// V1.39.B — preserves the pre-migration signal-accumulation order.
+    /// Split into name- and veto-side helpers to keep each function
+    /// within SwiftLint's cyclomatic_complexity cap.
     static func accumulatedSignals(
         for summary: FunctionSummary,
         vocabulary: Vocabulary,
@@ -103,6 +105,20 @@ public enum IdempotenceTemplate {
             return []
         }
         var signals: [Signal] = [typeSymmetry]
+        signals.append(contentsOf: nameSideSignals(for: summary, vocabulary: vocabulary))
+        signals.append(contentsOf: vetoSideSignals(
+            for: summary,
+            inheritedTypesByName: inheritedTypesByName,
+            carrierKindResolver: carrierKindResolver
+        ))
+        return signals
+    }
+
+    private static func nameSideSignals(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary
+    ) -> [Signal] {
+        var signals: [Signal] = []
         if let name = nameSignal(for: summary, vocabulary: vocabulary) {
             signals.append(name)
         }
@@ -118,6 +134,15 @@ public enum IdempotenceTemplate {
         if let domainMarker = domainMarkerCounterSignal(for: summary) {
             signals.append(domainMarker)
         }
+        return signals
+    }
+
+    private static func vetoSideSignals(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>],
+        carrierKindResolver: CarrierKindResolver?
+    ) -> [Signal] {
+        var signals: [Signal] = []
         if let setAlgebra = setAlgebraShapeVeto(for: summary) {
             signals.append(setAlgebra)
         }
@@ -173,6 +198,11 @@ public enum IdempotenceTemplate {
         let returnType = summary.returnTypeText ?? "Void"
         return "\(typePrefix)\(summary.name)(\(labels))|(\(paramTypes))->\(returnType)"
     }
+}
+
+// V1.43 cleanup — signals/vetoes/builders live here so the primary
+// enum body stays under SwiftLint's type_body_length cap.
+extension IdempotenceTemplate {
 
     // MARK: - Signals
 
