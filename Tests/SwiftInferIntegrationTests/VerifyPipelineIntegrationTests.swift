@@ -171,4 +171,111 @@ struct VerifyPipelineIntegrationTests {
             Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
         }
     }
+
+    // MARK: - V1.44.E.3 idempotence × {Complex<Double>, Double, Int}
+
+    /// Build + run the idempotence verify pipeline against the supplied
+    /// single-function call expression on the given carrier. Mirrors
+    /// `runPipeline` but uses `IdempotenceStubEmitter` so the stub
+    /// asserts `f(f(x)) ≈ f(x)` (or `f(f(x)) == f(x)` for Int).
+    private static func runIdempotencePipeline(
+        functionCall: String,
+        carrierType: String,
+        budget: IdempotenceStubEmitter.TrialBudget = .small
+    ) throws -> VerifyOutcome {
+        let workdir = try makeWorkdir()
+        defer { cleanUp(workdir) }
+        let stubSource = try IdempotenceStubEmitter.emit(
+            IdempotenceStubEmitter.Inputs(
+                functionCall: functionCall,
+                extraImports: [],
+                carrierType: carrierType,
+                seedHex: canonicalSeed,
+                trialBudget: budget
+            )
+        )
+        _ = try VerifierWorkdir.synthesize(
+            VerifierWorkdir.Inputs(
+                workdir: workdir,
+                userPackage: nil,
+                stubSource: stubSource
+            )
+        )
+        let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+        guard buildOutput.exitCode == 0 else {
+            return .error(reason: "build failed: \(buildOutput.stderr)")
+        }
+        let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+        return VerifyResultParser.parse(runOutput)
+    }
+
+    /// **V1.44.E.3.a — idempotence × Complex<Double> × edgeCaseAdvisory.**
+    /// `f(z) = z.isFinite ? Complex(1, 0) : Complex(0, 0)` is idempotent
+    /// on finite values (`f(z) = Complex(1, 0)`; `f(f(z)) = Complex(1, 0)`),
+    /// and on non-finite values returns `Complex(0, 0)` once but
+    /// `Complex(1, 0)` on the second application — `f(f(z)) ≠ f(z)`
+    /// when the input is one of curated entries #0–#7 (the non-finite
+    /// ones). The default pass samples only finite values (Double.random
+    /// in ±1e6) so it passes 100/100; the edge pass fires on the first
+    /// non-finite curated entry sampled and reports `.edgeCaseAdvisory`
+    /// with `edgeCaseIndex ∈ [0, 7]`.
+    @Test("idempotence × Complex<Double>: finite-only property fires advisory on non-finite entry")
+    func idempotenceComplexDoubleEdgeCaseAdvisory() throws {
+        let outcome = try Self.runIdempotencePipeline(
+            functionCall:
+                "{ (zedValue: Complex<Double>) in "
+                + "zedValue.isFinite ? Complex(1, 0) : Complex(0, 0) }",
+            carrierType: "Complex<Double>"
+        )
+        if case let .edgeCaseAdvisory(defaultTrials, _, _, _, _, edgeCaseIndex) = outcome {
+            #expect(defaultTrials == 100)
+            // First failing edge trial is one of the 8 non-finite
+            // curated entries — index resolves to [0, 7] via the
+            // `.rawStorage` match.
+            #expect((0...7).contains(edgeCaseIndex))
+        } else {
+            Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
+        }
+    }
+
+    /// **V1.44.E.3.b — idempotence × Double × defaultFails.**
+    /// `f(x) = x * 2` is non-idempotent on every non-zero input:
+    /// `f(f(x)) = 4x ≠ 2x = f(x)`. Default pass samples in ±1e6 so
+    /// the first non-zero sample fires the counterexample. Edge pass
+    /// is skipped by the runner's short-circuit.
+    @Test("idempotence × Double: non-idempotent f(x) = 2x fails default pass at trial 0")
+    func idempotenceDoubleDefaultFails() throws {
+        let outcome = try Self.runIdempotencePipeline(
+            functionCall: "{ (xValue: Double) in xValue * 2 }",
+            carrierType: "Double"
+        )
+        if case .defaultFails = outcome {
+            // Edge pass skipped by short-circuit; per-field
+            // counterexample data depends on the RNG-sampled value
+            // so we only pin the case.
+        } else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+        }
+    }
+
+    /// **V1.44.E.3.c — idempotence × Int × bothPass.** Identity
+    /// `{ x in x }` over `Int` — `f(f(x)) = x = f(x)` for every
+    /// integer input. Int carrier emits a zero-edge sentinel
+    /// (`VERIFY_EDGE_TRIALS: 0`), so the parser produces
+    /// `.bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0)`.
+    @Test("idempotence × Int: identity passes single-pass (zero-edge sentinel)")
+    func idempotenceIntBothPassSingleSentinel() throws {
+        let outcome = try Self.runIdempotencePipeline(
+            functionCall: "{ (xValue: Int) in xValue }",
+            carrierType: "Int"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            // Int carrier sentinel — V1.44.B/C convention.
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
 }
