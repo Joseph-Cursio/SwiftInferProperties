@@ -95,16 +95,26 @@ public enum RoundTripPairResolver {
             )
         }
         let forwardBare = entry.primaryFunctionName
-        guard let pair = curated.first(where: { $0.forwardName == forwardBare }) else {
-            throw VerifyError.unsupportedPair(
-                forward: forwardBare,
-                supported: curated.map(\.forwardName)
+        let typeQualifier = bareTypeName(from: carrier)
+        // V1.49.C.3 — first try the curated pair lookup; on miss,
+        // fall back to the entry's secondaryFunctionName (populated
+        // discover-side from the round-trip suggestion's evidence[1]).
+        // The .unsupportedPair error fires only when both lookups fail.
+        if let pair = curated.first(where: { $0.forwardName == forwardBare }) {
+            return Resolved(
+                forwardCall: "\(typeQualifier).\(stripParameterLabels(pair.forwardName))",
+                inverseCall: "\(typeQualifier).\(stripParameterLabels(pair.inverseName))"
             )
         }
-        let typeQualifier = bareTypeName(from: carrier)
-        return Resolved(
-            forwardCall: "\(typeQualifier).\(stripParameterLabels(pair.forwardName))",
-            inverseCall: "\(typeQualifier).\(stripParameterLabels(pair.inverseName))"
+        if let inverseBare = entry.secondaryFunctionName {
+            return Resolved(
+                forwardCall: "\(typeQualifier).\(stripParameterLabels(forwardBare))",
+                inverseCall: "\(typeQualifier).\(stripParameterLabels(inverseBare))"
+            )
+        }
+        throw VerifyError.unsupportedPair(
+            forward: forwardBare,
+            supported: curated.map(\.forwardName)
         )
     }
 

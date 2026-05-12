@@ -251,6 +251,7 @@ extension SwiftInferCommand {
                 for: suggestion,
                 typeShapesByName: typeShapesByName
             )
+            let secondaryFunctionName = secondaryFunctionName(for: suggestion)
             return SemanticIndexEntry(
                 identityHash: displayHash,
                 templateName: suggestion.templateName,
@@ -263,8 +264,21 @@ extension SwiftInferCommand {
                 decisionAt: decisionAt,
                 firstSeenAt: now,
                 lastSeenAt: now,
-                typeShape: typeShape
+                typeShape: typeShape,
+                secondaryFunctionName: secondaryFunctionName
             )
+        }
+
+        /// V1.49.C.2 — read the round-trip inverse-half name from the
+        /// Suggestion's evidence array. The round-trip template emits
+        /// `evidence = [forward, reverse]`; v1.49 persists the second
+        /// half so the verify resolver can use it as a non-curated
+        /// fallback. Returns `nil` for non-round-trip templates and
+        /// for evidence arrays with fewer than 2 entries.
+        private static func secondaryFunctionName(for suggestion: Suggestion) -> String? {
+            guard suggestion.templateName == "round-trip" else { return nil }
+            guard suggestion.evidence.count >= 2 else { return nil }
+            return suggestion.evidence[1].displayName
         }
 
         /// V1.47.C — look up the carrier's TypeShape by bare name (no

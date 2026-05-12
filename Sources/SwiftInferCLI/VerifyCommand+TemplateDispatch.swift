@@ -179,24 +179,34 @@ extension SwiftInferCommand.Verify {
         let funcName = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
         switch entry.templateName {
         case "round-trip":
-            // Curated-pair lookup mirrors RoundTripPairResolver but
-            // skips the carrier check — the strategist owns carrier
-            // validation here.
+            // V1.49.C.3 — mirrors RoundTripPairResolver.resolve's
+            // curated-first / secondaryFunctionName-fallback chain;
+            // skips the carrier check because the strategist owns
+            // carrier validation here.
             let forwardBare = entry.primaryFunctionName
-            guard let pair = RoundTripPairResolver.curated.first(
+            if let pair = RoundTripPairResolver.curated.first(
                 where: { $0.forwardName == forwardBare }
-            ) else {
-                throw VerifyError.unsupportedPair(
-                    forward: forwardBare,
-                    supported: RoundTripPairResolver.curated.map(\.forwardName)
+            ) {
+                let forwardCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(pair.forwardName))"
+                let inverseCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(pair.inverseName))"
+                return ResolvedCalls(
+                    expressions: [forwardCall, inverseCall],
+                    rendererForwardName: forwardCall,
+                    rendererInverseName: inverseCall
                 )
             }
-            let forwardCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(pair.forwardName))"
-            let inverseCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(pair.inverseName))"
-            return ResolvedCalls(
-                expressions: [forwardCall, inverseCall],
-                rendererForwardName: forwardCall,
-                rendererInverseName: inverseCall
+            if let inverseBare = entry.secondaryFunctionName {
+                let forwardCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(forwardBare))"
+                let inverseCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(inverseBare))"
+                return ResolvedCalls(
+                    expressions: [forwardCall, inverseCall],
+                    rendererForwardName: forwardCall,
+                    rendererInverseName: inverseCall
+                )
+            }
+            throw VerifyError.unsupportedPair(
+                forward: forwardBare,
+                supported: RoundTripPairResolver.curated.map(\.forwardName)
             )
         case "idempotence", "commutativity", "associativity":
             let call = "\(typeQualifier).\(funcName)"

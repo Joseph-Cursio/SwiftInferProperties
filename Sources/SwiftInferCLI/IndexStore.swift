@@ -26,15 +26,13 @@ public enum IndexStore {
     ///
     /// **History.** v1 = v1.33 initial format. v2 = v1.47 — adds the
     /// optional `typeShape: IndexedTypeShape?` field on
-    /// `SemanticIndexEntry` so the verify pipeline can call
-    /// `DerivationStrategist.strategy(for:)` against the persisted
-    /// type structure without re-parsing the user's source. v1 files
-    /// decode cleanly into v2 (the `typeShape` field is
-    /// `decodeIfPresent`-optional), so the bump is backward-
-    /// compatible at the entry level — readers may still want to bump
-    /// the schemaVersion on the wrapping `Index` for forensic
-    /// "when did this index get written" filtering.
-    public static let currentSchemaVersion: Int = 2
+    /// `SemanticIndexEntry`. v3 = v1.49 — adds the optional
+    /// `secondaryFunctionName: String?` field on `SemanticIndexEntry`
+    /// for non-curated round-trip pair derivation. Both bumps are
+    /// backward-compatible at the entry level (`decodeIfPresent`),
+    /// so v1 / v2 files decode cleanly into v3 — the version bump on
+    /// the wrapping `Index` is informational only.
+    public static let currentSchemaVersion: Int = 3
 
     /// The on-disk index value. Encoded as JSON with stable key
     /// ordering (alphabetical) + pretty-printing so diffs are clean

@@ -95,6 +95,16 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// re-parsing the user's source.
     public let typeShape: IndexedTypeShape?
 
+    /// V1.49.C — non-curated round-trip pair inverse-half name.
+    /// Populated by discover when the suggestion's evidence array
+    /// surfaces both pair halves (round-trip template emits
+    /// `[forward, inverse]`); the verify resolver consults this
+    /// field after the curated-pair lookup misses. `nil` for all
+    /// non-round-trip templates and for v1.47-and-earlier persisted
+    /// entries. Format: bare function name in the same shape
+    /// `primaryFunctionName` carries (e.g. `"_scale(forMinimumCapacity:)"`).
+    public let secondaryFunctionName: String?
+
     public init(
         identityHash: String,
         templateName: String,
@@ -107,7 +117,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         decisionAt: String? = nil,
         firstSeenAt: String,
         lastSeenAt: String,
-        typeShape: IndexedTypeShape? = nil
+        typeShape: IndexedTypeShape? = nil,
+        secondaryFunctionName: String? = nil
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -121,6 +132,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.firstSeenAt = firstSeenAt
         self.lastSeenAt = lastSeenAt
         self.typeShape = typeShape
+        self.secondaryFunctionName = secondaryFunctionName
     }
 
     // MARK: - Codable
@@ -142,6 +154,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         case firstSeenAt
         case lastSeenAt
         case typeShape
+        case secondaryFunctionName
     }
 
     public init(from decoder: Decoder) throws {
@@ -158,6 +171,9 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.firstSeenAt = try container.decode(String.self, forKey: .firstSeenAt)
         self.lastSeenAt = try container.decode(String.self, forKey: .lastSeenAt)
         self.typeShape = try container.decodeIfPresent(IndexedTypeShape.self, forKey: .typeShape)
+        self.secondaryFunctionName = try container.decodeIfPresent(
+            String.self, forKey: .secondaryFunctionName
+        )
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -174,6 +190,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         try container.encode(firstSeenAt, forKey: .firstSeenAt)
         try container.encode(lastSeenAt, forKey: .lastSeenAt)
         try container.encodeIfPresent(typeShape, forKey: .typeShape)
+        try container.encodeIfPresent(secondaryFunctionName, forKey: .secondaryFunctionName)
     }
 
     /// Returns a copy of `self` with the upsert-mutable columns
@@ -199,7 +216,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             decisionAt: other.decisionAt,
             firstSeenAt: firstSeenAt,
             lastSeenAt: other.lastSeenAt,
-            typeShape: other.typeShape
+            typeShape: other.typeShape,
+            secondaryFunctionName: other.secondaryFunctionName
         )
     }
 }
