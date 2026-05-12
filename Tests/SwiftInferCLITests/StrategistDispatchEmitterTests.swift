@@ -69,8 +69,8 @@ struct StrategistDispatchEmitterRecipeTests {
         #expect(recipe.expression.contains("MyEnum(rawValue:"))
     }
 
-    @Test("memberwise-arbitrary strategy throws (v1.47 defers to v1.48)")
-    func memberwiseRejected() throws {
+    @Test("memberwise-arbitrary 1-member emits map() with constructor call (V1.49.B)")
+    func memberwiseSingleMember() throws {
         let shape = IndexedTypeShape(
             name: "MyStruct", kind: .struct,
             inheritedTypes: [], hasUserGen: false,
@@ -79,11 +79,14 @@ struct StrategistDispatchEmitterRecipeTests {
             ],
             hasUserInit: false
         )
-        #expect(throws: VerifyError.self) {
-            _ = try StrategistDispatchEmitter.resolveRecipe(
-                carrier: "MyStruct", typeShape: shape
-            )
-        }
+        let recipe = try StrategistDispatchEmitter.resolveRecipe(
+            carrier: "MyStruct", typeShape: shape
+        )
+        // 1-member uses `.map`, not `zip`.
+        #expect(recipe.expression.contains("Gen<Int>.int()"))
+        #expect(recipe.expression.contains(".map"))
+        #expect(recipe.expression.contains("MyStruct(x: $0)"))
+        #expect(!recipe.expression.contains("zip("))
     }
 
     @Test("non-raw, non-shape carrier throws .unsupportedCarrier")
