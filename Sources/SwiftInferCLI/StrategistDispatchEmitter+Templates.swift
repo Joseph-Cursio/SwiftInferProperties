@@ -150,4 +150,131 @@ extension StrategistDispatchEmitter {
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
         """
     }
+
+    // MARK: - V1.48.A Idempotence-lifted (1 collection per trial; f(f(xs)) == f(xs))
+
+    /// Wraps the strategist's element generator in
+    /// `Gen<[Element]>` via the kit's
+    /// `Generator<T>.array(of: ClosedRange<Int>)` helper
+    /// (`PropertyBased/Gen+Collection.swift`). Each trial draws a
+    /// random-length array (size 0–8) and asserts the lifted
+    /// function is idempotent on the array.
+    static func composeIdempotenceLiftedPass(
+        inputs: Inputs,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let functionCall = inputs.functionCalls.first ?? "(missing)"
+        return """
+        // --- Pass 1: default (strategist-derived element + kit array helper) ---
+
+        let elementGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+        let defaultGenerator: Generator<[\(recipe.carrierTypeName)], some SendableSequenceType> =
+            elementGenerator.array(of: 0 ... 8)
+
+        for trial in 0 ..< trials {
+            let xs = defaultGenerator.run(using: &rng)
+            let onceResult = \(functionCall)(xs)
+            let twiceResult = \(functionCall)(onceResult)
+            if onceResult != twiceResult {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(xs)")
+                print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
+                print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    // MARK: - V1.48.A Dual-style-consistency
+    //         (1 value per trial; nonMut(x) == { var c = x; c.mut(); c })
+
+    /// Draws one value, calls the non-mutating function, then mutates
+    /// a copy with the mutating counterpart and asserts they agree.
+    /// `inputs.functionCalls` carries `[nonMutCall, mutCall]` —
+    /// `nonMutCall(x)` produces the non-mutating result;
+    /// `mutCall` is invoked via `copy.mutCall()` so the resolver
+    /// must produce a bare instance-method name (no receiver, no
+    /// argument list).
+    static func composeDualStyleConsistencyPass(
+        inputs: Inputs,
+        recipe: GeneratorRecipe
+    ) throws -> String {
+        guard inputs.functionCalls.count == 2 else {
+            throw VerifyError.unsupportedTemplate(
+                template: "dual-style-consistency",
+                expected: ["functionCalls must be [nonMutCall, mutMethodName]"]
+            )
+        }
+        let nonMutCall = inputs.functionCalls[0]
+        let mutMethodName = inputs.functionCalls[1]
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let original = defaultGenerator.run(using: &rng)
+            let nonMutResult = \(nonMutCall)(original)
+            var mutCopy = original
+            mutCopy.\(mutMethodName)()
+            if nonMutResult != mutCopy {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(original)")
+                print("VERIFY_DEFAULT_FORWARD: \\(nonMutResult)")
+                print("VERIFY_DEFAULT_INVERSE: \\(mutCopy)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    // MARK: - V1.48.A Monotonicity (2 values per trial; a ≤ b → f(a) ≤ f(b))
+
+    /// Draws two values, sorts so `a ≤ b`, applies the function to
+    /// each, and asserts `f(a) ≤ f(b)`. The carrier must conform to
+    /// `Comparable`; v1.48 trusts the strategist's surface
+    /// (Int / String / Bool / fixed-width ints — all Comparable).
+    static func composeMonotonicityPass(
+        inputs: Inputs,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let functionCall = inputs.functionCalls.first ?? "(missing)"
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let firstDraw = defaultGenerator.run(using: &rng)
+            let secondDraw = defaultGenerator.run(using: &rng)
+            let valueA = min(firstDraw, secondDraw)
+            let valueB = max(firstDraw, secondDraw)
+            let resultA = \(functionCall)(valueA)
+            let resultB = \(functionCall)(valueB)
+            if resultA > resultB {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB))")
+                print("VERIFY_DEFAULT_FORWARD: \\(resultA)")
+                print("VERIFY_DEFAULT_INVERSE: \\(resultB)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
 }

@@ -241,11 +241,18 @@ public enum StrategistDispatchEmitter {
             return composeCommutativityPass(inputs: inputs, recipe: recipe)
         case "associativity":
             return composeAssociativityPass(inputs: inputs, recipe: recipe)
+        case "idempotence-lifted":
+            return composeIdempotenceLiftedPass(inputs: inputs, recipe: recipe)
+        case "dual-style-consistency":
+            return try composeDualStyleConsistencyPass(inputs: inputs, recipe: recipe)
+        case "monotonicity":
+            return composeMonotonicityPass(inputs: inputs, recipe: recipe)
         default:
             throw VerifyError.unsupportedTemplate(
                 template: inputs.template,
                 expected: [
-                    "round-trip", "idempotence", "commutativity", "associativity"
+                    "round-trip", "idempotence", "commutativity", "associativity",
+                    "idempotence-lifted", "dual-style-consistency", "monotonicity"
                 ]
             )
         }
