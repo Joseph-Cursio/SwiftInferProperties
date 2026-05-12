@@ -40,3 +40,7 @@ fastlane/test_output
 
 # Claude Code local state
 .claude/
+
+# V1.50.A — cycle27-surface fixture's SwiftPM-resolved checkouts
+fixtures/cycle27-surface/.build/
+fixtures/cycle27-surface/Package.resolved
