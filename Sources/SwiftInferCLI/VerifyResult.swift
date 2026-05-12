@@ -291,6 +291,9 @@ public enum VerifyResultRenderer {
         case "idempotence": return RenderShape(kind: .idempotence)
         case "commutativity": return RenderShape(kind: .commutativity)
         case "associativity": return RenderShape(kind: .associativity)
+        case "idempotence-lifted": return RenderShape(kind: .idempotenceLifted)
+        case "dual-style-consistency": return RenderShape(kind: .dualStyleConsistency)
+        case "monotonicity": return RenderShape(kind: .monotonicity)
         default: return RenderShape(kind: .roundTrip)
         }
     }
@@ -357,7 +360,10 @@ public enum VerifyResultRenderer {
 /// Per-template render-time phrasing helper. File-scoped to keep
 /// the type-hierarchy within SwiftLint's `nesting` rule.
 private struct RenderShape {
-    enum Kind { case roundTrip, idempotence, commutativity, associativity }
+    enum Kind {
+        case roundTrip, idempotence, commutativity, associativity
+        case idempotenceLifted, dualStyleConsistency, monotonicity
+    }
     let kind: Kind
 
     func subjectLine(context: VerifyResultRenderer.Context) -> String {
@@ -371,22 +377,40 @@ private struct RenderShape {
             return "commutativity on \(context.forwardName) over \(context.carrierType)"
         case .associativity:
             return "associativity on \(context.forwardName) over \(context.carrierType)"
+        case .idempotenceLifted:
+            return "idempotence-lifted on \(context.forwardName) over [\(context.carrierType)]"
+        case .dualStyleConsistency:
+            return "dual-style-consistency on \(context.forwardName)/\(context.inverseName) "
+                + "over \(context.carrierType)"
+        case .monotonicity:
+            return "monotonicity on \(context.forwardName) over \(context.carrierType)"
         }
     }
 
     /// First value line. RT/idempotence: `f(input)`; commutativity:
-    /// `f(lhs, rhs)`; associativity: `f(f(a, b), c)`.
+    /// `f(lhs, rhs)`; associativity: `f(f(a, b), c)`;
+    /// idempotence-lifted: `f(xs)`; dual-style-consistency:
+    /// `nonMut(x)`; monotonicity: `f(a)` (where a ≤ b).
     func forwardExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip, .idempotence: return "\(context.forwardName)(input) "
         case .commutativity: return "\(context.forwardName)(lhs, rhs) "
         case .associativity:
             return "\(context.forwardName)(\(context.forwardName)(a, b), c) "
+        case .idempotenceLifted:
+            return "\(context.forwardName)(xs) "
+        case .dualStyleConsistency:
+            return "\(context.forwardName)(x) "
+        case .monotonicity:
+            return "\(context.forwardName)(a) "
         }
     }
 
-    /// Second value line — `reverse(forward(input))` / `f(f(input))` /
-    /// `f(rhs, lhs)` / `f(a, f(b, c))` per template.
+    /// Second value line. RT: `reverse(forward(input))`; idempotence:
+    /// `f(f(input))`; commutativity: `f(rhs, lhs)`; associativity:
+    /// `f(a, f(b, c))`; idempotence-lifted: `f(f(xs))`;
+    /// dual-style-consistency: `{ var c = x; c.mut(); c }`;
+    /// monotonicity: `f(b)` (where a ≤ b).
     func inverseExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip: return "\(context.inverseName)(\(context.forwardName)(input))"
@@ -394,10 +418,20 @@ private struct RenderShape {
         case .commutativity: return "\(context.forwardName)(rhs, lhs)"
         case .associativity:
             return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
+        case .idempotenceLifted:
+            return "\(context.forwardName)(\(context.forwardName)(xs))"
+        case .dualStyleConsistency:
+            return "{ var copy = x; copy.\(context.inverseName)(); return copy }()"
+        case .monotonicity:
+            return "\(context.forwardName)(b)"
         }
     }
 
-    /// `input` / `f(input)` / `f(rhs, lhs)` / `f(a, f(b, c))` per template.
+    /// Per-template expected expression. RT: `input`; idempotence:
+    /// `f(input)`; commutativity: `f(rhs, lhs)`; associativity:
+    /// `f(a, f(b, c))`; idempotence-lifted: `f(xs)`;
+    /// dual-style-consistency: `nonMut(x)`; monotonicity:
+    /// `f(a) ≤ f(b) when a ≤ b`.
     func expectedExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip: return "input"
@@ -405,6 +439,12 @@ private struct RenderShape {
         case .commutativity: return "\(context.forwardName)(rhs, lhs)"
         case .associativity:
             return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
+        case .idempotenceLifted:
+            return "\(context.forwardName)(xs)"
+        case .dualStyleConsistency:
+            return "\(context.forwardName)(x)"
+        case .monotonicity:
+            return "f(a) ≤ f(b) when a ≤ b"
         }
     }
 }

@@ -47,7 +47,8 @@ extension SwiftInferCommand.Verify {
         budget: RoundTripStubEmitter.TrialBudget
     ) throws -> VerifyStubBundle {
         let supportedTemplates: [String] = [
-            "round-trip", "idempotence", "commutativity", "associativity"
+            "round-trip", "idempotence", "commutativity", "associativity",
+            "idempotence-lifted", "dual-style-consistency", "monotonicity"
         ]
         guard supportedTemplates.contains(entry.templateName) else {
             throw VerifyError.unsupportedTemplate(
@@ -204,10 +205,35 @@ extension SwiftInferCommand.Verify {
                 rendererForwardName: call,
                 rendererInverseName: call
             )
+        case "idempotence-lifted", "monotonicity":
+            // V1.48.B — same single-function shape as idempotence /
+            // commutativity / associativity; the per-template emitter
+            // wraps the call differently (idempotence-lifted lifts
+            // through Gen<[T]>; monotonicity sorts before comparing).
+            let call = "\(typeQualifier).\(funcName)"
+            return ResolvedCalls(
+                expressions: [call],
+                rendererForwardName: call,
+                rendererInverseName: call
+            )
+        case "dual-style-consistency":
+            // V1.48.B — pair of expressions: [nonMutCall, mutMethodName].
+            // Resolver fires its own validation (carrier-agnostic;
+            // curated pair list check). Renderer surfaces both halves
+            // as forward / inverse names.
+            let pair = try DualStyleConsistencyPairResolver.resolve(entry)
+            return ResolvedCalls(
+                expressions: [pair.nonMutCall, pair.mutMethodName],
+                rendererForwardName: pair.nonMutCall,
+                rendererInverseName: pair.mutMethodName
+            )
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
-                expected: ["round-trip", "idempotence", "commutativity", "associativity"]
+                expected: [
+                    "round-trip", "idempotence", "commutativity", "associativity",
+                    "idempotence-lifted", "dual-style-consistency", "monotonicity"
+                ]
             )
         }
     }
