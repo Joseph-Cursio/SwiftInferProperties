@@ -17,7 +17,7 @@ import Testing
 /// works. `{ (z: Complex<Double>) in <expr> }` is the cleanest
 /// shape — no user-package fixture needed; the verifier workdir
 /// depends only on swift-numerics + swift-property-based.
-@Suite("Verify pipeline — V1.42.D end-to-end integration")
+@Suite("Verify pipeline — V1.42.D end-to-end integration", .tags(.subprocess))
 struct VerifyPipelineIntegrationTests {
 
     // MARK: - Helpers
