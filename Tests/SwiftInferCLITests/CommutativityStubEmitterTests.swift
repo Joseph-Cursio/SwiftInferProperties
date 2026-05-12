@@ -169,12 +169,20 @@ struct CommutativityStubEmitterTests {
     @Test("Complex<Double> edge pass biases lhs to edge generator + rhs to default")
     func complexEdgePassBiasesFirstValue() throws {
         let source = try CommutativityStubEmitter.emit(Self.inputs())
-        // Edge pass declares both generators; lhs draws from edge, rhs
-        // from default — surfaces "edge × finite" pairings (~10/100).
+        // Edge pass declares the edge generator; the rhs reuses Pass
+        // 1's top-level `defaultGenerator` (declaring a second
+        // top-level `let defaultGenerator` would clash). lhs draws
+        // from edge, rhs from default — surfaces "edge × finite"
+        // pairings (~10/100).
         #expect(source.contains("let edgeGenerator: Generator<Complex<Double>"))
-        #expect(source.contains("let defaultGenerator: Generator<Complex<Double>"))
         #expect(source.contains("let lhs = edgeGenerator.run(using: &rng)"))
         #expect(source.contains("let rhs = defaultGenerator.run(using: &rng)"))
+        // The Pass 1 `defaultGenerator` is the single top-level
+        // declaration — no duplicate in Pass 2.
+        let occurrences = source.components(
+            separatedBy: "let defaultGenerator: Generator<Complex<Double>"
+        ).count - 1
+        #expect(occurrences == 1)
     }
 
     @Test("stub exits 1 on FAIL and 0 on PASS")

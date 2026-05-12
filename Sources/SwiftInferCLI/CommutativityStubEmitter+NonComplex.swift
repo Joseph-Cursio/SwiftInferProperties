@@ -73,10 +73,7 @@ extension CommutativityStubEmitter {
                 if tag == 0 { return Double.nan }
                 return Double.random(in: -1_000_000.0 ... 1_000_000.0)
             }
-        let defaultGenerator: Generator<Double, some SendableSequenceType> =
-            Gen<Int>.int(in: 0 ..< 1).map { _ in
-                Double.random(in: -1_000_000.0 ... 1_000_000.0)
-            }
+        // Pass 2's rhs reuses Pass 1's top-level `defaultGenerator`.
 
         var sampledEdgeIndices: Set<Int> = []
 

@@ -278,4 +278,108 @@ struct VerifyPipelineIntegrationTests {
             Issue.record("expected .bothPass; got \(outcome)")
         }
     }
+
+    // MARK: - V1.45.E.3 commutativity × {Complex<Double>, Double, Int}
+
+    /// Build + run the commutativity verify pipeline against the
+    /// supplied two-argument function-call expression on the given
+    /// carrier. Mirrors `runIdempotencePipeline` but uses
+    /// `CommutativityStubEmitter` so the stub asserts `f(a, b) ≈
+    /// f(b, a)` (or `f(a, b) == f(b, a)` for Int).
+    private static func runCommutativityPipeline(
+        functionCall: String,
+        carrierType: String,
+        budget: CommutativityStubEmitter.TrialBudget = .small
+    ) throws -> VerifyOutcome {
+        let workdir = try makeWorkdir()
+        defer { cleanUp(workdir) }
+        let stubSource = try CommutativityStubEmitter.emit(
+            CommutativityStubEmitter.Inputs(
+                functionCall: functionCall,
+                extraImports: [],
+                carrierType: carrierType,
+                seedHex: canonicalSeed,
+                trialBudget: budget
+            )
+        )
+        _ = try VerifierWorkdir.synthesize(
+            VerifierWorkdir.Inputs(
+                workdir: workdir,
+                userPackage: nil,
+                stubSource: stubSource
+            )
+        )
+        let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+        guard buildOutput.exitCode == 0 else {
+            return .error(reason: "build failed: \(buildOutput.stderr)")
+        }
+        let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+        return VerifyResultParser.parse(runOutput)
+    }
+
+    /// **V1.45.E.3.a — commutativity × Complex<Double> × bothPass.**
+    /// `{ (a, b) in a + b }` over `Complex<Double>` is commutative on
+    /// the finite domain (`a + b == b + a` componentwise) and on the
+    /// non-finite "point at infinity" (swift-numerics' Complex `==`
+    /// collapses all non-finite values to one equivalence class, so
+    /// `f(non-finite, finite) == f(finite, non-finite)` trivially).
+    /// Pipeline reports `.bothPass` with `edgeTrials > 0` and a
+    /// non-zero `edgeSampled` count over 100 trials.
+    @Test("commutativity × Complex<Double>: a+b is commutative across both passes")
+    func commutativityComplexDoubleBothPass() throws {
+        let outcome = try Self.runCommutativityPipeline(
+            functionCall: "{ (a: Complex<Double>, b: Complex<Double>) in a + b }",
+            carrierType: "Complex<Double>"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 100)
+            // edgeSampled is deterministic at a fixed seed but RNG-state-
+            // arithmetic dependent; pin the kit's [0, 12] curated-entry
+            // range contract.
+            #expect((0...12).contains(edgeSampled))
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+    /// **V1.45.E.3.b — commutativity × Double × defaultFails.**
+    /// `{ (a, b) in a - b }` is non-commutative for every unequal
+    /// pair: `a - b == b - a` only when `a == b`. The default
+    /// generator samples in ±1e6 with probability of equal pairs
+    /// vanishingly small (~1/2^53), so the first trial fires.
+    /// Edge pass is skipped by the runner's short-circuit.
+    @Test("commutativity × Double: a-b is non-commutative; fails default pass at trial 0")
+    func commutativityDoubleDefaultFails() throws {
+        let outcome = try Self.runCommutativityPipeline(
+            functionCall: "{ (a: Double, b: Double) in a - b }",
+            carrierType: "Double"
+        )
+        if case .defaultFails = outcome {
+            // Edge pass skipped by short-circuit per proposal §2.2 row 3;
+            // per-field counterexample data is RNG-dependent so we only
+            // pin the case.
+        } else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+        }
+    }
+
+    /// **V1.45.E.3.c — commutativity × Int × bothPass.** Int addition
+    /// `{ (a, b) in a + b }` is commutative; the Int carrier emits
+    /// the V1.44.B/C zero-edge sentinel so the parser produces
+    /// `.bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0)`.
+    @Test("commutativity × Int: a+b is commutative (zero-edge sentinel)")
+    func commutativityIntBothPassSingleSentinel() throws {
+        let outcome = try Self.runCommutativityPipeline(
+            functionCall: "{ (a: Int, b: Int) in a + b }",
+            carrierType: "Int"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
 }

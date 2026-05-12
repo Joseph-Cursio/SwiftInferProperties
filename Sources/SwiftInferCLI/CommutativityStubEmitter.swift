@@ -198,13 +198,9 @@ extension CommutativityStubEmitter {
 
         let edgeGenerator: Generator<Complex<Double>, some SendableSequenceType> =
             Gen<Complex<Double>>.edgeCaseBiased()
-        let defaultGenerator: Generator<Complex<Double>, some SendableSequenceType> =
-            Gen<Int>.int(in: 0 ..< 1).map { _ in
-                Complex(
-                    Double.random(in: -1_000_000.0 ... 1_000_000.0),
-                    Double.random(in: -1_000_000.0 ... 1_000_000.0)
-                )
-            }
+        // Pass 2's rhs draws from Pass 1's `defaultGenerator` — already
+        // declared at top-level scope so it's reachable here. Don't
+        // re-declare or top-level `let` redeclaration fails to compile.
 
         var sampledEdgeIndices: Set<Int> = []
         """
