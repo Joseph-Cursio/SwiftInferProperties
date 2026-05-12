@@ -290,6 +290,7 @@ public enum VerifyResultRenderer {
         switch context.templateName {
         case "idempotence": return RenderShape(kind: .idempotence)
         case "commutativity": return RenderShape(kind: .commutativity)
+        case "associativity": return RenderShape(kind: .associativity)
         default: return RenderShape(kind: .roundTrip)
         }
     }
@@ -356,7 +357,7 @@ public enum VerifyResultRenderer {
 /// Per-template render-time phrasing helper. File-scoped to keep
 /// the type-hierarchy within SwiftLint's `nesting` rule.
 private struct RenderShape {
-    enum Kind { case roundTrip, idempotence, commutativity }
+    enum Kind { case roundTrip, idempotence, commutativity, associativity }
     let kind: Kind
 
     func subjectLine(context: VerifyResultRenderer.Context) -> String {
@@ -368,33 +369,42 @@ private struct RenderShape {
             return "idempotence on \(context.forwardName) over \(context.carrierType)"
         case .commutativity:
             return "commutativity on \(context.forwardName) over \(context.carrierType)"
+        case .associativity:
+            return "associativity on \(context.forwardName) over \(context.carrierType)"
         }
     }
 
-    /// First value line. RT/idempotence: `f(input)`; commutativity: `f(lhs, rhs)`.
+    /// First value line. RT/idempotence: `f(input)`; commutativity:
+    /// `f(lhs, rhs)`; associativity: `f(f(a, b), c)`.
     func forwardExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip, .idempotence: return "\(context.forwardName)(input) "
         case .commutativity: return "\(context.forwardName)(lhs, rhs) "
+        case .associativity:
+            return "\(context.forwardName)(\(context.forwardName)(a, b), c) "
         }
     }
 
     /// Second value line — `reverse(forward(input))` / `f(f(input))` /
-    /// `f(rhs, lhs)` respectively.
+    /// `f(rhs, lhs)` / `f(a, f(b, c))` per template.
     func inverseExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip: return "\(context.inverseName)(\(context.forwardName)(input))"
         case .idempotence: return "\(context.forwardName)(\(context.forwardName)(input))"
         case .commutativity: return "\(context.forwardName)(rhs, lhs)"
+        case .associativity:
+            return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
         }
     }
 
-    /// `input` / `f(input)` / `f(rhs, lhs)` per template.
+    /// `input` / `f(input)` / `f(rhs, lhs)` / `f(a, f(b, c))` per template.
     func expectedExpression(context: VerifyResultRenderer.Context) -> String {
         switch kind {
         case .roundTrip: return "input"
         case .idempotence: return "f(input)"
         case .commutativity: return "\(context.forwardName)(rhs, lhs)"
+        case .associativity:
+            return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
         }
     }
 }

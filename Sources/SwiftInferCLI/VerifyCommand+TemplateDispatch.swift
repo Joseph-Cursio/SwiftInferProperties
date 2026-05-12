@@ -16,9 +16,9 @@ struct VerifyStubBundle {
 extension SwiftInferCommand.Verify {
 
     /// Dispatch on `entry.templateName` to the per-template builder.
-    /// Unsupported templates (associativity, dual-style-consistency,
-    /// monotonicity) raise `.unsupportedTemplate`; v1.46+ widens the
-    /// supported set.
+    /// Unsupported templates (dual-style-consistency, monotonicity,
+    /// idempotence-lifted) raise `.unsupportedTemplate`; v1.47+ widens
+    /// the supported set.
     static func buildStubBundle(
         entry: SemanticIndexEntry,
         budget: RoundTripStubEmitter.TrialBudget
@@ -30,10 +30,12 @@ extension SwiftInferCommand.Verify {
             return try idempotenceStubBundle(entry: entry, budget: budget)
         case "commutativity":
             return try commutativityStubBundle(entry: entry, budget: budget)
+        case "associativity":
+            return try associativityStubBundle(entry: entry, budget: budget)
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
-                expected: ["round-trip", "idempotence", "commutativity"]
+                expected: ["round-trip", "idempotence", "commutativity", "associativity"]
             )
         }
     }
@@ -105,6 +107,33 @@ extension SwiftInferCommand.Verify {
         // `f(lhs, rhs)` and `f(rhs, lhs)` for the two value lines.
         let context = VerifyResultRenderer.Context(
             templateName: "commutativity",
+            forwardName: resolved.functionCall,
+            inverseName: resolved.functionCall,
+            carrierType: entry.typeName ?? "(none)"
+        )
+        return VerifyStubBundle(source: source, rendererContext: context)
+    }
+
+    private static func associativityStubBundle(
+        entry: SemanticIndexEntry,
+        budget: AssociativityStubEmitter.TrialBudget
+    ) throws -> VerifyStubBundle {
+        let resolved = try AssociativityPairResolver.resolve(entry)
+        let source = try AssociativityStubEmitter.emit(
+            AssociativityStubEmitter.Inputs(
+                functionCall: resolved.functionCall,
+                extraImports: [],
+                carrierType: entry.typeName ?? "(none)",
+                seedHex: makeSeedHex(from: entry.identityHash),
+                trialBudget: budget
+            )
+        )
+        // For associativity, both `forwardName` and `inverseName` slots
+        // hold the same single function call. The renderer's
+        // `RenderShape.associativity` reads it once and produces
+        // `f(f(a, b), c)` and `f(a, f(b, c))` for the two value lines.
+        let context = VerifyResultRenderer.Context(
+            templateName: "associativity",
             forwardName: resolved.functionCall,
             inverseName: resolved.functionCall,
             carrierType: entry.typeName ?? "(none)"
