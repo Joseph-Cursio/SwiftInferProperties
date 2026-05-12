@@ -66,21 +66,40 @@ extension SwiftInferCommand.Verify {
             )
         }
         // Route 2: strategist-routed carriers. Falls back to v1.46
-        // when the strategist throws (e.g. carrier == "Int" with no
-        // typeShape would hit the strategist's direct-RawType fast
-        // path, but a typeShape-less unknown carrier would throw).
+        // when the strategist throws **only for templates the v1.46
+        // path supports** (round-trip / idempotence / commutativity /
+        // associativity). v1.48 templates (idempotence-lifted /
+        // dual-style-consistency / monotonicity) have no v1.46
+        // hardcoded path — the fallback for those would surface a
+        // misleading `.unsupportedTemplate` instead of the original
+        // strategist error. **V1.50.B finding**: the cycle-47 full-
+        // surface measurement revealed this misrouting — 49 of the
+        // 109 picks were classified as "unsupported-template" when
+        // the real reason was strategist-side carrier-unsupported.
         do {
             return try strategistBundle(
                 entry: rebound(entry, toCarrier: boundCarrier),
                 budget: budget
             )
-        } catch is VerifyError {
-            return try v1_46HardcodedBundle(
-                entry: rebound(entry, toCarrier: boundCarrier),
-                budget: budget
-            )
+        } catch let error as VerifyError {
+            if Self.v1_46HardcodedTemplates.contains(entry.templateName) {
+                return try v1_46HardcodedBundle(
+                    entry: rebound(entry, toCarrier: boundCarrier),
+                    budget: budget
+                )
+            }
+            throw error
         }
     }
+
+    /// V1.50.B — the 4 templates the v1.46 hardcoded emitters
+    /// support. Used to gate the strategist→v1.46 fallback in
+    /// `buildStubBundle` so v1.48-template entries surface their
+    /// real strategist error rather than a misleading
+    /// `.unsupportedTemplate` from the v1.46 path's default case.
+    private static let v1_46HardcodedTemplates: Set<String> = [
+        "round-trip", "idempotence", "commutativity", "associativity"
+    ]
 
     /// Helper — produce a copy of `entry` with `typeName` set to
     /// `carrier`. Used to thread the `GenericBindingResolver`-bound

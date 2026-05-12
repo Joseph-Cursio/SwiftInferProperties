@@ -41,10 +41,62 @@ extension SwiftInferCommand {
             of `SuggestionIdentity.hash` shown in the `discover` \
             explainability block. If the prefix matches multiple \
             suggestions an ambiguity error names the candidates; if it \
-            matches none an error names the closest few.
+            matches none an error names the closest few. \
+            **V1.50.B**: mutually exclusive with `--all-from-index`; \
+            exactly one of the two must be provided.
             """
         )
-        public var suggestion: String
+        public var suggestion: String?
+
+        /// V1.50.B — survey-mode flag. When set, verify iterates
+        /// every entry in the loaded `SemanticIndex` (or one matching
+        /// the optional `--template` filter), runs the verify
+        /// pipeline per-entry, and emits a per-line JSON record to
+        /// stdout. The first full-surface verify measurement is
+        /// driven by this flag.
+        @Flag(
+            name: .long,
+            help: """
+            Survey mode: load the SemanticIndex (default path or via \
+            --index-path) and run verify against every entry, \
+            emitting one JSON record per entry to stdout. Mutually \
+            exclusive with --suggestion. Parallelism controlled via \
+            --max-parallel.
+            """
+        )
+        public var allFromIndex: Bool = false
+
+        /// V1.50.B — parallelism cap for survey mode. Each verify
+        /// call spawns a `swift build` of a synthesized workdir;
+        /// concurrent builds compete for file descriptors + disk +
+        /// network. Default 4 keeps headroom under macOS soft FD
+        /// limits.
+        @Option(
+            name: .long,
+            help: """
+            Maximum concurrent verify subprocesses in --all-from-index \
+            survey mode. Each subprocess runs a fresh `swift build` + \
+            verifier-binary invocation; high parallelism saturates \
+            disk + file descriptors. Default 4.
+            """
+        )
+        public var maxParallel: Int = 4
+
+        /// V1.50.B — optional template filter for survey mode.
+        /// Limits `--all-from-index` to entries whose templateName
+        /// matches. Useful for surveying a single template arm at a
+        /// time without re-running the full 109-pick walk.
+        @Option(
+            name: .long,
+            help: """
+            Optional template-name filter for --all-from-index. \
+            Entries whose `templateName` doesn't match are skipped \
+            silently. Examples: round-trip, idempotence, commutativity, \
+            associativity, idempotence-lifted, dual-style-consistency, \
+            monotonicity.
+            """
+        )
+        public var template: String?
 
         @Option(
             name: .long,
@@ -91,11 +143,32 @@ extension SwiftInferCommand {
         public init() {}
 
         public func run() async throws {
+            let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            if allFromIndex {
+                if suggestion != nil {
+                    throw VerifyError.invalidArguments(
+                        reason: "--suggestion and --all-from-index are mutually exclusive"
+                    )
+                }
+                try await Self.runAllFromIndex(
+                    indexPathOverride: indexPath,
+                    budgetString: budget,
+                    workingDirectory: workingDirectory,
+                    maxParallel: maxParallel,
+                    templateFilter: template
+                )
+                return
+            }
+            guard let suggestion else {
+                throw VerifyError.invalidArguments(
+                    reason: "either --suggestion <hash> or --all-from-index is required"
+                )
+            }
             let outcome = try Self.runPipeline(
                 suggestionPrefix: suggestion,
                 indexPathOverride: indexPath,
                 budgetString: budget,
-                workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                workingDirectory: workingDirectory
             )
             print(outcome)
         }
@@ -321,6 +394,10 @@ public enum VerifyError: Error, CustomStringConvertible {
     case runnerCrashed(reason: String)
     case unsupportedTemplate(template: String, expected: [String])
     case unsupportedPair(forward: String, supported: [String])
+    /// V1.50.B — argument-validation error surfaced when the user
+    /// passes a forbidden combination (e.g., `--suggestion` and
+    /// `--all-from-index` together, or neither).
+    case invalidArguments(reason: String)
 
     public var description: String {
         switch self {
@@ -376,6 +453,9 @@ public enum VerifyError: Error, CustomStringConvertible {
             return "swift-infer verify: forward-side function '\(forward)' is not in v1.42's "
                 + "curated round-trip pair list. Supported forwards: \(supportedList). "
                 + "Pair-list expansion lands in v1.43."
+
+        case let .invalidArguments(reason):
+            return "swift-infer verify: \(reason)"
         }
     }
 }
