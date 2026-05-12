@@ -625,4 +625,91 @@ struct VerifyPipelineIntegrationTests {
             )
         }
     }
+
+    // MARK: - V1.48.H strategist × {idempotence-lifted, dual-style-consistency, monotonicity}
+
+    /// **V1.48.H.1 — idempotence-lifted × Int × bothPass.**
+    /// `sorted()` over `[Int]` is idempotent — sorting a sorted array
+    /// returns the same array. The V1.48.A composer wraps the
+    /// strategist's `Gen<Int>.int()` via the kit's
+    /// `Generator<Int>.array(of: 0 ... 8)` helper, producing arrays
+    /// of size 0-8 elements. Pipeline reports `.bothPass(100, 0, 0)`
+    /// with the zero-edge sentinel.
+    @Test("idempotence-lifted × Int: sorted() is idempotent over [Int]")
+    func idempotenceLiftedIntBothPass() throws {
+        let outcome = try Self.runStrategistPipeline(
+            functionCalls: ["{ (xs: [Int]) in xs.sorted() }"],
+            carrier: "Int",
+            template: "idempotence-lifted"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+    /// **V1.48.H.2 — dual-style-consistency × Int × bothPass.**
+    /// Trivial pair: non-mutating `{ x in x }` (identity) +
+    /// mutating noop. `nonMut(x) == x` always; `var c = x; (noop)`
+    /// also produces `x`. Consistent by construction.
+    ///
+    /// **Implementation note**: the V1.48.A composer's
+    /// `mutCopy.\(mutMethodName)()` call shape requires a real
+    /// instance method on the carrier. For Int, we'd need to extend
+    /// Int with a noop method — which would require an extension
+    /// inside the synthesized stub. The simpler in-test approach:
+    /// define a struct in the stub with a noop method and run the
+    /// dual-style-consistency check over it. We compose the
+    /// extension via the stub's preamble (extraImports list isn't
+    /// the right channel — there's no preamble channel yet).
+    ///
+    /// V1.48.H.2 takes a different approach: use String's `lowercased()`
+    /// pair with a synthesized mutating wrapper. swift-infer's verify
+    /// pipeline doesn't have a preamble channel for v1.48, so we
+    /// inline the wrapper as a callable closure.
+    /// **Skipped for v1.48** — the V1.48.A composer's mutating-method
+    /// call shape (`copy.\(mutMethodName)()`) requires an extension
+    /// on the carrier type or a stub-preamble channel that v1.48
+    /// doesn't ship. The unit-test coverage in
+    /// `StrategistDispatchEmitterV1_48Tests` pins the emit shape;
+    /// end-to-end coverage of the dual-style composer lands in
+    /// v1.49 after the preamble channel ships (or after cycle-45
+    /// surfaces a concrete cycle-27 dual-style pick that doesn't
+    /// need stub-side type extension).
+    @Test(
+        "dual-style-consistency × Int: skipped pending stub-preamble channel (V1.49+)",
+        .disabled("V1.48.A's mutating-method shape needs a stub-preamble channel")
+    )
+    func dualStyleConsistencyIntBothPass() throws {
+        Issue.record("placeholder — see test docstring")
+    }
+
+    /// **V1.48.H.3 — monotonicity × Int × bothPass.**
+    /// `{ x in x + 1 }` is monotone-increasing on Int. The V1.48.A
+    /// composer draws 2 values, sorts via min/max so a ≤ b, asserts
+    /// f(a) ≤ f(b). The strategist's `Gen<Int>.int()` defaults to
+    /// `.min ... .max` (per swift-property-based 1.2.x), so
+    /// `x + 1` overflow-traps only at `x == Int.max` — probability
+    /// ~100/2^64 over 100 trials, effectively zero. Operations like
+    /// `x * 2` would overflow ~50% of trials and crash; `x + 1` is
+    /// the canonical overflow-safe monotone function for this test
+    /// shape.
+    @Test("monotonicity × Int: x → x+1 is monotone-increasing")
+    func monotonicityIntBothPass() throws {
+        let outcome = try Self.runStrategistPipeline(
+            functionCalls: ["{ (x: Int) in x + 1 }"],
+            carrier: "Int",
+            template: "monotonicity"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
 }
