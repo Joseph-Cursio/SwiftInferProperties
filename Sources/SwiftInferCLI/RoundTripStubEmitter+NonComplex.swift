@@ -10,7 +10,12 @@ extension RoundTripStubEmitter {
         let importsBlock = importsForDouble(inputs.extraImports)
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, carrierBlurb: doubleHeaderBlurb)
-        let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
+        let setup = setupSection(
+            importsBlock: importsBlock,
+            seed: inputs.seedHex,
+            trials: trials,
+            preamble: inputs.preamble
+        )
         let defaultPass = doubleDefaultPass(
             forwardCall: inputs.forwardCall,
             inverseCall: inputs.inverseCall
@@ -115,7 +120,12 @@ extension RoundTripStubEmitter {
         let importsBlock = importsForInt(inputs.extraImports)
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, carrierBlurb: intHeaderBlurb)
-        let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
+        let setup = setupSection(
+            importsBlock: importsBlock,
+            seed: inputs.seedHex,
+            trials: trials,
+            preamble: inputs.preamble
+        )
         let defaultPass = intDefaultPass(
             forwardCall: inputs.forwardCall,
             inverseCall: inputs.inverseCall
