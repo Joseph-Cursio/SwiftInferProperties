@@ -184,9 +184,13 @@ struct StrategistDispatchEmitterEmitTests {
 
     @Test("unsupported template throws .unsupportedTemplate")
     func unsupportedTemplateThrows() throws {
+        // V1.48.A widened the supported template set to 7 entries
+        // (added idempotence-lifted, dual-style-consistency,
+        // monotonicity). Use a template name outside that set to
+        // exercise the .unsupportedTemplate path.
         #expect(throws: VerifyError.self) {
             _ = try StrategistDispatchEmitter.emit(
-                Self.inputs(template: "monotonicity")
+                Self.inputs(template: "homomorphism")
             )
         }
     }
