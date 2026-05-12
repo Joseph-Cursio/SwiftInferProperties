@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 
 /// V1.33.C — `swift-infer index` subcommand (PRD §20.1). Builds (or
@@ -137,7 +138,12 @@ extension SwiftInferCommand {
             // is `now` for new entries; IndexStore.upsert preserves the
             // prior firstSeenAt for already-known entries.
             let freshEntries = pipeline.suggestions.map { suggestion in
-                Self.buildEntry(from: suggestion, decisionsByHash: decisionsByHash, now: now)
+                Self.buildEntry(
+                    from: suggestion,
+                    decisionsByHash: decisionsByHash,
+                    typeShapesByName: pipeline.typeShapesByName,
+                    now: now
+                )
             }
             let diff = Self.computeDiff(
                 priorIndex: indexLoad.index,
@@ -214,10 +220,15 @@ extension SwiftInferCommand {
 
         // MARK: - Suggestion → SemanticIndexEntry projection
 
-        /// Module-internal for V1.33.C unit tests.
+        /// Module-internal for V1.33.C unit tests. V1.47.C adds the
+        /// optional `typeShapesByName` parameter — when present, the
+        /// projection looks up the carrier's `TypeShape` and mirrors
+        /// it onto the entry as `IndexedTypeShape`. Tests that don't
+        /// care can pass an empty map.
         static func buildEntry(
             from suggestion: Suggestion,
             decisionsByHash: [String: DecisionRecord],
+            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             now: String
         ) -> SemanticIndexEntry {
             let evidence = suggestion.evidence.first
@@ -236,6 +247,10 @@ extension SwiftInferCommand {
             let decisionRecord = decisionsByHash[normalizedHash]
             let decisionString = decisionRecord?.decision.rawValue
             let decisionAt = decisionRecord.map { isoTimestamp(from: $0.timestamp) }
+            let typeShape = indexedTypeShape(
+                for: suggestion,
+                typeShapesByName: typeShapesByName
+            )
             return SemanticIndexEntry(
                 identityHash: displayHash,
                 templateName: suggestion.templateName,
@@ -247,8 +262,36 @@ extension SwiftInferCommand {
                 decision: decisionString,
                 decisionAt: decisionAt,
                 firstSeenAt: now,
-                lastSeenAt: now
+                lastSeenAt: now,
+                typeShape: typeShape
             )
+        }
+
+        /// V1.47.C — look up the carrier's TypeShape by bare name (no
+        /// generic argument list) and mirror it onto the entry. Returns
+        /// `nil` when the carrier is a free function (no carrier), a
+        /// stdlib raw type the indexer doesn't store TypeShapes for,
+        /// or a third-party type whose primary declaration isn't in the
+        /// indexed source.
+        private static func indexedTypeShape(
+            for suggestion: Suggestion,
+            typeShapesByName: [String: PropertyLawCore.TypeShape]
+        ) -> IndexedTypeShape? {
+            guard let carrier = suggestion.carrier else { return nil }
+            let bareName = bareTypeName(from: carrier)
+            guard let kitShape = typeShapesByName[bareName] else { return nil }
+            return IndexedTypeShape(from: kitShape)
+        }
+
+        /// Strip the generic argument list from a carrier name so the
+        /// `TypeShape` lookup hits the bare declaration name. e.g.
+        /// `"OrderedSet<Element>"` → `"OrderedSet"`,
+        /// `"Complex<Double>"` → `"Complex"`, `"Int"` → `"Int"`.
+        static func bareTypeName(from carrier: String) -> String {
+            if let openAngle = carrier.firstIndex(of: "<") {
+                return String(carrier[..<openAngle])
+            }
+            return carrier
         }
 
         /// V1.34.C — carrier-type extraction. v1.33 deferred this by

@@ -134,6 +134,13 @@ let package = Package(
                 "SwiftInferCore",
                 "SwiftInferTemplates",
                 "SwiftInferTestLifter",
+                // V1.47 — direct PropertyLawCore dep so IndexCommand
+                // can call TypeShapeBuilder/DerivationStrategist and the
+                // Verify pipeline can dispatch on a strategist result.
+                // Core re-exports the product via its own dep, but
+                // SwiftPM doesn't re-export transitively — the import
+                // has to be explicit.
+                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),

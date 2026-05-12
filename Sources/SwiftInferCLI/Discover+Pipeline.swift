@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 import SwiftInferTemplates
 import SwiftInferTestLifter
@@ -44,18 +45,28 @@ extension SwiftInferCommand.Discover {
         /// the `DomainHint` for the writeout.
         public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
 
+        /// V1.47.C — type declarations the discover pass saw, keyed by
+        /// bare type name (no generic argument list). `IndexCommand`
+        /// reads this to populate `SemanticIndexEntry.typeShape` so the
+        /// verify pipeline can call `DerivationStrategist.strategy(for:)`
+        /// without re-parsing the user's source. Empty for code paths
+        /// that don't need it (the renderer / interactive flows).
+        public let typeShapesByName: [String: PropertyLawCore.TypeShape]
+
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
             inverseElementPairs: [InverseElementPair] = [],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
-            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:]
+            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
+            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:]
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
             self.inverseElementPairs = inverseElementPairs
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
+            self.typeShapesByName = typeShapesByName
         }
     }
 
@@ -120,12 +131,17 @@ extension SwiftInferCommand.Discover {
             ),
             summaries: artifacts.summaries
         )
+        let typeShapesByName = Dictionary(
+            uniqueKeysWithValues: TypeShapeBuilder.shapes(from: artifacts.typeDecls)
+                .map { ($0.name, $0) }
+        )
         return PipelineResult(
             suggestions: visible,
             packageRoot: setup.packageRoot,
             inverseElementPairs: artifacts.inverseElementPairs,
             equivalenceClassHintsByIdentity: equivalenceClassHints,
-            consumerProducerChainHintsByIdentity: chainHints
+            consumerProducerChainHintsByIdentity: chainHints,
+            typeShapesByName: typeShapesByName
         )
     }
 
