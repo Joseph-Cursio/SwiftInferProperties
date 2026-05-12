@@ -47,12 +47,12 @@ struct IdempotenceStubEmitterTests {
     @Test("non-Complex<Double> carrier raises .unsupportedCarrier")
     func unsupportedCarrierThrows() throws {
         do {
-            _ = try IdempotenceStubEmitter.emit(Self.inputs(carrierType: "Int"))
+            _ = try IdempotenceStubEmitter.emit(Self.inputs(carrierType: "Array<Int>"))
             Issue.record("expected .unsupportedCarrier; emit succeeded")
         } catch let error as VerifyError {
             switch error {
             case let .unsupportedCarrier(carrier, expected):
-                #expect(carrier == "Int")
+                #expect(carrier == "Array<Int>")
                 #expect(expected == IdempotenceStubEmitter.supportedCarriers)
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
@@ -60,9 +60,11 @@ struct IdempotenceStubEmitterTests {
         }
     }
 
-    @Test("supportedCarriers contains Complex<Double>")
+    @Test("supportedCarriers contains all three V1.44.C carriers")
     func supportedCarriersListIsLoadBearing() {
         #expect(IdempotenceStubEmitter.supportedCarriers.contains("Complex<Double>"))
+        #expect(IdempotenceStubEmitter.supportedCarriers.contains("Double"))
+        #expect(IdempotenceStubEmitter.supportedCarriers.contains("Int"))
     }
 
     // MARK: - Imports
@@ -185,5 +187,78 @@ struct IdempotenceStubEmitterTests {
         let source = try IdempotenceStubEmitter.emit(Self.inputs())
         #expect(source.contains("exit(1)"))
         #expect(source.contains("exit(0)"))
+    }
+
+    // MARK: - V1.44.C carrier dispatch
+
+    @Test("Double carrier emits two-pass stub (no ComplexModule / PropertyLawComplex imports)")
+    func doubleCarrierEmits() throws {
+        let source = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Double")
+        )
+        #expect(!source.isEmpty)
+        // Double doesn't need Complex imports.
+        #expect(!source.contains("import ComplexModule"))
+        #expect(!source.contains("import PropertyLawComplex"))
+        #expect(source.contains("import RealModule"))
+        #expect(source.contains("import PropertyBased"))
+        #expect(source.contains("import Foundation"))
+    }
+
+    @Test("Double carrier uses inlined doubleWithNaN equivalent for edge pass")
+    func doubleCarrierEdgePassUsesInlinedDoubleWithNaN() throws {
+        let source = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Double")
+        )
+        #expect(source.contains("Gen<Int>.int(in: 0 ..< 20)"))
+        #expect(source.contains("return Double.nan"))
+        // Single-entry edge match — NaN → index 0, else -1.
+        #expect(source.contains("value.isNaN ? 0 : -1"))
+        #expect(!source.contains("complexEdgeCases"))
+    }
+
+    @Test("Double carrier renders f(value) and f(onceResult)")
+    func doubleCarrierFTwiceCallShape() throws {
+        let source = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Double")
+        )
+        #expect(source.contains("abs(value)"))
+        #expect(source.contains("abs(onceResult)"))
+        // Equality is on once vs twice, not value.
+        #expect(source.contains("twiceResult.isApproximatelyEqual(to: onceResult)"))
+    }
+
+    @Test("Int carrier emits single-pass stub (no FP / Complex imports)")
+    func intCarrierEmits() throws {
+        let source = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Int")
+        )
+        #expect(!source.isEmpty)
+        #expect(!source.contains("import ComplexModule"))
+        #expect(!source.contains("import PropertyLawComplex"))
+        #expect(!source.contains("import RealModule"))
+        #expect(source.contains("import PropertyBased"))
+        #expect(source.contains("import Foundation"))
+    }
+
+    @Test("Int carrier uses != (not isApproximatelyEqual) for the inequality check")
+    func intCarrierUsesExactEquality() throws {
+        let source = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Int")
+        )
+        #expect(source.contains("twiceResult != onceResult"))
+        #expect(!source.contains("isApproximatelyEqual"))
+    }
+
+    @Test("Int carrier emits edge-pass sentinel (VERIFY_EDGE_TRIALS: 0)")
+    func intCarrierEmitsEdgeSentinel() throws {
+        let source = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Int")
+        )
+        #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
+        #expect(source.contains("VERIFY_EDGE_TRIALS: 0"))
+        #expect(source.contains("VERIFY_EDGE_SAMPLED: 0"))
+        #expect(!source.contains("VERIFY_EDGE_TRIAL:"))
+        #expect(!source.contains("VERIFY_EDGE_INDEX:"))
     }
 }

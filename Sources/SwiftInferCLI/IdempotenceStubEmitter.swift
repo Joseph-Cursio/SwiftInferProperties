@@ -1,56 +1,42 @@
 import Foundation
 
-/// V1.44.A — synthesizes the standalone Swift source for an
+/// V1.44.A / V1.44.C — synthesizes the standalone Swift source for an
 /// idempotence verify subprocess (`f(f(x)) ≈ f(x)` on a single function
 /// `f: T -> T`).
 ///
-/// **Shape parity with `RoundTripStubEmitter`.** Idempotence is
-/// structurally identical to round-trip's single-function side — same
-/// subprocess shape, same Xoshiro seeded RNG, same two-pass design
-/// (default finite-domain + edge-case-biased), same `VERIFY_DEFAULT_*`
-/// / `VERIFY_EDGE_*` stdout-marker contract. The V1.43.C parser
-/// (`VerifyResultParser`) consumes the markers without modification.
+/// **Shape parity with `RoundTripStubEmitter`.** Same two-pass design,
+/// same Xoshiro seeded RNG, same `VERIFY_DEFAULT_*` / `VERIFY_EDGE_*`
+/// stdout-marker contract. The V1.43.C parser (`VerifyResultParser`)
+/// consumes the markers without modification.
 ///
 /// **Marker field semantics differ from round-trip.** The parser fills
 /// `forwardResult` ← `VERIFY_*_FORWARD` and `inverseResult` ← `VERIFY_*_INVERSE`
 /// regardless of template; for idempotence these map to `f(x)`
 /// (`onceResult`) and `f(f(x))` (`twiceResult`) respectively. The
-/// renderer (V1.43.D extended at V1.44.D) interprets these fields per
-/// template name so the user-facing output reads naturally.
+/// V1.44.D renderer interprets the marker fields per template name.
 ///
-/// **Carrier scope (V1.44.A).** `Complex<Double>` only — the kit's
-/// `PropertyLawComplex` generator gates the carrier set the same way
-/// V1.42 did for round-trip. V1.44.C extends to `Double` + `Int`.
+/// **Carrier scope (V1.44.C).** Three carriers — same set as
+/// `RoundTripStubEmitter` post-V1.44.B:
+///
+///   - `Complex<Double>`: two-pass (default finite + `Gen<Complex<Double>>.edgeCaseBiased()`).
+///   - `Double`: two-pass with inlined `doubleWithNaN` equivalent.
+///   - `Int`: single-pass with inlined `boundedForArithmetic` equivalent
+///     + zero-edge sentinel so `VerifyResultParser` still produces `.bothPass`.
 public enum IdempotenceStubEmitter {
 
-    /// Seed-hex format shared with `RoundTripStubEmitter` — identical
-    /// shape, no point duplicating the nominal type.
+    /// Seed-hex format shared with `RoundTripStubEmitter`.
     public typealias SeedHex = RoundTripStubEmitter.SeedHex
 
-    /// Trial budget shared with `RoundTripStubEmitter` — same N=100 /
-    /// N=1000 semantics.
+    /// Trial budget shared with `RoundTripStubEmitter`.
     public typealias TrialBudget = RoundTripStubEmitter.TrialBudget
 
     /// Inputs to the emitter. Mirrors `RoundTripStubEmitter.Inputs` but
-    /// carries a single `functionCall` (no forward/inverse pair).
+    /// carries a single `functionCall` (idempotence is single-function).
     public struct Inputs: Equatable, Sendable {
-        /// The function under test, written as a call expression
-        /// (e.g. `"Complex.exp"` or `"{ (z: Complex<Double>) in z }"`).
-        /// The emitter appends `(value)` and `(onceResult)`; the
-        /// resulting stub asserts `f(f(value)) ≈ f(value)`.
         public let functionCall: String
-
-        /// User modules to import beyond the mandatory set. Empty
-        /// entries and duplicates are filtered.
         public let extraImports: [String]
-
-        /// Carrier type as carried on the `SemanticIndexEntry`. Must
-        /// be in `supportedCarriers`; other values raise
-        /// `VerifyError.unsupportedCarrier`.
         public let carrierType: String
-
         public let seedHex: SeedHex
-
         public let trialBudget: TrialBudget
 
         public init(
@@ -68,61 +54,73 @@ public enum IdempotenceStubEmitter {
         }
     }
 
-    /// V1.44.A's supported carrier set. Single-element list; V1.44.C
-    /// extends to `["Complex<Double>", "Double", "Int"]`.
-    public static let supportedCarriers: [String] = ["Complex<Double>"]
+    /// V1.44.C's supported carrier set — mirrors `RoundTripStubEmitter`.
+    public static let supportedCarriers: [String] = ["Complex<Double>", "Double", "Int"]
 
-    /// Emit an idempotence verify stub. Validates the carrier, then
-    /// composes the source.
+    /// Emit an idempotence verify stub. Validates the carrier first,
+    /// then dispatches to the per-carrier composer.
     public static func emit(_ inputs: Inputs) throws -> String {
-        guard supportedCarriers.contains(inputs.carrierType) else {
+        guard let carrier = CarrierKind.from(typeName: inputs.carrierType) else {
             throw VerifyError.unsupportedCarrier(
                 carrier: inputs.carrierType,
                 expected: supportedCarriers
             )
         }
-        return composeSource(inputs)
+        switch carrier {
+        case .complexDouble: return composeComplexDoubleSource(inputs)
+        case .double: return composeDoubleSource(inputs)
+        case .int: return composeIntSource(inputs)
+        }
     }
 
-    // MARK: - Composition
+    // MARK: - Carrier dispatch
 
-    private static func composeSource(_ inputs: Inputs) -> String {
-        let importsBlock = importsSection(inputs.extraImports)
+    /// Internal carrier discriminator — mirrors
+    /// `RoundTripStubEmitter.CarrierKind` (intentionally duplicated to
+    /// keep the two emitters' implementation details independent;
+    /// promote to a shared module-internal type when a third template
+    /// reuses it).
+    private enum CarrierKind {
+        case complexDouble
+        case double
+        case int
+
+        static func from(typeName: String) -> CarrierKind? {
+            switch typeName {
+            case "Complex<Double>": return .complexDouble
+            case "Double": return .double
+            case "Int": return .int
+            default: return nil
+            }
+        }
+    }
+}
+
+// V1.44.A carrier — Complex<Double> two-pass emission. Behavior
+// bit-for-bit unchanged from V1.44.A.
+extension IdempotenceStubEmitter {
+
+    static func composeComplexDoubleSource(_ inputs: Inputs) -> String {
+        let importsBlock = importsForComplexDouble(inputs.extraImports)
         let trials = inputs.trialBudget.count
-        let header = headerSection(inputs: inputs)
+        let header = headerSection(inputs: inputs, carrierBlurb: complexDoubleHeaderBlurb)
         let setup = setupSection(importsBlock: importsBlock, seed: inputs.seedHex, trials: trials)
-        let defaultPass = defaultPassSection(functionCall: inputs.functionCall)
-        let edgePass = edgePassSection(functionCall: inputs.functionCall)
+        let defaultPass = complexDoubleDefaultPass(functionCall: inputs.functionCall)
+        let edgePass = complexDoubleEdgePass(functionCall: inputs.functionCall)
         return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
     }
 
-    private static func headerSection(inputs: Inputs) -> String {
-        """
-        // V1.44.A — auto-generated two-pass idempotence verify stub.
-        // Carrier: \(inputs.carrierType)
-        // Function: \(inputs.functionCall) — asserts f(f(x)) ≈ f(x).
-        // Pass 1 (default): inline finite-domain (Double.random in ±1e6).
-        // Pass 2 (edge):    Gen<Complex<Double>>.edgeCaseBiased() from
-        //                   PropertyLawComplex v2.1.0+. Skipped on default fail.
-        """
+    private static let complexDoubleHeaderBlurb =
+        "Pass 1 (default): inline finite-domain (Double.random in ±1e6).\n"
+        + "// Pass 2 (edge):    Gen<Complex<Double>>.edgeCaseBiased() from\n"
+        + "//                   PropertyLawComplex v2.1.0+. Skipped on default fail."
+
+    private static func importsForComplexDouble(_ extra: [String]) -> String {
+        let base = ["ComplexModule", "Foundation", "PropertyBased", "PropertyLawComplex", "RealModule"]
+        return mergedImports(base: base, extra: extra)
     }
 
-    private static func setupSection(importsBlock: String, seed: SeedHex, trials: Int) -> String {
-        """
-        \(importsBlock)
-
-        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
-            0x\(hex(seed.stateA)),
-            0x\(hex(seed.stateB)),
-            0x\(hex(seed.stateC)),
-            0x\(hex(seed.stateD))
-        ))
-
-        let trials = \(trials)
-        """
-    }
-
-    private static func defaultPassSection(functionCall: String) -> String {
+    private static func complexDoubleDefaultPass(functionCall: String) -> String {
         """
         // --- Pass 1: default (inline finite-domain) ---
 
@@ -153,10 +151,9 @@ public enum IdempotenceStubEmitter {
         """
     }
 
-    /// Pass 2 stub source. Same `.rawStorage`-based edge-case matching
-    /// as `RoundTripStubEmitter`'s edge pass (V1.43.E.3.b fix) so the
-    /// 8 distinct non-finite curated entries resolve to their own index.
-    private static func edgePassSection(functionCall: String) -> String {
+    /// `.rawStorage`-based edge match — same V1.43.E.3.b fix as
+    /// `RoundTripStubEmitter`.
+    private static func complexDoubleEdgePass(functionCall: String) -> String {
         """
         // --- Pass 2: edge-case-biased ---
 
@@ -204,12 +201,37 @@ public enum IdempotenceStubEmitter {
         exit(0)
         """
     }
+}
 
-    /// Mandatory imports for the emitted stub. Identical to the round-
-    /// trip emitter's base set: `Complex<Double>` carrier + the seeded
-    /// `Gen` machinery + `PropertyLawComplex`'s `edgeCaseBiased()`.
-    private static func importsSection(_ extra: [String]) -> String {
-        let base = ["ComplexModule", "Foundation", "PropertyBased", "PropertyLawComplex", "RealModule"]
+// V1.44.C shared section helpers — used by all three per-carrier
+// composers. Pure-text composition; no carrier-specific branching.
+extension IdempotenceStubEmitter {
+
+    static func headerSection(inputs: Inputs, carrierBlurb: String) -> String {
+        """
+        // V1.44.C — auto-generated idempotence verify stub.
+        // Carrier: \(inputs.carrierType)
+        // Function: \(inputs.functionCall) — asserts f(f(x)) ≈ f(x).
+        // \(carrierBlurb)
+        """
+    }
+
+    static func setupSection(importsBlock: String, seed: SeedHex, trials: Int) -> String {
+        """
+        \(importsBlock)
+
+        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
+            0x\(hex(seed.stateA)),
+            0x\(hex(seed.stateB)),
+            0x\(hex(seed.stateC)),
+            0x\(hex(seed.stateD))
+        ))
+
+        let trials = \(trials)
+        """
+    }
+
+    static func mergedImports(base: [String], extra: [String]) -> String {
         let extraTrimmed = extra
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -217,7 +239,7 @@ public enum IdempotenceStubEmitter {
         return combined.map { "import \($0)" }.joined(separator: "\n")
     }
 
-    private static func hex(_ word: UInt64) -> String {
+    static func hex(_ word: UInt64) -> String {
         String(word, radix: 16, uppercase: true)
     }
 }
