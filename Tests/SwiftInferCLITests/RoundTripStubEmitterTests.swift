@@ -55,16 +55,18 @@ struct RoundTripStubEmitterTests {
             switch error {
             case let .unsupportedCarrier(carrier, expected):
                 #expect(carrier == "Array<Int>")
-                #expect(expected == ["Complex<Double>"])
+                #expect(expected == RoundTripStubEmitter.supportedCarriers)
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }
         }
     }
 
-    @Test("supportedCarriers contains Complex<Double>")
+    @Test("supportedCarriers contains all three V1.44.B carriers")
     func supportedCarriersListIsLoadBearing() {
         #expect(RoundTripStubEmitter.supportedCarriers.contains("Complex<Double>"))
+        #expect(RoundTripStubEmitter.supportedCarriers.contains("Double"))
+        #expect(RoundTripStubEmitter.supportedCarriers.contains("Int"))
     }
 
     // MARK: - Mandatory imports
@@ -188,5 +190,84 @@ struct RoundTripStubEmitterTests {
         let source = try RoundTripStubEmitter.emit(Self.inputs())
         #expect(source.contains("exit(1)"))
         #expect(source.contains("exit(0)"))
+    }
+
+    // MARK: - V1.44.B carrier dispatch
+
+    @Test("Double carrier emits two-pass stub (no ComplexModule / PropertyLawComplex imports)")
+    func doubleCarrierEmits() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "double", inverseCall: "double", carrierType: "Double")
+        )
+        #expect(!source.isEmpty)
+        // Double doesn't need Complex imports.
+        #expect(!source.contains("import ComplexModule"))
+        #expect(!source.contains("import PropertyLawComplex"))
+        #expect(source.contains("import RealModule"))
+        #expect(source.contains("import PropertyBased"))
+        #expect(source.contains("import Foundation"))
+    }
+
+    @Test("Double carrier uses inlined doubleWithNaN equivalent (NaN at ~5%) for edge pass")
+    func doubleCarrierEdgePassUsesInlinedDoubleWithNaN() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "abs", inverseCall: "abs", carrierType: "Double")
+        )
+        // The inlined doubleWithNaN: Gen<Int>.int(in: 0 ..< 20).map { tag → NaN at tag==0 }
+        #expect(source.contains("Gen<Int>.int(in: 0 ..< 20)"))
+        #expect(source.contains("return Double.nan"))
+        // Single-entry edge match — NaN → index 0, else -1.
+        #expect(source.contains("value.isNaN ? 0 : -1"))
+        // No Complex-specific edge match.
+        #expect(!source.contains("complexEdgeCases"))
+    }
+
+    @Test("Double carrier emits two-pass + VERIFY_EDGE_INDEX marker")
+    func doubleCarrierEmitsTwoPassMarkers() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "abs", inverseCall: "abs", carrierType: "Double")
+        )
+        #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
+        #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
+        #expect(source.contains("VERIFY_EDGE_INDEX:"))
+        #expect(source.contains("VERIFY_EDGE_SAMPLED:"))
+    }
+
+    @Test("Int carrier emits single-pass stub (no FP / Complex imports)")
+    func intCarrierEmits() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "negate", inverseCall: "negate", carrierType: "Int")
+        )
+        #expect(!source.isEmpty)
+        // Int doesn't need any FP / Complex imports.
+        #expect(!source.contains("import ComplexModule"))
+        #expect(!source.contains("import PropertyLawComplex"))
+        #expect(!source.contains("import RealModule"))
+        #expect(source.contains("import PropertyBased"))
+        #expect(source.contains("import Foundation"))
+    }
+
+    @Test("Int carrier uses == (not isApproximatelyEqual) for equality check")
+    func intCarrierUsesExactEquality() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "negate", inverseCall: "negate", carrierType: "Int")
+        )
+        #expect(source.contains("inverseResult != value"))
+        #expect(!source.contains("isApproximatelyEqual"))
+    }
+
+    @Test("Int carrier emits edge-pass sentinel (VERIFY_EDGE_TRIALS: 0)")
+    func intCarrierEmitsEdgeSentinel() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "negate", inverseCall: "negate", carrierType: "Int")
+        )
+        // Single-pass: emit zero-edge sentinel so VerifyResultParser
+        // still produces .bothPass (with edgeTrials: 0, edgeSampled: 0).
+        #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
+        #expect(source.contains("VERIFY_EDGE_TRIALS: 0"))
+        #expect(source.contains("VERIFY_EDGE_SAMPLED: 0"))
+        // No per-trial edge loop / index marker.
+        #expect(!source.contains("VERIFY_EDGE_TRIAL:"))
+        #expect(!source.contains("VERIFY_EDGE_INDEX:"))
     }
 }
