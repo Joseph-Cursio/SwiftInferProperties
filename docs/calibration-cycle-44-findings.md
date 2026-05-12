@@ -106,3 +106,12 @@ No `triage-decisions.json` in `docs/calibration-cycle-44-data/` — cycle 44 did
 ## Open thread carried into v1.48
 
 **Idempotence semantics of `endOfChunk`/`startOfChunk`/`sizeOfChunk` against a bound Int carrier** (§"Per-pick verify outcome predictions" caveat). If cycle-45 measurement surfaces `.bothPass` against the predicted `.defaultFails`, the cycle-27 REJECT verdict for #7–#9 was based on the heuristic conflating name-pattern with idempotence violation. v1.48 should either (a) run the actual verify subprocess against the OrderedAlgorithms package to settle the prediction, or (b) document the discrepancy and use it to refine the cycle-44 prediction model. Either way, the load-bearing finding is the *agreement-rate signal* — predicted-vs-measured tracking is what makes this trajectory meaningful.
+
+
+---
+
+## Cycle-47 reframing caveat (added at v1.51)
+
+The per-pick agreement-rate signal and verifiable-fraction reported in this document are **synthetic-shape-class agreement** — measured on hand-crafted `SemanticIndexEntry` instances constructed inside the integration-test suite to match v1.49 emitter expectations. End-to-end-from-indexer measurement (the verify pipeline running against entries produced by `swift-infer index` against real source) begins at cycle-47 (`docs/calibration-cycle-47-findings.md`) and continues at cycle-48 (`docs/calibration-cycle-48-findings.md`).
+
+The two measurements are complementary, not contradictory: this document's numbers establish the verify-architecture *capability* (cycles 41-46 confirmed agreement on hand-crafted shapes); cycle-47+'s numbers measure the indexer→verify path *end-to-end*. Cycle-48 establishes that closing the carrier-resolution gap (V1.51.A canonicalization) doesn't immediately produce `.bothPass`-class outcomes — a deeper call-expression-shape gap is the next load-bearing fix. See `docs/calibration-cycle-48-findings.md` §"v1.52+ roadmap" for the trajectory.

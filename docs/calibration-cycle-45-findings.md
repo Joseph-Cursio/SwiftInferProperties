@@ -104,3 +104,12 @@ No `triage-decisions.json` in `docs/calibration-cycle-45-data/` — cycle 45 did
 ## Open thread carried into v1.49
 
 **Dual-style-consistency end-to-end integration**. V1.48.H.2 placeholder-skipped; cycle-46+ should land it once the stub-preamble channel or inline-mutation rework ships. Unit-test coverage is in place and pins the load-bearing emit semantics; the gap is integration coverage of the dual-style composer running against a real subprocess build. Per-pick agreement-rate signal is unaffected — the 5 cycle-27 dual-style picks all predict `.bothPass` based on the curated pair semantic, which holds independently of integration-test coverage.
+
+
+---
+
+## Cycle-47 reframing caveat (added at v1.51)
+
+The per-pick agreement-rate signal and verifiable-fraction reported in this document are **synthetic-shape-class agreement** — measured on hand-crafted `SemanticIndexEntry` instances constructed inside the integration-test suite to match v1.49 emitter expectations. End-to-end-from-indexer measurement (the verify pipeline running against entries produced by `swift-infer index` against real source) begins at cycle-47 (`docs/calibration-cycle-47-findings.md`) and continues at cycle-48 (`docs/calibration-cycle-48-findings.md`).
+
+The two measurements are complementary, not contradictory: this document's numbers establish the verify-architecture *capability* (cycles 41-46 confirmed agreement on hand-crafted shapes); cycle-47+'s numbers measure the indexer→verify path *end-to-end*. Cycle-48 establishes that closing the carrier-resolution gap (V1.51.A canonicalization) doesn't immediately produce `.bothPass`-class outcomes — a deeper call-expression-shape gap is the next load-bearing fix. See `docs/calibration-cycle-48-findings.md` §"v1.52+ roadmap" for the trajectory.

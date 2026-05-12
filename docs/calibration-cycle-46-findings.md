@@ -116,3 +116,12 @@ No `triage-decisions.json` in `docs/calibration-cycle-46-data/` — cycle 46 did
 ## Open thread carried into v1.50+
 
 **Cycle-27 source-package indexing for #10 + #11 measurement.** V1.49.B's memberwise emit + V1.49.A's preamble channel architecturally support both picks; the gap is that OrderedCollections (for `_Bucket`) and the NearMiss-defining user package aren't in the cycle-27 sample's indexed source. v1.50+ should either (a) extend the cycle-27 sample harness to optionally include these packages, or (b) frame cycle-46's 93.8% as the corpus-limited measured endpoint and treat the 100% claim as architectural. Either path is defensible; the user picks based on what cycle-47+ aims to measure.
+
+
+---
+
+## Cycle-47 reframing caveat (added at v1.51)
+
+The per-pick agreement-rate signal and verifiable-fraction reported in this document are **synthetic-shape-class agreement** — measured on hand-crafted `SemanticIndexEntry` instances constructed inside the integration-test suite to match v1.49 emitter expectations. End-to-end-from-indexer measurement (the verify pipeline running against entries produced by `swift-infer index` against real source) begins at cycle-47 (`docs/calibration-cycle-47-findings.md`) and continues at cycle-48 (`docs/calibration-cycle-48-findings.md`).
+
+The two measurements are complementary, not contradictory: this document's numbers establish the verify-architecture *capability* (cycles 41-46 confirmed agreement on hand-crafted shapes); cycle-47+'s numbers measure the indexer→verify path *end-to-end*. Cycle-48 establishes that closing the carrier-resolution gap (V1.51.A canonicalization) doesn't immediately produce `.bothPass`-class outcomes — a deeper call-expression-shape gap is the next load-bearing fix. See `docs/calibration-cycle-48-findings.md` §"v1.52+ roadmap" for the trajectory.
