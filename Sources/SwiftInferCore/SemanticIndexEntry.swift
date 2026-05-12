@@ -84,6 +84,17 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// is older than the most recent run).
     public let lastSeenAt: String
 
+    /// V1.47.A — JSON-encodable mirror of the carrier type's
+    /// `PropertyLawCore.TypeShape` (kind + inherited types + stored
+    /// members + user-init/gen flags), populated when discover sees
+    /// the type's declaration in the indexed source. `nil` for stdlib
+    /// raw-type carriers, `Complex<Double>`, types whose primary decl
+    /// the indexer couldn't see, or entries persisted by v1.46-and-
+    /// earlier `swift-infer` releases. The verify pipeline reads this
+    /// to call `DerivationStrategist.strategy(for:)` without
+    /// re-parsing the user's source.
+    public let typeShape: IndexedTypeShape?
+
     public init(
         identityHash: String,
         templateName: String,
@@ -95,7 +106,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         decision: String? = nil,
         decisionAt: String? = nil,
         firstSeenAt: String,
-        lastSeenAt: String
+        lastSeenAt: String,
+        typeShape: IndexedTypeShape? = nil
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -108,16 +120,72 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.decisionAt = decisionAt
         self.firstSeenAt = firstSeenAt
         self.lastSeenAt = lastSeenAt
+        self.typeShape = typeShape
+    }
+
+    // MARK: - Codable
+
+    /// Custom decoder uses `decodeIfPresent` for `typeShape` so
+    /// pre-v1.47 entries (without the field) decode cleanly. All
+    /// other fields stay required — they've been part of the schema
+    /// since v1.33.
+    private enum CodingKeys: String, CodingKey {
+        case identityHash
+        case templateName
+        case typeName
+        case score
+        case tier
+        case primaryFunctionName
+        case location
+        case decision
+        case decisionAt
+        case firstSeenAt
+        case lastSeenAt
+        case typeShape
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.identityHash = try container.decode(String.self, forKey: .identityHash)
+        self.templateName = try container.decode(String.self, forKey: .templateName)
+        self.typeName = try container.decodeIfPresent(String.self, forKey: .typeName)
+        self.score = try container.decode(Int.self, forKey: .score)
+        self.tier = try container.decode(String.self, forKey: .tier)
+        self.primaryFunctionName = try container.decode(String.self, forKey: .primaryFunctionName)
+        self.location = try container.decode(String.self, forKey: .location)
+        self.decision = try container.decodeIfPresent(String.self, forKey: .decision)
+        self.decisionAt = try container.decodeIfPresent(String.self, forKey: .decisionAt)
+        self.firstSeenAt = try container.decode(String.self, forKey: .firstSeenAt)
+        self.lastSeenAt = try container.decode(String.self, forKey: .lastSeenAt)
+        self.typeShape = try container.decodeIfPresent(IndexedTypeShape.self, forKey: .typeShape)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(identityHash, forKey: .identityHash)
+        try container.encode(templateName, forKey: .templateName)
+        try container.encodeIfPresent(typeName, forKey: .typeName)
+        try container.encode(score, forKey: .score)
+        try container.encode(tier, forKey: .tier)
+        try container.encode(primaryFunctionName, forKey: .primaryFunctionName)
+        try container.encode(location, forKey: .location)
+        try container.encodeIfPresent(decision, forKey: .decision)
+        try container.encodeIfPresent(decisionAt, forKey: .decisionAt)
+        try container.encode(firstSeenAt, forKey: .firstSeenAt)
+        try container.encode(lastSeenAt, forKey: .lastSeenAt)
+        try container.encodeIfPresent(typeShape, forKey: .typeShape)
     }
 
     /// Returns a copy of `self` with the upsert-mutable columns
     /// (`score`, `tier`, `primaryFunctionName`, `location`, `decision`,
-    /// `decisionAt`, `lastSeenAt`) replaced from `other` while
-    /// preserving `firstSeenAt` from `self`. Used by `IndexStore.upsert`
-    /// (V1.33.B). `identityHash`, `templateName`, `typeName` are
-    /// immutable across upserts (the PRD §7.5 identity hash is a
-    /// function of those fields, so they cannot change without also
-    /// changing the hash).
+    /// `decisionAt`, `lastSeenAt`, `typeShape`) replaced from `other`
+    /// while preserving `firstSeenAt` from `self`. Used by
+    /// `IndexStore.upsert` (V1.33.B). `identityHash`, `templateName`,
+    /// `typeName` are immutable across upserts (the PRD §7.5 identity
+    /// hash is a function of those fields, so they cannot change
+    /// without also changing the hash). `typeShape` is upsert-mutable
+    /// because the type's structural shape can evolve (e.g., a user
+    /// adds a stored property between two indexer runs).
     public func updated(from other: SemanticIndexEntry) -> SemanticIndexEntry {
         SemanticIndexEntry(
             identityHash: identityHash,
@@ -130,7 +198,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             decision: other.decision,
             decisionAt: other.decisionAt,
             firstSeenAt: firstSeenAt,
-            lastSeenAt: other.lastSeenAt
+            lastSeenAt: other.lastSeenAt,
+            typeShape: other.typeShape
         )
     }
 }

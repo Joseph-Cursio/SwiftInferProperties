@@ -22,9 +22,19 @@ public enum IndexStore {
 
     /// Current schema version. Increment on backward-incompatible
     /// schema changes; pre-existing v1 files implicitly map to 1 when
-    /// the field is absent (no such files exist yet — v1.33 introduces
-    /// the format).
-    public static let currentSchemaVersion: Int = 1
+    /// the field is absent.
+    ///
+    /// **History.** v1 = v1.33 initial format. v2 = v1.47 — adds the
+    /// optional `typeShape: IndexedTypeShape?` field on
+    /// `SemanticIndexEntry` so the verify pipeline can call
+    /// `DerivationStrategist.strategy(for:)` against the persisted
+    /// type structure without re-parsing the user's source. v1 files
+    /// decode cleanly into v2 (the `typeShape` field is
+    /// `decodeIfPresent`-optional), so the bump is backward-
+    /// compatible at the entry level — readers may still want to bump
+    /// the schemaVersion on the wrapping `Index` for forensic
+    /// "when did this index get written" filtering.
+    public static let currentSchemaVersion: Int = 2
 
     /// The on-disk index value. Encoded as JSON with stable key
     /// ordering (alphabetical) + pretty-printing so diffs are clean
