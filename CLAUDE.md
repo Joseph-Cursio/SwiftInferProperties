@@ -4,29 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.55.0** — fifty-second calibration cycle and **fifth Phase 2 gap-closing cycle**. **Single-workstream release** — V1.55.A per-function default-pass domain for Complex round-trip in `Sources/SwiftInferCLI/RoundTripStubEmitter.swift` (2-entry curated table: `cos`/`acos`/`cosh`/`acosh` use `Re ∈ [0, 1.5]` because their inverses are right-half-plane; everything else — exp/log + sin/asin + tan/atan + sinh/asinh + tanh/atanh — uses symmetric `±1.5` for both Re and Im). Closes the cycle-51 generator-tuning finding: the v1.42 `Double.random(in: -1e6 ... 1e6)` range exceeded the EF surface's stable domain, producing 8 spurious `.defaultFails`. Iteration: first cut used uniform `±1.5` which closed 6 of 8 picks; the cos/cosh failure surfaced the right-half-plane constraint; the final per-function table closed all 8. **Test count unchanged at 2396**; **non-subprocess fast path 2396/2396 in ~4s**.
+**Current: v1.56.0** — fifty-third calibration cycle and **sixth Phase 2 gap-closing cycle**. **Single-workstream release** — V1.56.A internal-API build-failure reclassification (new helper `architecturalPendingDetail(buildStdout:buildStderr:)` in `Sources/SwiftInferCLI/VerifyCommand+AllFromIndex.swift` checks both streams for the Swift compiler's `"is inaccessible due to '<access-level>' protection level"` pattern; on match, the surveyRecord path returns `.architecturalCoveragePending` with detail `"internal-api-not-accessible"` instead of `.measuredError`). V1.56.B 6 unit tests pin the matcher behavior (internal/private/fileprivate access-modifier variations, stdout vs stderr stream detection, nil-returns for non-matching inputs). Closes the cycle-52 `.measured-error` residual: 2 `Complex.rescaledDivide(_:_:)` picks (declared `internal` in swift-numerics) reclassify from `.measured-error` to `.architectural-coverage-pending`. **Methodology lesson learned**: cycle-53's first run with stderr-only check missed the diagnostic (compiler emits to stdout when run as subprocess); both-stream check + unit tests now pin the behavior. **Test count 2396 → 2402 (+6)**; **non-subprocess fast path 2402/2402 in ~4s**.
 
-**Cycle-52 measurement headline**: **20/109 = 18.3% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error) — count unchanged from cycle-51, but **category quality substantially improved**: 8 picks moved from misleading `.defaultFails` to correct `.edgeCaseAdvisory`. Distribution: 6 `.bothPass` (unchanged) + 6 `.defaultFails` (unchanged: Complex `pow`/`/`/`-` × commutativity + associativity) + **8 `.edgeCaseAdvisory` (NEW: all round-trip Complex EF surface — exp/log/sin/cos/tan/sinh/cosh/tanh)** + 2 `.measured-error` (unchanged: `_relaxedMul`/`rescaledDivide` build-failed) + 87 pending.
+**Cycle-53 measurement headline**: **20/109 = 18.3% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error) — total count unchanged from cycle-52, but **`.measured-error` count drops to 0** for the first time since cycle-47's full-surface measurement began. The 2 cycle-52 `rescaledDivide` picks shift `.measured-error → .architectural-coverage-pending` with detail `"internal-api-not-accessible"`. **The `.measured-error = 0` baseline is now a CI-able alarm**: any future cycle producing measured-error > 0 indicates an unexpected build/runtime failure (not a known measurement-tooling gap), motivating immediate investigation. Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + **0 `.measured-error`** + 89 `.architectural-coverage-pending`.
 
-**First non-zero `.edgeCaseAdvisory` measurement in the project's calibration history.** The v1.43 two-pass advisory design — forward-looking architectural work since v1.43 — now demonstrably produces its intended outcomes at scale for FP carriers across the EF surface. Default pass passes 100/100 within the principal-branch domain; the edge pass surfaces overflow at large inputs (the v1.43 design's intended advisory signal).
+**`.architectural-coverage-pending` category now has structured detail strings:**
+- 87 picks: `unsupported-carrier:<Type>` — OC + Algo generic-instantiation gap (v1.57+ TypeShape work)
+- 2 picks: `internal-api-not-accessible` — access-level gap (V1.56.A; deferred fix)
+- 3 picks: `unsupported-carrier:(none)` — typeName field null in index, likely indexer bug (v1.57+)
 
-**32-pick sample-subset agreement with cycle-46 predictions**:
-- **Strict 4-category match**: 5/13 = 38% (unchanged from cycle-51; 4 EF picks predicted `.bothPass` are now `.edgeCaseAdvisory`, neither matches strictly).
-- **Semantic "property holds" match**: 13/13 = **100%** (up from cycle-51's 38%). Under the interpretation that `.edgeCaseAdvisory` refines `.bothPass` (property holds in default domain + edge cases overflow), all 13 measurable subset picks match.
+**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-52):
+- **Strict 4-category match**: 5/13 = 38%
+- **Semantic "property holds" match**: 13/13 = **100%**
 
-Both numbers are informative. The strict-match reveals that `.edgeCaseAdvisory` is a real outcome class cycle-46's 4-category prediction didn't enumerate. The semantic-match confirms the architecture identifies the right algebraic outcome at the structural level.
+v1.57+ priorities (per cycle-53 evidence, in priority order):
 
-v1.56+ priorities (per cycle-52 evidence, in priority order):
-
-1. **v1.56-v1.57 — TypeShape-driven generic instantiation** for OC + Algo types. Dominant remaining category (60+ picks). Substantial scope; likely multi-cycle.
-2. **v1.56 — `_relaxedMul` / `rescaledDivide` build-failure investigation** — 2 picks; stub-source inspection.
-3. **v1.56 — Instance-method emission for chunked-Index picks** — closes 3 cycle-46-predicted `.defaultFails`.
-4. **v1.56 — Methodology guard for binding tables** — fixture-level check that every `GenericBindingResolver.curatedBindings` key matches at least one indexer-produced carrier name.
-5. **v1.57+ — Phase 2 accept-flow integration** — the 20-pick measurable sample is now stable + high-quality (100% semantic agreement); accept-flow can begin consuming verify outcomes.
-6. **v1.57+ — Per-function default-pass domain refinement** — extend the V1.55.A 2-entry table with more granular per-function ranges as cycle-N evidence reveals additional domain boundaries.
+1. **v1.57-v1.58 — TypeShape-driven generic instantiation** for OC + Algo types — dominant remaining category (87 `unsupported-carrier` picks). Multi-cycle scope.
+2. **v1.57 — Instance-method emission** for OC + Algo wrappers — closes a subset of the OC picks once TypeShape work lands.
+3. **v1.57 — Methodology guard for binding tables** — fixture-level check that every `GenericBindingResolver.curatedBindings` key matches at least one indexer-produced carrier name. Prevents V1.51.B + V1.52.C latent-key recurrence.
+4. **v1.57 — Investigate the 3 `(none)`-typeName picks** — likely indexer-side bug; small scope.
+5. **v1.58+ — Phase 2 accept-flow integration** — the 20-pick measurable sample + clean `.measured-error = 0` baseline make accept-flow viable.
+6. **v1.58+ — Optional indexer-time non-public filter** — drop the 2 internal-API picks from the index entirely; decision deferred (preserves v1.29-frozen baseline by default).
 7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.55 Calibration Plan.md` (v1.55 specifics), `docs/calibration-cycle-52-findings.md` (V1.55.A pays off + first `.edgeCaseAdvisory` at scale + 100% semantic agreement), `docs/calibration-cycle-52-data/full-surface-summary.md` (template × outcome cross-tab + first-cut/final-cut iteration history + cycle-46 sample-subset comparison).
+Full list in `docs/archive/v1.56 Calibration Plan.md` (v1.56 specifics), `docs/calibration-cycle-53-findings.md` (V1.56.A reclassification + `.measured-error = 0` clean baseline + v1.57+ roadmap), `docs/calibration-cycle-53-data/full-surface-summary.md` (template × outcome cross-tab + `.architectural-coverage-pending` detail-string breakdown).
+
+---
+
+[previous: v1.55.0] — fifty-second calibration cycle and **fifth Phase 2 gap-closing cycle**. **Single-workstream release** — V1.55.A per-function default-pass domain for Complex round-trip (2-entry curated table: cos/cosh use `Re ∈ [0, 1.5]`; everything else uses symmetric `±1.5`). Closes the cycle-51 generator-tuning finding. **Cycle-52 headline**: 20/109 = 18.3% measured-execution unchanged from cycle-51 but category quality improved — 8 picks shift from misleading `.defaultFails` to correct `.edgeCaseAdvisory` (first non-zero advisory measurement). Cycle-46 semantic agreement reaches 100% on the measurable subset.
 
 ---
 
