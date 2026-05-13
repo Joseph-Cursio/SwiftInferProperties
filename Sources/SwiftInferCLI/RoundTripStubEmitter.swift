@@ -196,15 +196,58 @@ extension RoundTripStubEmitter {
         return mergedImports(base: base, extra: extra)
     }
 
+    /// V1.55.A — narrow per-function default-pass domain for the
+    /// round-trip Complex generator. Returns a `(reMin, reMax, imMin, imMax)`
+    /// quadruple as Double literals to interpolate into the stub.
+    ///
+    /// **Why per-function**. Cycle-51 measurement (`docs/calibration-
+    /// cycle-51-findings.md`) showed the ±1e6 default range broke 8
+    /// round-trip Complex EF picks because it exceeded the functions'
+    /// stable domains. Cycle-52 with a uniform ±1.5 range fixed 6 of
+    /// the 8 (`exp/log`, `sin/asin`, `tan/atan`, `sinh/asinh`,
+    /// `tanh/atanh`) but `cos/acos` and `cosh/acosh` still failed —
+    /// their principal-branch inverses return values with `Re ≥ 0`,
+    /// so the round-trip only holds when `Re(input) ≥ 0`.
+    ///
+    /// **Cycle-52 scope**: 2 distinct domains. The lookup table can
+    /// grow per function as future cycles surface other domain
+    /// boundaries (e.g., `exp`'s `Im ∈ (-π, π]` principal branch when
+    /// the round-trip pair includes log's branch cut).
+    private static func complexDefaultPassDomain(forwardCall: String) -> (String, String, String, String) {
+        let bareName = forwardCall.split(separator: ".").last.map(String.init) ?? forwardCall
+        switch bareName {
+        case "cos", "acos", "cosh", "acosh":
+            // `acos`/`acosh` principal branch returns `Re ≥ 0`, so the
+            // round-trip `acos(cos(z)) == z` only holds for the right
+            // half-plane.
+            return ("0.0", "1.5", "-1.5", "1.5")
+        default:
+            // exp/log + sin/asin + tan/atan + sinh/asinh + tanh/atanh:
+            // all symmetric round-trip pairs holding on `|Re| ≤ π/2`.
+            return ("-1.5", "1.5", "-1.5", "1.5")
+        }
+    }
+
     private static func complexDoubleDefaultPass(forwardCall: String, inverseCall: String) -> String {
-        """
+        let (reMin, reMax, imMin, imMax) = complexDefaultPassDomain(forwardCall: forwardCall)
+        return """
         // --- Pass 1: default (inline finite-domain) ---
+        //
+        // V1.55.A — per-function default-pass domain. Cycle-52 evidence
+        // (`docs/calibration-cycle-52-findings.md`) showed the round-trip
+        // property holds only within each EF pair's principal-branch
+        // domain; uniform ±1e6 (v1.42) and ±1.5 (cycle-52 first cut)
+        // both miss cases. cos/cosh need `Re ≥ 0` (right half-plane);
+        // all other EF surface pairs use symmetric ±1.5. The v1.43 edge
+        // pass still tests boundaries via Gen<Complex<Double>>
+        // .edgeCaseBiased, so `.edgeCaseAdvisory` outcomes surface
+        // overflow / boundary behavior beyond the principal branch.
 
         let defaultGenerator: Generator<Complex<Double>, some SendableSequenceType> =
             Gen<Int>.int(in: 0 ..< 1).map { _ in
                 Complex(
-                    Double.random(in: -1_000_000.0 ... 1_000_000.0),
-                    Double.random(in: -1_000_000.0 ... 1_000_000.0)
+                    Double.random(in: \(reMin) ... \(reMax)),
+                    Double.random(in: \(imMin) ... \(imMax))
                 )
             }
 
