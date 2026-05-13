@@ -321,6 +321,14 @@ extension SwiftInferCommand.Verify {
         //         alongside `signal`, not on arbitrary signal mentions.
         let instanceMemberOnType = "cannot be used on type"
         let noExactMatchesInstance = "no exact matches in call to instance method"
+        // V1.63.A — `generic parameter '<X>' could not be inferred` is
+        // the diagnostic Swift produces when a static-call-shape on a
+        // nested generic type can't resolve type arguments (e.g.
+        // `OrderedDictionary.Elements.distance(value, ...)` on OD's
+        // `.elements` view — Swift can't infer Key/Value without an
+        // instance-call shape). Same architectural category as the
+        // other instance-method-shape errors.
+        let cannotInferGenericParam = "could not be inferred"
         let compileCrashOnSignal =
             (buildStdout.contains("compile command failed due to signal")
                 || buildStdout.contains("emit-module command failed due to signal"))
@@ -330,10 +338,12 @@ extension SwiftInferCommand.Verify {
         let stdoutInstanceMember =
             (buildStdout.contains("instance member") && buildStdout.contains(instanceMemberOnType))
             || buildStdout.contains(noExactMatchesInstance)
+            || (buildStdout.contains("generic parameter") && buildStdout.contains(cannotInferGenericParam))
             || compileCrashOnSignal
         let stderrInstanceMember =
             (buildStderr.contains("instance member") && buildStderr.contains(instanceMemberOnType))
             || buildStderr.contains(noExactMatchesInstance)
+            || (buildStderr.contains("generic parameter") && buildStderr.contains(cannotInferGenericParam))
             || stderrCrashOnSignal
         if stdoutInstanceMember || stderrInstanceMember {
             return "instance-method-shape-not-supported"

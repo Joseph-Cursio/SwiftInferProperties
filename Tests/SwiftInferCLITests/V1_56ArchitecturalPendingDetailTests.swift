@@ -147,6 +147,16 @@ struct V1_56ArchitecturalPendingDetailTests {
         #expect(detail == "instance-method-shape-not-supported")
     }
 
+    @Test("V1.63.A: matches `generic parameter ... could not be inferred`")
+    func matchesGenericParameterInference() {
+        let stdout = "error: generic parameter 'Key' could not be inferred"
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "instance-method-shape-not-supported")
+    }
+
     @Test("V1.59.A: matches `requires that X conform to Y` (carrier-conformance gap)")
     func matchesConformanceRequirement() {
         let stdout = """

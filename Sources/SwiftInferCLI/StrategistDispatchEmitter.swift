@@ -210,6 +210,15 @@ public enum StrategistDispatchEmitter {
                 carrierTypeName: carrier,
                 imports: ["Foundation", "OrderedCollections", "PropertyBased"]
             )
+        case "OrderedDictionary<Int, Int>.Elements":
+            // V1.63.A — OrderedDictionary's `.elements` view is the
+            // key-value-pair view. Generator constructs an OD with
+            // 4 keys mapped to derived values.
+            return GeneratorRecipe(
+                expression: "Gen<Int>.int(in: 0 ... 100).map { OrderedDictionary(uniqueKeysWithValues: [($0, $0 * 2), ($0 + 1, ($0 + 1) * 2), ($0 + 2, ($0 + 2) * 2), ($0 + 3, ($0 + 3) * 2)]).elements }",
+                carrierTypeName: carrier,
+                imports: ["Foundation", "OrderedCollections", "PropertyBased"]
+            )
         default:
             return nil
         }

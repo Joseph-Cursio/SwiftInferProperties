@@ -79,7 +79,17 @@ public enum GenericBindingResolver {
         // the 8 cycle-27 dual-style-consistency picks on
         // OS.UnorderedView reach `.bothPass` via V1.61.B's existing
         // dual-style mutating-instance emission.
-        "OrderedSet.UnorderedView": "OrderedSet<Int>.UnorderedView"
+        "OrderedSet.UnorderedView": "OrderedSet<Int>.UnorderedView",
+        // V1.63.A — OrderedDictionary<Key, Value>.Elements is the
+        // key-value-pair view; bound to OrderedDictionary<Int, Int>
+        // .Elements for cycle-27 alignment (Int keys + Int values).
+        // 7 cycle-27 picks span this carrier; 1 idempotence
+        // (OD.Elements.sort) should reach .bothPass via V1.60.A's
+        // mutating-instance emission. The other 6 are template-
+        // signature mismatches (commutativity/associativity on
+        // distance/index(_:offsetBy:)) or Comparable-requiring
+        // monotonicity — both deferred to v1.64+.
+        "OrderedDictionary.Elements": "OrderedDictionary<Int, Int>.Elements"
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,

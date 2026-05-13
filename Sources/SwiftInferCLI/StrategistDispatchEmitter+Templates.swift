@@ -107,7 +107,11 @@ extension StrategistDispatchEmitter {
     /// dual-style picks).
     static let mutatingInstanceCarriers: Set<String> = [
         "OrderedSet<Int>",
-        "OrderedSet<Int>.UnorderedView"
+        "OrderedSet<Int>.UnorderedView",
+        // V1.63.A — OD.Elements (key-value-pair view) is a
+        // MutableCollection with `sort()` etc. Gate it for V1.60.A's
+        // mutating-instance idempotence emission.
+        "OrderedDictionary<Int, Int>.Elements"
     ]
 
     /// V1.60.A — emit the mutating-instance-method idempotence shape.
