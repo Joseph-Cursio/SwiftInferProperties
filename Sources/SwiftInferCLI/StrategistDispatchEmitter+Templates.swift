@@ -103,8 +103,11 @@ extension StrategistDispatchEmitter {
     /// has its idempotence test emitted as `var copy = value;
     /// copy.method()` rather than `Type.method(value)`. Synced with
     /// `StrategistDispatchEmitter.curatedOCRecipe`'s curated carriers.
+    /// V1.62.A — added `OrderedSet<Int>.UnorderedView` (8 cycle-27
+    /// dual-style picks).
     static let mutatingInstanceCarriers: Set<String> = [
-        "OrderedSet<Int>"
+        "OrderedSet<Int>",
+        "OrderedSet<Int>.UnorderedView"
     ]
 
     /// V1.60.A — emit the mutating-instance-method idempotence shape.

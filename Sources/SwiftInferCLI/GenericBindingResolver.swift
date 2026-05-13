@@ -68,7 +68,18 @@ public enum GenericBindingResolver {
         // generator-recipe layer) — that's forward progress from
         // `.architectural-coverage-pending` and surfaces the next
         // gap layer for v1.59.
-        "OrderedSet": "OrderedSet<Int>"
+        "OrderedSet": "OrderedSet<Int>",
+        // V1.62.A — `OrderedSet.UnorderedView` is a nested type on
+        // `OrderedSet<Element>` exposing the same SetAlgebra surface
+        // (formUnion / formIntersection / etc.) but with a slightly
+        // different equality semantic. The bound form is
+        // `OrderedSet<Int>.UnorderedView` — the carrier's generic
+        // parameter is on the outer `OrderedSet`. v1.62 ships a
+        // strategist recipe + extends `mutatingInstanceCarriers` so
+        // the 8 cycle-27 dual-style-consistency picks on
+        // OS.UnorderedView reach `.bothPass` via V1.61.B's existing
+        // dual-style mutating-instance emission.
+        "OrderedSet.UnorderedView": "OrderedSet<Int>.UnorderedView"
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,

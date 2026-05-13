@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.61.0** — fifty-eighth calibration cycle and **eleventh Phase 2 gap-closing cycle; biggest single-cycle measured-execution gain in the project's history (+12 .bothPass)**. V1.61.A fixed `DualStyleConsistencyPairResolver`'s mismatched V1.51.B curated pairs (which treated `formUnion` as both halves; per Swift SetAlgebra: `union (non-mut) ↔ formUnion (mut)`, `intersection ↔ formIntersection`, `symmetricDifference ↔ formSymmetricDifference`, `subtracting ↔ subtract`). Resolver lookup updated to match against either field with parameter-label stripping. V1.61.B `composeMutatingDualStylePass` in `StrategistDispatchEmitter+Templates.swift` — generates 2 OC values per trial, both halves use instance-method call shape with the second value as argument. Gated on `mutatingInstanceCarriers` (V1.60.A's shared gate). **Test count unchanged at 2414** (V1.51.B's 6 tests rewritten with corrected expected values); **non-subprocess fast path 2414/2414 in ~4s**.
+**Current: v1.62.0** — fifty-ninth calibration cycle and **twelfth Phase 2 gap-closing cycle; third OC closure batch**. V1.62.A scaffolds `OrderedSet.UnorderedView` via the 3-edit pattern (binding in `GenericBindingResolver`, recipe in `StrategistDispatchEmitter.curatedOCRecipe`, gate addition in `mutatingInstanceCarriers`). Reuses V1.61.B's `composeMutatingDualStylePass` and V1.61.A's curated SetAlgebra pairs unchanged — same `formUnion`/`formIntersection`/etc. methods on the nested-view type. All 8 cycle-27 OS.UnorderedView dual-style picks close to `.bothPass`. **Test count unchanged at 2414**; **non-subprocess fast path 2414/2414 in ~4s**.
 
-**Cycle-58 measurement headline**: **33/103 = 32.0% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). **+12 vs cycle-57** — all 12 OS SetAlgebra dual-style-consistency picks reached `.bothPass`. **Biggest single-cycle measured-execution gain in the project's history.** Distribution: **19** `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 70 `.architectural-coverage-pending`.
+**Cycle-59 measurement headline**: **41/103 = 39.8% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). **+8 vs cycle-58** — all 8 OS.UnorderedView dual-style picks reached `.bothPass`. Distribution: **27** `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 62 `.architectural-coverage-pending`. **OS-family coverage**: 21/37 = 57% (29 OS<Int> + 8 OS<Int>.UnorderedView picks combined).
+
+**Cycle-58 headline (carried forward)**: 33/103 = 32.0% — +12 OS SetAlgebra dual-style picks closed via V1.61.A curated-pair fix + V1.61.B mutating-instance emission.
 
 **The measurable subset now spans 13 OS picks** (1 idempotence + 12 dual-style) — architecture's OC coverage meaningfully demonstrated.
 
@@ -22,17 +24,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The 13 OS `.bothPass` outcomes extend the measurable set beyond the cycle-46 sample. 100% per-pick mathematical correctness on the SetAlgebra-equivalence contract.
 
-v1.62+ priorities (per cycle-58 evidence, in priority order):
+v1.63+ priorities (per cycle-59 evidence, in priority order):
 
-1. **v1.62 — Commutativity/associativity instance-method emission**. 4 picks (`index(_:offsetBy:)`, `distance(from:to:)` × commutativity + associativity). Shape: `value.method(args)` instead of `Type.method(value, args)`. `distance` may surface as `.defaultFails` (signed) — correct verifier behavior on a non-property.
-2. **v1.62-v1.63 — Strategist recipes for nested-OC carriers** (33 picks: 8 OrderedSet.UnorderedView, 7 OrderedDictionary.Elements, 6 each for several others).
-3. **v1.63 — Comparable-aware monotonicity composer** (2 picks).
-4. **v1.63 — Strategist recipes for non-OC generics** (17 picks: `_HashTable`, `ChunkedByCollection`, etc.).
-5. **v1.64+ — Phase 2 accept-flow integration** — demonstrably viable (32% measured rate, 0 measured-error).
-6. **v1.64+ — Methodology-guard parallel for curated-pair tables** — V1.58.B-style fixture-level check would have surfaced V1.51.B's mismatch pre-merge.
-7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
+1. **v1.63 — Strategist recipes for the remaining nested-OC carriers** (25 picks: 7 OD.Elements, 6 OS.SubSequence, 6 OD.Values, 6 OD.Elements.SubSequence). Each follows the V1.62.A 3-edit pattern (binding + recipe + gate).
+2. **v1.63 — Strategist recipes for non-OC generics** (17 picks: `_HashTable`, `ChunkedByCollection`, etc.).
+3. **v1.64 — Comparable-aware monotonicity composer** (2 picks).
+4. **v1.64 — `_minimumCapacity/_maximumCapacity` curated round-trip pair** (3 picks at the resolver layer; likely reclassify to internal-api).
+5. **v1.65+ — Phase 2 accept-flow integration** — demonstrably viable (40% measured rate, 0 measured-error).
+6. **v1.65+ — Methodology-guard parallel for curated-pair tables** — V1.58.B-style fixture-level check would have surfaced V1.51.B's mismatch pre-merge.
+7. **Discover-layer false-positive cleanup** — 4 commutativity/associativity picks on `distance(from:Int,to:Int)` and `index(_:offsetBy:)` are signature mismatches (args aren't OS type); current architecture can't easily verify them. Deferred indefinitely; investigate discover-side template-match precision.
+8. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.61 Calibration Plan.md` (v1.61 specifics), `docs/calibration-cycle-58-findings.md` (+12 .bothPass; biggest single-cycle gain + v1.62+ roadmap), `docs/calibration-cycle-58-data/full-surface-summary.md`.
+Full list in `docs/archive/v1.62 Calibration Plan.md`, `docs/calibration-cycle-59-findings.md` (+8 .bothPass via UnorderedView scaffold; OS-family 57% measured), `docs/calibration-cycle-59-data/full-surface-summary.md`.
+
+---
+
+[previous: v1.61.0] — fifty-eighth calibration cycle and **eleventh Phase 2 gap-closing cycle; biggest single-cycle measured-execution gain in the project's history (+12 .bothPass)**. V1.61.A fixed `DualStyleConsistencyPairResolver`'s mismatched V1.51.B curated pairs; V1.61.B `composeMutatingDualStylePass` for 2-value-per-trial OC dual-style. Cycle-58 closed all 12 OS SetAlgebra dual-style picks.
 
 ---
 

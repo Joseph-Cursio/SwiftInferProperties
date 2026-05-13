@@ -201,6 +201,15 @@ public enum StrategistDispatchEmitter {
                 carrierTypeName: carrier,
                 imports: ["Foundation", "OrderedCollections", "PropertyBased"]
             )
+        case "OrderedSet<Int>.UnorderedView":
+            // V1.62.A — UnorderedView is reached via the `.unordered`
+            // property on a base OrderedSet. The generator constructs
+            // a fresh OS<Int> and projects its `.unordered`.
+            return GeneratorRecipe(
+                expression: "Gen<Int>.int(in: 0 ... 100).map { OrderedSet([$0, $0 + 1, $0 + 2, $0 + 3]).unordered }",
+                carrierTypeName: carrier,
+                imports: ["Foundation", "OrderedCollections", "PropertyBased"]
+            )
         default:
             return nil
         }
