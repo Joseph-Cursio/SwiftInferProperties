@@ -4,36 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.59.0** — fifty-sixth calibration cycle and **ninth Phase 2 gap-closing cycle; second TypeShape scaffold step**. Three coupled fixes in V1.59.A: (1) **Curated `OrderedSet<Int>` strategist recipe** in `StrategistDispatchEmitter.curatedOCRecipe` with deterministic `Gen<Int>.int(...).map { OrderedSet([...]) }` expression. (2) **`swift-collections` workdir dep** added to `VerifierWorkdir.renderPackageSwift` + `OrderedCollections` product. (3) **Double-qualifier strip in `CallExpressionShape.render`** — surfaced during smoke-test, fixes `OrderedSet.OrderedSet.sort` produced for qualified indexer-output names. Plus V1.59.A reclassification pattern extensions in `architecturalPendingDetail`: 3 new categories — `instance-method-shape-not-supported` (covers explicit "instance member" diagnostic + "no exact matches" + compiler-crash signal-6), `carrier-missing-required-conformance` (monotonicity-on-non-Comparable). V1.59.B 6 unit tests pin the new patterns. **Test count 2406 → 2412 (+6)**; **non-subprocess fast path 2412/2412 in ~4s**.
+**Current: v1.60.0** — fifty-seventh calibration cycle and **tenth Phase 2 gap-closing cycle; first OC closure**. V1.60.A mutating-instance-method idempotence emission for OC carriers (`mutatingInstanceCarriers = {"OrderedSet<Int>"}` in `StrategistDispatchEmitter+Templates.swift`; new `composeMutatingIdempotencePass` helper). Method-name extraction via `functionCall.split(".").last`. New emit shape: `var onceCopy = value; onceCopy.<method>(); var twiceCopy = value; twiceCopy.<method>(); twiceCopy.<method>(); assert onceCopy == twiceCopy`. V1.60.B 2 regression tests pin the shape (positive guard for OS<Int> carrier + negative guard for Int carrier). **`OrderedSet.sort()` × idempotence reaches `.bothPass` at 100 trials — first non-Complex/Double measured-execution in the project's calibration history.** Side-effect: 4 internal-mutating OS picks (`_ensureUnique`, `_isUnique`, `_regenerateHashTable`, `_regenerateExistingHashTable`) reclassify from `instance-method-shape-not-supported` (driven by swift-frontend crash) to `internal-api-not-accessible` (canonical Swift diagnostic) — more accurate category. **Test count 2412 → 2414 (+2)**; **non-subprocess fast path 2414/2414 in ~4s**.
 
-**Cycle-56 measurement headline**: **20/103 = 19.4% measured-execution** — aggregate counts unchanged from cycle-55. v1.59 ships scaffold step #2; the substantial change is in the **detail-string distribution** of the 83 pending picks, not the aggregate. Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + **0 `.measured-error`** + 83 `.architectural-coverage-pending`.
+**Cycle-57 measurement headline**: **21/103 = 20.4% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). **+1 vs cycle-56** — the `OrderedSet.sort()` × idempotence pick reached `.bothPass`. **First non-Complex/Double measured-execution in the project's calibration history.** Distribution: **7** `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 82 `.architectural-coverage-pending`.
 
-**26 OS picks moved past the resolver layer** into `swift build` (compile-failing at instance-method shape). V1.59.A's reclassification pattern matcher absorbs the new build errors cleanly, **preserving the `.measured-error = 0` baseline**.
+**The measurable subset now spans 3 distinct carriers** (Complex, Double, OrderedSet) — architecture demonstrably isn't single-carrier-bound.
 
-**Detail-string distribution shift (cycle-55 → cycle-56)**:
-- `unsupported-carrier: OrderedSet<Int>` 29 → **3** (V1.59.A recipe accepts the carrier; 26 picks moved out)
-- `instance-method-shape-not-supported` 0 → **21** (NEW; the static-call-of-instance-method gap)
-- `internal-api-not-accessible` 2 → **5** (V1.56.A; 3 additional OS picks compile-failed at `internal` access on `_ensureUnique` etc.)
-- `carrier-missing-required-conformance` 0 → **2** (NEW; monotonicity-on-OS<Int> requires Comparable)
-- `unsupported-carrier: <other-OC>` 52 → 52 (unchanged; non-OS carriers still pending v1.60+)
+**Detail-string distribution shift (cycle-56 → cycle-57)**:
+- `instance-method-shape-not-supported` 21 → **16** (-5: 1 to .bothPass, 4 reclassified to internal-api)
+- `internal-api-not-accessible` 5 → **9** (+4; OS internal-mutating picks now produce canonical "is inaccessible" diagnostics under V1.60.A's emit shape instead of compiler crashes)
+- Other categories unchanged.
 
-**6 architecturally-pending categories** (vs ~3 pre-v1.59), each pointing at a specific v1.60+/v1.61+ workstream.
+**V1.60.A side-effect**: 4 OS internal-mutating picks (`_ensureUnique`, `_isUnique`, `_regenerateHashTable`, `_regenerateExistingHashTable`) reclassified from `instance-method-shape-not-supported` (driven by swift-frontend crash; V1.59.A's signal-6 pattern) to `internal-api-not-accessible` (canonical Swift diagnostic; V1.56.A's pattern). More accurate categorization without changing the architectural-pending status.
 
-**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-55):
+**32-pick sample-subset agreement with cycle-46** (unchanged; OS picks aren't in the cycle-46 stratified subset):
 - **Strict 4-category match**: 5/13 = 38%
 - **Semantic "property holds" match**: 13/13 = **100%**
 
-v1.60+ priorities (per cycle-56 evidence, in priority order):
+v1.61+ priorities (per cycle-57 evidence, in priority order):
 
-1. **v1.60 — Mutating-instance-method idempotence + dual-style-consistency emission** for OC. Dominant remaining target (21 instance-method-shape-not-supported picks + 9-12 dual-style picks). New emit shape: `var copy1 = value; copy1.sort(); var copy2 = value; copy2.sort(); copy2.sort(); if copy1 != copy2 { fail }`. Projected to close ~25-30 OS picks to `.bothPass`/`.defaultFails`.
-2. **v1.60 — Investigate the 3 OS picks still at resolver layer** — likely dual-style-consistency taking `DualStyleConsistencyPairResolver` separately.
-3. **v1.60-v1.61 — Strategist recipes for nested-OC carriers** (`OrderedSet.UnorderedView`, `OrderedDictionary.Elements`, etc.). ~33 pending picks.
-4. **v1.61 — Comparable-aware monotonicity composer** (closes 2 picks).
-5. **v1.61 — Strategist recipes for non-OC generics** (`_HashTable`, `ChunkedByCollection`, etc.). ~17 picks.
-6. **v1.62+ — Phase 2 accept-flow integration**.
+1. **v1.61 — Mutating-instance-method dual-style-consistency emission**. 12 picks. Requires (a) fixing `DualStyleConsistencyPairResolver`'s V1.51.B mismatched curated pairs (Swift SetAlgebra: `union` (non-mut) ↔ `formUnion` (mut), `intersection` ↔ `formIntersection`, etc.) + (b) new emit shape: `let nonMutResult = value.union(other); var copy = value; copy.formUnion(other); assert nonMutResult == copy`.
+2. **v1.61 — Commutativity/associativity instance-method emission**. 4 picks. Shape: `value.method(args)` instead of `Type.method(value, args)`. Note: `distance` might not satisfy commutativity (signed) — cycle-58 evidence-driven.
+3. **v1.61-v1.62 — Strategist recipes for nested-OC carriers** (`OrderedSet.UnorderedView`, `OrderedDictionary.Elements`, etc.). ~33 pending picks.
+4. **v1.62 — Comparable-aware monotonicity composer** (2 picks).
+5. **v1.62 — Strategist recipes for non-OC generics** (`_HashTable`, `ChunkedByCollection`, etc.). ~17 picks.
+6. **v1.63+ — Phase 2 accept-flow integration**.
 7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.59 Calibration Plan.md` (v1.59 specifics), `docs/calibration-cycle-56-findings.md` (second TypeShape scaffold step + detail-string distribution shift + v1.60+ roadmap), `docs/calibration-cycle-56-data/full-surface-summary.md`.
+Full list in `docs/archive/v1.60 Calibration Plan.md` (v1.60 specifics), `docs/calibration-cycle-57-findings.md` (first non-Complex/Double measured-bothPass + v1.61+ roadmap), `docs/calibration-cycle-57-data/full-surface-summary.md`.
+
+---
+
+[previous: v1.59.0] — fifty-sixth calibration cycle and **ninth Phase 2 gap-closing cycle; second TypeShape scaffold step**. Three coupled fixes in V1.59.A (curated OC recipe + workdir Package.swift dep + double-qualifier strip in `CallExpressionShape.render`) plus reclassification pattern extensions (3 new architectural-pending categories: `instance-method-shape-not-supported`, `carrier-missing-required-conformance`). V1.59.B 6 unit tests. Cycle-56 aggregate unchanged but detail-string distribution shifted — 26 OS picks moved past resolver layer into compile-fail at instance-method-shape (preserved `.measured-error = 0` baseline).
 
 ---
 
