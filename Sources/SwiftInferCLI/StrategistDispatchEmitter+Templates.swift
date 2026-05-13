@@ -277,6 +277,20 @@ extension StrategistDispatchEmitter {
         }
         let nonMutCall = inputs.functionCalls[0]
         let mutMethodName = inputs.functionCalls[1]
+        // V1.61.B — mutating-instance-method shape for OC dual-style.
+        // SetAlgebra pairs (union/formUnion etc.) take a SECOND OC
+        // value as argument; the v1.48.B shape assumed 0-arg variants
+        // (sorted/sort) and doesn't generalize. Cycle-58 OC dual-style
+        // picks need 2 values per trial + instance-method shape on
+        // both halves: `let nonMut = value.union(other); var copy =
+        // value; copy.formUnion(other); assert nonMut == copy`.
+        if mutatingInstanceCarriers.contains(recipe.carrierTypeName) {
+            return composeMutatingDualStylePass(
+                nonMutCall: nonMutCall,
+                mutMethodName: mutMethodName,
+                recipe: recipe
+            )
+        }
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -292,6 +306,48 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: \\(original)")
+                print("VERIFY_DEFAULT_FORWARD: \\(nonMutResult)")
+                print("VERIFY_DEFAULT_INVERSE: \\(mutCopy)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// V1.61.B — mutating-instance-method dual-style emit shape for
+    /// OC SetAlgebra pairs. Two values per trial; both halves use
+    /// instance-method call shape. The non-mutating method name is
+    /// extracted from `nonMutCall` by splitting on `.` and taking the
+    /// trailing component (e.g. `OrderedSet.union` → `union`); the
+    /// `nonMutMethodName` becomes a 1-arg instance call.
+    private static func composeMutatingDualStylePass(
+        nonMutCall: String,
+        mutMethodName: String,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let nonMutMethodName = nonMutCall.split(separator: ".").last.map(String.init) ?? nonMutCall
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+        // V1.61.B — mutating-instance-method dual-style shape: assert
+        // `value.\(nonMutMethodName)(other)` equals the result of
+        // mutating a copy in place via `copy.\(mutMethodName)(other)`.
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let original = defaultGenerator.run(using: &rng)
+            let other = defaultGenerator.run(using: &rng)
+            let nonMutResult = original.\(nonMutMethodName)(other)
+            var mutCopy = original
+            mutCopy.\(mutMethodName)(other)
+            if nonMutResult != mutCopy {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: (\\(original), \\(other))")
                 print("VERIFY_DEFAULT_FORWARD: \\(nonMutResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(mutCopy)")
                 exit(1)

@@ -36,27 +36,24 @@ public enum DualStyleConsistencyPairResolver {
     }
 
     public static let curated: [Pair] = [
-        // V1.48.B initial 3 entries (Collection family).
+        // V1.48.B initial 3 entries (Collection family; 0-arg variants).
         Pair(nonMutating: "sorted()", mutating: "sort"),
         Pair(nonMutating: "reversed()", mutating: "reverse"),
         Pair(nonMutating: "shuffled()", mutating: "shuffle"),
-        // V1.51.B cycle-27-evidenced additions — OC's
-        // `OrderedSet.UnorderedView` exposes set-algebra mutating /
-        // non-mutating siblings. Per cycle-27 surface evidence the
-        // non-mutating spelling is `form*(_:)` and the mutating
-        // spelling is the same `form*` name acting via in-place
-        // mutation on the receiver. The `formUnion` family pairs
-        // resolve to `(self.form*(_:), copy.form*(_:))`-shaped checks
-        // where the non-mutating call returns a new value and the
-        // mutating call updates `var copy` in place.
-        Pair(nonMutating: "formIntersection(_:)", mutating: "formIntersection"),
-        Pair(nonMutating: "formUnion(_:)", mutating: "formUnion"),
-        Pair(nonMutating: "formSymmetricDifference(_:)", mutating: "formSymmetricDifference"),
-        Pair(nonMutating: "subtract(_:)", mutating: "subtract"),
-        // `OrderedDictionary.merge` family — non-mutating `merging`
+        // V1.61.A — fixed cycle-27-evidenced SetAlgebra pairs (1-arg
+        // variants). V1.51.B's original entries had the non-mutating
+        // half misnamed (treated `formUnion` as both halves). Per
+        // Swift's `SetAlgebra` protocol convention the actual pairing
+        // is `union` (non-mut) ↔ `formUnion` (mut); etc. Cycle-27
+        // captures the **mutating** name as `primaryFunctionName`, so
+        // the resolver's lookup logic is updated below to match
+        // either field.
+        Pair(nonMutating: "union(_:)", mutating: "formUnion"),
+        Pair(nonMutating: "intersection(_:)", mutating: "formIntersection"),
+        Pair(nonMutating: "symmetricDifference(_:)", mutating: "formSymmetricDifference"),
+        Pair(nonMutating: "subtracting(_:)", mutating: "subtract"),
+        // OrderedDictionary.merge family — non-mutating `merging`
         // returns a new dictionary; mutating `merge` updates in place.
-        // Cycle-27 surfaces both call shapes.
-        Pair(nonMutating: "merge(_:uniquingKeysWith:)", mutating: "merge"),
         Pair(nonMutating: "merging(_:uniquingKeysWith:)", mutating: "merge")
     ]
 
@@ -83,10 +80,22 @@ public enum DualStyleConsistencyPairResolver {
                 expected: ["dual-style-consistency"]
             )
         }
-        let nonMutBare = entry.primaryFunctionName
-        guard let pair = curated.first(where: { $0.nonMutating == nonMutBare }) else {
+        // V1.61.A — match `primaryFunctionName` against either the
+        // non-mutating or mutating half of each curated pair. Cycle-27
+        // captures the mutating name (`formUnion(_:)`) for SetAlgebra
+        // picks; earlier V1.48.B picks (`sorted()` etc.) captured the
+        // non-mutating name. Strip parameter labels from the indexer
+        // form before matching against the bare `mutating` half.
+        let primary = entry.primaryFunctionName
+        let primaryBare = RoundTripPairResolver.stripParameterLabels(primary)
+        guard let pair = curated.first(where: { pair in
+            pair.nonMutating == primary
+                || pair.mutating == primary
+                || pair.mutating == primaryBare
+                || RoundTripPairResolver.stripParameterLabels(pair.nonMutating) == primaryBare
+        }) else {
             throw VerifyError.unsupportedPair(
-                forward: nonMutBare,
+                forward: primary,
                 supported: curated.map(\.nonMutating)
             )
         }
