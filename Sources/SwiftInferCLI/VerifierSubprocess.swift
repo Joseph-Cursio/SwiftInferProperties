@@ -51,6 +51,17 @@ public enum VerifierSubprocess {
     /// have already invoked `runSwiftBuild` to produce the binary;
     /// if the path doesn't exist, this throws
     /// `VerifyError.runnerCrashed` with a load-bearing message.
+    ///
+    /// **V1.53.A** — injects `DYLD_LIBRARY_PATH` pointing at the
+    /// active toolchain's swift-testing runtime directory. The
+    /// verifier binary transitively links `libTesting.dylib` (via
+    /// `swift-property-based`'s `import Testing`) but SwiftPM's
+    /// linker bakes an rpath that doesn't match libTesting's actual
+    /// install location on macOS. Cycle-49 (`docs/calibration-
+    /// cycle-49-findings.md`) traced the 12 parse-error picks to
+    /// `dyld: Library not loaded: @rpath/libTesting.dylib`; this
+    /// env-var injection closes that gap at run-time without
+    /// requiring workdir-synthesis changes.
     public static func runVerifierBinary(workdir: URL) throws -> Output {
         let binaryPath = workdir
             .appendingPathComponent(".build")
@@ -65,8 +76,73 @@ public enum VerifierSubprocess {
         return try runProcess(
             executable: binaryPath,
             arguments: [],
-            workingDirectory: workdir
+            workingDirectory: workdir,
+            environment: environmentWithTestingLibraryPath()
         )
+    }
+
+    // MARK: - V1.53.A — libTesting.dylib runtime path
+
+    /// Cached toolchain testing-library directory (e.g.
+    /// `<toolchain>/usr/lib/swift/macosx/testing`). Computed once on
+    /// first access via `xcrun --find swift`; nil if xcrun fails,
+    /// produces an unexpected path, or the testing directory doesn't
+    /// exist. The 109-pick cycle-49 survey paid the xcrun cost 109
+    /// times before this cache existed; v1.53 pays it once.
+    static let cachedTestingLibraryDirectory: String? = computeTestingLibraryDirectory()
+
+    /// Build a fresh subprocess environment with `DYLD_LIBRARY_PATH`
+    /// prepended by the cached testing-library directory (when
+    /// detected). Existing `DYLD_LIBRARY_PATH` entries are preserved
+    /// — appended after the new entry so the user's value wins on
+    /// conflict but our entry resolves missing libraries.
+    ///
+    /// Returns the parent's full environment if the testing dir
+    /// isn't detectable, preserving v1.52 behavior so the fix
+    /// degrades gracefully on machines without xcrun / without the
+    /// expected toolchain layout.
+    private static func environmentWithTestingLibraryPath() -> [String: String] {
+        var env = ProcessInfo.processInfo.environment
+        guard let testingDir = cachedTestingLibraryDirectory else { return env }
+        if let existing = env["DYLD_LIBRARY_PATH"], !existing.isEmpty {
+            env["DYLD_LIBRARY_PATH"] = "\(testingDir):\(existing)"
+        } else {
+            env["DYLD_LIBRARY_PATH"] = testingDir
+        }
+        return env
+    }
+
+    /// Locate the active Swift toolchain's testing-library directory.
+    /// Implementation: shell out to `swift -print-target-info` (via
+    /// `/usr/bin/env`) and parse the JSON for `paths.runtimeResourcePath`,
+    /// then append `macosx/testing`. **Why not `xcrun --find swift`**:
+    /// xcrun returns Xcode's default toolchain, which is *not* the
+    /// toolchain `swift build` actually uses when the user has a
+    /// custom toolchain installed via `swiftly` or `TOOLCHAINS`. The
+    /// `swift -print-target-info` path reports the real runtime
+    /// location, matching what the verifier binary was built against.
+    /// Returns `nil` on any failure — caller falls back to inherited
+    /// environment.
+    private static func computeTestingLibraryDirectory() -> String? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["swift", "-print-target-info"]
+        let stdoutPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = Pipe()
+        do { try process.run() } catch { return nil }
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { return nil }
+        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let paths = json["paths"] as? [String: Any],
+              let runtimeResourcePath = paths["runtimeResourcePath"] as? String,
+              !runtimeResourcePath.isEmpty else { return nil }
+        let testingDir = URL(fileURLWithPath: runtimeResourcePath)
+            .appendingPathComponent("macosx")
+            .appendingPathComponent("testing")
+        guard FileManager.default.fileExists(atPath: testingDir.path) else { return nil }
+        return testingDir.path
     }
 
     // MARK: - Process helper
@@ -74,12 +150,16 @@ public enum VerifierSubprocess {
     private static func runProcess(
         executable: URL,
         arguments: [String],
-        workingDirectory: URL
+        workingDirectory: URL,
+        environment: [String: String]? = nil
     ) throws -> Output {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
         process.currentDirectoryURL = workingDirectory
+        if let environment {
+            process.environment = environment
+        }
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
         process.standardOutput = stdoutPipe
