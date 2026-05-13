@@ -176,6 +176,19 @@ extension SwiftInferCommand.Verify {
             )
             let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
             guard buildOutput.exitCode == 0 else {
+                if let detail = Self.architecturalPendingDetail(
+                    buildStdout: buildOutput.stdout,
+                    buildStderr: buildOutput.stderr
+                ) {
+                    return SurveyRecord(
+                        identityHash: context.identityHash,
+                        templateName: context.templateName,
+                        primaryFunctionName: context.primaryFunctionName,
+                        carrier: context.carrier,
+                        outcome: .architecturalCoveragePending,
+                        outcomeDetail: detail
+                    )
+                }
                 return SurveyRecord(
                     identityHash: context.identityHash,
                     templateName: context.templateName,
@@ -244,6 +257,41 @@ extension SwiftInferCommand.Verify {
             outcome: outcome,
             outcomeDetail: detail
         )
+    }
+
+    /// V1.56.A — reclassify build failures whose cause is a known
+    /// architectural-coverage-pending category, returning a short
+    /// detail string suitable for the SurveyRecord. Returns `nil` when
+    /// the build failure doesn't match any known category — caller
+    /// keeps the v1.52 `.measured-error` classification.
+    ///
+    /// **Currently recognized**:
+    ///   - `is inaccessible due to '<access-level>'` → `"internal-api-not-accessible"`.
+    ///     Cycle-52 surfaced 2 `Complex.rescaledDivide(_:_:)` picks
+    ///     declared `internal` in swift-numerics. Accessibility is a
+    ///     measurement-tooling gap (fix: skip non-public symbols at
+    ///     indexer time, or `@testable import` in the workdir), not a
+    ///     verifier-architecture gap.
+    ///
+    /// **Why both streams**: `swift build` formats compiler diagnostics
+    /// to stdout (parent-process-readable) and emits SwiftPM-level
+    /// errors to stderr. Cycle-53 measurement (`docs/calibration-
+    /// cycle-53-findings.md`) confirmed the "inaccessible due to"
+    /// message lands on stdout; checking both makes the pattern robust
+    /// against SwiftPM future-version changes.
+    ///
+    /// **Extension point**: v1.57+ may add more patterns (e.g. for
+    /// internal-typed parameters, `@_spi` symbols, etc.) as
+    /// cycle-N evidence motivates.
+    static func architecturalPendingDetail(
+        buildStdout: String,
+        buildStderr: String
+    ) -> String? {
+        if buildStdout.contains("is inaccessible due to '")
+            || buildStderr.contains("is inaccessible due to '") {
+            return "internal-api-not-accessible"
+        }
+        return nil
     }
 
     /// Map a `VerifyError` to a short human-readable detail string.
