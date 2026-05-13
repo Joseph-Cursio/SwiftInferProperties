@@ -35,6 +35,9 @@ public enum MonotonicityPairResolver {
         let carrier = entry.typeName ?? "(none)"
         let typeQualifier = RoundTripPairResolver.bareTypeName(from: carrier)
         let funcName = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
-        return Resolved(functionCall: "\(typeQualifier).\(funcName)")
+        return Resolved(functionCall: CallExpressionShape.render(
+            typeQualifier: typeQualifier,
+            bareFunctionName: funcName
+        ))
     }
 }

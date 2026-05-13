@@ -216,8 +216,14 @@ extension SwiftInferCommand.Verify {
             if let pair = RoundTripPairResolver.curated.first(
                 where: { $0.forwardName == forwardBare }
             ) {
-                let forwardCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(pair.forwardName))"
-                let inverseCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(pair.inverseName))"
+                let forwardCall = CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: RoundTripPairResolver.stripParameterLabels(pair.forwardName)
+                )
+                let inverseCall = CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: RoundTripPairResolver.stripParameterLabels(pair.inverseName)
+                )
                 return ResolvedCalls(
                     expressions: [forwardCall, inverseCall],
                     rendererForwardName: forwardCall,
@@ -225,8 +231,14 @@ extension SwiftInferCommand.Verify {
                 )
             }
             if let inverseBare = entry.secondaryFunctionName {
-                let forwardCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(forwardBare))"
-                let inverseCall = "\(typeQualifier).\(RoundTripPairResolver.stripParameterLabels(inverseBare))"
+                let forwardCall = CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: RoundTripPairResolver.stripParameterLabels(forwardBare)
+                )
+                let inverseCall = CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: RoundTripPairResolver.stripParameterLabels(inverseBare)
+                )
                 return ResolvedCalls(
                     expressions: [forwardCall, inverseCall],
                     rendererForwardName: forwardCall,
@@ -238,7 +250,10 @@ extension SwiftInferCommand.Verify {
                 supported: RoundTripPairResolver.curated.map(\.forwardName)
             )
         case "idempotence", "commutativity", "associativity":
-            let call = "\(typeQualifier).\(funcName)"
+            let call = CallExpressionShape.render(
+                typeQualifier: typeQualifier,
+                bareFunctionName: funcName
+            )
             return ResolvedCalls(
                 expressions: [call],
                 rendererForwardName: call,
@@ -249,7 +264,10 @@ extension SwiftInferCommand.Verify {
             // commutativity / associativity; the per-template emitter
             // wraps the call differently (idempotence-lifted lifts
             // through Gen<[T]>; monotonicity sorts before comparing).
-            let call = "\(typeQualifier).\(funcName)"
+            let call = CallExpressionShape.render(
+                typeQualifier: typeQualifier,
+                bareFunctionName: funcName
+            )
             return ResolvedCalls(
                 expressions: [call],
                 rendererForwardName: call,

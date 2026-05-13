@@ -102,14 +102,26 @@ public enum RoundTripPairResolver {
         // The .unsupportedPair error fires only when both lookups fail.
         if let pair = curated.first(where: { $0.forwardName == forwardBare }) {
             return Resolved(
-                forwardCall: "\(typeQualifier).\(stripParameterLabels(pair.forwardName))",
-                inverseCall: "\(typeQualifier).\(stripParameterLabels(pair.inverseName))"
+                forwardCall: CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: stripParameterLabels(pair.forwardName)
+                ),
+                inverseCall: CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: stripParameterLabels(pair.inverseName)
+                )
             )
         }
         if let inverseBare = entry.secondaryFunctionName {
             return Resolved(
-                forwardCall: "\(typeQualifier).\(stripParameterLabels(forwardBare))",
-                inverseCall: "\(typeQualifier).\(stripParameterLabels(inverseBare))"
+                forwardCall: CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: stripParameterLabels(forwardBare)
+                ),
+                inverseCall: CallExpressionShape.render(
+                    typeQualifier: typeQualifier,
+                    bareFunctionName: stripParameterLabels(inverseBare)
+                )
             )
         }
         throw VerifyError.unsupportedPair(

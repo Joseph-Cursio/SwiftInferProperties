@@ -32,30 +32,39 @@ struct RoundTripPairResolverTests {
 
     // MARK: - resolve(_:) — happy paths
 
-    @Test("Complex<Double> + exp(_:) → Complex.exp / Complex.log")
+    // V1.52.A — ElementaryFunctions surface names (exp/log/sin/cos/tan
+    // + hyperbolic + inverse-trig) now route through
+    // `CallExpressionShape.freeFunction`, so the rendered call drops
+    // the `Complex.` qualifier and emits the global free-function form
+    // that swift-numerics ships via `_Numerics.swift`. The static
+    // `Complex.exp(_:)` form compiled but cycle-48 surfaced runtime
+    // SIGABRTs — the free-function form is the canonical call shape
+    // for the property under test.
+
+    @Test("Complex<Double> + exp(_:) → free function exp / log (V1.52.A)")
     func resolvesExpLogPair() throws {
         let result = try RoundTripPairResolver.resolve(Self.entry(primary: "exp(_:)"))
-        #expect(result.forwardCall == "Complex.exp")
-        #expect(result.inverseCall == "Complex.log")
+        #expect(result.forwardCall == "exp")
+        #expect(result.inverseCall == "log")
     }
 
     @Test("bidirectional — log(_:) resolves to inverse exp(_:)")
     func resolvesLogExpPair() throws {
         let result = try RoundTripPairResolver.resolve(Self.entry(primary: "log(_:)"))
-        #expect(result.forwardCall == "Complex.log")
-        #expect(result.inverseCall == "Complex.exp")
+        #expect(result.forwardCall == "log")
+        #expect(result.inverseCall == "exp")
     }
 
     @Test("trigonometric pairs resolve in both directions")
     func resolvesTrigPairs() throws {
         let cosResult = try RoundTripPairResolver.resolve(Self.entry(primary: "cos(_:)"))
-        #expect(cosResult.inverseCall == "Complex.acos")
+        #expect(cosResult.inverseCall == "acos")
         let acosResult = try RoundTripPairResolver.resolve(Self.entry(primary: "acos(_:)"))
-        #expect(acosResult.inverseCall == "Complex.cos")
+        #expect(acosResult.inverseCall == "cos")
         let sinResult = try RoundTripPairResolver.resolve(Self.entry(primary: "sin(_:)"))
-        #expect(sinResult.inverseCall == "Complex.asin")
+        #expect(sinResult.inverseCall == "asin")
         let tanResult = try RoundTripPairResolver.resolve(Self.entry(primary: "tan(_:)"))
-        #expect(tanResult.inverseCall == "Complex.atan")
+        #expect(tanResult.inverseCall == "atan")
     }
 
     // V1.45.D — hyperbolic pairs added to the curated list. Unblocks
@@ -64,31 +73,31 @@ struct RoundTripPairResolverTests {
     @Test("V1.45.D — hyperbolic sinh/asinh pair resolves in both directions")
     func resolvesSinhAsinhPair() throws {
         let sinhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "sinh(_:)"))
-        #expect(sinhResult.forwardCall == "Complex.sinh")
-        #expect(sinhResult.inverseCall == "Complex.asinh")
+        #expect(sinhResult.forwardCall == "sinh")
+        #expect(sinhResult.inverseCall == "asinh")
         let asinhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "asinh(_:)"))
-        #expect(asinhResult.forwardCall == "Complex.asinh")
-        #expect(asinhResult.inverseCall == "Complex.sinh")
+        #expect(asinhResult.forwardCall == "asinh")
+        #expect(asinhResult.inverseCall == "sinh")
     }
 
     @Test("V1.45.D — hyperbolic cosh/acosh pair resolves in both directions")
     func resolvesCoshAcoshPair() throws {
         let coshResult = try RoundTripPairResolver.resolve(Self.entry(primary: "cosh(_:)"))
-        #expect(coshResult.forwardCall == "Complex.cosh")
-        #expect(coshResult.inverseCall == "Complex.acosh")
+        #expect(coshResult.forwardCall == "cosh")
+        #expect(coshResult.inverseCall == "acosh")
         let acoshResult = try RoundTripPairResolver.resolve(Self.entry(primary: "acosh(_:)"))
-        #expect(acoshResult.forwardCall == "Complex.acosh")
-        #expect(acoshResult.inverseCall == "Complex.cosh")
+        #expect(acoshResult.forwardCall == "acosh")
+        #expect(acoshResult.inverseCall == "cosh")
     }
 
     @Test("V1.45.D — hyperbolic tanh/atanh pair resolves in both directions")
     func resolvesTanhAtanhPair() throws {
         let tanhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "tanh(_:)"))
-        #expect(tanhResult.forwardCall == "Complex.tanh")
-        #expect(tanhResult.inverseCall == "Complex.atanh")
+        #expect(tanhResult.forwardCall == "tanh")
+        #expect(tanhResult.inverseCall == "atanh")
         let atanhResult = try RoundTripPairResolver.resolve(Self.entry(primary: "atanh(_:)"))
-        #expect(atanhResult.forwardCall == "Complex.atanh")
-        #expect(atanhResult.inverseCall == "Complex.tanh")
+        #expect(atanhResult.forwardCall == "atanh")
+        #expect(atanhResult.inverseCall == "tanh")
     }
 
     // MARK: - resolve(_:) — error paths
