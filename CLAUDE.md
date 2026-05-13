@@ -4,28 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.58.0** — fifty-fifth calibration cycle and **eighth Phase 2 gap-closing cycle; TypeShape scaffold opening**. Two workstreams: V1.58.A `OrderedSet → OrderedSet<Int>` binding (mirrors V1.51.A's Complex pattern; first OC carrier binding) + V1.58.B methodology guard for `GenericBindingResolver.curatedBindings` (fixture-level test asserts every binding key matches a cycle-27 carrier name or stored-member type-name; surfaced 4 latent V1.47.D bindings — `Self.Index` / `Self.Element` / `Base.Element` / `Iterator.Element` — added to `intentionallyUnmatchedKeys` escape hatch with documented rationale). v1.58 is **scaffolding-only by design**: V1.58.A's binding fires correctly but doesn't close picks (strategist still rejects bound carrier with no curated `OrderedSet<Int>` recipe). Cycle-55 outcome: aggregate counts unchanged; 29 OS picks show detail-string shift `"unsupported-carrier: OrderedSet"` → `"unsupported-carrier: OrderedSet<Int>"` confirming the resolver-layer fires. Full OC closure is v1.59-v1.61 scope (strategist recipe + mutating-instance-method emission + generalize to other OC types). **Pre-existing latent test failures caught + fixed**: V1.51.D's 109-count assertion (broken by v1.57 fixture rebuild; v1.57.0 silently failing) + V1.54.B's `OrderedSet == nil` assertion (broken by V1.58.A binding). **Test count 2403 → 2406 (+3)**; **non-subprocess fast path 2406/2406 in ~4s**.
+**Current: v1.59.0** — fifty-sixth calibration cycle and **ninth Phase 2 gap-closing cycle; second TypeShape scaffold step**. Three coupled fixes in V1.59.A: (1) **Curated `OrderedSet<Int>` strategist recipe** in `StrategistDispatchEmitter.curatedOCRecipe` with deterministic `Gen<Int>.int(...).map { OrderedSet([...]) }` expression. (2) **`swift-collections` workdir dep** added to `VerifierWorkdir.renderPackageSwift` + `OrderedCollections` product. (3) **Double-qualifier strip in `CallExpressionShape.render`** — surfaced during smoke-test, fixes `OrderedSet.OrderedSet.sort` produced for qualified indexer-output names. Plus V1.59.A reclassification pattern extensions in `architecturalPendingDetail`: 3 new categories — `instance-method-shape-not-supported` (covers explicit "instance member" diagnostic + "no exact matches" + compiler-crash signal-6), `carrier-missing-required-conformance` (monotonicity-on-non-Comparable). V1.59.B 6 unit tests pin the new patterns. **Test count 2406 → 2412 (+6)**; **non-subprocess fast path 2412/2412 in ~4s**.
 
-**Cycle-55 measurement headline**: **20/103 = 19.4% measured-execution** — aggregate counts unchanged from cycle-54. V1.58 is scaffolding-only by design; v1.58 doesn't close picks but lays groundwork for v1.59+. Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 83 `.architectural-coverage-pending`.
+**Cycle-56 measurement headline**: **20/103 = 19.4% measured-execution** — aggregate counts unchanged from cycle-55. v1.59 ships scaffold step #2; the substantial change is in the **detail-string distribution** of the 83 pending picks, not the aggregate. Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + **0 `.measured-error`** + 83 `.architectural-coverage-pending`.
 
-**Forward progress visible only in detail strings**: 29 OS picks show `"unsupported-carrier: OrderedSet"` → `"unsupported-carrier: OrderedSet<Int>"` confirming V1.58.A's binding-resolver layer fires. Next-layer gap (strategist's generator recipe) is v1.59 scope.
+**26 OS picks moved past the resolver layer** into `swift build` (compile-failing at instance-method shape). V1.59.A's reclassification pattern matcher absorbs the new build errors cleanly, **preserving the `.measured-error = 0` baseline**.
 
-**V1.58.B methodology guard surfaced 4 latent V1.47.D bindings** (`Self.Index`, `Self.Element`, `Base.Element`, `Iterator.Element`) — preemptive protocol-extension-anticipation entries that never matched cycle-27. Documented in `intentionallyUnmatchedKeys` escape-hatch set with rationale. Future binding-key additions failing the guard force explicit removal or documented escape-hatch entry.
+**Detail-string distribution shift (cycle-55 → cycle-56)**:
+- `unsupported-carrier: OrderedSet<Int>` 29 → **3** (V1.59.A recipe accepts the carrier; 26 picks moved out)
+- `instance-method-shape-not-supported` 0 → **21** (NEW; the static-call-of-instance-method gap)
+- `internal-api-not-accessible` 2 → **5** (V1.56.A; 3 additional OS picks compile-failed at `internal` access on `_ensureUnique` etc.)
+- `carrier-missing-required-conformance` 0 → **2** (NEW; monotonicity-on-OS<Int> requires Comparable)
+- `unsupported-carrier: <other-OC>` 52 → 52 (unchanged; non-OS carriers still pending v1.60+)
 
-**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-54):
+**6 architecturally-pending categories** (vs ~3 pre-v1.59), each pointing at a specific v1.60+/v1.61+ workstream.
+
+**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-55):
 - **Strict 4-category match**: 5/13 = 38%
 - **Semantic "property holds" match**: 13/13 = **100%**
 
-v1.59+ priorities (per cycle-55 evidence, in priority order):
+v1.60+ priorities (per cycle-56 evidence, in priority order):
 
-1. **v1.59 — Strategist-side `OrderedSet<Int>` recipe** — closes the v1.58 scaffold-gap-layer. Curated branch in `StrategistDispatchEmitter.resolveRecipe` returning `Gen<[Int]>.array(...).map { OrderedSet($0) }`. Closes the strategist-rejection failure on 29 OS picks.
-2. **v1.59-v1.60 — Mutating-instance-method idempotence emission for OC** — current emit shape doesn't work for `sort()`-style mutating methods. New shape: `var copy1 = value; copy1.sort(); var copy2 = value; copy2.sort(); copy2.sort(); if copy1 != copy2 { fail }`. Once landed, ~5-10 OS picks should reach `.bothPass` / `.defaultFails`.
-3. **v1.60-v1.61 — Generalize TypeShape work to other OC + Algo carriers** — `OrderedSet.UnorderedView`, `OrderedDictionary`, `_HashTable`, `ChunkedByCollection`, `EvenlyChunkedCollection`, `CombinationsSequence`. Pattern established in v1.59-v1.60.
-4. **v1.61+ — Phase 2 accept-flow integration** — demonstrably viable: 20-pick measurable sample, 0 .measured-error, methodology guard preventing latent-key recurrence, 103-pick coherent baseline.
-5. **v1.61+ — Per-function default-pass domain refinement** (v1.55 carry-forward).
-6. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
+1. **v1.60 — Mutating-instance-method idempotence + dual-style-consistency emission** for OC. Dominant remaining target (21 instance-method-shape-not-supported picks + 9-12 dual-style picks). New emit shape: `var copy1 = value; copy1.sort(); var copy2 = value; copy2.sort(); copy2.sort(); if copy1 != copy2 { fail }`. Projected to close ~25-30 OS picks to `.bothPass`/`.defaultFails`.
+2. **v1.60 — Investigate the 3 OS picks still at resolver layer** — likely dual-style-consistency taking `DualStyleConsistencyPairResolver` separately.
+3. **v1.60-v1.61 — Strategist recipes for nested-OC carriers** (`OrderedSet.UnorderedView`, `OrderedDictionary.Elements`, etc.). ~33 pending picks.
+4. **v1.61 — Comparable-aware monotonicity composer** (closes 2 picks).
+5. **v1.61 — Strategist recipes for non-OC generics** (`_HashTable`, `ChunkedByCollection`, etc.). ~17 picks.
+6. **v1.62+ — Phase 2 accept-flow integration**.
+7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.58 Calibration Plan.md` (v1.58 specifics), `docs/calibration-cycle-55-findings.md` (TypeShape scaffold opening + methodology guard findings + v1.59+ roadmap), `docs/calibration-cycle-55-data/full-surface-summary.md`.
+Full list in `docs/archive/v1.59 Calibration Plan.md` (v1.59 specifics), `docs/calibration-cycle-56-findings.md` (second TypeShape scaffold step + detail-string distribution shift + v1.60+ roadmap), `docs/calibration-cycle-56-data/full-surface-summary.md`.
+
+---
+
+[previous: v1.58.0] — fifty-fifth calibration cycle and **eighth Phase 2 gap-closing cycle; TypeShape scaffold opening**. V1.58.A `OrderedSet → OrderedSet<Int>` binding + V1.58.B methodology guard for `GenericBindingResolver.curatedBindings` (surfaced 4 latent V1.47.D bindings). v1.58 was scaffolding-only by design; cycle-55 outcome aggregate-unchanged with detail-string shift on 29 OS picks.
 
 ---
 
