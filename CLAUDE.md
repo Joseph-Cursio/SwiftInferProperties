@@ -4,34 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.60.0** — fifty-seventh calibration cycle and **tenth Phase 2 gap-closing cycle; first OC closure**. V1.60.A mutating-instance-method idempotence emission for OC carriers (`mutatingInstanceCarriers = {"OrderedSet<Int>"}` in `StrategistDispatchEmitter+Templates.swift`; new `composeMutatingIdempotencePass` helper). Method-name extraction via `functionCall.split(".").last`. New emit shape: `var onceCopy = value; onceCopy.<method>(); var twiceCopy = value; twiceCopy.<method>(); twiceCopy.<method>(); assert onceCopy == twiceCopy`. V1.60.B 2 regression tests pin the shape (positive guard for OS<Int> carrier + negative guard for Int carrier). **`OrderedSet.sort()` × idempotence reaches `.bothPass` at 100 trials — first non-Complex/Double measured-execution in the project's calibration history.** Side-effect: 4 internal-mutating OS picks (`_ensureUnique`, `_isUnique`, `_regenerateHashTable`, `_regenerateExistingHashTable`) reclassify from `instance-method-shape-not-supported` (driven by swift-frontend crash) to `internal-api-not-accessible` (canonical Swift diagnostic) — more accurate category. **Test count 2412 → 2414 (+2)**; **non-subprocess fast path 2414/2414 in ~4s**.
+**Current: v1.61.0** — fifty-eighth calibration cycle and **eleventh Phase 2 gap-closing cycle; biggest single-cycle measured-execution gain in the project's history (+12 .bothPass)**. V1.61.A fixed `DualStyleConsistencyPairResolver`'s mismatched V1.51.B curated pairs (which treated `formUnion` as both halves; per Swift SetAlgebra: `union (non-mut) ↔ formUnion (mut)`, `intersection ↔ formIntersection`, `symmetricDifference ↔ formSymmetricDifference`, `subtracting ↔ subtract`). Resolver lookup updated to match against either field with parameter-label stripping. V1.61.B `composeMutatingDualStylePass` in `StrategistDispatchEmitter+Templates.swift` — generates 2 OC values per trial, both halves use instance-method call shape with the second value as argument. Gated on `mutatingInstanceCarriers` (V1.60.A's shared gate). **Test count unchanged at 2414** (V1.51.B's 6 tests rewritten with corrected expected values); **non-subprocess fast path 2414/2414 in ~4s**.
 
-**Cycle-57 measurement headline**: **21/103 = 20.4% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). **+1 vs cycle-56** — the `OrderedSet.sort()` × idempotence pick reached `.bothPass`. **First non-Complex/Double measured-execution in the project's calibration history.** Distribution: **7** `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 82 `.architectural-coverage-pending`.
+**Cycle-58 measurement headline**: **33/103 = 32.0% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). **+12 vs cycle-57** — all 12 OS SetAlgebra dual-style-consistency picks reached `.bothPass`. **Biggest single-cycle measured-execution gain in the project's history.** Distribution: **19** `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 70 `.architectural-coverage-pending`.
 
-**The measurable subset now spans 3 distinct carriers** (Complex, Double, OrderedSet) — architecture demonstrably isn't single-carrier-bound.
+**The measurable subset now spans 13 OS picks** (1 idempotence + 12 dual-style) — architecture's OC coverage meaningfully demonstrated.
 
-**Detail-string distribution shift (cycle-56 → cycle-57)**:
-- `instance-method-shape-not-supported` 21 → **16** (-5: 1 to .bothPass, 4 reclassified to internal-api)
-- `internal-api-not-accessible` 5 → **9** (+4; OS internal-mutating picks now produce canonical "is inaccessible" diagnostics under V1.60.A's emit shape instead of compiler crashes)
+**Detail-string distribution shift (cycle-57 → cycle-58)**:
+- `instance-method-shape-not-supported` 16 → **4** (-12; the 12 OS dual-style picks closed to .bothPass)
 - Other categories unchanged.
 
-**V1.60.A side-effect**: 4 OS internal-mutating picks (`_ensureUnique`, `_isUnique`, `_regenerateHashTable`, `_regenerateExistingHashTable`) reclassified from `instance-method-shape-not-supported` (driven by swift-frontend crash; V1.59.A's signal-6 pattern) to `internal-api-not-accessible` (canonical Swift diagnostic; V1.56.A's pattern). More accurate categorization without changing the architectural-pending status.
+**V1.51.B latent bug fixed**: the mismatched curated pairs (treating `formUnion` as both halves) had blocked 12 picks from reaching `.bothPass` since v1.48 — ~13 release cycles of latent measurement-tooling gap. V1.61.A's correction restores the Swift SetAlgebra pairing (union ↔ formUnion etc.). Methodology lesson: curated-name tables for foreign APIs need cross-checking against the target API's conventions.
 
-**32-pick sample-subset agreement with cycle-46** (unchanged; OS picks aren't in the cycle-46 stratified subset):
+**32-pick sample-subset agreement with cycle-46** (unchanged; OS picks aren't in the stratified subset):
 - **Strict 4-category match**: 5/13 = 38%
 - **Semantic "property holds" match**: 13/13 = **100%**
 
-v1.61+ priorities (per cycle-57 evidence, in priority order):
+The 13 OS `.bothPass` outcomes extend the measurable set beyond the cycle-46 sample. 100% per-pick mathematical correctness on the SetAlgebra-equivalence contract.
 
-1. **v1.61 — Mutating-instance-method dual-style-consistency emission**. 12 picks. Requires (a) fixing `DualStyleConsistencyPairResolver`'s V1.51.B mismatched curated pairs (Swift SetAlgebra: `union` (non-mut) ↔ `formUnion` (mut), `intersection` ↔ `formIntersection`, etc.) + (b) new emit shape: `let nonMutResult = value.union(other); var copy = value; copy.formUnion(other); assert nonMutResult == copy`.
-2. **v1.61 — Commutativity/associativity instance-method emission**. 4 picks. Shape: `value.method(args)` instead of `Type.method(value, args)`. Note: `distance` might not satisfy commutativity (signed) — cycle-58 evidence-driven.
-3. **v1.61-v1.62 — Strategist recipes for nested-OC carriers** (`OrderedSet.UnorderedView`, `OrderedDictionary.Elements`, etc.). ~33 pending picks.
-4. **v1.62 — Comparable-aware monotonicity composer** (2 picks).
-5. **v1.62 — Strategist recipes for non-OC generics** (`_HashTable`, `ChunkedByCollection`, etc.). ~17 picks.
-6. **v1.63+ — Phase 2 accept-flow integration**.
+v1.62+ priorities (per cycle-58 evidence, in priority order):
+
+1. **v1.62 — Commutativity/associativity instance-method emission**. 4 picks (`index(_:offsetBy:)`, `distance(from:to:)` × commutativity + associativity). Shape: `value.method(args)` instead of `Type.method(value, args)`. `distance` may surface as `.defaultFails` (signed) — correct verifier behavior on a non-property.
+2. **v1.62-v1.63 — Strategist recipes for nested-OC carriers** (33 picks: 8 OrderedSet.UnorderedView, 7 OrderedDictionary.Elements, 6 each for several others).
+3. **v1.63 — Comparable-aware monotonicity composer** (2 picks).
+4. **v1.63 — Strategist recipes for non-OC generics** (17 picks: `_HashTable`, `ChunkedByCollection`, etc.).
+5. **v1.64+ — Phase 2 accept-flow integration** — demonstrably viable (32% measured rate, 0 measured-error).
+6. **v1.64+ — Methodology-guard parallel for curated-pair tables** — V1.58.B-style fixture-level check would have surfaced V1.51.B's mismatch pre-merge.
 7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.60 Calibration Plan.md` (v1.60 specifics), `docs/calibration-cycle-57-findings.md` (first non-Complex/Double measured-bothPass + v1.61+ roadmap), `docs/calibration-cycle-57-data/full-surface-summary.md`.
+Full list in `docs/archive/v1.61 Calibration Plan.md` (v1.61 specifics), `docs/calibration-cycle-58-findings.md` (+12 .bothPass; biggest single-cycle gain + v1.62+ roadmap), `docs/calibration-cycle-58-data/full-surface-summary.md`.
+
+---
+
+[previous: v1.60.0] — fifty-seventh calibration cycle and **tenth Phase 2 gap-closing cycle; first OC closure**. V1.60.A mutating-instance-method idempotence emission for OC carriers + V1.60.B regression tests. **`OrderedSet.sort()` × idempotence reaches `.bothPass` at 100 trials** — first non-Complex/Double measured-execution in the project's calibration history.
 
 ---
 
