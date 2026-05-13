@@ -51,7 +51,27 @@ public enum GenericBindingResolver {
         // bare form to the v1.46 hardcoded path's expected
         // `Complex<Double>` carrier. Bare→`<Float>` and `<Float80>`
         // variants stay unsupported in v1.51 (no v1.46 hardcoded path).
-        "Complex": "Complex<Double>"
+        "Complex": "Complex<Double>",
+        // V1.52.C — swift-algorithms chunked-collection Index aliases.
+        // Cycle-48 measurement (`docs/calibration-cycle-48-findings
+        // .md`) showed the real indexer outputs these qualified-Index
+        // names; cycle-46 predicted 3 chunked-Index REJECTs would
+        // land in `.defaultFails` once the carrier-resolution layer
+        // accepts them. All bind to `Int` for the same cycle-27-
+        // alignment reason the V1.47.D bindings do (Array<Int> as the
+        // canonical `Base`).
+        "ChunkedByCollection.Index": "Int",
+        "ChunkedOnCollection.Index": "Int",
+        "ChunkedByLazyCollection.Index": "Int",
+        // V1.52.C — OrderedSet.Index placeholder. OrderedCollections
+        // shows up in 60+ cycle-27 picks; this single-entry binding
+        // gets `OrderedSet.Index`-typed monotonicity / round-trip
+        // picks past the `.unsupportedCarrier` wall so cycle-49
+        // measurement surfaces the *next* gap below (likely instance-
+        // method shape on a value vs. a static call). Full
+        // OrderedSet / OrderedDictionary element-type binding via
+        // TypeShape-driven instantiation stays deferred to v1.53.
+        "OrderedSet.Index": "Int"
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,
