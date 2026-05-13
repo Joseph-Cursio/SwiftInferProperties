@@ -66,11 +66,13 @@ struct V1_51EndToEndFromIndexTests {
         #expect(bundle.rendererContext.templateName == "round-trip")
     }
 
-    @Test("real-indexer index loads with the expected cycle-27 surface count (109)")
+    @Test("real-indexer index loads with the expected cycle-27 surface count (103, post-V1.57.A)")
     func cycle27FixtureHasExpectedSurfaceCount() throws {
         let data = try Data(contentsOf: Self.fixtureIndexPath)
         let store = try JSONDecoder().decode(IndexStore.Index.self, from: data)
-        #expect(store.entries.count == 109)
+        // V1.57.A's private/fileprivate filter dropped the v1.29-era 109
+        // baseline to 103. See docs/calibration-cycle-54-findings.md.
+        #expect(store.entries.count == 103)
     }
 
     // **Why no dual-style E2E test in v1.51**. The cycle-27 fixture's

@@ -274,10 +274,16 @@ struct V1_54GenericBindingExpansionTests {
         #expect(GenericBindingResolver.resolve("ChunkedByCollection.SubSequence") == nil)
         #expect(GenericBindingResolver.bound("ChunkedByCollection.SubSequence")
             == "ChunkedByCollection.SubSequence")
-        // Bare type names (the actual indexer-output shape) also pass
-        // through — confirming cycle-50's finding that V1.52.C's keys
-        // didn't match anything.
+        // Bare type names that don't yet have a V1.58.A-style binding
+        // also pass through.
         #expect(GenericBindingResolver.resolve("ChunkedByCollection") == nil)
-        #expect(GenericBindingResolver.resolve("OrderedSet") == nil)
+        // V1.58.A added `"OrderedSet" → "OrderedSet<Int>"` so it no
+        // longer passes through — covered by a dedicated test below.
+    }
+
+    @Test("V1.58.A: OrderedSet bare-name binds to OrderedSet<Int>")
+    func orderedSetBindsToInt() {
+        #expect(GenericBindingResolver.resolve("OrderedSet") == "OrderedSet<Int>")
+        #expect(GenericBindingResolver.bound("OrderedSet") == "OrderedSet<Int>")
     }
 }

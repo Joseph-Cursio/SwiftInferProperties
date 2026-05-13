@@ -51,17 +51,24 @@ public enum GenericBindingResolver {
         // bare form to the v1.46 hardcoded path's expected
         // `Complex<Double>` carrier. Bare→`<Float>` and `<Float80>`
         // variants stay unsupported in v1.51 (no v1.46 hardcoded path).
-        "Complex": "Complex<Double>"
-        // V1.54.B — V1.52.C `<Type>.Index` entries (ChunkedByCollection
-        // / ChunkedOnCollection / ChunkedByLazyCollection / OrderedSet)
-        // removed. Cycle-50 evidence (`docs/calibration-cycle-50-
-        // findings.md`) showed the indexer outputs bare type names
-        // (`ChunkedByCollection`), not `<Type>.Index` — V1.52.C's keys
-        // never fired. A genuine fix requires (a) bare-type keys
-        // *plus* (b) instance-method emission since the chunked picks
-        // are `endOfChunk(startingAt:)`-style methods on the wrapper,
-        // not free/static functions. Both (a) and (b) wait on the
-        // v1.55+ TypeShape-driven generic-instantiation work.
+        "Complex": "Complex<Double>",
+        // V1.58.A — first OC carrier binding. `OrderedSet` →
+        // `OrderedSet<Int>`. Mirrors the V1.51.A pattern: cycle-27's
+        // discover layer captured `typeName: "OrderedSet"` (no generic
+        // arg); v1.58's emitter expects the bound form. Int is the
+        // canonical Element type for the cycle-27 alignment (same
+        // reason V1.47.D bound Base.Index → Int).
+        //
+        // **Scope**: cycle-55 measures whether this binding alone
+        // unblocks resolution (carrier passes V1.47.F's `bound(_:)`
+        // check); the downstream pipeline (strategist instance
+        // generation + mutating-method emission for `sort()` etc.)
+        // is v1.59+ work. Cycle-55 outcome for OS picks will likely
+        // be `.measured-error` (build-failed at instance-method or
+        // generator-recipe layer) — that's forward progress from
+        // `.architectural-coverage-pending` and surfaces the next
+        // gap layer for v1.59.
+        "OrderedSet": "OrderedSet<Int>"
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,
