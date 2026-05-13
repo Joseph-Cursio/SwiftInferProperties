@@ -136,10 +136,22 @@ public enum StrategistDispatchEmitter {
         typeShape: IndexedTypeShape?
     ) throws -> GeneratorRecipe {
         if let rawType = RawType(typeName: carrier) {
+            // V1.54.C — add `RealModule` for FP carriers so the static
+            // `Double.log(_:)` / `Float.log(_:)` etc. forms declared
+            // by `ElementaryFunctions` resolve. Cycle-51 measurement
+            // (`docs/calibration-cycle-51-findings.md`) showed that
+            // without this import, V1.54.A's free-function revert
+            // breaks the 2 monotonicity-on-Double picks that were
+            // `.bothPass` in cycle-50 (the v1.42 `Foundation` import
+            // exposes Darwin's C `log(_:)` free function but not the
+            // protocol's static methods).
+            let imports = (carrier == "Double" || carrier == "Float")
+                ? ["Foundation", "PropertyBased", "RealModule"]
+                : ["Foundation", "PropertyBased"]
             return GeneratorRecipe(
                 expression: rawType.generatorExpression,
                 carrierTypeName: carrier,
-                imports: ["Foundation", "PropertyBased"]
+                imports: imports
             )
         }
         if let typeShape {

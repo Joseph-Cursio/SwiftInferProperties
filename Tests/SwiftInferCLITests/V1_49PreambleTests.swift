@@ -263,16 +263,15 @@ struct V1_49SecondaryFunctionNameTests {
     func curatedTakesPrecedence() throws {
         // exp(_:) is in the curated list. The resolver uses the
         // curated inverse `log(_:)`, ignoring any secondaryFunctionName.
-        // V1.52.A — exp/log on Complex carrier now render as the
-        // free-function form (swift-numerics ships global
-        // `exp<T: ElementaryFunctions>(_:)` overloads); the static
-        // `Complex.exp` form compiled but cycle-48 surfaced runtime
-        // SIGABRTs from the static-vs-free-function divergence.
+        // V1.54.A — restored to the v1.51 `.staticMethod` shape after
+        // cycle-50 showed the v1.52.A free-function form fails to
+        // compile from a workdir that imports ComplexModule but not
+        // the `_Numerics`-globals module.
         let result = try RoundTripPairResolver.resolve(
             Self.entry(primary: "exp(_:)", secondary: "WRONG(_:)")
         )
-        #expect(result.forwardCall == "exp")
-        #expect(result.inverseCall == "log")
+        #expect(result.forwardCall == "Complex.exp")
+        #expect(result.inverseCall == "Complex.log")
     }
 
     @Test("non-curated pair falls back to secondaryFunctionName")

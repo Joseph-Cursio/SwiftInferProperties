@@ -24,14 +24,18 @@ struct V1_52CallExpressionShapeTests {
         #expect(result.rendered == "(/)")
     }
 
-    @Test("free-function name on Complex carrier → .freeFunction (no qualifier)")
-    func elementaryFunctionOnComplexClassifiesToFreeFunction() {
+    @Test("EF-surface name on Complex carrier → .staticMethod (V1.54.A revert)")
+    func elementaryFunctionOnComplexClassifiesToStaticMethod() {
+        // V1.54.A — V1.52.A's free-function hypothesis reverted per
+        // cycle-50 evidence. `Complex.exp(_:)` is the canonical Swift
+        // syntax for the static method declared by ElementaryFunctions
+        // and compiles cleanly from the workdir's imports.
         let result = CallExpressionShape.classify(
             typeQualifier: "Complex",
             bareFunctionName: "exp"
         )
-        #expect(result == .freeFunction(name: "exp"))
-        #expect(result.rendered == "exp")
+        #expect(result == .staticMethod(qualifier: "Complex", method: "exp"))
+        #expect(result.rendered == "Complex.exp")
     }
 
     @Test("static method on Int carrier → .staticMethod (default shape)")
@@ -80,19 +84,17 @@ struct V1_52CallExpressionShapeTests {
         #expect(result.rendered == "Complex._relaxedMul")
     }
 
-    @Test("Double + log → .freeFunction (V1.51.C monotonicity-on-Double path)")
-    func doubleWithLogClassifiesToFreeFunction() {
-        // The cycle-48 monotonicity-on-Double picks land here — the
-        // resolver previously built `Double.log` which compiled but
-        // produced the wrong runtime shape; V1.52.A emits `log` so
-        // the swift-numerics global `log<T: ElementaryFunctions>(_:)`
-        // overload is the actual call site.
+    @Test("Double + log → .staticMethod (V1.54.A revert)")
+    func doubleWithLogClassifiesToStaticMethod() {
+        // V1.54.A — reverted to .staticMethod per cycle-50 evidence.
+        // `Double.log(_:)` is canonical Swift syntax for the static
+        // method declared by ElementaryFunctions on Double.
         let result = CallExpressionShape.classify(
             typeQualifier: "Double",
             bareFunctionName: "log"
         )
-        #expect(result == .freeFunction(name: "log"))
-        #expect(result.rendered == "log")
+        #expect(result == .staticMethod(qualifier: "Double", method: "log"))
+        #expect(result.rendered == "Double.log")
     }
 
     @Test("isOperatorName edge cases (empty / mixed / digit)")
@@ -135,13 +137,13 @@ struct V1_52PairResolverIntegrationTests {
         )
     }
 
-    @Test("round-trip on Complex with exp(_:) emits free-function form")
-    func roundTripExpEmitsFreeFunction() throws {
+    @Test("round-trip on Complex with exp(_:) emits Complex.exp / Complex.log (V1.54.A)")
+    func roundTripExpEmitsStaticMethod() throws {
         let result = try RoundTripPairResolver.resolve(
             Self.entry(template: "round-trip", carrier: "Complex<Double>", primary: "exp(_:)")
         )
-        #expect(result.forwardCall == "exp")
-        #expect(result.inverseCall == "log")
+        #expect(result.forwardCall == "Complex.exp")
+        #expect(result.inverseCall == "Complex.log")
     }
 
     @Test("commutativity on Complex with operator name `+` emits paren form")
@@ -160,12 +162,12 @@ struct V1_52PairResolverIntegrationTests {
         #expect(result.functionCall == "(*)")
     }
 
-    @Test("monotonicity on Double with log(onePlus:) emits free-function form")
-    func monotonicityLogOnePlusEmitsFreeFunction() throws {
+    @Test("monotonicity on Double with log(onePlus:) emits Double.log (V1.54.A)")
+    func monotonicityLogOnePlusEmitsStaticMethod() throws {
         let result = try MonotonicityPairResolver.resolve(
             Self.entry(template: "monotonicity", carrier: "Double", primary: "log(onePlus:)")
         )
-        #expect(result.functionCall == "log")
+        #expect(result.functionCall == "Double.log")
     }
 }
 
@@ -238,28 +240,21 @@ struct V1_52StderrCaptureTests {
 
 // MARK: - V1.52.D.4 — GenericBindingResolver expansion
 
-@Suite("V1.52.C — GenericBindingResolver carrier-name expansion")
-struct V1_52GenericBindingExpansionTests {
+@Suite("V1.54.B — GenericBindingResolver after V1.52.C key cleanup")
+struct V1_54GenericBindingExpansionTests {
 
-    @Test("ChunkedByCollection.Index binds to Int")
-    func chunkedByCollectionIndexBindsToInt() {
-        #expect(GenericBindingResolver.resolve("ChunkedByCollection.Index") == "Int")
-        #expect(GenericBindingResolver.bound("ChunkedByCollection.Index") == "Int")
-    }
+    // V1.54.B — V1.52.C's `<Type>.Index` entries were removed after
+    // cycle-50 showed the indexer outputs bare type names (e.g.
+    // `ChunkedByCollection`) so the `.Index` keys never matched.
+    // Genuine chunked-Index coverage waits on v1.55+ TypeShape-driven
+    // instance-method emission.
 
-    @Test("ChunkedOnCollection.Index binds to Int")
-    func chunkedOnCollectionIndexBindsToInt() {
-        #expect(GenericBindingResolver.resolve("ChunkedOnCollection.Index") == "Int")
-    }
-
-    @Test("ChunkedByLazyCollection.Index binds to Int")
-    func chunkedByLazyCollectionIndexBindsToInt() {
-        #expect(GenericBindingResolver.resolve("ChunkedByLazyCollection.Index") == "Int")
-    }
-
-    @Test("OrderedSet.Index placeholder binds to Int")
-    func orderedSetIndexBindsToInt() {
-        #expect(GenericBindingResolver.resolve("OrderedSet.Index") == "Int")
+    @Test("V1.52.C dead bindings removed (regression guard)")
+    func v1_52CKeysRemoved() {
+        #expect(GenericBindingResolver.resolve("ChunkedByCollection.Index") == nil)
+        #expect(GenericBindingResolver.resolve("ChunkedOnCollection.Index") == nil)
+        #expect(GenericBindingResolver.resolve("ChunkedByLazyCollection.Index") == nil)
+        #expect(GenericBindingResolver.resolve("OrderedSet.Index") == nil)
     }
 
     @Test("V1.47.D + V1.51.A bindings still resolve (regression guard)")
@@ -279,7 +274,10 @@ struct V1_52GenericBindingExpansionTests {
         #expect(GenericBindingResolver.resolve("ChunkedByCollection.SubSequence") == nil)
         #expect(GenericBindingResolver.bound("ChunkedByCollection.SubSequence")
             == "ChunkedByCollection.SubSequence")
-        // OrderedDictionary.Index has no V1.52.C entry — passes through.
-        #expect(GenericBindingResolver.resolve("OrderedDictionary.Index") == nil)
+        // Bare type names (the actual indexer-output shape) also pass
+        // through — confirming cycle-50's finding that V1.52.C's keys
+        // didn't match anything.
+        #expect(GenericBindingResolver.resolve("ChunkedByCollection") == nil)
+        #expect(GenericBindingResolver.resolve("OrderedSet") == nil)
     }
 }

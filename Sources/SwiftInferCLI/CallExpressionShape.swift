@@ -121,36 +121,23 @@ public enum CallExpressionShape: Equatable, Sendable {
         return name.allSatisfy { operatorCharacters.contains($0) }
     }
 
-    /// Carriers + their `ElementaryFunctions`-surface function names.
-    /// v1.52 ships with the three v1.49-emitter-supported carriers
-    /// (Complex, Double, Float) mapped to the 14-method protocol
-    /// surface. v1.53+ extends as new carriers gain emitter support.
+    /// Carriers + their free-function-surface function names.
+    /// **V1.54.A — empty after cycle-50 evidence**. v1.52.A's
+    /// hypothesis was that swift-numerics's `_Numerics`-global
+    /// `exp<T: ElementaryFunctions>(_:)` overloads would resolve from
+    /// the verifier workdir's imports. Cycle-50 measurement (`docs/
+    /// calibration-cycle-50-findings.md`) showed bare `exp(value)`
+    /// doesn't compile from a workdir that imports only
+    /// `ComplexModule` + `RealModule` — the `_Numerics`-globals live
+    /// behind an `import _Numerics` that the workdir doesn't issue.
+    /// Reverting to the v1.51 `.staticMethod` shape: `Complex.exp(_:)`
+    /// is canonical Swift syntax for the static `exp` declared by
+    /// `ElementaryFunctions`, compiles cleanly, and (via V1.53.A's
+    /// DYLD fix) reaches the property check.
     ///
-    /// **Why this is a static curated table, not indexer-derived.**
-    /// `SemanticIndexEntry` doesn't carry conformance information
-    /// (schema bump deferred — see plan §V1.52.A.b.ii). The
-    /// ElementaryFunctions protocol surface is small (14 entries) and
-    /// stable, so a hardcoded table is the lowest-friction option.
-    static let freeFunctionMap: [String: Set<String>] = [
-        "Complex": elementaryFunctionsNames,
-        "Double": elementaryFunctionsNames,
-        "Float": elementaryFunctionsNames
-    ]
-
-    /// The 14-method `ElementaryFunctions` protocol surface from
-    /// swift-numerics. `exp`/`log` + the 6 trig + 6 hyperbolic
-    /// inverses; matches the curated round-trip pair list in
-    /// `RoundTripPairResolver.curated`.
-    ///
-    /// **Not included**: `pow(_:_:)` (binary, not in the round-trip
-    /// shape); `sqrt(_:)` (not in cycle-27's surface but valid
-    /// ElementaryFunctions member — add when first cycle-N surface
-    /// references it).
-    private static let elementaryFunctionsNames: Set<String> = [
-        "exp", "log",
-        "sin", "cos", "tan",
-        "asin", "acos", "atan",
-        "sinh", "cosh", "tanh",
-        "asinh", "acosh", "atanh"
-    ]
+    /// The map stays as an extension point — v1.55+ may revive a
+    /// free-function classification by adding `import _Numerics` to
+    /// the V1.49.A preamble, at which point the EF surface entries
+    /// can be restored here.
+    static let freeFunctionMap: [String: Set<String>] = [:]
 }
