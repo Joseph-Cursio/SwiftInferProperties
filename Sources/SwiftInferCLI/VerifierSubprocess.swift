@@ -85,10 +85,11 @@ public enum VerifierSubprocess {
 
     /// Cached toolchain testing-library directory (e.g.
     /// `<toolchain>/usr/lib/swift/macosx/testing`). Computed once on
-    /// first access via `xcrun --find swift`; nil if xcrun fails,
-    /// produces an unexpected path, or the testing directory doesn't
-    /// exist. The 109-pick cycle-49 survey paid the xcrun cost 109
-    /// times before this cache existed; v1.53 pays it once.
+    /// first access via `swift -print-target-info`; nil if the
+    /// invocation fails, the JSON lacks `paths.runtimeResourcePath`,
+    /// or the `macosx/testing` subdirectory doesn't exist. The cache
+    /// matters at survey scale — without it, a 109-pick survey
+    /// would shell out to `swift` 109 times.
     static let cachedTestingLibraryDirectory: String? = computeTestingLibraryDirectory()
 
     /// Build a fresh subprocess environment with `DYLD_LIBRARY_PATH`
