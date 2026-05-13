@@ -4,30 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.56.0** — fifty-third calibration cycle and **sixth Phase 2 gap-closing cycle**. **Single-workstream release** — V1.56.A internal-API build-failure reclassification (new helper `architecturalPendingDetail(buildStdout:buildStderr:)` in `Sources/SwiftInferCLI/VerifyCommand+AllFromIndex.swift` checks both streams for the Swift compiler's `"is inaccessible due to '<access-level>' protection level"` pattern; on match, the surveyRecord path returns `.architecturalCoveragePending` with detail `"internal-api-not-accessible"` instead of `.measuredError`). V1.56.B 6 unit tests pin the matcher behavior (internal/private/fileprivate access-modifier variations, stdout vs stderr stream detection, nil-returns for non-matching inputs). Closes the cycle-52 `.measured-error` residual: 2 `Complex.rescaledDivide(_:_:)` picks (declared `internal` in swift-numerics) reclassify from `.measured-error` to `.architectural-coverage-pending`. **Methodology lesson learned**: cycle-53's first run with stderr-only check missed the diagnostic (compiler emits to stdout when run as subprocess); both-stream check + unit tests now pin the behavior. **Test count 2396 → 2402 (+6)**; **non-subprocess fast path 2402/2402 in ~4s**.
+**Current: v1.57.0** — fifty-fourth calibration cycle and **seventh Phase 2 gap-closing cycle**. **Methodologically-significant baseline correction** — V1.57.A `private`/`fileprivate` filter in `FunctionScannerVisitor` (`Sources/SwiftInferCore/FunctionScanner.swift`) drops file-private declarations at scan time; not filtering `internal` (Swift default; over-aggressive without no-modifier exception). Applied retroactively to the cycle-27 fixture: 6 file-private picks from SwiftPropertyLaws dropped (3 file-private helpers in `*CollectionLaws.swift` + 3 `private static` members of `ViolationFormatter`). **Cycle-27 baseline shifts 109 → 103 picks.** Total measured-execution count unchanged at 20; rate improves 18.3% → 19.4% (denominator-driven). The 6 dropped picks were always noise (private declarations violate cross-module visibility and couldn't produce valid measurements regardless of verifier capabilities); v1.57+ baseline reflects what's actually verifiable. **Test count 2402 → 2403 (+1)**; **non-subprocess fast path 2403/2403 in ~4s**.
 
-**Cycle-53 measurement headline**: **20/109 = 18.3% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error) — total count unchanged from cycle-52, but **`.measured-error` count drops to 0** for the first time since cycle-47's full-surface measurement began. The 2 cycle-52 `rescaledDivide` picks shift `.measured-error → .architectural-coverage-pending` with detail `"internal-api-not-accessible"`. **The `.measured-error = 0` baseline is now a CI-able alarm**: any future cycle producing measured-error > 0 indicates an unexpected build/runtime failure (not a known measurement-tooling gap), motivating immediate investigation. Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + **0 `.measured-error`** + 89 `.architectural-coverage-pending`.
+**Cycle-54 measurement headline**: **20/103 = 19.4% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). Total measured count unchanged from cycle-53; **denominator shifts 109 → 103** due to V1.57.A's filter dropping 6 file-private declarations from SwiftPropertyLaws (3 cycle-53 `(none)`-typeName picks + 3 `private static` ViolationFormatter members). Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 83 `.architectural-coverage-pending`.
 
-**`.architectural-coverage-pending` category now has structured detail strings:**
-- 87 picks: `unsupported-carrier:<Type>` — OC + Algo generic-instantiation gap (v1.57+ TypeShape work)
-- 2 picks: `internal-api-not-accessible` — access-level gap (V1.56.A; deferred fix)
-- 3 picks: `unsupported-carrier:(none)` — typeName field null in index, likely indexer bug (v1.57+)
+**The dropped picks (V1.57.A retroactive filter):**
 
-**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-52):
+| Hash prefix | Function | Modifier | File |
+|---|---|---|---|
+| 0x9352 | `walkCap(for:)` | `private` | Public/BidirectionalCollectionLaws.swift:237 |
+| 0xAD05 | `iterationCap(for:)` | `private` | Public/IteratorProtocolLaws.swift:97 |
+| 0xBA0E | `snapshot(_:)` | `private` | Public/MutableCollectionLaws.swift:181 |
+| 0xD694 | `headerLine(_:)` | `private static` | Internal/ViolationFormatter.swift:27 |
+| 0x840A | `nearMissLines(_:)` | `private static` | Internal/ViolationFormatter.swift:58 |
+| 0xF67C | `formatBuckets(_:)` | `private static` | Internal/ViolationFormatter.swift:81 |
+
+**`.architectural-coverage-pending` category cleaner**:
+- 83 `unsupported-carrier:<Type>` (down from 87; OC + Algo generic-instantiation gap; v1.58+ TypeShape work)
+- 2 `internal-api-not-accessible` (V1.56.A; unchanged)
+- 0 `unsupported-carrier:(none)` (the 3 v1.56 `(none)` picks dropped via V1.57.A; the category is eliminated entirely)
+
+**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-53):
 - **Strict 4-category match**: 5/13 = 38%
-- **Semantic "property holds" match**: 13/13 = **100%**
+- **Semantic "property holds" match**: 13/13 = **100%** (none of the V1.57.A-dropped picks were in the cycle-46 stratified subset).
 
-v1.57+ priorities (per cycle-53 evidence, in priority order):
+v1.58+ priorities (per cycle-54 evidence, in priority order):
 
-1. **v1.57-v1.58 — TypeShape-driven generic instantiation** for OC + Algo types — dominant remaining category (87 `unsupported-carrier` picks). Multi-cycle scope.
-2. **v1.57 — Instance-method emission** for OC + Algo wrappers — closes a subset of the OC picks once TypeShape work lands.
-3. **v1.57 — Methodology guard for binding tables** — fixture-level check that every `GenericBindingResolver.curatedBindings` key matches at least one indexer-produced carrier name. Prevents V1.51.B + V1.52.C latent-key recurrence.
-4. **v1.57 — Investigate the 3 `(none)`-typeName picks** — likely indexer-side bug; small scope.
-5. **v1.58+ — Phase 2 accept-flow integration** — the 20-pick measurable sample + clean `.measured-error = 0` baseline make accept-flow viable.
-6. **v1.58+ — Optional indexer-time non-public filter** — drop the 2 internal-API picks from the index entirely; decision deferred (preserves v1.29-frozen baseline by default).
+1. **v1.58-v1.59 — TypeShape-driven generic instantiation** for OC + Algo types — dominant remaining category (83 `unsupported-carrier` picks; 83/83 = 100% of pending). Multi-cycle scope.
+2. **v1.58 — Instance-method emission** for OC + Algo wrappers — needed alongside TypeShape work since most OC picks are instance methods.
+3. **v1.58 — Methodology guard for binding tables** — fixture-level check that every `GenericBindingResolver.curatedBindings` key matches at least one indexer-produced carrier name. Prevents V1.51.B + V1.52.C latent-key recurrence.
+4. **v1.59+ — Phase 2 accept-flow integration** — the 20-pick measurable sample + clean `.measured-error = 0` baseline + 103-pick coherent index make accept-flow viable.
+5. **v1.59+ — Optional `internal`-modifier filter** — would require careful audit; Swift default is internal so over-aggressive without no-modifier exception. v1.59+ may revisit.
+6. **v1.59+ — Per-function default-pass domain refinement** (v1.55 carry-forward).
 7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.56 Calibration Plan.md` (v1.56 specifics), `docs/calibration-cycle-53-findings.md` (V1.56.A reclassification + `.measured-error = 0` clean baseline + v1.57+ roadmap), `docs/calibration-cycle-53-data/full-surface-summary.md` (template × outcome cross-tab + `.architectural-coverage-pending` detail-string breakdown).
+Full list in `docs/archive/v1.57 Calibration Plan.md` (v1.57 specifics), `docs/calibration-cycle-54-findings.md` (baseline shift + .architectural-coverage-pending cleanup + v1.58+ roadmap), `docs/calibration-cycle-54-data/full-surface-summary.md` (per-checkout drop breakdown + detail-string distribution).
+
+---
+
+[previous: v1.56.0] — fifty-third calibration cycle and **sixth Phase 2 gap-closing cycle**. **Single-workstream release** — V1.56.A internal-API build-failure reclassification (new helper `architecturalPendingDetail(buildStdout:buildStderr:)` checks both streams for `"is inaccessible due to '<access-level>'"`; on match, surveyRecord returns `.architecturalCoveragePending` with detail `"internal-api-not-accessible"`). V1.56.B 6 unit tests pin the matcher. **Cycle-53 headline**: 20/109 = 18.3% measured-execution with `.measured-error = 0` for the first time since cycle-47.
 
 ---
 
