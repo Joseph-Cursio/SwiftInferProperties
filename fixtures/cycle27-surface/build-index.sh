@@ -14,8 +14,13 @@
 #   - `jq` for the merge step.
 #
 # Output: `fixtures/cycle27-surface/.swiftinfer/index.json` with all
-# 109 cycle-27 surface picks (8 Algo + 20 ComplexModule + 74
-# OrderedCollections + 7 PropertyLawKit per surface-counts.md).
+# **103** cycle-27 surface picks (8 Algo + 20 ComplexModule + 74
+# OrderedCollections + 1 PropertyLawKit). V1.57.A (cycle-54)
+# narrowed the count from the original v1.29-frozen 109 by filtering
+# `private`/`fileprivate` declarations at scan time — dropped 6
+# picks from PropertyLawKit (3 file-private helpers in
+# *CollectionLaws.swift + 3 `private static` members of
+# ViolationFormatter). See docs/calibration-cycle-54-findings.md.
 
 set -euo pipefail
 

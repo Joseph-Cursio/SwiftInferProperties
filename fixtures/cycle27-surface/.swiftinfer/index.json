@@ -1,9 +1,9 @@
 {
   "entries": [
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x01FF9BEFB4BDEC2F",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:339",
       "primaryFunctionName": "formUnion(_:)",
       "score": 75,
@@ -12,9 +12,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x024EC8BD5F216271",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:97",
       "primaryFunctionName": "wordCount(forScale:)",
       "score": 35,
@@ -36,9 +36,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x06A2761D2E509FC7",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:240",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -47,9 +47,9 @@
       "typeName": "OrderedSet.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x0ADF4CC755508749",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:420",
       "primaryFunctionName": "OrderedSet._ensureUnique()",
       "score": 45,
@@ -75,9 +75,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x0EE19DA4B456B0F5",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:423",
       "primaryFunctionName": "pow(_:_:)",
       "score": 20,
@@ -105,9 +105,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x1A2EB97DEE1146E1",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:226",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -116,9 +116,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0x1BEF8F676F88EF18",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/Chunked.swift:243",
       "primaryFunctionName": "sizeOfChunk(offset:)",
       "score": 25,
@@ -158,9 +158,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x1C94EE2FCC17B783",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:171",
       "primaryFunctionName": "_relaxedAdd(_:_:)",
       "score": 30,
@@ -188,9 +188,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x2074913DD61C9477",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:263",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -199,9 +199,9 @@
       "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x22C45BA51D4DA777",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:224",
       "primaryFunctionName": "tan(_:)",
       "score": 30,
@@ -230,9 +230,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x26D2FD96A4FB2B01",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:171",
       "primaryFunctionName": "_relaxedAdd(_:_:)",
       "score": 30,
@@ -260,9 +260,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x28C62EECFCE653AD",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:84",
       "primaryFunctionName": "formSymmetricDifference(_:)",
       "score": 75,
@@ -288,9 +288,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0x3543E69FA981193D",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/Chunked.swift:79",
       "primaryFunctionName": "endOfChunk(startingAt:)",
       "score": 30,
@@ -328,9 +328,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x39BEE56059637823",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:432",
       "primaryFunctionName": "formIntersection(_:)",
       "score": 75,
@@ -339,9 +339,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0x40C830C81337F0F5",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/Chunked.swift:123",
       "primaryFunctionName": "startOfChunk(endingAt:)",
       "score": 30,
@@ -379,9 +379,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x44079B3ADA944F72",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary.swift:826",
       "primaryFunctionName": "merge(_:uniquingKeysWith:)",
       "score": 75,
@@ -407,9 +407,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x45D61B79277AD072",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:56",
       "primaryFunctionName": "subtract(_:)",
       "score": 75,
@@ -435,9 +435,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x4935E0E0B52AAB78",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:206",
       "primaryFunctionName": "index(after:)",
       "score": 25,
@@ -446,9 +446,9 @@
       "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x4949D576A215E8C1",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56",
       "primaryFunctionName": "exp(_:)",
       "score": 30,
@@ -477,9 +477,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x4B1E6B1E17779FB9",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:133",
       "primaryFunctionName": "index(before:)",
       "score": 25,
@@ -505,9 +505,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x4CE1969DD55F9FA4",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:415",
       "primaryFunctionName": "OrderedSet._isUnique()",
       "score": 45,
@@ -533,9 +533,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x518A1B6980755C21",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:309",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -544,9 +544,9 @@
       "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x51D592C8CBCA0831",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:171",
       "primaryFunctionName": "sinh(_:)",
       "score": 30,
@@ -575,9 +575,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x52EE0CC699032D33",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:176",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -603,9 +603,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x56A303C3E0347225",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:141",
       "primaryFunctionName": "cosh(_:)",
       "score": 30,
@@ -634,9 +634,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x57B82FC46EA980A9",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formUnion.swift:71",
       "primaryFunctionName": "formUnion(_:)",
       "score": 75,
@@ -662,9 +662,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x59D6E9A804BF9A7B",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:171",
       "primaryFunctionName": "index(after:)",
       "score": 25,
@@ -673,9 +673,9 @@
       "typeName": "OrderedDictionary.Values"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x5AF3B2B951D2A768",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:468",
       "primaryFunctionName": "formIntersection(_:)",
       "score": 75,
@@ -684,9 +684,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x5B893808F4A5C610",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:51",
       "primaryFunctionName": "_scale(forCapacity:)",
       "score": 25,
@@ -712,9 +712,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x5C7D1C8D560E326D",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:385",
       "primaryFunctionName": "OrderedSet._regenerateHashTable()",
       "score": 45,
@@ -740,9 +740,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x5F9B7214CBE810A5",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:119",
       "primaryFunctionName": "index(after:)",
       "score": 25,
@@ -768,9 +768,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x60A0CD20B1C8D1C0",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:176",
       "primaryFunctionName": "_relaxedMul(_:_:)",
       "score": 30,
@@ -798,9 +798,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x630213A9E5A8F780",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formUnion.swift:99",
       "primaryFunctionName": "formUnion(_:)",
       "score": 75,
@@ -826,9 +826,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x63266F720D01E9A2",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:377",
       "primaryFunctionName": "formUnion(_:)",
       "score": 75,
@@ -837,9 +837,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x68D500860718049A",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:217",
       "primaryFunctionName": "sin(_:)",
       "score": 30,
@@ -868,9 +868,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x6D310ED906336577",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:211",
       "primaryFunctionName": "cos(_:)",
       "score": 30,
@@ -899,9 +899,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x73A9C029E1A5207F",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:599",
       "primaryFunctionName": "subtract(_:)",
       "score": 75,
@@ -910,9 +910,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x7748FE51C18B2CD5",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:176",
       "primaryFunctionName": "_relaxedMul(_:_:)",
       "score": 30,
@@ -940,9 +940,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x7756BB702E3A609D",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:274",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -951,9 +951,9 @@
       "typeName": "OrderedDictionary.Values"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x77ABEB3E80E39BE1",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:160",
       "primaryFunctionName": "word(after:)",
       "score": 25,
@@ -962,28 +962,9 @@
       "typeName": "_HashTable.UnsafeHandle"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
-      "identityHash": "0x840AA110CEF8E8B5",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Internal/ViolationFormatter.swift:58",
-      "primaryFunctionName": "nearMissLines(_:)",
-      "score": 35,
-      "templateName": "idempotence",
-      "tier": "Possible",
-      "typeName": "ViolationFormatter",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": false,
-        "inheritedTypes": [],
-        "kind": "enum",
-        "name": "ViolationFormatter",
-        "storedMembers": []
-      }
-    },
-    {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x89A940C41092CADE",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:37",
       "primaryFunctionName": "/(z:w:)",
       "score": 20,
@@ -1011,9 +992,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x8AF59F8224E5120E",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45",
       "primaryFunctionName": "_maximumCapacity(forScale:)",
       "score": 25,
@@ -1039,9 +1020,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x8DC4D4EA04EA3091",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:197",
       "primaryFunctionName": "index(before:)",
       "score": 25,
@@ -1050,19 +1031,9 @@
       "typeName": "OrderedSet.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
-      "identityHash": "0x9352F26E9BA46A33",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Public/BidirectionalCollectionLaws.swift:237",
-      "primaryFunctionName": "walkCap(for:)",
-      "score": 25,
-      "templateName": "monotonicity",
-      "tier": "Possible"
-    },
-    {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x9C09220A07524450",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:174",
       "primaryFunctionName": "word(before:)",
       "score": 25,
@@ -1071,9 +1042,9 @@
       "typeName": "_HashTable.UnsafeHandle"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x9DE97AD2E2C4547A",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:240",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -1082,9 +1053,9 @@
       "typeName": "OrderedSet.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0x9F0FBC53CEC24D15",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:272",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -1093,9 +1064,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA271032EE79F8993",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:559",
       "primaryFunctionName": "formSymmetricDifference(_:)",
       "score": 75,
@@ -1104,9 +1075,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA275D2385A136BAD",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet.swift:399",
       "primaryFunctionName": "OrderedSet._regenerateExistingHashTable()",
       "score": 45,
@@ -1132,9 +1103,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA459C8D9F7531064",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:176",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -1160,9 +1131,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA48308B395A07123",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:263",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -1171,9 +1142,9 @@
       "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA5C1F58768F24FBB",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39",
       "primaryFunctionName": "_minimumCapacity(forScale:)",
       "score": 20,
@@ -1200,9 +1171,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA6E673318B7D41A5",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:183",
       "primaryFunctionName": "index(before:)",
       "score": 25,
@@ -1211,9 +1182,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA78807354D8573A9",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+CustomStringConvertible.swift:29",
       "primaryFunctionName": "_description(type:)",
       "score": 25,
@@ -1222,9 +1193,9 @@
       "typeName": "_HashTable.UnsafeHandle"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0xA9ADEC19AF2787F4",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/RandomSample.swift:30",
       "primaryFunctionName": "log(onePlus:)",
       "score": 25,
@@ -1233,9 +1204,9 @@
       "typeName": "Double"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xAC399387FD5E9E28",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary.swift:876",
       "primaryFunctionName": "merge(_:uniquingKeysWith:)",
       "score": 75,
@@ -1261,19 +1232,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
-      "identityHash": "0xAD056940C7F56BD0",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Public/IteratorProtocolLaws.swift:97",
-      "primaryFunctionName": "iterationCap(for:)",
-      "score": 25,
-      "templateName": "monotonicity",
-      "tier": "Possible"
-    },
-    {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xB34BD9B8F8AAC239",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formIntersection.swift:82",
       "primaryFunctionName": "formIntersection(_:)",
       "score": 75,
@@ -1299,9 +1260,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0xB56C450591E30313",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/Combinations.swift:68",
       "primaryFunctionName": "binomial(n:k:)",
       "score": 30,
@@ -1334,9 +1295,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xB683CA3FC5E39ACC",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:636",
       "primaryFunctionName": "subtract(_:)",
       "score": 75,
@@ -1345,9 +1306,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xB72E7362FA5FB419",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:56",
       "primaryFunctionName": "exp(_:)",
       "score": 30,
@@ -1376,9 +1337,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xB8DE422242F3793A",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AdditiveArithmetic.swift:29",
       "primaryFunctionName": "-(z:w:)",
       "score": 20,
@@ -1406,9 +1367,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xB8FE8FAB14F3C1A8",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:423",
       "primaryFunctionName": "pow(_:_:)",
       "score": 20,
@@ -1436,19 +1397,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
-      "identityHash": "0xBA0EEB8FA6A2C7EB",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Public/MutableCollectionLaws.swift:181",
-      "primaryFunctionName": "snapshot(_:)",
-      "score": 25,
-      "templateName": "monotonicity",
-      "tier": "Possible"
-    },
-    {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xBAD090569541B6A9",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39",
       "primaryFunctionName": "_minimumCapacity(forScale:)",
       "score": 20,
@@ -1475,9 +1426,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xBB5255C3E15CDD73",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:73",
       "primaryFunctionName": "subtract(_:)",
       "score": 75,
@@ -1503,9 +1454,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xBC43359C0574816B",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:201",
       "primaryFunctionName": "_value(forBucketContents:)",
       "score": 35,
@@ -1515,9 +1466,9 @@
       "typeName": "_HashTable.UnsafeHandle"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xBDC8024D684D1B56",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:228",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -1526,9 +1477,9 @@
       "typeName": "OrderedDictionary.Values"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xC0B0A68F141A3C6D",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:37",
       "primaryFunctionName": "subtract(_:)",
       "score": 75,
@@ -1554,9 +1505,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xC351D23824327898",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:272",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -1565,9 +1516,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xC6E1010A10F99897",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+ElementaryFunctions.swift:187",
       "primaryFunctionName": "tanh(_:)",
       "score": 30,
@@ -1596,9 +1547,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xCCCD9EBCA611BD7A",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formIntersection.swift:40",
       "primaryFunctionName": "formIntersection(_:)",
       "score": 75,
@@ -1624,9 +1575,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xCD6FA47C309B25DB",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:169",
       "primaryFunctionName": "index(after:)",
       "score": 25,
@@ -1635,9 +1586,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD259DD76B5D19FBE",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:58",
       "primaryFunctionName": "minimumCapacity(forScale:)",
       "score": 25,
@@ -1659,9 +1610,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD51DAD720E3D46B9",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:222",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -1687,9 +1638,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD64135D91EF930C7",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:183",
       "primaryFunctionName": "index(after:)",
       "score": 25,
@@ -1698,28 +1649,9 @@
       "typeName": "OrderedSet.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
-      "identityHash": "0xD694D93967F7E48F",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Internal/ViolationFormatter.swift:27",
-      "primaryFunctionName": "headerLine(_:)",
-      "score": 25,
-      "templateName": "monotonicity",
-      "tier": "Possible",
-      "typeName": "ViolationFormatter",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": false,
-        "inheritedTypes": [],
-        "kind": "enum",
-        "name": "ViolationFormatter",
-        "storedMembers": []
-      }
-    },
-    {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xD6C69F2BF84F3390",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:48",
       "primaryFunctionName": "rescaledDivide(_:_:)",
       "score": 20,
@@ -1747,9 +1679,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD70D8AB68ADE6C07",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:76",
       "primaryFunctionName": "scale(forCapacity:)",
       "score": 25,
@@ -1771,9 +1703,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD722DD4D9ADC90BF",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+Constants.swift:67",
       "primaryFunctionName": "maximumCapacity(forScale:)",
       "score": 25,
@@ -1795,9 +1727,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD73F898399AE3E4E",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:220",
       "primaryFunctionName": "index(before:)",
       "score": 25,
@@ -1806,9 +1738,9 @@
       "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD81E952EBCD8CA1F",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formUnion.swift:44",
       "primaryFunctionName": "formUnion(_:)",
       "score": 75,
@@ -1834,9 +1766,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xD8D360226C41CE34",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:37",
       "primaryFunctionName": "/(z:w:)",
       "score": 20,
@@ -1864,9 +1796,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xD99D1D742C24B42B",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:39",
       "primaryFunctionName": "_minimumCapacity(forScale:)",
       "score": 25,
@@ -1892,9 +1824,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xDA90F9E6856741DC",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial MutableCollection.swift:280",
       "primaryFunctionName": "OrderedSet.sort()",
       "score": 85,
@@ -1920,9 +1852,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xDBB22A3D3D3549C0",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Partial MutableCollection.swift:203",
       "primaryFunctionName": "OrderedDictionary.sort()",
       "score": 85,
@@ -1948,9 +1880,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xDBB72D4ECA3D89EB",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:228",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -1959,9 +1891,9 @@
       "typeName": "OrderedDictionary.Values"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xDD74883C0D627E95",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:185",
       "primaryFunctionName": "index(before:)",
       "score": 25,
@@ -1970,9 +1902,9 @@
       "typeName": "OrderedDictionary.Values"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xDFD6A2CA98762D02",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:45",
       "primaryFunctionName": "_maximumCapacity(forScale:)",
       "score": 20,
@@ -1999,9 +1931,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0xE0626CEF04CEE3AC",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/RandomSample.swift:25",
       "primaryFunctionName": "log(_:)",
       "score": 25,
@@ -2010,9 +1942,9 @@
       "typeName": "Double"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xE32D06B86F4ECFCD",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:63",
       "primaryFunctionName": "formSymmetricDifference(_:)",
       "score": 75,
@@ -2038,9 +1970,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xE54F0D92F01DC623",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/HashTable/_HashTable+UnsafeHandle.swift:325",
       "primaryFunctionName": "firstOccupiedBucketInChain(with:)",
       "score": 35,
@@ -2049,9 +1981,9 @@
       "typeName": "_UnsafeHashTable"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0xE574CB2D65C86A66",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/Combinations.swift:68",
       "primaryFunctionName": "binomial(n:k:)",
       "score": 30,
@@ -2084,9 +2016,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xE724B37606AAF2CE",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AlgebraicField.swift:48",
       "primaryFunctionName": "rescaledDivide(_:_:)",
       "score": 20,
@@ -2114,9 +2046,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xE750C48C0E345E19",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:531",
       "primaryFunctionName": "OrderedDictionary.Elements.sort()",
       "score": 85,
@@ -2125,9 +2057,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xE907D73766335014",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:286",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -2136,9 +2068,9 @@
       "typeName": "OrderedSet.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xEC357857FD9090EA",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:40",
       "primaryFunctionName": "formSymmetricDifference(_:)",
       "score": 75,
@@ -2164,9 +2096,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xED146732CB38DCDF",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formIntersection.swift:63",
       "primaryFunctionName": "formIntersection(_:)",
       "score": 75,
@@ -2192,9 +2124,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:11Z",
+      "firstSeenAt": "2026-05-13T16:46:53Z",
       "identityHash": "0xED77E1F06B342709",
-      "lastSeenAt": "2026-05-12T20:04:11Z",
+      "lastSeenAt": "2026-05-13T16:46:53Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-algorithms/Sources/Algorithms/Chunked.swift:243",
       "primaryFunctionName": "sizeOfChunk(offset:)",
       "score": 30,
@@ -2234,9 +2166,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xF16FD2125933F37C",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:286",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -2245,9 +2177,9 @@
       "typeName": "OrderedSet.SubSequence"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:09Z",
+      "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xF19AF076BEC75B25",
-      "lastSeenAt": "2026-05-12T20:04:09Z",
+      "lastSeenAt": "2026-05-13T16:46:51Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-numerics/Sources/ComplexModule/Complex+AdditiveArithmetic.swift:29",
       "primaryFunctionName": "-(z:w:)",
       "score": 20,
@@ -2275,9 +2207,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xF22ACE5E2EB2F2E0",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:274",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -2286,9 +2218,9 @@
       "typeName": "OrderedDictionary.Values"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
+      "firstSeenAt": "2026-05-13T16:47:00Z",
       "identityHash": "0xF2C82EDCE79300FB",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
+      "lastSeenAt": "2026-05-13T16:47:00Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Internal/ViolationFormatter.swift:10",
       "primaryFunctionName": "format(_:)",
       "score": 25,
@@ -2305,9 +2237,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xF3869C08573BDDA1",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:222",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -2333,9 +2265,9 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xF3A7DBD9B12ED6FB",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:226",
       "primaryFunctionName": "index(_:offsetBy:)",
       "score": 30,
@@ -2344,28 +2276,9 @@
       "typeName": "OrderedDictionary.Elements"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:30Z",
-      "identityHash": "0xF67C6A9E93CB1BE0",
-      "lastSeenAt": "2026-05-12T20:04:30Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/SwiftPropertyLaws/Sources/PropertyLawKit/Internal/ViolationFormatter.swift:81",
-      "primaryFunctionName": "formatBuckets(_:)",
-      "score": 25,
-      "templateName": "monotonicity",
-      "tier": "Possible",
-      "typeName": "ViolationFormatter",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": false,
-        "inheritedTypes": [],
-        "kind": "enum",
-        "name": "ViolationFormatter",
-        "storedMembers": []
-      }
-    },
-    {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xFAE7957C96C040A8",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:513",
       "primaryFunctionName": "formSymmetricDifference(_:)",
       "score": 75,
@@ -2374,9 +2287,9 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-12T20:04:18Z",
+      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xFCB18682347DB3CC",
-      "lastSeenAt": "2026-05-12T20:04:18Z",
+      "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:309",
       "primaryFunctionName": "distance(from:to:)",
       "score": 30,
@@ -2386,5 +2299,5 @@
     }
   ],
   "schemaVersion": 3,
-  "updatedAt": "2026-05-12T20:04:09Z"
+  "updatedAt": "2026-05-13T16:46:51Z"
 }
