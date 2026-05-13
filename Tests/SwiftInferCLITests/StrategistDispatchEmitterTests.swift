@@ -212,4 +212,45 @@ struct StrategistDispatchEmitterEmitTests {
         let source = try StrategistDispatchEmitter.emit(Self.inputs(template: "idempotence"))
         #expect(source.contains("let trials = 100"))
     }
+
+    // V1.60.A — mutating-instance-method emission for OC carriers.
+
+    @Test("V1.60.A: idempotence on OrderedSet<Int> emits mutating-instance shape")
+    func idempotenceOrderedSetMutatingShape() throws {
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "idempotence",
+                carrier: "OrderedSet<Int>",
+                functionCalls: ["OrderedSet.sort"]
+            )
+        )
+        // The new mutating shape produces `var copy = value;
+        // copy.sort()` instead of the static `OrderedSet.sort(value)`.
+        #expect(source.contains("var onceCopy = value"))
+        #expect(source.contains("onceCopy.sort()"))
+        #expect(source.contains("var twiceCopy = value"))
+        #expect(source.contains("twiceCopy.sort()"))
+        // The static-shape call must NOT appear (regression guard).
+        #expect(source.contains("OrderedSet.sort(value)") == false)
+        #expect(source.contains("OrderedSet.sort(onceResult)") == false)
+        // Standard VERIFY markers still emit.
+        #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
+        #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))
+    }
+
+    @Test("V1.60.A: idempotence on non-OC carrier still emits static shape (regression guard)")
+    func idempotenceIntCarrierStaticShape() throws {
+        // Int isn't in mutatingInstanceCarriers, so the existing
+        // static-call emit shape stays.
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "idempotence",
+                carrier: "Int",
+                functionCalls: ["{ (x: Int) in x }"]
+            )
+        )
+        #expect(source.contains("let onceResult"))
+        #expect(source.contains("let twiceResult"))
+        #expect(source.contains("var onceCopy") == false)
+    }
 }

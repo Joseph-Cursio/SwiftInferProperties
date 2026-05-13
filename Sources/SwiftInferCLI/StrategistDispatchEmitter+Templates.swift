@@ -59,6 +59,20 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
+        // V1.60.A — mutating-instance-method shape for OC carriers.
+        // The cycle-56 surface (`docs/calibration-cycle-56-findings.md`)
+        // showed 5 idempotence picks on OrderedSet<Int> compile-failing
+        // with the static-call-of-instance-method shape. New emit shape:
+        // `var copy1 = value; copy1.method(); var copy2 = value;
+        // copy2.method(); copy2.method(); if copy1 != copy2 { fail }`.
+        // The method name is extracted from the functionCall by
+        // splitting on `.` and taking the last component.
+        if mutatingInstanceCarriers.contains(recipe.carrierTypeName) {
+            return composeMutatingIdempotencePass(
+                functionCall: functionCall,
+                recipe: recipe
+            )
+        }
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -75,6 +89,56 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// V1.60.A — set of carrier type-names that trigger the
+    /// mutating-instance-method emit shape. Each carrier in this set
+    /// has its idempotence test emitted as `var copy = value;
+    /// copy.method()` rather than `Type.method(value)`. Synced with
+    /// `StrategistDispatchEmitter.curatedOCRecipe`'s curated carriers.
+    static let mutatingInstanceCarriers: Set<String> = [
+        "OrderedSet<Int>"
+    ]
+
+    /// V1.60.A — emit the mutating-instance-method idempotence shape.
+    /// Splits `functionCall` (e.g. `"OrderedSet.sort"`) on `.` and
+    /// takes the trailing component as the method name. Operator-named
+    /// functions (`(+)`-style) aren't expected in this code path —
+    /// mutating instance methods don't have operator spellings — but
+    /// would fall through to the static shape if encountered.
+    private static func composeMutatingIdempotencePass(
+        functionCall: String,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+        // V1.60.A — mutating-instance-method shape: apply `\(methodName)`
+        // once on `onceCopy` and twice on `twiceCopy`; assert equal.
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let value = defaultGenerator.run(using: &rng)
+            var onceCopy = value
+            onceCopy.\(methodName)()
+            var twiceCopy = value
+            twiceCopy.\(methodName)()
+            twiceCopy.\(methodName)()
+            if onceCopy != twiceCopy {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(value)")
+                print("VERIFY_DEFAULT_FORWARD: \\(onceCopy)")
+                print("VERIFY_DEFAULT_INVERSE: \\(twiceCopy)")
                 exit(1)
             }
         }
