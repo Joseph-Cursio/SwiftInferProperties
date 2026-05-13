@@ -4,41 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.57.0** — fifty-fourth calibration cycle and **seventh Phase 2 gap-closing cycle**. **Methodologically-significant baseline correction** — V1.57.A `private`/`fileprivate` filter in `FunctionScannerVisitor` (`Sources/SwiftInferCore/FunctionScanner.swift`) drops file-private declarations at scan time; not filtering `internal` (Swift default; over-aggressive without no-modifier exception). Applied retroactively to the cycle-27 fixture: 6 file-private picks from SwiftPropertyLaws dropped (3 file-private helpers in `*CollectionLaws.swift` + 3 `private static` members of `ViolationFormatter`). **Cycle-27 baseline shifts 109 → 103 picks.** Total measured-execution count unchanged at 20; rate improves 18.3% → 19.4% (denominator-driven). The 6 dropped picks were always noise (private declarations violate cross-module visibility and couldn't produce valid measurements regardless of verifier capabilities); v1.57+ baseline reflects what's actually verifiable. **Test count 2402 → 2403 (+1)**; **non-subprocess fast path 2403/2403 in ~4s**.
+**Current: v1.58.0** — fifty-fifth calibration cycle and **eighth Phase 2 gap-closing cycle; TypeShape scaffold opening**. Two workstreams: V1.58.A `OrderedSet → OrderedSet<Int>` binding (mirrors V1.51.A's Complex pattern; first OC carrier binding) + V1.58.B methodology guard for `GenericBindingResolver.curatedBindings` (fixture-level test asserts every binding key matches a cycle-27 carrier name or stored-member type-name; surfaced 4 latent V1.47.D bindings — `Self.Index` / `Self.Element` / `Base.Element` / `Iterator.Element` — added to `intentionallyUnmatchedKeys` escape hatch with documented rationale). v1.58 is **scaffolding-only by design**: V1.58.A's binding fires correctly but doesn't close picks (strategist still rejects bound carrier with no curated `OrderedSet<Int>` recipe). Cycle-55 outcome: aggregate counts unchanged; 29 OS picks show detail-string shift `"unsupported-carrier: OrderedSet"` → `"unsupported-carrier: OrderedSet<Int>"` confirming the resolver-layer fires. Full OC closure is v1.59-v1.61 scope (strategist recipe + mutating-instance-method emission + generalize to other OC types). **Pre-existing latent test failures caught + fixed**: V1.51.D's 109-count assertion (broken by v1.57 fixture rebuild; v1.57.0 silently failing) + V1.54.B's `OrderedSet == nil` assertion (broken by V1.58.A binding). **Test count 2403 → 2406 (+3)**; **non-subprocess fast path 2406/2406 in ~4s**.
 
-**Cycle-54 measurement headline**: **20/103 = 19.4% measured-execution** (`.bothPass` + `.defaultFails` + `.edgeCaseAdvisory`, excluding error). Total measured count unchanged from cycle-53; **denominator shifts 109 → 103** due to V1.57.A's filter dropping 6 file-private declarations from SwiftPropertyLaws (3 cycle-53 `(none)`-typeName picks + 3 `private static` ViolationFormatter members). Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 83 `.architectural-coverage-pending`.
+**Cycle-55 measurement headline**: **20/103 = 19.4% measured-execution** — aggregate counts unchanged from cycle-54. V1.58 is scaffolding-only by design; v1.58 doesn't close picks but lays groundwork for v1.59+. Distribution: 6 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 83 `.architectural-coverage-pending`.
 
-**The dropped picks (V1.57.A retroactive filter):**
+**Forward progress visible only in detail strings**: 29 OS picks show `"unsupported-carrier: OrderedSet"` → `"unsupported-carrier: OrderedSet<Int>"` confirming V1.58.A's binding-resolver layer fires. Next-layer gap (strategist's generator recipe) is v1.59 scope.
 
-| Hash prefix | Function | Modifier | File |
-|---|---|---|---|
-| 0x9352 | `walkCap(for:)` | `private` | Public/BidirectionalCollectionLaws.swift:237 |
-| 0xAD05 | `iterationCap(for:)` | `private` | Public/IteratorProtocolLaws.swift:97 |
-| 0xBA0E | `snapshot(_:)` | `private` | Public/MutableCollectionLaws.swift:181 |
-| 0xD694 | `headerLine(_:)` | `private static` | Internal/ViolationFormatter.swift:27 |
-| 0x840A | `nearMissLines(_:)` | `private static` | Internal/ViolationFormatter.swift:58 |
-| 0xF67C | `formatBuckets(_:)` | `private static` | Internal/ViolationFormatter.swift:81 |
+**V1.58.B methodology guard surfaced 4 latent V1.47.D bindings** (`Self.Index`, `Self.Element`, `Base.Element`, `Iterator.Element`) — preemptive protocol-extension-anticipation entries that never matched cycle-27. Documented in `intentionallyUnmatchedKeys` escape-hatch set with rationale. Future binding-key additions failing the guard force explicit removal or documented escape-hatch entry.
 
-**`.architectural-coverage-pending` category cleaner**:
-- 83 `unsupported-carrier:<Type>` (down from 87; OC + Algo generic-instantiation gap; v1.58+ TypeShape work)
-- 2 `internal-api-not-accessible` (V1.56.A; unchanged)
-- 0 `unsupported-carrier:(none)` (the 3 v1.56 `(none)` picks dropped via V1.57.A; the category is eliminated entirely)
-
-**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-53):
+**32-pick sample-subset agreement with cycle-46** (unchanged from cycle-54):
 - **Strict 4-category match**: 5/13 = 38%
-- **Semantic "property holds" match**: 13/13 = **100%** (none of the V1.57.A-dropped picks were in the cycle-46 stratified subset).
+- **Semantic "property holds" match**: 13/13 = **100%**
 
-v1.58+ priorities (per cycle-54 evidence, in priority order):
+v1.59+ priorities (per cycle-55 evidence, in priority order):
 
-1. **v1.58-v1.59 — TypeShape-driven generic instantiation** for OC + Algo types — dominant remaining category (83 `unsupported-carrier` picks; 83/83 = 100% of pending). Multi-cycle scope.
-2. **v1.58 — Instance-method emission** for OC + Algo wrappers — needed alongside TypeShape work since most OC picks are instance methods.
-3. **v1.58 — Methodology guard for binding tables** — fixture-level check that every `GenericBindingResolver.curatedBindings` key matches at least one indexer-produced carrier name. Prevents V1.51.B + V1.52.C latent-key recurrence.
-4. **v1.59+ — Phase 2 accept-flow integration** — the 20-pick measurable sample + clean `.measured-error = 0` baseline + 103-pick coherent index make accept-flow viable.
-5. **v1.59+ — Optional `internal`-modifier filter** — would require careful audit; Swift default is internal so over-aggressive without no-modifier exception. v1.59+ may revisit.
-6. **v1.59+ — Per-function default-pass domain refinement** (v1.55 carry-forward).
-7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
+1. **v1.59 — Strategist-side `OrderedSet<Int>` recipe** — closes the v1.58 scaffold-gap-layer. Curated branch in `StrategistDispatchEmitter.resolveRecipe` returning `Gen<[Int]>.array(...).map { OrderedSet($0) }`. Closes the strategist-rejection failure on 29 OS picks.
+2. **v1.59-v1.60 — Mutating-instance-method idempotence emission for OC** — current emit shape doesn't work for `sort()`-style mutating methods. New shape: `var copy1 = value; copy1.sort(); var copy2 = value; copy2.sort(); copy2.sort(); if copy1 != copy2 { fail }`. Once landed, ~5-10 OS picks should reach `.bothPass` / `.defaultFails`.
+3. **v1.60-v1.61 — Generalize TypeShape work to other OC + Algo carriers** — `OrderedSet.UnorderedView`, `OrderedDictionary`, `_HashTable`, `ChunkedByCollection`, `EvenlyChunkedCollection`, `CombinationsSequence`. Pattern established in v1.59-v1.60.
+4. **v1.61+ — Phase 2 accept-flow integration** — demonstrably viable: 20-pick measurable sample, 0 .measured-error, methodology guard preventing latent-key recurrence, 103-pick coherent baseline.
+5. **v1.61+ — Per-function default-pass domain refinement** (v1.55 carry-forward).
+6. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Full list in `docs/archive/v1.57 Calibration Plan.md` (v1.57 specifics), `docs/calibration-cycle-54-findings.md` (baseline shift + .architectural-coverage-pending cleanup + v1.58+ roadmap), `docs/calibration-cycle-54-data/full-surface-summary.md` (per-checkout drop breakdown + detail-string distribution).
+Full list in `docs/archive/v1.58 Calibration Plan.md` (v1.58 specifics), `docs/calibration-cycle-55-findings.md` (TypeShape scaffold opening + methodology guard findings + v1.59+ roadmap), `docs/calibration-cycle-55-data/full-surface-summary.md`.
+
+---
+
+[previous: v1.57.0] — fifty-fourth calibration cycle and **seventh Phase 2 gap-closing cycle**. **Methodologically-significant baseline correction** — V1.57.A `private`/`fileprivate` filter in `FunctionScannerVisitor` drops file-private declarations at scan time. Applied retroactively to the cycle-27 fixture: 6 file-private picks from SwiftPropertyLaws dropped (3 file-private helpers + 3 `private static` ViolationFormatter members). **Cycle-27 baseline shifts 109 → 103 picks.** Total measured-execution count unchanged at 20; rate improves 18.3% → 19.4% (denominator-driven).
 
 ---
 
