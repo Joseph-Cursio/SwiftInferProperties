@@ -103,10 +103,28 @@ public enum VerifyResultParser {
             )
         }
 
-        let snippet = lines.suffix(5).joined(separator: " | ")
-        let reason = "verifier subprocess exited with code \(output.exitCode), "
-            + "stdout (last 5 lines, pipe-joined): \(snippet)"
-        return .error(reason: reason)
+        return .error(reason: parseErrorReason(from: output))
+    }
+
+    /// V1.52.B — build the `.error` detail string from the raw
+    /// subprocess output. Cycle-48 measurement (`docs/
+    /// calibration-cycle-48-findings.md`) hit 11 subprocess SIGABRTs
+    /// (exit 6) with empty stdout — the trap reason printed by the
+    /// Swift runtime lands on stderr, so the parse-error path now
+    /// surfaces both streams. Stderr is appended only when non-empty
+    /// so pre-cycle-48 cases (build-failure stderr already captured
+    /// upstream as a different error path) don't gain noise.
+    private static func parseErrorReason(
+        from output: VerifierSubprocess.Output
+    ) -> String {
+        let stdoutSnippet = pipeJoinedTail(of: output.stdout)
+        var reason = "verifier subprocess exited with code \(output.exitCode), "
+            + "stdout (last 5 lines, pipe-joined): \(stdoutSnippet)"
+        let stderrSnippet = pipeJoinedTail(of: output.stderr)
+        if !stderrSnippet.isEmpty {
+            reason += "; stderr (last 5 lines, pipe-joined): \(stderrSnippet)"
+        }
+        return reason
     }
 
     /// Extract the value following a `MARKER:` prefix on the first
@@ -117,6 +135,29 @@ public enum VerifyResultParser {
             return value.trimmingCharacters(in: .whitespaces)
         }
         return nil
+    }
+
+    /// V1.52.B — return the last 5 lines of `stream`, pipe-joined,
+    /// with each line truncated to 200 characters (ellipsis suffix on
+    /// truncation). Empty input → empty output. Used for both stdout
+    /// and stderr in the parse-error detail string.
+    ///
+    /// **Why per-line truncation.** A single multi-line build error
+    /// can produce a 5-line tail where one line is several KB
+    /// (template-instantiation stack traces). Capping per line keeps
+    /// the JSON survey record tractable — the cycle-48 survey doc
+    /// is already 10KB+ for 109 rows; an uncapped stderr field
+    /// could push individual rows past 100KB.
+    private static func pipeJoinedTail(of stream: String) -> String {
+        let trimmed = stream.split(separator: "\n").map(String.init)
+        let lastFive = trimmed.suffix(5).map { line -> String in
+            if line.count > 200 {
+                let prefix = line.prefix(200)
+                return "\(prefix)…"
+            }
+            return line
+        }
+        return lastFive.joined(separator: " | ")
     }
 }
 
