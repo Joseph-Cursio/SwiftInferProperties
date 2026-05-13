@@ -86,13 +86,28 @@ public enum CallExpressionShape: Equatable, Sendable {
 
     /// One-shot helper: classify and render in a single call. Equivalent
     /// to `classify(...).rendered`.
+    ///
+    /// **V1.59.A.fix**: defends against the indexer producing
+    /// already-qualified `primaryFunctionName` values. Cycle-56 OS
+    /// picks (e.g. `OrderedSet.sort()`) carry a type-qualifier prefix
+    /// in the indexed name; without this stripping the renderer would
+    /// produce `OrderedSet.OrderedSet.sort`. Other carriers' picks
+    /// (e.g. Complex's `exp(_:)`) come through as bare names, so the
+    /// strip is a no-op for them.
     public static func render(
         typeQualifier: String,
         bareFunctionName: String
     ) -> String {
-        classify(
+        let prefix = "\(typeQualifier)."
+        let trueBareName: String
+        if bareFunctionName.hasPrefix(prefix) {
+            trueBareName = String(bareFunctionName.dropFirst(prefix.count))
+        } else {
+            trueBareName = bareFunctionName
+        }
+        return classify(
             typeQualifier: typeQualifier,
-            bareFunctionName: bareFunctionName
+            bareFunctionName: trueBareName
         ).rendered
     }
 

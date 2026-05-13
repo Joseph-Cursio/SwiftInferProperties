@@ -80,4 +80,82 @@ struct V1_56ArchitecturalPendingDetailTests {
         #expect(onlyStdout == "internal-api-not-accessible")
         #expect(onlyStderr == "internal-api-not-accessible")
     }
+
+    // MARK: V1.59.A — instance-member-on-type pattern
+
+    @Test("V1.59.A: matches `instance member ... cannot be used on type`")
+    func matchesInstanceMemberError() {
+        let stdout = "error: instance member 'sort' cannot be used on type 'OrderedSet<Int>'"
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "instance-method-shape-not-supported")
+    }
+
+    @Test("V1.59.A: matches instance-member pattern on stderr stream")
+    func matchesInstanceMemberOnStderr() {
+        let stderr = """
+        main.swift:27:22: error: generic parameter 'Element' could not be inferred
+        main.swift:27:22: error: instance member 'sort' cannot be used on type 'OrderedSet<<<hole>>>'
+        """
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: "",
+            buildStderr: stderr
+        )
+        #expect(detail == "instance-method-shape-not-supported")
+    }
+
+    @Test("internal-access pattern takes precedence over instance-member pattern (consistent ordering)")
+    func internalAccessPrecedesInstanceMember() {
+        // If both patterns appear (unlikely in real output but the
+        // helper's behavior should be deterministic), internal-access
+        // wins because it's the more semantically meaningful gap.
+        let stdout = """
+        error: 'foo' is inaccessible due to 'internal' protection level
+        error: instance member 'bar' cannot be used on type 'X'
+        """
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "internal-api-not-accessible")
+    }
+
+    // MARK: V1.59.A — additional patterns
+
+    @Test("V1.59.A: matches `no exact matches in call to instance method`")
+    func matchesNoExactMatchesInstance() {
+        let stdout = "error: no exact matches in call to instance method 'subtract'"
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "instance-method-shape-not-supported")
+    }
+
+    @Test("V1.59.A: matches `compile command failed due to signal` (compiler crash)")
+    func matchesCompilerCrash() {
+        let stdout = """
+        error: emit-module command failed due to signal 6 (use -v to see invocation)
+        error: compile command failed due to signal 6 (use -v to see invocation)
+        """
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "instance-method-shape-not-supported")
+    }
+
+    @Test("V1.59.A: matches `requires that X conform to Y` (carrier-conformance gap)")
+    func matchesConformanceRequirement() {
+        let stdout = """
+        error: global function 'min' requires that 'OrderedSet<Int>' conform to 'Comparable'
+        """
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "carrier-missing-required-conformance")
+    }
 }

@@ -154,6 +154,16 @@ public enum StrategistDispatchEmitter {
                 imports: imports
             )
         }
+        // V1.59.A — curated OC carrier recipes. Short-circuits before
+        // the kit-side strategy call for carriers the strategist's
+        // `DerivationStrategist.strategy(for:)` returns `.todo` on
+        // (wrapper-around-Array types like `OrderedSet<Int>`). v1.59
+        // ships with one entry; v1.60+ extends to `OrderedDictionary<Int, Int>`,
+        // `_HashTable`, `ChunkedByCollection<Array<Int>>`, etc.
+        // See `docs/calibration-cycle-55-findings.md`.
+        if let curated = curatedOCRecipe(carrier: carrier) {
+            return curated
+        }
         if let typeShape {
             let strategy = DerivationStrategist.strategy(for: typeShape.toKitShape())
             return try recipe(for: strategy, carrier: carrier)
@@ -162,6 +172,38 @@ public enum StrategistDispatchEmitter {
             carrier: carrier,
             expected: ["any RawType, or any carrier with an indexed TypeShape"]
         )
+    }
+
+    /// V1.59.A — curated recipes for OC + Algo wrapper-around-Array
+    /// carriers the kit's strategist doesn't recognize. Each entry
+    /// returns a `Generator<Carrier, some SendableSequenceType>`-typed
+    /// expression that the V1.47.E composers can drop into the stub's
+    /// `defaultGenerator` slot.
+    ///
+    /// **Generator deterministic-ness**: each recipe's expression must
+    /// produce reproducible outputs from a single `Gen<Int>` source.
+    /// The expression runs inside `Gen<Int>.int(...).map { ... }`, so
+    /// the outer `Gen` is the only randomness; the `.map`'s closure
+    /// must be pure. This keeps the v1.42 Xoshiro seed → outcome chain
+    /// deterministic.
+    ///
+    /// **Sample-coverage scope**: v1.59's `OrderedSet<Int>` recipe
+    /// produces 4-element sets `{n, n+1, n+2, n+3}`. Modest variety
+    /// per trial, but the 100-trial budget covers n ∈ [0, 100], i.e.,
+    /// 100 distinct sets. v1.60+ may switch to wider-distribution
+    /// generators (e.g. variable count via a second `Gen<Int>`) if
+    /// cycle-N evidence shows coverage gaps.
+    private static func curatedOCRecipe(carrier: String) -> GeneratorRecipe? {
+        switch carrier {
+        case "OrderedSet<Int>":
+            return GeneratorRecipe(
+                expression: "Gen<Int>.int(in: 0 ... 100).map { OrderedSet([$0, $0 + 1, $0 + 2, $0 + 3]) }",
+                carrierTypeName: carrier,
+                imports: ["Foundation", "OrderedCollections", "PropertyBased"]
+            )
+        default:
+            return nil
+        }
     }
 
     /// Translate a `DerivationStrategy` result into an emission

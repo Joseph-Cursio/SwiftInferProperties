@@ -158,6 +158,13 @@ public enum VerifierWorkdir {
     private static func renderDependenciesBlock(userPackage: UserPackageReference?) -> String {
         var entries = [
             ".package(url: \"https://github.com/apple/swift-numerics.git\", from: \"1.0.0\")",
+            // V1.59.A — swift-collections for OrderedSet / OrderedDictionary
+            // carriers. Required for the curated OC recipes in
+            // `StrategistDispatchEmitter.curatedOCRecipe`. v1.58 added the
+            // bare→qualified binding `OrderedSet → OrderedSet<Int>`; v1.59
+            // wires the dependency so the synthesized workdir can import
+            // `OrderedCollections`.
+            ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
             ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
             ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.1.0\")"
         ]
@@ -179,6 +186,8 @@ public enum VerifierWorkdir {
     private static func renderTargetDependenciesBlock(userPackage: UserPackageReference?) -> String {
         var entries = [
             ".product(name: \"ComplexModule\", package: \"swift-numerics\")",
+            // V1.59.A — OrderedCollections product for OC carriers.
+            ".product(name: \"OrderedCollections\", package: \"swift-collections\")",
             ".product(name: \"RealModule\", package: \"swift-numerics\")",
             ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
             ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"

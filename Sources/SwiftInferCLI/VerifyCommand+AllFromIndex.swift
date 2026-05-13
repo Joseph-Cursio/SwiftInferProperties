@@ -272,6 +272,13 @@ extension SwiftInferCommand.Verify {
     ///     measurement-tooling gap (fix: skip non-public symbols at
     ///     indexer time, or `@testable import` in the workdir), not a
     ///     verifier-architecture gap.
+    ///   - `instance member ... cannot be used on type` →
+    ///     `"instance-method-shape-not-supported"`. V1.59.A surfaced
+    ///     23 OS picks that compile-fail because the resolver builds
+    ///     `OrderedSet.sort(value)` (static call) but `sort()` is an
+    ///     instance method. Mutating-instance-method emission is
+    ///     v1.60+ scope; the picks remain architecturally pending
+    ///     until then.
     ///
     /// **Why both streams**: `swift build` formats compiler diagnostics
     /// to stdout (parent-process-readable) and emits SwiftPM-level
@@ -280,9 +287,9 @@ extension SwiftInferCommand.Verify {
     /// message lands on stdout; checking both makes the pattern robust
     /// against SwiftPM future-version changes.
     ///
-    /// **Extension point**: v1.57+ may add more patterns (e.g. for
-    /// internal-typed parameters, `@_spi` symbols, etc.) as
-    /// cycle-N evidence motivates.
+    /// **Extension point**: v1.60+ may add more patterns (e.g. for
+    /// `@_spi` symbols, ambiguous overloads, etc.) as cycle-N evidence
+    /// motivates.
     static func architecturalPendingDetail(
         buildStdout: String,
         buildStderr: String
@@ -290,6 +297,62 @@ extension SwiftInferCommand.Verify {
         if buildStdout.contains("is inaccessible due to '")
             || buildStderr.contains("is inaccessible due to '") {
             return "internal-api-not-accessible"
+        }
+        // V1.59.A — recognize instance-method-on-type errors. Three
+        // related Swift compiler diagnostics for the same root cause
+        // (synthesized stub calls `<Type>.<method>(value)` static shape
+        // but `<method>` is an instance method). Mutating-instance-
+        // method emission is v1.60+ scope.
+        //
+        // **(a)** `instance member ... cannot be used on type` — the
+        //         canonical diagnostic.
+        // **(b)** `no exact matches in call to instance method` — Swift
+        //         emits this when there's an instance method matching
+        //         the name but no static overload.
+        // **(c)** `compile command failed due to signal` (typically
+        //         signal 6 = SIGABRT) — swift-frontend CRASH on the
+        //         static-call-of-instance-mutating-method shape. Empirical
+        //         in cycle-56 on OS picks like `_ensureUnique()`,
+        //         `_isUnique()`, `_regenerateHashTable()`. The compiler
+        //         bails before emitting a structured diagnostic, but
+        //         the underlying cause is the same instance-method-shape
+        //         gap. Match conservatively — only when the
+        //         `emit-module` or `compile command` strings appear
+        //         alongside `signal`, not on arbitrary signal mentions.
+        let instanceMemberOnType = "cannot be used on type"
+        let noExactMatchesInstance = "no exact matches in call to instance method"
+        let compileCrashOnSignal =
+            (buildStdout.contains("compile command failed due to signal")
+                || buildStdout.contains("emit-module command failed due to signal"))
+        let stderrCrashOnSignal =
+            (buildStderr.contains("compile command failed due to signal")
+                || buildStderr.contains("emit-module command failed due to signal"))
+        let stdoutInstanceMember =
+            (buildStdout.contains("instance member") && buildStdout.contains(instanceMemberOnType))
+            || buildStdout.contains(noExactMatchesInstance)
+            || compileCrashOnSignal
+        let stderrInstanceMember =
+            (buildStderr.contains("instance member") && buildStderr.contains(instanceMemberOnType))
+            || buildStderr.contains(noExactMatchesInstance)
+            || stderrCrashOnSignal
+        if stdoutInstanceMember || stderrInstanceMember {
+            return "instance-method-shape-not-supported"
+        }
+        // V1.59.A — monotonicity picks on non-Comparable carriers
+        // (e.g. `OrderedSet<Int>` doesn't conform to `Comparable`) hit
+        // `global function 'min' requires that '<Carrier>' conform to
+        // 'Comparable'` — the monotonicity stub uses `min`/`max` to
+        // order the two trial values. v1.61+ may add a Comparable-
+        // aware monotonicity composer or a different value-ordering
+        // strategy for non-Comparable carriers.
+        let requiresConformance = "requires that"
+        let conformTo = "conform to"
+        let stdoutConformance =
+            buildStdout.contains(requiresConformance) && buildStdout.contains(conformTo)
+        let stderrConformance =
+            buildStderr.contains(requiresConformance) && buildStderr.contains(conformTo)
+        if stdoutConformance || stderrConformance {
+            return "carrier-missing-required-conformance"
         }
         return nil
     }
