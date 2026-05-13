@@ -118,6 +118,23 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        // V1.57.A — skip functions declared `private` or `fileprivate`.
+        // Cycle-53 measurement (`docs/calibration-cycle-53-findings.md`)
+        // surfaced 3 file-private helpers (`walkCap`, `iterationCap`,
+        // `snapshot`) in SwiftPropertyLaws that ended up indexed as
+        // `(none)`-typeName picks. These helpers aren't reachable from
+        // outside the file and can't be property-tested cross-module;
+        // filtering at scan time prevents them from entering the
+        // SemanticIndex. **Not** filtering `internal` — Swift's default
+        // access level is internal, so most user code carries no
+        // explicit modifier; filtering internal would over-eagerly drop
+        // most picks. Internal-but-explicit symbols (cycle-52's
+        // `rescaledDivide`) are handled at verify time via V1.56.A's
+        // pattern matcher instead.
+        let modifiers = node.modifiers.map { $0.name.text }
+        if modifiers.contains("private") || modifiers.contains("fileprivate") {
+            return .skipChildren
+        }
         summaries.append(makeSummary(from: node))
         return .skipChildren
     }

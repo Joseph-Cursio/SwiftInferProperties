@@ -198,4 +198,27 @@ struct FunctionScannerHeaderTests {
         #expect(summary.location.file == "Sources/X.swift")
         #expect(summary.location.line == 3)
     }
+
+    // MARK: V1.57.A — private/fileprivate filter
+
+    @Test("private functions are skipped at scan time (V1.57.A)")
+    func privateFunctionsAreSkipped() {
+        let source = """
+        public func publicFn() {}
+        private func privateFn() {}
+        fileprivate func fileprivateFn() {}
+        internal func internalFn() {}
+        func defaultFn() {}
+        """
+        let summaries = FunctionScanner.scan(source: source, file: "Test.swift")
+        let names = summaries.map(\.name)
+        #expect(names.contains("publicFn"))
+        #expect(names.contains("internalFn"))
+        #expect(names.contains("defaultFn"))
+        #expect(names.contains("privateFn") == false)
+        #expect(names.contains("fileprivateFn") == false)
+        // Final count: 3 (public + internal + default-internal); the 2
+        // private/fileprivate variants are skipped.
+        #expect(summaries.count == 3)
+    }
 }
