@@ -73,11 +73,11 @@ extension SwiftInferCommand {
 
         /// Pure pipeline — exposed at the type level so tests exercise
         /// drift end-to-end without going through ArgumentParser or
-        /// stderr. Loads baseline + decisions, runs the same discover
-        /// pipeline as `swift-infer discover`, hands the three to
-        /// `DriftDetector`, prints warnings to `diagnostics`. `output`
-        /// stays empty when no drift is detected — the CI-friendly
-        /// "silent on no-changes" shape.
+        /// stderr. Loads verify evidence + baseline + decisions, runs the
+        /// same discover pipeline as `swift-infer discover`, hands the
+        /// three to `DriftDetector`, prints warnings to `diagnostics`.
+        /// `output` stays empty when no drift is detected — the
+        /// CI-friendly "silent on no-changes" shape.
         public static func run(
             directory: URL,
             explicitVocabularyPath: URL? = nil,
@@ -86,10 +86,27 @@ extension SwiftInferCommand {
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
+            // V1.68 — load persisted `swift-infer verify` evidence so the
+            // discover pipeline applies the same verify-as-signal grading
+            // here as in `discover`: a `defaultFails` veto suppresses the
+            // disproven pick *before* the visibility cut, so it never
+            // reaches `DriftDetector` and drift won't warn on a
+            // verify-disproven Strong-tier candidate. Mirrors
+            // `Discover.run`'s evidence load; absent / unreadable file →
+            // empty map → drift behaves exactly as it did pre-v1.68.
+            let evidenceResult = VerifyEvidenceStore.load(startingFrom: directory)
+            for warning in evidenceResult.warnings {
+                diagnostics.writeDiagnostic("warning: \(warning)")
+            }
+            let evidenceByIdentity = Dictionary(
+                evidenceResult.log.records.map { ($0.identityHash, $0) },
+                uniquingKeysWith: { _, latest in latest }
+            )
             let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
+                verifyEvidenceByIdentity: evidenceByIdentity,
                 diagnostics: diagnostics
             )
             let packageRoot = pipeline.packageRoot ?? directory

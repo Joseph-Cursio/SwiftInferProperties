@@ -107,7 +107,12 @@ struct DriftCommandTests {
         #expect(!FileManager.default.fileExists(atPath: baselinePath.path))
     }
 
-    // MARK: - swift-infer drift
+}
+
+// MARK: - swift-infer drift
+
+@Suite("swift-infer drift — detection + verify integration (M6.5 / V1.68)")
+struct DriftDetectionTests {
 
     @Test
     func driftAgainstFreshCorpusWithoutBaselineWarnsOnEveryStrong() throws {
@@ -214,6 +219,57 @@ struct DriftCommandTests {
     }
 
     @Test
+    func driftIsSilentForVerifyDisprovenSuggestions() throws {
+        let directory = try makeFixtureDirectory(name: "DriftSilentAfterVerifyDisproven")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: directory.appendingPathComponent("Package.swift")
+        )
+        let target = try makeTarget(in: directory, contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        // Capture the Strong suggestion's identity, then persist a
+        // `.measuredDefaultFails` verify record for it. V1.68 — drift
+        // loads verify evidence and feeds it to the discover pipeline,
+        // so the veto suppresses the disproven pick before it can reach
+        // `DriftDetector`; drift stays silent even with no baseline and
+        // no recorded decision.
+        let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: target,
+            diagnostics: RecordingDiagnosticOutput()
+        )
+        let strong = try #require(pipeline.suggestions.first { $0.score.tier == .strong })
+        let log = VerifyEvidenceLog(records: [
+            VerifyEvidence(
+                identityHash: strong.identity.normalized,
+                template: strong.templateName,
+                outcome: .measuredDefaultFails,
+                detail: nil,
+                capturedAt: Date(timeIntervalSince1970: 0),
+                swiftInferVersion: "test"
+            )
+        ])
+        try VerifyEvidenceStore.write(
+            log,
+            to: directory.appendingPathComponent(".swiftinfer/verify-evidence.json")
+        )
+
+        let recording = RecordingOutput()
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Drift.run(
+            directory: target,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(diagnostics.lines.filter { $0.hasPrefix("warning: drift:") }.isEmpty)
+        #expect(recording.lines.contains("No drift detected."))
+    }
+
+    @Test
     func driftLineMatchesByteStableShape() throws {
         let directory = try makeFixtureDirectory(name: "DriftLineGolden")
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -242,27 +298,29 @@ struct DriftCommandTests {
         #expect(driftLine.hasSuffix(":2 — idempotence (no recorded decision)"))
     }
 
-    // MARK: - Helpers
+}
 
-    private func makeFixtureDirectory(name: String) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DriftCommandTests-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        return base
-    }
+// MARK: - Shared fixture helpers (file-private free functions so both
+// DriftCommandTests and DriftDetectionTests share one definition).
 
-    private func makeTarget(in root: URL, contents: String) throws -> URL {
-        let target = root
-            .appendingPathComponent("Sources")
-            .appendingPathComponent("Lib")
-        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
-        try contents.write(
-            to: target.appendingPathComponent("Source.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
-        return target
-    }
+private func makeFixtureDirectory(name: String) throws -> URL {
+    let base = FileManager.default.temporaryDirectory
+        .appendingPathComponent("DriftCommandTests-\(name)-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+    return base
+}
+
+private func makeTarget(in root: URL, contents: String) throws -> URL {
+    let target = root
+        .appendingPathComponent("Sources")
+        .appendingPathComponent("Lib")
+    try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+    try contents.write(
+        to: target.appendingPathComponent("Source.swift"),
+        atomically: true,
+        encoding: .utf8
+    )
+    return target
 }
 
 // MARK: - Local recording stubs (file-private to avoid colliding with
