@@ -366,42 +366,10 @@ extension StrategistDispatchEmitter {
         """
     }
 
-    // MARK: - V1.48.A Monotonicity (2 values per trial; a ≤ b → f(a) ≤ f(b))
+    // MARK: - V1.48.A Monotonicity
 
-    /// Draws two values, sorts so `a ≤ b`, applies the function to
-    /// each, and asserts `f(a) ≤ f(b)`. The carrier must conform to
-    /// `Comparable`; v1.48 trusts the strategist's surface
-    /// (Int / String / Bool / fixed-width ints — all Comparable).
-    static func composeMonotonicityPass(
-        inputs: Inputs,
-        recipe: GeneratorRecipe
-    ) -> String {
-        let functionCall = inputs.functionCalls.first ?? "(missing)"
-        return """
-        // --- Pass 1: default (strategist-derived generator) ---
-
-        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
-            \(recipe.expression)
-
-        for trial in 0 ..< trials {
-            let firstDraw = defaultGenerator.run(using: &rng)
-            let secondDraw = defaultGenerator.run(using: &rng)
-            let valueA = min(firstDraw, secondDraw)
-            let valueB = max(firstDraw, secondDraw)
-            let resultA = \(functionCall)(valueA)
-            let resultB = \(functionCall)(valueB)
-            if resultA > resultB {
-                print("VERIFY_DEFAULT_RESULT: FAIL")
-                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB))")
-                print("VERIFY_DEFAULT_FORWARD: \\(resultA)")
-                print("VERIFY_DEFAULT_INVERSE: \\(resultB)")
-                exit(1)
-            }
-        }
-
-        print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
-        """
-    }
+    // The monotonicity composers (`composeMonotonicityPass` +
+    // `composeInstanceMethodMonotonicityPass`) live in
+    // `StrategistDispatchEmitter+Monotonicity.swift` — extracted V1.69
+    // so this file stays under SwiftLint's file-length cap.
 }

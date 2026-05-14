@@ -260,16 +260,16 @@ extension SwiftInferCommand.Verify {
                 rendererInverseName: call
             )
         case "idempotence-lifted", "monotonicity":
-            // V1.48.B — same single-function shape as idempotence /
-            // commutativity / associativity; the per-template emitter
-            // wraps the call differently (idempotence-lifted lifts
-            // through Gen<[T]>; monotonicity sorts before comparing).
-            let call = CallExpressionShape.render(
-                typeQualifier: typeQualifier,
-                bareFunctionName: funcName
-            )
+            // V1.48.B — single-function shape. V1.69 — monotonicity's OC
+            // composer also needs the un-stripped `primaryFunctionName`
+            // (e.g. `"index(after:)"`) to recover the labeled-arg name;
+            // the Int/String composer reads only `functionCalls.first`.
+            let call = CallExpressionShape.render(typeQualifier: typeQualifier, bareFunctionName: funcName)
+            let expressions = entry.templateName == "monotonicity"
+                ? [call, entry.primaryFunctionName]
+                : [call]
             return ResolvedCalls(
-                expressions: [call],
+                expressions: expressions,
                 rendererForwardName: call,
                 rendererInverseName: call
             )
