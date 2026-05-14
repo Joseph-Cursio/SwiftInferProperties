@@ -41,12 +41,18 @@ extension StrategistDispatchEmitter {
     /// `Gen<Int>` source producing a fresh 4-key `OrderedDictionary<Int,
     /// Int>`, with `viewSuffix` (`".elements"`, `".values"`,
     /// `".elements[...]"`) projecting the view under test.
+    ///
+    /// The `OrderedDictionary<Int, Int>(...)` construction is bound to a
+    /// concretely-typed local before the view is projected: the
+    /// single-expression form with an inline 4-tuple literal *plus* a
+    /// `.elements[...]` slice overloads the Swift type-checker
+    /// ("unable to type-check this expression in reasonable time").
     private static func ocDictExpression(viewSuffix: String) -> String {
-        "Gen<Int>.int(in: 0 ... 100).map { "
-            + "OrderedDictionary(uniqueKeysWithValues: ["
-            + "($0, $0 * 2), ($0 + 1, ($0 + 1) * 2), "
-            + "($0 + 2, ($0 + 2) * 2), ($0 + 3, ($0 + 3) * 2)])"
-            + "\(viewSuffix) }"
+        "Gen<Int>.int(in: 0 ... 100).map { seed in "
+            + "let dict = OrderedDictionary<Int, Int>(uniqueKeysWithValues: ["
+            + "(seed, seed * 2), (seed + 1, (seed + 1) * 2), "
+            + "(seed + 2, (seed + 2) * 2), (seed + 3, (seed + 3) * 2)]); "
+            + "return dict\(viewSuffix) }"
     }
 
     /// The curated OC recipe table, keyed by bound carrier name.
