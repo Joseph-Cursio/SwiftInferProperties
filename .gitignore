@@ -44,3 +44,6 @@ fastlane/test_output
 # V1.50.A — cycle27-surface fixture's SwiftPM-resolved checkouts
 fixtures/cycle27-surface/.build/
 fixtures/cycle27-surface/Package.resolved
+
+# Verify-pipeline synthesized SwiftPM workdirs (build artifacts; index.json stays tracked)
+fixtures/cycle27-surface/.swiftinfer/verify-workdir/
