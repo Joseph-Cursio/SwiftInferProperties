@@ -157,7 +157,7 @@ extension SwiftInferCommand.Verify {
         let capturedAt = Date()
         let batch = collected.map { record in
             VerifyEvidence(
-                identityHash: record.identityHash,
+                identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(record.identityHash),
                 template: record.templateName,
                 outcome: VerifyEvidenceRecorder.evidenceOutcome(for: record.outcome),
                 detail: record.outcomeDetail,

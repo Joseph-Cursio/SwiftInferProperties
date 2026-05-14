@@ -18,6 +18,20 @@ enum VerifyEvidenceRecorder {
         SwiftInferCommand.configuration.version
     }
 
+    /// Normalize a raw identity-hash string to the canonical persisted
+    /// form — `SuggestionIdentity.normalized`: 16-char uppercase hex,
+    /// no `0x` prefix. `SemanticIndexEntry.identityHash` carries the
+    /// `0x`-prefixed `display` form, but `DecisionRecord` (and so this
+    /// store, for cross-`.swiftinfer/`-file join consistency) keys on
+    /// the stripped form. Without this the `discover` evidence-lookup
+    /// would miss every pick.
+    static func normalizedIdentityHash(_ raw: String) -> String {
+        if raw.hasPrefix("0x") || raw.hasPrefix("0X") {
+            return String(raw.dropFirst(2)).uppercased()
+        }
+        return raw.uppercased()
+    }
+
     /// Map a parsed single-suggestion `VerifyOutcome` to the persisted
     /// five-category `VerifyEvidenceOutcome` + detail string. Mirrors
     /// the survey's `surveyRecord(from:context:)` outcome mapping so the

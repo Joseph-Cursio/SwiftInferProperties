@@ -235,7 +235,7 @@ extension SwiftInferCommand {
             let (evidenceOutcome, evidenceDetail) = VerifyEvidenceRecorder.evidence(for: parsed)
             let recordWarnings = VerifyEvidenceRecorder.record(
                 VerifyEvidence(
-                    identityHash: entry.identityHash,
+                    identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(entry.identityHash),
                     template: entry.templateName,
                     outcome: evidenceOutcome,
                     detail: evidenceDetail,

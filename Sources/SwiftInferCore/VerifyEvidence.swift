@@ -45,10 +45,13 @@ public enum VerifyEvidenceOutcome: String, Sendable, Equatable, Codable, CaseIte
 ///     `schemaVersion` avoids touching the decisions format at all.
 public struct VerifyEvidence: Sendable, Equatable, Codable {
 
-    /// Stable suggestion-identity hash — matches
-    /// `DecisionRecord.identityHash` and `SemanticIndexEntry.identityHash`
-    /// (16-char uppercase hex, no `0x` prefix). The join key against
-    /// `decisions.json` and the SemanticIndex.
+    /// Stable suggestion-identity hash in the canonical persisted form —
+    /// `SuggestionIdentity.normalized`: 16-char uppercase hex, no `0x`
+    /// prefix, matching `DecisionRecord.identityHash`. The join key
+    /// against `decisions.json` and against `discover` suggestions.
+    /// Note `SemanticIndexEntry.identityHash` uses the `0x`-prefixed
+    /// `display` form — `VerifyEvidenceRecorder.normalizedIdentityHash`
+    /// strips it on write.
     public let identityHash: String
 
     /// Template that produced the suggestion (`"round-trip"`,

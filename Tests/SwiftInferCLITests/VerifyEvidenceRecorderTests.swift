@@ -66,6 +66,27 @@ struct VerifyEvidenceRecorderTests {
         }
     }
 
+    // MARK: - identityHash normalization (cross-file join key)
+
+    @Test
+    func normalizedIdentityHashStripsThe0xDisplayPrefix() {
+        // SemanticIndexEntry.identityHash is the 0x-prefixed display form;
+        // the evidence store keys on the stripped form to match
+        // DecisionRecord.identityHash and discover's suggestion identities.
+        #expect(VerifyEvidenceRecorder.normalizedIdentityHash("0x5F9B7214CBE810A5") == "5F9B7214CBE810A5")
+        #expect(VerifyEvidenceRecorder.normalizedIdentityHash("0X5F9B7214CBE810A5") == "5F9B7214CBE810A5")
+    }
+
+    @Test
+    func normalizedIdentityHashLeavesAnAlreadyStrippedHashUnchanged() {
+        #expect(VerifyEvidenceRecorder.normalizedIdentityHash("5F9B7214CBE810A5") == "5F9B7214CBE810A5")
+    }
+
+    @Test
+    func normalizedIdentityHashUppercasesLowercaseHex() {
+        #expect(VerifyEvidenceRecorder.normalizedIdentityHash("0xabcdef1234567890") == "ABCDEF1234567890")
+    }
+
     // MARK: - Version stamp
 
     @Test
