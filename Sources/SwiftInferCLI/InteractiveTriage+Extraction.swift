@@ -74,16 +74,26 @@ extension InteractiveTriage {
         return tail.isEmpty ? nil : tail
     }
 
+    /// Build the persisted `DecisionRecord` for a triaged suggestion.
+    ///
+    /// V1.68 — `tier` records the *effective* tier: the base
+    /// score-derived `suggestion.score.tier` promoted through
+    /// `Tier.promoted(byVerifyOutcome:)`, so a `.strong` pick whose
+    /// `swift-infer verify` run reached `.measuredBothPass` records as
+    /// `.verified` (mirroring what `discover` rendered). `verifyOutcome`
+    /// is `nil` when no evidence was loaded for this identity — promotion
+    /// is then a no-op and the base tier is recorded unchanged.
     static func makeRecord(
         for suggestion: Suggestion,
         decision: Decision,
-        timestamp: Date
+        timestamp: Date,
+        verifyOutcome: VerifyEvidenceOutcome? = nil
     ) -> DecisionRecord {
         DecisionRecord(
             identityHash: suggestion.identity.normalized,
             template: suggestion.templateName,
             scoreAtDecision: suggestion.score.total,
-            tier: suggestion.score.tier,
+            tier: suggestion.score.tier.promoted(byVerifyOutcome: verifyOutcome),
             decision: decision,
             timestamp: timestamp,
             signalWeights: suggestion.score.signals.map { signal in

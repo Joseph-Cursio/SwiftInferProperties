@@ -104,6 +104,17 @@ public enum InteractiveTriage {
         /// that case.
         public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
 
+        /// V1.68 — persisted `swift-infer verify` evidence keyed by
+        /// `SuggestionIdentity.normalized`, the same map `discover`
+        /// threads into the renderer for verified-first ordering. Used
+        /// at decision-record time so `DecisionRecord.tier` carries the
+        /// *effective* tier — a `.strong` pick with `.measuredBothPass`
+        /// evidence records as `.verified`, not `.strong` — and the
+        /// `metrics` tier-mix reflects it. Empty when the caller didn't
+        /// load evidence (non-`discover` callers); `makeRecord` then
+        /// records the base score-derived tier unchanged.
+        public let verifyEvidenceByIdentity: [String: VerifyEvidence]
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -113,7 +124,8 @@ public enum InteractiveTriage {
             clock: @escaping @Sendable () -> Date = { Date() },
             proposalsByType: [String: [RefactorBridgeProposal]] = [:],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
-            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:]
+            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
+            verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
         ) {
             self.prompt = prompt
             self.output = output
@@ -124,6 +136,7 @@ public enum InteractiveTriage {
             self.proposalsByType = proposalsByType
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
+            self.verifyEvidenceByIdentity = verifyEvidenceByIdentity
         }
     }
 
@@ -208,7 +221,9 @@ public enum InteractiveTriage {
             state.decisions = state.decisions.upserting(makeRecord(
                 for: suggestion,
                 decision: decision,
-                timestamp: context.clock()
+                timestamp: context.clock(),
+                verifyOutcome: context
+                    .verifyEvidenceByIdentity[suggestion.identity.normalized]?.outcome
             ))
         }
     }

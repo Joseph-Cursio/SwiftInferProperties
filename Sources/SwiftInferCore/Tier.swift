@@ -13,9 +13,11 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
     /// `promoted(byVerifyOutcome:)`, mirroring how `.advisory` is set
     /// explicitly by the surfacing pipeline. Declared first so
     /// `Tier.allCases` reads verified → strong → likely → … . Shown by
-    /// default. Promotion is render-time only — `.verified` never reaches
-    /// `DecisionRecord.tier` or `Baseline.tier` (those keep the base
-    /// score-derived tier).
+    /// default. V1.68 — `.verified` reaches `DecisionRecord.tier` too:
+    /// `--interactive` triage records the *effective* tier so the
+    /// `metrics` tier-mix reflects verified picks. `Baseline.tier` still
+    /// keeps the base score-derived tier (a snapshot is a pre-verify
+    /// surface marker, not a decision).
     case verified
 
     /// Score >= 75. Shown by default.

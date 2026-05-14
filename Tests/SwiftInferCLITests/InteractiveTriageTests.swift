@@ -310,7 +310,8 @@ func makeTriageContext(
     output: TriageRecordingOutput = TriageRecordingOutput(),
     diagnostics: TriageRecordingDiagnosticOutput = TriageRecordingDiagnosticOutput(),
     outputDirectory: URL = FileManager.default.temporaryDirectory,
-    dryRun: Bool = false
+    dryRun: Bool = false,
+    verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
 ) -> InteractiveTriage.Context {
     InteractiveTriage.Context(
         prompt: prompt,
@@ -318,7 +319,8 @@ func makeTriageContext(
         diagnostics: diagnostics,
         outputDirectory: outputDirectory,
         dryRun: dryRun,
-        clock: { Date(timeIntervalSince1970: 0) }
+        clock: { Date(timeIntervalSince1970: 0) },
+        verifyEvidenceByIdentity: verifyEvidenceByIdentity
     )
 }
 

@@ -262,7 +262,8 @@ extension SwiftInferCommand {
                         inverseElementPairs: pipeline.inverseElementPairs
                     ),
                     equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
-                    consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity
+                    consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity,
+                    verifyEvidenceByIdentity: evidenceByIdentity
                 )
                 try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
                 return

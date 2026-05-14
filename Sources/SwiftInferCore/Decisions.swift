@@ -69,7 +69,12 @@ public struct DecisionRecord: Sendable, Equatable, Codable {
     /// across kit versions.
     public let scoreAtDecision: Int
 
-    /// Tier the suggestion fell into at decision time per `Score.tier`.
+    /// Tier the suggestion fell into at decision time. V1.68 — the
+    /// *effective* tier: `Score.tier` promoted through
+    /// `Tier.promoted(byVerifyOutcome:)`, so a `.strong` pick with
+    /// `.measuredBothPass` verify evidence records as `.verified`
+    /// (matching what `discover` rendered). Falls back to the base
+    /// score-derived tier when no verify evidence was loaded.
     public let tier: Tier
 
     /// User's choice.
