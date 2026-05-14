@@ -135,6 +135,71 @@ struct SuggestionRendererVerifyEvidenceTests {
         #expect(rendered.contains("Score:    \(suggestion.score.total) (Strong)"))
     }
 
+    // MARK: - V1.65.B — verified-first stream ordering
+
+    @Test("verifiedFirst floats promoted suggestions ahead, stable within each group")
+    func verifiedFirstStablePartition() {
+        let likelyA = makeSuggestion(canonicalInput: "order-likely-A")
+        let strongB = makeStrongSuggestion(canonicalInput: "order-strong-B")
+        let likelyC = makeSuggestion(canonicalInput: "order-likely-C")
+        let strongD = makeStrongSuggestion(canonicalInput: "order-strong-D")
+        let input = [likelyA, strongB, likelyC, strongD]
+        // strongD promotes to .verified; strongB has disproven evidence
+        // (stays .strong); the two likely picks have no evidence.
+        let evidenceMap = [
+            strongD.identity.normalized: makeEvidence(
+                for: strongD, outcome: .measuredBothPass, detail: nil
+            ),
+            strongB.identity.normalized: makeEvidence(
+                for: strongB, outcome: .measuredDefaultFails, detail: nil
+            )
+        ]
+        let ordered = SuggestionRenderer.verifiedFirst(
+            input,
+            verifyEvidenceByIdentity: evidenceMap
+        )
+        // strongD floated to front; the rest keep their input order.
+        #expect(ordered.map(\.identity.normalized) == [
+            strongD.identity.normalized,
+            likelyA.identity.normalized,
+            strongB.identity.normalized,
+            likelyC.identity.normalized
+        ])
+    }
+
+    @Test("verifiedFirst with an empty evidence map leaves input order unchanged")
+    func verifiedFirstEmptyMapPreservesOrder() {
+        let input = [
+            makeStrongSuggestion(canonicalInput: "noevidence-A"),
+            makeSuggestion(canonicalInput: "noevidence-B"),
+            makeStrongSuggestion(canonicalInput: "noevidence-C")
+        ]
+        let ordered = SuggestionRenderer.verifiedFirst(input, verifyEvidenceByIdentity: [:])
+        #expect(ordered.map(\.identity.normalized) == input.map(\.identity.normalized))
+    }
+
+    @Test("list render places the verified block first")
+    func listRenderPlacesVerifiedBlockFirst() {
+        let likely = makeSuggestion(canonicalInput: "render-order-likely")
+        let strong = makeStrongSuggestion(canonicalInput: "render-order-strong")
+        let evidenceMap = [
+            strong.identity.normalized: makeEvidence(
+                for: strong, outcome: .measuredBothPass, detail: nil
+            )
+        ]
+        // Input order is [likely, strong]; verified-first flips it.
+        let rendered = SuggestionRenderer.render(
+            [likely, strong],
+            verifyEvidenceByIdentity: evidenceMap
+        )
+        guard let verifiedIdx = rendered.range(of: "(Verified)")?.lowerBound,
+              let likelyIdx = rendered.range(of: "(Likely)")?.lowerBound else {
+            Issue.record("Expected both a Verified and a Likely block")
+            return
+        }
+        #expect(verifiedIdx < likelyIdx)
+    }
+
     // MARK: - List render annotates by identity
 
     @Test("list render annotates only the matching suggestion")

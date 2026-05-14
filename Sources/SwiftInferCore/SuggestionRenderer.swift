@@ -71,6 +71,14 @@ public enum SuggestionRenderer {
     /// block is annotated with its match, if any. An empty map (the
     /// default) leaves every block byte-identical to the pre-v1.64
     /// output.
+    ///
+    /// **V1.65.B — verified-first ordering.** Suggestions whose effective
+    /// tier promotes to `.verified` (`.strong` base + `.measuredBothPass`
+    /// evidence) are floated to the top of the stream. The partition is
+    /// stable — relative order within the verified group and within the
+    /// rest is preserved — so the stream stays a deterministic function
+    /// of (sources, vocabulary, config, verify-evidence). An empty
+    /// evidence map promotes nothing, so input order is unchanged.
     public static func render(
         _ suggestions: [Suggestion],
         verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
@@ -80,14 +88,40 @@ public enum SuggestionRenderer {
         }
         let header = "\(suggestions.count) " +
             (suggestions.count == 1 ? "suggestion." : "suggestions.")
+        let ordered = verifiedFirst(
+            suggestions,
+            verifyEvidenceByIdentity: verifyEvidenceByIdentity
+        )
         var blocks: [String] = [header]
-        for suggestion in suggestions {
+        for suggestion in ordered {
             blocks.append(render(
                 suggestion,
                 verifyEvidence: verifyEvidenceByIdentity[suggestion.identity.normalized]
             ))
         }
         return blocks.joined(separator: "\n\n")
+    }
+
+    /// V1.65.B — stable partition that floats `.verified`-tier
+    /// suggestions ahead of the rest. Pure and order-deterministic;
+    /// exposed `internal` so unit tests can pin the ordering directly.
+    static func verifiedFirst(
+        _ suggestions: [Suggestion],
+        verifyEvidenceByIdentity: [String: VerifyEvidence]
+    ) -> [Suggestion] {
+        var verified: [Suggestion] = []
+        var rest: [Suggestion] = []
+        for suggestion in suggestions {
+            let effectiveTier = suggestion.score.tier.promoted(
+                byVerifyOutcome: verifyEvidenceByIdentity[suggestion.identity.normalized]?.outcome
+            )
+            if effectiveTier == .verified {
+                verified.append(suggestion)
+            } else {
+                rest.append(suggestion)
+            }
+        }
+        return verified + rest
     }
 
     /// `--stats-only` mode (M5.4). Renders a per-template /
