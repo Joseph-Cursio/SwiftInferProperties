@@ -4,23 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.63.0** — sixtieth calibration cycle; thirteenth Phase 2 gap-closing cycle; **diminishing-returns pivot point**. V1.63.A scaffolds `OrderedDictionary.Elements` via the V1.62.A 3-edit pattern (binding + recipe + gate) — closes 1 `.bothPass` (`OD.Elements.sort()` idempotence). Plus reclassification for `"generic parameter ... could not be inferred"` — preserves `.measured-error = 0`. **Test count 2415.**
+**Current: v1.64.0** — sixty-first calibration cycle; **Phase 2 accept-flow integration** (architecture cycle, not a measurement cycle). The `swift-infer verify` pipeline's outcomes now persist and surface to the user. Five workstreams: V1.64.A `VerifyEvidence` model + `.swiftinfer/verify-evidence.json` store (a parallel file, not a `DecisionRecord` field — orthogonal lifecycles, no schema-v3 migration); V1.64.B `verify` persists outcomes (single + `--all-from-index` survey), best-effort; V1.64.C `discover` annotates each explainability block with a `Verify:` line; V1.64.D `metrics` cross-references evidence against decisions for the §17.2 "does verify predict the human decision?" question; V1.64.E version bump + this cycle's docs. **Test count 2415 → 2461 (+46).**
 
-**Cycle-60 measurement headline**: **42/103 = 40.8% measured-execution** (+1 vs cycle-59). Distribution: 28 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 61 `.architectural-coverage-pending`. **OC-family coverage**: 22/44 = 50%. Diminishing returns visible: v1.62 closed 8 picks; v1.63 closed 1.
+The cycle was motivated by `docs/calibration-cycle-60-monotonicity-investigation.md` — both cycle-60 pick-closing priorities (Comparable composer; "17 non-OC generics") were verify-checked and found to be mirages. With no high-yield pick target left, v1.64 pivoted to making the 42 already-measured outcomes *do something*.
 
-**Per-pick correctness**: 32-pick sample-subset agreement with cycle-46 — strict 4-category match 5/13 = 38%; semantic "property holds" match 13/13 = **100%**. The 13 OS `.bothPass` outcomes extend the measurable set beyond the cycle-46 sample.
+**Cycle-60 measurement carried forward** (v1.64 touches no emitter/resolver/carrier path): **42/103 = 40.8% measured-execution** — 28 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 61 `.architectural-coverage-pending`. Per-pick correctness: semantic "property holds" match 13/13 = **100%** on the cycle-46 sample subset.
 
-v1.64+ priorities (per cycle-59/60 evidence, in priority order):
+v1.65+ priorities (per cycle-61 findings):
 
-1. **Comparable-aware monotonicity composer** — broader unblock for remaining nested-OC carriers (OS.SubSequence, OD.Values, OD.Elements.SubSequence), which are dominated by Comparable-blocked monotonicity + discover-layer false-positives.
-2. **Strategist recipes for non-OC generics** (17 picks: `_HashTable`, `ChunkedByCollection`, etc.) — V1.62.A 3-edit pattern.
-3. **`_minimumCapacity/_maximumCapacity` curated round-trip pair** (3 picks; likely reclassify to internal-api).
-4. **Phase 2 accept-flow integration** — demonstrably viable (40% measured rate, 0 measured-error).
-5. **Methodology-guard for curated-pair tables** — fixture-level check, V1.58.B-style.
-6. **Discover-layer false-positive cleanup** — 4 commutativity/associativity signature-mismatch picks; deferred indefinitely.
-7. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
+1. **`verify --all-from-index` re-run on the v1.64 binary** — produce the first `verify-evidence.json` for the cycle-27 fixture; confirm the discover annotation + metrics cross-reference render on real data. Natural cycle-62 measurement.
+2. **Verification cache / "Verified" first-class tier** — v1.51-era deferred item; `discover` could re-score/re-tier on evidence rather than only annotating.
+3. **Monotonicity-emitter rework** — the only remaining real pick target (~4 direct + ~6 behind nested-OC scaffolds), but a weak trade per the cycle-60 investigation. Budget deliberately or leave it.
+4. **`metrics` per-corpus evidence join** — extend V1.64.D to explicit `--decisions` aggregation mode.
+5. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`. This file is a pointer-only index. Most recent: `docs/calibration-cycle-59-findings.md`, `docs/archive/v1.62 Calibration Plan.md`.
+Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`. This file is a pointer-only index. Most recent: `docs/calibration-cycle-61-findings.md`, `docs/calibration-cycle-60-monotonicity-investigation.md`.
 
 ### Arc summary (how the project got here)
 
@@ -30,6 +28,7 @@ Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` +
 - **v1.36–v1.41 (Constraint Engine + cluster classification)** — `Constraint<Subject>` + `ConstraintRunner`, template migration, two-layer dominant-pattern cluster rule (v1.41).
 - **v1.42–v1.49 (Phase 1 + 1.5: test-execution-evidence shift)** — `swift-infer verify` pipeline: compiles + runs synthesized property tests in a throwaway SwiftPM workdir. Two-pass edge-case-biased outcomes (`bothPass`/`edgeCaseAdvisory`/`defaultFails`/`error`). Six templates supported; DerivationStrategist verify-time integration; verifiable-fraction reached 87.5%, verifier-mode REJECT lift 8/8.
 - **v1.50–v1.63 (Phase 2: full-surface measurement + gap-closing)** — `--all-from-index` survey over the frozen 103-pick cycle-27 surface; 5-category outcome scheme. Key fixes: `libTesting.dylib` DYLD injection (v1.53, first non-zero measurement), per-function generator domains (v1.55), TypeShape scaffolds for OC carriers (v1.58–v1.63), curated dual-style pair fix (v1.61, +12 `.bothPass`). Measured-execution rate climbed 0% → 40.8%.
+- **v1.64 (Phase 2 accept-flow integration)** — verify outcomes persist to `.swiftinfer/verify-evidence.json` and flow into `discover` (per-suggestion `Verify:` annotation) and `metrics` (§17.2 cross-reference). The first concrete payoff from the v1.42–v1.63 verify-architecture arc: verify evidence that influences what the user sees.
 
 ## Kit-side coordination
 
