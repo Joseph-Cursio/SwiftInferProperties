@@ -122,6 +122,7 @@ extension SwiftInferCommand.Verify {
         budget: RoundTripStubEmitter.TrialBudget,
         parallelism: Int
     ) async throws {
+        var collected: [SurveyRecord] = []
         await withTaskGroup(of: SurveyRecord.self) { group in
             var inFlight = 0
             var nextIndex = 0
@@ -138,6 +139,7 @@ extension SwiftInferCommand.Verify {
             while let record = await group.next() {
                 inFlight -= 1
                 emit(record)
+                collected.append(record)
                 if nextIndex < entries.count {
                     let entry = entries[nextIndex]
                     nextIndex += 1
@@ -148,6 +150,23 @@ extension SwiftInferCommand.Verify {
                 }
             }
             _ = inFlight  // Defensive: silence unused-var if the compiler tracks it.
+        }
+        // V1.64.B — persist the survey batch to verify-evidence.json. The
+        // stdout JSON stream is unchanged; this is an additive side file.
+        // One batch timestamp: the survey is one logical measurement run.
+        let capturedAt = Date()
+        let batch = collected.map { record in
+            VerifyEvidence(
+                identityHash: record.identityHash,
+                template: record.templateName,
+                outcome: VerifyEvidenceRecorder.evidenceOutcome(for: record.outcome),
+                detail: record.outcomeDetail,
+                capturedAt: capturedAt,
+                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+            )
+        }
+        for warning in VerifyEvidenceRecorder.recordBatch(batch, packageRoot: packageRoot) {
+            FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
         }
     }
 

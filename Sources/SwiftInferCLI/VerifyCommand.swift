@@ -228,8 +228,27 @@ extension SwiftInferCommand {
                 )
             )
             let runOutput = try buildAndRun(workdir: workdir)
+            let parsed = VerifyResultParser.parse(runOutput)
+            // V1.64.B — persist the outcome to .swiftinfer/verify-evidence.json
+            // so `discover` can annotate this suggestion later. Best-effort:
+            // a persistence failure warns but never fails the verify gesture.
+            let (evidenceOutcome, evidenceDetail) = VerifyEvidenceRecorder.evidence(for: parsed)
+            let recordWarnings = VerifyEvidenceRecorder.record(
+                VerifyEvidence(
+                    identityHash: entry.identityHash,
+                    template: entry.templateName,
+                    outcome: evidenceOutcome,
+                    detail: evidenceDetail,
+                    capturedAt: Date(),
+                    swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+                ),
+                packageRoot: packageRoot
+            )
+            for warning in recordWarnings {
+                FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
+            }
             return VerifyResultRenderer.render(
-                VerifyResultParser.parse(runOutput),
+                parsed,
                 context: stubBundle.rendererContext
             )
         }
