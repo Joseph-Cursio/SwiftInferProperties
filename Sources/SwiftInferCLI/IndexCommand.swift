@@ -322,6 +322,7 @@ extension SwiftInferCommand {
 
         private static func humanReadableTier(_ tier: Tier) -> String {
             switch tier {
+            case .verified:   return "Verified"
             case .strong:     return "Strong"
             case .likely:     return "Likely"
             case .possible:   return "Possible"

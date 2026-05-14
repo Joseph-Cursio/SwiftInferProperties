@@ -6,6 +6,18 @@
 /// constants.
 public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
 
+    /// V1.65 — top tier: a `.strong` suggestion whose `swift-infer verify`
+    /// run reached `.measuredBothPass` (human-signal-strong *and*
+    /// machine-confirmed). Never returned by `Tier(score:)` — score alone
+    /// can't know the verify outcome; set by the discover render path via
+    /// `promoted(byVerifyOutcome:)`, mirroring how `.advisory` is set
+    /// explicitly by the surfacing pipeline. Declared first so
+    /// `Tier.allCases` reads verified → strong → likely → … . Shown by
+    /// default. Promotion is render-time only — `.verified` never reaches
+    /// `DecisionRecord.tier` or `Baseline.tier` (those keep the base
+    /// score-derived tier).
+    case verified
+
     /// Score >= 75. Shown by default.
     case strong
 
@@ -28,7 +40,10 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
     /// with a runnable suggestion.
     case advisory
 
-    /// Tier mapping per PRD v0.3 §4.2.
+    /// Tier mapping per PRD v0.3 §4.2. Never produces `.verified` or
+    /// `.advisory` — both are set explicitly by the surfacing pipeline
+    /// (verify evidence / equivalence-class detection), not derived from
+    /// score alone.
     public init(score: Int) {
         switch score {
         case 75...:
@@ -42,9 +57,20 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
         }
     }
 
+    /// V1.65 — resolve the effective discover-presentation tier given a
+    /// suggestion's persisted verify outcome. A `.strong` suggestion
+    /// whose verify run reached `.measuredBothPass` is promoted to
+    /// `.verified`; every other `(tier, outcome)` pair — including a
+    /// `nil` outcome (no verify evidence) — returns `self` unchanged.
+    public func promoted(byVerifyOutcome outcome: VerifyEvidenceOutcome?) -> Tier {
+        guard self == .strong, outcome == .measuredBothPass else { return self }
+        return .verified
+    }
+
     /// Human-facing label rendered in the explainability block header.
     public var label: String {
         switch self {
+        case .verified: return "Verified"
         case .strong: return "Strong"
         case .likely: return "Likely"
         case .possible: return "Possible"
@@ -59,7 +85,7 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
     /// reach users without an opt-in flag.
     public var isVisibleByDefault: Bool {
         switch self {
-        case .strong, .likely, .advisory: return true
+        case .verified, .strong, .likely, .advisory: return true
         case .possible, .suppressed: return false
         }
     }

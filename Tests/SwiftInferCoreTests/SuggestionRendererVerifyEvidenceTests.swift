@@ -90,6 +90,51 @@ struct SuggestionRendererVerifyEvidenceTests {
         #expect(verifyIdx < identityIdx)
     }
 
+    // MARK: - V1.65 — verified-tier promotion in the Score: line
+
+    @Test("strong suggestion + bothPass evidence renders Score: N (Verified)")
+    func strongPlusBothPassRendersVerified() {
+        let suggestion = makeStrongSuggestion(canonicalInput: "promote-verified")
+        let rendered = SuggestionRenderer.render(
+            suggestion,
+            verifyEvidence: makeEvidence(for: suggestion, outcome: .measuredBothPass, detail: nil)
+        )
+        #expect(rendered.contains("Score:    \(suggestion.score.total) (Verified)"))
+    }
+
+    @Test("strong suggestion + non-bothPass evidence stays Strong")
+    func strongPlusNonBothPassStaysStrong() {
+        let suggestion = makeStrongSuggestion(canonicalInput: "no-promote-strong")
+        for outcome: VerifyEvidenceOutcome in [
+            .measuredEdgeCaseAdvisory, .measuredDefaultFails, .measuredError,
+            .architecturalCoveragePending
+        ] {
+            let rendered = SuggestionRenderer.render(
+                suggestion,
+                verifyEvidence: makeEvidence(for: suggestion, outcome: outcome, detail: nil)
+            )
+            #expect(rendered.contains("Score:    \(suggestion.score.total) (Strong)"))
+        }
+    }
+
+    @Test("likely suggestion + bothPass evidence stays Likely — only strong promotes")
+    func likelyPlusBothPassStaysLikely() {
+        let suggestion = makeSuggestion(canonicalInput: "no-promote-likely")
+        #expect(suggestion.score.tier == .likely)
+        let rendered = SuggestionRenderer.render(
+            suggestion,
+            verifyEvidence: makeEvidence(for: suggestion, outcome: .measuredBothPass, detail: nil)
+        )
+        #expect(rendered.contains("Score:    \(suggestion.score.total) (Likely)"))
+    }
+
+    @Test("strong suggestion with no evidence stays Strong")
+    func strongWithNoEvidenceStaysStrong() {
+        let suggestion = makeStrongSuggestion(canonicalInput: "strong-no-evidence")
+        let rendered = SuggestionRenderer.render(suggestion, verifyEvidence: nil)
+        #expect(rendered.contains("Score:    \(suggestion.score.total) (Strong)"))
+    }
+
     // MARK: - List render annotates by identity
 
     @Test("list render annotates only the matching suggestion")
@@ -134,6 +179,34 @@ struct SuggestionRendererVerifyEvidenceTests {
             ),
             identity: SuggestionIdentity(canonicalInput: canonicalInput)
         )
+    }
+
+    /// A `.strong`-tier suggestion (signals sum to 90 ≥ 75) — the only
+    /// tier that promotes to `.verified` under `.measuredBothPass`.
+    private func makeStrongSuggestion(canonicalInput: String) -> Suggestion {
+        let suggestion = Suggestion(
+            templateName: "idempotence",
+            evidence: [
+                Evidence(
+                    displayName: "normalize(_:)",
+                    signature: "(String) -> String",
+                    location: SourceLocation(file: "Sanitizer.swift", line: 7, column: 1)
+                )
+            ],
+            score: Score(signals: [
+                Signal(kind: .exactNameMatch, weight: 40, detail: "normalize"),
+                Signal(kind: .typeSymmetrySignature, weight: 30, detail: "T -> T"),
+                Signal(kind: .selfComposition, weight: 20, detail: "comp")
+            ]),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(
+                whySuggested: ["Curated idempotence verb match: 'normalize' (+40)"],
+                whyMightBeWrong: []
+            ),
+            identity: SuggestionIdentity(canonicalInput: canonicalInput)
+        )
+        precondition(suggestion.score.tier == .strong, "fixture must be Strong tier")
+        return suggestion
     }
 
     private func makeEvidence(

@@ -23,9 +23,14 @@ public enum SuggestionRenderer {
         verifyEvidence: VerifyEvidence? = nil
     ) -> String {
         var lines: [String] = []
+        // V1.65 — the rendered tier is the *effective* tier: a `.strong`
+        // suggestion with `.measuredBothPass` verify evidence promotes to
+        // `.verified`. Score total is unchanged; only the label moves.
+        let effectiveTier = suggestion.score.tier
+            .promoted(byVerifyOutcome: verifyEvidence?.outcome)
         lines.append("[Suggestion]")
         lines.append("Template: \(suggestion.templateName)")
-        lines.append("Score:    \(suggestion.score.total) (\(suggestion.score.tier.label))")
+        lines.append("Score:    \(suggestion.score.total) (\(effectiveTier.label))")
         lines.append("")
         lines.append("Why suggested:")
         if suggestion.explainability.whySuggested.isEmpty {
