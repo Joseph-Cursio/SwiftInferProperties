@@ -4,22 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.66.0** — sixty-third calibration cycle; **verify-as-signal** (architecture cycle, not a measurement cycle). Persisted `swift-infer verify` outcomes now participate in the suggestion *grade*, not just the rendered annotation (v1.64.C) or render-time tier label (v1.65). Two workstreams: V1.66.A `Signal.Kind.verifyBothPass` (+50, heavy positive) + `.verifyDisproven` (veto) + `VerifyEvidenceScoring.applied` — a pure post-pass folding outcomes into `Score` (`bothPass` raises score/tier; `defaultFails` vetoes → `.suppressed`; `edgeCaseAdvisory`/`error`/`pending` score-neutral; `.advisory` skipped); V1.66.B `Discover.run` applies it ahead of all paths (render/interactive/update-baseline) and drops the vetoed picks. **Test count 2471 → 2477 (+6).**
+**Current: v1.67.0** — sixty-fourth calibration cycle; **verify scoring before the visibility cut** (architecture cycle, not a measurement cycle). Closes the v1.66 limitation: verify-as-signal now runs *inside* the discover pipeline, before the `includePossible || isVisibleByDefault` filter, instead of in the CLI layer after it — so a `bothPass` outcome can lift a pick that scored sub-threshold on heuristics alone into view. V1.67.A `collectVisibleSuggestions` + `combineAndFilter` gain a `verifyEvidenceByIdentity` parameter (defaulted `[:]` — the ~53 non-`discover` callers untouched); `combineAndFilter` also now drops `.suppressed` unconditionally (a filter gap v1.66.B's explicit CLI-layer guard had masked — would otherwise leak verify-disproven picks through `--include-possible`); `Discover.run` reordered to load evidence first. V1.67.B version + docs. **Test count 2477 → 2482 (+5).**
 
-**v1.66 overturns the cycle-61/62 "`defaultFails` does not demote" decision** — deliberately. That decision applied PRD §3.5's caution toward *heuristic* inference to a *measured* result; a `defaultFails` outcome is an executed counterexample, not a guess, so suppressing the disproven suggestion raises precision rather than lowering it. Cycle-61/62 findings carry retroactive notes.
+**The verify-evidence arc is complete and internally consistent**: v1.64 persist (`verify-evidence.json`) → annotate (`discover` `Verify:` line) + `metrics` cross-reference; v1.65 `.verified` tier label + verified-first ordering; v1.66 grade (`bothPass` = +50 `Score` signal, `defaultFails` = veto), which overturned the cycle-61/62 "`defaultFails` does not demote" decision; v1.67 grade-before-the-cut. **`defaultFails` is execution evidence, not heuristic inference — suppressing a disproven suggestion raises precision.**
 
-**Cycle-60 measurement carried forward** (v1.64–v1.66 touch no emitter/resolver/carrier path): **42/103 = 40.8% measured-execution** — 28 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 61 `.architectural-coverage-pending`. Per-pick correctness: semantic "property holds" match 13/13 = **100%** on the cycle-46 sample subset. The committed `fixtures/cycle27-surface/.swiftinfer/verify-evidence.json` (103 records, v1.64.E validation survey) is the on-disk evidence artifact.
+**Cycle-60 measurement carried forward** (v1.64–v1.67 touch no emitter/resolver/carrier path): **42/103 = 40.8% measured-execution** — 28 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 61 `.architectural-coverage-pending`. Per-pick correctness: semantic "property holds" match 13/13 = **100%** on the cycle-46 sample subset. The committed `fixtures/cycle27-surface/.swiftinfer/verify-evidence.json` (103 records, v1.64.E validation survey) is the on-disk evidence artifact.
 
-v1.67+ priorities (per cycle-63 findings):
+v1.68+ priorities (per cycle-64 findings):
 
-1. **Discover-pipeline reorder** — load + score verify evidence *before* the visibility filter, so a `bothPass` outcome can rescue a pick that scored sub-threshold on heuristics alone (the v1.66.B post-pass runs after the filter, so it can't today).
-2. **`.verified` in recorded decisions** — thread the effective tier through interactive triage so `DecisionRecord.tier`/metrics reflect it.
-3. **Discover-CLI integration test for verify-suppression** — permanent regression guard for the v1.66 headline behaviour.
+1. **`.verified` in recorded decisions** — thread the effective tier through interactive triage so `DecisionRecord.tier`/`metrics` tier-mix reflect it.
+2. **`drift` verify integration** — exclude verify-disproven suggestions from drift warnings (`drift` still calls `collectVisibleSuggestions` with the empty map).
+3. **Discover-CLI integration test for verify-suppression** — a `Discover.run`-level guard (V1.67.A tests cover the pipeline function; the CLI `run()` wiring is still only smoke-tested).
 4. **Monotonicity-emitter rework** — the only remaining real pick target (~4 direct + ~6 behind nested-OC scaffolds), a weak trade per the cycle-60 investigation.
 5. **`metrics` per-corpus evidence join** — extend V1.64.D to explicit `--decisions` aggregation mode.
 6. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`. This file is a pointer-only index. Most recent: `docs/calibration-cycle-63-findings.md`, `docs/calibration-cycle-62-findings.md`.
+Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`. This file is a pointer-only index. Most recent: `docs/calibration-cycle-64-findings.md`, `docs/calibration-cycle-63-findings.md`.
 
 ### Arc summary (how the project got here)
 
@@ -32,6 +32,7 @@ Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` +
 - **v1.64 (Phase 2 accept-flow integration)** — verify outcomes persist to `.swiftinfer/verify-evidence.json` and flow into `discover` (per-suggestion `Verify:` annotation) and `metrics` (§17.2 cross-reference). The first concrete payoff from the v1.42–v1.63 verify-architecture arc: verify evidence that influences what the user sees.
 - **v1.65 (Verified first-class tier)** — `Tier.verified`: a `.strong` suggestion with `.measuredBothPass` evidence promotes to the top tier and floats to the head of the discover stream. Render-time only; no `Score` change.
 - **v1.66 (verify-as-signal)** — verify outcomes become a grade input: `bothPass` adds a +50 `Score` signal, `defaultFails` is a veto that suppresses the disproven pick. Overturns the cycle-61/62 "`defaultFails` does not demote" decision (execution evidence ≠ heuristic inference).
+- **v1.67 (verify scoring before the visibility cut)** — moves the v1.66 fold inside the discover pipeline, ahead of the visibility filter, so a `bothPass` outcome can rescue a sub-threshold pick; also fixes `combineAndFilter` to never leak `.suppressed` through `--include-possible`.
 
 ## Kit-side coordination
 
