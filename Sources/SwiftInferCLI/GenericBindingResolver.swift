@@ -89,7 +89,19 @@ public enum GenericBindingResolver {
         // signature mismatches (commutativity/associativity on
         // distance/index(_:offsetBy:)) or Comparable-requiring
         // monotonicity — both deferred to v1.64+.
-        "OrderedDictionary.Elements": "OrderedDictionary<Int, Int>.Elements"
+        "OrderedDictionary.Elements": "OrderedDictionary<Int, Int>.Elements",
+        // V1.69 — three nested-OC view carriers, each bound to the
+        // `<Int>` / `<Int, Int>` cycle-27 alignment. All three carry
+        // `index(after:)` / `index(before:)` monotonicity picks (6 total)
+        // that reach `.bothPass` via V1.69.A's instance-method composer
+        // once the carrier resolves to a curated OC recipe. Cycle-60's
+        // monotonicity investigation grouped these under
+        // `unsupported-carrier` precisely because no binding + recipe
+        // existed for them.
+        "OrderedSet.SubSequence": "OrderedSet<Int>.SubSequence",
+        "OrderedDictionary.Values": "OrderedDictionary<Int, Int>.Values",
+        "OrderedDictionary.Elements.SubSequence":
+            "OrderedDictionary<Int, Int>.Elements.SubSequence"
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,

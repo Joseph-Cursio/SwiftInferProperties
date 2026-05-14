@@ -28,7 +28,13 @@ extension StrategistDispatchEmitter {
     /// this set must have a curated OC recipe.
     static let monotonicityInstanceCarriers: Set<String> = [
         "OrderedSet<Int>",
-        "OrderedDictionary<Int, Int>.Elements"
+        "OrderedDictionary<Int, Int>.Elements",
+        // V1.69 — the three nested-OC view carriers scaffolded in
+        // V1.69.B. Each is a RandomAccessCollection with `Index == Int`,
+        // so the receiver-and-index emit shape applies unchanged.
+        "OrderedSet<Int>.SubSequence",
+        "OrderedDictionary<Int, Int>.Values",
+        "OrderedDictionary<Int, Int>.Elements.SubSequence"
     ]
 
     /// Draws two values, sorts so `a ≤ b`, applies the function to

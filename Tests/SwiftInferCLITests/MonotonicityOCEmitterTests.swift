@@ -128,6 +128,38 @@ struct MonotonicityOCEmitterTests {
         #expect(!source.contains("receiver.index"))
     }
 
+    // MARK: - V1.69.B nested-OC scaffolds
+
+    @Test("nested-OC carriers emit the instance shape", arguments: [
+        "OrderedSet<Int>.SubSequence",
+        "OrderedDictionary<Int, Int>.Values",
+        "OrderedDictionary<Int, Int>.Elements.SubSequence"
+    ])
+    func nestedOCCarrierEmitsInstanceShape(carrier: String) throws {
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(carrier: carrier, primaryFunctionName: "index(after:)")
+        )
+        #expect(source.contains("Generator<\(carrier), some SendableSequenceType>"))
+        #expect(source.contains("let resultA = receiver.index(after: lowerIndex)"))
+        #expect(!source.contains("min(firstDraw, secondDraw)"))
+    }
+
+    @Test("the 3 nested-OC binding keys resolve to their bound forms")
+    func nestedOCBindingsResolve() {
+        #expect(
+            GenericBindingResolver.resolve("OrderedSet.SubSequence")
+                == "OrderedSet<Int>.SubSequence"
+        )
+        #expect(
+            GenericBindingResolver.resolve("OrderedDictionary.Values")
+                == "OrderedDictionary<Int, Int>.Values"
+        )
+        #expect(
+            GenericBindingResolver.resolve("OrderedDictionary.Elements.SubSequence")
+                == "OrderedDictionary<Int, Int>.Elements.SubSequence"
+        )
+    }
+
     // MARK: - Methodology guard
 
     @Test("every monotonicityInstanceCarrier resolves a curated OC recipe")

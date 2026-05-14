@@ -174,60 +174,6 @@ public enum StrategistDispatchEmitter {
         )
     }
 
-    /// V1.59.A — curated recipes for OC + Algo wrapper-around-Array
-    /// carriers the kit's strategist doesn't recognize. Each entry
-    /// returns a `Generator<Carrier, some SendableSequenceType>`-typed
-    /// expression that the V1.47.E composers can drop into the stub's
-    /// `defaultGenerator` slot.
-    ///
-    /// **Generator deterministic-ness**: each recipe's expression must
-    /// produce reproducible outputs from a single `Gen<Int>` source.
-    /// The expression runs inside `Gen<Int>.int(...).map { ... }`, so
-    /// the outer `Gen` is the only randomness; the `.map`'s closure
-    /// must be pure. This keeps the v1.42 Xoshiro seed → outcome chain
-    /// deterministic.
-    ///
-    /// **Sample-coverage scope**: v1.59's `OrderedSet<Int>` recipe
-    /// produces 4-element sets `{n, n+1, n+2, n+3}`. Modest variety
-    /// per trial, but the 100-trial budget covers n ∈ [0, 100], i.e.,
-    /// 100 distinct sets. v1.60+ may switch to wider-distribution
-    /// generators (e.g. variable count via a second `Gen<Int>`) if
-    /// cycle-N evidence shows coverage gaps.
-    private static func curatedOCRecipe(carrier: String) -> GeneratorRecipe? {
-        switch carrier {
-        case "OrderedSet<Int>":
-            return GeneratorRecipe(
-                expression: "Gen<Int>.int(in: 0 ... 100).map { OrderedSet([$0, $0 + 1, $0 + 2, $0 + 3]) }",
-                carrierTypeName: carrier,
-                imports: ["Foundation", "OrderedCollections", "PropertyBased"]
-            )
-        case "OrderedSet<Int>.UnorderedView":
-            // V1.62.A — UnorderedView is reached via the `.unordered`
-            // property on a base OrderedSet. The generator constructs
-            // a fresh OS<Int> and projects its `.unordered`.
-            return GeneratorRecipe(
-                expression: "Gen<Int>.int(in: 0 ... 100).map { OrderedSet([$0, $0 + 1, $0 + 2, $0 + 3]).unordered }",
-                carrierTypeName: carrier,
-                imports: ["Foundation", "OrderedCollections", "PropertyBased"]
-            )
-        case "OrderedDictionary<Int, Int>.Elements":
-            // V1.63.A — OrderedDictionary's `.elements` view is the
-            // key-value-pair view. Generator constructs an OD with
-            // 4 keys mapped to derived values.
-            return GeneratorRecipe(
-                expression: "Gen<Int>.int(in: 0 ... 100).map { "
-                    + "OrderedDictionary(uniqueKeysWithValues: ["
-                    + "($0, $0 * 2), ($0 + 1, ($0 + 1) * 2), "
-                    + "($0 + 2, ($0 + 2) * 2), ($0 + 3, ($0 + 3) * 2)])"
-                    + ".elements }",
-                carrierTypeName: carrier,
-                imports: ["Foundation", "OrderedCollections", "PropertyBased"]
-            )
-        default:
-            return nil
-        }
-    }
-
     /// Translate a `DerivationStrategy` result into an emission
     /// recipe. Cases v1.47 supports: `.userGen`, `.caseIterable`,
     /// `.rawRepresentable` (enum-lifted form). Cases v1.47 defers:
