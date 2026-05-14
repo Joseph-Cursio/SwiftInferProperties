@@ -45,5 +45,7 @@ fastlane/test_output
 fixtures/cycle27-surface/.build/
 fixtures/cycle27-surface/Package.resolved
 
-# Verify-pipeline synthesized SwiftPM workdirs (build artifacts; index.json stays tracked)
-fixtures/cycle27-surface/.swiftinfer/verify-workdir/
+# Verify-pipeline synthesized SwiftPM workdirs (build artifacts; index.json
+# stays tracked). Matches any `.swiftinfer/verify-workdir/` — the fixture's
+# and any incidental one at the repo root from a dev `swift-infer verify` run.
+**/.swiftinfer/verify-workdir/
