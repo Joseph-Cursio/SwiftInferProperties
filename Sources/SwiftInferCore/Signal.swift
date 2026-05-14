@@ -150,9 +150,26 @@ public struct Signal: Sendable, Equatable {
         /// taxonomy.
         case fixedPointName
 
+        /// V1.66 — `swift-infer verify` ran the synthesized property and
+        /// it held across both the default and edge-case-biased passes
+        /// (`VerifyEvidenceOutcome.measuredBothPass`). A heavy positive
+        /// signal: execution evidence outranks any single heuristic
+        /// signal. Applied by `VerifyEvidenceScoring` as a post-pass,
+        /// after the persisted `verify-evidence.json` is loaded.
+        case verifyBothPass
+
         // Veto (collapses score to suppressed)
         case nonDeterministicBody
         case nonEquatableOutput
+        /// V1.66 — `swift-infer verify` ran the synthesized property and
+        /// it failed on the default pass (`measuredDefaultFails`): the
+        /// property is disproven by an executed counterexample. Full
+        /// veto — unlike the heuristic vetoes, this is not inference but
+        /// a measured falsification, so a disproven suggestion is
+        /// genuinely wrong, not merely low-confidence. v1.66 overturns
+        /// the cycle-61/62 "defaultFails does not demote" decision on
+        /// exactly this ground (see `docs/calibration-cycle-63-findings.md`).
+        case verifyDisproven
         /// V1.5.1 — fires when the candidate's primary type already
         /// conforms to a protocol whose published laws cover the
         /// `KnownProperty` the template would emit (looked up via
