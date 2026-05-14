@@ -146,3 +146,99 @@ struct VerifyEvidenceTests {
         )
     }
 }
+
+/// V1.69 — `VerifyEvidenceLog.merge` folds per-corpus evidence files
+/// into one in-memory aggregate for the `metrics` §17.2 cross-reference
+/// under `--decisions` mode. Mirrors `Decisions.merge`'s semantics:
+/// identity-keyed, later `capturedAt` wins, order-deterministic output.
+@Suite("VerifyEvidenceLog.merge — V1.69 multi-corpus aggregation")
+struct VerifyEvidenceLogMergeTests {
+
+    private func makeEvidence(
+        identity: String,
+        outcome: VerifyEvidenceOutcome = .measuredBothPass,
+        capturedAt: Date
+    ) -> VerifyEvidence {
+        VerifyEvidence(
+            identityHash: identity,
+            template: "round-trip",
+            outcome: outcome,
+            detail: nil,
+            capturedAt: capturedAt,
+            swiftInferVersion: "1.69.0"
+        )
+    }
+
+    @Test("Disjoint logs merge to the union")
+    func disjointMerge() {
+        let lhs = VerifyEvidenceLog(records: [
+            makeEvidence(identity: "AAA1111111111111", capturedAt: Date(timeIntervalSince1970: 100))
+        ])
+        let rhs = VerifyEvidenceLog(records: [
+            makeEvidence(identity: "BBB2222222222222", capturedAt: Date(timeIntervalSince1970: 200))
+        ])
+        let merged = lhs.merge(rhs)
+        #expect(merged.records.count == 2)
+        #expect(Set(merged.records.map(\.identityHash)) == ["AAA1111111111111", "BBB2222222222222"])
+    }
+
+    @Test("Overlapping identity: later capturedAt wins")
+    func overlapLaterWins() throws {
+        let older = makeEvidence(
+            identity: "AAA1111111111111",
+            outcome: .measuredDefaultFails,
+            capturedAt: Date(timeIntervalSince1970: 100)
+        )
+        let newer = makeEvidence(
+            identity: "AAA1111111111111",
+            outcome: .measuredBothPass,
+            capturedAt: Date(timeIntervalSince1970: 200)
+        )
+        let merged = VerifyEvidenceLog(records: [older]).merge(VerifyEvidenceLog(records: [newer]))
+        #expect(merged.records.count == 1)
+        #expect(merged.records.first?.outcome == .measuredBothPass)
+    }
+
+    @Test("Overlapping identity: order-independent — older RHS does not displace newer LHS")
+    func overlapOrderIndependent() throws {
+        let older = makeEvidence(
+            identity: "AAA1111111111111",
+            outcome: .measuredDefaultFails,
+            capturedAt: Date(timeIntervalSince1970: 100)
+        )
+        let newer = makeEvidence(
+            identity: "AAA1111111111111",
+            outcome: .measuredBothPass,
+            capturedAt: Date(timeIntervalSince1970: 200)
+        )
+        let merged = VerifyEvidenceLog(records: [newer]).merge(VerifyEvidenceLog(records: [older]))
+        #expect(merged.records.count == 1)
+        #expect(merged.records.first?.outcome == .measuredBothPass)
+    }
+
+    @Test("Result is sorted by capturedAt then identityHash")
+    func resultIsSorted() {
+        let merged = VerifyEvidenceLog(records: [
+            makeEvidence(identity: "CCC3333333333333", capturedAt: Date(timeIntervalSince1970: 300))
+        ]).merge(VerifyEvidenceLog(records: [
+            makeEvidence(identity: "AAA1111111111111", capturedAt: Date(timeIntervalSince1970: 100)),
+            makeEvidence(identity: "BBB2222222222222", capturedAt: Date(timeIntervalSince1970: 200))
+        ]))
+        #expect(merged.records.map(\.identityHash) == [
+            "AAA1111111111111", "BBB2222222222222", "CCC3333333333333"
+        ])
+    }
+
+    @Test("Schema version is the max of the two inputs")
+    func schemaVersionMaxes() {
+        let lhs = VerifyEvidenceLog(schemaVersion: 1, records: [])
+        let rhs = VerifyEvidenceLog(schemaVersion: 3, records: [])
+        #expect(lhs.merge(rhs).schemaVersion == 3)
+        #expect(rhs.merge(lhs).schemaVersion == 3)
+    }
+
+    @Test("Empty merged with empty is empty")
+    func emptyMergeEmpty() {
+        #expect(VerifyEvidenceLog.empty.merge(.empty).records.isEmpty)
+    }
+}

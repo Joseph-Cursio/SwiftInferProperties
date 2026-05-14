@@ -143,4 +143,31 @@ public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
             records: withoutPrior + [record]
         )
     }
+
+    /// Fold another `VerifyEvidenceLog` into this one (V1.69). Used by
+    /// `swift-infer metrics` to aggregate `.swiftinfer/verify-evidence.json`
+    /// across multiple `--decisions` corpora into one in-memory log for
+    /// the §17.2 cross-reference. Identity-keyed; on collision the
+    /// record with the later `capturedAt` wins (mirrors `upserting(_:)`'s
+    /// "latest run in effect" posture and `Decisions.merge`). The result
+    /// is sorted by `capturedAt` then `identityHash` so the in-memory
+    /// aggregate is order-deterministic regardless of input ordering.
+    public func merge(_ other: VerifyEvidenceLog) -> VerifyEvidenceLog {
+        var byHash: [String: VerifyEvidence] = [:]
+        for record in records + other.records {
+            if let existing = byHash[record.identityHash],
+               existing.capturedAt >= record.capturedAt {
+                continue
+            }
+            byHash[record.identityHash] = record
+        }
+        let merged = byHash.values.sorted { lhs, rhs in
+            if lhs.capturedAt != rhs.capturedAt { return lhs.capturedAt < rhs.capturedAt }
+            return lhs.identityHash < rhs.identityHash
+        }
+        return VerifyEvidenceLog(
+            schemaVersion: max(schemaVersion, other.schemaVersion),
+            records: merged
+        )
+    }
 }

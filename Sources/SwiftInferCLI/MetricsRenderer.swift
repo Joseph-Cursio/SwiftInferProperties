@@ -309,8 +309,11 @@ public enum MetricsRenderer {
 
     /// V1.64.D — cross-reference section: how the joined verify
     /// evidence distributes across each `Decision` state. Renders a
-    /// "no verify evidence" sentinel when the log is empty (explicit
-    /// `--decisions` mode, or no `swift-infer verify` run yet).
+    /// "no verify evidence" sentinel when the log is empty — no
+    /// `swift-infer verify` run yet, or (in `--decisions` aggregation
+    /// mode) no corpus had a sibling `verify-evidence.json`. V1.69
+    /// extended the join to `--decisions` mode, so the table now spans
+    /// the whole corpus set there too.
     private static func verifyEvidenceSection(
         decisions: Decisions,
         evidence: VerifyEvidenceLog

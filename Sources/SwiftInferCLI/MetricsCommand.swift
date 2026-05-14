@@ -9,10 +9,11 @@ import SwiftInferCore
 struct MetricsLoadResult: Equatable {
     let decisions: Decisions
     /// V1.64.D — verify evidence joined alongside the decisions for the
-    /// §17.2 cross-reference. Populated only in default walk-up mode
-    /// (one package root → one `verify-evidence.json`); `.empty` in
-    /// explicit `--decisions <path>` aggregation mode, where a
-    /// per-corpus evidence join is out of scope.
+    /// §17.2 cross-reference. Default walk-up mode joins the one package
+    /// root's `verify-evidence.json`; V1.69 extends this to explicit
+    /// `--decisions` aggregation mode — each corpus's sibling
+    /// `verify-evidence.json` is merged in. `.empty` only when no corpus
+    /// has a verify run.
     let evidence: VerifyEvidenceLog
     let sources: [String]
     let warnings: [String]
@@ -36,7 +37,11 @@ struct MetricsLoadResult: Equatable {
 /// **Aggregation mode (one or more `--decisions <path>` flags):**
 /// read each file, fold into one in-memory aggregate via
 /// `Decisions.merge(_:)`, render. Calibration use case (V1.4.2 runs
-/// across four benchmark corpora).
+/// across four benchmark corpora). V1.69 — each `--decisions` file's
+/// sibling `verify-evidence.json` (the on-disk `.swiftinfer/` layout
+/// pairs them) is loaded and merged via `VerifyEvidenceLog.merge(_:)`,
+/// so the §17.2 verify-evidence cross-reference spans the whole corpus
+/// set, not just default walk-up mode.
 extension SwiftInferCommand {
 
     public struct Metrics: AsyncParsableCommand {
@@ -96,6 +101,7 @@ extension SwiftInferCommand {
 
         private static func loadExplicitPaths(_ paths: [String]) -> MetricsLoadResult {
             var aggregate = Decisions.empty
+            var evidence = VerifyEvidenceLog.empty
             var sources: [String] = []
             var warnings: [String] = []
             for raw in paths {
@@ -107,13 +113,29 @@ extension SwiftInferCommand {
                 warnings.append(contentsOf: result.warnings)
                 aggregate = aggregate.merge(result.decisions)
                 sources.append(raw)
+                // V1.69 — per-corpus verify-evidence join: load the
+                // sibling `verify-evidence.json` next to each decisions
+                // file (the on-disk `.swiftinfer/` layout pairs them) and
+                // merge it into the aggregate. A corpus with decisions but
+                // no verify run is normal — skip a missing sibling
+                // silently rather than warning, so the join is opt-in per
+                // corpus. A *present but malformed* sibling still warns
+                // (via `VerifyEvidenceStore`'s explicit-path path).
+                let evidenceURL = url
+                    .deletingLastPathComponent()
+                    .appendingPathComponent("verify-evidence.json")
+                if FileManager.default.fileExists(atPath: evidenceURL.path) {
+                    let evidenceResult = VerifyEvidenceStore.load(
+                        startingFrom: evidenceURL.deletingLastPathComponent(),
+                        explicitPath: evidenceURL
+                    )
+                    warnings.append(contentsOf: evidenceResult.warnings)
+                    evidence = evidence.merge(evidenceResult.log)
+                }
             }
-            // V1.64.D — explicit `--decisions` aggregation spans multiple
-            // corpora; a per-corpus verify-evidence join is out of scope,
-            // so the cross-reference section is default-mode-only.
             return MetricsLoadResult(
                 decisions: aggregate,
-                evidence: .empty,
+                evidence: evidence,
                 sources: sources,
                 warnings: warnings
             )
