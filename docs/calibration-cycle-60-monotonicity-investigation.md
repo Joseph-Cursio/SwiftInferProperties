@@ -1,4 +1,4 @@
-# Cycle-60 — Monotonicity-pick investigation + findings correction
+# Cycle-60 — Residual-surface investigation + findings correction
 
 Captured: 2026-05-14. swift-infer at v1.63. Follow-up to
 `docs/calibration-cycle-60-findings.md`.
@@ -10,7 +10,16 @@ monotonicity composer" closing "4 picks currently blocked on Comparable."
 A direct verify-run investigation shows that framing is **wrong on two
 counts**: the picks are not classified as Comparable-blocked in the
 committed cycle-60 data, *and* a Comparable-aware composer alone would
-close zero of them. This note records the evidence and re-scopes v1.64.
+close zero of them.
+
+A follow-up investigation of the second-ranked priority — "non-OC generic
+scaffolds (17 picks)" — found it is **also a mirage**: ~11 of the 18 are
+internal-API dead ends, ~3 are discover-layer false positives, leaving
+~3–4 genuinely closeable picks behind a carrier scaffold each.
+
+This note records both investigations and concludes that **v1.64 has no
+high-yield pick-closing target** — the cycle should pivot to Phase 2
+accept-flow integration. The accept-flow scope is in the final section.
 
 ## The data discrepancy
 
@@ -83,7 +92,7 @@ Comparable half — each captured one of two co-occurring real bugs.
 | `unsupported-carrier` (`_HashTable*`) | 7 | `_HashTable`, `_HashTable.UnsafeHandle` | No — internal API, will reclassify to internal-api |
 | `unsupported-carrier` (other) | 2 | `EvenlyChunkedCollection`, `ViolationFormatter` | No — unrelated non-OC scaffolds |
 
-## v1.64 re-scope
+## Monotonicity emitter — what closing those 4 picks would actually take
 
 **A standalone "Comparable-aware monotonicity composer" closes 0 picks.**
 It would compile lines 28–29 and still hard-fail on lines 30–31.
@@ -99,23 +108,109 @@ rework, not a composer:
    value; the value-ordering step should not require carrier `Comparable`.
 
 Estimated yield: 4 direct picks, +6 more only if bundled with three
-nested-OC carrier scaffolds (`OS.SubSequence`, `OD.Values`,
-`OD.Elements.SubSequence`). The remaining 12 pending monotonicity picks
-are internal-API dead ends or unrelated non-OC carriers.
+nested-OC carrier scaffolds. Given cycle-60's diminishing-returns finding
+(v1.62 closed 8, v1.63 closed 1), an emitter rework for ~4 direct picks
+is a weak trade. Defer indefinitely.
 
-Given cycle-60's own diminishing-returns finding (v1.62 closed 8, v1.63
-closed 1), an emitter rework for ~4 direct picks is a weak trade.
-Recommended re-prioritisation for v1.64:
+## Non-OC residual surface — also investigated
 
-1. **Non-OC generic scaffolds** (17 picks) — larger surface, same 3-edit
-   pattern that already worked for UnorderedView (V1.62.A) and OD.Elements
-   (V1.63.A).
-2. **`_minimumCapacity` / `_maximumCapacity` curated round-trip pair**
-   (3 picks at the resolver; likely reclassifies to internal-api).
-3. **Phase 2 accept-flow integration** — viable now (40.8% measured, 0
-   measured-error).
-4. **Monotonicity-emitter rework** — only if a cycle is specifically
-   budgeted for it, with eyes open about the 4-pick direct yield.
+Verify runs on two representatives of the "17 non-OC generics" priority:
+
+- **`ChunkedByCollection` idempotence** (`3543`) — fails at the resolver
+  with `VerifyError.unsupportedCarrier` *before* a workdir is synthesized.
+  A genuine 3-edit scaffold candidate, if the carrier is constructible.
+- **`_HashTable` monotonicity** (`D722`) — the strategist returns `.todo`:
+  `_HashTable` declares a user `init` (no synthesized memberwise init) and
+  is internal API, invisible from a non-`@testable` workdir. Dead end.
+
+Honest breakdown of the 18 non-OC pending picks:
+
+| Bucket | Count | Picks | Real v1.64 target? |
+|---|---:|---|---|
+| Internal-API dead ends | 11 | `_HashTable*` (8), `_UnsafeHashTable` (1), `Complex.rescaledDivide` (2) | No — invisible from the workdir |
+| Likely discover-layer false positives | 3 | `CombinationsSequence × binomial(n:k:)` (2 — `binomial` is a free function; `binomial(n,k)==binomial(k,n)` is false), `ViolationFormatter × format(_:)` monotonicity (1) | No — should *reject*, not be "covered" |
+| Genuine scaffold candidates | ~4 | `ChunkedByCollection` idempotence (2), `EvenlyChunkedCollection` idempotence (1) + monotonicity (1 — also dual-bugged) | Maybe — 2–3 picks behind two scaffolds |
+
+The "17 non-OC generics" priority is **~3 genuinely closeable picks**, not 17.
+
+## v1.64 re-scope — pivot to accept-flow integration
+
+Both pick-closing priorities the original cycle-60 doc named are mirages
+once verify-checked. Combined with the cycle-60 trajectory (8 → 1 picks
+closed), the honest read is: **the pick-closing game is essentially over.
+Every remaining bucket is ≤4 picks or dead.** Grinding the measured rate
+from 40.8% → ~42% is not worth a cycle.
+
+The strategically correct v1.64 is **Phase 2 accept-flow integration** —
+making the 42 already-measured verify outcomes (40.8%, 0 measured-error)
+*do something* instead of being printed and discarded. That is the
+product value; the residual picks are not.
+
+### Current state
+
+- `Decisions` / `DecisionRecord` / `Decision` live in
+  `Sources/SwiftInferCore/Decisions.swift`; persisted at
+  `.swiftinfer/decisions.json` via `DecisionsLoader` (atomic write,
+  schema-versioned, `upserting` by `identityHash`). Schema is at v2.
+- `Decision` has four cases — `accepted`, `acceptedAsConformance`,
+  `rejected`, `skipped` — all *user* choices. `DecisionRecord` carries
+  no verify-outcome field.
+- `VerifyOutcome` (`VerifyResult.swift`) has four cases — `bothPass`,
+  `edgeCaseAdvisory`, `defaultFails`, `error`.
+- `VerifyCommand.swift:24` states the gap explicitly: *"Verified
+  suggestions don't flow into `decisions.json` in v1.42 — the accept-flow
+  integration is deferred."* `--all-from-index` emits `SurveyRecord` JSON
+  to stdout but persists nothing.
+
+### Proposed v1.64 workstreams
+
+**A. `VerifyEvidence` model + `.swiftinfer/verify-evidence.json` store.**
+New `VerifyEvidence` value (`identityHash`, `outcome`, `capturedAt`,
+`swiftInferVersion`, optional `detail`) + a `VerifyEvidenceStore`
+loader/writer mirroring `DecisionsLoader` — atomic write, schema-versioned,
+`upserting` by `identityHash`. **A parallel evidence file, not a new
+`DecisionRecord` field** — keeps machine evidence orthogonal to user
+decisions and avoids a schema-v3 migration of the v2 `Decisions` format.
+
+**B. Verify command persists evidence.** Both `--suggestion` (upsert one
+record) and `--all-from-index` (write the full batch) write to the store.
+The survey path already computes every outcome; this is an added write
+step, not new logic.
+
+**C. First consumer — `discover` explainability annotation.** When a
+discovered suggestion has a matching `VerifyEvidence` record, its
+explainability block shows the evidence inline: `✓ verified (bothPass,
+100 trials)` / `⚠ verify edge-case advisory` / `✗ verify-disproven`.
+This surfaces the evidence where the user actually reads it and is the
+lowest-risk consumer (render-only; no pipeline behaviour change).
+
+**D. (Optional, defer if scope tight) `metrics` split.** `swift-infer
+metrics` reports Possible-tier accept-rate split by verify-confirmed vs
+unverified — feeds the §17.2 calibration loop.
+
+**E. Tests + cycle-61 findings doc.**
+
+### Open design decisions
+
+1. **Parallel evidence file vs. schema-v3 `DecisionRecord` field** —
+   recommend the parallel file (workstream A). Lower risk, no migration,
+   and a suggestion can carry verify evidence with *no* user decision yet
+   (which an optional-`decision` schema-v3 would force awkwardly).
+2. **Does `defaultFails` (verify-disproven) auto-reject?** No. PRD §3.5
+   conservative posture + "nothing auto-executes" → `discover` warns
+   prominently and may drop the suggestion a tier, but the user still
+   decides. Auto-rejection would be the Daikon trap in reverse.
+3. **Staleness** — evidence is `swiftInferVersion`-stamped; a consumer
+   reading evidence from an older binary warns, mirroring the existing
+   index-staleness pattern in `VerifyHarness.resolveIndex`.
+
+### Why this is the right v1.64
+
+It is mostly mechanical (reuses `DecisionsLoader` patterns), carries no
+schema-migration risk, and delivers the first concrete payoff from the
+v1.42–v1.63 verify-architecture arc: verify evidence that influences what
+the user sees. Pick-count cycles have hit diminishing returns; this is
+the cycle that makes the prior fourteen worth something.
 
 ## Methodology note
 
@@ -128,8 +223,12 @@ pre-merge, analogous to the V1.58.B curated-bindings methodology guard.
 
 ## Artifacts
 
-- Verify run: `swift-infer verify --suggestion 5F9B --index-path fixtures/cycle27-surface/.swiftinfer/index.json`
-- Stub + build errors captured from the synthesized workdir at
+- Verify runs: `swift-infer verify --suggestion {5F9B,3543,D722} --index-path fixtures/cycle27-surface/.swiftinfer/index.json`
+- Stub + build errors for `5F9B` captured from the synthesized workdir at
   `fixtures/cycle27-surface/.swiftinfer/verify-workdir/5F9B/` (gitignored
-  build artifact).
+  build artifact). `3543` / `D722` fail at the resolver before workdir
+  synthesis.
 - Classifier ordering: `Sources/SwiftInferCLI/VerifyCommand+AllFromIndex.swift:348` vs `:364`.
+- Accept-flow current state: `Sources/SwiftInferCore/Decisions.swift`,
+  `Sources/SwiftInferCLI/DecisionsLoader.swift`,
+  `Sources/SwiftInferCLI/VerifyResult.swift`, `VerifyCommand.swift:24`.
