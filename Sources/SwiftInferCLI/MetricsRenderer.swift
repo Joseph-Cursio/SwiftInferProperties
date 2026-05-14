@@ -87,6 +87,41 @@ public enum MetricsRenderer {
         }
     }
 
+    /// V1.64.D — per-`Decision` breakdown of joined verify evidence.
+    /// `total` counts only decisions in this state that *have* a
+    /// matching `VerifyEvidence` record; the five outcome columns sum
+    /// to `total`. Feeds the §17.2 question "does verify evidence
+    /// predict the human decision?" — e.g. `accepted` rows heavy on
+    /// `bothPass` and `rejected` rows heavy on `defaultFails` indicate
+    /// the verify signal agrees with human judgment.
+    public struct VerifyEvidenceRow: Equatable, Sendable {
+        public let decision: Decision
+        public let total: Int
+        public let bothPass: Int
+        public let edgeCaseAdvisory: Int
+        public let defaultFails: Int
+        public let error: Int
+        public let architecturalCoveragePending: Int
+
+        public init(
+            decision: Decision,
+            total: Int,
+            bothPass: Int,
+            edgeCaseAdvisory: Int,
+            defaultFails: Int,
+            error: Int,
+            architecturalCoveragePending: Int
+        ) {
+            self.decision = decision
+            self.total = total
+            self.bothPass = bothPass
+            self.edgeCaseAdvisory = edgeCaseAdvisory
+            self.defaultFails = defaultFails
+            self.error = error
+            self.architecturalCoveragePending = architecturalCoveragePending
+        }
+    }
+
     /// Internal accumulator for `templateRows(from:)`. A nominal type
     /// keeps SwiftLint's `large_tuple` rule satisfied (3-element tuples
     /// trip it).
@@ -129,6 +164,38 @@ public enum MetricsRenderer {
             }
     }
 
+    /// V1.64.D — join `decisions` against `evidence` by `identityHash`
+    /// and bucket per `Decision`. Rows appear in `Decision.allCases`
+    /// order; a `Decision` state with no evidence-bearing decisions is
+    /// dropped. Both stores key on the no-`0x` normalized hash, so the
+    /// join is direct.
+    public static func evidenceRows(
+        decisions: Decisions,
+        evidence: VerifyEvidenceLog
+    ) -> [VerifyEvidenceRow] {
+        let evidenceByHash = Dictionary(
+            evidence.records.map { ($0.identityHash, $0) },
+            uniquingKeysWith: { _, latest in latest }
+        )
+        var byDecision: [Decision: [VerifyEvidenceOutcome: Int]] = [:]
+        for record in decisions.records {
+            guard let matched = evidenceByHash[record.identityHash] else { continue }
+            byDecision[record.decision, default: [:]][matched.outcome, default: 0] += 1
+        }
+        return Decision.allCases.compactMap { decision in
+            guard let outcomes = byDecision[decision], !outcomes.isEmpty else { return nil }
+            return VerifyEvidenceRow(
+                decision: decision,
+                total: outcomes.values.reduce(0, +),
+                bothPass: outcomes[.measuredBothPass] ?? 0,
+                edgeCaseAdvisory: outcomes[.measuredEdgeCaseAdvisory] ?? 0,
+                defaultFails: outcomes[.measuredDefaultFails] ?? 0,
+                error: outcomes[.measuredError] ?? 0,
+                architecturalCoveragePending: outcomes[.architecturalCoveragePending] ?? 0
+            )
+        }
+    }
+
     /// Aggregate `decisions` into per-tier rows. Tier order follows
     /// the canonical `Tier.allCases` order so the rendered table reads
     /// strong → likely → possible → suppressed → advisory.
@@ -154,9 +221,15 @@ public enum MetricsRenderer {
     /// of where decisions came from (e.g., `["~/calibration/swift-collections",
     /// "..."]`). `header` is rendered above the tables so the
     /// rendered output is self-describing when piped to a file.
+    /// `evidence` (V1.64.D) is the verify-evidence log joined against
+    /// `decisions` for the §17.2 cross-reference section. `.empty` (the
+    /// default) renders the section's "no verify evidence" sentinel —
+    /// the case in explicit `--decisions` aggregation mode and when no
+    /// `swift-infer verify` has run yet.
     public static func render(
         decisions: Decisions,
-        sources: [String]
+        sources: [String],
+        evidence: VerifyEvidenceLog = .empty
     ) -> String {
         var lines: [String] = []
         lines.append("swift-infer metrics — calibration aggregate (PRD §17.2)")
@@ -166,6 +239,11 @@ public enum MetricsRenderer {
         lines.append(contentsOf: templateSection(rows: templateRows(from: decisions)))
         lines.append("")
         lines.append(contentsOf: tierSection(rows: tierRows(from: decisions)))
+        lines.append("")
+        lines.append(contentsOf: verifyEvidenceSection(
+            decisions: decisions,
+            evidence: evidence
+        ))
         return lines.joined(separator: "\n") + "\n"
     }
 
@@ -227,6 +305,51 @@ public enum MetricsRenderer {
             lines.append("  | \(label) | \(total) | \(accepted) | \(acceptance) |")
         }
         return lines
+    }
+
+    /// V1.64.D — cross-reference section: how the joined verify
+    /// evidence distributes across each `Decision` state. Renders a
+    /// "no verify evidence" sentinel when the log is empty (explicit
+    /// `--decisions` mode, or no `swift-infer verify` run yet).
+    private static func verifyEvidenceSection(
+        decisions: Decisions,
+        evidence: VerifyEvidenceLog
+    ) -> [String] {
+        var lines: [String] = ["Verify-evidence cross-reference (PRD §17.2):"]
+        if evidence.records.isEmpty {
+            lines.append("  (no verify evidence — run `swift-infer verify` to populate)")
+            return lines
+        }
+        let rows = evidenceRows(decisions: decisions, evidence: evidence)
+        let matched = rows.reduce(0) { $0 + $1.total }
+        lines.append(
+            "  \(matched) of \(decisions.records.count) decisions have verify evidence."
+        )
+        if rows.isEmpty {
+            return lines
+        }
+        lines.append(
+            "  | Decision              | Total | bothPass | advisory | disproven | error | pending |"
+        )
+        lines.append(
+            "  |-----------------------|------:|---------:|---------:|----------:|------:|--------:|"
+        )
+        for row in rows {
+            lines.append(verifyEvidenceTableRow(row))
+        }
+        return lines
+    }
+
+    private static func verifyEvidenceTableRow(_ row: VerifyEvidenceRow) -> String {
+        let decision = row.decision.rawValue.padding(toLength: 21, withPad: " ", startingAt: 0)
+        let total = String(row.total).leftPadded(width: 5)
+        let bothPass = String(row.bothPass).leftPadded(width: 8)
+        let advisory = String(row.edgeCaseAdvisory).leftPadded(width: 8)
+        let disproven = String(row.defaultFails).leftPadded(width: 9)
+        let error = String(row.error).leftPadded(width: 5)
+        let pending = String(row.architecturalCoveragePending).leftPadded(width: 7)
+        let counts = "\(bothPass) | \(advisory) | \(disproven) | \(error) | \(pending)"
+        return "  | \(decision) | \(total) | \(counts) |"
     }
 
     // MARK: - Template-table cells

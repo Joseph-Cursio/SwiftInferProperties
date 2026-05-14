@@ -8,6 +8,12 @@ import SwiftInferCore
 /// (rather than nested in `Metrics`) per SwiftLint's nesting rule.
 struct MetricsLoadResult: Equatable {
     let decisions: Decisions
+    /// V1.64.D — verify evidence joined alongside the decisions for the
+    /// §17.2 cross-reference. Populated only in default walk-up mode
+    /// (one package root → one `verify-evidence.json`); `.empty` in
+    /// explicit `--decisions <path>` aggregation mode, where a
+    /// per-corpus evidence join is out of scope.
+    let evidence: VerifyEvidenceLog
     let sources: [String]
     let warnings: [String]
 }
@@ -68,7 +74,8 @@ extension SwiftInferCommand {
             }
             let rendered = MetricsRenderer.render(
                 decisions: aggregate.decisions,
-                sources: aggregate.sources
+                sources: aggregate.sources,
+                evidence: aggregate.evidence
             )
             print(rendered, terminator: "")
         }
@@ -101,7 +108,15 @@ extension SwiftInferCommand {
                 aggregate = aggregate.merge(result.decisions)
                 sources.append(raw)
             }
-            return MetricsLoadResult(decisions: aggregate, sources: sources, warnings: warnings)
+            // V1.64.D — explicit `--decisions` aggregation spans multiple
+            // corpora; a per-corpus verify-evidence join is out of scope,
+            // so the cross-reference section is default-mode-only.
+            return MetricsLoadResult(
+                decisions: aggregate,
+                evidence: .empty,
+                sources: sources,
+                warnings: warnings
+            )
         }
 
         // MARK: - Default walk-up mode
@@ -115,10 +130,13 @@ extension SwiftInferCommand {
                 }
                 return startDirectory.path
             }()
+            // V1.64.D — join verify evidence from the same package root.
+            let evidenceResult = VerifyEvidenceStore.load(startingFrom: startDirectory)
             return MetricsLoadResult(
                 decisions: result.decisions,
+                evidence: evidenceResult.log,
                 sources: [label],
-                warnings: result.warnings
+                warnings: result.warnings + evidenceResult.warnings
             )
         }
 
