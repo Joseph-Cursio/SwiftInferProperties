@@ -12,7 +12,16 @@ public enum SuggestionRenderer {
     /// Render a single suggestion as a multi-line block. No trailing
     /// newline — callers that print to stdout should use `print(...)`,
     /// which adds one.
-    public static func render(_ suggestion: Suggestion) -> String {
+    ///
+    /// `verifyEvidence` (V1.64.C) is the persisted `swift-infer verify`
+    /// outcome for this suggestion, if any. When present it adds a
+    /// `Verify:` line below `Sampling:`; when `nil` the block is
+    /// byte-identical to the pre-v1.64 output, so existing goldens are
+    /// unaffected.
+    public static func render(
+        _ suggestion: Suggestion,
+        verifyEvidence: VerifyEvidence? = nil
+    ) -> String {
         var lines: [String] = []
         lines.append("[Suggestion]")
         lines.append("Template: \(suggestion.templateName)")
@@ -41,6 +50,9 @@ public enum SuggestionRenderer {
             suggestion.generator,
             identity: suggestion.identity
         ))
+        if let verifyEvidence {
+            lines.append(renderVerifyLine(verifyEvidence))
+        }
         lines.append("Identity:  \(suggestion.identity.display)")
         lines.append("Suppress:  // swiftinfer: skip \(suggestion.identity.display)")
         return lines.joined(separator: "\n")
@@ -48,7 +60,16 @@ public enum SuggestionRenderer {
 
     /// Render a list of suggestions, prefixed by a count header. Empty
     /// input renders the "0 suggestions." sentinel only.
-    public static func render(_ suggestions: [Suggestion]) -> String {
+    ///
+    /// `verifyEvidenceByIdentity` (V1.64.C) maps
+    /// `SuggestionIdentity.normalized` → persisted verify evidence; each
+    /// block is annotated with its match, if any. An empty map (the
+    /// default) leaves every block byte-identical to the pre-v1.64
+    /// output.
+    public static func render(
+        _ suggestions: [Suggestion],
+        verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
+    ) -> String {
         if suggestions.isEmpty {
             return "0 suggestions."
         }
@@ -56,7 +77,10 @@ public enum SuggestionRenderer {
             (suggestions.count == 1 ? "suggestion." : "suggestions.")
         var blocks: [String] = [header]
         for suggestion in suggestions {
-            blocks.append(render(suggestion))
+            blocks.append(render(
+                suggestion,
+                verifyEvidence: verifyEvidenceByIdentity[suggestion.identity.normalized]
+            ))
         }
         return blocks.joined(separator: "\n\n")
     }
@@ -174,5 +198,36 @@ public enum SuggestionRenderer {
             let hex = String(seed, radix: 16, uppercase: true)
             return "Sampling:  failed (seed: 0x\(hex), counterexample: \(counter))"
         }
+    }
+
+    /// V1.64.C — render the persisted `swift-infer verify` outcome as a
+    /// `Verify:` line. Only invoked when evidence exists for the
+    /// suggestion; an unverified suggestion renders no line at all
+    /// (most suggestions are unverified, and a "not verified" line
+    /// would be noise). Glyphs mirror the rest of the block (`✓` / `⚠`)
+    /// and `VerifyResultRenderer` (`✗` / `!`); `·` marks the
+    /// not-yet-measurable architectural-coverage-pending state.
+    private static func renderVerifyLine(_ evidence: VerifyEvidence) -> String {
+        let glyph: String
+        let label: String
+        switch evidence.outcome {
+        case .measuredBothPass:
+            glyph = "✓"
+            label = "bothPass"
+        case .measuredEdgeCaseAdvisory:
+            glyph = "⚠"
+            label = "edge-case advisory"
+        case .measuredDefaultFails:
+            glyph = "✗"
+            label = "defaultFails (verify-disproven)"
+        case .measuredError:
+            glyph = "!"
+            label = "error"
+        case .architecturalCoveragePending:
+            glyph = "·"
+            label = "architectural-coverage-pending"
+        }
+        let detailFragment = evidence.detail.map { " — \($0)" } ?? ""
+        return "Verify:    \(glyph) \(label)\(detailFragment)"
     }
 }

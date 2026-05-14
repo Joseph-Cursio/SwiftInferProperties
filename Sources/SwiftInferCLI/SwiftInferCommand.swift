@@ -254,9 +254,29 @@ extension SwiftInferCommand {
                     output: output
                 )
             }
-            let rendered = statsOnly
-                ? SuggestionRenderer.renderStats(visible)
-                : SuggestionRenderer.render(visible)
+            let rendered: String
+            if statsOnly {
+                rendered = SuggestionRenderer.renderStats(visible)
+            } else {
+                // V1.64.C — annotate each explainability block with any
+                // persisted `swift-infer verify` evidence. Loaded from
+                // `.swiftinfer/verify-evidence.json` beneath the package
+                // root; absent / unreadable file → empty map → blocks
+                // render byte-identically to the pre-v1.64 output.
+                let evidenceRoot = pipeline.packageRoot ?? directory
+                let evidenceResult = VerifyEvidenceStore.load(startingFrom: evidenceRoot)
+                for warning in evidenceResult.warnings {
+                    diagnostics.writeDiagnostic("warning: \(warning)")
+                }
+                let evidenceByIdentity = Dictionary(
+                    evidenceResult.log.records.map { ($0.identityHash, $0) },
+                    uniquingKeysWith: { _, latest in latest }
+                )
+                rendered = SuggestionRenderer.render(
+                    visible,
+                    verifyEvidenceByIdentity: evidenceByIdentity
+                )
+            }
             output.write(rendered)
         }
 
