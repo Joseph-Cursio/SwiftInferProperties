@@ -211,25 +211,19 @@ extension SwiftInferCommand {
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
-            let pipeline = try collectVisibleSuggestions(
-                directory: directory,
-                includePossible: includePossible,
-                explicitVocabularyPath: explicitVocabularyPath,
-                explicitConfigPath: explicitConfigPath,
-                explicitTestDirectory: explicitTestDirectory,
-                packsOverride: packsOverride,
-                diagnostics: diagnostics
-            )
-            // V1.66.B — fold persisted `swift-infer verify` evidence into
-            // the grade before any downstream path consumes the
-            // suggestions: `bothPass` raises the score (tier may lift),
-            // `defaultFails` vetoes → `.suppressed` → dropped here.
-            // Loaded once from `.swiftinfer/verify-evidence.json` beneath
-            // the package root and reused for the V1.64.C render-time
-            // annotation below. Absent / unreadable file → empty map →
-            // every suggestion passes through unchanged.
-            let evidenceRoot = pipeline.packageRoot ?? directory
-            let evidenceResult = VerifyEvidenceStore.load(startingFrom: evidenceRoot)
+            // V1.67 — load persisted `swift-infer verify` evidence first
+            // so it feeds the pipeline's scoring *and* its visibility
+            // filter: `bothPass` raises the score (and can lift a pick
+            // past the visibility threshold), `defaultFails` vetoes →
+            // `.suppressed` → dropped by the pipeline's own filter. V1.66.B
+            // applied this after the pipeline, so it could only re-grade
+            // already-visible picks. `VerifyEvidenceStore.load` walks up
+            // from `directory` for the package root, so the load does not
+            // depend on the pipeline result. Absent / unreadable file →
+            // empty map → every suggestion passes through unchanged.
+            // The map is reused below for the V1.64.C render-time
+            // annotation.
+            let evidenceResult = VerifyEvidenceStore.load(startingFrom: directory)
             for warning in evidenceResult.warnings {
                 diagnostics.writeDiagnostic("warning: \(warning)")
             }
@@ -237,9 +231,17 @@ extension SwiftInferCommand {
                 evidenceResult.log.records.map { ($0.identityHash, $0) },
                 uniquingKeysWith: { _, latest in latest }
             )
-            let visible = VerifyEvidenceScoring
-                .applied(to: pipeline.suggestions, evidenceByIdentity: evidenceByIdentity)
-                .filter { $0.score.tier != .suppressed }
+            let pipeline = try collectVisibleSuggestions(
+                directory: directory,
+                includePossible: includePossible,
+                explicitVocabularyPath: explicitVocabularyPath,
+                explicitConfigPath: explicitConfigPath,
+                explicitTestDirectory: explicitTestDirectory,
+                packsOverride: packsOverride,
+                verifyEvidenceByIdentity: evidenceByIdentity,
+                diagnostics: diagnostics
+            )
+            let visible = pipeline.suggestions
 
             if interactive, updateBaseline {
                 diagnostics.writeDiagnostic(

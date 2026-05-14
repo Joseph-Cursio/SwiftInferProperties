@@ -77,6 +77,7 @@ extension SwiftInferCommand.Discover {
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,
         packsOverride: String? = nil,
+        verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         let setup = resolvePipelineSetup(
@@ -111,6 +112,7 @@ extension SwiftInferCommand.Discover {
             liftedArtifacts: liftedArtifacts,
             setup: setup,
             directory: directory,
+            verifyEvidenceByIdentity: verifyEvidenceByIdentity,
             diagnostics: diagnostics
         )
         // M11.2 — derive the per-identity hint map for the accept-flow
@@ -153,6 +155,7 @@ extension SwiftInferCommand.Discover {
         liftedArtifacts: TestLifter.Artifacts,
         setup: PipelineSetup,
         directory: URL,
+        verifyEvidenceByIdentity: [String: VerifyEvidence],
         diagnostics: any DiagnosticOutput
     ) -> [Suggestion] {
         let promotedLifted = LiftedSuggestionPipeline.promote(
@@ -179,8 +182,26 @@ extension SwiftInferCommand.Discover {
             ? skipFiltered
             : skipFiltered.filter { !counterSignalKeys.contains($0.crossValidationKey) }
         let combined = artifacts.suggestions + filteredPromotedLifted
-        return combined.filter { suggestion in
-            setup.includePossible || suggestion.score.tier.isVisibleByDefault
+        // V1.67 — fold verify evidence into the grade *before* the
+        // visibility cut, so a `bothPass` outcome can lift a pick past
+        // the threshold (and a `defaultFails` veto drops it). V1.66.B
+        // applied this after the cut, in the CLI layer, where it could
+        // only re-grade already-visible picks. An empty map (every
+        // caller but `discover`) leaves `combined` untouched.
+        let graded = VerifyEvidenceScoring.applied(
+            to: combined,
+            evidenceByIdentity: verifyEvidenceByIdentity
+        )
+        return graded.filter { suggestion in
+            let tier = suggestion.score.tier
+            // `.suppressed` is never shown — not even with
+            // `--include-possible` (`Tier.suppressed` doc; `renderStats`
+            // assumes it). V1.67 makes this explicit: verify-disproven
+            // picks land here as `.suppressed`, and the prior
+            // `includePossible || isVisibleByDefault` filter would have
+            // leaked them through under `--include-possible`.
+            guard tier != .suppressed else { return false }
+            return setup.includePossible || tier.isVisibleByDefault
         }
     }
 
