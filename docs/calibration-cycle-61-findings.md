@@ -53,6 +53,29 @@ at ~4–6s. No new subprocess integration tests; v1.64 adds no emitter or
 verifier-workdir behaviour. §13 budgets unchanged. Perf baseline is a
 v1.63 carry-forward.
 
+## V1.64.E — validation on real data
+
+A `verify --all-from-index` survey was run on the v1.64 binary against
+the cycle-27 fixture to exercise the full loop end to end:
+
+- **Producer** — produced `fixtures/cycle27-surface/.swiftinfer/verify-evidence.json`:
+  103 records, schema v1, well-formed (no-`0x` `identityHash`,
+  `swiftInferVersion: "1.64.0"`, ISO8601 `capturedAt`). Outcome
+  distribution — 28 bothPass / 8 edgeCaseAdvisory / 6 defaultFails /
+  61 architectural-coverage-pending — is **identical to cycle-60**, as
+  expected: v1.64 touches no emitter/resolver/carrier path. The file is
+  committed as the fixture's v1.64 evidence artifact (parallel to the
+  committed `index.json`).
+- **Consumer — `discover`** — on a temp package with one matching
+  evidence record, the `Verify:` line renders between `Sampling:` and
+  `Identity:` with the right glyph + label + detail, and only the
+  evidence-bearing block of four is annotated.
+- **Consumer — `metrics`** — loads the 103-record evidence file (takes
+  the non-empty-log branch) and renders the cross-reference section.
+
+The architecture is confirmed working on real data, not just unit
+fixtures.
+
 ## Design decisions of record
 
 1. **Parallel file, not a `DecisionRecord` field.** Verify evidence and
@@ -78,19 +101,16 @@ v1.63 carry-forward.
 The pick-closing game has hit diminishing returns (v1.62 closed 8,
 v1.63 closed 1, v1.64 closed 0 by design). Candidate v1.65+ directions:
 
-1. **`verify --all-from-index` re-run on a v1.64 binary** — produce the
-   first `verify-evidence.json` for the cycle-27 fixture and confirm the
-   discover annotation + metrics cross-reference render correctly on real
-   data. The natural cycle-62 measurement.
-2. **Verification cache / "Verified" first-class tier** — the v1.51-era
+1. **Verification cache / "Verified" first-class tier** — the v1.51-era
    deferred item; `discover` could re-score or re-tier on verify
-   evidence rather than only annotating.
-3. **Monotonicity-emitter rework** — the only remaining real pick target
+   evidence rather than only annotating. The committed fixture
+   `verify-evidence.json` is a ready integration anchor.
+2. **Monotonicity-emitter rework** — the only remaining real pick target
    (~4 direct + ~6 behind nested-OC scaffolds), but a weak trade per the
    cycle-60 investigation. Budget a cycle deliberately or leave it.
-4. **`metrics` per-corpus evidence join** — extend V1.64.D's
+3. **`metrics` per-corpus evidence join** — extend V1.64.D's
    cross-reference to explicit `--decisions` aggregation mode.
-5. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
+4. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
 ## Artifacts
 

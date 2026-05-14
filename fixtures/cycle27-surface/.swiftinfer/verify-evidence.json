@@ -1,0 +1,821 @@
+{
+  "records" : [
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet.SubSequence",
+      "identityHash" : "06A2761D2E509FC7",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable",
+      "identityHash" : "024EC8BD5F216271",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "1A2EB97DEE1146E1",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: EvenlyChunkedCollection",
+      "identityHash" : "1BEF8F676F88EF18",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "0ADF4CC755508749",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Elements.SubSequence",
+      "identityHash" : "2074913DD61C9477",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "trial=0",
+      "identityHash" : "0EE19DA4B456B0F5",
+      "outcome" : "measured-defaultFails",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "01FF9BEFB4BDEC2F",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "22C45BA51D4DA777",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: ChunkedByCollection",
+      "identityHash" : "3543E69FA981193D",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=100 edgeSampled=6",
+      "identityHash" : "1C94EE2FCC17B783",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: ChunkedByCollection",
+      "identityHash" : "40C830C81337F0F5",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary",
+      "identityHash" : "44079B3ADA944F72",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "28C62EECFCE653AD",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Elements.SubSequence",
+      "identityHash" : "4935E0E0B52AAB78",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=100 edgeSampled=6",
+      "identityHash" : "26D2FD96A4FB2B01",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "45D61B79277AD072",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "39BEE56059637823",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Elements.SubSequence",
+      "identityHash" : "518A1B6980755C21",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "4B1E6B1E17779FB9",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "4949D576A215E8C1",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "4CE1969DD55F9FA4",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "51D592C8CBCA0831",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Values",
+      "identityHash" : "59D6E9A804BF9A7B",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "52EE0CC699032D33",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "56A303C3E0347225",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "57B82FC46EA980A9",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "5B893808F4A5C610",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "5AF3B2B951D2A768",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "5C7D1C8D560E326D",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "5F9B7214CBE810A5",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "630213A9E5A8F780",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=100 edgeSampled=4",
+      "identityHash" : "60A0CD20B1C8D1C0",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "63266F720D01E9A2",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "68D500860718049A",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Values",
+      "identityHash" : "7756BB702E3A609D",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable.UnsafeHandle",
+      "identityHash" : "77ABEB3E80E39BE1",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "6D310ED906336577",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "73A9C029E1A5207F",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet.SubSequence",
+      "identityHash" : "8DC4D4EA04EA3091",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable.UnsafeHandle",
+      "identityHash" : "9C09220A07524450",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet.SubSequence",
+      "identityHash" : "9DE97AD2E2C4547A",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=100 edgeSampled=8",
+      "identityHash" : "7748FE51C18B2CD5",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "trial=0",
+      "identityHash" : "89A940C41092CADE",
+      "outcome" : "measured-defaultFails",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "8AF59F8224E5120E",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "9F0FBC53CEC24D15",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Elements.SubSequence",
+      "identityHash" : "A48308B395A07123",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet<Int>",
+      "identityHash" : "A5C1F58768F24FBB",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "A271032EE79F8993",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable.UnsafeHandle",
+      "identityHash" : "A78807354D8573A9",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "A275D2385A136BAD",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary",
+      "identityHash" : "AC399387FD5E9E28",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "A6E673318B7D41A5",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: CombinationsSequence",
+      "identityHash" : "B56C450591E30313",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "A459C8D9F7531064",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "A9ADEC19AF2787F4",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "B34BD9B8F8AAC239",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "B72E7362FA5FB419",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet<Int>",
+      "identityHash" : "BAD090569541B6A9",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "B683CA3FC5E39ACC",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable.UnsafeHandle",
+      "identityHash" : "BC43359C0574816B",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Values",
+      "identityHash" : "BDC8024D684D1B56",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "trial=0",
+      "identityHash" : "B8DE422242F3793A",
+      "outcome" : "measured-defaultFails",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "trial=0",
+      "identityHash" : "B8FE8FAB14F3C1A8",
+      "outcome" : "measured-defaultFails",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "C351D23824327898",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "C0B0A68F141A3C6D",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "BB5255C3E15CDD73",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable",
+      "identityHash" : "D259DD76B5D19FBE",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "identityHash" : "C6E1010A10F99897",
+      "outcome" : "measured-edgeCaseAdvisory",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet.SubSequence",
+      "identityHash" : "D64135D91EF930C7",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "CD6FA47C309B25DB",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable",
+      "identityHash" : "D70D8AB68ADE6C07",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _HashTable",
+      "identityHash" : "D722DD4D9ADC90BF",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Elements.SubSequence",
+      "identityHash" : "D73F898399AE3E4E",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "CCCD9EBCA611BD7A",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "D51DAD720E3D46B9",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "D6C69F2BF84F3390",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "trial=0",
+      "identityHash" : "D8D360226C41CE34",
+      "outcome" : "measured-defaultFails",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary",
+      "identityHash" : "DBB22A3D3D3549C0",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Values",
+      "identityHash" : "DBB72D4ECA3D89EB",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Values",
+      "identityHash" : "DD74883C0D627E95",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet<Int>",
+      "identityHash" : "DFD6A2CA98762D02",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "round-trip"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "D81E952EBCD8CA1F",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "D99D1D742C24B42B",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: _UnsafeHashTable",
+      "identityHash" : "E54F0D92F01DC623",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: CombinationsSequence",
+      "identityHash" : "E574CB2D65C86A66",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "DA90F9E6856741DC",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "E0626CEF04CEE3AC",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet.SubSequence",
+      "identityHash" : "E907D73766335014",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "internal-api-not-accessible",
+      "identityHash" : "E724B37606AAF2CE",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "E32D06B86F4ECFCD",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: EvenlyChunkedCollection",
+      "identityHash" : "ED77E1F06B342709",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedSet.SubSequence",
+      "identityHash" : "F16FD2125933F37C",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "EC357857FD9090EA",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Values",
+      "identityHash" : "F22ACE5E2EB2F2E0",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: ViolationFormatter",
+      "identityHash" : "F2C82EDCE79300FB",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "monotonicity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "E750C48C0E345E19",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "idempotence"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "ED146732CB38DCDF",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "trial=0",
+      "identityHash" : "F19AF076BEC75B25",
+      "outcome" : "measured-defaultFails",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "unsupported-carrier: OrderedDictionary.Elements.SubSequence",
+      "identityHash" : "FCB18682347DB3CC",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "F3A7DBD9B12ED6FB",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "commutativity"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "identityHash" : "FAE7957C96C040A8",
+      "outcome" : "measured-bothPass",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "dual-style-consistency"
+    },
+    {
+      "capturedAt" : "2026-05-14T17:07:19Z",
+      "detail" : "instance-method-shape-not-supported",
+      "identityHash" : "F3869C08573BDDA1",
+      "outcome" : "architectural-coverage-pending",
+      "swiftInferVersion" : "1.64.0",
+      "template" : "associativity"
+    }
+  ],
+  "schemaVersion" : 1
+}
