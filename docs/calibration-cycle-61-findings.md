@@ -90,6 +90,10 @@ fixtures.
    posture + "nothing auto-executes": `discover` renders a prominent
    `✗ defaultFails (verify-disproven)` annotation, but the user still
    decides. Auto-rejection would be the Daikon trap in reverse.
+   > **Retroactively overturned by v1.66** (`docs/calibration-cycle-63-findings.md`).
+   > `defaultFails` is an *executed counterexample*, not a heuristic
+   > guess — suppressing a known-false suggestion raises precision
+   > rather than lowering it. v1.66 makes it a veto.
 4. **No-`0x` normalized `identityHash`.** The canonical cross-file join
    key, consistent with `DecisionRecord` — see the V1.64.B fix above.
 5. **Version-stamped evidence.** Each record carries

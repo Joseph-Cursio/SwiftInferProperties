@@ -46,6 +46,10 @@ oversights):
    design decision and PRD §3.5 — `discover` renders the prominent
    `✗ defaultFails (verify-disproven)` annotation, but the suggestion
    keeps its base tier and the user still decides.
+   > **Retroactively overturned by v1.66** (`docs/calibration-cycle-63-findings.md`).
+   > The decision conflated execution evidence with heuristic
+   > inference; v1.66 makes `defaultFails` a veto, which serves PRD
+   > §3.5's precision goal rather than violating it.
 
 ## Blast radius
 
