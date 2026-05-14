@@ -20,6 +20,44 @@ private struct IndexDiff {
     let updatedCount: Int
 }
 
+/// V1.42.C.5 — inputs to `Index.performIndex`. Bundled into one struct
+/// (rather than a 7-parameter function) so the static reindex entry
+/// point stays under SwiftLint's `function_parameter_count` cap. At
+/// file scope, mirroring `IndexDiff`, for the `nesting`-rule reason.
+struct IndexInputs {
+    /// Discover root: `Sources/<target>` for `swift-infer index`, the
+    /// whole `<packageRoot>/Sources` for verify's reindex-on-demand.
+    let scanDirectory: URL
+    let includePossible: Bool
+    let explicitVocabularyPath: URL?
+    let explicitConfigPath: URL?
+    let explicitTestDirPath: URL?
+    let packsOverride: String?
+    let dryRun: Bool
+}
+
+/// Build the human-readable index-run summary. V1.42.C.5 split this out
+/// of the old `reportAndPersist` (which also did the write + `print`):
+/// `Index.performIndex` now owns the write and returns this string, so
+/// the caller picks the sink (`index` → stdout, `verify` → stderr). At
+/// file scope, mirroring `IndexDiff` / `IndexInputs`.
+private func indexSummaryLine(
+    merged: IndexStore.Index,
+    indexPath: URL,
+    freshCount: Int,
+    diff: IndexDiff,
+    dryRun: Bool
+) -> String {
+    if dryRun {
+        return "Indexed \(freshCount) suggestion(s) "
+            + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
+            + "prior index had \(diff.priorCount); --dry-run, no write)"
+    }
+    return "Indexed \(freshCount) suggestion(s) → \(indexPath.path) "
+        + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
+        + "total entries \(merged.entries.count))"
+}
+
 extension SwiftInferCommand {
 
     public struct Index: AsyncParsableCommand {
@@ -104,62 +142,81 @@ extension SwiftInferCommand {
 
         public func run() async throws {
             let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
-            let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
-            let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }
-            let explicitTestDirPath = testDir.map { URL(fileURLWithPath: $0) }
-
-            let diagnostics = PrintDiagnosticOutput()
             // Default to includePossible=true for the index — the index
             // is a recall surface and users filter via
             // `swift-infer query --min-score`. Pass --no-include-possible
             // to override (the flag is Bool? per the M2 plan's CLI > config
             // > default precedence; explicit non-nil wins).
-            let effectiveIncludePossible = includePossible ?? true
+            let (_, summary) = try Self.performIndex(
+                IndexInputs(
+                    scanDirectory: directory,
+                    includePossible: includePossible ?? true,
+                    explicitVocabularyPath: vocabulary.map { URL(fileURLWithPath: $0) },
+                    explicitConfigPath: config.map { URL(fileURLWithPath: $0) },
+                    explicitTestDirPath: testDir.map { URL(fileURLWithPath: $0) },
+                    packsOverride: packs,
+                    dryRun: dryRun
+                ),
+                diagnostics: PrintDiagnosticOutput()
+            )
+            print(summary)
+        }
+
+        /// V1.42.C.5 — the discover → project → upsert → save pipeline,
+        /// hoisted out of `run()`'s instance method into a callable
+        /// static so `swift-infer verify` can drive an implicit reindex
+        /// on demand when `.swiftinfer/index.json` is missing or stale.
+        /// Returns the merged index plus a human-readable summary line;
+        /// the caller decides where the summary goes — `index` prints it
+        /// to stdout, `verify` routes it to a stderr diagnostic so it
+        /// doesn't pollute the verify outcome / JSON stream.
+        static func performIndex(
+            _ inputs: IndexInputs,
+            diagnostics: any DiagnosticOutput
+        ) throws -> (index: IndexStore.Index, summary: String) {
             let pipeline = try Discover.collectVisibleSuggestions(
-                directory: directory,
-                includePossible: effectiveIncludePossible,
-                explicitVocabularyPath: explicitVocabularyPath,
-                explicitConfigPath: explicitConfigPath,
-                explicitTestDirectory: explicitTestDirPath,
-                packsOverride: packs,
+                directory: inputs.scanDirectory,
+                includePossible: inputs.includePossible,
+                explicitVocabularyPath: inputs.explicitVocabularyPath,
+                explicitConfigPath: inputs.explicitConfigPath,
+                explicitTestDirectory: inputs.explicitTestDirPath,
+                packsOverride: inputs.packsOverride,
                 diagnostics: diagnostics
             )
-            let packageRoot = pipeline.packageRoot ?? directory
-
+            let packageRoot = pipeline.packageRoot ?? inputs.scanDirectory
             // Load existing index + decisions (both may be absent on a
             // cold-start run; that's fine — empty values flow through).
-            let now = Self.isoTimestampNow()
+            let now = isoTimestampNow()
             let indexPath = IndexStore.defaultPath(for: packageRoot)
             let indexLoad = IndexStore.load(from: indexPath, nowTimestamp: now)
-            let decisionsLoad = DecisionsLoader.load(startingFrom: directory)
-            Self.replayWarnings(indexLoad.warnings + decisionsLoad.warnings, to: diagnostics)
-            let decisionsByHash = Self.decisionsByHash(from: decisionsLoad.decisions)
+            let decisionsLoad = DecisionsLoader.load(startingFrom: inputs.scanDirectory)
+            replayWarnings(indexLoad.warnings + decisionsLoad.warnings, to: diagnostics)
+            let decisionsByHash = decisionsByHash(from: decisionsLoad.decisions)
             // Project Suggestions → SemanticIndexEntry. fresh `firstSeenAt`
             // is `now` for new entries; IndexStore.upsert preserves the
             // prior firstSeenAt for already-known entries.
             let freshEntries = pipeline.suggestions.map { suggestion in
-                Self.buildEntry(
+                buildEntry(
                     from: suggestion,
                     decisionsByHash: decisionsByHash,
                     typeShapesByName: pipeline.typeShapesByName,
                     now: now
                 )
             }
-            let diff = Self.computeDiff(
-                priorIndex: indexLoad.index,
-                freshEntries: freshEntries
-            )
-            let merged = IndexStore.upsert(
-                freshEntries,
-                into: indexLoad.index,
-                at: now
-            )
-            try Self.reportAndPersist(
-                merged: merged,
-                indexPath: indexPath,
-                freshCount: freshEntries.count,
-                diff: diff,
-                dryRun: dryRun
+            let diff = computeDiff(priorIndex: indexLoad.index, freshEntries: freshEntries)
+            let merged = IndexStore.upsert(freshEntries, into: indexLoad.index, at: now)
+            if !inputs.dryRun {
+                try IndexStore.save(merged, to: indexPath)
+            }
+            return (
+                merged,
+                indexSummaryLine(
+                    merged: merged,
+                    indexPath: indexPath,
+                    freshCount: freshEntries.count,
+                    diff: diff,
+                    dryRun: inputs.dryRun
+                )
             )
         }
 
@@ -191,30 +248,6 @@ extension SwiftInferCommand {
                 priorCount: priorIndex.entries.count,
                 newCount: freshHashes.subtracting(priorHashes).count,
                 updatedCount: freshHashes.intersection(priorHashes).count
-            )
-        }
-
-        private static func reportAndPersist(
-            merged: IndexStore.Index,
-            indexPath: URL,
-            freshCount: Int,
-            diff: IndexDiff,
-            dryRun: Bool
-        ) throws {
-            if dryRun {
-                print(
-                    "Indexed \(freshCount) suggestion(s) "
-                        + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
-                        + "prior index had \(diff.priorCount); --dry-run, "
-                        + "no write)"
-                )
-                return
-            }
-            try IndexStore.save(merged, to: indexPath)
-            print(
-                "Indexed \(freshCount) suggestion(s) → \(indexPath.path) "
-                    + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
-                    + "total entries \(merged.entries.count))"
             )
         }
 

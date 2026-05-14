@@ -92,6 +92,8 @@ extension SwiftInferCommand.Verify {
     ) throws -> IndexStore.Index {
         let now = ISO8601DateFormatter().string(from: Date())
         let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
+        // V1.42.C.5 — reindex the conventional index on demand if stale/missing.
+        try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)
         let resolved = try VerifyHarness.resolveIndex(
             packageRoot: packageRoot,
             explicitIndexPath: explicitIndexPath,

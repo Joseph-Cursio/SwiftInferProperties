@@ -130,12 +130,11 @@ extension SwiftInferCommand {
             name: .long,
             help: """
             Path to a specific index file. When omitted, swift-infer \
-            walks up from the working directory to find Package.swift, \
-            then reads `<package-root>/.swiftinfer/index.json`. If the \
-            index is missing or stale (any tracked source's mtime is \
-            newer than the index file's), v1.42 reindexes on demand \
-            before the suggestion lookup — see the V1.42.C.1 design \
-            note in `docs/v1.42 Calibration Plan.md`.
+            walks up to find Package.swift and reads \
+            `<package-root>/.swiftinfer/index.json` — reindexing it on \
+            demand from a whole-`Sources/` discover pass if it's missing \
+            or stale (V1.42.C.5). An explicit `--index-path` is used \
+            as-is and never auto-rebuilt.
             """
         )
         public var indexPath: String?
@@ -263,6 +262,7 @@ extension SwiftInferCommand {
         ) throws -> SemanticIndexEntry {
             let now = ISO8601DateFormatter().string(from: Date())
             let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
+            try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)
             let resolved = try VerifyHarness.resolveIndex(
                 packageRoot: packageRoot,
                 explicitIndexPath: explicitIndexPath,
@@ -438,8 +438,8 @@ public enum VerifyError: Error, CustomStringConvertible {
 
         case let .indexMissing(path):
             return "swift-infer verify: SemanticIndex not found at \(path.path). "
-                + "Run `swift-infer index --target <X>` first to build it. "
-                + "(V1.42.C.5 will reindex on demand; not yet wired.)"
+                + "An explicit --index-path is used as-is. Run `swift-infer index "
+                + "--target <X>` to build it (reindex-on-demand covers only the default path)."
 
         case let .indexEmpty(path):
             let location = path.map { "at \($0.path)" } ?? "(default path)"

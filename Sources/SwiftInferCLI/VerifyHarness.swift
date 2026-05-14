@@ -6,14 +6,14 @@ import SwiftInferCore
 /// **Scope.** V1.42.C.1 ships hash-prefix lookup against the existing
 /// `IndexStore.Index`. The implicit-reindex behavior the v1.42 plan
 /// describes ("if `.swiftinfer/index.json` is missing or stale, verify
-/// reindexes on demand before the lookup") needs an `IndexCommand`-side
-/// refactor that hoists the discover → upsert → save pipeline out of
-/// `AsyncParsableCommand.run`'s instance method into a callable static.
-/// **Deferred to V1.42.C.5** (added to the v1.42 plan as a follow-up
-/// sub-step). For V1.42.C.1, missing or empty indexes surface a
-/// load-bearing `.indexMissing` / `.indexEmpty` error that names the
-/// recovery command (`swift-infer index --target <X>`); stale indexes
-/// emit a warning but proceed with the lookup.
+/// reindexes on demand before the lookup") **landed in V1.42.C.5** —
+/// `SwiftInferCommand.Verify.reindexIfNeeded` rebuilds the conventional
+/// index from a whole-`Sources/` discover pass before `resolveIndex`
+/// runs. `resolveIndex` itself is unchanged: it still throws
+/// `.indexMissing` for an explicit `--index-path` that doesn't exist
+/// (an explicit path is used as-is, never auto-rebuilt) and still
+/// surfaces `staleWarnings` — but in the default-path flow the reindex
+/// pre-step means a missing index is rebuilt rather than fatal.
 ///
 /// **Module-internal vs public.** The lookup helpers are module-internal
 /// so the upcoming V1.42.C.2/C.3/C.4 sub-steps can compose them without
@@ -98,9 +98,11 @@ public enum VerifyHarness {
     ///
     /// **Failure modes:**
     ///   - **Index file doesn't exist** → `.indexMissing(expectedPath:)`.
-    ///     V1.42.C.5 lands the implicit-reindex behavior; until then
-    ///     the caller is instructed to run `swift-infer index --target
-    ///     <X>` to bootstrap.
+    ///     In the default-path flow `Verify.reindexIfNeeded` (V1.42.C.5)
+    ///     rebuilds the index before this runs, so this throw is
+    ///     normally only reached for an explicit `--index-path` that
+    ///     doesn't exist (explicit paths are used as-is, never
+    ///     auto-rebuilt).
     ///   - **Decode failure** propagates through as diagnostic warnings
     ///     plus an empty index, which then surfaces `.indexEmpty`.
     ///
@@ -186,8 +188,10 @@ public enum VerifyHarness {
     /// Best-effort staleness probe: walks `<packageRoot>/Sources/`,
     /// returns `true` if any `.swift` file has an mtime newer than the
     /// index file's. Silently returns `false` on I/O errors so a
-    /// transient FS hiccup doesn't block a verify call.
-    private static func isStale(indexPath: URL, packageRoot: URL) -> Bool {
+    /// transient FS hiccup doesn't block a verify call. V1.42.C.5 made
+    /// this `internal` so `Verify.reindexIfNeeded` shares the one
+    /// staleness definition rather than re-implementing it.
+    static func isStale(indexPath: URL, packageRoot: URL) -> Bool {
         let fileManager = FileManager.default
         guard let indexAttrs = try? fileManager.attributesOfItem(atPath: indexPath.path),
               let indexMTime = indexAttrs[.modificationDate] as? Date else {
