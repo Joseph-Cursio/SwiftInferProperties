@@ -220,7 +220,26 @@ extension SwiftInferCommand {
                 packsOverride: packsOverride,
                 diagnostics: diagnostics
             )
-            let visible = pipeline.suggestions
+            // V1.66.B — fold persisted `swift-infer verify` evidence into
+            // the grade before any downstream path consumes the
+            // suggestions: `bothPass` raises the score (tier may lift),
+            // `defaultFails` vetoes → `.suppressed` → dropped here.
+            // Loaded once from `.swiftinfer/verify-evidence.json` beneath
+            // the package root and reused for the V1.64.C render-time
+            // annotation below. Absent / unreadable file → empty map →
+            // every suggestion passes through unchanged.
+            let evidenceRoot = pipeline.packageRoot ?? directory
+            let evidenceResult = VerifyEvidenceStore.load(startingFrom: evidenceRoot)
+            for warning in evidenceResult.warnings {
+                diagnostics.writeDiagnostic("warning: \(warning)")
+            }
+            let evidenceByIdentity = Dictionary(
+                evidenceResult.log.records.map { ($0.identityHash, $0) },
+                uniquingKeysWith: { _, latest in latest }
+            )
+            let visible = VerifyEvidenceScoring
+                .applied(to: pipeline.suggestions, evidenceByIdentity: evidenceByIdentity)
+                .filter { $0.score.tier != .suppressed }
 
             if interactive, updateBaseline {
                 diagnostics.writeDiagnostic(
@@ -258,20 +277,10 @@ extension SwiftInferCommand {
             if statsOnly {
                 rendered = SuggestionRenderer.renderStats(visible)
             } else {
-                // V1.64.C — annotate each explainability block with any
-                // persisted `swift-infer verify` evidence. Loaded from
-                // `.swiftinfer/verify-evidence.json` beneath the package
-                // root; absent / unreadable file → empty map → blocks
-                // render byte-identically to the pre-v1.64 output.
-                let evidenceRoot = pipeline.packageRoot ?? directory
-                let evidenceResult = VerifyEvidenceStore.load(startingFrom: evidenceRoot)
-                for warning in evidenceResult.warnings {
-                    diagnostics.writeDiagnostic("warning: \(warning)")
-                }
-                let evidenceByIdentity = Dictionary(
-                    evidenceResult.log.records.map { ($0.identityHash, $0) },
-                    uniquingKeysWith: { _, latest in latest }
-                )
+                // V1.64.C — annotate each explainability block with the
+                // persisted verify evidence loaded above; V1.65.B floats
+                // `.verified` blocks first. Absent evidence → empty map →
+                // blocks render byte-identically to the pre-v1.64 output.
                 rendered = SuggestionRenderer.render(
                     visible,
                     verifyEvidenceByIdentity: evidenceByIdentity
