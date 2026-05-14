@@ -4,22 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Current: v1.67.0** — sixty-fourth calibration cycle; **verify scoring before the visibility cut** (architecture cycle, not a measurement cycle). Closes the v1.66 limitation: verify-as-signal now runs *inside* the discover pipeline, before the `includePossible || isVisibleByDefault` filter, instead of in the CLI layer after it — so a `bothPass` outcome can lift a pick that scored sub-threshold on heuristics alone into view. V1.67.A `collectVisibleSuggestions` + `combineAndFilter` gain a `verifyEvidenceByIdentity` parameter (defaulted `[:]` — the ~53 non-`discover` callers untouched); `combineAndFilter` also now drops `.suppressed` unconditionally (a filter gap v1.66.B's explicit CLI-layer guard had masked — would otherwise leak verify-disproven picks through `--include-possible`); `Discover.run` reordered to load evidence first. V1.67.B version + docs. **Test count 2477 → 2482 (+5).**
+**Current: v1.69.0** — sixty-sixth calibration cycle; **monotonicity-emitter rework: +10 picks, past 50% measured-execution** (a measurement cycle — the first since cycle 60). Reworks the monotonicity verify-stub composer for OrderedCollections carriers and adds three nested-OC carrier scaffolds, closing the 10 monotonicity picks the cycle-60 investigation had flagged and recommended "defer indefinitely." V1.69.A `composeInstanceMethodMonotonicityPass` (gated on `monotonicityInstanceCarriers`) draws a receiver collection, draws two valid indices from its own index range, orders the *indices* (`Int` — `Comparable`), and asserts `receiver.index(after: lo) <= receiver.index(after: hi)` — fixing both cycle-60 bugs (carrier-`Comparable` `min`/`max`, static-call shape) at once; the labeled-arg name is threaded via `primaryFunctionName`. V1.69.B three 3-edit scaffolds (`OrderedSet<Int>.SubSequence`, `OrderedDictionary<Int, Int>.Values`, `OrderedDictionary<Int, Int>.Elements.SubSequence`); `curatedOCRecipe` → lookup table. V1.69.C version + docs + evidence refresh. **Test count 2490 → 2498 (+8).**
 
-**The verify-evidence arc is complete and internally consistent**: v1.64 persist (`verify-evidence.json`) → annotate (`discover` `Verify:` line) + `metrics` cross-reference; v1.65 `.verified` tier label + verified-first ordering; v1.66 grade (`bothPass` = +50 `Score` signal, `defaultFails` = veto), which overturned the cycle-61/62 "`defaultFails` does not demote" decision; v1.67 grade-before-the-cut. **`defaultFails` is execution evidence, not heuristic inference — suppressing a disproven suggestion raises precision.**
+**Measured-execution: 52/103 = 50.5%** — 38 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 51 `.architectural-coverage-pending`. Up from cycle-60's 42/103 = 40.8% (the +10 are the v1.69 monotonicity picks). The committed `fixtures/cycle27-surface/.swiftinfer/verify-evidence.json` (103 records, refreshed v1.69.C) is the on-disk evidence artifact. Per-pick correctness: semantic "property holds" match 13/13 = **100%** on the cycle-46 sample subset.
 
-**Cycle-60 measurement carried forward** (v1.64–v1.67 touch no emitter/resolver/carrier path): **42/103 = 40.8% measured-execution** — 28 `.bothPass` + 6 `.defaultFails` + 8 `.edgeCaseAdvisory` + 0 `.measured-error` + 61 `.architectural-coverage-pending`. Per-pick correctness: semantic "property holds" match 13/13 = **100%** on the cycle-46 sample subset. The committed `fixtures/cycle27-surface/.swiftinfer/verify-evidence.json` (103 records, v1.64.E validation survey) is the on-disk evidence artifact.
+**The verify-evidence arc is complete, internally consistent, and consumer-complete**: v1.64 persist (`verify-evidence.json`) → annotate (`discover` `Verify:` line) + `metrics` cross-reference; v1.65 `.verified` tier label + verified-first ordering; v1.66 grade (`bothPass` = +50 `Score` signal, `defaultFails` = veto), which overturned the cycle-61/62 "`defaultFails` does not demote" decision; v1.67 grade-before-the-cut; v1.68 wired the last two consumers (`.verified` reaches `DecisionRecord.tier` / `metrics` tier-mix; `drift` excludes verify-disproven picks). **`defaultFails` is execution evidence, not heuristic inference — suppressing a disproven suggestion raises precision.**
 
-v1.68+ priorities (per cycle-64 findings):
+v1.70+ priorities (per cycle-65/66 findings):
 
-1. **`.verified` in recorded decisions** — thread the effective tier through interactive triage so `DecisionRecord.tier`/`metrics` tier-mix reflect it.
-2. **`drift` verify integration** — exclude verify-disproven suggestions from drift warnings (`drift` still calls `collectVisibleSuggestions` with the empty map).
-3. **Discover-CLI integration test for verify-suppression** — a `Discover.run`-level guard (V1.67.A tests cover the pipeline function; the CLI `run()` wiring is still only smoke-tested).
-4. **Monotonicity-emitter rework** — the only remaining real pick target (~4 direct + ~6 behind nested-OC scaffolds), a weak trade per the cycle-60 investigation.
-5. **`metrics` per-corpus evidence join** — extend V1.64.D to explicit `--decisions` aggregation mode.
-6. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
+1. **`metrics` per-corpus evidence join** — extend V1.64.D to explicit `--decisions` aggregation mode.
+2. **V1.42.C.5 deferred** — implicit reindex on demand (carried from v1.42).
 
-Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`. This file is a pointer-only index. Most recent: `docs/calibration-cycle-64-findings.md`, `docs/calibration-cycle-63-findings.md`.
+The pick-closing surface is now near-exhausted: the residual 51 `.architectural-coverage-pending` is dominated by internal-API dead ends (`_HashTable*`) and discover-layer false positives the cycle-60 investigation already catalogued.
+
+Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`. This file is a pointer-only index. Most recent: `docs/calibration-cycle-66-findings.md`, `docs/calibration-cycle-65-findings.md`.
 
 ### Arc summary (how the project got here)
 
@@ -33,6 +31,8 @@ Per-cycle narratives live in git log + `docs/archive/v1.N Calibration Plan.md` +
 - **v1.65 (Verified first-class tier)** — `Tier.verified`: a `.strong` suggestion with `.measuredBothPass` evidence promotes to the top tier and floats to the head of the discover stream. Render-time only; no `Score` change.
 - **v1.66 (verify-as-signal)** — verify outcomes become a grade input: `bothPass` adds a +50 `Score` signal, `defaultFails` is a veto that suppresses the disproven pick. Overturns the cycle-61/62 "`defaultFails` does not demote" decision (execution evidence ≠ heuristic inference).
 - **v1.67 (verify scoring before the visibility cut)** — moves the v1.66 fold inside the discover pipeline, ahead of the visibility filter, so a `bothPass` outcome can rescue a sub-threshold pick; also fixes `combineAndFilter` to never leak `.suppressed` through `--include-possible`.
+- **v1.68 (verify evidence reaches its last two consumers, cycle 65)** — `.verified` reaches `DecisionRecord.tier` via interactive triage (so the `metrics` tier-mix reflects it); `drift` loads verify evidence and excludes verify-disproven picks from drift warnings; `Discover.run()`-level integration tests for verify-suppression. The verify-evidence arc becomes consumer-complete.
+- **v1.69 (monotonicity-emitter rework, cycle 66)** — instance-method monotonicity composer for OrderedCollections carriers + three nested-OC carrier scaffolds: closes 10 monotonicity picks (`index(after:)` / `index(before:)` over `OrderedSet` / `OrderedDictionary` views), lifting measured-execution 40.8% → 50.5%. Overturns the cycle-60 investigation's "defer indefinitely" conclusion.
 
 ## Kit-side coordination
 
