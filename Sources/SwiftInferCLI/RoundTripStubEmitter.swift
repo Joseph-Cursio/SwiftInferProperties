@@ -213,23 +213,32 @@ extension RoundTripStubEmitter {
     /// grow per function as future cycles surface other domain
     /// boundaries (e.g., `exp`'s `Im ∈ (-π, π]` principal branch when
     /// the round-trip pair includes log's branch cut).
-    private static func complexDefaultPassDomain(forwardCall: String) -> (String, String, String, String) {
+    /// Real/imaginary range bounds (as Double literals) for the
+    /// inline finite-domain default pass of a Complex round-trip.
+    private struct ComplexPassDomain {
+        let reMin: String
+        let reMax: String
+        let imMin: String
+        let imMax: String
+    }
+
+    private static func complexDefaultPassDomain(forwardCall: String) -> ComplexPassDomain {
         let bareName = forwardCall.split(separator: ".").last.map(String.init) ?? forwardCall
         switch bareName {
         case "cos", "acos", "cosh", "acosh":
             // `acos`/`acosh` principal branch returns `Re ≥ 0`, so the
             // round-trip `acos(cos(z)) == z` only holds for the right
             // half-plane.
-            return ("0.0", "1.5", "-1.5", "1.5")
+            return ComplexPassDomain(reMin: "0.0", reMax: "1.5", imMin: "-1.5", imMax: "1.5")
         default:
             // exp/log + sin/asin + tan/atan + sinh/asinh + tanh/atanh:
             // all symmetric round-trip pairs holding on `|Re| ≤ π/2`.
-            return ("-1.5", "1.5", "-1.5", "1.5")
+            return ComplexPassDomain(reMin: "-1.5", reMax: "1.5", imMin: "-1.5", imMax: "1.5")
         }
     }
 
     private static func complexDoubleDefaultPass(forwardCall: String, inverseCall: String) -> String {
-        let (reMin, reMax, imMin, imMax) = complexDefaultPassDomain(forwardCall: forwardCall)
+        let domain = complexDefaultPassDomain(forwardCall: forwardCall)
         return """
         // --- Pass 1: default (inline finite-domain) ---
         //
@@ -246,8 +255,8 @@ extension RoundTripStubEmitter {
         let defaultGenerator: Generator<Complex<Double>, some SendableSequenceType> =
             Gen<Int>.int(in: 0 ..< 1).map { _ in
                 Complex(
-                    Double.random(in: \(reMin) ... \(reMax)),
-                    Double.random(in: \(imMin) ... \(imMax))
+                    Double.random(in: \(domain.reMin) ... \(domain.reMax)),
+                    Double.random(in: \(domain.imMin) ... \(domain.imMax))
                 )
             }
 

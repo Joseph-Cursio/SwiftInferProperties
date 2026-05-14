@@ -146,10 +146,10 @@ struct V1_51RoutingFlipTests {
     @Test("monotonicity × Double routes through strategist (not v1.46 hardcoded)")
     func monotonicityDoubleRoutesThroughStrategist() throws {
         // V1.51.C: pre-fix, monotonicity × Double matched
-        // v1_46HardcodedCarriers and hit v1_46HardcodedBundle's
+        // v146HardcodedCarriers and hit v146HardcodedBundle's
         // default branch → .unsupportedTemplate. Post-fix, the carrier
-        // check now requires *both* carrier in v1_46HardcodedCarriers
-        // AND template in v1_46HardcodedTemplates; monotonicity is
+        // check now requires *both* carrier in v146HardcodedCarriers
+        // AND template in v146HardcodedTemplates; monotonicity is
         // in the v1.48 set, so the entry routes to the strategist.
         // The strategist's `.rawRepresentable(.double)` recipe emits
         // a working stub. We exercise the routing by calling

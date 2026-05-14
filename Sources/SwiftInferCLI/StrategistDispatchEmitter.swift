@@ -215,7 +215,11 @@ public enum StrategistDispatchEmitter {
             // key-value-pair view. Generator constructs an OD with
             // 4 keys mapped to derived values.
             return GeneratorRecipe(
-                expression: "Gen<Int>.int(in: 0 ... 100).map { OrderedDictionary(uniqueKeysWithValues: [($0, $0 * 2), ($0 + 1, ($0 + 1) * 2), ($0 + 2, ($0 + 2) * 2), ($0 + 3, ($0 + 3) * 2)]).elements }",
+                expression: "Gen<Int>.int(in: 0 ... 100).map { "
+                    + "OrderedDictionary(uniqueKeysWithValues: ["
+                    + "($0, $0 * 2), ($0 + 1, ($0 + 1) * 2), "
+                    + "($0 + 2, ($0 + 2) * 2), ($0 + 3, ($0 + 3) * 2)])"
+                    + ".elements }",
                 carrierTypeName: carrier,
                 imports: ["Foundation", "OrderedCollections", "PropertyBased"]
             )

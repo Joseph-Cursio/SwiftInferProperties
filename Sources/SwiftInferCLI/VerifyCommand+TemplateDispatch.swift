@@ -28,7 +28,7 @@ extension SwiftInferCommand.Verify {
     /// carriers on the v1.46 path. Folding them into the strategist
     /// (probably as a new `.curatedFP` strategy case) is a v1.48+
     /// kit-side cleanup target.
-    static let v1_46HardcodedCarriers: Set<String> = ["Complex<Double>", "Double"]
+    static let v146HardcodedCarriers: Set<String> = ["Complex<Double>", "Double"]
 
     /// V1.47.F — top-level dispatch. First normalizes the carrier via
     /// `GenericBindingResolver` (e.g. `"Base.Index"` → `"Int"`), then
@@ -62,14 +62,14 @@ extension SwiftInferCommand.Verify {
         // keep their existing path. **V1.51.C routing flip**: v1.48
         // templates (idempotence-lifted / dual-style-consistency /
         // monotonicity) always route through the strategist even when
-        // the carrier is in v1_46HardcodedCarriers — the v1.46
+        // the carrier is in v146HardcodedCarriers — the v1.46
         // hardcoded path doesn't implement them and the strategist
         // handles them via the v1.49 emitter family. Cycle-47 found 2
         // monotonicity × Double picks misrouted to v1_46HardcodedBundle's
         // default branch; v1.51.C closes that gap.
-        let isV1_46TemplateOnV1_46Carrier = v1_46HardcodedCarriers.contains(boundCarrier)
-            && v1_46HardcodedTemplates.contains(entry.templateName)
-        if isV1_46TemplateOnV1_46Carrier {
+        let isV146TemplateOnV146Carrier = v146HardcodedCarriers.contains(boundCarrier)
+            && v146HardcodedTemplates.contains(entry.templateName)
+        if isV146TemplateOnV146Carrier {
             return try v1_46HardcodedBundle(
                 entry: rebound(entry, toCarrier: boundCarrier),
                 budget: budget
@@ -92,7 +92,7 @@ extension SwiftInferCommand.Verify {
                 budget: budget
             )
         } catch let error as VerifyError {
-            if Self.v1_46HardcodedTemplates.contains(entry.templateName) {
+            if Self.v146HardcodedTemplates.contains(entry.templateName) {
                 return try v1_46HardcodedBundle(
                     entry: rebound(entry, toCarrier: boundCarrier),
                     budget: budget
@@ -107,7 +107,7 @@ extension SwiftInferCommand.Verify {
     /// `buildStubBundle` so v1.48-template entries surface their
     /// real strategist error rather than a misleading
     /// `.unsupportedTemplate` from the v1.46 path's default case.
-    private static let v1_46HardcodedTemplates: Set<String> = [
+    private static let v146HardcodedTemplates: Set<String> = [
         "round-trip", "idempotence", "commutativity", "associativity"
     ]
 
