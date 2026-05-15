@@ -34,7 +34,8 @@ public struct SwiftInferCommand: AsyncParsableCommand {
             AcceptCheck.self,
             DiscoverReducers.self,
             VerifyInteraction.self,
-            DiscoverInteraction.self
+            DiscoverInteraction.self,
+            DriftInteraction.self
         ],
         defaultSubcommand: Discover.self
     )

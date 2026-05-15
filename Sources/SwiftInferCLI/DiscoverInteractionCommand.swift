@@ -109,19 +109,38 @@ extension SwiftInferCommand {
             workingDirectory: URL,
             firstSeenAt: Date = Date()
         ) throws -> String {
-            let directory = workingDirectory
-                .appendingPathComponent("Sources")
-                .appendingPathComponent(target)
-            let allCandidates = try ReducerDiscoverer.discover(directory: directory)
-            let candidates = try filterCandidates(allCandidates, pinRaw: pinRaw)
-            let suggestions = try InteractionTemplateEngine.analyze(
-                candidates: candidates,
-                sourcesDirectory: directory,
+            let suggestions = try collectSuggestions(
+                target: target,
+                pinRaw: pinRaw,
+                workingDirectory: workingDirectory,
                 firstSeenAt: firstSeenAt
             )
             return InteractionSuggestionRenderer.render(
                 suggestions,
                 includePossible: includePossible
+            )
+        }
+
+        /// V2.0 M10 — pure pipeline leg that stops before rendering.
+        /// Exposed for `swift-infer drift-interaction` which needs the
+        /// raw suggestion list to diff against the baseline, not a
+        /// rendered string. Same M1 discovery + pin filter + M4
+        /// engine path as `runPipeline`.
+        static func collectSuggestions(
+            target: String,
+            pinRaw: String? = nil,
+            workingDirectory: URL,
+            firstSeenAt: Date = Date()
+        ) throws -> [InteractionInvariantSuggestion] {
+            let directory = workingDirectory
+                .appendingPathComponent("Sources")
+                .appendingPathComponent(target)
+            let allCandidates = try ReducerDiscoverer.discover(directory: directory)
+            let candidates = try filterCandidates(allCandidates, pinRaw: pinRaw)
+            return try InteractionTemplateEngine.analyze(
+                candidates: candidates,
+                sourcesDirectory: directory,
+                firstSeenAt: firstSeenAt
             )
         }
 
