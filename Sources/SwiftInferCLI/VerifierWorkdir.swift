@@ -72,14 +72,26 @@ public enum VerifierWorkdir {
         /// Already-emitted main.swift source per V1.42.C.2.
         public let stubSource: String
 
+        /// V2.0 M3.E.2 — which dep shape to render. `.algebraic`
+        /// (the default, preserving v1.42 callers' behavior) declares
+        /// swift-numerics + swift-collections + swift-property-based
+        /// + SwiftPropertyLaws@2.1.0 + PropertyLawComplex.
+        /// `.interaction` declares swift-property-based +
+        /// SwiftPropertyLaws@2.2.0 + PropertyLawKit (no numerics /
+        /// collections / PropertyLawComplex — the interaction-verify
+        /// stub doesn't import them).
+        public let mode: WorkdirMode
+
         public init(
             workdir: URL,
             userPackage: UserPackageReference?,
-            stubSource: String
+            stubSource: String,
+            mode: WorkdirMode = .algebraic
         ) {
             self.workdir = workdir
             self.userPackage = userPackage
             self.stubSource = stubSource
+            self.mode = mode
         }
     }
 
@@ -101,7 +113,10 @@ public enum VerifierWorkdir {
         )
         let packagePath = inputs.workdir.appendingPathComponent("Package.swift")
         let mainPath = sourcesDir.appendingPathComponent("main.swift")
-        let packageSource = renderPackageSwift(userPackage: inputs.userPackage)
+        let packageSource = renderPackageSwift(
+            userPackage: inputs.userPackage,
+            mode: inputs.mode
+        )
         try packageSource.write(to: packagePath, atomically: true, encoding: .utf8)
         try inputs.stubSource.write(to: mainPath, atomically: true, encoding: .utf8)
         return mainPath
@@ -122,9 +137,15 @@ public enum VerifierWorkdir {
     /// `complexEdgeCases` set, which V1.43.B consumes for the two-pass
     /// design. The dep is additive; existing `swift-numerics` and
     /// `swift-property-based` lines are untouched.
-    static func renderPackageSwift(userPackage: UserPackageReference?) -> String {
-        let dependenciesBlock = renderDependenciesBlock(userPackage: userPackage)
-        let targetDependenciesBlock = renderTargetDependenciesBlock(userPackage: userPackage)
+    static func renderPackageSwift(
+        userPackage: UserPackageReference?,
+        mode: WorkdirMode = .algebraic
+    ) -> String {
+        let dependenciesBlock = renderDependenciesBlock(userPackage: userPackage, mode: mode)
+        let targetDependenciesBlock = renderTargetDependenciesBlock(
+            userPackage: userPackage,
+            mode: mode
+        )
         return """
         // swift-tools-version: 6.1
         // V1.42.C.3 auto-generated. Do not edit.
@@ -150,24 +171,42 @@ public enum VerifierWorkdir {
         """
     }
 
-    /// Build the comma-joined `dependencies:` array. The numerics +
-    /// property-based packages are mandatory; the user package is
-    /// optional. Comma placement follows SwiftPM's accepted style —
-    /// trailing comma after the last entry is legal but we omit it
-    /// here for tidiness.
-    private static func renderDependenciesBlock(userPackage: UserPackageReference?) -> String {
-        var entries = [
-            ".package(url: \"https://github.com/apple/swift-numerics.git\", from: \"1.0.0\")",
-            // V1.59.A — swift-collections for OrderedSet / OrderedDictionary
-            // carriers. Required for the curated OC recipes in
-            // `StrategistDispatchEmitter.curatedOCRecipe`. v1.58 added the
-            // bare→qualified binding `OrderedSet → OrderedSet<Int>`; v1.59
-            // wires the dependency so the synthesized workdir can import
-            // `OrderedCollections`.
-            ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
-            ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
-            ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.1.0\")"
-        ]
+    /// Build the comma-joined `dependencies:` array. Mode-dependent:
+    /// `.algebraic` (v1.42 default) declares swift-numerics +
+    /// swift-collections + swift-property-based + SwiftPropertyLaws@2.1.0.
+    /// `.interaction` (V2.0 M3.E.2) declares swift-property-based +
+    /// SwiftPropertyLaws@2.2.0 only — numerics / collections aren't
+    /// imported by M3.B's emitted stub. Comma placement follows
+    /// SwiftPM's accepted style — trailing comma after the last entry
+    /// is legal but we omit it here for tidiness.
+    private static func renderDependenciesBlock(
+        userPackage: UserPackageReference?,
+        mode: WorkdirMode
+    ) -> String {
+        var entries: [String]
+        switch mode {
+        case .algebraic:
+            entries = [
+                ".package(url: \"https://github.com/apple/swift-numerics.git\", from: \"1.0.0\")",
+                // V1.59.A — swift-collections for OrderedSet /
+                // OrderedDictionary carriers. Required for the curated
+                // OC recipes in `StrategistDispatchEmitter.curatedOCRecipe`.
+                ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
+                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.1.0\")"
+            ]
+        case .interaction:
+            // V2.0 M3.E.2 — interaction verify needs the v2.2.0 kit
+            // surface (ActionSequenceFactory + StatefulGuard, shipped
+            // alongside PropertyLawKit). swift-property-based is a
+            // transitive dep — declared explicitly so the synthesized
+            // workdir's Package.swift resolves without leaning on
+            // the kit's own dep graph.
+            entries = [
+                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")"
+            ]
+        }
         if let userPackage {
             entries.append(".package(path: \(escapedLiteral(userPackage.packagePath.path)))")
         }
@@ -176,22 +215,32 @@ public enum VerifierWorkdir {
             .joined(separator: ",\n")
     }
 
-    /// Build the comma-joined target `dependencies:` array. Four kit
-    /// deps (`ComplexModule`, `RealModule`, `PropertyBased`,
-    /// `PropertyLawComplex`) are always present from V1.43.A; user
-    /// products append when supplied. `PropertyLawComplex` is the
-    /// opt-in library product introduced at `SwiftPropertyLaws v2.1.0`
-    /// that exposes `Gen<Complex<Double>>.edgeCaseBiased()` for the
-    /// V1.43.B two-pass design.
-    private static func renderTargetDependenciesBlock(userPackage: UserPackageReference?) -> String {
-        var entries = [
-            ".product(name: \"ComplexModule\", package: \"swift-numerics\")",
-            // V1.59.A — OrderedCollections product for OC carriers.
-            ".product(name: \"OrderedCollections\", package: \"swift-collections\")",
-            ".product(name: \"RealModule\", package: \"swift-numerics\")",
-            ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
-            ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"
-        ]
+    /// Build the comma-joined target `dependencies:` array.
+    /// Mode-dependent: `.algebraic` (v1.42 default) declares
+    /// ComplexModule + OrderedCollections + RealModule + PropertyBased
+    /// + PropertyLawComplex. `.interaction` (V2.0 M3.E.2) declares
+    /// PropertyBased + PropertyLawKit only — the M3.B-emitted stub
+    /// imports just those. User products append in either mode.
+    private static func renderTargetDependenciesBlock(
+        userPackage: UserPackageReference?,
+        mode: WorkdirMode
+    ) -> String {
+        var entries: [String]
+        switch mode {
+        case .algebraic:
+            entries = [
+                ".product(name: \"ComplexModule\", package: \"swift-numerics\")",
+                ".product(name: \"OrderedCollections\", package: \"swift-collections\")",
+                ".product(name: \"RealModule\", package: \"swift-numerics\")",
+                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
+                ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"
+            ]
+        case .interaction:
+            entries = [
+                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
+                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"
+            ]
+        }
         if let userPackage {
             for productName in userPackage.productNames {
                 entries.append(
@@ -216,4 +265,22 @@ public enum VerifierWorkdir {
             .replacingOccurrences(of: "\"", with: "\\\"")
         return "\"\(escaped)\""
     }
+}
+
+/// V2.0 M3.E.2 — selects which dependency shape `VerifierWorkdir`
+/// renders into the synthesized package's `Package.swift`. Hoisted to
+/// file scope so it doesn't increase nesting depth past SwiftLint's
+/// 1-level cap on `VerifierWorkdir` (already nested inside the
+/// `SwiftInferCommand` extension hierarchy).
+///
+/// - `algebraic`: the v1.42+ shape — swift-numerics + swift-collections
+///   + swift-property-based + SwiftPropertyLaws@2.1.0 + PropertyLawComplex.
+///   Used by `verify` for round-trip / idempotence / commutativity /
+///   associativity / dual-style / monotonicity templates.
+/// - `interaction`: the V2.0 M3 shape — swift-property-based +
+///   SwiftPropertyLaws@2.2.0 + PropertyLawKit. Used by
+///   `verify-interaction` for the action-sequence stub M3.B emits.
+public enum WorkdirMode: String, Sendable, Equatable, Codable, CaseIterable {
+    case algebraic
+    case interaction
 }

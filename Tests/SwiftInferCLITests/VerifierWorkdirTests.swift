@@ -117,4 +117,58 @@ struct VerifierWorkdirTests {
         #expect(VerifierWorkdir.escapedLiteral("/a/path\\with") == "\"/a/path\\\\with\"")
         #expect(VerifierWorkdir.escapedLiteral("with\"quote") == "\"with\\\"quote\"")
     }
+
+    // MARK: - V2.0 M3.E.2 — interaction mode
+
+    @Test("default mode is .algebraic — v1.42 callers don't break")
+    func defaultModeIsAlgebraic() {
+        let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil)
+        // The .algebraic shape includes numerics + collections; .interaction omits them.
+        #expect(rendered.contains("swift-numerics"))
+        #expect(rendered.contains("swift-collections"))
+        #expect(rendered.contains("SwiftPropertyLaws.git\", from: \"2.1.0\""))
+    }
+
+    @Test(".interaction mode declares v2.2.0 kit + PropertyLawKit; omits numerics / collections")
+    func interactionModeDeps() {
+        let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil, mode: .interaction)
+        #expect(rendered.contains("SwiftPropertyLaws.git\", from: \"2.2.0\""))
+        #expect(rendered.contains("swift-property-based"))
+        #expect(!rendered.contains("swift-numerics"))
+        #expect(!rendered.contains("swift-collections"))
+    }
+
+    @Test(".interaction mode target deps are PropertyBased + PropertyLawKit only")
+    func interactionModeTargetDeps() {
+        let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil, mode: .interaction)
+        #expect(rendered.contains(".product(name: \"PropertyBased\""))
+        #expect(rendered.contains(".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"))
+        // Algebraic-only products must NOT appear.
+        #expect(!rendered.contains("ComplexModule"))
+        #expect(!rendered.contains("RealModule"))
+        #expect(!rendered.contains("PropertyLawComplex"))
+    }
+
+    @Test(".interaction mode preserves the user-package dep + products when supplied")
+    func interactionModeWithUserPackage() {
+        let userRef = VerifierWorkdir.UserPackageReference(
+            packagePath: URL(fileURLWithPath: "/tmp/MyApp"),
+            packageDeclaredName: "MyApp",
+            productNames: ["MyAppLib"]
+        )
+        let rendered = VerifierWorkdir.renderPackageSwift(
+            userPackage: userRef,
+            mode: .interaction
+        )
+        #expect(rendered.contains(".package(path: \"/tmp/MyApp\")"))
+        #expect(rendered.contains(".product(name: \"MyAppLib\", package: \"MyApp\")"))
+        #expect(rendered.contains(".product(name: \"PropertyLawKit\""))
+    }
+
+    @Test("WorkdirMode rawValues are stable strings")
+    func workdirModeRawValues() {
+        #expect(WorkdirMode.algebraic.rawValue == "algebraic")
+        #expect(WorkdirMode.interaction.rawValue == "interaction")
+        #expect(WorkdirMode.allCases.count == 2)
+    }
 }
