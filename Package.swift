@@ -76,7 +76,7 @@ let package = Package(
         // `Testing.framework`, which would prevent the `swift-infer`
         // executable from running outside a test context — only the
         // generated test-target writeouts import it.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.1.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.2.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
