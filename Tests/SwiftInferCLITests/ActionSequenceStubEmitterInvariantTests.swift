@@ -172,16 +172,16 @@ struct ActionSequenceStubEmitterInvariantTests {
 
     // MARK: - Unsupported families
 
-    @Test("Referential-integrity invariant throws unsupportedFamily — M6 territory")
-    func referentialIntegrityIsUnsupported() {
-        let referentialIntegrity = InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: "refint::reduce::x"),
-            family: .referentialIntegrity,
+    @Test("Biconditional invariant throws unsupportedFamily — M7 territory")
+    func biconditionalIsUnsupported() {
+        let biconditional = InteractionInvariantSuggestion(
+            identity: SuggestionIdentity(canonicalInput: "bicond::reduce::x"),
+            family: .biconditional,
             reducerQualifiedName: "reduce",
             reducerLocation: "F.swift:1",
             stateTypeName: "AppState",
             actionTypeName: "AppAction",
-            predicate: "state.selectedID == nil || state.items.contains(...)",
+            predicate: "state.isLoading == (state.activeTask != nil)",
             score: 30,
             tier: .possible,
             whySuggested: [],
@@ -190,12 +190,36 @@ struct ActionSequenceStubEmitterInvariantTests {
         )
         #expect(
             throws:
-                ActionSequenceStubEmitter.EmitError.unsupportedFamily(.referentialIntegrity)
+                ActionSequenceStubEmitter.EmitError.unsupportedFamily(.biconditional)
         ) {
             _ = try ActionSequenceStubEmitter.emit(
-                inputs(candidate(), invariant: referentialIntegrity)
+                inputs(candidate(), invariant: biconditional)
             )
         }
+    }
+
+    @Test("Referential-integrity invariant — M6 ships, embeds precondition like Conservation")
+    func referentialIntegrityEmbedsPrecondition() throws {
+        let predicate = "state.selectedID == nil || state.items.contains { $0.id == state.selectedID }"
+        let referentialIntegrity = InteractionInvariantSuggestion(
+            identity: SuggestionIdentity(canonicalInput: "refint::reduce::sel"),
+            family: .referentialIntegrity,
+            reducerQualifiedName: "reduce",
+            reducerLocation: "F.swift:1",
+            stateTypeName: "AppState",
+            actionTypeName: "AppAction",
+            predicate: predicate,
+            score: 30,
+            tier: .possible,
+            whySuggested: [],
+            whyMightBeWrong: [],
+            firstSeenAt: Date()
+        )
+        let source = try ActionSequenceStubEmitter.emit(
+            inputs(candidate(), invariant: referentialIntegrity)
+        )
+        #expect(source.contains("precondition(\(predicate)"))
+        #expect(source.contains("Referential-integrity invariant violated"))
     }
 
     @Test("Cardinality invariant — M5 ships, embeds precondition like Conservation")

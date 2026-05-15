@@ -1,39 +1,24 @@
 import Foundation
 import SwiftInferCore
 
-/// V2.0 M3.B — emits the Swift source for the verifier executable
-/// that `swift-infer verify-interaction` builds + runs. The emitted
-/// `main.swift` imports the user's module + `PropertyLawKit`, builds
-/// an action-sequence generator via `ActionSequenceFactory`, runs
-/// N sequences through the discovered reducer, and prints a structured
-/// outcome line on the clean path.
+/// V2.0 M3.B — emits the verifier `main.swift` source for
+/// `swift-infer verify-interaction`. Imports the user's module +
+/// `PropertyLawKit`, builds an action-sequence generator, runs N
+/// sequences through the discovered reducer, and prints an outcome
+/// marker on the clean path. M4.D–M6 layer in family-aware
+/// invariant checks (Conservation / Cardinality / Ref-integrity
+/// per-step; Idempotence post-loop).
 ///
-/// **Trap-as-exit-code outcome model.** Swift traps (array-out-of-bounds,
-/// force-unwrap-nil, `fatalError`) terminate the process with a non-zero
-/// exit code. The harness exploits this: a clean exit + the expected
-/// outcome marker means every sequence ran without trapping; a non-zero
-/// exit or a missing marker means at least one sequence trapped. The
-/// parent (`swift-infer verify-interaction`) reads the exit code +
-/// stdout to map to the v1.42 five-category outcome scheme.
+/// **Trap-as-exit-code outcome.** Swift traps (`fatalError`,
+/// array-out-of-bounds, force-unwrap-nil) terminate the process
+/// with a non-zero exit. M3.E.3's parser maps to
+/// `.measuredDefaultFails`. `precondition` violations from the
+/// invariant checks land in the same bucket.
 ///
-/// **What it does NOT do at M3.0:** invariant checking. Every sequence
-/// runs through the reducer; the only failure mode is a trap. M4–M7
-/// template families attach an invariant predicate to each candidate
-/// and extend this stub to check `predicate(state)` at each step.
-///
-/// **Supported signature shapes (M3.0):**
-///   - `.stateActionReturnsState` — `state = reduce(state, action)`
-///   - `.inoutStateActionReturnsVoid` — `reduce(&state, action)`
-///
-/// The two effect-shaped signatures (`.stateActionReturnsStateAndEffect`,
-/// `.inoutStateActionReturnsEffect`) route to the subprocess path at
-/// M8 (PRD §7.4); the emitter throws `.unsupportedShape` for them.
-///
-/// **Supported call contexts (M3.0):** free function (no enclosing
-/// type), or a function nested in a `Reducer`-conforming type (called
-/// as `<Type>.functionName`). Instance methods needing an instance
-/// constructor (`<Type>().functionName(...)`) defer until calibration
-/// shows the simpler static-style call site doesn't cover most picks.
+/// **Supported shapes / contexts** (M3.0):
+///   - `.stateActionReturnsState` / `.inoutStateActionReturnsVoid`.
+///   - Free functions or static-call methods on a containing type.
+///   - Effect-shaped signatures + TCA closures route to M8 / M3.future.
 public enum ActionSequenceStubEmitter {
 
     /// Number of action sequences to run per verifier invocation.
@@ -200,10 +185,11 @@ public enum ActionSequenceStubEmitter {
         return lines.joined(separator: "\n")
     }
 
-    /// V2.0 M4.D / M5 — per-step invariant check (Conservation +
-    /// Cardinality). Both families embed a boolean predicate
-    /// evaluated at each action step. Idempotence uses the post-loop
-    /// double-apply check instead.
+    /// V2.0 M4.D / M5 / M6 — per-step invariant check
+    /// (Conservation + Cardinality + Referential Integrity). Three
+    /// families embed a boolean predicate evaluated at each action
+    /// step. Idempotence uses the post-loop double-apply check
+    /// instead.
     static func makePerStepCheck(invariant: InteractionInvariantSuggestion?) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
@@ -217,9 +203,14 @@ public enum ActionSequenceStubEmitter {
                 "precondition(\(invariant.predicate), "
                     + "\"Cardinality invariant violated\")"
             ]
+        case .referentialIntegrity:
+            return [
+                "precondition(\(invariant.predicate), "
+                    + "\"Referential-integrity invariant violated\")"
+            ]
         case .idempotence:
             return []
-        case .referentialIntegrity, .biconditional:
+        case .biconditional:
             // Unreachable — `validateInvariant` rejects these before emit.
             return []
         }
@@ -239,7 +230,7 @@ public enum ActionSequenceStubEmitter {
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
-        case .conservation, .cardinality:
+        case .conservation, .cardinality, .referentialIntegrity:
             return []
         case .idempotence:
             return makeIdempotenceCheck(
@@ -247,7 +238,7 @@ public enum ActionSequenceStubEmitter {
                 shape: shape,
                 reducerCall: reducerCall
             )
-        case .referentialIntegrity, .biconditional:
+        case .biconditional:
             return []
         }
     }
@@ -284,15 +275,15 @@ public enum ActionSequenceStubEmitter {
         }
     }
 
-    /// V2.0 M4.D / M5 — reject invariant families that don't have
-    /// an emission path yet. Conservation + Idempotence ship at
-    /// M4.B/C; Cardinality at M5. Referential integrity (M6) and
-    /// Biconditional (M7) still throw.
+    /// V2.0 M4.D / M5 / M6 — reject invariant families that don't
+    /// have an emission path yet. Conservation + Idempotence ship
+    /// at M4.B/C; Cardinality at M5; Referential integrity at M6.
+    /// Biconditional (M7) still throws.
     private static func validateInvariant(_ family: InteractionInvariantFamily) throws {
         switch family {
-        case .conservation, .idempotence, .cardinality:
+        case .conservation, .idempotence, .cardinality, .referentialIntegrity:
             return
-        case .referentialIntegrity, .biconditional:
+        case .biconditional:
             throw EmitError.unsupportedFamily(family)
         }
     }
