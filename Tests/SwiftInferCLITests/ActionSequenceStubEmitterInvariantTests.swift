@@ -172,25 +172,54 @@ struct ActionSequenceStubEmitterInvariantTests {
 
     // MARK: - Unsupported families
 
-    @Test("Cardinality invariant throws unsupportedFamily — M5 territory")
-    func cardinalityIsUnsupported() {
-        let cardinality = InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: "cardinality::reduce::x"),
-            family: .cardinality,
+    @Test("Referential-integrity invariant throws unsupportedFamily — M6 territory")
+    func referentialIntegrityIsUnsupported() {
+        let referentialIntegrity = InteractionInvariantSuggestion(
+            identity: SuggestionIdentity(canonicalInput: "refint::reduce::x"),
+            family: .referentialIntegrity,
             reducerQualifiedName: "reduce",
             reducerLocation: "F.swift:1",
             stateTypeName: "AppState",
             actionTypeName: "AppAction",
-            predicate: "state.sheets.count <= 1",
+            predicate: "state.selectedID == nil || state.items.contains(...)",
             score: 30,
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
             firstSeenAt: Date()
         )
-        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedFamily(.cardinality)) {
-            _ = try ActionSequenceStubEmitter.emit(inputs(candidate(), invariant: cardinality))
+        #expect(
+            throws:
+                ActionSequenceStubEmitter.EmitError.unsupportedFamily(.referentialIntegrity)
+        ) {
+            _ = try ActionSequenceStubEmitter.emit(
+                inputs(candidate(), invariant: referentialIntegrity)
+            )
         }
+    }
+
+    @Test("Cardinality invariant — M5 ships, embeds precondition like Conservation")
+    func cardinalityEmbedsPrecondition() throws {
+        let predicate = "(state.activeSheet != nil ? 1 : 0) + (state.isFullScreen ? 1 : 0) <= 1"
+        let cardinality = InteractionInvariantSuggestion(
+            identity: SuggestionIdentity(canonicalInput: "cardinality::reduce::sheet"),
+            family: .cardinality,
+            reducerQualifiedName: "reduce",
+            reducerLocation: "F.swift:1",
+            stateTypeName: "AppState",
+            actionTypeName: "AppAction",
+            predicate: predicate,
+            score: 30,
+            tier: .possible,
+            whySuggested: [],
+            whyMightBeWrong: [],
+            firstSeenAt: Date()
+        )
+        let source = try ActionSequenceStubEmitter.emit(
+            inputs(candidate(), invariant: cardinality)
+        )
+        #expect(source.contains("precondition(\(predicate)"))
+        #expect(source.contains("Cardinality invariant violated"))
     }
 
     // MARK: - Helper-function shape

@@ -88,6 +88,16 @@ public enum InteractionTemplateEngine {
             witnesses: idempotenceWitnesses,
             firstSeenAt: firstSeenAt
         ))
+        // V2.0 M5 — Cardinality (≥ 2 presentation-flag fields)
+        let cardinalityWitnesses = try CardinalityWitnessDetector.detect(
+            stateTypeName: candidate.stateTypeName,
+            in: sourcesDirectory
+        )
+        collected.append(contentsOf: CardinalityInteractionTemplate.analyze(
+            candidate: candidate,
+            witnesses: cardinalityWitnesses,
+            firstSeenAt: firstSeenAt
+        ))
         return collected
     }
 }

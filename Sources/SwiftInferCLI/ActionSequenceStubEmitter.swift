@@ -200,10 +200,10 @@ public enum ActionSequenceStubEmitter {
         return lines.joined(separator: "\n")
     }
 
-    /// V2.0 M4.D — per-step invariant check (Conservation). Emits
-    /// `precondition(<predicate>, "message")` inside the per-action
-    /// loop. Returns empty for nil invariant or non-Conservation
-    /// families.
+    /// V2.0 M4.D / M5 — per-step invariant check (Conservation +
+    /// Cardinality). Both families embed a boolean predicate
+    /// evaluated at each action step. Idempotence uses the post-loop
+    /// double-apply check instead.
     static func makePerStepCheck(invariant: InteractionInvariantSuggestion?) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
@@ -212,9 +212,14 @@ public enum ActionSequenceStubEmitter {
                 "precondition(\(invariant.predicate), "
                     + "\"Conservation invariant violated\")"
             ]
+        case .cardinality:
+            return [
+                "precondition(\(invariant.predicate), "
+                    + "\"Cardinality invariant violated\")"
+            ]
         case .idempotence:
             return []
-        case .cardinality, .referentialIntegrity, .biconditional:
+        case .referentialIntegrity, .biconditional:
             // Unreachable — `validateInvariant` rejects these before emit.
             return []
         }
@@ -234,7 +239,7 @@ public enum ActionSequenceStubEmitter {
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
-        case .conservation:
+        case .conservation, .cardinality:
             return []
         case .idempotence:
             return makeIdempotenceCheck(
@@ -242,7 +247,7 @@ public enum ActionSequenceStubEmitter {
                 shape: shape,
                 reducerCall: reducerCall
             )
-        case .cardinality, .referentialIntegrity, .biconditional:
+        case .referentialIntegrity, .biconditional:
             return []
         }
     }
@@ -279,14 +284,15 @@ public enum ActionSequenceStubEmitter {
         }
     }
 
-    /// V2.0 M4.D — reject invariant families that don't have an
-    /// emission path yet (Cardinality / Referential integrity /
-    /// Biconditional — M5 / M6 / M7).
+    /// V2.0 M4.D / M5 — reject invariant families that don't have
+    /// an emission path yet. Conservation + Idempotence ship at
+    /// M4.B/C; Cardinality at M5. Referential integrity (M6) and
+    /// Biconditional (M7) still throw.
     private static func validateInvariant(_ family: InteractionInvariantFamily) throws {
         switch family {
-        case .conservation, .idempotence:
+        case .conservation, .idempotence, .cardinality:
             return
-        case .cardinality, .referentialIntegrity, .biconditional:
+        case .referentialIntegrity, .biconditional:
             throw EmitError.unsupportedFamily(family)
         }
     }
@@ -303,12 +309,10 @@ public enum ActionSequenceStubEmitter {
         case .stateActionReturnsStateAndEffect, .inoutStateActionReturnsEffect:
             throw EmitError.unsupportedShape(candidate.signatureShape)
         }
-        // M3.0 carrier coverage: `.elmStyle` (free `(S, A) -> S`) and
-        // `.generic` (method or free of either supported shape). The
-        // `.tca` case needs closure-relative state init that the
-        // current `<TypeName>(_:_:)` static-call convention doesn't
-        // cover — `Reduce { state, action in ... }` is a closure
-        // value, not a callable on the conforming type.
+        // M3.0 covers `.elmStyle` + `.generic`. `.tca` needs
+        // closure-relative state init that the static-call convention
+        // doesn't cover — Reduce { state, action in ... } is a
+        // closure value, not a callable on the conforming type.
         if candidate.carrierKind == .tca {
             throw EmitError.unsupportedCarrier(candidate.carrierKind)
         }
