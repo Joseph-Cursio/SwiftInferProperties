@@ -196,7 +196,13 @@ let package = Package(
                 "SwiftInferCore",
                 // V1.47.G.1 — tests of IndexedTypeShape ↔ TypeShape
                 // conversion need PropertyLawCore symbols visible.
-                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws")
+                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
+                // V2.0.M2 smoke test — pins the v2.2.0 kit surface
+                // (ActionSequenceFactory + StatefulGuard + Xoshiro
+                // via PropertyBased) against accidental tightening.
+                // Same posture as the v1.6.0 DerivationStrategist
+                // smoke test.
+                .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
             ]
         ),
         .testTarget(
