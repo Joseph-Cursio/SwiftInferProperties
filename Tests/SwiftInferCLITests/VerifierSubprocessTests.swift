@@ -46,4 +46,24 @@ struct VerifierSubprocessTests {
         #expect(first == second)
         #expect(first != third)
     }
+
+    @Test("runVerifierBinary still errors on missing binary even with extraEnvironment (M8.D.2)")
+    func runVerifierBinaryMissingFileWithExtraEnv() throws {
+        let workdir = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: workdir) }
+        do {
+            _ = try VerifierSubprocess.runVerifierBinary(
+                workdir: workdir,
+                extraEnvironment: ["SWIFT_INFER_PIN_SEQUENCE": "42"]
+            )
+            Issue.record("expected .runnerCrashed")
+        } catch let error as VerifyError {
+            switch error {
+            case .runnerCrashed:
+                break
+            default:
+                Issue.record("expected .runnerCrashed; got \(error)")
+            }
+        }
+    }
 }

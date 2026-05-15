@@ -62,7 +62,10 @@ public enum VerifierSubprocess {
     /// `dyld: Library not loaded: @rpath/libTesting.dylib`; this
     /// env-var injection closes that gap at run-time without
     /// requiring workdir-synthesis changes.
-    public static func runVerifierBinary(workdir: URL) throws -> Output {
+    public static func runVerifierBinary(
+        workdir: URL,
+        extraEnvironment: [String: String] = [:]
+    ) throws -> Output {
         let binaryPath = workdir
             .appendingPathComponent(".build")
             .appendingPathComponent("debug")
@@ -73,11 +76,19 @@ public enum VerifierSubprocess {
                     + "did `swift build` succeed in the workdir?"
             )
         }
+        // V2.0 M8.D.2 — extraEnvironment merges over the testing-
+        // library-path environment (caller's entries win). Used by
+        // the shrinker (M8.D.3) to set SWIFT_INFER_PIN_SEQUENCE /
+        // SWIFT_INFER_PIN_PREFIX_LENGTH per re-invocation.
+        var env = environmentWithTestingLibraryPath()
+        for (key, value) in extraEnvironment {
+            env[key] = value
+        }
         return try runProcess(
             executable: binaryPath,
             arguments: [],
             workingDirectory: workdir,
-            environment: environmentWithTestingLibraryPath()
+            environment: env
         )
     }
 

@@ -40,6 +40,14 @@ public enum ActionSequenceStubEmitter {
     /// safe here.
     public static let traceCurrentSequenceMarker = "TRACE-CURRENT-SEQ:"
 
+    /// V2.0 M8.D.2 — env-var names the stub reads from
+    /// `ProcessInfo.processInfo.environment` at start-up to
+    /// implement single-sequence replay (the shrinker's
+    /// re-invocation primitive). Public so `VerifierSubprocess`
+    /// + `InteractionShrinker` agree on the byte-stable names.
+    public static let pinSequenceEnvVar = "SWIFT_INFER_PIN_SEQUENCE"
+    public static let pinPrefixLengthEnvVar = "SWIFT_INFER_PIN_PREFIX_LENGTH"
+
     // `Inputs` + `EmitError` are nested via extension in
     // ActionSequenceStubEmitter+Types.swift (M8.A split keeps the
     // type body under SwiftLint's `type_body_length` cap).
@@ -107,6 +115,12 @@ public enum ActionSequenceStubEmitter {
         lines.append("@main")
         lines.append("struct InteractionVerifier {")
         lines.append("    static func main() {")
+        // M8.D.2 — env-var-driven single-sequence replay. nil
+        // (env var unset) → full N-sequence loop (M8.D.1 posture).
+        // Non-nil → skip-then-replay-one (the shrinker's primitive).
+        lines.append("        let env = ProcessInfo.processInfo.environment")
+        lines.append("        let pinSequence = env[\"\(pinSequenceEnvVar)\"].flatMap(Int.init)")
+        lines.append("        let pinPrefix = env[\"\(pinPrefixLengthEnvVar)\"].flatMap(Int.init)")
         lines.append("        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))")
         lines.append("        let generator = ActionSequenceFactory.actionSequence(")
         lines.append("            forCaseIterable: \(inputs.candidate.actionTypeName).self,")
@@ -114,34 +128,51 @@ public enum ActionSequenceStubEmitter {
         lines.append("        )")
         lines.append("        var clean = 0")
         lines.append("        for sequenceIndex in 0..<\(inputs.sequenceCount) {")
-        // M8.D.1 — print the current sequence index to stderr before
-        // each iteration. stderr is unbuffered, so a trap during this
-        // iteration's reducer call still flushes the marker; the
-        // pipeline parser keys on the last-seen value to identify the
-        // failing index.
-        lines.append("            FileHandle.standardError.write(")
-        lines.append("                Data(\"\(traceCurrentSequenceMarker) \\(sequenceIndex)\\n\".utf8)")
-        lines.append("            )")
-        lines.append("            let actions = generator.run(using: &rng)")
-        lines.append("            var state = \(stateInit)")
-        lines.append("            for action in actions {")
-        for line in applyStep {
-            lines.append("                \(line)")
-        }
-        for line in perStepCheck {
-            lines.append("                \(line)")
-        }
-        lines.append("            }")
-        for line in postLoopCheck {
-            lines.append("            \(line)")
-        }
-        lines.append("            clean += 1")
+        lines.append(contentsOf: makeIterationBody(
+            stateInit: stateInit,
+            applyStep: applyStep,
+            perStepCheck: perStepCheck,
+            postLoopCheck: postLoopCheck
+        ))
         lines.append("        }")
         lines.append("        print(\"\(cleanOutcomeMarker) totalRuns=\\(\(inputs.sequenceCount)) clean=\\(clean)\")")
         lines.append("    }")
         lines.append("}")
         lines.append("")
         return lines.joined(separator: "\n")
+    }
+
+    /// V2.0 M8.D.2 — body of the per-sequence loop. Pulled to a helper
+    /// so `assembleStub` stays under SwiftLint's `function_body_length`
+    /// cap as the M8.D.1 stderr-marker write + M8.D.2 pin-sequence
+    /// branches landed. Lines are pre-indented to 12 spaces (the
+    /// `for sequenceIndex` block's interior depth).
+    private static func makeIterationBody(
+        stateInit: String,
+        applyStep: [String],
+        perStepCheck: [String],
+        postLoopCheck: [String]
+    ) -> [String] {
+        var lines: [String] = [
+            // M8.D.1 — stderr marker (unbuffered; survives trap).
+            "            FileHandle.standardError.write(",
+            "                Data(\"\(traceCurrentSequenceMarker) \\(sequenceIndex)\\n\".utf8)",
+            "            )",
+            // M8.D.2 — draw to advance rng even when skipping.
+            "            let rawActions = generator.run(using: &rng)",
+            "            if let pin = pinSequence, sequenceIndex != pin { continue }",
+            "            let actions = pinPrefix.map { Array(rawActions.prefix($0)) } "
+                + "?? rawActions",
+            "            var state = \(stateInit)",
+            "            for action in actions {"
+        ]
+        lines.append(contentsOf: applyStep.map { "                \($0)" })
+        lines.append(contentsOf: perStepCheck.map { "                \($0)" })
+        lines.append("            }")
+        lines.append(contentsOf: postLoopCheck.map { "            \($0)" })
+        lines.append("            clean += 1")
+        lines.append("            if pinSequence != nil { break }")
+        return lines
     }
 
     /// V2.0 M4.D / M5 / M6 — per-step invariant check

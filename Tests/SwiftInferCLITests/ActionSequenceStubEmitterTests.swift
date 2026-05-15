@@ -201,4 +201,41 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains(ActionSequenceStubEmitter.traceCurrentSequenceMarker))
         #expect(source.contains("\\(sequenceIndex)"))
     }
+
+    // MARK: - V2.0 M8.D.2 — pin-sequence env-var replay mode
+
+    @Test("stub reads SWIFT_INFER_PIN_SEQUENCE + SWIFT_INFER_PIN_PREFIX_LENGTH env vars (M8.D.2)")
+    func stubReadsPinSequenceEnvVars() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("ProcessInfo.processInfo.environment"))
+        #expect(source.contains(ActionSequenceStubEmitter.pinSequenceEnvVar))
+        #expect(source.contains(ActionSequenceStubEmitter.pinPrefixLengthEnvVar))
+    }
+
+    @Test("stub skips non-target sequences via `continue` when pinSequence is set (M8.D.2)")
+    func stubSkipsNonTargetSequences() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("if let pin = pinSequence, sequenceIndex != pin { continue }"))
+    }
+
+    @Test("stub truncates the action list via pinPrefix when supplied (M8.D.2)")
+    func stubTruncatesActionListByPrefix() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("Array(rawActions.prefix($0))"))
+    }
+
+    @Test("stub breaks after one execution in pinned mode — single-sequence replay (M8.D.2)")
+    func stubBreaksAfterOneExecutionWhenPinned() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("if pinSequence != nil { break }"))
+    }
+
+    @Test("stub names match the public env-var constants — byte-stable (M8.D.2)")
+    func stubEnvVarNamesAreStable() {
+        #expect(ActionSequenceStubEmitter.pinSequenceEnvVar == "SWIFT_INFER_PIN_SEQUENCE")
+        #expect(
+            ActionSequenceStubEmitter.pinPrefixLengthEnvVar
+                == "SWIFT_INFER_PIN_PREFIX_LENGTH"
+        )
+    }
 }
