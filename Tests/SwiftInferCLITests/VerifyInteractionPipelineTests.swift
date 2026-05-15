@@ -132,10 +132,15 @@ struct VerifyInteractionPipelineTests {
         }
     }
 
-    // MARK: - End-to-end runPipeline against a fixture directory
+    // MARK: - End-to-end resolveAndEmit against a fixture directory
+    //
+    // (The full `runPipeline` does subprocess builds and gets an
+    // integration test in SwiftInferIntegrationTests, skipped by
+    // default. These tests cover the pure leg: discovery + pin
+    // resolution + stub emission.)
 
-    @Test("runPipeline against a single-reducer fixture renders the stub-emission outcome")
-    func runPipelineSingleReducer() throws {
+    @Test("resolveAndEmit against a single-reducer fixture returns the candidate + emitted stub")
+    func resolveAndEmitSingleReducer() throws {
         let directory = try makeFixtureDirectory(name: "PipelineSingleReducer")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
@@ -144,18 +149,19 @@ struct VerifyInteractionPipelineTests {
             named: "Inbox.swift",
             contents: "func reduce(_ s: AppState, _ a: AppAction) -> AppState { return s }"
         )
-        let rendered = try VerifyInteractionPipeline.runPipeline(
+        let (candidate, stubSource) = try VerifyInteractionPipeline.resolveAndEmit(
             target: "MyApp",
             workingDirectory: directory
         )
-        #expect(rendered.contains("V2.0 M3.C"))
-        #expect(rendered.contains("Reducer: reduce"))
-        #expect(rendered.contains("Carrier: elm-style"))
-        #expect(rendered.contains(ActionSequenceStubEmitter.stubHeaderMarker))
+        #expect(candidate.functionName == "reduce")
+        #expect(candidate.carrierKind == .elmStyle)
+        #expect(stubSource.contains(ActionSequenceStubEmitter.stubHeaderMarker))
+        #expect(stubSource.contains("import MyApp"))
+        #expect(stubSource.contains(ActionSequenceStubEmitter.cleanOutcomeMarker))
     }
 
-    @Test("runPipeline with no reducers throws noReducersDetected")
-    func runPipelineNoReducers() throws {
+    @Test("resolveAndEmit with no reducers throws noReducersDetected")
+    func resolveAndEmitNoReducers() throws {
         let directory = try makeFixtureDirectory(name: "PipelineNoReducers")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
@@ -165,15 +171,15 @@ struct VerifyInteractionPipelineTests {
             contents: "// no reducer here"
         )
         #expect(throws: VerifyInteractionError.noReducersDetected) {
-            _ = try VerifyInteractionPipeline.runPipeline(
+            _ = try VerifyInteractionPipeline.resolveAndEmit(
                 target: "MyApp",
                 workingDirectory: directory
             )
         }
     }
 
-    @Test("runPipeline with multiple candidates and no pin throws requiresPin")
-    func runPipelineMultipleNoPin() throws {
+    @Test("resolveAndEmit with multiple candidates and no pin throws requiresPin")
+    func resolveAndEmitMultipleNoPin() throws {
         let directory = try makeFixtureDirectory(name: "PipelineMultipleNoPin")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
@@ -189,7 +195,7 @@ struct VerifyInteractionPipelineTests {
             contents: "func reduceB(_ s: StateB, _ a: ActionB) -> StateB { return s }"
         )
         do {
-            _ = try VerifyInteractionPipeline.runPipeline(
+            _ = try VerifyInteractionPipeline.resolveAndEmit(
                 target: "MyApp",
                 workingDirectory: directory
             )
@@ -206,8 +212,8 @@ struct VerifyInteractionPipelineTests {
         }
     }
 
-    @Test("runPipeline against an unsupported shape throws .unsupported")
-    func runPipelineUnsupportedShape() throws {
+    @Test("resolveAndEmit against an unsupported shape throws .unsupported")
+    func resolveAndEmitUnsupportedShape() throws {
         let directory = try makeFixtureDirectory(name: "PipelineUnsupportedShape")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
@@ -221,7 +227,7 @@ struct VerifyInteractionPipelineTests {
             """
         )
         do {
-            _ = try VerifyInteractionPipeline.runPipeline(
+            _ = try VerifyInteractionPipeline.resolveAndEmit(
                 target: "MyApp",
                 workingDirectory: directory
             )

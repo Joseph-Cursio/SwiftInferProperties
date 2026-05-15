@@ -1,49 +1,34 @@
 import Foundation
 import SwiftInferCore
 
-/// V2.0 M3.C — orchestration glue for the in-process interaction
-/// verify path. Threads M1's reducer discovery → M1.C's pin
-/// resolution → M3.B's stub emission. Returns a rendered outcome
-/// string the CLI prints.
+/// V2.0 M3.C → M3.E — orchestration glue for the in-process
+/// interaction verify path. Threads M1's reducer discovery → M1.C's
+/// pin resolution → M3.B's stub emission → M3.E's workdir-synthesis
+/// → build + run + outcome parsing → rendered five-category outcome.
 ///
-/// **M3.C scope.** Stub emission only. The workdir-synthesis +
-/// `swift build` + binary-run integration that v1.42's VerifyCommand
-/// uses for round-trip verify isn't reused here yet — that path bakes
-/// in SwiftPropertyLaws v2.1.0 + PropertyLawComplex dependencies that
-/// interaction verify doesn't need (it needs v2.2.0+ for the
-/// ActionSequenceFactory / StatefulGuard surface). Workdir/build/run
-/// integration follows in an M3.E sub-cycle once the v2.2.0 kit tag
-/// is published.
-///
-/// **The clean ship today**: surface the emitted stub source + a
-/// "pending kit publication" outcome that names what's left. Once
-/// the kit tag publishes, M3.E adds the build/run loop and the
-/// outcome flows through the v1.42 five-category scheme.
+/// **Two entries:**
+///   - `resolveAndEmit(target:pinRaw:...:)` — pure, no subprocess.
+///     Discovers reducers, applies the pin filter, emits the verifier
+///     stub source. Used by tests; consumed by `runPipeline` as the
+///     pre-execution leg.
+///   - `runPipeline(target:pinRaw:...:)` — the full path. Wraps
+///     `resolveAndEmit` + `executeAndParse` + outcome render. The
+///     CLI subcommand (M3.D) calls this.
 public enum VerifyInteractionPipeline {
 
-    /// V2.0 M3.C — pipeline entry. Tests drive it without going
-    /// through the AsyncParsableCommand shell.
-    ///
-    /// Pipeline steps:
-    ///   1. Discover reducers under `Sources/<target>/` via
-    ///      `ReducerDiscoverer.discover(directory:)`.
-    ///   2. If `pinRaw` is present, parse it via `ReducerPin.parse`
-    ///      and filter the candidate list. Zero / multiple matches
-    ///      throw clear errors. When `pinRaw` is `nil` and the target
-    ///      has more than one reducer, error asks the user to pin.
-    ///   3. Emit the verifier stub via `ActionSequenceStubEmitter`.
-    ///      Unsupported shapes / carriers (M8 deferrals, TCA closure
-    ///      state-init) surface as clear errors.
-    ///   4. Render the outcome — for M3.C, "stub emitted, harness
-    ///      pending kit v2.2.0 publication"; M3.E swaps this for
-    ///      the build/run loop.
-    public static func runPipeline(
+    /// V2.0 M3.C — pure leg: discover candidates, apply pin filter,
+    /// emit the stub source. No subprocess; no disk writes outside
+    /// the source-tree walk. Returns the resolved candidate plus
+    /// the M3.B-emitted main.swift source so callers can route into
+    /// the build/run leg (M3.E) or render a dry-run stub-only output
+    /// (the M3.C ship before M3.E landed).
+    public static func resolveAndEmit(
         target: String,
         pinRaw: String? = nil,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
         workingDirectory: URL
-    ) throws -> String {
+    ) throws -> (candidate: ReducerCandidate, stubSource: String) {
         let directory = workingDirectory
             .appendingPathComponent("Sources")
             .appendingPathComponent(target)
@@ -61,8 +46,46 @@ public enum VerifyInteractionPipeline {
         } catch let error as ActionSequenceStubEmitter.EmitError {
             throw VerifyInteractionError.unsupported(reason: error.description)
         }
-        return renderPendingHarness(candidate: matched, stubSource: stubSource)
+        return (matched, stubSource)
     }
+
+    /// V2.0 M3.E.4 — full path: resolveAndEmit → synthesize a
+    /// workdir under `<packageRoot>/.swiftinfer/verify-interaction-workdir/`
+    /// → `swift build` → run the verifier binary → parse outcome
+    /// via `InteractionVerifyOutcomeParser` → render in the v1.42
+    /// five-category format.
+    ///
+    /// **Until SwiftPropertyLaws v2.2.0 is published on remote**:
+    /// the synthesized workdir's `swift build` step will fail to
+    /// resolve the kit pin and the outcome surfaces as
+    /// `.architecturalCoveragePending` with a "kit pin v2.2.0 not yet
+    /// available" detail. This is normal — see
+    /// `docs/calibration-cycle-73-findings.md` "kit-tag-publication
+    /// gap" for the next-action.
+    public static func runPipeline(
+        target: String,
+        pinRaw: String? = nil,
+        sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
+        userModuleName: String? = nil,
+        workingDirectory: URL
+    ) throws -> String {
+        let (candidate, stubSource) = try resolveAndEmit(
+            target: target,
+            pinRaw: pinRaw,
+            sequenceCount: sequenceCount,
+            userModuleName: userModuleName,
+            workingDirectory: workingDirectory
+        )
+        let result = try executeAndParse(
+            candidate: candidate,
+            stubSource: stubSource,
+            userModuleName: userModuleName ?? target,
+            workingDirectory: workingDirectory
+        )
+        return renderOutcome(candidate: candidate, result: result)
+    }
+
+    // MARK: - Pin resolution
 
     /// V2.0 M3.C — pin-resolution sub-step. Pulled to a static so
     /// tests can drive it without the directory walk. Errors map
@@ -98,33 +121,108 @@ public enum VerifyInteractionPipeline {
         }
     }
 
-    /// V2.0 M3.C — "stub emitted, harness pending" rendering. M3.E
-    /// replaces the body of this with the actual build/run loop +
-    /// the v1.42-shape five-category outcome. The stub-source dump
-    /// makes the M3.C output useful in its own right: users can
-    /// inspect / hand-build the emitted verifier even before M3.E.
-    static func renderPendingHarness(
+    // MARK: - Build + run + parse (M3.E.4)
+
+    /// V2.0 M3.E.4 — synthesize the workdir, run `swift build`, run
+    /// the resulting binary, parse the outcome. Returns the
+    /// classified result; the caller renders it.
+    static func executeAndParse(
         candidate: ReducerCandidate,
-        stubSource: String
+        stubSource: String,
+        userModuleName: String,
+        workingDirectory: URL
+    ) throws -> InteractionVerifyOutcomeParser.Result {
+        let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+        let workdir = packageRoot
+            .appendingPathComponent(".swiftinfer")
+            .appendingPathComponent("verify-interaction-workdir")
+            .appendingPathComponent(workdirSegment(for: candidate))
+        let userPackage = VerifierWorkdir.UserPackageReference(
+            packagePath: packageRoot,
+            packageDeclaredName: userModuleName,
+            productNames: [userModuleName]
+        )
+        let workdirInputs = VerifierWorkdir.Inputs(
+            workdir: workdir,
+            userPackage: userPackage,
+            stubSource: stubSource,
+            mode: .interaction
+        )
+        _ = try VerifierWorkdir.synthesize(workdirInputs)
+
+        let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+        if buildOutput.exitCode != 0 {
+            return InteractionVerifyOutcomeParser.parseBuildFailure(
+                buildExitCode: buildOutput.exitCode,
+                stderr: buildOutput.stderr
+            )
+        }
+        let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+        return InteractionVerifyOutcomeParser.parseRunOutput(
+            binaryExitCode: runOutput.exitCode,
+            stdout: runOutput.stdout
+        )
+    }
+
+    /// Walk up from `directory` looking for `Package.swift`. Same
+    /// shape as v1.42 verify's package-root resolution + every other
+    /// loader in the project — kept inlined here for the same
+    /// independent-loader posture.
+    static func findPackageRoot(startingFrom directory: URL) -> URL? {
+        var current = directory.standardizedFileURL
+        while true {
+            let manifest = current.appendingPathComponent("Package.swift")
+            if FileManager.default.fileExists(atPath: manifest.path) {
+                return current
+            }
+            let parent = current.deletingLastPathComponent().standardizedFileURL
+            if parent == current {
+                return nil
+            }
+            current = parent
+        }
+    }
+
+    /// Filename-safe workdir segment derived from the candidate's
+    /// qualified name. `.` → `_` so a candidate `Inbox.body` lands
+    /// under `verify-interaction-workdir/Inbox_body/`. Mirrors
+    /// v1.42's `workdirSegment(for:)` posture (hash-prefix-based
+    /// there; name-based here since interaction-verify has no
+    /// stable identity hash yet).
+    static func workdirSegment(for candidate: ReducerCandidate) -> String {
+        candidate.qualifiedName.replacingOccurrences(of: ".", with: "_")
+    }
+
+    // MARK: - Outcome render
+
+    /// V2.0 M3.E.4 — five-category outcome rendering. Mirrors
+    /// `VerifyResultRenderer.render` shape but for interaction-
+    /// invariant outcomes. M3.0 doesn't ship verify-evidence
+    /// persistence — that comes alongside M9's `metrics --interaction`
+    /// consumer.
+    static func renderOutcome(
+        candidate: ReducerCandidate,
+        result: InteractionVerifyOutcomeParser.Result
     ) -> String {
-        [
-            "swift-infer verify-interaction — V2.0 M3.C (stub-emission only):",
+        let header = [
+            "swift-infer verify-interaction — V2.0 M3.E (in-process):",
             "  Reducer: \(candidate.qualifiedName)",
             "  Carrier: \(candidate.carrierKind.rawValue)",
             "  Signature: \(candidate.signatureShape.rawValue)",
             "  State: \(candidate.stateTypeName)",
             "  Action: \(candidate.actionTypeName)",
             "",
-            "  M3.C ships the orchestration + stub-emission surface. The",
-            "  build-and-run loop that turns this stub into a v1.42-shape",
-            "  outcome lands at M3.E once SwiftPropertyLaws v2.2.0 is",
-            "  published (see docs/calibration-cycle-73-findings.md for the",
-            "  kit-tag-publication next-action).",
-            "",
-            "  Emitted verifier source (\(stubSource.split(separator: "\n").count) lines):",
-            "",
-            stubSource
-        ].joined(separator: "\n")
+            "  Outcome: \(result.outcome.rawValue)"
+        ]
+        var lines = header
+        if let totalRuns = result.totalRuns, let clean = result.cleanRuns {
+            lines.append("  Total runs: \(totalRuns)")
+            lines.append("  Clean runs: \(clean)")
+        }
+        if let detail = result.detail {
+            lines.append("  Detail: \(detail)")
+        }
+        return lines.joined(separator: "\n") + "\n"
     }
 }
 
