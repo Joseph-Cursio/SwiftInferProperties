@@ -84,13 +84,32 @@ public enum VerifyInteractionPipeline {
             userModuleName: userModuleName,
             workingDirectory: workingDirectory
         )
+        let resolvedModuleName = userModuleName ?? target
         let result = try executeAndParse(
             candidate: candidate,
             stubSource: stubSource,
-            userModuleName: userModuleName ?? target,
+            userModuleName: resolvedModuleName,
             workingDirectory: workingDirectory
         )
-        return renderOutcome(candidate: candidate, result: result)
+        // V2.0 M8.C — on `.measuredDefaultFails`, persist a @Test-shape
+        // regression file under `Tests/Generated/SwiftInferTraces/`.
+        // The trace replays the same verifier loop with the same
+        // deterministic seed; CI subsequently runs it as a standard
+        // regression test until the user fixes the trapping reducer.
+        var tracePath: URL?
+        if result.outcome == .measuredDefaultFails {
+            let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+            let traceInputs = InteractionTraceEmitter.Inputs(
+                candidate: candidate,
+                userModuleName: resolvedModuleName,
+                sequenceCount: sequenceCount
+            )
+            tracePath = try? InteractionTraceEmitter.persist(
+                inputs: traceInputs,
+                packageRoot: packageRoot
+            )
+        }
+        return renderOutcome(candidate: candidate, result: result, tracePath: tracePath)
     }
 
     // MARK: - Pin resolution
@@ -210,10 +229,11 @@ public enum VerifyInteractionPipeline {
     /// consumer.
     static func renderOutcome(
         candidate: ReducerCandidate,
-        result: InteractionVerifyOutcomeParser.Result
+        result: InteractionVerifyOutcomeParser.Result,
+        tracePath: URL? = nil
     ) -> String {
         let header = [
-            "swift-infer verify-interaction — V2.0 M3.E + M8.B:",
+            "swift-infer verify-interaction — V2.0 M3.E + M8.B + M8.C:",
             "  Reducer: \(candidate.qualifiedName)",
             "  Carrier: \(candidate.carrierKind.rawValue)",
             "  Signature: \(candidate.signatureShape.rawValue)",
@@ -230,6 +250,9 @@ public enum VerifyInteractionPipeline {
         }
         if let detail = result.detail {
             lines.append("  Detail: \(detail)")
+        }
+        if let tracePath {
+            lines.append("  Trace: \(tracePath.path)")
         }
         return lines.joined(separator: "\n") + "\n"
     }

@@ -63,6 +63,40 @@ struct VerifyInteractionPipelineRenderTests {
         #expect(rendered.contains("swift build failed"))
     }
 
+    @Test("renderOutcome surfaces the trace path on defaultFails (M8.C)")
+    func renderOutcomeShowsTracePath() {
+        let result = InteractionVerifyOutcomeParser.Result(
+            outcome: .measuredDefaultFails,
+            detail: "verifier exited with code 134 — trap in reducer body"
+        )
+        let tracePath = URL(fileURLWithPath:
+            "/tmp/MyPackage/Tests/Generated/SwiftInferTraces/reduce/trace-replay.swift"
+        )
+        let rendered = VerifyInteractionPipeline.renderOutcome(
+            candidate: freeCandidate(),
+            result: result,
+            tracePath: tracePath
+        )
+        #expect(rendered.contains("Trace: "))
+        #expect(rendered.contains("Tests/Generated/SwiftInferTraces/reduce/trace-replay.swift"))
+    }
+
+    @Test("renderOutcome omits the Trace line when no trace path is supplied")
+    func renderOutcomeOmitsTraceWhenNil() {
+        let result = InteractionVerifyOutcomeParser.Result(
+            outcome: .measuredBothPass,
+            totalRuns: 1024,
+            cleanRuns: 1024,
+            detail: nil
+        )
+        let rendered = VerifyInteractionPipeline.renderOutcome(
+            candidate: freeCandidate(),
+            result: result,
+            tracePath: nil
+        )
+        #expect(!rendered.contains("Trace:"))
+    }
+
     @Test("renderOutcome surfaces the candidate's purity classification (M8.B)")
     func renderOutcomeShowsPurity() {
         let result = InteractionVerifyOutcomeParser.Result(
