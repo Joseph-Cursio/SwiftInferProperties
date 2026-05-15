@@ -57,7 +57,7 @@ public enum InteractionTemplateEngine {
         }
     }
 
-    /// V2.0 M4.B — per-candidate dispatcher. Routes through every
+    /// V2.0 M4.B/C — per-candidate dispatcher. Routes through every
     /// shipped per-family analyzer. Each analyzer is best-effort —
     /// if it can't produce a suggestion (witness absent, signature
     /// shape unsupported, etc.) it returns an empty slice.
@@ -67,17 +67,27 @@ public enum InteractionTemplateEngine {
         firstSeenAt: Date
     ) throws -> [InteractionInvariantSuggestion] {
         var collected: [InteractionInvariantSuggestion] = []
-        if let sourcesDirectory {
-            let witnesses = try ConservationWitnessDetector.detect(
-                stateTypeName: candidate.stateTypeName,
-                in: sourcesDirectory
-            )
-            collected.append(contentsOf: ConservationInteractionTemplate.analyze(
-                candidate: candidate,
-                witnesses: witnesses,
-                firstSeenAt: firstSeenAt
-            ))
-        }
+        guard let sourcesDirectory else { return collected }
+        // V2.0 M4.B — Conservation (count-shaped variant)
+        let conservationWitnesses = try ConservationWitnessDetector.detect(
+            stateTypeName: candidate.stateTypeName,
+            in: sourcesDirectory
+        )
+        collected.append(contentsOf: ConservationInteractionTemplate.analyze(
+            candidate: candidate,
+            witnesses: conservationWitnesses,
+            firstSeenAt: firstSeenAt
+        ))
+        // V2.0 M4.C — Idempotence (action-case-name pattern)
+        let idempotenceWitnesses = try IdempotenceWitnessDetector.detect(
+            actionTypeName: candidate.actionTypeName,
+            in: sourcesDirectory
+        )
+        collected.append(contentsOf: IdempotenceInteractionTemplate.analyze(
+            candidate: candidate,
+            witnesses: idempotenceWitnesses,
+            firstSeenAt: firstSeenAt
+        ))
         return collected
     }
 }
