@@ -15,6 +15,12 @@ struct MetricsLoadResult: Equatable {
     /// `verify-evidence.json` is merged in. `.empty` only when no corpus
     /// has a verify run.
     let evidence: VerifyEvidenceLog
+    /// V1.71 — SemanticIndex entries joined alongside the decisions for
+    /// the §17.2 time-to-adoption metric (`firstSeenAt` → decision
+    /// timestamp). Default mode loads the one package root's
+    /// `index.json`; `--decisions` mode concatenates each corpus's
+    /// sibling `index.json`. Empty when no corpus has been indexed.
+    let indexEntries: [SemanticIndexEntry]
     let sources: [String]
     let warnings: [String]
 }
@@ -80,7 +86,8 @@ extension SwiftInferCommand {
             let rendered = MetricsRenderer.render(
                 decisions: aggregate.decisions,
                 sources: aggregate.sources,
-                evidence: aggregate.evidence
+                evidence: aggregate.evidence,
+                indexEntries: aggregate.indexEntries
             )
             print(rendered, terminator: "")
         }
@@ -102,6 +109,7 @@ extension SwiftInferCommand {
         private static func loadExplicitPaths(_ paths: [String]) -> MetricsLoadResult {
             var aggregate = Decisions.empty
             var evidence = VerifyEvidenceLog.empty
+            var indexEntries: [SemanticIndexEntry] = []
             var sources: [String] = []
             var warnings: [String] = []
             for raw in paths {
@@ -113,29 +121,34 @@ extension SwiftInferCommand {
                 warnings.append(contentsOf: result.warnings)
                 aggregate = aggregate.merge(result.decisions)
                 sources.append(raw)
-                // V1.69 — per-corpus verify-evidence join: load the
-                // sibling `verify-evidence.json` next to each decisions
-                // file (the on-disk `.swiftinfer/` layout pairs them) and
-                // merge it into the aggregate. A corpus with decisions but
-                // no verify run is normal — skip a missing sibling
-                // silently rather than warning, so the join is opt-in per
-                // corpus. A *present but malformed* sibling still warns
-                // (via `VerifyEvidenceStore`'s explicit-path path).
-                let evidenceURL = url
-                    .deletingLastPathComponent()
-                    .appendingPathComponent("verify-evidence.json")
+                // V1.69 / V1.71 — per-corpus joins: load the siblings
+                // next to each decisions file (the on-disk `.swiftinfer/`
+                // layout pairs them) — `verify-evidence.json` for the
+                // cross-reference, `index.json` for time-to-adoption.
+                // A corpus missing a sibling is normal — skip it silently
+                // so each join is opt-in per corpus; a *present but
+                // malformed* sibling still warns.
+                let directory = url.deletingLastPathComponent()
+                let evidenceURL = directory.appendingPathComponent("verify-evidence.json")
                 if FileManager.default.fileExists(atPath: evidenceURL.path) {
                     let evidenceResult = VerifyEvidenceStore.load(
-                        startingFrom: evidenceURL.deletingLastPathComponent(),
+                        startingFrom: directory,
                         explicitPath: evidenceURL
                     )
                     warnings.append(contentsOf: evidenceResult.warnings)
                     evidence = evidence.merge(evidenceResult.log)
                 }
+                let indexURL = directory.appendingPathComponent("index.json")
+                if FileManager.default.fileExists(atPath: indexURL.path) {
+                    let indexLoad = IndexStore.load(from: indexURL, nowTimestamp: nowTimestamp())
+                    warnings.append(contentsOf: indexLoad.warnings)
+                    indexEntries.append(contentsOf: indexLoad.index.entries)
+                }
             }
             return MetricsLoadResult(
                 decisions: aggregate,
                 evidence: evidence,
+                indexEntries: indexEntries,
                 sources: sources,
                 warnings: warnings
             )
@@ -154,11 +167,25 @@ extension SwiftInferCommand {
             }()
             // V1.64.D — join verify evidence from the same package root.
             let evidenceResult = VerifyEvidenceStore.load(startingFrom: startDirectory)
+            // V1.71 — join the SemanticIndex from the same package root
+            // for the time-to-adoption metric. No package root → no
+            // index → empty entries (the section renders its sentinel).
+            var indexEntries: [SemanticIndexEntry] = []
+            var indexWarnings: [String] = []
+            if let root = result.packageRoot {
+                let indexLoad = IndexStore.load(
+                    from: IndexStore.defaultPath(for: root),
+                    nowTimestamp: nowTimestamp()
+                )
+                indexEntries = indexLoad.index.entries
+                indexWarnings = indexLoad.warnings
+            }
             return MetricsLoadResult(
                 decisions: result.decisions,
                 evidence: evidenceResult.log,
+                indexEntries: indexEntries,
                 sources: [label],
-                warnings: result.warnings + evidenceResult.warnings
+                warnings: result.warnings + evidenceResult.warnings + indexWarnings
             )
         }
 
@@ -167,6 +194,13 @@ extension SwiftInferCommand {
                 return URL(fileURLWithPath: override)
             }
             return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        }
+
+        /// Current time as an ISO8601 string — only feeds
+        /// `IndexStore.load`'s `.empty(at:)` fallback (the metrics path
+        /// never persists the loaded index), so any stable value works.
+        private static func nowTimestamp() -> String {
+            ISO8601DateFormatter().string(from: Date())
         }
     }
 }

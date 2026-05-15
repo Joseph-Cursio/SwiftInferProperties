@@ -222,14 +222,14 @@ public enum MetricsRenderer {
     /// "..."]`). `header` is rendered above the tables so the
     /// rendered output is self-describing when piped to a file.
     /// `evidence` (V1.64.D) is the verify-evidence log joined against
-    /// `decisions` for the §17.2 cross-reference section. `.empty` (the
-    /// default) renders the section's "no verify evidence" sentinel —
-    /// the case in explicit `--decisions` aggregation mode and when no
-    /// `swift-infer verify` has run yet.
+    /// `decisions` for the §17.2 cross-reference; `indexEntries` (V1.71)
+    /// is the SemanticIndex joined for the §17.2 time-to-adoption
+    /// section. Both default empty, rendering each section's sentinel.
     public static func render(
         decisions: Decisions,
         sources: [String],
-        evidence: VerifyEvidenceLog = .empty
+        evidence: VerifyEvidenceLog = .empty,
+        indexEntries: [SemanticIndexEntry] = []
     ) -> String {
         var lines: [String] = []
         lines.append("swift-infer metrics — calibration aggregate (PRD §17.2)")
@@ -240,10 +240,9 @@ public enum MetricsRenderer {
         lines.append("")
         lines.append(contentsOf: tierSection(rows: tierRows(from: decisions)))
         lines.append("")
-        lines.append(contentsOf: verifyEvidenceSection(
-            decisions: decisions,
-            evidence: evidence
-        ))
+        lines.append(contentsOf: timeToAdoptionSection(decisions: decisions, indexEntries: indexEntries))
+        lines.append("")
+        lines.append(contentsOf: verifyEvidenceSection(decisions: decisions, evidence: evidence))
         return lines.joined(separator: "\n") + "\n"
     }
 
