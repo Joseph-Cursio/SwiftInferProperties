@@ -208,10 +208,12 @@ public enum ActionSequenceStubEmitter {
                 "precondition(\(invariant.predicate), "
                     + "\"Referential-integrity invariant violated\")"
             ]
-        case .idempotence:
-            return []
         case .biconditional:
-            // Unreachable — `validateInvariant` rejects these before emit.
+            return [
+                "precondition(\(invariant.predicate), "
+                    + "\"Biconditional invariant violated\")"
+            ]
+        case .idempotence:
             return []
         }
     }
@@ -230,7 +232,7 @@ public enum ActionSequenceStubEmitter {
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
-        case .conservation, .cardinality, .referentialIntegrity:
+        case .conservation, .cardinality, .referentialIntegrity, .biconditional:
             return []
         case .idempotence:
             return makeIdempotenceCheck(
@@ -238,8 +240,6 @@ public enum ActionSequenceStubEmitter {
                 shape: shape,
                 reducerCall: reducerCall
             )
-        case .biconditional:
-            return []
         }
     }
 
@@ -277,14 +277,14 @@ public enum ActionSequenceStubEmitter {
 
     /// V2.0 M4.D / M5 / M6 — reject invariant families that don't
     /// have an emission path yet. Conservation + Idempotence ship
-    /// at M4.B/C; Cardinality at M5; Referential integrity at M6.
-    /// Biconditional (M7) still throws.
+    /// V2.0 M4.D / M5 / M6 / M7 — all five interaction families now
+    /// have an emission path. The error case stays for forward-
+    /// compatibility (future PRD families would slot in here).
     private static func validateInvariant(_ family: InteractionInvariantFamily) throws {
         switch family {
-        case .conservation, .idempotence, .cardinality, .referentialIntegrity:
+        case .conservation, .idempotence, .cardinality,
+             .referentialIntegrity, .biconditional:
             return
-        case .biconditional:
-            throw EmitError.unsupportedFamily(family)
         }
     }
 

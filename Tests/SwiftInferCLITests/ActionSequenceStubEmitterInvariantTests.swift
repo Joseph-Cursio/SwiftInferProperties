@@ -170,32 +170,30 @@ struct ActionSequenceStubEmitterInvariantTests {
         #expect(onceIndex < cleanIndex)
     }
 
-    // MARK: - Unsupported families
+    // MARK: - Biconditional / iff (M7 ships — all five families supported)
 
-    @Test("Biconditional invariant throws unsupportedFamily — M7 territory")
-    func biconditionalIsUnsupported() {
+    @Test("Biconditional invariant — M7 ships, embeds precondition like Conservation")
+    func biconditionalEmbedsPrecondition() throws {
+        let predicate = "state.isLoading == (state.activeTask != nil)"
         let biconditional = InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: "bicond::reduce::x"),
+            identity: SuggestionIdentity(canonicalInput: "bicond::reduce::isLoading"),
             family: .biconditional,
             reducerQualifiedName: "reduce",
             reducerLocation: "F.swift:1",
             stateTypeName: "AppState",
             actionTypeName: "AppAction",
-            predicate: "state.isLoading == (state.activeTask != nil)",
+            predicate: predicate,
             score: 30,
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
             firstSeenAt: Date()
         )
-        #expect(
-            throws:
-                ActionSequenceStubEmitter.EmitError.unsupportedFamily(.biconditional)
-        ) {
-            _ = try ActionSequenceStubEmitter.emit(
-                inputs(candidate(), invariant: biconditional)
-            )
-        }
+        let source = try ActionSequenceStubEmitter.emit(
+            inputs(candidate(), invariant: biconditional)
+        )
+        #expect(source.contains("precondition(\(predicate)"))
+        #expect(source.contains("Biconditional invariant violated"))
     }
 
     @Test("Referential-integrity invariant — M6 ships, embeds precondition like Conservation")

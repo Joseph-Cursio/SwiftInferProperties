@@ -98,6 +98,26 @@ public enum InteractionTemplateEngine {
             witnesses: cardinalityWitnesses,
             firstSeenAt: firstSeenAt
         ))
+        // V2.0 M6 — Referential Integrity (selectedX + xs pair)
+        let refIntegrityWitnesses = try ReferentialIntegrityWitnessDetector.detect(
+            stateTypeName: candidate.stateTypeName,
+            in: sourcesDirectory
+        )
+        collected.append(contentsOf: ReferentialIntegrityInteractionTemplate.analyze(
+            candidate: candidate,
+            witnesses: refIntegrityWitnesses,
+            firstSeenAt: firstSeenAt
+        ))
+        // V2.0 M7 — Biconditional / iff (Bool flag + Optional pair)
+        let biconditionalWitnesses = try BiconditionalWitnessDetector.detect(
+            stateTypeName: candidate.stateTypeName,
+            in: sourcesDirectory
+        )
+        collected.append(contentsOf: BiconditionalInteractionTemplate.analyze(
+            candidate: candidate,
+            witnesses: biconditionalWitnesses,
+            firstSeenAt: firstSeenAt
+        ))
         return collected
     }
 }
