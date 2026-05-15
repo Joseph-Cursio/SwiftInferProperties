@@ -108,9 +108,16 @@ extension SwiftInferCommand {
             for warning in baselineResult.warnings {
                 diagnostics.writeDiagnostic("warning: \(warning)")
             }
+            let decisionsResult = InteractionDecisionsLoader.load(
+                startingFrom: baselineResult.packageRoot ?? directory
+            )
+            for warning in decisionsResult.warnings {
+                diagnostics.writeDiagnostic("warning: \(warning)")
+            }
             let warnings = InteractionDriftDetector.warnings(
                 currentSuggestions: suggestions,
-                baseline: baselineResult.baseline
+                baseline: baselineResult.baseline,
+                decisions: decisionsResult.decisions
             )
             for drift in warnings {
                 diagnostics.writeDiagnostic(drift.renderedLine())

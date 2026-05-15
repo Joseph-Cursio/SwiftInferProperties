@@ -27,6 +27,7 @@ public enum VerifyInteractionPipeline {
         pinRaw: String? = nil,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
+        invariant: InteractionInvariantSuggestion? = nil,
         workingDirectory: URL
     ) throws -> (candidate: ReducerCandidate, stubSource: String) {
         let directory = workingDirectory
@@ -46,7 +47,8 @@ public enum VerifyInteractionPipeline {
         let inputs = ActionSequenceStubEmitter.Inputs(
             candidate: matched,
             userModuleName: resolvedModuleName,
-            sequenceCount: sequenceCount
+            sequenceCount: sequenceCount,
+            invariant: invariant
         )
         let stubSource: String
         do {
@@ -128,6 +130,37 @@ public enum VerifyInteractionPipeline {
             )
         }
         return renderOutcome(candidate: candidate, result: result, tracePath: tracePath)
+    }
+
+    /// V2.0 accept-check follow-up — invariant-bearing entry that
+    /// returns the parsed `InteractionVerifyOutcomeParser.Result`
+    /// directly (instead of a rendered string). Used by
+    /// `accept-check-interaction` so it can classify outcomes into
+    /// `InteractionPostAcceptanceOutcomeKind` without parsing
+    /// rendered text. The invariant's `reducerQualifiedName` doubles
+    /// as the implicit `--reducer` pin so the right candidate is
+    /// resolved when the target has multiple reducers.
+    public static func runWithInvariant(
+        target: String,
+        invariant: InteractionInvariantSuggestion,
+        sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
+        userModuleName: String? = nil,
+        workingDirectory: URL
+    ) throws -> InteractionVerifyOutcomeParser.Result {
+        let (candidate, stubSource) = try resolveAndEmit(
+            target: target,
+            pinRaw: invariant.reducerQualifiedName,
+            sequenceCount: sequenceCount,
+            userModuleName: userModuleName,
+            invariant: invariant,
+            workingDirectory: workingDirectory
+        )
+        return try executeAndParse(
+            candidate: candidate,
+            stubSource: stubSource,
+            userModuleName: userModuleName ?? target,
+            workingDirectory: workingDirectory
+        )
     }
 
     // MARK: - Pin resolution

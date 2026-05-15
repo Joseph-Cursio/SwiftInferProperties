@@ -1,21 +1,21 @@
 import Foundation
 
-/// V2.0 M10 — pure-function drift computation for `swift-infer
-/// drift-interaction`. Analog of v1's `DriftDetector` but keyed on
-/// `InteractionInvariantSuggestion`. Filters current suggestions
-/// against the baseline per PRD §3.6 step 7 + §16 #3:
+/// V2.0 M10 / accept-check follow-up — pure-function drift
+/// computation for `swift-infer drift-interaction`. Analog of v1's
+/// `DriftDetector` but keyed on `InteractionInvariantSuggestion`.
+/// Filters current suggestions per PRD §3.6 step 7 + §16 #3:
 ///
-/// 1. **Strong-tier-only** — Likely / Possible additions stay silent.
-///    PRD §16 #3: drift is non-fatal, advisory signal; suppressing
-///    sub-Strong noise keeps the warning stream actionable.
+/// 1. **Strong-tier-only** (or Verified — v1.65 promotion rule).
+///    Likely / Possible additions stay silent. PRD §16 #3: drift
+///    is non-fatal, advisory signal; suppressing sub-Strong noise
+///    keeps the warning stream actionable.
 /// 2. **Identity not in baseline** — the suggestion didn't exist
 ///    (or wasn't surfaced) at the last snapshot.
-///
-/// **Deferred:** decisions filtering. v1's drift skips suggestions
-/// the user has already accept/skip/rejected (M6.1 `Decisions`);
-/// interaction invariants don't yet have a decisions surface (the
-/// `accept-check`-shaped flow is queued as an M8/M9 follow-up).
-/// Once that lands, drift here picks up the filter.
+/// 3. **No recorded decision** (when decisions are supplied) —
+///    if the user has already accept/skip/rejected, drift stays
+///    quiet. Same M6 acceptance bar (f) as v1: decision wins over
+///    baseline-state. `nil` decisions argument preserves the M10.0
+///    "no filter" behavior for back-compat.
 ///
 /// Output preserves input order — `discover-interaction` sorts
 /// deterministically per PRD §16 #6, so drift inherits that
@@ -24,14 +24,18 @@ public enum InteractionDriftDetector {
 
     public static func warnings(
         currentSuggestions: [InteractionInvariantSuggestion],
-        baseline: InteractionBaseline
+        baseline: InteractionBaseline,
+        decisions: InteractionDecisions? = nil
     ) -> [InteractionDriftWarning] {
         currentSuggestions.compactMap { suggestion in
-            // V1.65 promotion rule: `.verified` is Strong+, counts.
             guard suggestion.tier == .strong || suggestion.tier == .verified else {
                 return nil
             }
             guard !baseline.contains(identityHash: suggestion.identity.normalized) else {
+                return nil
+            }
+            if let decisions,
+               decisions.record(for: suggestion.identity.normalized) != nil {
                 return nil
             }
             return InteractionDriftWarning(suggestion: suggestion)
