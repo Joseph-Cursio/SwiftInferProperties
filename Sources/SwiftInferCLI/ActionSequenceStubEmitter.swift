@@ -1,23 +1,16 @@
 import Foundation
 import SwiftInferCore
 
-/// V2.0 M3.B / M4.D / M8.A — emits the verifier `main.swift` source
-/// for `swift-infer verify-interaction`. Imports the user module +
-/// PropertyLawKit, builds an action-sequence generator, runs N
-/// sequences, and prints an outcome marker on the clean path. M4.D
-/// embeds family-aware predicate checks (Conservation / Cardinality
-/// / Ref-integrity / Biconditional per-step; Idempotence post-loop).
-/// M8.A accepts effect-bearing shapes and **captures-and-discards**
-/// the returned `Effect<A>` per PRD §16 #1.
-///
-/// **Trap-as-exit-code outcome.** Swift traps (`fatalError`, array-
-/// out-of-bounds, force-unwrap-nil) and `precondition` violations
-/// terminate with non-zero exit → `.measuredDefaultFails` via
-/// M3.E.3's parser.
-///
-/// **Supported:** all four `ReducerSignatureShape` cases via free /
-/// static-call form. **Rejected:** `.tca` carrier (closure-relative
-/// `feature.reduce(into:action:)` init is separate scope).
+/// V2.0 M3.B / M4.D / M8.A / M8.D — emits the verifier `main.swift`
+/// source for `swift-infer verify-interaction`. Runs N action
+/// sequences, prints an outcome marker on the clean path. M4.D
+/// embeds family-aware predicate checks; M8.A captures-and-discards
+/// `Effect<A>` per PRD §16 #1; M8.D adds stderr per-sequence marker
+/// + env-var-driven single-sequence replay (the shrinker primitive).
+/// Traps + `precondition` violations → non-zero exit →
+/// `.measuredDefaultFails`. Supported: all four `ReducerSignatureShape`
+/// cases via free / static-call form. Rejected: `.tca` carrier
+/// (closure-relative init is separate scope).
 public enum ActionSequenceStubEmitter {
 
     /// Number of action sequences per verifier run. PRD §15 perf
@@ -44,11 +37,15 @@ public enum ActionSequenceStubEmitter {
     /// survives the trap that follows.
     public static let traceCurrentSequenceMarker = "TRACE-CURRENT-SEQ:"
 
-    /// V2.0 M8.D.2 — env-var names the stub reads at start-up for
-    /// single-sequence replay (the shrinker's re-invocation
-    /// primitive). Public so the shrinker keys on the same names.
+    /// V2.0 M8.D.2 / M8.D.4 — env-var names the stub reads at
+    /// start-up for single-sequence replay (the shrinker's
+    /// re-invocation primitive). Public so the shrinker keys on
+    /// the same names. The action slice is computed as
+    /// `rawActions.dropFirst(suffixStart).prefix(prefixLength)` —
+    /// nil defaults mean "no drop / no truncation."
     public static let pinSequenceEnvVar = "SWIFT_INFER_PIN_SEQUENCE"
     public static let pinPrefixLengthEnvVar = "SWIFT_INFER_PIN_PREFIX_LENGTH"
+    public static let pinSuffixStartEnvVar = "SWIFT_INFER_PIN_SUFFIX_START"
 
     // `Inputs` + `EmitError` are nested via extension in
     // ActionSequenceStubEmitter+Types.swift (M8.A split keeps the
@@ -123,6 +120,7 @@ public enum ActionSequenceStubEmitter {
         lines.append("        let env = ProcessInfo.processInfo.environment")
         lines.append("        let pinSequence = env[\"\(pinSequenceEnvVar)\"].flatMap(Int.init)")
         lines.append("        let pinPrefix = env[\"\(pinPrefixLengthEnvVar)\"].flatMap(Int.init)")
+        lines.append("        let pinSuffixStart = env[\"\(pinSuffixStartEnvVar)\"].flatMap(Int.init)")
         lines.append("        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))")
         lines.append("        let generator = ActionSequenceFactory.actionSequence(")
         lines.append("            forCaseIterable: \(inputs.candidate.actionTypeName).self,")
@@ -155,16 +153,19 @@ public enum ActionSequenceStubEmitter {
         perStepCheck: [String],
         postLoopCheck: [String]
     ) -> [String] {
+        // M8.D.4: drop-prefix (suffixStart) applied first, then
+        // drop-suffix (prefixLength). Both slicing operations are
+        // bound-safe (`dropFirst(N)`: empty if N ≥ count; `.prefix(M)`:
+        // up to M elements).
         var lines: [String] = [
-            // M8.D.1 — stderr marker (unbuffered; survives trap).
             "            FileHandle.standardError.write(",
             "                Data(\"\(traceCurrentSequenceMarker) \\(sequenceIndex)\\n\".utf8)",
             "            )",
-            // M8.D.2 — draw to advance rng even when skipping.
             "            let rawActions = generator.run(using: &rng)",
             "            if let pin = pinSequence, sequenceIndex != pin { continue }",
-            "            let actions = pinPrefix.map { Array(rawActions.prefix($0)) } "
+            "            let dropped = pinSuffixStart.map { Array(rawActions.dropFirst($0)) } "
                 + "?? rawActions",
+            "            let actions = pinPrefix.map { Array(dropped.prefix($0)) } ?? dropped",
             "            var state = \(stateInit)",
             "            for action in actions {"
         ]

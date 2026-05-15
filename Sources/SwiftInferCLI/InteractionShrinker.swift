@@ -30,33 +30,47 @@ import SwiftInferCore
 /// is `high`.
 public enum InteractionShrinker {
 
-    /// V2.0 M8.D.3 — closure-shaped runner so unit tests can inject
-    /// synthetic exit-code-bearing logic instead of spawning real
-    /// binaries. The closure receives the sequence index + prefix
-    /// length and returns a process exit code (non-zero = trap).
+    /// V2.0 M8.D.3 / M8.D.4 — closure-shaped runner so unit tests
+    /// can inject synthetic exit-code-bearing logic instead of
+    /// spawning real binaries. The closure receives the sequence
+    /// index + window (`suffixStart`, `prefixLength`) and returns a
+    /// process exit code (non-zero = trap). M8.D.3 only varied
+    /// `prefixLength`; M8.D.4 adds the `suffixStart` axis.
     public struct Runner: Sendable {
-        public let invoke: @Sendable (_ sequenceIndex: Int, _ prefixLength: Int) -> Int32
+        public let invoke: @Sendable (
+            _ sequenceIndex: Int,
+            _ suffixStart: Int,
+            _ prefixLength: Int
+        ) -> Int32
 
         public init(
-            invoke: @escaping @Sendable (_ sequenceIndex: Int, _ prefixLength: Int) -> Int32
+            invoke: @escaping @Sendable (
+                _ sequenceIndex: Int,
+                _ suffixStart: Int,
+                _ prefixLength: Int
+            ) -> Int32
         ) {
             self.invoke = invoke
         }
     }
 
+    /// V2.0 M8.D.4 — the result of running both shrink phases on a
+    /// failing trace. The persisted trace replays
+    /// `rawActions.dropFirst(suffixStart).prefix(prefixLength)`.
+    public struct ShrinkResult: Equatable, Sendable {
+        public let suffixStart: Int
+        public let prefixLength: Int
+
+        public init(suffixStart: Int, prefixLength: Int) {
+            self.suffixStart = suffixStart
+            self.prefixLength = prefixLength
+        }
+    }
+
     /// V2.0 M8.D.3 — binary-search the smallest prefix length whose
-    /// pinned-sequence replay still traps. Returns a non-negative
-    /// integer in `[0, upperBound]`. The caller threads the result
-    /// into `InteractionTraceEmitter.Inputs.minimumFailingPrefixLength`
-    /// so the persisted trace file replays only the minimal
-    /// trap-inducing action prefix.
-    ///
-    /// **Inputs.**
-    /// - `failingSequenceIndex`: from M8.D.1's parser.
-    /// - `upperBound`: the verifier's `lengthUpperBound` (max possible
-    ///   action-list length). We assume this length traps; that's the
-    ///   precondition for invoking the shrinker.
-    /// - `runner`: how to invoke the verifier with pin env vars.
+    /// pinned-sequence replay (at suffix-start = 0) still traps.
+    /// Returns a non-negative integer in `[0, upperBound]`. Phase 1
+    /// of the two-phase shrink shipped at M8.D.4.
     public static func shrinkPrefix(
         failingSequenceIndex: Int,
         upperBound: Int,
@@ -64,11 +78,9 @@ public enum InteractionShrinker {
     ) -> Int {
         var low = -1
         var high = upperBound
-        // Each loop step shrinks the [low, high] interval; the
-        // search runs in O(log N) re-invocations.
         while low + 1 < high {
             let mid = (low + high) / 2
-            let exitCode = runner.invoke(failingSequenceIndex, mid)
+            let exitCode = runner.invoke(failingSequenceIndex, 0, mid)
             if exitCode != 0 {
                 high = mid
             } else {
@@ -78,14 +90,77 @@ public enum InteractionShrinker {
         return high
     }
 
-    /// V2.0 M8.D.3 — concrete `Runner` that invokes the verifier
-    /// binary in `workdir` with the M8.D.2 pin env vars. Used by the
-    /// pipeline; tests prefer the closure-based `Runner.init` to keep
-    /// the suite hermetic.
+    /// V2.0 M8.D.4 — binary-search the largest suffix-start that
+    /// still traps when the prefix length is pinned to `prefixLength`.
+    /// Returns a non-negative integer in `[0, upperBound -
+    /// prefixLength]`. Phase 2 of the two-phase shrink.
+    ///
+    /// **Why "largest start that still traps."** Drop-prefix slides
+    /// the window forward as long as the trap is preserved. The
+    /// answer is the maximum start such that
+    /// `rawActions[start..<start+prefixLength]` still trips the
+    /// reducer.
+    public static func shrinkSuffixStart(
+        failingSequenceIndex: Int,
+        prefixLength: Int,
+        upperBound: Int,
+        runner: Runner
+    ) -> Int {
+        // Invariant: `low` is the largest known-trapping start; `high`
+        // is the smallest known-passing start. Range `[0, upperBound -
+        // prefixLength]`. Initially `low = 0` (we assume the prior
+        // phase's start=0 still traps) and `high = max + 1` (a
+        // sentinel one past the search space).
+        let maxStart = max(0, upperBound - prefixLength)
+        var low = 0
+        var high = maxStart + 1
+        while low + 1 < high {
+            let mid = (low + high) / 2
+            let exitCode = runner.invoke(failingSequenceIndex, mid, prefixLength)
+            if exitCode != 0 {
+                low = mid
+            } else {
+                high = mid
+            }
+        }
+        return low
+    }
+
+    /// V2.0 M8.D.4 — top-level two-phase shrink. Runs `shrinkPrefix`
+    /// first to find the minimum trap-inducing length, then
+    /// `shrinkSuffixStart` with that length pinned to find the
+    /// largest start offset that still traps. Returns the combined
+    /// `(suffixStart, prefixLength)` window. Total cost is
+    /// O(log²(upperBound)) re-invocations — bounded by ~25 for the
+    /// default upperBound=16, sub-second wall time.
+    public static func shrink(
+        failingSequenceIndex: Int,
+        upperBound: Int,
+        runner: Runner
+    ) -> ShrinkResult {
+        let prefixLength = shrinkPrefix(
+            failingSequenceIndex: failingSequenceIndex,
+            upperBound: upperBound,
+            runner: runner
+        )
+        let suffixStart = shrinkSuffixStart(
+            failingSequenceIndex: failingSequenceIndex,
+            prefixLength: prefixLength,
+            upperBound: upperBound,
+            runner: runner
+        )
+        return ShrinkResult(suffixStart: suffixStart, prefixLength: prefixLength)
+    }
+
+    /// V2.0 M8.D.3 / M8.D.4 — concrete `Runner` that invokes the
+    /// verifier binary in `workdir` with the M8.D.2 + M8.D.4 pin
+    /// env vars. Tests prefer the closure-based `Runner.init` for
+    /// hermetic suites.
     public static func liveRunner(workdir: URL) -> Runner {
-        Runner { sequenceIndex, prefixLength in
+        Runner { sequenceIndex, suffixStart, prefixLength in
             let env = [
                 ActionSequenceStubEmitter.pinSequenceEnvVar: "\(sequenceIndex)",
+                ActionSequenceStubEmitter.pinSuffixStartEnvVar: "\(suffixStart)",
                 ActionSequenceStubEmitter.pinPrefixLengthEnvVar: "\(prefixLength)"
             ]
             do {
@@ -95,10 +170,7 @@ public enum InteractionShrinker {
                 )
                 return output.exitCode
             } catch {
-                // Treat subprocess-launch failures as a non-zero exit
-                // — conservative; the shrinker can't make progress
-                // and the trap-inducing length defaults to whatever
-                // bound the binary search had landed on.
+                // Subprocess-launch failure → conservative non-zero.
                 return 1
             }
         }

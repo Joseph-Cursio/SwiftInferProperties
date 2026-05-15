@@ -99,18 +99,16 @@ public enum VerifyInteractionPipeline {
         var tracePath: URL?
         if result.outcome == .measuredDefaultFails {
             let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
-            // M8.D.3 — when M8.D.1 recovered a failing sequence index,
-            // run the binary-search shrinker to find the minimum
-            // action-prefix length that still traps. The workdir is
-            // already built; each shrink step is one binary
-            // re-invocation with pin-sequence env vars (M8.D.2).
-            var minPrefix: Int?
+            // M8.D.3 + M8.D.4 — two-phase binary-search shrink over
+            // (prefixLength, suffixStart). Each phase is O(log N)
+            // re-invocations; total O(log²N) ≈ 25 for upperBound=16.
+            var shrinkResult: InteractionShrinker.ShrinkResult?
             if let failingIndex = result.failingSequenceIndex {
                 let workdir = packageRoot
                     .appendingPathComponent(".swiftinfer")
                     .appendingPathComponent("verify-interaction-workdir")
                     .appendingPathComponent(workdirSegment(for: candidate))
-                minPrefix = InteractionShrinker.shrinkPrefix(
+                shrinkResult = InteractionShrinker.shrink(
                     failingSequenceIndex: failingIndex,
                     upperBound: ActionSequenceStubEmitter.defaultLengthUpperBound,
                     runner: InteractionShrinker.liveRunner(workdir: workdir)
@@ -121,7 +119,8 @@ public enum VerifyInteractionPipeline {
                 userModuleName: resolvedModuleName,
                 sequenceCount: sequenceCount,
                 failingSequenceIndex: result.failingSequenceIndex,
-                minimumFailingPrefixLength: minPrefix
+                minimumFailingPrefixLength: shrinkResult?.prefixLength,
+                minimumFailingSuffixStart: shrinkResult?.suffixStart
             )
             tracePath = try? InteractionTraceEmitter.persist(
                 inputs: traceInputs,

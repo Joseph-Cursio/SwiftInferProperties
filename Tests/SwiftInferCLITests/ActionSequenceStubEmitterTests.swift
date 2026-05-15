@@ -221,7 +221,9 @@ struct ActionSequenceStubEmitterTests {
     @Test("stub truncates the action list via pinPrefix when supplied (M8.D.2)")
     func stubTruncatesActionListByPrefix() throws {
         let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
-        #expect(source.contains("Array(rawActions.prefix($0))"))
+        // M8.D.4 — drop-prefix applies first (producing `dropped`),
+        // then drop-suffix via `.prefix($0)` truncates that.
+        #expect(source.contains("Array(dropped.prefix($0))"))
     }
 
     @Test("stub breaks after one execution in pinned mode — single-sequence replay (M8.D.2)")
@@ -236,6 +238,37 @@ struct ActionSequenceStubEmitterTests {
         #expect(
             ActionSequenceStubEmitter.pinPrefixLengthEnvVar
                 == "SWIFT_INFER_PIN_PREFIX_LENGTH"
+        )
+    }
+
+    // MARK: - V2.0 M8.D.4 — drop-prefix env-var (suffix-start)
+
+    @Test("stub reads SWIFT_INFER_PIN_SUFFIX_START env var (M8.D.4)")
+    func stubReadsSuffixStartEnvVar() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains(ActionSequenceStubEmitter.pinSuffixStartEnvVar))
+        #expect(source.contains("let pinSuffixStart"))
+    }
+
+    @Test("stub drops leading actions via pinSuffixStart before truncating (M8.D.4)")
+    func stubDropsLeadingActionsBeforePrefix() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        // The drop-prefix step produces `dropped`; the drop-suffix
+        // step then truncates `dropped`. Order matters.
+        #expect(source.contains("Array(rawActions.dropFirst($0))"))
+        #expect(source.contains("Array(dropped.prefix($0))"))
+        // Ensure ordering: dropFirst occurs in the source before
+        // dropped.prefix.
+        let dropFirstIndex = source.range(of: "rawActions.dropFirst")!.lowerBound
+        let prefixIndex = source.range(of: "dropped.prefix")!.lowerBound
+        #expect(dropFirstIndex < prefixIndex)
+    }
+
+    @Test("M8.D.4 env-var name is byte-stable")
+    func suffixStartEnvVarIsStable() {
+        #expect(
+            ActionSequenceStubEmitter.pinSuffixStartEnvVar
+                == "SWIFT_INFER_PIN_SUFFIX_START"
         )
     }
 }

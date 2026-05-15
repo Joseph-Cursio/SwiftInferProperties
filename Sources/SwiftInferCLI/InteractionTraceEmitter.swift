@@ -27,12 +27,13 @@ import SwiftInferCore
 /// trapped).
 public enum InteractionTraceEmitter {
 
-    /// V2.0 M8.C / M8.D.1 / M8.D.3 — inputs to the trace-file emit.
-    /// `failingSequenceIndex` supplied → burn-then-replay-one form;
-    /// `minimumFailingPrefixLength` additionally supplied (M8.D.3) →
-    /// the replayed sequence's action list is truncated to that
-    /// prefix length, so the persisted trace replays only the
-    /// minimal trap-inducing actions.
+    /// V2.0 M8.C / M8.D.1 / M8.D.3 / M8.D.4 — inputs to the
+    /// trace-file emit. `failingSequenceIndex` supplied →
+    /// burn-then-replay-one form. `minimumFailingPrefixLength`
+    /// supplied (M8.D.3) → truncate the action list to a prefix.
+    /// `minimumFailingSuffixStart` additionally supplied (M8.D.4) →
+    /// drop the leading actions before truncation, so the replay
+    /// runs only the minimal window `rawActions[start..<start+prefix]`.
     public struct Inputs: Equatable, Sendable {
         public let candidate: ReducerCandidate
         public let userModuleName: String
@@ -41,6 +42,7 @@ public enum InteractionTraceEmitter {
         public let lengthUpperBound: Int
         public let failingSequenceIndex: Int?
         public let minimumFailingPrefixLength: Int?
+        public let minimumFailingSuffixStart: Int?
 
         public init(
             candidate: ReducerCandidate,
@@ -49,7 +51,8 @@ public enum InteractionTraceEmitter {
             lengthLowerBound: Int = 0,
             lengthUpperBound: Int = 16,
             failingSequenceIndex: Int? = nil,
-            minimumFailingPrefixLength: Int? = nil
+            minimumFailingPrefixLength: Int? = nil,
+            minimumFailingSuffixStart: Int? = nil
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
@@ -58,6 +61,7 @@ public enum InteractionTraceEmitter {
             self.lengthUpperBound = lengthUpperBound
             self.failingSequenceIndex = failingSequenceIndex
             self.minimumFailingPrefixLength = minimumFailingPrefixLength
+            self.minimumFailingSuffixStart = minimumFailingSuffixStart
         }
     }
 
@@ -90,6 +94,9 @@ public enum InteractionTraceEmitter {
         }
         if let prefix = inputs.minimumFailingPrefixLength {
             lines.append("// Minimum failing prefix length: \(prefix) (M8.D.3 shrinking)")
+        }
+        if let suffixStart = inputs.minimumFailingSuffixStart {
+            lines.append("// Minimum failing suffix start: \(suffixStart) (M8.D.4 shrinking)")
         }
         lines.append("// DO NOT EDIT — regenerated on each verify-interaction "
             + "`.measuredDefaultFails` outcome.")
@@ -137,12 +144,17 @@ public enum InteractionTraceEmitter {
                 lines.append("            _ = generator.run(using: &rng)")
                 lines.append("        }")
             }
-            // M8.D.3 — truncate to the minimal trap-inducing prefix
-            // when shrinking found one; otherwise replay the full
-            // action list.
-            if let prefix = inputs.minimumFailingPrefixLength {
+            // M8.D.3 + M8.D.4 — slice to the minimal trap-inducing
+            // window when shrinking found one. drop-prefix
+            // (`suffixStart`) is applied before drop-suffix (`prefix`).
+            let prefix = inputs.minimumFailingPrefixLength
+            let suffixStart = inputs.minimumFailingSuffixStart
+            if prefix != nil || suffixStart != nil {
                 lines.append("        let rawActions = generator.run(using: &rng)")
-                lines.append("        let actions = Array(rawActions.prefix(\(prefix)))")
+                lines.append(makeShrunkActionsExpression(
+                    suffixStart: suffixStart,
+                    prefixLength: prefix
+                ))
             } else {
                 lines.append("        let actions = generator.run(using: &rng)")
             }
@@ -162,6 +174,27 @@ public enum InteractionTraceEmitter {
             }
             lines.append("            }")
             lines.append("        }")
+        }
+    }
+
+    /// V2.0 M8.D.4 — emit the `let actions = ...` line for the
+    /// replay body. Combines drop-prefix (`suffixStart`) and
+    /// drop-suffix (`prefixLength`); either may be nil. Returns a
+    /// single pre-indented (8 spaces) line ending with the
+    /// expression that produces `actions`.
+    static func makeShrunkActionsExpression(
+        suffixStart: Int?,
+        prefixLength: Int?
+    ) -> String {
+        switch (suffixStart, prefixLength) {
+        case let (.some(start), .some(prefix)):
+            return "        let actions = Array(rawActions.dropFirst(\(start)).prefix(\(prefix)))"
+        case let (.some(start), .none):
+            return "        let actions = Array(rawActions.dropFirst(\(start)))"
+        case let (.none, .some(prefix)):
+            return "        let actions = Array(rawActions.prefix(\(prefix)))"
+        case (.none, .none):
+            return "        let actions = rawActions"
         }
     }
 
