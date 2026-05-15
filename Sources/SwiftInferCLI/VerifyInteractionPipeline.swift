@@ -99,11 +99,29 @@ public enum VerifyInteractionPipeline {
         var tracePath: URL?
         if result.outcome == .measuredDefaultFails {
             let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+            // M8.D.3 — when M8.D.1 recovered a failing sequence index,
+            // run the binary-search shrinker to find the minimum
+            // action-prefix length that still traps. The workdir is
+            // already built; each shrink step is one binary
+            // re-invocation with pin-sequence env vars (M8.D.2).
+            var minPrefix: Int?
+            if let failingIndex = result.failingSequenceIndex {
+                let workdir = packageRoot
+                    .appendingPathComponent(".swiftinfer")
+                    .appendingPathComponent("verify-interaction-workdir")
+                    .appendingPathComponent(workdirSegment(for: candidate))
+                minPrefix = InteractionShrinker.shrinkPrefix(
+                    failingSequenceIndex: failingIndex,
+                    upperBound: ActionSequenceStubEmitter.defaultLengthUpperBound,
+                    runner: InteractionShrinker.liveRunner(workdir: workdir)
+                )
+            }
             let traceInputs = InteractionTraceEmitter.Inputs(
                 candidate: candidate,
                 userModuleName: resolvedModuleName,
                 sequenceCount: sequenceCount,
-                failingSequenceIndex: result.failingSequenceIndex
+                failingSequenceIndex: result.failingSequenceIndex,
+                minimumFailingPrefixLength: minPrefix
             )
             tracePath = try? InteractionTraceEmitter.persist(
                 inputs: traceInputs,

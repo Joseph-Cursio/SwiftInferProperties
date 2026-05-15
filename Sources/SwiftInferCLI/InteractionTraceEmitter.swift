@@ -27,12 +27,12 @@ import SwiftInferCore
 /// trapped).
 public enum InteractionTraceEmitter {
 
-    /// V2.0 M8.C / M8.D.1 — inputs to the trace-file emit. When
-    /// `failingSequenceIndex` is supplied (M8.D.1+), the emitted
-    /// `@Test` burns the (i) sequences that passed and replays
-    /// only the failing one — much faster than re-running the full
-    /// N-sequence verifier loop. When nil (M8.C posture), the
-    /// trace replays all N sequences.
+    /// V2.0 M8.C / M8.D.1 / M8.D.3 — inputs to the trace-file emit.
+    /// `failingSequenceIndex` supplied → burn-then-replay-one form;
+    /// `minimumFailingPrefixLength` additionally supplied (M8.D.3) →
+    /// the replayed sequence's action list is truncated to that
+    /// prefix length, so the persisted trace replays only the
+    /// minimal trap-inducing actions.
     public struct Inputs: Equatable, Sendable {
         public let candidate: ReducerCandidate
         public let userModuleName: String
@@ -40,6 +40,7 @@ public enum InteractionTraceEmitter {
         public let lengthLowerBound: Int
         public let lengthUpperBound: Int
         public let failingSequenceIndex: Int?
+        public let minimumFailingPrefixLength: Int?
 
         public init(
             candidate: ReducerCandidate,
@@ -47,7 +48,8 @@ public enum InteractionTraceEmitter {
             sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
             lengthLowerBound: Int = 0,
             lengthUpperBound: Int = 16,
-            failingSequenceIndex: Int? = nil
+            failingSequenceIndex: Int? = nil,
+            minimumFailingPrefixLength: Int? = nil
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
@@ -55,6 +57,7 @@ public enum InteractionTraceEmitter {
             self.lengthLowerBound = lengthLowerBound
             self.lengthUpperBound = lengthUpperBound
             self.failingSequenceIndex = failingSequenceIndex
+            self.minimumFailingPrefixLength = minimumFailingPrefixLength
         }
     }
 
@@ -84,6 +87,9 @@ public enum InteractionTraceEmitter {
         ]
         if let failingIndex = inputs.failingSequenceIndex {
             lines.append("// Failing sequence index: \(failingIndex) (M8.D.1 recovery)")
+        }
+        if let prefix = inputs.minimumFailingPrefixLength {
+            lines.append("// Minimum failing prefix length: \(prefix) (M8.D.3 shrinking)")
         }
         lines.append("// DO NOT EDIT — regenerated on each verify-interaction "
             + "`.measuredDefaultFails` outcome.")
@@ -131,7 +137,15 @@ public enum InteractionTraceEmitter {
                 lines.append("            _ = generator.run(using: &rng)")
                 lines.append("        }")
             }
-            lines.append("        let actions = generator.run(using: &rng)")
+            // M8.D.3 — truncate to the minimal trap-inducing prefix
+            // when shrinking found one; otherwise replay the full
+            // action list.
+            if let prefix = inputs.minimumFailingPrefixLength {
+                lines.append("        let rawActions = generator.run(using: &rng)")
+                lines.append("        let actions = Array(rawActions.prefix(\(prefix)))")
+            } else {
+                lines.append("        let actions = generator.run(using: &rng)")
+            }
             lines.append("        var state = \(inputs.candidate.stateTypeName)()")
             lines.append("        for action in actions {")
             for line in applyStep {

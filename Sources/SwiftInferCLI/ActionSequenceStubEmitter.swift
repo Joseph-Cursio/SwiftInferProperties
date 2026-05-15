@@ -24,6 +24,12 @@ public enum ActionSequenceStubEmitter {
     /// target: 1k sequences in <100ms; default 1024.
     public static let defaultSequenceCount = 1024
 
+    /// V2.0 M8.D.3 — upper bound on action-list length per
+    /// generated sequence. Matches `Inputs.init`'s default; lifted
+    /// to a public constant so the shrinker can use it without
+    /// hard-coding the same number.
+    public static let defaultLengthUpperBound = 16
+
     /// Outcome marker the verifier prints on the clean path. M3.E.3's
     /// parser keys on this byte-stable string.
     public static let cleanOutcomeMarker = "INTERACTION-VERIFY-OUTCOME: bothPass"
@@ -34,17 +40,13 @@ public enum ActionSequenceStubEmitter {
 
     /// V2.0 M8.D.1 — per-sequence stderr marker the stub writes
     /// before each generator step. Parser scans for the *last*
-    /// occurrence on non-zero exit to recover the failing sequence
-    /// index. stderr is unbuffered on macOS, so the marker survives
-    /// the trap that follows; stdout's buffering wouldn't be
-    /// safe here.
+    /// occurrence on non-zero exit; stderr is unbuffered so it
+    /// survives the trap that follows.
     public static let traceCurrentSequenceMarker = "TRACE-CURRENT-SEQ:"
 
-    /// V2.0 M8.D.2 — env-var names the stub reads from
-    /// `ProcessInfo.processInfo.environment` at start-up to
-    /// implement single-sequence replay (the shrinker's
-    /// re-invocation primitive). Public so `VerifierSubprocess`
-    /// + `InteractionShrinker` agree on the byte-stable names.
+    /// V2.0 M8.D.2 — env-var names the stub reads at start-up for
+    /// single-sequence replay (the shrinker's re-invocation
+    /// primitive). Public so the shrinker keys on the same names.
     public static let pinSequenceEnvVar = "SWIFT_INFER_PIN_SEQUENCE"
     public static let pinPrefixLengthEnvVar = "SWIFT_INFER_PIN_PREFIX_LENGTH"
 

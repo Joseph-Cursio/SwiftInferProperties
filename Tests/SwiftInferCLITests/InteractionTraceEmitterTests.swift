@@ -189,6 +189,49 @@ struct InteractionTraceEmitterTests {
         #expect(!source.contains("// Failing sequence index:"))
     }
 
+    // MARK: - V2.0 M8.D.3 — prefix-truncation in the replay body
+
+    @Test("M8.D.3: minimumFailingPrefixLength truncates the replay action list")
+    func traceWithPrefixLengthTruncates() {
+        let withPrefix = InteractionTraceEmitter.Inputs(
+            candidate: candidate(),
+            userModuleName: "MyApp",
+            failingSequenceIndex: 7,
+            minimumFailingPrefixLength: 3
+        )
+        let source = InteractionTraceEmitter.emit(withPrefix)
+        #expect(source.contains("let rawActions = generator.run(using: &rng)"))
+        #expect(source.contains("let actions = Array(rawActions.prefix(3))"))
+        #expect(source.contains("// Minimum failing prefix length: 3"))
+    }
+
+    @Test("M8.D.3: missing minimumFailingPrefixLength keeps the M8.D.1 full-replay shape")
+    func traceWithoutPrefixLengthFullReplay() {
+        let withIndex = InteractionTraceEmitter.Inputs(
+            candidate: candidate(),
+            userModuleName: "MyApp",
+            failingSequenceIndex: 7,
+            minimumFailingPrefixLength: nil
+        )
+        let source = InteractionTraceEmitter.emit(withIndex)
+        #expect(source.contains("let actions = generator.run(using: &rng)"))
+        #expect(!source.contains("// Minimum failing prefix length:"))
+        #expect(!source.contains("rawActions.prefix("))
+    }
+
+    @Test("M8.D.3: prefix=0 still emits truncation (asserts empty actions path)")
+    func traceWithPrefixZero() {
+        let zeroPrefix = InteractionTraceEmitter.Inputs(
+            candidate: candidate(),
+            userModuleName: "MyApp",
+            failingSequenceIndex: 0,
+            minimumFailingPrefixLength: 0
+        )
+        let source = InteractionTraceEmitter.emit(zeroPrefix)
+        #expect(source.contains("let actions = Array(rawActions.prefix(0))"))
+        #expect(source.contains("// Minimum failing prefix length: 0"))
+    }
+
     @Test("persist writes the trace file under the canonical layout")
     func persistRoundTrip() throws {
         let directory = FileManager.default.temporaryDirectory
