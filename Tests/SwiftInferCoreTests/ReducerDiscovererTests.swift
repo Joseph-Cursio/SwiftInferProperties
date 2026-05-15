@@ -1,0 +1,228 @@
+import Foundation
+import Testing
+@testable import SwiftInferCore
+
+// V2.0 M1.A — SwiftSyntax-pass tests for ReducerDiscoverer. Pure:
+// every test passes a string literal of source code and asserts on
+// the returned `[ReducerCandidate]`. No disk I/O; no subprocess.
+
+@Suite("ReducerDiscoverer — V2.0 M1.A signature scan")
+struct ReducerDiscovererTests {
+
+    // MARK: - Shape 1: (S, A) -> S
+
+    @Test("matches free-function (S, A) -> S")
+    func shape1FreeFunction() {
+        let source = """
+        func reduce(_ state: AppState, _ action: AppAction) -> AppState {
+            return state
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        let candidate = result[0]
+        #expect(candidate.functionName == "reduce")
+        #expect(candidate.signatureShape == .stateActionReturnsState)
+        #expect(candidate.stateTypeName == "AppState")
+        #expect(candidate.actionTypeName == "AppAction")
+        #expect(candidate.enclosingTypeName == nil)
+    }
+
+    @Test("matches instance-method (S, A) -> S inside a struct — sets enclosingTypeName")
+    func shape1InstanceMethod() {
+        let source = """
+        struct Inbox {
+            func reduce(_ state: State, _ action: Action) -> State { return state }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].enclosingTypeName == "Inbox")
+        #expect(result[0].functionName == "reduce")
+    }
+
+    @Test("matches static-method (S, A) -> S")
+    func shape1StaticMethod() {
+        let source = """
+        enum Reducer {
+            static func reduce(_ state: AppState, _ action: AppAction) -> AppState {
+                return state
+            }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].enclosingTypeName == "Reducer")
+        #expect(result[0].signatureShape == .stateActionReturnsState)
+    }
+
+    // MARK: - Shape 2: (inout S, A) -> Void
+
+    @Test("matches (inout S, A) -> Void")
+    func shape2InoutVoidReturn() {
+        let source = """
+        func reduce(state: inout AppState, action: AppAction) {
+            state.count += 1
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].signatureShape == .inoutStateActionReturnsVoid)
+        #expect(result[0].stateTypeName == "AppState")
+        #expect(result[0].actionTypeName == "AppAction")
+    }
+
+    @Test("matches (inout S, A) -> Void with explicit Void return clause")
+    func shape2InoutExplicitVoid() {
+        let source = """
+        func reduce(_ state: inout AppState, _ action: AppAction) -> Void {
+            state.count += 1
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].signatureShape == .inoutStateActionReturnsVoid)
+    }
+
+    @Test("rejects (inout S, A) -> S — return-type-with-inout is not a canonical shape")
+    func shape2RejectsInoutWithReturn() {
+        let source = """
+        func reduce(_ state: inout AppState, _ action: AppAction) -> AppState {
+            return state
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - Shape 3: (S, A) -> (S, Effect<A>)
+
+    @Test("matches (S, A) -> (S, Effect<A>)")
+    func shape3StateEffectTuple() {
+        let source = """
+        func reduce(_ state: AppState, _ action: AppAction) -> (AppState, Effect<AppAction>) {
+            return (state, .none)
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].signatureShape == .stateActionReturnsStateAndEffect)
+    }
+
+    @Test("matches (S, A) -> (S, Effect<Combine.Output, Combine.Failure>) — depth-counting comma split")
+    func shape3StateEffectWithMultipleGenericArgs() {
+        let source = """
+        func reduce(_ s: AppState, _ a: AppAction) -> (AppState, Effect<Output, Failure>) {
+            return (s, .none)
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].signatureShape == .stateActionReturnsStateAndEffect)
+    }
+
+    @Test("rejects tuple-return where second element is not Effect<...>")
+    func shape3RejectsNonEffectTuple() {
+        let source = """
+        func reduce(_ state: AppState, _ action: AppAction) -> (AppState, AppState) {
+            return (state, state)
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - Negatives
+
+    @Test("rejects arity-1 dispatch(_:) — naturally implements §2.3 strict-Action-surface")
+    func rejectsArity1Dispatch() {
+        let source = """
+        class AppLogic {
+            func dispatch(_ action: AppAction) {}
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    @Test("rejects arity-3 function")
+    func rejectsArity3() {
+        let source = """
+        func reduce(_ s: AppState, _ a: AppAction, _ env: Env) -> AppState {
+            return s
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    @Test("rejects (S, A) -> T where T != S")
+    func rejectsNonMatchingReturn() {
+        let source = """
+        func transform(_ s: AppState, _ a: AppAction) -> String {
+            return ""
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    @Test("skips private and fileprivate functions — V1.57.A cycle-53 posture carried forward")
+    func skipsPrivateAndFileprivate() {
+        let source = """
+        private func reduce(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        fileprivate func update(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    @Test("skips generic functions — type-name extraction with placeholders deferred")
+    func skipsGenericFunctions() {
+        let source = """
+        func reduce<S, A>(_ state: S, _ action: A) -> S {
+            return state
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - Multi-reducer files
+
+    @Test("multiple reducers in one file all surface")
+    func multipleReducersInOneFile() {
+        let source = """
+        func reduceA(_ s: StateA, _ a: ActionA) -> StateA { return s }
+        struct B { func reduce(_ s: StateB, _ a: ActionB) -> StateB { return s } }
+        func reduceC(_ s: inout StateC, _ a: ActionC) {}
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 3)
+        #expect(Set(result.map(\.functionName)) == ["reduceA", "reduce", "reduceC"])
+    }
+
+    @Test("function name is NOT filtered — reducer-ness is signature-only at M1.A")
+    func functionNameNotFiltered() {
+        let source = """
+        func foo(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].functionName == "foo")
+    }
+
+    // MARK: - Location
+
+    @Test("location records file path and line number")
+    func locationCarriesFileAndLine() {
+        let source = """
+        // line 1
+        // line 2
+        func reduce(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "Inbox.swift")
+        #expect(result.count == 1)
+        #expect(result[0].location == "Inbox.swift:3")
+    }
+}
