@@ -212,9 +212,9 @@ struct VerifyInteractionPipelineTests {
         }
     }
 
-    @Test("resolveAndEmit against an unsupported shape throws .unsupported")
-    func resolveAndEmitUnsupportedShape() throws {
-        let directory = try makeFixtureDirectory(name: "PipelineUnsupportedShape")
+    @Test("resolveAndEmit against effect-tuple shape — M8.A emits effect-discard stub")
+    func resolveAndEmitEffectTupleShape() throws {
+        let directory = try makeFixtureDirectory(name: "PipelineEffectTupleShape")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
             in: directory,
@@ -226,22 +226,14 @@ struct VerifyInteractionPipelineTests {
             }
             """
         )
-        do {
-            _ = try VerifyInteractionPipeline.resolveAndEmit(
-                target: "MyApp",
-                workingDirectory: directory
-            )
-            Issue.record("expected unsupported error")
-        } catch let error as VerifyInteractionError {
-            switch error {
-            case .unsupported:
-                break
-            default:
-                Issue.record("expected .unsupported, got \(error)")
-            }
-        } catch {
-            Issue.record("expected VerifyInteractionError, got \(error)")
-        }
+        let (candidate, stubSource) = try VerifyInteractionPipeline.resolveAndEmit(
+            target: "MyApp",
+            workingDirectory: directory
+        )
+        #expect(candidate.signatureShape == .stateActionReturnsStateAndEffect)
+        // The effect half is captured into `_` and discarded — PRD §16 #1.
+        #expect(stubSource.contains("let (newState, _) = reduce(state, action)"))
+        #expect(stubSource.contains("state = newState"))
     }
 
     // MARK: - Helpers

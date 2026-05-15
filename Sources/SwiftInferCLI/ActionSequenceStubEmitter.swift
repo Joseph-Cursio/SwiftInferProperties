@@ -1,102 +1,40 @@
 import Foundation
 import SwiftInferCore
 
-/// V2.0 M3.B — emits the verifier `main.swift` source for
-/// `swift-infer verify-interaction`. Imports the user's module +
-/// `PropertyLawKit`, builds an action-sequence generator, runs N
-/// sequences through the discovered reducer, and prints an outcome
-/// marker on the clean path. M4.D–M6 layer in family-aware
-/// invariant checks (Conservation / Cardinality / Ref-integrity
-/// per-step; Idempotence post-loop).
+/// V2.0 M3.B / M4.D / M8.A — emits the verifier `main.swift` source
+/// for `swift-infer verify-interaction`. Imports the user module +
+/// PropertyLawKit, builds an action-sequence generator, runs N
+/// sequences, and prints an outcome marker on the clean path. M4.D
+/// embeds family-aware predicate checks (Conservation / Cardinality
+/// / Ref-integrity / Biconditional per-step; Idempotence post-loop).
+/// M8.A accepts effect-bearing shapes and **captures-and-discards**
+/// the returned `Effect<A>` per PRD §16 #1.
 ///
-/// **Trap-as-exit-code outcome.** Swift traps (`fatalError`,
-/// array-out-of-bounds, force-unwrap-nil) terminate the process
-/// with a non-zero exit. M3.E.3's parser maps to
-/// `.measuredDefaultFails`. `precondition` violations from the
-/// invariant checks land in the same bucket.
+/// **Trap-as-exit-code outcome.** Swift traps (`fatalError`, array-
+/// out-of-bounds, force-unwrap-nil) and `precondition` violations
+/// terminate with non-zero exit → `.measuredDefaultFails` via
+/// M3.E.3's parser.
 ///
-/// **Supported shapes / contexts** (M3.0):
-///   - `.stateActionReturnsState` / `.inoutStateActionReturnsVoid`.
-///   - Free functions or static-call methods on a containing type.
-///   - Effect-shaped signatures + TCA closures route to M8 / M3.future.
+/// **Supported:** all four `ReducerSignatureShape` cases via free /
+/// static-call form. **Rejected:** `.tca` carrier (closure-relative
+/// `feature.reduce(into:action:)` init is separate scope).
 public enum ActionSequenceStubEmitter {
 
-    /// Number of action sequences to run per verifier invocation.
-    /// PRD §15 perf target is "1k action sequences ... in < 100ms wall"
-    /// on a small reducer, so 1024 is the default upper bound. The
-    /// caller can override via `Inputs.sequenceCount` for tighter
-    /// budgets or longer fuzzing campaigns.
+    /// Number of action sequences per verifier run. PRD §15 perf
+    /// target: 1k sequences in <100ms; default 1024.
     public static let defaultSequenceCount = 1024
 
-    /// Outcome marker the verifier prints on the clean path. Parsed
-    /// by `Verify.runInteractionPipeline` (M3.C). Public so tests on
-    /// both ends agree on the byte-stable string.
+    /// Outcome marker the verifier prints on the clean path. M3.E.3's
+    /// parser keys on this byte-stable string.
     public static let cleanOutcomeMarker = "INTERACTION-VERIFY-OUTCOME: bothPass"
 
-    /// Header marker (first non-blank line of stub output) so tests
-    /// can pin the format without depending on emit-time variables
-    /// like the swift-infer version.
+    /// Header marker (first non-blank line) — tests pin the format
+    /// without depending on emit-time variables.
     public static let stubHeaderMarker = "// swift-infer verify-interaction stub (V2.0 M3.B)"
 
-    public struct Inputs: Sendable, Equatable {
-        public let candidate: ReducerCandidate
-        public let userModuleName: String
-        public let sequenceCount: Int
-        public let lengthLowerBound: Int
-        public let lengthUpperBound: Int
-        /// V2.0 M4.D — optional invariant suggestion the stub
-        /// should verify. When `nil`, the stub falls back to the
-        /// M3.0 "ran cleanly / trapped" posture (no predicate
-        /// check; the only failure mode is a Swift trap inside the
-        /// reducer body). When supplied, the emitter branches on
-        /// `invariant.family`:
-        ///   - `.conservation` → embeds `precondition(<predicate>)`
-        ///     after each `state = reduce(...)` step
-        ///   - `.idempotence` → emits a post-loop double-apply check
-        ///     using `<predicate>` (the action-case dot-shorthand)
-        ///   - other families (`.cardinality` / `.referentialIntegrity`
-        ///     / `.biconditional`) → `EmitError.unsupportedFamily`
-        ///     until M5–M7 ship them.
-        public let invariant: InteractionInvariantSuggestion?
-
-        public init(
-            candidate: ReducerCandidate,
-            userModuleName: String,
-            sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
-            lengthLowerBound: Int = 0,
-            lengthUpperBound: Int = 16,
-            invariant: InteractionInvariantSuggestion? = nil
-        ) {
-            self.candidate = candidate
-            self.userModuleName = userModuleName
-            self.sequenceCount = sequenceCount
-            self.lengthLowerBound = lengthLowerBound
-            self.lengthUpperBound = lengthUpperBound
-            self.invariant = invariant
-        }
-    }
-
-    public enum EmitError: Error, CustomStringConvertible, Equatable {
-        case unsupportedShape(ReducerSignatureShape)
-        case unsupportedCarrier(ReducerCarrierKind)
-        case unsupportedFamily(InteractionInvariantFamily)
-
-        public var description: String {
-            switch self {
-            case let .unsupportedShape(shape):
-                return "M3.B does not support reducer shape '\(shape.rawValue)' "
-                    + "(effect-bearing shapes route to the subprocess path at M8)."
-            case let .unsupportedCarrier(kind):
-                return "M3.B does not yet support carrier kind '\(kind.rawValue)' "
-                    + "(TCA `.tca` reducers need closure-relative state init — deferred to M3.E)."
-            case let .unsupportedFamily(family):
-                return "M4.D does not yet support invariant family '\(family.rawValue)' "
-                    + "— Conservation (M4.B) and Idempotence (M4.C) ship; the three "
-                    + "new families (Cardinality / Referential integrity / Biconditional) "
-                    + "land at M5 / M6 / M7."
-            }
-        }
-    }
+    // `Inputs` + `EmitError` are nested via extension in
+    // ActionSequenceStubEmitter+Types.swift (M8.A split keeps the
+    // type body under SwiftLint's `type_body_length` cap).
 
     /// V2.0 M3.B / M4.D — emit the verifier `main.swift` source.
     /// Throws if the candidate's signature shape or carrier kind isn't
@@ -128,14 +66,16 @@ public enum ActionSequenceStubEmitter {
         )
     }
 
-    /// V2.0 M4.D — assemble the stub source. Extracted from
+    /// V2.0 M4.D / M8.A — assemble the stub source. Extracted from
     /// `emit(_:)` to keep the outer function under SwiftLint's
     /// `function_body_length` cap as the per-step / post-loop
-    /// check blocks landed.
+    /// check blocks landed. M8.A switched `applyStep` to `[String]`
+    /// so effect-tuple shapes can render a two-line destructure-
+    /// and-assign block at the right indent.
     private static func assembleStub(
         inputs: Inputs,
         stateInit: String,
-        applyStep: String,
+        applyStep: [String],
         perStepCheck: [String],
         postLoopCheck: [String]
     ) -> String {
@@ -168,7 +108,9 @@ public enum ActionSequenceStubEmitter {
         lines.append("            let actions = generator.run(using: &rng)")
         lines.append("            var state = \(stateInit)")
         lines.append("            for action in actions {")
-        lines.append("                \(applyStep)")
+        for line in applyStep {
+            lines.append("                \(line)")
+        }
         for line in perStepCheck {
             lines.append("                \(line)")
         }
@@ -243,9 +185,12 @@ public enum ActionSequenceStubEmitter {
         }
     }
 
-    /// V2.0 M4.D — the idempotence check body, parameterized over
-    /// the signature shape. Pulled to a static so tests can drive
-    /// the body shape independently of the surrounding stub.
+    /// V2.0 M4.D / M8.A — the idempotence check body, parameterized
+    /// over the signature shape. Pulled to a static so tests can
+    /// drive the body shape independently of the surrounding stub.
+    /// M8.A extends with two effect-bearing arms: the `Effect<A>`
+    /// half of the tuple / return is **captured and discarded** per
+    /// PRD §16 #1 (swift-infer never runs user-side Effects).
     static func makeIdempotenceCheck(
         actionExpr: String,
         shape: ReducerSignatureShape,
@@ -269,9 +214,20 @@ public enum ActionSequenceStubEmitter {
                 "\(reducerCall)(&twice, \(actionExpr))",
                 assertion
             ]
-        case .stateActionReturnsStateAndEffect, .inoutStateActionReturnsEffect:
-            // Unreachable — `validate` rejects effect-bearing shapes.
-            return []
+        case .stateActionReturnsStateAndEffect:
+            return [
+                "let (once, _) = \(reducerCall)(state, \(actionExpr))",
+                "let (twice, _) = \(reducerCall)(once, \(actionExpr))",
+                assertion
+            ]
+        case .inoutStateActionReturnsEffect:
+            return [
+                "var once = state",
+                "_ = \(reducerCall)(&once, \(actionExpr))",
+                "var twice = once",
+                "_ = \(reducerCall)(&twice, \(actionExpr))",
+                assertion
+            ]
         }
     }
 
@@ -290,20 +246,13 @@ public enum ActionSequenceStubEmitter {
 
     // MARK: - Internals
 
-    /// Reject signature shapes / carrier kinds that M3.0 doesn't
-    /// support. The thrown error names the case so the caller can
-    /// surface a clear "route to M8 instead" message.
+    /// Reject carrier kinds the emitter doesn't support. All four
+    /// signature shapes are now accepted (M8.A lifted the
+    /// effect-shape rejection — effects are captured and discarded
+    /// per PRD §16 #1). `.tca` carrier still rejected: closure-
+    /// relative init via `feature.reduce(into:action:)` is separate
+    /// scope.
     private static func validate(_ candidate: ReducerCandidate) throws {
-        switch candidate.signatureShape {
-        case .stateActionReturnsState, .inoutStateActionReturnsVoid:
-            break
-        case .stateActionReturnsStateAndEffect, .inoutStateActionReturnsEffect:
-            throw EmitError.unsupportedShape(candidate.signatureShape)
-        }
-        // M3.0 covers `.elmStyle` + `.generic`. `.tca` needs
-        // closure-relative state init that the static-call convention
-        // doesn't cover — Reduce { state, action in ... } is a
-        // closure value, not a callable on the conforming type.
         if candidate.carrierKind == .tca {
             throw EmitError.unsupportedCarrier(candidate.carrierKind)
         }
@@ -321,19 +270,28 @@ public enum ActionSequenceStubEmitter {
     }
 
     /// One iteration of the action-application loop. Returns the
-    /// statement that mutates `state` for the given signature shape.
+    /// statement(s) that mutate `state` for the given signature
+    /// shape. Effect-bearing shapes (M8.A) discard the returned
+    /// `Effect<A>` — captured into `_` and never executed (PRD
+    /// §16 #1). Returned as an array so the assembler can append
+    /// each line at the caller's indent depth — the effect-tuple
+    /// shape needs two lines (destructure + assign).
     static func makeApplyStep(
         shape: ReducerSignatureShape,
         reducerCall: String
-    ) -> String {
+    ) -> [String] {
         switch shape {
         case .stateActionReturnsState:
-            return "state = \(reducerCall)(state, action)"
+            return ["state = \(reducerCall)(state, action)"]
         case .inoutStateActionReturnsVoid:
-            return "\(reducerCall)(&state, action)"
-        case .stateActionReturnsStateAndEffect, .inoutStateActionReturnsEffect:
-            // Unreachable — `validate` rejects these.
-            return "// unsupported shape"
+            return ["\(reducerCall)(&state, action)"]
+        case .stateActionReturnsStateAndEffect:
+            return [
+                "let (newState, _) = \(reducerCall)(state, action)",
+                "state = newState"
+            ]
+        case .inoutStateActionReturnsEffect:
+            return ["_ = \(reducerCall)(&state, action)"]
         }
     }
 

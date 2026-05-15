@@ -77,21 +77,26 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains("state = Inbox.reduce(state, action)"))
     }
 
-    @Test("effect-tuple shape `(S, A) -> (S, Effect<A>)` — throws unsupportedShape")
-    func effectTupleShapeIsUnsupported() {
+    @Test("effect-tuple shape `(S, A) -> (S, Effect<A>)` — captures-and-discards effect (M8.A)")
+    func effectTupleShapeEmitsEffectDiscard() throws {
         let candidate = candidate(signatureShape: .stateActionReturnsStateAndEffect)
-        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedShape(.stateActionReturnsStateAndEffect)) {
-            _ = try ActionSequenceStubEmitter.emit(inputs(candidate))
-        }
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate))
+        // Effect-discard form: destructure the tuple, bind State to
+        // `newState`, throw the `Effect<A>` half away into `_`.
+        #expect(source.contains("let (newState, _) = reduce(state, action)"))
+        #expect(source.contains("state = newState"))
     }
 
-    @Test("inout-effect shape `(inout S, A) -> Effect<A>` — throws unsupportedShape (TCA closure subprocess path)")
-    func inoutEffectShapeIsUnsupported() {
-        let candidate = candidate(signatureShape: .inoutStateActionReturnsEffect, carrierKind: .tca)
-        // The shape check fires first.
-        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedShape(.inoutStateActionReturnsEffect)) {
-            _ = try ActionSequenceStubEmitter.emit(inputs(candidate))
-        }
+    @Test("inout-effect shape `(inout S, A) -> Effect<A>` — captures-and-discards effect (M8.A)")
+    func inoutEffectShapeEmitsEffectDiscard() throws {
+        // `.tca` carrier still rejected; use `.generic` (free / method
+        // static-call form) for the effect-discard surface.
+        let candidate = candidate(
+            signatureShape: .inoutStateActionReturnsEffect,
+            carrierKind: .generic
+        )
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate))
+        #expect(source.contains("_ = reduce(&state, action)"))
     }
 
     @Test("`.tca` carrier with a supported shape — throws unsupportedCarrier (closure-relative init deferred)")
