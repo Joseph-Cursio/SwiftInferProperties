@@ -30,7 +30,8 @@ public struct SwiftInferCommand: AsyncParsableCommand {
             Index.self,
             Query.self,
             SuggestRefactors.self,
-            Verify.self
+            Verify.self,
+            AcceptCheck.self
         ],
         defaultSubcommand: Discover.self
     )
