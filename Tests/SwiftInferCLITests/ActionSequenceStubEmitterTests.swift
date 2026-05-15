@@ -1,0 +1,180 @@
+import Foundation
+import SwiftInferCore
+import Testing
+@testable import SwiftInferCLI
+
+// V2.0 M3.B — ActionSequenceStubEmitter assertions. Pure text
+// emission: no subprocess, no disk I/O. Tests pin the structural
+// shape of the emitted stub (imports, generator construction, the
+// reducer-call statement for each signature shape, the outcome
+// marker, supported-vs-rejected shapes/carriers) without
+// byte-exact-matching the whole source (which would brittle on
+// every emitter tweak).
+
+@Suite("ActionSequenceStubEmitter — V2.0 M3.B verifier source emission")
+struct ActionSequenceStubEmitterTests {
+
+    private func candidate(
+        location: String = "Sources/MyApp/Inbox.swift:42",
+        enclosingTypeName: String? = nil,
+        functionName: String = "reduce",
+        signatureShape: ReducerSignatureShape = .stateActionReturnsState,
+        stateTypeName: String = "AppState",
+        actionTypeName: String = "AppAction",
+        carrierKind: ReducerCarrierKind = .elmStyle
+    ) -> ReducerCandidate {
+        ReducerCandidate(
+            location: location,
+            enclosingTypeName: enclosingTypeName,
+            functionName: functionName,
+            signatureShape: signatureShape,
+            stateTypeName: stateTypeName,
+            actionTypeName: actionTypeName,
+            carrierKind: carrierKind
+        )
+    }
+
+    private func inputs(
+        _ candidate: ReducerCandidate,
+        userModuleName: String = "MyApp",
+        sequenceCount: Int = 1024,
+        lengthLowerBound: Int = 0,
+        lengthUpperBound: Int = 16
+    ) -> ActionSequenceStubEmitter.Inputs {
+        ActionSequenceStubEmitter.Inputs(
+            candidate: candidate,
+            userModuleName: userModuleName,
+            sequenceCount: sequenceCount,
+            lengthLowerBound: lengthLowerBound,
+            lengthUpperBound: lengthUpperBound
+        )
+    }
+
+    // MARK: - Shape support
+
+    @Test("free (S, A) -> S reducer — `state = reduce(state, action)`")
+    func freeStateActionReturnsState() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("state = reduce(state, action)"))
+        #expect(source.contains("var state = AppState()"))
+    }
+
+    @Test("(inout S, A) -> Void reducer — `reduce(&state, action)`")
+    func freeInoutStateActionReturnsVoid() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(
+            signatureShape: .inoutStateActionReturnsVoid
+        )))
+        #expect(source.contains("reduce(&state, action)"))
+    }
+
+    @Test("method on a type — `<EnclosingType>.<functionName>` static-call form")
+    func methodOnTypeUsesStaticCallForm() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(
+            enclosingTypeName: "Inbox",
+            functionName: "reduce",
+            carrierKind: .generic
+        )))
+        #expect(source.contains("state = Inbox.reduce(state, action)"))
+    }
+
+    @Test("effect-tuple shape `(S, A) -> (S, Effect<A>)` — throws unsupportedShape")
+    func effectTupleShapeIsUnsupported() {
+        let candidate = candidate(signatureShape: .stateActionReturnsStateAndEffect)
+        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedShape(.stateActionReturnsStateAndEffect)) {
+            _ = try ActionSequenceStubEmitter.emit(inputs(candidate))
+        }
+    }
+
+    @Test("inout-effect shape `(inout S, A) -> Effect<A>` — throws unsupportedShape (TCA closure subprocess path)")
+    func inoutEffectShapeIsUnsupported() {
+        let candidate = candidate(signatureShape: .inoutStateActionReturnsEffect, carrierKind: .tca)
+        // The shape check fires first.
+        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedShape(.inoutStateActionReturnsEffect)) {
+            _ = try ActionSequenceStubEmitter.emit(inputs(candidate))
+        }
+    }
+
+    @Test("`.tca` carrier with a supported shape — throws unsupportedCarrier (closure-relative init deferred)")
+    func tcaCarrierIsUnsupportedEvenWithCompatibleShape() {
+        // A TCA candidate WITH a state-action-returns-state shape (synthetic
+        // — TCA closures normally use .inoutStateActionReturnsEffect, but
+        // the shape and carrier are independently validated).
+        let candidate = candidate(signatureShape: .stateActionReturnsState, carrierKind: .tca)
+        // Shape passes, carrier fails.
+        let captured = candidate
+        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.tca)) {
+            _ = try ActionSequenceStubEmitter.emit(inputs(captured))
+        }
+    }
+
+    // MARK: - Imports
+
+    @Test("emitted stub imports the user's module + PropertyLawKit + PropertyBased")
+    func emittedStubHasRequiredImports() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(), userModuleName: "Inbox"))
+        #expect(source.contains("import Inbox"))
+        #expect(source.contains("import PropertyBased"))
+        #expect(source.contains("import PropertyLawKit"))
+    }
+
+    // MARK: - Generator construction
+
+    @Test("emitted stub builds the action generator via ActionSequenceFactory")
+    func emittedStubBuildsGenerator() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(
+            actionTypeName: "Inbox.Action"
+        )))
+        #expect(source.contains("ActionSequenceFactory.actionSequence("))
+        #expect(source.contains("forCaseIterable: Inbox.Action.self"))
+        #expect(source.contains("length: 0...16"))
+    }
+
+    @Test("length range overrides via inputs propagate to the emitted stub")
+    func lengthRangeOverridePropagates() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(
+            candidate(),
+            lengthLowerBound: 4,
+            lengthUpperBound: 8
+        ))
+        #expect(source.contains("length: 4...8"))
+    }
+
+    // MARK: - Outcome marker
+
+    @Test("emitted stub prints the clean-outcome marker on the success path")
+    func emittedStubPrintsCleanOutcomeMarker() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains(ActionSequenceStubEmitter.cleanOutcomeMarker))
+    }
+
+    @Test("sequence-count override propagates to the loop bound")
+    func sequenceCountOverridePropagates() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(), sequenceCount: 100))
+        #expect(source.contains("for _ in 0..<100 {"))
+    }
+
+    // MARK: - Header marker
+
+    @Test("first line is the byte-stable header marker — parsers can pin it")
+    func firstLineIsHeaderMarker() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        let firstLine = source.split(separator: "\n").first.map(String.init) ?? ""
+        #expect(firstLine == ActionSequenceStubEmitter.stubHeaderMarker)
+    }
+
+    // MARK: - Seed determinism
+
+    @Test("seed tuple is byte-stable for the same qualifiedName across calls")
+    func seedTupleIsDeterministic() {
+        let first = ActionSequenceStubEmitter.seedTuple(for: candidate(functionName: "reduce"))
+        let second = ActionSequenceStubEmitter.seedTuple(for: candidate(functionName: "reduce"))
+        #expect(first == second)
+    }
+
+    @Test("different qualifiedNames produce different seed tuples")
+    func seedTupleVariesByQualifiedName() {
+        let alpha = ActionSequenceStubEmitter.seedTuple(for: candidate(functionName: "reduceA"))
+        let beta = ActionSequenceStubEmitter.seedTuple(for: candidate(functionName: "reduceB"))
+        #expect(alpha != beta)
+    }
+}
