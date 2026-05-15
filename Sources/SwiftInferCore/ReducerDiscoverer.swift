@@ -248,13 +248,27 @@ private final class Visitor: SyntaxVisitor {
 
         let position = node.funcKeyword.positionAfterSkippingLeadingTrivia
         let location = converter.location(for: position)
+        let enclosingTypeName = typeStack.last
+        // V1.C — `.elmStyle` differentiation. A free `(S, A) -> S`
+        // reducer (the Elm idiom — `func update(_:_:)` at module
+        // scope) is the canonical carrier of that label. Methods on a
+        // type, and the two `inout` / tuple-return shapes when free,
+        // stay `.generic` — they're not the Elm convention even if
+        // signature-matched.
+        let carrierKind: ReducerCarrierKind
+        if enclosingTypeName == nil, shape == .stateActionReturnsState {
+            carrierKind = .elmStyle
+        } else {
+            carrierKind = .generic
+        }
         return ReducerCandidate(
             location: "\(file):\(location.line)",
-            enclosingTypeName: typeStack.last,
+            enclosingTypeName: enclosingTypeName,
             functionName: node.name.text,
             signatureShape: shape,
             stateTypeName: firstType,
-            actionTypeName: secondType
+            actionTypeName: secondType,
+            carrierKind: carrierKind
         )
     }
 

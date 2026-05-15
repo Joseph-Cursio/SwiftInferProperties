@@ -226,10 +226,47 @@ struct ReducerDiscovererTests {
         #expect(result[0].location == "Inbox.swift:3")
     }
 
-    @Test("M1.A candidates carry carrierKind:.generic — V1.B field addition")
-    func m1aCandidatesAreGeneric() {
+    // MARK: - V1.C — carrier-kind differentiation
+
+    @Test("V1.C — free `(S, A) -> S` function gets carrierKind: .elmStyle")
+    func elmStyleFreeStateActionReturnsState() {
         let source = """
         func reduce(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .elmStyle)
+    }
+
+    @Test("V1.C — method `(S, A) -> S` on a non-Reducer struct stays .generic")
+    func genericMethodStateActionReturnsState() {
+        let source = """
+        struct Helper {
+            func reduce(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .generic)
+        #expect(result[0].enclosingTypeName == "Helper")
+    }
+
+    @Test("V1.C — free `(inout S, A) -> Void` stays .generic — not the Elm idiom")
+    func genericFreeInoutShape() {
+        let source = """
+        func reduce(_ s: inout AppState, _ a: AppAction) {}
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .generic)
+    }
+
+    @Test("V1.C — free `(S, A) -> (S, Effect<A>)` stays .generic — TCA-pre-2022 idiom, not Elm")
+    func genericFreeEffectTupleShape() {
+        let source = """
+        func reduce(_ s: AppState, _ a: AppAction) -> (AppState, Effect<AppAction>) {
+            return (s, .none)
+        }
         """
         let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
         #expect(result.count == 1)
