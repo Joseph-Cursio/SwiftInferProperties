@@ -16,7 +16,8 @@ struct VerifyInteractionPipelineRenderTests {
         signatureShape: ReducerSignatureShape = .stateActionReturnsState,
         stateTypeName: String = "S",
         actionTypeName: String = "A",
-        carrierKind: ReducerCarrierKind = .elmStyle
+        carrierKind: ReducerCarrierKind = .elmStyle,
+        purity: ReducerPurity = .pure
     ) -> ReducerCandidate {
         ReducerCandidate(
             location: "F.swift:1",
@@ -25,7 +26,8 @@ struct VerifyInteractionPipelineRenderTests {
             signatureShape: signatureShape,
             stateTypeName: stateTypeName,
             actionTypeName: actionTypeName,
-            carrierKind: carrierKind
+            carrierKind: carrierKind,
+            purity: purity
         )
     }
 
@@ -59,6 +61,26 @@ struct VerifyInteractionPipelineRenderTests {
         )
         #expect(rendered.contains("Outcome: architectural-coverage-pending"))
         #expect(rendered.contains("swift build failed"))
+    }
+
+    @Test("renderOutcome surfaces the candidate's purity classification (M8.B)")
+    func renderOutcomeShowsPurity() {
+        let result = InteractionVerifyOutcomeParser.Result(
+            outcome: .measuredBothPass,
+            totalRuns: 1024,
+            cleanRuns: 1024,
+            detail: nil
+        )
+        let pureRender = VerifyInteractionPipeline.renderOutcome(
+            candidate: freeCandidate(purity: .pure),
+            result: result
+        )
+        #expect(pureRender.contains("Purity: pure"))
+        let effectRender = VerifyInteractionPipeline.renderOutcome(
+            candidate: freeCandidate(purity: .effectBearing),
+            result: result
+        )
+        #expect(effectRender.contains("Purity: effect-bearing"))
     }
 
     @Test("workdirSegment is filename-safe: dots become underscores")

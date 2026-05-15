@@ -71,6 +71,11 @@ final class ReduceClosureWalker: SyntaxVisitor {
     private func emitCandidate(closure: ClosureExprSyntax) {
         let position = closure.positionAfterSkippingLeadingTrivia
         let location = converter.location(for: position)
+        // M8.B — analyze the closure body for purity. TCA closures
+        // are typically `.effectBearing` (they construct `Effect.run`
+        // / `.send` etc.), but signature-pure closures qualify for the
+        // pure path at the routing layer.
+        let purity = ReducerPurityAnalyzer.analyze(Syntax(closure.statements))
         candidates.append(ReducerCandidate(
             location: "\(file):\(location.line)",
             enclosingTypeName: enclosingTypeName,
@@ -78,7 +83,8 @@ final class ReduceClosureWalker: SyntaxVisitor {
             signatureShape: .inoutStateActionReturnsEffect,
             stateTypeName: "\(enclosingTypeName).State",
             actionTypeName: "\(enclosingTypeName).Action",
-            carrierKind: .tca
+            carrierKind: .tca,
+            purity: purity
         ))
     }
 }

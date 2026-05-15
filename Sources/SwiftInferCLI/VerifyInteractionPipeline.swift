@@ -34,6 +34,14 @@ public enum VerifyInteractionPipeline {
             .appendingPathComponent(target)
         let candidates = try ReducerDiscoverer.discover(directory: directory)
         let matched = try resolveCandidate(candidates: candidates, pinRaw: pinRaw)
+        // M8.B — hidden-mutability bodies write to static / global
+        // vars; running N action sequences against such a reducer
+        // produces meaningless outcomes (state persists across runs).
+        // Reject cleanly so the caller surfaces an actionable error
+        // instead of a confusing `.measuredDefaultFails`.
+        if matched.purity == .hiddenMutability {
+            throw VerifyInteractionError.hiddenMutability(reducer: matched.qualifiedName)
+        }
         let resolvedModuleName = userModuleName ?? target
         let inputs = ActionSequenceStubEmitter.Inputs(
             candidate: matched,
@@ -205,10 +213,11 @@ public enum VerifyInteractionPipeline {
         result: InteractionVerifyOutcomeParser.Result
     ) -> String {
         let header = [
-            "swift-infer verify-interaction — V2.0 M3.E (in-process):",
+            "swift-infer verify-interaction — V2.0 M3.E + M8.B:",
             "  Reducer: \(candidate.qualifiedName)",
             "  Carrier: \(candidate.carrierKind.rawValue)",
             "  Signature: \(candidate.signatureShape.rawValue)",
+            "  Purity: \(candidate.purity.rawValue)",
             "  State: \(candidate.stateTypeName)",
             "  Action: \(candidate.actionTypeName)",
             "",
@@ -235,6 +244,10 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
     case ambiguousPin(pin: String, matches: [String])
     case requiresPin(candidates: [String])
     case unsupported(reason: String)
+    /// V2.0 M8.B — body writes to a static / global var; running N
+    /// action sequences against it produces meaningless outcomes
+    /// because state persists across runs. PRD §4.1 `-∞` veto.
+    case hiddenMutability(reducer: String)
 
     public var description: String {
         switch self {
@@ -252,6 +265,12 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
                 + "Candidates: \(candidates.joined(separator: ", "))"
         case let .unsupported(reason):
             return "swift-infer verify-interaction: \(reason)"
+        case let .hiddenMutability(reducer):
+            return "swift-infer verify-interaction: reducer '\(reducer)' has hidden "
+                + "mutability (writes to static / global state). Running random action "
+                + "sequences against it produces non-deterministic outcomes; PRD §4.1 "
+                + "vetoes the verify path here. Rework the reducer to be pure or move "
+                + "the static state to the State type."
         }
     }
 }

@@ -216,13 +216,16 @@ struct VerifyInteractionPipelineTests {
     func resolveAndEmitEffectTupleShape() throws {
         let directory = try makeFixtureDirectory(name: "PipelineEffectTupleShape")
         defer { try? FileManager.default.removeItem(at: directory) }
+        // Body actually references Effect.run (not just .none) so the
+        // M8.B purity analyzer classifies the body as .effectBearing
+        // alongside the signature-shape match.
         try writeFile(
             in: directory,
             relativePath: "Sources/MyApp",
             named: "Effect.swift",
             contents: """
             func reduce(_ s: AppState, _ a: AppAction) -> (AppState, Effect<AppAction>) {
-                return (s, .none)
+                return (s, Effect.run { _ in })
             }
             """
         )
@@ -231,9 +234,44 @@ struct VerifyInteractionPipelineTests {
             workingDirectory: directory
         )
         #expect(candidate.signatureShape == .stateActionReturnsStateAndEffect)
+        #expect(candidate.purity == .effectBearing)
         // The effect half is captured into `_` and discarded — PRD §16 #1.
         #expect(stubSource.contains("let (newState, _) = reduce(state, action)"))
         #expect(stubSource.contains("state = newState"))
+    }
+
+    @Test("resolveAndEmit against a hidden-mutability body throws .hiddenMutability (M8.B)")
+    func resolveAndEmitHiddenMutabilityRejected() throws {
+        let directory = try makeFixtureDirectory(name: "PipelineHiddenMutability")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            relativePath: "Sources/MyApp",
+            named: "Reducer.swift",
+            contents: """
+            enum Counter {
+                static var hits = 0
+                static func reduce(_ s: AppState, _ a: AppAction) -> AppState {
+                    Counter.hits += 1
+                    return s
+                }
+            }
+            """
+        )
+        do {
+            _ = try VerifyInteractionPipeline.resolveAndEmit(
+                target: "MyApp",
+                workingDirectory: directory
+            )
+            Issue.record("expected .hiddenMutability error")
+        } catch let error as VerifyInteractionError {
+            switch error {
+            case let .hiddenMutability(reducer):
+                #expect(reducer == "Counter.reduce")
+            default:
+                Issue.record("expected .hiddenMutability, got \(error)")
+            }
+        }
     }
 
     // MARK: - Helpers

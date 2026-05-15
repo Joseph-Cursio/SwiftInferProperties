@@ -143,4 +143,47 @@ struct ReducerCandidateTests {
         let decoded = try JSONDecoder().decode(ReducerCandidate.self, from: data)
         #expect(decoded.carrierKind == .generic)
     }
+
+    // MARK: - V2.0 M8.B — purity field
+
+    @Test("purity defaults to .pure when no body-analyzer signal supplied")
+    func purityDefaultsToPure() {
+        let target = candidate()
+        #expect(target.purity == .pure)
+    }
+
+    @Test("ReducerCandidate round-trips with purity: .effectBearing (M8.B)")
+    func codableRoundTripWithEffectBearingPurity() throws {
+        let original = ReducerCandidate(
+            location: "Sources/MyApp/Inbox.swift:42",
+            enclosingTypeName: "Inbox",
+            functionName: "reduce",
+            signatureShape: .stateActionReturnsStateAndEffect,
+            stateTypeName: "Inbox.State",
+            actionTypeName: "Inbox.Action",
+            carrierKind: .generic,
+            purity: .effectBearing
+        )
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(ReducerCandidate.self, from: data)
+        #expect(decoded == original)
+        #expect(decoded.purity == .effectBearing)
+    }
+
+    @Test("ReducerCandidate decodes legacy records missing purity as .pure (M8.B back-compat)")
+    func codableBackwardCompatMissingPurity() throws {
+        let json = """
+        {
+            "location": "Sources/X.swift:1",
+            "functionName": "reduce",
+            "signatureShape": "state-action-returns-state",
+            "stateTypeName": "S",
+            "actionTypeName": "A",
+            "carrierKind": "generic"
+        }
+        """
+        let data = Data(json.utf8)
+        let decoded = try JSONDecoder().decode(ReducerCandidate.self, from: data)
+        #expect(decoded.purity == .pure)
+    }
 }

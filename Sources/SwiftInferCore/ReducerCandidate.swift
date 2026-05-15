@@ -81,6 +81,15 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// routing and rendering decisions, not as a hard filter.
     public let carrierKind: ReducerCarrierKind
 
+    /// V2.0 M8.B — body-purity classification (`.pure` /
+    /// `.effectBearing` / `.hiddenMutability`) computed by
+    /// `ReducerPurityAnalyzer` at discovery time. Drives M8's verify
+    /// routing: `.hiddenMutability` is rejected (non-deterministic
+    /// across action sequences); `.pure` + `.effectBearing` both run
+    /// through M3.E (the emit shape differs per signature). Defaults
+    /// to `.pure` for older JSON records (none on disk yet).
+    public let purity: ReducerPurity
+
     public init(
         location: String,
         enclosingTypeName: String?,
@@ -88,7 +97,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         signatureShape: ReducerSignatureShape,
         stateTypeName: String,
         actionTypeName: String,
-        carrierKind: ReducerCarrierKind = .generic
+        carrierKind: ReducerCarrierKind = .generic,
+        purity: ReducerPurity = .pure
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -97,6 +107,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.stateTypeName = stateTypeName
         self.actionTypeName = actionTypeName
         self.carrierKind = carrierKind
+        self.purity = purity
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just
@@ -119,6 +130,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case stateTypeName
         case actionTypeName
         case carrierKind
+        case purity
     }
 
     public init(from decoder: Decoder) throws {
@@ -135,6 +147,12 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             ReducerCarrierKind.self,
             forKey: .carrierKind
         ) ?? .generic
+        // M8.B — pre-M8 records default to `.pure` (the safe-to-route
+        // value; pure reducers go through the same M3.E path).
+        self.purity = try container.decodeIfPresent(
+            ReducerPurity.self,
+            forKey: .purity
+        ) ?? .pure
     }
 }
 

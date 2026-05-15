@@ -261,6 +261,11 @@ private final class Visitor: SyntaxVisitor {
         } else {
             carrierKind = .generic
         }
+        // M8.B — classify the body's purity for the §7 routing
+        // signal: `.hiddenMutability` is suppressed at verify time;
+        // `.pure` + `.effectBearing` both flow through M3.E (the
+        // emit shape differs per signature, not per body).
+        let purity = ReducerPurityAnalyzer.analyze(node)
         return ReducerCandidate(
             location: "\(file):\(location.line)",
             enclosingTypeName: enclosingTypeName,
@@ -268,7 +273,8 @@ private final class Visitor: SyntaxVisitor {
             signatureShape: shape,
             stateTypeName: firstType,
             actionTypeName: secondType,
-            carrierKind: carrierKind
+            carrierKind: carrierKind,
+            purity: purity
         )
     }
 
