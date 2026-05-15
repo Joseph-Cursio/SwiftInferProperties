@@ -102,7 +102,8 @@ public enum VerifyInteractionPipeline {
             let traceInputs = InteractionTraceEmitter.Inputs(
                 candidate: candidate,
                 userModuleName: resolvedModuleName,
-                sequenceCount: sequenceCount
+                sequenceCount: sequenceCount,
+                failingSequenceIndex: result.failingSequenceIndex
             )
             tracePath = try? InteractionTraceEmitter.persist(
                 inputs: traceInputs,
@@ -187,7 +188,8 @@ public enum VerifyInteractionPipeline {
         let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
         return InteractionVerifyOutcomeParser.parseRunOutput(
             binaryExitCode: runOutput.exitCode,
-            stdout: runOutput.stdout
+            stdout: runOutput.stdout,
+            stderr: runOutput.stderr
         )
     }
 

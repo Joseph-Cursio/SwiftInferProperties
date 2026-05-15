@@ -99,4 +99,60 @@ struct InteractionVerifyOutcomeParserTests {
         let fields = InteractionVerifyOutcomeParser.extractMarker(from: "")
         #expect(fields == nil)
     }
+
+    // MARK: - V2.0 M8.D.1 — failing-sequence-index recovery
+
+    @Test("non-zero exit + TRACE-CURRENT-SEQ in stderr → failingSequenceIndex recovered")
+    func nonZeroExitWithTraceMarker() {
+        let stderr = """
+        TRACE-CURRENT-SEQ: 0
+        TRACE-CURRENT-SEQ: 1
+        TRACE-CURRENT-SEQ: 42
+        """
+        let result = InteractionVerifyOutcomeParser.parseRunOutput(
+            binaryExitCode: 134,
+            stdout: "",
+            stderr: stderr
+        )
+        #expect(result.outcome == .measuredDefaultFails)
+        #expect(result.failingSequenceIndex == 42)
+        #expect(result.detail?.contains("at sequence index 42") == true)
+    }
+
+    @Test("non-zero exit with no TRACE-CURRENT-SEQ markers → failingSequenceIndex nil")
+    func nonZeroExitWithoutTraceMarker() {
+        let result = InteractionVerifyOutcomeParser.parseRunOutput(
+            binaryExitCode: 134,
+            stdout: "",
+            stderr: ""
+        )
+        #expect(result.outcome == .measuredDefaultFails)
+        #expect(result.failingSequenceIndex == nil)
+    }
+
+    @Test("extractFailingSequenceIndex returns the LAST marker, not the first")
+    func extractFailingIndexReturnsLast() {
+        let stderr = "TRACE-CURRENT-SEQ: 5\nTRACE-CURRENT-SEQ: 7\nTRACE-CURRENT-SEQ: 12\n"
+        let index = InteractionVerifyOutcomeParser.extractFailingSequenceIndex(from: stderr)
+        #expect(index == 12)
+    }
+
+    @Test("extractFailingSequenceIndex on empty input returns nil")
+    func extractFailingIndexEmpty() {
+        let index = InteractionVerifyOutcomeParser.extractFailingSequenceIndex(from: "")
+        #expect(index == nil)
+    }
+
+    @Test("extractFailingSequenceIndex ignores lines without the marker prefix")
+    func extractFailingIndexIgnoresNoise() {
+        let stderr = """
+        some build chatter
+        TRACE-CURRENT-SEQ: 3
+        random log line
+        TRACE-CURRENT-SEQ: 99
+        end-of-output
+        """
+        let index = InteractionVerifyOutcomeParser.extractFailingSequenceIndex(from: stderr)
+        #expect(index == 99)
+    }
 }

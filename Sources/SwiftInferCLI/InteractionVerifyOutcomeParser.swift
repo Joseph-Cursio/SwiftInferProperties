@@ -32,33 +32,48 @@ public enum InteractionVerifyOutcomeParser {
         public let totalRuns: Int?
         public let cleanRuns: Int?
         public let detail: String?
+        /// V2.0 M8.D.1 — sequence index of the iteration that
+        /// trapped, recovered from the stub's stderr trace marker.
+        /// `nil` for clean runs, build failures, or non-default-fail
+        /// outcomes; also `nil` if the stub trapped before writing
+        /// the first marker (e.g., a crash in generator construction).
+        public let failingSequenceIndex: Int?
 
         public init(
             outcome: VerifyEvidenceOutcome,
             totalRuns: Int? = nil,
             cleanRuns: Int? = nil,
-            detail: String? = nil
+            detail: String? = nil,
+            failingSequenceIndex: Int? = nil
         ) {
             self.outcome = outcome
             self.totalRuns = totalRuns
             self.cleanRuns = cleanRuns
             self.detail = detail
+            self.failingSequenceIndex = failingSequenceIndex
         }
     }
 
-    /// V2.0 M3.E.3 — parse the binary-run leg of the pipeline. Called
-    /// after `VerifierSubprocess.runSwiftBuild` returned a non-error
-    /// exit code (build step succeeded), so `binaryExitCode == 0`
-    /// here means "ran cleanly, marker expected." Non-zero exit code
-    /// means a trap — defaultFails.
+    /// V2.0 M3.E.3 / M8.D.1 — parse the binary-run leg of the
+    /// pipeline. Called after `VerifierSubprocess.runSwiftBuild`
+    /// returned a non-error exit code (build step succeeded), so
+    /// `binaryExitCode == 0` here means "ran cleanly, marker
+    /// expected." Non-zero exit code means a trap; M8.D.1 also
+    /// scans stderr for the last `TRACE-CURRENT-SEQ:` line so the
+    /// caller can replay just the failing sequence.
     public static func parseRunOutput(
         binaryExitCode: Int32,
-        stdout: String
+        stdout: String,
+        stderr: String = ""
     ) -> Result {
         if binaryExitCode != 0 {
+            let failingIndex = extractFailingSequenceIndex(from: stderr)
+            let indexDetail = failingIndex.map { " at sequence index \($0)" } ?? ""
             return Result(
                 outcome: .measuredDefaultFails,
-                detail: "verifier exited with code \(binaryExitCode) — trap in reducer body"
+                detail: "verifier exited with code \(binaryExitCode)\(indexDetail) "
+                    + "— trap in reducer body",
+                failingSequenceIndex: failingIndex
             )
         }
         guard let parsed = extractMarker(from: stdout) else {
@@ -143,5 +158,27 @@ public enum InteractionVerifyOutcomeParser {
         text.split(whereSeparator: { $0 == "\n" || $0 == "\r" })
             .suffix(count)
             .joined(separator: "\n")
+    }
+
+    /// V2.0 M8.D.1 — scan stderr for the last
+    /// `TRACE-CURRENT-SEQ: <i>` line and return `<i>`. The stub
+    /// prints one such line before each generator step; on trap,
+    /// the last successfully written line tells the pipeline which
+    /// sequence index trapped (it had begun the iteration but didn't
+    /// reach the next iteration's marker). Returns `nil` when no
+    /// marker is present — e.g., the stub trapped before the first
+    /// iteration, or no stderr was captured.
+    static func extractFailingSequenceIndex(from stderr: String) -> Int? {
+        let prefix = ActionSequenceStubEmitter.traceCurrentSequenceMarker
+        var last: Int?
+        for rawLine in stderr.split(whereSeparator: { $0 == "\n" || $0 == "\r" }) {
+            let line = String(rawLine).trimmingCharacters(in: .whitespaces)
+            guard line.hasPrefix(prefix) else { continue }
+            let rest = line.dropFirst(prefix.count).trimmingCharacters(in: .whitespaces)
+            if let value = Int(rest) {
+                last = value
+            }
+        }
+        return last
     }
 }

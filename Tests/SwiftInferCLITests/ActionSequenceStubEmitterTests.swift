@@ -155,7 +155,10 @@ struct ActionSequenceStubEmitterTests {
     @Test("sequence-count override propagates to the loop bound")
     func sequenceCountOverridePropagates() throws {
         let source = try ActionSequenceStubEmitter.emit(inputs(candidate(), sequenceCount: 100))
-        #expect(source.contains("for _ in 0..<100 {"))
+        // M8.D.1 — the loop variable is now `sequenceIndex` so the
+        // stub can write a per-iteration stderr marker for failing-
+        // sequence recovery.
+        #expect(source.contains("for sequenceIndex in 0..<100 {"))
     }
 
     // MARK: - Header marker
@@ -181,5 +184,21 @@ struct ActionSequenceStubEmitterTests {
         let alpha = ActionSequenceStubEmitter.seedTuple(for: candidate(functionName: "reduceA"))
         let beta = ActionSequenceStubEmitter.seedTuple(for: candidate(functionName: "reduceB"))
         #expect(alpha != beta)
+    }
+
+    // MARK: - V2.0 M8.D.1 — failing-sequence-index trace marker
+
+    @Test("stub imports Foundation for FileHandle access (M8.D.1)")
+    func stubImportsFoundation() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("import Foundation"))
+    }
+
+    @Test("stub writes TRACE-CURRENT-SEQ to stderr inside the iteration loop (M8.D.1)")
+    func stubWritesTraceMarkerToStderr() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate()))
+        #expect(source.contains("FileHandle.standardError.write("))
+        #expect(source.contains(ActionSequenceStubEmitter.traceCurrentSequenceMarker))
+        #expect(source.contains("\\(sequenceIndex)"))
     }
 }

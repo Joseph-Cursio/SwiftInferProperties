@@ -145,6 +145,50 @@ struct InteractionTraceEmitterTests {
 
     // MARK: - Disk-write round-trip
 
+    // MARK: - V2.0 M8.D.1 — failing-sequence-index burn-then-replay
+
+    @Test("M8.D.1: failingSequenceIndex=0 skips the burn loop and replays sequence 0")
+    func traceWithZeroFailingIndexSkipsBurnLoop() {
+        let target = candidate()
+        let baseInputs = inputs(target)
+        let withIndex = InteractionTraceEmitter.Inputs(
+            candidate: baseInputs.candidate,
+            userModuleName: baseInputs.userModuleName,
+            sequenceCount: baseInputs.sequenceCount,
+            failingSequenceIndex: 0
+        )
+        let source = InteractionTraceEmitter.emit(withIndex)
+        // No burn loop when the very first sequence trapped.
+        #expect(!source.contains("_ = generator.run(using: &rng)"))
+        // Single replay step is present.
+        #expect(source.contains("let actions = generator.run(using: &rng)"))
+        #expect(source.contains("// Failing sequence index: 0"))
+    }
+
+    @Test("M8.D.1: failingSequenceIndex>0 burns the passing sequences before replay")
+    func traceWithNonZeroFailingIndexBurnsPassingSequences() {
+        let target = candidate()
+        let withIndex = InteractionTraceEmitter.Inputs(
+            candidate: target,
+            userModuleName: "MyApp",
+            failingSequenceIndex: 7
+        )
+        let source = InteractionTraceEmitter.emit(withIndex)
+        #expect(source.contains("for _ in 0..<7 {"))
+        #expect(source.contains("_ = generator.run(using: &rng)"))
+        #expect(source.contains("// Failing sequence index: 7"))
+        // The N-sequence loop posture from M8.C is gone — single
+        // replay only.
+        #expect(!source.contains("for _ in 0..<1024 {"))
+    }
+
+    @Test("M8.D.1: nil failingSequenceIndex preserves the M8.C all-sequences loop")
+    func traceWithoutFailingIndexReplaysAllSequences() {
+        let source = InteractionTraceEmitter.emit(inputs(candidate(), sequenceCount: 1024))
+        #expect(source.contains("for _ in 0..<1024 {"))
+        #expect(!source.contains("// Failing sequence index:"))
+    }
+
     @Test("persist writes the trace file under the canonical layout")
     func persistRoundTrip() throws {
         let directory = FileManager.default.temporaryDirectory

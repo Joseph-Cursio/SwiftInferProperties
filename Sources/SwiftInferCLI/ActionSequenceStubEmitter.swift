@@ -32,6 +32,14 @@ public enum ActionSequenceStubEmitter {
     /// without depending on emit-time variables.
     public static let stubHeaderMarker = "// swift-infer verify-interaction stub (V2.0 M3.B)"
 
+    /// V2.0 M8.D.1 — per-sequence stderr marker the stub writes
+    /// before each generator step. Parser scans for the *last*
+    /// occurrence on non-zero exit to recover the failing sequence
+    /// index. stderr is unbuffered on macOS, so the marker survives
+    /// the trap that follows; stdout's buffering wouldn't be
+    /// safe here.
+    public static let traceCurrentSequenceMarker = "TRACE-CURRENT-SEQ:"
+
     // `Inputs` + `EmitError` are nested via extension in
     // ActionSequenceStubEmitter+Types.swift (M8.A split keeps the
     // type body under SwiftLint's `type_body_length` cap).
@@ -91,6 +99,7 @@ public enum ActionSequenceStubEmitter {
         }
         lines.append("// DO NOT EDIT — regenerated on each `swift-infer verify-interaction` run.")
         lines.append("")
+        lines.append("import Foundation")
         lines.append("import \(inputs.userModuleName)")
         lines.append("import PropertyBased")
         lines.append("import PropertyLawKit")
@@ -104,7 +113,15 @@ public enum ActionSequenceStubEmitter {
         lines.append("            length: \(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)")
         lines.append("        )")
         lines.append("        var clean = 0")
-        lines.append("        for _ in 0..<\(inputs.sequenceCount) {")
+        lines.append("        for sequenceIndex in 0..<\(inputs.sequenceCount) {")
+        // M8.D.1 — print the current sequence index to stderr before
+        // each iteration. stderr is unbuffered, so a trap during this
+        // iteration's reducer call still flushes the marker; the
+        // pipeline parser keys on the last-seen value to identify the
+        // failing index.
+        lines.append("            FileHandle.standardError.write(")
+        lines.append("                Data(\"\(traceCurrentSequenceMarker) \\(sequenceIndex)\\n\".utf8)")
+        lines.append("            )")
         lines.append("            let actions = generator.run(using: &rng)")
         lines.append("            var state = \(stateInit)")
         lines.append("            for action in actions {")

@@ -27,28 +27,34 @@ import SwiftInferCore
 /// trapped).
 public enum InteractionTraceEmitter {
 
-    /// V2.0 M8.C — inputs to the trace-file emit. `traceSuiteName` is
-    /// auto-derived if not supplied; the caller may override for
-    /// fixture-stable test output.
+    /// V2.0 M8.C / M8.D.1 — inputs to the trace-file emit. When
+    /// `failingSequenceIndex` is supplied (M8.D.1+), the emitted
+    /// `@Test` burns the (i) sequences that passed and replays
+    /// only the failing one — much faster than re-running the full
+    /// N-sequence verifier loop. When nil (M8.C posture), the
+    /// trace replays all N sequences.
     public struct Inputs: Equatable, Sendable {
         public let candidate: ReducerCandidate
         public let userModuleName: String
         public let sequenceCount: Int
         public let lengthLowerBound: Int
         public let lengthUpperBound: Int
+        public let failingSequenceIndex: Int?
 
         public init(
             candidate: ReducerCandidate,
             userModuleName: String,
             sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
             lengthLowerBound: Int = 0,
-            lengthUpperBound: Int = 16
+            lengthUpperBound: Int = 16,
+            failingSequenceIndex: Int? = nil
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
             self.sequenceCount = sequenceCount
             self.lengthLowerBound = lengthLowerBound
             self.lengthUpperBound = lengthUpperBound
+            self.failingSequenceIndex = failingSequenceIndex
         }
     }
 
@@ -58,8 +64,10 @@ public enum InteractionTraceEmitter {
     public static let traceHeaderMarker =
         "// swift-infer interaction-trace regression (V2.0 M8.C)"
 
-    /// V2.0 M8.C — emit the trace file's Swift source. Pure: no
-    /// disk I/O.
+    /// V2.0 M8.C / M8.D.1 — emit the trace file's Swift source.
+    /// Pure: no disk I/O. When `inputs.failingSequenceIndex` is
+    /// supplied, the body burns the (i) sequences that passed and
+    /// replays only the failing one — minimal regression artifact.
     public static func emit(_ inputs: Inputs) -> String {
         let reducerCall = ActionSequenceStubEmitter.makeReducerCall(inputs.candidate)
         let applyStep = ActionSequenceStubEmitter.makeApplyStep(
@@ -72,38 +80,75 @@ public enum InteractionTraceEmitter {
             "// Reducer: \(inputs.candidate.qualifiedName)",
             "// Carrier: \(inputs.candidate.carrierKind.rawValue)",
             "// Signature: \(inputs.candidate.signatureShape.rawValue)",
-            "// Purity: \(inputs.candidate.purity.rawValue)",
-            "// DO NOT EDIT — regenerated on each verify-interaction "
-                + "`.measuredDefaultFails` outcome.",
-            "",
-            "import Testing",
-            "import \(inputs.userModuleName)",
-            "import PropertyBased",
-            "import PropertyLawKit",
-            "",
-            "@Suite(\"SwiftInferTraces — \(inputs.candidate.qualifiedName)\")",
-            "struct \(suiteIdentifier(for: inputs.candidate)) {",
-            "    @Test(\"Replay of failing action sequence (deterministic seed)\")",
-            "    func replay() {",
-            "        var rng = Xoshiro(seed: (\(seed)))",
-            "        let generator = ActionSequenceFactory.actionSequence(",
-            "            forCaseIterable: \(inputs.candidate.actionTypeName).self,",
-            "            length: \(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)",
-            "        )",
-            "        for _ in 0..<\(inputs.sequenceCount) {",
-            "            let actions = generator.run(using: &rng)",
-            "            var state = \(inputs.candidate.stateTypeName)()",
-            "            for action in actions {"
+            "// Purity: \(inputs.candidate.purity.rawValue)"
         ]
-        for line in applyStep {
-            lines.append("                \(line)")
+        if let failingIndex = inputs.failingSequenceIndex {
+            lines.append("// Failing sequence index: \(failingIndex) (M8.D.1 recovery)")
         }
-        lines.append("            }")
-        lines.append("        }")
+        lines.append("// DO NOT EDIT — regenerated on each verify-interaction "
+            + "`.measuredDefaultFails` outcome.")
+        lines.append("")
+        lines.append("import Testing")
+        lines.append("import \(inputs.userModuleName)")
+        lines.append("import PropertyBased")
+        lines.append("import PropertyLawKit")
+        lines.append("")
+        lines.append("@Suite(\"SwiftInferTraces — \(inputs.candidate.qualifiedName)\")")
+        lines.append("struct \(suiteIdentifier(for: inputs.candidate)) {")
+        lines.append("    @Test(\"Replay of failing action sequence (deterministic seed)\")")
+        lines.append("    func replay() {")
+        lines.append("        var rng = Xoshiro(seed: (\(seed)))")
+        lines.append("        let generator = ActionSequenceFactory.actionSequence(")
+        lines.append("            forCaseIterable: \(inputs.candidate.actionTypeName).self,")
+        lines.append("            length: \(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)")
+        lines.append("        )")
+        appendReplayBody(
+            inputs: inputs,
+            applyStep: applyStep,
+            lines: &lines
+        )
         lines.append("    }")
         lines.append("}")
         lines.append("")
         return lines.joined(separator: "\n")
+    }
+
+    /// M8.C posture (no index) vs M8.D.1 posture (burn + replay-one).
+    /// Pulled to a helper so `emit` stays under SwiftLint's
+    /// `function_body_length` cap as M8.D.1 branches the body.
+    private static func appendReplayBody(
+        inputs: Inputs,
+        applyStep: [String],
+        lines: inout [String]
+    ) {
+        if let failingIndex = inputs.failingSequenceIndex {
+            // Burn the passing sequences so `rng` advances to the
+            // exact state the verifier had when it produced the
+            // failing sequence — same Xoshiro256** trajectory as the
+            // original run.
+            if failingIndex > 0 {
+                lines.append("        for _ in 0..<\(failingIndex) {")
+                lines.append("            _ = generator.run(using: &rng)")
+                lines.append("        }")
+            }
+            lines.append("        let actions = generator.run(using: &rng)")
+            lines.append("        var state = \(inputs.candidate.stateTypeName)()")
+            lines.append("        for action in actions {")
+            for line in applyStep {
+                lines.append("            \(line)")
+            }
+            lines.append("        }")
+        } else {
+            lines.append("        for _ in 0..<\(inputs.sequenceCount) {")
+            lines.append("            let actions = generator.run(using: &rng)")
+            lines.append("            var state = \(inputs.candidate.stateTypeName)()")
+            lines.append("            for action in actions {")
+            for line in applyStep {
+                lines.append("                \(line)")
+            }
+            lines.append("            }")
+            lines.append("        }")
+        }
     }
 
     /// Build the filesystem path for the trace file under
