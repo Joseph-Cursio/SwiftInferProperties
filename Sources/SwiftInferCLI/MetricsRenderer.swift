@@ -224,12 +224,16 @@ public enum MetricsRenderer {
     /// `evidence` (V1.64.D) is the verify-evidence log joined against
     /// `decisions` for the §17.2 cross-reference; `indexEntries` (V1.71)
     /// is the SemanticIndex joined for the §17.2 time-to-adoption
-    /// section. Both default empty, rendering each section's sentinel.
+    /// section; `postAcceptanceOutcomes` (V1.72.C) is the accept-check
+    /// log joined for the §17.2 post-acceptance failure-rate section
+    /// (the 5th and final §17.2 metric). All default empty — each
+    /// section renders its sentinel when unloaded.
     public static func render(
         decisions: Decisions,
         sources: [String],
         evidence: VerifyEvidenceLog = .empty,
-        indexEntries: [SemanticIndexEntry] = []
+        indexEntries: [SemanticIndexEntry] = [],
+        postAcceptanceOutcomes: PostAcceptanceOutcomeLog = .empty
     ) -> String {
         var lines: [String] = []
         lines.append("swift-infer metrics — calibration aggregate (PRD §17.2)")
@@ -243,6 +247,11 @@ public enum MetricsRenderer {
         lines.append(contentsOf: timeToAdoptionSection(decisions: decisions, indexEntries: indexEntries))
         lines.append("")
         lines.append(contentsOf: verifyEvidenceSection(decisions: decisions, evidence: evidence))
+        lines.append("")
+        lines.append(contentsOf: postAcceptanceFailureSection(
+            decisions: decisions,
+            outcomes: postAcceptanceOutcomes
+        ))
         return lines.joined(separator: "\n") + "\n"
     }
 
@@ -286,72 +295,6 @@ public enum MetricsRenderer {
             )
         }
         return lines
-    }
-
-    private static func tierSection(rows: [TierRow]) -> [String] {
-        var lines: [String] = ["Tier-mix at decision time:"]
-        if rows.isEmpty {
-            lines.append("  (no decisions yet)")
-            return lines
-        }
-        lines.append("  | Tier       | Total | Accepted | Acceptance |")
-        lines.append("  |------------|------:|---------:|-----------:|")
-        for row in rows {
-            let label = row.tier.label.padding(toLength: 10, withPad: " ", startingAt: 0)
-            let total = String(row.total).leftPadded(width: 5)
-            let accepted = String(row.accepted).leftPadded(width: 8)
-            let acceptance = formatPercent(row.acceptanceRate).leftPadded(width: 10)
-            lines.append("  | \(label) | \(total) | \(accepted) | \(acceptance) |")
-        }
-        return lines
-    }
-
-    /// V1.64.D — cross-reference section: how the joined verify
-    /// evidence distributes across each `Decision` state. Renders a
-    /// "no verify evidence" sentinel when the log is empty — no
-    /// `swift-infer verify` run yet, or (in `--decisions` aggregation
-    /// mode) no corpus had a sibling `verify-evidence.json`. V1.69
-    /// extended the join to `--decisions` mode, so the table now spans
-    /// the whole corpus set there too.
-    private static func verifyEvidenceSection(
-        decisions: Decisions,
-        evidence: VerifyEvidenceLog
-    ) -> [String] {
-        var lines: [String] = ["Verify-evidence cross-reference (PRD §17.2):"]
-        if evidence.records.isEmpty {
-            lines.append("  (no verify evidence — run `swift-infer verify` to populate)")
-            return lines
-        }
-        let rows = evidenceRows(decisions: decisions, evidence: evidence)
-        let matched = rows.reduce(0) { $0 + $1.total }
-        lines.append(
-            "  \(matched) of \(decisions.records.count) decisions have verify evidence."
-        )
-        if rows.isEmpty {
-            return lines
-        }
-        lines.append(
-            "  | Decision              | Total | bothPass | advisory | disproven | error | pending |"
-        )
-        lines.append(
-            "  |-----------------------|------:|---------:|---------:|----------:|------:|--------:|"
-        )
-        for row in rows {
-            lines.append(verifyEvidenceTableRow(row))
-        }
-        return lines
-    }
-
-    private static func verifyEvidenceTableRow(_ row: VerifyEvidenceRow) -> String {
-        let decision = row.decision.rawValue.padding(toLength: 21, withPad: " ", startingAt: 0)
-        let total = String(row.total).leftPadded(width: 5)
-        let bothPass = String(row.bothPass).leftPadded(width: 8)
-        let advisory = String(row.edgeCaseAdvisory).leftPadded(width: 8)
-        let disproven = String(row.defaultFails).leftPadded(width: 9)
-        let error = String(row.error).leftPadded(width: 5)
-        let pending = String(row.architecturalCoveragePending).leftPadded(width: 7)
-        let counts = "\(bothPass) | \(advisory) | \(disproven) | \(error) | \(pending)"
-        return "  | \(decision) | \(total) | \(counts) |"
     }
 
     // MARK: - Template-table cells

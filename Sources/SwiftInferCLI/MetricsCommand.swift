@@ -21,6 +21,13 @@ struct MetricsLoadResult: Equatable {
     /// `index.json`; `--decisions` mode concatenates each corpus's
     /// sibling `index.json`. Empty when no corpus has been indexed.
     let indexEntries: [SemanticIndexEntry]
+    /// V1.72.C — post-acceptance outcomes joined alongside the decisions
+    /// for the §17.2 5th metric (post-acceptance failure rate). Default
+    /// walk-up mode loads the one package root's
+    /// `post-acceptance-outcomes.json`; `--decisions` mode merges each
+    /// corpus's sibling file via `PostAcceptanceOutcomeLog.merge(_:)`.
+    /// `.empty` until the user has run `swift-infer accept-check`.
+    let postAcceptanceOutcomes: PostAcceptanceOutcomeLog
     let sources: [String]
     let warnings: [String]
 }
@@ -87,7 +94,8 @@ extension SwiftInferCommand {
                 decisions: aggregate.decisions,
                 sources: aggregate.sources,
                 evidence: aggregate.evidence,
-                indexEntries: aggregate.indexEntries
+                indexEntries: aggregate.indexEntries,
+                postAcceptanceOutcomes: aggregate.postAcceptanceOutcomes
             )
             print(rendered, terminator: "")
         }
@@ -110,6 +118,7 @@ extension SwiftInferCommand {
             var aggregate = Decisions.empty
             var evidence = VerifyEvidenceLog.empty
             var indexEntries: [SemanticIndexEntry] = []
+            var postAcceptanceOutcomes = PostAcceptanceOutcomeLog.empty
             var sources: [String] = []
             var warnings: [String] = []
             for raw in paths {
@@ -121,13 +130,14 @@ extension SwiftInferCommand {
                 warnings.append(contentsOf: result.warnings)
                 aggregate = aggregate.merge(result.decisions)
                 sources.append(raw)
-                // V1.69 / V1.71 — per-corpus joins: load the siblings
-                // next to each decisions file (the on-disk `.swiftinfer/`
-                // layout pairs them) — `verify-evidence.json` for the
-                // cross-reference, `index.json` for time-to-adoption.
-                // A corpus missing a sibling is normal — skip it silently
-                // so each join is opt-in per corpus; a *present but
-                // malformed* sibling still warns.
+                // V1.69 / V1.71 / V1.72.C — per-corpus joins: load the
+                // siblings next to each decisions file (the on-disk
+                // `.swiftinfer/` layout pairs them) — `verify-evidence.json`
+                // for the cross-reference, `index.json` for time-to-adoption,
+                // `post-acceptance-outcomes.json` for the failure-rate
+                // metric. A corpus missing a sibling is normal — skip it
+                // silently so each join is opt-in per corpus; a *present
+                // but malformed* sibling still warns.
                 let directory = url.deletingLastPathComponent()
                 let evidenceURL = directory.appendingPathComponent("verify-evidence.json")
                 if FileManager.default.fileExists(atPath: evidenceURL.path) {
@@ -144,11 +154,21 @@ extension SwiftInferCommand {
                     warnings.append(contentsOf: indexLoad.warnings)
                     indexEntries.append(contentsOf: indexLoad.index.entries)
                 }
+                let outcomesURL = directory.appendingPathComponent("post-acceptance-outcomes.json")
+                if FileManager.default.fileExists(atPath: outcomesURL.path) {
+                    let outcomesResult = PostAcceptanceOutcomesStore.load(
+                        startingFrom: directory,
+                        explicitPath: outcomesURL
+                    )
+                    warnings.append(contentsOf: outcomesResult.warnings)
+                    postAcceptanceOutcomes = postAcceptanceOutcomes.merge(outcomesResult.log)
+                }
             }
             return MetricsLoadResult(
                 decisions: aggregate,
                 evidence: evidence,
                 indexEntries: indexEntries,
+                postAcceptanceOutcomes: postAcceptanceOutcomes,
                 sources: sources,
                 warnings: warnings
             )
@@ -180,12 +200,18 @@ extension SwiftInferCommand {
                 indexEntries = indexLoad.index.entries
                 indexWarnings = indexLoad.warnings
             }
+            // V1.72.C — join the post-acceptance outcomes from the same
+            // package root. Absent file → `.empty` → the section renders
+            // its "run accept-check to populate" sentinel.
+            let outcomesResult = PostAcceptanceOutcomesStore.load(startingFrom: startDirectory)
             return MetricsLoadResult(
                 decisions: result.decisions,
                 evidence: evidenceResult.log,
                 indexEntries: indexEntries,
+                postAcceptanceOutcomes: outcomesResult.log,
                 sources: [label],
                 warnings: result.warnings + evidenceResult.warnings + indexWarnings
+                    + outcomesResult.warnings
             )
         }
 
