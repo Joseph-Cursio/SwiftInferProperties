@@ -27,24 +27,28 @@ struct InteractionTemplateEngineTests {
     }
 
     @Test("empty candidate list yields empty suggestions")
-    func emptyCandidates() {
-        let result = InteractionTemplateEngine.analyze(candidates: [])
+    func emptyCandidates() throws {
+        let result = try InteractionTemplateEngine.analyze(candidates: [])
         #expect(result.isEmpty)
     }
 
-    @Test("M4.A returns empty for any candidate — no template ships at this sub-cycle")
-    func noFamiliesShipAtM4A() {
-        let result = InteractionTemplateEngine.analyze(candidates: [
+    @Test("analyze without sourcesDirectory skips Conservation witness detection")
+    func analyzeWithoutSourcesDirectory() throws {
+        // Conservation is the only M4.B-shipped family and requires
+        // sourcesDirectory to walk the State struct. Without it,
+        // no suggestions surface even when candidates are present.
+        let result = try InteractionTemplateEngine.analyze(candidates: [
             candidate(functionName: "reduceA"),
             candidate(functionName: "reduceB", signatureShape: .inoutStateActionReturnsVoid)
         ])
         #expect(result.isEmpty)
     }
 
-    @Test("analyzeOne returns empty at M4.A regardless of candidate shape")
-    func analyzeOneReturnsEmpty() {
-        let result = InteractionTemplateEngine.analyzeOne(
+    @Test("analyzeOne returns empty when sourcesDirectory is nil")
+    func analyzeOneReturnsEmptyWithoutDirectory() throws {
+        let result = try InteractionTemplateEngine.analyzeOne(
             candidate(),
+            sourcesDirectory: nil,
             firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
         )
         #expect(result.isEmpty)

@@ -23,9 +23,16 @@ import SwiftInferCore
 public enum InteractionTemplateEngine {
 
     /// V2.0 M4.A — dispatch entry. Walks each reducer candidate,
-    /// runs every shipped per-family analyzer (none at M4.A),
+    /// runs every shipped per-family analyzer (M4.B's Conservation
+    /// is the first; M4.C / M5 / M6 / M7 layer in the rest),
     /// returns the accumulated suggestions sorted by descending
     /// score (matching v1's `TemplateRegistry.combine`).
+    ///
+    /// `sourcesDirectory` is the target's source root (e.g.
+    /// `Sources/MyApp/`) — required at M4.B for Conservation's
+    /// witness detector to walk the State struct's source. Family
+    /// analyzers that don't need source access (Idempotence's
+    /// Action-name pattern detector, etc.) ignore it.
     ///
     /// `firstSeenAt` defaults to the current wall-clock time — the
     /// caller can override for byte-stable test output. The returned
@@ -33,11 +40,16 @@ public enum InteractionTemplateEngine {
     /// anchor.
     public static func analyze(
         candidates: [ReducerCandidate],
+        sourcesDirectory: URL? = nil,
         firstSeenAt: Date = Date()
-    ) -> [InteractionInvariantSuggestion] {
+    ) throws -> [InteractionInvariantSuggestion] {
         var emitted: [InteractionInvariantSuggestion] = []
         for candidate in candidates {
-            emitted.append(contentsOf: analyzeOne(candidate, firstSeenAt: firstSeenAt))
+            emitted.append(contentsOf: try analyzeOne(
+                candidate,
+                sourcesDirectory: sourcesDirectory,
+                firstSeenAt: firstSeenAt
+            ))
         }
         return emitted.sorted { lhs, rhs in
             if lhs.score != rhs.score { return lhs.score > rhs.score }
@@ -45,20 +57,27 @@ public enum InteractionTemplateEngine {
         }
     }
 
-    /// V2.0 M4.A — per-candidate analyzer. At M4.A nothing fires
-    /// (every family analyzer is `nil` until its sub-cycle ships).
-    /// M4.B layers in `analyzeConservation(_:firstSeenAt:)`, M4.C
-    /// `analyzeIdempotence(_:firstSeenAt:)`, etc.
+    /// V2.0 M4.B — per-candidate dispatcher. Routes through every
+    /// shipped per-family analyzer. Each analyzer is best-effort —
+    /// if it can't produce a suggestion (witness absent, signature
+    /// shape unsupported, etc.) it returns an empty slice.
     static func analyzeOne(
         _ candidate: ReducerCandidate,
+        sourcesDirectory: URL?,
         firstSeenAt: Date
-    ) -> [InteractionInvariantSuggestion] {
-        // Intentionally empty — no templates ship at M4.A. The
-        // dispatch surface is in place; the analyzers come at M4.B
-        // (Conservation), M4.C (Idempotence), and M5–M7 (the three
-        // new families).
-        _ = candidate
-        _ = firstSeenAt
-        return []
+    ) throws -> [InteractionInvariantSuggestion] {
+        var collected: [InteractionInvariantSuggestion] = []
+        if let sourcesDirectory {
+            let witnesses = try ConservationWitnessDetector.detect(
+                stateTypeName: candidate.stateTypeName,
+                in: sourcesDirectory
+            )
+            collected.append(contentsOf: ConservationInteractionTemplate.analyze(
+                candidate: candidate,
+                witnesses: witnesses,
+                firstSeenAt: firstSeenAt
+            ))
+        }
+        return collected
     }
 }
