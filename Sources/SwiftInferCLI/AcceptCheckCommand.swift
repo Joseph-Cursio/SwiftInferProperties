@@ -139,6 +139,7 @@ extension SwiftInferCommand {
                 from: loaded.decisions,
                 templateFilter: templateFilter
             )
+            let packageRoot = loaded.packageRoot ?? workingDirectory
             var results: [AcceptCheckResult] = []
             for record in candidates {
                 let outcome = checkOne(
@@ -147,11 +148,63 @@ extension SwiftInferCommand {
                     indexPathOverride: indexPathOverride,
                     workingDirectory: workingDirectory
                 )
+                // V1.72.B — persist after each check. Per-record write
+                // mirrors `VerifyEvidenceRecorder.record(_:)`: a process
+                // crash mid-run leaves prior verdicts on disk for the
+                // §17.2 join to consume. Best-effort: warnings surface
+                // on stderr but never abort the run.
+                let warnings = persist(
+                    record: record,
+                    outcome: outcome,
+                    packageRoot: packageRoot
+                )
+                for warning in warnings {
+                    FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
+                }
                 results.append(
                     AcceptCheckResult(record: record, kind: outcome.kind, detail: outcome.detail)
                 )
             }
             return renderSummary(results: results)
+        }
+
+        /// V1.72.B — build a `PostAcceptanceOutcome` from the
+        /// decision + classified verdict and upsert it into
+        /// `post-acceptance-outcomes.json` under `packageRoot`. Best-
+        /// effort: read warnings + any write failure are returned for
+        /// the caller to surface on stderr — accept-check never fails
+        /// on a persistence error (same posture as
+        /// `VerifyEvidenceRecorder.record(_:)`).
+        static func persist(
+            record: DecisionRecord,
+            outcome: (kind: PostAcceptanceOutcomeKind, detail: String?),
+            packageRoot: URL,
+            now: Date = Date()
+        ) -> [String] {
+            let existing = PostAcceptanceOutcomesStore.load(startingFrom: packageRoot)
+            var warnings = existing.warnings
+            let path = PostAcceptanceOutcomesStore.defaultPath(for: packageRoot)
+            let persisted = PostAcceptanceOutcome(
+                identityHash: record.identityHash,
+                template: record.template,
+                outcome: outcome.kind,
+                detail: outcome.detail,
+                originalAcceptedAt: record.timestamp,
+                checkedAt: now,
+                swiftInferVersion: SwiftInferCommand.configuration.version
+            )
+            do {
+                try PostAcceptanceOutcomesStore.write(
+                    existing.log.upserting(persisted),
+                    to: path
+                )
+            } catch {
+                warnings.append(
+                    "could not write post-acceptance-outcomes to \(path.path): "
+                        + error.localizedDescription
+                )
+            }
+            return warnings
         }
 
         /// Filter the loaded decisions to acceptances and apply the

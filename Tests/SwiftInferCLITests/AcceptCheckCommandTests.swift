@@ -156,4 +156,90 @@ struct AcceptCheckCommandTests {
         #expect(rendered.contains("obsolete: 0"))
         #expect(rendered.contains("error: 0"))
     }
+
+    // MARK: - persist (V1.72.B)
+
+    @Test("persist writes a new record to .swiftinfer/post-acceptance-outcomes.json")
+    func persistWritesNewRecord() throws {
+        let directory = try makePackageFixture(name: "PersistNew")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let record = decision(identity: "AAA1111111111111", template: "round-trip", choice: .accepted)
+        let warnings = Command.persist(
+            record: record,
+            outcome: (.stillPasses, "bothPass"),
+            packageRoot: directory,
+            now: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+        )
+        #expect(warnings.isEmpty)
+
+        let path = directory
+            .appendingPathComponent(".swiftinfer")
+            .appendingPathComponent("post-acceptance-outcomes.json")
+        #expect(FileManager.default.fileExists(atPath: path.path))
+
+        let log = PostAcceptanceOutcomesStore.load(startingFrom: directory).log
+        #expect(log.records.count == 1)
+        let persisted = log.records[0]
+        #expect(persisted.identityHash == "AAA1111111111111")
+        #expect(persisted.template == "round-trip")
+        #expect(persisted.outcome == .stillPasses)
+        #expect(persisted.detail == "bothPass")
+        #expect(persisted.originalAcceptedAt == record.timestamp)
+    }
+
+    @Test("persist upserts an existing record — the latest verdict wins")
+    func persistUpsertsExistingRecord() throws {
+        let directory = try makePackageFixture(name: "PersistUpsert")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let record = decision(identity: "AAA1111111111111", template: "round-trip")
+        _ = Command.persist(
+            record: record,
+            outcome: (.stillPasses, "bothPass"),
+            packageRoot: directory
+        )
+        // Second run on the same identity flips to nowFails — the
+        // accepted property regressed.
+        _ = Command.persist(
+            record: record,
+            outcome: (.nowFails, "defaultFails"),
+            packageRoot: directory
+        )
+        let log = PostAcceptanceOutcomesStore.load(startingFrom: directory).log
+        #expect(log.records.count == 1)
+        #expect(log.records[0].outcome == .nowFails)
+        #expect(log.records[0].detail == "defaultFails")
+    }
+
+    @Test("persist preserves prior records for other identity hashes")
+    func persistPreservesPriorRecordsForOtherIdentities() throws {
+        let directory = try makePackageFixture(name: "PersistPreserve")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        _ = Command.persist(
+            record: decision(identity: "AAA1111111111111"),
+            outcome: (.stillPasses, nil),
+            packageRoot: directory
+        )
+        _ = Command.persist(
+            record: decision(identity: "BBB2222222222222"),
+            outcome: (.nowFails, nil),
+            packageRoot: directory
+        )
+        let log = PostAcceptanceOutcomesStore.load(startingFrom: directory).log
+        #expect(log.records.count == 2)
+        #expect(Set(log.records.map(\.identityHash)) == ["AAA1111111111111", "BBB2222222222222"])
+    }
+
+    // MARK: - Helpers
+
+    /// Fixture directory with a stub `Package.swift` so the
+    /// loader walk-up stops at this directory rather than walking
+    /// further to the real `SwiftInferProperties/Package.swift`.
+    private func makePackageFixture(name: String) throws -> URL {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AcceptCheckCommandTests-\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        try Data("// swift-tools-version: 6.1\n".utf8)
+            .write(to: base.appendingPathComponent("Package.swift"))
+        return base
+    }
 }
