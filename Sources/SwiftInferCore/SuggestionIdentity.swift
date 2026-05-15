@@ -15,7 +15,7 @@ import Foundation
 /// row defines the seed as "the low 64 bits of `SHA256(suggestionIdentityHash
 /// || 'sampling')`", so 64 bits of identity is enough surface for the
 /// downstream sampling-seed derivation.
-public struct SuggestionIdentity: Sendable, Equatable, Hashable {
+public struct SuggestionIdentity: Sendable, Equatable, Hashable, Codable {
 
     /// Canonical input that was hashed. Retained for diagnostics — debuggers
     /// can see exactly what was fed into SHA256, which makes hash collisions
