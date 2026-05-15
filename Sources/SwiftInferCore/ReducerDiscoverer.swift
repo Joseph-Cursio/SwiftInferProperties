@@ -103,12 +103,28 @@ private final class Visitor: SyntaxVisitor {
     let file: String
     let converter: SourceLocationConverter
     var typeStack: [String] = []
+    /// V1.B — set when the file imports `ComposableArchitecture`. The
+    /// TCA conformance walk only fires under this flag (PRD §6.3
+    /// step 1 — same name-match strategy v1 uses for `@Discoverable`,
+    /// avoids false matches against unrelated `Reducer` protocols).
+    var importsComposableArchitecture: Bool = false
 
     init(file: String, converter: SourceLocationConverter) {
         self.file = file
         self.converter = converter
         super.init(viewMode: .sourceAccurate)
     }
+
+    // MARK: - Imports
+
+    override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
+        if node.path.trimmedDescription == "ComposableArchitecture" {
+            importsComposableArchitecture = true
+        }
+        return .skipChildren
+    }
+
+    // MARK: - Function-decl signature scan (M1.A path)
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         // Skip private / fileprivate — same posture as
@@ -129,22 +145,40 @@ private final class Visitor: SyntaxVisitor {
         return .skipChildren
     }
 
-    // Type-stack maintenance — mirrors `FunctionScannerVisitor`.
+    // MARK: - Type-stack maintenance + TCA conformance walk
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         typeStack.append(node.name.text)
+        extractTCACandidatesIfReducerConformer(
+            modifiers: node.modifiers,
+            inheritanceClause: node.inheritanceClause,
+            memberBlock: node.memberBlock,
+            enclosingTypeName: node.name.text
+        )
         return .visitChildren
     }
     override func visitPost(_ node: ClassDeclSyntax) { typeStack.removeLast() }
 
     override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
         typeStack.append(node.name.text)
+        extractTCACandidatesIfReducerConformer(
+            modifiers: node.modifiers,
+            inheritanceClause: node.inheritanceClause,
+            memberBlock: node.memberBlock,
+            enclosingTypeName: node.name.text
+        )
         return .visitChildren
     }
     override func visitPost(_ node: StructDeclSyntax) { typeStack.removeLast() }
 
     override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
         typeStack.append(node.name.text)
+        extractTCACandidatesIfReducerConformer(
+            modifiers: node.modifiers,
+            inheritanceClause: node.inheritanceClause,
+            memberBlock: node.memberBlock,
+            enclosingTypeName: node.name.text
+        )
         return .visitChildren
     }
     override func visitPost(_ node: EnumDeclSyntax) { typeStack.removeLast() }
@@ -156,7 +190,14 @@ private final class Visitor: SyntaxVisitor {
     override func visitPost(_ node: ActorDeclSyntax) { typeStack.removeLast() }
 
     override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        typeStack.append(node.extendedType.trimmedDescription)
+        let extendedTypeName = node.extendedType.trimmedDescription
+        typeStack.append(extendedTypeName)
+        extractTCACandidatesIfReducerConformer(
+            modifiers: node.modifiers,
+            inheritanceClause: node.inheritanceClause,
+            memberBlock: node.memberBlock,
+            enclosingTypeName: extendedTypeName
+        )
         return .visitChildren
     }
     override func visitPost(_ node: ExtensionDeclSyntax) { typeStack.removeLast() }
@@ -216,6 +257,81 @@ private final class Visitor: SyntaxVisitor {
             actionTypeName: secondType
         )
     }
+
+    // MARK: - TCA conformance walk (V1.B)
+
+    /// V1.B — entry point for the TCA path. Fires only when the file
+    /// imports `ComposableArchitecture` and the declaration's
+    /// inheritance clause names `Reducer` (or a generic variant).
+    /// Private / fileprivate types are skipped, matching the
+    /// function-scan posture.
+    private func extractTCACandidatesIfReducerConformer(
+        modifiers: DeclModifierListSyntax,
+        inheritanceClause: InheritanceClauseSyntax?,
+        memberBlock: MemberBlockSyntax,
+        enclosingTypeName: String
+    ) {
+        guard importsComposableArchitecture else { return }
+        guard Self.declaresReducerConformance(inheritanceClause) else { return }
+        let modifierNames = modifiers.map { $0.name.text }
+        if modifierNames.contains("private") || modifierNames.contains("fileprivate") {
+            return
+        }
+        extractTCACandidates(from: memberBlock, enclosingTypeName: enclosingTypeName)
+    }
+
+    /// Does an inheritance clause name TCA's `Reducer` protocol?
+    /// Matches the literal `Reducer` plus `Reducer<...>` and
+    /// `ReducerOf<...>` generic variants. Static so test fixtures can
+    /// drive it without spinning up a full walk.
+    static func declaresReducerConformance(_ clause: InheritanceClauseSyntax?) -> Bool {
+        guard let clause else { return false }
+        for inherited in clause.inheritedTypes {
+            let text = inherited.type.trimmedDescription
+            if text == "Reducer" || text.hasPrefix("Reducer<") || text.hasPrefix("ReducerOf<") {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Find `var body` and walk its initializer / accessor block for
+    /// `Reduce { state, action in ... }` calls.
+    private func extractTCACandidates(
+        from memberBlock: MemberBlockSyntax,
+        enclosingTypeName: String
+    ) {
+        for member in memberBlock.members {
+            guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
+            for binding in variable.bindings {
+                guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
+                      identifier.identifier.text == "body" else { continue }
+                if let initializer = binding.initializer?.value {
+                    walkForReduceClosures(in: Syntax(initializer), enclosingTypeName: enclosingTypeName)
+                }
+                if let accessor = binding.accessorBlock {
+                    walkForReduceClosures(in: Syntax(accessor), enclosingTypeName: enclosingTypeName)
+                }
+            }
+        }
+    }
+
+    /// Recursively walk `subtree` looking for `Reduce { ... }` calls
+    /// with an arity-2 trailing closure. Each match emits one
+    /// `ReducerCandidate`. Composed reducers (`Scope`, `BindingReducer`,
+    /// `CombineReducers`, `EmptyReducer`, etc.) are walked past — only
+    /// `Reduce` introduces the closure shape M1.B is after.
+    private func walkForReduceClosures(in subtree: Syntax, enclosingTypeName: String) {
+        let walker = ReduceClosureWalker(
+            file: file,
+            converter: converter,
+            enclosingTypeName: enclosingTypeName
+        )
+        walker.walk(subtree)
+        candidates.append(contentsOf: walker.candidates)
+    }
+
+    // MARK: - Tuple-return helper (M1.A)
 
     /// Does `returnType` look like `(<expectedFirst>, Effect<...>)`?
     /// Tuple-shape match by depth-counting comma split — handles

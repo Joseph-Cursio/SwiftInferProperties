@@ -225,4 +225,14 @@ struct ReducerDiscovererTests {
         #expect(result.count == 1)
         #expect(result[0].location == "Inbox.swift:3")
     }
+
+    @Test("M1.A candidates carry carrierKind:.generic — V1.B field addition")
+    func m1aCandidatesAreGeneric() {
+        let source = """
+        func reduce(_ s: AppState, _ a: AppAction) -> AppState { return s }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .generic)
+    }
 }
