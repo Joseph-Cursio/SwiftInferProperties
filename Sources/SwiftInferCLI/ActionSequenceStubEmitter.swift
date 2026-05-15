@@ -196,18 +196,18 @@ public enum ActionSequenceStubEmitter {
     static func seedTuple(for candidate: ReducerCandidate) -> String {
         var hash = SipHasher()
         hash.combine(candidate.qualifiedName)
-        let a = hash.finalize()
+        let seedA = hash.finalize()
         hash = SipHasher()
         hash.combine(candidate.qualifiedName + ".b")
-        let b = hash.finalize()
+        let seedB = hash.finalize()
         hash = SipHasher()
         hash.combine(candidate.qualifiedName + ".c")
-        let c = hash.finalize()
+        let seedC = hash.finalize()
         hash = SipHasher()
         hash.combine(candidate.qualifiedName + ".d")
-        let d = hash.finalize()
-        return "0x\(String(a, radix: 16)), 0x\(String(b, radix: 16)), "
-            + "0x\(String(c, radix: 16)), 0x\(String(d, radix: 16))"
+        let seedD = hash.finalize()
+        return "0x\(String(seedA, radix: 16)), 0x\(String(seedB, radix: 16)), "
+            + "0x\(String(seedC, radix: 16)), 0x\(String(seedD, radix: 16))"
     }
 }
 
