@@ -137,6 +137,78 @@ struct DiscoverReducersCommandTests {
         #expect(rendered.contains("no reducer-shaped functions detected"))
     }
 
+    // MARK: - V1.C — --reducer pin filter
+
+    @Test("V1.C — --reducer pin filters output to the single matching candidate")
+    func pinFiltersToSingleMatch() throws {
+        let directory = try makeFixtureDirectory(name: "PinFilters")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            named: "A.swift",
+            contents: "func reduceA(_ s: StateA, _ a: ActionA) -> StateA { return s }"
+        )
+        try writeFile(
+            in: directory,
+            named: "B.swift",
+            contents: """
+            struct Inbox {
+                func reduce(_ s: inout State, _ a: Action) {}
+            }
+            """
+        )
+        let rendered = try Command.runPipeline(directory: directory, pinRaw: "Inbox.reduce")
+        #expect(rendered.contains("detected 1 reducer-shaped function:"))
+        #expect(rendered.contains("Inbox.reduce"))
+        #expect(!rendered.contains("reduceA"))
+    }
+
+    @Test("V1.C — --reducer with no matching candidate throws pinNoMatch")
+    func pinNoMatchThrows() throws {
+        let directory = try makeFixtureDirectory(name: "PinNoMatch")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            named: "A.swift",
+            contents: "func reduce(_ s: StateA, _ a: ActionA) -> StateA { return s }"
+        )
+        #expect(throws: DiscoverReducersError.pinNoMatch(raw: "Missing.body")) {
+            _ = try Command.runPipeline(directory: directory, pinRaw: "Missing.body")
+        }
+    }
+
+    @Test("V1.C — --reducer with multiple matches throws pinAmbiguous")
+    func pinAmbiguousThrows() throws {
+        let directory = try makeFixtureDirectory(name: "PinAmbiguous")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            named: "A.swift",
+            contents: """
+            struct InboxA { func reduce(_ s: inout State, _ a: Action) {} }
+            struct InboxB { func reduce(_ s: inout State, _ a: Action) {} }
+            """
+        )
+        // The function-only pin "reduce" matches both candidates.
+        #expect(throws: (any Error).self) {
+            _ = try Command.runPipeline(directory: directory, pinRaw: "reduce")
+        }
+    }
+
+    @Test("V1.C — module-prefixed pin surfaces ReducerPinError.moduleResolutionUnsupported")
+    func pinModulePrefixedSurfacesError() throws {
+        let directory = try makeFixtureDirectory(name: "PinModulePrefixed")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            named: "A.swift",
+            contents: "func reduce(_ s: StateA, _ a: ActionA) -> StateA { return s }"
+        )
+        #expect(throws: ReducerPinError.moduleResolutionUnsupported(raw: "MyModule.Inbox.body")) {
+            _ = try Command.runPipeline(directory: directory, pinRaw: "MyModule.Inbox.body")
+        }
+    }
+
     // MARK: - Helpers
 
     private func makeFixtureDirectory(name: String) throws -> URL {
