@@ -59,25 +59,42 @@ public enum ActionSequenceStubEmitter {
         public let sequenceCount: Int
         public let lengthLowerBound: Int
         public let lengthUpperBound: Int
+        /// V2.0 M4.D — optional invariant suggestion the stub
+        /// should verify. When `nil`, the stub falls back to the
+        /// M3.0 "ran cleanly / trapped" posture (no predicate
+        /// check; the only failure mode is a Swift trap inside the
+        /// reducer body). When supplied, the emitter branches on
+        /// `invariant.family`:
+        ///   - `.conservation` → embeds `precondition(<predicate>)`
+        ///     after each `state = reduce(...)` step
+        ///   - `.idempotence` → emits a post-loop double-apply check
+        ///     using `<predicate>` (the action-case dot-shorthand)
+        ///   - other families (`.cardinality` / `.referentialIntegrity`
+        ///     / `.biconditional`) → `EmitError.unsupportedFamily`
+        ///     until M5–M7 ship them.
+        public let invariant: InteractionInvariantSuggestion?
 
         public init(
             candidate: ReducerCandidate,
             userModuleName: String,
             sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
             lengthLowerBound: Int = 0,
-            lengthUpperBound: Int = 16
+            lengthUpperBound: Int = 16,
+            invariant: InteractionInvariantSuggestion? = nil
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
             self.sequenceCount = sequenceCount
             self.lengthLowerBound = lengthLowerBound
             self.lengthUpperBound = lengthUpperBound
+            self.invariant = invariant
         }
     }
 
     public enum EmitError: Error, CustomStringConvertible, Equatable {
         case unsupportedShape(ReducerSignatureShape)
         case unsupportedCarrier(ReducerCarrierKind)
+        case unsupportedFamily(InteractionInvariantFamily)
 
         public var description: String {
             switch self {
@@ -87,54 +104,191 @@ public enum ActionSequenceStubEmitter {
             case let .unsupportedCarrier(kind):
                 return "M3.B does not yet support carrier kind '\(kind.rawValue)' "
                     + "(TCA `.tca` reducers need closure-relative state init — deferred to M3.E)."
+            case let .unsupportedFamily(family):
+                return "M4.D does not yet support invariant family '\(family.rawValue)' "
+                    + "— Conservation (M4.B) and Idempotence (M4.C) ship; the three "
+                    + "new families (Cardinality / Referential integrity / Biconditional) "
+                    + "land at M5 / M6 / M7."
             }
         }
     }
 
-    /// V2.0 M3.B — emit the verifier `main.swift` source. Throws if
-    /// the candidate's signature shape or carrier kind isn't supported
-    /// at M3.0.
+    /// V2.0 M3.B / M4.D — emit the verifier `main.swift` source.
+    /// Throws if the candidate's signature shape or carrier kind isn't
+    /// supported (M3.B), or if the supplied invariant's family isn't
+    /// yet handled (M4.D).
     public static func emit(_ inputs: Inputs) throws -> String {
         try validate(inputs.candidate)
+        if let invariant = inputs.invariant {
+            try validateInvariant(invariant.family)
+        }
         let reducerCall = makeReducerCall(inputs.candidate)
         let stateInit = "\(inputs.candidate.stateTypeName)()"
         let applyStep = makeApplyStep(
             shape: inputs.candidate.signatureShape,
             reducerCall: reducerCall
         )
-        return [
+        let perStepCheck = makePerStepCheck(invariant: inputs.invariant)
+        let postLoopCheck = makePostLoopCheck(
+            invariant: inputs.invariant,
+            shape: inputs.candidate.signatureShape,
+            reducerCall: reducerCall
+        )
+        return assembleStub(
+            inputs: inputs,
+            stateInit: stateInit,
+            applyStep: applyStep,
+            perStepCheck: perStepCheck,
+            postLoopCheck: postLoopCheck
+        )
+    }
+
+    /// V2.0 M4.D — assemble the stub source. Extracted from
+    /// `emit(_:)` to keep the outer function under SwiftLint's
+    /// `function_body_length` cap as the per-step / post-loop
+    /// check blocks landed.
+    private static func assembleStub(
+        inputs: Inputs,
+        stateInit: String,
+        applyStep: String,
+        perStepCheck: [String],
+        postLoopCheck: [String]
+    ) -> String {
+        var lines: [String] = [
             stubHeaderMarker,
             "// Reducer: \(inputs.candidate.qualifiedName)",
             "// Carrier: \(inputs.candidate.carrierKind.rawValue)",
-            "// Signature: \(inputs.candidate.signatureShape.rawValue)",
-            "// DO NOT EDIT — regenerated on each `swift-infer verify-interaction` run.",
-            "",
-            "import \(inputs.userModuleName)",
-            "import PropertyBased",
-            "import PropertyLawKit",
-            "",
-            "@main",
-            "struct InteractionVerifier {",
-            "    static func main() {",
-            "        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))",
-            "        let generator = ActionSequenceFactory.actionSequence(",
-            "            forCaseIterable: \(inputs.candidate.actionTypeName).self,",
-            "            length: \(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)",
-            "        )",
-            "        var clean = 0",
-            "        for _ in 0..<\(inputs.sequenceCount) {",
-            "            let actions = generator.run(using: &rng)",
-            "            var state = \(stateInit)",
-            "            for action in actions {",
-            "                \(applyStep)",
-            "            }",
-            "            clean += 1",
-            "        }",
-            "        print(\"\(cleanOutcomeMarker) totalRuns=\\(\(inputs.sequenceCount)) clean=\\(clean)\")",
-            "    }",
-            "}",
-            ""
-        ].joined(separator: "\n")
+            "// Signature: \(inputs.candidate.signatureShape.rawValue)"
+        ]
+        if let invariant = inputs.invariant {
+            lines.append("// Invariant family: \(invariant.family.rawValue)")
+            lines.append("// Predicate: \(invariant.predicate)")
+        }
+        lines.append("// DO NOT EDIT — regenerated on each `swift-infer verify-interaction` run.")
+        lines.append("")
+        lines.append("import \(inputs.userModuleName)")
+        lines.append("import PropertyBased")
+        lines.append("import PropertyLawKit")
+        lines.append("")
+        lines.append("@main")
+        lines.append("struct InteractionVerifier {")
+        lines.append("    static func main() {")
+        lines.append("        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))")
+        lines.append("        let generator = ActionSequenceFactory.actionSequence(")
+        lines.append("            forCaseIterable: \(inputs.candidate.actionTypeName).self,")
+        lines.append("            length: \(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)")
+        lines.append("        )")
+        lines.append("        var clean = 0")
+        lines.append("        for _ in 0..<\(inputs.sequenceCount) {")
+        lines.append("            let actions = generator.run(using: &rng)")
+        lines.append("            var state = \(stateInit)")
+        lines.append("            for action in actions {")
+        lines.append("                \(applyStep)")
+        for line in perStepCheck {
+            lines.append("                \(line)")
+        }
+        lines.append("            }")
+        for line in postLoopCheck {
+            lines.append("            \(line)")
+        }
+        lines.append("            clean += 1")
+        lines.append("        }")
+        lines.append("        print(\"\(cleanOutcomeMarker) totalRuns=\\(\(inputs.sequenceCount)) clean=\\(clean)\")")
+        lines.append("    }")
+        lines.append("}")
+        lines.append("")
+        return lines.joined(separator: "\n")
+    }
+
+    /// V2.0 M4.D — per-step invariant check (Conservation). Emits
+    /// `precondition(<predicate>, "message")` inside the per-action
+    /// loop. Returns empty for nil invariant or non-Conservation
+    /// families.
+    static func makePerStepCheck(invariant: InteractionInvariantSuggestion?) -> [String] {
+        guard let invariant else { return [] }
+        switch invariant.family {
+        case .conservation:
+            return [
+                "precondition(\(invariant.predicate), "
+                    + "\"Conservation invariant violated\")"
+            ]
+        case .idempotence:
+            return []
+        case .cardinality, .referentialIntegrity, .biconditional:
+            // Unreachable — `validateInvariant` rejects these before emit.
+            return []
+        }
+    }
+
+    /// V2.0 M4.D — post-loop invariant check (Idempotence). After
+    /// the action sequence has driven `state` to a varied position,
+    /// applies the candidate action twice and asserts state-equality.
+    /// Branches on `signatureShape` because `(inout S, A) -> Void`
+    /// needs a copy-and-mutate dance vs. `(S, A) -> S`'s direct
+    /// assignment. Returns empty for nil invariant or non-Idempotence
+    /// families.
+    static func makePostLoopCheck(
+        invariant: InteractionInvariantSuggestion?,
+        shape: ReducerSignatureShape,
+        reducerCall: String
+    ) -> [String] {
+        guard let invariant else { return [] }
+        switch invariant.family {
+        case .conservation:
+            return []
+        case .idempotence:
+            return makeIdempotenceCheck(
+                actionExpr: invariant.predicate,
+                shape: shape,
+                reducerCall: reducerCall
+            )
+        case .cardinality, .referentialIntegrity, .biconditional:
+            return []
+        }
+    }
+
+    /// V2.0 M4.D — the idempotence check body, parameterized over
+    /// the signature shape. Pulled to a static so tests can drive
+    /// the body shape independently of the surrounding stub.
+    static func makeIdempotenceCheck(
+        actionExpr: String,
+        shape: ReducerSignatureShape,
+        reducerCall: String
+    ) -> [String] {
+        let assertion =
+            "precondition(once == twice, "
+                + "\"Idempotence invariant violated for \(actionExpr)\")"
+        switch shape {
+        case .stateActionReturnsState:
+            return [
+                "let once = \(reducerCall)(state, \(actionExpr))",
+                "let twice = \(reducerCall)(once, \(actionExpr))",
+                assertion
+            ]
+        case .inoutStateActionReturnsVoid:
+            return [
+                "var once = state",
+                "\(reducerCall)(&once, \(actionExpr))",
+                "var twice = once",
+                "\(reducerCall)(&twice, \(actionExpr))",
+                assertion
+            ]
+        case .stateActionReturnsStateAndEffect, .inoutStateActionReturnsEffect:
+            // Unreachable — `validate` rejects effect-bearing shapes.
+            return []
+        }
+    }
+
+    /// V2.0 M4.D — reject invariant families that don't have an
+    /// emission path yet (Cardinality / Referential integrity /
+    /// Biconditional — M5 / M6 / M7).
+    private static func validateInvariant(_ family: InteractionInvariantFamily) throws {
+        switch family {
+        case .conservation, .idempotence:
+            return
+        case .cardinality, .referentialIntegrity, .biconditional:
+            throw EmitError.unsupportedFamily(family)
+        }
     }
 
     // MARK: - Internals
