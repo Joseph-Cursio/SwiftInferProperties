@@ -42,7 +42,7 @@ struct ReducerCandidateTests {
 
     // MARK: - Signature-shape raw values
 
-    @Test("signature-shape rawValues are stable strings — downstream pipelines key on them")
+    @Test("M1.A signature-shape rawValues are stable strings — downstream pipelines key on them")
     func signatureShapeRawValues() {
         #expect(ReducerSignatureShape.stateActionReturnsState.rawValue == "state-action-returns-state")
         #expect(
@@ -53,7 +53,8 @@ struct ReducerCandidateTests {
             ReducerSignatureShape.stateActionReturnsStateAndEffect.rawValue
                 == "state-action-returns-state-and-effect"
         )
-        #expect(ReducerSignatureShape.allCases.count == 3)
+        // The 4th case (inoutStateActionReturnsEffect) is asserted in the
+        // V1.B test block below — `allCases.count` is checked there.
     }
 
     // MARK: - Codable round-trip
@@ -80,5 +81,66 @@ struct ReducerCandidateTests {
         let decoded = try JSONDecoder().decode(ReducerCandidate.self, from: data)
         #expect(decoded == original)
         #expect(decoded.enclosingTypeName == nil)
+    }
+
+    // MARK: - V1.B — carrierKind + 4th signature shape
+
+    @Test("carrierKind defaults to .generic — M1.A candidates retroactively keep their kind")
+    func carrierKindDefaultsToGeneric() {
+        let target = candidate()
+        #expect(target.carrierKind == .generic)
+    }
+
+    @Test("ReducerCarrierKind rawValues are stable strings")
+    func carrierKindRawValues() {
+        #expect(ReducerCarrierKind.generic.rawValue == "generic")
+        #expect(ReducerCarrierKind.tca.rawValue == "tca")
+        #expect(ReducerCarrierKind.elmStyle.rawValue == "elm-style")
+        #expect(ReducerCarrierKind.allCases.count == 3)
+    }
+
+    @Test("4th ReducerSignatureShape — TCA Reduce closure synthesized signature")
+    func tcaSignatureShapeRawValue() {
+        #expect(
+            ReducerSignatureShape.inoutStateActionReturnsEffect.rawValue
+                == "inout-state-action-returns-effect"
+        )
+        #expect(ReducerSignatureShape.allCases.count == 4)
+    }
+
+    @Test("ReducerCandidate round-trips with carrierKind: .tca")
+    func codableRoundTripWithTCACarrier() throws {
+        let original = ReducerCandidate(
+            location: "Sources/MyApp/Inbox.swift:42",
+            enclosingTypeName: "Inbox",
+            functionName: "body",
+            signatureShape: .inoutStateActionReturnsEffect,
+            stateTypeName: "Inbox.State",
+            actionTypeName: "Inbox.Action",
+            carrierKind: .tca
+        )
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(ReducerCandidate.self, from: data)
+        #expect(decoded == original)
+        #expect(decoded.carrierKind == .tca)
+    }
+
+    @Test("ReducerCandidate decodes legacy records missing carrierKind as .generic")
+    func codableBackwardCompatMissingCarrierKind() throws {
+        // Hand-crafted JSON without the `carrierKind` key — simulates a
+        // record persisted before V1.B shipped (none exist on disk yet
+        // but the schema is forward-defended).
+        let json = """
+        {
+            "location": "Sources/X.swift:1",
+            "functionName": "reduce",
+            "signatureShape": "state-action-returns-state",
+            "stateTypeName": "S",
+            "actionTypeName": "A"
+        }
+        """
+        let data = Data(json.utf8)
+        let decoded = try JSONDecoder().decode(ReducerCandidate.self, from: data)
+        #expect(decoded.carrierKind == .generic)
     }
 }

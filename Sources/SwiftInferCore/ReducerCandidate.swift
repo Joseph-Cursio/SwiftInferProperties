@@ -35,23 +35,26 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// static method (`"Inbox"`, `"AppLogic"`, etc.); `nil` for
     /// free functions at file scope. M1.A treats both equally — the
     /// downstream pipelines (M3 verify, M4+ templates) consume both
-    /// kinds. Carrier-kind inference at M1.C may use this signal to
-    /// distinguish `.elmStyle` (free function) from `.tca` /
-    /// `.generic` (method).
+    /// kinds. M1.C uses this signal to distinguish `.elmStyle` (free
+    /// function) from `.generic` (method on a non-Reducer type).
     public let enclosingTypeName: String?
 
     /// The function's own name (`"reduce"`, `"update"`, `"body"`,
     /// `"handle"`, etc.). M1.A does NOT filter on function name — a
     /// reducer is anything matching the canonical signature, even if
     /// it's named `foo`. Vocabulary-based filtering (favor names like
-    /// `reduce` / `update`) is a §4 scoring signal at M4+.
+    /// `reduce` / `update`) is a §4 scoring signal at M4+. TCA
+    /// candidates (M1.B) use the synthetic name `"body"` since the
+    /// closure isn't a declared function.
     public let functionName: String
 
     /// The matched canonical signature shape — see
     /// `ReducerSignatureShape`. Downstream pipelines branch on this:
     /// `(inout S, A) -> Void` requires an in-place verify wrapper
     /// (copy-then-call); `(S, A) -> S` calls directly; `(S, A) ->
-    /// (S, Effect<A>)` routes to the §7.3 subprocess verify path.
+    /// (S, Effect<A>)` routes to the §7.3 subprocess verify path;
+    /// `(inout S, A) -> Effect<A>` is the synthesized TCA-closure
+    /// shape (M1.B) and routes the same as the tuple form.
     public let signatureShape: ReducerSignatureShape
 
     /// The State type's textual name as it appears in source
@@ -59,14 +62,24 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// NOT resolve this to a `TypeDecl` record — that's an M3 / M4
     /// concern when `Equatable` conformance + projected-field
     /// resolution matter. The name is preserved verbatim for
-    /// rendering.
+    /// rendering. M1.B's TCA path synthesizes
+    /// `"<EnclosingType>.State"` from the conventional TCA shape
+    /// (the conforming type has nested `State` / `Action` types).
     public let stateTypeName: String
 
     /// The Action type's textual name as it appears in source
     /// (`"Inbox.Action"`, `"AppAction"`, etc.). Same posture as
-    /// `stateTypeName` — verbatim for M1.A, resolved at M2+ when
-    /// the Action-sequence generator needs to enumerate cases.
+    /// `stateTypeName` — verbatim for M1.A, synthesized as
+    /// `"<EnclosingType>.Action"` for M1.B's TCA path.
     public let actionTypeName: String
+
+    /// V1.B — carrier-kind label inferred at discovery time. M1.A
+    /// candidates default to `.generic` (signature-scan); M1.B's TCA
+    /// path emits `.tca`; M1.C distinguishes `.elmStyle` (free
+    /// function) from `.generic`. The label is informational —
+    /// downstream pipelines (M3 verify, M4+ scoring) consume it for
+    /// routing and rendering decisions, not as a hard filter.
+    public let carrierKind: ReducerCarrierKind
 
     public init(
         location: String,
@@ -74,7 +87,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         functionName: String,
         signatureShape: ReducerSignatureShape,
         stateTypeName: String,
-        actionTypeName: String
+        actionTypeName: String,
+        carrierKind: ReducerCarrierKind = .generic
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -82,6 +96,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.signatureShape = signatureShape
         self.stateTypeName = stateTypeName
         self.actionTypeName = actionTypeName
+        self.carrierKind = carrierKind
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just
@@ -92,6 +107,34 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             return "\(enclosingTypeName).\(functionName)"
         }
         return functionName
+    }
+
+    // MARK: - Codable (carrierKind backward-compat default)
+
+    private enum CodingKeys: String, CodingKey {
+        case location
+        case enclosingTypeName
+        case functionName
+        case signatureShape
+        case stateTypeName
+        case actionTypeName
+        case carrierKind
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.location = try container.decode(String.self, forKey: .location)
+        self.enclosingTypeName = try container.decodeIfPresent(String.self, forKey: .enclosingTypeName)
+        self.functionName = try container.decode(String.self, forKey: .functionName)
+        self.signatureShape = try container.decode(ReducerSignatureShape.self, forKey: .signatureShape)
+        self.stateTypeName = try container.decode(String.self, forKey: .stateTypeName)
+        self.actionTypeName = try container.decode(String.self, forKey: .actionTypeName)
+        // Backward-compat: pre-M1.B records (none exist on disk yet but
+        // forward-defending the schema) default to `.generic`.
+        self.carrierKind = try container.decodeIfPresent(
+            ReducerCarrierKind.self,
+            forKey: .carrierKind
+        ) ?? .generic
     }
 }
 
@@ -128,4 +171,42 @@ public enum ReducerSignatureShape: String, Sendable, Equatable, Codable, CaseIte
     /// in-process). Effect-bearing reducers route to the §7.3
     /// subprocess verify path.
     case stateActionReturnsStateAndEffect = "state-action-returns-state-and-effect"
+
+    /// V1.B — `(inout S, A) -> Effect<A>` — the synthesized signature
+    /// for TCA `Reduce { state, action in ... }` closures inside a
+    /// `Reducer` conformer's `var body: some ReducerOf<Self>`. The
+    /// closure isn't a `FunctionDeclSyntax`, so M1.B's TCA walk
+    /// synthesizes this shape from the closure's source position +
+    /// the enclosing type's `Self.State` / `Self.Action` convention.
+    /// Routes to the §7.3 subprocess verify path by default; pure
+    /// closures (no `.run` / `.send` / `.cancel` references) qualify
+    /// for the in-process path at M3+.
+    case inoutStateActionReturnsEffect = "inout-state-action-returns-effect"
+}
+
+/// V1.B — carrier-kind label inferred at reducer-discovery time. The
+/// PRD §6.4 framing: discovery hands the rest of the v2.0 pipeline a
+/// label distinguishing where the candidate came from, so downstream
+/// scoring (M4+) and rendering know the carrier shape without
+/// re-running the signature inspection.
+///
+/// **Three cases, two shipped at M1.B:**
+///   - `.generic` — signature-scan match (M1.A path) where the
+///     enclosing context isn't a known TCA `Reducer` conformer. The
+///     default and the catch-all.
+///   - `.tca` — extracted from a TCA `Reducer` conformer's `var body:
+///     some ReducerOf<Self>` (M1.B's conformance walk).
+///   - `.elmStyle` — reserved for M1.C, which distinguishes free
+///     `(S, A) -> S` reducers (Elm idiom — `func update(state:msg:)`)
+///     from struct/class methods of the same signature. M1.B leaves
+///     these in `.generic`.
+///
+/// Labels are **informational** — PRD §6.4: "templates fire on all
+/// carrier kinds equally." Pipeline routing (`verifyPath`,
+/// `actionGeneratorSource`) lives on later milestones' fields, not
+/// here.
+public enum ReducerCarrierKind: String, Sendable, Equatable, Codable, CaseIterable {
+    case generic
+    case tca
+    case elmStyle = "elm-style"
 }
