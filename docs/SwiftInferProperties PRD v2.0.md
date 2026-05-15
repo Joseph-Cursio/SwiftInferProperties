@@ -5,7 +5,7 @@
 **Version:** 2.0 (draft)
 **Status:** Planned (no v2.0 surface has shipped; v1.71.0 is the current release line)
 **Audience:** Open Source Contributors, Swift Ecosystem
-**Depends On:** SwiftPropertyLaws v3.0.0+ (planned major bump — new `InteractionInvariant` law surface; see §11)
+**Depends On:** SwiftPropertyLaws next minor (additive bump — new `InteractionInvariant` law surface; see §13)
 
 > This document is forward-looking. v1.0 described a shipped surface; v2.0 describes what is *planned*. No claims here should be read as commitments until the corresponding §5–§9 milestones land and a calibration cycle confirms them. Where this document differs from v1.0's "shipped" framing, that is deliberate — the v2.0 surface is conjectural and the calibration record will overrule any prose below that turns out to be wrong.
 
@@ -31,7 +31,7 @@ The intellectual debt is to the *interaction-invariant taxonomy* — a shape-bas
 v2.0 ships **five new contributions** layered on the v1.0 surface:
 
 - **Contribution 1 — InteractionTemplateEngine.** Five new (or lifted) template families, each scored through the same §4 weighted engine as v1's algebraic templates, surfaced through the same explainability block and triage prompts. The shape-by-shape spec is §5.
-- **Contribution 2 — ReducerDiscovery.** Carrier-agnostic SwiftSyntax pass that finds reducer-shaped functions (`(S, A) -> S`, `(inout S, A) -> Void`, `(S, A) -> (S, Effect<A>)`) without committing to any one architecture (TCA, Observable, ReSwift, hand-rolled Elm-style). The discovery model deliberately accepts any signature shape that fits — at the cost of a louder Daikon-trap risk that §3.5 addresses directly.
+- **Contribution 2 — ReducerDiscovery.** SwiftSyntax pass that finds reducer-shaped functions by signature match (`(S, A) -> S`, `(inout S, A) -> Void`, `(S, A) -> (S, Effect<A>)`) plus a TCA-specific path that walks `Reducer.body` declarations (§6.3). Scope is *signature-detectable reducers with a first-class Action enum* — implicit-action carriers (e.g., `@Observable` view-models where actions are method calls) are out of scope. The discovery model accepts any signature shape that fits — at the cost of a louder Daikon-trap risk that §3.5 addresses directly.
 - **Contribution 3 — HybridVerifyPipeline.** Pure reducers (Equatable State, no async / Effect in body) verify **in-process** at < 100ms/1k-action-sequence; effect-bearing reducers fall back to the existing v1.42+ **subprocess** harness with the same five-category outcome scheme. Both paths share the `.bothPass` / `.edgeCaseAdvisory` / `.defaultFails` / `.error` / `.architectural-coverage-pending` vocabulary so v1's measured-execution metric extends cleanly to v2.
 - **Contribution 4 — ActionSequenceGenerator.** Kit-side extension to `DerivationStrategist`: synthesize `Gen<[Action]>` from an Action enum, with optional stateful guards (don't fire `.delete(id)` after `.delete(id)` on the same id). Sequences are bounded (default ≤ 16 actions); shrinking minimizes a failing trace to its smallest reproducer. Persisted to `Tests/Generated/SwiftInferTraces/` on failure.
 - **Contribution 5 — InteractionInvariantBridge.** When the InteractionTemplateEngine accumulates ≥3 Strong-tier suggestions on the same reducer, propose conformance to a kit-defined `InteractionInvariant` protocol so SwiftPropertyLaws verifies the laws on every CI run thereafter. Analog of v1's RefactorBridge.
@@ -44,19 +44,19 @@ All five contributions inherit v1's invariants: opt-in, human-reviewed, never au
 
 ### 2.1 Interaction Bugs Dominate Real-World UI Failures
 
-Postmortems across SwiftUI and reactive-UI codebases consistently identify *transition bugs*, *temporal bugs*, *stale-state bugs*, and *race conditions* as the dominant failure modes — not rendering bugs. v1.0 covered pure-function correctness; the much larger surface of *state-system correctness* sits in the reducer layer, where mainstream Swift testing tooling stops at scripted action sequences (Point-Free's `TestStore`) and has no `forAll`-over-actions equivalent to QuickCheck / Hypothesis / quickcheck-state-machine.
+Real-world UI failures cluster in *transition bugs*, *temporal bugs*, *stale-state bugs*, and *race conditions* far more often than in rendering or layout bugs. v1.0 covered pure-function correctness; the much larger surface of *state-system correctness* sits in the reducer layer, where mainstream Swift testing tooling stops at scripted action sequences (Point-Free's `TestStore`) and has no `forAll`-over-actions equivalent to QuickCheck / Hypothesis / quickcheck-state-machine.
 
 ### 2.2 The Interaction-Invariant Taxonomy
 
 The natural unit isn't "PBT for SwiftUI" but **interaction invariants** — predicates over `(State, Action) -> State` that must hold for any user action sequence. The taxonomy is shape-based (cardinality, ref-integrity, biconditional, conservation, idempotence, reachability, temporal, accessibility), not domain-based (auth, cart, navigation): the same *shape* recurs across domains and each shape has a different cost/tool profile. Lumping them all under "invariants" hides that — and is exactly the mistake the academic LTL/CTL taxonomy (safety vs liveness vs fairness) avoids.
 
-### 2.3 Why "Any Reducer-Shaped" Is Harder Than TCA Only
+### 2.3 The Scope: Signature-Detectable Reducers
 
-v2.0 takes the carrier-agnostic stance: detect any reducer-shaped function regardless of architecture. This is the **most general but loudest Daikon-trap target** of the four scoping options. Three risks the design must mitigate:
+v2.0 detects any function with one of three canonical reducer signatures (§6.2) **plus** TCA `Reducer.body` declarations recognized by a conformance walk (§6.3). This is *signature-based detection*, not full carrier-agnosticism — implicit-action carriers like `@Observable` view-models, where actions are method calls rather than a first-class enum, are out of scope because action-sequence generation requires an enumerable Action type. Three risks the design must mitigate:
 
-1. The reducer convention varies. TCA's `Reducer.body` is one shape; `@Observable` view-models with explicit `dispatch(_:)` are another; hand-rolled Elm-style switches are a third. The discovery surface for the (S, A) → S signature is real but discovery-by-shape risks false matches against non-reducer functions that happen to have the right type signature.
-2. The Action enum may be implicit. In `@Observable` models the "actions" are often just public methods on the model — there's no first-class Action type to enumerate. v2.0 documents this case as out of scope; sequence generation requires an explicit Action enum.
-3. State may not be Equatable. SwiftUI's @State holds opaque value types regularly; reducer State is often a struct with closures, AnyView, or other non-Equatable fields. The in-process verify path requires Equatable State; the subprocess path can sometimes work around it via custom comparison closures.
+1. Discovery-by-shape risks false matches. A non-reducer function that happens to have signature `(S, A) -> S` will be picked up. Mitigation: the user pins target reducers via `--reducer <module>.<typeName>.<funcName>` (§6.4) — the default behavior is to list candidates with carrier-kind labels and exit, never silently picking one.
+2. TCA reducers don't match the canonical signatures directly. `var body: some ReducerOf<Self>` is neither `(S, A) -> S` nor `(inout S, A) -> Void` at the source level — the reducer shape is hidden behind the protocol. §6.3 specifies the TCA-specific walk that recovers it.
+3. State may not be Equatable. SwiftUI State often contains closures, `AnyView`, `Task`, `AnyCancellable`, or other non-Equatable fields. The in-process verify path tolerates this when the candidate invariant uses *projected* fields (§5.6 biconditional discussion); the subprocess path accepts a user-supplied `state.equals(_:)` instance method (§14).
 
 These risks are addressed by §3.5 (philosophy), §5 (per-family precision targets), and §14 (risk register).
 
@@ -89,7 +89,7 @@ v2.0 handles: *"given what your reducer looks like, what interaction invariants 
 - Snapshot testing
 - Accessibility automation
 - Automatic action-sequence mining from user trace logs / replay buffers
-- TCA-specific TestStore integration (deferred to §20 — keeps v2.0 carrier-agnostic)
+- TCA-specific TestStore integration (deferred to §20 — keeps v2.0's verify path uniform across carriers)
 - Effects / async / cancellation modeling beyond per-step semantics (the verify pipeline calls each `(S, A) -> S` step; downstream Effect resolution is not simulated)
 - Concurrency-race detection (in-process verify is single-threaded; concurrency requires a different harness — §14)
 - Stateful PBT in the full quickcheck-state-machine sense (bundles, parallel histories) — v2.0 ships sequential action sequences only
@@ -100,12 +100,12 @@ v2.0 handles: *"given what your reducer looks like, what interaction invariants 
 
 v2.0 inherits v1.0's conservative-inference philosophy verbatim and adds one corollary:
 
-> **Interaction-invariant precision is harder than algebraic-law precision.** SwiftUI state graphs have far less structure than function signatures. The curated-binding-table problem (the cycle-58 V1.51.B latent-pair-table bug masking 12 picks for ~13 release cycles, the v1.61 dual-style pair fix, the v1.69 monotonicity-emitter rework) will recur at every new family. Defaults must skew even more aggressively toward suppression.
+> **Interaction-invariant precision is expected to be harder than algebraic-law precision.** SwiftUI state graphs have far less structure than function signatures, and the v1 binding-table experience (cycle-58 V1.51.B latent-pair-table bug masking 12 picks for ~13 release cycles; v1.61 dual-style pair fix; v1.69 monotonicity-emitter rework) tells us to plan for the same shape of problem at every new template family. The defaults skew even more aggressively toward suppression than v1's.
 
 Concretely this means:
 
 1. **`Possible` tier is hidden by default in v2.0 just as in v1.0.** No exceptions for new families.
-2. **Each new family ships behind at least three calibration cycles before being claimed measured.** v1's pattern (cycles 1–27 to drive Possible-tier acceptance to ≥70%) is the precedent — new family X cannot claim "shipped" status until cycles N, N+1, N+2 produce a stable acceptance rate.
+2. **A new family's milestone ships at default `Possible` visibility.** Promotion to default-visible (`Likely` or `Strong`) requires three calibration cycles after the milestone ship date with stable acceptance rate ≥ the §19 Phase 2 target. The §5.8 milestone "Planned" status means *emitter + scoring + verify integration landed*; it does not imply default-visible promotion. Sequence: M5 → M5.cal1 → M5.cal2 → M5.cal3 → promotion (or weight retune, if the rate doesn't stabilize).
 3. **The verify pipeline's `.bothPass` outcome is the strongest signal v2.0 emits.** Heuristic-only invariants stay in the lower tiers; only execution evidence promotes to `.verified` (continuing the v1.65 first-class tier introduction).
 4. **The Daikon trap is louder.** If calibration shows interaction-template families producing more suggestions than a developer can read in one sitting, raise thresholds — *do not* add filters on top.
 
@@ -113,13 +113,13 @@ Concretely this means:
 
 ## 3.6 Developer Workflow
 
-End-to-end workflow. Each step lists its owning §5–§9 contribution.
+End-to-end workflow. Each step lists its owning §5–§9 contribution. CLI surface adds flags to v1's existing subcommands (`discover`, `verify`, `drift`) rather than introducing new top-level subcommands.
 
-1. **Reducer discovery.** Developer runs `swift-infer discover-reducers --target MyApp`. Lists detected reducer-shaped functions with a signature shape + carrier inference (TCA Reducer.body / @Observable method-dispatch / generic `(S, A) -> S`). The user pins the target reducer via `--reducer Inbox.body` when ambiguous.
-2. **Interaction-invariant discovery.** `swift-infer discover-interaction --reducer Inbox.body` scans the State struct and Action enum, applies the five template families, and produces tiered suggestions (✓ Strong / ~ Likely / ? Possible) using the same §4 explainability block as v1.
+1. **Reducer discovery.** Developer runs `swift-infer discover --reducers --target MyApp`. Lists detected reducer-shaped functions with a signature shape + carrier inference (TCA `Reducer.body` / generic `(S, A) -> S` / Elm-style). The user pins the target reducer via `--reducer Inbox.body` when ambiguous.
+2. **Interaction-invariant discovery.** `swift-infer discover --interaction --reducer Inbox.body` scans the State struct and Action enum, applies the five template families, and produces tiered suggestions (✓ Strong / ~ Likely / ? Possible) using the same §4 explainability block as v1.
 3. **Suggestion review.** Each suggestion shows: family, predicate, evidence trail, candidate generator strategy, expected verify path (in-process vs subprocess), and the same "why suggested" / "why this might be wrong" two-sided block.
 4. **Adoption.** Accepted suggestions write `@Test` stubs to `Tests/Generated/SwiftInferInteraction/`. InteractionInvariantBridge suggestions (≥3 Strong on the same reducer) propose kit-conformance stubs in `Tests/Generated/SwiftInferRefactors/`.
-5. **Verify.** `swift-infer verify-interaction --reducer Inbox.body` runs N action sequences per accepted invariant — in-process if pure, subprocess if effect-bearing. Outcomes flow into the same five-category vocabulary as v1.
+5. **Verify.** `swift-infer verify --interaction --reducer Inbox.body` runs N action sequences per accepted invariant — in-process if pure, subprocess if effect-bearing. Outcomes flow into the same five-category vocabulary as v1.
 6. **Trace replay.** Failing sequences are shrunk and persisted to `Tests/Generated/SwiftInferTraces/<reducer>/<invariant-id>.swift` as deterministic regression tests.
 7. **Drift checking.** `swift-infer drift --interaction --baseline .swiftinfer/interaction-baseline.json` warns (non-fatally) about new Strong-tier interaction suggestions added since baseline.
 8. **Decision persistence.** Decisions written to `.swiftinfer/decisions.json` (schema v4, extended from v3) keyed by interaction-suggestion-identity hash.
@@ -140,12 +140,12 @@ v2.0 reuses v1.0's §4 weighted scoring model unchanged; the tier mapping (Stron
 | **Action enum has ≤ 8 cases** | +15 | Small action sets are tractable for combinatorial exploration; large enums signal richer state machines where the Daikon trap is louder. |
 | **Action enum has ≥ 20 cases** | -15 | Inverse: very large action enums produce noisy sequence generation; suppress unless other signals fire. |
 | **State has @Observation-trackable references** | -10 | State contains stored class references / `@Observable` instances — the reducer may not be pure and in-process verify is unreliable. |
-| **Reducer body calls async / Effect / Task** | -∞ for in-process; routes to subprocess instead | Detected via type-flow analysis at the SwiftSyntax level. Subprocess verify is *not* a veto; it routes the suggestion through the slower path. |
+| **Reducer body calls async / Effect / Task** | 0 (routing only) | Detected via type-flow analysis. Does *not* change the score — it routes the suggestion's `verifyPath` (§4.3) from `.inProcess` to `.subprocess`. The subprocess path is slower but still produces the same five-category outcome. |
+| **Reducer body has hidden mutability** (global state, static vars, escaped captures) | -∞ | Distinct from the row above: outcomes will be non-deterministic in either verify path, so the suggestion is suppressed. |
 | **Cardinality witness: ≥ 2 transient-presentation modifiers** | +25 | State exposes ≥ 2 `Bool` / `Optional` fields that look like sheet/alert/fullScreenCover items. Triggers cardinality-family templates. |
 | **Referential-integrity witness: KeyPath into collection** | +25 | State has a `selectedID: T.ID?` field and a `items: [T]` field where `T.ID` matches. Triggers ref-integrity templates. |
 | **Biconditional witness: parallel state pairs** | +20 | State has a pair `(isLoadingX: Bool, requestX: Task?)` or `(isShowingX: Bool, dataX: T?)`. Triggers biconditional templates. |
 | **Counter-signal: implicit action surface** | -20 | Reducer body switches over an action enum, but the action enum has ≥ 3 cases with unhandled-default routes — the action set is implicit. |
-| **Counter-signal: reducer has hidden mutability** | -20 | Body mutates global state, static vars, or escapes captured references — verify-pipeline outcomes will be non-deterministic. |
 | **Verify outcome: bothPass on action sequences** | +50 | The action-sequence verify pipeline produces `.bothPass` for the invariant across both default and edge generators. Same +50 weight as v1.66. |
 | **Verify outcome: defaultFails** | veto (suppression) | Verify pipeline disproved the invariant. Same vetoing semantics as v1.66. |
 
@@ -159,6 +159,7 @@ Every interaction-invariant suggestion's evidence record adds:
 
 - `actionGeneratorSource`: `.derivedFromCaseIterableAction` | `.derivedWithStatefulGuards` | `.registered` | `.todo`
 - `actionGeneratorConfidence`: `.high` | `.medium` | `.low`
+- `verifyPath`: `.inProcess` | `.subprocess` | `.skipped(reason:)` — chosen by the §4.1 type-flow check; rendered in the explainability block so the user knows which path produced any verify outcome below
 - `sequenceLength`: actual `(min, max, p50, p99)` from the verify run, if any
 - `samplingResult`: `.passed(trials: N, sequenceCount: M)` | `.failed(seed: S, shrunkTrace: T)` | `.notRun`
 
@@ -204,12 +205,14 @@ SwiftSyntax-based static analysis over reducer-shaped functions. For each detect
 
 ### 5.2 Family 4 — Conservation (Lifted from v1)
 
-**Pattern:** State has a derived value (computed property or repeated computation) that should equal the recomputation from primary fields.
+**Pattern:** State has a *cached* aggregate (a stored property) that should equal the recomputation from a contributing collection in the same State.
+
+**Note on what doesn't qualify:** if `total` is a *computed* property whose definition already says `items.reduce(0, +)`, then `total == items.reduce(0, +)` is true by definition — there's no invariant to verify. Conservation only fires when the aggregate is a stored property whose synchronization with the collection is the reducer's responsibility.
 
 **Witnesses:**
-- A State computed-var `total` whose definition references `items.reduce(0, +)` (or equivalent).
-- An Action `.setTotal(Decimal)` whose handler writes to the stored property — suggesting the derived value is cached and should equal the recomputation.
-- Three or more action handlers that touch both a stored aggregate (`total`) and a contributing collection (`items`) — suggesting an invariant `total == items.map(\.price).reduce(0, +)`.
+- A stored aggregate-shaped property (`total: Decimal`, `count: Int`, `sum: Double`) paired with a contributing collection (`items: [LineItem]`, `entries: [Entry]`) in the same State struct.
+- An Action case writing to the stored aggregate (`.setTotal(Decimal)`, `.recomputeTotal`) or one whose handler updates the aggregate alongside the collection.
+- Three or more action handlers that touch both the stored aggregate and the contributing collection — suggesting an invariant `total == items.map(\.price).reduce(0, +)`.
 
 **Counter-signals:** Non-Equatable State (-∞); state contains floating-point sums (downgrade — IEEE-754 round-off makes exact equality fragile; suggest approximate-equality variant per v1.31's FP arm).
 
@@ -309,6 +312,8 @@ SwiftSyntax-based static analysis over reducer-shaped functions. For each detect
 - A `(isLoadingX: Bool, taskX: Task<_, _>?)` pair where the reducer body for `.startX` sets both and `.cancelX` clears both — but at least one handler clears only one of the pair.
 - A `(isShowingX: Bool, dataX: T?)` pair with similar shape.
 
+**Note on Equatable State:** the canonical biconditional pair contains a `Task<_, _>?` or `AnyCancellable?` field, neither of which is `Equatable`. v2.0 does *not* require whole-State equality for biconditional verify — the predicate is checked via *projected fields* (`state.isLoading` and `state.activeTask != nil`, both Bool) at each reducer step. The §4.1 "Equatable State" signal is a generic score contributor; it is not a precondition for the biconditional family specifically.
+
 **Emitted property:**
 
 ```swift
@@ -360,32 +365,46 @@ Macro expansion writes a per-attribute `@Test func ...` peer in the user's sourc
 
 The §4 explainability block ("why suggested" + "why this might be wrong") is a per-family deliverable — every family ships with both blocks populated from active signals plus known caveats. There is no separate "explainability milestone."
 
+**Per-family calibration cadence.** Milestone status `Planned → Planned (in-progress) → Planned (calibrating) → Planned (promoted)`. A new-family milestone (M4–M7 above) is `Planned (calibrating)` when emitter + scoring + verify integration land at default `Possible` visibility. Promotion to default-visible (`Likely` / `Strong`) requires three calibration cycles with stable acceptance rate ≥ the §19 target — at which point the milestone reaches `Planned (promoted)`. The §3.5 policy and these milestone states are the same constraint expressed two ways.
+
 -----
 
 ## 6. Contribution 2: ReducerDiscovery
 
 ### 6.1 Description
 
-SwiftSyntax pass that scans the target module for reducer-shaped functions. Carrier-agnostic: any function matching one of the three canonical signatures qualifies as a candidate.
+SwiftSyntax pass that scans the target module for reducer-shaped functions. Two detection paths run in parallel: a signature scan over canonical reducer signatures (§6.2), and a TCA-specific conformance walk (§6.3). Both produce reducer candidates with `carrierKind` labels (§6.4) for downstream §5 templates.
 
 ### 6.2 Canonical Signatures
 
-| Shape | Example | In-process verifiable? |
-|---|---|---|
-| `(S, A) -> S` | TCA-style, Elm-style, hand-rolled | Yes (if S: Equatable, no Effect/async in body) |
-| `(inout S, A) -> Void` | TCA's `Reducer.body` post-2022 | Yes (S: Equatable; in-process verify makes a copy and feeds it in) |
-| `(S, A) -> (S, Effect<A>)` | TCA pre-2022, ReSwift with thunks | No — routes to subprocess |
-| `func dispatch(_ action: A)` on a class | @Observable view-models | **Out of scope in v2.0** — no first-class Action carrier |
+| Shape | Example | Detection | In-process verifiable? |
+|---|---|---|---|
+| `(S, A) -> S` | Elm-style, hand-rolled, free-function reducers | Signature scan | Yes (if S: Equatable, no Effect/async in body) |
+| `(inout S, A) -> Void` | Common idiom in TCA reducer closures | Signature scan | Yes (S: Equatable; verify makes a copy and feeds it in) |
+| `(S, A) -> (S, Effect<A>)` | TCA pre-2022, ReSwift with thunks | Signature scan | No — routes to subprocess |
+| `var body: some ReducerOf<Self>` inside a `Reducer` conformer | TCA post-2022 idiom | Conformance walk (§6.3) | Yes if the resolved `Reduce { state, action in ... }` body is pure |
+| `func dispatch(_ action: A)` on a class | @Observable view-models | N/A | Out of scope (§2.3) — no first-class Action enum to enumerate |
 
-### 6.3 Carrier Inference
+### 6.3 TCA-Specific Detection
 
-Each reducer candidate gets a `carrierKind` label (`.tca` / `.observable` / `.elmStyle` / `.generic`) inferred from imports and context (e.g., the function is `body` on a `Reducer`-conforming type → `.tca`). The label is informational; templates fire on all carrier kinds equally.
+TCA reducers expose `var body: some ReducerOf<Self>` rather than a function of canonical signature, so signature-scan misses them. The detection path:
 
-### 6.4 Disambiguation
+1. **Conformance walk.** Recognize any type conforming to `Reducer` by name match against `import ComposableArchitecture` (no runtime dep — same name-match strategy v1 uses for `@Discoverable`).
+2. **Body resolution.** Walk the `body` declaration. Recognize standard combinators (`Reduce`, `BindingReducer`, `Scope`, `EmptyReducer`, `CombineReducers`, `Pullback`).
+3. **Closure extraction.** For each `Reduce { state, action in ... }` literal encountered during the walk, treat the closure as a reducer body with synthesized signature `(inout Self.State, Self.Action) -> Effect<Self.Action>`. Pure closures (no `Effect` returns, no `.run` / `.send` / `.cancel`) qualify for the in-process path.
+4. **Type-flow on the extracted body.** Apply the §4.1 type-flow check (async / Effect / Task references) to the closure body, not to `body` itself.
+
+When `body` composes multiple `Reduce` closures via `CombineReducers`, each closure is detected independently and surfaces as a separate reducer candidate.
+
+### 6.4 Carrier Inference
+
+Each reducer candidate gets a `carrierKind` label (`.tca` / `.elmStyle` / `.generic`) inferred from imports and context. The label is informational; templates fire on all carrier kinds equally. `@Observable` is *not* a valid carrier kind in v2.0 (§2.3).
+
+### 6.5 Disambiguation
 
 When multiple reducer candidates exist in the target, the user pins via `--reducer <module>.<typeName>.<funcName>`. The default behavior (no flag) is to list all candidates with their carrier-kind labels and exit — never silently picking one.
 
-### 6.5 Discovery Performance Budget
+### 6.6 Discovery Performance Budget
 
 | Operation | Target |
 |---|---|
@@ -404,9 +423,9 @@ Two verify paths sharing one outcome vocabulary. Pure reducers (Equatable State,
 
 When the reducer is pure:
 
-1. Generate a sequence of N actions via the action-sequence generator (§8).
+1. Generate a sequence of N actions via the action-sequence generator (§8), filtering through any active stateful guards (§8.1).
 2. Apply each action in turn, checking the candidate invariant at each step.
-3. On failure, shrink the sequence to its minimal reproducer (drop-prefix, drop-suffix, halving — standard QuickCheck shrinking).
+3. On failure, shrink the sequence to its minimal reproducer (drop-prefix, drop-suffix, halving — standard QuickCheck shrinking). **Shrinking respects the same stateful guards used during generation** — a shrunk variant that violates a guard (e.g., contains `.select(id: 1)` with no preceding `.insert(id: 1)`) is rejected and the shrinker tries a smaller variant. Termination is guaranteed: shrinking either reaches a guard-valid minimal failing trace or terminates at the empty sequence.
 4. Emit outcome.
 
 Performance target: 1k action sequences (default length distribution; ≤ 16 actions each) in < 100ms wall on a 2024 MacBook Air for a 5-case-Action 10-field-State reducer.
@@ -424,7 +443,7 @@ When the reducer body contains Effect / async / Task references (type-flow detec
 | Reducer body signature property | Path | Why |
 |---|---|---|
 | No Effect/async/Task references | In-process | Fast, deterministic |
-| Has Effect/Task but State: Equatable | Subprocess (or in-process with stub-mocked Effects) | Effect resolution unknown; subprocess captures real semantics |
+| Has Effect/Task but State: Equatable | Subprocess | Effect resolution unknown at scan time; subprocess captures real semantics by building + running the test. Effect-stubbing is a §20 future direction, not v2.0 |
 | State: !Equatable | Manual `equals` override required | In-process: requires user-supplied `state.equals(_:)`; subprocess: same |
 | Non-Sendable Action | Subprocess only | In-process path is concurrency-clean; non-Sendable Action signals shared state |
 
@@ -455,27 +474,49 @@ Trace files are emitted as deterministic `@Test` cases for replay regression on 
 
 ### 8.1 Kit-Side Extension
 
-`SwiftPropertyLaws v3.0.0` extends `DerivationStrategist` with:
+The next SwiftPropertyLaws minor (v2.N+1.0 — see §13) extends `DerivationStrategist` with two entry points:
 
 ```swift
 public extension DerivationStrategist {
-    static func actionSequence<A: CaseIterable & Sendable>(
+    /// Primary entry: build a sequence generator from a per-action generator.
+    /// Carrier-agnostic — works for any Action enum whose per-case Gen<A> the caller can supply.
+    static func actionSequence<A: Sendable>(
+        from actionGen: Gen<A>,
+        length: ClosedRange<Int> = 0...16,
+        statefulGuards: [any StatefulGuard<A>] = []
+    ) -> Gen<[A]>
+
+    /// Convenience: derive Gen<A> for an Action enum by walking the kit's
+    /// existing per-case payload strategy chain (.caseIterable / .rawRepresentable /
+    /// .memberwise / .codableRoundTrip / .todo).
+    /// CaseIterable cases are enumerated directly; cases with payloads are
+    /// composed via DerivationStrategist per their payload types.
+    /// Returns nil if any case lacks a derivable generator (forces the caller
+    /// to either supply a custom Gen<A> or accept the conservative refusal).
+    static func actionSequence<A: Sendable>(
         _ actionType: A.Type,
         length: ClosedRange<Int> = 0...16,
-        statefulGuards: [(any StatefulGuard<A>)] = []
-    ) -> Gen<[A]>
+        statefulGuards: [any StatefulGuard<A>] = []
+    ) -> Gen<[A]>?
 }
 ```
 
-Stateful guards are user-supplied filters that suppress action sequences containing forbidden transitions (e.g., "no `.delete(id)` after `.delete(id)` on the same id"). v2.0 ships three curated guards:
+The primary entry deliberately makes no enumerability assumption — the caller supplies a per-action generator. The convenience entry attempts derivation via the kit's existing strategy chain and returns `nil` (rather than emitting `.todo`-placeholder sequences) if any case is underivable. This matches v1's PRD §16 #4 hard guarantee: no silently-wrong code.
 
-- `.noDoubleDelete` — pairs a `.delete(id)` action with a `.insert(_:)` action by id.
-- `.requireLogin` — `.dispatchAfterLogin` actions are gated by a preceding `.login` action.
-- `.maxConcurrentTasks(N)` — at most N async-effect-bearing actions queued at any point.
+Stateful guards are user-supplied filters that suppress action sequences containing forbidden transitions. The shape:
+
+```swift
+public protocol StatefulGuard<Action> {
+    associatedtype Action
+    func wouldAllow(_ next: Action, given history: [Action]) -> Bool
+}
+```
+
+**Curated guards as v2.0 examples, not commitments.** Specific guards like `.noDoubleDelete`, `.requireLogin`, `.maxConcurrentTasks(N)` illustrate the shape but the v2.0 ship list is calibrated against the actual reference corpus during M2 — guards that don't fire empirically get dropped. The production guard list is an M2 deliverable, not a v2.0 commitment.
 
 ### 8.2 Action-Inference From Reducer Body
 
-When the Action enum has cases the engine doesn't know how to enumerate (e.g., associated `T` payloads), the generator falls back to the kit's `DerivationStrategist` per-case-payload strategy chain (`.caseIterable` / `.rawRepresentable` / `.memberwise` / `.codableRoundTrip` / `.todo`). Same tiered fallback as v1's TestLifter generator inference (§7.4 of v1.0).
+When the convenience entry's strategy chain can't derive a per-case generator (e.g., a payload type lacks `.memberwise`-suitable structure), v2.0 falls back to `.todo` *at the per-case level* — the convenience entry returns `nil`, and the caller routes through the primary entry with a user-supplied `Gen<A>`. The user is forced to construct the action generator explicitly rather than receiving a silently-broken sequence generator.
 
 ### 8.3 Confidence Surfacing
 
@@ -489,15 +530,13 @@ The action-sequence generator's confidence (`.high` / `.medium` / `.low`) flows 
 
 Analog of v1's RefactorBridge: when InteractionTemplateEngine accumulates ≥ 3 Strong-tier suggestions on the same reducer, propose conformance to a kit-defined `InteractionInvariant` protocol.
 
-### 9.2 Kit-Side Law Surface (v3.0.0)
+### 9.2 Kit-Side Law Surface (next kit minor)
 
-SwiftPropertyLaws v3.0.0 ships new protocols:
+The next SwiftPropertyLaws minor (§13) ships new protocols. The InteractionInvariant protocol declares only the predicate — the reducer is supplied separately to the verify harness, so the conformer doesn't need to *be* the reducer:
 
 ```swift
 public protocol InteractionInvariant {
     associatedtype State
-    associatedtype Action
-    static func reduce(_ state: State, _ action: Action) -> State
     static func invariantHolds(in state: State) -> Bool
 }
 
@@ -505,18 +544,42 @@ public protocol CardinalityInvariant: InteractionInvariant { /* law: count ≤ N
 public protocol ReferentialIntegrityInvariant: InteractionInvariant { /* law: ref ∈ extant */ }
 public protocol BiconditionalInvariant: InteractionInvariant { /* law: A ↔ B */ }
 public protocol ConservationInvariant: InteractionInvariant { /* law: derived = recompute */ }
-public protocol ActionIdempotenceInvariant: InteractionInvariant { /* law: f(f(s), a) = f(s, a) */ }
+public protocol ActionIdempotenceInvariant: InteractionInvariant {
+    associatedtype Action
+    static var idempotentActions: Set<Action> { get } where Action: Hashable
+    /* law: ∀ s, ∀ a ∈ idempotentActions: f(f(s, a), a) = f(s, a) */
+}
 ```
 
-Each protocol exposes one Strict law via the same `PropertyLawMacro` discovery plugin that v1's Semigroup/Monoid/Group surface. When the user conforms `Inbox` to `ReferentialIntegrityInvariant`, SwiftPropertyLaws' discovery emits the property test on every CI run.
+The verify harness accepts the reducer as a closure parameter, so it works for any carrier (TCA `Inbox().reduce(into:action:)`, free function, hand-rolled closure):
+
+```swift
+public func checkInteractionInvariant<I: InteractionInvariant, A: Sendable>(
+    _ invariantType: I.Type,
+    reducer: @Sendable (inout I.State, A) -> Void,
+    actionGen: Gen<A>,
+    length: ClosedRange<Int> = 0...16,
+    initialState: @Sendable @autoclosure () -> I.State
+) async -> InvariantCheckResult
+```
+
+Each protocol exposes one Strict law via the same `PropertyLawMacro` discovery plugin that v1's Semigroup/Monoid/Group surface. When the user conforms `InboxReferentialIntegrity` (a stub type) to `ReferentialIntegrityInvariant`, SwiftPropertyLaws' discovery emits the property test on every CI run — pointing the verify harness at the user's reducer via a generated conformance stub.
 
 ### 9.3 Writeout Path
 
 Bridge suggestions emit to `Tests/Generated/SwiftInferRefactors/<TypeName>/<InvariantName>.swift` (reusing v1's path, never auto-editing existing source — same v1 §16 #1 hard guarantee).
 
-### 9.4 Strict-Subsumption + Incomparable Arms
+### 9.4 No Subsumption Across the Five Families
 
-When two interaction-invariant protocols are mathematically incomparable (e.g., a reducer satisfies both `CardinalityInvariant` and `ReferentialIntegrityInvariant`), both are emitted as peer proposals via the `[A/B/B'/s/n/?]` extended prompt that v1.8 introduced. No subsumption hierarchy across the five families is currently defined.
+The five families are mutually independent — none subsumes another mathematically (unlike v1's CommutativeMonoid ⊃ Monoid hierarchy). When ≥ 2 families fire as Strong on the same reducer, **all of them surface as peer proposals** via an N-arm extended triage prompt:
+
+```
+[A/B/B'/B''/.../s/n/?]
+```
+
+Each `B*` proposal corresponds to one of the kit's family-specific `InteractionInvariant` protocols. There is no kit `CombinedInvariant<X, Y, ...>` umbrella protocol — conformance to each family stub is independent, and the user accepts each `B*` arm independently. The triage UI shows them as peers, not nested choices.
+
+**Curated dual-pairing.** As in v1's Semilattice + SetAlgebra dual surfacing, v2.0 may surface curated stdlib-protocol Option-B pairs alongside the kit's `InteractionInvariant` — e.g., a reducer that satisfies `ReferentialIntegrityInvariant` and whose State exposes `Identifiable`-keyed collections may surface a secondary `BidirectionalCollection`-shape conformance suggestion. The pairing table is calibrated during M9 and is not committed in v2.0.
 
 -----
 
@@ -542,8 +605,8 @@ Decisions logged to `.swiftinfer/decisions.json` (schema v4).
 | Concern | Owner | Notes |
 |---|---|---|
 | Conformance detection | SwiftPropertyLaws (`PropertyLawMacro`) | Same as v1 — discovery plugin extended for `InteractionInvariant` family |
-| `InteractionInvariant` law specs | SwiftPropertyLaws (`PropertyLawKit`) | New in v3.0.0 |
-| Action-sequence generator primitive | SwiftPropertyLaws (`DerivationStrategist`) | New in v3.0.0 |
+| `InteractionInvariant` law specs | SwiftPropertyLaws (`PropertyLawKit`) | New in next kit minor |
+| Action-sequence generator primitive | SwiftPropertyLaws (`DerivationStrategist`) | New in next kit minor |
 | Reducer discovery | SwiftInferProperties (`ReducerDiscovery`) | New in v2.0 |
 | Interaction-template registry + scoring | SwiftInferProperties (`InteractionTemplateEngine`) | New in v2.0; extends v1's TemplateEngine |
 | Hybrid verify pipeline | SwiftInferProperties (`HybridVerifyPipeline`) | New in v2.0; in-process path is new, subprocess reuses v1.42+ |
@@ -556,9 +619,11 @@ Decisions logged to `.swiftinfer/decisions.json` (schema v4).
 
 -----
 
-## 13. Relationship to SwiftPropertyLaws v3.0.0
+## 13. Relationship to SwiftPropertyLaws (Next Minor)
 
-`Package.swift` will be bumped to `from: "3.0.0"` at v2.0 ship. v3.0.0 is a major bump because the new `InteractionInvariant` protocol family is large enough to be a public-API change worth signalling, and because new `DerivationStrategist` API for action-sequence generation extends the public surface.
+The kit changes for v2.0 are **purely additive** — new protocols (`InteractionInvariant` family) and new `DerivationStrategist` entries (action-sequence generators). Per semver, additive changes are a *minor* bump, not a major one. `Package.swift` will pin to the next minor after current — concretely `from: "2.N+1.0"` where N is the kit's current minor at v2.0 ship time (the kit was renamed at v2.0.0; the current minor floats with kit releases and is not load-bearing for this document).
+
+No breaking kit changes are required for v2.0. A future major bump (v3.0.0) is reserved for if and when a kit redesign breaks v1's `Semigroup`/`Monoid`/etc. shape — adding new protocols alongside the existing ones does not justify it.
 
 Deferred to a future kit minor: `ReachabilityInvariant` (needs bounded model checking — out of v2.0); `TemporalInvariant` (needs virtual clock — out of v2.0); `LivenessInvariant` (subset of temporal).
 
@@ -577,10 +642,10 @@ The one-way downstream relationship is preserved: SwiftInferProperties detects i
 | **In-process verify can't catch concurrency races** | Medium | Documented non-goal (§3); concurrency-aware verify is a v2.1+ direction |
 | **Effect-bearing reducer verify is slow** | Medium | Subprocess path inherits v1.42+ infrastructure; in-process fast path covers the majority case |
 | **Action enum is implicit (e.g., @Observable method dispatch)** | Medium | Documented out of scope (§2.3); fallback is the `--action-enum` flag pointing at an explicit enum if the user wants to opt in |
-| **State is not Equatable** | Medium | User supplies `state.equals(_:)` via macro or annotation; verify path uses it instead of `==` |
+| **State is not Equatable** | Medium | Verify falls back to projection-based checking when the candidate invariant only touches Equatable projected fields (§5.6); when whole-State equality is needed, user supplies an instance method `func equals(_ other: Self) -> Bool` on State that the verify harness calls instead of `==`. No macro is defined for this — the user writes the method by hand |
 | **Trace shrinking is non-deterministic** | Low | Seed policy unchanged from v1 §16 #6: SHA256 of suggestion-identity hash, packed into Xoshiro256** state |
 | **`InteractionInvariant` law surface bloats SwiftPropertyLaws** | Medium | Kit ships five law protocols only, with strict-law-only laws (no Lawful tier); incremental kit minors deliver families 6–7 later if needed |
-| **Calibration takes longer than v1's 27 cycles** | High | Acknowledged up front: success-criteria targets in §19 are deliberately lower than v1's 70% bar to reflect this |
+| **Calibration takes longer than v1's 27 cycles** | High | §19 Phase 2 acceptance targets are deliberately lower than v1's 70% bar; per-family milestones in §5.8 stay at default `Possible` visibility until three calibration cycles confirm stable acceptance rate (§3.5 policy); no family promotes to default-visible on cycle 1 |
 | **Project-vocabulary explosion (witness-table problem at v1.4–v1.30 scale)** | Medium | Same `.swiftinfer/vocabulary.json` extension model; new keys: `cardinalityFieldPatterns`, `referentialIntegrityKeyPaths`, `biconditionalPairPatterns` |
 
 -----
@@ -598,7 +663,7 @@ Hard targets enforced by regression tests in CI:
 | Trace shrinking (initial 16-action sequence → minimal) | < 500ms wall | Regression test fails |
 | Memory ceiling on 500-file module | < 1 GB resident (v2.0 starting point; recalibrate post-v2.1.0) | Regression test fails |
 
-Numbers are Swift-realistic, not aspirational. SwiftSyntax parsing + in-process action execution dominate. Calibrated against TCA's `swift-composable-architecture` examples directory as the reference corpus.
+Numbers are Swift-realistic, not aspirational. SwiftSyntax parsing + in-process action execution dominate. The reference corpus is TCA's `swift-composable-architecture` examples directory, pinned at a commit fixed in `docs/calibration-corpus-v2.0.md` at M1 ship (the file will list each examples-app reducer, its carrier kind, and its expected per-family suggestion counts). v2.0's analog of v1's cycle-1 1167-baseline is the per-family suggestion count against this frozen corpus.
 
 -----
 
@@ -607,6 +672,7 @@ Numbers are Swift-realistic, not aspirational. SwiftSyntax parsing + in-process 
 Inherits all v1 §16 guarantees. v2.0 adds:
 
 1. **SwiftInferProperties never executes user-side Effects in-process.** The in-process verify path calls only `(S, A) -> S` step semantics. If a reducer returns an `Effect<A>`, that Effect is captured and discarded — never run.
+1a. **In-process verify executes user reducer-body code in the same process as `swift-infer`.** This is intentional — pure reducers are safe to run in-process and the speed-up is meaningful. But contributors must not over-promise: "swift-infer doesn't execute user code" is *not* a guarantee. In-process verify runs the body of any reducer that passes the §4.1 purity gate (no Effect / async / Task references), including any non-Effect side-effects in the body (logger calls, static-var reads, etc. — captured by the §4.1 "reducer body has hidden mutability" -∞ veto when detected). The subprocess path runs in a sandboxed SwiftPM work directory the same way v1's verify pipeline does. Routing is driven by the §4.1 type-flow check, exposed as `verifyPath` in §4.3.
 2. **SwiftInferProperties never auto-applies an `InteractionInvariant` conformance.** Bridge suggestions write to `Tests/Generated/SwiftInferRefactors/` for manual review (same v1 §16 #1 hard guarantee).
 3. **Shrunk traces are deterministic.** Same seed policy as v1 §16 #6: SHA256 of suggestion-identity hash packed into Xoshiro256**. Trace files include the seed in a comment header.
 4. **Action-sequence verify is single-threaded.** Concurrency races require a different harness; in-process verify makes no concurrency claims.
@@ -635,7 +701,7 @@ v2.0 extends v1's `.swiftinfer/decisions.json` to schema v4. New fields per deci
 | False-positive rate per family | "Wrong" decisions ÷ total surfaced per family |
 | Suppression rate | Suggestions vetoed by `.defaultFails` or `-∞` counter-signals |
 | Time-to-adoption | Decision timestamp − reducer-firstSeenAt from SemanticIndex; same `firstSeenAt` anchor as v1.71 |
-| Post-acceptance failure rate | Trace-replay regressions in `Tests/Generated/SwiftInferTraces/` that newly fail on CI. **This is finally the natural setting for the 5th §17.2 metric that v1.71 parked** — the trigger isn't open here: trace replays run on every CI invocation, no separate hook needed. |
+| Post-acceptance failure rate | Two sub-metrics, both contributing to the v1.71-parked 5th §17.2 metric: (a) **trace-replay regressions** — failures in `Tests/Generated/SwiftInferTraces/<reducer>/<invariant>.swift` after the trace was previously green. Unambiguous; the trace runs as a standard `@Test` on every CI invocation. (b) **verify-outcome flips** — previously-accepted Strong invariants whose verify outcome changes from `.bothPass` to `.defaultFails` or `.error` between CI runs. Noisier than trace-replay (could indicate generator flakiness or a flaky stateful guard rather than a real regression). v2.0 reports both sub-metrics separately. The PRD §17.2 5th metric is naturally measurable here, where it wasn't in v1, because trace replay is a built-in regression surface — but the metric splits two ways and the user reading it needs to know which sub-metric to trust. |
 
 -----
 
@@ -698,7 +764,7 @@ Phase 2 targets are lower than Phase 1 deliberately — new templates restart ca
 2. **Implicit vs explicit Action surface.** Should v2.0 ship with a fallback macro that lifts dispatched method calls on `@Observable` models to a synthetic Action enum, or stay strict and require explicit Action enums? Strict is the cleaner v2.0; the fallback is a v2.1+ direction.
 3. **Non-Equatable State.** A surprising fraction of SwiftUI state is non-Equatable (closures, AnyView, lazy structures). User-supplied `state.equals(_:)` is the documented workaround, but uptake will be uneven. Should v2.0 try to derive a structural `equals` for the user, or insist they write it?
 4. **Calibration corpus bias.** TCA-only calibration risks the binding-table problem — heuristics tuned to TCA conventions may not generalize. Mitigation is including at least one Elm-style and one hand-rolled reducer in the corpus, but finding good OSS exemplars is itself a research task.
-5. **The `--architecture` flag.** Should v2.0 ship with an explicit `--architecture tca|observable|generic` flag, or stay carrier-agnostic and infer? Carrier-agnostic is the current decision (§2.3) but it may be the wrong one — early calibration will tell.
+5. **The `--architecture` flag.** Should v2.0 ship with an explicit `--architecture tca|generic` flag, or rely on §6.3/§6.4's automatic carrier-kind labeling? The current decision is automatic (no flag); if calibration finds the carrier inference produces noticeable false matches, the flag becomes the v2.0 ship answer.
 6. **Trace replay's interaction with `decisions.json`.** When a previously-accepted invariant starts failing on CI via a trace replay, do we auto-revoke the decision, prompt the user, or just fail loudly? The honest answer is "fail loudly" — let humans handle the regression — but that creates a new state for v1's decision schema.
 7. **Memberwise State generators.** v1's `DerivationStrategist` handles memberwise generation for plain structs. State structs often contain `@ObservationIgnored` properties, `let` constants set at init, or computed properties — the strategist's existing memberwise pass needs an audit before v2.0 M3 ships.
 
@@ -714,7 +780,7 @@ For readers who want the formal vocabulary:
 | 2. Referential integrity | Safety | `G(ref ∈ extant)` |
 | 3. Biconditional | Safety | `G(A ↔ B)` |
 | 4. Conservation | Safety | `G(derived = recompute)` |
-| 5. Idempotence | Safety | `G(f(f(s), a) = f(s, a))` |
+| 5. Idempotence | Safety | `G(f(f(s, a), a) = f(s, a))` for `a ∈ idempotentActions` |
 | 6. Reachability | Reachability (CTL) | `EF(target)` / `AG ¬ unreachable` |
 | 7. Temporal | Liveness / bounded liveness | `G(request → F(response))` / `G(request → F<T response)` |
 | 8. Accessibility | Out of scope (not temporal-logic-shaped) | — |
@@ -729,7 +795,7 @@ The pure-function arc that built v1.0 (cycles 1–68) produced four reusable ass
 
 | v1.0 Asset | v2.0 Application |
 |---|---|
-| `DerivationStrategist` (kit-side memberwise / CaseIterable / RawRepresentable) | Extended in v3.0.0 with `actionSequence(_:length:statefulGuards:)` |
+| `DerivationStrategist` (kit-side memberwise / CaseIterable / RawRepresentable) | Extended in the next kit minor with `actionSequence(from:length:statefulGuards:)` (primary) + `actionSequence(_:length:statefulGuards:)` (convenience, may return nil) |
 | Verify-pipeline subprocess harness (v1.42+) | Routes effect-bearing reducers; same five-category outcome scheme |
 | Verify-evidence persistence (`verify-evidence.json`, v1.64+) | Schema-compatible — interaction invariants persist alongside pure-function evidence |
 | `.verified` first-class tier (v1.65) | Extends to interaction invariants — bothPass action-sequence verify promotes to `.verified` |
@@ -745,4 +811,4 @@ The cycle-1 1167-baseline metric ("how many candidate suggestions does the tool 
 
 ## Document History
 
-- **v2.0 (draft)** — Initial draft of the SwiftUI / state-system extension. Five new contributions, five shape families (4 + 5 lifted from v1; 1 + 2 + 3 new), hybrid in-process / subprocess verify, kit v3.0.0 `InteractionInvariant` law surface. No surface has shipped.
+- **v2.0 (draft)** — Initial draft of the SwiftUI / state-system extension. Five new contributions, five shape families (4 + 5 lifted from v1; 1 + 2 + 3 new), hybrid in-process / subprocess verify, kit next-minor additive `InteractionInvariant` law surface. No surface has shipped.
