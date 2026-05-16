@@ -1,9 +1,19 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: cycle-0 baseline measured (v1.90 / cycle 87).** This file
-pins the v2.0 calibration corpus and records the per-corpus discovery
-counts at v1.89's M1 + M4–M7 detectors. Cycles 1+ report deltas
+**Status: cycle-1 baseline measured (v1.91 / cycle 88).** This file
+pins the v2.0 calibration corpus and records per-corpus discovery
+counts at v1.91's M1 + M4–M7 detectors. Cycles 2+ report deltas
 against these baseline numbers.
+
+**v1.91 update — cross-contamination fix landed.** Cycle-87 finding
+#2 (bare-`State` / bare-`Action` cross-contamination) was fixed in
+v1.91 via `ReducerCandidate.stateQualifiedName` /
+`actionQualifiedName` properties that thread qualified names through
+to the witness detectors. The post-fix cycle-1 baseline numbers
+replace the cycle-0 numbers below; both raw outputs are preserved
+(`docs/calibration-cycle-87-data/` for pre-fix,
+`docs/calibration-cycle-88-data/` for post-fix) for forensic
+comparison.
 
 The v2.0 analog of v1's cycle-1 1167-baseline (the candidate-count
 that the first calibration cycle starts from) is the per-corpus,
@@ -98,38 +108,43 @@ produces ~12.5% false-positive rate on this minimal corpus. PRD
 heuristic (reject `(Int, Int) -> Int` and similar "two-scalars"
 shapes) in a follow-up.
 
-**discover-interaction:** 98 interaction-invariant suggestions.
+**discover-interaction (post-v1.91 cross-contam fix):** 18
+interaction-invariant suggestions.
 
-| Family | Count | Designed total | Cross-contamination factor |
+| Family | Cycle-0 (pre-fix) | Cycle-1 (post-fix) | Designed per-fixture total |
 |---|---|---|---|
-| Idempotence | 49 | 5 | 9.8× |
-| Biconditional | 24 | 2 | 12× |
-| Referential Integrity | 12 | 2 | 6× |
-| Cardinality | 7 | 2 | 3.5× |
-| Conservation | 6 | 1 | 6× |
-| **Total** | **98** | **12** | **8.2×** |
+| Idempotence | 49 | 9 | 9 (Hand02: 4, Hand03: 3, Hand04: 1, Hand06: 1) |
+| Biconditional | 24 | 4 | 4 (Hand03: 2, Hand05: 2) |
+| Referential Integrity | 12 | 2 | 2 (Hand04) |
+| Cardinality | 7 | 2 | 2 (Hand03: 1, Hand06: 1) |
+| Conservation | 6 | 1 | 1 (Hand01) |
+| **Total** | **98** | **18** | **18** |
 
-**Cycle-87 finding #2 — bare-`State` cross-contamination.** Every
-hand-rolled reducer declares its State as a nested `Reducer.State`
-struct, so all six reducers expose a type whose bare name is
-`State`. The witness detectors (M4.B / M4.C / M5–M7) take a
-`stateTypeName: "State"` from each `ReducerCandidate` and match
+Post-fix counts match per-fixture design exactly. **81.6% reduction**
+from the cycle-0 baseline reflects the cross-contamination overhead.
+
+**Cycle-87 finding #2 — historical record.** Pre-v1.91, every
+hand-rolled reducer declared its State as a nested `Reducer.State`
+struct, so all six reducers exposed a type whose bare name was
+`State`. The witness detectors (M4.B / M4.C / M5–M7) took a
+`stateTypeName: "State"` from each `ReducerCandidate` and matched
 *any* `State` in the corpus by bare-name suffix — not the
-qualified path. Result: each of the 6 same-named-State reducers
-fires 16 witnesses (the union of every State's matchable fields),
-producing 16×6 = 96 suggestions on the bare-State reducers + 2 on
-the elm-style `CounterState` reducer (which has a distinct State
-name) = 98 total.
+qualified path. Same problem for `Action` (idempotence detection).
+Result: each of the 6 same-named-State reducers fired 16
+witnesses (the union of every State's matchable fields), producing
+16×6 = 96 suggestions + 2 elm-style = 98 total vs the designed
+total of 18.
 
-This is a real architectural finding: in a real TCA codebase where
-every reducer follows the `Reducer.State` convention, witness
-detection cross-contaminates massively. Follow-up: scope state-type
-lookup to `<enclosingTypeName>.<stateTypeName>` rather than bare
-suffix.
-
-The "designed total" column (12 witnesses) is what we'd see without
-cross-contamination. The 8.2× inflation factor on this minimal
-corpus is the cycle-87 baseline for the bare-name-collision bug.
+**v1.91 fix** added `ReducerCandidate.stateQualifiedName` and
+`actionQualifiedName` computed properties that produce
+`<enclosingType>.<typeName>` (or pass through M1.B's pre-qualified
+names like `"LazyNavigation.State"` unchanged). The
+`InteractionTemplateEngine` passes these qualified names to the
+5 detectors, scoping the type-stack suffix match to the
+candidate's own enclosing type. The dot-awareness is load-bearing
+— M1.B's TCA closure walker pre-qualifies for downstream stub
+emission, so naively prepending would produce
+`"LazyNavigation.LazyNavigation.State"` and break detector lookup.
 
 -----
 
@@ -246,49 +261,57 @@ sharpen the patterns.
 
 -----
 
-## 5. Cycle-0 baseline summary
+## 5. Cycle-1 baseline summary (post-v1.91 fix)
 
-| Corpus | Reducers detected | Interaction suggestions | Per-family non-zero |
+| Corpus | Reducers detected | Interaction suggestions (cycle-0 → cycle-1) | Per-family non-zero |
 |---|---|---|---|
-| Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 | 98 | All 5 |
-| TCA 1.25.5 (7 examples) | 0 | 0 | None |
-| TCA 1.0.0 (3 examples) | 21 | 16 | Idempotence only |
-| **Total** | **29** | **114** | 5 of 5 |
+| Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 | 98 → **18** | All 5 |
+| TCA 1.25.5 (7 examples) | 0 | 0 → 0 | None |
+| TCA 1.0.0 (3 examples) | 21 | 16 → 16 | Idempotence only |
+| **Total** | **29** | **114 → 34** | 5 of 5 |
 
-**v2.0 cycle-0 baseline = 114 interaction-invariant suggestions
-across 29 reducers (8 hand-rolled + 21 TCA-pre-macro), all at default
-Possible tier.**
+**v2.0 cycle-1 baseline = 34 interaction-invariant suggestions
+across 29 reducers (8 hand-rolled + 21 TCA-pre-macro), all at
+default Possible tier.**
+
+Cycle-0 → cycle-1 delta: −80 suggestions (−70.2%). All −80 came
+from the hand-rolled corpus where the cross-contamination factor
+was largest (the TCA corpora were unaffected because M1.B's TCA
+walker already pre-qualifies State/Action names — they were never
+cross-contaminating).
 
 Raw discovery outputs are saved to
-`docs/calibration-cycle-87-data/` for byte-stable comparison in
-cycle 1+.
+`docs/calibration-cycle-88-data/` (post-fix) +
+`docs/calibration-cycle-87-data/` (pre-fix) for forensic
+comparison.
 
 -----
 
-## 6. Follow-up work items surfaced by cycle-0 baseline
+## 6. Follow-up work items remaining after cycle-1
 
-Ordered by impact on the calibration loop:
+Cycle-87 originally surfaced 5 findings. v1.91 closed Finding #2
+(bare-`State`/bare-`Action` cross-contamination); the remaining four
+are still queued:
 
 1. **M1.D: `@Reducer` macro recognition.** Without this, all
-   modern TCA is invisible to v2.0. Highest priority — TCA is the
-   dominant Swift reducer ecosystem.
+   modern TCA is invisible to v2.0. **Highest remaining priority**
+   — TCA is the dominant Swift reducer ecosystem.
 2. **M1.A 4th-shape extension.** Recognize `(inout S, A) -> Effect<A>`
    as a method/free-function shape (the case label already exists).
    Unlocks pre-macro TCA `reduce(into:action:)` methods. Small fix.
-3. **Witness detector qualified-name scoping.** The bare-`State`
-   cross-contamination on the hand-rolled corpus (8.2× inflation)
-   would massively over-fire on any real codebase. Scope
-   `stateTypeName` lookups to `<enclosingTypeName>.State` instead
-   of bare-suffix.
-4. **Two-scalar false-positive filter.** Reject `(Int, Int) -> Int`
+3. **Two-scalar false-positive filter.** Reject `(Int, Int) -> Int`
    / `(Bool, Bool) -> Bool` / similar shapes from M1.A signature
    scan. PRD §3.5 conservative-inference posture.
-5. **Family-pattern calibration for real TCA conventions.** M4.C /
+4. **Family-pattern calibration for real TCA conventions.** M4.C /
    M5 / M6 / M7 patterns should learn `@PresentationState` /
    `IdentifiedArrayOf` / TCA Action conventions.
 
-Items 1–4 are bug-fix-shaped; items 5 is the actual three-cycle
+Items 1–3 are bug-fix-shaped; item 4 is the actual three-cycle
 calibration loop the §19 metrics measure against.
+
+**~~5.~~ Bare-`State` / bare-`Action` cross-contamination.** Closed
+in v1.91 — see `docs/calibration-cycle-88-findings.md` for the
+fix shape + post-fix measurement.
 
 -----
 
