@@ -1,0 +1,1 @@
+swift-infer discover-reducers: no reducer-shaped functions detected.

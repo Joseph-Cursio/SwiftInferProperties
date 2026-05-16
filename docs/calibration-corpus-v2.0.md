@@ -1,12 +1,13 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: skeleton (M1.C ship).** This file frames what the v2.0
-calibration corpus will be. Real OSS commit pins land at M3+ when the
-verify pipeline can validate expected per-family suggestion counts.
+**Status: cycle-0 baseline measured (v1.90 / cycle 87).** This file
+pins the v2.0 calibration corpus and records the per-corpus discovery
+counts at v1.89's M1 + M4–M7 detectors. Cycles 1+ report deltas
+against these baseline numbers.
 
 The v2.0 analog of v1's cycle-1 1167-baseline (the candidate-count
-that the first calibration cycle starts from) is the per-carrier-kind
-+ per-family discovery count this corpus produces.
+that the first calibration cycle starts from) is the per-corpus,
+per-family discovery count this file records.
 
 -----
 
@@ -21,13 +22,13 @@ swift-algorithms / swift-async-algorithms / Apollo iOS) — its corpus
 v2.0's domain is reducer-shaped state systems, so the natural corpus
 is a mix of:
 
-- **TCA exemplars.** The canonical `swift-composable-architecture/Examples/`
-  reducers — ~15 reducers across the standard examples.
-- **Elm-style OSS projects.** Smaller surface in Swift OSS; ELM-in-Swift
-  patterns mostly live in proof-of-concept projects.
-- **Hand-rolled reducers.** Analog of v1's cycle-27 frozen surface — a
-  curated set of representative reducers exercising each family at
-  least 5 times.
+- **TCA exemplars** (`swift-composable-architecture/Examples/`),
+  pinned at two versions — current (`1.25.5`) and pre-macro (`1.0.0`)
+  — so we can measure both modern-TCA detection (gap-driven) and
+  pre-`@Reducer`-era detection (signal-driven).
+- **Hand-rolled fixtures** (`Tests/Fixtures/v2.0-corpus/Sources/HandRolled/`),
+  designed to exercise each of the five PRD §5 families at least
+  once on cleanly-shaped State types.
 
 The corpus is the **denominator** for §19 metrics. A per-family
 acceptance rate of "≥ 70% on cycle 3" means nothing without a fixed
@@ -46,86 +47,269 @@ Reducer candidates are labeled with one of three carrier kinds
 | `.elmStyle` | Free `(S, A) -> S` functions — the Elm idiom (`func update(_:_:)`) | M1.A signature scan, free-function specialization at M1.C |
 | `.generic` | Methods matching canonical shapes; free `(inout S, A) -> Void`; free `(S, A) -> (S, Effect<A>)` (pre-2022 TCA) | M1.A signature scan, default |
 
-Per-carrier expected counts are TBD — populated at M3+ when discovery
-runs against the pinned OSS corpora and verify validates the numbers.
+Per-carrier-kind counts are recorded per-corpus in §3 / §4 below.
 
 -----
 
-## 3. Per-family expected suggestion counts
+## 3. Hand-rolled corpus
 
-The five interaction-template families (PRD §5):
+**Location:** `Tests/Fixtures/v2.0-corpus/Sources/HandRolled/`
+(7 fixture files, ~190 LOC total).
 
-| Family | M-milestone | Witness | Expected per-corpus count (TBD) |
+**Layout:**
+
+| File | Family targeted | Carrier kind | Designed witnesses |
 |---|---|---|---|
-| 4. Conservation | M4 (lifted from v1) | Stored aggregate + contributing collection | TBD |
-| 5. Idempotence | M4 (lifted from v1) | Action case name pattern (refresh / reset / clear) | TBD |
-| 1. Cardinality | M5 | ≥ 2 transient-presentation modifiers in State | TBD |
-| 2. Referential integrity | M6 | `selectedX: T.ID?` + `xs: [T]` pair | TBD |
-| 3. Biconditional / iff | M7 | `(isLoadingX, taskX?)` or `(isShowingX, dataX?)` pair | TBD |
+| `Hand01_Conservation.swift` | Conservation | `.generic` | 1 (itemCount × items) |
+| `Hand02_Idempotence.swift` | Idempotence | `.generic` | 4 (refresh, clear, dismiss, setColor) |
+| `Hand03_Cardinality.swift` | Cardinality | `.generic` | 1 (multi-flag bundle) |
+| `Hand04_ReferentialIntegrity.swift` | Referential Integrity | `.generic` | 2 (selectedMessageID × {messages, drafts}) |
+| `Hand05_Biconditional.swift` | Biconditional | `.generic` | 2 (isLoadingResults × {activeTask, cachedResult}) |
+| `Hand06_ElmStyle.swift` | Idempotence + Cardinality | `.elmStyle` | 1 + 1 |
+| `Hand07_Negative.swift` | none (negative) | `.generic` | 0 expected |
 
-Each per-family number lands when the family's milestone ships at
-default `Possible` visibility (§3.5 corollary). The number is the
-calibration baseline against which "stable acceptance rate" is
-measured across the three required calibration cycles before
-promotion to default-visible (`Likely` / `Strong`).
+### 3.1 Measured discovery counts (v1.89)
+
+```
+cd Tests/Fixtures/v2.0-corpus
+swift-infer discover-reducers --target HandRolled
+swift-infer discover-interaction --target HandRolled --include-possible
+```
+
+**discover-reducers:** 8 reducer-shaped functions detected.
+
+| Reducer | Signature shape | Carrier kind | Expected? |
+|---|---|---|---|
+| `CountedListReducer.reduce` | `state-action-returns-state` | `.generic` | ✓ |
+| `SettingsReducer.reduce` | `state-action-returns-state` | `.generic` | ✓ |
+| `PresentationReducer.reduce` | `state-action-returns-state` | `.generic` | ✓ |
+| `MessageListReducer.reduce` | `state-action-returns-state` | `.generic` | ✓ |
+| `FetchReducer.reduce` | `state-action-returns-state` | `.generic` | ✓ |
+| `PlainReducer.update` | `state-action-returns-state` | `.generic` | ✓ (negative reducer) |
+| `reduce` (CounterState/Action) | `state-action-returns-state` | `.elmStyle` | ✓ |
+| `transform` (Int, Int) → Int | `state-action-returns-state` | `.elmStyle` | **false positive** |
+
+The `transform: (Int, Int) -> Int` false positive matches the M1.A
+signature scan's `(S, A) -> S` shape structurally (S=A=Int). The
+scan can't distinguish "state-shaped Int" from "scalar Int" without
+type context. **Cycle-87 finding #1**: signature-only matching
+produces ~12.5% false-positive rate on this minimal corpus. PRD
+§3.5 conservative-inference posture suggests adding a carrier-name
+heuristic (reject `(Int, Int) -> Int` and similar "two-scalars"
+shapes) in a follow-up.
+
+**discover-interaction:** 98 interaction-invariant suggestions.
+
+| Family | Count | Designed total | Cross-contamination factor |
+|---|---|---|---|
+| Idempotence | 49 | 5 | 9.8× |
+| Biconditional | 24 | 2 | 12× |
+| Referential Integrity | 12 | 2 | 6× |
+| Cardinality | 7 | 2 | 3.5× |
+| Conservation | 6 | 1 | 6× |
+| **Total** | **98** | **12** | **8.2×** |
+
+**Cycle-87 finding #2 — bare-`State` cross-contamination.** Every
+hand-rolled reducer declares its State as a nested `Reducer.State`
+struct, so all six reducers expose a type whose bare name is
+`State`. The witness detectors (M4.B / M4.C / M5–M7) take a
+`stateTypeName: "State"` from each `ReducerCandidate` and match
+*any* `State` in the corpus by bare-name suffix — not the
+qualified path. Result: each of the 6 same-named-State reducers
+fires 16 witnesses (the union of every State's matchable fields),
+producing 16×6 = 96 suggestions on the bare-State reducers + 2 on
+the elm-style `CounterState` reducer (which has a distinct State
+name) = 98 total.
+
+This is a real architectural finding: in a real TCA codebase where
+every reducer follows the `Reducer.State` convention, witness
+detection cross-contaminates massively. Follow-up: scope state-type
+lookup to `<enclosingTypeName>.<stateTypeName>` rather than bare
+suffix.
+
+The "designed total" column (12 witnesses) is what we'd see without
+cross-contamination. The 8.2× inflation factor on this minimal
+corpus is the cycle-87 baseline for the bare-name-collision bug.
 
 -----
 
-## 4. OSS corpus pins (deferred to M3+)
+## 4. TCA exemplar corpus
 
-Each corpus is pinned at a specific git commit so re-running
-calibration on a later cycle compares against the same source bytes
-(matches v1's reproducibility posture — PRD §16 #6).
+Two pinned versions because the v1.89 detectors have different
+blind spots at each:
 
-**Pinning happens at M3+ ship**, not at M1. Reason: pinning numbers
-that haven't been validated against a working verify path produces a
-false anchor — better to pin once we can stand behind the counts.
+### 4.1 TCA 1.25.5 (current / `@Reducer`-macro era)
 
-The corpora intended for inclusion (no commits pinned yet):
+- **Repository**: `https://github.com/pointfreeco/swift-composable-architecture`
+- **Commit**: `1eaa6fa2ee57ac42843283b9fd3457af408c858d` (tag `1.25.5`)
+- **Examples surveyed**: CaseStudies (SwiftUI), UIKitCaseStudies, Search, SpeechRecognition, SyncUps, Todos, VoiceMemos.
 
-- **TCA examples.**
-  - Repository: `https://github.com/pointfreeco/swift-composable-architecture`
-  - Path: `Examples/`
-  - Commit: TBD (pinned at M3+ ship).
-- **Elm-style OSS.** TBD — research task to find a representative
-  exemplar. Strong candidates include any Swift reproductions of
-  classic Elm examples (counter, list-with-add/remove,
-  navigation-with-pages).
-- **Hand-rolled corpus.** TBD — analog of v1's cycle-27 frozen
-  surface. Likely lives in `Tests/Fixtures/v2.0-corpus/` once M3
-  shows what fixtures are worth keeping under version control.
+**Setup** (network + hard-copy required — `FileManager.enumerator`
+doesn't follow top-level symlinks):
+
+```
+cd /tmp && git clone --depth 1 --branch 1.25.5 \
+    https://github.com/pointfreeco/swift-composable-architecture.git tca-corpus
+mkdir -p tca-25-discovery/Sources
+cp -R /tmp/tca-corpus/Examples/CaseStudies/SwiftUICaseStudies tca-25-discovery/Sources/CaseStudies
+cp -R /tmp/tca-corpus/Examples/CaseStudies/UIKitCaseStudies tca-25-discovery/Sources/UIKitCaseStudies
+# … same for Search / SpeechRecognition / SyncUps / Todos / VoiceMemos.
+cd tca-25-discovery && for t in …; do swift-infer discover-reducers --target "$t"; done
+```
+
+**Measured discovery counts (v1.89):**
+
+| Example target | Reducers detected | Interaction suggestions |
+|---|---|---|
+| CaseStudies (SwiftUI) | 0 | (skipped — no reducers) |
+| UIKitCaseStudies | 0 | (skipped) |
+| Search | 0 | (skipped) |
+| SpeechRecognition | 0 | (skipped) |
+| SyncUps | 0 | (skipped) |
+| Todos | 0 | (skipped) |
+| VoiceMemos | 0 | (skipped) |
+| **Total** | **0** | **0** |
+
+**Cycle-87 finding #3 — M1.B blind to `@Reducer` macro.** Modern
+TCA uses the `@Reducer` macro attribute to attach `Reducer`
+conformance; the source-level `: Reducer` inheritance clause that
+v1.74's M1.B walker keys on is absent. Every example in 1.25.5
+declares its reducer as `@Reducer struct Feature { … }` rather than
+`struct Feature: Reducer { … }`. Result: 0 reducers detected across
+~100 macro-attached `@Reducer` declarations in the seven examples.
+
+This makes 1.25.5 a **gap-driven baseline** — the measurement says
+the detector misses modern TCA entirely, and the follow-up is M1.D
+@Reducer-macro recognition. Filing this as the highest-priority
+M1 follow-up.
+
+### 4.2 TCA 1.0.0 (pre-`@Reducer`-macro era)
+
+- **Commit**: `195284b94b799b326729640453f547f08892293a` (tag `1.0.0`)
+- **Examples surveyed**: SwiftUICaseStudies, UIKitCaseStudies, tvOSCaseStudies.
+- **Other 1.0.0 examples** (SpeechRecognition, Standups, etc.) already
+  used `@Reducer` macro and produce 0 detections — same gap as 1.25.5.
+
+**Setup** (same as 4.1 but with `--branch 1.0.0`):
+
+```
+cd /tmp && git clone --depth 1 --branch 1.0.0 \
+    https://github.com/pointfreeco/swift-composable-architecture.git tca-pre-macro
+mkdir -p tca-10-discovery/Sources
+cp -R /tmp/tca-pre-macro/Examples/CaseStudies/SwiftUICaseStudies tca-10-discovery/Sources/CaseStudies
+cp -R /tmp/tca-pre-macro/Examples/CaseStudies/UIKitCaseStudies tca-10-discovery/Sources/UIKitCaseStudies
+cp -R /tmp/tca-pre-macro/Examples/CaseStudies/tvOSCaseStudies tca-10-discovery/Sources/tvOSCaseStudies
+cd tca-10-discovery && for t in CaseStudies UIKitCaseStudies tvOSCaseStudies; do
+    swift-infer discover-reducers --target "$t"
+done
+```
+
+**Measured discovery counts (v1.89):**
+
+| Example target | Reducers detected | Interaction suggestions (all `Possible`) |
+|---|---|---|
+| SwiftUICaseStudies | 19 (all `.body` / generic) | 12 (all idempotence) |
+| UIKitCaseStudies | 2 (`LazyNavigation.body`, `EagerNavigation.body`) | 4 (all idempotence) |
+| tvOSCaseStudies | 0 | 0 |
+| **Total** | **21** | **16** |
+
+**Cycle-87 finding #4 — M1.A blind to `(inout S, A) -> Effect<A>` shape.**
+tvOSCaseStudies has explicit `: Reducer` conformance on `Focus` and
+`Root` structs, with `func reduce(into state: inout State, action:
+Action) -> Effect<Action>` methods (the 4th canonical reducer shape
+per PRD §6.2). v1.74's M1.B closure walker recognizes this shape
+inside `Reduce { state, action in ... }` blocks, but v1.73's M1.A
+signature scan rejects it (no shape arm matches `inout + non-Void +
+non-tuple return`). Result: 0 detections on tvOS despite 2 clean
+reducer methods. Follow-up: extend `matchReducer` in
+`ReducerDiscoverer.swift` to recognize `(inout S, A) -> Effect<A>`
+as a 4th shape (the case label already exists in
+`ReducerSignatureShape.inoutStateActionReturnsEffect`).
+
+**Cycle-87 finding #5 — only idempotence fires on real TCA.** All
+16 interaction suggestions across both example sets are
+idempotence. Cardinality / referential integrity / biconditional
+all fire 0 times on real TCA State types. Working hypotheses:
+
+- TCA convention uses `@PresentationState alert: AlertState<Action>?`
+  rather than two bare `Bool` flags, so M5 / M7's name patterns
+  don't fire on the `@Presents` wrapper.
+- TCA convention uses `IdentifiedArrayOf<X>` rather than `[X]`, so
+  M6's `[T]` array-literal match misses.
+- TCA's `Action` enum names skew toward `task` / `delegate(...)` /
+  `binding(.set(…))` shapes; only direct `refresh` / `setX` /
+  `selectX` match M4.C's curated lists.
+
+These are real signals about how the v0.0 detectors compare to
+real-world TCA naming. M4.C / M5 / M6 / M7 calibration cycles will
+sharpen the patterns.
 
 -----
 
-## 5. What this file becomes at M3+
+## 5. Cycle-0 baseline summary
 
-When this skeleton is upgraded to a real pinned corpus, the structure
-becomes:
+| Corpus | Reducers detected | Interaction suggestions | Per-family non-zero |
+|---|---|---|---|
+| Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 | 98 | All 5 |
+| TCA 1.25.5 (7 examples) | 0 | 0 | None |
+| TCA 1.0.0 (3 examples) | 21 | 16 | Idempotence only |
+| **Total** | **29** | **114** | 5 of 5 |
 
-1. Per-corpus reducer inventory: file path, carrier kind, signature
-   shape (the M1 discovery output, frozen at the pinned commit).
-2. Per-corpus per-family expected suggestion counts (M3+ scoring's
-   output, frozen at the pinned commit).
-3. Per-corpus measured-execution rate (M3+ verify's output, frozen
-   at the pinned commit).
+**v2.0 cycle-0 baseline = 114 interaction-invariant suggestions
+across 29 reducers (8 hand-rolled + 21 TCA-pre-macro), all at default
+Possible tier.**
 
-Together these are the v2.0 calibration baseline. Cycles 1–N then
-report deltas against this baseline, mirroring v1's
-`docs/calibration-cycle-N-data/` shape.
+Raw discovery outputs are saved to
+`docs/calibration-cycle-87-data/` for byte-stable comparison in
+cycle 1+.
 
 -----
 
-## 6. Open questions
+## 6. Follow-up work items surfaced by cycle-0 baseline
 
-1. **Corpus size.** v1 pinned four large OSS libraries (~thousands of
-   functions). v2.0's "reducer" surface is far smaller per repo, so
-   the corpus probably needs more *projects* — maybe 8–12 reducers
-   per project across 5–10 projects.
-2. **TCA-only bias.** If the OSS corpus is dominated by TCA, the
-   heuristics will tune to TCA conventions and not generalize. PRD
-   §14 calls this out as a risk — at least one Elm-style and one
-   hand-rolled project must be in the pinned corpus.
-3. **Whether to include `swift-infer` itself.** Dogfooding signal —
-   does v2.0 produce useful interaction-invariant suggestions on its
-   own reducer-ish code paths? Probably not many: `swift-infer` is a
-   one-shot CLI tool, not a state-system. Skip.
+Ordered by impact on the calibration loop:
+
+1. **M1.D: `@Reducer` macro recognition.** Without this, all
+   modern TCA is invisible to v2.0. Highest priority — TCA is the
+   dominant Swift reducer ecosystem.
+2. **M1.A 4th-shape extension.** Recognize `(inout S, A) -> Effect<A>`
+   as a method/free-function shape (the case label already exists).
+   Unlocks pre-macro TCA `reduce(into:action:)` methods. Small fix.
+3. **Witness detector qualified-name scoping.** The bare-`State`
+   cross-contamination on the hand-rolled corpus (8.2× inflation)
+   would massively over-fire on any real codebase. Scope
+   `stateTypeName` lookups to `<enclosingTypeName>.State` instead
+   of bare-suffix.
+4. **Two-scalar false-positive filter.** Reject `(Int, Int) -> Int`
+   / `(Bool, Bool) -> Bool` / similar shapes from M1.A signature
+   scan. PRD §3.5 conservative-inference posture.
+5. **Family-pattern calibration for real TCA conventions.** M4.C /
+   M5 / M6 / M7 patterns should learn `@PresentationState` /
+   `IdentifiedArrayOf` / TCA Action conventions.
+
+Items 1–4 are bug-fix-shaped; items 5 is the actual three-cycle
+calibration loop the §19 metrics measure against.
+
+-----
+
+## 7. Open questions (revised after cycle-0)
+
+1. **Corpus expansion.** The current corpus has 29 reducers across
+   3 corpora. PRD §19 wants per-family acceptance rates with
+   meaningful denominators — likely need 100+ reducers across more
+   projects. Candidates for cycle 1+: SyncUps re-pinned at TCA 1.4.x
+   (the last pre-macro `@Reducer`-free Standups), additional
+   Elm-style Swift projects (research task), and dogfood
+   `swift-infer` itself's `discover-interaction` pipeline against
+   smaller real-world TCA codebases.
+2. **TCA-only bias.** Currently the OSS corpus is 100% TCA. PRD §14
+   risk: heuristics tune to TCA conventions and miss generic
+   reducer patterns. At least one Elm-style and one non-TCA hand-
+   rolled project should join the corpus before promotion cycles
+   begin.
+3. **Three-cycle promotion timeline.** Per PRD §3.5 corollary, each
+   M4–M7 family needs three calibration cycles of stable acceptance
+   rate before promotion. Cycle-0 establishes baseline; cycle 1
+   would re-measure after fixing the bare-`State` cross-
+   contamination bug (item #3 above) so the per-family denominators
+   become meaningful.

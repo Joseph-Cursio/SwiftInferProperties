@@ -1,0 +1,1923 @@
+98 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .select
+
+Why suggested:
+  ✓ Action case `.select` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x006FEEEEC72FAFEB
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.activeTask != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `activeTask: TaskHandle?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `activeTask == nil` (or vice versa).
+
+Identity:  0x014654E13542A46A
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .showAlert
+
+Why suggested:
+  ✓ Action case `.showAlert` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x07273C59C8C05262
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.isShowingSheet == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingSheet: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingSheet` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x0D325E8C61E36444
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.activeTask != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `activeTask: TaskHandle?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `activeTask == nil` (or vice versa).
+
+Identity:  0x102C6072BCF8C2FB
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.activeTask != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `activeTask: TaskHandle?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `activeTask == nil` (or vice versa).
+
+Identity:  0x13A10C7AD6C82BAD
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .showCover
+
+Why suggested:
+  ✓ Action case `.showCover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x14E3685435390B26
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: (state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 3 presentation-shaped fields (2 Bool flags, 1 Optional presentation): isShowingSheet, isShowingAlert, activeFullScreenCover.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x1628477269C29926
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.cachedResult != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `cachedResult: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `cachedResult == nil` (or vice versa).
+
+Identity:  0x1998CE3E4A531361
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .select
+
+Why suggested:
+  ✓ Action case `.select` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x1C1A99B704BACE75
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: (state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 3 presentation-shaped fields (2 Bool flags, 1 Optional presentation): isShowingSheet, isShowingAlert, activeFullScreenCover.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x1F483552B6FB6B15
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .dismiss
+
+Why suggested:
+  ✓ Action case `.dismiss` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x21F9223C4FAAB86D
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x225ABCB4E3460BA6
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x280DED39E4B292F9
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x28C699EDBFE752FC
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x28E063D1073103E6
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: (state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 3 presentation-shaped fields (2 Bool flags, 1 Optional presentation): isShowingSheet, isShowingAlert, activeFullScreenCover.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x2B67DBDF8C9E7FB1
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `messages: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `messages` empty.
+
+Identity:  0x301F71BBD573E779
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.isShowingAlert == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingAlert: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingAlert` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x314027309D51094F
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .showCover
+
+Why suggested:
+  ✓ Action case `.showCover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x31E2523AC3A7F323
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.cachedResult != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `cachedResult: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `cachedResult == nil` (or vice versa).
+
+Identity:  0x382EB373CF11D0C8
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .dismiss
+
+Why suggested:
+  ✓ Action case `.dismiss` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x39993CA9A4560942
+
+[Interaction-Invariant Suggestion]
+Family:    conservation
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.itemCount == state.items.count
+
+Why suggested:
+  ✓ State stores `itemCount: Int` paired with `items: [String]` — a count-shaped conservation candidate (PRD §5.2).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — Action enum + reducer body handlers not yet inspected (M4.B+ refinement).
+  ⚠ Predicate uses `items.count` as the recompute; correct for count-shaped aggregates but wrong for sum / total / subtotal shapes (those need per-element field detection — deferred to later M4.B refinement).
+  ⚠ Initial-state invariant might not hold if `State.init()` sets `itemCount` to a non-zero default with `items` empty.
+
+Identity:  0x39CD37E7F3AA7588
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .showAlert
+
+Why suggested:
+  ✓ Action case `.showAlert` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x3C2602EBEE52E152
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .showCover
+
+Why suggested:
+  ✓ Action case `.showCover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x3C390CFE6D5A9176
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .select
+
+Why suggested:
+  ✓ Action case `.select` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x437F71B77FECD9E1
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.isShowingSheet == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingSheet: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingSheet` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x4414A53486C4CEE4
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .dismiss
+
+Why suggested:
+  ✓ Action case `.dismiss` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x441C37D7D54A0EE5
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.isShowingAlert == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingAlert: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingAlert` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x49E05B7A3E6C566F
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.drafts.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `drafts: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `drafts` empty.
+
+Identity:  0x4BA30A2FA33AC077
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .showCover
+
+Why suggested:
+  ✓ Action case `.showCover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x4C082F68E94EEDC3
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.cachedResult != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `cachedResult: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `cachedResult == nil` (or vice versa).
+
+Identity:  0x5322E671E7B9C8B0
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.isShowingSheet == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingSheet: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingSheet` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x552E9842BA29E8AE
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x56DAAA8ADA3A4368
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.cachedResult != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `cachedResult: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `cachedResult == nil` (or vice versa).
+
+Identity:  0x5D294E6FEFC187D4
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.cachedResult != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `cachedResult: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `cachedResult == nil` (or vice versa).
+
+Identity:  0x61B2AE2E52E1158E
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .clear
+
+Why suggested:
+  ✓ Action case `.clear` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x63F72651B30EB43E
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.activeTask != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `activeTask: TaskHandle?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `activeTask == nil` (or vice versa).
+
+Identity:  0x67CD83C53C9DFA32
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.activeTask != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `activeTask: TaskHandle?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `activeTask == nil` (or vice versa).
+
+Identity:  0x6AE3CAC27441579E
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .dismiss
+
+Why suggested:
+  ✓ Action case `.dismiss` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x6BD83F094A07F3A0
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .showCover
+
+Why suggested:
+  ✓ Action case `.showCover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x712D1795DD320A3E
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .select
+
+Why suggested:
+  ✓ Action case `.select` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x72BE95E06FD2164D
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: (state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 3 presentation-shaped fields (2 Bool flags, 1 Optional presentation): isShowingSheet, isShowingAlert, activeFullScreenCover.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x78A45791588995CC
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x79E17DE9C845263C
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x7E85703CE891241C
+
+[Interaction-Invariant Suggestion]
+Family:    conservation
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.itemCount == state.items.count
+
+Why suggested:
+  ✓ State stores `itemCount: Int` paired with `items: [String]` — a count-shaped conservation candidate (PRD §5.2).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — Action enum + reducer body handlers not yet inspected (M4.B+ refinement).
+  ⚠ Predicate uses `items.count` as the recompute; correct for count-shaped aggregates but wrong for sum / total / subtotal shapes (those need per-element field detection — deferred to later M4.B refinement).
+  ⚠ Initial-state invariant might not hold if `State.init()` sets `itemCount` to a non-zero default with `items` empty.
+
+Identity:  0x7EC3E1F5B21BA03B
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x827AC3C0D3F7639E
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.isShowingAlert == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingAlert: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingAlert` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x86E733EBF55CC259
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x8732848EA0A675EB
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: (state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 3 presentation-shaped fields (2 Bool flags, 1 Optional presentation): isShowingSheet, isShowingAlert, activeFullScreenCover.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x8A7F29743EDA14DC
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.activeTask != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `activeTask: TaskHandle?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `activeTask == nil` (or vice versa).
+
+Identity:  0x8ABDADD6D008F8C1
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .showAlert
+
+Why suggested:
+  ✓ Action case `.showAlert` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x8B9287484B528EC2
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand06_ElmStyle.swift:28
+State:     CounterState
+Action:    CounterAction
+Predicate: (state.isShowingMenu ? 1 : 0) + (state.isShowingHelp ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 2 presentation-shaped fields (2 Bool flags, 0 Optional presentations): isShowingMenu, isShowingHelp.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x8D6BD8CCFE6C8A14
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .dismiss
+
+Why suggested:
+  ✓ Action case `.dismiss` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x8EB90E906965ABC1
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.isShowingSheet == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingSheet: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingSheet` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x91FF71388151015C
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .clear
+
+Why suggested:
+  ✓ Action case `.clear` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x92E71B3CB434BF7F
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .clear
+
+Why suggested:
+  ✓ Action case `.clear` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x97C9FD09CAE9C108
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `messages: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `messages` empty.
+
+Identity:  0x9930CF1B914D3D75
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x9B61B0C65BC892D9
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .select
+
+Why suggested:
+  ✓ Action case `.select` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x9C2E692E188CC9D5
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.isShowingSheet == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingSheet: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingSheet` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0x9C940AD86DEB892C
+
+[Interaction-Invariant Suggestion]
+Family:    conservation
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.itemCount == state.items.count
+
+Why suggested:
+  ✓ State stores `itemCount: Int` paired with `items: [String]` — a count-shaped conservation candidate (PRD §5.2).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — Action enum + reducer body handlers not yet inspected (M4.B+ refinement).
+  ⚠ Predicate uses `items.count` as the recompute; correct for count-shaped aggregates but wrong for sum / total / subtotal shapes (those need per-element field detection — deferred to later M4.B refinement).
+  ⚠ Initial-state invariant might not hold if `State.init()` sets `itemCount` to a non-zero default with `items` empty.
+
+Identity:  0xA12C2163E49803C9
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.isShowingAlert == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingAlert: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingAlert` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0xA3BE3F151787B342
+
+[Interaction-Invariant Suggestion]
+Family:    conservation
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.itemCount == state.items.count
+
+Why suggested:
+  ✓ State stores `itemCount: Int` paired with `items: [String]` — a count-shaped conservation candidate (PRD §5.2).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — Action enum + reducer body handlers not yet inspected (M4.B+ refinement).
+  ⚠ Predicate uses `items.count` as the recompute; correct for count-shaped aggregates but wrong for sum / total / subtotal shapes (those need per-element field detection — deferred to later M4.B refinement).
+  ⚠ Initial-state invariant might not hold if `State.init()` sets `itemCount` to a non-zero default with `items` empty.
+
+Identity:  0xA7F77E614B377A95
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .select
+
+Why suggested:
+  ✓ Action case `.select` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xAAC34EB72D44A2FC
+
+[Interaction-Invariant Suggestion]
+Family:    conservation
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.itemCount == state.items.count
+
+Why suggested:
+  ✓ State stores `itemCount: Int` paired with `items: [String]` — a count-shaped conservation candidate (PRD §5.2).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — Action enum + reducer body handlers not yet inspected (M4.B+ refinement).
+  ⚠ Predicate uses `items.count` as the recompute; correct for count-shaped aggregates but wrong for sum / total / subtotal shapes (those need per-element field detection — deferred to later M4.B refinement).
+  ⚠ Initial-state invariant might not hold if `State.init()` sets `itemCount` to a non-zero default with `items` empty.
+
+Identity:  0xAB14023EC8B5B8BF
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xB2BCEC7390B9385E
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.isShowingSheet == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingSheet: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingSheet` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0xB4F3339898FEAE75
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xB5977A36BBEBD7F2
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: .showCover
+
+Why suggested:
+  ✓ Action case `.showCover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xB7C2710512F94204
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.drafts.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `drafts: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `drafts` empty.
+
+Identity:  0xB95120599738333A
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xBE23CC0652F623B2
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .clear
+
+Why suggested:
+  ✓ Action case `.clear` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xBE375BF44C7560ED
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.isShowingAlert == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingAlert: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingAlert` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0xBF2FFDE33CF877F2
+
+[Interaction-Invariant Suggestion]
+Family:    conservation
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.itemCount == state.items.count
+
+Why suggested:
+  ✓ State stores `itemCount: Int` paired with `items: [String]` — a count-shaped conservation candidate (PRD §5.2).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — Action enum + reducer body handlers not yet inspected (M4.B+ refinement).
+  ⚠ Predicate uses `items.count` as the recompute; correct for count-shaped aggregates but wrong for sum / total / subtotal shapes (those need per-element field detection — deferred to later M4.B refinement).
+  ⚠ Initial-state invariant might not hold if `State.init()` sets `itemCount` to a non-zero default with `items` empty.
+
+Identity:  0xC05406743B4464EB
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.drafts.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `drafts: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `drafts` empty.
+
+Identity:  0xC37C335FF3EB7BCA
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .showAlert
+
+Why suggested:
+  ✓ Action case `.showAlert` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xC39FEC3315BCCFE9
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .showAlert
+
+Why suggested:
+  ✓ Action case `.showAlert` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xC62D69426379F36E
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .clear
+
+Why suggested:
+  ✓ Action case `.clear` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xC81621F1B8CF7A65
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xC9D44BB9F293643C
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xCE77EA6DD242B5CD
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xD35E556742C09574
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xD76B6F11633D5CCF
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `messages: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `messages` empty.
+
+Identity:  0xD7D5D517A193AA7E
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .showAlert
+
+Why suggested:
+  ✓ Action case `.showAlert` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xD7D89E3281103E81
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand06_ElmStyle.swift:28
+State:     CounterState
+Action:    CounterAction
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xDB4AF9FDB178C90F
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `messages: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `messages` empty.
+
+Identity:  0xDB73B64CB7320F1E
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `messages: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `messages` empty.
+
+Identity:  0xDF7B4776E4770460
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: .clear
+
+Why suggested:
+  ✓ Action case `.clear` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xE3D354BF8B9FEF3F
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `messages: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `messages` empty.
+
+Identity:  0xE3ECEBF66C8A8791
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   PresentationReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.drafts.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `drafts: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `drafts` empty.
+
+Identity:  0xE5788A7E175DD5AD
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: .dismiss
+
+Why suggested:
+  ✓ Action case `.dismiss` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xE59D8E0FF0BB945F
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   PlainReducer.update
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.drafts.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `drafts: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `drafts` empty.
+
+Identity:  0xE5FCFEBEBDBF8AF0
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   CountedListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20
+State:     State
+Action:    Action
+Predicate: state.isShowingAlert == (state.activeFullScreenCover != nil)
+
+Why suggested:
+  ✓ State stores `isShowingAlert: Bool` paired with `activeFullScreenCover: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isShowingAlert` to `true` with `activeFullScreenCover == nil` (or vice versa).
+
+Identity:  0xE83AB06D6BB5C24B
+
+[Interaction-Invariant Suggestion]
+Family:    referential-integrity
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: state.selectedMessageID == nil || state.drafts.contains { $0.id == state.selectedMessageID }
+
+Why suggested:
+  ✓ State stores `selectedMessageID: Message.ID?` paired with `drafts: [Message]` — a referential-integrity candidate (PRD §5.5).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the selection points to an extant element at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .select / .delete actions not yet inspected (M6+ refinement). The PRD §5.5 third witness ('.select writes to ID + .delete clears collection without clearing selection') would strengthen this signal.
+  ⚠ Predicate uses `\$0.id ==` against `Message` — the element type must conform to `Identifiable` (or expose a comparable `id` property) for the synthesized verifier to compile. Non-conforming element types surface as `.architecturalCoveragePending` per M3.E.3.
+  ⚠ PRD §5.5 counter-signal: selection may be allowed to be stale by design (e.g., the View interprets a missing selection as 'show empty state'). This invariant is incorrect in that case — surfaced here as a caveat, not as an automatic veto.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `selectedMessageID` to a non-nil value with `drafts` empty.
+
+Identity:  0xE850A01097DFE59D
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FetchReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25
+State:     State
+Action:    Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (state-action-returns-state).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xEE13853A181CF0F1
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   MessageListReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24
+State:     State
+Action:    Action
+Predicate: (state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 3 presentation-shaped fields (2 Bool flags, 1 Optional presentation): isShowingSheet, isShowingAlert, activeFullScreenCover.
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0xFC08F80ECB544CC4
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   SettingsReducer.reduce
+Location:  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24
+State:     State
+Action:    Action
+Predicate: state.isLoadingResults == (state.cachedResult != nil)
+
+Why suggested:
+  ✓ State stores `isLoadingResults: Bool` paired with `cachedResult: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (state-action-returns-state) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoadingResults` to `true` with `cachedResult == nil` (or vice versa).
+
+Identity:  0xFFC263335C61E478
