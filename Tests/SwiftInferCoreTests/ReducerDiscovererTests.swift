@@ -84,8 +84,13 @@ struct ReducerDiscovererTests {
         #expect(result[0].signatureShape == .inoutStateActionReturnsVoid)
     }
 
-    @Test("rejects (inout S, A) -> S — return-type-with-inout is not a canonical shape")
-    func shape2RejectsInoutWithReturn() {
+    @Test("rejects (inout S, A) -> S — only Void- or Effect-returning inout shapes are canonical")
+    func shape2RejectsInoutWithStateReturn() {
+        // V1.92 (cycle-89): the `(inout S, A) -> Effect<A>` 4th shape
+        // is now a recognized shape, but `(inout S, A) -> S` (return
+        // matches first param) remains rejected — no canonical
+        // reducer convention returns the same State by value while
+        // also taking it inout.
         let source = """
         func reduce(_ state: inout AppState, _ action: AppAction) -> AppState {
             return state

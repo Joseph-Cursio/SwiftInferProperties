@@ -230,19 +230,22 @@ private final class Visitor: SyntaxVisitor {
 
         let returnRaw = node.signature.returnClause?.type.trimmedDescription ?? "Void"
         let returnType = returnRaw.trimmingCharacters(in: .whitespaces)
+        guard let shape = Self.classifyShape(
+            firstType: firstType,
+            firstIsInout: firstIsInout,
+            returnType: returnType
+        ) else {
+            return nil
+        }
 
-        let shape: ReducerSignatureShape
-        if firstIsInout {
-            // Shape 2: `(inout S, A) -> Void`.
-            guard returnType == "Void" || returnType.isEmpty else { return nil }
-            shape = .inoutStateActionReturnsVoid
-        } else if returnType == firstType {
-            // Shape 1: `(S, A) -> S`.
-            shape = .stateActionReturnsState
-        } else if isStateEffectTuple(returnType, expectedFirst: firstType) {
-            // Shape 3: `(S, A) -> (S, Effect<A>)`.
-            shape = .stateActionReturnsStateAndEffect
-        } else {
+        // V1.92 (cycle-89 fix for cycle-87 finding #1) — two-scalar
+        // false-positive filter. `transform(_: Int, _: Int) -> Int`
+        // and friends match `(S, A) -> S` structurally with S = A =
+        // Int, but no plausible reducer has scalar State + scalar
+        // Action. Reject when both types are in the curated scalar
+        // set. PRD §3.5 conservative-inference posture.
+        if ReducerDiscoverer.isScalarTypeName(firstType)
+            && ReducerDiscoverer.isScalarTypeName(secondType) {
             return nil
         }
 
@@ -353,33 +356,33 @@ private final class Visitor: SyntaxVisitor {
 
     // MARK: - Tuple-return helper (M1.A)
 
-    /// Does `returnType` look like `(<expectedFirst>, Effect<...>)`?
-    /// Tuple-shape match by depth-counting comma split — handles
-    /// generic args like `Effect<Action>` and `Effect<S.Action>`
-    /// without choking on nested `<>` / `()` / `[]`.
-    private func isStateEffectTuple(_ returnType: String, expectedFirst: String) -> Bool {
-        guard returnType.hasPrefix("(") && returnType.hasSuffix(")") else { return false }
-        let inner = returnType.dropFirst().dropLast()
-        var depth = 0
-        var commaIdx: String.Index?
-        for index in inner.indices {
-            let char = inner[index]
-            switch char {
-            case "<", "(", "[": depth += 1
-            case ">", ")", "]": depth -= 1
-            case ",":
-                if depth == 0 {
-                    commaIdx = index
-                }
-            default:
-                break
+    /// V1.92 lint pass — shape classification extracted from
+    /// `matchReducer` so the outer function stays under SwiftLint's
+    /// 50-line cap. Returns the matched `ReducerSignatureShape` or
+    /// `nil` when no canonical shape matches.
+    static func classifyShape(
+        firstType: String,
+        firstIsInout: Bool,
+        returnType: String
+    ) -> ReducerSignatureShape? {
+        if firstIsInout {
+            if returnType == "Void" || returnType.isEmpty {
+                return .inoutStateActionReturnsVoid
             }
-            if commaIdx != nil { break }
+            if ReducerDiscoverer.looksLikeEffect(returnType) {
+                // V1.92 — Shape 4: `(inout S, A) -> Effect<A>`.
+                return .inoutStateActionReturnsEffect
+            }
+            return nil
         }
-        guard let commaIdx else { return false }
-        let firstHalf = inner[..<commaIdx].trimmingCharacters(in: .whitespaces)
-        let secondHalf = inner[inner.index(after: commaIdx)...]
-            .trimmingCharacters(in: .whitespaces)
-        return firstHalf == expectedFirst && secondHalf.hasPrefix("Effect")
+        if returnType == firstType {
+            // Shape 1: `(S, A) -> S`.
+            return .stateActionReturnsState
+        }
+        if ReducerDiscoverer.isStateEffectTuple(returnType, expectedFirst: firstType) {
+            // Shape 3: `(S, A) -> (S, Effect<A>)`.
+            return .stateActionReturnsStateAndEffect
+        }
+        return nil
     }
 }
