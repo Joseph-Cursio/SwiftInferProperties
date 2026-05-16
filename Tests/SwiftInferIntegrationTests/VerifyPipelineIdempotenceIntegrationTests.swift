@@ -1,0 +1,74 @@
+import Foundation
+import SwiftInferCLI
+import SwiftInferCore
+import Testing
+
+/// V1.89 lint pass — `idempotence` arm of the verify-pipeline
+/// integration suite. Split from
+/// `VerifyPipelineIntegrationTests.swift` so each suite stays under
+/// SwiftLint's 350-line `type_body_length` cap. All tests use the
+/// shared `VerifyPipelineIntegrationFixture` helpers.
+@Suite("Verify pipeline — idempotence integration", .tags(.subprocess))
+struct VerifyPipelineIdempotenceTests {
+
+    @Test("idempotence × Complex<Double>: finite-only property fires advisory on non-finite entry")
+    func idempotenceComplexDoubleEdgeCaseAdvisory() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runIdempotencePipeline(
+            functionCall:
+                "{ (zedValue: Complex<Double>) in "
+                + "zedValue.isFinite ? Complex(1, 0) : Complex(0, 0) }",
+            carrierType: "Complex<Double>"
+        )
+        if case let .edgeCaseAdvisory(defaultTrials, _, _, _, _, edgeCaseIndex) = outcome {
+            #expect(defaultTrials == 100)
+            // First failing edge trial is one of the 8 non-finite
+            // curated entries — index resolves to [0, 7] via the
+            // `.rawStorage` match.
+            #expect((0...7).contains(edgeCaseIndex))
+        } else {
+            Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
+        }
+    }
+
+    /// **V1.44.E.3.b — idempotence × Double × defaultFails.**
+    /// `f(x) = x * 2` is non-idempotent on every non-zero input:
+    /// `f(f(x)) = 4x ≠ 2x = f(x)`. Default pass samples in ±1e6 so
+    /// the first non-zero sample fires the counterexample. Edge pass
+    /// is skipped by the runner's short-circuit.
+    @Test("idempotence × Double: non-idempotent f(x) = 2x fails default pass at trial 0")
+    func idempotenceDoubleDefaultFails() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runIdempotencePipeline(
+            functionCall: "{ (xValue: Double) in xValue * 2 }",
+            carrierType: "Double"
+        )
+        if case .defaultFails = outcome {
+            // Edge pass skipped by short-circuit; per-field
+            // counterexample data depends on the RNG-sampled value
+            // so we only pin the case.
+        } else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+        }
+    }
+
+    /// **V1.44.E.3.c — idempotence × Int × bothPass.** Identity
+    /// `{ x in x }` over `Int` — `f(f(x)) = x = f(x)` for every
+    /// integer input. Int carrier emits a zero-edge sentinel
+    /// (`VERIFY_EDGE_TRIALS: 0`), so the parser produces
+    /// `.bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0)`.
+    @Test("idempotence × Int: identity passes single-pass (zero-edge sentinel)")
+    func idempotenceIntBothPassSingleSentinel() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runIdempotencePipeline(
+            functionCall: "{ (xValue: Int) in xValue }",
+            carrierType: "Int"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            // Int carrier sentinel — V1.44.B/C convention.
+            #expect(edgeTrials == 0)
+            #expect(edgeSampled == 0)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
+
+}
