@@ -83,10 +83,12 @@ extension SwiftInferCommand.Discover {
         let setup = resolvePipelineSetup(
             directory: directory,
             includePossible: includePossible,
-            explicitVocabularyPath: explicitVocabularyPath,
-            explicitConfigPath: explicitConfigPath,
-            explicitTestDirectory: explicitTestDirectory,
-            packsOverride: packsOverride,
+            overrides: ExplicitOverrides(
+                vocabularyPath: explicitVocabularyPath,
+                configPath: explicitConfigPath,
+                testDirectory: explicitTestDirectory,
+                packs: packsOverride
+            ),
             diagnostics: diagnostics
         )
         // TestLifter M1.5 — scan tests for slices feeding the +20 cross-
@@ -262,19 +264,27 @@ extension SwiftInferCommand.Discover {
         )
     }
 
-    // swiftlint:disable:next function_parameter_count
+    /// V1.89 lint pass — bundle of the four "explicit override" inputs
+    /// to `resolvePipelineSetup`, lifted from individual params so the
+    /// function stays under the `function_parameter_count` cap. Each
+    /// field uses the same "nil means walk up / fall back to config"
+    /// semantics as the original parameters.
+    private struct ExplicitOverrides {
+        let vocabularyPath: URL?
+        let configPath: URL?
+        let testDirectory: URL?
+        let packs: String?
+    }
+
     private static func resolvePipelineSetup(
         directory: URL,
         includePossible: Bool?,
-        explicitVocabularyPath: URL?,
-        explicitConfigPath: URL?,
-        explicitTestDirectory: URL?,
-        packsOverride: String?,
+        overrides: ExplicitOverrides,
         diagnostics: any DiagnosticOutput
     ) -> PipelineSetup {
         let configResult = ConfigLoader.load(
             startingFrom: directory,
-            explicitPath: explicitConfigPath
+            explicitPath: overrides.configPath
         )
         for warning in configResult.warnings {
             diagnostics.writeDiagnostic("warning: \(warning)")
@@ -282,7 +292,7 @@ extension SwiftInferCommand.Discover {
         let effectiveIncludePossible =
             includePossible ?? configResult.config.includePossible
         let effectiveVocabularyPath = resolveVocabularyPath(
-            cliOverride: explicitVocabularyPath,
+            cliOverride: overrides.vocabularyPath,
             configValue: configResult.config.vocabularyPath,
             packageRoot: configResult.packageRoot
         )
@@ -298,13 +308,13 @@ extension SwiftInferCommand.Discover {
         // <package-root>/Tests/; the user can override with --test-dir.
         let testDirectory = effectiveTestDirectory(
             productionTarget: directory,
-            explicitTestDir: explicitTestDirectory,
+            explicitTestDir: overrides.testDirectory,
             diagnostic: { diagnostics.writeDiagnostic("warning: \($0)") }
         )
         // V1.32.C — Domain Template Packs (PRD §20.3). Precedence
         // CLI > config > nil (no filter; all templates run).
         let templateFilter = resolveTemplateFilter(
-            cliOverride: packsOverride,
+            cliOverride: overrides.packs,
             configValue: configResult.config.packs,
             diagnostics: diagnostics
         )

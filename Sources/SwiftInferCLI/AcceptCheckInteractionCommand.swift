@@ -129,11 +129,13 @@ extension SwiftInferCommand {
             let updatedLog = runChecks(
                 acceptedRecords: acceptedRecords,
                 byIdentity: byIdentity,
-                target: target,
-                workingDirectory: workingDirectory,
                 existingLog: outcomesStore.log,
-                now: now,
-                swiftInferVersion: swiftInferVersion,
+                metadata: AcceptCheckInteractionCheckMetadata(
+                    target: target,
+                    workingDirectory: workingDirectory,
+                    now: now,
+                    swiftInferVersion: swiftInferVersion
+                ),
                 output: output
             )
             let packageRoot = decisionsResult.packageRoot ?? directory
@@ -171,15 +173,11 @@ extension SwiftInferCommand {
             }
         }
 
-        // swiftlint:disable:next function_parameter_count
         private static func runChecks(
             acceptedRecords: [InteractionDecisionRecord],
             byIdentity: [String: InteractionInvariantSuggestion],
-            target: String,
-            workingDirectory: URL,
             existingLog: InteractionPostAcceptanceOutcomeLog,
-            now: Date,
-            swiftInferVersion: String,
+            metadata: AcceptCheckInteractionCheckMetadata,
             output: any DiscoverOutput
         ) -> InteractionPostAcceptanceOutcomeLog {
             var log = existingLog
@@ -187,8 +185,8 @@ extension SwiftInferCommand {
                 let outcome = classify(
                     record: record,
                     matching: byIdentity[record.identityHash],
-                    target: target,
-                    workingDirectory: workingDirectory
+                    target: metadata.target,
+                    workingDirectory: metadata.workingDirectory
                 )
                 let stored = InteractionPostAcceptanceOutcome(
                     identityHash: record.identityHash,
@@ -196,8 +194,8 @@ extension SwiftInferCommand {
                     outcome: outcome.kind,
                     detail: outcome.detail,
                     originalAcceptedAt: record.timestamp,
-                    checkedAt: now,
-                    swiftInferVersion: swiftInferVersion
+                    checkedAt: metadata.now,
+                    swiftInferVersion: metadata.swiftInferVersion
                 )
                 log = log.upserting(stored)
                 output.write(renderLine(record: record, outcome: outcome))
@@ -291,6 +289,18 @@ extension SwiftInferCommand {
 /// owning subcommand is already nested inside `SwiftInferCommand`
 /// via extension). Public so tests pattern-match on the kind /
 /// detail fields.
+/// V1.89 lint pass — per-check context bundle, lifted from
+/// `runChecks`'s 8-param signature so the function stays under the
+/// `function_parameter_count` cap. File-scope rather than nested
+/// under `AcceptCheckInteraction` to satisfy the 1-level `nesting`
+/// rule.
+struct AcceptCheckInteractionCheckMetadata {
+    let target: String
+    let workingDirectory: URL
+    let now: Date
+    let swiftInferVersion: String
+}
+
 public struct InteractionAcceptCheckOutcome: Equatable, Sendable {
     public let kind: InteractionPostAcceptanceOutcomeKind
     public let detail: String?

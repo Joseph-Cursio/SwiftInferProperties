@@ -121,11 +121,13 @@ extension SwiftInferCommand {
             let result = try Self.runQuery(
                 directoryOverride: directory,
                 explicitIndexPath: indexPath,
-                template: template,
-                type: type,
-                tier: tier,
-                decision: decision,
-                minScore: minScore,
+                filters: QueryFilters(
+                    template: template,
+                    type: type,
+                    tier: tier,
+                    decision: decision,
+                    minScore: minScore
+                ),
                 limit: limit
             )
             for warning in result.warnings {
@@ -136,17 +138,16 @@ extension SwiftInferCommand {
             print(result.rendered, terminator: "")
         }
 
-        // Pure-function surface so unit tests can drive the query
-        // path without the AsyncParsableCommand shell.
-        // swiftlint:disable:next function_parameter_count
+        /// Pure-function surface so unit tests can drive the query
+        /// path without the AsyncParsableCommand shell. V1.89 lint pass —
+        /// the original 6 filter params were bundled into `QueryFilters`
+        /// (which the function already constructed internally), dropping
+        /// the param count from 8 → 4 and eliminating the
+        /// `function_parameter_count` disable.
         static func runQuery(
             directoryOverride: String?,
             explicitIndexPath: String?,
-            template: String?,
-            type: String?,
-            tier: String?,
-            decision: String?,
-            minScore: Int?,
+            filters: QueryFilters,
             limit: Int?
         ) throws -> QueryOutcome {
             let directory = URL(fileURLWithPath: directoryOverride ?? ".")
@@ -161,13 +162,6 @@ extension SwiftInferCommand {
                 )
             }
             let load = IndexStore.load(from: resolvedPath, nowTimestamp: now)
-            let filters = QueryFilters(
-                template: template,
-                type: type,
-                tier: tier,
-                decision: decision,
-                minScore: minScore
-            )
             let filtered = applyFilters(load.index.entries, filters: filters)
             let sorted = filtered.sorted { $0.score > $1.score }
             let capped: [SemanticIndexEntry]
