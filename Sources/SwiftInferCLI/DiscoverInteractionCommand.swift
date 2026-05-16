@@ -74,17 +74,90 @@ extension SwiftInferCommand {
         )
         public var includePossible: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            Snapshot the current run's Strong-tier-or-Verified \
+            interaction-invariant suggestions to \
+            .swiftinfer/interaction-baseline.json. Used by \
+            `swift-infer drift-interaction` to compute "what's new \
+            since the last snapshot" — only Strong-tier-or-Verified \
+            suggestions added after this snapshot (and lacking a \
+            recorded decision) earn a drift warning. Filter is \
+            symmetric with InteractionDriftDetector + \
+            InteractionInvariantBridge — Possible / Likely / \
+            Suppressed are deliberately excluded so baseline + drift \
+            stay aligned. Honors --dry-run by skipping the write. \
+            Additive: the suggestion stream is still rendered.
+            """
+        )
+        public var updateBaseline: Bool = false
+
+        @Flag(
+            name: .long,
+            help: """
+            Suppress writes during --update-baseline. The would-be \
+            file path is reported on stdout and the .swiftinfer/ \
+            update is skipped. Without --update-baseline there are \
+            no writes to suppress, so --dry-run is a no-op.
+            """
+        )
+        public var dryRun: Bool = false
+
         public init() {}
 
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            let rendered = try Self.runPipeline(
+            try Self.run(
                 target: target,
                 pinRaw: reducer,
                 includePossible: includePossible,
-                workingDirectory: workingDirectory
+                updateBaseline: updateBaseline,
+                dryRun: dryRun,
+                workingDirectory: workingDirectory,
+                output: PrintOutput()
             )
-            print(rendered, terminator: rendered.hasSuffix("\n") ? "" : "\n")
+        }
+
+        /// V1.89 — full orchestrator. Drives `collectSuggestions`,
+        /// optionally writes the M10 interaction-baseline, then
+        /// renders the suggestion stream to `output`. Tests use a
+        /// recording sink for byte-stable assertions on both the
+        /// baseline-write status line and the renderer output.
+        ///
+        /// `runPipeline` (which only renders) is kept for callers
+        /// that don't need the baseline-write leg — primarily the
+        /// existing pipeline tests pinning renderer output.
+        public static func run(
+            target: String,
+            pinRaw: String? = nil,
+            includePossible: Bool = false,
+            updateBaseline: Bool = false,
+            dryRun: Bool = false,
+            workingDirectory: URL,
+            output: any DiscoverOutput,
+            firstSeenAt: Date = Date()
+        ) throws {
+            let suggestions = try collectSuggestions(
+                target: target,
+                pinRaw: pinRaw,
+                workingDirectory: workingDirectory,
+                firstSeenAt: firstSeenAt
+            )
+            if updateBaseline {
+                try runUpdateBaseline(
+                    suggestions: suggestions,
+                    workingDirectory: workingDirectory,
+                    target: target,
+                    dryRun: dryRun,
+                    output: output
+                )
+            }
+            let rendered = InteractionSuggestionRenderer.render(
+                suggestions,
+                includePossible: includePossible
+            )
+            output.write(rendered)
         }
 
         /// V2.0 M4.E — pure-ish pipeline entry. Tests drive it
@@ -162,6 +235,78 @@ extension SwiftInferCommand {
                 throw DiscoverInteractionError.noMatchingReducer(pin: pinRaw)
             }
             return matched
+        }
+
+        /// V1.89 — snapshot the current run's Strong-tier-or-Verified
+        /// suggestions to `.swiftinfer/interaction-baseline.json`.
+        /// Symmetric write side for M10's drift read. Honors `--dry-run`
+        /// by reporting the would-be path on stdout and skipping the
+        /// write.
+        ///
+        /// **Filter.** Strong + Verified only, matching
+        /// `InteractionDriftDetector.warnings` and
+        /// `InteractionInvariantBridge`. Persisting Possible / Likely
+        /// would write entries that drift would never warn against —
+        /// the two surfaces would silently desync. Today (pre-
+        /// calibration) every M4–M7 family ships at default `.possible`
+        /// so the snapshot is typically empty; that's correct (drift
+        /// today warns on nothing, and the snapshot records that
+        /// state).
+        static func runUpdateBaseline(
+            suggestions: [InteractionInvariantSuggestion],
+            workingDirectory: URL,
+            target: String,
+            dryRun: Bool,
+            output: any DiscoverOutput
+        ) throws {
+            let entries = suggestions
+                .filter { $0.tier == .strong || $0.tier == .verified }
+                .map { suggestion in
+                    InteractionBaselineEntry(
+                        identityHash: suggestion.identity.normalized,
+                        family: suggestion.family,
+                        scoreAtSnapshot: suggestion.score,
+                        tier: suggestion.tier,
+                        reducerQualifiedName: suggestion.reducerQualifiedName
+                    )
+                }
+            let baseline = InteractionBaseline(entries: entries)
+            let sourcesDirectory = workingDirectory
+                .appendingPathComponent("Sources")
+                .appendingPathComponent(target)
+            let packageRoot = findPackageRoot(startingFrom: sourcesDirectory)
+                ?? workingDirectory
+            let path = InteractionBaselineLoader.defaultPath(for: packageRoot)
+            if dryRun {
+                output.write(
+                    "[dry-run] would write interaction-baseline to "
+                        + "\(path.path) (\(entries.count) entries)."
+                )
+                return
+            }
+            try InteractionBaselineLoader.write(baseline, to: path)
+            output.write(
+                "Wrote interaction-baseline to \(path.path) (\(entries.count) entries)."
+            )
+        }
+
+        /// Walk up from `directory` looking for `Package.swift`. Same
+        /// shape as `InteractionBaselineLoader.findPackageRoot` (kept
+        /// private there); inlined here to keep the baseline-write
+        /// helper self-contained without widening the loader's API.
+        private static func findPackageRoot(startingFrom directory: URL) -> URL? {
+            var current = directory.standardizedFileURL
+            while true {
+                let manifest = current.appendingPathComponent("Package.swift")
+                if FileManager.default.fileExists(atPath: manifest.path) {
+                    return current
+                }
+                let parent = current.deletingLastPathComponent().standardizedFileURL
+                if parent == current {
+                    return nil
+                }
+                current = parent
+            }
         }
     }
 }
