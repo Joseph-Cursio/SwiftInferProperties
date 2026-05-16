@@ -24,7 +24,7 @@ import Testing
 // fails at unit-test speed.
 
 @Suite("V1.51.D — end-to-end indexer→verify resolution guard")
-struct V1_51EndToEndFromIndexTests {
+struct V151EndToEndFromIndexTests {
 
     /// The cycle-27 fixture's merged index path. Committed to the
     /// repo by V1.50.A; rebuildable via
@@ -80,7 +80,7 @@ struct V1_51EndToEndFromIndexTests {
     // (`OrderedSet.UnorderedView`, `OrderedDictionary.Elements`, etc.)
     // which fail at carrier resolution before V1.51.B's curated-pair
     // expansion is consulted. V1.51.B's expansion is exercised by
-    // V1_51DualStyleExpansionTests's unit tests; full real-indexer
+    // V151DualStyleExpansionTests's unit tests; full real-indexer
     // dual-style E2E coverage waits for v1.52+'s generic-carrier
     // TypeShape work.
 
@@ -91,7 +91,7 @@ struct V1_51EndToEndFromIndexTests {
         let store = try JSONDecoder().decode(IndexStore.Index.self, from: data)
         guard let entry = store.entries.first(where: { $0.identityHash == identityHash }) else {
             throw NSError(
-                domain: "V1_51EndToEndFromIndexTests",
+                domain: "V151EndToEndFromIndexTests",
                 code: 1,
                 userInfo: [
                     NSLocalizedDescriptionKey:

@@ -844,7 +844,7 @@ struct VerifyPipelineIntegrationTests {
             // pair directly from `functionCalls[0]` / `[1]`; this is the
             // *emit-side* of V1.49.C's non-curated pair derivation.
             // The *resolve-side* (entry.secondaryFunctionName) is
-            // exercised in the unit-test suite (V1_49SecondaryFunctionNameTests).
+            // exercised in the unit-test suite (V149SecondaryFunctionNameTests).
         } else {
             Issue.record("expected .bothPass; got \(outcome)")
         }

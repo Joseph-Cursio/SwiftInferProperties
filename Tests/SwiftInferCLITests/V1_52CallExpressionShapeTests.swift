@@ -12,7 +12,7 @@ import Testing
 // MARK: - V1.52.D.1 — CallExpressionShape.classify
 
 @Suite("V1.52.A — CallExpressionShape.classify")
-struct V1_52CallExpressionShapeTests {
+struct V152CallExpressionShapeTests {
 
     @Test("operator-named function → .operatorFunction with paren form")
     func operatorClassifiesToOperatorFunction() {
@@ -116,7 +116,7 @@ struct V1_52CallExpressionShapeTests {
 // MARK: - V1.52.D.2 — Pair-resolver integration
 
 @Suite("V1.52.A — Pair-resolver call-site integration")
-struct V1_52PairResolverIntegrationTests {
+struct V152PairResolverIntegrationTests {
 
     private static func entry(
         template: String,
@@ -174,7 +174,7 @@ struct V1_52PairResolverIntegrationTests {
 // MARK: - V1.52.D.3 — Stderr capture in parse-error detail
 
 @Suite("V1.52.B — Stderr capture in VerifyResultParser parse-error path")
-struct V1_52StderrCaptureTests {
+struct V152StderrCaptureTests {
 
     private static func output(
         exitCode: Int32,
@@ -241,7 +241,7 @@ struct V1_52StderrCaptureTests {
 // MARK: - V1.52.D.4 — GenericBindingResolver expansion
 
 @Suite("V1.54.B — GenericBindingResolver after V1.52.C key cleanup")
-struct V1_54GenericBindingExpansionTests {
+struct V154GenericBindingExpansionTests {
 
     // V1.54.B — V1.52.C's `<Type>.Index` entries were removed after
     // cycle-50 showed the indexer outputs bare type names (e.g.

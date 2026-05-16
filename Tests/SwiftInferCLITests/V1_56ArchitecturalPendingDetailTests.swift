@@ -10,7 +10,7 @@ import Testing
 // classification (nil return).
 
 @Suite("V1.56.A — architecturalPendingDetail pattern matcher")
-struct V1_56ArchitecturalPendingDetailTests {
+struct V156ArchitecturalPendingDetailTests {
 
     @Test("matches `is inaccessible due to 'internal'` on stdout")
     func matchesInternalOnStdout() {

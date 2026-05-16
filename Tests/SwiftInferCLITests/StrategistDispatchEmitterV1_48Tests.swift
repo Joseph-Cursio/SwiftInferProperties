@@ -8,7 +8,7 @@ import Testing
 // monotonicity). Pins the load-bearing emit shape per template.
 
 @Suite("StrategistDispatchEmitter — V1.48.A new template composers")
-struct StrategistDispatchEmitterV1_48Tests {
+struct StrategistDispatchEmitterV148Tests {
 
     private static let canonicalSeed = StrategistDispatchEmitter.SeedHex(
         stateA: 0x01, stateB: 0x02, stateC: 0x03, stateD: 0x04

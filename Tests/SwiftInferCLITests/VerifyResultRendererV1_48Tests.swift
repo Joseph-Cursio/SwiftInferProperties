@@ -8,7 +8,7 @@ import Testing
 // monotonicity).
 
 @Suite("VerifyResultRenderer — V1.48.D idempotence-lifted phrasing")
-struct VerifyResultRendererIdempotenceLiftedTests {
+struct RendererIdempotenceLiftedTests {
 
     private static let context = VerifyResultRenderer.Context(
         templateName: "idempotence-lifted",
@@ -44,7 +44,7 @@ struct VerifyResultRendererIdempotenceLiftedTests {
 }
 
 @Suite("VerifyResultRenderer — V1.48.D dual-style-consistency phrasing")
-struct VerifyResultRendererDualStyleConsistencyTests {
+struct RendererDualStyleConsistencyTests {
 
     private static let context = VerifyResultRenderer.Context(
         templateName: "dual-style-consistency",

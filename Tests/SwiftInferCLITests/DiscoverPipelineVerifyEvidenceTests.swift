@@ -78,7 +78,11 @@ struct DiscoverPipelineVerifyEvidenceTests {
         // filtered — bothPass grades it +50 before the cut → .strong.
         let rescued = try collect(
             directory,
-            evidence: evidenceMap(idempotence, .measuredBothPass, detail: "defaultTrials=100 edgeTrials=100 edgeSampled=6")
+            evidence: evidenceMap(
+                idempotence,
+                .measuredBothPass,
+                detail: "defaultTrials=100 edgeTrials=100 edgeSampled=6"
+            )
         )
         let lifted = rescued.first { $0.identity.normalized == idempotence.identity.normalized }
         #expect(lifted != nil)

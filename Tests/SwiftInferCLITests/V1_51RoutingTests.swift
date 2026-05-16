@@ -9,7 +9,7 @@ import Testing
 // V1.51.C v1.48-template routing flip).
 
 @Suite("V1.51.A — bare→qualified carrier normalization")
-struct V1_51CanonicalizationTests {
+struct V151CanonicalizationTests {
 
     @Test("Complex bare name canonicalizes to Complex<Double>")
     func complexCanonicalizes() {
@@ -36,7 +36,7 @@ struct V1_51CanonicalizationTests {
 }
 
 @Suite("V1.51.B — DualStyleConsistencyPairResolver curated expansion")
-struct V1_51DualStyleExpansionTests {
+struct V151DualStyleExpansionTests {
 
     private static func entry(primary: String, carrier: String = "OrderedSet") -> SemanticIndexEntry {
         SemanticIndexEntry(
@@ -123,7 +123,7 @@ struct V1_51DualStyleExpansionTests {
 }
 
 @Suite("V1.51.C — v1.48 template routing flip (always strategist)")
-struct V1_51RoutingFlipTests {
+struct V151RoutingFlipTests {
 
     private static func entry(
         template: String,

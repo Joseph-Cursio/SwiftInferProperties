@@ -31,7 +31,7 @@ import Testing
 // doesn't yet contain). v1.58 ships with this set empty.
 
 @Suite("V1.58.B — GenericBindingResolver methodology guard")
-struct V1_58MethodologyGuardTests {
+struct V158MethodologyGuardTests {
 
     /// Path to the cycle-27 fixture's merged index.
     private static let fixtureIndexPath = URL(fileURLWithPath: #filePath)
@@ -90,7 +90,12 @@ struct V1_58MethodologyGuardTests {
     func intentionalEscapeHatchesAreActualBindings() {
         let bindingKeys = Set(GenericBindingResolver.curatedBindings.keys)
         for key in Self.intentionallyUnmatchedKeys where !bindingKeys.contains(key) {
-            Issue.record("intentionallyUnmatchedKeys lists '\(key)' but it's not in curatedBindings — the escape hatch is stale.")
+            Issue.record(
+                """
+                intentionallyUnmatchedKeys lists '\(key)' but it's not in \
+                curatedBindings — the escape hatch is stale.
+                """
+            )
         }
     }
 

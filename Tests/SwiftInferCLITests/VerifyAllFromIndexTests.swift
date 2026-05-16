@@ -60,7 +60,10 @@ struct VerifySurveyEncodingTests {
         #expect(SwiftInferCommand.Verify.SurveyOutcome.measuredEdgeCaseAdvisory.rawValue == "measured-edgeCaseAdvisory")
         #expect(SwiftInferCommand.Verify.SurveyOutcome.measuredDefaultFails.rawValue == "measured-defaultFails")
         #expect(SwiftInferCommand.Verify.SurveyOutcome.measuredError.rawValue == "measured-error")
-        #expect(SwiftInferCommand.Verify.SurveyOutcome.architecturalCoveragePending.rawValue == "architectural-coverage-pending")
+        #expect(
+            SwiftInferCommand.Verify.SurveyOutcome.architecturalCoveragePending.rawValue
+                == "architectural-coverage-pending"
+        )
     }
 
     @Test("SurveyRecord JSON encodes with all five fields + sorted keys")

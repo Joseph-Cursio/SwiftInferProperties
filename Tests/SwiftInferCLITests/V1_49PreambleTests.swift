@@ -8,7 +8,7 @@ import Testing
 // V1.49.E — unit tests for the V1.49.A stub-preamble channel.
 
 @Suite("V1.49.A — stub-preamble channel across all 5 emitters")
-struct V1_49PreambleTests {
+struct V149PreambleTests {
 
     private static let canonicalSeed = RoundTripStubEmitter.SeedHex(
         stateA: 0x01, stateB: 0x02, stateC: 0x03, stateD: 0x04
@@ -147,7 +147,7 @@ struct V1_49PreambleTests {
 // V1.49.E — unit tests for the V1.49.B .memberwiseArbitrary emit.
 
 @Suite("V1.49.B — memberwiseArbitrary strategy emit")
-struct V1_49MemberwiseTests {
+struct V149MemberwiseTests {
 
     @Test("1-member struct emits map() with constructor call")
     func singleMemberEmitShape() throws {
@@ -238,7 +238,7 @@ struct V1_49MemberwiseTests {
 // V1.49.E — unit tests for V1.49.C secondaryFunctionName + resolver fallback.
 
 @Suite("V1.49.C — secondaryFunctionName + non-curated pair resolver fallback")
-struct V1_49SecondaryFunctionNameTests {
+struct V149SecondaryFunctionNameTests {
 
     private static func entry(
         primary: String,
