@@ -218,25 +218,9 @@ extension SwiftInferCommand {
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
-            // V1.67 — load persisted `swift-infer verify` evidence first
-            // so it feeds the pipeline's scoring *and* its visibility
-            // filter: `bothPass` raises the score (and can lift a pick
-            // past the visibility threshold), `defaultFails` vetoes →
-            // `.suppressed` → dropped by the pipeline's own filter. V1.66.B
-            // applied this after the pipeline, so it could only re-grade
-            // already-visible picks. `VerifyEvidenceStore.load` walks up
-            // from `directory` for the package root, so the load does not
-            // depend on the pipeline result. Absent / unreadable file →
-            // empty map → every suggestion passes through unchanged.
-            // The map is reused below for the V1.64.C render-time
-            // annotation.
-            let evidenceResult = VerifyEvidenceStore.load(startingFrom: directory)
-            for warning in evidenceResult.warnings {
-                diagnostics.writeDiagnostic("warning: \(warning)")
-            }
-            let evidenceByIdentity = Dictionary(
-                evidenceResult.log.records.map { ($0.identityHash, $0) },
-                uniquingKeysWith: { _, latest in latest }
+            let evidenceByIdentity = loadVerifyEvidenceMap(
+                directory: directory,
+                diagnostics: diagnostics
             )
             let pipeline = try collectVisibleSuggestions(
                 directory: directory,
@@ -257,22 +241,18 @@ extension SwiftInferCommand {
                 )
             }
             if interactive {
-                let packageRoot = pipeline.packageRoot ?? directory
-                let context = InteractiveTriage.Context(
-                    prompt: promptInput,
-                    output: output,
-                    diagnostics: diagnostics,
-                    outputDirectory: packageRoot,
-                    dryRun: dryRun,
-                    proposalsByType: RefactorBridgeOrchestrator.proposals(
-                        from: visible,
-                        inverseElementPairs: pipeline.inverseElementPairs
+                try runInteractiveBranch(
+                    visible: visible,
+                    pipeline: pipeline,
+                    directory: directory,
+                    triageIO: DiscoverInteractiveIO(
+                        prompt: promptInput,
+                        output: output,
+                        diagnostics: diagnostics,
+                        dryRun: dryRun
                     ),
-                    equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
-                    consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity,
-                    verifyEvidenceByIdentity: evidenceByIdentity
+                    evidenceByIdentity: evidenceByIdentity
                 )
-                try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
                 return
             }
             if updateBaseline {
@@ -283,14 +263,28 @@ extension SwiftInferCommand {
                     output: output
                 )
             }
+            renderAndWrite(
+                visible: visible,
+                statsOnly: statsOnly,
+                evidenceByIdentity: evidenceByIdentity,
+                output: output
+            )
+        }
+
+        /// V1.89 lint pass — render branch extracted from `Discover.run`
+        /// so the orchestrator body stays under SwiftLint's 50-line cap.
+        /// V1.64.C annotation behavior unchanged: when `evidenceByIdentity`
+        /// is empty, blocks render byte-identically to the pre-v1.64 output.
+        private static func renderAndWrite(
+            visible: [Suggestion],
+            statsOnly: Bool,
+            evidenceByIdentity: [String: VerifyEvidence],
+            output: any DiscoverOutput
+        ) {
             let rendered: String
             if statsOnly {
                 rendered = SuggestionRenderer.renderStats(visible)
             } else {
-                // V1.64.C — annotate each explainability block with the
-                // persisted verify evidence loaded above; V1.65.B floats
-                // `.verified` blocks first. Absent evidence → empty map →
-                // blocks render byte-identically to the pre-v1.64 output.
                 rendered = SuggestionRenderer.render(
                     visible,
                     verifyEvidenceByIdentity: evidenceByIdentity
@@ -299,7 +293,70 @@ extension SwiftInferCommand {
             output.write(rendered)
         }
 
+        /// V1.67 — load persisted `swift-infer verify` evidence so it
+        /// feeds the pipeline's scoring AND its visibility filter:
+        /// `bothPass` raises the score (and can lift a pick past the
+        /// visibility threshold), `defaultFails` vetoes → `.suppressed`
+        /// → dropped by the pipeline's own filter. The returned map
+        /// is reused for the V1.64.C render-time annotation.
+        ///
+        /// V1.89 lint pass — extracted from `Discover.run` so the
+        /// orchestrator body stays under SwiftLint's 50-line cap.
+        private static func loadVerifyEvidenceMap(
+            directory: URL,
+            diagnostics: any DiagnosticOutput
+        ) -> [String: VerifyEvidence] {
+            let evidenceResult = VerifyEvidenceStore.load(startingFrom: directory)
+            for warning in evidenceResult.warnings {
+                diagnostics.writeDiagnostic("warning: \(warning)")
+            }
+            return Dictionary(
+                evidenceResult.log.records.map { ($0.identityHash, $0) },
+                uniquingKeysWith: { _, latest in latest }
+            )
+        }
+
+        /// V1.89 lint pass — extracted from `Discover.run`. Builds the
+        /// `InteractiveTriage.Context` and hands off to `runInteractive`.
+        /// Same control flow as before the extraction.
+        private static func runInteractiveBranch(
+            visible: [Suggestion],
+            pipeline: PipelineResult,
+            directory: URL,
+            triageIO: DiscoverInteractiveIO,
+            evidenceByIdentity: [String: VerifyEvidence]
+        ) throws {
+            let packageRoot = pipeline.packageRoot ?? directory
+            let context = InteractiveTriage.Context(
+                prompt: triageIO.prompt,
+                output: triageIO.output,
+                diagnostics: triageIO.diagnostics,
+                outputDirectory: packageRoot,
+                dryRun: triageIO.dryRun,
+                proposalsByType: RefactorBridgeOrchestrator.proposals(
+                    from: visible,
+                    inverseElementPairs: pipeline.inverseElementPairs
+                ),
+                equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
+                consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity,
+                verifyEvidenceByIdentity: evidenceByIdentity
+            )
+            try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
+        }
+
     }
+}
+
+/// V1.89 lint pass — small I/O bundle for the interactive-triage path,
+/// lifted from the four individual `Discover.run` params (`promptInput`,
+/// `output`, `diagnostics`, `dryRun`) so `runInteractiveBranch` stays
+/// at 5 params. File-scope rather than nested under `Discover` to keep
+/// SwiftLint's nesting cap satisfied.
+struct DiscoverInteractiveIO {
+    let prompt: any PromptInput
+    let output: any DiscoverOutput
+    let diagnostics: any DiagnosticOutput
+    let dryRun: Bool
 }
 
 /// Sink for `Discover.run(directory:output:)`. Production code uses

@@ -111,21 +111,53 @@ extension SwiftInferCommand.Discover {
             artifacts: artifacts,
             liftedArtifacts: liftedArtifacts,
             setup: setup,
-            directory: directory,
             verifyEvidenceByIdentity: verifyEvidenceByIdentity,
             diagnostics: diagnostics
         )
-        // M11.2 — derive the per-identity hint map for the accept-flow
-        // renderer alongside the lifted promotion. Pure function over
-        // the same inputs; doesn't allocate per-Suggestion.
+        let hints = buildHintsAndShapes(
+            artifacts: artifacts,
+            liftedArtifacts: liftedArtifacts
+        )
+        return PipelineResult(
+            suggestions: visible,
+            packageRoot: setup.packageRoot,
+            inverseElementPairs: artifacts.inverseElementPairs,
+            equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
+            consumerProducerChainHintsByIdentity: hints.chainHints,
+            typeShapesByName: hints.typeShapesByName
+        )
+    }
+
+    /// V1.89 lint pass — bundle for the derived per-identity maps
+    /// that `collectVisibleSuggestions` folds into `PipelineResult`.
+    /// Returned by `buildHintsAndShapes` as a struct rather than a
+    /// 3-tuple to satisfy SwiftLint's `large_tuple` rule.
+    private struct HintsAndShapes {
+        let equivalenceClassHints: [SuggestionIdentity: EquivalenceClassHintKind]
+        let chainHints: [SuggestionIdentity: DomainHint]
+        let typeShapesByName: [String: PropertyLawCore.TypeShape]
+    }
+
+    /// V1.89 lint pass — extracted from `collectVisibleSuggestions`
+    /// for SwiftLint's body-length cap. Bundles three derived
+    /// per-identity maps:
+    ///
+    /// - M11.2 equivalence-class hints — accept-flow renderer reads
+    ///   these by promoted-suggestion identity.
+    /// - M16.3 consumer-producer-chain hints — same out-of-band
+    ///   storage shape, keyed by promoted-suggestion identity.
+    /// - V1.47.C type-shape map keyed by bare type name — feeds
+    ///   `IndexCommand.populate` so verify can call `DerivationStrategist`
+    ///   without re-parsing user sources.
+    private static func buildHintsAndShapes(
+        artifacts: TemplateRegistry.DiscoverArtifacts,
+        liftedArtifacts: TestLifter.Artifacts
+    ) -> HintsAndShapes {
         let equivalenceClassHints = LiftedSuggestionPipeline.equivalenceClassHintMap(
             from: liftedArtifacts.equivalenceClassCandidates,
             summaries: artifacts.summaries,
             typeDecls: artifacts.typeDecls
         )
-        // M16.3 — same posture: derive consumer-producer-chain hint
-        // map keyed on promoted suggestion identity for the accept-
-        // flow renderer to consult on accept.
         let chainHints = LiftedSuggestionPipeline.consumerProducerChainHintMap(
             from: liftedArtifacts.domainCallSitesByConsumer,
             roundTripPairs: LiftedSuggestionPipeline.roundTripPairs(
@@ -137,12 +169,9 @@ extension SwiftInferCommand.Discover {
             uniqueKeysWithValues: TypeShapeBuilder.shapes(from: artifacts.typeDecls)
                 .map { ($0.name, $0) }
         )
-        return PipelineResult(
-            suggestions: visible,
-            packageRoot: setup.packageRoot,
-            inverseElementPairs: artifacts.inverseElementPairs,
-            equivalenceClassHintsByIdentity: equivalenceClassHints,
-            consumerProducerChainHintsByIdentity: chainHints,
+        return HintsAndShapes(
+            equivalenceClassHints: equivalenceClassHints,
+            chainHints: chainHints,
             typeShapesByName: typeShapesByName
         )
     }
@@ -154,7 +183,6 @@ extension SwiftInferCommand.Discover {
         artifacts: TemplateRegistry.DiscoverArtifacts,
         liftedArtifacts: TestLifter.Artifacts,
         setup: PipelineSetup,
-        directory: URL,
         verifyEvidenceByIdentity: [String: VerifyEvidence],
         diagnostics: any DiagnosticOutput
     ) -> [Suggestion] {
@@ -170,7 +198,7 @@ extension SwiftInferCommand.Discover {
         )
         let skipFiltered = applyLiftedSkipMarkerFilter(
             to: promotedLifted,
-            productionTarget: directory,
+            productionTarget: setup.directory,
             testDirectory: setup.testDirectory,
             diagnostics: diagnostics
         )
@@ -207,7 +235,10 @@ extension SwiftInferCommand.Discover {
 
     /// Bundle of resolved settings the discover pipeline pulls from
     /// `ConfigLoader` + `VocabularyLoader` + `effectiveTestDirectory`.
+    /// V1.89 lint pass — carries the production-target `directory`
+    /// too so `combineAndFilter` stays under the 5-param cap.
     private struct PipelineSetup {
+        let directory: URL
         let includePossible: Bool
         let vocabulary: Vocabulary
         let testDirectory: URL
@@ -278,6 +309,7 @@ extension SwiftInferCommand.Discover {
             diagnostics: diagnostics
         )
         return PipelineSetup(
+            directory: directory,
             includePossible: effectiveIncludePossible,
             vocabulary: vocabResult.vocabulary,
             testDirectory: testDirectory,
@@ -317,118 +349,6 @@ extension SwiftInferCommand.Discover {
             )
         }
         return resolved
-    }
-
-    /// Snapshot the current run's surface-suggestion identities to
-    /// `.swiftinfer/baseline.json` (M6.5). Honors `--dry-run` by
-    /// reporting the would-be path on stdout and skipping the write.
-    /// The renderer still emits the normal suggestion stream after
-    /// the snapshot — `--update-baseline` is additive, not a mode
-    /// swap.
-    static func runUpdateBaseline(
-        suggestions: [Suggestion],
-        packageRoot: URL,
-        dryRun: Bool,
-        output: any DiscoverOutput
-    ) throws {
-        let baseline = Baseline(
-            entries: suggestions.map { suggestion in
-                BaselineEntry(
-                    identityHash: suggestion.identity.normalized,
-                    template: suggestion.templateName,
-                    scoreAtSnapshot: suggestion.score.total,
-                    tier: suggestion.score.tier
-                )
-            }
-        )
-        let path = BaselineLoader.defaultPath(for: packageRoot)
-        if dryRun {
-            output.write("[dry-run] would write baseline to \(path.path)")
-            return
-        }
-        try BaselineLoader.write(baseline, to: path)
-        output.write("Wrote baseline to \(path.path) (\(suggestions.count) entries).")
-    }
-
-    /// Drive the M6.4 `--interactive` triage session: load the
-    /// existing decisions, walk surviving suggestions through the
-    /// `[A/s/n/?]` prompt loop, persist the updated decisions
-    /// (unless `--dry-run`).
-    static func runInteractive(
-        suggestions: [Suggestion],
-        packageRoot: URL,
-        context: InteractiveTriage.Context
-    ) throws {
-        let decisionsResult = DecisionsLoader.load(startingFrom: packageRoot)
-        for warning in decisionsResult.warnings {
-            context.diagnostics.writeDiagnostic("warning: \(warning)")
-        }
-        let outcome = try InteractiveTriage.run(
-            suggestions: suggestions,
-            existingDecisions: decisionsResult.decisions,
-            context: context
-        )
-        if !context.dryRun, outcome.updatedDecisions != decisionsResult.decisions {
-            let path = decisionsResult.packageRoot.map(DecisionsLoader.defaultPath(for:))
-                ?? DecisionsLoader.defaultPath(for: packageRoot)
-            try DecisionsLoader.write(outcome.updatedDecisions, to: path)
-        }
-    }
-
-    /// Resolve the vocabulary path with CLI > config > implicit-walk-up
-    /// precedence. Relative paths in config are resolved against the
-    /// package root the config loader walked up to; absolute paths
-    /// pass through unchanged. Absoluteness is checked on the raw
-    /// string — `URL(fileURLWithPath:)` would otherwise re-anchor a
-    /// relative path against the current working directory before we
-    /// got the chance to join it with the package root.
-    static func resolveVocabularyPath(
-        cliOverride: URL?,
-        configValue: String?,
-        packageRoot: URL?
-    ) -> URL? {
-        if let cliOverride {
-            return cliOverride
-        }
-        guard let raw = configValue else {
-            return nil
-        }
-        if raw.hasPrefix("/") {
-            return URL(fileURLWithPath: raw)
-        }
-        if let packageRoot {
-            return packageRoot.appendingPathComponent(raw)
-        }
-        return URL(fileURLWithPath: raw)
-    }
-
-    /// TestLifter M6.0 — resolve TestLifter's scan directory with
-    /// precedence: explicit `--test-dir` (warn + fall through if path
-    /// doesn't exist) > walk-up to `<package-root>/Tests/` > the
-    /// production target itself (degraded fallback for tmpdir fixtures
-    /// without `Package.swift`). Pure function over its inputs.
-    public static func effectiveTestDirectory(
-        productionTarget: URL,
-        explicitTestDir: URL?,
-        diagnostic: (String) -> Void
-    ) -> URL {
-        let fileManager = FileManager.default
-        if let explicit = explicitTestDir {
-            if fileManager.fileExists(atPath: explicit.path) {
-                return explicit
-            }
-            diagnostic(
-                "--test-dir path '\(explicit.path)' does not exist; "
-                    + "falling back to walk-up resolution"
-            )
-        }
-        if let packageRoot = findPackageRootForTestDir(startingFrom: productionTarget) {
-            let tests = packageRoot.appendingPathComponent("Tests")
-            if fileManager.fileExists(atPath: tests.path) {
-                return tests
-            }
-        }
-        return productionTarget
     }
 
 }

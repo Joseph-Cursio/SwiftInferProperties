@@ -196,28 +196,8 @@ extension SwiftInferCommand.Verify {
                 )
             )
             let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
-            guard buildOutput.exitCode == 0 else {
-                if let detail = Self.architecturalPendingDetail(
-                    buildStdout: buildOutput.stdout,
-                    buildStderr: buildOutput.stderr
-                ) {
-                    return SurveyRecord(
-                        identityHash: context.identityHash,
-                        templateName: context.templateName,
-                        primaryFunctionName: context.primaryFunctionName,
-                        carrier: context.carrier,
-                        outcome: .architecturalCoveragePending,
-                        outcomeDetail: detail
-                    )
-                }
-                return SurveyRecord(
-                    identityHash: context.identityHash,
-                    templateName: context.templateName,
-                    primaryFunctionName: context.primaryFunctionName,
-                    carrier: context.carrier,
-                    outcome: .measuredError,
-                    outcomeDetail: "build-failed: exit=\(buildOutput.exitCode)"
-                )
+            if buildOutput.exitCode != 0 {
+                return surveyRecordForBuildFailure(buildOutput: buildOutput, context: context)
             }
             let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
             let parsed = VerifyResultParser.parse(runOutput)
@@ -246,6 +226,39 @@ extension SwiftInferCommand.Verify {
                 outcomeDetail: "exception: \(error.localizedDescription)"
             )
         }
+    }
+
+    /// V1.89 lint pass — extracted from `surveyRecord(for:…)` so the
+    /// per-entry survey worker stays under SwiftLint's 50-line cap.
+    /// Classifies a non-zero `swift build` exit into either
+    /// `.architecturalCoveragePending` (when the build output matches a
+    /// known signature like "no such module" or "compiler crash") or
+    /// `.measuredError` (everything else).
+    private static func surveyRecordForBuildFailure(
+        buildOutput: VerifierSubprocess.Output,
+        context: RecordContext
+    ) -> SurveyRecord {
+        if let detail = Self.architecturalPendingDetail(
+            buildStdout: buildOutput.stdout,
+            buildStderr: buildOutput.stderr
+        ) {
+            return SurveyRecord(
+                identityHash: context.identityHash,
+                templateName: context.templateName,
+                primaryFunctionName: context.primaryFunctionName,
+                carrier: context.carrier,
+                outcome: .architecturalCoveragePending,
+                outcomeDetail: detail
+            )
+        }
+        return SurveyRecord(
+            identityHash: context.identityHash,
+            templateName: context.templateName,
+            primaryFunctionName: context.primaryFunctionName,
+            carrier: context.carrier,
+            outcome: .measuredError,
+            outcomeDetail: "build-failed: exit=\(buildOutput.exitCode)"
+        )
     }
 
     /// Translate the `VerifyOutcome` (from the parser) into a

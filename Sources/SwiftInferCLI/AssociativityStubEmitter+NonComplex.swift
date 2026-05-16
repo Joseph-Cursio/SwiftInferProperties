@@ -67,7 +67,8 @@ extension AssociativityStubEmitter {
     /// edge value itself (the one drawn from the inlined doubleWithNaN
     /// generator), regardless of which slot it lands in.
     private static func doubleEdgePass(functionCall: String) -> String {
-        """
+        let trialLoop = doubleEdgePassTrialLoop(functionCall: functionCall)
+        return """
         // --- Pass 2: edge-case-biased (inlined doubleWithNaN; per-slot rotation) ---
 
         func matchEdgeCaseIndex(_ value: Double) -> Int {
@@ -83,6 +84,22 @@ extension AssociativityStubEmitter {
 
         var sampledEdgeIndices: Set<Int> = []
 
+        \(trialLoop)
+
+        print("VERIFY_EDGE_RESULT: PASS")
+        print("VERIFY_EDGE_TRIALS: \\(trials)")
+        print("VERIFY_EDGE_SAMPLED: \\(sampledEdgeIndices.count)")
+        exit(0)
+        """
+    }
+
+    /// V1.89 lint pass — extracted from `doubleEdgePass` so the
+    /// emitted-source builder stays under SwiftLint's 50-line cap.
+    /// Per-trial loop body: per-slot rotation of the edge value across
+    /// the three associativity slots (A/B/C), associativity check,
+    /// FAIL print + trap on mismatch.
+    private static func doubleEdgePassTrialLoop(functionCall: String) -> String {
+        """
         for trial in 0 ..< trials {
             let edgeSlot = trial % 3
             let edgeValue = edgeGenerator.run(using: &rng)
@@ -120,11 +137,6 @@ extension AssociativityStubEmitter {
                 exit(1)
             }
         }
-
-        print("VERIFY_EDGE_RESULT: PASS")
-        print("VERIFY_EDGE_TRIALS: \\(trials)")
-        print("VERIFY_EDGE_SAMPLED: \\(sampledEdgeIndices.count)")
-        exit(0)
         """
     }
 }
