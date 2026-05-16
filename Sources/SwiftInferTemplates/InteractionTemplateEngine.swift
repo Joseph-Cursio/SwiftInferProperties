@@ -70,7 +70,7 @@ public enum InteractionTemplateEngine {
         guard let sourcesDirectory else { return collected }
         // V2.0 M4.B — Conservation (count-shaped variant)
         let conservationWitnesses = try ConservationWitnessDetector.detect(
-            stateTypeName: candidate.stateTypeName,
+            stateTypeName: candidate.stateQualifiedName,
             in: sourcesDirectory
         )
         collected.append(contentsOf: ConservationInteractionTemplate.analyze(
@@ -80,7 +80,7 @@ public enum InteractionTemplateEngine {
         ))
         // V2.0 M4.C — Idempotence (action-case-name pattern)
         let idempotenceWitnesses = try IdempotenceWitnessDetector.detect(
-            actionTypeName: candidate.actionTypeName,
+            actionTypeName: candidate.actionQualifiedName,
             in: sourcesDirectory
         )
         collected.append(contentsOf: IdempotenceInteractionTemplate.analyze(
@@ -90,7 +90,7 @@ public enum InteractionTemplateEngine {
         ))
         // V2.0 M5 — Cardinality (≥ 2 presentation-flag fields)
         let cardinalityWitnesses = try CardinalityWitnessDetector.detect(
-            stateTypeName: candidate.stateTypeName,
+            stateTypeName: candidate.stateQualifiedName,
             in: sourcesDirectory
         )
         collected.append(contentsOf: CardinalityInteractionTemplate.analyze(
@@ -100,7 +100,7 @@ public enum InteractionTemplateEngine {
         ))
         // V2.0 M6 — Referential Integrity (selectedX + xs pair)
         let refIntegrityWitnesses = try ReferentialIntegrityWitnessDetector.detect(
-            stateTypeName: candidate.stateTypeName,
+            stateTypeName: candidate.stateQualifiedName,
             in: sourcesDirectory
         )
         collected.append(contentsOf: ReferentialIntegrityInteractionTemplate.analyze(
@@ -110,7 +110,7 @@ public enum InteractionTemplateEngine {
         ))
         // V2.0 M7 — Biconditional / iff (Bool flag + Optional pair)
         let biconditionalWitnesses = try BiconditionalWitnessDetector.detect(
-            stateTypeName: candidate.stateTypeName,
+            stateTypeName: candidate.stateQualifiedName,
             in: sourcesDirectory
         )
         collected.append(contentsOf: BiconditionalInteractionTemplate.analyze(

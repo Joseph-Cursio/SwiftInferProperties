@@ -120,6 +120,51 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         return functionName
     }
 
+    /// V1.91 (cycle-88 fix for cycle-87 finding #2) — fully-qualified
+    /// State type name. Used by the witness detectors to scope the
+    /// type-stack suffix match to the candidate's *own* State, not
+    /// any same-named State elsewhere in the corpus. Without this,
+    /// every reducer following the `Reducer.State` convention would
+    /// fire witnesses against every other reducer's State (cycle-87
+    /// measured 8.2× witness inflation on the hand-rolled corpus).
+    ///
+    /// **Dot-awareness.** M1.A's signature scan stores bare
+    /// `stateTypeName` (`"State"`) so this property prefixes the
+    /// enclosing type. M1.B's TCA closure walker already pre-
+    /// qualifies as `"<enclosingType>.State"` (the literal text is
+    /// load-bearing for downstream stub emission — see
+    /// `ActionSequenceStubEmitter`'s `\(stateTypeName)()`
+    /// constructor); when `stateTypeName` already contains a dot,
+    /// return it as-is to avoid double-qualifying.
+    public var stateQualifiedName: String {
+        Self.qualify(typeName: stateTypeName, enclosing: enclosingTypeName)
+    }
+
+    /// V1.91 (cycle-88 fix for cycle-87 finding #2) — sister to
+    /// `stateQualifiedName` for the Action enum. Same mechanism, same
+    /// rationale: `IdempotenceWitnessDetector` walks the syntax tree
+    /// looking for an enum named `actionTypeName`, and when every
+    /// reducer follows the `Reducer.Action` convention the bare-
+    /// `Action` match fires against every reducer's Action. Cycle-87
+    /// measurement showed idempotence at 49 suggestions vs designed
+    /// 9 — the same ~8× inflation factor as State.
+    public var actionQualifiedName: String {
+        Self.qualify(typeName: actionTypeName, enclosing: enclosingTypeName)
+    }
+
+    private static func qualify(typeName: String, enclosing: String?) -> String {
+        // Already-qualified names (containing a dot) come from M1.B's
+        // TCA walker, which pre-qualifies for stub-emission reasons.
+        // Pass them through untouched.
+        if typeName.contains(".") {
+            return typeName
+        }
+        if let enclosing {
+            return "\(enclosing).\(typeName)"
+        }
+        return typeName
+    }
+
     // MARK: - Codable (carrierKind backward-compat default)
 
     private enum CodingKeys: String, CodingKey {

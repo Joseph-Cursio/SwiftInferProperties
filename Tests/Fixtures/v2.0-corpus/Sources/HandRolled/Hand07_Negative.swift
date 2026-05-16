@@ -47,6 +47,6 @@ func utility(_ value: String) -> Int {
     value.count
 }
 
-func transform(_ a: Int, _ b: Int) -> Int {
-    a + b
+func transform(_ lhs: Int, _ rhs: Int) -> Int {
+    lhs + rhs
 }

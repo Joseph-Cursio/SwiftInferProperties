@@ -40,6 +40,48 @@ struct ReducerCandidateTests {
         #expect(target.qualifiedName == "reduce")
     }
 
+    // MARK: - stateQualifiedName / actionQualifiedName (V1.91 cross-contam fix)
+
+    @Test("stateQualifiedName prefixes bare State with enclosing type (M1.A shape)")
+    func stateQualifiedNameFromBareName() {
+        let target = candidate(enclosingTypeName: "Inbox", stateTypeName: "State")
+        #expect(target.stateQualifiedName == "Inbox.State")
+    }
+
+    @Test("stateQualifiedName passes already-qualified names through (M1.B shape)")
+    func stateQualifiedNamePassesQualifiedThrough() {
+        // M1.B's TCA closure walker pre-qualifies as `<enclosing>.State`
+        // because the literal text feeds downstream stub-emission shapes
+        // like `\(stateTypeName)()`. Double-qualifying would produce
+        // `LazyNavigation.LazyNavigation.State` and break detector lookup.
+        let target = candidate(enclosingTypeName: "LazyNavigation", stateTypeName: "LazyNavigation.State")
+        #expect(target.stateQualifiedName == "LazyNavigation.State")
+    }
+
+    @Test("stateQualifiedName is just the bare name for free-function reducers")
+    func stateQualifiedNameForFreeFunction() {
+        let target = candidate(enclosingTypeName: nil, stateTypeName: "CounterState")
+        #expect(target.stateQualifiedName == "CounterState")
+    }
+
+    @Test("actionQualifiedName prefixes bare Action with enclosing type (M1.A shape)")
+    func actionQualifiedNameFromBareName() {
+        let target = candidate(enclosingTypeName: "Inbox", actionTypeName: "Action")
+        #expect(target.actionQualifiedName == "Inbox.Action")
+    }
+
+    @Test("actionQualifiedName passes already-qualified names through (M1.B shape)")
+    func actionQualifiedNamePassesQualifiedThrough() {
+        let target = candidate(enclosingTypeName: "LazyNavigation", actionTypeName: "LazyNavigation.Action")
+        #expect(target.actionQualifiedName == "LazyNavigation.Action")
+    }
+
+    @Test("actionQualifiedName is just the bare name for free-function reducers")
+    func actionQualifiedNameForFreeFunction() {
+        let target = candidate(enclosingTypeName: nil, actionTypeName: "CounterAction")
+        #expect(target.actionQualifiedName == "CounterAction")
+    }
+
     // MARK: - Signature-shape raw values
 
     @Test("M1.A signature-shape rawValues are stable strings — downstream pipelines key on them")
