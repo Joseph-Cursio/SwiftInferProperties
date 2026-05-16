@@ -1,19 +1,28 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: cycle-1 baseline measured (v1.91 / cycle 88).** This file
+**Status: cycle-2 baseline measured (v1.92 / cycle 89).** This file
 pins the v2.0 calibration corpus and records per-corpus discovery
-counts at v1.91's M1 + M4–M7 detectors. Cycles 2+ report deltas
+counts at v1.92's M1 + M4–M7 detectors. Cycles 3+ report deltas
 against these baseline numbers.
 
-**v1.91 update — cross-contamination fix landed.** Cycle-87 finding
-#2 (bare-`State` / bare-`Action` cross-contamination) was fixed in
-v1.91 via `ReducerCandidate.stateQualifiedName` /
-`actionQualifiedName` properties that thread qualified names through
-to the witness detectors. The post-fix cycle-1 baseline numbers
-replace the cycle-0 numbers below; both raw outputs are preserved
-(`docs/calibration-cycle-87-data/` for pre-fix,
-`docs/calibration-cycle-88-data/` for post-fix) for forensic
-comparison.
+**v1.92 update — M1.A 4th-shape + scalar filter landed.** Cycle-87
+findings #1 (two-scalar false positive) and #4 (M1.A blind to
+`(inout S, A) -> Effect<A>`) both closed in v1.92. Reducer-
+detection count jumped 29 → 42 (+13, +44.8%) — the 4th-shape
+extension caught 13 pre-macro TCA reducers using
+`reduce(into:action:) -> Effect<Action>` that were previously
+invisible; the scalar filter dropped 1 hand-rolled false-positive
+(`transform: (Int, Int) -> Int`). Interaction-suggestion count
+moved 34 → 35 (+1) — most newly-detected TCA reducers use Action
+case names outside the curated idempotent set, confirming cycle-87
+finding #5. Cycle-2 raw outputs at
+`docs/calibration-cycle-89-data/`.
+
+**v1.91 update — cross-contamination fix.** Cycle-87 finding #2
+(bare-`State` / bare-`Action`) closed via
+`ReducerCandidate.stateQualifiedName` / `actionQualifiedName`
+properties threaded through to witness detectors. Cycle-1 outputs
+at `docs/calibration-cycle-88-data/`.
 
 The v2.0 analog of v1's cycle-1 1167-baseline (the candidate-count
 that the first calibration cycle starts from) is the per-corpus,
@@ -86,7 +95,8 @@ swift-infer discover-reducers --target HandRolled
 swift-infer discover-interaction --target HandRolled --include-possible
 ```
 
-**discover-reducers:** 8 reducer-shaped functions detected.
+**discover-reducers (post-v1.92 scalar filter):** 7 reducer-shaped
+functions detected.
 
 | Reducer | Signature shape | Carrier kind | Expected? |
 |---|---|---|---|
@@ -97,16 +107,13 @@ swift-infer discover-interaction --target HandRolled --include-possible
 | `FetchReducer.reduce` | `state-action-returns-state` | `.generic` | ✓ |
 | `PlainReducer.update` | `state-action-returns-state` | `.generic` | ✓ (negative reducer) |
 | `reduce` (CounterState/Action) | `state-action-returns-state` | `.elmStyle` | ✓ |
-| `transform` (Int, Int) → Int | `state-action-returns-state` | `.elmStyle` | **false positive** |
+| ~~`transform` (Int, Int) → Int~~ | (filtered) | (filtered) | ~~false positive~~ |
 
-The `transform: (Int, Int) -> Int` false positive matches the M1.A
-signature scan's `(S, A) -> S` shape structurally (S=A=Int). The
-scan can't distinguish "state-shaped Int" from "scalar Int" without
-type context. **Cycle-87 finding #1**: signature-only matching
-produces ~12.5% false-positive rate on this minimal corpus. PRD
-§3.5 conservative-inference posture suggests adding a carrier-name
-heuristic (reject `(Int, Int) -> Int` and similar "two-scalars"
-shapes) in a follow-up.
+**Cycle-87 finding #1 closed in v1.92.** The `transform: (Int, Int)
+-> Int` false positive is now rejected by `ReducerDiscoverer`'s
+scalar-type filter (curated set: Int / UInt variants, Bool, Double,
+Float, String, Character — both `Swift.`-prefixed and bare). No
+plausible reducer has both halves scalar.
 
 **discover-interaction (post-v1.91 cross-contam fix):** 18
 interaction-invariant suggestions.
@@ -219,27 +226,26 @@ cd tca-10-discovery && for t in CaseStudies UIKitCaseStudies tvOSCaseStudies; do
 done
 ```
 
-**Measured discovery counts (v1.89):**
+**Measured discovery counts (post-v1.92 4th-shape extension):**
 
-| Example target | Reducers detected | Interaction suggestions (all `Possible`) |
+| Example target | Reducers (cycle-0 → cycle-2) | Interactions (cycle-0 → cycle-2) |
 |---|---|---|
-| SwiftUICaseStudies | 19 (all `.body` / generic) | 12 (all idempotence) |
-| UIKitCaseStudies | 2 (`LazyNavigation.body`, `EagerNavigation.body`) | 4 (all idempotence) |
-| tvOSCaseStudies | 0 | 0 |
-| **Total** | **21** | **16** |
+| SwiftUICaseStudies | 19 → **31** (+12) | 12 → **13** (+1) |
+| UIKitCaseStudies | 2 → **3** (+1) | 4 → 4 |
+| tvOSCaseStudies | 0 → **1** (+1) | 0 → 0 |
+| **Total** | **21 → 35** (+14) | **16 → 17** (+1) |
 
-**Cycle-87 finding #4 — M1.A blind to `(inout S, A) -> Effect<A>` shape.**
-tvOSCaseStudies has explicit `: Reducer` conformance on `Focus` and
-`Root` structs, with `func reduce(into state: inout State, action:
-Action) -> Effect<Action>` methods (the 4th canonical reducer shape
-per PRD §6.2). v1.74's M1.B closure walker recognizes this shape
-inside `Reduce { state, action in ... }` blocks, but v1.73's M1.A
-signature scan rejects it (no shape arm matches `inout + non-Void +
-non-tuple return`). Result: 0 detections on tvOS despite 2 clean
-reducer methods. Follow-up: extend `matchReducer` in
-`ReducerDiscoverer.swift` to recognize `(inout S, A) -> Effect<A>`
-as a 4th shape (the case label already exists in
-`ReducerSignatureShape.inoutStateActionReturnsEffect`).
+**Cycle-87 finding #4 closed in v1.92.** `ReducerDiscoverer.matchReducer`
+now recognizes the 4th canonical reducer shape `(inout S, A) ->
+Effect<A>`. The case label `ReducerSignatureShape.inoutStateActionReturnsEffect`
+existed since v1.83 (used by M1.B's closure walker for `Reduce {
+state, action in ... }` blocks); v1.92 extends M1.A's signature
+scan to assign the same shape to plain methods + free functions.
+tvOSCaseStudies' `Focus.reduce(into:action:)` and 12 additional
+SwiftUICaseStudies methods that were previously invisible now
+surface. The interaction-suggestion delta is small (+1) because
+most newly-detected reducers use Action case names outside the
+curated idempotent set — cycle-87 finding #5 in action.
 
 **Cycle-87 finding #5 — only idempotence fires on real TCA.** All
 16 interaction suggestions across both example sets are
@@ -261,57 +267,61 @@ sharpen the patterns.
 
 -----
 
-## 5. Cycle-1 baseline summary (post-v1.91 fix)
+## 5. Cycle-2 baseline summary (post-v1.92 fixes)
 
-| Corpus | Reducers detected | Interaction suggestions (cycle-0 → cycle-1) | Per-family non-zero |
+| Corpus | Reducers (c0 → c2) | Interactions (c0 → c2) | Per-family non-zero |
 |---|---|---|---|
-| Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 | 98 → **18** | All 5 |
-| TCA 1.25.5 (7 examples) | 0 | 0 → 0 | None |
-| TCA 1.0.0 (3 examples) | 21 | 16 → 16 | Idempotence only |
-| **Total** | **29** | **114 → 34** | 5 of 5 |
+| Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 → **7** | 98 → **18** | All 5 |
+| TCA 1.25.5 (7 examples) | 0 → 0 | 0 → 0 | None |
+| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **17** | Idempotence only |
+| **Total** | **29 → 42** | **114 → 35** | 5 of 5 |
 
-**v2.0 cycle-1 baseline = 34 interaction-invariant suggestions
-across 29 reducers (8 hand-rolled + 21 TCA-pre-macro), all at
+**v2.0 cycle-2 baseline = 35 interaction-invariant suggestions
+across 42 reducers (7 hand-rolled + 35 TCA-pre-macro), all at
 default Possible tier.**
 
-Cycle-0 → cycle-1 delta: −80 suggestions (−70.2%). All −80 came
-from the hand-rolled corpus where the cross-contamination factor
-was largest (the TCA corpora were unaffected because M1.B's TCA
-walker already pre-qualifies State/Action names — they were never
-cross-contaminating).
+Per-cycle deltas:
+- **Cycle-0 → cycle-1** (v1.91 cross-contam fix): 114 → 34 suggestions
+  (−80, −70.2%). All from hand-rolled corpus.
+- **Cycle-1 → cycle-2** (v1.92 4th-shape + scalar filter): 34 → 35
+  suggestions (+1) and 29 → 42 reducers (+13). 4th-shape extension
+  catches 14 new TCA reducers (12 SwiftUI + 1 UIKit + 1 tvOS);
+  scalar filter drops 1 hand-rolled false-positive (`transform`).
+  Interaction-count delta is small because most newly-detected
+  reducers use Action names outside M4.C's curated idempotent set.
 
-Raw discovery outputs are saved to
-`docs/calibration-cycle-88-data/` (post-fix) +
-`docs/calibration-cycle-87-data/` (pre-fix) for forensic
-comparison.
+Raw discovery outputs:
+- `docs/calibration-cycle-87-data/` — cycle-0 (pre-v1.91, baseline)
+- `docs/calibration-cycle-88-data/` — cycle-1 (post-v1.91)
+- `docs/calibration-cycle-89-data/` — cycle-2 (post-v1.92)
 
 -----
 
-## 6. Follow-up work items remaining after cycle-1
+## 6. Follow-up work items remaining after cycle-2
 
-Cycle-87 originally surfaced 5 findings. v1.91 closed Finding #2
-(bare-`State`/bare-`Action` cross-contamination); the remaining four
-are still queued:
+Cycle-87 originally surfaced 5 findings. v1.91 closed #2 (bare-name
+cross-contamination); v1.92 closed #1 (two-scalar false positive)
+and #4 (M1.A 4th-shape). Two remain:
 
 1. **M1.D: `@Reducer` macro recognition.** Without this, all
    modern TCA is invisible to v2.0. **Highest remaining priority**
-   — TCA is the dominant Swift reducer ecosystem.
-2. **M1.A 4th-shape extension.** Recognize `(inout S, A) -> Effect<A>`
-   as a method/free-function shape (the case label already exists).
-   Unlocks pre-macro TCA `reduce(into:action:)` methods. Small fix.
-3. **Two-scalar false-positive filter.** Reject `(Int, Int) -> Int`
-   / `(Bool, Bool) -> Bool` / similar shapes from M1.A signature
-   scan. PRD §3.5 conservative-inference posture.
-4. **Family-pattern calibration for real TCA conventions.** M4.C /
+   — TCA is the dominant Swift reducer ecosystem, and cycle-89
+   measurement confirms TCA 1.25.5 still produces 0 detections
+   across all 7 examples surveyed.
+2. **Family-pattern calibration for real TCA conventions.** M4.C /
    M5 / M6 / M7 patterns should learn `@PresentationState` /
-   `IdentifiedArrayOf` / TCA Action conventions.
+   `IdentifiedArrayOf` / TCA Action conventions. Cycle-89's +14
+   reducer-detection delta on TCA 1.0.0 only translated to +1
+   interaction-suggestion delta — confirming that Action name
+   conventions are the dominant gap, not detection.
 
-Items 1–3 are bug-fix-shaped; item 4 is the actual three-cycle
+Item 1 is bug-fix-shaped; item 2 is the actual three-cycle
 calibration loop the §19 metrics measure against.
 
-**~~5.~~ Bare-`State` / bare-`Action` cross-contamination.** Closed
-in v1.91 — see `docs/calibration-cycle-88-findings.md` for the
-fix shape + post-fix measurement.
+**Closed findings**:
+- **#1** (two-scalar false positive) — closed in v1.92.
+- **#2** (bare-`State` / bare-`Action` cross-contamination) — closed in v1.91.
+- **#4** (M1.A 4th-shape extension) — closed in v1.92.
 
 -----
 
