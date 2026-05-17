@@ -1,0 +1,37 @@
+2 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SyncUpDetail.body
+Location:  /private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpDetail.swift:52
+State:     SyncUpDetail.State
+Action:    SyncUpDetail.Action
+Predicate: .delegate
+
+Why suggested:
+  ✓ Action case `.delegate` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x0601E26716079C49
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SyncUpForm.body
+Location:  /private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpForm.swift:37
+State:     SyncUpForm.State
+Action:    SyncUpForm.Action
+Predicate: .binding
+
+Why suggested:
+  ✓ Action case `.binding` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x2F42BD614C76A015

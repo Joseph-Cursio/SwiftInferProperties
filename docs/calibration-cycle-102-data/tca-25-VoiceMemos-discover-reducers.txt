@@ -1,0 +1,5 @@
+swift-infer discover-reducers — detected 3 reducer-shaped functions:
+
+  /private/tmp/tca-25-discovery/Sources/VoiceMemos/RecordingMemo.swift:39  RecordingMemo.body  signature:inout-state-action-returns-effect  state:RecordingMemo.State  action:RecordingMemo.Action
+  /private/tmp/tca-25-discovery/Sources/VoiceMemos/VoiceMemo.swift:43  VoiceMemo.body  signature:inout-state-action-returns-effect  state:VoiceMemo.State  action:VoiceMemo.Action
+  /private/tmp/tca-25-discovery/Sources/VoiceMemos/VoiceMemos.swift:40  VoiceMemos.body  signature:inout-state-action-returns-effect  state:VoiceMemos.State  action:VoiceMemos.Action
