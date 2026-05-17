@@ -96,10 +96,28 @@ extension SwiftInferCommand {
         @Flag(
             name: .long,
             help: """
-            Suppress writes during --update-baseline. The would-be \
-            file path is reported on stdout and the .swiftinfer/ \
-            update is skipped. Without --update-baseline there are \
-            no writes to suppress, so --dry-run is a no-op.
+            Walk surviving suggestions one at a time, prompting \
+            [A/C/s/n/?]: Accept records `accepted` in \
+            .swiftinfer/interaction-decisions.json; Conformance \
+            records `accepted-as-conformance` (signals the invariant \
+            should be expressed as a SwiftPropertyLaws-side protocol); \
+            Skip / Reject behave as in v1 (skip re-surfaces, reject \
+            hides from future drift warnings). Mutually exclusive \
+            with --update-baseline; honors --dry-run by skipping the \
+            decisions write. (V1.98 cycle-95, PRD §9.4 per-suggestion \
+            form.)
+            """
+        )
+        public var interactive: Bool = false
+
+        @Flag(
+            name: .long,
+            help: """
+            Suppress writes during --update-baseline or --interactive. \
+            For --update-baseline the would-be file path is reported \
+            on stdout; for --interactive the triage loop runs but the \
+            decisions JSON write is skipped. No-op without either \
+            flag.
             """
         )
         public var dryRun: Bool = false
@@ -113,29 +131,40 @@ extension SwiftInferCommand {
                 pinRaw: reducer,
                 includePossible: includePossible,
                 updateBaseline: updateBaseline,
+                interactive: interactive,
                 dryRun: dryRun,
                 workingDirectory: workingDirectory,
-                output: PrintOutput()
+                output: PrintOutput(),
+                diagnostics: PrintDiagnosticOutput()
             )
         }
 
         /// V1.89 — full orchestrator. Drives `collectSuggestions`,
-        /// optionally writes the M10 interaction-baseline, then
+        /// optionally writes the M10 interaction-baseline (v1.89) or
+        /// runs the per-suggestion interactive triage (v1.98), then
         /// renders the suggestion stream to `output`. Tests use a
-        /// recording sink for byte-stable assertions on both the
-        /// baseline-write status line and the renderer output.
+        /// recording sink for byte-stable assertions.
+        ///
+        /// V1.98 — `--interactive` and `--update-baseline` are
+        /// mutually exclusive (different gestures); if both are set,
+        /// the orchestrator emits a warning and ignores
+        /// `--update-baseline`. The render pass still runs after
+        /// either branch — both are additive to the suggestion
+        /// stream output.
         ///
         /// `runPipeline` (which only renders) is kept for callers
-        /// that don't need the baseline-write leg — primarily the
-        /// existing pipeline tests pinning renderer output.
+        /// that don't need the baseline-write / triage leg.
         public static func run(
             target: String,
             pinRaw: String? = nil,
             includePossible: Bool = false,
             updateBaseline: Bool = false,
+            interactive: Bool = false,
             dryRun: Bool = false,
             workingDirectory: URL,
+            promptInput: any PromptInput = StdinPromptInput(),
             output: any DiscoverOutput,
+            diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             firstSeenAt: Date = Date()
         ) throws {
             let suggestions = try collectSuggestions(
@@ -144,7 +173,25 @@ extension SwiftInferCommand {
                 workingDirectory: workingDirectory,
                 firstSeenAt: firstSeenAt
             )
-            if updateBaseline {
+            if interactive, updateBaseline {
+                diagnostics.writeDiagnostic(
+                    "warning: --interactive and --update-baseline are mutually exclusive; "
+                        + "--update-baseline ignored for this run"
+                )
+            }
+            if interactive {
+                try runInteractiveBranch(
+                    suggestions: suggestions,
+                    workingDirectory: workingDirectory,
+                    target: target,
+                    triageIO: InteractionInteractiveTriage.Inputs(
+                        prompt: promptInput,
+                        output: output,
+                        diagnostics: diagnostics,
+                        dryRun: dryRun
+                    )
+                )
+            } else if updateBaseline {
                 try runUpdateBaseline(
                     suggestions: suggestions,
                     workingDirectory: workingDirectory,
@@ -237,77 +284,6 @@ extension SwiftInferCommand {
             return matched
         }
 
-        /// V1.89 — snapshot the current run's Strong-tier-or-Verified
-        /// suggestions to `.swiftinfer/interaction-baseline.json`.
-        /// Symmetric write side for M10's drift read. Honors `--dry-run`
-        /// by reporting the would-be path on stdout and skipping the
-        /// write.
-        ///
-        /// **Filter.** Strong + Verified only, matching
-        /// `InteractionDriftDetector.warnings` and
-        /// `InteractionInvariantBridge`. Persisting Possible / Likely
-        /// would write entries that drift would never warn against —
-        /// the two surfaces would silently desync. Today (pre-
-        /// calibration) every M4–M7 family ships at default `.possible`
-        /// so the snapshot is typically empty; that's correct (drift
-        /// today warns on nothing, and the snapshot records that
-        /// state).
-        static func runUpdateBaseline(
-            suggestions: [InteractionInvariantSuggestion],
-            workingDirectory: URL,
-            target: String,
-            dryRun: Bool,
-            output: any DiscoverOutput
-        ) throws {
-            let entries = suggestions
-                .filter { $0.tier == .strong || $0.tier == .verified }
-                .map { suggestion in
-                    InteractionBaselineEntry(
-                        identityHash: suggestion.identity.normalized,
-                        family: suggestion.family,
-                        scoreAtSnapshot: suggestion.score,
-                        tier: suggestion.tier,
-                        reducerQualifiedName: suggestion.reducerQualifiedName
-                    )
-                }
-            let baseline = InteractionBaseline(entries: entries)
-            let sourcesDirectory = workingDirectory
-                .appendingPathComponent("Sources")
-                .appendingPathComponent(target)
-            let packageRoot = findPackageRoot(startingFrom: sourcesDirectory)
-                ?? workingDirectory
-            let path = InteractionBaselineLoader.defaultPath(for: packageRoot)
-            if dryRun {
-                output.write(
-                    "[dry-run] would write interaction-baseline to "
-                        + "\(path.path) (\(entries.count) entries)."
-                )
-                return
-            }
-            try InteractionBaselineLoader.write(baseline, to: path)
-            output.write(
-                "Wrote interaction-baseline to \(path.path) (\(entries.count) entries)."
-            )
-        }
-
-        /// Walk up from `directory` looking for `Package.swift`. Same
-        /// shape as `InteractionBaselineLoader.findPackageRoot` (kept
-        /// private there); inlined here to keep the baseline-write
-        /// helper self-contained without widening the loader's API.
-        private static func findPackageRoot(startingFrom directory: URL) -> URL? {
-            var current = directory.standardizedFileURL
-            while true {
-                let manifest = current.appendingPathComponent("Package.swift")
-                if FileManager.default.fileExists(atPath: manifest.path) {
-                    return current
-                }
-                let parent = current.deletingLastPathComponent().standardizedFileURL
-                if parent == current {
-                    return nil
-                }
-                current = parent
-            }
-        }
     }
 }
 
