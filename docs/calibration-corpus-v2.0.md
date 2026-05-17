@@ -1,9 +1,20 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: cycle-5 baseline measured (v1.95 / cycle 92).** This file
+**Status: cycle-6 baseline measured (v1.96 / cycle 93).** This file
 pins the v2.0 calibration corpus and records per-corpus discovery
-counts at v1.95's M1 + M4–M7 detectors. Cycles 6+ report deltas
+counts at v1.96's M1 + M4–M7 detectors. Cycles 7+ report deltas
 against these baseline numbers.
+
+**v1.96 update — Idempotence TCA action-name conventions.** Third
+family-pattern-calibration sub-cycle. Adds `task` / `delegate` /
+`binding` to `IdempotenceWitnessDetector.exactNames` — three
+canonical TCA conventions every Action enum uses. **TCA 1.25.5:
+23 → 31 interactions (+8 idempotence)** with first detections on
+SyncUps (+2) and Todos (+1). TCA 1.0.0 also picks up +4 idempotence
+plus a belated +1 cardinality from v1.94 that wasn't re-measured
+at cycle-4. Total corpus delta: +13 interactions (largest
+single-cycle unlock outside the M1.D macro cycle). Cycle-6 raw
+outputs at `docs/calibration-cycle-93-data/`.
 
 **v1.95 update — Referential Integrity `IdentifiedArrayOf<X>`
 recognition.** Second family-pattern-calibration sub-cycle of
@@ -301,28 +312,35 @@ sharpen the patterns.
 
 -----
 
-## 5. Cycle-5 baseline summary (post-v1.95 RefInt IdentifiedArrayOf)
+## 5. Cycle-6 baseline summary (post-v1.96 Idempotence TCA names)
 
-| Corpus | Reducers (c0 → c5) | Interactions (c0 → c5) | Per-family non-zero |
+| Corpus | Reducers (c0 → c6) | Interactions (c0 → c6) | Per-family non-zero |
 |---|---|---|---|
 | Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 → **7** | 98 → **18** | All 5 |
-| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **23** | Idempotence + Cardinality |
-| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **16** | Idempotence only |
-| **Total** | **29 → 92** | **114 → 57** | 5 of 5 (hand-rolled) |
+| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **31** | Idempotence + Cardinality |
+| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **21** | Idempotence + Cardinality |
+| **Total** | **29 → 92** | **114 → 70** | 5 of 5 (hand-rolled) |
 
-**v2.0 cycle-5 baseline = 57 interaction-invariant suggestions
-across 92 reducers, all at default Possible tier.** Unchanged from
-cycle-4 — the v1.95 IdentifiedArrayOf recognition is correct
-but TCA's lack of `selected*` properties means the pairing rule
-doesn't fire (see cycle-92 findings calibration note).
+**v2.0 cycle-6 baseline = 70 interaction-invariant suggestions
+across 92 reducers, all at default Possible tier.** Per-family:
+55 idempotence + 8 cardinality + 4 biconditional + 2 referential
+integrity + 1 conservation. Idempotence dominates (76% share)
+because v1.96 expanded its name set, and cycle-91/cycle-92
+confirmed Cardinality + RefInt are bounded by TCA's *other*
+naming conventions.
 
 Per-cycle deltas (chronological):
 - **Cycle-0 → 1** (v1.91 cross-contam fix): 114 → 34 (−80).
 - **Cycle-1 → 2** (v1.92 4th-shape + scalar): 34 → 35 (+1), 29 → 42 reducers (+13).
 - **Cycle-2 → 3** (v1.93 M1.D macro): 35 → 56 (+21), 42 → 92 reducers (+50).
-- **Cycle-3 → 4** (v1.94 cardinality @Presents): 56 → 57 (+1).
+- **Cycle-3 → 4** (v1.94 cardinality @Presents): 56 → 57 (+1 on
+  TCA 1.25.5; +1 on TCA 1.0.0 caught belatedly in cycle-6).
 - **Cycle-4 → 5** (v1.95 RefInt IdentifiedArrayOf): 57 → 57 (no
   delta — detector correct, but TCA doesn't use `selected*` naming).
+- **Cycle-5 → 6** (v1.96 Idempotence TCA action names): 57 → 70
+  (+13). TCA 1.25.5 +8 (first detections on SyncUps, Todos,
+  VoiceMemos idempotence). TCA 1.0.0 +5 (+4 idempotence from
+  v1.96 + 1 belated cardinality from v1.94).
 
 Raw discovery outputs:
 - `docs/calibration-cycle-87-data/` — cycle-0 (pre-v1.91 baseline)
@@ -331,27 +349,26 @@ Raw discovery outputs:
 - `docs/calibration-cycle-90-data/` — cycle-3 (post-v1.93)
 - `docs/calibration-cycle-91-data/` — cycle-4 (post-v1.94)
 - `docs/calibration-cycle-92-data/` — cycle-5 (post-v1.95)
+- `docs/calibration-cycle-93-data/` — cycle-6 (post-v1.96)
 
 -----
 
-## 6. Follow-up work items remaining after cycle-5
+## 6. Follow-up work items remaining after cycle-6
 
 Cycle-87 finding #5 broke into 4 sub-items. v1.94 closed (a),
-v1.95 closed (b). Two remain:
+v1.95 closed (b), v1.96 closed (c). One remains:
 
-1. **Idempotence: TCA action-name conventions** — extend M4.C's
-   curated set with `task` / `delegate(...)` / `binding(.set(...))`.
-   Highest expected unlock — every TCA Action enum has these
-   names, and Idempotence's pairing rule is name-only (no
-   companion-pattern needed, unlike Cardinality and Referential
-   Integrity which both turned out to be bounded by TCA's naming
-   conventions on the *other* half of their pair).
-2. **Biconditional: Effect/Task pairs** — extend pairing rules to
-   recognize TCA's `Effect<X>?` / Task-style state pairs. More
-   design-heavy.
+1. **Biconditional: Effect/Task pairs** — extend
+   `BiconditionalWitnessDetector`'s pairing rules to recognize
+   TCA's `Effect<X>?` / Task-style state pairs alongside the
+   existing `(isLoadingX: Bool, taskX: Optional)` shape. Design-
+   heavier than the prior three sub-items. Smaller expected unlock —
+   TCA's "is loading" state typically lives in the Effect's
+   `.cancellable(id:)` registration rather than in State, so the
+   pair often isn't materialized.
 
-This is the actual three-cycle calibration loop the PRD §19
-metrics measure against, now unblocked.
+After (d) ships, the v2.0 calibration arc closes for v1 scope —
+all 5 cycle-87 findings + their sub-items addressed.
 
 **Closed findings**:
 - **#1** (two-scalar false positive) — closed in v1.92.
@@ -360,6 +377,7 @@ metrics measure against, now unblocked.
 - **#4** (M1.A 4th-shape extension) — closed in v1.92.
 - **#5 sub-item (a)** (Cardinality `@Presents` recognition) — closed in v1.94.
 - **#5 sub-item (b)** (RefInt `IdentifiedArrayOf` recognition) — closed in v1.95.
+- **#5 sub-item (c)** (Idempotence TCA action names) — closed in v1.96.
 
 -----
 

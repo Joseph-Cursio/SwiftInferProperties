@@ -1,0 +1,77 @@
+4 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   EagerNavigation.body
+Location:  /private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift:22
+State:     EagerNavigation.State
+Action:    EagerNavigation.Action
+Predicate: .setNavigation
+
+Why suggested:
+  ✓ Action case `.setNavigation` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xCDD3C7C47F9CAA85
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   LazyNavigation.body
+Location:  /private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift:23
+State:     LazyNavigation.State
+Action:    LazyNavigation.Action
+Predicate: .setNavigation
+
+Why suggested:
+  ✓ Action case `.setNavigation` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xD026F5CB9B3CAC36
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   LazyNavigation.body
+Location:  /private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift:23
+State:     LazyNavigation.State
+Action:    LazyNavigation.Action
+Predicate: .setNavigationIsActiveDelayCompleted
+
+Why suggested:
+  ✓ Action case `.setNavigationIsActiveDelayCompleted` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xF8AA84E3C9B94589
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   EagerNavigation.body
+Location:  /private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift:22
+State:     EagerNavigation.State
+Action:    EagerNavigation.Action
+Predicate: .setNavigationIsActiveDelayCompleted
+
+Why suggested:
+  ✓ Action case `.setNavigationIsActiveDelayCompleted` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xFB6656B406E394A4
