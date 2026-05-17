@@ -172,7 +172,7 @@ enum ReferentialIntegrityExtractor {
         let name = identifier.identifier.text
         if nameLooksLikeSelected(name), isOptionalType(typeText) {
             selectedOpts.append((name, typeText))
-        } else if let element = arrayElementType(typeText) {
+        } else if let element = collectionElementType(typeText) {
             collections.append((name, element))
         }
     }
@@ -185,6 +185,23 @@ enum ReferentialIntegrityExtractor {
         if trimmed.hasPrefix("Optional<") { return true }
         if trimmed.hasPrefix("Swift.Optional<") { return true }
         return false
+    }
+
+    /// V1.95 (cycle-92 — TCA family-pattern calibration #2) —
+    /// element-type extraction across all recognized collection
+    /// shapes. Tries the array-literal `[T]` shape first
+    /// (`arrayElementType`), then the modern-TCA
+    /// `IdentifiedArrayOf<T>` / `IdentifiedArray<ID, T>` shapes
+    /// (`identifiedArrayElementType`). Cycle-3 measurement on TCA
+    /// 1.25.5 showed referential integrity at 0 across all 50 reducers
+    /// because every TCA State uses `IdentifiedArrayOf<X>` (not bare
+    /// `[X]`) for its collections, and the detector only matched
+    /// the array-literal form.
+    static func collectionElementType(_ type: String) -> String? {
+        if let element = arrayElementType(type) {
+            return element
+        }
+        return identifiedArrayElementType(type)
     }
 
     /// Returns the element type if `type` is an array literal `[T]`,
@@ -207,5 +224,71 @@ enum ReferentialIntegrityExtractor {
             }
         }
         return inner
+    }
+
+    /// V1.95 — returns the element type if `type` is one of TCA's
+    /// `IdentifiedArrayOf<T>` (typealias for `IdentifiedArray<T.ID, T>`)
+    /// or the explicit `IdentifiedArray<ID, T>` two-argument form.
+    /// For the two-argument form, the element type is the *second*
+    /// generic argument (the first is the ID type). Returns nil for
+    /// any other shape so the caller can fall through to
+    /// non-collection classification.
+    ///
+    /// Module-prefix variants (`IdentifiedCollections.IdentifiedArrayOf`)
+    /// are accepted alongside the bare names — real TCA code never
+    /// uses the prefix but the detector stays robust.
+    static func identifiedArrayElementType(_ type: String) -> String? {
+        let trimmed = type.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasSuffix(">") else { return nil }
+        for prefix in identifiedArrayOfPrefixes where trimmed.hasPrefix(prefix) {
+            let inner = String(trimmed.dropFirst(prefix.count).dropLast())
+                .trimmingCharacters(in: .whitespaces)
+            return inner.isEmpty ? nil : inner
+        }
+        for prefix in identifiedArrayPrefixes where trimmed.hasPrefix(prefix) {
+            let inner = String(trimmed.dropFirst(prefix.count).dropLast())
+                .trimmingCharacters(in: .whitespaces)
+            return secondGenericArgument(in: inner)
+        }
+        return nil
+    }
+
+    private static let identifiedArrayOfPrefixes = [
+        "IdentifiedArrayOf<",
+        "IdentifiedCollections.IdentifiedArrayOf<"
+    ]
+
+    private static let identifiedArrayPrefixes = [
+        "IdentifiedArray<",
+        "IdentifiedCollections.IdentifiedArray<"
+    ]
+
+    /// Depth-counting split on the top-level comma. `inner` is the
+    /// generic-argument list without the enclosing `<>`. Returns
+    /// the second comma-separated component (the element type for
+    /// `IdentifiedArray<ID, Element>`), trimmed, or nil if the
+    /// argument list isn't exactly 2 top-level components.
+    private static func secondGenericArgument(in inner: String) -> String? {
+        var depth = 0
+        var commaIdx: String.Index?
+        for index in inner.indices {
+            let char = inner[index]
+            switch char {
+            case "<", "(", "[": depth += 1
+            case ">", ")", "]": depth -= 1
+            case "," where depth == 0:
+                if commaIdx == nil {
+                    commaIdx = index
+                } else {
+                    return nil
+                }
+            default:
+                break
+            }
+        }
+        guard let commaIdx else { return nil }
+        let second = inner[inner.index(after: commaIdx)...]
+            .trimmingCharacters(in: .whitespaces)
+        return second.isEmpty ? nil : second
     }
 }
