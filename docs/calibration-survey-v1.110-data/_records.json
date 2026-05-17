@@ -1,0 +1,562 @@
+[
+  {
+    "corpus": "HandRolled",
+    "family": "cardinality",
+    "reducer": "PresentationReducer.reduce",
+    "predicate": "(state.isShowingSheet ? 1 : 0) + (state.isShowingAlert ? 1 : 0) + (state.activeFullScreenCover != nil ? 1 : 0) <= 1",
+    "identity": "0x1628477269C29926",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "SettingsReducer.reduce",
+    "predicate": ".refresh",
+    "identity": "0x28E063D1073103E6",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "SettingsReducer.reduce",
+    "predicate": ".dismiss",
+    "identity": "0x39993CA9A4560942",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "PresentationReducer.reduce",
+    "predicate": ".showCover",
+    "identity": "0x3C390CFE6D5A9176",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "biconditional",
+    "reducer": "FetchReducer.reduce",
+    "predicate": "state.isLoadingResults == (state.cachedResult != nil)",
+    "identity": "0x5322E671E7B9C8B0",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "biconditional",
+    "reducer": "FetchReducer.reduce",
+    "predicate": "state.isLoadingResults == (state.activeTask != nil)",
+    "identity": "0x6AE3CAC27441579E",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "conservation",
+    "reducer": "CountedListReducer.reduce",
+    "predicate": "state.itemCount == state.items.count",
+    "identity": "0x7EC3E1F5B21BA03B",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "SettingsReducer.reduce",
+    "predicate": ".setColor",
+    "identity": "0x827AC3C0D3F7639E",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "PresentationReducer.reduce",
+    "predicate": ".showAlert",
+    "identity": "0x8B9287484B528EC2",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "cardinality",
+    "reducer": "reduce",
+    "predicate": "(state.isShowingMenu ? 1 : 0) + (state.isShowingHelp ? 1 : 0) <= 1",
+    "identity": "0x8D6BD8CCFE6C8A14",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand06_ElmStyle.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "SettingsReducer.reduce",
+    "predicate": ".clear",
+    "identity": "0x97C9FD09CAE9C108",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "PresentationReducer.reduce",
+    "predicate": ".showSheet",
+    "identity": "0x9B61B0C65BC892D9",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "MessageListReducer.reduce",
+    "predicate": ".select",
+    "identity": "0x9C2E692E188CC9D5",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "idempotence",
+    "reducer": "reduce",
+    "predicate": ".refresh",
+    "identity": "0xDB4AF9FDB178C90F",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand06_ElmStyle.swift"
+  },
+  {
+    "corpus": "HandRolled",
+    "family": "referential-integrity",
+    "reducer": "MessageListReducer.reduce",
+    "predicate": "state.selectedMessageID == nil || state.messages.contains { $0.id == state.selectedMessageID }",
+    "identity": "0xDF7B4776E4770460",
+    "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "FocusDemo.body",
+    "predicate": ".binding",
+    "identity": "0x03305FCA3F2C90C1",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-FocusState.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoad.body",
+    "predicate": ".setNavigationIsActiveDelayCompleted",
+    "identity": "0x222DD422104373CD",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "cardinality",
+    "reducer": "AlertAndConfirmationDialog.body",
+    "predicate": "(state.alert != nil ? 1 : 0) + (state.confirmationDialog != nil ? 1 : 0) <= 1",
+    "identity": "0x2661FFB7152A81C6",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-AlertsAndConfirmationDialogs.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "MultipleDestinations.body",
+    "predicate": ".showDrillDown",
+    "identity": "0x2CF145DE9F15BBC3",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Multiple-Destinations.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "BindingForm.body",
+    "predicate": ".binding",
+    "identity": "0x4D5AA3831F8F39F5",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-Bindings-Forms.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "SharedState.body",
+    "predicate": ".selectTab",
+    "identity": "0x6A1C5F8B800C666B",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-SharedState.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoad.body",
+    "predicate": ".setNavigation",
+    "identity": "0x6CD1437C507D2C40",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "PresentAndLoad.body",
+    "predicate": ".setSheetIsPresentedDelayCompleted",
+    "identity": "0x6D02629A0B7E2AD6",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Sheet-PresentAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "biconditional",
+    "reducer": "NavigateAndLoad.body",
+    "predicate": "state.isNavigationActive == (state.optionalCounter != nil)",
+    "identity": "0x94FF67A336D17466",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "Animations.body",
+    "predicate": ".setColor",
+    "identity": "0x98095E03B5CB50C6",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-Animations.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "LongLivingEffects.reduce",
+    "predicate": ".task",
+    "identity": "0xA128952D45DE0EE8",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/02-Effects-LongLiving.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoadList.body",
+    "predicate": ".setNavigationSelectionDelayCompleted",
+    "identity": "0xA4E1C7777957793A",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Lists-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "MultipleDestinations.body",
+    "predicate": ".showSheet",
+    "identity": "0xD73376B29A2C4843",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Multiple-Destinations.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "biconditional",
+    "reducer": "ScreenA.reduce",
+    "predicate": "state.isLoading == (state.fact != nil)",
+    "identity": "0xD8040F167F092FA9",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-NavigationStack.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "Root.body",
+    "predicate": ".presentAndLoad",
+    "identity": "0xDC04AF5A07FE1BD5",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/00-Core.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "MultipleDestinations.body",
+    "predicate": ".showPopover",
+    "identity": "0xDC63548560C7FF3A",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Multiple-Destinations.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "PresentAndLoad.body",
+    "predicate": ".setSheet",
+    "identity": "0xF1BDBD0D08BB8479",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Sheet-PresentAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoadList.body",
+    "predicate": ".setNavigation",
+    "identity": "0xF5C13CD78D4B01D6",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Lists-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-CaseStudies",
+    "family": "idempotence",
+    "reducer": "Refreshable.reduce",
+    "predicate": ".refresh",
+    "identity": "0xFDD5E07840BF51F1",
+    "location": "/private/tmp/tca-10-discovery/Sources/CaseStudies/02-Effects-Refreshable.swift"
+  },
+  {
+    "corpus": "tca-10-UIKitCaseStudies",
+    "family": "biconditional",
+    "reducer": "EagerNavigation.body",
+    "predicate": "state.isNavigationActive == (state.optionalCounter != nil)",
+    "identity": "0x16AD1B03D0321336",
+    "location": "/private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "EagerNavigation.body",
+    "predicate": ".setNavigation",
+    "identity": "0xCDD3C7C47F9CAA85",
+    "location": "/private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-10-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "LazyNavigation.body",
+    "predicate": ".setNavigation",
+    "identity": "0xD026F5CB9B3CAC36",
+    "location": "/private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift"
+  },
+  {
+    "corpus": "tca-10-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "LazyNavigation.body",
+    "predicate": ".setNavigationIsActiveDelayCompleted",
+    "identity": "0xF8AA84E3C9B94589",
+    "location": "/private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift"
+  },
+  {
+    "corpus": "tca-10-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "EagerNavigation.body",
+    "predicate": ".setNavigationIsActiveDelayCompleted",
+    "identity": "0xFB6656B406E394A4",
+    "location": "/private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "SharedStateFileStorage.body",
+    "predicate": ".selectTab",
+    "identity": "0x029429B00EA31B2F",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/02-SharedState-FileStorage.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "FocusDemo.body",
+    "predicate": ".binding",
+    "identity": "0x03305FCA3F2C90C1",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/01-GettingStarted-FocusState.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "Refreshable.body",
+    "predicate": ".refresh",
+    "identity": "0x039376A414D935FA",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/03-Effects-Refreshable.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "LongLivingEffects.body",
+    "predicate": ".task",
+    "identity": "0x1CD499C261AD459F",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/03-Effects-LongLiving.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoad.body",
+    "predicate": ".setNavigationIsActiveDelayCompleted",
+    "identity": "0x222DD422104373CD",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "cardinality",
+    "reducer": "AlertAndConfirmationDialog.body",
+    "predicate": "(state.alert != nil ? 1 : 0) + (state.confirmationDialog != nil ? 1 : 0) <= 1",
+    "identity": "0x2661FFB7152A81C6",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/01-GettingStarted-AlertsAndConfirmationDialogs.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "MultipleDestinations.body",
+    "predicate": ".showDrillDown",
+    "identity": "0x2CF145DE9F15BBC3",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Multiple-Destinations.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "BindingForm.body",
+    "predicate": ".binding",
+    "identity": "0x4D5AA3831F8F39F5",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/01-GettingStarted-Bindings-Forms.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "SharedStateUserDefaults.body",
+    "predicate": ".selectTab",
+    "identity": "0x55B2D1BD3AC66895",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/02-SharedState-UserDefaults.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "biconditional",
+    "reducer": "ScreenA.body",
+    "predicate": "state.isLoading == (state.fact != nil)",
+    "identity": "0x6207F353D6E8C2C4",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-NavigationStack.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoad.body",
+    "predicate": ".setNavigation",
+    "identity": "0x6CD1437C507D2C40",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "PresentAndLoad.body",
+    "predicate": ".setSheetIsPresentedDelayCompleted",
+    "identity": "0x6D02629A0B7E2AD6",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Sheet-PresentAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "SharedStateInMemory.body",
+    "predicate": ".selectTab",
+    "identity": "0x8EACCFC0953B8503",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/02-SharedState-InMemory.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "biconditional",
+    "reducer": "NavigateAndLoad.body",
+    "predicate": "state.isNavigationActive == (state.optionalCounter != nil)",
+    "identity": "0x94FF67A336D17466",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "Animations.body",
+    "predicate": ".setColor",
+    "identity": "0x98095E03B5CB50C6",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/01-GettingStarted-Animations.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoadList.body",
+    "predicate": ".setNavigationSelectionDelayCompleted",
+    "identity": "0xA4E1C7777957793A",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Lists-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "MultipleDestinations.body",
+    "predicate": ".showSheet",
+    "identity": "0xD73376B29A2C4843",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Multiple-Destinations.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "MultipleDestinations.body",
+    "predicate": ".showPopover",
+    "identity": "0xDC63548560C7FF3A",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Multiple-Destinations.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "PresentAndLoad.body",
+    "predicate": ".setSheet",
+    "identity": "0xF1BDBD0D08BB8479",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Sheet-PresentAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-CaseStudies",
+    "family": "idempotence",
+    "reducer": "NavigateAndLoadList.body",
+    "predicate": ".setNavigation",
+    "identity": "0xF5C13CD78D4B01D6",
+    "location": "/private/tmp/tca-25-discovery/Sources/CaseStudies/04-Navigation-Lists-NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-SyncUps",
+    "family": "idempotence",
+    "reducer": "SyncUpDetail.body",
+    "predicate": ".delegate",
+    "identity": "0x0601E26716079C49",
+    "location": "/private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpDetail.swift"
+  },
+  {
+    "corpus": "tca-25-SyncUps",
+    "family": "idempotence",
+    "reducer": "SyncUpForm.body",
+    "predicate": ".binding",
+    "identity": "0x2F42BD614C76A015",
+    "location": "/private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpForm.swift"
+  },
+  {
+    "corpus": "tca-25-Todos",
+    "family": "idempotence",
+    "reducer": "Todos.body",
+    "predicate": ".binding",
+    "identity": "0x65552F900B4B1991",
+    "location": "/private/tmp/tca-25-discovery/Sources/Todos/Todos.swift"
+  },
+  {
+    "corpus": "tca-25-UIKitCaseStudies",
+    "family": "biconditional",
+    "reducer": "EagerNavigation.body",
+    "predicate": "state.isNavigationActive == (state.optionalCounter != nil)",
+    "identity": "0x16AD1B03D0321336",
+    "location": "/private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "EagerNavigation.body",
+    "predicate": ".setNavigation",
+    "identity": "0xCDD3C7C47F9CAA85",
+    "location": "/private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "LazyNavigation.body",
+    "predicate": ".setNavigation",
+    "identity": "0xD026F5CB9B3CAC36",
+    "location": "/private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift"
+  },
+  {
+    "corpus": "tca-25-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "LazyNavigation.body",
+    "predicate": ".setNavigationIsActiveDelayCompleted",
+    "identity": "0xF8AA84E3C9B94589",
+    "location": "/private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift"
+  },
+  {
+    "corpus": "tca-25-UIKitCaseStudies",
+    "family": "idempotence",
+    "reducer": "EagerNavigation.body",
+    "predicate": ".setNavigationIsActiveDelayCompleted",
+    "identity": "0xFB6656B406E394A4",
+    "location": "/private/tmp/tca-25-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift"
+  },
+  {
+    "corpus": "tca-25-VoiceMemos",
+    "family": "cardinality",
+    "reducer": "VoiceMemos.body",
+    "predicate": "(state.alert != nil ? 1 : 0) + (state.recordingMemo != nil ? 1 : 0) <= 1",
+    "identity": "0x2518F5817C36B01B",
+    "location": "/private/tmp/tca-25-discovery/Sources/VoiceMemos/VoiceMemos.swift"
+  },
+  {
+    "corpus": "tca-25-VoiceMemos",
+    "family": "idempotence",
+    "reducer": "VoiceMemo.body",
+    "predicate": ".delegate",
+    "identity": "0xC4E850D15D81A545",
+    "location": "/private/tmp/tca-25-discovery/Sources/VoiceMemos/VoiceMemo.swift"
+  },
+  {
+    "corpus": "tca-25-VoiceMemos",
+    "family": "idempotence",
+    "reducer": "RecordingMemo.body",
+    "predicate": ".delegate",
+    "identity": "0xFE45216FC753E6A5",
+    "location": "/private/tmp/tca-25-discovery/Sources/VoiceMemos/RecordingMemo.swift"
+  }
+]
