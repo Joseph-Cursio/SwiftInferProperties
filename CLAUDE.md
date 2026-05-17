@@ -34,7 +34,7 @@ SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategis
 | Per-cycle change story | `git log` + `docs/calibration-cycle-N-findings.md` |
 | Calibration corpus + baseline | `docs/calibration-corpus-v2.0.md` |
 | Triage rubrics | `docs/interaction-invariant-triage-rubric.md` (v2.0) + `docs/cycle-6-triage-rubric.md` (v1) |
-| Perf baseline | `docs/perf-baseline-v1.N.md` (latest version) |
+| Perf baseline | `docs/perf-baseline-v1.63.md` — last in series; not updated in v2.0 (was tied to the v1.42–v1.63 verify-pipeline arc) |
 | Closed milestone + calibration plans | `docs/archive/*.md` |
 | PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |
 
