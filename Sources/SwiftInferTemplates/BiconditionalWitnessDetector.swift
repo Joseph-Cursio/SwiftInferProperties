@@ -159,14 +159,40 @@ enum BiconditionalExtractor {
     ) {
         if binding.accessorBlock != nil { return }
         guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { return }
-        guard let typeAnnotation = binding.typeAnnotation else { return }
-        let typeText = typeAnnotation.type.trimmedDescription
         let name = identifier.identifier.text
-        if isBoolType(typeText), nameLooksLikeBiconditionalFlag(name) {
-            boolFlags.append((name, typeText))
-        } else if isOptionalType(typeText) {
-            optionals.append((name, typeText))
+        // V1.97 (cycle-94 fix for cycle-87 finding #5 sub-item (d)) —
+        // recognize Bool fields declared without an explicit type
+        // annotation but with a `true` / `false` literal initializer.
+        // Modern TCA's idiomatic State shape is `var isLoading =
+        // false` (no `: Bool`), and `04-NavigationStack.swift`'s
+        // `(fact: String?, isLoading: <inferred Bool>)` is exactly
+        // the biconditional pair the M7 detector is after — but the
+        // prior typeAnnotation-required gate missed it. The
+        // annotation-bearing path stays unchanged for Optional fields
+        // (whose Optional-ness can't be inferred from a literal
+        // without nullability info beyond what `nil` carries).
+        if let typeAnnotation = binding.typeAnnotation {
+            let typeText = typeAnnotation.type.trimmedDescription
+            if isBoolType(typeText), nameLooksLikeBiconditionalFlag(name) {
+                boolFlags.append((name, typeText))
+            } else if isOptionalType(typeText) {
+                optionals.append((name, typeText))
+            }
+            return
         }
+        if isBoolLiteralInitializer(binding.initializer?.value),
+           nameLooksLikeBiconditionalFlag(name) {
+            boolFlags.append((name, "Bool"))
+        }
+    }
+
+    /// V1.97 — does this initializer expression look like a `true` /
+    /// `false` literal? Used by `classifyBinding` to recover the Bool
+    /// type for `var isLoading = false`-style bindings where the
+    /// programmer relies on type inference rather than an explicit
+    /// `: Bool` annotation.
+    static func isBoolLiteralInitializer(_ expression: ExprSyntax?) -> Bool {
+        expression?.as(BooleanLiteralExprSyntax.self) != nil
     }
 
     /// `Bool` / `Swift.Bool`.
