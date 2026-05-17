@@ -76,7 +76,7 @@ let package = Package(
         // `Testing.framework`, which would prevent the `swift-infer`
         // executable from running outside a test context — only the
         // generated test-target writeouts import it.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.4.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.5.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],
@@ -228,6 +228,12 @@ let package = Package(
                 // PropertyLawCore symbols (TypeShape construction)
                 // for the recipe-resolution coverage.
                 .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
+                // V1.100 cycle-97 — KitV25InteractionInvariantTestsMacroSmokeTests
+                // exercises kit v2.5.0's `@InteractionInvariantTests`
+                // attached macro, which requires importing the
+                // user-facing macro module (the `PropertyLawMacro`
+                // product re-exports `PropertyLawKit`).
+                .product(name: "PropertyLawMacro", package: "SwiftPropertyLaws"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),
