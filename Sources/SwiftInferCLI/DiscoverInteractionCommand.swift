@@ -256,12 +256,46 @@ extension SwiftInferCommand {
                 .appendingPathComponent("Sources")
                 .appendingPathComponent(target)
             let allCandidates = try ReducerDiscoverer.discover(directory: directory)
-            let candidates = try filterCandidates(allCandidates, pinRaw: pinRaw)
+            let filtered = try filterCandidates(allCandidates, pinRaw: pinRaw)
+            let deduped = dedupedByStateAndAction(filtered)
             return try InteractionTemplateEngine.analyze(
-                candidates: candidates,
+                candidates: deduped,
                 sourcesDirectory: directory,
                 firstSeenAt: firstSeenAt
             )
+        }
+
+        /// V1.107 (cycle-103 Finding F fix) — dedupe candidates by
+        /// `(stateQualifiedName, actionQualifiedName)` before the
+        /// interaction template engine runs. `ReduceClosureWalker`
+        /// emits one `ReducerCandidate` per `Reduce { ... }` closure
+        /// in a body, but the interaction templates are State+Action
+        /// shape-driven — multiple closures with the same State and
+        /// Action produce identical suggestions, redundant analysis
+        /// work, and identity-duplicated output.
+        ///
+        /// Real-world example (cycle-102a isowords dogfood):
+        /// `Settings.body` has 10 inline `Reduce { ... }` closures
+        /// via `.onChange(of:)` composition. Pre-fix produced 20
+        /// raw suggestions for 2 unique identities — 10× redundant
+        /// engine runs. Post-fix: 1 candidate → 2 suggestions.
+        ///
+        /// First-seen wins; subsequent candidates with the same key
+        /// are dropped. `discover-reducers` output is unaffected —
+        /// per-closure locations stay visible there because this
+        /// dedupe is local to the interaction pipeline.
+        static func dedupedByStateAndAction(
+            _ candidates: [ReducerCandidate]
+        ) -> [ReducerCandidate] {
+            var seen: Set<String> = []
+            var result: [ReducerCandidate] = []
+            for candidate in candidates {
+                let key = candidate.stateQualifiedName + "|" + candidate.actionQualifiedName
+                if seen.insert(key).inserted {
+                    result.append(candidate)
+                }
+            }
+            return result
         }
 
         /// V2.0 M4.E — apply the `--reducer <pin>` filter when
