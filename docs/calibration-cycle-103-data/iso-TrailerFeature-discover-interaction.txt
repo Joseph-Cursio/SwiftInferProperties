@@ -1,0 +1,37 @@
+2 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Trailer.body
+Location:  /private/tmp/isowords-dogfood/Sources/TrailerFeature/Trailer.swift:80
+State:     Trailer.State
+Action:    Trailer.Action
+Predicate: .task
+
+Why suggested:
+  ✓ Action case `.task` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x8C23FC9E3E9095F6
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Trailer.body
+Location:  /private/tmp/isowords-dogfood/Sources/TrailerFeature/Trailer.swift:80
+State:     Trailer.State
+Action:    Trailer.Action
+Predicate: .binding
+
+Why suggested:
+  ✓ Action case `.binding` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xD5991F2953D3B5B2

@@ -1,12 +1,13 @@
-# v1.106 Calibration Cycle 103 — Findings (first triage datapoint)
+# v1.107 Calibration Cycle 104 — Findings (first triage datapoint)
 
 > **STATUS: DRAFT.** This file is a scaffold prepped after cycle 99
 > shipped the `metrics-interaction` aggregation helper, cycles 100 +
-> 101 + 102 closed Findings A (cardinality distinct-field dedupe),
-> C (RefInt element-type filter), and D (bicond cardinality-overlap
-> suppression). Sections marked `_DRAFT_` need triage decisions
-> filled in via the per-corpus `discover-interaction --interactive`
-> workflow. The aggregated metrics table at the bottom is generated
+> 101 + 102 + 102a (dogfood) + 103 closed Findings A (cardinality
+> distinct-field dedupe), C (RefInt element-type filter), D (bicond
+> cardinality-overlap suppression), and F (ReducerCandidate dedupe
+> by state+action in the discover-interaction pipeline). Sections
+> marked `_DRAFT_` need triage decisions filled in via the per-corpus
+> `discover-interaction --interactive` workflow. The aggregated metrics table at the bottom is generated
 > by piping the persisted decision logs through `metrics-interaction`
 > (one invocation, all three corpora's decisions files). Replace this
 > banner with a "Captured: YYYY-MM-DD" line when the cycle is final.
@@ -15,7 +16,7 @@
 > cycle-100 scaffold. Cycles 100 + 101 + 102 ended up shipping
 > detector bug fixes instead (same pattern as v1.91–v1.97 cycle-87
 > fixes interleaving with calibration cycles), so the first triage
-> datapoint becomes cycle 103 + v1.106.
+> datapoint becomes cycle 104 + v1.107.
 
 ## Headline (TODO once decisions land)
 
@@ -23,7 +24,7 @@ _DRAFT_ — fill in once the first per-family acceptance-rate datapoint is in ha
 
 Template:
 
-> Cycle 103 lands the first per-family acceptance-rate datapoint of
+> Cycle 104 lands the first per-family acceptance-rate datapoint of
 > the three-cycle calibration loop. **HandRolled: X% acceptance**
 > (denominator N); **TCA 1.25.5: X%** (denominator N); **TCA 1.0.0:
 > X%** (denominator N); **overall: X%** (across 51 unique identities,
@@ -65,7 +66,7 @@ swift-infer metrics-interaction \
   --decisions /tmp/tca-10-discovery/.swiftinfer/interaction-decisions.json
 ```
 
-Paste the rendered markdown table into the "Cycle 103 aggregated metrics" section below.
+Paste the rendered markdown table into the "Cycle 104 aggregated metrics" section below.
 
 ## Effective denominator
 
@@ -282,7 +283,7 @@ For cycle 100, report:
 - Whether each family is **gap-bound** (skip rate > 30% — rubric
   refinement for cycle 101).
 
-## What's next after cycle 103
+## What's next after cycle 104
 
 | Cycle | What lands |
 |---|---|
@@ -290,14 +291,14 @@ For cycle 100, report:
 | 101 | **Finding C fix** (closed) — RefInt element-type filter |
 | 102 | **Finding D fix** (closed) — bicond cardinality-overlap suppression |
 | 103 | **First triage datapoint** (this file) — populates the worksheet + metrics + findings |
-| 104 | Second triage datapoint. Optional: rubric refinement if cycle-103 surfaced a high-skip family. |
+| 105 | Second triage datapoint. Optional: rubric refinement if cycle-104 surfaced a high-skip family. |
 | 105 | Third datapoint; families at ≥ 70% across 103 + 104 + 105 propose tier promotion in cycle-105 findings. |
 | 106+ | Per-promotion-family follow-up cycles; bridge-level N-arm peer triage if calibration unlocks bridge-firing volume. |
 
 ## CLAUDE.md / version bump notes
 
-When cycle 103 is final:
-- Bump `Sources/SwiftInferCLI/SwiftInferCommand.swift` version to `1.106.0`.
-- Update CLAUDE.md `Current: v1.106.0` header with the cycle-103 summary.
-- Update the arc-summary tail with the v1.106 / cycle-103 entry.
-- Update the "Most recent" pointer to `docs/calibration-cycle-103-findings.md`.
+When cycle 104 is final:
+- Bump `Sources/SwiftInferCLI/SwiftInferCommand.swift` version to `1.108.0`.
+- Update CLAUDE.md `Current: v1.108.0` header with the cycle-104 summary.
+- Update the arc-summary tail with the v1.108 / cycle-104 entry.
+- Update the "Most recent" pointer to `docs/calibration-cycle-104-findings.md`.
