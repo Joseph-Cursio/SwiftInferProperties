@@ -1,0 +1,19 @@
+1 interaction-invariant suggestion.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PastGames.body
+Location:  /private/tmp/isowords-dogfood/Sources/MultiplayerFeature/PastGamesView.swift:23
+State:     PastGames.State
+Action:    PastGames.Action
+Predicate: .task
+
+Why suggested:
+  ✓ Action case `.task` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x2F3CC3F96BB89AF6

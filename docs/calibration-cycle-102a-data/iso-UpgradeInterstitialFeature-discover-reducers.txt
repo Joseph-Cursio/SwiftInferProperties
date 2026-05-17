@@ -1,0 +1,3 @@
+swift-infer discover-reducers — detected 1 reducer-shaped function:
+
+  /private/tmp/isowords-dogfood/Sources/UpgradeInterstitialFeature/UpgradeInterstitialView.swift:64  UpgradeInterstitial.body  signature:inout-state-action-returns-effect  state:UpgradeInterstitial.State  action:UpgradeInterstitial.Action

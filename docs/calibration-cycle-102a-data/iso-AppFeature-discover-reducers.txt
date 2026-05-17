@@ -1,0 +1,7 @@
+swift-infer discover-reducers — detected 5 reducer-shaped functions:
+
+  /private/tmp/isowords-dogfood/Sources/AppFeature/AppDelegate.swift:31  AppDelegateReducer.body  signature:inout-state-action-returns-effect  state:AppDelegateReducer.State  action:AppDelegateReducer.Action
+  /private/tmp/isowords-dogfood/Sources/AppFeature/AppView.swift:64  AppReducer.body  signature:inout-state-action-returns-effect  state:AppReducer.State  action:AppReducer.Action
+  /private/tmp/isowords-dogfood/Sources/AppFeature/AppView.swift:80  AppReducer.body  signature:inout-state-action-returns-effect  state:AppReducer.State  action:AppReducer.Action
+  /private/tmp/isowords-dogfood/Sources/AppFeature/GameCenterCore.swift:24  GameCenterLogic.body  signature:inout-state-action-returns-effect  state:GameCenterLogic.State  action:GameCenterLogic.Action
+  /private/tmp/isowords-dogfood/Sources/AppFeature/StoreKitCore.swift:17  StoreKitLogic.body  signature:inout-state-action-returns-effect  state:StoreKitLogic.State  action:StoreKitLogic.Action

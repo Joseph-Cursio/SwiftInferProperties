@@ -1,0 +1,40 @@
+2 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   LeaderboardResults.body
+Location:  /private/tmp/isowords-dogfood/Sources/LeaderboardFeature/LeaderboardResultsView.swift:55
+State:     LeaderboardResults.State
+Action:    LeaderboardResults.Action
+Predicate: state.isLoading == (state.resultEnvelope != nil)
+
+Why suggested:
+  ✓ State stores `isLoading: Bool` paired with `resultEnvelope: ResultEnvelope?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoading` to `true` with `resultEnvelope == nil` (or vice versa).
+
+Identity:  0x65358039DA6EE228
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   LeaderboardResults.body
+Location:  /private/tmp/isowords-dogfood/Sources/LeaderboardFeature/LeaderboardResultsView.swift:55
+State:     LeaderboardResults.State
+Action:    LeaderboardResults.Action
+Predicate: .task
+
+Why suggested:
+  ✓ Action case `.task` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x6ECED40E67967BD6

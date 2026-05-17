@@ -1,0 +1,3 @@
+swift-infer discover-reducers — detected 1 reducer-shaped function:
+
+  /private/tmp/isowords-dogfood/Sources/GameOverFeature/GameOverView.swift:141  GameOver.body  signature:inout-state-action-returns-effect  state:GameOver.State  action:GameOver.Action
