@@ -1,0 +1,21 @@
+1 interaction-invariant suggestion.
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   VoiceMemos.body
+Location:  /private/tmp/tca-25-discovery/Sources/VoiceMemos/VoiceMemos.swift:40
+State:     VoiceMemos.State
+Action:    VoiceMemos.Action
+Predicate: (state.alert != nil ? 1 : 0) + (state.recordingMemo != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 2 presentation-shaped fields (0 Bool flags, 2 Optional presentations): alert, recordingMemo.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x2518F5817C36B01B
