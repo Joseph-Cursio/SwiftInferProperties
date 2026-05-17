@@ -1,28 +1,32 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: cycle-2 baseline measured (v1.92 / cycle 89).** This file
+**Status: cycle-3 baseline measured (v1.93 / cycle 90).** This file
 pins the v2.0 calibration corpus and records per-corpus discovery
-counts at v1.92's M1 + M4–M7 detectors. Cycles 3+ report deltas
+counts at v1.93's M1 + M4–M7 detectors. Cycles 4+ report deltas
 against these baseline numbers.
+
+**v1.93 update — M1.D `@Reducer` macro recognition landed.**
+Cycle-87 finding #3 (M1.B blind to `@Reducer` macro — all modern
+TCA invisible) closed in v1.93. New `hasReducerAttribute(_:)`
+static helper checks each type-decl's `AttributeListSyntax` for
+`@Reducer`; the existing `extractTCACandidatesIfReducerConformer`
+fires on **either** inheritance-clause `: Reducer` (M1.B) or
+`@Reducer` attribute (M1.D). The body-walk logic is shared and
+idempotent, so a type with both forms emits one set of candidates.
+**TCA 1.25.5 jumps from 0 → 50 reducers detected** across all 7
+examples, with 21 interaction suggestions (18 idempotence + 3
+cardinality — first non-idempotence family to fire on real TCA).
+Cycle-3 raw outputs at `docs/calibration-cycle-90-data/`.
 
 **v1.92 update — M1.A 4th-shape + scalar filter landed.** Cycle-87
 findings #1 (two-scalar false positive) and #4 (M1.A blind to
-`(inout S, A) -> Effect<A>`) both closed in v1.92. Reducer-
-detection count jumped 29 → 42 (+13, +44.8%) — the 4th-shape
-extension caught 13 pre-macro TCA reducers using
-`reduce(into:action:) -> Effect<Action>` that were previously
-invisible; the scalar filter dropped 1 hand-rolled false-positive
-(`transform: (Int, Int) -> Int`). Interaction-suggestion count
-moved 34 → 35 (+1) — most newly-detected TCA reducers use Action
-case names outside the curated idempotent set, confirming cycle-87
-finding #5. Cycle-2 raw outputs at
-`docs/calibration-cycle-89-data/`.
+`(inout S, A) -> Effect<A>`) both closed. Reducer count 29 → 42
+(+13). Cycle-2 outputs at `docs/calibration-cycle-89-data/`.
 
 **v1.91 update — cross-contamination fix.** Cycle-87 finding #2
 (bare-`State` / bare-`Action`) closed via
-`ReducerCandidate.stateQualifiedName` / `actionQualifiedName`
-properties threaded through to witness detectors. Cycle-1 outputs
-at `docs/calibration-cycle-88-data/`.
+`ReducerCandidate.stateQualifiedName` / `actionQualifiedName`.
+Cycle-1 outputs at `docs/calibration-cycle-88-data/`.
 
 The v2.0 analog of v1's cycle-1 1167-baseline (the candidate-count
 that the first calibration cycle starts from) is the per-corpus,
@@ -160,7 +164,7 @@ emission, so naively prepending would produce
 Two pinned versions because the v1.89 detectors have different
 blind spots at each:
 
-### 4.1 TCA 1.25.5 (current / `@Reducer`-macro era)
+### 4.1 TCA 1.25.5 (current / `@Reducer`-macro era) — unlocked at cycle-3
 
 - **Repository**: `https://github.com/pointfreeco/swift-composable-architecture`
 - **Commit**: `1eaa6fa2ee57ac42843283b9fd3457af408c858d` (tag `1.25.5`)
@@ -179,31 +183,36 @@ cp -R /tmp/tca-corpus/Examples/CaseStudies/UIKitCaseStudies tca-25-discovery/Sou
 cd tca-25-discovery && for t in …; do swift-infer discover-reducers --target "$t"; done
 ```
 
-**Measured discovery counts (v1.89):**
+**Measured discovery counts (post-v1.93 M1.D unlock):**
 
-| Example target | Reducers detected | Interaction suggestions |
+| Example target | Reducers (cycle-0 → cycle-3) | Interactions (cycle-0 → cycle-3) |
 |---|---|---|
-| CaseStudies (SwiftUI) | 0 | (skipped — no reducers) |
-| UIKitCaseStudies | 0 | (skipped) |
-| Search | 0 | (skipped) |
-| SpeechRecognition | 0 | (skipped) |
-| SyncUps | 0 | (skipped) |
-| Todos | 0 | (skipped) |
-| VoiceMemos | 0 | (skipped) |
-| **Total** | **0** | **0** |
+| CaseStudies (SwiftUI) | 0 → **36** (+36) | 0 → **17** (14 idempotence + 3 cardinality) |
+| UIKitCaseStudies | 0 → **3** (+3) | 0 → **4** (all idempotence) |
+| Search | 0 → **1** (+1) | 0 → 0 |
+| SpeechRecognition | 0 → **1** (+1) | 0 → 0 |
+| SyncUps | 0 → **5** (+5) | 0 → 0 |
+| Todos | 0 → **1** (+1) | 0 → 0 |
+| VoiceMemos | 0 → **3** (+3) | 0 → 0 |
+| **Total** | **0 → 50** (+50) | **0 → 21** (+21) |
 
-**Cycle-87 finding #3 — M1.B blind to `@Reducer` macro.** Modern
-TCA uses the `@Reducer` macro attribute to attach `Reducer`
-conformance; the source-level `: Reducer` inheritance clause that
-v1.74's M1.B walker keys on is absent. Every example in 1.25.5
-declares its reducer as `@Reducer struct Feature { … }` rather than
-`struct Feature: Reducer { … }`. Result: 0 reducers detected across
-~100 macro-attached `@Reducer` declarations in the seven examples.
+**Cycle-87 finding #3 closed in v1.93.** New `hasReducerAttribute(_:)`
+static helper in `ReducerDiscoverer` checks each type-decl's
+`AttributeListSyntax` for `@Reducer`. The existing
+`extractTCACandidatesIfReducerConformer` fires on **either**
+inheritance-clause `: Reducer` (M1.B) or `@Reducer` attribute
+(M1.D); the body-walk is shared and idempotent, so a type with
+both forms emits one set of candidates. All 7 TCA 1.25.5 examples
+now surface their reducers — 50 total across the corpus.
 
-This makes 1.25.5 a **gap-driven baseline** — the measurement says
-the detector misses modern TCA entirely, and the follow-up is M1.D
-@Reducer-macro recognition. Filing this as the highest-priority
-M1 follow-up.
+**First non-idempotence on real TCA** — 3 cardinality witnesses
+in SwiftUICaseStudies (from State types with ≥ 2 Bool fields
+matching `Showing` / `Presenting` patterns, or Optional fields
+whose lowercased name matches `sheet` / `alert` / `fullscreencover`
+/ `popover`). 0 conservation / referential-integrity /
+biconditional across the entire TCA corpus, confirming cycle-87
+finding #5 (`@PresentationState` / `IdentifiedArrayOf` / TCA
+Action conventions need pattern calibration).
 
 ### 4.2 TCA 1.0.0 (pre-`@Reducer`-macro era)
 
@@ -267,60 +276,62 @@ sharpen the patterns.
 
 -----
 
-## 5. Cycle-2 baseline summary (post-v1.92 fixes)
+## 5. Cycle-3 baseline summary (post-v1.93 M1.D unlock)
 
-| Corpus | Reducers (c0 → c2) | Interactions (c0 → c2) | Per-family non-zero |
+| Corpus | Reducers (c0 → c3) | Interactions (c0 → c3) | Per-family non-zero |
 |---|---|---|---|
 | Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 → **7** | 98 → **18** | All 5 |
-| TCA 1.25.5 (7 examples) | 0 → 0 | 0 → 0 | None |
+| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **21** | Idempotence + Cardinality |
 | TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **17** | Idempotence only |
-| **Total** | **29 → 42** | **114 → 35** | 5 of 5 |
+| **Total** | **29 → 92** | **114 → 56** | 5 of 5 (hand-rolled) |
 
-**v2.0 cycle-2 baseline = 35 interaction-invariant suggestions
-across 42 reducers (7 hand-rolled + 35 TCA-pre-macro), all at
-default Possible tier.**
+**v2.0 cycle-3 baseline = 56 interaction-invariant suggestions
+across 92 reducers (7 hand-rolled + 35 TCA-pre-macro + 50
+TCA-modern-macro), all at default Possible tier.**
 
 Per-cycle deltas:
 - **Cycle-0 → cycle-1** (v1.91 cross-contam fix): 114 → 34 suggestions
-  (−80, −70.2%). All from hand-rolled corpus.
+  (−80). All from hand-rolled corpus.
 - **Cycle-1 → cycle-2** (v1.92 4th-shape + scalar filter): 34 → 35
-  suggestions (+1) and 29 → 42 reducers (+13). 4th-shape extension
-  catches 14 new TCA reducers (12 SwiftUI + 1 UIKit + 1 tvOS);
-  scalar filter drops 1 hand-rolled false-positive (`transform`).
-  Interaction-count delta is small because most newly-detected
-  reducers use Action names outside M4.C's curated idempotent set.
+  suggestions (+1), 29 → 42 reducers (+13). TCA 1.0.0 reducers
+  unlocked; small interaction-suggestion delta confirms Action-
+  pattern calibration is the dominant gap.
+- **Cycle-2 → cycle-3** (v1.93 M1.D macro recognition): 35 → 56
+  suggestions (+21), 42 → 92 reducers (+50). TCA 1.25.5 fully
+  unlocked — first detection of any modern-TCA reducers. First
+  non-idempotence family fires on real TCA (3 cardinality
+  witnesses in SwiftUICaseStudies).
 
 Raw discovery outputs:
-- `docs/calibration-cycle-87-data/` — cycle-0 (pre-v1.91, baseline)
+- `docs/calibration-cycle-87-data/` — cycle-0 (pre-v1.91 baseline)
 - `docs/calibration-cycle-88-data/` — cycle-1 (post-v1.91)
 - `docs/calibration-cycle-89-data/` — cycle-2 (post-v1.92)
+- `docs/calibration-cycle-90-data/` — cycle-3 (post-v1.93)
 
 -----
 
-## 6. Follow-up work items remaining after cycle-2
+## 6. Follow-up work items remaining after cycle-3
 
-Cycle-87 originally surfaced 5 findings. v1.91 closed #2 (bare-name
-cross-contamination); v1.92 closed #1 (two-scalar false positive)
-and #4 (M1.A 4th-shape). Two remain:
+Cycle-87 originally surfaced 5 findings. Four have been closed
+across v1.91 / v1.92 / v1.93. One remains:
 
-1. **M1.D: `@Reducer` macro recognition.** Without this, all
-   modern TCA is invisible to v2.0. **Highest remaining priority**
-   — TCA is the dominant Swift reducer ecosystem, and cycle-89
-   measurement confirms TCA 1.25.5 still produces 0 detections
-   across all 7 examples surveyed.
-2. **Family-pattern calibration for real TCA conventions.** M4.C /
+1. **Family-pattern calibration for real TCA conventions.** M4.C /
    M5 / M6 / M7 patterns should learn `@PresentationState` /
-   `IdentifiedArrayOf` / TCA Action conventions. Cycle-89's +14
-   reducer-detection delta on TCA 1.0.0 only translated to +1
-   interaction-suggestion delta — confirming that Action name
-   conventions are the dominant gap, not detection.
+   `IdentifiedArrayOf` / TCA Action conventions. Cycle-3 measurement
+   gives the strongest possible evidence yet: with M1.D unlocking
+   50 TCA-modern-macro reducers, only 21 interaction suggestions
+   fire (18 idempotence + 3 cardinality). Conservation, referential
+   integrity, and biconditional remain at 0 on the entire TCA
+   corpus (1.0.0 + 1.25.5 combined). The detector gaps are now
+   closed; the family-pattern gaps are not.
 
-Item 1 is bug-fix-shaped; item 2 is the actual three-cycle
-calibration loop the §19 metrics measure against.
+This is the actual three-cycle calibration loop the PRD §19
+metrics measure against, now unblocked.
 
 **Closed findings**:
 - **#1** (two-scalar false positive) — closed in v1.92.
 - **#2** (bare-`State` / bare-`Action` cross-contamination) — closed in v1.91.
+- **#3** (M1.B blind to `@Reducer` macro) — closed in v1.93.
 - **#4** (M1.A 4th-shape extension) — closed in v1.92.
 
 -----
