@@ -1,11 +1,34 @@
 import Foundation
+import SwiftSyntax
 
 /// V1.92 lint pass — shape-classification + scalar-filter helpers
 /// extracted from `ReducerDiscoverer.swift` so the main file stays
-/// under SwiftLint's 400-line cap. All helpers are static-internal
-/// (callable from the Visitor in the main file); none depend on
-/// per-Visitor state, so they're naturally pure.
+/// under SwiftLint's 400-line cap. V1.93 added the
+/// `hasReducerAttribute` helper for the M1.D macro path. All
+/// helpers are static-internal (callable from the Visitor in the
+/// main file); none depend on per-Visitor state, so they're
+/// naturally pure.
 extension ReducerDiscoverer {
+
+    /// V1.93 (cycle-90 fix for cycle-87 finding #3) — does an attribute
+    /// list contain `@Reducer`? Matches the canonical macro name
+    /// with or without parameter clause (`@Reducer` or
+    /// `@Reducer(state: .equatable)`) — both have the same
+    /// `attributeName.trimmedDescription`. Modern TCA (1.0+) attaches
+    /// `Reducer` conformance via this macro rather than the explicit
+    /// `: Reducer` inheritance clause; cycle-87 measured every TCA
+    /// 1.25.5 example as 0 detections because v1.92's M1.B walker
+    /// only recognized the conformance clause.
+    static func hasReducerAttribute(_ attributes: AttributeListSyntax) -> Bool {
+        for element in attributes {
+            guard let attribute = element.as(AttributeSyntax.self) else { continue }
+            let name = attribute.attributeName.trimmedDescription
+            if name == "Reducer" {
+                return true
+            }
+        }
+        return false
+    }
 
     /// V1.92 (cycle-89 fix for cycle-87 finding #4) — does `returnType`
     /// look like `Effect<...>`? Matches the canonical TCA effect

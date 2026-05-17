@@ -150,6 +150,7 @@ private final class Visitor: SyntaxVisitor {
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         typeStack.append(node.name.text)
         extractTCACandidatesIfReducerConformer(
+            attributes: node.attributes,
             modifiers: node.modifiers,
             inheritanceClause: node.inheritanceClause,
             memberBlock: node.memberBlock,
@@ -162,6 +163,7 @@ private final class Visitor: SyntaxVisitor {
     override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
         typeStack.append(node.name.text)
         extractTCACandidatesIfReducerConformer(
+            attributes: node.attributes,
             modifiers: node.modifiers,
             inheritanceClause: node.inheritanceClause,
             memberBlock: node.memberBlock,
@@ -174,6 +176,7 @@ private final class Visitor: SyntaxVisitor {
     override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
         typeStack.append(node.name.text)
         extractTCACandidatesIfReducerConformer(
+            attributes: node.attributes,
             modifiers: node.modifiers,
             inheritanceClause: node.inheritanceClause,
             memberBlock: node.memberBlock,
@@ -193,6 +196,7 @@ private final class Visitor: SyntaxVisitor {
         let extendedTypeName = node.extendedType.trimmedDescription
         typeStack.append(extendedTypeName)
         extractTCACandidatesIfReducerConformer(
+            attributes: node.attributes,
             modifiers: node.modifiers,
             inheritanceClause: node.inheritanceClause,
             memberBlock: node.memberBlock,
@@ -283,19 +287,27 @@ private final class Visitor: SyntaxVisitor {
 
     // MARK: - TCA conformance walk (V1.B)
 
-    /// V1.B — entry point for the TCA path. Fires only when the file
-    /// imports `ComposableArchitecture` and the declaration's
-    /// inheritance clause names `Reducer` (or a generic variant).
-    /// Private / fileprivate types are skipped, matching the
-    /// function-scan posture.
+    /// V1.B + V1.D — entry point for the TCA path. Fires when the
+    /// file imports `ComposableArchitecture` AND **either** the
+    /// declaration's inheritance clause names `Reducer` (V1.B
+    /// pre-macro form: `struct Foo: Reducer`) **or** the declaration
+    /// has the `@Reducer` macro attribute (V1.D modern form,
+    /// dominant since TCA 1.0+ — `@Reducer struct Foo`). Private /
+    /// fileprivate types are skipped, matching the function-scan
+    /// posture. The body walk is idempotent for a single decl, so
+    /// a type with both forms (`@Reducer struct Foo: Reducer`)
+    /// emits one set of candidates, not two.
     private func extractTCACandidatesIfReducerConformer(
+        attributes: AttributeListSyntax,
         modifiers: DeclModifierListSyntax,
         inheritanceClause: InheritanceClauseSyntax?,
         memberBlock: MemberBlockSyntax,
         enclosingTypeName: String
     ) {
         guard importsComposableArchitecture else { return }
-        guard Self.declaresReducerConformance(inheritanceClause) else { return }
+        let viaConformance = Self.declaresReducerConformance(inheritanceClause)
+        let viaMacro = ReducerDiscoverer.hasReducerAttribute(attributes)
+        guard viaConformance || viaMacro else { return }
         let modifierNames = modifiers.map { $0.name.text }
         if modifierNames.contains("private") || modifierNames.contains("fileprivate") {
             return
