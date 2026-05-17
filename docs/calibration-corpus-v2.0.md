@@ -1,9 +1,23 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: cycle-6 baseline measured (v1.96 / cycle 93).** This file
+**Status: cycle-7 baseline measured (v1.97 / cycle 94).** This file
 pins the v2.0 calibration corpus and records per-corpus discovery
-counts at v1.96's M1 + M4–M7 detectors. Cycles 7+ report deltas
-against these baseline numbers.
+counts at v1.97's M1 + M4–M7 detectors. **All five cycle-87
+findings + four sub-items now closed.** Cycles 8+ are the
+three-cycle calibration loop proper (PRD §3.5 corollary — three
+cycles of stable per-family acceptance rate before tier promotion).
+
+**v1.97 update — Biconditional inferred-Bool initializer recognition.**
+Fourth and final family-pattern-calibration sub-cycle.
+`BiconditionalWitnessDetector.classifyBinding` now accepts Bool
+fields declared without `: Bool` annotation but with a `true` /
+`false` literal initializer (modern TCA's `var isLoading = false`
+idiom). **Biconditional fires on real TCA for the first time** —
+TCA 1.25.5 +3 (CaseStudies 2 + UIKit 1), TCA 1.0.0 +3 (same
+distribution). Cycle-7 corpus baseline: 92 reducers, 76
+interactions (was 70 at cycle-6). Biconditional share moves from
+5.7% → 13.2%. Cycle-7 raw outputs at
+`docs/calibration-cycle-94-data/`.
 
 **v1.96 update — Idempotence TCA action-name conventions.** Third
 family-pattern-calibration sub-cycle. Adds `task` / `delegate` /
@@ -312,22 +326,20 @@ sharpen the patterns.
 
 -----
 
-## 5. Cycle-6 baseline summary (post-v1.96 Idempotence TCA names)
+## 5. Cycle-7 baseline summary (post-v1.97 Biconditional inferred Bool)
 
-| Corpus | Reducers (c0 → c6) | Interactions (c0 → c6) | Per-family non-zero |
+| Corpus | Reducers (c0 → c7) | Interactions (c0 → c7) | Per-family non-zero |
 |---|---|---|---|
 | Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 → **7** | 98 → **18** | All 5 |
-| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **31** | Idempotence + Cardinality |
-| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **21** | Idempotence + Cardinality |
-| **Total** | **29 → 92** | **114 → 70** | 5 of 5 (hand-rolled) |
+| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **34** | Idempotence + Cardinality + Biconditional |
+| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **24** | Idempotence + Cardinality + Biconditional |
+| **Total** | **29 → 92** | **114 → 76** | 5 of 5 (hand-rolled) |
 
-**v2.0 cycle-6 baseline = 70 interaction-invariant suggestions
+**v2.0 cycle-7 baseline = 76 interaction-invariant suggestions
 across 92 reducers, all at default Possible tier.** Per-family:
-55 idempotence + 8 cardinality + 4 biconditional + 2 referential
-integrity + 1 conservation. Idempotence dominates (76% share)
-because v1.96 expanded its name set, and cycle-91/cycle-92
-confirmed Cardinality + RefInt are bounded by TCA's *other*
-naming conventions.
+55 idempotence + 10 biconditional + 8 cardinality + 2 referential
+integrity + 1 conservation. Idempotence share 72.4%; Biconditional
+13.2% (up from 5.7% at cycle-6).
 
 Per-cycle deltas (chronological):
 - **Cycle-0 → 1** (v1.91 cross-contam fix): 114 → 34 (−80).
@@ -341,6 +353,11 @@ Per-cycle deltas (chronological):
   (+13). TCA 1.25.5 +8 (first detections on SyncUps, Todos,
   VoiceMemos idempotence). TCA 1.0.0 +5 (+4 idempotence from
   v1.96 + 1 belated cardinality from v1.94).
+- **Cycle-6 → 7** (v1.97 Biconditional inferred Bool): 70 → 76
+  (+6 biconditional). TCA 1.25.5 +3 (CaseStudies 2 + UIKit 1);
+  TCA 1.0.0 +3 (same distribution). **First biconditional firings
+  on real TCA** — the inferred-Bool initializer (`var isLoading
+  = false`) is modern TCA's idiom.
 
 Raw discovery outputs:
 - `docs/calibration-cycle-87-data/` — cycle-0 (pre-v1.91 baseline)
@@ -350,25 +367,19 @@ Raw discovery outputs:
 - `docs/calibration-cycle-91-data/` — cycle-4 (post-v1.94)
 - `docs/calibration-cycle-92-data/` — cycle-5 (post-v1.95)
 - `docs/calibration-cycle-93-data/` — cycle-6 (post-v1.96)
+- `docs/calibration-cycle-94-data/` — cycle-7 (post-v1.97)
 
 -----
 
-## 6. Follow-up work items remaining after cycle-6
+## 6. v2.0 calibration arc closed — cycle-87 findings complete
 
-Cycle-87 finding #5 broke into 4 sub-items. v1.94 closed (a),
-v1.95 closed (b), v1.96 closed (c). One remains:
-
-1. **Biconditional: Effect/Task pairs** — extend
-   `BiconditionalWitnessDetector`'s pairing rules to recognize
-   TCA's `Effect<X>?` / Task-style state pairs alongside the
-   existing `(isLoadingX: Bool, taskX: Optional)` shape. Design-
-   heavier than the prior three sub-items. Smaller expected unlock —
-   TCA's "is loading" state typically lives in the Effect's
-   `.cancellable(id:)` registration rather than in State, so the
-   pair often isn't materialized.
-
-After (d) ships, the v2.0 calibration arc closes for v1 scope —
-all 5 cycle-87 findings + their sub-items addressed.
+**All 5 cycle-87 findings + 4 sub-items closed across v1.91 –
+v1.97.** The detector-fix queue is empty. The next active surface
+is the three-cycle calibration loop the PRD §19 metrics measure
+against — per-family acceptance-rate measurement against the
+cycle-7 corpus baseline (76 suggestions across 92 reducers), three
+cycles of stable rate per family, then tier promotion from
+default-`.possible` to `.likely` / `.strong`.
 
 **Closed findings**:
 - **#1** (two-scalar false positive) — closed in v1.92.
@@ -378,6 +389,17 @@ all 5 cycle-87 findings + their sub-items addressed.
 - **#5 sub-item (a)** (Cardinality `@Presents` recognition) — closed in v1.94.
 - **#5 sub-item (b)** (RefInt `IdentifiedArrayOf` recognition) — closed in v1.95.
 - **#5 sub-item (c)** (Idempotence TCA action names) — closed in v1.96.
+- **#5 sub-item (d)** (Biconditional inferred-Bool initializer) — closed in v1.97.
+
+**Sibling threads still queued**, both unblock different aspects
+of the calibration loop's UX:
+
+- **N-arm interactive triage prompt** (PRD §9.4) — UI work to
+  walk a user through accept/reject decisions efficiently.
+  Mechanical wrapper around `accept-interaction` recorder.
+- **Kit-side `checkInteractionInvariantPropertyLaws` harness**
+  (cross-repo) — third cross-repo cycle after M2 and M9. Wires
+  v2.3.0 conformances to auto-run on every CI invocation.
 
 -----
 
