@@ -33,6 +33,22 @@ public enum CardinalityWitnessDetector {
     /// type (rare in practice — State typically lives in one file —
     /// but `extension Inbox.State { ... }` could legitimately split
     /// the fields), then emits one witness if `≥ 2` total.
+    ///
+    /// V1.103 (cycle-100 Finding A fix) — fields are deduplicated by
+    /// `propertyName` after the cross-file aggregation. This handles
+    /// the case where multiple files declare types whose suffixes
+    /// match `stateTypeName` but the types are independently defined
+    /// (not extension-split). Real TCA hits this with
+    /// `02-SharedState-{FileStorage,InMemory,UserDefaults}.swift`
+    /// each defining their own `CounterTab.State { var alert: ...? }`
+    /// — the prior code concatenated the same `alert` field 3× and
+    /// emitted a cardinality predicate `(alert != nil) + (alert != nil)
+    /// + (alert != nil) <= 1` that mathematically reduces to
+    /// `alert == nil`. The dedupe collapses to one field; since
+    /// cardinality requires ≥ 2 distinct fields, no witness fires
+    /// (correct — a single Optional doesn't have a cardinality
+    /// invariant). The legitimate extension-split case has distinct
+    /// field names by construction, so the dedupe is a no-op.
     public static func detect(
         stateTypeName: String,
         in directory: URL
@@ -58,7 +74,27 @@ public enum CardinalityWitnessDetector {
             visitor.walk(tree)
             allFields.append(contentsOf: visitor.fields)
         }
-        return allFields.count >= 2 ? [CardinalityWitness(fields: allFields)] : []
+        let dedupedFields = deduplicateByPropertyName(allFields)
+        return dedupedFields.count >= 2
+            ? [CardinalityWitness(fields: dedupedFields)]
+            : []
+    }
+
+    /// V1.103 — drop later occurrences of a `propertyName` already
+    /// seen in `fields`. Preserves first-occurrence ordering (driven
+    /// by the sorted `swiftFiles` traversal, so the result is stable
+    /// across runs). File-private to keep the dedupe coupled to its
+    /// caller's documented intent.
+    private static func deduplicateByPropertyName(
+        _ fields: [CardinalityWitness.Field]
+    ) -> [CardinalityWitness.Field] {
+        var seen: Set<String> = []
+        var result: [CardinalityWitness.Field] = []
+        for field in fields where !seen.contains(field.propertyName) {
+            seen.insert(field.propertyName)
+            result.append(field)
+        }
+        return result
     }
 
     // MARK: - Visitor
