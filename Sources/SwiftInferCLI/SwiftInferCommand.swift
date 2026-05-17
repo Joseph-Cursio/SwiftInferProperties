@@ -21,7 +21,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         All output is suggestions for human review; nothing auto-executes. \
         See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: "1.101.0",
+        version: "1.102.0",
         subcommands: [
             Discover.self,
             Drift.self,
@@ -37,7 +37,8 @@ public struct SwiftInferCommand: AsyncParsableCommand {
             DiscoverInteraction.self,
             DriftInteraction.self,
             AcceptInteraction.self,
-            AcceptCheckInteraction.self
+            AcceptCheckInteraction.self,
+            MetricsInteraction.self
         ],
         defaultSubcommand: Discover.self
     )

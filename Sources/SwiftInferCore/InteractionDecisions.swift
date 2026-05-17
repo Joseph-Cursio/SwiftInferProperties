@@ -126,4 +126,29 @@ public struct InteractionDecisions: Sendable, Equatable, Codable {
             records: withoutPrior + [record]
         )
     }
+
+    /// Fold another `InteractionDecisions` into this one (v1.102 —
+    /// cycle 99 calibration helper). Used by `metrics-interaction`
+    /// to aggregate per-corpus decision files into one in-memory
+    /// `InteractionDecisions` for per-family acceptance-rate
+    /// reporting. Identity-keyed; on collision the record with the
+    /// later `timestamp` wins (same posture as v1's `Decisions.merge`).
+    public func merge(_ other: InteractionDecisions) -> InteractionDecisions {
+        var byHash: [String: InteractionDecisionRecord] = [:]
+        for record in records + other.records {
+            if let existing = byHash[record.identityHash],
+               existing.timestamp >= record.timestamp {
+                continue
+            }
+            byHash[record.identityHash] = record
+        }
+        let merged = byHash.values.sorted { lhs, rhs in
+            if lhs.timestamp != rhs.timestamp { return lhs.timestamp < rhs.timestamp }
+            return lhs.identityHash < rhs.identityHash
+        }
+        return InteractionDecisions(
+            schemaVersion: max(schemaVersion, other.schemaVersion),
+            records: merged
+        )
+    }
 }
