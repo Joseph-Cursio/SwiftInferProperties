@@ -35,9 +35,29 @@ public enum IdempotenceWitnessDetector {
     /// `select(id)` as idempotent (selecting the same id twice =
     /// selecting once); the prefix arm still catches `selectFoo` /
     /// `selectMessage` for prefix variants.
+    ///
+    /// V1.96 (cycle-93 — TCA family-pattern calibration #3) adds three
+    /// canonical TCA Action-name conventions:
+    ///
+    /// - **`task`** — TCA's "subscribe to a long-running effect"
+    ///   action. Conventionally wired through `.cancellable(id:)` so
+    ///   re-firing cancels-and-restarts the same subscription. State-
+    ///   level idempotent for same payload.
+    /// - **`delegate`** — payload-carrying parent-communication action.
+    ///   The child reducer typically does nothing in its body for
+    ///   `delegate(...)` cases (the parent observes them). State-no-op
+    ///   is trivially idempotent.
+    /// - **`binding`** — TCA's `BindingAction<State>` integration
+    ///   (`.binding(.set(\.$foo, value))`). Setter on a key-path;
+    ///   assigning the same value twice = same final state.
+    ///
+    /// Toggle-shape names (`toggle`, `toggleX`) are intentionally
+    /// excluded — toggling toggles, applying twice returns to original
+    /// state, not idempotent.
     static let exactNames: Set<String> = [
         "refresh", "reset", "clear", "dismiss", "cancel", "close", "hide",
-        "select"
+        "select",
+        "task", "delegate", "binding"
     ]
 
     /// Prefix-match names. The case identifier must start with one

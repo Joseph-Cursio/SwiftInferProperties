@@ -162,4 +162,61 @@ struct IdempotenceWitnessDetectorTests {
         )
         #expect(witnesses.isEmpty)
     }
+
+    // MARK: - V1.96 TCA action-name conventions
+
+    @Test("V1.96 — task / delegate / binding classify as exact-name (TCA conventions)")
+    func classifyTCAActionConventions() {
+        // Cycle-87 finding #5 sub-item (c) — extend the curated
+        // exact-name set with TCA's three canonical idempotent
+        // Action-name conventions. Every TCA Action enum uses at
+        // least one of these.
+        #expect(IdempotenceWitnessDetector.classify("task") == .exactName)
+        #expect(IdempotenceWitnessDetector.classify("delegate") == .exactName)
+        #expect(IdempotenceWitnessDetector.classify("binding") == .exactName)
+    }
+
+    @Test("V1.96 — TCA exact-name additions are case-insensitive (like the rest of the set)")
+    func classifyTCAActionConventionsCaseInsensitive() {
+        #expect(IdempotenceWitnessDetector.classify("Task") == .exactName)
+        #expect(IdempotenceWitnessDetector.classify("DELEGATE") == .exactName)
+        #expect(IdempotenceWitnessDetector.classify("Binding") == .exactName)
+    }
+
+    @Test("V1.96 — toggle / toggleX stays unmatched — toggling is not idempotent")
+    func toggleIsNotIdempotent() {
+        // Intentionally NOT added to the exact-name set. Toggling
+        // toggles — applying twice returns to original state, which
+        // is the canonical non-idempotent shape. Confirm both the
+        // bare name and the common prefix form stay unmatched.
+        #expect(IdempotenceWitnessDetector.classify("toggle") == nil)
+        #expect(IdempotenceWitnessDetector.classify("toggleMenu") == nil)
+        #expect(IdempotenceWitnessDetector.classify("toggleChanged") == nil)
+    }
+
+    @Test("V1.96 — TCA-shaped Action enum fires task / delegate / binding witnesses")
+    func tcaShapedActionEnumFires() {
+        // Realistic TCA Action enum — `task`, `delegate(...)`, and
+        // `binding(BindingAction<State>)` all fire idempotence
+        // witnesses with the v1.96 expansion. The
+        // `incrementButtonTapped` case stays unmatched (not in
+        // either the exact-name set or the prefix list).
+        let source = """
+        struct Feature {
+            enum Action {
+                case task
+                case delegate(Delegate)
+                case binding(BindingAction<State>)
+                case incrementButtonTapped
+            }
+        }
+        """
+        let witnesses = IdempotenceWitnessDetector.detect(
+            actionTypeName: "Feature.Action",
+            in: source
+        )
+        #expect(witnesses.count == 3)
+        #expect(Set(witnesses.map(\.actionCaseName)) == ["task", "delegate", "binding"])
+        #expect(witnesses.allSatisfy { $0.matchKind == .exactName })
+    }
 }
