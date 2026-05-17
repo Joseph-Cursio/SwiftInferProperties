@@ -129,17 +129,38 @@ enum CardinalityFieldExtractor {
         "sheet", "alert", "fullscreencover", "popover"
     ]
 
+    /// V1.94 (cycle-91 — TCA family-pattern calibration #1) — TCA
+    /// presentation-property-wrapper attribute names. An Optional
+    /// field carrying either of these attributes is treated as a
+    /// presentation slot regardless of property name, since the
+    /// wrapper itself encodes the presentation semantics. Modern
+    /// TCA (1.0+) uses `@Presents`; the older `@PresentationState`
+    /// alias is recognized for back-compat. Cycle-3 measurement on
+    /// TCA 1.25.5 showed only 3 cardinality witnesses across 50
+    /// reducers because every `@Presents var destination:
+    /// Destination.State?` failed the name-pattern check (no
+    /// "sheet" / "alert" substring in "destination").
+    private static let presentationAttributeNames: Set<String> = [
+        "Presents", "PresentationState"
+    ]
+
     /// V2.0 M5 — walk the member block, route each stored property
     /// into either the bool-flag bucket or the optional-presentation
-    /// bucket via the curated name patterns.
+    /// bucket via the curated name patterns. V1.94 — Optional fields
+    /// carrying `@Presents` / `@PresentationState` qualify regardless
+    /// of name.
     static func extract(from memberBlock: MemberBlockSyntax) -> [CardinalityWitness.Field] {
         var result: [CardinalityWitness.Field] = []
         for member in memberBlock.members {
             guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
             let modifiers = varDecl.modifiers.map { $0.name.text }
             if modifiers.contains("static") || modifiers.contains("class") { continue }
+            let hasPresentationAttribute = Self.declHasPresentationAttribute(varDecl)
             for binding in varDecl.bindings {
-                if let field = classifyBinding(binding) {
+                if let field = classifyBinding(
+                    binding,
+                    hasPresentationAttribute: hasPresentationAttribute
+                ) {
                     result.append(field)
                 }
             }
@@ -147,11 +168,29 @@ enum CardinalityFieldExtractor {
         return result
     }
 
+    /// V1.94 — does the `VariableDeclSyntax` carry an `@Presents` or
+    /// `@PresentationState` attribute? Used by `extract(from:)` to
+    /// relax the name-pattern check for Optional fields with TCA
+    /// presentation property wrappers.
+    static func declHasPresentationAttribute(_ varDecl: VariableDeclSyntax) -> Bool {
+        for element in varDecl.attributes {
+            guard let attribute = element.as(AttributeSyntax.self) else { continue }
+            let name = attribute.attributeName.trimmedDescription
+            if presentationAttributeNames.contains(name) {
+                return true
+            }
+        }
+        return false
+    }
+
     /// Classify one binding. Returns `nil` if the binding is
     /// computed, has no type annotation, or doesn't match either
-    /// the Bool-flag or Optional-presentation patterns.
+    /// the Bool-flag or Optional-presentation patterns. V1.94 —
+    /// when `hasPresentationAttribute` is `true`, an Optional binding
+    /// qualifies regardless of property name.
     static func classifyBinding(
-        _ binding: PatternBindingSyntax
+        _ binding: PatternBindingSyntax,
+        hasPresentationAttribute: Bool = false
     ) -> CardinalityWitness.Field? {
         if binding.accessorBlock != nil { return nil }
         guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { return nil }
@@ -165,7 +204,8 @@ enum CardinalityFieldExtractor {
                 kind: .boolFlag
             )
         }
-        if isOptionalType(typeText), matchesOptionalPattern(name) {
+        if isOptionalType(typeText),
+           hasPresentationAttribute || matchesOptionalPattern(name) {
             return CardinalityWitness.Field(
                 propertyName: name,
                 indicator: "state.\(name) != nil",

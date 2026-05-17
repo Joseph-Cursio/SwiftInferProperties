@@ -220,4 +220,5 @@ struct CardinalityWitnessDetectorTests {
         #expect(CardinalityFieldExtractor.matchesOptionalPattern("PRESENTEDSHEET"))
         #expect(!CardinalityFieldExtractor.matchesOptionalPattern("selectedID"))
     }
+
 }
