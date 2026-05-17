@@ -201,77 +201,24 @@ extension SwiftInferCommand {
                 updateBaseline: updateBaseline,
                 diagnostics: diagnostics
             )
-            if effectiveFlags.interactive {
-                try runInteractiveBranch(
-                    suggestions: suggestions,
+            try dispatchSideOrchestrator(
+                suggestions: suggestions,
+                inputs: SideOrchestratorInputs(
+                    effectiveFlags: effectiveFlags,
                     workingDirectory: workingDirectory,
                     target: target,
-                    triageIO: InteractionInteractiveTriage.Inputs(
-                        prompt: promptInput,
-                        output: output,
-                        diagnostics: diagnostics,
-                        dryRun: dryRun
-                    )
-                )
-            } else if effectiveFlags.interactiveBridges {
-                try runInteractiveBridgesBranch(
-                    suggestions: suggestions,
-                    workingDirectory: workingDirectory,
-                    target: target,
-                    triageIO: InteractionBridgeInteractiveTriage.Inputs(
-                        prompt: promptInput,
-                        output: output,
-                        diagnostics: diagnostics,
-                        dryRun: dryRun
-                    ),
+                    promptInput: promptInput,
+                    output: output,
+                    diagnostics: diagnostics,
+                    dryRun: dryRun,
                     firstSeenAt: firstSeenAt
                 )
-            } else if effectiveFlags.updateBaseline {
-                try runUpdateBaseline(
-                    suggestions: suggestions,
-                    workingDirectory: workingDirectory,
-                    target: target,
-                    dryRun: dryRun,
-                    output: output
-                )
-            }
+            )
             let rendered = InteractionSuggestionRenderer.render(
                 suggestions,
                 includePossible: includePossible
             )
             output.write(rendered)
-        }
-
-        /// V1.109 (cycle-103c) — resolve the three-way mutex over
-        /// `--interactive` / `--interactive-bridges` /
-        /// `--update-baseline`. Precedence (most-specific wins):
-        /// `--interactive` > `--interactive-bridges` >
-        /// `--update-baseline`. Each downgrade emits a warning to
-        /// `diagnostics`. Extracted so the `run` orchestrator stays
-        /// under SwiftLint's body-length cap.
-        static func warnAndResolveFlagMutex(
-            interactive: Bool,
-            interactiveBridges: Bool,
-            updateBaseline: Bool,
-            diagnostics: any DiagnosticOutput
-        ) -> (interactive: Bool, interactiveBridges: Bool, updateBaseline: Bool) {
-            var bridges = interactiveBridges
-            var baseline = updateBaseline
-            if interactive, bridges {
-                diagnostics.writeDiagnostic(
-                    "warning: --interactive and --interactive-bridges are mutually exclusive; "
-                        + "--interactive-bridges ignored for this run"
-                )
-                bridges = false
-            }
-            if (interactive || bridges), baseline {
-                diagnostics.writeDiagnostic(
-                    "warning: --interactive(-bridges) and --update-baseline are mutually exclusive; "
-                        + "--update-baseline ignored for this run"
-                )
-                baseline = false
-            }
-            return (interactive: interactive, interactiveBridges: bridges, updateBaseline: baseline)
         }
 
         /// V2.0 M4.E — pure-ish pipeline entry. Tests drive it

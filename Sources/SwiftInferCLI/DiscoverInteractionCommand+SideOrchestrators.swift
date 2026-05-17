@@ -7,6 +7,58 @@ import SwiftInferCore
 /// cap after v1.98's `--interactive` branch landed. Contains the
 /// `--update-baseline` writer (v1.89), the `--interactive` triage
 /// dispatcher (v1.98), and the shared package-root walk-up helper.
+
+/// V1.110 (cycle-103d) — resolved-flag bundle. Replaces the
+/// 3-element tuple SwiftLint flags as a `large_tuple` violation.
+/// File-scope for the nesting cap; small enough to inline at call
+/// sites without ceremony.
+public struct DiscoverInteractionEffectiveFlags: Sendable, Equatable {
+    public let interactive: Bool
+    public let interactiveBridges: Bool
+    public let updateBaseline: Bool
+
+    public init(interactive: Bool, interactiveBridges: Bool, updateBaseline: Bool) {
+        self.interactive = interactive
+        self.interactiveBridges = interactiveBridges
+        self.updateBaseline = updateBaseline
+    }
+}
+
+/// V1.110 (cycle-103d) — bundle of `dispatchSideOrchestrator`
+/// dependencies. SwiftLint flagged the original 9-arg form as a
+/// `function_parameter_count` violation. The bundle stays
+/// file-scope (nesting cap) + lets the dispatch helper stay a
+/// 2-arg function (suggestions + inputs).
+public struct SideOrchestratorInputs {
+    public let effectiveFlags: DiscoverInteractionEffectiveFlags
+    public let workingDirectory: URL
+    public let target: String
+    public let promptInput: any PromptInput
+    public let output: any DiscoverOutput
+    public let diagnostics: any DiagnosticOutput
+    public let dryRun: Bool
+    public let firstSeenAt: Date
+
+    public init(
+        effectiveFlags: DiscoverInteractionEffectiveFlags,
+        workingDirectory: URL,
+        target: String,
+        promptInput: any PromptInput,
+        output: any DiscoverOutput,
+        diagnostics: any DiagnosticOutput,
+        dryRun: Bool,
+        firstSeenAt: Date
+    ) {
+        self.effectiveFlags = effectiveFlags
+        self.workingDirectory = workingDirectory
+        self.target = target
+        self.promptInput = promptInput
+        self.output = output
+        self.diagnostics = diagnostics
+        self.dryRun = dryRun
+        self.firstSeenAt = firstSeenAt
+    }
+}
 extension SwiftInferCommand.DiscoverInteraction {
 
     /// V1.98 — extracted from `run` so the orchestrator stays under
@@ -29,6 +81,89 @@ extension SwiftInferCommand.DiscoverInteraction {
             packageRoot: packageRoot,
             inputs: triageIO
         )
+    }
+
+    /// V1.109 (cycle-103c) — resolve the three-way mutex over
+    /// `--interactive` / `--interactive-bridges` /
+    /// `--update-baseline`. Precedence (most-specific wins):
+    /// `--interactive` > `--interactive-bridges` >
+    /// `--update-baseline`. Each downgrade emits a warning to
+    /// `diagnostics`. Moved to the side-orchestrators extension in
+    /// cycle 103d so the main struct stays under SwiftLint's
+    /// body-length cap.
+    static func warnAndResolveFlagMutex(
+        interactive: Bool,
+        interactiveBridges: Bool,
+        updateBaseline: Bool,
+        diagnostics: any DiagnosticOutput
+    ) -> DiscoverInteractionEffectiveFlags {
+        var bridges = interactiveBridges
+        var baseline = updateBaseline
+        if interactive, bridges {
+            diagnostics.writeDiagnostic(
+                "warning: --interactive and --interactive-bridges are mutually exclusive; "
+                    + "--interactive-bridges ignored for this run"
+            )
+            bridges = false
+        }
+        let triageActive = interactive || bridges
+        if triageActive, baseline {
+            diagnostics.writeDiagnostic(
+                "warning: --interactive(-bridges) and --update-baseline are mutually exclusive; "
+                    + "--update-baseline ignored for this run"
+            )
+            baseline = false
+        }
+        return DiscoverInteractionEffectiveFlags(
+            interactive: interactive,
+            interactiveBridges: bridges,
+            updateBaseline: baseline
+        )
+    }
+
+    /// V1.110 (cycle-103d) — dispatch the resolved triage / baseline
+    /// branch based on the effective flags. Extracted from `run` so
+    /// the orchestrator stays under SwiftLint's body-length cap.
+    /// Pure dispatch — no flag-mutex logic here (that stays in
+    /// `warnAndResolveFlagMutex`).
+    static func dispatchSideOrchestrator(
+        suggestions: [InteractionInvariantSuggestion],
+        inputs: SideOrchestratorInputs
+    ) throws {
+        if inputs.effectiveFlags.interactive {
+            try runInteractiveBranch(
+                suggestions: suggestions,
+                workingDirectory: inputs.workingDirectory,
+                target: inputs.target,
+                triageIO: InteractionInteractiveTriage.Inputs(
+                    prompt: inputs.promptInput,
+                    output: inputs.output,
+                    diagnostics: inputs.diagnostics,
+                    dryRun: inputs.dryRun
+                )
+            )
+        } else if inputs.effectiveFlags.interactiveBridges {
+            try runInteractiveBridgesBranch(
+                suggestions: suggestions,
+                workingDirectory: inputs.workingDirectory,
+                target: inputs.target,
+                triageIO: InteractionBridgeInteractiveTriage.Inputs(
+                    prompt: inputs.promptInput,
+                    output: inputs.output,
+                    diagnostics: inputs.diagnostics,
+                    dryRun: inputs.dryRun
+                ),
+                firstSeenAt: inputs.firstSeenAt
+            )
+        } else if inputs.effectiveFlags.updateBaseline {
+            try runUpdateBaseline(
+                suggestions: suggestions,
+                workingDirectory: inputs.workingDirectory,
+                target: inputs.target,
+                dryRun: inputs.dryRun,
+                output: inputs.output
+            )
+        }
     }
 
     /// V1.109 (cycle-103c) — bridge-level analog of
