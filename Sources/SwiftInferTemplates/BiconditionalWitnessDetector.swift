@@ -109,11 +109,50 @@ enum BiconditionalExtractor {
 
     /// V2.0 M7 — walk the member block, partition into Bool-flag +
     /// Optional buckets, emit one witness per Cartesian-product pair.
+    ///
+    /// V1.105 (cycle-102 Finding D fix) — suppress bicond pairings
+    /// where both the Bool field AND the Optional field would
+    /// already be classified as Cardinality presentation slots AND
+    /// the cardinality witness covers **≥ 3 fields**. The 3+-slot
+    /// cardinality encodes mutual-exclusion over multiple
+    /// independent UI slots; bicond cross-pairings between those
+    /// slots (e.g., `isShowingSheet × activeFullScreenCover` —
+    /// unrelated presentation slots) are noise.
+    ///
+    /// The 2-slot cardinality case is deliberately NOT suppressed:
+    /// `isShowingSheet` + `sheet: Sheet?` legitimately suggests both
+    /// cardinality (`at most one`) AND biconditional (`bool iff
+    /// non-nil`); calibration triage decides which the user wants.
+    /// Combining both invariants over-constrains but doesn't break
+    /// detection — the rubric handles the disambiguation.
+    ///
+    /// Real-corpus example (Hand03): State `{isShowingSheet,
+    /// isShowingAlert, activeFullScreenCover}` produces a 3-slot
+    /// cardinality witness. Pre-fix bicond also fired 2 cross-
+    /// pairings (`isShowingSheet × cover`, `isShowingAlert × cover`)
+    /// — both unrelated to the presentation contract. Post-fix
+    /// both are suppressed.
+    ///
+    /// The filter is narrow: TCA's `isNavigationActive ×
+    /// optionalCounter` shape stays intact because `optionalCounter`
+    /// doesn't match the presentation-name patterns (and the State
+    /// doesn't fire cardinality at all). Hand05's `isLoadingResults
+    /// × cachedResult` stays intact for the same reason — neither
+    /// field is a cardinality candidate. The triage rubric handles
+    /// those semantic disambiguations.
     static func extract(from memberBlock: MemberBlockSyntax) -> [BiconditionalWitness] {
         let (boolFlags, optionals) = classify(memberBlock)
+        let cardinalityFields = CardinalityFieldExtractor.extract(from: memberBlock)
+        let cardinalityHasThreeOrMore = cardinalityFields.count >= 3
+        let presentationFieldNames = Set(cardinalityFields.map(\.propertyName))
         var witnesses: [BiconditionalWitness] = []
         for boolField in boolFlags {
             for optionalField in optionals {
+                if cardinalityHasThreeOrMore,
+                   presentationFieldNames.contains(boolField.name),
+                   presentationFieldNames.contains(optionalField.name) {
+                    continue
+                }
                 witnesses.append(BiconditionalWitness(
                     boolPropertyName: boolField.name,
                     boolTypeName: boolField.typeText,
