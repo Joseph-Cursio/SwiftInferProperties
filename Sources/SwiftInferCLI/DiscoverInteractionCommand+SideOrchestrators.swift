@@ -31,6 +31,45 @@ extension SwiftInferCommand.DiscoverInteraction {
         )
     }
 
+    /// V1.109 (cycle-103c) — bridge-level analog of
+    /// `runInteractiveBranch`. Groups Strong-tier suggestions into
+    /// bridges via `InteractionInvariantBridge.bridges(from:now:)`,
+    /// then hands them to `InteractionBridgeInteractiveTriage.run`.
+    /// Emits a sentinel + early-returns when the bridge list is
+    /// empty (the common case until calibration promotes a family
+    /// to Strong tier).
+    static func runInteractiveBridgesBranch(
+        suggestions: [InteractionInvariantSuggestion],
+        workingDirectory: URL,
+        target: String,
+        triageIO: InteractionBridgeInteractiveTriage.Inputs,
+        firstSeenAt: Date
+    ) throws {
+        let bridges = InteractionInvariantBridge.bridges(
+            from: suggestions,
+            now: firstSeenAt
+        )
+        if bridges.isEmpty {
+            triageIO.output.write(
+                "No bridges fire — all suggestions are below Strong tier or fewer than "
+                    + "the 3-witness threshold per reducer. Bridges fire only on Strong-tier "
+                    + "suggestions (PRD §3.5 — gated on the calibration loop's tier-promotion "
+                    + "rule). Re-run after calibration promotes a family to Strong / Verified."
+            )
+            return
+        }
+        let sourcesDirectory = workingDirectory
+            .appendingPathComponent("Sources")
+            .appendingPathComponent(target)
+        let packageRoot = findPackageRoot(startingFrom: sourcesDirectory)
+            ?? workingDirectory
+        _ = try InteractionBridgeInteractiveTriage.run(
+            bridges: bridges,
+            packageRoot: packageRoot,
+            inputs: triageIO
+        )
+    }
+
     /// V1.89 — snapshot the current run's Strong-tier-or-Verified
     /// suggestions to `.swiftinfer/interaction-baseline.json`.
     /// Symmetric write side for M10's drift read. Honors `--dry-run`
