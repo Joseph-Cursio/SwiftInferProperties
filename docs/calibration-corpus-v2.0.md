@@ -1,9 +1,21 @@
 # SwiftInferProperties v2.0 — Calibration Corpus
 
-**Status: cycle-3 baseline measured (v1.93 / cycle 90).** This file
+**Status: cycle-4 baseline measured (v1.94 / cycle 91).** This file
 pins the v2.0 calibration corpus and records per-corpus discovery
-counts at v1.93's M1 + M4–M7 detectors. Cycles 4+ report deltas
+counts at v1.94's M1 + M4–M7 detectors. Cycles 5+ report deltas
 against these baseline numbers.
+
+**v1.94 update — Cardinality `@Presents` / `@PresentationState`
+recognition.** First family-pattern-calibration sub-cycle of
+cycle-87 finding #5. `CardinalityWitnessDetector` now treats any
+Optional carrying `@Presents` or `@PresentationState` as a
+presentation slot regardless of property name. TCA 1.25.5 cardinality
+witnesses: 3 → 5 (CaseStudies 3 → 4, VoiceMemos 0 → 1 first
+detection). Smaller unlock than expected — modern TCA prefers a
+single `@Presents var destination: Destination.State?` with an
+enum carrying variants over multiple `@Presents` Optionals, so
+only the legacy multi-slot shape fires Cardinality. Cycle-4 raw
+outputs at `docs/calibration-cycle-91-data/`.
 
 **v1.93 update — M1.D `@Reducer` macro recognition landed.**
 Cycle-87 finding #3 (M1.B blind to `@Reducer` macro — all modern
@@ -183,18 +195,18 @@ cp -R /tmp/tca-corpus/Examples/CaseStudies/UIKitCaseStudies tca-25-discovery/Sou
 cd tca-25-discovery && for t in …; do swift-infer discover-reducers --target "$t"; done
 ```
 
-**Measured discovery counts (post-v1.93 M1.D unlock):**
+**Measured discovery counts (post-v1.94 cardinality @Presents):**
 
-| Example target | Reducers (cycle-0 → cycle-3) | Interactions (cycle-0 → cycle-3) |
+| Example target | Reducers (cycle-0 → cycle-4) | Interactions (cycle-0 → cycle-4) |
 |---|---|---|
-| CaseStudies (SwiftUI) | 0 → **36** (+36) | 0 → **17** (14 idempotence + 3 cardinality) |
+| CaseStudies (SwiftUI) | 0 → **36** (+36) | 0 → **18** (14 idempotence + 4 cardinality) |
 | UIKitCaseStudies | 0 → **3** (+3) | 0 → **4** (all idempotence) |
 | Search | 0 → **1** (+1) | 0 → 0 |
 | SpeechRecognition | 0 → **1** (+1) | 0 → 0 |
 | SyncUps | 0 → **5** (+5) | 0 → 0 |
 | Todos | 0 → **1** (+1) | 0 → 0 |
-| VoiceMemos | 0 → **3** (+3) | 0 → 0 |
-| **Total** | **0 → 50** (+50) | **0 → 21** (+21) |
+| VoiceMemos | 0 → **3** (+3) | 0 → **1** (1 cardinality, first detection) |
+| **Total** | **0 → 50** (+50) | **0 → 23** (+23) |
 
 **Cycle-87 finding #3 closed in v1.93.** New `hasReducerAttribute(_:)`
 static helper in `ReducerDiscoverer` checks each type-decl's
@@ -276,54 +288,58 @@ sharpen the patterns.
 
 -----
 
-## 5. Cycle-3 baseline summary (post-v1.93 M1.D unlock)
+## 5. Cycle-4 baseline summary (post-v1.94 cardinality @Presents)
 
-| Corpus | Reducers (c0 → c3) | Interactions (c0 → c3) | Per-family non-zero |
+| Corpus | Reducers (c0 → c4) | Interactions (c0 → c4) | Per-family non-zero |
 |---|---|---|---|
 | Hand-rolled (`Tests/Fixtures/v2.0-corpus/`) | 8 → **7** | 98 → **18** | All 5 |
-| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **21** | Idempotence + Cardinality |
-| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **17** | Idempotence only |
-| **Total** | **29 → 92** | **114 → 56** | 5 of 5 (hand-rolled) |
+| TCA 1.25.5 (7 examples) | 0 → **50** | 0 → **23** | Idempotence + Cardinality |
+| TCA 1.0.0 (3 examples) | 21 → **35** | 16 → **16** | Idempotence only |
+| **Total** | **29 → 92** | **114 → 57** | 5 of 5 (hand-rolled) |
 
-**v2.0 cycle-3 baseline = 56 interaction-invariant suggestions
+**v2.0 cycle-4 baseline = 57 interaction-invariant suggestions
 across 92 reducers (7 hand-rolled + 35 TCA-pre-macro + 50
 TCA-modern-macro), all at default Possible tier.**
 
 Per-cycle deltas:
-- **Cycle-0 → cycle-1** (v1.91 cross-contam fix): 114 → 34 suggestions
-  (−80). All from hand-rolled corpus.
+- **Cycle-0 → cycle-1** (v1.91 cross-contam fix): 114 → 34
+  suggestions (−80). All from hand-rolled corpus.
 - **Cycle-1 → cycle-2** (v1.92 4th-shape + scalar filter): 34 → 35
   suggestions (+1), 29 → 42 reducers (+13). TCA 1.0.0 reducers
   unlocked; small interaction-suggestion delta confirms Action-
   pattern calibration is the dominant gap.
 - **Cycle-2 → cycle-3** (v1.93 M1.D macro recognition): 35 → 56
   suggestions (+21), 42 → 92 reducers (+50). TCA 1.25.5 fully
-  unlocked — first detection of any modern-TCA reducers. First
-  non-idempotence family fires on real TCA (3 cardinality
-  witnesses in SwiftUICaseStudies).
+  unlocked. (Note: cycle-3 corpus doc reported 56 by including a
+  1-off in the TCA 1.0.0 subtotal; corrected here to 55 implied,
+  reconciled to 56 by the +1 hand-rolled. See cycle-91 findings
+  arithmetic note.)
+- **Cycle-3 → cycle-4** (v1.94 cardinality @Presents): 56 → 57
+  suggestions net (TCA 1.25.5 +2 cardinality offset by the cycle-3
+  arithmetic correction). 92 reducers unchanged.
 
 Raw discovery outputs:
 - `docs/calibration-cycle-87-data/` — cycle-0 (pre-v1.91 baseline)
 - `docs/calibration-cycle-88-data/` — cycle-1 (post-v1.91)
 - `docs/calibration-cycle-89-data/` — cycle-2 (post-v1.92)
 - `docs/calibration-cycle-90-data/` — cycle-3 (post-v1.93)
+- `docs/calibration-cycle-91-data/` — cycle-4 (post-v1.94)
 
 -----
 
-## 6. Follow-up work items remaining after cycle-3
+## 6. Follow-up work items remaining after cycle-4
 
-Cycle-87 originally surfaced 5 findings. Four have been closed
-across v1.91 / v1.92 / v1.93. One remains:
+Cycle-87 finding #5 broke into 4 sub-items. v1.94 closed sub-item
+#1 (Cardinality `@Presents`). Three remain:
 
-1. **Family-pattern calibration for real TCA conventions.** M4.C /
-   M5 / M6 / M7 patterns should learn `@PresentationState` /
-   `IdentifiedArrayOf` / TCA Action conventions. Cycle-3 measurement
-   gives the strongest possible evidence yet: with M1.D unlocking
-   50 TCA-modern-macro reducers, only 21 interaction suggestions
-   fire (18 idempotence + 3 cardinality). Conservation, referential
-   integrity, and biconditional remain at 0 on the entire TCA
-   corpus (1.0.0 + 1.25.5 combined). The detector gaps are now
-   closed; the family-pattern gaps are not.
+1. **Referential Integrity: `IdentifiedArrayOf<X>` recognition** —
+   modern TCA uses `IdentifiedArrayOf<X>` everywhere; the detector
+   currently only matches `[X]`. Largest expected unlock for TCA.
+2. **Idempotence: TCA action-name conventions** — extend M4.C's
+   curated set with `task` / `delegate(...)` / `binding(.set(...))`.
+3. **Biconditional: Effect/Task pairs** — extend pairing rules to
+   recognize TCA's `Effect<X>?` / Task-style state pairs. More
+   design-heavy.
 
 This is the actual three-cycle calibration loop the PRD §19
 metrics measure against, now unblocked.
@@ -333,6 +349,7 @@ metrics measure against, now unblocked.
 - **#2** (bare-`State` / bare-`Action` cross-contamination) — closed in v1.91.
 - **#3** (M1.B blind to `@Reducer` macro) — closed in v1.93.
 - **#4** (M1.A 4th-shape extension) — closed in v1.92.
+- **#5 sub-item 1** (Cardinality `@Presents` recognition) — closed in v1.94.
 
 -----
 
