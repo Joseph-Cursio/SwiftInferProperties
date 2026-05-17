@@ -1,0 +1,363 @@
+19 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   FocusDemo.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-FocusState.swift:29
+State:     FocusDemo.State
+Action:    FocusDemo.Action
+Predicate: .binding
+
+Why suggested:
+  ✓ Action case `.binding` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x03305FCA3F2C90C1
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   NavigateAndLoad.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-NavigateAndLoad.swift:29
+State:     NavigateAndLoad.State
+Action:    NavigateAndLoad.Action
+Predicate: .setNavigationIsActiveDelayCompleted
+
+Why suggested:
+  ✓ Action case `.setNavigationIsActiveDelayCompleted` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x222DD422104373CD
+
+[Interaction-Invariant Suggestion]
+Family:    cardinality
+Score:     30 (Possible)
+Reducer:   AlertAndConfirmationDialog.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-AlertsAndConfirmationDialogs.swift:47
+State:     AlertAndConfirmationDialog.State
+Action:    AlertAndConfirmationDialog.Action
+Predicate: (state.alert != nil ? 1 : 0) + (state.confirmationDialog != nil ? 1 : 0) <= 1
+
+Why suggested:
+  ✓ State has 2 presentation-shaped fields (0 Bool flags, 2 Optional presentations): alert, confirmationDialog.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect) — verifier loop will assert ≤ 1 active at each action step.
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .show* actions are not yet inspected (M5+ refinement). If your domain allows two presentations active simultaneously by design (e.g. an alert overlaid on a sheet), this invariant is incorrect.
+  ⚠ The `≥ 2 fields` heuristic is deliberately crude (PRD §5.4 calibration note). Spurious matches on fields that happen to contain `Showing` / `Presenting` / `sheet` / `alert` etc. are expected in the first calibration cycles.
+  ⚠ Initial-state invariant may not hold if `State.init()` leaves multiple fields in their non-default active state.
+
+Identity:  0x2661FFB7152A81C6
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MultipleDestinations.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Multiple-Destinations.swift:48
+State:     MultipleDestinations.State
+Action:    MultipleDestinations.Action
+Predicate: .showDrillDown
+
+Why suggested:
+  ✓ Action case `.showDrillDown` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x2CF145DE9F15BBC3
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   BindingForm.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-Bindings-Forms.swift:33
+State:     BindingForm.State
+Action:    BindingForm.Action
+Predicate: .binding
+
+Why suggested:
+  ✓ Action case `.binding` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x4D5AA3831F8F39F5
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   SharedState.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-SharedState.swift:64
+State:     SharedState.State
+Action:    SharedState.Action
+Predicate: .selectTab
+
+Why suggested:
+  ✓ Action case `.selectTab` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x6A1C5F8B800C666B
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   NavigateAndLoad.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-NavigateAndLoad.swift:29
+State:     NavigateAndLoad.State
+Action:    NavigateAndLoad.Action
+Predicate: .setNavigation
+
+Why suggested:
+  ✓ Action case `.setNavigation` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x6CD1437C507D2C40
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentAndLoad.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Sheet-PresentAndLoad.swift:29
+State:     PresentAndLoad.State
+Action:    PresentAndLoad.Action
+Predicate: .setSheetIsPresentedDelayCompleted
+
+Why suggested:
+  ✓ Action case `.setSheetIsPresentedDelayCompleted` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x6D02629A0B7E2AD6
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   NavigateAndLoad.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-NavigateAndLoad.swift:29
+State:     NavigateAndLoad.State
+Action:    NavigateAndLoad.Action
+Predicate: state.isNavigationActive == (state.optionalCounter != nil)
+
+Why suggested:
+  ✓ State stores `isNavigationActive: Bool` paired with `optionalCounter: Counter.State?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isNavigationActive` to `true` with `optionalCounter == nil` (or vice versa).
+
+Identity:  0x94FF67A336D17466
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Animations.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/01-GettingStarted-Animations.swift:49
+State:     Animations.State
+Action:    Animations.Action
+Predicate: .setColor
+
+Why suggested:
+  ✓ Action case `.setColor` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0x98095E03B5CB50C6
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   LongLivingEffects.reduce
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/02-Effects-LongLiving.swift:32
+State:     State
+Action:    Action
+Predicate: .task
+
+Why suggested:
+  ✓ Action case `.task` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xA128952D45DE0EE8
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   NavigateAndLoadList.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Lists-NavigateAndLoad.swift:38
+State:     NavigateAndLoadList.State
+Action:    NavigateAndLoadList.Action
+Predicate: .setNavigationSelectionDelayCompleted
+
+Why suggested:
+  ✓ Action case `.setNavigationSelectionDelayCompleted` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xA4E1C7777957793A
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MultipleDestinations.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Multiple-Destinations.swift:48
+State:     MultipleDestinations.State
+Action:    MultipleDestinations.Action
+Predicate: .showSheet
+
+Why suggested:
+  ✓ Action case `.showSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xD73376B29A2C4843
+
+[Interaction-Invariant Suggestion]
+Family:    biconditional
+Score:     30 (Possible)
+Reducer:   ScreenA.reduce
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-NavigationStack.swift:231
+State:     State
+Action:    Action
+Predicate: state.isLoading == (state.fact != nil)
+
+Why suggested:
+  ✓ State stores `isLoading: Bool` paired with `fact: String?` — a biconditional candidate (PRD §5.6).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect) — verifier asserts the two projected Bools agree at each action step (whole-State Equatable not required).
+
+Why this might be wrong:
+  ⚠ Detection is structural only — reducer-body handlers for .startX / .cancelX actions not yet inspected (PRD §5.6 third witness). The third witness ('at least one handler clears only one of the pair') is the signal that this invariant *should* hold; without it, M7 may surface pairs whose two sides are intentionally independent.
+  ⚠ Pairing is Cartesian-product at v0.0 — every `is*`-shaped Bool × every Optional in the State. Spurious matches are expected in the first calibration cycles; stem-matching (`isLoadingX` ↔ `taskX?`) is a future refinement.
+  ⚠ PRD §5.6 calibration note: this family is the trickiest of the five because the two sides often live in different state layers (view-state vs model-state) and drift out of sync — exactly where SwiftUI race conditions show up. Expect 3–5 calibration cycles before stable acceptance rate.
+  ⚠ Initial-state invariant may not hold if `State.init()` sets `isLoading` to `true` with `fact == nil` (or vice versa).
+
+Identity:  0xD8040F167F092FA9
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Root.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/00-Core.swift:62
+State:     Root.State
+Action:    Root.Action
+Predicate: .presentAndLoad
+
+Why suggested:
+  ✓ Action case `.presentAndLoad` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xDC04AF5A07FE1BD5
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   MultipleDestinations.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Multiple-Destinations.swift:48
+State:     MultipleDestinations.State
+Action:    MultipleDestinations.Action
+Predicate: .showPopover
+
+Why suggested:
+  ✓ Action case `.showPopover` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xDC63548560C7FF3A
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   PresentAndLoad.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Sheet-PresentAndLoad.swift:29
+State:     PresentAndLoad.State
+Action:    PresentAndLoad.Action
+Predicate: .setSheet
+
+Why suggested:
+  ✓ Action case `.setSheet` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xF1BDBD0D08BB8479
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   NavigateAndLoadList.body
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/03-Navigation-Lists-NavigateAndLoad.swift:38
+State:     NavigateAndLoadList.State
+Action:    NavigateAndLoadList.Action
+Predicate: .setNavigation
+
+Why suggested:
+  ✓ Action case `.setNavigation` matches an idempotent-action pattern: name-prefix match (set* / select* / show* / present*) — payload-aware idempotence still surfaces under verifier since the same payload is generated twice in succession.
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+  ⚠ Prefix-match families (set* / select* / etc.) are idempotent only when the action's payload is held constant. The verifier generates the same payload twice in succession, so detection still surfaces correctly, but the property doesn't extend to 'all payloads' uniformly.
+
+Identity:  0xF5C13CD78D4B01D6
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Refreshable.reduce
+Location:  /private/tmp/tca-10-discovery/Sources/CaseStudies/02-Effects-Refreshable.swift:33
+State:     State
+Action:    Action
+Predicate: .refresh
+
+Why suggested:
+  ✓ Action case `.refresh` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xFDD5E07840BF51F1
