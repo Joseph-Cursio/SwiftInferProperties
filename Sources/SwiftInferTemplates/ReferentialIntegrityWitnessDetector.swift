@@ -114,13 +114,37 @@ enum ReferentialIntegrityExtractor {
     }
 
     /// V2.0 M6 — walk the member block, partition into "selected
-    /// Optional" + "Array collection" buckets, emit one witness
-    /// per Cartesian-product pair.
+    /// Optional" + "Array collection" buckets, emit one witness per
+    /// Cartesian-product pair filtered by element-type compatibility.
+    ///
+    /// V1.104 (cycle-101a Finding C fix) — when a `selected<X>(ID)?`
+    /// property exposes an implied element type via `impliedElementType
+    /// (fromSelectedName:)`, only pair it with collections whose
+    /// element type matches X (case-insensitive, ignoring module
+    /// qualification). E.g., `selectedMessageID` pairs with
+    /// `messages: [Message]` but not `drafts: [Draft]`. When the
+    /// selected name has no extractable core (`selected`, `selectedID`),
+    /// the filter falls back to the pre-fix Cartesian behavior, since
+    /// no naming signal is available.
+    ///
+    /// Real-corpus motivation: HandRolled `MessageListReducer` State
+    /// pairs `selectedMessageID: Message.ID?` against both
+    /// `messages: [Message]` and `drafts: [Draft]`. Pre-fix, both
+    /// pairings emitted suggestions; the drafts pairing is
+    /// semantically wrong (a Message ID can't index into a Draft
+    /// collection) and would be triaged as `.rejected` per the
+    /// cycle-99 triage rubric. Post-fix, the drafts pairing is
+    /// filtered out at detection time.
     static func extract(from memberBlock: MemberBlockSyntax) -> [ReferentialIntegrityWitness] {
         let (selectedOpts, collections) = classify(memberBlock)
         var witnesses: [ReferentialIntegrityWitness] = []
         for selected in selectedOpts {
+            let implied = impliedElementType(fromSelectedName: selected.name)
             for collection in collections {
+                if let implied,
+                   !elementTypeMatches(implied: implied, collection: collection.elementTypeText) {
+                    continue
+                }
                 witnesses.append(ReferentialIntegrityWitness(
                     selectedPropertyName: selected.name,
                     selectedTypeName: selected.typeText,
@@ -130,6 +154,49 @@ enum ReferentialIntegrityExtractor {
             }
         }
         return witnesses
+    }
+
+    /// V1.104 — extract the implied element type from a
+    /// `selected<X>(ID)?` property name. Returns the substring after
+    /// stripping the `selected` prefix and trailing `ID` suffix
+    /// (both case-insensitive). Returns `nil` when the remaining
+    /// core is empty (e.g., bare `selected`, `selectedID`,
+    /// `selectedId`) — those preserve the pre-v1.104 Cartesian
+    /// behavior because no element-type signal is available.
+    static func impliedElementType(fromSelectedName name: String) -> String? {
+        let lowered = name.lowercased()
+        guard lowered.hasPrefix("selected") else { return nil }
+        var core = String(name.dropFirst("selected".count))
+        if core.lowercased().hasSuffix("id") {
+            core = String(core.dropLast(2))
+        }
+        return core.isEmpty ? nil : core
+    }
+
+    /// V1.104 — does the collection's element type satisfy the
+    /// selected property's implied element type? Matches if **any**
+    /// dotted component of the collection's element-type text equals
+    /// `implied` (case-insensitive). Two conventions both produce
+    /// matches:
+    ///
+    ///   - `selectedMessageID` → implied `Message`; collection
+    ///     `[Message]` or `[Inbox.Message]` → match on the `Message`
+    ///     component. The `Inbox` qualifier is just module scope.
+    ///   - `selectedTodoID` → implied `Todo`; collection
+    ///     `IdentifiedArrayOf<Todo.State>` → element extracted as
+    ///     `Todo.State`, match on the `Todo` component. This is TCA's
+    ///     idiomatic convention: a Reducer named `Todo` defines its
+    ///     `State` sub-type, and `selectedTodoID` references one of
+    ///     those `Todo.State` records by their `ID`.
+    ///
+    /// Conservative: requires *some* component to match. Suppresses
+    /// the cross-collection false-positive (`selectedMessageID` ×
+    /// `[Draft]` — no shared component) while admitting both
+    /// conventions.
+    static func elementTypeMatches(implied: String, collection: String) -> Bool {
+        let lowercasedImplied = implied.lowercased()
+        let components = collection.split(separator: ".").map { $0.lowercased() }
+        return components.contains(lowercasedImplied)
     }
 
     /// Walk one member block, returning each stored property

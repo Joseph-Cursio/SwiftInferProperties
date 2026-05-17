@@ -2,12 +2,20 @@
 //
 // **Family**: Referential Integrity (PRD §5.5).
 // **Witness**: Optional whose name lowercases-to-start-with `selected`
-// Cartesian-paired with any array `[T]` in the same State.
+// paired with any array `[T]` in the same State, **filtered by
+// element-type compatibility** (V1.104 cycle-101a Finding C fix).
 // **Carrier**: generic.
 //
-// Expected witnesses: 2 (selectedMessageID × messages,
-// selectedMessageID × drafts). Both arrays pair with the single
-// selected Optional because the detector takes the Cartesian product.
+// Expected witnesses: 1 (selectedMessageID × messages). The
+// `drafts: [Draft]` collection is *not* paired because the implied
+// element type from `selectedMessageID` is `Message`, not `Draft`.
+//
+// Pre-v1.104 this fixture used `drafts: [Message]` (same element
+// type) which fired 2 Cartesian witnesses. The cycle-101a fixture
+// update introduces a distinct `Draft` element type so the filter
+// has a real test target — `selectedMessageID` × `drafts: [Draft]`
+// is suppressed at detection time rather than surfacing as a
+// triage `.rejected` decision.
 
 import struct Foundation.UUID
 
@@ -15,7 +23,7 @@ struct MessageListReducer {
     struct State {
         var selectedMessageID: Message.ID?
         var messages: [Message]
-        var drafts: [Message]
+        var drafts: [Draft]
     }
     enum Action {
         case select(Message.ID?)
@@ -37,6 +45,11 @@ struct MessageListReducer {
 }
 
 struct Message: Identifiable {
+    let id: UUID
+    let body: String
+}
+
+struct Draft: Identifiable {
     let id: UUID
     let body: String
 }

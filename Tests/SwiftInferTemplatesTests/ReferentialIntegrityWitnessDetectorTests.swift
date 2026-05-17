@@ -64,8 +64,15 @@ struct ReferentialIntegrityWitnessDetectorTests {
         #expect(witnesses.count == 1)
     }
 
-    @Test("multiple selected-Optionals × multiple arrays → Cartesian product witnesses")
-    func cartesianProductWitnesses() {
+    @Test("multiple selected-Optionals × multiple arrays → element-type-filtered (V1.104)")
+    func elementTypeFilteredPairings() {
+        // V1.104 (cycle-101a Finding C fix) — was a Cartesian-
+        // product expectation pre-v1.104 (4 witnesses); post-fix
+        // the element-type filter narrows to the 2 type-compatible
+        // pairings (`selectedItemID` × `items`, `selectedUserID` ×
+        // `users`), suppressing the cross-collection pairings
+        // (`selectedItemID` × `users`, `selectedUserID` × `items`)
+        // that would have surfaced as triage rejects.
         let source = """
         struct AppState {
             var selectedItemID: UUID?
@@ -78,13 +85,14 @@ struct ReferentialIntegrityWitnessDetectorTests {
             stateTypeName: "AppState",
             in: source
         )
-        // 2 selected-Optionals × 2 arrays = 4 witnesses.
-        #expect(witnesses.count == 4)
-        let pairs = witnesses.map { ($0.selectedPropertyName, $0.collectionPropertyName) }
-        #expect(pairs.contains { $0 == ("selectedItemID", "items") })
-        #expect(pairs.contains { $0 == ("selectedItemID", "users") })
-        #expect(pairs.contains { $0 == ("selectedUserID", "items") })
-        #expect(pairs.contains { $0 == ("selectedUserID", "users") })
+        #expect(witnesses.count == 2)
+        let pairs = Set(witnesses.map {
+            "\($0.selectedPropertyName)→\($0.collectionPropertyName)"
+        })
+        #expect(pairs == [
+            "selectedItemID→items",
+            "selectedUserID→users"
+        ])
     }
 
     @Test("case-insensitive `selected` prefix match")
