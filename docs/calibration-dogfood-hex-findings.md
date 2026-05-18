@@ -42,7 +42,9 @@ For comparison:
 
 ### Finding I — `Reduce(reduce)` method-ref form not detected
 
-**Status: queued for fix cycle.** The `ReduceClosureWalker` introduced in cycle-71 (v1.74) walks `Reduce { state, action in ... }` closures inside a TCA `var body`. It does not match the method-reference form `Reduce(methodName)` where the body is extracted to a separate method on the conformer. This is a real-world TCA idiom — when reducer logic grows beyond a comfortable inline closure, extracting to a method is the natural refactor.
+**Status: CLOSED in v1.111.** Fix shipped immediately after this dogfood — `ReduceClosureWalker.visit(FunctionCallExprSyntax)` gained a second arm that matches `Reduce(<identifier>)` where the argument is a single unlabeled bare `DeclReferenceExpr`. Emits a candidate with the same shape as the closure form (`carrierKind: .tca`, `signatureShape: .inoutStateActionReturnsEffect`); purity defaults to `.effectBearing` since the method body lives outside the walker's reach (safe routing: subprocess verify path works for both pure and effect-bearing reducers). 8 new regression tests; Hex now detects 5 reducers / 27 interactions (was 4 / 22).
+
+**Original report.** The `ReduceClosureWalker` introduced in cycle-71 (v1.74) walks `Reduce { state, action in ... }` closures inside a TCA `var body`. It did not match the method-reference form `Reduce(methodName)` where the body is extracted to a separate method on the conformer. This is a real-world TCA idiom — when reducer logic grows beyond a comfortable inline closure, extracting to a method is the natural refactor.
 
 **Reproducer:** `/tmp/hex-dogfood/Hex/Features/Settings/ModelDownload/ModelDownloadFeature.swift:176`:
 

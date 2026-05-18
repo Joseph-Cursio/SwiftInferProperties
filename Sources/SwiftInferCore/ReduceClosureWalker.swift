@@ -14,11 +14,20 @@ import SwiftSyntax
 /// `Reduce` closures via `CombineReducers`, each closure is detected
 /// independently and surfaces as a separate reducer candidate").
 ///
-/// **What it ignores.** `Reduce` calls without an arity-2 trailing
-/// closure (e.g. `Reduce { $0 }`, `Reduce(into: { ... }, action: { ... })`)
-/// — not the canonical M1.B shape. The pre-1.0 TCA `Reduce(into:action:)`
-/// API can be added at a later milestone if calibration shows it's
-/// common in OSS corpora.
+/// **What it matches (V1.B + Finding I).** Two forms of `Reduce(...)`:
+/// (1) the closure form `Reduce { state, action in ... }` (V1.B
+/// original), and (2) the method-reference form `Reduce(<methodName>)`
+/// where the conformer defines `reduce(into:action:)` (or similar) as
+/// a separate method and passes it by reference. Finding I from
+/// kitlangton/Hex dogfood (cycle-dogfood-hex) — common real-world
+/// idiom when reducer bodies grow beyond a comfortable inline closure.
+///
+/// **What it ignores.** `Reduce` calls without either shape (e.g.
+/// `Reduce { $0 }`, `Reduce(into: { ... }, action: { ... })`,
+/// `Reduce(.someEnumCase)`) — not the canonical M1.B / Finding-I
+/// shapes. The pre-1.0 TCA `Reduce(into:action:)` API can be added
+/// at a later milestone if calibration shows it's common in OSS
+/// corpora.
 ///
 /// **Closure parameter names are not validated.** The convention is
 /// `state, action` but `s, a` / `value, msg` / anything else are all
@@ -45,9 +54,23 @@ final class ReduceClosureWalker: SyntaxVisitor {
             // be nested inside a `Scope { ... }` or similar wrapper.
             return .visitChildren
         }
-        guard let closure = node.trailingClosure else { return .visitChildren }
-        guard closureParameterCount(closure) == 2 else { return .visitChildren }
-        emitCandidate(closure: closure)
+        // Closure form: Reduce { state, action in ... }
+        if let closure = node.trailingClosure,
+           closureParameterCount(closure) == 2 {
+            emitCandidate(closure: closure)
+            return .visitChildren
+        }
+        // Finding-I method-reference form: Reduce(<identifier>). Single
+        // unlabeled argument that's a bare DeclReferenceExpr (e.g.
+        // `Reduce(reduce)`). Rejects: labeled arguments, .enumCase
+        // sugar, member access (`self.handle`), closures.
+        if node.trailingClosure == nil,
+           node.arguments.count == 1,
+           let arg = node.arguments.first,
+           arg.label == nil,
+           arg.expression.is(DeclReferenceExprSyntax.self) {
+            emitCandidateForMethodRef(at: node)
+        }
         return .visitChildren
     }
 
@@ -85,6 +108,27 @@ final class ReduceClosureWalker: SyntaxVisitor {
             actionTypeName: "\(enclosingTypeName).Action",
             carrierKind: .tca,
             purity: purity
+        ))
+    }
+
+    /// Finding I — emit a candidate for `Reduce(<methodName>)`. Without
+    /// resolving the referenced method's body we can't run the purity
+    /// analyzer; default to `.effectBearing` (the dominant TCA pattern,
+    /// safe routing — `.effectBearing` always uses the subprocess
+    /// verify path which works for both pure and effect-bearing
+    /// reducers).
+    private func emitCandidateForMethodRef(at call: FunctionCallExprSyntax) {
+        let position = call.positionAfterSkippingLeadingTrivia
+        let location = converter.location(for: position)
+        candidates.append(ReducerCandidate(
+            location: "\(file):\(location.line)",
+            enclosingTypeName: enclosingTypeName,
+            functionName: "body",
+            signatureShape: .inoutStateActionReturnsEffect,
+            stateTypeName: "\(enclosingTypeName).State",
+            actionTypeName: "\(enclosingTypeName).Action",
+            carrierKind: .tca,
+            purity: .effectBearing
         ))
     }
 }
