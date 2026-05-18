@@ -1,0 +1,6 @@
+swift-infer discover-reducers — detected 4 reducer-shaped functions:
+
+  /private/tmp/hex-dogfood/Sources/Hex/Features/App/AppFeature.swift:77  AppFeature.body  signature:inout-state-action-returns-effect  state:AppFeature.State  action:AppFeature.Action
+  /private/tmp/hex-dogfood/Sources/Hex/Features/History/HistoryFeature.swift:126  HistoryFeature.body  signature:inout-state-action-returns-effect  state:HistoryFeature.State  action:HistoryFeature.Action
+  /private/tmp/hex-dogfood/Sources/Hex/Features/Settings/SettingsFeature.swift:223  SettingsFeature.body  signature:inout-state-action-returns-effect  state:SettingsFeature.State  action:SettingsFeature.Action
+  /private/tmp/hex-dogfood/Sources/Hex/Features/Transcription/TranscriptionFeature.swift:76  TranscriptionFeature.body  signature:inout-state-action-returns-effect  state:TranscriptionFeature.State  action:TranscriptionFeature.Action
