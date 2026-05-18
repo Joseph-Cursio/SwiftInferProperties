@@ -1,11 +1,15 @@
-# v1.107 Calibration Cycle 104 — Findings (first triage datapoint)
+# Calibration Cycle 104 — Findings (first triage datapoint)
 
 > **STATUS: DRAFT.** This file is a scaffold prepped after cycle 99
 > shipped the `metrics-interaction` aggregation helper, cycles 100 +
 > 101 + 102 + 102a (dogfood) + 103 closed Findings A (cardinality
 > distinct-field dedupe), C (RefInt element-type filter), D (bicond
 > cardinality-overlap suppression), and F (ReducerCandidate dedupe
-> by state+action in the discover-interaction pipeline). Sections
+> by state+action in the discover-interaction pipeline). Cycles
+> 103b/c/d shipped bridge-level triage scaffolding (no calibration
+> impact). v1.111 shipped Finding I fix (`Reduce(methodName)`
+> method-ref detection from Hex dogfood) — also no calibration
+> impact (calibration corpus has no method-ref forms). Sections
 > marked `_DRAFT_` need triage decisions filled in via the per-corpus
 > `discover-interaction --interactive` workflow. The aggregated metrics table at the bottom is generated
 > by piping the persisted decision logs through `metrics-interaction`
@@ -16,7 +20,8 @@
 > cycle-100 scaffold. Cycles 100 + 101 + 102 ended up shipping
 > detector bug fixes instead (same pattern as v1.91–v1.97 cycle-87
 > fixes interleaving with calibration cycles), so the first triage
-> datapoint becomes cycle 104 + v1.107.
+> datapoint became cycle 104. The version when cycle 104 ships will
+> be assigned at ship time (project is currently at v1.111).
 
 ## Headline (TODO once decisions land)
 
@@ -192,7 +197,7 @@ latest-timestamp wins).
 | idempotence | `LazyNavigation.body` (UIKit) | `0xF8AA84E3C9B94589` | `.setNavigationIsActiveDelayCompleted` | _DRAFT_ | overlaps tca-25 UIKit |
 | idempotence | `EagerNavigation.body` (UIKit) | `0xFB6656B406E394A4` | `.setNavigationIsActiveDelayCompleted` | _DRAFT_ | overlaps tca-25 UIKit |
 
-## Cycle 100 aggregated metrics (TODO)
+## Cycle 104 aggregated metrics (TODO)
 
 Paste the rendered table from:
 
@@ -290,15 +295,15 @@ For cycle 100, report:
 | 100 | **Finding A fix** (closed) — distinct-field dedupe in CardinalityWitnessDetector |
 | 101 | **Finding C fix** (closed) — RefInt element-type filter |
 | 102 | **Finding D fix** (closed) — bicond cardinality-overlap suppression |
-| 103 | **First triage datapoint** (this file) — populates the worksheet + metrics + findings |
+| 103 | **Finding F fix** (closed) — ReducerCandidate dedupe in DiscoverInteraction |
+| 104 | **First triage datapoint** (this file) — populates the worksheet + metrics + findings |
 | 105 | Second triage datapoint. Optional: rubric refinement if cycle-104 surfaced a high-skip family. |
-| 105 | Third datapoint; families at ≥ 70% across 103 + 104 + 105 propose tier promotion in cycle-105 findings. |
-| 106+ | Per-promotion-family follow-up cycles; bridge-level N-arm peer triage if calibration unlocks bridge-firing volume. |
+| 106 | Third datapoint; families at ≥ 70% across 104 + 105 + 106 propose tier promotion in cycle-106 findings. |
+| 107+ | Per-promotion-family follow-up cycles; bridge-level N-arm peer triage if calibration unlocks bridge-firing volume. |
 
 ## CLAUDE.md / version bump notes
 
 When cycle 104 is final:
-- Bump `Sources/SwiftInferCLI/SwiftInferCommand.swift` version to `1.108.0`.
-- Update CLAUDE.md `Current: v1.108.0` header with the cycle-104 summary.
-- Update the arc-summary tail with the v1.108 / cycle-104 entry.
-- Update the "Most recent" pointer to `docs/calibration-cycle-104-findings.md`.
+- Bump `Sources/SwiftInferCLI/SwiftInferCommand.swift` version (next available — currently v1.111, so `1.112.0` or higher depending on any intervening cycles).
+- Update CLAUDE.md `Current:` header with the cycle-104 summary.
+- Update the "Most recent" pointer in CLAUDE.md (or wherever the latest-cycle pointer lives) to `docs/calibration-cycle-104-findings.md`.
