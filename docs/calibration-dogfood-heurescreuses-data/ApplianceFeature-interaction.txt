@@ -1,0 +1,73 @@
+4 interaction-invariant suggestions.
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   ApplianceForm.body
+Location:  /private/tmp/heurescreuses-dogfood/Sources/ApplianceFeature/ApplianceForm.swift:33
+State:     ApplianceForm.State
+Action:    ApplianceForm.Action
+Predicate: .binding
+
+Why suggested:
+  ✓ Action case `.binding` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x08D76166959D7AD7
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   ProgramSelection.body
+Location:  /private/tmp/heurescreuses-dogfood/Sources/ApplianceFeature/ProgramSelection.swift:50
+State:     ProgramSelection.State
+Action:    ProgramSelection.Action
+Predicate: .delegate
+
+Why suggested:
+  ✓ Action case `.delegate` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0x3F736EE885A90F61
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Delays.body
+Location:  /private/tmp/heurescreuses-dogfood/Sources/ApplianceFeature/Delays.swift:43
+State:     Delays.State
+Action:    Delays.Action
+Predicate: .task
+
+Why suggested:
+  ✓ Action case `.task` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xCEFEA01FFC972CE9
+
+[Interaction-Invariant Suggestion]
+Family:    idempotence
+Score:     30 (Possible)
+Reducer:   Optimum.body
+Location:  /private/tmp/heurescreuses-dogfood/Sources/ApplianceFeature/Optimum.swift:44
+State:     Optimum.State
+Action:    Optimum.Action
+Predicate: .task
+
+Why suggested:
+  ✓ Action case `.task` matches an idempotent-action pattern: exact-match against the curated idempotent-action list (refresh / reset / clear / dismiss / cancel / close / hide).
+  ✓ Reducer-shaped signature (inout-state-action-returns-effect).
+
+Why this might be wrong:
+  ⚠ Detection is purely name-based — reducer-body purity for this action is not yet inspected (M4.C+ refinement). An action body that increments counters or accumulates into unbounded collections breaks idempotence even when the name suggests otherwise.
+
+Identity:  0xF1C0C70E11BCE387

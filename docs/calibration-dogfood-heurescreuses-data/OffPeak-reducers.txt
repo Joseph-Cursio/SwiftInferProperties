@@ -1,0 +1,4 @@
+swift-infer discover-reducers — detected 2 reducer-shaped functions:
+
+  /private/tmp/heurescreuses-dogfood/Sources/OffPeak/OffPeakHomeWidgetView.swift:43  OffPeakHomeWidget.body  signature:inout-state-action-returns-effect  state:OffPeakHomeWidget.State  action:OffPeakHomeWidget.Action
+  /private/tmp/heurescreuses-dogfood/Sources/OffPeak/OffPeakSelectionView.swift:35  OffPeakSelection.body  signature:inout-state-action-returns-effect  state:OffPeakSelection.State  action:OffPeakSelection.Action

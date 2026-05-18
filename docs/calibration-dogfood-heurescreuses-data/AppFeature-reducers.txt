@@ -1,0 +1,3 @@
+swift-infer discover-reducers — detected 1 reducer-shaped function:
+
+  /private/tmp/heurescreuses-dogfood/Sources/AppFeature/App.swift:46  App.body  signature:inout-state-action-returns-effect  state:App.State  action:App.Action

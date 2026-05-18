@@ -1,0 +1,4 @@
+swift-infer discover-reducers — detected 2 reducer-shaped functions:
+
+  /private/tmp/heurescreuses-dogfood/Sources/UserNotification/UserNotificationHomeWidgetView.swift:50  UserNotificationHomeWidget.body  signature:inout-state-action-returns-effect  state:UserNotificationHomeWidget.State  action:UserNotificationHomeWidget.Action
+  /private/tmp/heurescreuses-dogfood/Sources/UserNotification/UserNotificationsListView.swift:46  UserNotificationsList.body  signature:inout-state-action-returns-effect  state:UserNotificationsList.State  action:UserNotificationsList.Action
