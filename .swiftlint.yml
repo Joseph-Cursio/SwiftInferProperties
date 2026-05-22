@@ -124,7 +124,6 @@ opt_in_rules:
   - pattern_matching_keywords
   - vertical_whitespace_between_cases
   - let_var_whitespace
-  - function_default_parameter_at_end
   - no_empty_block
   - multiline_arguments_brackets
   - multiline_literal_brackets
