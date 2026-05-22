@@ -160,10 +160,10 @@ private final class MemorySampler: @unchecked Sendable {
         let queue = DispatchQueue(label: "swift-infer.memory-sampler", qos: .userInitiated)
         queue.async { [weak self] in
             guard let self else { return }
-            while self.isRunning() {
+            while isRunning() {
                 let sample = Self.currentResidentBytes()
-                self.recordSample(sample)
-                Thread.sleep(forTimeInterval: Double(self.intervalNanos) / 1_000_000_000)
+                recordSample(sample)
+                Thread.sleep(forTimeInterval: Double(intervalNanos) / 1_000_000_000)
             }
         }
     }
