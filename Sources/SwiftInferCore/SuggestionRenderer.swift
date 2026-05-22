@@ -236,7 +236,7 @@ public enum SuggestionRenderer {
         case .passed(let trials):
             return "Sampling:  \(trials)/\(trials) passed"
 
-        case .failed(let seed, let counter):
+        case let .failed(seed, counter):
             let hex = String(seed, radix: 16, uppercase: true)
             return "Sampling:  failed (seed: 0x\(hex), counterexample: \(counter))"
         }

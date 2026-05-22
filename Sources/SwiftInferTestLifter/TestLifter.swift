@@ -246,7 +246,7 @@ extension TestLifter {
         let location = slice.assertion?.location
             ?? SourceLocation(file: origin.sourceLocation.file, line: 0, column: 0)
         switch detection {
-        case .roundTrip(let forwardCallee, let backwardCallee):
+        case let .roundTrip(forwardCallee, backwardCallee):
             return .roundTrip(
                 forwardCallee: forwardCallee,
                 backwardCallee: backwardCallee,

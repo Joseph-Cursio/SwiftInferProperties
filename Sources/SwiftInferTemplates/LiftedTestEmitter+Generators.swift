@@ -163,7 +163,7 @@ public extension LiftedTestEmitter {
         case .positiveInt: return "all observed values are positive Int"
         case .nonNegativeInt: return "all observed values are non-negative Int"
         case .negativeInt: return "all observed values are negative Int"
-        case .intRange(let low, let high): return "all observed values are in [\(low), \(high)]"
+        case let .intRange(low, high): return "all observed values are in [\(low), \(high)]"
         default: return ""
         }
     }
@@ -171,7 +171,7 @@ public extension LiftedTestEmitter {
     private static func describeStringPattern(_ pattern: PreconditionPattern) -> String {
         switch pattern {
         case .nonEmptyString: return "all observed strings are non-empty"
-        case .stringLength(let low, let high): return "all observed strings have length in [\(low), \(high)]"
+        case let .stringLength(low, high): return "all observed strings have length in [\(low), \(high)]"
         default: return ""
         }
     }
@@ -181,7 +181,7 @@ public extension LiftedTestEmitter {
         case .positiveDouble: return "all observed values are positive Double"
         case .nonNegativeDouble: return "all observed values are non-negative Double"
         case .negativeDouble: return "all observed values are negative Double"
-        case .doubleRange(let low, let high): return "all observed values are in [\(low), \(high)]"
+        case let .doubleRange(low, high): return "all observed values are in [\(low), \(high)]"
         default: return ""
         }
     }

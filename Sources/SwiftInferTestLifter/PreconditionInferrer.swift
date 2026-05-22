@@ -272,7 +272,7 @@ public enum PreconditionInferrer {
         case .positiveInt: return "Gen.int(in: 1...)"
         case .nonNegativeInt: return "Gen.int(in: 0...)"
         case .negativeInt: return "Gen.int(in: ...(-1))"
-        case .intRange(let low, let high): return "Gen.int(in: \(low)...\(high))"
+        case let .intRange(low, high): return "Gen.int(in: \(low)...\(high))"
         default: return ""
         }
     }
@@ -280,7 +280,7 @@ public enum PreconditionInferrer {
     private static func suggestedStringGenerator(for pattern: PreconditionPattern) -> String {
         switch pattern {
         case .nonEmptyString: return "Gen.string()  // verify empty-string case is acceptable"
-        case .stringLength(let low, let high): return "Gen.string(of: \(low)...\(high))"
+        case let .stringLength(low, high): return "Gen.string(of: \(low)...\(high))"
         default: return ""
         }
     }
@@ -290,7 +290,7 @@ public enum PreconditionInferrer {
         case .positiveDouble: return "Gen.double(in: 0.0.nextUp...)"
         case .nonNegativeDouble: return "Gen.double(in: 0.0...)"
         case .negativeDouble: return "Gen.double(in: ...0.0.nextDown)"
-        case .doubleRange(let low, let high): return "Gen.double(in: \(low)...\(high))"
+        case let .doubleRange(low, high): return "Gen.double(in: \(low)...\(high))"
         default: return ""
         }
     }
