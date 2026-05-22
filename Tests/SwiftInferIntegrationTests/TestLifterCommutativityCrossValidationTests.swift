@@ -139,5 +139,5 @@ struct TestLifterCommutativityCrossValTests {
 }
 
 private struct SilentCommutativityDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }

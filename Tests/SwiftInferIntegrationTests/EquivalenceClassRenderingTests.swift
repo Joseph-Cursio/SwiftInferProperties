@@ -226,11 +226,11 @@ struct EquivalenceClassRenderingTests {
 // MARK: - Test doubles
 
 private struct SilentECDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class SilentECDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_ text: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class RecordingECOutput: DiscoverOutput, @unchecked Sendable {

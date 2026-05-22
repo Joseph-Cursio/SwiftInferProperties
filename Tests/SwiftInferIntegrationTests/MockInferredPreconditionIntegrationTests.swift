@@ -299,11 +299,11 @@ struct MockInferredPreconditionIntegrationTests {
 // MARK: - Test doubles
 
 private struct SilentPreconditionDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class SilentPreconditionDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_ text: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class RecordingPreconditionOutput: DiscoverOutput, @unchecked Sendable {

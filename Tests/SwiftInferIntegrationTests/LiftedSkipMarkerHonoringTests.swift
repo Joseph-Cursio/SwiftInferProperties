@@ -195,5 +195,5 @@ struct LiftedSkipMarkerHonoringTests {
 }
 
 private struct SilentSkipDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }

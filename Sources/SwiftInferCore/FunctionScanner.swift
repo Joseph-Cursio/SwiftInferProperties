@@ -155,7 +155,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         typeStack.append(node.name.text)
         return .visitChildren
     }
-    override func visitPost(_ node: ClassDeclSyntax) {
+    override func visitPost(_: ClassDeclSyntax) {
         typeStack.removeLast()
     }
 
@@ -170,7 +170,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         typeStack.append(node.name.text)
         return .visitChildren
     }
-    override func visitPost(_ node: StructDeclSyntax) {
+    override func visitPost(_: StructDeclSyntax) {
         typeStack.removeLast()
     }
 
@@ -185,7 +185,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         typeStack.append(node.name.text)
         return .visitChildren
     }
-    override func visitPost(_ node: EnumDeclSyntax) {
+    override func visitPost(_: EnumDeclSyntax) {
         typeStack.removeLast()
     }
 
@@ -200,7 +200,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         typeStack.append(node.name.text)
         return .visitChildren
     }
-    override func visitPost(_ node: ActorDeclSyntax) {
+    override func visitPost(_: ActorDeclSyntax) {
         typeStack.removeLast()
     }
 
@@ -216,12 +216,12 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         typeStack.append(extendedTypeText)
         return .visitChildren
     }
-    override func visitPost(_ node: ExtensionDeclSyntax) {
+    override func visitPost(_: ExtensionDeclSyntax) {
         typeStack.removeLast()
     }
 
     /// Protocol decls — skip body entirely (requirements have no body).
-    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+    override func visit(_: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
         .skipChildren
     }
 }

@@ -282,11 +282,11 @@ struct ConsumerProducerChainRenderingTests {
 // MARK: - Test doubles
 
 private struct SilentChainDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class SilentChainDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_ text: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class RecordingChainOutput: DiscoverOutput, @unchecked Sendable {

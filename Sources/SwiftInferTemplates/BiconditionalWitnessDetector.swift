@@ -76,7 +76,7 @@ public enum BiconditionalWitnessDetector {
             }
             return .visitChildren
         }
-        override func visitPost(_ node: StructDeclSyntax) { typeStack.removeLast() }
+        override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
 
         override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
@@ -87,13 +87,13 @@ public enum BiconditionalWitnessDetector {
             }
             return .visitChildren
         }
-        override func visitPost(_ node: ClassDeclSyntax) { typeStack.removeLast() }
+        override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
 
         override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             return .visitChildren
         }
-        override func visitPost(_ node: EnumDeclSyntax) { typeStack.removeLast() }
+        override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
 
         private func matchesTarget() -> Bool {
             guard typeStack.count >= targetComponents.count else { return false }

@@ -129,9 +129,9 @@ private final class TimingPromptInput: PromptInput, @unchecked Sendable {
 // MARK: - Silent stubs
 
 private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_ text: String) {}
+    func write(_: String) {}
 }
 
 private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_ text: String) {}
+    func writeDiagnostic(_: String) {}
 }

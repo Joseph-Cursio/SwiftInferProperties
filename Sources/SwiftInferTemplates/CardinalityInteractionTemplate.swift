@@ -99,7 +99,7 @@ public enum CardinalityInteractionTemplate {
         ]
     }
 
-    private static func whyMightBeWrongFor(witness: CardinalityWitness) -> [String] {
+    private static func whyMightBeWrongFor(witness _: CardinalityWitness) -> [String] {
         [
             "Detection is structural only — reducer-body handlers for "
                 + ".show* actions are not yet inspected (M5+ refinement). "

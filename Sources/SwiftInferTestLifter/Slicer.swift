@@ -260,7 +260,7 @@ enum AssertionAnchor {
         }
     }
 
-    private static func location(of node: Syntax) -> SwiftInferCore.SourceLocation {
+    private static func location(of _: Syntax) -> SwiftInferCore.SourceLocation {
         // The slicer doesn't carry a SourceLocationConverter, and
         // M1.3's round-trip detector consumes the assertion's argument
         // shape, not its absolute location. We surface a placeholder

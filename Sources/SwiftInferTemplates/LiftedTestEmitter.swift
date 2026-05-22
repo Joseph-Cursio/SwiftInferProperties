@@ -38,7 +38,7 @@ public enum LiftedTestEmitter {
     /// `f(f(value)).isApproximatelyEqual(to: f(value))`.
     public static func idempotent(
         funcName: String,
-        typeName: String,
+        typeName _: String,
         seed: SamplingSeed.Value,
         generator: String,
         equalityKind: EqualityKind = .strict

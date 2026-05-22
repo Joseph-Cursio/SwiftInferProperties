@@ -159,6 +159,6 @@ struct VocabularyLoaderTests {
 /// the "no Package.swift in walk-up" test independent of whatever's
 /// above the temp dir on the host filesystem.
 private struct NoPackageStub: FileSystemReader {
-    func fileExists(atPath: String) -> Bool { false }
-    func contents(of url: URL) -> Data { Data() }
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) -> Data { Data() }
 }

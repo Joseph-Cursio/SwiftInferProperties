@@ -133,5 +133,5 @@ struct MockSynthesisCoverageTests {
 // MARK: - Test doubles
 
 private struct SilentCovDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }

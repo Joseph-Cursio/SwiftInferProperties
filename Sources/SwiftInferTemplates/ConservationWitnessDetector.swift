@@ -95,7 +95,7 @@ public enum ConservationWitnessDetector {
             }
             return .visitChildren
         }
-        override func visitPost(_ node: StructDeclSyntax) { typeStack.removeLast() }
+        override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
 
         override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
@@ -105,13 +105,13 @@ public enum ConservationWitnessDetector {
             }
             return .visitChildren
         }
-        override func visitPost(_ node: ClassDeclSyntax) { typeStack.removeLast() }
+        override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
 
         override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             return .visitChildren
         }
-        override func visitPost(_ node: EnumDeclSyntax) { typeStack.removeLast() }
+        override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
 
         /// Does the current type-stack suffix match the target name's
         /// component sequence? `"Inbox.State"` matches `[Inbox, State]`;

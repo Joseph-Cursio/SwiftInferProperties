@@ -136,11 +136,11 @@ struct ECNClassPartialCoverageTests {
 // MARK: - Test doubles
 
 private struct SilentECNCDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class SilentECNCDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_ text: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class RecordingECNCOutput: DiscoverOutput, @unchecked Sendable {

@@ -77,7 +77,7 @@ struct SmokeCardinality: CardinalityInvariant, Sendable {
 }
 
 enum SmokeFeature {
-    static func reduce(_ state: SmokeState, _ action: SmokeAction) -> SmokeState {
+    static func reduce(_: SmokeState, _ action: SmokeAction) -> SmokeState {
         switch action {
         case .showA: return SmokeState(showsA: true, showsB: false)
         case .showB: return SmokeState(showsA: false, showsB: true)

@@ -95,7 +95,7 @@ private final class Visitor: SyntaxVisitor {
 
     // MARK: - async / await
 
-    override func visit(_ node: AwaitExprSyntax) -> SyntaxVisitorContinueKind {
+    override func visit(_: AwaitExprSyntax) -> SyntaxVisitorContinueKind {
         foundEffectSignal = true
         return .skipChildren
     }

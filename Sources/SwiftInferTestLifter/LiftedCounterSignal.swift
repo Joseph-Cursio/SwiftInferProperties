@@ -63,7 +63,7 @@ public struct LiftedCounterSignal: Sendable, Equatable {
     public static func roundTrip(
         forwardCallee: String,
         backwardCallee: String,
-        sourceLocation: SourceLocation,
+        sourceLocation _: SourceLocation,
         origin: LiftedOrigin? = nil
     ) -> Self {
         let key = CrossValidationKey(
@@ -80,7 +80,7 @@ public struct LiftedCounterSignal: Sendable, Equatable {
 
     public static func idempotence(
         calleeName: String,
-        sourceLocation: SourceLocation,
+        sourceLocation _: SourceLocation,
         origin: LiftedOrigin? = nil
     ) -> Self {
         let key = CrossValidationKey(
@@ -97,7 +97,7 @@ public struct LiftedCounterSignal: Sendable, Equatable {
 
     public static func commutativity(
         calleeName: String,
-        sourceLocation: SourceLocation,
+        sourceLocation _: SourceLocation,
         origin: LiftedOrigin? = nil
     ) -> Self {
         let key = CrossValidationKey(
@@ -114,7 +114,7 @@ public struct LiftedCounterSignal: Sendable, Equatable {
 
     public static func monotonicity(
         calleeName: String,
-        sourceLocation: SourceLocation,
+        sourceLocation _: SourceLocation,
         origin: LiftedOrigin? = nil
     ) -> Self {
         let key = CrossValidationKey(
@@ -131,7 +131,7 @@ public struct LiftedCounterSignal: Sendable, Equatable {
 
     public static func countInvariance(
         calleeName: String,
-        sourceLocation: SourceLocation,
+        sourceLocation _: SourceLocation,
         origin: LiftedOrigin? = nil
     ) -> Self {
         let key = CrossValidationKey(
@@ -148,7 +148,7 @@ public struct LiftedCounterSignal: Sendable, Equatable {
 
     public static func reduceEquivalence(
         opCalleeName: String,
-        sourceLocation: SourceLocation,
+        sourceLocation _: SourceLocation,
         origin: LiftedOrigin? = nil
     ) -> Self {
         let key = CrossValidationKey(

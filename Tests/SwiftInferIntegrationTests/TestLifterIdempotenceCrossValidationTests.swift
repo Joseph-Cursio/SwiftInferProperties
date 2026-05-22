@@ -144,5 +144,5 @@ struct TestLifterIdempotenceCrossValTests {
 }
 
 private struct SilentIdempotenceDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }

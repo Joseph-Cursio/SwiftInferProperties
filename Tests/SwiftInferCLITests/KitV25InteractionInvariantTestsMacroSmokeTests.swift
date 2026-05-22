@@ -56,7 +56,7 @@ enum SmokeMacroAction: CaseIterable, Sendable {
 }
 
 enum SmokeMacroFeature {
-    static func reduce(_ state: SmokeMacroState, _ action: SmokeMacroAction) -> SmokeMacroState {
+    static func reduce(_: SmokeMacroState, _ action: SmokeMacroAction) -> SmokeMacroState {
         switch action {
         case .showA: return SmokeMacroState(showsA: true, showsB: false)
         case .showB: return SmokeMacroState(showsA: false, showsB: true)

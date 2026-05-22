@@ -234,11 +234,11 @@ struct LiftedAcceptFlowMockGeneratorTests {
 // MARK: - Test doubles
 
 private struct SilentMockDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class SilentMockDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_ text: String) {}
+    func writeDiagnostic(_: String) {}
 }
 
 private final class RecordingMockOutput: DiscoverOutput, @unchecked Sendable {

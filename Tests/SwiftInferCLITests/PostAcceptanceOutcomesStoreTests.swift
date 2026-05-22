@@ -164,8 +164,8 @@ struct PostAcceptanceOutcomesStoreTests {
 
 /// Test-only `FileSystemReader` reporting every path as missing.
 private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath: String) -> Bool { false }
-    func contents(of url: URL) throws -> Data {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
         throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

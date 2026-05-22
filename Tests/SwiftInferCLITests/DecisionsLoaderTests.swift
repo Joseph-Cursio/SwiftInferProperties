@@ -250,8 +250,8 @@ struct DecisionsLoaderTests {
 /// to drive the "no walk-up target found" code path without setting up
 /// a real fixture tree.
 private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath: String) -> Bool { false }
-    func contents(of url: URL) throws -> Data {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
         throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

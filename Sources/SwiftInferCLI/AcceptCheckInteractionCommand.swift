@@ -204,7 +204,7 @@ extension SwiftInferCommand {
         }
 
         static func classify(
-            record: InteractionDecisionRecord,
+            record _: InteractionDecisionRecord,
             matching current: InteractionInvariantSuggestion?,
             target: String,
             workingDirectory: URL

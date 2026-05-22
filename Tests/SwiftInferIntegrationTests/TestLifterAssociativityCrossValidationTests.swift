@@ -106,5 +106,5 @@ struct TestLifterAssociativityCrossValTests {
 }
 
 private struct SilentAssociativityDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_ message: String) {}
+    func writeDiagnostic(_: String) {}
 }
