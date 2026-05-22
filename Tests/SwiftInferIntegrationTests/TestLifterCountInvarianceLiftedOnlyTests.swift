@@ -28,7 +28,7 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
         // InvariantPreservationTemplate suggestion in the baseline.
         let baseline = try TemplateRegistry.discover(in: directory)
         #expect(
-            baseline.first { $0.templateName == "invariant-preservation" } == nil,
+            !baseline.contains { $0.templateName == "invariant-preservation" },
             "Baseline should NOT carry an InvariantPreservationTemplate suggestion (annotation-only template)"
         )
 

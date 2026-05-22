@@ -124,15 +124,23 @@ struct InteractionSuggestionRendererTests {
     @Test("filter drops .possible without flag; keeps .possible with flag")
     func filterPossibleObeysFlag() {
         let target = [suggestion(tier: .possible)]
-        #expect(InteractionSuggestionRenderer.filter(target, includePossible: false).isEmpty)
-        #expect(InteractionSuggestionRenderer.filter(target, includePossible: true).count == 1)
+        // `InteractionSuggestionRenderer.filter` is a domain method, not
+        // `Sequence.filter` — bind its result before asserting so the
+        // contains_over_filter_is_empty rule doesn't false-positive.
+        let withoutFlag = InteractionSuggestionRenderer.filter(target, includePossible: false)
+        let withFlag = InteractionSuggestionRenderer.filter(target, includePossible: true)
+        #expect(withoutFlag.isEmpty)
+        #expect(withFlag.count == 1)
     }
 
     @Test("filter always drops .suppressed regardless of flag")
     func filterSuppressedAlwaysHidden() {
         let target = [suggestion(score: 5, tier: .suppressed)]
-        #expect(InteractionSuggestionRenderer.filter(target, includePossible: false).isEmpty)
-        #expect(InteractionSuggestionRenderer.filter(target, includePossible: true).isEmpty)
+        // Domain method, not `Sequence.filter` — see filterPossibleObeysFlag.
+        let withoutFlag = InteractionSuggestionRenderer.filter(target, includePossible: false)
+        let withFlag = InteractionSuggestionRenderer.filter(target, includePossible: true)
+        #expect(withoutFlag.isEmpty)
+        #expect(withFlag.isEmpty)
     }
 
     // MARK: - Multi-suggestion ordering

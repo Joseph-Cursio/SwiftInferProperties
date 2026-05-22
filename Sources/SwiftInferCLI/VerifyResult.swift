@@ -83,10 +83,10 @@ public enum VerifyResultParser {
     ///      the exit code and a short stdout snippet.
     public static func parse(_ output: VerifierSubprocess.Output) -> VerifyOutcome {
         let lines = output.stdout.split(separator: "\n").map(String.init)
-        let defaultPass = lines.first(where: { $0.hasPrefix("VERIFY_DEFAULT_RESULT: PASS") }) != nil
-        let defaultFail = lines.first(where: { $0.hasPrefix("VERIFY_DEFAULT_RESULT: FAIL") }) != nil
-        let edgePass = lines.first(where: { $0.hasPrefix("VERIFY_EDGE_RESULT: PASS") }) != nil
-        let edgeFail = lines.first(where: { $0.hasPrefix("VERIFY_EDGE_RESULT: FAIL") }) != nil
+        let defaultPass = lines.contains(where: { $0.hasPrefix("VERIFY_DEFAULT_RESULT: PASS") })
+        let defaultFail = lines.contains(where: { $0.hasPrefix("VERIFY_DEFAULT_RESULT: FAIL") })
+        let edgePass = lines.contains(where: { $0.hasPrefix("VERIFY_EDGE_RESULT: PASS") })
+        let edgeFail = lines.contains(where: { $0.hasPrefix("VERIFY_EDGE_RESULT: FAIL") })
 
         if defaultFail, output.exitCode == 1 {
             let trial = Int(value(forMarker: "VERIFY_DEFAULT_TRIAL:", in: lines) ?? "") ?? -1

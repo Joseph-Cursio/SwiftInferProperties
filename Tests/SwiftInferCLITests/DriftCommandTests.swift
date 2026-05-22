@@ -169,7 +169,7 @@ struct DriftDetectionTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(diagnostics.lines.filter { $0.hasPrefix("warning: drift:") }.isEmpty)
+        #expect(!diagnostics.lines.contains { $0.hasPrefix("warning: drift:") })
         #expect(recording.lines.contains("No drift detected."))
     }
 
@@ -214,7 +214,7 @@ struct DriftDetectionTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(diagnostics.lines.filter { $0.hasPrefix("warning: drift:") }.isEmpty)
+        #expect(!diagnostics.lines.contains { $0.hasPrefix("warning: drift:") })
         #expect(recording.lines.contains("No drift detected."))
     }
 
@@ -265,7 +265,7 @@ struct DriftDetectionTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(diagnostics.lines.filter { $0.hasPrefix("warning: drift:") }.isEmpty)
+        #expect(!diagnostics.lines.contains { $0.hasPrefix("warning: drift:") })
         #expect(recording.lines.contains("No drift detected."))
     }
 
