@@ -29,7 +29,7 @@ import Foundation
 /// number and warn.
 public enum Decision: String, Sendable, Equatable, Codable, CaseIterable {
     case accepted
-    case acceptedAsConformance = "acceptedAsConformance"
+    case acceptedAsConformance
     case rejected
     case skipped
 }

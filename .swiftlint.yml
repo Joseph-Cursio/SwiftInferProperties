@@ -106,7 +106,6 @@ opt_in_rules:
   - closure_body_length
   - enum_case_associated_values_count
   - prefixed_toplevel_constant
-  - raw_value_for_camel_cased_codable_enum
   - vertical_parameter_alignment_on_call
   - empty_string
   - sorted_first_last
