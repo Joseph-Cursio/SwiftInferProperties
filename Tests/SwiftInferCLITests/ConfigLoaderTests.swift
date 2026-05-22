@@ -183,5 +183,5 @@ struct ConfigLoaderTests {
 
 private struct NoPackageStub: FileSystemReader {
     func fileExists(atPath: String) -> Bool { false }
-    func contents(of url: URL) throws -> Data { Data() }
+    func contents(of url: URL) -> Data { Data() }
 }

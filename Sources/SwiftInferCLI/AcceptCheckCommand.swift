@@ -94,9 +94,9 @@ extension SwiftInferCommand {
 
         public init() {}
 
-        public func run() async throws {
+        public func run() async {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            let rendered = try Self.runPipeline(
+            let rendered = Self.runPipeline(
                 decisionsPathOverride: decisions,
                 templateFilter: template,
                 budgetString: budget,
@@ -127,7 +127,7 @@ extension SwiftInferCommand {
             budgetString: String,
             indexPathOverride: String?,
             workingDirectory: URL
-        ) throws -> String {
+        ) -> String {
             let loaded = DecisionsLoader.load(
                 startingFrom: workingDirectory,
                 explicitPath: decisionsPathOverride.map { URL(fileURLWithPath: $0) }

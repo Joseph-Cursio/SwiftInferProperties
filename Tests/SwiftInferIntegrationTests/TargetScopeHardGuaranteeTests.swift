@@ -23,7 +23,7 @@ import SwiftInferTemplates
 struct TargetScopeHardGuaranteeTests {
 
     @Test("discover requires --target — parse fails without it (PRD §16 #5)")
-    func discoverRequiresTargetFlag() throws {
+    func discoverRequiresTargetFlag() {
         // ArgumentParser surfaces missing-required-flag as a thrown
         // error from `parseAsRoot` before any code in `run()` executes.
         // The §16 #5 contract is satisfied by the type-level

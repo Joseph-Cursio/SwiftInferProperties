@@ -114,7 +114,7 @@ public enum ConvertCounterexampleEngine {
     /// caller falls through to `renderBinaryTemplate`.
     private static func renderUnaryTemplate(_ args: Args) throws -> String? {
         switch args.template {
-        case "idempotence": return try renderIdempotence(args)
+        case "idempotence": return renderIdempotence(args)
         case "round-trip": return try renderRoundTrip(args)
         case "invariant-preservation": return try renderInvariantPreservation(args)
         case "identity-element": return try renderIdentityElement(args)
@@ -127,16 +127,16 @@ public enum ConvertCounterexampleEngine {
     /// input. Returns nil when `args.template` doesn't match.
     private static func renderBinaryTemplate(_ args: Args) throws -> String? {
         switch args.template {
-        case "monotonicity": return try renderMonotonicity(args)
-        case "commutativity": return try renderCommutativity(args)
-        case "associativity": return try renderAssociativity(args)
+        case "monotonicity": return renderMonotonicity(args)
+        case "commutativity": return renderCommutativity(args)
+        case "associativity": return renderAssociativity(args)
         case "count-invariance": return try renderCountInvariance(args)
         case "reduce-equivalence": return try renderReduceEquivalence(args)
         default: return nil
         }
     }
 
-    private static func renderIdempotence(_ args: Args) throws -> String {
+    private static func renderIdempotence(_ args: Args) -> String {
         LiftedTestEmitter.idempotentRegression(
             funcName: args.callee, typeName: args.type, inputSource: args.counterexample
         )
@@ -151,7 +151,7 @@ public enum ConvertCounterexampleEngine {
         )
     }
 
-    private static func renderMonotonicity(_ args: Args) throws -> String {
+    private static func renderMonotonicity(_ args: Args) -> String {
         LiftedTestEmitter.monotonicRegression(
             funcName: args.callee,
             tupleType: "(\(args.type), \(args.type))",
@@ -168,7 +168,7 @@ public enum ConvertCounterexampleEngine {
         )
     }
 
-    private static func renderCommutativity(_ args: Args) throws -> String {
+    private static func renderCommutativity(_ args: Args) -> String {
         LiftedTestEmitter.commutativeRegression(
             funcName: args.callee,
             tupleType: "(\(args.type), \(args.type))",
@@ -176,7 +176,7 @@ public enum ConvertCounterexampleEngine {
         )
     }
 
-    private static func renderAssociativity(_ args: Args) throws -> String {
+    private static func renderAssociativity(_ args: Args) -> String {
         LiftedTestEmitter.associativeRegression(
             funcName: args.callee,
             tripleType: "(\(args.type), \(args.type), \(args.type))",

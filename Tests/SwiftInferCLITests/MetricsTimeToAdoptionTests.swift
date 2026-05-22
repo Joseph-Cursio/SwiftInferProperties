@@ -222,7 +222,7 @@ struct MetricsTimeToAdoptionLoadTests {
         let corpus = try makeCorpus(name: "withIndex", withIndex: true)
         defer { try? FileManager.default.removeItem(at: corpus.deletingLastPathComponent()) }
 
-        let result = try SwiftInferCommand.Metrics.loadAggregate(
+        let result = SwiftInferCommand.Metrics.loadAggregate(
             directoryOverride: nil,
             explicitPaths: [corpus.path]
         )
@@ -244,7 +244,7 @@ struct MetricsTimeToAdoptionLoadTests {
         let corpus = try makeCorpus(name: "noIndex", withIndex: false)
         defer { try? FileManager.default.removeItem(at: corpus.deletingLastPathComponent()) }
 
-        let result = try SwiftInferCommand.Metrics.loadAggregate(
+        let result = SwiftInferCommand.Metrics.loadAggregate(
             directoryOverride: nil,
             explicitPaths: [corpus.path]
         )

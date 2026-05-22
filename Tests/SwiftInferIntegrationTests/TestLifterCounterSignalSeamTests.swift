@@ -45,7 +45,7 @@ struct TestLifterCounterSignalSeamTests {
     }
 
     @Test("Cross-validation +20 and counter-signal -25 coexist on different callees")
-    func crossValidationAndCounterSignalCoexist() throws {
+    func crossValidationAndCounterSignalCoexist() {
         // Two functions: `merge` (gets +20 from cross-validation) and
         // `combine` (gets -25 from counter-signal). The two seams operate
         // independently per callee.
@@ -127,7 +127,7 @@ struct TestLifterCounterSignalSeamTests {
     }
 
     @Test("Empty counter-signal set is a no-op fast path")
-    func emptyCounterSignalSetIsNoop() throws {
+    func emptyCounterSignalSetIsNoop() {
         let merge = makeBinaryIntListFunction(name: "merge", file: "Merge.swift")
         let baseline = TemplateRegistry.discover(in: [merge])
         let withEmptyCS = TemplateRegistry.discover(

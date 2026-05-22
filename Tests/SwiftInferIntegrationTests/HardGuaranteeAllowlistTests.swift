@@ -17,7 +17,7 @@ struct HardGuaranteeAllowlistTests {
         let directory = try makeAllowlistM6Fixture(named: "InteractiveAcceptAllowlist")
         defer { try? FileManager.default.removeItem(at: directory) }
         let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
+        let before = fileSet(of: directory)
         try SwiftInferCommand.Discover.run(
             directory: target,
             interactive: true,
@@ -25,7 +25,7 @@ struct HardGuaranteeAllowlistTests {
             output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
-        let after = try fileSet(of: directory)
+        let after = fileSet(of: directory)
         let added = after.subtracting(before)
         // Two paths added: the property-test stub + the decisions.json
         // record. Both match the M6 plan's allowlist.
@@ -47,7 +47,7 @@ struct HardGuaranteeAllowlistTests {
         let directory = try makeAllowlistM7Fixture(named: "BridgeAllowlist")
         defer { try? FileManager.default.removeItem(at: directory) }
         let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
+        let before = fileSet(of: directory)
         try SwiftInferCommand.Discover.run(
             directory: target,
             interactive: true,
@@ -55,7 +55,7 @@ struct HardGuaranteeAllowlistTests {
             output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
-        let after = try fileSet(of: directory)
+        let after = fileSet(of: directory)
         let added = after.subtracting(before)
         for path in added {
             #expect(
@@ -87,7 +87,7 @@ struct HardGuaranteeAllowlistTests {
         let directory = try makeAllowlistM8Fixture(named: "M8AllArmsAllowlist")
         defer { try? FileManager.default.removeItem(at: directory) }
         let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
+        let before = fileSet(of: directory)
         let script = Array(repeating: "B", count: 10) + Array(repeating: "s", count: 30)
         try SwiftInferCommand.Discover.run(
             directory: target,
@@ -96,7 +96,7 @@ struct HardGuaranteeAllowlistTests {
             output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
-        let after = try fileSet(of: directory)
+        let after = fileSet(of: directory)
         let added = after.subtracting(before)
         for path in added {
             let isInfer = path.hasPrefix("/Tests/Generated/SwiftInfer/")
@@ -134,14 +134,14 @@ struct HardGuaranteeAllowlistTests {
         let directory = try makeAllowlistM6Fixture(named: "UpdateBaselineAllowlist")
         defer { try? FileManager.default.removeItem(at: directory) }
         let target = directory.appendingPathComponent("Sources").appendingPathComponent("Lib")
-        let before = try fileSet(of: directory)
+        let before = fileSet(of: directory)
         try SwiftInferCommand.Discover.run(
             directory: target,
             updateBaseline: true,
             output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
-        let after = try fileSet(of: directory)
+        let after = fileSet(of: directory)
         let added = after.subtracting(before)
         #expect(added == ["/.swiftinfer/baseline.json"])
     }

@@ -22,7 +22,7 @@ struct IdentityCandidateScannerTests {
     }
 
     @Test
-    func detectsAllCuratedIdentityNames() throws {
+    func detectsAllCuratedIdentityNames() {
         // PRD v0.3 §5.2 priority-1 list: zero, empty, identity, none, default.
         let source = """
         enum Group {
@@ -104,7 +104,7 @@ struct IdentityCandidateScannerTests {
     }
 
     @Test
-    func multipleBindingsInOneDeclEachCounted() throws {
+    func multipleBindingsInOneDeclEachCounted() {
         // `static let zero, empty: IntSet = .init()` — both names emit.
         let source = """
         struct IntSet {

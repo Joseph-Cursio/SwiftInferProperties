@@ -80,8 +80,8 @@ extension SwiftInferCommand {
 
         public init() {}
 
-        public func run() async throws {
-            let aggregate = try Self.loadAggregate(
+        public func run() async {
+            let aggregate = Self.loadAggregate(
                 directoryOverride: directory,
                 explicitPaths: decisions
             )
@@ -105,7 +105,7 @@ extension SwiftInferCommand {
         static func loadAggregate(
             directoryOverride: String?,
             explicitPaths: [String]
-        ) throws -> MetricsLoadResult {
+        ) -> MetricsLoadResult {
             if !explicitPaths.isEmpty {
                 return loadExplicitPaths(explicitPaths)
             }

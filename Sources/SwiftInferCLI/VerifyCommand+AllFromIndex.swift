@@ -78,7 +78,7 @@ extension SwiftInferCommand.Verify {
         }
         let budget = parseBudget(budgetString)
         let parallelism = max(1, maxParallel)
-        try await runParallelSurvey(
+        await runParallelSurvey(
             entries: entries,
             packageRoot: packageRoot,
             budget: budget,
@@ -123,7 +123,7 @@ extension SwiftInferCommand.Verify {
         packageRoot: URL,
         budget: RoundTripStubEmitter.TrialBudget,
         parallelism: Int
-    ) async throws {
+    ) async {
         var collected: [SurveyRecord] = []
         await withTaskGroup(of: SurveyRecord.self) { group in
             var inFlight = 0

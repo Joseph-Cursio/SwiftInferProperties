@@ -16,7 +16,7 @@ public struct CheckPropertyMacro: PeerMacro {
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
-    ) throws -> [DeclSyntax] {
+    ) -> [DeclSyntax] {
         guard let function = declaration.as(FunctionDeclSyntax.self) else {
             context.diagnose(Diagnostic(
                 node: Syntax(declaration),

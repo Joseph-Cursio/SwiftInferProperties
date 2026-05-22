@@ -23,22 +23,22 @@ struct LiftedDecisionsHardGuaranteeTests {
         try writeSourcesUnannotatedFilter(in: packageRoot)
         try writeTestsCountInvariantBody(in: packageRoot)
 
-        let beforeFiles = try fileSet(in: packageRoot, includingDotDirs: true)
+        let beforeFiles = fileSet(in: packageRoot, includingDotDirs: true)
         let lifted = try discoverLifted(directory: packageRoot)
         let outcome = try acceptLifted(suggestion: lifted, packageRoot: packageRoot)
 
         let decisionsPath = DecisionsLoader.defaultPath(for: packageRoot)
         try DecisionsLoader.write(outcome.updatedDecisions, to: decisionsPath)
 
-        let afterFiles = try fileSet(in: packageRoot, includingDotDirs: true)
+        let afterFiles = fileSet(in: packageRoot, includingDotDirs: true)
         let newFiles = Set(afterFiles).subtracting(beforeFiles)
-        try assertNewFilesAreSandboxed(newFiles: newFiles, packageRoot: packageRoot)
+        assertNewFilesAreSandboxed(newFiles: newFiles, packageRoot: packageRoot)
 
         let swiftinferRoot = packageRoot.appendingPathComponent(".swiftinfer")
             .standardizedFileURL.path
         #expect(FileManager.default.fileExists(atPath: decisionsPath.path))
         #expect(decisionsPath.path.hasPrefix(swiftinferRoot + "/"))
-        try assertOriginalSourceSurvived(packageRoot: packageRoot)
+        assertOriginalSourceSurvived(packageRoot: packageRoot)
     }
 
     /// Drive the M3.3 accept-flow against `suggestion`. Encapsulated
@@ -71,7 +71,7 @@ struct LiftedDecisionsHardGuaranteeTests {
     private func assertNewFilesAreSandboxed(
         newFiles: Set<URL>,
         packageRoot: URL
-    ) throws {
+    ) {
         let swiftinferRoot = packageRoot.appendingPathComponent(".swiftinfer")
             .standardizedFileURL.path
         let stubsRoot = packageRoot.appendingPathComponent("Tests/Generated/SwiftInfer")
@@ -89,7 +89,7 @@ struct LiftedDecisionsHardGuaranteeTests {
     /// Pin the pre-M6 source-tree-immutable contract: each
     /// originally-written fixture file is still present after the
     /// accept run.
-    private func assertOriginalSourceSurvived(packageRoot: URL) throws {
+    private func assertOriginalSourceSurvived(packageRoot: URL) {
         let sourceFiles = [
             packageRoot.appendingPathComponent("Sources/Foo/Filter.swift"),
             packageRoot.appendingPathComponent("Tests/FooTests/FilterTests.swift"),
@@ -165,7 +165,7 @@ struct LiftedDecisionsHardGuaranteeTests {
         })
     }
 
-    private func fileSet(in directory: URL, includingDotDirs: Bool) throws -> [URL] {
+    private func fileSet(in directory: URL, includingDotDirs: Bool) -> [URL] {
         let manager = FileManager.default
         let options: FileManager.DirectoryEnumerationOptions =
             includingDotDirs ? [] : [.skipsHiddenFiles]

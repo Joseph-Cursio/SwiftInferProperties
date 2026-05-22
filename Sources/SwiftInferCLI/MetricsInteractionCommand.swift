@@ -58,7 +58,7 @@ extension SwiftInferCommand {
 
         public func run() async throws {
             let parsedFormat = try parseFormat(format)
-            let loaded = try loadDecisions()
+            let loaded = loadDecisions()
             let report = InteractionDecisionsAggregator.aggregate(loaded.decisions)
             let rendered = InteractionMetricsRenderer.render(
                 report,
@@ -73,14 +73,14 @@ extension SwiftInferCommand {
 
         // MARK: - Loading
 
-        private func loadDecisions() throws -> MetricsInteractionLoaded {
+        private func loadDecisions() -> MetricsInteractionLoaded {
             if decisions.isEmpty {
-                return try loadDefault()
+                return loadDefault()
             }
             return loadAggregation()
         }
 
-        private func loadDefault() throws -> MetricsInteractionLoaded {
+        private func loadDefault() -> MetricsInteractionLoaded {
             let directoryURL: URL
             if let directory {
                 directoryURL = URL(fileURLWithPath: directory).standardizedFileURL

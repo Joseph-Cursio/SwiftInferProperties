@@ -117,8 +117,8 @@ extension SwiftInferCommand {
 
         public init() {}
 
-        public func run() async throws {
-            let result = try Self.runQuery(
+        public func run() async {
+            let result = Self.runQuery(
                 directoryOverride: directory,
                 explicitIndexPath: indexPath,
                 filters: QueryFilters(
@@ -149,7 +149,7 @@ extension SwiftInferCommand {
             explicitIndexPath: String?,
             filters: QueryFilters,
             limit: Int?
-        ) throws -> QueryOutcome {
+        ) -> QueryOutcome {
             let directory = URL(fileURLWithPath: directoryOverride ?? ".")
             let explicitPath = explicitIndexPath.map { URL(fileURLWithPath: $0) }
             let now = SwiftInferCommand.Index.isoTimestamp(from: Date())

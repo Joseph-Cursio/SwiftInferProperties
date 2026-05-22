@@ -183,7 +183,7 @@ struct VerifyEvidenceLogMergeTests {
     }
 
     @Test("Overlapping identity: later capturedAt wins")
-    func overlapLaterWins() throws {
+    func overlapLaterWins() {
         let older = makeEvidence(
             identity: "AAA1111111111111",
             outcome: .measuredDefaultFails,
@@ -200,7 +200,7 @@ struct VerifyEvidenceLogMergeTests {
     }
 
     @Test("Overlapping identity: order-independent — older RHS does not displace newer LHS")
-    func overlapOrderIndependent() throws {
+    func overlapOrderIndependent() {
         let older = makeEvidence(
             identity: "AAA1111111111111",
             outcome: .measuredDefaultFails,

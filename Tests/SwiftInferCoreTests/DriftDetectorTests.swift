@@ -78,20 +78,20 @@ struct DriftDetectorTests {
     // MARK: - Decisions suppression
 
     @Test
-    func decisionRecordedAsAcceptedSuppressesWarning() throws {
-        try assertDecisionSuppresses(.accepted)
+    func decisionRecordedAsAcceptedSuppressesWarning() {
+        assertDecisionSuppresses(.accepted)
     }
 
     @Test
-    func decisionRecordedAsRejectedSuppressesWarning() throws {
-        try assertDecisionSuppresses(.rejected)
+    func decisionRecordedAsRejectedSuppressesWarning() {
+        assertDecisionSuppresses(.rejected)
     }
 
     @Test
-    func decisionRecordedAsSkippedSuppressesWarning() throws {
+    func decisionRecordedAsSkippedSuppressesWarning() {
         // Per M6 plan open decision #2: skipped means "decide later" but
         // the user has acknowledged the suggestion, so drift stays quiet.
-        try assertDecisionSuppresses(.skipped)
+        assertDecisionSuppresses(.skipped)
     }
 
     // MARK: - Mixed corpus + ordering
@@ -181,7 +181,7 @@ struct DriftDetectorTests {
 
     // MARK: - Helpers
 
-    private func assertDecisionSuppresses(_ decision: Decision) throws {
+    private func assertDecisionSuppresses(_ decision: Decision) {
         let suggestion = makeStrongSuggestion(canonical: "decided")
         let decisions = Decisions(records: [
             DecisionRecord(

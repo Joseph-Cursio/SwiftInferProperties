@@ -316,7 +316,7 @@ struct MetricsExplicitDecisionsEvidenceTests {
             try? FileManager.default.removeItem(at: corpusA.deletingLastPathComponent())
             try? FileManager.default.removeItem(at: corpusB.deletingLastPathComponent())
         }
-        let result = try SwiftInferCommand.Metrics.loadAggregate(
+        let result = SwiftInferCommand.Metrics.loadAggregate(
             directoryOverride: nil,
             explicitPaths: [corpusA.path, corpusB.path]
         )
@@ -350,7 +350,7 @@ struct MetricsExplicitDecisionsEvidenceTests {
             try? FileManager.default.removeItem(at: withEvidence.deletingLastPathComponent())
             try? FileManager.default.removeItem(at: noEvidence.deletingLastPathComponent())
         }
-        let result = try SwiftInferCommand.Metrics.loadAggregate(
+        let result = SwiftInferCommand.Metrics.loadAggregate(
             directoryOverride: nil,
             explicitPaths: [withEvidence.path, noEvidence.path]
         )

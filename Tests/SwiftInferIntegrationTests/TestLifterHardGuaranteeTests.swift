@@ -38,9 +38,9 @@ struct TestLifterHardGuaranteeTests {
     func noNewFilesAfterDiscover() throws {
         let directory = try makeFixtureWithRoundTripTest()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let before = try fileSet(in: directory)
+        let before = fileSet(in: directory)
         _ = try TestLifter.discover(in: directory)
-        let after = try fileSet(in: directory)
+        let after = fileSet(in: directory)
         #expect(before == after, "TestLifter.discover created or removed files")
     }
 
@@ -59,7 +59,7 @@ struct TestLifterHardGuaranteeTests {
     func existingTestsSurviveDiscover() throws {
         let directory = try makeFixtureWithRoundTripTest()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let originalFiles = try fileSet(in: directory)
+        let originalFiles = fileSet(in: directory)
         let originalCount = originalFiles.count
 
         // Drive the lifted-suggestion path — the fixture's
@@ -74,7 +74,7 @@ struct TestLifterHardGuaranteeTests {
             "Fixture should produce at least one lifted suggestion to exercise §16 #2"
         )
 
-        let surviving = try fileSet(in: directory)
+        let surviving = fileSet(in: directory)
         #expect(
             surviving.count == originalCount,
             """
@@ -138,7 +138,7 @@ struct TestLifterHardGuaranteeTests {
         // Snapshot the source tree before accepting — the §16 #1
         // contract is that the only files that appear are under
         // Tests/Generated/SwiftInfer/.
-        let beforeFiles = try fileSet(in: directory)
+        let beforeFiles = fileSet(in: directory)
         let lifted = try #require(pipeline.suggestions.first { $0.liftedOrigin != nil })
 
         let recordedOutput = HGSilentOutput()
@@ -173,7 +173,7 @@ struct TestLifterHardGuaranteeTests {
             )
         }
         // Original source files unchanged.
-        let afterFiles = try fileSet(in: directory)
+        let afterFiles = fileSet(in: directory)
         let newFiles = Set(afterFiles).subtracting(beforeFiles)
         for newFile in newFiles {
             let newStandardized = newFile.standardizedFileURL.path
@@ -305,14 +305,14 @@ struct TestLifterHardGuaranteeTests {
 
     private func snapshot(directory: URL) throws -> [String: Data] {
         var snap: [String: Data] = [:]
-        for url in try fileSet(in: directory) {
+        for url in fileSet(in: directory) {
             let relative = String(url.path.dropFirst(directory.path.count))
             snap[relative] = try Data(contentsOf: url)
         }
         return snap
     }
 
-    private func fileSet(in directory: URL) throws -> [URL] {
+    private func fileSet(in directory: URL) -> [URL] {
         let manager = FileManager.default
         guard let enumerator = manager.enumerator(
             at: directory,

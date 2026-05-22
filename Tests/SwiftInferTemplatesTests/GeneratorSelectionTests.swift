@@ -207,7 +207,7 @@ struct GeneratorSelectionTests {
     // MARK: Mixed — selection only touches mapped suggestions
 
     @Test
-    func unmappedSuggestionsPassThroughInMixedBatch() throws {
+    func unmappedSuggestionsPassThroughInMixedBatch() {
         let mapped = makePlaceholderSuggestion(typeText: "Widget", line: 1)
         let unmapped = makePlaceholderSuggestion(typeText: "Other", line: 5)
         let shape = TypeShape(name: "Widget", kind: .struct, inheritedTypes: [], hasUserGen: true)

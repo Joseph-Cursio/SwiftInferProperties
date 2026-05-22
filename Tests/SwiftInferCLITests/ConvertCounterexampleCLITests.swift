@@ -44,7 +44,7 @@ struct ConvertCounterexampleCLITests {
     }
 
     @Test("round-trip template requires --reverse-callee")
-    func roundTripRequiresReverseCallee() throws {
+    func roundTripRequiresReverseCallee() {
         let args = Args(
             template: "round-trip", callee: "encode", type: "Int", counterexample: "42"
         )
@@ -79,7 +79,7 @@ struct ConvertCounterexampleCLITests {
     }
 
     @Test("invariant-preservation template requires --invariant-keypath")
-    func invariantPreservationRequiresKeypath() throws {
+    func invariantPreservationRequiresKeypath() {
         let args = Args(
             template: "invariant-preservation",
             callee: "adjust",
@@ -115,7 +115,7 @@ struct ConvertCounterexampleCLITests {
     }
 
     @Test("identity-element requires --identity-element")
-    func identityElementRequiresIdentityName() throws {
+    func identityElementRequiresIdentityName() {
         let args = Args(
             template: "identity-element", callee: "union", type: "IntSet", counterexample: "IntSet([1])"
         )
@@ -128,7 +128,7 @@ struct ConvertCounterexampleCLITests {
     }
 
     @Test("reduce-equivalence requires --seed-source AND --reduce-element-type")
-    func reduceEquivalenceRequiresSeedAndElementType() throws {
+    func reduceEquivalenceRequiresSeedAndElementType() {
         let args = Args(
             template: "reduce-equivalence", callee: "+", type: "Int", counterexample: "[1, 2, 3]"
         )
@@ -142,7 +142,7 @@ struct ConvertCounterexampleCLITests {
     }
 
     @Test("Unknown --template errors with the valid-templates list")
-    func unknownTemplateErrors() throws {
+    func unknownTemplateErrors() {
         let args = Args(template: "bogus", callee: "f", type: "Int", counterexample: "0")
         do {
             _ = try ConvertCounterexampleEngine.renderRegressionStub(args: args)
@@ -247,7 +247,7 @@ struct ConvertCounterexampleSandboxTests {
         let packageRoot = try makeFixture(name: "OnlyNew")
         defer { try? FileManager.default.removeItem(at: packageRoot) }
 
-        let beforeFiles = try fileSet(in: packageRoot)
+        let beforeFiles = fileSet(in: packageRoot)
         let args = Args(
             template: "idempotence", callee: "normalize", type: "String", counterexample: "\"x\""
         )
@@ -256,7 +256,7 @@ struct ConvertCounterexampleSandboxTests {
             stub: try ConvertCounterexampleEngine.renderRegressionStub(args: args),
             packageRoot: packageRoot
         )
-        let afterFiles = try fileSet(in: packageRoot)
+        let afterFiles = fileSet(in: packageRoot)
         let newFiles = Set(afterFiles).subtracting(beforeFiles)
         #expect(newFiles.count == 1)
         let stubsRoot = packageRoot
@@ -278,7 +278,7 @@ private func makeFixture(name: String) throws -> URL {
     return base
 }
 
-private func fileSet(in directory: URL) throws -> [URL] {
+private func fileSet(in directory: URL) -> [URL] {
     let manager = FileManager.default
     guard let enumerator = manager.enumerator(
         at: directory,

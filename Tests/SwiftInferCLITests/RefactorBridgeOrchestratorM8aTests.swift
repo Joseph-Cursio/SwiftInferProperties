@@ -78,7 +78,7 @@ struct RefactorBridgeOrchestratorM8aTests {
     }
 
     @Test("Inverse-element pair without associativity does NOT promote to Group")
-    func inversePairAloneDoesNotPromote() throws {
+    func inversePairAloneDoesNotPromote() {
         // Group requires Monoid (associativity + identity) + inverse.
         let pair = makeRBInversePair(typeName: "Floating", opName: "plus", inverseName: "negate")
         let proposals = RefactorBridgeOrchestrator.proposals(

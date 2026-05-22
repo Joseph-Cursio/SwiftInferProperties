@@ -27,9 +27,9 @@ struct HardGuaranteeTests {
     func discoverDoesNotCreateFiles() throws {
         let directory = try makeHardGuaranteeFixture(named: "NoNewFiles")
         defer { try? FileManager.default.removeItem(at: directory) }
-        let before = try fileSet(of: directory)
+        let before = fileSet(of: directory)
         _ = try TemplateRegistry.discover(in: directory)
-        let after = try fileSet(of: directory)
+        let after = fileSet(of: directory)
         #expect(before == after, "discover added or removed files in the scanned target")
     }
 
@@ -215,7 +215,7 @@ func snapshotContents(of directory: URL) throws -> [String: String] {
     return snapshot
 }
 
-func fileSet(of directory: URL) throws -> Set<String> {
+func fileSet(of directory: URL) -> Set<String> {
     var paths: Set<String> = []
     let enumerator = FileManager.default.enumerator(
         at: directory,

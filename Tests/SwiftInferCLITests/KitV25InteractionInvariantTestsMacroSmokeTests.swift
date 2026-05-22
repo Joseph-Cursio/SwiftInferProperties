@@ -19,7 +19,7 @@ import Testing
 @Suite("V1.100 — kit v2.5.0 @InteractionInvariantTests macro smoke")
 struct KitV25MacroSmokeTests {
 
-    @Test func macroExpandsAndGeneratedTestRuns() async throws {
+    @Test func macroExpandsAndGeneratedTestRuns() async {
         // The `@InteractionInvariantTests` macro attached to
         // `SmokeMacroCardinality` below emits a peer
         // `SmokeMacroCardinalityInteractionInvariantTests` struct

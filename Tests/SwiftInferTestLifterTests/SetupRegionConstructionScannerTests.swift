@@ -251,7 +251,7 @@ struct SetupRegionConstructionScannerTests {
     // MARK: - Acceptance: § 13 perf re-check
 
     @Test("Record building over 100 synthetic test files completes in < 400ms")
-    func hundredFilePerf() throws {
+    func hundredFilePerf() {
         var allMethods: [TestMethodSummary] = []
         for index in 0..<100 {
             let source = """

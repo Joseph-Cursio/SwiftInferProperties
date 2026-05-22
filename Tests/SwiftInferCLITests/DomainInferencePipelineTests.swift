@@ -70,7 +70,7 @@ struct DomainInferencePipelineTests {
     // MARK: - Pipeline behavior
 
     @Test("Empty domainCallSitesByConsumer is a no-op (mockGenerator.domainHint stays nil)")
-    func emptyMapNoOp() throws {
+    func emptyMapNoOp() {
         let suggestion = Self.roundTripSuggestionWithMockGenerator(
             forwardName: "encode",
             reverseName: "decode",
@@ -133,7 +133,7 @@ struct DomainInferencePipelineTests {
     }
 
     @Test("Below-threshold corpus (2 sites) doesn't populate a hint")
-    func belowThresholdNoHint() throws {
+    func belowThresholdNoHint() {
         let suggestion = Self.roundTripSuggestionWithMockGenerator(
             forwardName: "encode",
             reverseName: "decode",
@@ -148,7 +148,7 @@ struct DomainInferencePipelineTests {
     }
 
     @Test("Non-round-trip suggestions are unaffected")
-    func nonRoundTripUnaffected() throws {
+    func nonRoundTripUnaffected() {
         let mock = MockGenerator(typeName: "MyType", argumentSpec: [], siteCount: 5)
         let idempotent = Suggestion(
             templateName: "idempotence",

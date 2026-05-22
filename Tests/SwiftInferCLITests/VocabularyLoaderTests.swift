@@ -160,5 +160,5 @@ struct VocabularyLoaderTests {
 /// above the temp dir on the host filesystem.
 private struct NoPackageStub: FileSystemReader {
     func fileExists(atPath: String) -> Bool { false }
-    func contents(of url: URL) throws -> Data { Data() }
+    func contents(of url: URL) -> Data { Data() }
 }

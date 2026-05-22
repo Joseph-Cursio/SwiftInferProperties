@@ -70,8 +70,8 @@ extension SwiftInferCommand {
 
         public init() {}
 
-        public func run() async throws {
-            let result = try Self.runSuggestRefactors(
+        public func run() async {
+            let result = Self.runSuggestRefactors(
                 directoryOverride: directory,
                 explicitIndexPath: indexPath,
                 minSuggestions: minSuggestions,
@@ -94,7 +94,7 @@ extension SwiftInferCommand {
             minSuggestions: Int,
             shape: String?,
             limit: Int?
-        ) throws -> SuggestRefactorsOutcome {
+        ) -> SuggestRefactorsOutcome {
             let directory = URL(fileURLWithPath: directoryOverride ?? ".")
             let explicitPath = explicitIndexPath.map { URL(fileURLWithPath: $0) }
             let now = SwiftInferCommand.Index.isoTimestamp(from: Date())

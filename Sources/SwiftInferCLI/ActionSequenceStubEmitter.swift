@@ -58,7 +58,7 @@ public enum ActionSequenceStubEmitter {
     public static func emit(_ inputs: Inputs) throws -> String {
         try validate(inputs.candidate)
         if let invariant = inputs.invariant {
-            try validateInvariant(invariant.family)
+            validateInvariant(invariant.family)
         }
         let reducerCall = makeReducerCall(inputs.candidate)
         let stateInit = "\(inputs.candidate.stateTypeName)()"
@@ -186,7 +186,7 @@ public enum ActionSequenceStubEmitter {
     /// V2.0 M4.D / M5 / M6 / M7 — all five interaction families now
     /// have an emission path. The error case stays for forward-
     /// compatibility (future PRD families would slot in here).
-    private static func validateInvariant(_ family: InteractionInvariantFamily) throws {
+    private static func validateInvariant(_ family: InteractionInvariantFamily) {
         switch family {
         case .conservation, .idempotence, .cardinality,
              .referentialIntegrity, .biconditional:

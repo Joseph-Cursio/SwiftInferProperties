@@ -78,7 +78,7 @@ struct ConsumerProducerChainDetectorVetoTests {
     }
 
     @Test("Multiple qualifying chains all surface; output is deterministic by consumer name")
-    func multipleChainsAreDeterministic() throws {
+    func multipleChainsAreDeterministic() {
         let consumerB = FunctionSummary(
             name: "verify",
             parameters: [Parameter(label: nil, internalName: "s", typeText: "String", isInout: false)],
