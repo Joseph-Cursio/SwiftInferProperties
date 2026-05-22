@@ -89,7 +89,7 @@ extension SwiftInferCommand {
                     .standardizedFileURL
             }
             let result = InteractionDecisionsLoader.load(startingFrom: directoryURL)
-            let sourceLabel = result.packageRoot.map { $0.path } ?? "(no package root)"
+            let sourceLabel = result.packageRoot.map(\.path) ?? "(no package root)"
             return MetricsInteractionLoaded(
                 decisions: result.decisions,
                 sources: [sourceLabel],

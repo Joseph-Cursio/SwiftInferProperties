@@ -130,7 +130,7 @@ private final class Visitor: SyntaxVisitor {
         // Skip private / fileprivate — same posture as
         // `FunctionScannerVisitor`. V1.57.A cycle-53 lesson: file-private
         // helpers aren't reachable cross-module and pollute the list.
-        let modifiers = node.modifiers.map { $0.name.text }
+        let modifiers = node.modifiers.map(\.name.text)
         if modifiers.contains("private") || modifiers.contains("fileprivate") {
             return .skipChildren
         }
@@ -308,7 +308,7 @@ private final class Visitor: SyntaxVisitor {
         let viaConformance = Self.declaresReducerConformance(inheritanceClause)
         let viaMacro = ReducerDiscoverer.hasReducerAttribute(attributes)
         guard viaConformance || viaMacro else { return }
-        let modifierNames = modifiers.map { $0.name.text }
+        let modifierNames = modifiers.map(\.name.text)
         if modifierNames.contains("private") || modifierNames.contains("fileprivate") {
             return
         }

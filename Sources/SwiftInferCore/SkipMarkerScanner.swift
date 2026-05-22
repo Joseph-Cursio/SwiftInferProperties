@@ -76,7 +76,7 @@ public enum SkipMarkerScanner {
             stripped = firstToken
         }
         guard !stripped.isEmpty,
-              stripped.allSatisfy({ $0.isHexDigit }) else {
+              stripped.allSatisfy(\.isHexDigit) else {
             return nil
         }
         return stripped.uppercased()

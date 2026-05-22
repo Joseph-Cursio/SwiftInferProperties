@@ -15,9 +15,7 @@ extension FunctionScannerVisitor {
         keywordToken: TokenSyntax,
         memberBlock: MemberBlockSyntax
     ) -> TypeDecl {
-        let inheritedTypes = inheritanceClause?.inheritedTypes.map {
-            $0.type.trimmedDescription
-        } ?? []
+        let inheritedTypes = inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? []
         let position = keywordToken.positionAfterSkippingLeadingTrivia
         let sourceLocation = converter.location(for: position)
         let location = SourceLocation(

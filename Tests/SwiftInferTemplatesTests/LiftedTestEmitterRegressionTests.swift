@@ -18,7 +18,7 @@ struct LiftedTestEmitterRegressionTests {
         #expect(hash1 == hash2)
         #expect(hash1 != hash3)
         #expect(hash1.count == 8)
-        let allHex = hash1.allSatisfy { $0.isHexDigit }
+        let allHex = hash1.allSatisfy(\.isHexDigit)
         #expect(allHex)
     }
 

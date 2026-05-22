@@ -59,7 +59,7 @@ public struct ReducerPin: Sendable, Equatable {
         let components = trimmed.split(separator: ".", omittingEmptySubsequences: false)
             .map(String.init)
         // Reject empty components — `"Inbox..body"` is malformed.
-        if components.contains(where: { $0.isEmpty }) {
+        if components.contains(where: \.isEmpty) {
             throw ReducerPinError.malformed(raw: raw)
         }
         switch components.count {

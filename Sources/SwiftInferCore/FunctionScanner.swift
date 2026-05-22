@@ -131,7 +131,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         // most picks. Internal-but-explicit symbols (cycle-52's
         // `rescaledDivide`) are handled at verify time via V1.56.A's
         // pattern matcher instead.
-        let modifiers = node.modifiers.map { $0.name.text }
+        let modifiers = node.modifiers.map(\.name.text)
         if modifiers.contains("private") || modifiers.contains("fileprivate") {
             return .skipChildren
         }

@@ -15,7 +15,7 @@ extension FunctionScannerVisitor {
     /// earlier bindings inherit it. The loop therefore looks forward to
     /// the next-annotated binding for any unannotated entry.
     func captureIdentityCandidates(from node: VariableDeclSyntax) {
-        let modifiers = node.modifiers.map { $0.name.text }
+        let modifiers = node.modifiers.map(\.name.text)
         guard modifiers.contains("static") || modifiers.contains("class") else {
             return
         }

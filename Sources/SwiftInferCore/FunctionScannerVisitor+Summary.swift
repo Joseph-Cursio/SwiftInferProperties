@@ -15,7 +15,7 @@ extension FunctionScannerVisitor {
         let effects = node.signature.effectSpecifiers
         let isThrows = effects?.throwsClause != nil
         let isAsync = effects?.asyncSpecifier != nil
-        let modifiers = node.modifiers.map { $0.name.text }
+        let modifiers = node.modifiers.map(\.name.text)
         let isMutating = modifiers.contains("mutating")
         let isStatic = modifiers.contains("static") || modifiers.contains("class")
 

@@ -284,7 +284,7 @@ extension InversePairTemplate {
     ) -> Signal? {
         let domain = pair.forward.parameters.first?.typeText
         let codomain = pair.forward.returnTypeText
-        let candidates = [domain, codomain].compactMap { $0 }
+        let candidates = [domain, codomain].compactMap(\.self)
         guard candidates.contains(where: { FloatingPointStorageNames.contains($0) }) else {
             return nil
         }
@@ -305,7 +305,7 @@ extension InversePairTemplate {
     private static func floatingPointAdvisory(for pair: FunctionPair) -> String? {
         let domain = pair.forward.parameters.first?.typeText
         let codomain = pair.forward.returnTypeText
-        let candidates = [domain, codomain].compactMap { $0 }
+        let candidates = [domain, codomain].compactMap(\.self)
         guard let fpType = candidates.first(where: { FloatingPointStorageNames.contains($0) }) else {
             return nil
         }

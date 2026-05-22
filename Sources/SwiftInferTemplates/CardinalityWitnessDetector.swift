@@ -189,7 +189,7 @@ enum CardinalityFieldExtractor {
         var result: [CardinalityWitness.Field] = []
         for member in memberBlock.members {
             guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
-            let modifiers = varDecl.modifiers.map { $0.name.text }
+            let modifiers = varDecl.modifiers.map(\.name.text)
             if modifiers.contains("static") || modifiers.contains("class") { continue }
             let hasPresentationAttribute = Self.declHasPresentationAttribute(varDecl)
             for binding in varDecl.bindings {
