@@ -76,11 +76,13 @@ public extension LiftedTestEmitter {
         // comments can sit above each generator expression. Without
         // hints the multi-line shape still renders correctly; the
         // hint-line emission is the only conditional bit.
-        let argumentLines = generators.enumerated().map { index, generatorExpr -> String in
-            let hintLine = preconditionCommentLine(for: index, in: mock)
-                .map { "                \($0)\n" } ?? ""
-            return "\(hintLine)                \(generatorExpr)"
-        }.joined(separator: ",\n")
+        let argumentLines = generators.enumerated()
+            .map { index, generatorExpr -> String in
+                let hintLine = preconditionCommentLine(for: index, in: mock)
+                    .map { "                \($0)\n" } ?? ""
+                return "\(hintLine)                \(generatorExpr)"
+            }
+            .joined(separator: ",\n")
         let constructionArgs = mock.argumentSpec.enumerated()
             .map { index, argument -> String in
                 let labelPrefix = argument.label.map { "\($0): " } ?? ""

@@ -205,9 +205,11 @@ public extension LiftedSuggestion {
             return "\(hint.predicateName) partitions \(hint.positiveMarker)/\(hint.negativeMarker)"
                 + " (\(hint.positiveSiteCount)+\(hint.negativeSiteCount) sites)"
         case .nClassEquivalenceClass(let hint):
-            let counts = hint.markers.map { marker in
-                "\(marker)=\(hint.siteCountsByMarker[marker] ?? 0)"
-            }.joined(separator: ", ")
+            let counts = hint.markers
+                .map { marker in
+                    "\(marker)=\(hint.siteCountsByMarker[marker] ?? 0)"
+                }
+                .joined(separator: ", ")
             return "\(hint.predicateName) partitions \(hint.markerSetName) [\(counts)]"
         case .consumerProducerChain(let hint):
             return "\(hint.reverseName)'s argument was always \(hint.producerName)'s output"

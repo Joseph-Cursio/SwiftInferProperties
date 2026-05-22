@@ -88,7 +88,8 @@ struct DiscoverCLIVerifySuppressionTests {
             try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: target,
                 diagnostics: DPRecordingDiagnosticOutput()
-            ).suggestions.first { $0.score.tier == .strong }
+            )
+            .suggestions.first { $0.score.tier == .strong }
         )
 
         // Control — no evidence file yet, so the Strong pick renders.
@@ -128,7 +129,8 @@ struct DiscoverCLIVerifySuppressionTests {
             try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: target,
                 diagnostics: DPRecordingDiagnosticOutput()
-            ).suggestions.first { $0.score.tier == .strong }
+            )
+            .suggestions.first { $0.score.tier == .strong }
         )
         try writeEvidence(
             [evidence(for: strong, outcome: .measuredDefaultFails, detail: "trial=4")],
@@ -161,7 +163,8 @@ struct DiscoverCLIVerifySuppressionTests {
                 directory: target,
                 includePossible: true,
                 diagnostics: DPRecordingDiagnosticOutput()
-            ).suggestions.first { $0.templateName == "idempotence" }
+            )
+            .suggestions.first { $0.templateName == "idempotence" }
         )
         #expect(possible.score.tier == .possible)
 
