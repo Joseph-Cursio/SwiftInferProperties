@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M9 — InteractionInvariantBridge aggregator. Pure: no I/O.
 // Uses synthetic Strong-tier `InteractionInvariantSuggestion`

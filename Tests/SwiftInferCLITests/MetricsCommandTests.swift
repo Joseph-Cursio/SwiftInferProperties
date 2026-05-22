@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 @Suite("MetricsRenderer — V1.4.1 §17.2 aggregation")
 struct MetricsRendererTests {

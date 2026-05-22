@@ -1,6 +1,6 @@
-import Testing
 import Foundation
 @testable import SwiftInferCore
+import Testing
 
 /// V1.36.B — `ConstraintRunner.suggest(constraint:subject:)` tests.
 @Suite("ConstraintRunner — V1.36.B orchestration")

@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.4 §4.1 + §5.7 / M5.6 acceptance-bar (a) integration suite
 /// for `@Discoverable(group:)` recognition. Closes the bar by

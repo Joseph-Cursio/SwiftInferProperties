@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 private func detectReduceEquivalence(in source: String) -> [DetectedReduceEquivalence] {
     let slice = SlicerTestHelper.sliceFirstBody(in: source)

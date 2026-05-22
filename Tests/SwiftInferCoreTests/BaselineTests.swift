@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("Baseline — data model + Codable round-trip (M6.2)")
 struct BaselineTests {

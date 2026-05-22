@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 @Suite("Drift command + --update-baseline (M6.5)")
 struct DriftCommandTests {

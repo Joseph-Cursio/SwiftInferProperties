@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.16.1 — SetAlgebra-shape veto on IdempotenceTemplate.
 // Closes post-v1.15 priority #1 (cycle-12 OC SetAlgebra idempotence

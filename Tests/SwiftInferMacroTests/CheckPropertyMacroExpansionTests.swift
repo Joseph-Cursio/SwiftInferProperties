@@ -1,8 +1,8 @@
+@testable import SwiftInferCore
+@testable import SwiftInferMacroImpl
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import Testing
-@testable import SwiftInferCore
-@testable import SwiftInferMacroImpl
 
 @Suite("@CheckProperty macro — round-trip + preserves-invariant expansion")
 struct CheckPropertyMacroExpansionTests {

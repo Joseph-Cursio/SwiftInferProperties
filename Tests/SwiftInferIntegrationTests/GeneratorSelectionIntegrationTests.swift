@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.3 §11 / M4.5 acceptance-bar (a) integration suite for
 /// `GeneratorSelection`. Closes the bar by exercising every

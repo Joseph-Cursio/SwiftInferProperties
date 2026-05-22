@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 @Suite("VocabularyLoader — explicit path + walk-up implicit lookup per PRD §4.5")
 struct VocabularyLoaderTests {

@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.27.A — Sequence-conformance fallback path on V1.21.A's
 /// `iteratorProtocolCarrierVeto`. Direct cycle-23 finding closure: Algo

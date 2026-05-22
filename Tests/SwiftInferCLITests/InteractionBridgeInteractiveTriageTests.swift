@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.108 (cycle-103b) — tests for the bridge-level N-arm
 // interactive triage namespace.

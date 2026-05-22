@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 @Suite("Discover pipeline — --stats-only mode (M5.4) + --dry-run mode (M5.5 → M6.4)")
 struct DiscoverPipelineStatsTests {

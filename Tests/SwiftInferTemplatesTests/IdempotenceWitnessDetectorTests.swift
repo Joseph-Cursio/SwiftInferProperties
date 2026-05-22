@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V2.0 M4.C — IdempotenceWitnessDetector tests. Pure: parse a
 // source snippet, look for an Action enum, assert on the detected

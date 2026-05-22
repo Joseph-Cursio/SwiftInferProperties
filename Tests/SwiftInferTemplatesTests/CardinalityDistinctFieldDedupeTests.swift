@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.103 (cycle-100 Finding A fix) — regression tests for the
 // distinct-field dedupe in CardinalityWitnessDetector's

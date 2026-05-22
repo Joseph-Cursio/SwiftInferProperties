@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("NClassEquivalenceClassDetector — N-class threshold + veto (M13.2)")
 struct NClassEquivalenceClassDetectorTests {

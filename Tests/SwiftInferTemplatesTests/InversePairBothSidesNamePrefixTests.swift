@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.27.B — name-prefix-gated both-sides direction-label full-veto on
 /// InversePairTemplate. Direct cycle-23 finding closure: cycle-23 #26

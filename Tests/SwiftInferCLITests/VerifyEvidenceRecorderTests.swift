@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 @Suite("VerifyEvidenceRecorder — outcome mapping + best-effort persistence (V1.64.B)")
 struct VerifyEvidenceRecorderTests {

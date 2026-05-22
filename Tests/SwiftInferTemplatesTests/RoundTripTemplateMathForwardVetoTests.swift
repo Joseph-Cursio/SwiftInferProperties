@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.21.C — math-library forward-function pair veto on non-lifted
 /// round-trip. Suppresses cross-product noise (forward × forward) while

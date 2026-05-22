@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("IdentityElementTemplate — pair construction + signal score")
 struct IdentityElementTemplatePairTests {

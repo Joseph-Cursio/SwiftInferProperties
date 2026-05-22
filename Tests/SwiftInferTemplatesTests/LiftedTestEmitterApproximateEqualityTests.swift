@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.31.B — `EqualityKind` parameter on `LiftedTestEmitter`'s three
 /// unary-property arms (round-trip, idempotent, inverse-pair). Closes

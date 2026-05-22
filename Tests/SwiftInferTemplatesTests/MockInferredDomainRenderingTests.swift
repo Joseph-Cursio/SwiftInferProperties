@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedTestEmitter — M10.3 domain hint rendering")
 struct MockInferredDomainRenderingTests {

@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.110 (cycle-103d) — renderSummary tests for the accept-bridge
 // recorder. Split out from AcceptBridgeCommandTests.swift to stay

@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.24.A — asymmetric label class mismatch counter on
 /// `RoundTripTemplate`. Direct cycle-19 finding + cycle-20 reconfirmed

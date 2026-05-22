@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("SuggestionRenderer.renderStats — --stats-only summary block (M5.4)")
 struct SuggestionRendererStatsTests {

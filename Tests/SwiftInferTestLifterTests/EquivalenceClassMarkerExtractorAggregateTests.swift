@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("EquivalenceClassMarkerExtractor — partition aggregation (M11.1)")
 struct ECMarkerExtractorAggregateTests {

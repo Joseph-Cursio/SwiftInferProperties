@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("AssociativityTemplate — suggestion shape, identity, golden render")
 struct AssociativityTemplateGoldenTests {

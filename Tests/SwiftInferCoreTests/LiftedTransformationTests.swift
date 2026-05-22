@@ -1,6 +1,6 @@
 import PropertyLawCore
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("LiftedTransformation — V1.19.A admission gate + shadow-form derivation")
 struct LiftedTransformationTests {

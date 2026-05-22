@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("Decisions — data model + Codable round-trip (M6.1 + M7.5 schema v2)")
 struct DecisionsTests {

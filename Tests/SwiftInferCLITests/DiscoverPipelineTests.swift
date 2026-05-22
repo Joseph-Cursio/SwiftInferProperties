@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 @Suite("Discover pipeline — basic discovery + skip markers")
 struct DiscoverPipelineTests {

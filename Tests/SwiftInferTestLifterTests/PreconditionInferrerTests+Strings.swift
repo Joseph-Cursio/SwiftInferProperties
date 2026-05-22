@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 /// String-pattern + escape-rejection tests for `PreconditionInferrer`.
 /// Split from `PreconditionInferrerTests.swift` to keep both files

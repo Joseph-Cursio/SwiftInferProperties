@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
+import Testing
 
 /// PRD v0.4 §16 #3 hard guarantee — "SwiftInfer never auto-accepts
 /// suggestions. Even in CI mode, `drift` emits warnings, not

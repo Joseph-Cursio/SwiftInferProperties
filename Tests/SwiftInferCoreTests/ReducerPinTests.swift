@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M1.C — ReducerPin: parse a `--reducer <pin>` string and match
 // against a ReducerCandidate. The CLI consumes `parse` + `matches` to

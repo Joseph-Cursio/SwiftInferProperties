@@ -1,8 +1,8 @@
-import Testing
 import Foundation
 import PropertyLawCore
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 /// V1.33.C — `IndexCommand.buildEntry` projects a `Suggestion` (plus
 /// its joined `DecisionRecord`, if any) onto a `SemanticIndexEntry`.

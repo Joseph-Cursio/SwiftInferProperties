@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 accept-check follow-up — wires the InteractionDriftDetector's
 // new decisions filter (the M10 deferral). Suggestions with recorded

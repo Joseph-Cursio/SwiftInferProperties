@@ -1,6 +1,6 @@
 import ArgumentParser
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 @Test
 func discoverSubcommandIsConfigured() {

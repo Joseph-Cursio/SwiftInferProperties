@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestionRecovery — type recovery via FunctionSummary lookup (M3.1)")
 struct LiftedSuggestionRecoveryTests {

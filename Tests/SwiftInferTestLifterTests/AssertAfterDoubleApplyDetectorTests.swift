@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("AssertAfterDoubleApplyDetector — explicit + collapsed idempotence (M2.1)")
 struct AssertAfterDoubleApplyDetectorTests {

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("RoundTripTemplate — @Discoverable +35 signal (M5.1)")
 struct RoundTripTemplateDiscoverableTests {

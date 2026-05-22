@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.25.A — name-prefix-gated magnitude bump on V1.10.1's idempotence
 /// direction-label counter. Direct cycle-21 finding closure: 13+ OC

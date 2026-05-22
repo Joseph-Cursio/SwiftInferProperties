@@ -1,6 +1,6 @@
+@testable import SwiftInferTestLifter
 import SwiftSyntax
 import Testing
-@testable import SwiftInferTestLifter
 
 /// PRD §15 hard contract for the slicer: never throws regardless of
 /// the input body shape. M1.6 backs this with a fuzz pass over 100

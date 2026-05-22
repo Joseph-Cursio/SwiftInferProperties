@@ -1,6 +1,6 @@
-import Testing
 import Foundation
 @testable import SwiftInferCore
+import Testing
 
 /// V1.36.A — `Constraint<Subject>` data-model tests. Field defaults,
 /// generic Subject type-checking, closure invocation.

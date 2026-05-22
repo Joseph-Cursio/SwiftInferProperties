@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FunctionScanner — header and structure")
 struct FunctionScannerHeaderTests {

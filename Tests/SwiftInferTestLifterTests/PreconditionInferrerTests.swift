@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("PreconditionInferrer — pure-function pattern detection (M9.1)")
 struct PreconditionInferrerTests {

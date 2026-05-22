@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V1.72.B — data-model tests for the post-acceptance-outcomes shape:
 // outcome rawValues stay stable (the §17.2 metric and tests both key on

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("DomainInferrer — round-trip-pair domain inference (M10.2)")
 struct DomainInferrerTests {

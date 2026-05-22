@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.10.1 — direction-label counter-signal on IdempotenceTemplate.
 // Closes cycle-7 priority #1 from

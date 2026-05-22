@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 accept-check follow-up — `accept-interaction` recorder. Uses
 // a fixture package + a real discover-interaction run to find the

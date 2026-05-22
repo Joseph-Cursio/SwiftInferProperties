@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("DomainHint — data model (M10.0)")
 struct DomainHintTests {

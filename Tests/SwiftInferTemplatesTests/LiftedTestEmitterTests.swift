@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedTestEmitter — defaultGenerator + M6.3 arms (idempotent, roundTrip)")
 struct LiftedTestEmitterTests {

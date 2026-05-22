@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("GeneratorSelection — Codable round-trip fallback acceptance (M5.4)")
 struct CodableRoundTripFallbackAcceptanceTests {

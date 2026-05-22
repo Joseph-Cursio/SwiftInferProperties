@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M1.A — SwiftSyntax-pass tests for ReducerDiscoverer. Pure:
 // every test passes a string literal of source code and asserts on

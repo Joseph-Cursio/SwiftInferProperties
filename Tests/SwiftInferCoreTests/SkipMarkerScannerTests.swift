@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("SkipMarkerScanner — `// swiftinfer: skip <hash>` extraction")
 struct SkipMarkerScannerTests {

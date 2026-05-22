@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("ProtocolCoverageMap — V1.5.1 curated protocol → property coverage")
 struct ProtocolCoverageMapTests {

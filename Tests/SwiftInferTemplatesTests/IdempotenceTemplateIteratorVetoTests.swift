@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.21.A — IteratorProtocol carrier veto on lifted-idempotence
 /// suggestions. Direct cycle-17 finding closure (4/4 reject on Iterator-

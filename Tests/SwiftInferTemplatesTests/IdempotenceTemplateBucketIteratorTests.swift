@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.22.A — BucketIterator name extension on V1.21.A's
 /// `iteratorProtocolCarrierVeto`. Direct cycle-18 finding closure

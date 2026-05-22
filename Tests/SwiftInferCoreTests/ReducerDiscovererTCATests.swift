@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M1.B — TCA-path tests for ReducerDiscoverer. Each test source
 // imports ComposableArchitecture (so the conformance walk fires) and

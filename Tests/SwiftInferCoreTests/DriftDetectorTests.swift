@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("DriftDetector — Strong-tier-only diff against baseline + decisions (M6.5)")
 struct DriftDetectorTests {

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("RoundTripTemplate — pair shape + curated naming + vetoes")
 struct RoundTripTemplateBasicsTests {

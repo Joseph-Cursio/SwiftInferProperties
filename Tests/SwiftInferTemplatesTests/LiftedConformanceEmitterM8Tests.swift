@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedConformanceEmitter — M8.5 kit-protocol arms")
 struct LiftedConformanceEmitterM8Tests {

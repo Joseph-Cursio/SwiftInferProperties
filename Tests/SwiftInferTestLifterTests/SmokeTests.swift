@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("SwiftInferTestLifter — M1.0 scaffolding smoke")
 struct SwiftInferTestLifterSmokeTests {

@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("CompositionTemplate — V1.19.C additive-monoid mutating composition")
 struct CompositionTemplateTests {

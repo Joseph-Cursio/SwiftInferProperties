@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("EquivalenceClassMarkerExtractor — token boundaries + classification (M11.1)")
 struct EquivalenceClassMarkerExtractorTests {

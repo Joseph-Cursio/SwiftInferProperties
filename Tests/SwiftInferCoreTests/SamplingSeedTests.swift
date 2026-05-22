@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("SamplingSeed — PRD v0.4 §16 #6 256-bit deterministic seed derivation")
 struct SamplingSeedTests {

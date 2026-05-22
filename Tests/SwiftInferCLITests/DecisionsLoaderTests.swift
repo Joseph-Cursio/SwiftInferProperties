@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 @Suite("DecisionsLoader — explicit path + walk-up implicit lookup + atomic write (M6.1)")
 struct DecisionsLoaderTests {

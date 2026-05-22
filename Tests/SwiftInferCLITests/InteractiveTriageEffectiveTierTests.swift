@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 /// Build a one-record verify-evidence map keyed by `identityHash`, for
 /// the V1.68 effective-tier triage tests.

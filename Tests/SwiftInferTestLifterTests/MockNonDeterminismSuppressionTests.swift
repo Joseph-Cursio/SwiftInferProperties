@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 /// TestLifter M7.1 acceptance — `MockGeneratorSynthesizer` returns
 /// nil when any observed literal in any argument position matches a

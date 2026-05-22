@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.95 (cycle-92) — tests for the IdentifiedArrayOf<X> /
 // IdentifiedArray<ID, X> recognition extension to

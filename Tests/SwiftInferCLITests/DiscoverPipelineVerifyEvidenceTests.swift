@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 /// V1.67 — `collectVisibleSuggestions` folds verify evidence into the
 /// grade *before* the visibility cut, so a `bothPass` outcome can lift a

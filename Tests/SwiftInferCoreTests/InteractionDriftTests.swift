@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M10 — InteractionDriftDetector + InteractionDriftWarning +
 // InteractionBaseline. Pure: no I/O. All inputs are synthetic

@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M4.E — CLI surface + pipeline tests for discover-interaction.
 // Argument parsing covers the standard flag shape; pipeline tests

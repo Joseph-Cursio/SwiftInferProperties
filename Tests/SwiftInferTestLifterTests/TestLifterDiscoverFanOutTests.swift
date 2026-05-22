@@ -1,7 +1,7 @@
 import Foundation
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 /// TestLifter M2.3 acceptance — `TestLifter.discover(in:)` fans the
 /// per-summary loop out to all three M1+M2 detectors (round-trip,

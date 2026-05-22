@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("Vocabulary — PRD §4.5 schema decode/encode")
 struct VocabularyTests {

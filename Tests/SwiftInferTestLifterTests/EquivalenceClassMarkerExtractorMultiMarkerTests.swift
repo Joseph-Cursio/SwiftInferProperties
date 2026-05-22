@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("EquivalenceClassMarkerExtractor — multi-marker scan + per-predicate ranking (M13.1)")
 struct ECMarkerExtractorMultiMarkerTests {

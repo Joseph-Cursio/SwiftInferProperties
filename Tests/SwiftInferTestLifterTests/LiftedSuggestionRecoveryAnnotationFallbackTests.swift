@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestionRecovery — M4.2 annotation-fallback tier")
 struct LiftedRecoveryAnnotationFallbackTests {

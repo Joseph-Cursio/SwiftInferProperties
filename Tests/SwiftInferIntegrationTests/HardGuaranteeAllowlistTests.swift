@@ -1,8 +1,8 @@
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD §16 #1 allowlist hard-guarantees — M6 / M7 / M8 writeout paths
 /// must never escape `Tests/Generated/SwiftInfer*/` or

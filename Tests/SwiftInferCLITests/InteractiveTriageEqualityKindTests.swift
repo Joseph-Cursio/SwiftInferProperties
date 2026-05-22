@@ -1,7 +1,7 @@
-import Testing
+@testable import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
-@testable import SwiftInferCLI
+import Testing
 
 /// V1.31.C — dispatch-table wiring from suggestion carrier type to
 /// `LiftedTestEmitter.EqualityKind`. The `liftedTestStub(for:)` accept

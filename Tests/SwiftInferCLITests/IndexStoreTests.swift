@@ -1,7 +1,7 @@
-import Testing
 import Foundation
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 /// V1.33.B — `IndexStore` JSON persistence + upsert semantics.
 @Suite("IndexStore — V1.33.B JSON persistence")

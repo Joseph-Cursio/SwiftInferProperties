@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 /// V1.32.A — `TemplatePack` enum + pack-to-templates resolver. Per-pack
 /// membership tests + cross-pack overlap assertions + `resolve` union

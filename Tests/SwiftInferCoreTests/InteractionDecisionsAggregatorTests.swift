@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V1.102 (cycle-99 calibration helper) — InteractionDecisionsAggregator.
 // Pure aggregation: no I/O.

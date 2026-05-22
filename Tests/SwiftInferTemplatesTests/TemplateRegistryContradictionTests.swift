@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("TemplateRegistry — contradiction detection (PRD §5.6)")
 struct TemplateRegistryContradictionTests {

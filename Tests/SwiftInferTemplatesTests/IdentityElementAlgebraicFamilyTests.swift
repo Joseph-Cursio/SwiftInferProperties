@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.29.B — algebraic-family-mismatch veto on IdentityElementTemplate.
 /// Closes cycle-25 finding 2: `rescaledDivide(_:_:) × Complex.zero` was

@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FunctionScanner — body signals and edge cases")
 struct FunctionScannerBodyTests {

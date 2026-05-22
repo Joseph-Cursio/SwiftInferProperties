@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("SuggestionIdentity — SHA256-derived stable hash per §7.5")
 struct SuggestionIdentityTests {

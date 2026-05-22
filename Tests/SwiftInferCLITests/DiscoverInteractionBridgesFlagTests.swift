@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.109 (cycle-103c) — tests for the --interactive-bridges flag
 // on discover-interaction: argument parsing + the flag-mutex

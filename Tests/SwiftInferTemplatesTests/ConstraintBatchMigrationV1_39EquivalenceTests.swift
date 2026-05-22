@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.39.D — equivalence tests for the v1.39 batch migration of
 /// RoundTrip + Idempotence (non-lifted + lifted) to the Constraint

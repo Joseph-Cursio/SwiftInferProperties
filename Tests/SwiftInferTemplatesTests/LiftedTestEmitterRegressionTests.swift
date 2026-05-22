@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 /// TestLifter M8.0 acceptance — `LiftedTestEmitter+Regression`'s 10
 /// regression arms emit byte-stable single-trial test stubs over a

@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 @Suite("MetricsRenderer — V1.64.D verify-evidence cross-reference")
 struct MetricsRendererVerifyEvidenceTests {

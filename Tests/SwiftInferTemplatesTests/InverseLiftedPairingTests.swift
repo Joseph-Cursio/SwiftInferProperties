@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("InverseLiftedPairing — V1.19.D mutating add/remove pairing")
 struct InverseLiftedPairingTests {

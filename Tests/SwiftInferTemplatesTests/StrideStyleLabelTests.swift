@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.22.D — stride-style label extension. Closes the cycle-14-demoted
 /// Algo `endOfChunk(startingAt:) × startOfChunk(endingAt:)` triple

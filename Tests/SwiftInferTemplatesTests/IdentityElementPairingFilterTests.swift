@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.6.1 — pair-formation skip-list filter for known cross-product
 // mismatches. Complementary to v1.5's coverage veto: v1.5 suppresses

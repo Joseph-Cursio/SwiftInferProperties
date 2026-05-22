@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.15.1 — domain-marker counter-signal on RoundTripTemplate.
 // Closes post-v1.14 priority #1: 9 OC HashTable round-trip Possible-

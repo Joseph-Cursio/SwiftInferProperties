@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedTestEmitter — mock-inferred precondition rendering (M9.2)")
 struct MockInferredPreconditionRenderingTests {

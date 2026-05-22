@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.11.1 — direction-label counter-signal on InversePairTemplate.
 // Closes cycle-8 priority #1 from

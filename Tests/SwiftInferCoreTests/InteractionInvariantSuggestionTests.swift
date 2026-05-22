@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M4.A — data-model tests for the interaction-invariant
 // suggestion shape + the InteractionInvariantFamily enum. Pure:

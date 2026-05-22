@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("GeneratorSelection — DerivationStrategy → GeneratorMetadata (M4.2)")
 struct GeneratorSelectionTests {

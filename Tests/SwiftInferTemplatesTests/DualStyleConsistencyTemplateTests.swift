@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("DualStyleConsistencyTemplate — V1.18.C signal scoring + identity")
 struct DualStyleConsistencyTemplateTests {

@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 @Suite("Discover pipeline — contradiction detection (M3.4)")
 struct DiscoverPipelineContradictionTests {

@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 M1.A — data-model tests for the ReducerCandidate value type
 // and its companion ReducerSignatureShape enum. Pure: no SwiftSyntax.

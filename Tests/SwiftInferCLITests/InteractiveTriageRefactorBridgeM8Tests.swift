@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 @Suite("InteractiveTriage — M8.6 per-arm B accept end-to-end")
 struct InteractiveTriageRefactorBridgeM8Tests {

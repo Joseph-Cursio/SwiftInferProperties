@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FunctionScanner — @Discoverable(group:) detection (M5.1)")
 struct DiscoverableAnnotationScannerTests {

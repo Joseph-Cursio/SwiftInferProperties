@@ -1,7 +1,7 @@
 import Foundation
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V2.0 M4.A — InteractionTemplateEngine namespace smoke tests.
 // The dispatch surface is in place; no per-family analyzer ships

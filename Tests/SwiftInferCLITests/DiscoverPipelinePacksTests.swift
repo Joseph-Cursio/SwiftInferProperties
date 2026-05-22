@@ -1,7 +1,7 @@
-import Testing
 import Foundation
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 /// V1.32.C — `--packs` flag + config TOML wiring. Verifies:
 ///   - CLI override beats config value

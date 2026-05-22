@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("EquivalenceClassHint — data model (M11.0)")
 struct EquivalenceClassHintTests {

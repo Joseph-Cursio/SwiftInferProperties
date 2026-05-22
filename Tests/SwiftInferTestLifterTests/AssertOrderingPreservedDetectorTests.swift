@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 private func detectMonotonicity(in source: String) -> [DetectedMonotonicity] {
     let slice = SlicerTestHelper.sliceFirstBody(in: source)

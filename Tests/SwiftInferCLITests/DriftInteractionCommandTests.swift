@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M10 — end-to-end `drift-interaction` orchestration. Builds a
 // real package-on-disk fixture so the M1 reducer-discoverer + M4

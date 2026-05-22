@@ -1,8 +1,8 @@
 import Foundation
+@testable import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
 import Testing
-@testable import SwiftInferCore
 
 // V2.0 M3.A — purity classification tests. Each test parses a
 // reducer body via SwiftParser, hands it to ReducerPurityAnalyzer,

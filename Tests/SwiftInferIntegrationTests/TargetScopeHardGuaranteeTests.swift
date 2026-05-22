@@ -1,9 +1,9 @@
 import ArgumentParser
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.4 §16 #5 hard guarantee — "SwiftInfer never operates
 /// outside the configured target. `--target` is required for

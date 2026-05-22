@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("MarkerTable — TestLifter M13.0 data model")
 struct MarkerTableTests {

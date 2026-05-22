@@ -1,6 +1,6 @@
 import PropertyLawCore
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("CarrierKindResolver — V1.18.A value-semantic carrier classifier")
 struct CarrierKindResolverTests {

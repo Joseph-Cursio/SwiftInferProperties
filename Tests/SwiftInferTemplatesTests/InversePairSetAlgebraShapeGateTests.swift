@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.14.1 — SetAlgebra-shape veto on InversePairTemplate.
 // Closes post-v1.13 priority #1: 6 OC inverse-pair survivors with

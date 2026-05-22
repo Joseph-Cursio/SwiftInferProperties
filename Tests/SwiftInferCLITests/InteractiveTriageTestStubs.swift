@@ -1,6 +1,6 @@
 import Foundation
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
 
 /// In-memory `DiscoverOutput` for `InteractiveTriageTests`. Distinct
 /// name (`Triage`-prefixed) so it doesn't collide with the file-private

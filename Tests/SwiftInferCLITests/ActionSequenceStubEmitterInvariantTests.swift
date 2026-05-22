@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M4.D — invariant-aware emission tests for
 // ActionSequenceStubEmitter. The base "ran cleanly" mode is covered

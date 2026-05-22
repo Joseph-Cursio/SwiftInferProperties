@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.104 (cycle-101a Finding C fix) — regression tests for the
 // element-type filter in ReferentialIntegrityExtractor.extract.

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V2.0 M4.C — IdempotenceInteractionTemplate tests. Pure: given
 // a candidate + witness, assert on the emitted suggestion's

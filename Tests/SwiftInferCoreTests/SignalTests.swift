@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("Signal — formattedLine bullet text (M4.4)")
 struct SignalTests {

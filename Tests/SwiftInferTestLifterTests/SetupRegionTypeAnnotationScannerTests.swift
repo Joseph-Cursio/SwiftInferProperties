@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("SetupRegionTypeAnnotationScanner (TestLifter M4.0)")
 struct SetupRegionTypeAnnotationScannerTests {

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.38.D — equivalence tests for the v1.38 batch migrations of
 /// Associativity / InvariantPreservation / DualStyleConsistency to

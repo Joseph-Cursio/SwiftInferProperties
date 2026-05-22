@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("NClassEquivalenceClassHint — TestLifter M13.2 data model")
 struct NClassEquivalenceClassHintTests {

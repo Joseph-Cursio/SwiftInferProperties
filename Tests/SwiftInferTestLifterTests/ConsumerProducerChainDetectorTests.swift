@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("ConsumerProducerChainDetector — five-criterion narrow scope (M16.1)")
 struct ConsumerProducerChainDetectorTests {

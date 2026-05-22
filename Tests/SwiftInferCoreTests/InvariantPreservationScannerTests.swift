@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FunctionScanner — @CheckProperty(.preservesInvariant(_:)) detection (M7.2)")
 struct InvariantPreservationScannerTests {

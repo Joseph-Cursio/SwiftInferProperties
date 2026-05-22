@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.32.B — `templateFilter: Set<String>?` parameter on
 /// `TemplateRegistry.discover`. Verifies the filter drops suggestions

@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.105 (cycle-102 Finding D fix) — regression tests for the
 // cardinality-overlap suppression in BiconditionalExtractor.

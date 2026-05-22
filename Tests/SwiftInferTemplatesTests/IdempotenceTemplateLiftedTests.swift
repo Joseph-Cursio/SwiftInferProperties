@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("IdempotenceTemplate — V1.19.B lift admission (no-param + x-curried)")
 struct IdempotenceTemplateLiftedTests {

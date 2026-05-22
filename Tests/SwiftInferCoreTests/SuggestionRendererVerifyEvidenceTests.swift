@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("SuggestionRenderer — V1.64.C verify-evidence annotation")
 struct SuggestionRendererVerifyEvidenceTests {

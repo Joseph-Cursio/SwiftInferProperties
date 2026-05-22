@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 // V1.72.B — disk-resident store: explicit-path + walk-up implicit
 // lookup, atomic write, and graceful handling of missing / corrupt

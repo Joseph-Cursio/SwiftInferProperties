@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.110 (cycle-103d) — tests for the accept-bridge recorder.
 // Strong-tier bridges don't fire from real source today (PRD §3.5

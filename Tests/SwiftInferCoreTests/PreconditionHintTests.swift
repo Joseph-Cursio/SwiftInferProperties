@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("PreconditionHint — data model (M9.0)")
 struct PreconditionHintTests {

@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 private func detectAsymmetric(in source: String) -> [DetectedAsymmetricAssertion] {
     let slice = SlicerTestHelper.sliceFirstBody(in: source)

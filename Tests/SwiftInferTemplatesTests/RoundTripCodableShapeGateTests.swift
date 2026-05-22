@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.8.1 — round-trip Codable encoder/decoder shape gate.
 // Split out of `ProtocolCoverageVetoPairTests.swift` for the SwiftLint

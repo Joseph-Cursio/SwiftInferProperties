@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.36.C — equivalence tests for the CommutativityTemplate migration
 /// to the Constraint Engine (PRD §20.2). Verifies that

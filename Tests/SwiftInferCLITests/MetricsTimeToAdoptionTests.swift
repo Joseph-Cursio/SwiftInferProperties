@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.71 — PRD §17.2 time-to-adoption: the gap between a suggestion
 // first being surfaced (`SemanticIndexEntry.firstSeenAt`) and the user

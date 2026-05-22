@@ -1,8 +1,8 @@
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.3 §13 performance budget integration suite.
 ///

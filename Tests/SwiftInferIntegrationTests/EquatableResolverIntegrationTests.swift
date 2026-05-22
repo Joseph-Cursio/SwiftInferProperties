@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 import SwiftInferCore
+import Testing
 
 /// PRD v0.3 §5.6 / M3.6 acceptance-bar (c) integration suite for
 /// `EquatableResolver`. Closes the bar by exercising the three-state

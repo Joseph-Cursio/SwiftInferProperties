@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("SuggestionRenderer — byte-stable output for the §4.5 block")
 struct SuggestionRendererTests {

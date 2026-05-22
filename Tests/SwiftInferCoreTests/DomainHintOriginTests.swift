@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("DomainHint.origin — provenance discriminator (M16.0)")
 struct DomainHintOriginTests {

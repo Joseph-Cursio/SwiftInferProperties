@@ -1,8 +1,8 @@
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.4 §13 row 3 — `swift-infer drift` re-run after one-file
 /// change must complete in < 500ms (incremental). The drift command

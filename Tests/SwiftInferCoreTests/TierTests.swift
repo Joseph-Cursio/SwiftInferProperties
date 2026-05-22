@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("Tier — score-to-tier boundary mapping")
 struct TierTests {

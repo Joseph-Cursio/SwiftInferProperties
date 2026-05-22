@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V1.7.1 — stdlib-conformance bake-in tests for `ProtocolCoverageMap`.
 // Split out of `ProtocolCoverageMapTests.swift` for the SwiftLint

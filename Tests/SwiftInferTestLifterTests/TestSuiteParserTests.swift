@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("TestSuiteParser — XCTest + Swift Testing recognition (M1.1)")
 struct TestSuiteParserTests {

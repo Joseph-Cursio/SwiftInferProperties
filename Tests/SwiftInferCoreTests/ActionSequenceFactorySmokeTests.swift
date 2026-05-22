@@ -1,6 +1,6 @@
-import Testing
-import PropertyLawKit
 import PropertyBased
+import PropertyLawKit
+import Testing
 
 // V2.0.M2 smoke test — pins the v2.2.0 SwiftPropertyLaws surface
 // (ActionSequenceFactory + StatefulGuard + Xoshiro re-exported via

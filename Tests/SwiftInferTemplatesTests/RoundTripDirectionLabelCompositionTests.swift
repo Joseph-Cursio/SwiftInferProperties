@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.12.1 — companion suites to RoundTripDirectionLabelCounterTests.
 // Split out per the V1.10.1 / V1.11.1 file-length precedent (the parent

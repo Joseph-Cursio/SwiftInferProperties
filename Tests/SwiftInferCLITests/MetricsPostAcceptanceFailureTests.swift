@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.72.C — PRD §17.2's 5th and final metric: post-acceptance failure
 // rate. Joins accepted decisions against post-acceptance outcomes by

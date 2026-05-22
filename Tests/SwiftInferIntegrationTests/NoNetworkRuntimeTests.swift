@@ -1,9 +1,9 @@
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
 import SwiftInferTestLifter
+import Testing
 
 /// PRD v0.4 §14 + §19 success criterion — "All §14 privacy guarantees
 /// are testable: integration test verifies no network sockets opened

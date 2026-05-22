@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.89 — `discover-interaction --update-baseline` write side.
 // Symmetric writeout for M10's drift read; the filter is Strong +

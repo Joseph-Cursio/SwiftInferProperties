@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("DualStylePairing — V1.18.C curated naming + shape match")
 struct DualStylePairingTests {

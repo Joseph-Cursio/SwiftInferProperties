@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // Finding I from kitlangton/Hex dogfood (cycle-dogfood-hex). Tests
 // the method-reference form of TCA's `Reduce(...)` — `Reduce(reduce)`

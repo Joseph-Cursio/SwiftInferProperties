@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.5.2 — protocol-coverage veto tests for the three single-summary
 // algebraic templates (idempotence / commutativity / associativity).

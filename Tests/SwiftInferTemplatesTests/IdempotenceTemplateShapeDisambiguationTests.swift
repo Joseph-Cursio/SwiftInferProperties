@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.24.D — capacity-from-scale + formatter shape-disambiguation veto
 /// on non-lifted `IdempotenceTemplate.suggest(for:)`. Direct cycle-20

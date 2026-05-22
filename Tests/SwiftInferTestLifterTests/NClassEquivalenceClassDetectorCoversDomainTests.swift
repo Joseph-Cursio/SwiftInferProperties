@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("NClassEquivalenceClassDetector — coversDomain via same-target enum (M14.1)")
 struct NClassDetectorCoversDomainTests {

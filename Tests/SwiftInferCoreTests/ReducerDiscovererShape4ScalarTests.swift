@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V1.92 (cycle-89) — tests for the M1.A 4th-shape extension
 // (`(inout S, A) -> Effect<A>`) + the two-scalar false-positive

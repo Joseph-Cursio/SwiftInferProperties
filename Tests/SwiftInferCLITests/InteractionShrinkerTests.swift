@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 // V2.0 M8.D.3 — binary-search shrinker correctness. Pure: every
 // test injects a synthetic `Runner` whose closure returns a fixed

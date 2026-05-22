@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.42.C.5 — implicit reindex on demand. `IndexCommand.performIndex`
 // is the discover → project → upsert → save pipeline hoisted into a

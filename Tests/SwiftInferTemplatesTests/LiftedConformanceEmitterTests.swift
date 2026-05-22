@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedConformanceEmitter — semigroup + monoid arms (M7.4 + M7.5.a)")
 struct LiftedConformanceEmitterTests {

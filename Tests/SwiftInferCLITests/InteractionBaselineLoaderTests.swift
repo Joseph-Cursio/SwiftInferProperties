@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M10 — InteractionBaselineLoader (explicit path / implicit
 // walk-up / write round-trip). Mirrors v1's BaselineLoader test

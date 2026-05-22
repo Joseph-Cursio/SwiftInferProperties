@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("TemplateRegistry — GeneratorSelection (M4.2)")
 struct TemplateRegistryGeneratorTests {

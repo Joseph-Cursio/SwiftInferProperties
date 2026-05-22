@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V2.0 M4.B — ConservationWitnessDetector tests. Pure: parse a
 // source snippet, look for a State type, assert on the resulting

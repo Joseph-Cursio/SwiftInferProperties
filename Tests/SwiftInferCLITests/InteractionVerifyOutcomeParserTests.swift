@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M3.E.3 — outcome-parser tests. Pure: no subprocess, no I/O.
 // Each test feeds hand-crafted stdout + an exit code and asserts

@@ -1,7 +1,7 @@
 import SwiftInferCore
 import SwiftInferTemplates
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestion + cross-validation-key parity (M1.4)")
 struct LiftedSuggestionTests {

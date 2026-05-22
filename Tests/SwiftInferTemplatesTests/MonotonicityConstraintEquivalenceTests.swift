@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.37.B — equivalence tests for the MonotonicityTemplate migration
 /// to the Constraint Engine (PRD §20.2). Verifies that

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("InvariantPreservationTemplate — annotation-only firing, Strong tier")
 struct InvariantPreservationTemplateTests {

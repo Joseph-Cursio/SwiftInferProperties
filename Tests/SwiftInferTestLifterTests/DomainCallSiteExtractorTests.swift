@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("DomainCallSiteExtractor — consumer call-site classification (M10.1)")
 struct DomainCallSiteExtractorTests {

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("ConsumerProducerChainDetector — producer veto + edge cases (M16.1)")
 struct ConsumerProducerChainDetectorVetoTests {

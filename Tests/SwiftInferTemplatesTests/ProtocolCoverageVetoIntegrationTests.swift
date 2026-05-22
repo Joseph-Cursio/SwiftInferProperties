@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.5.2 — protocol-coverage veto end-to-end integration tests.
 // Per-template behavioural tests live in `ProtocolCoverageVetoTests.swift`

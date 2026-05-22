@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V2.0 M6 — ReferentialIntegrityWitnessDetector tests. Pure: parse
 // a source snippet, assert on detected witnesses.

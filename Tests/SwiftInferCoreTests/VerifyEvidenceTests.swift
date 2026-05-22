@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("VerifyEvidence — data model + Codable round-trip (V1.64.A schema v1)")
 struct VerifyEvidenceTests {

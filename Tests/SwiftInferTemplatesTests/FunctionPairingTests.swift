@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("FunctionPairing — module-scope type filter for cross-function templates")
 struct FunctionPairingTests {

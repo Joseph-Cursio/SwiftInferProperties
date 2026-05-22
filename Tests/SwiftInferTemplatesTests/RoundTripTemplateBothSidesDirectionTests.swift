@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.22.B — both-sides direction-label full-veto extension on V1.12.1's
 /// `RoundTripTemplate.directionLabelCounterSignal(for:)`. Direct cycle-18

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("EquivalenceClassMarkerExtractor — N-class classify + aggregation (M13.2)")
 struct ECMarkerExtractorNClassTests {

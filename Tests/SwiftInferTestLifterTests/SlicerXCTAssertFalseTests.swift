@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 /// TestLifter M11.0 — `XCTAssertFalse` first-class recognition. Per M11
 /// plan OD #2, the slicer routes `XCTAssertFalse` to the new

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedTestEmitter — M8.2 algebraic-structure arms")
 struct LiftedTestEmitterM8Tests {

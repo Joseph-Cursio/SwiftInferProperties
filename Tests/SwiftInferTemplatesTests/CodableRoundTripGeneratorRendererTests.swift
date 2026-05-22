@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("CodableRoundTripGeneratorRenderer — body-string shape (M5.4)")
 struct CodableRoundTripGeneratorRendererTests {

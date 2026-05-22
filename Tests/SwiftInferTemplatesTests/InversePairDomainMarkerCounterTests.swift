@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.15.1 — domain-marker counter-signal on InversePairTemplate.
 // Defensive scaffold: post-v1.14 OC inverse-pair surface is at 0

@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.21.C — math-library forward-function veto on non-lifted
 /// idempotence. Cycle-17 V1.20.C picks #18, #19, #20 measured 0/3 = 0%

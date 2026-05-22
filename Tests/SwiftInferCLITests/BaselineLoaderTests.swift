@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 @Suite("BaselineLoader — explicit path + walk-up implicit lookup + atomic write (M6.2)")
 struct BaselineLoaderTests {

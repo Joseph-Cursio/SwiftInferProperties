@@ -1,7 +1,7 @@
-import Testing
 import Foundation
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 /// V1.35.A — `RefactorClusterAnalyzer` classification + ordering tests.
 @Suite("RefactorClusterAnalyzer — V1.35.A classification + ordering")

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("InversePairTemplate — non-Equatable inverse, Possible-tier (M8.1)")
 struct InversePairTemplateTests {

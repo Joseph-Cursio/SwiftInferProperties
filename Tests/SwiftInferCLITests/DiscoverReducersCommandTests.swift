@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M1.A — CLI surface tests for DiscoverReducers. The pipeline
 // path is integration-tested via `runPipeline(directory:)` against a

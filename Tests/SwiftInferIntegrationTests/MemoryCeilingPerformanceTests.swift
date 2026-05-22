@@ -1,8 +1,8 @@
 import Darwin
 import Foundation
-import Testing
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD §13 row 4 — `swift-infer discover` against a 500-file module
 /// must stay under the calibrated memory budget. The row had no

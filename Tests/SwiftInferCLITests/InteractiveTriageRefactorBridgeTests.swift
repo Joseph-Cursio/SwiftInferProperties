@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 @Suite("InteractiveTriage — RefactorBridge prompt + readChoice (M7.5c + M8.4.b.1)")
 struct InteractiveTriageBridgePromptTests {

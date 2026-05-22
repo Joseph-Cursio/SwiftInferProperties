@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("LiftedTestEmitter — M5.5 lifted-only arms (countInvariance, reduceEquivalence)")
 struct LiftedTestEmitterM5Tests {

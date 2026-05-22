@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 @Suite("ConfigLoader — explicit path + walk-up implicit lookup per PRD §5.8 (M2)")
 struct ConfigLoaderTests {

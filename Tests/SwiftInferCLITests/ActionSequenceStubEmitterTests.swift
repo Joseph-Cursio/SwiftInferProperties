@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M3.B — ActionSequenceStubEmitter assertions. Pure text
 // emission: no subprocess, no disk I/O. Tests pin the structural

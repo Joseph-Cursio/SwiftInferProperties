@@ -1,8 +1,8 @@
 import Foundation
-import Testing
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.3 §16 hard-guarantee integration suite — §16 #1 no-modification,
 /// §16 #6 byte-identical reproducibility, §14 no-telemetry/no-network

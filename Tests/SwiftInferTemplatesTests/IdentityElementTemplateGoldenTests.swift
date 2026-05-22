@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("IdentityElementTemplate — golden render")
 struct IdentityElementTemplateGoldenTests {

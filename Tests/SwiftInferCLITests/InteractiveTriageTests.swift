@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 @Suite("InteractiveTriage — empty/already-decided + accept paths (M6.4)")
 struct InteractiveTriageAcceptTests {

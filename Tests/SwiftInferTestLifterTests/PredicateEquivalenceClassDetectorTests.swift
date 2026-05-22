@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("PredicateEquivalenceClassDetector — threshold + veto (M11.1)")
 struct PredicateEquivalenceClassDetectorTests {

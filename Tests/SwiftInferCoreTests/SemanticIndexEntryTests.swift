@@ -1,6 +1,6 @@
-import Testing
 import Foundation
 @testable import SwiftInferCore
+import Testing
 
 /// V1.33.A — `SemanticIndexEntry` data model tests. Round-trip JSON,
 /// upsert `updated(from:)` semantics, identity-hash key equality.

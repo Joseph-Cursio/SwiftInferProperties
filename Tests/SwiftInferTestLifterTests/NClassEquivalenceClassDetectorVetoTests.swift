@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("NClassEquivalenceClassDetector — predicate-shape veto (M13.2)")
 struct NClassEquivalenceClassDetectorVetoTests {

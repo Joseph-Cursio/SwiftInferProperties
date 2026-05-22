@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("SetupRegionConstructionScanner (TestLifter M4.1)")
 struct SetupRegionConstructionScannerTests {

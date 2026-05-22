@@ -1,5 +1,5 @@
-import Testing
 import SwiftInferCore
+import Testing
 
 // V1.16.1 — Tests for the hoisted SetAlgebraShape.isSelfTypedBinaryOp(_:)
 // helper. Hoisted from InversePairSetAlgebraShapeGate.swift's private

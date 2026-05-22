@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 /// TestLifter M15.1 — float / double pattern detection. Closes the
 /// M9 plan OD #1 deferral; mirrors the integer-pattern coverage shape

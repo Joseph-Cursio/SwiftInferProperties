@@ -1,7 +1,7 @@
 import ArgumentParser
 import Foundation
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 /// V1.42.B — `swift-infer verify` subcommand surface tests.
 ///

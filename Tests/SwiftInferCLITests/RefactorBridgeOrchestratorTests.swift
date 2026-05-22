@@ -1,8 +1,8 @@
 import Foundation
-import Testing
+@testable import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
-@testable import SwiftInferCLI
+import Testing
 
 @Suite("RefactorBridgeOrchestrator — single-arm + per-type aggregation (M7.5b)")
 struct RefactorBridgeOrchestratorTests {

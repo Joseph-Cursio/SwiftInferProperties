@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("MathForwardFunctions — V1.21.C curated set + canonical-inverse-pair allowlist")
 struct MathForwardFunctionsTests {

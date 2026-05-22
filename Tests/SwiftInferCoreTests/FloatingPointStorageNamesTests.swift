@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FloatingPointStorageNames — V1.4.3 curated FP-storage list")
 struct FloatingPointStorageNamesTests {

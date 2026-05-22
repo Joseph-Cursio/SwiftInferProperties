@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 /// V1.31.A — curated set + detector for FP-equatable types. Drives the
 /// `LiftedTestEmitter` `EqualityKind` dispatch (V1.31.B).

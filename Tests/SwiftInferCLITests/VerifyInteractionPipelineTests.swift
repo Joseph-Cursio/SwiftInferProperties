@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M3.C — pipeline orchestration tests. The candidate-resolution
 // path (pin parsing + filtering) is unit-tested in isolation; the

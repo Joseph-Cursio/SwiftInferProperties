@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("MockGeneratorSynthesizer (TestLifter M4.3)")
 struct MockGeneratorSynthesizerTests {

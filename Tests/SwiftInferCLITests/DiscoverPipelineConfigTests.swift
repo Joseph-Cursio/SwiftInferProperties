@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 @Suite("Discover pipeline — config integration (M2.2) + commutativity (M2.3)")
 struct DiscoverPipelineConfigTests {

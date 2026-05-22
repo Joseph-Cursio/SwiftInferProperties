@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.12.1 — direction-label counter-signal on RoundTripTemplate.
 // Closes cycle-9 priority #1 from

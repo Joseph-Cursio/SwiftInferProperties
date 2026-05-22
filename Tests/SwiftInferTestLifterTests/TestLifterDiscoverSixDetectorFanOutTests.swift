@@ -1,7 +1,7 @@
 import Foundation
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 /// TestLifter M5.5 acceptance — `TestLifter.discover(in:)` fans the
 /// per-summary loop out to all six detectors (round-trip + idempotence

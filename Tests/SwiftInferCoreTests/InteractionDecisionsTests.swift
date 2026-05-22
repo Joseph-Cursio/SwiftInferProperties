@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V2.0 accept-check follow-up — InteractionDecisions data model.
 // Pure: no I/O.

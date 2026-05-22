@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 import SwiftInferCore
 import SwiftInferTemplates
+import Testing
 
 /// PRD v0.4 §16 #4 hard guarantee — "SwiftInfer never emits silently-
 /// wrong code. When generator inference fails, the stub is emitted

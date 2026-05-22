@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 // V1.93 (cycle-90) — tests for M1.D `@Reducer` macro recognition.
 // Sibling to ReducerDiscovererTCATests (M1.B inheritance-clause

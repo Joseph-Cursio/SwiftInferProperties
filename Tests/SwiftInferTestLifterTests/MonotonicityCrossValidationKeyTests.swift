@@ -1,7 +1,7 @@
 import SwiftInferCore
 import SwiftInferTemplates
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestion.monotonicity — cross-validation-key parity (M5.0)")
 struct MonotonicityCrossValidationKeyTests {

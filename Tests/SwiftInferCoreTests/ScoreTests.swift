@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("Score — signal aggregation and veto handling")
 struct ScoreTests {

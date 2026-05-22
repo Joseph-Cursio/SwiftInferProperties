@@ -1,8 +1,8 @@
 import Foundation
-import Testing
+@testable import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
-@testable import SwiftInferCLI
+import Testing
 
 @Suite("RefactorBridgeOrchestrator — M8.4.b.1 SetAlgebra secondary")
 struct RefactorBridgeSetAlgebraTests {

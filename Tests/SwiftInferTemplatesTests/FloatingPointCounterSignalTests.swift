@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("FP storage counter-signal — V1.4.3 calibration tuning")
 struct FloatingPointCounterSignalTests {

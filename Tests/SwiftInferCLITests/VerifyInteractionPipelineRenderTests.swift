@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M3.E — render-side tests for VerifyInteractionPipeline:
 // outcome rendering + workdir-segment filename safety. Split out

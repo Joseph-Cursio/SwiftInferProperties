@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 /// V1.68 — `Discover.run`-level integration coverage for the verify
 /// evidence wiring. `DiscoverPipelineVerifyEvidenceTests` exercises the

@@ -1,7 +1,7 @@
-import Testing
+@testable import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTestLifter
-@testable import SwiftInferCLI
+import Testing
 
 @Suite("LiftedSuggestionPipeline — M16.2 consumer-producer chain advisory wiring")
 struct ConsumerProducerChainPipelineTests {

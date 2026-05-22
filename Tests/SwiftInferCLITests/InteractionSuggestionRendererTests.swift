@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 M4.E — InteractionSuggestionRenderer tests. Pure: take a
 // hand-built suggestion list, assert on the rendered string shape.

@@ -1,8 +1,8 @@
+@testable import SwiftInferCore
+@testable import SwiftInferMacroImpl
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import Testing
-@testable import SwiftInferCore
-@testable import SwiftInferMacroImpl
 
 @Suite("@CheckProperty macro — diagnostics (M5.2 + M5.3 + M7.2.a)")
 struct CheckPropertyMacroDiagnosticsTests {

@@ -1,7 +1,7 @@
-import Testing
+@testable import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTestLifter
-@testable import SwiftInferCLI
+import Testing
 
 @Suite("LiftedSuggestionPipeline — M10.3 domain inference pass")
 struct DomainInferencePipelineTests {

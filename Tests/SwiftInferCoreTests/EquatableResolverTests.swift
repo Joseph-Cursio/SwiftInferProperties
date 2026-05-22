@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("EquatableResolver — three-valued textual classifier (M3.3)")
 struct EquatableResolverTests {

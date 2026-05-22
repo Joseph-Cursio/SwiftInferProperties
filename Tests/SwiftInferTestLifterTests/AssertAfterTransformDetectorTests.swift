@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("AssertAfterTransformDetector — explicit + collapsed round-trip (M1.3)")
 struct AssertAfterTransformDetectorTests {

@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("Round-trip cross-type counter-signal — V1.4.3b calibration tuning")
 struct CrossTypeRoundTripTests {

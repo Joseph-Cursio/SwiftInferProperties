@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestion → Suggestion promotion (M3.0)")
 struct LiftedSuggestionPromotionTests {

@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("TypeDecl.enumCaseNames — case-extraction shapes (M14.0)")
 struct TypeDeclEnumCaseTests {

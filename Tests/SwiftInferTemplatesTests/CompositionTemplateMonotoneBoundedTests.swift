@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.21.B / **V1.29.C** — monotone-bounded label gate on
 /// `CompositionTemplate`. Labels like `until:`, `to:`, `at:` signal

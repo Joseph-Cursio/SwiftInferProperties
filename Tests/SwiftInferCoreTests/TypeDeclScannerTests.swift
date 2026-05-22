@@ -1,7 +1,7 @@
 import Foundation
 import PropertyLawCore
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FunctionScanner.scanCorpus — type-decl emission (M3.2)")
 struct TypeDeclScannerBasicsTests {

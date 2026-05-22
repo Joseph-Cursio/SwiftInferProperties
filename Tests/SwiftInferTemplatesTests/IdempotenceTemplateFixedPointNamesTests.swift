@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.22.C — fixed-point-name positive signal on non-lifted
 /// idempotence. **First recall-positive signal in the post-V1.4.3

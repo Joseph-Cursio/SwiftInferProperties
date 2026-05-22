@@ -1,7 +1,7 @@
 import SwiftInferCore
 import SwiftInferTemplates
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestion.commutativity — cross-validation-key parity (M2.3)")
 struct CommutativityCrossValidationKeyTests {

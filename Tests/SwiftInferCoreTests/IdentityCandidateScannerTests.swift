@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("FunctionScanner.scanCorpus — identity candidate detection")
 struct IdentityCandidateScannerTests {

@@ -1,5 +1,5 @@
-import Testing
 import PropertyLawCore
+import Testing
 
 @Suite("PropertyLawCore dep wiring — M3.1 smoke test")
 struct DerivationStrategistSmokeTests {

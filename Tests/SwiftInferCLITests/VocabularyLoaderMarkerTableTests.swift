@@ -1,7 +1,7 @@
 import Foundation
-import Testing
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 @Suite("VocabularyLoader — markerPairs / markerSets JSON round-trip (TestLifter M13.0)")
 struct VocabularyLoaderMarkerTableTests {

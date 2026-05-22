@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 @Suite("VerifyEvidenceScoring — verify-as-signal post-pass (V1.66.A)")
 struct VerifyEvidenceScoringTests {

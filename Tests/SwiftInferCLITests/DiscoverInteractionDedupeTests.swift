@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.107 (cycle-103 Finding F fix) — regression tests for the
 // candidate-dedupe-by-state-action helper in DiscoverInteraction.

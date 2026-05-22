@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.98 (cycle-95) — tests for InteractionInteractiveTriage: the
 // per-suggestion `[A/C/s/n/?]` prompt-loop that walks a user

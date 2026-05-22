@@ -1,7 +1,7 @@
-import Testing
 import Foundation
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
+import Testing
 
 /// V1.33.D — `swift-infer query` subcommand filter + render tests.
 @Suite("QueryCommand — V1.33.D filter + render")

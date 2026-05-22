@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("IdentityElementTemplate — V1.19.C lift admission (op'(s, e) == s)")
 struct IdentityElementTemplateLiftedTests {

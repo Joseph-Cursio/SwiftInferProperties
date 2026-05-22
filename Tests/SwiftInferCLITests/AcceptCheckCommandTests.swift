@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V1.72.A — pure-function tests for the `AcceptCheck` skeleton:
 // the verify-outcome classifier, the accepted-records filter, and the

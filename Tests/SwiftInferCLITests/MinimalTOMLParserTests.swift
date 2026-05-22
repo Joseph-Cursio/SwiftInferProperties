@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 @Suite("MinimalTOMLParser — section + key=value subset for .swiftinfer/config.toml")
 struct MinimalTOMLParserTests {

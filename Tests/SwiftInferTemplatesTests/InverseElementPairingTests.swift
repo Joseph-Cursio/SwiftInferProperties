@@ -1,6 +1,6 @@
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 @Suite("InverseElementPairing — type + curated-name pre-filter (M8.3)")
 struct InverseElementPairingTests {

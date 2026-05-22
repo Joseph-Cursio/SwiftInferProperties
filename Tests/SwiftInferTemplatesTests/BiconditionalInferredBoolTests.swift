@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 // V1.97 (cycle-94) — tests for the inferred-Bool-from-literal-initializer
 // extension to BiconditionalWitnessDetector. Sibling to the M7 suite

@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.24.B — explicit non-idempotent mutator-name veto on idempotence-
 /// lifted. Direct cycle-20 finding closure (V1.20.C 4/4 reject on OC

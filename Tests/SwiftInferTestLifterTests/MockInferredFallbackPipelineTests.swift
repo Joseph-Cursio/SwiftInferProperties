@@ -1,8 +1,8 @@
-import SwiftInferCore
 import SwiftInferCLI
+import SwiftInferCore
 import SwiftInferTemplates
-import Testing
 @testable import SwiftInferTestLifter
+import Testing
 
 @Suite("LiftedSuggestionPipeline — M4.3 mock-inferred fallback")
 struct MockInferredFallbackPipelineTests {

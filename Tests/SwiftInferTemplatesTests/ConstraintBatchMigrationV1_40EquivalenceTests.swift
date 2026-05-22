@@ -1,7 +1,7 @@
 import PropertyLawCore
-import Testing
 import SwiftInferCore
 @testable import SwiftInferTemplates
+import Testing
 
 /// V1.40.F — equivalence tests for the v1.40 batch migration of the
 /// last 5 templates (InversePair non-lifted + lifted, IdentityElement

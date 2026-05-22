@@ -1,7 +1,7 @@
 import Foundation
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
-@testable import SwiftInferCLI
 
 // V2.0 accept-check follow-up — accept-check-interaction subcommand.
 // Tests focus on the classification logic + the no-accepted-decisions
