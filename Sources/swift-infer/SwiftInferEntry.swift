@@ -4,7 +4,7 @@ import SwiftInferCLI
 /// lives in `SwiftInferCLI`'s `SwiftInferCommand` so the surface stays
 /// reachable from tests without launching a subprocess.
 @main
-struct SwiftInferEntry {
+enum SwiftInferEntry {
     static func main() async {
         await SwiftInferCommand.main()
     }
