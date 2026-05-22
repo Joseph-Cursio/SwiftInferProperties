@@ -279,5 +279,4 @@ public struct CheckPropertyMacro: PeerMacro {
     ) -> String {
         "checkProperty.preservesInvariant|\(funcName)|\(keyPath)|(\(paramType))->\(returnType)"
     }
-
 }

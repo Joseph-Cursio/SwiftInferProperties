@@ -145,5 +145,4 @@ struct BiconditionalInferredBoolTests {
         let boolNames = Set(witnesses.map(\.boolPropertyName))
         #expect(boolNames == ["isLoading", "isShowing"])
     }
-
 }

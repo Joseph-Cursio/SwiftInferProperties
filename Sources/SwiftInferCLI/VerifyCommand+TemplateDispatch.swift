@@ -349,5 +349,4 @@ extension SwiftInferCommand.Verify {
         )
         return VerifyStubBundle(source: source, rendererContext: context)
     }
-
 }

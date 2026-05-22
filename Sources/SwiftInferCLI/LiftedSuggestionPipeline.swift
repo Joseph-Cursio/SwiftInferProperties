@@ -277,5 +277,4 @@ public enum LiftedSuggestionPipeline {
             carrier: suggestion.carrier
         )
     }
-
 }

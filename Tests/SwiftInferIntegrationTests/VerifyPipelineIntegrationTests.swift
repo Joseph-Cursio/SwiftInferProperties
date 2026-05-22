@@ -121,5 +121,4 @@ struct VerifyPipelineIntegrationTests {
             Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
         }
     }
-
 }

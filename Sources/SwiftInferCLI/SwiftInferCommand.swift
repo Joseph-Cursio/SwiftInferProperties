@@ -345,7 +345,6 @@ extension SwiftInferCommand {
             )
             try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
         }
-
     }
 }
 

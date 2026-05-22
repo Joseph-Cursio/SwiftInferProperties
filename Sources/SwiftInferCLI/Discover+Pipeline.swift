@@ -360,5 +360,4 @@ extension SwiftInferCommand.Discover {
         }
         return resolved
     }
-
 }

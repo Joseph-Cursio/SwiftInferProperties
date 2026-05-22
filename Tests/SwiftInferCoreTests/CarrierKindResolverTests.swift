@@ -300,7 +300,6 @@ struct CarrierKindResolverTests {
         // collision with the T1/U2 generic-parameter heuristic.)
         #expect(resolver.classify(typeName: "Layer1") == .unknown)
     }
-
 }
 
 @Suite("CarrierKindResolver — V1.18.A signal factory + helpers")

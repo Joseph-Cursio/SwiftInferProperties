@@ -211,7 +211,6 @@ struct LiftedTransformationTests {
         ))
         #expect(lifted.rationale.contains("Counter.absorb(_:)"))
     }
-
 }
 
 @Suite("LiftedTransformation — V1.19.A corpus-wide derive() + signal kind")

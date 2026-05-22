@@ -158,7 +158,6 @@ struct LiftedTestEmitterTests {
         #expect(idempotentSource.contains("transform_isIdempotent"))
         #expect(roundTripSource.contains("transform_untransform_roundTrip"))
     }
-
 }
 
 @Suite("LiftedTestEmitter — M7.3 arms (monotonic, invariantPreserving)")

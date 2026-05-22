@@ -106,7 +106,6 @@ struct DriftCommandTests {
         let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
         #expect(!FileManager.default.fileExists(atPath: baselinePath.path))
     }
-
 }
 
 // MARK: - swift-infer drift
@@ -297,7 +296,6 @@ struct DriftDetectionTests {
         #expect(driftLine.contains(" for normalize(_:) at "))
         #expect(driftLine.hasSuffix(":2 — idempotence (no recorded decision)"))
     }
-
 }
 
 // MARK: - Shared fixture helpers (file-private free functions so both

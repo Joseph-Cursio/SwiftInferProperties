@@ -207,7 +207,6 @@ struct AcceptBridgeCommandTests {
         #expect(parsed.peer == 2)
         #expect(parsed.decisions == "/tmp/foo.json")
     }
-
 }
 
 final class ABRecordingOutput: DiscoverOutput, @unchecked Sendable {

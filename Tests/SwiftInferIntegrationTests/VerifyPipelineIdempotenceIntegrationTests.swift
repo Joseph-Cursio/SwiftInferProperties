@@ -70,5 +70,4 @@ struct VerifyPipelineIdempotenceTests {
             Issue.record("expected .bothPass; got \(outcome)")
         }
     }
-
 }

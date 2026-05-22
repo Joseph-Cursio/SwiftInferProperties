@@ -148,7 +148,6 @@ struct OrderingPreservedXCTestTests {
         let detections = detectMonotonicity(in: source)
         #expect(detections.isEmpty)
     }
-
 }
 
 @Suite("AssertOrderingPreservedDetector — Swift Testing two-#expect (M5.1)")

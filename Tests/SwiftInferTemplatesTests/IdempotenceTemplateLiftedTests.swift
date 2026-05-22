@@ -171,5 +171,4 @@ struct IdempotenceTemplateLiftedTests {
             carrierKindResolver: resolver
         ) == nil)
     }
-
 }

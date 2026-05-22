@@ -129,5 +129,4 @@ struct VerifyPipelineCommAssocIntegrationTests {
             Issue.record("expected .bothPass; got \(outcome)")
         }
     }
-
 }

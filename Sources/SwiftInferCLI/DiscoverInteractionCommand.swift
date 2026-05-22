@@ -331,7 +331,6 @@ extension SwiftInferCommand {
             }
             return matched
         }
-
     }
 }
 

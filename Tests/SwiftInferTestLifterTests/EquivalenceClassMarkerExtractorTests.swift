@@ -202,5 +202,4 @@ struct EquivalenceClassMarkerExtractorTests {
         )
         #expect(result == .matched(predicateName: "isValid", polarity: .positive))
     }
-
 }
