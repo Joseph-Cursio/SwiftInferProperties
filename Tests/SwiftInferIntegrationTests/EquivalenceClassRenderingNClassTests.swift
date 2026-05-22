@@ -310,11 +310,11 @@ struct EquivalenceClassRenderingNClassTests {
 // MARK: - Test doubles
 
 private struct SilentNCDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }
 
 private final class SilentNCDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }
 
 private final class RecordingNCOutput: DiscoverOutput, @unchecked Sendable {

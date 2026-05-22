@@ -77,7 +77,7 @@ extension SwiftInferCommand {
         )
         public var packageRoot: String?
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async throws {
             let args = ConvertCounterexampleEngine.Args(

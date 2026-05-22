@@ -261,5 +261,5 @@ struct TestLifterCounterSignalLiftedFilterTests {
 }
 
 private struct SilentCounterSignalDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

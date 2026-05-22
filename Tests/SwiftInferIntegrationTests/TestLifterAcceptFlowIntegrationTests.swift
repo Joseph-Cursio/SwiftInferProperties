@@ -175,11 +175,11 @@ struct TestLifterAcceptFlowIntegrationTests {
 // MARK: - Test doubles
 
 private struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }
 
 private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }
 
 private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {

@@ -101,5 +101,5 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
 }
 
 private struct SilentLiftedOnlyDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

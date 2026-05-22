@@ -227,5 +227,5 @@ struct TestLifterStreamEntryTests {
 /// warning stream from ConfigLoader / VocabularyLoader because the
 /// fixture directories don't carry config files.
 private struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

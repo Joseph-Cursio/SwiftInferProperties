@@ -54,7 +54,7 @@ extension SwiftInferCommand {
         )
         public var config: String?
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async throws {
             let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)

@@ -112,5 +112,5 @@ struct TestLifterCountInvarianceCrossValTests {
 }
 
 private struct SilentCountInvarianceDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

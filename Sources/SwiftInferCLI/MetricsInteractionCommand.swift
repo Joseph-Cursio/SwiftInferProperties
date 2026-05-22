@@ -54,7 +54,7 @@ extension SwiftInferCommand {
         )
         public var format: String = "markdown"
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async throws {
             let parsedFormat = try parseFormat(format)

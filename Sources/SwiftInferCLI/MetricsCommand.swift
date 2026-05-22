@@ -78,7 +78,7 @@ extension SwiftInferCommand {
         )
         public var decisions: [String] = []
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async {
             let aggregate = Self.loadAggregate(

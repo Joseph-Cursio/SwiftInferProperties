@@ -44,7 +44,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         defaultSubcommand: Discover.self
     )
 
-    public init() {}
+    public init() { /* no-op */ }
 }
 
 extension SwiftInferCommand {
@@ -173,7 +173,7 @@ extension SwiftInferCommand {
         )
         public var testDir: String?
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async throws {
             let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
@@ -367,7 +367,7 @@ public protocol DiscoverOutput {
 }
 
 public struct PrintOutput: DiscoverOutput {
-    public init() {}
+    public init() { /* no-op */ }
     public func write(_ text: String) {
         print(text)
     }
@@ -383,7 +383,7 @@ public protocol DiagnosticOutput {
 }
 
 public struct PrintDiagnosticOutput: DiagnosticOutput {
-    public init() {}
+    public init() { /* no-op */ }
     public func writeDiagnostic(_ text: String) {
         FileHandle.standardError.write(Data((text + "\n").utf8))
     }

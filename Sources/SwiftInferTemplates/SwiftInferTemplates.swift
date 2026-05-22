@@ -63,7 +63,7 @@ public enum TemplateRegistry {
         identities: [IdentityCandidate] = [],
         typeDecls: [TypeDecl] = [],
         vocabulary: Vocabulary = .empty,
-        diagnostic: (String) -> Void = { _ in },
+        diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil
@@ -173,7 +173,7 @@ public enum TemplateRegistry {
     public static func discover(
         in directory: URL,
         vocabulary: Vocabulary = .empty,
-        diagnostic: (String) -> Void = { _ in },
+        diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil
@@ -235,7 +235,7 @@ public enum TemplateRegistry {
     public static func discoverArtifacts(
         in directory: URL,
         vocabulary: Vocabulary = .empty,
-        diagnostic: (String) -> Void = { _ in },
+        diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil

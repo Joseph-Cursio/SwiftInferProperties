@@ -92,7 +92,7 @@ extension SwiftInferCommand {
         )
         public var indexPath: String?
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)

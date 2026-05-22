@@ -123,9 +123,9 @@ struct DriftIncrementalPerformanceTests {
 // MARK: - Silent stubs
 
 private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) {}
+    func write(_: String) { /* no-op */ }
 }
 
 private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

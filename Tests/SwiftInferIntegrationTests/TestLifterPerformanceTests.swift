@@ -274,5 +274,5 @@ struct TestLifterPerformanceTests {
 /// fixtures would surface, since they're unrelated to perf
 /// measurement.
 private struct SilentPerfDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

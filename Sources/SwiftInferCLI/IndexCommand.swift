@@ -138,7 +138,7 @@ extension SwiftInferCommand {
         )
         public var dryRun: Bool = false
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async throws {
             let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)

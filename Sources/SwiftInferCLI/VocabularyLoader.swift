@@ -116,7 +116,7 @@ public protocol FileSystemReader: Sendable {
 }
 
 public struct DefaultFileSystemReader: FileSystemReader {
-    public init() {}
+    public init() { /* no-op */ }
 
     public func fileExists(atPath path: String) -> Bool {
         FileManager.default.fileExists(atPath: path)

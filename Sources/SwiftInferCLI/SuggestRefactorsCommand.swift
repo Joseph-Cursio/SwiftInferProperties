@@ -68,7 +68,7 @@ extension SwiftInferCommand {
         )
         public var limit: Int?
 
-        public init() {}
+        public init() { /* no-op */ }
 
         public func run() async {
             let result = Self.runSuggestRefactors(

@@ -176,15 +176,15 @@ private final class NetworkInterceptor: URLProtocol {
         client?.urlProtocol(self, didFailWithError: URLError(.cancelled))
     }
 
-    override func stopLoading() {}
+    override func stopLoading() { /* no-op */ }
 }
 
 // MARK: - Silent stubs
 
 private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) {}
+    func write(_: String) { /* no-op */ }
 }
 
 private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }

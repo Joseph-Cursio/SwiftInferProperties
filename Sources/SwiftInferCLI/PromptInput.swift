@@ -18,7 +18,7 @@ public protocol PromptInput: Sendable {
 /// Quoted spelling (`Swift.readLine()`) avoids the recursive
 /// shadowing that would happen if the method were just `readLine()`.
 public struct StdinPromptInput: PromptInput {
-    public init() {}
+    public init() { /* no-op */ }
     public func readLine() -> String? {
         Swift.readLine()
     }

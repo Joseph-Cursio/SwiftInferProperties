@@ -253,11 +253,11 @@ let kPackageSourcesRoot: URL = {
 // MARK: - Silent stubs for hard-guarantee tests
 
 final class HGSilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) {}
+    func write(_: String) { /* no-op */ }
 }
 
 final class HGSilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }
 
 final class HGScriptedPromptInput: PromptInput, @unchecked Sendable {

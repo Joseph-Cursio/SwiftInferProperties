@@ -108,5 +108,5 @@ struct TestLifterMonotonicityCrossValTests {
 }
 
 private struct SilentMonotonicityDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) {}
+    func writeDiagnostic(_: String) { /* no-op */ }
 }
