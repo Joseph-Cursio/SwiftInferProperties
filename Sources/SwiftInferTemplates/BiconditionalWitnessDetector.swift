@@ -70,8 +70,8 @@ public enum BiconditionalWitnessDetector {
         override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                witnesses.append(contentsOf:
-                    BiconditionalExtractor.extract(from: node.memberBlock)
+                witnesses.append(
+                    contentsOf: BiconditionalExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren
@@ -81,8 +81,8 @@ public enum BiconditionalWitnessDetector {
         override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                witnesses.append(contentsOf:
-                    BiconditionalExtractor.extract(from: node.memberBlock)
+                witnesses.append(
+                    contentsOf: BiconditionalExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren

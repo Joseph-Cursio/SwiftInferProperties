@@ -144,8 +144,8 @@ public enum IdempotenceWitnessDetector {
         override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                witnesses.append(contentsOf:
-                    IdempotenceCaseExtractor.extract(from: node.memberBlock)
+                witnesses.append(
+                    contentsOf: IdempotenceCaseExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren

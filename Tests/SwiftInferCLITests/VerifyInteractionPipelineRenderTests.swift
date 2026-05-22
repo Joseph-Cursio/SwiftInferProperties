@@ -69,8 +69,8 @@ struct VerifyInteractionPipelineRenderTests {
             outcome: .measuredDefaultFails,
             detail: "verifier exited with code 134 — trap in reducer body"
         )
-        let tracePath = URL(fileURLWithPath:
-            "/tmp/MyPackage/Tests/Generated/SwiftInferTraces/reduce/trace-replay.swift"
+        let tracePath = URL(
+            fileURLWithPath: "/tmp/MyPackage/Tests/Generated/SwiftInferTraces/reduce/trace-replay.swift"
         )
         let rendered = VerifyInteractionPipeline.renderOutcome(
             candidate: freeCandidate(),

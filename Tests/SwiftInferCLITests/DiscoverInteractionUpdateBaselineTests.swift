@@ -61,15 +61,15 @@ struct DiscoverInteractionUpdateBaselineTests {
         #expect(FileManager.default.fileExists(atPath: path.path))
         #expect(loaded.baseline.entries.count == 2)
         let persisted = Set(loaded.baseline.entries.map(\.identityHash))
-        let expectedStrong = SuggestionIdentity(canonicalInput:
-            InteractionInvariantSuggestion.identityCanonicalInput(
+        let expectedStrong = SuggestionIdentity(
+            canonicalInput: InteractionInvariantSuggestion.identityCanonicalInput(
                 family: .conservation,
                 reducerQualifiedName: "Inbox.body",
                 predicate: "state.a == 1"
             )
         ).normalized
-        let expectedVerified = SuggestionIdentity(canonicalInput:
-            InteractionInvariantSuggestion.identityCanonicalInput(
+        let expectedVerified = SuggestionIdentity(
+            canonicalInput: InteractionInvariantSuggestion.identityCanonicalInput(
                 family: .conservation,
                 reducerQualifiedName: "Inbox.body",
                 predicate: "state.b == 2"

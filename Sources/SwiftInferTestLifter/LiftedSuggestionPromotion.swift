@@ -256,5 +256,4 @@ public extension LiftedSuggestion {
         let callees = crossValidationKey.calleeNames.joined(separator: ",")
         return SuggestionIdentity(canonicalInput: "lifted|\(templateName)|\(callees)")
     }
-
 }

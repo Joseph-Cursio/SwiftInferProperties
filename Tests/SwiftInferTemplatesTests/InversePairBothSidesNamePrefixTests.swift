@@ -43,8 +43,10 @@ struct InversePairBothSidesNamePrefixTests {
     @Test("'bucket(after:) × bucket(before:)' fires full veto (cycle-23 #26 case)")
     func bucketBothSidesFiresFullVeto() throws {
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "bucket", forwardLabel: "after",
-                      reverseName: "bucket", reverseLabel: "before")
+            for: pair(
+                forwardName: "bucket", forwardLabel: "after",
+                reverseName: "bucket", reverseLabel: "before"
+            )
         )
         let veto = try #require(signal)
         #expect(veto.isVeto)
@@ -54,8 +56,10 @@ struct InversePairBothSidesNamePrefixTests {
     @Test("'word(after:) × word(before:)' fires full veto")
     func wordBothSidesFiresFullVeto() {
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "word", forwardLabel: "after",
-                      reverseName: "word", reverseLabel: "before")
+            for: pair(
+                forwardName: "word", forwardLabel: "after",
+                reverseName: "word", reverseLabel: "before"
+            )
         )
         #expect(signal?.isVeto == true)
     }
@@ -63,8 +67,10 @@ struct InversePairBothSidesNamePrefixTests {
     @Test("'index(after:) × index(before:)' fires full veto")
     func indexBothSidesFiresFullVeto() {
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "index", forwardLabel: "after",
-                      reverseName: "index", reverseLabel: "before")
+            for: pair(
+                forwardName: "index", forwardLabel: "after",
+                reverseName: "index", reverseLabel: "before"
+            )
         )
         #expect(signal?.isVeto == true)
     }
@@ -76,8 +82,10 @@ struct InversePairBothSidesNamePrefixTests {
         // reverse side is non-direction lookup. V1.29.A's asymmetric-pair
         // full-veto closes the cycle-25 #28 + #29 reject pattern.
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "bucket", forwardLabel: "after",
-                      reverseName: "firstOccupiedBucketInChain", reverseLabel: "with")
+            for: pair(
+                forwardName: "bucket", forwardLabel: "after",
+                reverseName: "firstOccupiedBucketInChain", reverseLabel: "with"
+            )
         )
         let veto = try #require(signal)
         #expect(veto.isVeto)
@@ -89,8 +97,10 @@ struct InversePairBothSidesNamePrefixTests {
         // 'firstOccupiedBucketInChain(with:) × bucket(before:)': reverse
         // side is the cursor-advance shape. Symmetric to the forward case.
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "firstOccupiedBucketInChain", forwardLabel: "with",
-                      reverseName: "bucket", reverseLabel: "before")
+            for: pair(
+                forwardName: "firstOccupiedBucketInChain", forwardLabel: "with",
+                reverseName: "bucket", reverseLabel: "before"
+            )
         )
         #expect(signal?.isVeto == true)
     }
@@ -101,8 +111,10 @@ struct InversePairBothSidesNamePrefixTests {
         // but name doesn't match cursor-prefix list. V1.29.A's asymmetric
         // veto doesn't fire; falls through to V1.11.1 either-side -10.
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "transform", forwardLabel: "after",
-                      reverseName: "untransform", reverseLabel: nil)
+            for: pair(
+                forwardName: "transform", forwardLabel: "after",
+                reverseName: "untransform", reverseLabel: nil
+            )
         )
         #expect(signal?.weight == -10)
     }
@@ -113,8 +125,10 @@ struct InversePairBothSidesNamePrefixTests {
         // labeled but neither name has index/bucket/word prefix.
         // V1.27.B doesn't fire; falls through to either-side -10.
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "transform", forwardLabel: "after",
-                      reverseName: "untransform", reverseLabel: "before")
+            for: pair(
+                forwardName: "transform", forwardLabel: "after",
+                reverseName: "untransform", reverseLabel: "before"
+            )
         )
         #expect(signal?.weight == -10)
     }
@@ -122,8 +136,10 @@ struct InversePairBothSidesNamePrefixTests {
     @Test("Neither side labeled returns nil")
     func neitherLabeledReturnsNil() {
         let signal = InversePairTemplate.directionLabelCounterSignal(
-            for: pair(forwardName: "encode", forwardLabel: nil,
-                      reverseName: "decode", reverseLabel: nil)
+            for: pair(
+                forwardName: "encode", forwardLabel: nil,
+                reverseName: "decode", reverseLabel: nil
+            )
         )
         #expect(signal == nil)
     }

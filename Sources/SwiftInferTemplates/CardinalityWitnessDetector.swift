@@ -112,8 +112,8 @@ public enum CardinalityWitnessDetector {
         override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                fields.append(contentsOf:
-                    CardinalityFieldExtractor.extract(from: node.memberBlock)
+                fields.append(
+                    contentsOf: CardinalityFieldExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren
@@ -123,8 +123,8 @@ public enum CardinalityWitnessDetector {
         override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                fields.append(contentsOf:
-                    CardinalityFieldExtractor.extract(from: node.memberBlock)
+                fields.append(
+                    contentsOf: CardinalityFieldExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren

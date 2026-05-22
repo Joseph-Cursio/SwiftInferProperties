@@ -72,8 +72,10 @@ struct IdempotenceShapeDisambiguationTests {
     @Test("'(String) -> String' shape does NOT fire pattern 1 (Int-only)")
     func nonIntShapeDoesNotFirePattern1() {
         let signal = IdempotenceTemplate.shapeDisambiguationVeto(
-            for: summary("normalizeCount", paramLabel: "forScale",
-                         paramType: "String", returnType: "String")
+            for: summary(
+                "normalizeCount", paramLabel: "forScale",
+                paramType: "String", returnType: "String"
+            )
         )
         #expect(signal == nil, "Pattern 1 requires (Int) -> Int shape")
     }
@@ -106,8 +108,10 @@ struct IdempotenceShapeDisambiguationTests {
     @Test("'_description(type:)' fires veto (cycle-17/20 #16/#12 case)")
     func descriptionFormatterVetoes() throws {
         let signal = IdempotenceTemplate.shapeDisambiguationVeto(
-            for: summary("_description", paramLabel: "type",
-                         paramType: "String", returnType: "String")
+            for: summary(
+                "_description", paramLabel: "type",
+                paramType: "String", returnType: "String"
+            )
         )
         let veto = try #require(signal)
         #expect(veto.isVeto)
@@ -117,8 +121,10 @@ struct IdempotenceShapeDisambiguationTests {
     @Test("'format(_:)' on enum fires veto (cycle-17/20 #18 case)")
     func formatVetoes() {
         let signal = IdempotenceTemplate.shapeDisambiguationVeto(
-            for: summary("format", paramLabel: nil,
-                         paramType: "CheckResult", returnType: "String")
+            for: summary(
+                "format", paramLabel: nil,
+                paramType: "CheckResult", returnType: "String"
+            )
         )
         #expect(signal?.isVeto == true)
     }
@@ -126,8 +132,10 @@ struct IdempotenceShapeDisambiguationTests {
     @Test("'formatBuckets' fires veto (prefix 'format')")
     func formatBucketsVetoes() {
         let signal = IdempotenceTemplate.shapeDisambiguationVeto(
-            for: summary("formatBuckets", paramLabel: nil,
-                         paramType: "[String: Int]", returnType: "String")
+            for: summary(
+                "formatBuckets", paramLabel: nil,
+                paramType: "[String: Int]", returnType: "String"
+            )
         )
         #expect(signal?.isVeto == true)
     }
@@ -165,9 +173,11 @@ struct IdempotenceShapeDisambiguationTests {
         let suggestion = IdempotenceTemplate.suggest(
             for: summary("_minimumCapacity", paramLabel: "forScale"),
             carrierKindResolver: CarrierKindResolver(typeDecls: [
-                TypeDecl(name: "OrderedSet", kind: .struct, inheritedTypes: [],
-                         location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-                         storedMembers: [StoredMember(name: "elements", typeName: "[Int]")])
+                TypeDecl(
+                    name: "OrderedSet", kind: .struct, inheritedTypes: [],
+                    location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+                    storedMembers: [StoredMember(name: "elements", typeName: "[Int]")]
+                )
             ])
         )
         #expect(suggestion == nil, "V1.24.D should suppress capacity-from-scale idempotence")

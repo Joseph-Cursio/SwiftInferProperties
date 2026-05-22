@@ -179,9 +179,11 @@ struct VocabularyTests {
             monotonicityVerbs: ["rank", "tally"],
             inverseElementVerbs: ["mirror"],
             markerPairs: [
-                MarkerPair(positive: "Open", negative: "Closed",
-                           positiveSynonyms: ["Active"],
-                           negativeSynonyms: ["Inactive"])
+                MarkerPair(
+                    positive: "Open", negative: "Closed",
+                    positiveSynonyms: ["Active"],
+                    negativeSynonyms: ["Inactive"]
+                )
             ],
             markerSets: [
                 MarkerSet(name: "Sizes", markers: ["small", "medium", "large"])

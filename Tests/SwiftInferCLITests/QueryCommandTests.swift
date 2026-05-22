@@ -59,8 +59,9 @@ struct QueryCommandTests {
     func noFilterReturnsAll() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: nil, tier: nil, decision: nil, minScore: nil
-        )
+            filters: QueryFilters(
+                template: nil, type: nil, tier: nil, decision: nil, minScore: nil
+            )
         )
         #expect(filtered.count == 3)
     }
@@ -69,8 +70,9 @@ struct QueryCommandTests {
     func templateFilter() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: "round-trip", type: nil, tier: nil, decision: nil, minScore: nil
-        )
+            filters: QueryFilters(
+                template: "round-trip", type: nil, tier: nil, decision: nil, minScore: nil
+            )
         )
         #expect(filtered.count == 2)
         #expect(filtered.allSatisfy { $0.templateName == "round-trip" })
@@ -80,8 +82,9 @@ struct QueryCommandTests {
     func tierFilter() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: nil, tier: "Strong", decision: nil, minScore: nil
-        )
+            filters: QueryFilters(
+                template: nil, type: nil, tier: "Strong", decision: nil, minScore: nil
+            )
         )
         #expect(filtered == [Self.strong])
     }
@@ -90,8 +93,9 @@ struct QueryCommandTests {
     func decisionUntriagedMatchesNil() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: nil, tier: nil, decision: "untriaged", minScore: nil
-        )
+            filters: QueryFilters(
+                template: nil, type: nil, tier: nil, decision: "untriaged", minScore: nil
+            )
         )
         #expect(filtered == [Self.possibleSorter])
     }
@@ -100,8 +104,9 @@ struct QueryCommandTests {
     func decisionRejectedFilters() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: nil, tier: nil, decision: "rejected", minScore: nil
-        )
+            filters: QueryFilters(
+                template: nil, type: nil, tier: nil, decision: "rejected", minScore: nil
+            )
         )
         #expect(filtered == [Self.possibleFreeFunc])
     }
@@ -110,8 +115,9 @@ struct QueryCommandTests {
     func typeNoneFiltersFreeFunctions() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: "none", tier: nil, decision: nil, minScore: nil
-        )
+            filters: QueryFilters(
+                template: nil, type: "none", tier: nil, decision: nil, minScore: nil
+            )
         )
         #expect(filtered == [Self.possibleFreeFunc])
     }
@@ -120,8 +126,9 @@ struct QueryCommandTests {
     func typeExactMatch() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: "Codec", tier: nil, decision: nil, minScore: nil
-        )
+            filters: QueryFilters(
+                template: nil, type: "Codec", tier: nil, decision: nil, minScore: nil
+            )
         )
         #expect(filtered == [Self.strong])
     }
@@ -130,8 +137,9 @@ struct QueryCommandTests {
     func minScoreFilter() {
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: nil, type: nil, tier: nil, decision: nil, minScore: 50
-        )
+            filters: QueryFilters(
+                template: nil, type: nil, tier: nil, decision: nil, minScore: 50
+            )
         )
         #expect(filtered == [Self.strong])
     }

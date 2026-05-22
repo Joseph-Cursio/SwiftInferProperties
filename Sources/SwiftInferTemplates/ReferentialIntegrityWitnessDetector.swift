@@ -68,8 +68,8 @@ public enum ReferentialIntegrityWitnessDetector {
         override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                witnesses.append(contentsOf:
-                    ReferentialIntegrityExtractor.extract(from: node.memberBlock)
+                witnesses.append(
+                    contentsOf: ReferentialIntegrityExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren
@@ -79,8 +79,8 @@ public enum ReferentialIntegrityWitnessDetector {
         override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
             typeStack.append(node.name.text)
             if matchesTarget() {
-                witnesses.append(contentsOf:
-                    ReferentialIntegrityExtractor.extract(from: node.memberBlock)
+                witnesses.append(
+                    contentsOf: ReferentialIntegrityExtractor.extract(from: node.memberBlock)
                 )
             }
             return .visitChildren
