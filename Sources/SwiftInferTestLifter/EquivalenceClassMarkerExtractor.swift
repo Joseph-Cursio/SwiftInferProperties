@@ -134,12 +134,15 @@ public enum EquivalenceClassMarkerExtractor {
         case .xctAssertTrue, .xctAssert:
             guard let first = assertion.arguments.first else { return nil }
             return interpretBooleanArgument(first, baseAssertedTrue: true)
+
         case .xctAssertFalse:
             guard let first = assertion.arguments.first else { return nil }
             return interpretBooleanArgument(first, baseAssertedTrue: false)
+
         case .expectMacro, .requireMacro:
             guard let first = assertion.arguments.first else { return nil }
             return interpretBooleanArgument(first, baseAssertedTrue: true)
+
         case .xctAssertEqual, .xctAssertNotNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
@@ -189,6 +192,7 @@ public enum EquivalenceClassMarkerExtractor {
         case (.xctAssertTrue, .positive),
                 (.xctAssertFalse, .negative):
             return true
+
         default:
             return false
         }

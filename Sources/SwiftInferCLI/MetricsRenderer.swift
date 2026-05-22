@@ -141,8 +141,10 @@ public enum MetricsRenderer {
             switch record.decision {
             case .accepted, .acceptedAsConformance:
                 entry.accepted += 1
+
             case .rejected:
                 entry.rejected += 1
+
             case .skipped:
                 entry.skipped += 1
             }

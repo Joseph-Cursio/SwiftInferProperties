@@ -177,6 +177,7 @@ extension SwiftInferCommand {
                 CommutativeMonoid / Semilattice, formal conformance lets \
                 SwiftPropertyLaws verify the laws on every CI run.
                 """
+
             case .idempotenceCluster:
                 return """
                 This type has several idempotent operations. If they're \
@@ -185,6 +186,7 @@ extension SwiftInferCommand {
                 on the type's API contract. A shared "IdempotentNormalize"-style \
                 protocol may capture the pattern across multiple such types.
                 """
+
             case .dualStyleCluster:
                 return """
                 This type has several form/non-form mutating-pair APIs. The pattern \
@@ -192,6 +194,7 @@ extension SwiftInferCommand {
                 conformance (or a custom protocol) lets the kit verify the \
                 paired-mutation laws on every CI run.
                 """
+
             case .roundTripCluster:
                 return """
                 This type has several round-trip pairs. The pattern suggests a \
@@ -199,6 +202,7 @@ extension SwiftInferCommand {
                 Codec-shaped protocol that captures the (encode, decode) pair \
                 explicitly.
                 """
+
             case .generalCluster:
                 return """
                 This type has many inferred properties across mixed templates. \

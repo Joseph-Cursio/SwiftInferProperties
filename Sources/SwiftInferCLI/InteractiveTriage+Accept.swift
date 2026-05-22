@@ -22,6 +22,7 @@ extension InteractiveTriage {
             switch kind {
             case .twoClass(let hint):
                 return try writeEquivalenceClassDocument(hint: hint, context: context)
+
             case .nClass(let hint):
                 return try writeNClassEquivalenceClassDocument(hint: hint, context: context)
             }
@@ -68,20 +69,28 @@ extension InteractiveTriage {
         switch suggestion.templateName {
         case "idempotence":
             return idempotentStub(for: suggestion)
+
         case "round-trip":
             return roundTripStub(for: suggestion)
+
         case "monotonicity":
             return monotonicStub(for: suggestion)
+
         case "invariant-preservation":
             return invariantPreservingStub(for: suggestion)
+
         case "commutativity":
             return commutativeStub(for: suggestion)
+
         case "associativity":
             return associativeStub(for: suggestion)
+
         case "identity-element":
             return identityElementStub(for: suggestion)
+
         case "inverse-pair":
             return inversePairStub(for: suggestion)
+
         default:
             return nil
         }
@@ -369,6 +378,7 @@ extension InteractiveTriage {
                 return "\(funcName).swift"
             }
             return "\(funcName)_\(reverseName).swift"
+
         case "invariant-preservation":
             // File name carries the keypath suffix so distinct invariants
             // on the same function don't overwrite each other.
@@ -379,6 +389,7 @@ extension InteractiveTriage {
                 .replacingOccurrences(of: "\\.", with: "")
                 .replacingOccurrences(of: ".", with: "_")
             return "\(funcName)_\(suffix).swift"
+
         default:
             return "\(funcName).swift"
         }

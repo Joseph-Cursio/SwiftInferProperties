@@ -135,6 +135,7 @@ public enum ConfigLoader {
             switch value {
             case .boolean(let bool):
                 includePossible = bool
+
             case .string:
                 warnings.append(
                     "config at \(path.path): expected boolean for [discover].includePossible, ignoring"
@@ -145,6 +146,7 @@ public enum ConfigLoader {
             switch value {
             case .string(let str):
                 vocabularyPath = str
+
             case .boolean:
                 warnings.append(
                     "config at \(path.path): expected string for [discover].vocabularyPath, ignoring"
@@ -157,6 +159,7 @@ public enum ConfigLoader {
             switch value {
             case .string(let str):
                 packs = str
+
             case .boolean:
                 warnings.append(
                     "config at \(path.path): expected string for [discover].packs, ignoring"

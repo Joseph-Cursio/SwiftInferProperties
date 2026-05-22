@@ -85,6 +85,7 @@ struct VerifyCommandTests {
             switch error {
             case .indexMissing:
                 break
+
             default:
                 Issue.record("expected .indexMissing; got \(error)")
             }

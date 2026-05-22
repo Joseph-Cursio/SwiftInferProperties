@@ -76,9 +76,11 @@ extension EquivalenceClassMarkerExtractor {
                 lhs: assertion.arguments[0],
                 rhs: assertion.arguments[1]
             )
+
         case .expectMacro, .requireMacro:
             guard let first = assertion.arguments.first else { return nil }
             return matchPredicateAndCaseInEqualityExpression(first)
+
         case .xctAssertTrue, .xctAssert, .xctAssertFalse,
                 .xctAssertNotNil, .xctAssertLessThan,
                 .xctAssertLessThanOrEqual, .xctAssertNotEqual,

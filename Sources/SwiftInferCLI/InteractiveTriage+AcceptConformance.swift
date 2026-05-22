@@ -53,6 +53,7 @@ extension InteractiveTriage {
                 combineWitness: proposal.combineWitness,
                 explainability: proposal.explainability
             )
+
         case "Monoid":
             // Monoid proposals always carry an identityWitness per the
             // orchestrator's Monoid-only-when-identity-element-fires
@@ -65,6 +66,7 @@ extension InteractiveTriage {
                 identityWitness: proposal.identityWitness ?? "identity",
                 explainability: proposal.explainability
             )
+
         case "CommutativeMonoid":
             // CommutativeMonoid (kit v1.9.0) — same shape as Monoid; the
             // commutativity law is verified at law-check time, no new
@@ -75,6 +77,7 @@ extension InteractiveTriage {
                 identityWitness: proposal.identityWitness ?? "identity",
                 explainability: proposal.explainability
             )
+
         case "Group":
             // Group (kit v1.9.0) — adds the `static func inverse(_:)`
             // requirement on top of Monoid's combine + identity. M8.4.a's
@@ -87,6 +90,7 @@ extension InteractiveTriage {
                 inverseWitness: proposal.inverseWitness ?? "inverse",
                 explainability: proposal.explainability
             )
+
         case "Semilattice":
             // Semilattice (kit v1.9.0) — extends CommutativeMonoid with
             // the idempotence Strict law. No new requirements; same body
@@ -97,6 +101,7 @@ extension InteractiveTriage {
                 identityWitness: proposal.identityWitness ?? "identity",
                 explainability: proposal.explainability
             )
+
         case "SetAlgebra":
             // SetAlgebra (stdlib) — secondary arm for Semilattice
             // claims with curated set-named ops (M8.4.b.1, open
@@ -108,6 +113,7 @@ extension InteractiveTriage {
                 typeName: proposal.typeName,
                 explainability: proposal.explainability
             )
+
         case "Numeric":
             // Numeric (stdlib) — Ring arm (M8.4.b.2). Bare extension;
             // the user's existing +/-/* operators + Numeric.init?(exactly:)
@@ -118,6 +124,7 @@ extension InteractiveTriage {
                 typeName: proposal.typeName,
                 explainability: proposal.explainability
             )
+
         default:
             // No remaining shipped protocol arms — every M8 promotion
             // routes through one of the explicit cases above. Future

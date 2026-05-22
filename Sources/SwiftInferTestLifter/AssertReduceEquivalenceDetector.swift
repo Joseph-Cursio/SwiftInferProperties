@@ -68,11 +68,13 @@ public enum AssertReduceEquivalenceDetector {
                 rhs: assertion.arguments.dropFirst().first,
                 location: assertion.location
             )
+
         case .expectMacro:
             guard let firstArg = assertion.arguments.first else {
                 return nil
             }
             return collapsedFromEqualityExpression(firstArg, location: assertion.location)
+
         case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,

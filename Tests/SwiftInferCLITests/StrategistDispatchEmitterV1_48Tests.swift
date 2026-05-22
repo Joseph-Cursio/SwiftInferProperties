@@ -150,6 +150,7 @@ struct StrategistDispatchEmitterV148Tests {
             switch template {
             case "dual-style-consistency":
                 functionCalls = ["{ (x: Int) in x }", "noop"]
+
             default:
                 functionCalls = ["{ (x: Int) in x }"]
             }

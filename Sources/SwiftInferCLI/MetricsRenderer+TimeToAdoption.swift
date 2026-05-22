@@ -69,6 +69,7 @@ extension MetricsRenderer {
             switch record.decision {
             case .accepted, .acceptedAsConformance:
                 break
+
             case .rejected, .skipped:
                 continue
             }

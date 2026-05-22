@@ -54,6 +54,7 @@ struct IdempotenceStubEmitterTests {
             case let .unsupportedCarrier(carrier, expected):
                 #expect(carrier == "Array<Int>")
                 #expect(expected == IdempotenceStubEmitter.supportedCarriers)
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }

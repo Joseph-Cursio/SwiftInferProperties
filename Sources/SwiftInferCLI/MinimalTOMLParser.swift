@@ -146,6 +146,7 @@ public enum MinimalTOMLParser {
                 case "\\": result.append("\\")
                 case "n": result.append("\n")
                 case "t": result.append("\t")
+
                 default:
                     throw TOMLParseError(
                         line: lineNumber,

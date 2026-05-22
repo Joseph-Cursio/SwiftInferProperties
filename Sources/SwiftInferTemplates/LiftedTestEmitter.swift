@@ -391,6 +391,7 @@ extension LiftedTestEmitter {
         switch kind {
         case .strict:
             return "\(lhs) == \(rhs)"
+
         case .approximate:
             return "\(lhs).isApproximatelyEqual(to: \(rhs))"
         }

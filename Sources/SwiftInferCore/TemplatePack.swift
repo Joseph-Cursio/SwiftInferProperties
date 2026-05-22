@@ -59,11 +59,13 @@ public enum TemplatePack: String, CaseIterable, Sendable {
                 "identity-element",
                 "monotonicity"
             ]
+
         case .serialization:
             return [
                 "round-trip",
                 "inverse-pair"
             ]
+
         case .collections:
             return [
                 "idempotence",
@@ -72,6 +74,7 @@ public enum TemplatePack: String, CaseIterable, Sendable {
                 "composition",
                 "invariant-preservation"
             ]
+
         case .algebraic:
             return [
                 "commutativity",
@@ -80,6 +83,7 @@ public enum TemplatePack: String, CaseIterable, Sendable {
                 "idempotence",
                 "composition"
             ]
+
         case .concurrency:
             // Aspirational — no current templates target concurrency.
             return []

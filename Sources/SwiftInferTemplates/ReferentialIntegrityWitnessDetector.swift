@@ -343,12 +343,14 @@ enum ReferentialIntegrityExtractor {
             switch char {
             case "<", "(", "[": depth += 1
             case ">", ")", "]": depth -= 1
+
             case "," where depth == 0:
                 if commaIdx == nil {
                     commaIdx = index
                 } else {
                     return nil
                 }
+
             default:
                 break
             }

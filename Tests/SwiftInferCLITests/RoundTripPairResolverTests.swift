@@ -112,6 +112,7 @@ struct RoundTripPairResolverTests {
             case let .unsupportedTemplate(template, expected):
                 #expect(template == "idempotence")
                 #expect(expected == ["round-trip"])
+
             default:
                 Issue.record("expected .unsupportedTemplate; got \(error)")
             }
@@ -127,6 +128,7 @@ struct RoundTripPairResolverTests {
             switch error {
             case .unsupportedCarrier:
                 break
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }
@@ -143,6 +145,7 @@ struct RoundTripPairResolverTests {
             case let .unsupportedPair(forward, supported):
                 #expect(forward == "noSuchFunc(_:)")
                 #expect(supported.contains("exp(_:)"))
+
             default:
                 Issue.record("expected .unsupportedPair; got \(error)")
             }

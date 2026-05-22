@@ -85,8 +85,10 @@ public enum VerifyHarness {
                 prefix: rawPrefix,
                 closest: closest.map(\.identityHash)
             )
+
         case 1:
             return LookupResult(entry: candidates[0], warnings: staleWarnings)
+
         default:
             let matched = candidates.prefix(5).map(\.identityHash)
             throw VerifyError.ambiguousPrefix(prefix: rawPrefix, matches: Array(matched))

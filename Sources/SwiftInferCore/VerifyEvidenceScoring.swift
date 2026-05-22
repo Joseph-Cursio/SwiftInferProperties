@@ -25,6 +25,7 @@ extension Suggestion {
                 whySuggested: explainability.whySuggested + [signal.formattedLine],
                 whyMightBeWrong: explainability.whyMightBeWrong
             )
+
         case .whyMightBeWrong:
             newExplainability = ExplainabilityBlock(
                 whySuggested: explainability.whySuggested,
@@ -107,6 +108,7 @@ public enum VerifyEvidenceScoring {
                     ),
                     explainabilityArm: .whySuggested
                 )
+
             case .measuredDefaultFails:
                 return suggestion.appendingScoreSignal(
                     Signal(
@@ -116,6 +118,7 @@ public enum VerifyEvidenceScoring {
                     ),
                     explainabilityArm: .whyMightBeWrong
                 )
+
             case .measuredEdgeCaseAdvisory, .measuredError, .architecturalCoveragePending:
                 return suggestion
             }

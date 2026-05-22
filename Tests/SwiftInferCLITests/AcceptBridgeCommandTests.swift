@@ -156,6 +156,7 @@ struct AcceptBridgeCommandTests {
             case let .peerOutOfRange(index, peerCount):
                 #expect(index == 5)
                 #expect(peerCount == 1)
+
             default: Issue.record("expected .peerOutOfRange; got \(error)")
             }
         } catch {

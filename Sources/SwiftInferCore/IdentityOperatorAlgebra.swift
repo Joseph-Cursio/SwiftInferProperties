@@ -79,8 +79,10 @@ public enum IdentityOperatorAlgebra {
         switch identityName {
         case "zero":
             return !additiveOperatorNames.contains(opName)
+
         case "one":
             return !multiplicativeOperatorNames.contains(opName)
+
         default:
             return false
         }

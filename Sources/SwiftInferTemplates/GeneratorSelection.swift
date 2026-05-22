@@ -65,12 +65,16 @@ public enum GeneratorSelection {
         switch strategy {
         case .userGen:
             return (.registered, .high)
+
         case .caseIterable:
             return (.derivedCaseIterable, .high)
+
         case .rawRepresentable:
             return (.derivedRawRepresentable, .high)
+
         case .memberwiseArbitrary:
             return (.derivedMemberwise, .medium)
+
         case .todo:
             return (.todo, nil)
         }

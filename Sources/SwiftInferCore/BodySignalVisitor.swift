@@ -117,6 +117,7 @@ final class BodySignalVisitor: SyntaxVisitor {
         switch dict.content {
         case .colon:
             return true
+
         case .elements(let elements):
             return elements.isEmpty
         }

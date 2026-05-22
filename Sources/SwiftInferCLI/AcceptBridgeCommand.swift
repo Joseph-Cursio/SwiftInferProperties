@@ -204,6 +204,7 @@ extension SwiftInferCommand {
             }
             switch decision {
             case .acceptedAsConformance, .rejected: return decision
+
             case .accepted, .skipped:
                 throw AcceptBridgeError.nonBridgeDecision(raw: raw)
             }
@@ -287,15 +288,18 @@ public enum AcceptBridgeError: Error, CustomStringConvertible, Equatable {
         case let .unknownDecision(raw):
             return "swift-infer accept-bridge: unknown decision '\(raw)'. "
                 + "Valid for bridges: accepted-as-conformance, rejected."
+
         case let .nonBridgeDecision(raw):
             return "swift-infer accept-bridge: decision '\(raw)' is not valid "
                 + "for bridges. Bridges imply kit-side protocol conformance "
                 + "commitment (PRD §9.4) — only accepted-as-conformance and "
                 + "rejected are accepted."
+
         case let .unknownBridgeIdentity(hash):
             return "swift-infer accept-bridge: no current bridge matches "
                 + "identity 0x\(hash). Re-run discover-interaction "
                 + "--interactive-bridges to see the current bridge set."
+
         case let .peerOutOfRange(index, peerCount):
             return "swift-infer accept-bridge: --peer \(index) out of range "
                 + "(bridge has \(peerCount) peers, valid indices 1...\(peerCount))."

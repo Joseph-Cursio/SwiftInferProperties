@@ -77,8 +77,10 @@ public enum CallExpressionShape: Equatable, Sendable {
         switch self {
         case let .staticMethod(qualifier, method):
             return "\(qualifier).\(method)"
+
         case let .operatorFunction(name):
             return "(\(name))"
+
         case let .freeFunction(name):
             return name
         }

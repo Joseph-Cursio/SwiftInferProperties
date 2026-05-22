@@ -65,12 +65,15 @@ public struct ReducerPin: Sendable, Equatable {
         switch components.count {
         case 1:
             return Self(functionName: components[0])
+
         case 2:
             return Self(typeName: components[0], functionName: components[1])
+
         case 3:
             // V1.C — module resolution deferred. The shape is parsed
             // far enough to give the user a clear error.
             throw ReducerPinError.moduleResolutionUnsupported(raw: raw)
+
         default:
             // 4+ components — no canonical interpretation.
             throw ReducerPinError.malformed(raw: raw)
@@ -101,8 +104,10 @@ public enum ReducerPinError: Error, CustomStringConvertible, Equatable {
         switch self {
         case .emptyPin:
             return "--reducer pin is empty; expected `<funcName>` or `<typeName>.<funcName>`"
+
         case let .malformed(raw):
             return "--reducer pin '\(raw)' is malformed; expected `<funcName>` or `<typeName>.<funcName>`"
+
         case let .moduleResolutionUnsupported(raw):
             return "--reducer pin '\(raw)' uses a module prefix; module-name resolution "
                 + "lands at v2.0 M2+. Drop the module prefix for now."

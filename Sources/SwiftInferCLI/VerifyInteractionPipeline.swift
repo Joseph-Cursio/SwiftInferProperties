@@ -178,8 +178,10 @@ public enum VerifyInteractionPipeline {
             switch matched.count {
             case 0:
                 throw VerifyInteractionError.noMatchingReducer(pin: pinRaw)
+
             case 1:
                 return matched[0]
+
             default:
                 throw VerifyInteractionError.ambiguousPin(
                     pin: pinRaw,
@@ -190,8 +192,10 @@ public enum VerifyInteractionPipeline {
         switch candidates.count {
         case 0:
             throw VerifyInteractionError.noReducersDetected
+
         case 1:
             return candidates[0]
+
         default:
             throw VerifyInteractionError.requiresPin(
                 candidates: candidates.map(\.qualifiedName)
@@ -328,18 +332,23 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
         switch self {
         case .noReducersDetected:
             return "swift-infer verify-interaction: no reducer-shaped functions detected in target."
+
         case let .noMatchingReducer(pin):
             return "swift-infer verify-interaction: no reducer matches pin '\(pin)'."
+
         case let .ambiguousPin(pin, matches):
             return "swift-infer verify-interaction: pin '\(pin)' is ambiguous — matches "
                 + "\(matches.count) reducers: \(matches.joined(separator: ", ")). "
                 + "Lengthen the pin to disambiguate."
+
         case let .requiresPin(candidates):
             return "swift-infer verify-interaction: \(candidates.count) reducer candidates "
                 + "detected. Pin one via --reducer <typeName>.<funcName>. "
                 + "Candidates: \(candidates.joined(separator: ", "))"
+
         case let .unsupported(reason):
             return "swift-infer verify-interaction: \(reason)"
+
         case let .hiddenMutability(reducer):
             return "swift-infer verify-interaction: reducer '\(reducer)' has hidden "
                 + "mutability (writes to static / global state). Running random action "

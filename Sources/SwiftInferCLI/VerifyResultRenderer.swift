@@ -193,11 +193,13 @@ public enum VerifyResultRenderer {
                 return "a non-curated value"
             }
             return "edge case #\(edgeCaseIndex) (\(edgeCaseLabels[edgeCaseIndex]))"
+
         case "Double":
             // Single-entry curated list — index 0 is NaN per V1.44.B.
             return edgeCaseIndex == 0
                 ? "edge case #0 (Double.nan)"
                 : "a non-curated value"
+
         default:
             // Int carrier shouldn't fire `.edgeCaseAdvisory` (no edge
             // pass) — defensive fallback.
@@ -232,17 +234,23 @@ private struct RenderShape {
         case .roundTrip:
             return "round-trip \(context.forwardName)/\(context.inverseName) "
                 + "over \(context.carrierType)"
+
         case .idempotence:
             return "idempotence on \(context.forwardName) over \(context.carrierType)"
+
         case .commutativity:
             return "commutativity on \(context.forwardName) over \(context.carrierType)"
+
         case .associativity:
             return "associativity on \(context.forwardName) over \(context.carrierType)"
+
         case .idempotenceLifted:
             return "idempotence-lifted on \(context.forwardName) over [\(context.carrierType)]"
+
         case .dualStyleConsistency:
             return "dual-style-consistency on \(context.forwardName)/\(context.inverseName) "
                 + "over \(context.carrierType)"
+
         case .monotonicity:
             return "monotonicity on \(context.forwardName) over \(context.carrierType)"
         }
@@ -256,12 +264,16 @@ private struct RenderShape {
         switch kind {
         case .roundTrip, .idempotence: return "\(context.forwardName)(input) "
         case .commutativity: return "\(context.forwardName)(lhs, rhs) "
+
         case .associativity:
             return "\(context.forwardName)(\(context.forwardName)(a, b), c) "
+
         case .idempotenceLifted:
             return "\(context.forwardName)(xs) "
+
         case .dualStyleConsistency:
             return "\(context.forwardName)(x) "
+
         case .monotonicity:
             return "\(context.forwardName)(a) "
         }
@@ -277,12 +289,16 @@ private struct RenderShape {
         case .roundTrip: return "\(context.inverseName)(\(context.forwardName)(input))"
         case .idempotence: return "\(context.forwardName)(\(context.forwardName)(input))"
         case .commutativity: return "\(context.forwardName)(rhs, lhs)"
+
         case .associativity:
             return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
+
         case .idempotenceLifted:
             return "\(context.forwardName)(\(context.forwardName)(xs))"
+
         case .dualStyleConsistency:
             return "{ var copy = x; copy.\(context.inverseName)(); return copy }()"
+
         case .monotonicity:
             return "\(context.forwardName)(b)"
         }
@@ -298,12 +314,16 @@ private struct RenderShape {
         case .roundTrip: return "input"
         case .idempotence: return "f(input)"
         case .commutativity: return "\(context.forwardName)(rhs, lhs)"
+
         case .associativity:
             return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
+
         case .idempotenceLifted:
             return "\(context.forwardName)(xs)"
+
         case .dualStyleConsistency:
             return "\(context.forwardName)(x)"
+
         case .monotonicity:
             return "f(a) ≤ f(b) when a ≤ b"
         }

@@ -230,6 +230,7 @@ extension RoundTripStubEmitter {
             // round-trip `acos(cos(z)) == z` only holds for the right
             // half-plane.
             return ComplexPassDomain(reMin: "0.0", reMax: "1.5", imMin: "-1.5", imMax: "1.5")
+
         default:
             // exp/log + sin/asin + tan/atan + sinh/asinh + tanh/atanh:
             // all symmetric round-trip pairs holding on `|Re| ≤ π/2`.

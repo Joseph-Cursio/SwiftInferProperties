@@ -287,10 +287,13 @@ extension CommutativityTemplate {
         switch opName {
         case "+":
             return [.additiveCommutative]
+
         case "*":
             return [.multiplicativeCommutative]
+
         case "union", "formUnion":
             return [.setUnionCommutative]
+
         default:
             return []
         }

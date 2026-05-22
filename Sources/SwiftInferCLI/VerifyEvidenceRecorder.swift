@@ -45,10 +45,13 @@ enum VerifyEvidenceRecorder {
                 .measuredBothPass,
                 "defaultTrials=\(defaultTrials) edgeTrials=\(edgeTrials) edgeSampled=\(edgeSampled)"
             )
+
         case .edgeCaseAdvisory:
             return (.measuredEdgeCaseAdvisory, nil)
+
         case let .defaultFails(trial, _, _, _):
             return (.measuredDefaultFails, "trial=\(trial)")
+
         case let .error(reason):
             return (.measuredError, "parse-error: \(reason)")
         }

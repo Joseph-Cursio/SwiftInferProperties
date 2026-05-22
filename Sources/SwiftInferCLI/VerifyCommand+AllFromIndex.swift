@@ -273,12 +273,15 @@ extension SwiftInferCommand.Verify {
         case let .bothPass(defaultTrials, edgeTrials, edgeSampled):
             outcome = .measuredBothPass
             detail = "defaultTrials=\(defaultTrials) edgeTrials=\(edgeTrials) edgeSampled=\(edgeSampled)"
+
         case .edgeCaseAdvisory:
             outcome = .measuredEdgeCaseAdvisory
             detail = nil
+
         case let .defaultFails(trial, _, _, _):
             outcome = .measuredDefaultFails
             detail = "trial=\(trial)"
+
         case let .error(reason):
             outcome = .measuredError
             detail = "parse-error: \(reason)"
@@ -298,10 +301,13 @@ extension SwiftInferCommand.Verify {
         switch error {
         case let .unsupportedCarrier(carrier, _):
             return "unsupported-carrier: \(carrier)"
+
         case let .unsupportedTemplate(template, _):
             return "unsupported-template: \(template)"
+
         case let .unsupportedPair(forward, _):
             return "unsupported-pair: \(forward)"
+
         default:
             return error.description
         }

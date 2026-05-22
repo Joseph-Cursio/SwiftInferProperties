@@ -181,6 +181,7 @@ func makeHardGuaranteeFixture(
             atomically: true,
             encoding: .utf8
         )
+
     case .alpha:
         try "struct AlphaType {}\n".write(
             to: base.appendingPathComponent("Alpha.swift"),

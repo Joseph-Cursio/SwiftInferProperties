@@ -54,10 +54,12 @@ extension ReducerDiscoverer {
             switch char {
             case "<", "(", "[": depth += 1
             case ">", ")", "]": depth -= 1
+
             case ",":
                 if depth == 0 {
                     commaIdx = index
                 }
+
             default:
                 break
             }

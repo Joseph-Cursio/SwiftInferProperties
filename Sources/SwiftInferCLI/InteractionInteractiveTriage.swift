@@ -124,8 +124,10 @@ public enum InteractionInteractiveTriage {
             case "c": return .acceptAsConformance
             case "s", "": return .skip
             case "n": return .reject
+
             case "?", "h", "help":
                 output.write(helpText())
+
             default:
                 output.write("Unrecognized input '\(trimmed)'. Type ? for help.")
             }

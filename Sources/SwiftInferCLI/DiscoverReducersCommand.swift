@@ -94,8 +94,10 @@ extension SwiftInferCommand {
             switch matched.count {
             case 0:
                 throw DiscoverReducersError.pinNoMatch(raw: pinRaw)
+
             case 1:
                 return renderSummary(candidates: matched)
+
             default:
                 throw DiscoverReducersError.pinAmbiguous(
                     raw: pinRaw,
@@ -150,6 +152,7 @@ public enum DiscoverReducersError: Error, CustomStringConvertible, Equatable {
         switch self {
         case let .pinNoMatch(raw):
             return "swift-infer discover-reducers: no reducer matches pin '\(raw)'."
+
         case let .pinAmbiguous(raw, matches):
             return "swift-infer discover-reducers: pin '\(raw)' is ambiguous — "
                 + "matches \(matches.count) reducers: \(matches.joined(separator: ", ")). "

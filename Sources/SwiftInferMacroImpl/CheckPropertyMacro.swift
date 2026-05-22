@@ -34,12 +34,14 @@ public struct CheckPropertyMacro: PeerMacro {
         switch kind {
         case .idempotent:
             return expandIdempotent(function: function, in: context)
+
         case .roundTrip(let inverseName):
             return expandRoundTrip(
                 function: function,
                 inverseName: inverseName,
                 in: context
             )
+
         case .preservesInvariant(let keyPath):
             return expandPreservesInvariant(
                 function: function,
@@ -97,6 +99,7 @@ public struct CheckPropertyMacro: PeerMacro {
                 }
             }
             return nil
+
         case "preservesInvariant":
             // First (unlabelled) argument is the keypath literal.
             guard let firstArgument = call.arguments.first else { return nil }
@@ -104,6 +107,7 @@ public struct CheckPropertyMacro: PeerMacro {
                 return nil
             }
             return .preservesInvariant(keyPath: keyPath.trimmedDescription)
+
         default:
             return nil
         }

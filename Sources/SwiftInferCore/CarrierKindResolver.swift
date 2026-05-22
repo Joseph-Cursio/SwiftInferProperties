@@ -145,8 +145,10 @@ public struct CarrierKindResolver: Sendable {
             switch classify(typeName: member.typeName, depth: depth + 1) {
             case .valueSemantic:
                 continue
+
             case .referenceType, .mixed:
                 return .mixed
+
             case .unknown:
                 hasUnknownMember = true
             }
@@ -270,6 +272,7 @@ public struct CarrierKindResolver: Sendable {
                 detail: "Value-semantic carrier\(label) — algebraic property "
                     + "is well-defined under aliasing"
             )
+
         case .referenceType:
             let label = typeName.map { " (\($0))" } ?? ""
             return Signal(
@@ -279,6 +282,7 @@ public struct CarrierKindResolver: Sendable {
                     + "algebraic properties may be aliasing-sensitive "
                     + "(shared state through stored references)"
             )
+
         case .mixed, .unknown:
             return nil
         }

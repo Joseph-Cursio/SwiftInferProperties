@@ -190,12 +190,14 @@ public enum StrategistDispatchEmitter {
                 carrierTypeName: carrier,
                 imports: ["Foundation", "PropertyBased"]
             )
+
         case .caseIterable:
             return GeneratorRecipe(
                 expression: "Gen<\(carrier)>.element(of: \(carrier).allCases)",
                 carrierTypeName: carrier,
                 imports: ["Foundation", "PropertyBased"]
             )
+
         case let .rawRepresentable(rawType):
             let lifted = "\(rawType.generatorExpression).compactMap { "
                 + "\(carrier)(rawValue: $0) }"
@@ -204,8 +206,10 @@ public enum StrategistDispatchEmitter {
                 carrierTypeName: carrier,
                 imports: ["Foundation", "PropertyBased"]
             )
+
         case let .memberwiseArbitrary(members):
             return try memberwiseRecipe(members: members, carrier: carrier)
+
         case let .todo(reason):
             throw VerifyError.unsupportedCarrier(
                 carrier: carrier,
@@ -260,18 +264,25 @@ public enum StrategistDispatchEmitter {
         switch inputs.template {
         case "round-trip":
             return try composeRoundTripPass(inputs: inputs, recipe: recipe)
+
         case "idempotence":
             return composeIdempotencePass(inputs: inputs, recipe: recipe)
+
         case "commutativity":
             return composeCommutativityPass(inputs: inputs, recipe: recipe)
+
         case "associativity":
             return composeAssociativityPass(inputs: inputs, recipe: recipe)
+
         case "idempotence-lifted":
             return composeIdempotenceLiftedPass(inputs: inputs, recipe: recipe)
+
         case "dual-style-consistency":
             return try composeDualStyleConsistencyPass(inputs: inputs, recipe: recipe)
+
         case "monotonicity":
             return composeMonotonicityPass(inputs: inputs, recipe: recipe)
+
         default:
             throw VerifyError.unsupportedTemplate(
                 template: inputs.template,

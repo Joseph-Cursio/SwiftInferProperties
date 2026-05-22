@@ -49,10 +49,12 @@ extension ActionSequenceStubEmitter {
                 return "ActionSequenceStubEmitter does not support reducer shape "
                     + "'\(shape.rawValue)' — forward-compat slot for future PRD §6.2 "
                     + "shapes."
+
             case let .unsupportedCarrier(kind):
                 return "ActionSequenceStubEmitter does not yet support carrier kind "
                     + "'\(kind.rawValue)' (TCA `.tca` reducers need closure-relative "
                     + "state init via `feature.reduce(into:action:)` — deferred)."
+
             case let .unsupportedFamily(family):
                 return "ActionSequenceStubEmitter does not yet support invariant "
                     + "family '\(family.rawValue)' — forward-compat slot for future "

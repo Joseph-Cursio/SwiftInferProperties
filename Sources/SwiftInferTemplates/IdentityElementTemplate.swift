@@ -300,12 +300,15 @@ extension IdentityElementTemplate {
         // Additive: .zero + "+" → AdditiveArithmetic / Numeric / SignedNumeric
         case ("zero", "+"):
             return .additiveIdentityZero
+
         // Multiplicative: .one + "*" → Numeric / SignedNumeric
         case ("one", "*"):
             return .multiplicativeIdentityOne
+
         // Set-union: .empty + union-shaped ops → SetAlgebra
         case ("empty", "union"), ("empty", "formUnion"), ("empty", "+"):
             return .setUnionEmptyIdentity
+
         // Kit-monoid: .identity + arbitrary op → Monoid / CommutativeMonoid /
         // Group / Semilattice. The kit's `combine` op is type-bound, not
         // syntactic, so we don't constrain by op name here — any op paired
@@ -313,6 +316,7 @@ extension IdentityElementTemplate {
         // type is the kit's intended posture.
         case ("identity", _):
             return .monoidIdentity
+
         default:
             return nil
         }

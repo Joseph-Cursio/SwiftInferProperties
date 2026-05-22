@@ -99,6 +99,7 @@ extension MetricsRenderer {
             switch record.decision {
             case .accepted, .acceptedAsConformance:
                 break
+
             case .rejected, .skipped:
                 continue
             }
@@ -107,10 +108,13 @@ extension MetricsRenderer {
             switch outcome.outcome {
             case .stillPasses:
                 entry.stillPasses += 1
+
             case .nowFails:
                 entry.nowFails += 1
+
             case .obsolete:
                 entry.obsolete += 1
+
             case .error:
                 entry.error += 1
             }

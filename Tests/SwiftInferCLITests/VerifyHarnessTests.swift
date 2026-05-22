@@ -100,6 +100,7 @@ struct VerifyHarnessTests {
                 #expect(prefix == "0xBC43")
                 #expect(matches.contains(first.identityHash))
                 #expect(matches.contains(second.identityHash))
+
             default:
                 Issue.record("expected .ambiguousPrefix; got \(error)")
             }
@@ -125,6 +126,7 @@ struct VerifyHarnessTests {
                 #expect(prefix == "0xFFFF")
                 #expect(!closest.isEmpty)
                 #expect(closest.count <= 3)
+
             default:
                 Issue.record("expected .suggestionNotFound; got \(error)")
             }
@@ -143,6 +145,7 @@ struct VerifyHarnessTests {
             switch error {
             case .indexEmpty:
                 break
+
             default:
                 Issue.record("expected .indexEmpty; got \(error)")
             }
@@ -177,6 +180,7 @@ struct VerifyHarnessTests {
             switch error {
             case let .indexMissing(path):
                 #expect(path.path.hasSuffix(".swiftinfer/index.json"))
+
             default:
                 Issue.record("expected .indexMissing; got \(error)")
             }

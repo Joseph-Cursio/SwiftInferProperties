@@ -189,10 +189,13 @@ public enum InteractionTraceEmitter {
         switch (suffixStart, prefixLength) {
         case let (.some(start), .some(prefix)):
             return "        let actions = Array(rawActions.dropFirst(\(start)).prefix(\(prefix)))"
+
         case let (.some(start), .none):
             return "        let actions = Array(rawActions.dropFirst(\(start)))"
+
         case let (.none, .some(prefix)):
             return "        let actions = Array(rawActions.prefix(\(prefix)))"
+
         case (.none, .none):
             return "        let actions = rawActions"
         }

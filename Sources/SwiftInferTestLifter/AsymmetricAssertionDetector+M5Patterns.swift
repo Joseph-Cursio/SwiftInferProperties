@@ -41,8 +41,10 @@ extension AsymmetricAssertionDetector {
         switch assertion.kind {
         case .xctAssertGreaterThan, .xctAssertGreaterThanOrEqual:
             return parseXCTestConclusionPair(assertion.arguments)
+
         case .expectMacro:
             return parseSwiftTestingGreaterThanConclusion(assertion.arguments.first)
+
         default:
             return nil
         }

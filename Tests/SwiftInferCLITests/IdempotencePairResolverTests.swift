@@ -72,6 +72,7 @@ struct IdempotencePairResolverTests {
             case let .unsupportedTemplate(template, expected):
                 #expect(template == "round-trip")
                 #expect(expected == ["idempotence"])
+
             default:
                 Issue.record("expected .unsupportedTemplate; got \(error)")
             }
@@ -88,6 +89,7 @@ struct IdempotencePairResolverTests {
             case let .unsupportedCarrier(carrier, expected):
                 #expect(carrier == "Array<Int>")
                 #expect(expected == IdempotenceStubEmitter.supportedCarriers)
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }
@@ -103,6 +105,7 @@ struct IdempotencePairResolverTests {
             switch error {
             case let .unsupportedCarrier(carrier, _):
                 #expect(carrier == "(none)")
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }

@@ -21,21 +21,25 @@ extension ActionSequenceStubEmitter {
                 "precondition(\(invariant.predicate), "
                     + "\"Conservation invariant violated\")"
             ]
+
         case .cardinality:
             return [
                 "precondition(\(invariant.predicate), "
                     + "\"Cardinality invariant violated\")"
             ]
+
         case .referentialIntegrity:
             return [
                 "precondition(\(invariant.predicate), "
                     + "\"Referential-integrity invariant violated\")"
             ]
+
         case .biconditional:
             return [
                 "precondition(\(invariant.predicate), "
                     + "\"Biconditional invariant violated\")"
             ]
+
         case .idempotence:
             return []
         }
@@ -57,6 +61,7 @@ extension ActionSequenceStubEmitter {
         switch invariant.family {
         case .conservation, .cardinality, .referentialIntegrity, .biconditional:
             return []
+
         case .idempotence:
             return makeIdempotenceCheck(
                 actionExpr: invariant.predicate,
@@ -87,6 +92,7 @@ extension ActionSequenceStubEmitter {
                 "let twice = \(reducerCall)(once, \(actionExpr))",
                 assertion
             ]
+
         case .inoutStateActionReturnsVoid:
             return [
                 "var once = state",
@@ -95,12 +101,14 @@ extension ActionSequenceStubEmitter {
                 "\(reducerCall)(&twice, \(actionExpr))",
                 assertion
             ]
+
         case .stateActionReturnsStateAndEffect:
             return [
                 "let (once, _) = \(reducerCall)(state, \(actionExpr))",
                 "let (twice, _) = \(reducerCall)(once, \(actionExpr))",
                 assertion
             ]
+
         case .inoutStateActionReturnsEffect:
             return [
                 "var once = state",

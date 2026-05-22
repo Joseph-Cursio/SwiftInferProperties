@@ -236,21 +236,25 @@ extension SwiftInferCommand {
             switch verifyOutcome.outcome {
             case .measuredBothPass:
                 return InteractionAcceptCheckOutcome(kind: .stillPasses, detail: "bothPass")
+
             case .measuredDefaultFails:
                 return InteractionAcceptCheckOutcome(
                     kind: .nowFails,
                     detail: verifyOutcome.detail ?? "defaultFails"
                 )
+
             case .measuredEdgeCaseAdvisory:
                 return InteractionAcceptCheckOutcome(
                     kind: .stillPasses,
                     detail: "edgeCaseAdvisory"
                 )
+
             case .measuredError:
                 return InteractionAcceptCheckOutcome(
                     kind: .error,
                     detail: verifyOutcome.detail ?? "measuredError"
                 )
+
             case .architecturalCoveragePending:
                 return InteractionAcceptCheckOutcome(
                     kind: .error,

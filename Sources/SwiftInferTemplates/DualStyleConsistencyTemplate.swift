@@ -134,12 +134,15 @@ public enum DualStyleConsistencyTemplate {
         case .activeToPresentParticiple:
             detail = "Active / present-participle dual-style pair: "
                 + "'\(pair.mutatingMember.name)' / '\(pair.nonMutatingMember.name)'"
+
         case .activeToPastParticiple:
             detail = "Active / past-participle dual-style pair: "
                 + "'\(pair.mutatingMember.name)' / '\(pair.nonMutatingMember.name)'"
+
         case .formPrefixToBare:
             detail = "form-prefix / bare dual-style pair: "
                 + "'\(pair.mutatingMember.name)' / '\(pair.nonMutatingMember.name)'"
+
         case .projectVocabulary:
             detail = "Project-vocabulary dual-style pair: "
                 + "'\(pair.mutatingMember.name)' / '\(pair.nonMutatingMember.name)'"

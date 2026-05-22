@@ -160,12 +160,16 @@ public enum PredicateVetoReason: Sendable, Equatable, Codable {
         switch self {
         case .predicateThrows:
             return "predicate throws — Gen<T>.filter cannot apply throwing functions"
+
         case .predicateAsync:
             return "predicate is async — Gen<T>.filter is synchronous"
+
         case .predicateMultiArg:
             return "predicate takes multiple arguments — Gen<T>.filter is unary"
+
         case .predicateArgNotGeneratable:
             return "predicate's argument type isn't auto-generatable"
+
         case .predicateReturnNotEquatable:
             return "predicate's return type isn't Equatable — N-class equality classification needs ==(_:_:)"
         }

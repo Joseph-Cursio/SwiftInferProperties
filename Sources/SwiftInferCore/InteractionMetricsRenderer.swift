@@ -31,6 +31,7 @@ public enum InteractionMetricsRenderer {
         switch format {
         case .markdown:
             return renderMarkdown(report, sources: sources, skipRateThreshold: skipRateThreshold)
+
         case .plain:
             return renderPlain(report, sources: sources, skipRateThreshold: skipRateThreshold)
         }

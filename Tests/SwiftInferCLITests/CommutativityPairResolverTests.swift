@@ -61,6 +61,7 @@ struct CommutativityPairResolverTests {
             case let .unsupportedTemplate(template, expected):
                 #expect(template == "round-trip")
                 #expect(expected == ["commutativity"])
+
             default:
                 Issue.record("expected .unsupportedTemplate; got \(error)")
             }
@@ -77,6 +78,7 @@ struct CommutativityPairResolverTests {
             case let .unsupportedCarrier(carrier, expected):
                 #expect(carrier == "Array<Int>")
                 #expect(expected == CommutativityStubEmitter.supportedCarriers)
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }
@@ -92,6 +94,7 @@ struct CommutativityPairResolverTests {
             switch error {
             case let .unsupportedCarrier(carrier, _):
                 #expect(carrier == "(none)")
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }

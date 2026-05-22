@@ -38,8 +38,10 @@ extension SwiftInferCommand.Verify {
         switch raw.lowercased() {
         case "small":
             return .small
+
         case "standard":
             return .standard
+
         default:
             FileHandle.standardError.write(
                 Data("warning: unknown --budget '\(raw)'; defaulting to 'small'\n".utf8)

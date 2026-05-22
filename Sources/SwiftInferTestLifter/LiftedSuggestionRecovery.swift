@@ -144,18 +144,21 @@ public enum LiftedSuggestionRecovery {
                 summariesByName: summariesByName,
                 setupAnnotations: setupAnnotations
             )
+
         case .idempotence(let detection):
             return recoverIdempotence(
                 detection: detection,
                 summariesByName: summariesByName,
                 setupAnnotations: setupAnnotations
             )
+
         case .commutativity(let detection):
             return recoverCommutativity(
                 detection: detection,
                 summariesByName: summariesByName,
                 setupAnnotations: setupAnnotations
             )
+
         case .monotonicity, .countInvariance, .reduceEquivalence:
             // M5.0 lands the enum cases + factories; per-pattern
             // type-recovery rules (codomain vs domain split for
@@ -165,6 +168,7 @@ public enum LiftedSuggestionRecovery {
             // patterns aren't constructed by `TestLifter.discover` so
             // this branch is dormant.
             return (nil, nil)
+
         case .equivalenceClass(let hint):
             // M11.2 — the predicate equivalence-class hint already
             // carries the `argTypeName` resolved by the M11.1 detector
@@ -173,11 +177,13 @@ public enum LiftedSuggestionRecovery {
             // predicate). The `returnType` is `Bool` — every
             // equivalence-class predicate is unary returning Bool.
             return (hint.argTypeName, "Bool")
+
         case .nClassEquivalenceClass(let hint):
             // M13.3 — N-class hint carries argTypeName + returnTypeName
             // already resolved by the M13.2 detector. Same posture as
             // the two-class case above.
             return (hint.argTypeName, hint.returnTypeName)
+
         case .consumerProducerChain(let hint):
             // M16.2 — comment-only advisory; carry the consumer's
             // first-arg type (which equals the chain's `domainTypeName`

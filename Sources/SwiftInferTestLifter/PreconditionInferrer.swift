@@ -255,10 +255,13 @@ public enum PreconditionInferrer {
         switch pattern {
         case .positiveInt, .nonNegativeInt, .negativeInt, .intRange:
             return suggestedIntGenerator(for: pattern)
+
         case .nonEmptyString, .stringLength:
             return suggestedStringGenerator(for: pattern)
+
         case .constantBool(let value):
             return "Gen.always(\(value))  // observed only \(value) — opposite case may be untested"
+
         case .positiveDouble, .nonNegativeDouble, .negativeDouble, .doubleRange:
             return suggestedDoubleGenerator(for: pattern)
         }

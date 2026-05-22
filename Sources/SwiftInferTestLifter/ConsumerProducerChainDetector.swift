@@ -131,6 +131,7 @@ public enum ConsumerProducerChainDetector {
                     return nil
                 }
                 observed = producerName
+
             case .identifier, .other:
                 return nil
             }

@@ -144,12 +144,16 @@ extension SwiftInferCommand.Verify {
         switch entry.templateName {
         case "round-trip":
             return try roundTripStubBundle(entry: entry, budget: budget)
+
         case "idempotence":
             return try idempotenceStubBundle(entry: entry, budget: budget)
+
         case "commutativity":
             return try commutativityStubBundle(entry: entry, budget: budget)
+
         case "associativity":
             return try associativityStubBundle(entry: entry, budget: budget)
+
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
@@ -209,6 +213,7 @@ extension SwiftInferCommand.Verify {
         switch entry.templateName {
         case "round-trip":
             return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
+
         case "idempotence", "commutativity", "associativity":
             let call = CallExpressionShape.render(
                 typeQualifier: typeQualifier,
@@ -219,6 +224,7 @@ extension SwiftInferCommand.Verify {
                 rendererForwardName: call,
                 rendererInverseName: call
             )
+
         case "idempotence-lifted", "monotonicity":
             // V1.48.B — single-function shape. V1.69 — monotonicity's OC
             // composer also needs the un-stripped `primaryFunctionName`
@@ -233,6 +239,7 @@ extension SwiftInferCommand.Verify {
                 rendererForwardName: call,
                 rendererInverseName: call
             )
+
         case "dual-style-consistency":
             // V1.48.B — pair of expressions: [nonMutCall, mutMethodName].
             // Resolver fires its own validation (carrier-agnostic;
@@ -244,6 +251,7 @@ extension SwiftInferCommand.Verify {
                 rendererForwardName: pair.nonMutCall,
                 rendererInverseName: pair.mutMethodName
             )
+
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,

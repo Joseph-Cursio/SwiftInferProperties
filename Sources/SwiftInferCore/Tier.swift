@@ -50,10 +50,13 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
         switch score {
         case 75...:
             self = .strong
+
         case 40..<75:
             self = .likely
+
         case 20..<40:
             self = .possible
+
         default:
             self = .suppressed
         }

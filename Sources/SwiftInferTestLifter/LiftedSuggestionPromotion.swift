@@ -60,6 +60,7 @@ public extension LiftedSuggestion {
         switch pattern {
         case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
             score = Score(advisorySignals: [signal])
+
         case .roundTrip, .idempotence, .commutativity,
                 .monotonicity, .countInvariance, .reduceEquivalence:
             score = Score(signals: [signal])
@@ -89,10 +90,13 @@ public extension LiftedSuggestion {
         switch pattern {
         case .roundTrip(let detection):
             return roundTripEvidence(detection: detection, typeT: typeT, typeU: typeU)
+
         case .idempotence(let detection):
             return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
+
         case .commutativity(let detection):
             return [binaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
+
         case .monotonicity(let detection):
             // (T) -> Comparable; codomain is unknown at promotion time
             // until M5.5 widens recoverTypes to split domain/codomain.
@@ -101,10 +105,13 @@ public extension LiftedSuggestion {
                 signature: "(\(typeT)) -> ?",
                 location: detection.assertionLocation
             )]
+
         case .countInvariance(let detection):
             return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
+
         case .reduceEquivalence(let detection):
             return [reduceEquivalenceEvidence(detection: detection, typeT: typeT)]
+
         case .equivalenceClass(let hint):
             // M11.2 — synthesize a single Evidence carrying the predicate's
             // signature `(T) -> Bool`. Location is a placeholder (the M11
@@ -115,6 +122,7 @@ public extension LiftedSuggestion {
                 signature: "(\(hint.argTypeName)) -> Bool",
                 location: SourceLocation(file: "<corpus>", line: 0, column: 0)
             )]
+
         case .nClassEquivalenceClass(let hint):
             // M13.3 — same shape as two-class equivalence-class evidence
             // but the signature names the predicate's actual return type.
@@ -123,6 +131,7 @@ public extension LiftedSuggestion {
                 signature: "(\(hint.argTypeName)) -> \(hint.returnTypeName)",
                 location: SourceLocation(file: "<corpus>", line: 0, column: 0)
             )]
+
         case .consumerProducerChain(let hint):
             // M16.2 — synthesize a single Evidence carrying the
             // consumer's signature `(domainTypeName) -> ?`. Like the
@@ -191,19 +200,26 @@ public extension LiftedSuggestion {
         switch pattern {
         case .roundTrip(let detection):
             return "\(detection.backwardCallee)(\(detection.forwardCallee)(x)) == x"
+
         case .idempotence(let detection):
             return "\(detection.calleeName)(\(detection.calleeName)(x)) == \(detection.calleeName)(x)"
+
         case .commutativity(let detection):
             return "\(detection.calleeName)(a, b) == \(detection.calleeName)(b, a)"
+
         case .monotonicity(let detection):
             return "a < b ⇒ \(detection.calleeName)(a) <= \(detection.calleeName)(b)"
+
         case .countInvariance(let detection):
             return "\(detection.calleeName)(xs).count == xs.count"
+
         case .reduceEquivalence(let detection):
             return "xs.reduce(_, \(detection.opCalleeName)) == xs.reversed().reduce(_, \(detection.opCalleeName))"
+
         case .equivalenceClass(let hint):
             return "\(hint.predicateName) partitions \(hint.positiveMarker)/\(hint.negativeMarker)"
                 + " (\(hint.positiveSiteCount)+\(hint.negativeSiteCount) sites)"
+
         case .nClassEquivalenceClass(let hint):
             let counts = hint.markers
                 .map { marker in
@@ -211,6 +227,7 @@ public extension LiftedSuggestion {
                 }
                 .joined(separator: ", ")
             return "\(hint.predicateName) partitions \(hint.markerSetName) [\(counts)]"
+
         case .consumerProducerChain(let hint):
             return "\(hint.reverseName)'s argument was always \(hint.producerName)'s output"
                 + " across \(hint.siteCount) sites"
@@ -250,28 +267,34 @@ public extension LiftedSuggestion {
             assertionLine = "Test body asserts \(detection.backwardCallee)"
                 + "(\(detection.forwardCallee)(\(detection.inputBindingName)))"
                 + " == \(detection.inputBindingName)"
+
         case .idempotence(let detection):
             assertionLine = "Test body asserts \(detection.calleeName)"
                 + "(\(detection.calleeName)(\(detection.inputBindingName)))"
                 + " == \(detection.calleeName)(\(detection.inputBindingName))"
+
         case .commutativity(let detection):
             assertionLine = "Test body asserts \(detection.calleeName)"
                 + "(\(detection.leftArgName), \(detection.rightArgName))"
                 + " == \(detection.calleeName)(\(detection.rightArgName), \(detection.leftArgName))"
+
         case .monotonicity(let detection):
             assertionLine = "Test body asserts \(detection.leftArgName)"
                 + " < \(detection.rightArgName) implies "
                 + "\(detection.calleeName)(\(detection.leftArgName))"
                 + " <= \(detection.calleeName)(\(detection.rightArgName))"
+
         case .countInvariance(let detection):
             assertionLine = "Test body asserts \(detection.calleeName)"
                 + "(\(detection.inputBindingName)).count"
                 + " == \(detection.inputBindingName).count"
+
         case .reduceEquivalence(let detection):
             assertionLine = "Test body asserts \(detection.collectionBindingName)"
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
                 + " == \(detection.collectionBindingName).reversed()"
                 + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
+
         case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
             // Handled by the early-return above.
             assertionLine = ""
@@ -320,16 +343,22 @@ public extension LiftedSuggestion {
         switch pattern {
         case .roundTrip(let detection):
             return detection.assertionLocation
+
         case .idempotence(let detection):
             return detection.assertionLocation
+
         case .commutativity(let detection):
             return detection.assertionLocation
+
         case .monotonicity(let detection):
             return detection.assertionLocation
+
         case .countInvariance(let detection):
             return detection.assertionLocation
+
         case .reduceEquivalence(let detection):
             return detection.assertionLocation
+
         case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
             // M11.2 / M13.3 / M16.2 — corpus-level finding; no single
             // assertion location.

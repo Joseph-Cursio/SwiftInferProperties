@@ -28,8 +28,10 @@ extension InteractiveTriage {
         switch suggestion.templateName {
         case "invariant-preservation":
             return liftedCountInvarianceStub(for: suggestion)
+
         case "associativity":
             return liftedReduceEquivalenceStub(for: suggestion)
+
         default:
             return nil
         }

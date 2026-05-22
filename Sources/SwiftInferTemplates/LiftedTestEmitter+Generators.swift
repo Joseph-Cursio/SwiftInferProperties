@@ -146,10 +146,13 @@ public extension LiftedTestEmitter {
         switch pattern {
         case .positiveInt, .nonNegativeInt, .negativeInt, .intRange:
             return describeIntPattern(pattern)
+
         case .nonEmptyString, .stringLength:
             return describeStringPattern(pattern)
+
         case .constantBool(let value):
             return "all observed values are \(value)"
+
         case .positiveDouble, .nonNegativeDouble, .negativeDouble, .doubleRange:
             return describeDoublePattern(pattern)
         }

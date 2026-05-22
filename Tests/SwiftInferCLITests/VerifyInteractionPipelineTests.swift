@@ -64,6 +64,7 @@ struct VerifyInteractionPipelineTests {
             switch error {
             case let .requiresPin(names):
                 #expect(names == ["reduceA", "reduceB"])
+
             default:
                 Issue.record("expected .requiresPin, got \(error)")
             }
@@ -113,6 +114,7 @@ struct VerifyInteractionPipelineTests {
             case let .ambiguousPin(pin, matches):
                 #expect(pin == "reduce")
                 #expect(matches.count == 2)
+
             default:
                 Issue.record("expected .ambiguousPin, got \(error)")
             }
@@ -204,6 +206,7 @@ struct VerifyInteractionPipelineTests {
             switch error {
             case .requiresPin:
                 break
+
             default:
                 Issue.record("expected .requiresPin, got \(error)")
             }
@@ -268,6 +271,7 @@ struct VerifyInteractionPipelineTests {
             switch error {
             case let .hiddenMutability(reducer):
                 #expect(reducer == "Counter.reduce")
+
             default:
                 Issue.record("expected .hiddenMutability, got \(error)")
             }

@@ -55,6 +55,7 @@ extension InteractiveTriage {
             switch trimmed {
             case "a": return .accept
             case "b" where primaryAvailable: return .conformance
+
             // M8.4.b.1 — `b'` matches the rendered prompt notation
             // verbatim; `c` is a typing-friendly alias since some
             // terminals/keyboards make the apostrophe awkward.
@@ -62,11 +63,13 @@ extension InteractiveTriage {
             case "c" where secondaryAvailable: return .conformancePrime
             case "s", "": return .skip // empty line = skip-for-now (default-on-Enter)
             case "n": return .reject
+
             case "?", "h", "help":
                 output.write(helpText(
                     primaryAvailable: primaryAvailable,
                     secondaryAvailable: secondaryAvailable
                 ))
+
             default:
                 output.write("Unrecognized input '\(trimmed)'. Type ? for help.")
             }

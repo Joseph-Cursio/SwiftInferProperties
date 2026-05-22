@@ -195,6 +195,7 @@ public enum VerifierWorkdir {
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
                 ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.1.0\")"
             ]
+
         case .interaction:
             // V2.0 M3.E.2 — interaction verify needs the v2.2.0 kit
             // surface (ActionSequenceFactory + StatefulGuard, shipped
@@ -235,6 +236,7 @@ public enum VerifierWorkdir {
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
                 ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"
             ]
+
         case .interaction:
             entries = [
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",

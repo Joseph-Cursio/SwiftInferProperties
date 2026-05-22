@@ -167,6 +167,7 @@ struct AcceptBridgePipelineTests {
             switch error {
             case let .unknownBridgeIdentity(hash):
                 #expect(hash == "DEADBEEFDEADBEEF")
+
             default: Issue.record("expected .unknownBridgeIdentity; got \(error)")
             }
         }

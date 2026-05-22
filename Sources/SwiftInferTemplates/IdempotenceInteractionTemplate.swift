@@ -93,6 +93,7 @@ public enum IdempotenceInteractionTemplate {
             patternDescription = "exact-match against the curated "
                 + "idempotent-action list (refresh / reset / clear / "
                 + "dismiss / cancel / close / hide)"
+
         case .namePrefix:
             patternDescription = "name-prefix match (set* / select* / "
                 + "show* / present*) — payload-aware idempotence "

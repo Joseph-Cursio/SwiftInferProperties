@@ -218,6 +218,7 @@ extension SwiftInferCommand {
                 switch record.decision {
                 case .accepted, .acceptedAsConformance:
                     break
+
                 case .rejected, .skipped:
                     return false
                 }
@@ -295,12 +296,16 @@ extension SwiftInferCommand {
             switch evidence {
             case .measuredBothPass:
                 return (.stillPasses, "bothPass")
+
             case .measuredEdgeCaseAdvisory:
                 return (.stillPasses, "edgeCaseAdvisory")
+
             case .measuredDefaultFails:
                 return (.nowFails, "defaultFails")
+
             case .measuredError:
                 return (.error, "verify-error")
+
             case .architecturalCoveragePending:
                 return (.error, "architectural-coverage-pending")
             }

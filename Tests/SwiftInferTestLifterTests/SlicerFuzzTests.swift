@@ -73,24 +73,31 @@ struct SlicerFuzzTests {
         switch Int.random(in: 0..<7, using: &generator) {
         case 0:
             return "let \(randomIdent(generator: &generator)) = \(randomLiteral(generator: &generator))"
+
         case 1:
             let name = randomIdent(generator: &generator)
             let arg = randomIdent(generator: &generator)
             return "let \(name) = \(randomCallee(generator: &generator))(\(arg))"
+
         case 2:
             return "\(randomCallee(generator: &generator))()"
+
         case 3:
             let lhs = randomIdent(generator: &generator)
             let rhs = randomIdent(generator: &generator)
             return "XCTAssertEqual(\(lhs), \(rhs))"
+
         case 4:
             return "XCTAssertTrue(true)"
+
         case 5:
             let arg = randomIdent(generator: &generator)
             return "if \(arg) > 0 { print(\"positive\") }"
+
         case 6:
             // Deliberately weird: bare literal expression.
             return randomLiteral(generator: &generator)
+
         default:
             return ""
         }

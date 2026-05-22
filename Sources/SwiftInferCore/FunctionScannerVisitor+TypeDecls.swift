@@ -40,6 +40,7 @@ extension FunctionScannerVisitor {
         switch kind {
         case .enum, .extension:
             enumCaseNames = MemberBlockInspector.enumCaseNames(in: memberBlock)
+
         case .struct, .class, .actor:
             enumCaseNames = []
         }

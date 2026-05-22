@@ -296,10 +296,13 @@ extension AssociativityTemplate {
         switch opName {
         case "+":
             return [.additiveAssociative]
+
         case "*":
             return [.multiplicativeAssociative]
+
         case "union", "formUnion":
             return [.setUnionAssociative]
+
         default:
             return []
         }

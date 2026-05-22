@@ -257,12 +257,14 @@ extension RefactorBridgeAccumulator {
                 "Commutativity is a Strict law per kit v1.9.0 — "
                 + "`combine(a, b) == combine(b, a)` must hold for every (a, b)."
             )
+
         case "Group":
             caveats.append(
                 "Inverse witness must satisfy `combine(x, inverse(x)) == .identity` "
                 + "AND `combine(inverse(x), x) == .identity` — both Strict laws "
                 + "per kit v1.9.0."
             )
+
         case "Semilattice":
             caveats.append(
                 "Idempotence is a Strict law per kit v1.9.0 — "
@@ -270,6 +272,7 @@ extension RefactorBridgeAccumulator {
                 + "(set union, integer max) and bounded meet-semilattices (set "
                 + "intersection, integer min) share this conformance."
             )
+
         case "SetAlgebra":
             caveats.append(
                 "stdlib `SetAlgebra` requires more than the bounded-join-semilattice "
@@ -280,6 +283,7 @@ extension RefactorBridgeAccumulator {
                 + "conformance. Surfaced as a secondary Option B alongside "
                 + "Semilattice (PRD §5.4 row 2's primary-kit + secondary-stdlib pattern)."
             )
+
         default:
             break
         }

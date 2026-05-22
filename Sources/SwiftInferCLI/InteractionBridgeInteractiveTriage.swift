@@ -144,6 +144,7 @@ public enum InteractionBridgeInteractiveTriage {
         case "a": return .acceptAll
         case "s", "": return .skip
         case "n": return .reject
+
         default:
             if let index = Int(trimmed), index >= 1, index <= peerCount {
                 return .acceptPeer(index: index)
@@ -167,6 +168,7 @@ public enum InteractionBridgeInteractiveTriage {
         case .skip:
             output.write("Skipped.")
             return decisions
+
         case .acceptAll:
             let updated = upsertingAllPeers(
                 bridge,
@@ -176,6 +178,7 @@ public enum InteractionBridgeInteractiveTriage {
             )
             output.write("Recorded acceptedAsConformance for all \(bridge.peers.count) peers.")
             return updated
+
         case .reject:
             let updated = upsertingAllPeers(
                 bridge,
@@ -185,6 +188,7 @@ public enum InteractionBridgeInteractiveTriage {
             )
             output.write("Recorded rejected for all \(bridge.peers.count) peers.")
             return updated
+
         case .acceptPeer(let index):
             // 1-based → 0-based
             guard index >= 1, index <= bridge.peers.count else {

@@ -32,6 +32,7 @@ struct VerifierSubprocessTests {
             switch error {
             case let .runnerCrashed(reason):
                 #expect(reason.contains("verifier binary"))
+
             default:
                 Issue.record("expected .runnerCrashed; got \(error)")
             }
@@ -61,6 +62,7 @@ struct VerifierSubprocessTests {
             switch error {
             case .runnerCrashed:
                 break
+
             default:
                 Issue.record("expected .runnerCrashed; got \(error)")
             }

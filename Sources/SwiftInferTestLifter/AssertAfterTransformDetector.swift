@@ -54,6 +54,7 @@ public enum AssertAfterTransformDetector {
                 rhs: assertion.arguments.dropFirst().first,
                 location: assertion.location
             )
+
         case .expectMacro:
             // `#expect(LHS == RHS)` — first argument is a binary
             // operator expression with `==` infix.
@@ -61,6 +62,7 @@ public enum AssertAfterTransformDetector {
                 return nil
             }
             return collapsedFromEqualityExpression(firstArg, location: assertion.location)
+
         case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,

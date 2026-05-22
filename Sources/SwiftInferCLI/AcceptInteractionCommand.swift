@@ -175,6 +175,7 @@ public enum AcceptInteractionError: Error, CustomStringConvertible, Equatable {
         case let .unknownDecision(raw):
             return "swift-infer accept-interaction: unknown decision '\(raw)'. "
                 + "Valid: accepted, accepted-as-conformance, rejected, skipped."
+
         case let .unknownIdentity(hash):
             return "swift-infer accept-interaction: no current suggestion "
                 + "matches identity 0x\(hash). Re-run discover-interaction "

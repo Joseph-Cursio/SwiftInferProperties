@@ -27,8 +27,10 @@ struct PartitionAccumulator {
         switch classification {
         case .matched(_, .positive):
             positiveSites.append(PartitionSite(methodName: methodName))
+
         case .matched(_, .negative):
             negativeSites.append(PartitionSite(methodName: methodName))
+
         case .outlier:
             outlierSiteCount += 1
         }
@@ -62,6 +64,7 @@ struct NClassPartitionAccumulator {
         switch classification {
         case .matched(_, let marker):
             bucketsByMarker[marker, default: []].append(PartitionSite(methodName: methodName))
+
         case .outlier:
             outlierSiteCount += 1
         }

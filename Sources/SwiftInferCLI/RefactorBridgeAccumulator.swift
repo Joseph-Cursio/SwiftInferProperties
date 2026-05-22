@@ -44,10 +44,13 @@ struct RefactorBridgeAccumulator {
         switch signal {
         case .associativity:
             recordAssociativity(opName: opName)
+
         case .identityElement:
             recordIdentityElement(opName: opName, suggestion: suggestion)
+
         case .commutativity:
             recordCommutativity(opName: opName)
+
         case .idempotence:
             recordIdempotence(opName: opName)
         }

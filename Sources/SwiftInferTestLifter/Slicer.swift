@@ -251,8 +251,10 @@ enum AssertionAnchor {
         switch macro.macroName.text {
         case "expect":
             return .expectMacro
+
         case "require":
             return .requireMacro
+
         default:
             return nil
         }

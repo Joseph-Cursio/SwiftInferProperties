@@ -98,8 +98,10 @@ public enum InteractionSuggestionRenderer {
             switch suggestion.tier {
             case .verified, .strong, .likely, .advisory:
                 return true
+
             case .possible:
                 return includePossible
+
             case .suppressed:
                 return false
             }

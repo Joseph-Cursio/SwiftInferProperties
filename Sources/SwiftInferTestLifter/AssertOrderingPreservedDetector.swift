@@ -107,8 +107,10 @@ public enum AssertOrderingPreservedDetector {
         switch assertion.kind {
         case .xctAssertLessThan, .xctAssertLessThanOrEqual:
             return parseXCTestConclusion(assertion.arguments)
+
         case .expectMacro:
             return parseSwiftTestingConclusion(assertion.arguments.first)
+
         case .xctAssertEqual, .xctAssertTrue, .xctAssert, .xctAssertNotNil,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
                 .xctAssertGreaterThanOrEqual, .xctAssertFalse,

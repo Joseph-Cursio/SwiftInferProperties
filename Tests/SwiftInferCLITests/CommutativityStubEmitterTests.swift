@@ -54,6 +54,7 @@ struct CommutativityStubEmitterTests {
             case let .unsupportedCarrier(carrier, expected):
                 #expect(carrier == "Array<Int>")
                 #expect(expected == CommutativityStubEmitter.supportedCarriers)
+
             default:
                 Issue.record("expected .unsupportedCarrier; got \(error)")
             }

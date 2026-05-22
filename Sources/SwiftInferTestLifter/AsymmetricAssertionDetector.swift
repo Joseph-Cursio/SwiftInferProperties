@@ -192,11 +192,13 @@ public enum AsymmetricAssertionDetector {
                 return nil
             }
             return InequalityPair(lhs: lhs, rhs: rhs)
+
         case .expectMacro:
             guard let firstArg = assertion.arguments.first else {
                 return nil
             }
             return inequalityFromExpectArg(firstArg)
+
         default:
             return nil
         }

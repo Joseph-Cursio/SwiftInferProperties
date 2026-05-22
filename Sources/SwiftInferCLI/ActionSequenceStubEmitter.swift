@@ -233,13 +233,16 @@ public enum ActionSequenceStubEmitter {
         switch shape {
         case .stateActionReturnsState:
             return ["state = \(reducerCall)(state, action)"]
+
         case .inoutStateActionReturnsVoid:
             return ["\(reducerCall)(&state, action)"]
+
         case .stateActionReturnsStateAndEffect:
             return [
                 "let (newState, _) = \(reducerCall)(state, action)",
                 "state = newState"
             ]
+
         case .inoutStateActionReturnsEffect:
             return ["_ = \(reducerCall)(&state, action)"]
         }

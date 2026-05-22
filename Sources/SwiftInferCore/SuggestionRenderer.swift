@@ -209,6 +209,7 @@ public enum SuggestionRenderer {
         switch meta.source {
         case .notYetComputed:
             return "Generator: not yet computed (M3 prerequisite)"
+
         case .derivedCaseIterable, .derivedRawRepresentable,
              .derivedMemberwise, .derivedCodableRoundTrip,
              .registered, .todo, .inferredFromTests:
@@ -231,8 +232,10 @@ public enum SuggestionRenderer {
         case .notRun:
             let seed = SamplingSeed.derive(from: identity)
             return "Sampling:  not run; lifted test seed: \(SamplingSeed.renderHex(seed))"
+
         case .passed(let trials):
             return "Sampling:  \(trials)/\(trials) passed"
+
         case .failed(let seed, let counter):
             let hex = String(seed, radix: 16, uppercase: true)
             return "Sampling:  failed (seed: 0x\(hex), counterexample: \(counter))"
@@ -253,15 +256,19 @@ public enum SuggestionRenderer {
         case .measuredBothPass:
             glyph = "✓"
             label = "bothPass"
+
         case .measuredEdgeCaseAdvisory:
             glyph = "⚠"
             label = "edge-case advisory"
+
         case .measuredDefaultFails:
             glyph = "✗"
             label = "defaultFails (verify-disproven)"
+
         case .measuredError:
             glyph = "!"
             label = "error"
+
         case .architecturalCoveragePending:
             glyph = "·"
             label = "architectural-coverage-pending"

@@ -253,30 +253,35 @@ extension TestLifter {
                 sourceLocation: location,
                 origin: origin
             )
+
         case .idempotence(let calleeName):
             return .idempotence(
                 calleeName: calleeName,
                 sourceLocation: location,
                 origin: origin
             )
+
         case .commutativity(let calleeName):
             return .commutativity(
                 calleeName: calleeName,
                 sourceLocation: location,
                 origin: origin
             )
+
         case .monotonicity(let calleeName):
             return .monotonicity(
                 calleeName: calleeName,
                 sourceLocation: location,
                 origin: origin
             )
+
         case .countInvariance(let calleeName):
             return .countInvariance(
                 calleeName: calleeName,
                 sourceLocation: location,
                 origin: origin
             )
+
         case .reduceEquivalence(let opCalleeName):
             return .reduceEquivalence(
                 opCalleeName: opCalleeName,

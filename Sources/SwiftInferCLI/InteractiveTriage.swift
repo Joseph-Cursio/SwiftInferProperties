@@ -244,6 +244,7 @@ public enum InteractiveTriage {
                 state.writtenFiles.append(path)
             }
             return .accepted
+
         case .conformance:
             return try acceptConformance(
                 proposal: activeProposals.first,
@@ -251,6 +252,7 @@ public enum InteractiveTriage {
                 state: &state,
                 context: context
             )
+
         case .conformancePrime:
             // activeProposals.count >= 2 is the readChoice gate
             // condition; defensively read the index.
@@ -261,8 +263,10 @@ public enum InteractiveTriage {
                 state: &state,
                 context: context
             )
+
         case .skip:
             return .skipped
+
         case .reject:
             return .rejected
         }

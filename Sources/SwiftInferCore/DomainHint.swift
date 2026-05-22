@@ -152,10 +152,13 @@ public enum ProducerVetoReason: Sendable, Equatable {
         switch self {
         case .producerThrows:
             return "producer throws — Gen<T>.map cannot apply throwing functions"
+
         case .producerAsync:
             return "producer is async — Gen<T>.map is synchronous"
+
         case .producerMultiArg:
             return "producer takes multiple arguments — Gen<T>.map is unary"
+
         case .producerArgNotGeneratable:
             return "producer's argument type isn't auto-generatable"
         }
