@@ -53,7 +53,8 @@ struct DomainHintOriginTests {
 
     @Test
     func hintOriginEnumDistinguishesItsCases() {
-        #expect(HintOrigin.roundTripPair == HintOrigin.roundTripPair)
+        let roundTrip = HintOrigin.roundTripPair
+        #expect(roundTrip == HintOrigin.roundTripPair)
         #expect(HintOrigin.roundTripPair != HintOrigin.consumerProducerChain)
     }
 }

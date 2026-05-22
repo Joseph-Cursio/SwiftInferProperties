@@ -34,7 +34,8 @@ struct EquivalenceClassHintTests {
 
     @Test("PredicateVetoReason cases are distinct")
     func predicateVetoReasonEquatableDistinguishesCases() {
-        #expect(PredicateVetoReason.predicateThrows == PredicateVetoReason.predicateThrows)
+        let throwsReason = PredicateVetoReason.predicateThrows
+        #expect(throwsReason == PredicateVetoReason.predicateThrows)
         #expect(PredicateVetoReason.predicateThrows != PredicateVetoReason.predicateAsync)
         #expect(PredicateVetoReason.predicateMultiArg != PredicateVetoReason.predicateArgNotGeneratable)
     }

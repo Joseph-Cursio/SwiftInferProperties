@@ -39,7 +39,8 @@ struct DomainHintTests {
 
     @Test
     func producerVetoReasonEquatableDistinguishesCases() {
-        #expect(ProducerVetoReason.producerThrows == ProducerVetoReason.producerThrows)
+        let throwsReason = ProducerVetoReason.producerThrows
+        #expect(throwsReason == ProducerVetoReason.producerThrows)
         #expect(ProducerVetoReason.producerThrows != ProducerVetoReason.producerAsync)
         #expect(ProducerVetoReason.producerMultiArg != ProducerVetoReason.producerArgNotGeneratable)
     }

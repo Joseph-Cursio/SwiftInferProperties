@@ -33,7 +33,8 @@ struct PreconditionHintTests {
 
     @Test
     func patternEquatableDistinguishesCases() {
-        #expect(PreconditionPattern.positiveInt == PreconditionPattern.positiveInt)
+        let positiveInt = PreconditionPattern.positiveInt
+        #expect(positiveInt == PreconditionPattern.positiveInt)
         #expect(PreconditionPattern.positiveInt != PreconditionPattern.nonNegativeInt)
         #expect(PreconditionPattern.intRange(low: 0, high: 10) == .intRange(low: 0, high: 10))
         #expect(PreconditionPattern.intRange(low: 0, high: 10) != .intRange(low: 0, high: 11))
