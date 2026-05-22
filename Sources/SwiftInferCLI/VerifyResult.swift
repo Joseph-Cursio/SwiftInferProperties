@@ -1,28 +1,5 @@
 import Foundation
 
-/// V1.43.C — parses the two-pass verifier subprocess output into a
-/// structured `VerifyOutcome` and renders it for human consumption.
-///
-/// **Four v1.43 outcomes** (extends v1.42's 3-way pass/fail/error):
-///
-///   - `.bothPass(defaultTrials:edgeTrials:edgeSampled:)` — strong
-///     evidence; default + edge passes both clean.
-///   - `.edgeCaseAdvisory(defaultTrials:edge:)` — default pass clean,
-///     edge pass surfaced a counterexample at a curated edge case (or,
-///     less commonly, a finite-path value on the 90% slice —
-///     `edge.caseIndex == -1`). Property holds for normal inputs but
-///     breaks at a boundary.
-///   - `.defaultFails(trial:input:forwardResult:inverseResult:)` —
-///     default pass surfaced a counterexample; edge pass was skipped
-///     by the runner per the proposal §2.2 row 3 short-circuit.
-///   - `.error(reason:)` — build failure, runner crash, missing
-///     markers, or unexpected exit code.
-///
-/// **Parsing convention.** The V1.43.B stub emits one
-/// `VERIFY_DEFAULT_<KEY>:` or `VERIFY_EDGE_<KEY>:` line per data point.
-/// The parser is tolerant of extra lines (build chatter, debug prints,
-/// etc.) — it locates each marker by line prefix and ignores anything
-/// else. Multiple matches of the same marker take the *first* hit.
 /// The edge-pass counterexample data carried by
 /// `VerifyOutcome.edgeCaseAdvisory`.
 ///
@@ -57,6 +34,29 @@ public struct EdgeCaseDetail: Equatable, Sendable {
     }
 }
 
+/// V1.43.C — parses the two-pass verifier subprocess output into a
+/// structured `VerifyOutcome` and renders it for human consumption.
+///
+/// **Four v1.43 outcomes** (extends v1.42's 3-way pass/fail/error):
+///
+///   - `.bothPass(defaultTrials:edgeTrials:edgeSampled:)` — strong
+///     evidence; default + edge passes both clean.
+///   - `.edgeCaseAdvisory(defaultTrials:edge:)` — default pass clean,
+///     edge pass surfaced a counterexample at a curated edge case (or,
+///     less commonly, a finite-path value on the 90% slice —
+///     `edge.caseIndex == -1`). Property holds for normal inputs but
+///     breaks at a boundary.
+///   - `.defaultFails(trial:input:forwardResult:inverseResult:)` —
+///     default pass surfaced a counterexample; edge pass was skipped
+///     by the runner per the proposal §2.2 row 3 short-circuit.
+///   - `.error(reason:)` — build failure, runner crash, missing
+///     markers, or unexpected exit code.
+///
+/// **Parsing convention.** The V1.43.B stub emits one
+/// `VERIFY_DEFAULT_<KEY>:` or `VERIFY_EDGE_<KEY>:` line per data point.
+/// The parser is tolerant of extra lines (build chatter, debug prints,
+/// etc.) — it locates each marker by line prefix and ignores anything
+/// else. Multiple matches of the same marker take the *first* hit.
 public enum VerifyOutcome: Equatable, Sendable {
     case bothPass(defaultTrials: Int, edgeTrials: Int, edgeSampled: Int)
     case edgeCaseAdvisory(defaultTrials: Int, edge: EdgeCaseDetail)
