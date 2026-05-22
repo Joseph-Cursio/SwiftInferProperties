@@ -100,7 +100,7 @@ extension SwiftInferCommand {
             }
             let evidenceByIdentity = Dictionary(
                 evidenceResult.log.records.map { ($0.identityHash, $0) }
-            )                { _, latest in latest }
+            ) { _, latest in latest }
             let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
                 explicitVocabularyPath: explicitVocabularyPath,

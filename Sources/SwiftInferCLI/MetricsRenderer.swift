@@ -175,7 +175,7 @@ public enum MetricsRenderer {
     ) -> [VerifyEvidenceRow] {
         let evidenceByHash = Dictionary(
             evidence.records.map { ($0.identityHash, $0) }
-        )            { _, latest in latest }
+        ) { _, latest in latest }
         var byDecision: [Decision: [VerifyEvidenceOutcome: Int]] = [:]
         for record in decisions.records {
             guard let matched = evidenceByHash[record.identityHash] else { continue }

@@ -26,7 +26,7 @@ struct DiscoverCLITestDirResolverTests {
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
             explicitTestDir: testDir
-        )            { warnings.append($0) }
+        ) { warnings.append($0) }
         #expect(resolved.standardizedFileURL == testDir.standardizedFileURL)
         #expect(warnings.isEmpty)
     }
@@ -45,7 +45,7 @@ struct DiscoverCLITestDirResolverTests {
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
             explicitTestDir: missing
-        )            { warnings.append($0) }
+        ) { warnings.append($0) }
         // Walk-up found Package.swift + Tests/ — that's what the
         // resolver returns.
         #expect(resolved.standardizedFileURL == tests.standardizedFileURL)
@@ -67,7 +67,7 @@ struct DiscoverCLITestDirResolverTests {
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
             explicitTestDir: nil
-        )            { warnings.append($0) }
+        ) { warnings.append($0) }
         #expect(resolved.standardizedFileURL == tests.standardizedFileURL)
         #expect(warnings.isEmpty)
     }
@@ -85,7 +85,7 @@ struct DiscoverCLITestDirResolverTests {
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
             explicitTestDir: nil
-        )            { warnings.append($0) }
+        ) { warnings.append($0) }
         #expect(resolved.standardizedFileURL == prodTarget.standardizedFileURL)
         #expect(warnings.isEmpty)
     }
@@ -103,7 +103,7 @@ struct DiscoverCLITestDirResolverTests {
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
             explicitTestDir: nil
-        )            { warnings.append($0) }
+        ) { warnings.append($0) }
         #expect(resolved.standardizedFileURL == prodTarget.standardizedFileURL)
         #expect(warnings.isEmpty)
     }

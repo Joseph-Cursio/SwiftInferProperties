@@ -60,7 +60,7 @@ struct ConsumerProducerChainDetectorVetoTests {
                 "validate": Fixtures.validateConsumer()
             ],
             knownRoundTripPairs: []
-        )            { _ in false }
+        ) { _ in false }
         let hint = try #require(hints.first)
         #expect(hint.producerVeto == .producerArgNotGeneratable)
     }

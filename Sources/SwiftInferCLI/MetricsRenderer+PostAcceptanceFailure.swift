@@ -93,7 +93,7 @@ extension MetricsRenderer {
     ) -> [PostAcceptanceFailureRow] {
         let outcomeByHash = Dictionary(
             outcomes.records.map { ($0.identityHash, $0) }
-        )            { _, latest in latest }
+        ) { _, latest in latest }
         var byTemplate: [String: PostAcceptanceCounts] = [:]
         for record in decisions.records {
             switch record.decision {

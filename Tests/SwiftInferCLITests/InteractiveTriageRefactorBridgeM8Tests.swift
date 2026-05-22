@@ -16,11 +16,11 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 identityWitness: "empty",
                 inverseWitness: nil
             )
-        )            { contents in
+        ) { contents in
                 #expect(contents.contains("extension Tally: CommutativeMonoid {"))
                 #expect(contents.contains("Self.merge(lhs, rhs)"))
                 #expect(contents.contains("Self.empty"))
-            }
+        }
     }
 
     @Test("M8.6: B accept on Group writes a kit-protocol extension with inverse witness")
@@ -33,7 +33,7 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 identityWitness: "zero",
                 inverseWitness: "negate"
             )
-        )            { contents in
+        ) { contents in
                 #expect(contents.contains("extension AdditiveInt: Group {"))
                 #expect(contents.contains("Self.plus(lhs, rhs)"))
                 #expect(contents.contains("Self.zero"))
@@ -41,7 +41,7 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 // emitter's `static func inverse(_:)` aliasing body.
                 #expect(contents.contains("public static func inverse(_ value: AdditiveInt)"))
                 #expect(contents.contains("Self.negate(value)"))
-            }
+        }
     }
 
     @Test("M8.6: B accept on Semilattice writes a kit-protocol extension")
@@ -54,14 +54,14 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 identityWitness: "minimum",
                 inverseWitness: nil
             )
-        )            { contents in
+        ) { contents in
                 #expect(contents.contains("extension MaxInt: Semilattice {"))
                 // `combine` is the canonical kit-required name; no
                 // aliasing emitted (open decision in M7.5.a — self-
                 // aliasing would recurse infinitely at runtime).
                 #expect(contents.contains("public static func combine") == false)
                 #expect(contents.contains("Self.minimum"))
-            }
+        }
     }
 
     @Test("M8.6: B accept on Numeric (Ring arm) writes a bare stdlib extension")
@@ -77,12 +77,12 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 identityWitness: "zero",
                 inverseWitness: nil
             )
-        )            { contents in
+        ) { contents in
                 #expect(contents.contains("extension Money: Numeric {}"))
                 // Bare extension — no aliasing body.
                 #expect(contents.contains("public static func combine") == false)
                 #expect(contents.contains("public static var identity") == false)
-            }
+        }
     }
 
     @Test("M8.6: B accept on SetAlgebra (Semilattice secondary) writes a bare stdlib extension")
@@ -95,10 +95,10 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 identityWitness: nil,
                 inverseWitness: nil
             )
-        )            { contents in
+        ) { contents in
                 #expect(contents.contains("extension Bag: SetAlgebra {}"))
                 #expect(contents.contains("public static func combine") == false)
-            }
+        }
     }
 }
 

@@ -67,7 +67,7 @@ extension InversePairTemplate {
         // sides are direction-labeled AND both function names start with
         // `index`/`bucket`/`word`, fire full veto. Mirrors V1.25.A on
         // idempotence + V1.22.B on round-trip.
-        if forwardIsDirection, reverseIsDirection, 
+        if forwardIsDirection, reverseIsDirection,
            forwardNameMatch, reverseNameMatch {
             return Signal(
                 kind: .directionLabel,
