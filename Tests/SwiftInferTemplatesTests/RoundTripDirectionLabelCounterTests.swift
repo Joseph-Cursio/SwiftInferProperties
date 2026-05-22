@@ -270,7 +270,7 @@ struct RoundTripDirectionLabelCounterTests {
             forwardReturn: "Data"
         )
         let suggestion = RoundTripTemplate.suggest(for: curated)
-        let directionSignal = suggestion?.score.signals.first(where: { $0.kind == .directionLabel })
+        let directionSignal = suggestion?.score.signals.first { $0.kind == .directionLabel }
         #expect(directionSignal?.weight == -15)
         // Sanity check: bare-shape with direction label suppresses.
         let bare = makePair(

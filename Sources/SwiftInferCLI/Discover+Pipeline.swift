@@ -308,9 +308,8 @@ extension SwiftInferCommand.Discover {
         // <package-root>/Tests/; the user can override with --test-dir.
         let testDirectory = effectiveTestDirectory(
             productionTarget: directory,
-            explicitTestDir: overrides.testDirectory,
-            diagnostic: { diagnostics.writeDiagnostic("warning: \($0)") }
-        )
+            explicitTestDir: overrides.testDirectory
+        )            { diagnostics.writeDiagnostic("warning: \($0)") }
         // V1.32.C — Domain Template Packs (PRD §20.3). Precedence
         // CLI > config > nil (no filter; all templates run).
         let templateFilter = resolveTemplateFilter(

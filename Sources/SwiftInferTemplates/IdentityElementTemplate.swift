@@ -124,6 +124,9 @@ public enum IdentityElementTemplate {
                 ]
             },
             identity: Self.makeIdentity(for:),
+            // Multi-closure Constraint call: multiple_closures_with_trailing_closure
+            // (default) forbids the trailing form trailing_closure would want.
+            // swiftlint:disable:next trailing_closure
             carrier: { $0.operation.containingTypeName }
         )
     }

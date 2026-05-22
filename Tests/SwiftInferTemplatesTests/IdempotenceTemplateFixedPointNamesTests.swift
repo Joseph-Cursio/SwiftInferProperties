@@ -148,7 +148,7 @@ struct IdempotenceTemplateFixedPointNamesTests {
         // The suggestion's explainability whySuggested must include the
         // fixed-point line in the signal-pipeline order.
         let lines = suggestion.explainability.whySuggested
-        let fixedPointIndex = lines.firstIndex(where: { $0.contains("Fixed-point name") })
+        let fixedPointIndex = lines.firstIndex { $0.contains("Fixed-point name") }
         #expect(fixedPointIndex != nil, "Fixed-point signal should be in whySuggested")
     }
 }

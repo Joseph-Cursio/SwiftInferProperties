@@ -289,7 +289,7 @@ extension InversePairTemplate {
             return nil
         }
         let stripped = candidates
-            .first(where: { FloatingPointStorageNames.contains($0) })
+            .first { FloatingPointStorageNames.contains($0) }
             .map(FloatingPointStorageNames.strippingGenericParameters)
             ?? "?"
         return Signal(

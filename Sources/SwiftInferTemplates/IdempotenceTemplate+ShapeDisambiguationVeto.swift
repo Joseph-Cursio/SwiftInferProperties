@@ -71,7 +71,7 @@ extension IdempotenceTemplate {
         // Capacity/Count/Scale token in name).
         if returnType == "Int" && param.typeText == "Int" {
             let domainTokens = ["Capacity", "Count", "Scale", "scale"]
-            let nameHit = domainTokens.contains(where: { name.contains($0) })
+            let nameHit = domainTokens.contains { name.contains($0) }
             let labelHit: Bool = {
                 guard let label = param.label else { return false }
                 return label == "forScale" || label == "forCapacity"

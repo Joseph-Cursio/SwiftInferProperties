@@ -47,7 +47,7 @@ struct RefactorBridgeSetAlgebraTests {
         let idem = makeRBSuggestion(template: "idempotence", typeName: "Bag", funcName: "intersect")
         let proposals = RefactorBridgeOrchestrator.proposals(from: [assoc, identity, comm, idem])
         let list = try #require(proposals["Bag"])
-        let setAlgebra = try #require(list.first(where: { $0.protocolName == "SetAlgebra" }))
+        let setAlgebra = try #require(list.first { $0.protocolName == "SetAlgebra" })
         let caveats = setAlgebra.explainability.whyMightBeWrong.joined(separator: "\n")
         #expect(caveats.contains("stdlib `SetAlgebra` requires more than"))
         #expect(caveats.contains("`insert`, `remove`, `contains`"))

@@ -211,7 +211,7 @@ struct InversePairDirectionLabelCounterTests {
             forwardReturn: "String"
         )
         let suggestion = InversePairTemplate.suggest(for: curated)
-        let directionSignal = suggestion?.score.signals.first(where: { $0.kind == .directionLabel })
+        let directionSignal = suggestion?.score.signals.first { $0.kind == .directionLabel }
         #expect(directionSignal?.weight == -10)
         // Sanity check: bare-shape with direction label should be
         // suppressed under the same -10 weight.

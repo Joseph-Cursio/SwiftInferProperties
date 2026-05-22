@@ -25,9 +25,8 @@ struct DiscoverCLITestDirResolverTests {
         var warnings: [String] = []
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
-            explicitTestDir: testDir,
-            diagnostic: { warnings.append($0) }
-        )
+            explicitTestDir: testDir
+        )            { warnings.append($0) }
         #expect(resolved.standardizedFileURL == testDir.standardizedFileURL)
         #expect(warnings.isEmpty)
     }
@@ -45,9 +44,8 @@ struct DiscoverCLITestDirResolverTests {
         var warnings: [String] = []
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
-            explicitTestDir: missing,
-            diagnostic: { warnings.append($0) }
-        )
+            explicitTestDir: missing
+        )            { warnings.append($0) }
         // Walk-up found Package.swift + Tests/ — that's what the
         // resolver returns.
         #expect(resolved.standardizedFileURL == tests.standardizedFileURL)
@@ -68,9 +66,8 @@ struct DiscoverCLITestDirResolverTests {
         var warnings: [String] = []
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
-            explicitTestDir: nil,
-            diagnostic: { warnings.append($0) }
-        )
+            explicitTestDir: nil
+        )            { warnings.append($0) }
         #expect(resolved.standardizedFileURL == tests.standardizedFileURL)
         #expect(warnings.isEmpty)
     }
@@ -87,9 +84,8 @@ struct DiscoverCLITestDirResolverTests {
         var warnings: [String] = []
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
-            explicitTestDir: nil,
-            diagnostic: { warnings.append($0) }
-        )
+            explicitTestDir: nil
+        )            { warnings.append($0) }
         #expect(resolved.standardizedFileURL == prodTarget.standardizedFileURL)
         #expect(warnings.isEmpty)
     }
@@ -106,9 +102,8 @@ struct DiscoverCLITestDirResolverTests {
         var warnings: [String] = []
         let resolved = SwiftInferCommand.Discover.effectiveTestDirectory(
             productionTarget: prodTarget,
-            explicitTestDir: nil,
-            diagnostic: { warnings.append($0) }
-        )
+            explicitTestDir: nil
+        )            { warnings.append($0) }
         #expect(resolved.standardizedFileURL == prodTarget.standardizedFileURL)
         #expect(warnings.isEmpty)
     }

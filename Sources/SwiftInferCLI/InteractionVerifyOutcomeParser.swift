@@ -155,7 +155,7 @@ public enum InteractionVerifyOutcomeParser {
     /// the most recent stderr lines from a build failure without
     /// dumping the entire `swift build` log.
     private static func lastLines(_ text: String, count: Int) -> String {
-        text.split(whereSeparator: { $0 == "\n" || $0 == "\r" })
+        text.split { $0 == "\n" || $0 == "\r" }
             .suffix(count)
             .joined(separator: "\n")
     }

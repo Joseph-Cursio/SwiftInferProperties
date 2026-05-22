@@ -99,9 +99,8 @@ extension SwiftInferCommand {
                 diagnostics.writeDiagnostic("warning: \(warning)")
             }
             let evidenceByIdentity = Dictionary(
-                evidenceResult.log.records.map { ($0.identityHash, $0) },
-                uniquingKeysWith: { _, latest in latest }
-            )
+                evidenceResult.log.records.map { ($0.identityHash, $0) }
+            )                { _, latest in latest }
             let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
                 explicitVocabularyPath: explicitVocabularyPath,

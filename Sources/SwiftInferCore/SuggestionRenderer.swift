@@ -146,7 +146,7 @@ public enum SuggestionRenderer {
         if suggestions.isEmpty {
             return "0 suggestions."
         }
-        let byTemplate = Dictionary(grouping: suggestions, by: { $0.templateName })
+        let byTemplate = Dictionary(grouping: suggestions) { $0.templateName }
         let templates = byTemplate.keys.sorted()
         let header = countHeader(suggestions.count, templateCount: templates.count)
         let nameWidth = templates.map(\.count).max() ?? 0

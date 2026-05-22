@@ -25,9 +25,8 @@ struct TemplateRegistryContradictionTests {
         )
         var diagnostics: [String] = []
         let suggestions = TemplateRegistry.discover(
-            in: [merge],
-            diagnostic: { diagnostics.append($0) }
-        )
+            in: [merge]
+        )            { diagnostics.append($0) }
         #expect(suggestions.allSatisfy { $0.templateName != "commutativity" })
         #expect(diagnostics.count == 1)
         let line = diagnostics.first ?? ""
@@ -66,9 +65,8 @@ struct TemplateRegistryContradictionTests {
         )
         var diagnostics: [String] = []
         let suggestions = TemplateRegistry.discover(
-            in: [wrap, unwrap],
-            diagnostic: { diagnostics.append($0) }
-        )
+            in: [wrap, unwrap]
+        )            { diagnostics.append($0) }
         #expect(suggestions.allSatisfy { $0.templateName != "round-trip" })
         #expect(diagnostics.count == 1)
         let line = diagnostics.first ?? ""
@@ -86,9 +84,8 @@ struct TemplateRegistryContradictionTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         var diagnostics: [String] = []
         let suggestions = try TemplateRegistry.discover(
-            in: directory,
-            diagnostic: { diagnostics.append($0) }
-        )
+            in: directory
+        )            { diagnostics.append($0) }
         #expect(suggestions.allSatisfy { $0.templateName != "commutativity" })
         #expect(diagnostics.contains { line in
             line.hasPrefix("contradiction: ")

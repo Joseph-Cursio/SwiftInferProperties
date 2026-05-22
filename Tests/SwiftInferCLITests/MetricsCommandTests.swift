@@ -215,8 +215,8 @@ struct DecisionsMergeTests {
         let rhs = Decisions(records: [Self.record(identityHash: "BB", decision: .rejected, timestamp: 200)])
         let merged = lhs.merge(rhs)
         #expect(merged.records.count == 2)
-        #expect(merged.records.contains(where: { $0.identityHash == "AA" }))
-        #expect(merged.records.contains(where: { $0.identityHash == "BB" }))
+        #expect(merged.records.contains { $0.identityHash == "AA" })
+        #expect(merged.records.contains { $0.identityHash == "BB" })
     }
 
     @Test("Overlapping identity: later timestamp wins")

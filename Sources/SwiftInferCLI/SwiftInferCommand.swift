@@ -313,9 +313,8 @@ extension SwiftInferCommand {
                 diagnostics.writeDiagnostic("warning: \(warning)")
             }
             return Dictionary(
-                evidenceResult.log.records.map { ($0.identityHash, $0) },
-                uniquingKeysWith: { _, latest in latest }
-            )
+                evidenceResult.log.records.map { ($0.identityHash, $0) }
+            )                { _, latest in latest }
         }
 
         /// V1.89 lint pass — extracted from `Discover.run`. Builds the
