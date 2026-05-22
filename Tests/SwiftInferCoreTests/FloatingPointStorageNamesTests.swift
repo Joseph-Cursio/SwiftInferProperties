@@ -42,7 +42,7 @@ struct FloatingPointStorageNamesTests {
         #expect(FloatingPointStorageNames.strippingGenericParameters("Complex<Float>") == "Complex")
         #expect(FloatingPointStorageNames.strippingGenericParameters("Array<Int>") == "Array")
         #expect(FloatingPointStorageNames.strippingGenericParameters("Foo") == "Foo")
-        #expect(FloatingPointStorageNames.strippingGenericParameters("") == "")
+        #expect(FloatingPointStorageNames.strippingGenericParameters("").isEmpty)
     }
 
     @Test("Generic Complex<...> matches contains(_:)")

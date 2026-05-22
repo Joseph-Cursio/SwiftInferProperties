@@ -242,6 +242,6 @@ struct IndexCommandBuildEntryTests {
         #expect(SwiftInferCommand.Index.bareTypeName(from: "Complex<Double>") == "Complex")
         #expect(SwiftInferCommand.Index.bareTypeName(from: "OrderedSet<Element>") == "OrderedSet")
         #expect(SwiftInferCommand.Index.bareTypeName(from: "Int") == "Int")
-        #expect(SwiftInferCommand.Index.bareTypeName(from: "") == "")
+        #expect(SwiftInferCommand.Index.bareTypeName(from: "").isEmpty)
     }
 }

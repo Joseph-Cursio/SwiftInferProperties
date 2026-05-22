@@ -34,7 +34,7 @@ struct EquivalenceClassMarkerExtractorTests {
 
     @Test("Empty identifier yields empty token list")
     func tokenizeEmpty() {
-        #expect(EquivalenceClassMarkerExtractor.tokenize("") == [])
+        #expect(EquivalenceClassMarkerExtractor.tokenize("").isEmpty)
     }
 
     @Test("Trailing underscore doesn't yield an empty token")

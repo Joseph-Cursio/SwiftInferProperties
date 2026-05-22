@@ -191,8 +191,8 @@ struct CommutativityProtocolCoverageVetoTests {
             == [.setUnionCommutative])
         #expect(CommutativityTemplate.commutativityCoverageCandidates(forOp: "formUnion")
             == [.setUnionCommutative])
-        #expect(CommutativityTemplate.commutativityCoverageCandidates(forOp: "combine") == [])
-        #expect(CommutativityTemplate.commutativityCoverageCandidates(forOp: "merge") == [])
+        #expect(CommutativityTemplate.commutativityCoverageCandidates(forOp: "combine").isEmpty)
+        #expect(CommutativityTemplate.commutativityCoverageCandidates(forOp: "merge").isEmpty)
     }
 }
 
@@ -251,6 +251,6 @@ struct AssociativityProtocolCoverageVetoTests {
             == [.setUnionAssociative])
         #expect(AssociativityTemplate.associativityCoverageCandidates(forOp: "formUnion")
             == [.setUnionAssociative])
-        #expect(AssociativityTemplate.associativityCoverageCandidates(forOp: "concat") == [])
+        #expect(AssociativityTemplate.associativityCoverageCandidates(forOp: "concat").isEmpty)
     }
 }
