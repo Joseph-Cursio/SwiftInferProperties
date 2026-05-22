@@ -1,12 +1,10 @@
 included:
   - Sources
   - Tests
-
 excluded:
   - .build
   - docs
   - Package.swift
-
 # Match SwiftPropertyLaws's identifier_name relaxations: keep the idiomatic
 # `id` two-letter name and lift max_length to 50 to accommodate downstream
 # integration with the kit's `check<Protocol>ProtocolLaws` family.
@@ -14,3 +12,94 @@ identifier_name:
   excluded:
     - id
   max_length: 50
+opt_in_rules:
+  - required_enum_case
+  - strong_iboutlet
+  - discouraged_assert
+  - redundant_type_annotation
+  - implicit_return
+  - prefer_asset_symbols
+  - static_operator
+  - closure_end_indentation
+  - empty_count
+  - file_name_no_space
+  - prefer_self_type_over_type_of_self
+  - unneeded_parentheses_in_closure_argument
+  - joined_default_parameter
+  - explicit_init
+  - discouraged_none_name
+  - flatmap_over_map_reduce
+  - discouraged_object_literal
+  - last_where
+  - contains_over_range_nil_comparison
+  - optional_enum_case_matching
+  - collection_alignment
+  - modifier_order
+  - operator_usage_whitespace
+  - local_doc_comment
+  - lower_acl_than_parent
+  - contains_over_filter_count
+  - period_spacing
+  - direct_return
+  - discarded_notification_center_observer
+  - multiline_parameters
+  - prefer_nimble
+  - prefer_zero_over_explicit_init
+  - accessibility_trait_for_button
+  - private_outlet
+  - private_subject
+  - single_test_class
+  - superfluous_else
+  - toggle_bool
+  - unavailable_function
+  - fatal_error_message
+  - fallthrough
+  - legacy_objc_type
+  - nslocalizedstring_key
+  - prohibited_super_call
+  - nimble_operator
+  - unowned_variable_capture
+  - literal_expression_end_indentation
+  - unhandled_throwing_task
+  - empty_xctest_method
+  - file_header
+  - nslocalizedstring_require_bundle
+  - quick_discouraged_focused_test
+  - return_value_from_void_function
+  - test_case_accessibility
+  - shorthand_optional_binding
+  - closure_spacing
+  - ibinspectable_in_extension
+  - reduce_into
+  - object_literal
+  - expiring_todo
+  - array_init
+  - first_where
+  - balanced_xctest_lifecycle
+  - override_in_extension
+  - private_action
+  - quick_discouraged_call
+  - shorthand_argument
+  - prohibited_interface_builder
+  - accessibility_label_for_image
+  - xct_specific_matcher
+  - yoda_condition
+  - self_binding
+  - multiline_parameters_brackets
+  - weak_delegate
+  - legacy_multiple
+  - redundant_nil_coalescing
+  - overridden_super_call
+  - implicitly_unwrapped_optional
+  - unneeded_escaping
+  - untyped_error_in_catch
+  - comma_inheritance
+  - final_test_case
+  - quick_discouraged_pending_test
+  - private_swiftui_state
+analyzer_rules:
+  - capture_variable
+  - unused_declaration
+  - explicit_self
+  - unused_import
+  - typesafe_array_init
