@@ -102,7 +102,7 @@ struct HardGuaranteeTests {
 
     @Test("Production source contains no networking-API usage patterns")
     func noNetworkingAPIsInProduction() throws {
-        let sourcesRoot = packageSourcesRoot
+        let sourcesRoot = kPackageSourcesRoot
         let forbidden = [
             "URLSession(",
             "URLSession.shared.",
@@ -240,7 +240,7 @@ func fileSet(of directory: URL) throws -> Set<String> {
 
 /// `Sources/` directory of the package, resolved against `#filePath`
 /// so the path holds regardless of `swift test`'s working directory.
-let packageSourcesRoot: URL = {
+let kPackageSourcesRoot: URL = {
     let testFile = URL(fileURLWithPath: #filePath, isDirectory: false)
     return testFile
         .deletingLastPathComponent()  // SwiftInferIntegrationTests/
