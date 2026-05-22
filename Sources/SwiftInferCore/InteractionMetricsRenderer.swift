@@ -212,7 +212,13 @@ public enum InteractionMetricsRenderer {
     /// cycle-7's findings (idem first, then bicon, card, refint,
     /// cons). Aligns the metrics table with the cycle-N findings
     /// `per-family distribution` table for at-a-glance comparison.
-    private static let familyDisplayOrder: [InteractionInvariantFamily] = [
+    ///
+    /// This explicit array is what decouples the metrics table from
+    /// `InteractionInvariantFamily`'s `case`-declaration order. It is
+    /// `internal` (not `private`) only so `InteractionMetricsRendererTests`
+    /// can assert it stays exhaustive — an explicit-array display order is
+    /// not compiler-checked for completeness.
+    static let familyDisplayOrder: [InteractionInvariantFamily] = [
         .idempotence,
         .biconditional,
         .cardinality,

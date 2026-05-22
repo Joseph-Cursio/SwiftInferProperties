@@ -116,4 +116,17 @@ struct InteractionMetricsRendererTests {
         )
         #expect(rendered.contains("Sources: (none)"))
     }
+
+    /// Completeness guard — `familyDisplayOrder` decouples the per-family
+    /// metrics table from `InteractionInvariantFamily`'s case-declaration
+    /// order, but an explicit array isn't compiler-checked for coverage.
+    /// A family added to the enum but not to `familyDisplayOrder` would
+    /// silently vanish from the rendered table; this catches that.
+    @Test("familyDisplayOrder covers every InteractionInvariantFamily case")
+    func familyDisplayOrderIsExhaustive() {
+        #expect(
+            Set(InteractionMetricsRenderer.familyDisplayOrder)
+                == Set(InteractionInvariantFamily.allCases)
+        )
+    }
 }
