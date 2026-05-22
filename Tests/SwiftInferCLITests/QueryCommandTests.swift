@@ -141,9 +141,13 @@ struct QueryCommandTests {
         // --template round-trip AND --tier Possible → matches only the free-func entry
         let filtered = SwiftInferCommand.Query.applyFilters(
             Self.allThree,
-            filters: QueryFilters(template: "round-trip", type: nil, tier: "Possible",
-            decision: nil, minScore: nil
-        )
+            filters: QueryFilters(
+                template: "round-trip",
+                type: nil,
+                tier: "Possible",
+                decision: nil,
+                minScore: nil
+            )
         )
         #expect(filtered == [Self.possibleFreeFunc])
     }
