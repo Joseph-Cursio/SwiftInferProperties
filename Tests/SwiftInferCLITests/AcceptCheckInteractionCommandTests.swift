@@ -34,8 +34,8 @@ struct AcceptCheckInteractionCommandTests {
     func classifyBothPass() {
         let result = InteractionVerifyOutcomeParser.Result(
             outcome: .measuredBothPass,
-            totalRuns: 1024,
-            cleanRuns: 1024
+            totalRuns: 1_024,
+            cleanRuns: 1_024
         )
         let classified = SwiftInferCommand.AcceptCheckInteraction.classify(
             verifyOutcome: result

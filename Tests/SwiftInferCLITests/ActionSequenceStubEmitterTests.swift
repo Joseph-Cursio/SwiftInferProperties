@@ -37,7 +37,7 @@ struct ActionSequenceStubEmitterTests {
     private func inputs(
         _ candidate: ReducerCandidate,
         userModuleName: String = "MyApp",
-        sequenceCount: Int = 1024,
+        sequenceCount: Int = 1_024,
         lengthLowerBound: Int = 0,
         lengthUpperBound: Int = 16
     ) -> ActionSequenceStubEmitter.Inputs {

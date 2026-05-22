@@ -15,7 +15,7 @@ public enum ActionSequenceStubEmitter {
 
     /// Number of action sequences per verifier run. PRD §15 perf
     /// target: 1k sequences in <100ms; default 1024.
-    public static let defaultSequenceCount = 1024
+    public static let defaultSequenceCount = 1_024
 
     /// V2.0 M8.D.3 — upper bound on action-list length per
     /// generated sequence. Matches `Inputs.init`'s default; lifted

@@ -58,7 +58,7 @@ public enum RoundTripStubEmitter {
         public var count: Int {
             switch self {
             case .small: return 100
-            case .standard: return 1000
+            case .standard: return 1_000
             }
         }
     }

@@ -74,8 +74,8 @@ struct MemoryCeilingPerformanceTests {
         sampler.stop()
 
         let peakDeltaBytes = sampler.peakDeltaBytes()
-        let peakDeltaMB = Double(peakDeltaBytes) / (1024 * 1024)
-        let baselineMB = Double(baselineBytes) / (1024 * 1024)
+        let peakDeltaMB = Double(peakDeltaBytes) / (1_024 * 1_024)
+        let baselineMB = Double(baselineBytes) / (1_024 * 1_024)
         let budgetMB = Self.calibratedDeltaBudgetMB
         // Always log the measured delta so success runs leave a record
         // in CI logs. The v1.1 recalibration was driven by a silent

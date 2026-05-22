@@ -35,7 +35,7 @@ struct InteractionTraceEmitterTests {
     private func inputs(
         _ candidate: ReducerCandidate,
         userModuleName: String = "MyApp",
-        sequenceCount: Int = 1024
+        sequenceCount: Int = 1_024
     ) -> InteractionTraceEmitter.Inputs {
         InteractionTraceEmitter.Inputs(
             candidate: candidate,
@@ -184,7 +184,7 @@ struct InteractionTraceEmitterTests {
 
     @Test("M8.D.1: nil failingSequenceIndex preserves the M8.C all-sequences loop")
     func traceWithoutFailingIndexReplaysAllSequences() {
-        let source = InteractionTraceEmitter.emit(inputs(candidate(), sequenceCount: 1024))
+        let source = InteractionTraceEmitter.emit(inputs(candidate(), sequenceCount: 1_024))
         #expect(source.contains("for _ in 0..<1024 {"))
         #expect(!source.contains("// Failing sequence index:"))
     }

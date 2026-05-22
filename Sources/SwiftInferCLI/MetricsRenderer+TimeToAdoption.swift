@@ -146,8 +146,8 @@ extension MetricsRenderer {
     static func formatDuration(_ seconds: TimeInterval) -> String {
         let total = Int(seconds)
         if total < 60 { return "\(total)s" }
-        if total < 3600 { return "\(total / 60)m" }
-        if total < 86_400 { return "\(total / 3600)h" }
+        if total < 3_600 { return "\(total / 60)m" }
+        if total < 86_400 { return "\(total / 3_600)h" }
         return "\(total / 86_400)d"
     }
 }

@@ -35,8 +35,8 @@ struct VerifyInteractionPipelineRenderTests {
     func renderOutcomeShape() {
         let result = InteractionVerifyOutcomeParser.Result(
             outcome: .measuredBothPass,
-            totalRuns: 1024,
-            cleanRuns: 1024,
+            totalRuns: 1_024,
+            cleanRuns: 1_024,
             detail: "totalRuns=1024 clean=1024"
         )
         let rendered = VerifyInteractionPipeline.renderOutcome(
@@ -85,8 +85,8 @@ struct VerifyInteractionPipelineRenderTests {
     func renderOutcomeOmitsTraceWhenNil() {
         let result = InteractionVerifyOutcomeParser.Result(
             outcome: .measuredBothPass,
-            totalRuns: 1024,
-            cleanRuns: 1024,
+            totalRuns: 1_024,
+            cleanRuns: 1_024,
             detail: nil
         )
         let rendered = VerifyInteractionPipeline.renderOutcome(
@@ -101,8 +101,8 @@ struct VerifyInteractionPipelineRenderTests {
     func renderOutcomeShowsPurity() {
         let result = InteractionVerifyOutcomeParser.Result(
             outcome: .measuredBothPass,
-            totalRuns: 1024,
-            cleanRuns: 1024,
+            totalRuns: 1_024,
+            cleanRuns: 1_024,
             detail: nil
         )
         let pureRender = VerifyInteractionPipeline.renderOutcome(

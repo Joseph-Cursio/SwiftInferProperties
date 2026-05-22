@@ -10,7 +10,7 @@ import Testing
 @Suite("InteractionVerifyOutcomeParser — V2.0 M3.E.3 five-category mapping")
 struct InteractionVerifyOutcomeParserTests {
 
-    private func cleanMarker(totalRuns: Int = 1024, clean: Int = 1024) -> String {
+    private func cleanMarker(totalRuns: Int = 1_024, clean: Int = 1_024) -> String {
         "\(ActionSequenceStubEmitter.cleanOutcomeMarker) "
             + "totalRuns=\(totalRuns) clean=\(clean)\n"
     }
@@ -21,11 +21,11 @@ struct InteractionVerifyOutcomeParserTests {
     func cleanExitWithMarker() {
         let result = InteractionVerifyOutcomeParser.parseRunOutput(
             binaryExitCode: 0,
-            stdout: cleanMarker(totalRuns: 1024, clean: 1024)
+            stdout: cleanMarker(totalRuns: 1_024, clean: 1_024)
         )
         #expect(result.outcome == .measuredBothPass)
-        #expect(result.totalRuns == 1024)
-        #expect(result.cleanRuns == 1024)
+        #expect(result.totalRuns == 1_024)
+        #expect(result.cleanRuns == 1_024)
     }
 
     @Test("marker on a stdout line surrounded by noise still parses")
