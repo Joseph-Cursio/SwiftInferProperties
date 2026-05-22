@@ -5,8 +5,6 @@ excluded:
   - .build
   - docs
   - Package.swift
-  # v2.0 calibration corpus — deliberate hand-rolled test inputs the
-  # tool analyzes, not maintained project code; not a lint target.
   - Tests/Fixtures
 # Match SwiftPropertyLaws's identifier_name relaxations: keep the idiomatic
 # `id` two-letter name and lift max_length to 50 to accommodate downstream
@@ -114,6 +112,12 @@ opt_in_rules:
   - contains_over_filter_is_empty
   - multiline_function_chains
   - convenience_type
+  - prefer_condition_list
+  - prefer_key_path
+  - vertical_whitespace_closing_braces
+  - number_separator
+  - trailing_closure
+  - unneeded_throws_rethrows
 analyzer_rules:
   - capture_variable
   - unused_declaration
