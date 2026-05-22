@@ -198,8 +198,9 @@ public enum MetricsRenderer {
     }
 
     /// Aggregate `decisions` into per-tier rows. Tier order follows
-    /// the canonical `Tier.allCases` order so the rendered table reads
-    /// strong → likely → possible → suppressed → advisory.
+    /// `Tier`'s `Comparable` order (`Tier.allCases.sorted()`) so the
+    /// rendered table reads verified → strong → likely → possible →
+    /// suppressed → advisory, independently of `case`-declaration layout.
     public static func tierRows(from decisions: Decisions) -> [TierRow] {
         var byTier: [Tier: (total: Int, accepted: Int)] = [:]
         for record in decisions.records {
@@ -212,7 +213,7 @@ public enum MetricsRenderer {
             }
             byTier[record.tier] = entry
         }
-        return Tier.allCases.compactMap { tier in
+        return Tier.allCases.sorted().compactMap { tier in
             guard let entry = byTier[tier] else { return nil }
             return TierRow(tier: tier, total: entry.total, accepted: entry.accepted)
         }

@@ -60,17 +60,16 @@ struct TierTests {
         }
     }
 
-    /// Regression guard — `Tier`'s declaration order is load-bearing, not
-    /// cosmetic. `MetricsRenderer` renders metric-table rows in
-    /// `Tier.allCases` order, so reordering the cases silently changes
-    /// `swift-infer metrics` output. If an alphabetical case-sort (e.g.
-    /// SwiftLint's `sorted_enum_cases` rule — deliberately left disabled
-    /// for exactly this reason) turns this red, the reorder is the bug:
-    /// restore the enum's severity order, do NOT rewrite the expected
-    /// array to match the sorted cases.
-    @Test("Tier.allCases reads verified → strong → likely → possible → suppressed → advisory")
-    func allCasesOrder() {
-        #expect(Tier.allCases == [.verified, .strong, .likely, .possible, .suppressed, .advisory])
+    /// Regression guard — `Tier`'s severity order is load-bearing:
+    /// `MetricsRenderer` renders metric-table rows in `Tier`'s
+    /// `Comparable` order (`Tier.allCases.sorted()`). That order is
+    /// defined explicitly by `Tier.severityRank`, not by `case`-line
+    /// layout — so the `case` lines are now free to be reordered, but
+    /// editing `severityRank` silently changes `swift-infer metrics`
+    /// output. If this turns red, the rank change is the bug.
+    @Test("Tier's Comparable order is verified → strong → likely → possible → suppressed → advisory")
+    func comparableOrder() {
+        #expect(Tier.allCases.sorted() == [.verified, .strong, .likely, .possible, .suppressed, .advisory])
     }
 
     // MARK: - V1.65 promoted(byVerifyOutcome:)
