@@ -97,6 +97,23 @@ opt_in_rules:
   - final_test_case
   - quick_discouraged_pending_test
   - private_swiftui_state
+  - non_overridable_class_declaration
+  - incompatible_concurrency_annotation
+  - redundant_self
+  - closure_body_length
+  - enum_case_associated_values_count
+  - prefixed_toplevel_constant
+  - raw_value_for_camel_cased_codable_enum
+  - vertical_parameter_alignment_on_call
+  - empty_string
+  - sorted_first_last
+  - empty_collection_literal
+  - identical_operands
+  - contains_over_first_not_nil
+  - contains_over_filter_is_empty
+  - discouraged_optional_boolean
+  - multiline_function_chains
+  - convenience_type
 analyzer_rules:
   - capture_variable
   - unused_declaration
