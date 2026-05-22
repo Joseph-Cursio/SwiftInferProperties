@@ -45,6 +45,9 @@ fastlane/test_output
 fixtures/cycle27-surface/.build/
 fixtures/cycle27-surface/Package.resolved
 
+# SwiftLint config backups left by the SwiftLintRuleStudio editor on save
+.swiftlint.yml.*.backup
+
 # Verify-pipeline synthesized SwiftPM workdirs (build artifacts; index.json
 # stays tracked). Matches any `.swiftinfer/verify-workdir/` — the fixture's
 # and any incidental one at the repo root from a dev `swift-infer verify` run.
