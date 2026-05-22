@@ -129,7 +129,7 @@ extension SwiftInferCommand.Verify {
             var inFlight = 0
             var nextIndex = 0
             // Prime the pump with `parallelism` initial tasks.
-            while nextIndex < entries.count && inFlight < parallelism {
+            while nextIndex < entries.count, inFlight < parallelism {
                 let entry = entries[nextIndex]
                 nextIndex += 1
                 inFlight += 1

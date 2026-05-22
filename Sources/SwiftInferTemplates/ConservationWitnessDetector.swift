@@ -163,7 +163,7 @@ enum ConservationWitnessExtractor {
     /// idiomatic Swift convention; calibration can widen if needed).
     static func arrayElementType(_ type: String) -> String? {
         let trimmed = type.trimmingCharacters(in: .whitespaces)
-        guard trimmed.hasPrefix("[") && trimmed.hasSuffix("]") else { return nil }
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]") else { return nil }
         // Reject dictionary literal `[K: V]` — contains a top-level colon.
         let inner = String(trimmed.dropFirst().dropLast())
             .trimmingCharacters(in: .whitespaces)

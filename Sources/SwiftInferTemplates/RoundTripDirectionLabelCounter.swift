@@ -77,7 +77,7 @@ extension RoundTripTemplate {
         // above visibility by V1.18.A carrier-kind +5). The -25 magnitude
         // sends both-sides-directional pairs to +15 → Suppressed with a
         // clean 5-point margin.
-        if forwardIsDirectional && reverseIsDirectional {
+        if forwardIsDirectional, reverseIsDirectional {
             // Both labels in the curated set — render both for clarity.
             // Force-unwrapped because the boolean guards above already
             // confirmed both labels exist + match the curated set.

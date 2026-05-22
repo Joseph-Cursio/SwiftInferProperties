@@ -45,7 +45,7 @@ extension ReducerDiscoverer {
     /// generic args like `Effect<Action>` and `Effect<S.Action>`
     /// without choking on nested `<>` / `()` / `[]`.
     static func isStateEffectTuple(_ returnType: String, expectedFirst: String) -> Bool {
-        guard returnType.hasPrefix("(") && returnType.hasSuffix(")") else { return false }
+        guard returnType.hasPrefix("("), returnType.hasSuffix(")") else { return false }
         let inner = returnType.dropFirst().dropLast()
         var depth = 0
         var commaIdx: String.Index?

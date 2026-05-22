@@ -278,7 +278,7 @@ enum ReferentialIntegrityExtractor {
     /// dictionary check.
     static func arrayElementType(_ type: String) -> String? {
         let trimmed = type.trimmingCharacters(in: .whitespaces)
-        guard trimmed.hasPrefix("[") && trimmed.hasSuffix("]") else { return nil }
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]") else { return nil }
         let inner = String(trimmed.dropFirst().dropLast())
             .trimmingCharacters(in: .whitespaces)
         var depth = 0

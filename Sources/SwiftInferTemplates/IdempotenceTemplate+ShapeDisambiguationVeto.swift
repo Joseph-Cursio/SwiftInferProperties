@@ -69,14 +69,14 @@ extension IdempotenceTemplate {
         //   - `wordCount(forScale:)` (Count token)
         // Skips: `normalize(forScale:)`, `simplify(forScale:)` (no
         // Capacity/Count/Scale token in name).
-        if returnType == "Int" && param.typeText == "Int" {
+        if returnType == "Int", param.typeText == "Int" {
             let domainTokens = ["Capacity", "Count", "Scale", "scale"]
             let nameHit = domainTokens.contains { name.contains($0) }
             let labelHit: Bool = {
                 guard let label = param.label else { return false }
                 return label == "forScale" || label == "forCapacity"
             }()
-            if nameHit && labelHit {
+            if nameHit, labelHit {
                 let labelStr = param.label ?? "_"
                 return Signal(
                     kind: .protocolCoveredProperty,

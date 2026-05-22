@@ -248,8 +248,7 @@ private final class Visitor: SyntaxVisitor {
         // Int, but no plausible reducer has scalar State + scalar
         // Action. Reject when both types are in the curated scalar
         // set. PRD §3.5 conservative-inference posture.
-        if ReducerDiscoverer.isScalarTypeName(firstType)
-            && ReducerDiscoverer.isScalarTypeName(secondType) {
+        if ReducerDiscoverer.isScalarTypeName(firstType), ReducerDiscoverer.isScalarTypeName(secondType) {
             return nil
         }
 

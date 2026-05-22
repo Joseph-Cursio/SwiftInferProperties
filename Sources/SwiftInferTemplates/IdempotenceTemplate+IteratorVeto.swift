@@ -124,7 +124,7 @@ extension IdempotenceTemplate {
         let isIteratorNamed = carrier == "Iterator"
             || carrier.hasSuffix(".Iterator")
             || carrier.hasSuffix("Iterator")
-        if isIteratorNamed && iteratorMethodNames.contains(methodName) {
+        if isIteratorNamed, iteratorMethodNames.contains(methodName) {
             return Signal(
                 kind: .protocolCoveredProperty,
                 weight: Signal.vetoWeight,

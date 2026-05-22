@@ -19,7 +19,7 @@ extension InteractiveTriage {
         secondaryAvailable: Bool = false
     ) -> String {
         let arms: String
-        if primaryAvailable && secondaryAvailable {
+        if primaryAvailable, secondaryAvailable {
             arms = "Accept (A) / Conformance (B) / Conformance' (B') "
                 + "/ Skip (s) / Reject (n) / Help (?)"
         } else if primaryAvailable {
