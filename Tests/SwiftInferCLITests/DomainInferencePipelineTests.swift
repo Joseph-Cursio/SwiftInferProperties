@@ -152,11 +152,13 @@ struct DomainInferencePipelineTests {
         let mock = MockGenerator(typeName: "MyType", argumentSpec: [], siteCount: 5)
         let idempotent = Suggestion(
             templateName: "idempotence",
-            evidence: [Evidence(
-                displayName: "normalize(_:)",
-                signature: "(MyType) -> MyType",
-                location: SourceLocation(file: "T.swift", line: 1, column: 1)
-            )],
+            evidence: [
+                Evidence(
+                    displayName: "normalize(_:)",
+                    signature: "(MyType) -> MyType",
+                    location: SourceLocation(file: "T.swift", line: 1, column: 1)
+                )
+            ],
             score: Score(signals: [Signal(kind: .typeSymmetrySignature, weight: 60, detail: "")]),
             generator: GeneratorMetadata(source: .inferredFromTests, confidence: .low, sampling: .notRun),
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),

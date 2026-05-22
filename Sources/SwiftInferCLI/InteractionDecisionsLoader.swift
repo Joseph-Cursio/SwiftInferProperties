@@ -110,8 +110,10 @@ public enum InteractionDecisionsLoader {
         } catch {
             return Result(
                 decisions: .empty,
-                warnings: ["could not read interaction-decisions at \(path.path): "
-                    + error.localizedDescription],
+                warnings: [
+                    "could not read interaction-decisions at \(path.path): "
+                        + error.localizedDescription
+                ],
                 packageRoot: packageRoot
             )
         }

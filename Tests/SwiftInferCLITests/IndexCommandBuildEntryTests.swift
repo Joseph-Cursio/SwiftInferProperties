@@ -229,9 +229,11 @@ struct IndexCommandBuildEntryTests {
         let entry = SwiftInferCommand.Index.buildEntry(
             from: suggestion,
             decisionsByHash: [:],
-            typeShapesByName: ["Foo": TypeShape(
-                name: "Foo", kind: .struct, inheritedTypes: [], hasUserGen: false
-            )],
+            typeShapesByName: [
+                "Foo": TypeShape(
+                    name: "Foo", kind: .struct, inheritedTypes: [], hasUserGen: false
+                )
+            ],
             now: "2026-05-11T12:00:00Z"
         )
         #expect(entry.typeShape == nil)

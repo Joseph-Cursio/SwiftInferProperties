@@ -100,11 +100,13 @@ public extension LiftedSuggestion {
         case .monotonicity(let detection):
             // (T) -> Comparable; codomain is unknown at promotion time
             // until M5.5 widens recoverTypes to split domain/codomain.
-            return [Evidence(
-                displayName: "\(detection.calleeName)(_:)",
-                signature: "(\(typeT)) -> ?",
-                location: detection.assertionLocation
-            )]
+            return [
+                Evidence(
+                    displayName: "\(detection.calleeName)(_:)",
+                    signature: "(\(typeT)) -> ?",
+                    location: detection.assertionLocation
+                )
+            ]
 
         case .countInvariance(let detection):
             return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
@@ -117,20 +119,24 @@ public extension LiftedSuggestion {
             // signature `(T) -> Bool`. Location is a placeholder (the M11
             // detector aggregates across many test sites; no single
             // assertion location is canonical).
-            return [Evidence(
-                displayName: "\(hint.predicateName)(_:)",
-                signature: "(\(hint.argTypeName)) -> Bool",
-                location: SourceLocation(file: "<corpus>", line: 0, column: 0)
-            )]
+            return [
+                Evidence(
+                    displayName: "\(hint.predicateName)(_:)",
+                    signature: "(\(hint.argTypeName)) -> Bool",
+                    location: SourceLocation(file: "<corpus>", line: 0, column: 0)
+                )
+            ]
 
         case .nClassEquivalenceClass(let hint):
             // M13.3 — same shape as two-class equivalence-class evidence
             // but the signature names the predicate's actual return type.
-            return [Evidence(
-                displayName: "\(hint.predicateName)(_:)",
-                signature: "(\(hint.argTypeName)) -> \(hint.returnTypeName)",
-                location: SourceLocation(file: "<corpus>", line: 0, column: 0)
-            )]
+            return [
+                Evidence(
+                    displayName: "\(hint.predicateName)(_:)",
+                    signature: "(\(hint.argTypeName)) -> \(hint.returnTypeName)",
+                    location: SourceLocation(file: "<corpus>", line: 0, column: 0)
+                )
+            ]
 
         case .consumerProducerChain(let hint):
             // M16.2 — synthesize a single Evidence carrying the
@@ -138,11 +144,13 @@ public extension LiftedSuggestion {
             // equivalence-class case the location is a placeholder —
             // the chain is a corpus-wide finding, not anchored at a
             // single test-body assertion.
-            return [Evidence(
-                displayName: "\(hint.reverseName)(_:)",
-                signature: "(\(hint.domainTypeName)) -> ?",
-                location: SourceLocation(file: "<corpus>", line: 0, column: 0)
-            )]
+            return [
+                Evidence(
+                    displayName: "\(hint.reverseName)(_:)",
+                    signature: "(\(hint.domainTypeName)) -> ?",
+                    location: SourceLocation(file: "<corpus>", line: 0, column: 0)
+                )
+            ]
         }
     }
 

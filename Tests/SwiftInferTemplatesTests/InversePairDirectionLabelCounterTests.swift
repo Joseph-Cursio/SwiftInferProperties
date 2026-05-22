@@ -54,8 +54,10 @@ struct InversePairDirectionLabelCounterTests {
 
     @Test(
         "V1.11.1 — all curated direction labels suppress (forward-side)",
-        arguments: ["after", "before", "next", "prev", "previous",
-                    "advance", "succ", "pred", "successor", "predecessor"]
+        arguments: [
+            "after", "before", "next", "prev", "previous",
+            "advance", "succ", "pred", "successor", "predecessor"
+        ]
     )
     func allCuratedDirectionLabelsSuppressForwardSide(label: String) {
         let pair = makePair(
@@ -72,8 +74,10 @@ struct InversePairDirectionLabelCounterTests {
 
     @Test(
         "V1.11.1 — direction label on reverse side alone also suppresses",
-        arguments: ["after", "before", "next", "prev", "previous",
-                    "advance", "succ", "pred", "successor", "predecessor"]
+        arguments: [
+            "after", "before", "next", "prev", "previous",
+            "advance", "succ", "pred", "successor", "predecessor"
+        ]
     )
     func directionLabelOnReverseSuppresses(label: String) {
         // Either-side detection: open decision #3. Asymmetric labeling

@@ -10,14 +10,16 @@ func makeVerifyEvidenceMap(
     outcome: VerifyEvidenceOutcome,
     template: String = "idempotence"
 ) -> [String: VerifyEvidence] {
-    [identityHash: VerifyEvidence(
-        identityHash: identityHash,
-        template: template,
-        outcome: outcome,
-        detail: nil,
-        capturedAt: Date(timeIntervalSince1970: 0),
-        swiftInferVersion: "test"
-    )]
+    [
+        identityHash: VerifyEvidence(
+            identityHash: identityHash,
+            template: template,
+            outcome: outcome,
+            detail: nil,
+            capturedAt: Date(timeIntervalSince1970: 0),
+            swiftInferVersion: "test"
+        )
+    ]
 }
 
 /// V1.68 — `DecisionRecord.tier` records the *effective* tier: the base

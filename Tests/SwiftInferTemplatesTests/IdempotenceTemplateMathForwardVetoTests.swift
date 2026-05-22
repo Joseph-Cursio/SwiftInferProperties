@@ -51,10 +51,12 @@ struct IdempotenceTemplateMathForwardVetoTests {
 
     @Test("All elementary-functions families veto on (T) -> T shape")
     func allFamiliesVeto() {
-        let names = ["exp", "exp2", "expMinusOne", "log", "log2", "log10",
-                     "sin", "cos", "tan", "asin", "acos", "atan",
-                     "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
-                     "sqrt", "cbrt"]
+        let names = [
+            "exp", "exp2", "expMinusOne", "log", "log2", "log10",
+            "sin", "cos", "tan", "asin", "acos", "atan",
+            "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+            "sqrt", "cbrt"
+        ]
         for name in names {
             let signal = IdempotenceTemplate.mathForwardFunctionVeto(for: mathSummary(name))
             #expect(signal?.isVeto == true, "\(name) should veto on (T) -> T shape")

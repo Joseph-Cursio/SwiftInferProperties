@@ -110,8 +110,10 @@ public enum InteractionBaselineLoader {
         } catch {
             return Result(
                 baseline: .empty,
-                warnings: ["could not read interaction-baseline at \(path.path): "
-                    + error.localizedDescription],
+                warnings: [
+                    "could not read interaction-baseline at \(path.path): "
+                        + error.localizedDescription
+                ],
                 packageRoot: packageRoot
             )
         }

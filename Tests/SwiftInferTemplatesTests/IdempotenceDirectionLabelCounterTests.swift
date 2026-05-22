@@ -40,8 +40,10 @@ struct IdempotenceDirectionLabelCounterTests {
     }
 
     @Test("V1.10.1 — all curated direction labels suppress",
-          arguments: ["after", "before", "next", "prev", "previous",
-                      "advance", "succ", "pred", "successor", "predecessor"])
+          arguments: [
+              "after", "before", "next", "prev", "previous",
+              "advance", "succ", "pred", "successor", "predecessor"
+          ])
     func allCuratedDirectionLabelsSuppress(label: String) {
         let summary = makeIdempotenceSummary(
             name: "step",

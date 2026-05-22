@@ -79,15 +79,19 @@ public enum InteractionPostAcceptanceOutcomesStore {
         } catch let error as DecodingError {
             return Result(
                 log: .empty,
-                warnings: ["could not parse interaction-post-acceptance-outcomes "
-                    + "at \(path.path): \(error)"],
+                warnings: [
+                    "could not parse interaction-post-acceptance-outcomes "
+                        + "at \(path.path): \(error)"
+                ],
                 packageRoot: packageRoot
             )
         } catch {
             return Result(
                 log: .empty,
-                warnings: ["could not read interaction-post-acceptance-outcomes "
-                    + "at \(path.path): \(error.localizedDescription)"],
+                warnings: [
+                    "could not read interaction-post-acceptance-outcomes "
+                        + "at \(path.path): \(error.localizedDescription)"
+                ],
                 packageRoot: packageRoot
             )
         }
