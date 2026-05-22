@@ -75,9 +75,11 @@ enum SmokeMacroFeature {
 @InteractionInvariantTests
 struct SmokeMacroCardinality: CardinalityInvariant, Sendable {
     typealias State = SmokeMacroState
+
     static let initialState = SmokeMacroState(showsA: false, showsB: false)
     static let reducer: @Sendable (SmokeMacroState, SmokeMacroAction) -> SmokeMacroState =
         SmokeMacroFeature.reduce
+
     static func invariantHolds(in state: SmokeMacroState) -> Bool {
         (state.showsA ? 1 : 0) + (state.showsB ? 1 : 0) <= 1
     }

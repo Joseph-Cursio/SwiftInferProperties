@@ -12,6 +12,7 @@ import Testing
 struct DiscoverInteractionUpdateBaselineTests {
 
     private typealias Command = SwiftInferCommand.DiscoverInteraction
+
     private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
 
     // MARK: - Flag parsing
@@ -249,6 +250,7 @@ struct DiscoverInteractionUpdateBaselineTests {
 /// status line AND the renderer output when --update-baseline is set.
 private final class UpdateBaselineRecordingOutput: DiscoverOutput, @unchecked Sendable {
     var lines: [String] = []
+
     func write(_ text: String) {
         lines.append(text)
     }

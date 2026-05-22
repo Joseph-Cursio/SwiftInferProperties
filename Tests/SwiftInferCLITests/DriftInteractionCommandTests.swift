@@ -127,6 +127,7 @@ struct DriftInteractionCommandTests {
 
 private final class DIRecordingOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
+
     func write(_ text: String) {
         lines.append(text)
     }
@@ -134,6 +135,7 @@ private final class DIRecordingOutput: DiscoverOutput, @unchecked Sendable {
 
 private final class DIRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
+
     func writeDiagnostic(_ text: String) {
         lines.append(text)
     }

@@ -309,6 +309,7 @@ private final class SilentPreconditionDiagnosticOutput: DiagnosticOutput, @unche
 private final class RecordingPreconditionOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
     var text: String { lines.joined(separator: "\n") }
+
     func write(_ text: String) {
         lines.append(text)
     }
@@ -316,6 +317,7 @@ private final class RecordingPreconditionOutput: DiscoverOutput, @unchecked Send
 
 private final class ScriptedPreconditionPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
+
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
     }

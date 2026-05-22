@@ -320,6 +320,7 @@ private final class SilentNCDiagnosticOutput: DiagnosticOutput, @unchecked Senda
 private final class RecordingNCOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
     var text: String { lines.joined(separator: "\n") }
+
     func write(_ text: String) {
         lines.append(text)
     }
@@ -327,6 +328,7 @@ private final class RecordingNCOutput: DiscoverOutput, @unchecked Sendable {
 
 private final class ScriptedNCPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
+
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
     }

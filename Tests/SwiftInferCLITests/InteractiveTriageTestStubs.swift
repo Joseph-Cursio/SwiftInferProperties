@@ -8,6 +8,7 @@ import SwiftInferCore
 final class TriageRecordingOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
     var text: String { lines.joined(separator: "\n") }
+
     func write(_ text: String) {
         lines.append(text)
     }
@@ -15,6 +16,7 @@ final class TriageRecordingOutput: DiscoverOutput, @unchecked Sendable {
 
 final class TriageRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
+
     func writeDiagnostic(_ text: String) {
         lines.append(text)
     }
@@ -24,6 +26,7 @@ final class TriageRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendab
 /// script is exhausted (simulating EOF on stdin).
 final class TriageRecordingPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
+
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
     }

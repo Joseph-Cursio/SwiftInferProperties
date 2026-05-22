@@ -130,6 +130,7 @@ private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         return captured
     }
+
     func write(_ text: String) {
         lock.lock(); captured.append(text); lock.unlock()
     }
@@ -142,6 +143,7 @@ private final class RecordingDiagnosticOutput: DiagnosticOutput, @unchecked Send
         lock.lock(); defer { lock.unlock() }
         return captured
     }
+
     func writeDiagnostic(_ text: String) {
         lock.lock(); captured.append(text); lock.unlock()
     }

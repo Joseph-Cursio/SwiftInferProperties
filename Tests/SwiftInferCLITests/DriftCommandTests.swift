@@ -326,6 +326,7 @@ private func makeTarget(in root: URL, contents: String) throws -> URL {
 
 private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
+
     func write(_ text: String) {
         lines.append(text)
     }
@@ -333,6 +334,7 @@ private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
 
 private final class RecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
+
     func writeDiagnostic(_ text: String) {
         lines.append(text)
     }
@@ -340,6 +342,7 @@ private final class RecordingDiagnosticOutput: DiagnosticOutput, @unchecked Send
 
 private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
+
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
     }

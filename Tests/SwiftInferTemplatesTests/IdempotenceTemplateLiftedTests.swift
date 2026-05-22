@@ -15,6 +15,7 @@ struct IdempotenceTemplateLiftedTests {
         let label: String?
         let type: String
         let isInout: Bool
+
         init(_ label: String?, _ type: String, isInout: Bool = false) {
             self.label = label
             self.type = type

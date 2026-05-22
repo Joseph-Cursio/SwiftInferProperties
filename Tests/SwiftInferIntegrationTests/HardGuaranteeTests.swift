@@ -262,6 +262,7 @@ final class HGSilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
 
 final class HGScriptedPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
+
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
     }

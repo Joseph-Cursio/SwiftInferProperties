@@ -227,6 +227,7 @@ private struct RenderShape {
         case roundTrip, idempotence, commutativity, associativity
         case idempotenceLifted, dualStyleConsistency, monotonicity
     }
+
     let kind: Kind
 
     func subjectLine(context: VerifyResultRenderer.Context) -> String {

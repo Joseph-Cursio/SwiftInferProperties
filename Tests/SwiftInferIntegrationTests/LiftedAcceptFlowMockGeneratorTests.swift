@@ -244,6 +244,7 @@ private final class SilentMockDiagnosticOutput: DiagnosticOutput, @unchecked Sen
 private final class RecordingMockOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
     var text: String { lines.joined(separator: "\n") }
+
     func write(_ text: String) {
         lines.append(text)
     }
@@ -251,6 +252,7 @@ private final class RecordingMockOutput: DiscoverOutput, @unchecked Sendable {
 
 private final class ScriptedMockPromptInput: PromptInput, @unchecked Sendable {
     private var remaining: [String]
+
     init(scriptedLines: [String]) {
         self.remaining = scriptedLines
     }

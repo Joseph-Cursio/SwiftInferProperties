@@ -45,6 +45,7 @@ func normalizeDPDiagnostics(
 /// against rendered text without going through stdout.
 final class DPRecordingOutput: DiscoverOutput, @unchecked Sendable {
     var text: String = ""
+
     func write(_ text: String) {
         self.text = text
     }
@@ -55,6 +56,7 @@ final class DPRecordingOutput: DiscoverOutput, @unchecked Sendable {
 /// stderr.
 final class DPRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
     var lines: [String] = []
+
     func writeDiagnostic(_ text: String) {
         lines.append(text)
     }

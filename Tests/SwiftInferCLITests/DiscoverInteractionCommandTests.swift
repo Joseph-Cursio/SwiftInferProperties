@@ -12,6 +12,7 @@ import Testing
 struct DiscoverInteractionCommandTests {
 
     private typealias Command = SwiftInferCommand.DiscoverInteraction
+
     private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
 
     // MARK: - CLI registration + argument parsing

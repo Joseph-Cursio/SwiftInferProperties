@@ -16,6 +16,7 @@ struct DiscoverPipelinePacksTests {
     /// resolver emits.
     private final class CapturingDiagnostics: DiagnosticOutput, @unchecked Sendable {
         var lines: [String] = []
+
         func writeDiagnostic(_ text: String) {
             lines.append(text)
         }

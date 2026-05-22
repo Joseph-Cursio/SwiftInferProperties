@@ -153,6 +153,7 @@ struct AcceptCheckInteractionCommandTests {
 
 private final class ACRecordingOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
+
     func write(_ text: String) {
         lines.append(text)
     }

@@ -14,6 +14,7 @@ struct VerifyReindexOnDemandTests {
 
     private final class RecordingDiag: DiagnosticOutput, @unchecked Sendable {
         private(set) var lines: [String] = []
+
         func writeDiagnostic(_ text: String) { lines.append(text) }
     }
 

@@ -110,5 +110,6 @@ enum SmokeCounterFeature {
 struct SmokeCounterIdempotence: ActionIdempotenceInvariant, Sendable {
     typealias State = SmokeCounterState
     typealias Action = SmokeCounterAction
+
     static let idempotentActions: Set<SmokeCounterAction> = [.reset]
 }

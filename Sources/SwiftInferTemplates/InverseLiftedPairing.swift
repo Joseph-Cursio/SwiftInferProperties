@@ -45,6 +45,7 @@ public struct LiftedInversePair: Sendable, Equatable {
     public struct NamePair: Sendable, Equatable {
         public let lhs: String
         public let rhs: String
+
         public init(lhs: String, rhs: String) {
             self.lhs = lhs
             self.rhs = rhs

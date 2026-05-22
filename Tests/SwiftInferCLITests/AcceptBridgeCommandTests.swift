@@ -213,6 +213,7 @@ struct AcceptBridgeCommandTests {
 final class ABRecordingOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
     var text: String { lines.joined(separator: "\n") }
+
     func write(_ text: String) {
         lines.append(text)
     }
