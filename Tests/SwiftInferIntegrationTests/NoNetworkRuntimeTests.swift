@@ -160,7 +160,7 @@ private final class NetworkInterceptor: URLProtocol {
     // `static_over_final_class` rule doesn't model the inherited-API
     // constraint — silence per occurrence.
     // swiftlint:disable:next static_over_final_class
-    override class func canInit(with request: URLRequest) -> Bool {
+    override final class func canInit(with request: URLRequest) -> Bool {
         lock.lock()
         capturedRequests.append(request)
         lock.unlock()
@@ -168,7 +168,7 @@ private final class NetworkInterceptor: URLProtocol {
     }
 
     // swiftlint:disable:next static_over_final_class
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+    override final class func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }
 
