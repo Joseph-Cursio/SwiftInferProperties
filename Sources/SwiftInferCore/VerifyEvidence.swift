@@ -122,7 +122,7 @@ public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
 
     /// The empty value — schema version present, no records yet.
     /// `VerifyEvidenceStore.load` returns this when the file is absent.
-    public static let empty = VerifyEvidenceLog()
+    public static let empty = Self()
 
     /// Look up evidence by suggestion-identity hash. Used by the
     /// `discover` explainability annotation ("does this suggestion have
@@ -136,9 +136,9 @@ public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
     /// record appended at the end — the trailing-append shape keeps
     /// re-saved JSON stable for previously-recorded evidence. Mirrors
     /// `Decisions.upserting`.
-    public func upserting(_ record: VerifyEvidence) -> VerifyEvidenceLog {
+    public func upserting(_ record: VerifyEvidence) -> Self {
         let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return VerifyEvidenceLog(
+        return Self(
             schemaVersion: schemaVersion,
             records: withoutPrior + [record]
         )
@@ -152,7 +152,7 @@ public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
     /// "latest run in effect" posture and `Decisions.merge`). The result
     /// is sorted by `capturedAt` then `identityHash` so the in-memory
     /// aggregate is order-deterministic regardless of input ordering.
-    public func merge(_ other: VerifyEvidenceLog) -> VerifyEvidenceLog {
+    public func merge(_ other: Self) -> Self {
         var byHash: [String: VerifyEvidence] = [:]
         for record in records + other.records {
             if let existing = byHash[record.identityHash],
@@ -165,7 +165,7 @@ public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
             if lhs.capturedAt != rhs.capturedAt { return lhs.capturedAt < rhs.capturedAt }
             return lhs.identityHash < rhs.identityHash
         }
-        return VerifyEvidenceLog(
+        return Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
             records: merged
         )

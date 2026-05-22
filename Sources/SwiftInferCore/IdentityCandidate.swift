@@ -63,5 +63,5 @@ public struct ScannedCorpus: Sendable, Equatable {
         self.typeDecls = typeDecls
     }
 
-    public static let empty = ScannedCorpus(summaries: [], identities: [], typeDecls: [])
+    public static let empty = Self(summaries: [], identities: [], typeDecls: [])
 }

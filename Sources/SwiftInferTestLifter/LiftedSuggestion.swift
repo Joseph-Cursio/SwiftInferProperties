@@ -68,12 +68,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func roundTrip(
         from detection: DetectedRoundTrip,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "round-trip",
             calleeNames: [detection.forwardCallee, detection.backwardCallee]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "round-trip",
             crossValidationKey: key,
             pattern: .roundTrip(detection),
@@ -88,12 +88,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func idempotence(
         from detection: DetectedIdempotence,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "idempotence",
             calleeNames: [detection.calleeName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "idempotence",
             crossValidationKey: key,
             pattern: .idempotence(detection),
@@ -108,12 +108,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func commutativity(
         from detection: DetectedCommutativity,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "commutativity",
             calleeNames: [detection.calleeName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "commutativity",
             crossValidationKey: key,
             pattern: .commutativity(detection),
@@ -132,12 +132,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func monotonicity(
         from detection: DetectedMonotonicity,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "monotonicity",
             calleeNames: [detection.calleeName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "monotonicity",
             crossValidationKey: key,
             pattern: .monotonicity(detection),
@@ -157,12 +157,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func countInvariance(
         from detection: DetectedCountInvariance,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "invariant-preservation",
             calleeNames: [detection.calleeName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "invariant-preservation",
             crossValidationKey: key,
             pattern: .countInvariance(detection),
@@ -178,12 +178,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func reduceEquivalence(
         from detection: DetectedReduceEquivalence,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "associativity",
             calleeNames: [detection.opCalleeName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "associativity",
             crossValidationKey: key,
             pattern: .reduceEquivalence(detection),
@@ -203,12 +203,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func equivalenceClass(
         hint: EquivalenceClassHint,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "equivalence-class",
             calleeNames: [hint.predicateName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "equivalence-class",
             crossValidationKey: key,
             pattern: .equivalenceClass(hint),
@@ -226,12 +226,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func nClassEquivalenceClass(
         hint: NClassEquivalenceClassHint,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "equivalence-class",
             calleeNames: [hint.predicateName, "set:\(hint.markerSetName)"]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "equivalence-class",
             crossValidationKey: key,
             pattern: .nClassEquivalenceClass(hint),
@@ -250,12 +250,12 @@ public struct LiftedSuggestion: Sendable, Equatable {
     public static func consumerProducerChain(
         hint: DomainHint,
         origin: LiftedOrigin? = nil
-    ) -> LiftedSuggestion {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "consumer-producer-chain",
             calleeNames: [hint.producerName, hint.reverseName]
         )
-        return LiftedSuggestion(
+        return Self(
             templateName: "consumer-producer-chain",
             crossValidationKey: key,
             pattern: .consumerProducerChain(hint),

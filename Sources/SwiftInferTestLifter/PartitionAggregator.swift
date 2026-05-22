@@ -176,7 +176,7 @@ struct PartitionAggregator {
     func finalize() -> [PartitionCandidate] {
         let twoClass = finalizeTwoClass()
         let nClass = finalizeNClass()
-        return (twoClass + nClass).sorted(by: PartitionAggregator.sortCandidates)
+        return (twoClass + nClass).sorted(by: Self.sortCandidates)
     }
 
     private func finalizeTwoClass() -> [PartitionCandidate] {
@@ -250,7 +250,7 @@ private struct RankedCandidate {
         self.positiveMarker = accumulator.markerPair.positive
     }
 
-    func beats(_ other: RankedCandidate) -> Bool {
+    func beats(_ other: Self) -> Bool {
         if totalSites != other.totalSites {
             return totalSites > other.totalSites
         }

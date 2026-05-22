@@ -105,7 +105,7 @@ public struct InteractionDecisions: Sendable, Equatable, Codable {
 
     /// The empty value. `InteractionDecisionsLoader.load` returns
     /// this when the file doesn't exist.
-    public static let empty = InteractionDecisions()
+    public static let empty = Self()
 
     /// Look up a decision by suggestion-identity hash. Used by the
     /// drift detector ("does this suggestion already have a
@@ -119,9 +119,9 @@ public struct InteractionDecisions: Sendable, Equatable, Codable {
     /// semantics — the prior record for the same identity is
     /// removed; the new record appends at the end. Re-saved JSON
     /// stays stable for previously-stable records.
-    public func upserting(_ record: InteractionDecisionRecord) -> InteractionDecisions {
+    public func upserting(_ record: InteractionDecisionRecord) -> Self {
         let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return InteractionDecisions(
+        return Self(
             schemaVersion: schemaVersion,
             records: withoutPrior + [record]
         )
@@ -133,7 +133,7 @@ public struct InteractionDecisions: Sendable, Equatable, Codable {
     /// `InteractionDecisions` for per-family acceptance-rate
     /// reporting. Identity-keyed; on collision the record with the
     /// later `timestamp` wins (same posture as v1's `Decisions.merge`).
-    public func merge(_ other: InteractionDecisions) -> InteractionDecisions {
+    public func merge(_ other: Self) -> Self {
         var byHash: [String: InteractionDecisionRecord] = [:]
         for record in records + other.records {
             if let existing = byHash[record.identityHash],
@@ -146,7 +146,7 @@ public struct InteractionDecisions: Sendable, Equatable, Codable {
             if lhs.timestamp != rhs.timestamp { return lhs.timestamp < rhs.timestamp }
             return lhs.identityHash < rhs.identityHash
         }
-        return InteractionDecisions(
+        return Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
             records: merged
         )

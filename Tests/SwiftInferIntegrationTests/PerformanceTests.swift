@@ -154,7 +154,7 @@ struct PerformanceTests {
     /// corpus isn't available.
     @Test(
         "swift-collections DequeModule discover completes within the 3-second flake-resistant budget",
-        .enabled(if: PerformanceTests.dequeModulePath != nil)
+        .enabled(if: Self.dequeModulePath != nil)
     )
     func swiftCollectionsDequeModule() throws {
         let path = try #require(PerformanceTests.dequeModulePath)

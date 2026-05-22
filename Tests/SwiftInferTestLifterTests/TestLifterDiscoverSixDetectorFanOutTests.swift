@@ -125,7 +125,7 @@ private struct SixPatternFixture {
     let fileName: String
     let body: String
 
-    static let roundTrip = SixPatternFixture(
+    static let roundTrip = Self(
         fileName: "CodecTests.swift",
         body: """
         import XCTest
@@ -141,7 +141,7 @@ private struct SixPatternFixture {
         """
     )
 
-    static let idempotence = SixPatternFixture(
+    static let idempotence = Self(
         fileName: "NormalizerTests.swift",
         body: """
         import XCTest
@@ -157,7 +157,7 @@ private struct SixPatternFixture {
         """
     )
 
-    static let commutativity = SixPatternFixture(
+    static let commutativity = Self(
         fileName: "MergerTests.swift",
         body: """
         import XCTest
@@ -172,7 +172,7 @@ private struct SixPatternFixture {
         """
     )
 
-    static let monotonicity = SixPatternFixture(
+    static let monotonicity = Self(
         fileName: "PricingTests.swift",
         body: """
         import XCTest
@@ -188,7 +188,7 @@ private struct SixPatternFixture {
         """
     )
 
-    static let countInvariance = SixPatternFixture(
+    static let countInvariance = Self(
         fileName: "FilterTests.swift",
         body: """
         import XCTest
@@ -202,7 +202,7 @@ private struct SixPatternFixture {
         """
     )
 
-    static let reduceEquivalence = SixPatternFixture(
+    static let reduceEquivalence = Self(
         fileName: "ReducerTests.swift",
         body: """
         import XCTest

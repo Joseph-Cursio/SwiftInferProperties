@@ -203,8 +203,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// without also changing the hash). `typeShape` is upsert-mutable
     /// because the type's structural shape can evolve (e.g., a user
     /// adds a stored property between two indexer runs).
-    public func updated(from other: SemanticIndexEntry) -> SemanticIndexEntry {
-        SemanticIndexEntry(
+    public func updated(from other: Self) -> Self {
+        Self(
             identityHash: identityHash,
             templateName: templateName,
             typeName: typeName,

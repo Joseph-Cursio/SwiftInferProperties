@@ -114,7 +114,7 @@ public struct InteractionPostAcceptanceOutcomeLog: Sendable, Equatable, Codable 
 
     /// The empty value. `InteractionPostAcceptanceOutcomesStore.load`
     /// returns this when the file doesn't exist.
-    public static let empty = InteractionPostAcceptanceOutcomeLog()
+    public static let empty = Self()
 
     /// Look up an outcome by identity hash. Returns `nil` when no
     /// accept-check has run against the given suggestion.
@@ -126,7 +126,7 @@ public struct InteractionPostAcceptanceOutcomeLog: Sendable, Equatable, Codable 
     /// second accept-check on the same identity replaces the first.
     public func upserting(_ record: InteractionPostAcceptanceOutcome) -> Self {
         let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return InteractionPostAcceptanceOutcomeLog(
+        return Self(
             schemaVersion: schemaVersion,
             records: withoutPrior + [record]
         )

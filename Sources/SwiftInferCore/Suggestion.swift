@@ -159,7 +159,7 @@ public struct GeneratorMetadata: Sendable, Equatable {
     /// at M3 and sampling at M4 — until then both fields are explicit
     /// `notYetComputed` / `notRun` so the explainability block can render
     /// them honestly.
-    public static let m1Placeholder = GeneratorMetadata(
+    public static let m1Placeholder = Self(
         source: .notYetComputed,
         confidence: nil,
         sampling: .notRun

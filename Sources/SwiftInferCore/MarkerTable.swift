@@ -53,8 +53,8 @@ public struct MarkerPair: Sendable, Equatable, Hashable {
     /// constant; M13.1's extractor refactor switches the discover loop to
     /// consume the broader `MarkerTable.curatedPairs` surface (see M13
     /// plan sub-milestone M13.1).
-    public static let defaultTable: [MarkerPair] = [
-        MarkerPair(positive: "Valid", negative: "Invalid")
+    public static let defaultTable: [Self] = [
+        Self(positive: "Valid", negative: "Invalid")
     ]
 }
 

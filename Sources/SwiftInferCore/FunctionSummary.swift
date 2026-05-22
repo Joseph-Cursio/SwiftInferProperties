@@ -201,7 +201,7 @@ public struct BodySignals: Sendable, Equatable {
     }
 
     /// Empty signals — used for functions without bodies.
-    public static let empty = BodySignals(
+    public static let empty = Self(
         hasNonDeterministicCall: false,
         hasSelfComposition: false,
         nonDeterministicAPIsDetected: [],

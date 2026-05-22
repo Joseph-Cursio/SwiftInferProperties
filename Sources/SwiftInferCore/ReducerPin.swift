@@ -53,7 +53,7 @@ public struct ReducerPin: Sendable, Equatable {
     /// V1.C — split the raw `--reducer` value on `.` and route the
     /// components right-to-left. Throws for empty pins and for
     /// module-prefixed pins (M2+ deferral).
-    public static func parse(_ raw: String) throws -> ReducerPin {
+    public static func parse(_ raw: String) throws -> Self {
         let trimmed = raw.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { throw ReducerPinError.emptyPin }
         let components = trimmed.split(separator: ".", omittingEmptySubsequences: false)
@@ -64,9 +64,9 @@ public struct ReducerPin: Sendable, Equatable {
         }
         switch components.count {
         case 1:
-            return ReducerPin(functionName: components[0])
+            return Self(functionName: components[0])
         case 2:
-            return ReducerPin(typeName: components[0], functionName: components[1])
+            return Self(typeName: components[0], functionName: components[1])
         case 3:
             // V1.C — module resolution deferred. The shape is parsed
             // far enough to give the user a clear error.

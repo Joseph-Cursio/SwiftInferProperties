@@ -66,7 +66,7 @@ public struct Baseline: Sendable, Equatable, Codable {
 
     /// The empty value — schema version present, no entries yet.
     /// `BaselineLoader.load` returns this when the file doesn't exist.
-    public static let empty = Baseline()
+    public static let empty = Self()
 
     /// `true` when an entry with the given identity hash exists.
     /// M6.5's `drift` uses this to ask "is this current suggestion

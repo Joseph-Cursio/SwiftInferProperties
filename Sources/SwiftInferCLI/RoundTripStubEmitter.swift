@@ -149,7 +149,7 @@ public enum RoundTripStubEmitter {
         case double
         case int
 
-        static func from(typeName: String) -> CarrierKind? {
+        static func from(typeName: String) -> Self? {
             switch typeName {
             case "Complex<Double>": return .complexDouble
             case "Double": return .double

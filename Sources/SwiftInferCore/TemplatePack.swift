@@ -93,7 +93,7 @@ public enum TemplatePack: String, CaseIterable, Sendable {
     /// Empty set when `packs` is empty — caller's responsibility to
     /// emit a diagnostic warning if zero effective templates is
     /// unexpected (V1.32.C handles this in the CLI layer).
-    public static func resolve(_ packs: Set<TemplatePack>) -> Set<String> {
+    public static func resolve(_ packs: Set<Self>) -> Set<String> {
         Set(packs.flatMap(\.templateNames))
     }
 
@@ -102,21 +102,21 @@ public enum TemplatePack: String, CaseIterable, Sendable {
     /// monolithic-registry behavior). Used by the V1.32.C CLI layer as
     /// the "no `--packs` flag, no config setting" default.
     public static var allTemplateNames: Set<String> {
-        resolve(Set(TemplatePack.allCases))
+        resolve(Set(Self.allCases))
     }
 
     /// Parses a comma-separated pack-name string like `"numeric,serialization"`
     /// into a `Set<TemplatePack>`. Unknown pack names are silently
     /// dropped; the CLI layer (V1.32.C) is responsible for diagnostic
     /// warnings on dropped entries.
-    public static func parse(_ commaSeparated: String) -> Set<TemplatePack> {
+    public static func parse(_ commaSeparated: String) -> Set<Self> {
         let names = commaSeparated
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
-        var result: Set<TemplatePack> = []
+        var result: Set<Self> = []
         for name in names {
-            if let pack = TemplatePack(rawValue: name) {
+            if let pack = Self(rawValue: name) {
                 result.insert(pack)
             }
         }
@@ -130,6 +130,6 @@ public enum TemplatePack: String, CaseIterable, Sendable {
         commaSeparated
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty && TemplatePack(rawValue: $0) == nil }
+            .filter { !$0.isEmpty && Self(rawValue: $0) == nil }
     }
 }

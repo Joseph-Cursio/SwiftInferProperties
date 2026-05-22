@@ -139,7 +139,7 @@ public struct Decisions: Sendable, Equatable, Codable {
 
     /// The empty value — schema version present, no records yet.
     /// `DecisionsLoader.load` returns this when the file doesn't exist.
-    public static let empty = Decisions()
+    public static let empty = Self()
 
     /// Look up a decision by suggestion-identity hash. Used by the
     /// `--interactive` flow ("has this been triaged?") and `drift`
@@ -154,9 +154,9 @@ public struct Decisions: Sendable, Equatable, Codable {
     /// trailing-append shape keeps re-saved JSON stable for
     /// freshly-decided suggestions while leaving the previously-stable
     /// records in place.
-    public func upserting(_ record: DecisionRecord) -> Decisions {
+    public func upserting(_ record: DecisionRecord) -> Self {
         let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return Decisions(schemaVersion: schemaVersion, records: withoutPrior + [record])
+        return Self(schemaVersion: schemaVersion, records: withoutPrior + [record])
     }
 
     /// Fold another `Decisions` into this one (V1.4.1). Used by
@@ -165,7 +165,7 @@ public struct Decisions: Sendable, Equatable, Codable {
     /// `Decisions` for §17.2 reporting. Identity-keyed; on collision
     /// the record with the later `timestamp` wins (mirrors the
     /// `upserting(_:)` "latest decision in effect" posture).
-    public func merge(_ other: Decisions) -> Decisions {
+    public func merge(_ other: Self) -> Self {
         var byHash: [String: DecisionRecord] = [:]
         for record in records + other.records {
             if let existing = byHash[record.identityHash],
@@ -178,7 +178,7 @@ public struct Decisions: Sendable, Equatable, Codable {
             if lhs.timestamp != rhs.timestamp { return lhs.timestamp < rhs.timestamp }
             return lhs.identityHash < rhs.identityHash
         }
-        return Decisions(
+        return Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
             records: merged
         )

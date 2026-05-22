@@ -60,7 +60,7 @@ public enum CallExpressionShape: Equatable, Sendable {
     public static func classify(
         typeQualifier: String,
         bareFunctionName: String
-    ) -> CallExpressionShape {
+    ) -> Self {
         if isOperatorName(bareFunctionName) {
             return .operatorFunction(name: bareFunctionName)
         }

@@ -26,7 +26,7 @@ public enum DomainCorpusScanner {
             self.setupBindings = setupBindings
         }
 
-        public static let empty = SliceArtifacts(callSitesByConsumer: [:], setupBindings: [:])
+        public static let empty = Self(callSitesByConsumer: [:], setupBindings: [:])
     }
 
     public static func artifacts(in slice: SlicedTestBody) -> SliceArtifacts {

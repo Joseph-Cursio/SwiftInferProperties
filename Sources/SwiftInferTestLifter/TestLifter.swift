@@ -81,7 +81,7 @@ extension TestLifter {
             self.equivalenceClassCandidates = equivalenceClassCandidates
         }
 
-        public static let empty = Artifacts(
+        public static let empty = Self(
             liftedSuggestions: [],
             setupAnnotationsByOrigin: [:],
             constructionRecord: ConstructionRecord(entries: []),

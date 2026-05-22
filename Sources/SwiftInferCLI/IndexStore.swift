@@ -54,8 +54,8 @@ public enum IndexStore {
         }
 
         /// Empty index with the current run timestamp.
-        public static func empty(at timestamp: String) -> Index {
-            Index(updatedAt: timestamp, entries: [])
+        public static func empty(at timestamp: String) -> Self {
+            Self(updatedAt: timestamp, entries: [])
         }
     }
 

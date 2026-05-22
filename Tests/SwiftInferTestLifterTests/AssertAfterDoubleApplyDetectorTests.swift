@@ -24,7 +24,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         let detected = detections.first
         #expect(detected?.calleeName == "normalize")
@@ -44,7 +44,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.calleeName == "normalize")
     }
@@ -62,7 +62,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.calleeName == "normalize")
     }
@@ -80,7 +80,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -97,7 +97,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.calleeName == "normalize")
         #expect(detections.first?.inputBindingName == "s")
@@ -114,7 +114,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.calleeName == "normalize")
     }
@@ -128,7 +128,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             #expect(normalize(normalize(s)) == normalize(s))
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.calleeName == "normalize")
         #expect(detections.first?.inputBindingName == "s")
@@ -143,7 +143,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             #expect(formatter.normalize(formatter.normalize(s)) == formatter.normalize(s))
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.calleeName == "normalize")
     }
@@ -159,7 +159,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -174,7 +174,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -187,7 +187,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             #expect(normalize(s) == normalize(s))
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -203,7 +203,7 @@ struct AssertAfterDoubleApplyDetectorTests {
             }
         }
         """
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -223,7 +223,7 @@ struct AssertAfterDoubleApplyDetectorTests {
         // Round-trip has different callees on the two binding inits
         // (encode vs decode); the idempotence detector's single-callee
         // invariant rejects.
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -240,7 +240,7 @@ struct AssertAfterDoubleApplyDetectorTests {
         """
         // Mirror M1.3's posture — collapsed shape covers
         // XCTAssertEqual + #expect, not XCTAssertTrue.
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -257,7 +257,7 @@ struct AssertAfterDoubleApplyDetectorTests {
         // M1.3 has the same constraint — inner argument must be a
         // DeclReferenceExpr. Tests using inline literals can refactor
         // to bind first.
-        let detections = AssertAfterDoubleApplyDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 }

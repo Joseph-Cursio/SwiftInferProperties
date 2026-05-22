@@ -65,12 +65,12 @@ public struct LiftedCounterSignal: Sendable, Equatable {
         backwardCallee: String,
         sourceLocation: SourceLocation,
         origin: LiftedOrigin? = nil
-    ) -> LiftedCounterSignal {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "round-trip",
             calleeNames: [forwardCallee, backwardCallee]
         )
-        return LiftedCounterSignal(
+        return Self(
             templateName: "round-trip",
             crossValidationKey: key,
             pattern: .roundTrip(forwardCallee: forwardCallee, backwardCallee: backwardCallee),
@@ -82,12 +82,12 @@ public struct LiftedCounterSignal: Sendable, Equatable {
         calleeName: String,
         sourceLocation: SourceLocation,
         origin: LiftedOrigin? = nil
-    ) -> LiftedCounterSignal {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "idempotence",
             calleeNames: [calleeName]
         )
-        return LiftedCounterSignal(
+        return Self(
             templateName: "idempotence",
             crossValidationKey: key,
             pattern: .idempotence(calleeName: calleeName),
@@ -99,12 +99,12 @@ public struct LiftedCounterSignal: Sendable, Equatable {
         calleeName: String,
         sourceLocation: SourceLocation,
         origin: LiftedOrigin? = nil
-    ) -> LiftedCounterSignal {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "commutativity",
             calleeNames: [calleeName]
         )
-        return LiftedCounterSignal(
+        return Self(
             templateName: "commutativity",
             crossValidationKey: key,
             pattern: .commutativity(calleeName: calleeName),
@@ -116,12 +116,12 @@ public struct LiftedCounterSignal: Sendable, Equatable {
         calleeName: String,
         sourceLocation: SourceLocation,
         origin: LiftedOrigin? = nil
-    ) -> LiftedCounterSignal {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "monotonicity",
             calleeNames: [calleeName]
         )
-        return LiftedCounterSignal(
+        return Self(
             templateName: "monotonicity",
             crossValidationKey: key,
             pattern: .monotonicity(calleeName: calleeName),
@@ -133,12 +133,12 @@ public struct LiftedCounterSignal: Sendable, Equatable {
         calleeName: String,
         sourceLocation: SourceLocation,
         origin: LiftedOrigin? = nil
-    ) -> LiftedCounterSignal {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "invariant-preservation",
             calleeNames: [calleeName]
         )
-        return LiftedCounterSignal(
+        return Self(
             templateName: "invariant-preservation",
             crossValidationKey: key,
             pattern: .countInvariance(calleeName: calleeName),
@@ -150,12 +150,12 @@ public struct LiftedCounterSignal: Sendable, Equatable {
         opCalleeName: String,
         sourceLocation: SourceLocation,
         origin: LiftedOrigin? = nil
-    ) -> LiftedCounterSignal {
+    ) -> Self {
         let key = CrossValidationKey(
             templateName: "associativity",
             calleeNames: [opCalleeName]
         )
-        return LiftedCounterSignal(
+        return Self(
             templateName: "associativity",
             crossValidationKey: key,
             pattern: .reduceEquivalence(opCalleeName: opCalleeName),

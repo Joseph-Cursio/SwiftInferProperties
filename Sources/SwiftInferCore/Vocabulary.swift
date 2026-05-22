@@ -114,7 +114,7 @@ public struct Vocabulary: Sendable, Equatable {
 
     /// The default vocabulary — every list empty. Templates fall back to
     /// their curated lists alone when no project vocabulary is supplied.
-    public static let empty = Vocabulary()
+    public static let empty = Self()
 }
 
 extension Vocabulary: Codable {

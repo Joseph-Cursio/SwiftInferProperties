@@ -24,7 +24,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         let detected = detections.first
         #expect(detected?.forwardCallee == "encode")
@@ -46,7 +46,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.forwardCallee == "encode")
         #expect(detections.first?.backwardCallee == "decode")
@@ -65,7 +65,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.forwardCallee == "encode")
         #expect(detections.first?.backwardCallee == "decode")
@@ -83,7 +83,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -106,7 +106,7 @@ struct AssertAfterTransformDetectorTests {
         // mid-chain, not arbitrary callee pairs — pair-of-arbitrary-
         // names is still a valid round-trip *claim* in M1, with the
         // explainability block covering "why this might be wrong."
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.forwardCallee == "encode")
         #expect(detections.first?.backwardCallee == "somethingElse")
@@ -126,7 +126,7 @@ struct AssertAfterTransformDetectorTests {
         // Detector M1 requires the explicit shape's two assertion
         // arguments to both be DeclReferenceExpr — collapsed shape
         // catches this case via decode(encode(x))-on-LHS instead.
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         // collapsed-detector falls through because the inner expr 42 is
         // not an identifier; explicit-detector falls through because
         // RHS is a literal not a DeclReferenceExpr; net: no detection.
@@ -146,7 +146,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         let detected = detections.first
         #expect(detected?.forwardCallee == "encode")
@@ -166,7 +166,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.forwardCallee == "encode")
         #expect(detections.first?.backwardCallee == "decode")
@@ -181,7 +181,7 @@ struct AssertAfterTransformDetectorTests {
             #expect(decode(encode(original)) == original)
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         let detected = detections.first
         #expect(detected?.forwardCallee == "encode")
@@ -198,7 +198,7 @@ struct AssertAfterTransformDetectorTests {
             #expect(original == decode(encode(original)))
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
     }
 
@@ -213,7 +213,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.count == 1)
         #expect(detections.first?.forwardCallee == "encode")
         #expect(detections.first?.backwardCallee == "decode")
@@ -230,7 +230,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -246,7 +246,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -264,7 +264,7 @@ struct AssertAfterTransformDetectorTests {
         // M1 doesn't pattern-match `XCTAssertTrue(... == ...)` for
         // round-trip — XCTAssertEqual + #expect cover the canonical
         // shapes. Documenting the limit; M5+ may extend.
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 
@@ -280,7 +280,7 @@ struct AssertAfterTransformDetectorTests {
             }
         }
         """
-        let detections = AssertAfterTransformDetectorTests.detect(in: source)
+        let detections = Self.detect(in: source)
         #expect(detections.isEmpty)
     }
 }

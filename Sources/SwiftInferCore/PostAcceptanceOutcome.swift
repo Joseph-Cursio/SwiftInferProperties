@@ -159,7 +159,7 @@ public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
     /// The empty value — schema version present, no records yet.
     /// `PostAcceptanceOutcomesStore.load` returns this when the file
     /// is absent.
-    public static let empty = PostAcceptanceOutcomeLog()
+    public static let empty = Self()
 
     /// Look up outcome by suggestion-identity hash. Used by the
     /// §17.2 metric's render-time join.
@@ -172,9 +172,9 @@ public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
     /// new record appended at the end. The trailing-append shape
     /// keeps re-saved JSON stable for previously-recorded outcomes —
     /// mirrors `VerifyEvidenceLog.upserting`.
-    public func upserting(_ record: PostAcceptanceOutcome) -> PostAcceptanceOutcomeLog {
+    public func upserting(_ record: PostAcceptanceOutcome) -> Self {
         let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return PostAcceptanceOutcomeLog(
+        return Self(
             schemaVersion: schemaVersion,
             records: withoutPrior + [record]
         )
@@ -189,7 +189,7 @@ public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
     /// `upserting(_:)`'s "latest run in effect" posture). The result
     /// is sorted by `checkedAt` then `identityHash` so the in-memory
     /// aggregate is order-deterministic regardless of input ordering.
-    public func merge(_ other: PostAcceptanceOutcomeLog) -> PostAcceptanceOutcomeLog {
+    public func merge(_ other: Self) -> Self {
         var byHash: [String: PostAcceptanceOutcome] = [:]
         for record in records + other.records {
             if let existing = byHash[record.identityHash],
@@ -202,7 +202,7 @@ public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
             if lhs.checkedAt != rhs.checkedAt { return lhs.checkedAt < rhs.checkedAt }
             return lhs.identityHash < rhs.identityHash
         }
-        return PostAcceptanceOutcomeLog(
+        return Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
             records: merged
         )

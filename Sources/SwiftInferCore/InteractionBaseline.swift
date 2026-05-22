@@ -72,7 +72,7 @@ public struct InteractionBaseline: Sendable, Equatable, Codable {
     /// The empty value — schema version present, no entries yet.
     /// `InteractionBaselineLoader.load` returns this when the file
     /// doesn't exist.
-    public static let empty = InteractionBaseline()
+    public static let empty = Self()
 
     /// `true` when an entry with the given identity hash exists.
     /// `drift-interaction` uses this to ask "is this current

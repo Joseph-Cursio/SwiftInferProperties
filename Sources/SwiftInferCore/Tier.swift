@@ -64,7 +64,7 @@ public enum Tier: String, Sendable, Equatable, CaseIterable, Codable {
     /// whose verify run reached `.measuredBothPass` is promoted to
     /// `.verified`; every other `(tier, outcome)` pair — including a
     /// `nil` outcome (no verify evidence) — returns `self` unchanged.
-    public func promoted(byVerifyOutcome outcome: VerifyEvidenceOutcome?) -> Tier {
+    public func promoted(byVerifyOutcome outcome: VerifyEvidenceOutcome?) -> Self {
         guard self == .strong, outcome == .measuredBothPass else { return self }
         return .verified
     }

@@ -60,5 +60,5 @@ public struct Config: Sendable, Equatable {
     /// PRD-defined defaults: Possible tier hidden, no vocabulary
     /// override, all packs enabled. Used when no
     /// `.swiftinfer/config.toml` is present.
-    public static let defaults = Config()
+    public static let defaults = Self()
 }

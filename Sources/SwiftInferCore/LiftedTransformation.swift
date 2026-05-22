@@ -94,7 +94,7 @@ public struct LiftedTransformation: Sendable, Equatable {
     public static func derive(
         from summaries: [FunctionSummary],
         carrierKindResolver: CarrierKindResolver
-    ) -> [LiftedTransformation] {
+    ) -> [Self] {
         summaries
             .compactMap { summary in
                 lift(summary, carrierKindResolver: carrierKindResolver)
@@ -108,7 +108,7 @@ public struct LiftedTransformation: Sendable, Equatable {
     public static func lift(
         _ summary: FunctionSummary,
         carrierKindResolver: CarrierKindResolver
-    ) -> LiftedTransformation? {
+    ) -> Self? {
         guard summary.isMutating,
               let carrier = summary.containingTypeName else {
             return nil
@@ -129,7 +129,7 @@ public struct LiftedTransformation: Sendable, Equatable {
             + "Property holds iff `\(carrier)` has value semantics — "
             + "`var copy = original; copy.\(summary.name)(...)` does not alias "
             + "original's state."
-        return LiftedTransformation(
+        return Self(
             originalSummary: summary,
             carrier: carrier,
             liftedParameters: liftedParameters,
@@ -139,8 +139,8 @@ public struct LiftedTransformation: Sendable, Equatable {
     }
 
     private static func lessThan(
-        _ lhs: LiftedTransformation,
-        _ rhs: LiftedTransformation
+        _ lhs: Self,
+        _ rhs: Self
     ) -> Bool {
         let lhsLoc = lhs.originalSummary.location
         let rhsLoc = rhs.originalSummary.location

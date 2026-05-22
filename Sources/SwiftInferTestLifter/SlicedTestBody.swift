@@ -54,8 +54,8 @@ public struct SlicedTestBody {
     /// Empty slice — for bodies with no terminal assertion. Setup
     /// holds the original body items in source order; property region
     /// is empty.
-    public static func emptySlice(setup: [CodeBlockItemSyntax]) -> SlicedTestBody {
-        SlicedTestBody(
+    public static func emptySlice(setup: [CodeBlockItemSyntax]) -> Self {
+        Self(
             setup: setup,
             propertyRegion: [],
             parameterizedValues: [],
