@@ -92,12 +92,10 @@ extension RefactorBridgeAccumulator {
         }
         let additive = monoidShapedOps.keys
             .filter { Self.curatedAdditiveOpNames.contains($0) }
-            .sorted()
-            .first
+            .min()
         let multiplicative = monoidShapedOps.keys
             .filter { Self.curatedMultiplicativeOpNames.contains($0) }
-            .sorted()
-            .first
+            .min()
         guard let additive, let multiplicative else { return nil }
         let additiveIdentity = monoidShapedOps[additive]?.identityName
         let multiplicativeIdentity = monoidShapedOps[multiplicative]?.identityName
