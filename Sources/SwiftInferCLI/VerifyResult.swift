@@ -7,12 +7,11 @@ import Foundation
 ///
 ///   - `.bothPass(defaultTrials:edgeTrials:edgeSampled:)` — strong
 ///     evidence; default + edge passes both clean.
-///   - `.edgeCaseAdvisory(defaultTrials:edgeTrial:edgeInput:edgeForward:`
-///     `edgeInverse:edgeCaseIndex:)` — default pass clean, edge pass
-///     surfaced a counterexample at a curated edge case (or, less
-///     commonly, a finite-path value on the 90% slice — `edgeCaseIndex
-///     == -1`). Property holds for normal inputs but breaks at a
-///     boundary.
+///   - `.edgeCaseAdvisory(defaultTrials:edge:)` — default pass clean,
+///     edge pass surfaced a counterexample at a curated edge case (or,
+///     less commonly, a finite-path value on the 90% slice —
+///     `edge.caseIndex == -1`). Property holds for normal inputs but
+///     breaks at a boundary.
 ///   - `.defaultFails(trial:input:forwardResult:inverseResult:)` —
 ///     default pass surfaced a counterexample; edge pass was skipped
 ///     by the runner per the proposal §2.2 row 3 short-circuit.
@@ -24,16 +23,43 @@ import Foundation
 /// The parser is tolerant of extra lines (build chatter, debug prints,
 /// etc.) — it locates each marker by line prefix and ignores anything
 /// else. Multiple matches of the same marker take the *first* hit.
+/// The edge-pass counterexample data carried by
+/// `VerifyOutcome.edgeCaseAdvisory`.
+///
+/// Grouped into a struct so the enum case stays within a readable
+/// associated-value count. `defaultTrials` stays on the case itself —
+/// it describes the *default* pass, not this edge counterexample.
+public struct EdgeCaseDetail: Equatable, Sendable {
+    /// The edge-pass trial index at which the counterexample surfaced.
+    public let trial: Int
+    /// The failing edge input, as rendered by the verifier stub.
+    public let input: String
+    /// The forward-call result on `input`.
+    public let forward: String
+    /// The inverse-call result on `input`.
+    public let inverse: String
+    /// The curated edge-case index — `-1` for a non-curated
+    /// finite-slice value.
+    public let caseIndex: Int
+
+    public init(
+        trial: Int,
+        input: String,
+        forward: String,
+        inverse: String,
+        caseIndex: Int
+    ) {
+        self.trial = trial
+        self.input = input
+        self.forward = forward
+        self.inverse = inverse
+        self.caseIndex = caseIndex
+    }
+}
+
 public enum VerifyOutcome: Equatable, Sendable {
     case bothPass(defaultTrials: Int, edgeTrials: Int, edgeSampled: Int)
-    case edgeCaseAdvisory(
-        defaultTrials: Int,
-        edgeTrial: Int,
-        edgeInput: String,
-        edgeForward: String,
-        edgeInverse: String,
-        edgeCaseIndex: Int
-    )
+    case edgeCaseAdvisory(defaultTrials: Int, edge: EdgeCaseDetail)
     case defaultFails(
         trial: Int,
         input: String,
@@ -84,11 +110,13 @@ public enum VerifyResultParser {
             let edgeCaseIndex = Int(value(forMarker: "VERIFY_EDGE_INDEX:", in: lines) ?? "") ?? -1
             return .edgeCaseAdvisory(
                 defaultTrials: defaultTrials,
-                edgeTrial: edgeTrial,
-                edgeInput: edgeInput,
-                edgeForward: edgeForward,
-                edgeInverse: edgeInverse,
-                edgeCaseIndex: edgeCaseIndex
+                edge: EdgeCaseDetail(
+                    trial: edgeTrial,
+                    input: edgeInput,
+                    forward: edgeForward,
+                    inverse: edgeInverse,
+                    caseIndex: edgeCaseIndex
+                )
             )
         }
 

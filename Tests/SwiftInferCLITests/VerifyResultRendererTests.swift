@@ -75,11 +75,13 @@ struct VerifyResultRendererTests {
         let rendered = VerifyResultRenderer.render(
             .edgeCaseAdvisory(
                 defaultTrials: 100,
-                edgeTrial: 7,
-                edgeInput: "Complex(nan, 0.0)",
-                edgeForward: "Complex(nan, nan)",
-                edgeInverse: "Complex(nan, nan)",
-                edgeCaseIndex: 1
+                edge: EdgeCaseDetail(
+                    trial: 7,
+                    input: "Complex(nan, 0.0)",
+                    forward: "Complex(nan, nan)",
+                    inverse: "Complex(nan, nan)",
+                    caseIndex: 1
+                )
             ),
             context: Self.canonicalContext
         )
@@ -96,11 +98,13 @@ struct VerifyResultRendererTests {
         let rendered = VerifyResultRenderer.render(
             .edgeCaseAdvisory(
                 defaultTrials: 100,
-                edgeTrial: 3,
-                edgeInput: "Complex(1.5, -2.5)",
-                edgeForward: "Complex(3.0, -5.0)",
-                edgeInverse: "Complex(0.0, 0.0)",
-                edgeCaseIndex: -1
+                edge: EdgeCaseDetail(
+                    trial: 3,
+                    input: "Complex(1.5, -2.5)",
+                    forward: "Complex(3.0, -5.0)",
+                    inverse: "Complex(0.0, 0.0)",
+                    caseIndex: -1
+                )
             ),
             context: Self.canonicalContext
         )
@@ -193,11 +197,13 @@ struct VerifyResultRendererTests {
         let rendered = VerifyResultRenderer.render(
             .edgeCaseAdvisory(
                 defaultTrials: 100,
-                edgeTrial: 4,
-                edgeInput: "Complex(nan, nan)",
-                edgeForward: "Complex(nan, nan)",
-                edgeInverse: "Complex(nan, nan)",
-                edgeCaseIndex: 0
+                edge: EdgeCaseDetail(
+                    trial: 4,
+                    input: "Complex(nan, nan)",
+                    forward: "Complex(nan, nan)",
+                    inverse: "Complex(nan, nan)",
+                    caseIndex: 0
+                )
             ),
             context: Self.idempotenceContext
         )
@@ -238,11 +244,13 @@ struct VerifyResultRendererTests {
         let rendered = VerifyResultRenderer.render(
             .edgeCaseAdvisory(
                 defaultTrials: 100,
-                edgeTrial: 7,
-                edgeInput: "nan",
-                edgeForward: "nan",
-                edgeInverse: "nan",
-                edgeCaseIndex: 0
+                edge: EdgeCaseDetail(
+                    trial: 7,
+                    input: "nan",
+                    forward: "nan",
+                    inverse: "nan",
+                    caseIndex: 0
+                )
             ),
             context: Self.doubleContext
         )

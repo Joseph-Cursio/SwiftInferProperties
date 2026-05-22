@@ -22,11 +22,13 @@ struct VerifyEvidenceRecorderTests {
         let (outcome, detail) = VerifyEvidenceRecorder.evidence(
             for: .edgeCaseAdvisory(
                 defaultTrials: 100,
-                edgeTrial: 3,
-                edgeInput: "x",
-                edgeForward: "y",
-                edgeInverse: "z",
-                edgeCaseIndex: 0
+                edge: EdgeCaseDetail(
+                    trial: 3,
+                    input: "x",
+                    forward: "y",
+                    inverse: "z",
+                    caseIndex: 0
+                )
             )
         )
         #expect(outcome == .measuredEdgeCaseAdvisory)

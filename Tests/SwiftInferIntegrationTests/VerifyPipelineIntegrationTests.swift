@@ -105,7 +105,7 @@ struct VerifyPipelineIntegrationTests {
                 + "zedValue.isFinite ? zedValue : Complex(0, 0) }",
             inverseCall: "{ (zedValue: Complex<Double>) in zedValue }"
         )
-        if case let .edgeCaseAdvisory(defaultTrials, _, _, _, _, edgeCaseIndex) = outcome {
+        if case let .edgeCaseAdvisory(defaultTrials, edge) = outcome {
             #expect(defaultTrials == 100)
             // The first failing trial is determined by the kit's
             // seeded `Gen<Int>.int(in: 0 ..< 120)` tag sequence; at
@@ -116,7 +116,7 @@ struct VerifyPipelineIntegrationTests {
             // indicate the property failed on a finite-slice
             // non-curated value, which the property by construction
             // can never do.
-            #expect((0...7).contains(edgeCaseIndex))
+            #expect((0...7).contains(edge.caseIndex))
         } else {
             Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
         }

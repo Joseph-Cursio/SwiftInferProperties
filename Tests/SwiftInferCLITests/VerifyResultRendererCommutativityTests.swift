@@ -62,11 +62,13 @@ struct VerifyResultRendererCommutativityTests {
         let rendered = VerifyResultRenderer.render(
             .edgeCaseAdvisory(
                 defaultTrials: 100,
-                edgeTrial: 5,
-                edgeInput: "(Complex(nan, 0.0), Complex(1, 2))",
-                edgeForward: "Complex(...)",
-                edgeInverse: "Complex(...)",
-                edgeCaseIndex: 1
+                edge: EdgeCaseDetail(
+                    trial: 5,
+                    input: "(Complex(nan, 0.0), Complex(1, 2))",
+                    forward: "Complex(...)",
+                    inverse: "Complex(...)",
+                    caseIndex: 1
+                )
             ),
             context: Self.complexContext
         )

@@ -64,23 +64,12 @@ public enum VerifyResultRenderer {
                 context: context
             )
 
-        case let .edgeCaseAdvisory(
-            defaultTrials,
-            edgeTrial,
-            edgeInput,
-            edgeForward,
-            edgeInverse,
-            edgeCaseIndex
-        ):
-            let payload = EdgeAdvisoryPayload(
+        case let .edgeCaseAdvisory(defaultTrials, edge):
+            return renderEdgeCaseAdvisory(
                 defaultTrials: defaultTrials,
-                edgeTrial: edgeTrial,
-                edgeInput: edgeInput,
-                edgeForward: edgeForward,
-                edgeInverse: edgeInverse,
-                edgeCaseIndex: edgeCaseIndex
+                edge: edge,
+                context: context
             )
-            return renderEdgeCaseAdvisory(payload: payload, context: context)
 
         case let .defaultFails(trial, input, forwardResult, inverseResult):
             return renderDefaultFails(
@@ -117,29 +106,21 @@ public enum VerifyResultRenderer {
         return [header, trialLine, coverageLine].joined(separator: "\n")
     }
 
-    fileprivate struct EdgeAdvisoryPayload {
-        let defaultTrials: Int
-        let edgeTrial: Int
-        let edgeInput: String
-        let edgeForward: String
-        let edgeInverse: String
-        let edgeCaseIndex: Int
-    }
-
     private static func renderEdgeCaseAdvisory(
-        payload: EdgeAdvisoryPayload,
+        defaultTrials: Int,
+        edge: EdgeCaseDetail,
         context: Context
     ) -> String {
         let shape = renderShape(for: context)
-        let edgeTag = edgeIndexTag(edgeCaseIndex: payload.edgeCaseIndex, context: context)
+        let edgeTag = edgeIndexTag(edgeCaseIndex: edge.caseIndex, context: context)
         return [
             "⚠ verify holds for finite domain; edge-case advisory: "
                 + "\(shape.subjectLine(context: context)),",
-            "    default pass \(payload.defaultTrials)/\(payload.defaultTrials), "
-                + "edge pass failed at trial \(payload.edgeTrial) on \(edgeTag):",
-            "    input  = \(payload.edgeInput)",
-            "    \(shape.forwardExpression(context: context)) = \(payload.edgeForward)",
-            "    \(shape.inverseExpression(context: context)) = \(payload.edgeInverse)",
+            "    default pass \(defaultTrials)/\(defaultTrials), "
+                + "edge pass failed at trial \(edge.trial) on \(edgeTag):",
+            "    input  = \(edge.input)",
+            "    \(shape.forwardExpression(context: context)) = \(edge.forward)",
+            "    \(shape.inverseExpression(context: context)) = \(edge.inverse)",
             "    expected ≈ \(shape.expectedExpression(context: context)) "
                 + "(within \(context.carrierType).isApproximatelyEqual)"
         ].joined(separator: "\n")

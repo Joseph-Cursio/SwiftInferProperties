@@ -19,12 +19,12 @@ struct VerifyPipelineIdempotenceTests {
                 + "zedValue.isFinite ? Complex(1, 0) : Complex(0, 0) }",
             carrierType: "Complex<Double>"
         )
-        if case let .edgeCaseAdvisory(defaultTrials, _, _, _, _, edgeCaseIndex) = outcome {
+        if case let .edgeCaseAdvisory(defaultTrials, edge) = outcome {
             #expect(defaultTrials == 100)
             // First failing edge trial is one of the 8 non-finite
             // curated entries — index resolves to [0, 7] via the
             // `.rawStorage` match.
-            #expect((0...7).contains(edgeCaseIndex))
+            #expect((0...7).contains(edge.caseIndex))
         } else {
             Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
         }

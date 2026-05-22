@@ -80,11 +80,13 @@ struct VerifyResultParserTests {
         let outcome = VerifyResultParser.parse(raw)
         #expect(outcome == .edgeCaseAdvisory(
             defaultTrials: 100,
-            edgeTrial: 7,
-            edgeInput: "Complex(nan, 0.0)",
-            edgeForward: "Complex(nan, nan)",
-            edgeInverse: "Complex(nan, nan)",
-            edgeCaseIndex: 1
+            edge: EdgeCaseDetail(
+                trial: 7,
+                input: "Complex(nan, 0.0)",
+                forward: "Complex(nan, nan)",
+                inverse: "Complex(nan, nan)",
+                caseIndex: 1
+            )
         ))
     }
 
@@ -104,8 +106,8 @@ struct VerifyResultParserTests {
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
-        if case let .edgeCaseAdvisory(_, _, _, _, _, edgeCaseIndex) = outcome {
-            #expect(edgeCaseIndex == -1)
+        if case let .edgeCaseAdvisory(_, edge) = outcome {
+            #expect(edge.caseIndex == -1)
         } else {
             Issue.record("expected .edgeCaseAdvisory; got \(outcome)")
         }
