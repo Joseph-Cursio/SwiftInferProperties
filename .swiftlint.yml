@@ -118,6 +118,8 @@ opt_in_rules:
   - number_separator
   - trailing_closure
   - unneeded_throws_rethrows
+  - prefer_self_in_static_references
+  - sorted_imports
 analyzer_rules:
   - capture_variable
   - unused_declaration
