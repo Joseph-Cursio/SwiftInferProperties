@@ -47,7 +47,7 @@ correct `Package.swift` walk-up:
 
 ```sh
 # 1. HandRolled (7 fixtures, 15 unique identities, 15 occurrences post-Findings-C+D)
-cd /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus
+cd $HOME/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus
 swift-infer discover-interaction --target HandRolled --include-possible --interactive
 
 # 2. TCA 1.25.5 (7 examples, 31 unique identities, 31 occurrences post-Finding-A)
@@ -64,7 +64,7 @@ for tgt in CaseStudies UIKitCaseStudies; do
 done
 
 # 4. Aggregate
-cd /Users/josephcursio/xcode_projects/SwiftInferProperties
+cd $HOME/xcode_projects/SwiftInferProperties
 swift-infer metrics-interaction \
   --decisions Tests/Fixtures/v2.0-corpus/.swiftinfer/interaction-decisions.json \
   --decisions /tmp/tca-25-discovery/.swiftinfer/interaction-decisions.json \
@@ -88,6 +88,27 @@ raw count): the same `NavigateAndLoad.setNavigation`,
 `Animations.setColor`, `BindingForm.binding`, etc. emit identical
 identity hashes across both TCA pinned versions because identity
 keys on family + reducer qualified name + predicate string.
+
+### Pre-triage environment verification (v1.111, 2026-06-07)
+
+Before the interactive walk, the three corpora were re-measured
+non-interactively (`discover-interaction --include-possible`, raw
+outputs persisted to `docs/calibration-cycle-104-data/{handrolled,
+tca-25,tca-10}-raw.txt`) and audited against this worksheet:
+
+- **Occurrence counts reproduce exactly:** HandRolled 15, TCA 1.25.5
+  31 (CaseStudies 20 / UIKit 5 / SyncUps 2 / Todos 1 / VoiceMemos 3),
+  TCA 1.0.0 24 (CaseStudies 19 / UIKit 5) → 70 total.
+- **All 51 unique identity hashes match the worksheet** — zero drift
+  between the cycle-102 baseline (when this scaffold was authored) and
+  v1.111. `comm -23` / `comm -13` of emitted-vs-worksheet identity
+  sets are both empty.
+- Full `swift package clean && swift test` is green (3156 tests / 420
+  suites). Scaffold command flags (`--interactive`,
+  `metrics-interaction --decisions … --format markdown`) confirmed
+  current against the v1.111 CLI surface.
+
+The triage can proceed directly against the worksheet below.
 
 ## Per-suggestion triage worksheet
 
