@@ -333,8 +333,8 @@ extension IdentityElementTemplate {
 
     private static func makeEvidence(operation summary: FunctionSummary) -> Evidence {
         Evidence(
-            displayName: displayName(for: summary),
-            signature: signature(for: summary),
+            displayName: summary.inferenceDisplayName,
+            signature: summary.inferenceSignature,
             location: summary.location
         )
     }

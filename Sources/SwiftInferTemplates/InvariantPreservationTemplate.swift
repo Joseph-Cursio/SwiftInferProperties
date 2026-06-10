@@ -138,7 +138,7 @@ public enum InvariantPreservationTemplate {
 
     private static func makeEvidence(_ summary: FunctionSummary, keyPath: String) -> Evidence {
         Evidence(
-            displayName: displayName(for: summary),
+            displayName: summary.inferenceDisplayName,
             signature: signature(for: summary, keyPath: keyPath),
             location: summary.location
         )
@@ -171,11 +171,6 @@ public enum InvariantPreservationTemplate {
     }
 
     // MARK: - Display helpers
-
-    private static func displayName(for summary: FunctionSummary) -> String {
-        let labels = summary.parameters.map { ($0.label ?? "_") + ":" }.joined()
-        return "\(summary.name)(\(labels))"
-    }
 
     private static func signature(for summary: FunctionSummary, keyPath: String) -> String {
         let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")

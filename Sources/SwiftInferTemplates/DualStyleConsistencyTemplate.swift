@@ -58,8 +58,8 @@ public enum DualStyleConsistencyTemplate {
             },
             evidence: { pair in
                 [
-                    Self.makeEvidence(pair.mutatingMember),
-                    Self.makeEvidence(pair.nonMutatingMember)
+                    pair.mutatingMember.inferenceEvidence,
+                    pair.nonMutatingMember.inferenceEvidence
                 ]
             },
             identity: Self.makeIdentity(for:),
@@ -165,21 +165,13 @@ public enum DualStyleConsistencyTemplate {
 
     // MARK: - Suggestion construction
 
-    private static func makeEvidence(_ summary: FunctionSummary) -> Evidence {
-        Evidence(
-            displayName: displayName(for: summary),
-            signature: signature(for: summary),
-            location: summary.location
-        )
-    }
-
     private static func makeExplainability(
         for pair: DualStylePair,
         signals: [Signal]
     ) -> ExplainabilityBlock {
         var whySuggested: [String] = []
-        let mutEvidence = makeEvidence(pair.mutatingMember)
-        let nonMutEvidence = makeEvidence(pair.nonMutatingMember)
+        let mutEvidence = pair.mutatingMember.inferenceEvidence
+        let nonMutEvidence = pair.nonMutatingMember.inferenceEvidence
         whySuggested.append(
             "\(mutEvidence.displayName) \(mutEvidence.signature)"
                 + " — \(mutEvidence.location.file):\(mutEvidence.location.line)"
@@ -202,25 +194,5 @@ public enum DualStyleConsistencyTemplate {
                 + "sampling time."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
-
-    // MARK: - Display helpers
-
-    private static func displayName(for summary: FunctionSummary) -> String {
-        let labels = summary.parameters.map { ($0.label ?? "_") + ":" }.joined()
-        return "\(summary.name)(\(labels))"
-    }
-
-    private static func signature(for summary: FunctionSummary) -> String {
-        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
-        var sig = "(\(paramTypes))"
-        if summary.isAsync {
-            sig += " async"
-        }
-        if summary.isThrows {
-            sig += " throws"
-        }
-        sig += " -> \(summary.returnTypeText ?? "Void")"
-        return sig
     }
 }

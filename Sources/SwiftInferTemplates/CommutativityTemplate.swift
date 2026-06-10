@@ -104,7 +104,7 @@ public enum CommutativityTemplate {
                 )
             },
             evidence: { summary in
-                [Self.makeEvidence(summary)]
+                [summary.inferenceEvidence]
             },
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
@@ -349,20 +349,12 @@ extension CommutativityTemplate {
 
     // MARK: - Suggestion construction
 
-    private static func makeEvidence(_ summary: FunctionSummary) -> Evidence {
-        Evidence(
-            displayName: displayName(for: summary),
-            signature: signature(for: summary),
-            location: summary.location
-        )
-    }
-
     private static func makeExplainability(
         for summary: FunctionSummary,
         signals: [Signal]
     ) -> ExplainabilityBlock {
         var whySuggested: [String] = []
-        let evidence = makeEvidence(summary)
+        let evidence = summary.inferenceEvidence
         whySuggested.append(
             "\(evidence.displayName) \(evidence.signature) — \(evidence.location.file):\(evidence.location.line)"
         )

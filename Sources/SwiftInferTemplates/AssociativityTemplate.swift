@@ -99,7 +99,7 @@ public enum AssociativityTemplate {
                 )
             },
             evidence: { summary in
-                [Self.makeEvidence(summary)]
+                [summary.inferenceEvidence]
             },
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
@@ -310,20 +310,12 @@ extension AssociativityTemplate {
 
     // MARK: - Suggestion construction
 
-    private static func makeEvidence(_ summary: FunctionSummary) -> Evidence {
-        Evidence(
-            displayName: displayName(for: summary),
-            signature: signature(for: summary),
-            location: summary.location
-        )
-    }
-
     private static func makeExplainability(
         for summary: FunctionSummary,
         signals: [Signal]
     ) -> ExplainabilityBlock {
         var whySuggested: [String] = []
-        let evidence = makeEvidence(summary)
+        let evidence = summary.inferenceEvidence
         whySuggested.append(
             "\(evidence.displayName) \(evidence.signature) — \(evidence.location.file):\(evidence.location.line)"
         )
@@ -373,25 +365,5 @@ extension AssociativityTemplate {
             + "`Gen<Double>.double(in: -1e6...1e6)` lifted into \(stripped)) per "
             + "PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ "
             + "will surface the generator override automatically."
-    }
-
-    // MARK: - Display helpers
-
-    private static func displayName(for summary: FunctionSummary) -> String {
-        let labels = summary.parameters.map { ($0.label ?? "_") + ":" }.joined()
-        return "\(summary.name)(\(labels))"
-    }
-
-    private static func signature(for summary: FunctionSummary) -> String {
-        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
-        var sig = "(\(paramTypes))"
-        if summary.isAsync {
-            sig += " async"
-        }
-        if summary.isThrows {
-            sig += " throws"
-        }
-        sig += " -> \(summary.returnTypeText ?? "Void")"
-        return sig
     }
 }

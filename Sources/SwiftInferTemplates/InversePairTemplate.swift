@@ -91,7 +91,7 @@ public enum InversePairTemplate {
                 )
             },
             evidence: { pair in
-                [Self.makeEvidence(pair.forward), Self.makeEvidence(pair.reverse)]
+                [pair.forward.inferenceEvidence, pair.reverse.inferenceEvidence]
             },
             identity: Self.makeIdentity(for:),
             carrier: { $0.forward.containingTypeName },
@@ -330,21 +330,13 @@ extension InversePairTemplate {
 
     // MARK: - Suggestion construction
 
-    private static func makeEvidence(_ summary: FunctionSummary) -> Evidence {
-        Evidence(
-            displayName: displayName(for: summary),
-            signature: signature(for: summary),
-            location: summary.location
-        )
-    }
-
     private static func makeExplainability(
         for pair: FunctionPair,
         signals: [Signal]
     ) -> ExplainabilityBlock {
         var whySuggested: [String] = []
-        let forwardEvidence = makeEvidence(pair.forward)
-        let reverseEvidence = makeEvidence(pair.reverse)
+        let forwardEvidence = pair.forward.inferenceEvidence
+        let reverseEvidence = pair.reverse.inferenceEvidence
         whySuggested.append(
             "\(forwardEvidence.displayName) \(forwardEvidence.signature)"
                 + " — \(forwardEvidence.location.file):\(forwardEvidence.location.line)"
@@ -370,25 +362,5 @@ extension InversePairTemplate {
             caveats.append(fpCaveat)
         }
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
-
-    // MARK: - Display helpers (mirrors RoundTripTemplate)
-
-    private static func displayName(for summary: FunctionSummary) -> String {
-        let labels = summary.parameters.map { ($0.label ?? "_") + ":" }.joined()
-        return "\(summary.name)(\(labels))"
-    }
-
-    private static func signature(for summary: FunctionSummary) -> String {
-        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
-        var sig = "(\(paramTypes))"
-        if summary.isAsync {
-            sig += " async"
-        }
-        if summary.isThrows {
-            sig += " throws"
-        }
-        sig += " -> \(summary.returnTypeText ?? "Void")"
-        return sig
     }
 }
