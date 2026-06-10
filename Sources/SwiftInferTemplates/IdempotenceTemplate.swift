@@ -157,7 +157,7 @@ public enum IdempotenceTemplate {
         ) {
             signals.append(carrier)
         }
-        if let veto = nonDeterministicVeto(for: summary) {
+        if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         if let coverageVeto = protocolCoverageVeto(
@@ -307,18 +307,6 @@ extension IdempotenceTemplate {
             weight: -15,
             detail: "Direction-label argument: '\(label)' — function is likely "
                 + "directional (increment/decrement) rather than idempotent"
-        )
-    }
-
-    static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
-        guard summary.bodySignals.hasNonDeterministicCall else {
-            return nil
-        }
-        let calls = summary.bodySignals.nonDeterministicAPIsDetected.joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
         )
     }
 

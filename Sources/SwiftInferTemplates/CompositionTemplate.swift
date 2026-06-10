@@ -163,7 +163,7 @@ public enum CompositionTemplate {
         if let monotoneBounded = monotoneBoundedLabelSignal(for: lifted) {
             signals.append(monotoneBounded)
         }
-        if let veto = nonDeterministicVeto(for: lifted) {
+        if let veto = lifted.originalSummary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         return signals
@@ -273,17 +273,6 @@ public enum CompositionTemplate {
             detail: "Monotone-bounded parameter label '\(label)' — "
                 + "`op(s, a).op(s, b) = max(a, b)`-bounded state, not "
                 + "additive composition `op(s, a + b)`"
-        )
-    }
-
-    private static func nonDeterministicVeto(for lifted: LiftedTransformation) -> Signal? {
-        guard lifted.originalSummary.bodySignals.hasNonDeterministicCall else { return nil }
-        let calls = lifted.originalSummary.bodySignals.nonDeterministicAPIsDetected
-            .joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
         )
     }
 

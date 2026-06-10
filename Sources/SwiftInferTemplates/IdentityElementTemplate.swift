@@ -148,7 +148,7 @@ public enum IdentityElementTemplate {
         ) {
             signals.append(carrier)
         }
-        if let veto = nonDeterministicVeto(for: pair) {
+        if let veto = pair.operation.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         if let familyVeto = algebraicFamilyMismatchVeto(for: pair) {
@@ -248,18 +248,6 @@ extension IdentityElementTemplate {
             detail: "Algebraic-family mismatch: identity 'T.\(identityName)' is the "
                 + "\(family) identity but operator '\(opName)' is not "
                 + "\(family) — type-shape false-positive"
-        )
-    }
-
-    private static func nonDeterministicVeto(for pair: IdentityElementPair) -> Signal? {
-        guard pair.operation.bodySignals.hasNonDeterministicCall else {
-            return nil
-        }
-        let calls = pair.operation.bodySignals.nonDeterministicAPIsDetected.joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
         )
     }
 

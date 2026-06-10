@@ -180,7 +180,7 @@ extension IdempotenceTemplate {
         }
         // Lifted-from-mutation badge (+10) — V1.19.A signal kind.
         signals.append(liftedFromMutationSignal(for: lifted))
-        if let veto = nonDeterministicVeto(for: lifted.originalSummary) {
+        if let veto = lifted.originalSummary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         if let coverageVeto = protocolCoverageVeto(

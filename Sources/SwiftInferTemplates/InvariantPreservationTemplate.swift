@@ -78,7 +78,7 @@ public enum InvariantPreservationTemplate {
             return []
         }
         var signals: [Signal] = [annotationSignal(keyPath: keyPath)]
-        if let veto = nonDeterministicVeto(for: summary) {
+        if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         return signals
@@ -119,18 +119,6 @@ public enum InvariantPreservationTemplate {
             kind: .discoverableAnnotation,
             weight: 80,
             detail: "@CheckProperty(.preservesInvariant(\(keyPath))) annotation present"
-        )
-    }
-
-    private static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
-        guard summary.bodySignals.hasNonDeterministicCall else {
-            return nil
-        }
-        let calls = summary.bodySignals.nonDeterministicAPIsDetected.joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
         )
     }
 

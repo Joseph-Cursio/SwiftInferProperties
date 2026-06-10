@@ -94,7 +94,7 @@ public enum CommutativityTemplate {
         Constraint<FunctionSummary>(
             templateName: "commutativity",
             appliesTo: { summary in
-                Self.typeShapeSignal(for: summary) != nil
+                summary.binaryOperatorTypeSymmetrySignal != nil
             },
             signals: { summary in
                 Self.accumulatedSignals(
@@ -123,7 +123,7 @@ public enum CommutativityTemplate {
         vocabulary: Vocabulary,
         inheritedTypesByName: [String: Set<String>]
     ) -> [Signal] {
-        guard let typeShape = typeShapeSignal(for: summary) else {
+        guard let typeShape = summary.binaryOperatorTypeSymmetrySignal else {
             return []
         }
         var signals: [Signal] = [typeShape]
@@ -136,7 +136,7 @@ public enum CommutativityTemplate {
         if let fpCounter = floatingPointStorageCounterSignal(for: summary) {
             signals.append(fpCounter)
         }
-        if let veto = nonDeterministicVeto(for: summary) {
+        if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         if let coverageVeto = protocolCoverageVeto(
@@ -181,29 +181,6 @@ extension CommutativityTemplate {
 
     // MARK: - Signals
 
-    private static func typeShapeSignal(for summary: FunctionSummary) -> Signal? {
-        guard summary.parameters.count == 2,
-              !summary.isMutating else {
-            return nil
-        }
-        let first = summary.parameters[0]
-        let second = summary.parameters[1]
-        guard !first.isInout,
-              !second.isInout,
-              first.typeText == second.typeText,
-              let returnType = summary.returnTypeText,
-              returnType == first.typeText,
-              returnType != "Void",
-              returnType != "()" else {
-            return nil
-        }
-        return Signal(
-            kind: .typeSymmetrySignature,
-            weight: 30,
-            detail: "Type-symmetry signature: (T, T) -> T (T = \(returnType))"
-        )
-    }
-
     private static func nameSignal(
         for summary: FunctionSummary,
         vocabulary: Vocabulary
@@ -244,18 +221,6 @@ extension CommutativityTemplate {
             )
         }
         return nil
-    }
-
-    private static func nonDeterministicVeto(for summary: FunctionSummary) -> Signal? {
-        guard summary.bodySignals.hasNonDeterministicCall else {
-            return nil
-        }
-        let calls = summary.bodySignals.nonDeterministicAPIsDetected.joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
-        )
     }
 
     /// V1.5.2 — fires when the candidate type's existing protocol
