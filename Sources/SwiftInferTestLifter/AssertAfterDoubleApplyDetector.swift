@@ -92,34 +92,12 @@ public enum AssertAfterDoubleApplyDetector {
         _ expr: ExprSyntax,
         location: SwiftInferCore.SourceLocation
     ) -> DetectedIdempotence? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            return collapsedFromSequence(sequence, location: location)
-        }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "==" {
-            return collapsedFromTwoArguments(
-                lhs: infix.leftOperand,
-                rhs: infix.rightOperand,
-                location: location
-            )
-        }
-        return nil
-    }
-
-    private static func collapsedFromSequence(
-        _ sequence: SequenceExprSyntax,
-        location: SwiftInferCore.SourceLocation
-    ) -> DetectedIdempotence? {
-        let elements = Array(sequence.elements)
-        guard elements.count == 3,
-              let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-              opExpr.operator.text == "==" else {
+        guard let operands = expr.equalityOperands else {
             return nil
         }
         return collapsedFromTwoArguments(
-            lhs: elements[0],
-            rhs: elements[2],
+            lhs: operands.lhs,
+            rhs: operands.rhs,
             location: location
         )
     }

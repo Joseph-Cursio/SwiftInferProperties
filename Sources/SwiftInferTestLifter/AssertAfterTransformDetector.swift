@@ -90,40 +90,12 @@ public enum AssertAfterTransformDetector {
         _ expr: ExprSyntax,
         location: SwiftInferCore.SourceLocation
     ) -> DetectedRoundTrip? {
-        // SwiftParser doesn't fold operator precedence at parse time —
-        // `x == y` lands as a SequenceExprSyntax of three elements
-        // (lhs, BinaryOperatorExprSyntax("=="), rhs) when the source
-        // hasn't been put through OperatorTable.foldAll. Handle the
-        // sequence shape directly; the folded `InfixOperatorExprSyntax`
-        // shape is also accepted as a fallback.
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            return collapsedFromSequence(sequence, location: location)
-        }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "==" {
-            return collapsedFromTwoArguments(
-                lhs: infix.leftOperand,
-                rhs: infix.rightOperand,
-                location: location
-            )
-        }
-        return nil
-    }
-
-    private static func collapsedFromSequence(
-        _ sequence: SequenceExprSyntax,
-        location: SwiftInferCore.SourceLocation
-    ) -> DetectedRoundTrip? {
-        let elements = Array(sequence.elements)
-        guard elements.count == 3,
-              let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-              opExpr.operator.text == "==" else {
+        guard let operands = expr.equalityOperands else {
             return nil
         }
         return collapsedFromTwoArguments(
-            lhs: elements[0],
-            rhs: elements[2],
+            lhs: operands.lhs,
+            rhs: operands.rhs,
             location: location
         )
     }

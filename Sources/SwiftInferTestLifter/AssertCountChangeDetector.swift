@@ -101,35 +101,10 @@ public enum AssertCountChangeDetector {
         _ expr: ExprSyntax,
         location: SwiftInferCore.SourceLocation
     ) -> DetectedCountInvariance? {
-        if let sequence = expr.as(SequenceExprSyntax.self),
-           let pair = equalityPair(in: sequence) {
-            return collapsedFromTwoArguments(lhs: pair.lhs, rhs: pair.rhs, location: location)
-        }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "==" {
-            return collapsedFromTwoArguments(
-                lhs: infix.leftOperand,
-                rhs: infix.rightOperand,
-                location: location
-            )
-        }
-        return nil
-    }
-
-    private struct EqualityPair {
-        let lhs: ExprSyntax
-        let rhs: ExprSyntax
-    }
-
-    private static func equalityPair(in sequence: SequenceExprSyntax) -> EqualityPair? {
-        let elements = Array(sequence.elements)
-        guard elements.count == 3,
-              let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-              opExpr.operator.text == "==" else {
+        guard let operands = expr.equalityOperands else {
             return nil
         }
-        return EqualityPair(lhs: elements[0], rhs: elements[2])
+        return collapsedFromTwoArguments(lhs: operands.lhs, rhs: operands.rhs, location: location)
     }
 
     /// Try to interpret `transform` as `f(input).count` and `input` as
