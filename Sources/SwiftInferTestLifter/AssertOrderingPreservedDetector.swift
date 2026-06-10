@@ -275,5 +275,4 @@ public enum AssertOrderingPreservedDetector {
         }
         return nil
     }
-
 }

@@ -234,7 +234,7 @@ public enum AssertReduceEquivalenceDetector {
               let rhsRef = assertion.arguments[1].as(DeclReferenceExprSyntax.self) else {
             return nil
         }
-        let bindings = collectBindings(in: propertyRegion)
+        let bindings = propertyRegion.bindingInitializers()
         guard let lhsInit = bindings[lhsRef.baseName.text],
               let rhsInit = bindings[rhsRef.baseName.text] else {
             return nil
@@ -243,24 +243,5 @@ public enum AssertReduceEquivalenceDetector {
             return detected
         }
         return matchedReduceEquivalence(lhs: rhsInit, rhs: lhsInit, location: assertion.location)
-    }
-
-    // MARK: - Helpers
-
-    private static func collectBindings(
-        in items: [CodeBlockItemSyntax]
-    ) -> [String: ExprSyntax] {
-        var bindings: [String: ExprSyntax] = [:]
-        for item in items {
-            guard case .decl(let decl) = item.item,
-                  let varDecl = decl.as(VariableDeclSyntax.self),
-                  let firstBinding = varDecl.bindings.first,
-                  let identifierPattern = firstBinding.pattern.as(IdentifierPatternSyntax.self),
-                  let initializer = firstBinding.initializer?.value else {
-                continue
-            }
-            bindings[identifierPattern.identifier.text] = initializer
-        }
-        return bindings
     }
 }

@@ -141,7 +141,7 @@ public enum AssertSymmetryDetector {
               let rhsRef = assertion.arguments[1].as(DeclReferenceExprSyntax.self) else {
             return nil
         }
-        let bindings = collectBindings(in: propertyRegion)
+        let bindings = propertyRegion.bindingInitializers()
         guard let lhsInit = bindings[lhsRef.baseName.text],
               let lhsCall = lhsInit.as(FunctionCallExprSyntax.self),
               let rhsInit = bindings[rhsRef.baseName.text],
@@ -221,25 +221,6 @@ public enum AssertSymmetryDetector {
         let calleeName: String
         let leftArgName: String
         let rightArgName: String
-    }
-
-    // MARK: - Helpers (mirrored from AssertAfterTransformDetector)
-
-    private static func collectBindings(
-        in items: [CodeBlockItemSyntax]
-    ) -> [String: ExprSyntax] {
-        var bindings: [String: ExprSyntax] = [:]
-        for item in items {
-            guard case .decl(let decl) = item.item,
-                  let varDecl = decl.as(VariableDeclSyntax.self),
-                  let firstBinding = varDecl.bindings.first,
-                  let identifierPattern = firstBinding.pattern.as(IdentifierPatternSyntax.self),
-                  let initializer = firstBinding.initializer?.value else {
-                continue
-            }
-            bindings[identifierPattern.identifier.text] = initializer
-        }
-        return bindings
     }
 }
 

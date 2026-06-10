@@ -98,7 +98,6 @@ public enum AssociativityStubEmitter: SeededStubEmitter {
         case .int: return composeIntSource(inputs)
         }
     }
-
 }
 
 // V1.46.A carrier — Complex<Double> two-pass emission.

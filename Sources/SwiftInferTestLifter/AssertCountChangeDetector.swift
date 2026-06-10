@@ -174,7 +174,7 @@ public enum AssertCountChangeDetector {
               let rhsRef = rhsBaseExpr.as(DeclReferenceExprSyntax.self) else {
             return nil
         }
-        let bindings = collectBindings(in: propertyRegion)
+        let bindings = propertyRegion.bindingInitializers()
         if let detected = explicitCountChange(
             transformName: lhsRef.baseName.text,
             inputName: rhsRef.baseName.text,
@@ -225,24 +225,5 @@ public enum AssertCountChangeDetector {
             return nil
         }
         return base
-    }
-
-    /// Collect `let x = ...` bindings from the property region as a
-    /// name → initializer-expr map.
-    private static func collectBindings(
-        in items: [CodeBlockItemSyntax]
-    ) -> [String: ExprSyntax] {
-        var bindings: [String: ExprSyntax] = [:]
-        for item in items {
-            guard case .decl(let decl) = item.item,
-                  let varDecl = decl.as(VariableDeclSyntax.self),
-                  let firstBinding = varDecl.bindings.first,
-                  let identifierPattern = firstBinding.pattern.as(IdentifierPatternSyntax.self),
-                  let initializer = firstBinding.initializer?.value else {
-                continue
-            }
-            bindings[identifierPattern.identifier.text] = initializer
-        }
-        return bindings
     }
 }

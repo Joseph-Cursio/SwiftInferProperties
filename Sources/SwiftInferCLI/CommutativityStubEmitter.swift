@@ -94,7 +94,6 @@ public enum CommutativityStubEmitter: SeededStubEmitter {
         case .int: return composeIntSource(inputs)
         }
     }
-
 }
 
 // V1.45.A carrier — Complex<Double> two-pass emission.

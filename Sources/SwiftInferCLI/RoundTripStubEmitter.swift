@@ -139,7 +139,6 @@ public enum RoundTripStubEmitter: SeededStubEmitter {
         case .int: return composeIntSource(inputs)
         }
     }
-
 }
 
 // V1.43.B carrier — Complex<Double> two-pass emission. Behavior

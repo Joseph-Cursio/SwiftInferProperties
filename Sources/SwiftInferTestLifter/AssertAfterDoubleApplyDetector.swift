@@ -168,7 +168,7 @@ public enum AssertAfterDoubleApplyDetector {
               let rhsRef = assertion.arguments[1].as(DeclReferenceExprSyntax.self) else {
             return nil
         }
-        let bindings = collectBindings(in: propertyRegion)
+        let bindings = propertyRegion.bindingInitializers()
         if let detected = explicitDoubleApply(
             singleName: lhsRef.baseName.text,
             doubleName: rhsRef.baseName.text,
@@ -213,27 +213,6 @@ public enum AssertAfterDoubleApplyDetector {
             inputBindingName: innerInput.baseName.text,
             assertionLocation: location
         )
-    }
-
-    // MARK: - Helpers (mirrored from AssertAfterTransformDetector)
-
-    /// Collect `let x = ...` bindings from the property region as a
-    /// name → initializer-expr map.
-    private static func collectBindings(
-        in items: [CodeBlockItemSyntax]
-    ) -> [String: ExprSyntax] {
-        var bindings: [String: ExprSyntax] = [:]
-        for item in items {
-            guard case .decl(let decl) = item.item,
-                  let varDecl = decl.as(VariableDeclSyntax.self),
-                  let firstBinding = varDecl.bindings.first,
-                  let identifierPattern = firstBinding.pattern.as(IdentifierPatternSyntax.self),
-                  let initializer = firstBinding.initializer?.value else {
-                continue
-            }
-            bindings[identifierPattern.identifier.text] = initializer
-        }
-        return bindings
     }
 }
 
