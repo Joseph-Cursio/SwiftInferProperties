@@ -23,55 +23,13 @@ import SwiftInferCore
 /// — three calibration cycles before promotion. PRD §5.4 also
 /// flags the "≥ 2 fields" detection as deliberately crude; future
 /// cycles may add per-field-count score signals.
-public enum CardinalityInteractionTemplate {
+public enum CardinalityInteractionTemplate: InteractionTemplateFamily {
+
+    static let family = InteractionInvariantFamily.cardinality
 
     /// V2.0 M5 — initial score. Lands in the `.possible` band
     /// (20–39) per PRD §3.5 corollary.
     static let initialScore = 30
-
-    /// V2.0 M5 — emit one suggestion per witness. Pure; no I/O.
-    public static func analyze(
-        candidate: ReducerCandidate,
-        witnesses: [CardinalityWitness],
-        firstSeenAt: Date
-    ) -> [InteractionInvariantSuggestion] {
-        witnesses.map { witness in
-            makeSuggestion(
-                candidate: candidate,
-                witness: witness,
-                firstSeenAt: firstSeenAt
-            )
-        }
-    }
-
-    /// Per-witness suggestion construction. Pulled to a static so
-    /// tests can drive it with hand-built inputs.
-    static func makeSuggestion(
-        candidate: ReducerCandidate,
-        witness: CardinalityWitness,
-        firstSeenAt: Date
-    ) -> InteractionInvariantSuggestion {
-        let predicate = makePredicate(witness: witness)
-        let canonical = InteractionInvariantSuggestion.identityCanonicalInput(
-            family: .cardinality,
-            reducerQualifiedName: candidate.qualifiedName,
-            predicate: predicate
-        )
-        return InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: canonical),
-            family: .cardinality,
-            reducerQualifiedName: candidate.qualifiedName,
-            reducerLocation: candidate.location,
-            stateTypeName: candidate.stateTypeName,
-            actionTypeName: candidate.actionTypeName,
-            predicate: predicate,
-            score: initialScore,
-            tier: .possible,
-            whySuggested: whySuggestedFor(witness: witness, candidate: candidate),
-            whyMightBeWrong: whyMightBeWrongFor(witness: witness),
-            firstSeenAt: firstSeenAt
-        )
-    }
 
     /// V2.0 M5 — build the `Σ indicators ≤ 1` predicate from the
     /// witness's fields. Each indicator is wrapped in a
@@ -82,7 +40,7 @@ public enum CardinalityInteractionTemplate {
         return "\(sum) <= 1"
     }
 
-    private static func whySuggestedFor(
+    static func whySuggestedFor(
         witness: CardinalityWitness,
         candidate: ReducerCandidate
     ) -> [String] {
@@ -99,7 +57,7 @@ public enum CardinalityInteractionTemplate {
         ]
     }
 
-    private static func whyMightBeWrongFor(witness _: CardinalityWitness) -> [String] {
+    static func whyMightBeWrongFor(witness _: CardinalityWitness) -> [String] {
         [
             "Detection is structural only — reducer-body handlers for "
                 + ".show* actions are not yet inspected (M5+ refinement). "

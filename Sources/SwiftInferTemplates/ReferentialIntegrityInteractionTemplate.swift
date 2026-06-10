@@ -23,55 +23,13 @@ import SwiftInferCore
 /// caveat in the explainability block, not a veto." The
 /// `whyMightBeWrong` block names this so the user understands when
 /// to reject the suggestion.
-public enum ReferentialIntegrityInteractionTemplate {
+public enum ReferentialIntegrityInteractionTemplate: InteractionTemplateFamily {
+
+    static let family = InteractionInvariantFamily.referentialIntegrity
 
     /// V2.0 M6 — initial score. Lands in the `.possible` band
     /// (20–39) per PRD §3.5 corollary.
     static let initialScore = 30
-
-    /// V2.0 M6 — emit one suggestion per witness. Pure; no I/O.
-    public static func analyze(
-        candidate: ReducerCandidate,
-        witnesses: [ReferentialIntegrityWitness],
-        firstSeenAt: Date
-    ) -> [InteractionInvariantSuggestion] {
-        witnesses.map { witness in
-            makeSuggestion(
-                candidate: candidate,
-                witness: witness,
-                firstSeenAt: firstSeenAt
-            )
-        }
-    }
-
-    /// Per-witness suggestion construction. Pulled to a static so
-    /// tests can drive it with hand-built inputs.
-    static func makeSuggestion(
-        candidate: ReducerCandidate,
-        witness: ReferentialIntegrityWitness,
-        firstSeenAt: Date
-    ) -> InteractionInvariantSuggestion {
-        let predicate = makePredicate(witness: witness)
-        let canonical = InteractionInvariantSuggestion.identityCanonicalInput(
-            family: .referentialIntegrity,
-            reducerQualifiedName: candidate.qualifiedName,
-            predicate: predicate
-        )
-        return InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: canonical),
-            family: .referentialIntegrity,
-            reducerQualifiedName: candidate.qualifiedName,
-            reducerLocation: candidate.location,
-            stateTypeName: candidate.stateTypeName,
-            actionTypeName: candidate.actionTypeName,
-            predicate: predicate,
-            score: initialScore,
-            tier: .possible,
-            whySuggested: whySuggestedFor(witness: witness, candidate: candidate),
-            whyMightBeWrong: whyMightBeWrongFor(witness: witness),
-            firstSeenAt: firstSeenAt
-        )
-    }
 
     /// V2.0 M6 — build the "selected is nil OR collection contains
     /// it" predicate from the witness. Pure.
@@ -81,7 +39,7 @@ public enum ReferentialIntegrityInteractionTemplate {
             + ".contains { $0.id == state.\(witness.selectedPropertyName) }"
     }
 
-    private static func whySuggestedFor(
+    static func whySuggestedFor(
         witness: ReferentialIntegrityWitness,
         candidate: ReducerCandidate
     ) -> [String] {
@@ -97,7 +55,7 @@ public enum ReferentialIntegrityInteractionTemplate {
         ]
     }
 
-    private static func whyMightBeWrongFor(
+    static func whyMightBeWrongFor(
         witness: ReferentialIntegrityWitness
     ) -> [String] {
         [

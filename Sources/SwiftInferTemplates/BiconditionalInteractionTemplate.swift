@@ -17,55 +17,13 @@ import SwiftInferCore
 /// corollary. PRD §5.6 calibration note flags this as the trickiest
 /// of the five families — expect 3–5 calibration cycles before
 /// promotion (longer than the other families' baseline 3).
-public enum BiconditionalInteractionTemplate {
+public enum BiconditionalInteractionTemplate: InteractionTemplateFamily {
+
+    static let family = InteractionInvariantFamily.biconditional
 
     /// V2.0 M7 — initial score. Lands in the `.possible` band
     /// (20–39) per PRD §3.5 corollary.
     static let initialScore = 30
-
-    /// V2.0 M7 — emit one suggestion per witness.
-    public static func analyze(
-        candidate: ReducerCandidate,
-        witnesses: [BiconditionalWitness],
-        firstSeenAt: Date
-    ) -> [InteractionInvariantSuggestion] {
-        witnesses.map { witness in
-            makeSuggestion(
-                candidate: candidate,
-                witness: witness,
-                firstSeenAt: firstSeenAt
-            )
-        }
-    }
-
-    /// Per-witness suggestion construction. Pulled to a static so
-    /// tests can drive it with hand-built inputs.
-    static func makeSuggestion(
-        candidate: ReducerCandidate,
-        witness: BiconditionalWitness,
-        firstSeenAt: Date
-    ) -> InteractionInvariantSuggestion {
-        let predicate = makePredicate(witness: witness)
-        let canonical = InteractionInvariantSuggestion.identityCanonicalInput(
-            family: .biconditional,
-            reducerQualifiedName: candidate.qualifiedName,
-            predicate: predicate
-        )
-        return InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: canonical),
-            family: .biconditional,
-            reducerQualifiedName: candidate.qualifiedName,
-            reducerLocation: candidate.location,
-            stateTypeName: candidate.stateTypeName,
-            actionTypeName: candidate.actionTypeName,
-            predicate: predicate,
-            score: initialScore,
-            tier: .possible,
-            whySuggested: whySuggestedFor(witness: witness, candidate: candidate),
-            whyMightBeWrong: whyMightBeWrongFor(witness: witness),
-            firstSeenAt: firstSeenAt
-        )
-    }
 
     /// V2.0 M7 — `state.<bool> == (state.<optional> != nil)`. Pure.
     static func makePredicate(witness: BiconditionalWitness) -> String {
@@ -73,7 +31,7 @@ public enum BiconditionalInteractionTemplate {
             + " == (state.\(witness.optionalPropertyName) != nil)"
     }
 
-    private static func whySuggestedFor(
+    static func whySuggestedFor(
         witness: BiconditionalWitness,
         candidate: ReducerCandidate
     ) -> [String] {
@@ -89,7 +47,7 @@ public enum BiconditionalInteractionTemplate {
         ]
     }
 
-    private static func whyMightBeWrongFor(witness: BiconditionalWitness) -> [String] {
+    static func whyMightBeWrongFor(witness: BiconditionalWitness) -> [String] {
         [
             "Detection is structural only — reducer-body handlers for "
                 + ".startX / .cancelX actions not yet inspected (PRD §5.6 "

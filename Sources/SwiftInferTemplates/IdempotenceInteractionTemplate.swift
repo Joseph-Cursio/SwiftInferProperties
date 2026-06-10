@@ -29,61 +29,23 @@ import SwiftInferCore
 ///
 /// **Scoring.** Initial score 30 (sits in the `.possible` band)
 /// matching Conservation's default-Possible posture (PRD §3.5).
-public enum IdempotenceInteractionTemplate {
+public enum IdempotenceInteractionTemplate: InteractionTemplateFamily {
+
+    static let family = InteractionInvariantFamily.idempotence
 
     /// V2.0 M4.C — initial score. Same `.possible` band default as
     /// Conservation; calibration may promote (or demote) once real
     /// corpora produce data.
     static let initialScore = 30
 
-    /// V2.0 M4.C — emit one suggestion per witness. Pure; no I/O.
-    public static func analyze(
-        candidate: ReducerCandidate,
-        witnesses: [IdempotenceWitness],
-        firstSeenAt: Date
-    ) -> [InteractionInvariantSuggestion] {
-        witnesses.map { witness in
-            makeSuggestion(
-                candidate: candidate,
-                witness: witness,
-                firstSeenAt: firstSeenAt
-            )
-        }
+    /// V2.0 M4.C — the predicate carries the action-case dot-shorthand.
+    /// M4.D's stub emitter parses by family and embeds the appropriate
+    /// verifier loop. Pure.
+    static func makePredicate(witness: IdempotenceWitness) -> String {
+        ".\(witness.actionCaseName)"
     }
 
-    /// Per-witness suggestion construction. Pulled to a static so
-    /// tests can drive it with hand-built inputs.
-    static func makeSuggestion(
-        candidate: ReducerCandidate,
-        witness: IdempotenceWitness,
-        firstSeenAt: Date
-    ) -> InteractionInvariantSuggestion {
-        // For Idempotence the predicate carries the action-case
-        // dot-shorthand. M4.D's stub emitter parses by family and
-        // embeds the appropriate verifier loop.
-        let predicate = ".\(witness.actionCaseName)"
-        let canonical = InteractionInvariantSuggestion.identityCanonicalInput(
-            family: .idempotence,
-            reducerQualifiedName: candidate.qualifiedName,
-            predicate: predicate
-        )
-        return InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: canonical),
-            family: .idempotence,
-            reducerQualifiedName: candidate.qualifiedName,
-            reducerLocation: candidate.location,
-            stateTypeName: candidate.stateTypeName,
-            actionTypeName: candidate.actionTypeName,
-            predicate: predicate,
-            score: initialScore,
-            tier: .possible,
-            whySuggested: whySuggestedFor(witness: witness, candidate: candidate),
-            whyMightBeWrong: whyMightBeWrongFor(witness: witness),
-            firstSeenAt: firstSeenAt
-        )
-    }
-
-    private static func whySuggestedFor(
+    static func whySuggestedFor(
         witness: IdempotenceWitness,
         candidate: ReducerCandidate
     ) -> [String] {
@@ -107,7 +69,7 @@ public enum IdempotenceInteractionTemplate {
         ]
     }
 
-    private static func whyMightBeWrongFor(witness: IdempotenceWitness) -> [String] {
+    static func whyMightBeWrongFor(witness: IdempotenceWitness) -> [String] {
         var caveats: [String] = [
             "Detection is purely name-based — reducer-body purity for "
                 + "this action is not yet inspected (M4.C+ refinement). "
