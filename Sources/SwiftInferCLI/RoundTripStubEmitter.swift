@@ -140,24 +140,6 @@ public enum RoundTripStubEmitter: SeededStubEmitter {
         }
     }
 
-    // MARK: - Carrier dispatch
-
-    /// Internal carrier discriminator — keeps the `emit` switch
-    /// exhaustive and the per-composer call sites typed.
-    private enum CarrierKind {
-        case complexDouble
-        case double
-        case int
-
-        static func from(typeName: String) -> Self? {
-            switch typeName {
-            case "Complex<Double>": return .complexDouble
-            case "Double": return .double
-            case "Int": return .int
-            default: return nil
-            }
-        }
-    }
 }
 
 // V1.43.B carrier — Complex<Double> two-pass emission. Behavior

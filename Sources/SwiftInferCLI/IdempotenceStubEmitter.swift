@@ -80,26 +80,6 @@ public enum IdempotenceStubEmitter: SeededStubEmitter {
     }
 
     // MARK: - Carrier dispatch
-
-    /// Internal carrier discriminator — mirrors
-    /// `RoundTripStubEmitter.CarrierKind` (intentionally duplicated to
-    /// keep the two emitters' implementation details independent;
-    /// promote to a shared module-internal type when a third template
-    /// reuses it).
-    private enum CarrierKind {
-        case complexDouble
-        case double
-        case int
-
-        static func from(typeName: String) -> Self? {
-            switch typeName {
-            case "Complex<Double>": return .complexDouble
-            case "Double": return .double
-            case "Int": return .int
-            default: return nil
-            }
-        }
-    }
 }
 
 // V1.44.A carrier — Complex<Double> two-pass emission. Behavior

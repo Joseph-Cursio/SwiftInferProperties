@@ -95,26 +95,6 @@ public enum CommutativityStubEmitter: SeededStubEmitter {
         }
     }
 
-    // MARK: - Carrier dispatch
-
-    /// Internal carrier discriminator — duplicated from
-    /// `RoundTripStubEmitter` / `IdempotenceStubEmitter` to keep each
-    /// emitter's implementation details independent. Hoist to a shared
-    /// module-internal type when a fourth template reuses the pattern.
-    private enum CarrierKind {
-        case complexDouble
-        case double
-        case int
-
-        static func from(typeName: String) -> Self? {
-            switch typeName {
-            case "Complex<Double>": return .complexDouble
-            case "Double": return .double
-            case "Int": return .int
-            default: return nil
-            }
-        }
-    }
 }
 
 // V1.45.A carrier — Complex<Double> two-pass emission.
