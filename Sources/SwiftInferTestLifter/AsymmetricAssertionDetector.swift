@@ -207,20 +207,8 @@ public enum AsymmetricAssertionDetector {
     private static func inequalityFromExpectArg(
         _ expr: ExprSyntax
     ) -> InequalityPair? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(sequence.elements)
-            guard elements.count == 3,
-                  let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-                  opExpr.operator.text == "!=" else {
-                return nil
-            }
-            return InequalityPair(lhs: elements[0], rhs: elements[2])
+        expr.binaryOperands(matching: ["!="]).map {
+            InequalityPair(lhs: $0.lhs, rhs: $0.rhs)
         }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "!=" {
-            return InequalityPair(lhs: infix.leftOperand, rhs: infix.rightOperand)
-        }
-        return nil
     }
 }

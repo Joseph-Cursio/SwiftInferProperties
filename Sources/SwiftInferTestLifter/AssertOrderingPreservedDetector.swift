@@ -173,25 +173,9 @@ public enum AssertOrderingPreservedDetector {
     /// supporting both `SequenceExprSyntax` (pre-fold parser shape) and
     /// `InfixOperatorExprSyntax` (folded shape).
     private static func orderingComparison(in expr: ExprSyntax) -> OrderingComparison? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(sequence.elements)
-            guard elements.count == 3,
-                  let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-                  isOrderingOperator(opExpr.operator.text) else {
-                return nil
-            }
-            return OrderingComparison(lhs: elements[0], rhs: elements[2])
+        expr.binaryOperands(matching: ["<", "<="]).map {
+            OrderingComparison(lhs: $0.lhs, rhs: $0.rhs)
         }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           isOrderingOperator(opExpr.operator.text) {
-            return OrderingComparison(lhs: infix.leftOperand, rhs: infix.rightOperand)
-        }
-        return nil
-    }
-
-    private static func isOrderingOperator(_ token: String) -> Bool {
-        token == "<" || token == "<="
     }
 
     // MARK: - Precondition matching
@@ -259,20 +243,8 @@ public enum AssertOrderingPreservedDetector {
     /// precondition needs strict `<` while the conclusion accepts both
     /// `<` and `<=`.
     private static func strictLessThanComparison(in expr: ExprSyntax) -> OrderingComparison? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(sequence.elements)
-            guard elements.count == 3,
-                  let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-                  opExpr.operator.text == "<" else {
-                return nil
-            }
-            return OrderingComparison(lhs: elements[0], rhs: elements[2])
+        expr.binaryOperands(matching: ["<"]).map {
+            OrderingComparison(lhs: $0.lhs, rhs: $0.rhs)
         }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "<" {
-            return OrderingComparison(lhs: infix.leftOperand, rhs: infix.rightOperand)
-        }
-        return nil
     }
 }

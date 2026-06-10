@@ -266,39 +266,15 @@ extension AsymmetricAssertionDetector {
     }
 
     private static func greaterThanComparison(in expr: ExprSyntax) -> OrderingComparison? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(sequence.elements)
-            guard elements.count == 3,
-                  let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-                  opExpr.operator.text == ">" || opExpr.operator.text == ">=" else {
-                return nil
-            }
-            return OrderingComparison(lhs: elements[0], rhs: elements[2])
+        expr.binaryOperands(matching: [">", ">="]).map {
+            OrderingComparison(lhs: $0.lhs, rhs: $0.rhs)
         }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == ">" || opExpr.operator.text == ">=" {
-            return OrderingComparison(lhs: infix.leftOperand, rhs: infix.rightOperand)
-        }
-        return nil
     }
 
     private static func strictLessThanComparison(in expr: ExprSyntax) -> OrderingComparison? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(sequence.elements)
-            guard elements.count == 3,
-                  let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-                  opExpr.operator.text == "<" else {
-                return nil
-            }
-            return OrderingComparison(lhs: elements[0], rhs: elements[2])
+        expr.binaryOperands(matching: ["<"]).map {
+            OrderingComparison(lhs: $0.lhs, rhs: $0.rhs)
         }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "<" {
-            return OrderingComparison(lhs: infix.leftOperand, rhs: infix.rightOperand)
-        }
-        return nil
     }
 
     private static func countMemberBase(of expr: ExprSyntax) -> ExprSyntax? {

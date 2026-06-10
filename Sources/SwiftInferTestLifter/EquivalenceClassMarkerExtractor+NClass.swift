@@ -96,22 +96,10 @@ extension EquivalenceClassMarkerExtractor {
     private static func matchPredicateAndCaseInEqualityExpression(
         _ expr: ExprSyntax
     ) -> (predicateName: String, caseLiteral: String)? {
-        if let sequence = expr.as(SequenceExprSyntax.self) {
-            let elements = Array(sequence.elements)
-            guard elements.count == 3,
-                  let opExpr = elements[1].as(BinaryOperatorExprSyntax.self),
-                  opExpr.operator.text == "==" else { return nil }
-            return matchPredicateAndCase(lhs: elements[0], rhs: elements[2])
+        guard let operands = expr.equalityOperands else {
+            return nil
         }
-        if let infix = expr.as(InfixOperatorExprSyntax.self),
-           let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
-           opExpr.operator.text == "==" {
-            return matchPredicateAndCase(
-                lhs: ExprSyntax(infix.leftOperand),
-                rhs: ExprSyntax(infix.rightOperand)
-            )
-        }
-        return nil
+        return matchPredicateAndCase(lhs: operands.lhs, rhs: operands.rhs)
     }
 
     /// Tries to match `(predicate(x), .case)` in either argument
