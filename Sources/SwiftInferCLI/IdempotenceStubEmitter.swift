@@ -22,7 +22,7 @@ import Foundation
 ///   - `Double`: two-pass with inlined `doubleWithNaN` equivalent.
 ///   - `Int`: single-pass with inlined `boundedForArithmetic` equivalent
 ///     + zero-edge sentinel so `VerifyResultParser` still produces `.bothPass`.
-public enum IdempotenceStubEmitter {
+public enum IdempotenceStubEmitter: SeededStubEmitter {
 
     /// Seed-hex format shared with `RoundTripStubEmitter`.
     public typealias SeedHex = RoundTripStubEmitter.SeedHex
@@ -225,38 +225,5 @@ extension IdempotenceStubEmitter {
         // Function: \(inputs.functionCall) — asserts f(f(x)) ≈ f(x).
         // \(carrierBlurb)
         """
-    }
-
-    static func setupSection(
-        importsBlock: String,
-        seed: SeedHex,
-        trials: Int,
-        preamble: String = ""
-    ) -> String {
-        let preambleBlock = preamble.isEmpty ? "" : "\n\(preamble)\n"
-        return """
-        \(importsBlock)
-        \(preambleBlock)
-        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
-            0x\(hex(seed.stateA)),
-            0x\(hex(seed.stateB)),
-            0x\(hex(seed.stateC)),
-            0x\(hex(seed.stateD))
-        ))
-
-        let trials = \(trials)
-        """
-    }
-
-    static func mergedImports(base: [String], extra: [String]) -> String {
-        let extraTrimmed = extra
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        let combined = Set(base + extraTrimmed).sorted()
-        return combined.map { "import \($0)" }.joined(separator: "\n")
-    }
-
-    static func hex(_ word: UInt64) -> String {
-        String(word, radix: 16, uppercase: true)
     }
 }

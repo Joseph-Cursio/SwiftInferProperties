@@ -25,7 +25,7 @@ import SwiftInferCore
 /// emits the V1.44.B/C zero-edge sentinel directly (matching the v1.46
 /// Int path). The marker contract is preserved unchanged so
 /// `VerifyResultParser` reads strategist-routed output identically.
-public enum StrategistDispatchEmitter {
+public enum StrategistDispatchEmitter: SeededStubEmitter {
 
     /// Seed-hex format shared with the v1.46 emitters.
     public typealias SeedHex = RoundTripStubEmitter.SeedHex
@@ -232,29 +232,6 @@ public enum StrategistDispatchEmitter {
         """
     }
 
-    /// Imports + optional V1.49.A preamble + Xoshiro RNG seeded from
-    /// the V1.7.5 identity hash + trial count.
-    private static func setupSection(
-        importsBlock: String,
-        seed: SeedHex,
-        trials: Int,
-        preamble: String = ""
-    ) -> String {
-        let preambleBlock = preamble.isEmpty ? "" : "\n\(preamble)\n"
-        return """
-        \(importsBlock)
-        \(preambleBlock)
-        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
-            0x\(hex(seed.stateA)),
-            0x\(hex(seed.stateB)),
-            0x\(hex(seed.stateC)),
-            0x\(hex(seed.stateD))
-        ))
-
-        let trials = \(trials)
-        """
-    }
-
     /// Pass 1 emit — template-aware. Routes to the right per-template
     /// composer (1/2/3 values per trial).
     private static func defaultPassSection(
@@ -304,19 +281,5 @@ public enum StrategistDispatchEmitter {
         print("VERIFY_EDGE_SAMPLED: 0")
         exit(0)
         """
-    }
-
-    // MARK: - Helpers
-
-    static func mergedImports(base: [String], extra: [String]) -> String {
-        let extraTrimmed = extra
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        let combined = Set(base + extraTrimmed).sorted()
-        return combined.map { "import \($0)" }.joined(separator: "\n")
-    }
-
-    static func hex(_ word: UInt64) -> String {
-        String(word, radix: 16, uppercase: true)
     }
 }

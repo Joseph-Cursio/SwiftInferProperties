@@ -29,7 +29,7 @@ import Foundation
 ///
 /// **Carrier scope (V1.46.A).** Same set as `CommutativityStubEmitter`
 /// post-V1.45.A: `Complex<Double>`, `Double`, `Int`.
-public enum AssociativityStubEmitter {
+public enum AssociativityStubEmitter: SeededStubEmitter {
 
     /// Seed-hex format shared with `RoundTripStubEmitter`.
     public typealias SeedHex = RoundTripStubEmitter.SeedHex
@@ -286,38 +286,5 @@ extension AssociativityStubEmitter {
         // Function: \(inputs.functionCall) — asserts f(f(a, b), c) ≈ f(a, f(b, c)).
         // \(carrierBlurb)
         """
-    }
-
-    static func setupSection(
-        importsBlock: String,
-        seed: SeedHex,
-        trials: Int,
-        preamble: String = ""
-    ) -> String {
-        let preambleBlock = preamble.isEmpty ? "" : "\n\(preamble)\n"
-        return """
-        \(importsBlock)
-        \(preambleBlock)
-        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
-            0x\(hex(seed.stateA)),
-            0x\(hex(seed.stateB)),
-            0x\(hex(seed.stateC)),
-            0x\(hex(seed.stateD))
-        ))
-
-        let trials = \(trials)
-        """
-    }
-
-    static func mergedImports(base: [String], extra: [String]) -> String {
-        let extraTrimmed = extra
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        let combined = Set(base + extraTrimmed).sorted()
-        return combined.map { "import \($0)" }.joined(separator: "\n")
-    }
-
-    static func hex(_ word: UInt64) -> String {
-        String(word, radix: 16, uppercase: true)
     }
 }

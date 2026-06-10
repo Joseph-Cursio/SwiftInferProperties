@@ -30,7 +30,7 @@ import Foundation
 ///
 /// V1.43.C/D parse the `VERIFY_*` lines and render the 4-outcome table
 /// (`bothPass` / `edgeCaseAdvisory` / `defaultFails` / `error`).
-public enum RoundTripStubEmitter {
+public enum RoundTripStubEmitter: SeededStubEmitter {
 
     /// Hex-formatted Xoshiro seed quadruple. A nominal type so callers
     /// can document their seed-derivation strategy without leaking a
@@ -344,38 +344,5 @@ extension RoundTripStubEmitter {
         // Forward: \(inputs.forwardCall) / Inverse: \(inputs.inverseCall)
         // \(carrierBlurb)
         """
-    }
-
-    static func setupSection(
-        importsBlock: String,
-        seed: SeedHex,
-        trials: Int,
-        preamble: String = ""
-    ) -> String {
-        let preambleBlock = preamble.isEmpty ? "" : "\n\(preamble)\n"
-        return """
-        \(importsBlock)
-        \(preambleBlock)
-        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
-            0x\(hex(seed.stateA)),
-            0x\(hex(seed.stateB)),
-            0x\(hex(seed.stateC)),
-            0x\(hex(seed.stateD))
-        ))
-
-        let trials = \(trials)
-        """
-    }
-
-    static func mergedImports(base: [String], extra: [String]) -> String {
-        let extraTrimmed = extra
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        let combined = Set(base + extraTrimmed).sorted()
-        return combined.map { "import \($0)" }.joined(separator: "\n")
-    }
-
-    static func hex(_ word: UInt64) -> String {
-        String(word, radix: 16, uppercase: true)
     }
 }
