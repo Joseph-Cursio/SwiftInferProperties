@@ -146,8 +146,8 @@ public enum AssertOrderingPreservedDetector {
         leftCall: FunctionCallExprSyntax,
         rightCall: FunctionCallExprSyntax
     ) -> ConclusionShape? {
-        guard let leftCallee = calleeName(of: leftCall.calledExpression),
-              let rightCallee = calleeName(of: rightCall.calledExpression),
+        guard let leftCallee = leftCall.calledExpression.trailingIdentifierName,
+              let rightCallee = rightCall.calledExpression.trailingIdentifierName,
               leftCallee == rightCallee,
               let leftArgExpr = leftCall.arguments.first?.expression,
               let rightArgExpr = rightCall.arguments.first?.expression,
@@ -276,15 +276,4 @@ public enum AssertOrderingPreservedDetector {
         return nil
     }
 
-    // MARK: - Helpers
-
-    private static func calleeName(of expr: ExprSyntax) -> String? {
-        if let ref = expr.as(DeclReferenceExprSyntax.self) {
-            return ref.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
-    }
 }

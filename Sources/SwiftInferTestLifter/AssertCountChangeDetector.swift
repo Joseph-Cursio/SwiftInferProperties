@@ -142,7 +142,7 @@ public enum AssertCountChangeDetector {
     ) -> DetectedCountInvariance? {
         guard let transformBase = countMemberBase(of: transform),
               let transformCall = transformBase.as(FunctionCallExprSyntax.self),
-              let callee = calleeName(of: transformCall.calledExpression),
+              let callee = transformCall.calledExpression.trailingIdentifierName,
               let transformArg = transformCall.arguments.first?.expression,
               let transformArgRef = transformArg.as(DeclReferenceExprSyntax.self),
               let inputBase = countMemberBase(of: input),
@@ -200,7 +200,7 @@ public enum AssertCountChangeDetector {
     ) -> DetectedCountInvariance? {
         guard let transformInit = bindings[transformName],
               let call = transformInit.as(FunctionCallExprSyntax.self),
-              let callee = calleeName(of: call.calledExpression),
+              let callee = call.calledExpression.trailingIdentifierName,
               let firstArg = call.arguments.first?.expression,
               let firstArgRef = firstArg.as(DeclReferenceExprSyntax.self),
               firstArgRef.baseName.text == inputName else {
@@ -225,20 +225,6 @@ public enum AssertCountChangeDetector {
             return nil
         }
         return base
-    }
-
-    /// Extract the base callee name from a call expression's
-    /// `calledExpression`. Bare references and member-access tail names
-    /// both surface — `pricing.filter(xs)` returns `"filter"`, matching
-    /// the parity established by the other M5 detectors.
-    private static func calleeName(of expr: ExprSyntax) -> String? {
-        if let ref = expr.as(DeclReferenceExprSyntax.self) {
-            return ref.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
     }
 
     /// Collect `let x = ...` bindings from the property region as a

@@ -214,19 +214,7 @@ public enum EquivalenceClassMarkerExtractor {
         }
         guard let call = expr.as(FunctionCallExprSyntax.self) else { return nil }
         guard call.arguments.count == 1 else { return nil }
-        return trailingIdentifier(of: call.calledExpression)
-    }
-
-    /// Internal-visibility (was `private` pre-M13.2) so the N-class
-    /// extractor can reuse the same trailing-identifier extraction.
-    static func trailingIdentifier(of expr: ExprSyntax) -> String? {
-        if let ident = expr.as(DeclReferenceExprSyntax.self) {
-            return ident.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
+        return call.calledExpression.trailingIdentifierName
     }
 }
 

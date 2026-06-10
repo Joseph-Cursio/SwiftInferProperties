@@ -37,9 +37,9 @@ import SwiftSyntax
 /// patterns (monotonicity / count-invariance / reduce-equivalence)
 /// live in `AsymmetricAssertionDetector+M5Patterns.swift` to keep this
 /// file under SwiftLint's 400-line file-length limit. The shared
-/// helpers (`inequalityPair`, `calleeName`, `InequalityPair`) stay
-/// in this file with `internal` visibility so the companion can use
-/// them.
+/// helpers (`inequalityPair`, `InequalityPair`) stay in this file with
+/// `internal` visibility so the companion can use them. Callee-name
+/// extraction is shared via `ExprSyntax.trailingIdentifierName`.
 public enum AsymmetricAssertionDetector {
 
     public static func detect(in slice: SlicedTestBody) -> [DetectedAsymmetricAssertion] {
@@ -90,10 +90,10 @@ public enum AsymmetricAssertionDetector {
         original: ExprSyntax
     ) -> DetectedAsymmetricAssertion? {
         guard let outerCall = transformed.as(FunctionCallExprSyntax.self),
-              let outerName = calleeName(of: outerCall.calledExpression),
+              let outerName = outerCall.calledExpression.trailingIdentifierName,
               let outerArg = outerCall.arguments.first?.expression,
               let innerCall = outerArg.as(FunctionCallExprSyntax.self),
-              let innerName = calleeName(of: innerCall.calledExpression),
+              let innerName = innerCall.calledExpression.trailingIdentifierName,
               outerName != innerName,
               let innerArg = innerCall.arguments.first?.expression,
               let innerInput = innerArg.as(DeclReferenceExprSyntax.self),
@@ -123,15 +123,15 @@ public enum AsymmetricAssertionDetector {
         single: ExprSyntax
     ) -> DetectedAsymmetricAssertion? {
         guard let outerCall = doubled.as(FunctionCallExprSyntax.self),
-              let outerName = calleeName(of: outerCall.calledExpression),
+              let outerName = outerCall.calledExpression.trailingIdentifierName,
               let outerArg = outerCall.arguments.first?.expression,
               let innerCall = outerArg.as(FunctionCallExprSyntax.self),
-              let innerName = calleeName(of: innerCall.calledExpression),
+              let innerName = innerCall.calledExpression.trailingIdentifierName,
               outerName == innerName,
               let innerArg = innerCall.arguments.first?.expression,
               let innerInput = innerArg.as(DeclReferenceExprSyntax.self),
               let singleCall = single.as(FunctionCallExprSyntax.self),
-              let singleName = calleeName(of: singleCall.calledExpression),
+              let singleName = singleCall.calledExpression.trailingIdentifierName,
               singleName == outerName,
               let singleArg = singleCall.arguments.first?.expression,
               let singleInput = singleArg.as(DeclReferenceExprSyntax.self),
@@ -151,8 +151,8 @@ public enum AsymmetricAssertionDetector {
         }
         guard let leftCall = pair.lhs.as(FunctionCallExprSyntax.self),
               let rightCall = pair.rhs.as(FunctionCallExprSyntax.self),
-              let leftName = calleeName(of: leftCall.calledExpression),
-              let rightName = calleeName(of: rightCall.calledExpression),
+              let leftName = leftCall.calledExpression.trailingIdentifierName,
+              let rightName = rightCall.calledExpression.trailingIdentifierName,
               leftName == rightName,
               leftCall.arguments.count == 2,
               rightCall.arguments.count == 2,
@@ -220,19 +220,6 @@ public enum AsymmetricAssertionDetector {
            let opExpr = infix.operator.as(BinaryOperatorExprSyntax.self),
            opExpr.operator.text == "!=" {
             return InequalityPair(lhs: infix.leftOperand, rhs: infix.rightOperand)
-        }
-        return nil
-    }
-
-    /// Extract the base callee name from a call expression's
-    /// `calledExpression`. Bare references and member-access tail names
-    /// both surface. **Internal** so the companion file can use it.
-    static func calleeName(of expr: ExprSyntax) -> String? {
-        if let ref = expr.as(DeclReferenceExprSyntax.self) {
-            return ref.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
         }
         return nil
     }

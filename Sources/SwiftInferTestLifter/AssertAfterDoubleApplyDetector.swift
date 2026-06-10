@@ -132,15 +132,15 @@ public enum AssertAfterDoubleApplyDetector {
         location: SwiftInferCore.SourceLocation
     ) -> DetectedIdempotence? {
         guard let outerCall = doubled.as(FunctionCallExprSyntax.self),
-              let outerName = calleeName(of: outerCall.calledExpression),
+              let outerName = outerCall.calledExpression.trailingIdentifierName,
               let outerArg = outerCall.arguments.first?.expression,
               let innerCall = outerArg.as(FunctionCallExprSyntax.self),
-              let innerName = calleeName(of: innerCall.calledExpression),
+              let innerName = innerCall.calledExpression.trailingIdentifierName,
               outerName == innerName,
               let innerArg = innerCall.arguments.first?.expression,
               let innerInput = innerArg.as(DeclReferenceExprSyntax.self),
               let singleCall = single.as(FunctionCallExprSyntax.self),
-              let singleName = calleeName(of: singleCall.calledExpression),
+              let singleName = singleCall.calledExpression.trailingIdentifierName,
               singleName == outerName,
               let singleArg = singleCall.arguments.first?.expression,
               let singleInput = singleArg.as(DeclReferenceExprSyntax.self),
@@ -196,13 +196,13 @@ public enum AssertAfterDoubleApplyDetector {
     ) -> DetectedIdempotence? {
         guard let doubleInit = bindings[doubleName],
               let outerCall = doubleInit.as(FunctionCallExprSyntax.self),
-              let outerName = calleeName(of: outerCall.calledExpression),
+              let outerName = outerCall.calledExpression.trailingIdentifierName,
               let outerArg = outerCall.arguments.first?.expression,
               let outerArgRef = outerArg.as(DeclReferenceExprSyntax.self),
               outerArgRef.baseName.text == singleName,
               let singleInit = bindings[singleName],
               let innerCall = singleInit.as(FunctionCallExprSyntax.self),
-              let innerName = calleeName(of: innerCall.calledExpression),
+              let innerName = innerCall.calledExpression.trailingIdentifierName,
               innerName == outerName,
               let innerArg = innerCall.arguments.first?.expression,
               let innerInput = innerArg.as(DeclReferenceExprSyntax.self) else {
@@ -234,20 +234,6 @@ public enum AssertAfterDoubleApplyDetector {
             bindings[identifierPattern.identifier.text] = initializer
         }
         return bindings
-    }
-
-    /// Extract the base callee name from a call expression's
-    /// `calledExpression`. Bare references and member-access tail names
-    /// both surface; deeper chains (`a.b.c(x)`) and subscripts return
-    /// `nil`.
-    private static func calleeName(of expr: ExprSyntax) -> String? {
-        if let ref = expr.as(DeclReferenceExprSyntax.self) {
-            return ref.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
     }
 }
 

@@ -97,7 +97,7 @@ private final class ScannerVisitor: SyntaxVisitor {
     var setupBindings: [String: ArgumentClassification] = [:]
 
     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard let consumer = trailingIdentifier(of: node.calledExpression) else {
+        guard let consumer = node.calledExpression.trailingIdentifierName else {
             return .visitChildren
         }
         let argument: ArgumentClassification = {
@@ -144,22 +144,12 @@ private final class ScannerVisitor: SyntaxVisitor {
             inner = awaitExpr.expression
         }
         if let call = inner.as(FunctionCallExprSyntax.self),
-           let producer = trailingIdentifier(of: call.calledExpression) {
+           let producer = call.calledExpression.trailingIdentifierName {
             return .callOutput(producerName: producer)
         }
         if let ident = inner.as(DeclReferenceExprSyntax.self) {
             return .identifier(name: ident.baseName.text)
         }
         return .other
-    }
-
-    private func trailingIdentifier(of expr: ExprSyntax) -> String? {
-        if let ident = expr.as(DeclReferenceExprSyntax.self) {
-            return ident.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
     }
 }

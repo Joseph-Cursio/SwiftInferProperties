@@ -136,10 +136,10 @@ public enum AssertAfterTransformDetector {
         location: SwiftInferCore.SourceLocation
     ) -> DetectedRoundTrip? {
         guard let outerCall = call.as(FunctionCallExprSyntax.self),
-              let backwardName = calleeName(of: outerCall.calledExpression),
+              let backwardName = outerCall.calledExpression.trailingIdentifierName,
               let outerArg = outerCall.arguments.first?.expression,
               let innerCall = outerArg.as(FunctionCallExprSyntax.self),
-              let forwardName = calleeName(of: innerCall.calledExpression),
+              let forwardName = innerCall.calledExpression.trailingIdentifierName,
               let innerArg = innerCall.arguments.first?.expression,
               let inputRef = innerArg.as(DeclReferenceExprSyntax.self),
               let otherRef = otherSide.as(DeclReferenceExprSyntax.self),
@@ -200,12 +200,12 @@ public enum AssertAfterTransformDetector {
     ) -> DetectedRoundTrip? {
         guard let recoveredInit = bindings[recoveredName],
               let outerCall = recoveredInit.as(FunctionCallExprSyntax.self),
-              let backwardName = calleeName(of: outerCall.calledExpression),
+              let backwardName = outerCall.calledExpression.trailingIdentifierName,
               let intermediateArg = outerCall.arguments.first?.expression,
               let intermediateRef = intermediateArg.as(DeclReferenceExprSyntax.self),
               let intermediateInit = bindings[intermediateRef.baseName.text],
               let innerCall = intermediateInit.as(FunctionCallExprSyntax.self),
-              let forwardName = calleeName(of: innerCall.calledExpression),
+              let forwardName = innerCall.calledExpression.trailingIdentifierName,
               let inputArg = innerCall.arguments.first?.expression,
               let inputRef = inputArg.as(DeclReferenceExprSyntax.self),
               inputRef.baseName.text == inputName else {
@@ -241,20 +241,6 @@ public enum AssertAfterTransformDetector {
         return bindings
     }
 
-    /// Extract the base callee name from a call expression's
-    /// `calledExpression`. Handles bare references (`encode(x)`) and
-    /// member accesses (`encoder.encode(x)`). Returns `nil` for
-    /// shapes M1 doesn't recognize (chained `a.b.c(x)`, subscripts,
-    /// etc.).
-    private static func calleeName(of expr: ExprSyntax) -> String? {
-        if let ref = expr.as(DeclReferenceExprSyntax.self) {
-            return ref.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
-    }
 }
 
 /// Output of `AssertAfterTransformDetector.detect(in:)`. M1.4 hashes

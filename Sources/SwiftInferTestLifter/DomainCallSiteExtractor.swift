@@ -51,7 +51,7 @@ private final class CallSiteVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard trailingIdentifier(of: node.calledExpression) == consumer else {
+        guard node.calledExpression.trailingIdentifierName == consumer else {
             return .visitChildren
         }
         guard let firstArg = node.arguments.first else {
@@ -64,22 +64,12 @@ private final class CallSiteVisitor: SyntaxVisitor {
 
     private func classify(_ expr: ExprSyntax) -> ArgumentClassification {
         if let call = expr.as(FunctionCallExprSyntax.self),
-           let producer = trailingIdentifier(of: call.calledExpression) {
+           let producer = call.calledExpression.trailingIdentifierName {
             return .callOutput(producerName: producer)
         }
         if let ident = expr.as(DeclReferenceExprSyntax.self) {
             return .identifier(name: ident.baseName.text)
         }
         return .other
-    }
-
-    private func trailingIdentifier(of expr: ExprSyntax) -> String? {
-        if let ident = expr.as(DeclReferenceExprSyntax.self) {
-            return ident.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
     }
 }

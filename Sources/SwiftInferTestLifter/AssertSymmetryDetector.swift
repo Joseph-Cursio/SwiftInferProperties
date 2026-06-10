@@ -206,7 +206,7 @@ public enum AssertSymmetryDetector {
         if args.count == 2,
            let leftRef = args[0].expression.as(DeclReferenceExprSyntax.self),
            let rightRef = args[1].expression.as(DeclReferenceExprSyntax.self),
-           let name = calleeName(of: call.calledExpression) {
+           let name = call.calledExpression.trailingIdentifierName {
             return CommutativityPair(
                 calleeName: name,
                 leftArgName: leftRef.baseName.text,
@@ -240,16 +240,6 @@ public enum AssertSymmetryDetector {
             bindings[identifierPattern.identifier.text] = initializer
         }
         return bindings
-    }
-
-    private static func calleeName(of expr: ExprSyntax) -> String? {
-        if let ref = expr.as(DeclReferenceExprSyntax.self) {
-            return ref.baseName.text
-        }
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return nil
     }
 }
 

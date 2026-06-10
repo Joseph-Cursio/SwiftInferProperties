@@ -6,8 +6,8 @@ import SwiftSyntax
 /// reduce-equivalence). Split out of the main
 /// `AsymmetricAssertionDetector.swift` to keep that file under
 /// SwiftLint's 400-line file-length limit. The shared helpers
-/// (`inequalityPair`, `calleeName`, `InequalityPair`) live in the
-/// main file with internal visibility.
+/// (`inequalityPair`, `InequalityPair`) live in the main file with
+/// internal visibility.
 extension AsymmetricAssertionDetector {
 
     // MARK: - Monotonicity negative — `< precondition; > conclusion`
@@ -79,8 +79,8 @@ extension AsymmetricAssertionDetector {
         leftCall: FunctionCallExprSyntax,
         rightCall: FunctionCallExprSyntax
     ) -> ConclusionShape? {
-        guard let leftCallee = calleeName(of: leftCall.calledExpression),
-              let rightCallee = calleeName(of: rightCall.calledExpression),
+        guard let leftCallee = leftCall.calledExpression.trailingIdentifierName,
+              let rightCallee = rightCall.calledExpression.trailingIdentifierName,
               leftCallee == rightCallee,
               let leftArg = leftCall.arguments.first?.expression
                 .as(DeclReferenceExprSyntax.self),
@@ -170,7 +170,7 @@ extension AsymmetricAssertionDetector {
     ) -> DetectedAsymmetricAssertion? {
         guard let transformBase = countMemberBase(of: transform),
               let transformCall = transformBase.as(FunctionCallExprSyntax.self),
-              let callee = calleeName(of: transformCall.calledExpression),
+              let callee = transformCall.calledExpression.trailingIdentifierName,
               let transformArg = transformCall.arguments.first?.expression,
               let transformArgRef = transformArg.as(DeclReferenceExprSyntax.self),
               let inputBase = countMemberBase(of: input),
