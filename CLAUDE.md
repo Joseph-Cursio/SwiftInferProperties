@@ -14,9 +14,9 @@ SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategis
 
 ## Repository state
 
-**Current: v1.111.0** — Finding I fix (`Reduce(<methodName>)` method-reference form detection, from kitlangton/Hex dogfood). For the change-by-change story, read `git log` and the per-cycle findings docs.
+**Current: v1.112.0** — cycle 104, the **first triage datapoint** of the v2.0 calibration loop (`docs/calibration-cycle-104-findings.md`, Captured 2026-06-13). 51 unique identities triaged: **idempotence 100%** (sole promotion-track family, counter 1/3); **cardinality 50% + biconditional 33%** re-homed as shipped SwiftProjectLint refactor lints per **Finding G** (`mutually-exclusive-presentation-state`, `flag-optional-pair-state`); overall 89.8% (44/49). Falsified the scaffold's assumption that all 15 HandRolled anchors accept — 3 reject (fixtures are designed to be *detected*, not to *dynamically satisfy*). For the change-by-change story, read `git log` and the per-cycle findings docs.
 
-**What's next: cycle 104** — first human-triage datapoint of the calibration loop. Scaffold at `docs/calibration-cycle-104-findings.md` (DRAFT). Five consecutive non-triage cycles (100/101/102/102a/103/103b/103c/103d) have exhausted the detector-fix queue; tier promotion from `.possible` → `.likely` (which gates M9 Bridge / M10 drift / accept-check signal) requires per-family acceptance-rate data.
+**What's next: cycle 105** — second triage datapoint; only needs to re-confirm idempotence ≥ 70% (105 + 106 hold → `.possible → .likely` promotion proposed in cycle-106 findings). Open SInferP-side item from Finding G: re-frame cardinality/biconditional *output* to defer to the SwiftProjectLint rules (or gate behind `--include-possible`, never promote past `.possible`).
 
 **Calibration baseline (cycle 7, holds at v1.110):** 92 reducers, 76 interactions across 11 corpus targets. Per-family: 55 idem / 10 bicon / 8 card / 2 refint / 1 cons.
 

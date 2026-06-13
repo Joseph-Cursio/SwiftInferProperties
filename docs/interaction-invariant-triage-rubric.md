@@ -164,7 +164,7 @@ For each cycle:
 1. `swift package clean && swift build --product swift-infer`
 2. Re-measure all 3 corpora with `discover-interaction --include-possible`, persist raw outputs to `docs/calibration-cycle-N-data/`.
 3. For HandRolled, run `--interactive` from the project root and triage each of the 18 suggestions against this rubric.
-4. For TCA 1.25.5 + TCA 1.0.0, replicate the corpus layout under `/tmp/tca-{25,10}-discovery` per the setup commands in `calibration-corpus-v2.0.md`, then run `--interactive` from those workdirs.
+4. For TCA 1.25.5 + TCA 1.0.0, replicate the corpus layout under `$HOME/xcode_projects/calibration-corpora/tca-{25,10}-discovery` (NOT `/tmp` — it gets auto-purged) per the setup commands in `calibration-corpus-v2.0.md`, then run `--interactive` from those workdirs.
 5. Aggregate decisions from `.swiftinfer/interaction-decisions.json` (each corpus has its own) into per-family acceptance rates.
 6. Write `docs/calibration-cycle-N-findings.md` reporting:
    - Per-corpus reducer / interaction counts (baseline vs. cycle-N delta).

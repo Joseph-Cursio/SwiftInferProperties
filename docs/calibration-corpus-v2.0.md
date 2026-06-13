@@ -223,14 +223,28 @@ blind spots at each:
 **Setup** (network + hard-copy required — `FileManager.enumerator`
 doesn't follow top-level symlinks):
 
+> **Workdir location — do NOT use `/tmp`.** macOS purges `/tmp`
+> entries older than ~3 days, which silently guts the `Sources` tree
+> and makes `discover-interaction` return 0 with no error (this bit
+> cycle 104 on 2026-06-13). Keep the discovery workdirs under the
+> stable sibling dir `$HOME/xcode_projects/calibration-corpora/`. The
+> throwaway upstream clone can still live in `/tmp`.
+
 ```
+CORPORA="$HOME/xcode_projects/calibration-corpora"
 cd /tmp && git clone --depth 1 --branch 1.25.5 \
     https://github.com/pointfreeco/swift-composable-architecture.git tca-corpus
-mkdir -p tca-25-discovery/Sources
-cp -R /tmp/tca-corpus/Examples/CaseStudies/SwiftUICaseStudies tca-25-discovery/Sources/CaseStudies
-cp -R /tmp/tca-corpus/Examples/CaseStudies/UIKitCaseStudies tca-25-discovery/Sources/UIKitCaseStudies
-# … same for Search / SpeechRecognition / SyncUps / Todos / VoiceMemos.
-cd tca-25-discovery && for t in …; do swift-infer discover-reducers --target "$t"; done
+mkdir -p "$CORPORA/tca-25-discovery/Sources"
+cd "$CORPORA/tca-25-discovery"
+cp -R /tmp/tca-corpus/Examples/CaseStudies/SwiftUICaseStudies Sources/CaseStudies
+cp -R /tmp/tca-corpus/Examples/CaseStudies/UIKitCaseStudies   Sources/UIKitCaseStudies
+cp -R /tmp/tca-corpus/Examples/SyncUps/SyncUps                Sources/SyncUps
+cp -R /tmp/tca-corpus/Examples/Todos/Todos                    Sources/Todos
+cp -R /tmp/tca-corpus/Examples/VoiceMemos/VoiceMemos          Sources/VoiceMemos
+# (Search / SpeechRecognition surveyed but emit 0 interactions — omit from triage.)
+for t in CaseStudies UIKitCaseStudies SyncUps Todos VoiceMemos; do
+    swift-infer discover-reducers --target "$t"
+done
 ```
 
 **Measured discovery counts (post-v1.94 cardinality @Presents):**
@@ -271,16 +285,19 @@ Action conventions need pattern calibration).
 - **Other 1.0.0 examples** (SpeechRecognition, Standups, etc.) already
   used `@Reducer` macro and produce 0 detections — same gap as 1.25.5.
 
-**Setup** (same as 4.1 but with `--branch 1.0.0`):
+**Setup** (same as 4.1 but with `--branch 1.0.0`; same
+non-`/tmp` workdir rule — see the §4.1 callout):
 
 ```
+CORPORA="$HOME/xcode_projects/calibration-corpora"
 cd /tmp && git clone --depth 1 --branch 1.0.0 \
     https://github.com/pointfreeco/swift-composable-architecture.git tca-pre-macro
-mkdir -p tca-10-discovery/Sources
-cp -R /tmp/tca-pre-macro/Examples/CaseStudies/SwiftUICaseStudies tca-10-discovery/Sources/CaseStudies
-cp -R /tmp/tca-pre-macro/Examples/CaseStudies/UIKitCaseStudies tca-10-discovery/Sources/UIKitCaseStudies
-cp -R /tmp/tca-pre-macro/Examples/CaseStudies/tvOSCaseStudies tca-10-discovery/Sources/tvOSCaseStudies
-cd tca-10-discovery && for t in CaseStudies UIKitCaseStudies tvOSCaseStudies; do
+mkdir -p "$CORPORA/tca-10-discovery/Sources"
+cd "$CORPORA/tca-10-discovery"
+cp -R /tmp/tca-pre-macro/Examples/CaseStudies/SwiftUICaseStudies Sources/CaseStudies
+cp -R /tmp/tca-pre-macro/Examples/CaseStudies/UIKitCaseStudies Sources/UIKitCaseStudies
+cp -R /tmp/tca-pre-macro/Examples/CaseStudies/tvOSCaseStudies Sources/tvOSCaseStudies
+for t in CaseStudies UIKitCaseStudies tvOSCaseStudies; do
     swift-infer discover-reducers --target "$t"
 done
 ```
