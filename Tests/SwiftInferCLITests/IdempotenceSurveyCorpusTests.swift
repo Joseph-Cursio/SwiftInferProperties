@@ -12,7 +12,7 @@ import Testing
 @Suite("Idempotence survey corpus — discovery coverage (cycle 115)")
 struct IdempotenceSurveyCorpusTests {
 
-    @Test("packaging + discovery surfaces exactly the curated idempotence identities")
+    @Test("packaging + discovery surfaces exactly the curated idempotence identities (12 across 3 carrier shapes)")
     func discoversTheCuratedIdentities() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("idempotence-survey-corpus-discovery")
@@ -34,6 +34,7 @@ struct IdempotenceSurveyCorpusTests {
         let found = Set(idempotence.map { "\($0.reducerQualifiedName) \($0.predicate)" })
 
         let expected: Set<String> = [
+            // cycle 115 — generic struct-method carriers
             "NavigationReducer.reduce .dismiss",
             "NavigationReducer.reduce .close",
             "NavigationReducer.reduce .hide",
@@ -41,7 +42,14 @@ struct IdempotenceSurveyCorpusTests {
             "SelectionReducer.reduce .selectFirst",
             "SelectionReducer.reduce .showDetail",
             "SettingsReducer.reduce .cancel",
-            "SettingsReducer.reduce .setBadge"
+            "SettingsReducer.reduce .setBadge",
+            // cycle 116 — TCA-convention witnesses (task/delegate/binding)
+            "TCAFeatureReducer.reduce .task",
+            "TCAFeatureReducer.reduce .delegate",
+            "TCAFeatureReducer.reduce .binding",
+            // cycle 116 — Elm-style free-function carrier (uniquely named
+            // so it's pin-resolvable; see ElmCounter.swift)
+            "reduceElmCounter .refresh"
         ]
         #expect(found == expected)
 
