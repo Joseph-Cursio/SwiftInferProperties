@@ -155,12 +155,52 @@ public enum VerifyInteractionPipeline {
             invariant: invariant,
             workingDirectory: workingDirectory
         )
-        return try executeAndParse(
+        let result = try executeAndParse(
             candidate: candidate,
             stubSource: stubSource,
             userModuleName: userModuleName ?? target,
             workingDirectory: workingDirectory
         )
+        // Cycle 111 — persist the measured outcome to
+        // `.swiftinfer/verify-evidence.json`, keyed by the invariant's
+        // identity, so `discover-interaction` can join evidence back onto
+        // the suggestion (the M9 outcome→evidence→tier promotion path).
+        // Mirrors `VerifyCommand.runPipeline`'s algebraic recording.
+        // Only reachable from the invariant-bearing entry: the bare
+        // `runPipeline` (no invariant) has no family/predicate and so no
+        // identity hash to key on. Best-effort — a persistence failure
+        // warns but never fails the verify gesture.
+        recordEvidence(invariant: invariant, result: result, workingDirectory: workingDirectory)
+        return result
+    }
+
+    /// Cycle 111 — best-effort upsert of one interaction-verify outcome
+    /// into the shared `.swiftinfer/verify-evidence.json` store. The
+    /// identity is the invariant's already-normalized hash (16-char
+    /// uppercase hex, no `0x`) — the exact join key the discover-side
+    /// consumer looks up via `suggestion.identity.normalized`. The
+    /// parsed result's `outcome` is already a `VerifyEvidenceOutcome`,
+    /// so no mapping is needed (unlike the algebraic `VerifyOutcome`).
+    static func recordEvidence(
+        invariant: InteractionInvariantSuggestion,
+        result: InteractionVerifyOutcomeParser.Result,
+        workingDirectory: URL
+    ) {
+        let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+        let recordWarnings = VerifyEvidenceRecorder.record(
+            VerifyEvidence(
+                identityHash: invariant.identity.normalized,
+                template: invariant.family.rawValue,
+                outcome: result.outcome,
+                detail: result.detail,
+                capturedAt: Date(),
+                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+            ),
+            packageRoot: packageRoot
+        )
+        for warning in recordWarnings {
+            FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
+        }
     }
 
     // MARK: - Pin resolution
