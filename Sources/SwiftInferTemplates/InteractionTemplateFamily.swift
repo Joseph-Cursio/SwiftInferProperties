@@ -90,7 +90,11 @@ extension InteractionTemplateFamily {
     /// must never promote off the `.possible` tier even if a future score
     /// signal would otherwise lift them. This is the promotion gate the
     /// `swiftProjectLintDeferral` mapping was introduced to back.
+    ///
+    /// Cycle 112 — the gate now lives on `InteractionInvariantFamily`
+    /// (`tier(forScore:)`) so the verify-evidence re-grade shares it; this
+    /// stays as the template-emission entry that delegates to it.
     static func tierFor(family: InteractionInvariantFamily, score: Int) -> Tier {
-        family.swiftProjectLintDeferral == nil ? Tier(score: score) : .possible
+        family.tier(forScore: score)
     }
 }

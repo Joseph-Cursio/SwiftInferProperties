@@ -114,6 +114,33 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
         self.firstSeenAt = firstSeenAt
     }
 
+    /// Cycle 112 — return a copy with selected fields overridden. Used by
+    /// the verify-evidence fold (`InteractionVerifyEvidenceScoring`) to
+    /// re-grade a suggestion — a new score / tier plus an appended
+    /// explainability line — without restating every field. `nil` keeps
+    /// the existing value.
+    public func with(
+        score: Int? = nil,
+        tier: Tier? = nil,
+        whySuggested: [String]? = nil,
+        whyMightBeWrong: [String]? = nil
+    ) -> Self {
+        Self(
+            identity: identity,
+            family: family,
+            reducerQualifiedName: reducerQualifiedName,
+            reducerLocation: reducerLocation,
+            stateTypeName: stateTypeName,
+            actionTypeName: actionTypeName,
+            predicate: predicate,
+            score: score ?? self.score,
+            tier: tier ?? self.tier,
+            whySuggested: whySuggested ?? self.whySuggested,
+            whyMightBeWrong: whyMightBeWrong ?? self.whyMightBeWrong,
+            firstSeenAt: firstSeenAt
+        )
+    }
+
     /// V2.0 M4.A — convenience constructor that derives `identity`
     /// from the canonical input `(family, reducer, predicate)`.
     /// Used by every template emitter so the identity-hash derivation
@@ -189,5 +216,22 @@ public extension InteractionInvariantFamily {
         case .conservation, .idempotence, .referentialIntegrity:
             return nil
         }
+    }
+
+    /// The score → tier mapping for this family, honoring the Finding-G
+    /// promotion gate (cycle 107 / cycle 112). A family carrying a
+    /// `swiftProjectLintDeferral` (cardinality + biconditional) is
+    /// **clamped to `.possible` regardless of score** — it detects a
+    /// representable-illegal-state refactor smell, not a high-precision
+    /// runtime property, so it must never promote off `.possible` even
+    /// when a score signal (template scoring *or* a verify-evidence fold)
+    /// would otherwise lift it.
+    ///
+    /// Single source of truth: both template emission
+    /// (`InteractionTemplateFamily.tierFor`) and the verify-evidence
+    /// re-grade (`InteractionVerifyEvidenceScoring`) route through here,
+    /// so the gate can't be bypassed on one path and not the other.
+    func tier(forScore score: Int) -> Tier {
+        swiftProjectLintDeferral == nil ? Tier(score: score) : .possible
     }
 }
