@@ -52,3 +52,8 @@ fixtures/cycle27-surface/Package.resolved
 # stays tracked). Matches any `.swiftinfer/verify-workdir/` — the fixture's
 # and any incidental one at the repo root from a dev `swift-infer verify` run.
 **/.swiftinfer/verify-workdir/
+
+# Calibration triage decision files — regenerable per-cycle scratch produced
+# by `discover-interaction --interactive` / the cycle re-triage. The durable
+# record is the cycle-N findings doc worksheet + calibration-cycle-N-data/.
+**/.swiftinfer/interaction-decisions.json
