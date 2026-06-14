@@ -71,7 +71,29 @@ public enum CardinalityInteractionTemplate: InteractionTemplateFamily {
                 + "cycles.",
             "Initial-state invariant may not hold if `State.init()` "
                 + "leaves multiple fields in their non-default active "
-                + "state."
+                + "state.",
+            crossReferenceCaveat
         ]
+    }
+
+    /// V2.0 Finding G — cross-reference to the SwiftProjectLint refactor
+    /// lint. This is the *same* signal seen as a structural smell rather
+    /// than a runtime property: ≥ 2 presentation fields make an illegal
+    /// both-active state *representable*. The generated test can false-fail
+    /// because the mutex is often enforced by the presentation framework
+    /// (a modal auto-nils on dismiss) that this reducer-level test does not
+    /// model — so a failure may flag a UI-unreachable state, not a bug.
+    /// We still emit the property (a failure may instead be a genuinely
+    /// unguarded state), but pin it at `.possible` per the cycle-104 gate.
+    private static var crossReferenceCaveat: String {
+        let rule = family.swiftProjectLintDeferral ?? ""
+        return "This is also a representable-illegal-state refactor smell "
+            + "— see SwiftProjectLint rule `\(rule)`. The mutex may be "
+            + "enforced by the presentation framework (modal auto-dismiss) "
+            + "that this reducer-level test doesn't model, so a failing test "
+            + "can flag a UI-unreachable state rather than a bug. The "
+            + "idiomatic fix collapses the fields into a single `@Presents` "
+            + "destination enum, which makes the illegal state "
+            + "unrepresentable (Finding G)."
     }
 }

@@ -127,6 +127,19 @@ struct BiconditionalTemplateTests {
         #expect(combined.contains("init()"))
     }
 
+    @Test("whyMightBeWrong cross-references the SwiftProjectLint refactor lint (Finding G)")
+    func whyMightBeWrongCrossReferencesLint() {
+        let suggestion = BiconditionalInteractionTemplate.makeSuggestion(
+            candidate: candidate(),
+            witness: witness(),
+            firstSeenAt: firstSeenAt
+        )
+        let combined = suggestion.whyMightBeWrong.joined(separator: " | ")
+        #expect(combined.contains("SwiftProjectLint"))
+        #expect(combined.contains("flag-optional-pair-state"))
+        #expect(combined.contains("Finding G"))
+    }
+
     // MARK: - Identity
 
     @Test("identity stable for same (family, reducer, predicate)")

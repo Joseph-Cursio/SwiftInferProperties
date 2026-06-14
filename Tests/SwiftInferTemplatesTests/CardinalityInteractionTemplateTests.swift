@@ -158,6 +158,19 @@ struct CardinalityInteractionTemplateTests {
         #expect(combined.contains("init()"))
     }
 
+    @Test("whyMightBeWrong cross-references the SwiftProjectLint refactor lint (Finding G)")
+    func whyMightBeWrongCrossReferencesLint() {
+        let suggestion = CardinalityInteractionTemplate.makeSuggestion(
+            candidate: candidate(),
+            witness: witness(),
+            firstSeenAt: firstSeenAt
+        )
+        let combined = suggestion.whyMightBeWrong.joined(separator: " | ")
+        #expect(combined.contains("SwiftProjectLint"))
+        #expect(combined.contains("mutually-exclusive-presentation-state"))
+        #expect(combined.contains("Finding G"))
+    }
+
     // MARK: - Identity
 
     @Test("identity is stable for the same (family, reducer, predicate)")

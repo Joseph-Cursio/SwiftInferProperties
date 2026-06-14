@@ -68,7 +68,30 @@ public enum BiconditionalInteractionTemplate: InteractionTemplateFamily {
                 + "acceptance rate.",
             "Initial-state invariant may not hold if `State.init()` sets "
                 + "`\(witness.boolPropertyName)` to `true` with "
-                + "`\(witness.optionalPropertyName) == nil` (or vice versa)."
+                + "`\(witness.optionalPropertyName) == nil` (or vice versa).",
+            crossReferenceCaveat
         ]
+    }
+
+    /// V2.0 Finding G — cross-reference to the SwiftProjectLint refactor
+    /// lint. The same flag/optional pair seen as a structural smell rather
+    /// than a runtime property: it makes a loading-with-stale-result (or
+    /// loaded-but-flag-off) state *representable*. The generated test can
+    /// false-fail because the two fields are often orthogonal *at rest* —
+    /// e.g. a fetched value that legitimately persists after the loading
+    /// flag clears — so the biconditional is false at rest by design, not
+    /// a bug. We still emit the property (a failure may instead be a real
+    /// drift between the pair), but pin it at `.possible` per the
+    /// cycle-104 gate.
+    private static var crossReferenceCaveat: String {
+        let rule = family.swiftProjectLintDeferral ?? ""
+        return "This is also a representable-illegal-state refactor smell "
+            + "— see SwiftProjectLint rule `\(rule)`. The flag and the "
+            + "optional are often orthogonal at rest (a value that persists "
+            + "after the flag clears), so the predicate can be false at rest "
+            + "by design rather than from a bug. The idiomatic fix models "
+            + "the pair as a single `enum Status { case idle, loading, "
+            + "loaded(T) }`, which makes the illegal combination "
+            + "unrepresentable (Finding G)."
     }
 }

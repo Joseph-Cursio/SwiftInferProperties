@@ -463,21 +463,46 @@ it unrepresentable"). The families that are low-precision **as
 properties** are exactly the ones that are high-value **as lints**.
 Keep the tools decoupled — a shared idea, not a build dependency.
 
-**SInferP-side follow-up (separate cycle, still OPEN):** now that the
-SwiftProjectLint rules exist, re-frame cardinality + biconditional
-*output* to defer ("→ see SwiftProjectLint rule X") rather than emitting
-a property stub, OR gate them behind `--include-possible` permanently and
-never promote past `.possible`. Do **not** pursue option (c) (teaching
-SInferP the presentation contract) — it reintroduces the TCA-version
-fragility the corpus pinning exists to expose.
+**SInferP-side follow-up — RESOLVED (option a′: emit + cross-reference,
+never defer/suppress).** The original framing offered defer-the-output
+*or* permanent `--include-possible` gate. On reflection the pure defer
+throws away the tool's core value: the detector cannot distinguish a
+presentation-layer-enforced mutex (false-fail) from a genuinely unguarded
+illegal state (real latent bug a property test *would* catch), so
+suppressing the property declines to emit a test that may surface a real
+defect. Shipped instead:
+
+- **Keep emitting the property.** Cardinality + biconditional still emit
+  their `InteractionInvariantSuggestion` and stub `precondition` unchanged
+  — a failing generated test may be a real unguarded state, and the tool's
+  mission is property→test, not lint.
+- **Cross-reference the lint in `whyMightBeWrong`.** Both templates now
+  append a caveat naming the SwiftProjectLint rule and explaining *why*
+  the generated test may false-fail without a real bug (cardinality:
+  presentation-framework-enforced mutex this reducer-level test doesn't
+  model; biconditional: fields orthogonal at rest, predicate false by
+  design). Single-sourced via `InteractionInvariantFamily
+  .swiftProjectLintDeferral` (SwiftInferCore).
+- **Hard-pin at `.possible`, never promotable.** That same mapping is the
+  documented promotion gate: a non-nil value means "do not promote." (No
+  score→tier promotion path exists for interaction suggestions yet —
+  `makeSuggestion` hardcodes `.possible` — so the pin is structurally in
+  force today; the mapping guards any future promotion code.)
+
+Net: both tools fire (SInferP emits the property + warns; SwiftProjectLint
+flags the structural smell), nothing low-precision reaches the promotion
+track, and the stub-emitter / measured-execution path is untouched.
+Option (c) (teaching SInferP the presentation contract) was **not**
+pursued — it reintroduces the TCA-version fragility the corpus pinning
+exists to expose.
 
 **Cycle impact:** does not change any cycle-104 decision. It removes
 cardinality + biconditional from the property-promotion track
 (idempotence remains the sole on-track family). The SwiftProjectLint work
-item is **shipped** (`ec74f50`, `4264236`); the open remainder is the
-SInferP-side output re-frame above. PRD-adjacent — worth flagging to the
-SwiftPropertyLaws/PRD side per the "explainability is a first-class
-output" principle.
+item is **shipped** (`ec74f50`, `4264236`); the SInferP-side output
+re-frame is now **shipped** too (option a′ above). PRD-adjacent — worth
+flagging to the SwiftPropertyLaws/PRD side per the "explainability is a
+first-class output" principle.
 
 ### Finding H / I / ... (TODO)
 

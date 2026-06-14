@@ -56,6 +56,23 @@ struct InteractionInvariantSuggestionTests {
         #expect(InteractionInvariantFamily.allCases.count == 5)
     }
 
+    // MARK: - swiftProjectLintDeferral (Finding G)
+
+    @Test("only cardinality + biconditional carry a SwiftProjectLint deferral")
+    func swiftProjectLintDeferralMapping() {
+        #expect(
+            InteractionInvariantFamily.cardinality.swiftProjectLintDeferral
+                == "mutually-exclusive-presentation-state"
+        )
+        #expect(
+            InteractionInvariantFamily.biconditional.swiftProjectLintDeferral
+                == "flag-optional-pair-state"
+        )
+        #expect(InteractionInvariantFamily.conservation.swiftProjectLintDeferral == nil)
+        #expect(InteractionInvariantFamily.idempotence.swiftProjectLintDeferral == nil)
+        #expect(InteractionInvariantFamily.referentialIntegrity.swiftProjectLintDeferral == nil)
+    }
+
     // MARK: - identityCanonicalInput
 
     @Test("identityCanonicalInput is deterministic for the same (family, reducer, predicate)")
