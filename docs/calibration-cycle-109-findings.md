@@ -70,6 +70,13 @@ The fix pushed `ReducerDiscoverer.swift` past SwiftLint's 400-line
 
 ## Blocker B is still open (measured evidence still blocked)
 
+> **CORRECTION (cycle 110):** the "architectural / plain `@main` can't host
+> swift-testing" framing below is wrong. Root cause is the toolchain's
+> `libTesting.dylib → Testing.framework` migration (the V1.53.A
+> `DYLD_LIBRARY_PATH` fix became a no-op); the proven fix is a small
+> `DYLD_FRAMEWORK_PATH` injection. See
+> `docs/blocker-b-verifier-testing-framework-design.md`.
+
 Cycle 109 unblocks the *build* leg only. The verifier executable still
 transitively links `@rpath/Testing.framework` via kit 2.5.0's
 PropertyLawKit/PropertyBased and fails at launch (a plain `@main`

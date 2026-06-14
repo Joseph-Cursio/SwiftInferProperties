@@ -58,6 +58,14 @@ discoverer signal. *Spike fix was prototyped and reverted — not shipped.*
 
 ### Blocker B — verifier executable links `Testing.framework`, can't load it at runtime (architectural)
 
+> **CORRECTION (cycle 110):** "architectural" was wrong. Verifying the
+> algebraic path showed an executable verifier *does* run swift-testing —
+> it just needs `Testing.framework` on the framework search path. The real
+> cause is the toolchain's swift-testing `libTesting.dylib → Testing.framework`
+> migration, which made the V1.53.A `DYLD_LIBRARY_PATH` fix a no-op. The fix
+> is a small `DYLD_FRAMEWORK_PATH` injection (proven), not a redesign. See
+> `docs/blocker-b-verifier-testing-framework-design.md`.
+
 With Blocker A patched locally, the stub **compiles and the binary runs** —
 but the outcome comes back `measured-defaultFails` ("trap in reducer body")
 on a *total identity reducer that cannot trap*. Root cause: the synthesized
