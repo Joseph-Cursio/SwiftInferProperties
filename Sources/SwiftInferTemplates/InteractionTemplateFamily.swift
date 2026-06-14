@@ -67,10 +67,30 @@ extension InteractionTemplateFamily {
             actionTypeName: candidate.actionTypeName,
             predicate: predicate,
             score: initialScore,
-            tier: .possible,
+            tier: tierFor(family: family, score: initialScore),
             whySuggested: whySuggestedFor(witness: witness, candidate: candidate),
             whyMightBeWrong: whyMightBeWrongFor(witness: witness),
             firstSeenAt: firstSeenAt
         )
+    }
+
+    /// Cycle 107 — derive the emitted tier from the family's score.
+    ///
+    /// Through cycles 98–106 every family shipped a hardcoded `.possible`
+    /// (the PRD §3.5 corollary: new families stay default-`.possible`
+    /// through calibration). Cycle 107 promotes idempotence to `.likely`
+    /// by bumping its `initialScore` into the `.likely` band, so the tier
+    /// must now follow the score via `Tier(score:)`.
+    ///
+    /// The one guard: a family carrying a Finding-G SwiftProjectLint
+    /// re-home (`swiftProjectLintDeferral != nil` — cardinality +
+    /// biconditional) is **clamped to `.possible` regardless of score**.
+    /// Those families detect a representable-illegal-state refactor smell,
+    /// not a high-precision runtime property (33–50% acceptance), so they
+    /// must never promote off the `.possible` tier even if a future score
+    /// signal would otherwise lift them. This is the promotion gate the
+    /// `swiftProjectLintDeferral` mapping was introduced to back.
+    static func tierFor(family: InteractionInvariantFamily, score: Int) -> Tier {
+        family.swiftProjectLintDeferral == nil ? Tier(score: score) : .possible
     }
 }

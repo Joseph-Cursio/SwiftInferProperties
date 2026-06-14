@@ -27,16 +27,21 @@ import SwiftInferCore
 ///   - `.idempotence` → emits a dedicated double-apply test using
 ///     the action-case identifier in `predicate`.
 ///
-/// **Scoring.** Initial score 30 (sits in the `.possible` band)
-/// matching Conservation's default-Possible posture (PRD §3.5).
+/// **Scoring.** Initial score 40 — the `.likely` band (40..<75 per
+/// `Tier(score:)`). **Promoted from 30 (`.possible`) in cycle 107** after
+/// idempotence held 100% acceptance (39/39) across three consecutive
+/// calibration cycles (104 + 105 + 106), clearing the PRD §3.5 gate
+/// (≥ 70% × 3). See `docs/calibration-cycle-106-findings.md` for the
+/// promotion proposal. Idempotence is the first interaction-invariant
+/// family to graduate past default-`.possible`.
 public enum IdempotenceInteractionTemplate: InteractionTemplateFamily {
 
     static let family = InteractionInvariantFamily.idempotence
 
-    /// V2.0 M4.C — initial score. Same `.possible` band default as
-    /// Conservation; calibration may promote (or demote) once real
-    /// corpora produce data.
-    static let initialScore = 30
+    /// V2.0 M4.C — initial score. Cycle 107: **40** (the `.likely` band)
+    /// after the three-cycle promotion gate. Was 30 (`.possible`) through
+    /// calibration cycles 98–106.
+    static let initialScore = 40
 
     /// V2.0 M4.C — the predicate carries the action-case dot-shorthand.
     /// M4.D's stub emitter parses by family and embeds the appropriate

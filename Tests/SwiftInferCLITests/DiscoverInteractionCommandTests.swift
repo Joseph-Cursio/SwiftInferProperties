@@ -140,9 +140,45 @@ struct DiscoverInteractionCommandTests {
         #expect(rendered.contains("Predicate: .refresh"))
     }
 
-    @Test("runPipeline default (no --include-possible) returns the calibration-aware sentinel")
+    @Test("runPipeline default (no --include-possible) hides a still-.possible family")
     func runPipelineHidesPossibleByDefault() throws {
+        // Cycle 107: idempotence promoted to `.likely` (surfaces by
+        // default), so the hide-by-default sentinel must be exercised with
+        // a family that is still `.possible` — here cardinality (two
+        // presentation-shaped Bool flags), with a non-idempotent action
+        // (`tick`) so no `.likely` idempotence suggestion is also emitted.
         let directory = try makeFixtureDirectory(name: "PipelineHidePossible")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            relativePath: "Sources/MyApp",
+            named: "Modal.swift",
+            contents: """
+            struct Modal {
+                struct State {
+                    var isShowingSheet: Bool
+                    var isShowingAlert: Bool
+                }
+                enum Action { case tick }
+                static func reduce(_ s: State, _ a: Action) -> State { return s }
+            }
+            """
+        )
+        let rendered = try Command.runPipeline(
+            target: "MyApp",
+            workingDirectory: directory,
+            firstSeenAt: firstSeenAt
+        )
+        #expect(rendered.contains("--include-possible"))
+        #expect(!rendered.contains("[Interaction-Invariant Suggestion]"))
+    }
+
+    @Test("runPipeline default surfaces promoted .likely idempotence without the flag (cycle 107)")
+    func runPipelineShowsLikelyIdempotenceByDefault() throws {
+        // Cycle 107 promotion payoff: an idempotence suggestion now lands
+        // at `.likely` and is visible in the default view (no
+        // `--include-possible` required).
+        let directory = try makeFixtureDirectory(name: "PipelineShowLikely")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
             in: directory,
@@ -164,8 +200,10 @@ struct DiscoverInteractionCommandTests {
             workingDirectory: directory,
             firstSeenAt: firstSeenAt
         )
-        #expect(rendered.contains("--include-possible"))
-        #expect(!rendered.contains("[Interaction-Invariant Suggestion]"))
+        #expect(rendered.contains("[Interaction-Invariant Suggestion]"))
+        #expect(rendered.contains("Family:    idempotence"))
+        #expect(rendered.contains("Score:     40 (Likely)"))
+        #expect(!rendered.contains("--include-possible"))
     }
 
     @Test("runPipeline against an empty target returns the 0-suggestions sentinel")

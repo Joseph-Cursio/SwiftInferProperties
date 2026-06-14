@@ -77,16 +77,16 @@ struct IdempotenceInteractionTemplateTests {
 
     // MARK: - Suggestion shape
 
-    @Test("score lands in the .possible band (20-39)")
-    func scoreInPossibleBand() {
+    @Test("score lands in the .likely band (40-74) — cycle-107 promotion")
+    func scoreInLikelyBand() {
         let suggestion = IdempotenceInteractionTemplate.makeSuggestion(
             candidate: candidate(),
             witness: witness(),
             firstSeenAt: firstSeenAt
         )
-        #expect(suggestion.score >= 20)
-        #expect(suggestion.score < 40)
-        #expect(suggestion.tier == .possible)
+        #expect(suggestion.score >= 40)
+        #expect(suggestion.score < 75)
+        #expect(suggestion.tier == .likely)
     }
 
     @Test("exact-name witness — whySuggested mentions the curated list")
