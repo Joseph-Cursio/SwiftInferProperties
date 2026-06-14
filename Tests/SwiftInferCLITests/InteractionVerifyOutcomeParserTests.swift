@@ -51,6 +51,33 @@ struct InteractionVerifyOutcomeParserTests {
         #expect(result.detail?.contains("134") == true)
     }
 
+    @Test("non-zero exit + dyld signature + no sequence ran → .measuredError, not a trap (Blocker B)")
+    func dyldLaunchFailureIsMeasuredError() {
+        let result = InteractionVerifyOutcomeParser.parseRunOutput(
+            binaryExitCode: 134,
+            stdout: "",
+            stderr: "dyld[123]: Library not loaded: @rpath/Testing.framework/Versions/A/Testing"
+        )
+        // A launch failure must NOT be misclassified as a reducer trap —
+        // that would falsely fail a valid property and poison measured
+        // evidence.
+        #expect(result.outcome == .measuredError)
+        #expect(result.detail?.contains("failed to launch") == true)
+    }
+
+    @Test("non-zero exit + dyld signature BUT a sequence ran → .measuredDefaultFails (real trap)")
+    func trapWithTraceTakesPriorityOverDyldText() {
+        let result = InteractionVerifyOutcomeParser.parseRunOutput(
+            binaryExitCode: 134,
+            stdout: "",
+            // Stub got into the loop (TRACE present) → a genuine trap, even
+            // if some dyld-like text also appears later.
+            stderr: "TRACE-CURRENT-SEQ: 7\nLibrary not loaded: something"
+        )
+        #expect(result.outcome == .measuredDefaultFails)
+        #expect(result.failingSequenceIndex == 7)
+    }
+
     @Test("exit code 0 with no marker → .measuredError — stub bug or version skew")
     func missingMarkerIsMeasuredError() {
         let result = InteractionVerifyOutcomeParser.parseRunOutput(

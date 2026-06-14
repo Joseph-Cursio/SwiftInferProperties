@@ -48,6 +48,17 @@ struct VerifierSubprocessTests {
         #expect(first != third)
     }
 
+    @Test("cachedTestingFrameworkDirectory, when detected, contains Testing.framework (Blocker B)")
+    func testingFrameworkLocatorPointsAtTheFramework() {
+        // Degrades to nil on hosts without the expected Xcode layout
+        // (e.g. Linux CI) — that's correct, not a failure. When non-nil it
+        // must actually contain Testing.framework so DYLD_FRAMEWORK_PATH
+        // resolves the verifier's `@rpath/Testing.framework` link.
+        guard let dir = VerifierSubprocess.cachedTestingFrameworkDirectory else { return }
+        let framework = URL(fileURLWithPath: dir).appendingPathComponent("Testing.framework")
+        #expect(FileManager.default.fileExists(atPath: framework.path))
+    }
+
     @Test("runVerifierBinary still errors on missing binary even with extraEnvironment (M8.D.2)")
     func runVerifierBinaryMissingFileWithExtraEnv() throws {
         let workdir = try makeTempDirectory()

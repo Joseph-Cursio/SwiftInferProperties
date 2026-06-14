@@ -68,6 +68,22 @@ public enum InteractionVerifyOutcomeParser {
     ) -> Result {
         if binaryExitCode != 0 {
             let failingIndex = extractFailingSequenceIndex(from: stderr)
+            // Cycle 110 (Blocker B) — distinguish a genuine reducer trap
+            // from a *launch* failure. The stub writes a `TRACE-CURRENT-SEQ:`
+            // line at the start of every iteration, so a real trap always
+            // leaves at least one; a dynamic-loader failure (e.g. an
+            // unresolved `Testing.framework`) crashes before `main` runs,
+            // leaving none + a dyld signature on stderr. Misclassifying the
+            // latter as `.measuredDefaultFails` would falsely "fail" a valid
+            // property and poison a measured-evidence run, so route it to
+            // `.measuredError`.
+            if failingIndex == nil, looksLikeLaunchFailure(stderr) {
+                return Result(
+                    outcome: .measuredError,
+                    detail: "verifier failed to launch (dynamic loader) before running "
+                        + "any sequence — not a reducer trap. Exit code \(binaryExitCode)."
+                )
+            }
             let indexDetail = failingIndex.map { " at sequence index \($0)" } ?? ""
             return Result(
                 outcome: .measuredDefaultFails,
@@ -110,6 +126,21 @@ public enum InteractionVerifyOutcomeParser {
     }
 
     // MARK: - Internals
+
+    /// Cycle 110 (Blocker B) — does stderr carry a dynamic-loader
+    /// (`dyld`) failure signature? Used to tell a launch failure (the
+    /// binary never started) from a reducer trap (the binary ran and
+    /// trapped mid-sequence).
+    static func looksLikeLaunchFailure(_ stderr: String) -> Bool {
+        let signatures = [
+            "Library not loaded:",
+            "dyld[",
+            "image not found",
+            "Symbol not found:",
+            "no LC_RPATH"
+        ]
+        return signatures.contains { stderr.contains($0) }
+    }
 
     struct MarkerFields: Equatable {
         let totalRuns: Int
