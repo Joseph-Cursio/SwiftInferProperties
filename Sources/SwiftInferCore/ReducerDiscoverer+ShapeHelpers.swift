@@ -98,4 +98,44 @@ extension ReducerDiscoverer {
         "Swift.Double", "Swift.Float",
         "Swift.String", "Swift.Character"
     ]
+
+    // MARK: - Cycle 109 — nested State/Action qualification (Blocker A)
+
+    /// The names of every type a member block declares directly (one
+    /// level deep): `struct` / `enum` / `class` / `actor` / `typealias`.
+    /// `Visitor` records this per enclosing type so `matchReducer` can
+    /// tell whether a reducer's bare `State`/`Action` param type is a
+    /// nested member of its enclosing type.
+    static func nestedTypeNames(in memberBlock: MemberBlockSyntax) -> Set<String> {
+        var names: Set<String> = []
+        for member in memberBlock.members {
+            let decl = member.decl
+            if let structDecl = decl.as(StructDeclSyntax.self) {
+                names.insert(structDecl.name.text)
+            } else if let enumDecl = decl.as(EnumDeclSyntax.self) {
+                names.insert(enumDecl.name.text)
+            } else if let classDecl = decl.as(ClassDeclSyntax.self) {
+                names.insert(classDecl.name.text)
+            } else if let actorDecl = decl.as(ActorDeclSyntax.self) {
+                names.insert(actorDecl.name.text)
+            } else if let aliasDecl = decl.as(TypeAliasDeclSyntax.self) {
+                names.insert(aliasDecl.name.text)
+            }
+        }
+        return names
+    }
+
+    /// Qualify `name` as `<enclosing>.<name>` when it is a nested member
+    /// of the enclosing type, so the stub emitters produce a resolvable
+    /// `<Enclosing>.State()` / `<Enclosing>.Action.self`. No-op when there
+    /// is no enclosing type, when the name is already dotted (M1.B
+    /// pre-qualifies — avoid double-qualifying), or when the name is not
+    /// in the enclosing type's nested-type set (a top-level type
+    /// referenced by bare name stays bare).
+    static func qualifyIfNested(_ name: String, enclosing: String?, nested: Set<String>) -> String {
+        guard let enclosing, !name.contains("."), nested.contains(name) else {
+            return name
+        }
+        return "\(enclosing).\(name)"
+    }
 }
