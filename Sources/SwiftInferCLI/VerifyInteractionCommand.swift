@@ -79,10 +79,49 @@ extension SwiftInferCommand {
         )
         public var sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount
 
+        @Flag(
+            name: .long,
+            help: """
+            Survey mode (cycle 114): discover every interaction-invariant \
+            identity in --target, run measured verify against each, record \
+            evidence to .swiftinfer/verify-evidence.json, and print a \
+            per-identity outcome summary. The campaign harvest step — one \
+            command instead of N hand-pinned runs. Ignores --reducer; \
+            narrow with --family. Serial (a real build per identity).
+            """
+        )
+        public var all: Bool = false
+
+        @Option(
+            name: .long,
+            help: """
+            With --all, restrict the survey to one interaction-invariant \
+            family (e.g. `idempotence`). Unknown values are an error. \
+            No-op without --all.
+            """
+        )
+        public var family: String?
+
         public init() { /* no-op */ }
 
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            if all {
+                if reducer != nil {
+                    FileHandle.standardError.write(
+                        Data("warning: --reducer is ignored in --all survey mode\n".utf8)
+                    )
+                }
+                let rendered = try VerifyInteractionSurvey.run(
+                    target: target,
+                    familyFilter: family,
+                    sequenceCount: sequenceCount,
+                    userModuleName: userModule,
+                    workingDirectory: workingDirectory
+                )
+                print(rendered, terminator: "")
+                return
+            }
             let rendered = try VerifyInteractionPipeline.runPipeline(
                 target: target,
                 pinRaw: reducer,
