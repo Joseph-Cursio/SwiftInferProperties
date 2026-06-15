@@ -90,6 +90,18 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// to `.pure` for older JSON records (none on disk yet).
     public let purity: ReducerPurity
 
+    /// Cycle 122 (Phase A) — the Action enum's **payload-free** case
+    /// names, in source order, captured at discovery time for `.tca`
+    /// carriers. Real TCA Action enums don't declare `CaseIterable`, so
+    /// the verifier can't use `Gen<Action>.case`; it builds an explicit
+    /// `Gen.element(of: [.a, .b, …])` generator from this list instead.
+    /// **Soundness gate:** populated *only* when every case in the Action
+    /// enum is payload-free — if any case carries an associated value
+    /// (Phase B / value-gen territory), this stays empty so the emitter
+    /// keeps rejecting the candidate rather than verify over a partial
+    /// action space. Empty for non-`.tca` carriers and older records.
+    public let actionCaseNames: [String]
+
     public init(
         location: String,
         enclosingTypeName: String?,
@@ -98,7 +110,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         stateTypeName: String,
         actionTypeName: String,
         carrierKind: ReducerCarrierKind = .generic,
-        purity: ReducerPurity = .pure
+        purity: ReducerPurity = .pure,
+        actionCaseNames: [String] = []
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -108,6 +121,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.actionTypeName = actionTypeName
         self.carrierKind = carrierKind
         self.purity = purity
+        self.actionCaseNames = actionCaseNames
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just
@@ -176,6 +190,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case actionTypeName
         case carrierKind
         case purity
+        case actionCaseNames
     }
 
     public init(from decoder: Decoder) throws {
@@ -198,6 +213,12 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             ReducerPurity.self,
             forKey: .purity
         ) ?? .pure
+        // Cycle 122 — pre-Phase-A records (and all non-`.tca` carriers)
+        // default to an empty case list.
+        self.actionCaseNames = try container.decodeIfPresent(
+            [String].self,
+            forKey: .actionCaseNames
+        ) ?? []
     }
 }
 

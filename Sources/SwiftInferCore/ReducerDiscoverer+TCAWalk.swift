@@ -61,19 +61,56 @@ extension ReducerDiscoveryVisitor {
         from memberBlock: MemberBlockSyntax,
         enclosingTypeName: String
     ) {
+        // Cycle 122 (Phase A) — capture the nested Action enum's
+        // payload-free case names so the verifier can enumerate actions
+        // without `CaseIterable` (real TCA Actions don't declare it).
+        let actionCaseNames = Self.payloadFreeActionCaseNames(in: memberBlock)
         for member in memberBlock.members {
             guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
             for binding in variable.bindings {
                 guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
                       identifier.identifier.text == "body" else { continue }
                 if let initializer = binding.initializer?.value {
-                    walkForReduceClosures(in: Syntax(initializer), enclosingTypeName: enclosingTypeName)
+                    walkForReduceClosures(
+                        in: Syntax(initializer),
+                        enclosingTypeName: enclosingTypeName,
+                        actionCaseNames: actionCaseNames
+                    )
                 }
                 if let accessor = binding.accessorBlock {
-                    walkForReduceClosures(in: Syntax(accessor), enclosingTypeName: enclosingTypeName)
+                    walkForReduceClosures(
+                        in: Syntax(accessor),
+                        enclosingTypeName: enclosingTypeName,
+                        actionCaseNames: actionCaseNames
+                    )
                 }
             }
         }
+    }
+
+    /// Cycle 122 (Phase A) — payload-free case names of the nested
+    /// `enum Action`, in source order. Returns `[]` (the verify-reject
+    /// signal) when the Action enum has **any** associated-value case
+    /// (mixed/payload enums are Phase B value-gen territory — verifying
+    /// over only the payload-free subset would be unsound) or when no
+    /// `Action` enum is found in this member block.
+    static func payloadFreeActionCaseNames(in memberBlock: MemberBlockSyntax) -> [String] {
+        guard let actionEnum = memberBlock.members
+            .compactMap({ $0.decl.as(EnumDeclSyntax.self) })
+            .first(where: { $0.name.text == "Action" })
+        else { return [] }
+
+        var names: [String] = []
+        for member in actionEnum.memberBlock.members {
+            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
+            for element in caseDecl.elements {
+                // Any associated-value clause → bail: the full action
+                // space isn't payload-free, so don't claim a case list.
+                if element.parameterClause != nil { return [] }
+                names.append(element.name.text)
+            }
+        }
+        return names
     }
 
     /// Recursively walk `subtree` looking for `Reduce { ... }` calls
@@ -81,11 +118,16 @@ extension ReducerDiscoveryVisitor {
     /// `ReducerCandidate`. Composed reducers (`Scope`, `BindingReducer`,
     /// `CombineReducers`, `EmptyReducer`, etc.) are walked past — only
     /// `Reduce` introduces the closure shape M1.B is after.
-    private func walkForReduceClosures(in subtree: Syntax, enclosingTypeName: String) {
+    private func walkForReduceClosures(
+        in subtree: Syntax,
+        enclosingTypeName: String,
+        actionCaseNames: [String]
+    ) {
         let walker = ReduceClosureWalker(
             file: file,
             converter: converter,
-            enclosingTypeName: enclosingTypeName
+            enclosingTypeName: enclosingTypeName,
+            actionCaseNames: actionCaseNames
         )
         walker.walk(subtree)
         candidates.append(contentsOf: walker.candidates)

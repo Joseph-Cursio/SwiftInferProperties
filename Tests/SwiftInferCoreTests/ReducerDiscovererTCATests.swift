@@ -38,6 +38,57 @@ struct ReducerDiscovererTCATests {
         #expect(candidate.actionTypeName == "Inbox.Action")
     }
 
+    @Test("Cycle 122 — payload-free Action cases captured in source order")
+    func capturesPayloadFreeActionCases() {
+        let source = """
+        import ComposableArchitecture
+
+        @Reducer
+        struct Counter {
+            struct State: Equatable { var count = 0 }
+            enum Action {
+                case increment
+                case decrement
+                case closeMenu
+            }
+            var body: some Reducer<State, Action> {
+                Reduce { state, action in .none }
+            }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "Counter.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .tca)
+        // Source order preserved — the verifier's explicit-case generator
+        // depends on a stable, complete list.
+        #expect(result[0].actionCaseNames == ["increment", "decrement", "closeMenu"])
+    }
+
+    @Test("Cycle 122 — any payload case ⇒ empty list (verify-reject, Phase B territory)")
+    func payloadCaseSuppressesCapture() {
+        let source = """
+        import ComposableArchitecture
+
+        @Reducer
+        struct Form {
+            struct State: Equatable {}
+            enum Action {
+                case submit
+                case setName(String)
+            }
+            var body: some Reducer<State, Action> {
+                Reduce { state, action in .none }
+            }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "Form.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .tca)
+        // One associated-value case ⇒ the whole list is withheld so the
+        // emitter keeps rejecting (no verifying over a partial action space).
+        #expect(result[0].actionCaseNames.isEmpty)
+    }
+
     @Test("Reduce match is gated on `import ComposableArchitecture`")
     func requiresComposableArchitectureImport() {
         let source = """
