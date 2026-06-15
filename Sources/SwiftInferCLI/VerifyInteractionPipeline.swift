@@ -34,7 +34,15 @@ public enum VerifyInteractionPipeline {
             .appendingPathComponent("Sources")
             .appendingPathComponent(target)
         let candidates = try ReducerDiscoverer.discover(directory: directory)
-        let matched = try resolveCandidate(candidates: candidates, pinRaw: pinRaw)
+        // Cycle 133 — collapse composed-body duplicates before pin
+        // resolution. A composed `var body` (multiple `Reduce {}` closures,
+        // or `Reduce` + `Scope`/`CombineReducers`) emits one candidate per
+        // closure (PRD §6.3), all with the same qualifiedName / State /
+        // Action — which `resolveCandidate` would otherwise reject as
+        // `ambiguousPin`. Mirrors the discover path's dedup; the deduped
+        // candidate verifies the whole composed body via `T().reduce`.
+        let deduped = SwiftInferCommand.DiscoverInteraction.dedupedByStateAndAction(candidates)
+        let matched = try resolveCandidate(candidates: deduped, pinRaw: pinRaw)
         // M8.B — hidden-mutability bodies write to static / global
         // vars; running N action sequences against such a reducer
         // produces meaningless outcomes (state persists across runs).

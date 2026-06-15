@@ -211,6 +211,40 @@ struct VerifyInteractionPipelineTests {
         #expect(stubSource.contains(ActionSequenceStubEmitter.cleanOutcomeMarker))
     }
 
+    @Test("Cycle 133 — resolveAndEmit dedups a composed body (multiple Reduce closures), no ambiguousPin")
+    func resolveAndEmitComposedBody() throws {
+        let directory = try makeFixtureDirectory(name: "PipelineComposedBody")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writeFile(
+            in: directory,
+            relativePath: "Sources/MyApp",
+            named: "Feature.swift",
+            contents: """
+            import ComposableArchitecture
+            @Reducer
+            struct Feature {
+                struct State: Equatable { var count = 0 }
+                enum Action { case close, tick }
+                var body: some Reducer<State, Action> {
+                    Reduce { state, action in .none }
+                    Reduce { state, action in .none }
+                }
+            }
+            """
+        )
+        // Two Reduce closures → two "Feature.body" candidates; pre-133 this
+        // threw ambiguousPin. The (state, action) dedup now resolves it to
+        // the one composed reducer.
+        let (candidate, stubSource) = try VerifyInteractionPipeline.resolveAndEmit(
+            target: "MyApp",
+            pinRaw: "Feature.body",
+            workingDirectory: directory
+        )
+        #expect(candidate.qualifiedName == "Feature.body")
+        #expect(candidate.carrierKind == .tca)
+        #expect(stubSource.contains("let reducer = Feature()"))
+    }
+
     @Test("resolveAndEmit with no reducers throws noReducersDetected")
     func resolveAndEmitNoReducers() throws {
         let directory = try makeFixtureDirectory(name: "PipelineNoReducers")
