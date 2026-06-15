@@ -52,30 +52,36 @@ struct RefIntVerifyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        #expect(summary.contains("Identities: 3 (--family referential-integrity)"))
-        #expect(summary.contains("1 measured-bothPass"))
-        #expect(summary.contains("1 measured-defaultFails"))
+        // Cycle 143 — widened to 5 reducers: + PlaylistFeature
+        // (IdentifiedArrayOf collection, valid → bothPass → Verified) and
+        // GalleryFeature (select-nonexistent false positive → defaultFails).
+        #expect(summary.contains("Identities: 5 (--family referential-integrity)"))
+        #expect(summary.contains("2 measured-bothPass"))
+        #expect(summary.contains("2 measured-defaultFails"))
         #expect(summary.contains("1 architectural-coverage-pending"))
         // The gate's disclosure rides into the survey output (no build run).
         #expect(summary.contains("element type `Note` is not Identifiable"))
 
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 3)
-        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 1)
-        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
+        #expect(stored.log.records.count == 5)
+        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 2)
+        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 2)
         #expect(stored.log.records.filter { $0.outcome == .architecturalCoveragePending }.count == 1)
 
-        // Payoff: discover folds the evidence — Library promoted to Verified
-        // (ungated, no overrule disclosure); Catalog suppressed; NoteFeature
-        // stays Possible (architectural-pending is score-neutral).
+        // Payoff: discover folds the evidence — the valid reducers promoted to
+        // Verified (ungated, no overrule disclosure); the false positives
+        // suppressed; NoteFeature stays Possible (architectural-pending is
+        // score-neutral).
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "RefIntVerifyCorpus",
             includePossible: true,
             workingDirectory: root
         )
         #expect(discovered.contains("(Verified)"))
-        #expect(discovered.contains("state.books.contains"))        // Library survives
+        #expect(discovered.contains("state.books.contains"))        // Library survives ([T] array)
+        #expect(discovered.contains("state.tracks.contains"))       // Playlist survives (IdentifiedArrayOf)
         #expect(!discovered.contains("state.items.contains"))       // Catalog suppressed
+        #expect(!discovered.contains("state.photos.contains"))      // Gallery suppressed
         #expect(!discovered.contains("overruled"))                  // un-gated: no pin-overrule
         #expect(discovered.contains("state.notes.contains"))        // Note still present…
         #expect(discovered.contains("(Possible)"))                  // …at .possible (gate-skipped)

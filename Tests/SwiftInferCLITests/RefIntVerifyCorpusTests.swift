@@ -12,7 +12,7 @@ import Testing
 @Suite("Referential-integrity verify corpus — discovery coverage (cycle 138)")
 struct RefIntVerifyCorpusTests {
 
-    @Test("packaging + discovery surfaces exactly the three refint identities at .possible")
+    @Test("packaging + discovery surfaces exactly the five refint identities at .possible")
     func discoversTheCuratedIdentities() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("refint-verify-corpus-discovery")
@@ -42,7 +42,13 @@ struct RefIntVerifyCorpusTests {
             // surfaces the witness (it doesn't check Identifiable); the verify
             // gate skips it (cycle 139).
             "NoteFeature.body state.selectedNoteID == nil"
-                + " || state.notes.contains { $0.id == state.selectedNoteID }"
+                + " || state.notes.contains { $0.id == state.selectedNoteID }",
+            // cycle 143 — IdentifiedArrayOf collection + a select-nonexistent
+            // false positive.
+            "PlaylistFeature.body state.selectedTrackID == nil"
+                + " || state.tracks.contains { $0.id == state.selectedTrackID }",
+            "GalleryFeature.body state.selectedPhotoID == nil"
+                + " || state.photos.contains { $0.id == state.selectedPhotoID }"
         ]
         #expect(found == expected)
 
