@@ -34,12 +34,11 @@ struct TCAVerifyCorpusMeasuredTests {
         )
 
         // The real witness detector surfaces idempotence witnesses across the
-        // four real @Reducer reducers (NavFeature: dismiss/close/hide;
-        // EditorFeature: close/setBadge; SelectionFeature: select/selectFirst/
-        // showDetail; SettingsFeature: setEnabled/cancel) and measured verify
-        // splits them — only setBadge (the set* false positive) fails.
-        #expect(summary.contains("Identities: 10 (--family idempotence)"))
-        #expect(summary.contains("Summary: 9 measured-bothPass, 1 measured-defaultFails"))
+        // six real @Reducer reducers and measured verify splits them: only the
+        // two name-vs-behavior false positives fail — setBadge (set*) and
+        // ToggleFeature.hide (exact witness that toggles).
+        #expect(summary.contains("Identities: 13 (--family idempotence)"))
+        #expect(summary.contains("Summary: 11 measured-bothPass, 2 measured-defaultFails"))
         // The deliberate set* false positive is disproven by execution.
         #expect(summary.contains("[measured-defaultFails]            EditorFeature.body"))
         #expect(summary.contains(".setBadge"))
@@ -53,19 +52,21 @@ struct TCAVerifyCorpusMeasuredTests {
         // reducers (NavFeature, SelectionFeature) do not (full exploration).
         #expect(summary.contains("explored 4 of 5 action types (excluded: received)"))
         #expect(summary.contains("explored 4 of 5 action types (excluded: sync)"))
+        // A richer excluded set — two non-derivable cases in one disclosure.
+        #expect(summary.contains("explored 3 of 5 action types (excluded: received, markItems)"))
         let lines = summary.split(separator: "\n")
-        for mixed in ["EditorFeature.body", "SettingsFeature.body"] {
+        for mixed in ["EditorFeature.body", "SettingsFeature.body", "DownloadFeature.body"] {
             #expect(lines.filter { $0.contains(mixed) }.allSatisfy { $0.contains("partial") })
         }
-        for full in ["NavFeature.body", "SelectionFeature.body"] {
+        for full in ["NavFeature.body", "SelectionFeature.body", "ToggleFeature.body"] {
             #expect(lines.filter { $0.contains(full) }.allSatisfy { !$0.contains("partial") })
         }
 
-        // Evidence harvested for all 10; 9 bothPass survive.
+        // Evidence harvested for all 13; 11 bothPass survive.
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 10)
-        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 9)
-        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
+        #expect(stored.log.records.count == 13)
+        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 11)
+        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 2)
 
         // Payoff: discover reads the evidence — the 4 survivors render
         // Verified (AST-only, no extra build); setBadge is suppressed.
