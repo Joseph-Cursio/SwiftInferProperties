@@ -6,6 +6,75 @@ import SwiftInferCore
 /// SwiftLint's `file_length` cap (mirrors the `+Evidence` split).
 extension VerifyInteractionPipeline {
 
+    /// Cycle 129 — registry of per-workdir-path build locks. The survey
+    /// runs identities concurrently; identities sharing a workdir (the
+    /// shared TCA corpus workdir) must serialize their synthesize → build →
+    /// run so they reuse the warm `.build` instead of clobbering each
+    /// other, while identities in distinct workdirs (non-TCA per-reducer)
+    /// get distinct locks and stay parallel. Access to the dictionary is
+    /// guarded by `workdirLockRegistry`; the returned `NSLock`s are held
+    /// across the (synchronous) build, never across an `await`.
+    private static let workdirLockRegistry = NSLock()
+    nonisolated(unsafe) private static var workdirLocksByPath: [String: NSLock] = [:]
+
+    static func workdirLock(forPath path: String) -> NSLock {
+        workdirLockRegistry.lock()
+        defer { workdirLockRegistry.unlock() }
+        if let existing = workdirLocksByPath[path] { return existing }
+        let lock = NSLock()
+        workdirLocksByPath[path] = lock
+        return lock
+    }
+
+    /// The workdir + synthesis inputs for a candidate. Cycle 122: `.tca`
+    /// carriers build via direct source inclusion (corpus co-compiled into
+    /// the verifier so `internal` types resolve) + a CA-bearing package;
+    /// other carriers keep the v1.42 path-dependency model. Cycle 129: TCA
+    /// identities share ONE corpus-keyed workdir (heavy deps compile once;
+    /// later identities are stub-only incrementals) — non-TCA keeps the
+    /// per-(reducer, identity) segment.
+    /// The inputs `executeAndParse` resolves before synthesizing a workdir.
+    struct WorkdirRequest {
+        let candidate: ReducerCandidate
+        let stubSource: String
+        let userModuleName: String
+        let packageRoot: URL
+        let identity: String?
+        let corpusSourceDirectory: URL?
+    }
+
+    static func makeWorkdirInputs(
+        _ request: WorkdirRequest
+    ) -> (workdir: URL, inputs: VerifierWorkdir.Inputs) {
+        let isTCA = request.candidate.carrierKind == .tca && request.corpusSourceDirectory != nil
+        let segment = isTCA
+            ? "tca-corpus-\(request.userModuleName.replacingOccurrences(of: ".", with: "_"))"
+            : workdirSegment(for: request.candidate, identity: request.identity)
+        let workdir = request.packageRoot
+            .appendingPathComponent(".swiftinfer")
+            .appendingPathComponent("verify-interaction-workdir")
+            .appendingPathComponent(segment)
+        if isTCA, let corpusSourceDirectory = request.corpusSourceDirectory {
+            return (workdir, VerifierWorkdir.Inputs(
+                workdir: workdir,
+                userPackage: nil,
+                stubSource: request.stubSource,
+                mode: .interactionTCA,
+                inlinedSources: (try? CorpusPackager.readSwiftSources(in: corpusSourceDirectory)) ?? []
+            ))
+        }
+        return (workdir, VerifierWorkdir.Inputs(
+            workdir: workdir,
+            userPackage: VerifierWorkdir.UserPackageReference(
+                packagePath: request.packageRoot,
+                packageDeclaredName: request.userModuleName,
+                productNames: [request.userModuleName]
+            ),
+            stubSource: request.stubSource,
+            mode: .interaction
+        ))
+    }
+
     /// Walk up from `directory` looking for `Package.swift`. Same shape as
     /// v1.42 verify's package-root resolution + every other loader in the
     /// project — kept inlined here for the same independent-loader posture.

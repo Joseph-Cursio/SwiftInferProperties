@@ -260,36 +260,21 @@ public enum VerifyInteractionPipeline {
         corpusSourceDirectory: URL? = nil
     ) throws -> InteractionVerifyOutcomeParser.Result {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
-        let workdir = packageRoot
-            .appendingPathComponent(".swiftinfer")
-            .appendingPathComponent("verify-interaction-workdir")
-            .appendingPathComponent(workdirSegment(for: candidate, identity: identity))
-        // Cycle 122 (Phase A) — `.tca` carriers build via direct source
-        // inclusion (corpus co-compiled into the verifier target so its
-        // `internal` types resolve) + a CA-bearing package. Other carriers
-        // keep the v1.42 path-dependency model.
-        let workdirInputs: VerifierWorkdir.Inputs
-        if candidate.carrierKind == .tca, let corpusSourceDirectory {
-            workdirInputs = VerifierWorkdir.Inputs(
-                workdir: workdir,
-                userPackage: nil,
-                stubSource: stubSource,
-                mode: .interactionTCA,
-                inlinedSources: (try? CorpusPackager.readSwiftSources(in: corpusSourceDirectory)) ?? []
-            )
-        } else {
-            let userPackage = VerifierWorkdir.UserPackageReference(
-                packagePath: packageRoot,
-                packageDeclaredName: userModuleName,
-                productNames: [userModuleName]
-            )
-            workdirInputs = VerifierWorkdir.Inputs(
-                workdir: workdir,
-                userPackage: userPackage,
-                stubSource: stubSource,
-                mode: .interaction
-            )
-        }
+        let (workdir, workdirInputs) = makeWorkdirInputs(WorkdirRequest(
+            candidate: candidate,
+            stubSource: stubSource,
+            userModuleName: userModuleName,
+            packageRoot: packageRoot,
+            identity: identity,
+            corpusSourceDirectory: corpusSourceDirectory
+        ))
+        // Cycle 129 — serialize synthesize → build → run per workdir. The
+        // shared TCA workdir thus warm-reuses serially (one cold build, then
+        // stub-only incrementals) with no clobbering; distinct non-TCA
+        // workdirs hold distinct locks and still run in parallel.
+        let lock = workdirLock(forPath: workdir.path)
+        lock.lock()
+        defer { lock.unlock() }
         _ = try VerifierWorkdir.synthesize(workdirInputs)
 
         let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)

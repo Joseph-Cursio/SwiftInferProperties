@@ -134,18 +134,30 @@ public enum VerifierWorkdir {
             userPackage: inputs.userPackage,
             mode: inputs.mode
         )
-        try packageSource.write(to: packagePath, atomically: true, encoding: .utf8)
-        try inputs.stubSource.write(to: stubPath, atomically: true, encoding: .utf8)
+        try writeIfChanged(packageSource, to: packagePath)
+        try writeIfChanged(inputs.stubSource, to: stubPath)
         // Direct source inclusion — write each corpus file into the same
         // target so `internal` reducer/State/Action types are in-module.
         for source in inputs.inlinedSources {
-            try source.contents.write(
-                to: sourcesDir.appendingPathComponent(source.name),
-                atomically: true,
-                encoding: .utf8
+            try writeIfChanged(
+                source.contents,
+                to: sourcesDir.appendingPathComponent(source.name)
             )
         }
         return stubPath
+    }
+
+    /// Cycle 129 — write `content` to `url` only if the file is absent or
+    /// its contents differ. Skipping an unchanged write preserves the
+    /// file's mtime, so SwiftPM/llbuild sees no change and the build stays
+    /// incremental — the basis for the shared-warm-workdir survey (an
+    /// identical co-compiled corpus + deps recompile once; only the
+    /// per-identity stub triggers a rebuild). Atomic when it does write.
+    private static func writeIfChanged(_ content: String, to url: URL) throws {
+        if let existing = try? String(contentsOf: url, encoding: .utf8), existing == content {
+            return
+        }
+        try content.write(to: url, atomically: true, encoding: .utf8)
     }
 
     // MARK: - Package.swift rendering
