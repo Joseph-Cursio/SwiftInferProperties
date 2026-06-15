@@ -119,4 +119,3 @@ A noted **further** speedup, not pursued: a shared *prebuilt user-package
 artifact* so even cross-reducer (cold) builds skip recompiling the common
 dependency graph. M4's within-group reuse captured the bulk of the win; this
 would chip at the residual cold-build-per-reducer cost.
-</content>

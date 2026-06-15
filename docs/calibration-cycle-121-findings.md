@@ -154,4 +154,3 @@ prebuilt user-package artifact** (cross-reducer cold-build reuse — the
 residual perf tail cycle 120 flagged). The real coverage lever is the
 **`.tca` carrier epic** above, should it be greenlit. Value-generator path
 stays shelved (cycle 119).
-</content>

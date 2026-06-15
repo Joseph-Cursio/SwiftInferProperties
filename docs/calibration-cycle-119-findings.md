@@ -169,5 +169,3 @@ grep -rhE "^[[:space:]]*case (set|select|show|dismiss|close|hide|cancel)[A-Za-z0
 
 Suite green (3196; one verify-pipeline subprocess flake observed on a clean
 build under contention, did not reproduce on rerun — not a regression).
-</content>
-</invoke>

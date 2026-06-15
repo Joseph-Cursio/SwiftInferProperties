@@ -128,12 +128,43 @@ the verifier's own target. This:
 5. **Proof** — a `.subprocess` test driving a real `Counter`-shaped reducer
    to `measured-bothPass`, mirroring this spike.
 
+## Phase A reachability — measured over the real corpora
+
+Ran the production discovery (`ReducerDiscoverer` + `actionCaseNames`
+capture) over both real corpora to size what Phase A *alone* unlocks. The
+payload-free-Action gate is exactly what the emitter enforces, so these
+counts are machinery-authoritative (State shape assessed separately):
+
+| Metric | tca-10 | tca-25 | total |
+|---|---|---|---|
+| `.tca` candidate closures | 21 | 48 | **69** |
+| …payload-free Action (emitter-accepted) | **0** | 9 | **9** |
+| distinct `.tca` reducer types | — | — | 64 |
+| …payload-free-Action types | 0 | 6 | **6** |
+
+The 6 reachable types (all in tca-25): **Counter, LongLivingEffects,
+ProfileTab, ScreenB, ScreenC, Timers**. State assessment:
+
+- **Counter, ScreenC, Timers, LongLivingEffects** — all-defaulted `Equatable`
+  State → zero-arg `State()` works → genuinely Phase-A-verifiable.
+- **ScreenB** — `struct State: Equatable {}` is empty → builds, but
+  **degenerate** (idempotence trivially holds; no real signal).
+- **ProfileTab** — `@Shared(.stats) var stats = Stats()` → `@Shared`
+  property wrapper makes zero-arg construction **uncertain**.
+
+**So ~4–5 non-degenerate reducer types out of 64 (~7%) are reachable by
+Phase A alone, and zero in tca-10.** This quantifies the cycle-121/122
+thesis: the overwhelming majority of real `.tca` reducers (60 of 69
+candidates) carry payload-bearing Actions (binding / delegate / nested
+`X.Action` / `Result` / …), which are **Phase B** (value-gen) territory.
+Phase A is a correct, shipped foundation but moves the frozen 50.5% only
+marginally on its own — **the volume is in Phase B.**
+
 ## What's next after Phase A
 
 Phase B (payload-bearing TCA actions → un-shelve cycle-119 value-gen) and
 Phase C (corpus-scale survey over real `tca-10`/`tca-25` via cycle-120's
-parallel survey), each evidence-gated. The decisive Phase-A data point to
-collect: of the 58 `.tca` reducers, how many are Counter-shaped
-(payload-free Action, zero-arg `Equatable` State) and thus reachable by
-Phase A alone.
-</content>
+parallel survey), each evidence-gated. The Phase-A reachability data point
+is now **collected** (see the section above): ~4–5 non-degenerate reducer
+types reachable out of 64, so **Phase B carries the volume** — that's the
+higher-priority next phase if the goal is to move 50.5%.
