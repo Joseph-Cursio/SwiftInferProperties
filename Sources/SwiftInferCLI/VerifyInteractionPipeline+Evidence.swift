@@ -67,7 +67,8 @@ extension VerifyInteractionPipeline {
             outcome: result.outcome,
             detail: result.detail,
             capturedAt: Date(),
-            swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+            swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
+            excludedActionCount: result.excludedActionCount
         )
     }
 
@@ -77,28 +78,43 @@ extension VerifyInteractionPipeline {
         }
     }
 
-    /// Cycle 125 (Phase B, guardrail #1) — for a `.tca` reducer verified via
-    /// relaxed partial exploration, fold the excluded-action disclosure into
-    /// the verdict `detail` so it rides through to the evidence record +
-    /// render. No-op when nothing was excluded (full exploration — e.g. an
-    /// all-payload-free Action) or for non-`.tca` carriers.
+    /// Cycle 125 (Phase B, guardrail #1) + cycle 136 — two jobs:
+    ///
+    ///   1. **Disclosure (`.tca`-only).** For a `.tca` reducer verified via
+    ///      relaxed partial exploration, fold the excluded-action disclosure
+    ///      into the verdict `detail` so it rides through to the evidence
+    ///      record + render. No note when nothing was excluded (full
+    ///      exploration) or for non-`.tca` carriers.
+    ///   2. **Coverage stamp (all carriers).** Stamp `excludedActionCount`
+    ///      on every result so the discover-side fold can gate the cycle-135
+    ///      Finding-G pin-overrule on *full* coverage.
+    ///      `excludedCaseNames` is `0` for non-`.tca` CaseIterable reducers
+    ///      and all-constructible `.tca` reducers (full coverage), and `> 0`
+    ///      only for genuinely relaxed `.tca` exploration.
     static func foldPartialExplorationDisclosure(
         _ result: InteractionVerifyOutcomeParser.Result,
         candidate: ReducerCandidate
     ) -> InteractionVerifyOutcomeParser.Result {
-        guard candidate.carrierKind == .tca else { return result }
         let excluded = ActionSequenceStubEmitter.excludedCaseNames(candidate)
-        guard !excluded.isEmpty else { return result }
-        let total = candidate.actionCases.count
-        let note = "partial exploration: explored \(total - excluded.count) of \(total) "
-            + "action types (excluded: \(excluded.joined(separator: ", ")))"
-        let detail = result.detail.map { "\($0) | \(note)" } ?? note
+        var note: String?
+        if candidate.carrierKind == .tca, !excluded.isEmpty {
+            let total = candidate.actionCases.count
+            note = "partial exploration: explored \(total - excluded.count) of \(total) "
+                + "action types (excluded: \(excluded.joined(separator: ", ")))"
+        }
+        let detail: String?
+        if let note {
+            detail = result.detail.map { "\($0) | \(note)" } ?? note
+        } else {
+            detail = result.detail
+        }
         return InteractionVerifyOutcomeParser.Result(
             outcome: result.outcome,
             totalRuns: result.totalRuns,
             cleanRuns: result.cleanRuns,
             detail: detail,
-            failingSequenceIndex: result.failingSequenceIndex
+            failingSequenceIndex: result.failingSequenceIndex,
+            excludedActionCount: excluded.count
         )
     }
 }

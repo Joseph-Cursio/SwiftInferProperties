@@ -69,6 +69,20 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
     /// `nil` when the outcome carries no extra detail.
     public let detail: String?
 
+    /// Cycle 136 — the number of Action cases the verify run could NOT
+    /// explore (non-constructible composition cases under Phase B's relaxed
+    /// exploration). `0` means **full action-space coverage**; `> 0` means a
+    /// partial exploration; `nil` means coverage was not recorded (legacy
+    /// evidence written before cycle 136 — treated conservatively as *not*
+    /// full coverage). This is the gate for the cycle-135 Finding-G
+    /// pin-overrule: a measured `bothPass` overrules the cardinality /
+    /// biconditional `.possible` pin **only** when `excludedActionCount == 0`
+    /// (see `InteractionVerifyEvidenceScoring`). Optional so old
+    /// `verify-evidence.json` files decode unchanged (synthesized Codable
+    /// uses `decodeIfPresent`/`encodeIfPresent` for optionals — no schema
+    /// bump).
+    public let excludedActionCount: Int?
+
     /// Wall-clock time the verify run completed. ISO8601-encoded in
     /// JSON for human readability + cross-platform parsing.
     public let capturedAt: Date
@@ -84,7 +98,8 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         outcome: VerifyEvidenceOutcome,
         detail: String?,
         capturedAt: Date,
-        swiftInferVersion: String
+        swiftInferVersion: String,
+        excludedActionCount: Int? = nil
     ) {
         self.identityHash = identityHash
         self.template = template
@@ -92,6 +107,7 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         self.detail = detail
         self.capturedAt = capturedAt
         self.swiftInferVersion = swiftInferVersion
+        self.excludedActionCount = excludedActionCount
     }
 }
 

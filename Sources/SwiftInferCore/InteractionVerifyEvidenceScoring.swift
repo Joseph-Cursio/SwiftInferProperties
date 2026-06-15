@@ -15,9 +15,14 @@ import Foundation
 ///   apply `Tier.promoted(byVerifyOutcome:)`. For idempotence this lifts a
 ///   `.likely` pick (score 40) to `.verified` (40 + 50 = 90 → `.strong` →
 ///   `.verified`). For a `swiftProjectLintDeferral` family (cardinality,
-///   biconditional) the gate pins `.possible` regardless of evidence — a
-///   representable-illegal-state refactor smell never promotes off
-///   `.possible`, even when measured.
+///   biconditional) the gate pins `.possible` — **except** when a measured
+///   bothPass is established at **full action-space coverage**
+///   (`excludedActionCount == 0`): the cycle-135 pin-overrule then promotes
+///   via the ungated tier (30 + 50 = 80 → `.strong` → `.verified`) and
+///   discloses the overrule. A *partial* bothPass (or legacy `nil`
+///   coverage) keeps the `.possible` pin — the family's failure mode lives
+///   in the excluded composition actions, so partial coverage is biased
+///   toward false-pass (cycle 135).
 /// - `.measuredDefaultFails` → collapse to `.suppressed`; discover drops
 ///   it. An executed counterexample is not a heuristic guess — the same
 ///   precision argument that backs the algebraic veto (cycle 63).
@@ -45,14 +50,7 @@ public enum InteractionVerifyEvidenceScoring {
             }
             switch evidence.outcome {
             case .measuredBothPass:
-                let newScore = suggestion.score + VerifyEvidenceScoring.verifyBothPassWeight
-                let gatedTier = suggestion.family.tier(forScore: newScore)
-                return suggestion.with(
-                    score: newScore,
-                    tier: gatedTier.promoted(byVerifyOutcome: .measuredBothPass),
-                    whySuggested: suggestion.whySuggested
-                        + ["Verify: bothPass — \(evidence.detail ?? "property held at execution")"]
-                )
+                return gradedForBothPass(suggestion, evidence: evidence)
 
             case .measuredDefaultFails:
                 return suggestion.with(
@@ -65,5 +63,38 @@ public enum InteractionVerifyEvidenceScoring {
                 return suggestion
             }
         }
+    }
+
+    /// The `measuredBothPass` arm, extracted (keeps the `applied` closure
+    /// under SwiftLint's `closure_body_length` cap). Adds the +50 weight,
+    /// then resolves the tier through the Finding-G gate **with the cycle-135
+    /// full-coverage pin-overrule**: a gated family (cardinality /
+    /// biconditional) is normally clamped to `.possible` by
+    /// `tier(forScore:)`, but a measured `bothPass` at **full action-space
+    /// coverage** (`excludedActionCount == 0`) is sound per-candidate proof
+    /// the reducer enforces the invariant itself, so it overrules the pin and
+    /// promotes via the *ungated* tier. A partial bothPass (or legacy `nil`
+    /// coverage) keeps the clamp — the failure mode lives in the excluded
+    /// composition actions, so partial coverage is biased toward false-pass.
+    /// Static score alone never overrules (this path is measured-evidence
+    /// only). Non-gated families are unaffected (`gatedTier == ungatedTier`).
+    private static func gradedForBothPass(
+        _ suggestion: InteractionInvariantSuggestion,
+        evidence: VerifyEvidence
+    ) -> InteractionInvariantSuggestion {
+        let newScore = suggestion.score + VerifyEvidenceScoring.verifyBothPassWeight
+        let gatedTier = suggestion.family.tier(forScore: newScore)
+        let overruled = suggestion.family.swiftProjectLintDeferral != nil
+            && evidence.excludedActionCount == 0
+        let effectiveTier = overruled ? Tier(score: newScore) : gatedTier
+        let note = "Verify: bothPass — " + (evidence.detail ?? "property held at execution")
+            + (overruled
+                ? " (Finding-G pin overruled by full-coverage measured execution — 0 excluded actions)"
+                : "")
+        return suggestion.with(
+            score: newScore,
+            tier: effectiveTier.promoted(byVerifyOutcome: .measuredBothPass),
+            whySuggested: suggestion.whySuggested + [note]
+        )
     }
 }

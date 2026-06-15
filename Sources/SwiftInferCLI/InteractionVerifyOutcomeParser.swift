@@ -39,18 +39,28 @@ public enum InteractionVerifyOutcomeParser {
         /// the first marker (e.g., a crash in generator construction).
         public let failingSequenceIndex: Int?
 
+        /// Cycle 136 — Action cases excluded from exploration (Phase B
+        /// non-constructible composition cases). `0` = full coverage;
+        /// `nil` = not yet stamped (pre-`foldPartialExplorationDisclosure`).
+        /// Stamped in `executeAndParse` and carried into
+        /// `VerifyEvidence.excludedActionCount` so the discover-side fold can
+        /// gate the cycle-135 Finding-G pin-overrule on full coverage.
+        public let excludedActionCount: Int?
+
         public init(
             outcome: VerifyEvidenceOutcome,
             totalRuns: Int? = nil,
             cleanRuns: Int? = nil,
             detail: String? = nil,
-            failingSequenceIndex: Int? = nil
+            failingSequenceIndex: Int? = nil,
+            excludedActionCount: Int? = nil
         ) {
             self.outcome = outcome
             self.totalRuns = totalRuns
             self.cleanRuns = cleanRuns
             self.detail = detail
             self.failingSequenceIndex = failingSequenceIndex
+            self.excludedActionCount = excludedActionCount
         }
     }
 
