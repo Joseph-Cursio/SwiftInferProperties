@@ -33,28 +33,38 @@ struct TCAVerifyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        // The real witness detector surfaces 5 idempotence identities across
-        // the two real @Reducer reducers (NavFeature: dismiss/close/hide;
-        // EditorFeature: close/setBadge) and measured verify splits them.
-        #expect(summary.contains("Identities: 5 (--family idempotence)"))
-        #expect(summary.contains("Summary: 4 measured-bothPass, 1 measured-defaultFails"))
+        // The real witness detector surfaces idempotence witnesses across the
+        // four real @Reducer reducers (NavFeature: dismiss/close/hide;
+        // EditorFeature: close/setBadge; SelectionFeature: select/selectFirst/
+        // showDetail; SettingsFeature: setEnabled/cancel) and measured verify
+        // splits them — only setBadge (the set* false positive) fails.
+        #expect(summary.contains("Identities: 10 (--family idempotence)"))
+        #expect(summary.contains("Summary: 9 measured-bothPass, 1 measured-defaultFails"))
         // The deliberate set* false positive is disproven by execution.
         #expect(summary.contains("[measured-defaultFails]            EditorFeature.body"))
         #expect(summary.contains(".setBadge"))
-        // Phase B: EditorFeature's mixed Action discloses the excluded case
-        // on every verdict; NavFeature's all-payload-free Action does not
-        // (full exploration — no caveat).
-        #expect(summary.contains("explored 4 of 5 action types (excluded: received)"))
-        let lines = summary.split(separator: "\n")
-        #expect(lines.filter { $0.contains("EditorFeature.body") }
-            .allSatisfy { $0.contains("partial exploration") })
-        #expect(lines.filter { $0.contains("NavFeature.body") }
-            .allSatisfy { !$0.contains("partial") })
+        // A set* TRUE positive (SettingsFeature.setEnabled → enabled = true)
+        // verifies bothPass — the mirror of EditorFeature.setBadge's set*
+        // FALSE positive; execution distinguishes them.
+        #expect(summary.contains("[measured-bothPass]") && summary.contains(".setEnabled"))
 
-        // Evidence harvested for all 5; 4 bothPass survive.
+        // Phase B: the MIXED reducers (EditorFeature, SettingsFeature)
+        // disclose their excluded case on every verdict; the all-payload-free
+        // reducers (NavFeature, SelectionFeature) do not (full exploration).
+        #expect(summary.contains("explored 4 of 5 action types (excluded: received)"))
+        #expect(summary.contains("explored 4 of 5 action types (excluded: sync)"))
+        let lines = summary.split(separator: "\n")
+        for mixed in ["EditorFeature.body", "SettingsFeature.body"] {
+            #expect(lines.filter { $0.contains(mixed) }.allSatisfy { $0.contains("partial") })
+        }
+        for full in ["NavFeature.body", "SelectionFeature.body"] {
+            #expect(lines.filter { $0.contains(full) }.allSatisfy { !$0.contains("partial") })
+        }
+
+        // Evidence harvested for all 10; 9 bothPass survive.
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 5)
-        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 4)
+        #expect(stored.log.records.count == 10)
+        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 9)
         #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
 
         // Payoff: discover reads the evidence — the 4 survivors render
