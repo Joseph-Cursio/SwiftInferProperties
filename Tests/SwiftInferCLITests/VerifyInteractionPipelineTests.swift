@@ -89,6 +89,55 @@ struct VerifyInteractionPipelineTests {
         #expect(resolved.enclosingTypeName == "Inbox")
     }
 
+    // MARK: - resolveCandidate — cycle-117 exact qualified-name preference
+
+    @Test("a free-function `reduce` pin resolves to the free function, not the same-named methods")
+    func freeFunctionPinDisambiguates() throws {
+        // The cycle-116 finding: a free `reduce` (qualifiedName == "reduce")
+        // alongside `Foo.reduce` / `Bar.reduce` was unresolvable because the
+        // lenient match matched all three. Exact qualifiedName preference
+        // now picks the free function.
+        let candidates = [
+            candidate(functionName: "reduce", enclosingTypeName: "Foo", carrierKind: .generic),
+            candidate(functionName: "reduce"),  // free function → qualifiedName "reduce"
+            candidate(functionName: "reduce", enclosingTypeName: "Bar", carrierKind: .generic)
+        ]
+        let resolved = try VerifyInteractionPipeline.resolveCandidate(
+            candidates: candidates,
+            pinRaw: "reduce"
+        )
+        #expect(resolved.enclosingTypeName == nil)
+        #expect(resolved.qualifiedName == "reduce")
+    }
+
+    @Test("a fully-qualified pin resolves via exact match even when a free function shares the name")
+    func qualifiedPinResolvesAlongsideFreeFunction() throws {
+        let candidates = [
+            candidate(functionName: "reduce"),  // free `reduce`
+            candidate(functionName: "reduce", enclosingTypeName: "Foo", carrierKind: .generic)
+        ]
+        let resolved = try VerifyInteractionPipeline.resolveCandidate(
+            candidates: candidates,
+            pinRaw: "Foo.reduce"
+        )
+        #expect(resolved.enclosingTypeName == "Foo")
+    }
+
+    @Test("bare-name convenience is preserved: `body` still resolves `Inbox.body` via the lenient fallback")
+    func bareNameConvenienceStillWorks() throws {
+        // No candidate's qualifiedName equals "body" (it's "Inbox.body"), so
+        // exact-match misses and the lenient functionName match resolves it —
+        // the existing `--reducer body` ergonomic is untouched.
+        let candidates = [
+            candidate(functionName: "body", enclosingTypeName: "Inbox", carrierKind: .generic)
+        ]
+        let resolved = try VerifyInteractionPipeline.resolveCandidate(
+            candidates: candidates,
+            pinRaw: "body"
+        )
+        #expect(resolved.enclosingTypeName == "Inbox")
+    }
+
     @Test("pin matching zero candidates throws noMatchingReducer")
     func pinNoMatchThrows() {
         let candidates = [candidate(functionName: "reduce")]

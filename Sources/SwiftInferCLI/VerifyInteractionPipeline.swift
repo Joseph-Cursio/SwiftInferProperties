@@ -213,6 +213,24 @@ public enum VerifyInteractionPipeline {
         pinRaw: String?
     ) throws -> ReducerCandidate {
         if let pinRaw {
+            // Cycle 117 — prefer an exact qualified-name match before the
+            // lenient `(functionName, optional typeName)` pin match. A
+            // free-function reducer's qualifiedName is its bare function
+            // name (e.g. `reduce`), which the lenient match also matches
+            // against every same-named *method* — so a free `reduce`
+            // alongside `Foo.reduce` is otherwise unresolvable (the
+            // cycle-116 finding the `--all` survey hit). An exact
+            // qualifiedName hit disambiguates the free function (and
+            // resolves any fully-qualified pin directly). Falling through
+            // to the lenient match preserves the bare-name convenience
+            // (`--reducer body` → `Inbox.body`) and the correct
+            // ambiguous-pin error for same-named methods, since their
+            // qualifiedNames carry the type prefix and so never exact-match
+            // a bare pin.
+            let exact = candidates.filter { $0.qualifiedName == pinRaw }
+            if exact.count == 1 {
+                return exact[0]
+            }
             let pin = try ReducerPin.parse(pinRaw)
             let matched = candidates.filter { pin.matches($0) }
             switch matched.count {

@@ -47,9 +47,9 @@ struct IdempotenceSurveyCorpusTests {
             "TCAFeatureReducer.reduce .task",
             "TCAFeatureReducer.reduce .delegate",
             "TCAFeatureReducer.reduce .binding",
-            // cycle 116 — Elm-style free-function carrier (uniquely named
-            // so it's pin-resolvable; see ElmCounter.swift)
-            "reduceElmCounter .refresh"
+            // cycle 116 — Elm-style free-function carrier, named `reduce`
+            // (cycle-117 pin fix makes the bare free-function name resolvable)
+            "reduce .refresh"
         ]
         #expect(found == expected)
 
