@@ -101,86 +101,10 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains("_ = reduce(&state, action)"))
     }
 
-    @Test("Cycle 122 — `.tca` with a payload-bearing Action (no case list) throws tcaActionNotEnumerable")
-    func tcaWithoutCaseListIsRejected() {
-        // Empty actionCaseNames is the discovery signal for "Action has a
-        // payload case (or none found)" — Phase A can't enumerate it.
-        let captured = candidate(
-            enclosingTypeName: "Counter",
-            functionName: "body",
-            signatureShape: .inoutStateActionReturnsEffect,
-            stateTypeName: "Counter.State",
-            actionTypeName: "Counter.Action",
-            carrierKind: .tca,
-            actionCaseNames: []
-        )
-        #expect(
-            throws: ActionSequenceStubEmitter.EmitError
-                .tcaActionNotEnumerable(actionType: "Counter.Action")
-        ) {
-            _ = try ActionSequenceStubEmitter.emit(inputs(captured))
-        }
-    }
-
-    @Test("Cycle 122 — `.tca` with a payload-free case list emits the instance-relative TCA shape")
-    func tcaWithCaseListEmitsInstanceInvocation() throws {
-        let captured = candidate(
-            enclosingTypeName: "Counter",
-            functionName: "body",
-            signatureShape: .inoutStateActionReturnsEffect,
-            stateTypeName: "Counter.State",
-            actionTypeName: "Counter.Action",
-            carrierKind: .tca,
-            actionCaseNames: ["increment", "decrement", "closeMenu"]
-        )
-        let source = try ActionSequenceStubEmitter.emit(inputs(captured))
-        // 1. CA import (not `import <userModule>` — corpus is co-compiled).
-        #expect(source.contains("import ComposableArchitecture"))
-        // 2. explicit-case generator from the captured list (not forCaseIterable).
-        #expect(source.contains(
-            "Gen.element(of: [Counter.Action.increment, Counter.Action.decrement, "
-                + "Counter.Action.closeMenu])"
-        ))
-        #expect(!source.contains("forCaseIterable"))
-        // 3. instance setup + instance-relative invocation.
-        #expect(source.contains("let reducer = Counter()"))
-        #expect(source.contains("_ = reducer.reduce(into: &state, action: action)"))
-    }
-
-    @Test("Cycle 122 — `.tca` idempotence check double-applies the witness through the instance")
-    func tcaIdempotenceUsesInstance() throws {
-        let captured = candidate(
-            enclosingTypeName: "Counter",
-            functionName: "body",
-            signatureShape: .inoutStateActionReturnsEffect,
-            stateTypeName: "Counter.State",
-            actionTypeName: "Counter.Action",
-            carrierKind: .tca,
-            actionCaseNames: ["increment", "closeMenu"]
-        )
-        let invariant = InteractionInvariantSuggestion(
-            identity: SuggestionIdentity(canonicalInput: "idempotence|Counter.body|.closeMenu"),
-            family: .idempotence,
-            reducerQualifiedName: "Counter.body",
-            reducerLocation: "Sources/App/Counter.swift:1",
-            stateTypeName: "Counter.State",
-            actionTypeName: "Counter.Action",
-            predicate: ".closeMenu",
-            score: 40,
-            tier: .likely,
-            whySuggested: [],
-            whyMightBeWrong: [],
-            firstSeenAt: Date(timeIntervalSince1970: 1_700_000_000)
-        )
-        let source = try ActionSequenceStubEmitter.emit(ActionSequenceStubEmitter.Inputs(
-            candidate: captured,
-            userModuleName: "App",
-            invariant: invariant
-        ))
-        #expect(source.contains("_ = reducer.reduce(into: &once, action: .closeMenu)"))
-        #expect(source.contains("_ = reducer.reduce(into: &twice, action: .closeMenu)"))
-        #expect(source.contains("precondition(once == twice"))
-    }
+    // Cycle 122 — `.tca` carrier emitter tests live in
+    // ActionSequenceStubEmitterTCATests.swift (own file, per the
+    // ReducerDiscovererTCATests split; keeps this struct under the
+    // type_body_length cap).
 
     // MARK: - Imports
 

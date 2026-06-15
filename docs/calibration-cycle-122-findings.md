@@ -1,14 +1,21 @@
 # Calibration cycle 122 — `.tca` carrier epic, Phase A spike (verify a real TCA reducer)
 
-> **STATUS: SPIKE VALIDATED → WIRING.** A throwaway hand-built spike drove a
-> real internal `@Reducer` + `@ObservableState` reducer (the exact
-> `tca-25-discovery` shape) to **`measured-bothPass` end-to-end**, proving
-> all five scoped blockers are clearable — and surfacing **three new
-> blockers** the static scope (cycle 121 / cycle 122 scoping) missed, one of
-> which (Testing.framework runtime linking) would have silently sunk a naive
-> implementation. Records the validated approach + the direct-source-inclusion
-> architecture decision before wiring Phase A into the emitter/pipeline.
-> Captured 2026-06-14.
+> **STATUS: SHIPPED (v1.126.0).** A throwaway spike drove a real internal
+> `@Reducer` + `@ObservableState` reducer (the exact `tca-25-discovery`
+> shape) to `measured-bothPass` by hand — proving the five scoped blockers
+> clearable and surfacing three the static scope missed — and Phase A was
+> then wired into the production pipeline in four commits + a capstone
+> `.subprocess` test (`TCACarrierMeasuredTests`, ~75s). `verify-interaction`
+> now builds + runs a real payload-free TCA `@Reducer` end-to-end. Captured
+> 2026-06-14.
+>
+> **Wiring summary:** (1) discovery captures `ReducerCandidate.actionCaseNames`
+> (payload-free, withheld if any payload case); (2) the emitter's `.tca` path
+> (CA import, explicit-case generator, instance-relative invocation);
+> (3) `VerifierWorkdir.interactionTCA` (CA dep + direct source inclusion,
+> stub → `Verifier.swift`); (4) the capstone test. Blocker #6
+> (Testing.framework) needed no code — cycle-110's `DYLD_FRAMEWORK_PATH`
+> injection already covers it. Suite green (3203).
 
 ## Why a spike first
 
