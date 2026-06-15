@@ -82,16 +82,28 @@ public enum VerifierWorkdir {
         /// stub doesn't import them).
         public let mode: WorkdirMode
 
+        /// Cycle 122 (Phase A) — corpus sources to compile **into** the
+        /// verifier target (direct source inclusion), used by the
+        /// `.interactionTCA` path so a real `internal` TCA reducer is
+        /// visible without `import`/`@testable`. Empty (the default) keeps
+        /// the v1.42 path-dependency model: the stub is `main.swift` and
+        /// the user package is referenced via `userPackage`. Non-empty:
+        /// the stub is `Verifier.swift` (avoids the `@main` + `main.swift`
+        /// top-level-code conflict) and each file is written alongside it.
+        public let inlinedSources: [CorpusPackager.SourceFile]
+
         public init(
             workdir: URL,
             userPackage: UserPackageReference?,
             stubSource: String,
-            mode: WorkdirMode = .algebraic
+            mode: WorkdirMode = .algebraic,
+            inlinedSources: [CorpusPackager.SourceFile] = []
         ) {
             self.workdir = workdir
             self.userPackage = userPackage
             self.stubSource = stubSource
             self.mode = mode
+            self.inlinedSources = inlinedSources
         }
     }
 
@@ -112,14 +124,28 @@ public enum VerifierWorkdir {
             withIntermediateDirectories: true
         )
         let packagePath = inputs.workdir.appendingPathComponent("Package.swift")
-        let mainPath = sourcesDir.appendingPathComponent("main.swift")
+        // Cycle 122 — with co-compiled corpus sources, the stub can't be
+        // `main.swift` (the `@main` + top-level-code conflict); name it
+        // `Verifier.swift`. Without inlined sources, keep the v1.42
+        // `main.swift` shape.
+        let stubFileName = inputs.inlinedSources.isEmpty ? "main.swift" : "Verifier.swift"
+        let stubPath = sourcesDir.appendingPathComponent(stubFileName)
         let packageSource = renderPackageSwift(
             userPackage: inputs.userPackage,
             mode: inputs.mode
         )
         try packageSource.write(to: packagePath, atomically: true, encoding: .utf8)
-        try inputs.stubSource.write(to: mainPath, atomically: true, encoding: .utf8)
-        return mainPath
+        try inputs.stubSource.write(to: stubPath, atomically: true, encoding: .utf8)
+        // Direct source inclusion — write each corpus file into the same
+        // target so `internal` reducer/State/Action types are in-module.
+        for source in inputs.inlinedSources {
+            try source.contents.write(
+                to: sourcesDir.appendingPathComponent(source.name),
+                atomically: true,
+                encoding: .utf8
+            )
+        }
+        return stubPath
     }
 
     // MARK: - Package.swift rendering
@@ -207,6 +233,19 @@ public enum VerifierWorkdir {
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
                 ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")"
             ]
+
+        case .interactionTCA:
+            // Cycle 122 — interaction deps + TCA. The corpus is compiled
+            // into the verifier target (direct source inclusion), so there
+            // is no user-package path dependency — just CA for the macros
+            // and runtime the co-compiled reducer needs.
+            entries = [
+                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")",
+                ".package(url: "
+                    + "\"https://github.com/pointfreeco/swift-composable-architecture.git\", "
+                    + "from: \"1.15.0\")"
+            ]
         }
         if let userPackage {
             entries.append(".package(path: \(escapedLiteral(userPackage.packagePath.path)))")
@@ -241,6 +280,14 @@ public enum VerifierWorkdir {
             entries = [
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
                 ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"
+            ]
+
+        case .interactionTCA:
+            entries = [
+                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
+                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
+                ".product(name: \"ComposableArchitecture\", "
+                    + "package: \"swift-composable-architecture\")"
             ]
         }
         if let userPackage {
@@ -285,4 +332,10 @@ public enum VerifierWorkdir {
 public enum WorkdirMode: String, Sendable, Equatable, Codable, CaseIterable {
     case algebraic
     case interaction
+    /// Cycle 122 (Phase A) — the interaction shape plus
+    /// swift-composable-architecture (so the co-compiled corpus reducer +
+    /// the stub's `import ComposableArchitecture` resolve). Paired with
+    /// `Inputs.inlinedSources` (direct source inclusion); no user-package
+    /// path dependency.
+    case interactionTCA = "interaction-tca"
 }

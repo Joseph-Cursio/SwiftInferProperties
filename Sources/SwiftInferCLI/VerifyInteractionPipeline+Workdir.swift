@@ -24,6 +24,17 @@ extension VerifyInteractionPipeline {
         }
     }
 
+    /// Cycle 122 (Phase A) — the corpus's source directory
+    /// (`<workingDirectory>/Sources/<target>`), the same layout
+    /// `resolveAndEmit` discovers from. Passed to `executeAndParse` so a
+    /// `.tca` build can co-compile those sources into the verifier target
+    /// (direct source inclusion). Non-`.tca` builds ignore it.
+    static func corpusSourceDirectory(target: String, workingDirectory: URL) -> URL {
+        workingDirectory
+            .appendingPathComponent("Sources")
+            .appendingPathComponent(target)
+    }
+
     /// Filename-safe workdir segment from the candidate's qualified
     /// name (`.` → `_`, so `Inbox.body` → `Inbox_body`). Cycle 120:
     /// a non-nil `identity` (the invariant's normalized 16-char hash)

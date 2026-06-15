@@ -76,6 +76,43 @@ struct VerifierWorkdirTests {
         #expect(written == "// second")
     }
 
+    @Test("Cycle 122 — .interactionTCA direct source inclusion: Verifier.swift + co-compiled corpus")
+    func tcaDirectSourceInclusion() throws {
+        let workdir = try makeTempDirectory()
+        defer { cleanUp(workdir) }
+        let stubPath = try VerifierWorkdir.synthesize(VerifierWorkdir.Inputs(
+            workdir: workdir,
+            userPackage: nil,
+            stubSource: "// @main stub",
+            mode: .interactionTCA,
+            inlinedSources: [
+                .init(name: "Counter.swift", contents: "// reducer source")
+            ]
+        ))
+        // Stub is Verifier.swift (NOT main.swift) so @main + the co-compiled
+        // corpus don't trip the top-level-code conflict.
+        #expect(stubPath.path.hasSuffix("Sources/SwiftInferVerifier/Verifier.swift"))
+        let corpus = workdir
+            .appendingPathComponent("Sources/SwiftInferVerifier/Counter.swift")
+        #expect(FileManager.default.fileExists(atPath: corpus.path))
+        #expect(try String(contentsOf: corpus, encoding: .utf8) == "// reducer source")
+        // No main.swift written.
+        let mainPath = workdir.appendingPathComponent("Sources/SwiftInferVerifier/main.swift")
+        #expect(!FileManager.default.fileExists(atPath: mainPath.path))
+    }
+
+    @Test("Cycle 122 — .interactionTCA Package.swift declares ComposableArchitecture, no user path dep")
+    func tcaPackageDeclaresCA() {
+        let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil, mode: .interactionTCA)
+        #expect(rendered.contains("swift-composable-architecture"))
+        #expect(rendered.contains(
+            ".product(name: \"ComposableArchitecture\", package: \"swift-composable-architecture\")"
+        ))
+        #expect(rendered.contains(".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"))
+        // Direct source inclusion → no `.package(path:)` user dependency.
+        #expect(!rendered.contains(".package(path:"))
+    }
+
     // MARK: - renderPackageSwift(...)
 
     @Test("Package.swift without user package depends only on the kit deps")
@@ -169,6 +206,7 @@ struct VerifierWorkdirTests {
     func workdirModeRawValues() {
         #expect(WorkdirMode.algebraic.rawValue == "algebraic")
         #expect(WorkdirMode.interaction.rawValue == "interaction")
-        #expect(WorkdirMode.allCases.count == 2)
+        #expect(WorkdirMode.interactionTCA.rawValue == "interaction-tca")
+        #expect(WorkdirMode.allCases.count == 3)
     }
 }

@@ -91,7 +91,8 @@ public enum VerifyInteractionPipeline {
             candidate: candidate,
             stubSource: stubSource,
             userModuleName: resolvedModuleName,
-            workingDirectory: workingDirectory
+            workingDirectory: workingDirectory,
+            corpusSourceDirectory: corpusSourceDirectory(target: target, workingDirectory: workingDirectory)
         )
         // V2.0 M8.C — on `.measuredDefaultFails`, persist a @Test-shape
         // regression file under `Tests/Generated/SwiftInferTraces/`.
@@ -162,7 +163,8 @@ public enum VerifyInteractionPipeline {
             candidate: candidate,
             stubSource: stubSource,
             userModuleName: userModuleName ?? target,
-            workingDirectory: workingDirectory
+            workingDirectory: workingDirectory,
+            corpusSourceDirectory: corpusSourceDirectory(target: target, workingDirectory: workingDirectory)
             // Cycle 120 m4 — reducer-keyed workdir (identity omitted). The
             // survey parallelizes *across* reducers but runs one reducer's
             // sibling identities serially in this shared warm workdir, so
@@ -254,24 +256,40 @@ public enum VerifyInteractionPipeline {
         stubSource: String,
         userModuleName: String,
         workingDirectory: URL,
-        identity: String? = nil
+        identity: String? = nil,
+        corpusSourceDirectory: URL? = nil
     ) throws -> InteractionVerifyOutcomeParser.Result {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
         let workdir = packageRoot
             .appendingPathComponent(".swiftinfer")
             .appendingPathComponent("verify-interaction-workdir")
             .appendingPathComponent(workdirSegment(for: candidate, identity: identity))
-        let userPackage = VerifierWorkdir.UserPackageReference(
-            packagePath: packageRoot,
-            packageDeclaredName: userModuleName,
-            productNames: [userModuleName]
-        )
-        let workdirInputs = VerifierWorkdir.Inputs(
-            workdir: workdir,
-            userPackage: userPackage,
-            stubSource: stubSource,
-            mode: .interaction
-        )
+        // Cycle 122 (Phase A) — `.tca` carriers build via direct source
+        // inclusion (corpus co-compiled into the verifier target so its
+        // `internal` types resolve) + a CA-bearing package. Other carriers
+        // keep the v1.42 path-dependency model.
+        let workdirInputs: VerifierWorkdir.Inputs
+        if candidate.carrierKind == .tca, let corpusSourceDirectory {
+            workdirInputs = VerifierWorkdir.Inputs(
+                workdir: workdir,
+                userPackage: nil,
+                stubSource: stubSource,
+                mode: .interactionTCA,
+                inlinedSources: (try? CorpusPackager.readSwiftSources(in: corpusSourceDirectory)) ?? []
+            )
+        } else {
+            let userPackage = VerifierWorkdir.UserPackageReference(
+                packagePath: packageRoot,
+                packageDeclaredName: userModuleName,
+                productNames: [userModuleName]
+            )
+            workdirInputs = VerifierWorkdir.Inputs(
+                workdir: workdir,
+                userPackage: userPackage,
+                stubSource: stubSource,
+                mode: .interaction
+            )
+        }
         _ = try VerifierWorkdir.synthesize(workdirInputs)
 
         let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
