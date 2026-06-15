@@ -8,17 +8,17 @@ import SwiftInferCore
 /// `verify-interaction` runs — feeding `verify-evidence.json` so a later
 /// `discover-interaction` surfaces the survivors at `.verified`.
 ///
-/// **Bounded-parallel (cycle 120).** The fan-out builds up to
-/// `maxParallel` identities concurrently (`withTaskGroup`, mirroring the
-/// algebraic `--all-from-index` survey). Three pieces make it safe:
-/// milestone 1's per-invariant workdir (`workdirSegment(for:identity:)`)
-/// so sibling identities on one reducer no longer share a `.build/`;
-/// milestone 2's `persistEvidence: false` + single batch write so
-/// concurrent verifies can't lose records to interleaved
-/// read-modify-writes; and a re-sort to discovery order so output stays
-/// deterministic despite nondeterministic completion. Each task is a real
-/// `swift build`, so the cap is conservative (default 4) — concurrent
-/// builds contend for cores.
+/// **Reducer-grouped bounded-parallel (cycle 120).** Up to `maxParallel`
+/// *reducer groups* build concurrently (`withTaskGroup`, drain-and-refill
+/// like the algebraic `--all-from-index` survey); a group's sibling
+/// identities run serially in one shared reducer-keyed workdir so the 2nd+
+/// rebuilds only the changed stub (warm `.build/` reuse — the speedup
+/// lever m4 added after the m1–m3 per-invariant fan-out showed no
+/// wall-clock gain). Safe + deterministic via: distinct groups touch
+/// distinct workdirs (no concurrent clobber); m2's `persistEvidence: false`
+/// + single batch write (no lost records); and a re-sort to discovery
+/// order (stable output despite nondeterministic completion). Each task
+/// is real `swift build`s, so the cap is conservative (default 4).
 enum VerifyInteractionSurvey {
 
     /// One surveyed identity + its measured outcome.
@@ -97,38 +97,62 @@ enum VerifyInteractionSurvey {
         return render(target: target, family: family, entries: entries)
     }
 
-    /// Cycle 120 — bounded-parallel fan-out over the selected identities
-    /// (mirrors the algebraic `runParallelSurvey`: prime `parallelism`
-    /// tasks, then drain-and-refill). Each identity now builds in its own
-    /// per-invariant workdir (milestone 1) and suppresses per-call
-    /// recording (milestone 2), so the concurrency is safe. Task
-    /// completion order is nondeterministic, so results are re-sorted to
-    /// discovery order before return — the rendered summary and the
-    /// batch-record order stay deterministic regardless of build timing.
+    /// One identity tagged with its discovery position, so completion in
+    /// any order can be re-sorted back to a deterministic render order.
+    private typealias IndexedSuggestion = (index: Int, suggestion: InteractionInvariantSuggestion)
+
+    /// Cycle 120 m4 — reducer-grouped bounded-parallel fan-out. The unit
+    /// of parallelism is a *reducer group*, not a single identity: groups
+    /// run concurrently (bounded by `parallelism`, drain-and-refill like
+    /// the algebraic survey), but a group's identities run serially in one
+    /// shared reducer-keyed workdir. That keeps the warm-`.build/` reuse
+    /// the old serial path had (sibling identities rebuild only the changed
+    /// stub) while still parallelizing distinct reducers. Distinct groups
+    /// touch distinct workdirs, so no concurrent build clobbers another.
+    /// Results carry their discovery index and are re-sorted before return,
+    /// so the summary + batch-record order stay deterministic.
     private static func runSurvey(
         selected: [InteractionInvariantSuggestion],
         context: RunContext,
         parallelism: Int
     ) async -> [Entry] {
+        let groups = groupByReducer(selected)
         var collected: [(index: Int, entry: Entry)] = []
-        await withTaskGroup(of: (index: Int, entry: Entry).self) { group in
+        await withTaskGroup(of: [(index: Int, entry: Entry)].self) { group in
             var inFlight = 0
-            var nextIndex = 0
+            var nextGroup = 0
             func submitNext() {
-                let index = nextIndex
-                let suggestion = selected[index]
-                nextIndex += 1
+                let items = groups[nextGroup]
+                nextGroup += 1
                 inFlight += 1
-                group.addTask { (index, surveyOne(suggestion: suggestion, context: context)) }
+                group.addTask {
+                    items.map { ($0.index, surveyOne(suggestion: $0.suggestion, context: context)) }
+                }
             }
-            while nextIndex < selected.count, inFlight < parallelism { submitNext() }
+            while nextGroup < groups.count, inFlight < parallelism { submitNext() }
             while let done = await group.next() {
                 inFlight -= 1
-                collected.append(done)
-                if nextIndex < selected.count { submitNext() }
+                collected.append(contentsOf: done)
+                if nextGroup < groups.count { submitNext() }
             }
         }
         return collected.sorted { $0.index < $1.index }.map(\.entry)
+    }
+
+    /// Partition identities by reducer, preserving first-appearance order
+    /// for both the groups and the identities within each — so the survey
+    /// is deterministic and the re-sort restores exact discovery order.
+    private static func groupByReducer(
+        _ selected: [InteractionInvariantSuggestion]
+    ) -> [[IndexedSuggestion]] {
+        var order: [String] = []
+        var byReducer: [String: [IndexedSuggestion]] = [:]
+        for (index, suggestion) in selected.enumerated() {
+            let key = suggestion.reducerQualifiedName
+            if byReducer[key] == nil { order.append(key) }
+            byReducer[key, default: []].append((index, suggestion))
+        }
+        return order.map { byReducer[$0]! }
     }
 
     /// Per-identity worker. Runs the full measured verify; maps any thrown

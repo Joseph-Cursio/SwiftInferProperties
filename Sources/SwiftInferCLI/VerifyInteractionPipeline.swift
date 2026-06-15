@@ -162,10 +162,13 @@ public enum VerifyInteractionPipeline {
             candidate: candidate,
             stubSource: stubSource,
             userModuleName: userModuleName ?? target,
-            workingDirectory: workingDirectory,
-            // Cycle 120 — per-invariant workdir so a parallel survey
-            // can run sibling identities on this reducer concurrently.
-            identity: invariant.identity.normalized
+            workingDirectory: workingDirectory
+            // Cycle 120 m4 — reducer-keyed workdir (identity omitted). The
+            // survey parallelizes *across* reducers but runs one reducer's
+            // sibling identities serially in this shared warm workdir, so
+            // the 2nd+ identity rebuilds incrementally instead of cold.
+            // (`workdirSegment`'s `identity:` per-invariant form is retained
+            // for a potential intra-reducer fan-out but unused on this path.)
         )
         // Cycle 111 — persist the measured outcome to
         // `.swiftinfer/verify-evidence.json`, keyed by the invariant's
