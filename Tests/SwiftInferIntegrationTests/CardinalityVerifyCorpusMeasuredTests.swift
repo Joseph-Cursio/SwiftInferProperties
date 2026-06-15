@@ -45,21 +45,25 @@ struct CardinalityVerifyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        #expect(summary.contains("Identities: 3 (--family cardinality)"))
-        #expect(summary.contains("2 measured-bothPass"))
-        #expect(summary.contains("1 measured-defaultFails"))
+        // Cycle 141 — widened to 5 reducers: + SheetRouterFeature
+        // (Optional-presentation, mutex → full-coverage bothPass → Verified)
+        // and PopoverFeature (3 Optional fields, no mutex → defaultFails).
+        #expect(summary.contains("Identities: 5 (--family cardinality)"))
+        #expect(summary.contains("3 measured-bothPass"))
+        #expect(summary.contains("2 measured-defaultFails"))
         // DrawerFeature discloses its excluded case (partial exploration);
-        // Router/Leaky are full coverage and disclose nothing.
+        // the full-coverage reducers disclose nothing.
         #expect(summary.contains("explored 3 of 4 action types (excluded: received)"))
 
-        // Evidence: 3 records; the coverage field distinguishes full vs
+        // Evidence: 5 records; the coverage field distinguishes full vs
         // partial — the gate the overrule reads.
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 3)
-        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 2)
-        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
+        #expect(stored.log.records.count == 5)
+        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 3)
+        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 2)
         let bothPass = stored.log.records.filter { $0.outcome == .measuredBothPass }
-        // One full-coverage (0 excluded) bothPass and one partial (1 excluded).
+        // Full-coverage (0 excluded) bothPasses (Router, SheetRouter) and the
+        // partial one (1 excluded, Drawer).
         #expect(bothPass.contains { $0.excludedActionCount == 0 })
         #expect(bothPass.contains { $0.excludedActionCount == 1 })
 
@@ -69,16 +73,19 @@ struct CardinalityVerifyCorpusMeasuredTests {
             includePossible: true,
             workingDirectory: root
         )
-        // RouterFeature: full-coverage bothPass overrules the pin → Verified,
-        // with the disclosure.
+        // Full-coverage bothPasses overrule the pin → Verified, with the
+        // disclosure: RouterFeature (Bool indicator) + SheetRouterFeature
+        // (Optional `!= nil` indicator).
         #expect(discovered.contains("(Verified)"))
-        #expect(discovered.contains("isShowingSheet"))
+        #expect(discovered.contains("isShowingSheet"))            // Router
+        #expect(discovered.contains("state.activeSheet != nil"))  // SheetRouter
         #expect(discovered.contains("Finding-G pin overruled by full-coverage measured execution"))
         // DrawerFeature: partial bothPass → stays Possible (not promoted).
         #expect(discovered.contains("(Possible)"))
         #expect(discovered.contains("isShowingMenu"))
-        // LeakyFeature: defaultFails → suppressed (its flags absent).
-        #expect(!discovered.contains("isShowingBanner"))
+        // The false positives are suppressed (their flags absent).
+        #expect(!discovered.contains("isShowingBanner"))          // LeakyFeature
+        #expect(!discovered.contains("activePopover"))            // PopoverFeature
     }
 
     /// `Tests/Fixtures/cardinality-verify-corpus/`, resolved against

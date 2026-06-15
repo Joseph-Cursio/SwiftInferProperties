@@ -12,7 +12,7 @@ import Testing
 @Suite("Cardinality verify corpus — discovery coverage (cycle 136)")
 struct CardinalityVerifyCorpusTests {
 
-    @Test("packaging + discovery surfaces exactly the three cardinality identities at .possible")
+    @Test("packaging + discovery surfaces exactly the five cardinality identities at .possible")
     func discoversTheCuratedIdentities() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("cardinality-verify-corpus-discovery")
@@ -35,22 +35,31 @@ struct CardinalityVerifyCorpusTests {
         // Exactly one cardinality witness per reducer (two presentation Bool
         // flags each).
         #expect(Set(cardinality.map(\.reducerQualifiedName)) == [
-            "RouterFeature.body", "DrawerFeature.body", "LeakyFeature.body"
+            "RouterFeature.body", "DrawerFeature.body", "LeakyFeature.body",
+            // cycle 141 — Optional-presentation widening.
+            "SheetRouterFeature.body", "PopoverFeature.body"
         ])
         // Gated baseline: every cardinality pick sits at .possible pre-verify.
         #expect(cardinality.allSatisfy { $0.tier == .possible })
-        // Each predicate is the `Σ indicators <= 1` shape over its two flags.
+        // Each predicate is the `Σ indicators <= 1` shape over its flags.
         #expect(cardinality.allSatisfy { $0.predicate.hasSuffix("<= 1") })
         let byReducer = Dictionary(uniqueKeysWithValues: cardinality.map {
             ($0.reducerQualifiedName, $0.predicate)
         })
+        // Bool-flag indicators (`state.<name>`).
         #expect(byReducer["RouterFeature.body"]?.contains("state.isShowingSheet") == true)
         #expect(byReducer["RouterFeature.body"]?.contains("state.isPresentingAlert") == true)
         #expect(byReducer["DrawerFeature.body"]?.contains("state.isPresentingPopover") == true)
         #expect(byReducer["LeakyFeature.body"]?.contains("state.isPresentingToast") == true)
+        // Optional-presentation indicators (`state.<name> != nil`).
+        #expect(byReducer["SheetRouterFeature.body"]?.contains("state.activeSheet != nil") == true)
+        #expect(byReducer["SheetRouterFeature.body"]?.contains("state.activeAlert != nil") == true)
+        // The 3-field witness sums three `!= nil` indicators.
+        #expect(byReducer["PopoverFeature.body"]?.contains("state.activePopover != nil") == true)
 
-        // The corpus surfaces no other family (no Optional / witness-vocab
-        // action names), so cardinality is the whole story.
+        // The corpus surfaces no other family (Bool-only or Optional-only
+        // States, no witness-vocab action names), so cardinality is the whole
+        // story.
         #expect(suggestions.allSatisfy { $0.family == .cardinality })
     }
 
