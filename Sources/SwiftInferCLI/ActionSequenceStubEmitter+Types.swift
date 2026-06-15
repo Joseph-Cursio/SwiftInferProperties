@@ -42,11 +42,11 @@ extension ActionSequenceStubEmitter {
         case unsupportedShape(ReducerSignatureShape)
         case unsupportedCarrier(ReducerCarrierKind)
         case unsupportedFamily(InteractionInvariantFamily)
-        /// Cycle 122 (Phase A) — a `.tca` candidate whose Action enum
-        /// isn't fully payload-free, so the verifier can't enumerate the
-        /// action space without value generators (Phase B). Distinct from
-        /// `unsupportedCarrier` because `.tca` IS now supported — just not
-        /// for payload-bearing Actions yet.
+        /// Cycle 122/125 — a `.tca` candidate whose Action has **no**
+        /// constructible case (every case is a composition / multi-value /
+        /// non-raw payload), so there's nothing for the relaxed generator
+        /// to explore. Distinct from `unsupportedCarrier` because `.tca` IS
+        /// supported — just not for an entirely non-derivable Action.
         case tcaActionNotEnumerable(actionType: String)
 
         public var description: String {
@@ -62,9 +62,9 @@ extension ActionSequenceStubEmitter {
 
             case let .tcaActionNotEnumerable(actionType):
                 return "ActionSequenceStubEmitter can't enumerate the action space for "
-                    + "'\(actionType)': the Action enum has associated-value cases, which "
-                    + "need value generators (Phase B). Phase A verifies only payload-free "
-                    + "TCA Actions."
+                    + "'\(actionType)': no constructible (payload-free or raw-payload) "
+                    + "case — every case is a composition / multi-value / non-raw payload, "
+                    + "which relaxed partial exploration can't generate."
 
             case let .unsupportedFamily(family):
                 return "ActionSequenceStubEmitter does not yet support invariant "

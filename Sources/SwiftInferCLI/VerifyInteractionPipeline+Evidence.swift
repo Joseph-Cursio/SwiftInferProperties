@@ -76,4 +76,29 @@ extension VerifyInteractionPipeline {
             FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
         }
     }
+
+    /// Cycle 125 (Phase B, guardrail #1) — for a `.tca` reducer verified via
+    /// relaxed partial exploration, fold the excluded-action disclosure into
+    /// the verdict `detail` so it rides through to the evidence record +
+    /// render. No-op when nothing was excluded (full exploration — e.g. an
+    /// all-payload-free Action) or for non-`.tca` carriers.
+    static func foldPartialExplorationDisclosure(
+        _ result: InteractionVerifyOutcomeParser.Result,
+        candidate: ReducerCandidate
+    ) -> InteractionVerifyOutcomeParser.Result {
+        guard candidate.carrierKind == .tca else { return result }
+        let excluded = ActionSequenceStubEmitter.excludedCaseNames(candidate)
+        guard !excluded.isEmpty else { return result }
+        let total = candidate.actionCases.count
+        let note = "partial exploration: explored \(total - excluded.count) of \(total) "
+            + "action types (excluded: \(excluded.joined(separator: ", ")))"
+        let detail = result.detail.map { "\($0) | \(note)" } ?? note
+        return InteractionVerifyOutcomeParser.Result(
+            outcome: result.outcome,
+            totalRuns: result.totalRuns,
+            cleanRuns: result.cleanRuns,
+            detail: detail,
+            failingSequenceIndex: result.failingSequenceIndex
+        )
+    }
 }

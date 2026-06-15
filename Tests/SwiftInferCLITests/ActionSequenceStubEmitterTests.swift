@@ -21,8 +21,7 @@ struct ActionSequenceStubEmitterTests {
         signatureShape: ReducerSignatureShape = .stateActionReturnsState,
         stateTypeName: String = "AppState",
         actionTypeName: String = "AppAction",
-        carrierKind: ReducerCarrierKind = .elmStyle,
-        actionCaseNames: [String] = []
+        carrierKind: ReducerCarrierKind = .elmStyle
     ) -> ReducerCandidate {
         ReducerCandidate(
             location: location,
@@ -31,8 +30,7 @@ struct ActionSequenceStubEmitterTests {
             signatureShape: signatureShape,
             stateTypeName: stateTypeName,
             actionTypeName: actionTypeName,
-            carrierKind: carrierKind,
-            actionCaseNames: actionCaseNames
+            carrierKind: carrierKind
         )
     }
 

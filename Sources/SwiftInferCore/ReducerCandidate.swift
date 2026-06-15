@@ -90,17 +90,16 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// to `.pure` for older JSON records (none on disk yet).
     public let purity: ReducerPurity
 
-    /// Cycle 122 (Phase A) — the Action enum's **payload-free** case
-    /// names, in source order, captured at discovery time for `.tca`
-    /// carriers. Real TCA Action enums don't declare `CaseIterable`, so
-    /// the verifier can't use `Gen<Action>.case`; it builds an explicit
-    /// `Gen.element(of: [.a, .b, …])` generator from this list instead.
-    /// **Soundness gate:** populated *only* when every case in the Action
-    /// enum is payload-free — if any case carries an associated value
-    /// (Phase B / value-gen territory), this stays empty so the emitter
-    /// keeps rejecting the candidate rather than verify over a partial
-    /// action space. Empty for non-`.tca` carriers and older records.
-    public let actionCaseNames: [String]
+    /// Cycle 122 (Phase A) → cycle 125 (Phase B) — the Action enum's
+    /// cases, in source order, captured at discovery time for `.tca`
+    /// carriers (real TCA Actions don't declare `CaseIterable`, so the
+    /// verifier enumerates them explicitly). Each case carries its
+    /// associated-value payload types (empty = payload-free). Phase B's
+    /// relaxed partial-exploration emitter builds a generator over the
+    /// *constructible* subset (payload-free + raw-payload cases) and
+    /// discloses the rest as excluded; the all-or-nothing Phase A gate is
+    /// gone. Empty for non-`.tca` carriers and older records.
+    public let actionCases: [ActionCaseInfo]
 
     public init(
         location: String,
@@ -111,7 +110,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         actionTypeName: String,
         carrierKind: ReducerCarrierKind = .generic,
         purity: ReducerPurity = .pure,
-        actionCaseNames: [String] = []
+        actionCases: [ActionCaseInfo] = []
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -121,7 +120,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.actionTypeName = actionTypeName
         self.carrierKind = carrierKind
         self.purity = purity
-        self.actionCaseNames = actionCaseNames
+        self.actionCases = actionCases
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just
@@ -190,7 +189,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case actionTypeName
         case carrierKind
         case purity
-        case actionCaseNames
+        case actionCases
     }
 
     public init(from decoder: Decoder) throws {
@@ -213,12 +212,27 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             ReducerPurity.self,
             forKey: .purity
         ) ?? .pure
-        // Cycle 122 — pre-Phase-A records (and all non-`.tca` carriers)
-        // default to an empty case list.
-        self.actionCaseNames = try container.decodeIfPresent(
-            [String].self,
-            forKey: .actionCaseNames
+        // Cycle 122/125 — pre-Phase-A records (and all non-`.tca`
+        // carriers) default to an empty case list.
+        self.actionCases = try container.decodeIfPresent(
+            [ActionCaseInfo].self,
+            forKey: .actionCases
         ) ?? []
+    }
+}
+
+/// Cycle 125 (Phase B) — one Action enum case captured at discovery time:
+/// its name plus its associated-value payload types in declaration order
+/// (`[]` = payload-free). The emitter classifies constructibility from
+/// `payloadTypes` (empty → free; single recognized raw type → raw-payload;
+/// anything else → non-derivable, excluded from partial exploration).
+public struct ActionCaseInfo: Sendable, Equatable, Codable {
+    public let name: String
+    public let payloadTypes: [String]
+
+    public init(name: String, payloadTypes: [String] = []) {
+        self.name = name
+        self.payloadTypes = payloadTypes
     }
 }
 

@@ -38,7 +38,7 @@ struct ReducerDiscovererTCATests {
         #expect(candidate.actionTypeName == "Inbox.Action")
     }
 
-    @Test("Cycle 122 — payload-free Action cases captured in source order")
+    @Test("Cycle 122/125 — payload-free Action cases captured in source order")
     func capturesPayloadFreeActionCases() {
         let source = """
         import ComposableArchitecture
@@ -59,13 +59,16 @@ struct ReducerDiscovererTCATests {
         let result = ReducerDiscoverer.discover(source: source, file: "Counter.swift")
         #expect(result.count == 1)
         #expect(result[0].carrierKind == .tca)
-        // Source order preserved — the verifier's explicit-case generator
-        // depends on a stable, complete list.
-        #expect(result[0].actionCaseNames == ["increment", "decrement", "closeMenu"])
+        // Source order preserved; all payload-free.
+        #expect(result[0].actionCases == [
+            ActionCaseInfo(name: "increment"),
+            ActionCaseInfo(name: "decrement"),
+            ActionCaseInfo(name: "closeMenu")
+        ])
     }
 
-    @Test("Cycle 122 — any payload case ⇒ empty list (verify-reject, Phase B territory)")
-    func payloadCaseSuppressesCapture() {
+    @Test("Cycle 125 — Phase B: payload cases captured with their types (no bail)")
+    func capturesPayloadCaseTypes() {
         let source = """
         import ComposableArchitecture
 
@@ -75,6 +78,7 @@ struct ReducerDiscovererTCATests {
             enum Action {
                 case submit
                 case setName(String)
+                case child(Child.Action)
             }
             var body: some Reducer<State, Action> {
                 Reduce { state, action in .none }
@@ -84,9 +88,13 @@ struct ReducerDiscovererTCATests {
         let result = ReducerDiscoverer.discover(source: source, file: "Form.swift")
         #expect(result.count == 1)
         #expect(result[0].carrierKind == .tca)
-        // One associated-value case ⇒ the whole list is withheld so the
-        // emitter keeps rejecting (no verifying over a partial action space).
-        #expect(result[0].actionCaseNames.isEmpty)
+        // Phase B: every case captured with payload types — the emitter
+        // classifies constructibility, no all-or-nothing bail.
+        #expect(result[0].actionCases == [
+            ActionCaseInfo(name: "submit"),
+            ActionCaseInfo(name: "setName", payloadTypes: ["String"]),
+            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"])
+        ])
     }
 
     @Test("Reduce match is gated on `import ComposableArchitecture`")

@@ -300,11 +300,12 @@ public enum VerifyInteractionPipeline {
             )
         }
         let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
-        return InteractionVerifyOutcomeParser.parseRunOutput(
+        let parsed = InteractionVerifyOutcomeParser.parseRunOutput(
             binaryExitCode: runOutput.exitCode,
             stdout: runOutput.stdout,
             stderr: runOutput.stderr
         )
+        return foldPartialExplorationDisclosure(parsed, candidate: candidate)
     }
 
     // `findPackageRoot` + `workdirSegment` live in

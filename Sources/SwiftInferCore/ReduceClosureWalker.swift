@@ -39,21 +39,21 @@ final class ReduceClosureWalker: SyntaxVisitor {
     let file: String
     let converter: SourceLocationConverter
     let enclosingTypeName: String
-    /// Cycle 122 (Phase A) — payload-free Action case names for this
-    /// reducer (empty when the Action has any payload case, or none was
-    /// found); stamped onto every emitted `.tca` candidate.
-    let actionCaseNames: [String]
+    /// Cycle 122/125 — the Action enum's cases (name + payload types) for
+    /// this reducer, stamped onto every emitted `.tca` candidate. Empty
+    /// when no `Action` enum was found.
+    let actionCases: [ActionCaseInfo]
 
     init(
         file: String,
         converter: SourceLocationConverter,
         enclosingTypeName: String,
-        actionCaseNames: [String] = []
+        actionCases: [ActionCaseInfo] = []
     ) {
         self.file = file
         self.converter = converter
         self.enclosingTypeName = enclosingTypeName
-        self.actionCaseNames = actionCaseNames
+        self.actionCases = actionCases
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -118,7 +118,7 @@ final class ReduceClosureWalker: SyntaxVisitor {
             actionTypeName: "\(enclosingTypeName).Action",
             carrierKind: .tca,
             purity: purity,
-            actionCaseNames: actionCaseNames
+            actionCases: actionCases
         ))
     }
 
@@ -140,7 +140,7 @@ final class ReduceClosureWalker: SyntaxVisitor {
             actionTypeName: "\(enclosingTypeName).Action",
             carrierKind: .tca,
             purity: .effectBearing,
-            actionCaseNames: actionCaseNames
+            actionCases: actionCases
         ))
     }
 }

@@ -113,4 +113,86 @@ struct TCACarrierMeasuredTests {
         let stored = VerifyEvidenceStore.load(startingFrom: root)
         #expect(stored.log.record(for: invariant.identity.normalized)?.outcome == .measuredBothPass)
     }
+
+    /// Cycle 125 (Phase B) — a MIXED Action: free witness + a raw-payload
+    /// case (generated) + a non-derivable case (skipped). Proves relaxed
+    /// partial exploration verifies the witness and discloses the excluded
+    /// case in the evidence detail (guardrail #1).
+    private static let mixedSource = """
+    import ComposableArchitecture
+    import Foundation
+
+    @Reducer
+    struct Mixed {
+        @ObservableState
+        struct State: Equatable {
+            var count = 0
+            var menuOpen = false
+            var data: Data?
+        }
+        enum Action {
+            case closeMenu          // free — idempotent witness
+            case setCount(Int)      // raw payload — generated
+            case received(Data)     // non-derivable — skipped
+        }
+        var body: some Reducer<State, Action> {
+            Reduce { state, action in
+                switch action {
+                case .closeMenu: state.menuOpen = false; return .none
+                case let .setCount(n): state.count = n; return .none
+                case let .received(d): state.data = d; return .none
+                }
+            }
+        }
+    }
+    """
+
+    @Test("Phase B — mixed Action verifies the witness + discloses the excluded case")
+    func mixedActionPartialExploration() throws {
+        let parent = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tca-carrier-mixed")
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: parent) }
+
+        let root = try CorpusPackager.package(
+            moduleName: "TCAMixedCorpus",
+            sourceFiles: [.init(name: "Mixed.swift", contents: Self.mixedSource)],
+            into: parent
+        )
+        let canonical = InteractionInvariantSuggestion.identityCanonicalInput(
+            family: .idempotence,
+            reducerQualifiedName: "Mixed.body",
+            predicate: ".closeMenu"
+        )
+        let invariant = InteractionInvariantSuggestion(
+            identity: SuggestionIdentity(canonicalInput: canonical),
+            family: .idempotence,
+            reducerQualifiedName: "Mixed.body",
+            reducerLocation: "Sources/TCAMixedCorpus/Mixed.swift:4",
+            stateTypeName: "Mixed.State",
+            actionTypeName: "Mixed.Action",
+            predicate: ".closeMenu",
+            score: 40,
+            tier: .likely,
+            whySuggested: [],
+            whyMightBeWrong: [],
+            firstSeenAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        let result = try VerifyInteractionPipeline.runWithInvariant(
+            target: "TCAMixedCorpus",
+            invariant: invariant,
+            workingDirectory: root
+        )
+
+        #expect(result.outcome == .measuredBothPass)
+        // Guardrail #1: the partial-exploration basis is disclosed.
+        #expect(result.detail?.contains("excluded: received") == true)
+        #expect(result.detail?.contains("explored 2 of 3 action types") == true)
+        // …and the disclosure rides into the persisted evidence.
+        let stored = VerifyEvidenceStore.load(startingFrom: root)
+        #expect(stored.log.record(for: invariant.identity.normalized)?
+            .detail?.contains("excluded: received") == true)
+    }
 }
