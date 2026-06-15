@@ -47,22 +47,26 @@ struct BiconditionalVerifyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        #expect(summary.contains("Identities: 3 (--family biconditional)"))
-        #expect(summary.contains("2 measured-bothPass"))
-        #expect(summary.contains("1 measured-defaultFails"))
+        // Cycle 142 — widened to 5 reducers: + FeedFeature (literal-inferred
+        // Bool, String? optional, in sync, full coverage → bothPass → overrule
+        // → Verified) and PendingFeature (inverse-drift false positive →
+        // defaultFails).
+        #expect(summary.contains("Identities: 5 (--family biconditional)"))
+        #expect(summary.contains("3 measured-bothPass"))
+        #expect(summary.contains("2 measured-defaultFails"))
         // ConnectionFeature discloses its excluded case (partial exploration);
-        // Session/Stale are full coverage and disclose nothing.
+        // the full-coverage reducers disclose nothing.
         #expect(summary.contains("explored 2 of 3 action types (excluded: received)"))
 
-        // Evidence: 3 records; the coverage field distinguishes full vs
+        // Evidence: 5 records; the coverage field distinguishes full vs
         // partial — the gate the overrule reads.
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 3)
-        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 2)
-        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
+        #expect(stored.log.records.count == 5)
+        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 3)
+        #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 2)
         let bothPass = stored.log.records.filter { $0.outcome == .measuredBothPass }
-        #expect(bothPass.contains { $0.excludedActionCount == 0 })   // SessionFeature
-        #expect(bothPass.contains { $0.excludedActionCount == 1 })   // ConnectionFeature
+        #expect(bothPass.contains { $0.excludedActionCount == 0 })   // Session / Feed (full)
+        #expect(bothPass.contains { $0.excludedActionCount == 1 })   // Connection (partial)
 
         // Payoff: discover folds the evidence through the cycle-135 overrule.
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
@@ -70,15 +74,18 @@ struct BiconditionalVerifyCorpusMeasuredTests {
             includePossible: true,
             workingDirectory: root
         )
-        // SessionFeature: full-coverage bothPass overrules the pin → Verified.
+        // Full-coverage bothPasses overrule the pin → Verified: SessionFeature
+        // (annotated Bool) + FeedFeature (literal-inferred Bool).
         #expect(discovered.contains("(Verified)"))
         #expect(discovered.contains("state.isActive == (state.token != nil)"))
+        #expect(discovered.contains("state.isRefreshing == (state.feed != nil)"))
         #expect(discovered.contains("Finding-G pin overruled by full-coverage measured execution"))
         // ConnectionFeature: partial bothPass → stays Possible (not promoted).
         #expect(discovered.contains("(Possible)"))
         #expect(discovered.contains("state.isFetching == (state.payload != nil)"))
-        // StaleFeature: defaultFails → suppressed (its predicate absent).
-        #expect(!discovered.contains("state.isLoading == (state.data != nil)"))
+        // The false positives are suppressed (their predicates absent).
+        #expect(!discovered.contains("state.isLoading == (state.data != nil)"))       // Stale
+        #expect(!discovered.contains("state.isFetchingMore == (state.nextPage != nil)")) // Pending
     }
 
     /// `Tests/Fixtures/biconditional-verify-corpus/`, resolved against

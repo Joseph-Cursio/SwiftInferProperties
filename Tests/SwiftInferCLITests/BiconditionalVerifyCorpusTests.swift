@@ -13,7 +13,7 @@ import Testing
 @Suite("Biconditional verify corpus — discovery coverage (cycle 137)")
 struct BiconditionalVerifyCorpusTests {
 
-    @Test("packaging + discovery surfaces exactly the three biconditional identities at .possible")
+    @Test("packaging + discovery surfaces exactly the five biconditional identities at .possible")
     func discoversTheCuratedIdentities() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("biconditional-verify-corpus-discovery")
@@ -37,7 +37,10 @@ struct BiconditionalVerifyCorpusTests {
         let expected: Set<String> = [
             "SessionFeature.body state.isActive == (state.token != nil)",
             "ConnectionFeature.body state.isFetching == (state.payload != nil)",
-            "StaleFeature.body state.isLoading == (state.data != nil)"
+            "StaleFeature.body state.isLoading == (state.data != nil)",
+            // cycle 142 — literal-inferred Bool + inverse-drift false positive.
+            "FeedFeature.body state.isRefreshing == (state.feed != nil)",
+            "PendingFeature.body state.isFetchingMore == (state.nextPage != nil)"
         ]
         #expect(found == expected)
 
