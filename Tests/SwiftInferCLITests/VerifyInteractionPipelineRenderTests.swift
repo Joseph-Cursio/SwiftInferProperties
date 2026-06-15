@@ -130,4 +130,48 @@ struct VerifyInteractionPipelineRenderTests {
         #expect(VerifyInteractionPipeline.workdirSegment(for: methodCandidate) == "Inbox_body")
         #expect(VerifyInteractionPipeline.workdirSegment(for: freeCandidate()) == "reduce")
     }
+
+    @Test("Cycle 120 — identity-keyed workdir isolates sibling invariants on one reducer")
+    func workdirSegmentIsolatesPerInvariant() {
+        let candidate = ReducerCandidate(
+            location: "F.swift:1",
+            enclosingTypeName: "Inbox",
+            functionName: "body",
+            signatureShape: .stateActionReturnsState,
+            stateTypeName: "Inbox.State",
+            actionTypeName: "Inbox.Action"
+        )
+        // Two distinct invariant identities on the *same* reducer must
+        // produce distinct segments — the prerequisite for a parallel
+        // survey that can't clobber a shared `.build/`.
+        let refresh = VerifyInteractionPipeline.workdirSegment(
+            for: candidate, identity: "AAAA1111BBBB2222"
+        )
+        let reset = VerifyInteractionPipeline.workdirSegment(
+            for: candidate, identity: "CCCC3333DDDD4444"
+        )
+        #expect(refresh == "Inbox_body__AAAA1111BBBB2222")
+        #expect(reset == "Inbox_body__CCCC3333DDDD4444")
+        #expect(refresh != reset)
+    }
+
+    @Test("Cycle 120 — nil / empty identity preserves the bare reducer-only segment")
+    func workdirSegmentBarePathUnchanged() {
+        let candidate = ReducerCandidate(
+            location: "F.swift:1",
+            enclosingTypeName: "Inbox",
+            functionName: "body",
+            signatureShape: .stateActionReturnsState,
+            stateTypeName: "Inbox.State",
+            actionTypeName: "Inbox.Action"
+        )
+        // The single-shot / `runPipeline` path passes no identity — its
+        // workdir must stay byte-for-byte the reducer-only segment.
+        #expect(VerifyInteractionPipeline.workdirSegment(for: candidate, identity: nil) == "Inbox_body")
+        #expect(VerifyInteractionPipeline.workdirSegment(for: candidate, identity: "") == "Inbox_body")
+        #expect(
+            VerifyInteractionPipeline.workdirSegment(for: candidate, identity: nil)
+                == VerifyInteractionPipeline.workdirSegment(for: candidate)
+        )
+    }
 }

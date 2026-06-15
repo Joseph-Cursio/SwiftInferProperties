@@ -159,7 +159,10 @@ public enum VerifyInteractionPipeline {
             candidate: candidate,
             stubSource: stubSource,
             userModuleName: userModuleName ?? target,
-            workingDirectory: workingDirectory
+            workingDirectory: workingDirectory,
+            // Cycle 120 — per-invariant workdir so a parallel survey
+            // can run sibling identities on this reducer concurrently.
+            identity: invariant.identity.normalized
         )
         // Cycle 111 — persist the measured outcome to
         // `.swiftinfer/verify-evidence.json`, keyed by the invariant's
@@ -172,35 +175,6 @@ public enum VerifyInteractionPipeline {
         // warns but never fails the verify gesture.
         recordEvidence(invariant: invariant, result: result, workingDirectory: workingDirectory)
         return result
-    }
-
-    /// Cycle 111 — best-effort upsert of one interaction-verify outcome
-    /// into the shared `.swiftinfer/verify-evidence.json` store. The
-    /// identity is the invariant's already-normalized hash (16-char
-    /// uppercase hex, no `0x`) — the exact join key the discover-side
-    /// consumer looks up via `suggestion.identity.normalized`. The
-    /// parsed result's `outcome` is already a `VerifyEvidenceOutcome`,
-    /// so no mapping is needed (unlike the algebraic `VerifyOutcome`).
-    static func recordEvidence(
-        invariant: InteractionInvariantSuggestion,
-        result: InteractionVerifyOutcomeParser.Result,
-        workingDirectory: URL
-    ) {
-        let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
-        let recordWarnings = VerifyEvidenceRecorder.record(
-            VerifyEvidence(
-                identityHash: invariant.identity.normalized,
-                template: invariant.family.rawValue,
-                outcome: result.outcome,
-                detail: result.detail,
-                capturedAt: Date(),
-                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
-            ),
-            packageRoot: packageRoot
-        )
-        for warning in recordWarnings {
-            FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
-        }
     }
 
     // MARK: - Pin resolution
@@ -266,17 +240,20 @@ public enum VerifyInteractionPipeline {
     /// V2.0 M3.E.4 — synthesize the workdir, run `swift build`, run
     /// the resulting binary, parse the outcome. Returns the
     /// classified result; the caller renders it.
+    /// Cycle 120: `identity` keys the workdir per-invariant (see
+    /// `workdirSegment`); `nil` keeps the reducer-only segment.
     static func executeAndParse(
         candidate: ReducerCandidate,
         stubSource: String,
         userModuleName: String,
-        workingDirectory: URL
+        workingDirectory: URL,
+        identity: String? = nil
     ) throws -> InteractionVerifyOutcomeParser.Result {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
         let workdir = packageRoot
             .appendingPathComponent(".swiftinfer")
             .appendingPathComponent("verify-interaction-workdir")
-            .appendingPathComponent(workdirSegment(for: candidate))
+            .appendingPathComponent(workdirSegment(for: candidate, identity: identity))
         let userPackage = VerifierWorkdir.UserPackageReference(
             packagePath: packageRoot,
             packageDeclaredName: userModuleName,
@@ -324,14 +301,19 @@ public enum VerifyInteractionPipeline {
         }
     }
 
-    /// Filename-safe workdir segment derived from the candidate's
-    /// qualified name. `.` → `_` so a candidate `Inbox.body` lands
-    /// under `verify-interaction-workdir/Inbox_body/`. Mirrors
-    /// v1.42's `workdirSegment(for:)` posture (hash-prefix-based
-    /// there; name-based here since interaction-verify has no
-    /// stable identity hash yet).
-    static func workdirSegment(for candidate: ReducerCandidate) -> String {
-        candidate.qualifiedName.replacingOccurrences(of: ".", with: "_")
+    /// Filename-safe workdir segment from the candidate's qualified
+    /// name (`.` → `_`, so `Inbox.body` → `Inbox_body`). Cycle 120:
+    /// a non-nil `identity` (the invariant's normalized 16-char hash)
+    /// appends `__<identity>` so sibling identities on one reducer get
+    /// distinct workdirs and can build concurrently; `nil` (the bare
+    /// `runPipeline` path) preserves the reducer-only segment exactly.
+    static func workdirSegment(
+        for candidate: ReducerCandidate,
+        identity: String? = nil
+    ) -> String {
+        let base = candidate.qualifiedName.replacingOccurrences(of: ".", with: "_")
+        guard let identity, !identity.isEmpty else { return base }
+        return "\(base)__\(identity)"
     }
 
     // MARK: - Outcome render
