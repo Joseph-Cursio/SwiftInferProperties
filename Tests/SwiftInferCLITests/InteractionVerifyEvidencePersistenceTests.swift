@@ -107,6 +107,42 @@ struct InteractionVerifyEvidenceTests {
         #expect(reloaded.log.record(for: invariant.identity.normalized)?.outcome == .measuredBothPass)
     }
 
+    @Test("Cycle 120 — recordEvidenceBatch upserts every record in one write")
+    func batchRecordsAllIdentities() throws {
+        let directory = try makeFixtureDirectory(name: "InteractionBatch")
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let refresh = makeInvariant(predicate: ".refresh")
+        let reset = makeInvariant(predicate: ".reset")
+        let outcomes = [
+            (invariant: refresh, result: InteractionVerifyOutcomeParser.Result(
+                outcome: .measuredBothPass, totalRuns: 1_024, cleanRuns: 1_024
+            )),
+            (invariant: reset, result: InteractionVerifyOutcomeParser.Result(
+                outcome: .measuredDefaultFails, detail: "at sequence index 2", failingSequenceIndex: 2
+            ))
+        ]
+
+        VerifyInteractionPipeline.recordEvidenceBatch(outcomes, workingDirectory: directory)
+
+        let reloaded = VerifyEvidenceStore.load(startingFrom: directory)
+        // Two distinct sibling identities — both must survive the single
+        // batch write (the race that per-call recording risks under M3).
+        #expect(reloaded.log.records.count == 2)
+        #expect(reloaded.log.record(for: refresh.identity.normalized)?.outcome == .measuredBothPass)
+        #expect(reloaded.log.record(for: reset.identity.normalized)?.outcome == .measuredDefaultFails)
+    }
+
+    @Test("Cycle 120 — an empty batch is a no-op (no store file forced)")
+    func emptyBatchIsNoOp() throws {
+        let directory = try makeFixtureDirectory(name: "InteractionEmptyBatch")
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        VerifyInteractionPipeline.recordEvidenceBatch([], workingDirectory: directory)
+
+        #expect(VerifyEvidenceStore.load(startingFrom: directory).log.records.isEmpty)
+    }
+
     // MARK: - Helpers
 
     /// Build an idempotence invariant whose identity is derived from the

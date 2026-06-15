@@ -8,16 +8,15 @@ import SwiftInferCore
 /// `verify-interaction` runs — feeding `verify-evidence.json` so a later
 /// `discover-interaction` surfaces the survivors at `.verified`.
 ///
-/// **Serial by design (this cycle).** Each `runWithInvariant` spawns a real
-/// `swift build` + run, so concurrency would help — but the interaction
-/// verify workdir is keyed by *reducer* (`workdirSegment(for: candidate)`),
-/// not per-invariant, so two identities on the same reducer share a workdir
-/// and can't build concurrently without clobbering. The algebraic survey
-/// gets bounded parallelism only because its workdirs are identity-hash-
-/// keyed. Per-invariant workdir isolation (the prerequisite for a parallel
-/// interaction survey) is a noted follow-up; serial is correct today.
-/// Running serially also means `runWithInvariant`'s per-call evidence
-/// record is race-free — no batch needed.
+/// **Still serial, but no longer *by necessity* (cycle 120).** The two
+/// blockers to parallelism are now removed: milestone 1 made the verify
+/// workdir per-invariant (`workdirSegment(for:identity:)`), so sibling
+/// identities on one reducer no longer share a `.build/`; milestone 2
+/// moved evidence recording out of the per-call hot path
+/// (`persistEvidence: false`) to a single batch write below, so concurrent
+/// verifies can't lose records to interleaved read-modify-writes. The loop
+/// stays a serial `for` here; milestone 3 swaps it for a bounded
+/// `withTaskGroup` (mirroring the algebraic `--all-from-index` survey).
 enum VerifyInteractionSurvey {
 
     /// One surveyed identity + its measured outcome.
@@ -69,10 +68,18 @@ enum VerifyInteractionSurvey {
                 invariant: suggestion,
                 sequenceCount: sequenceCount,
                 userModuleName: userModuleName,
+                // Cycle 120 — suppress the per-call upsert; the survey
+                // batch-records once below so a future parallel fan-out
+                // can't lose records to interleaved read-modify-writes.
+                persistEvidence: false,
                 workingDirectory: workingDirectory
             )
             entries.append(Entry(suggestion: suggestion, result: result))
         }
+        VerifyInteractionPipeline.recordEvidenceBatch(
+            entries.map { (invariant: $0.suggestion, result: $0.result) },
+            workingDirectory: workingDirectory
+        )
         return render(target: target, family: family, entries: entries)
     }
 

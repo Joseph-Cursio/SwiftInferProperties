@@ -140,11 +140,14 @@ public enum VerifyInteractionPipeline {
     /// rendered text. The invariant's `reducerQualifiedName` doubles
     /// as the implicit `--reducer` pin so the right candidate is
     /// resolved when the target has multiple reducers.
+    /// Cycle 120: `persistEvidence: false` suppresses the per-call upsert
+    /// so the survey can batch-record once (race-free under M3 parallelism).
     public static func runWithInvariant(
         target: String,
         invariant: InteractionInvariantSuggestion,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
+        persistEvidence: Bool = true,
         workingDirectory: URL
     ) throws -> InteractionVerifyOutcomeParser.Result {
         let (candidate, stubSource) = try resolveAndEmit(
@@ -170,10 +173,11 @@ public enum VerifyInteractionPipeline {
         // the suggestion (the M9 outcome→evidence→tier promotion path).
         // Mirrors `VerifyCommand.runPipeline`'s algebraic recording.
         // Only reachable from the invariant-bearing entry: the bare
-        // `runPipeline` (no invariant) has no family/predicate and so no
-        // identity hash to key on. Best-effort — a persistence failure
-        // warns but never fails the verify gesture.
-        recordEvidence(invariant: invariant, result: result, workingDirectory: workingDirectory)
+        // `runPipeline` (no invariant) has no identity hash to key on.
+        // Best-effort — a persistence failure warns, never fails verify.
+        if persistEvidence {
+            recordEvidence(invariant: invariant, result: result, workingDirectory: workingDirectory)
+        }
         return result
     }
 
@@ -282,39 +286,9 @@ public enum VerifyInteractionPipeline {
         )
     }
 
-    /// Walk up from `directory` looking for `Package.swift`. Same
-    /// shape as v1.42 verify's package-root resolution + every other
-    /// loader in the project — kept inlined here for the same
-    /// independent-loader posture.
-    static func findPackageRoot(startingFrom directory: URL) -> URL? {
-        var current = directory.standardizedFileURL
-        while true {
-            let manifest = current.appendingPathComponent("Package.swift")
-            if FileManager.default.fileExists(atPath: manifest.path) {
-                return current
-            }
-            let parent = current.deletingLastPathComponent().standardizedFileURL
-            if parent == current {
-                return nil
-            }
-            current = parent
-        }
-    }
-
-    /// Filename-safe workdir segment from the candidate's qualified
-    /// name (`.` → `_`, so `Inbox.body` → `Inbox_body`). Cycle 120:
-    /// a non-nil `identity` (the invariant's normalized 16-char hash)
-    /// appends `__<identity>` so sibling identities on one reducer get
-    /// distinct workdirs and can build concurrently; `nil` (the bare
-    /// `runPipeline` path) preserves the reducer-only segment exactly.
-    static func workdirSegment(
-        for candidate: ReducerCandidate,
-        identity: String? = nil
-    ) -> String {
-        let base = candidate.qualifiedName.replacingOccurrences(of: ".", with: "_")
-        guard let identity, !identity.isEmpty else { return base }
-        return "\(base)__\(identity)"
-    }
+    // `findPackageRoot` + `workdirSegment` live in
+    // VerifyInteractionPipeline+Workdir.swift (cycle 120 split — keeps
+    // this file under SwiftLint's file_length cap).
 
     // MARK: - Outcome render
 
