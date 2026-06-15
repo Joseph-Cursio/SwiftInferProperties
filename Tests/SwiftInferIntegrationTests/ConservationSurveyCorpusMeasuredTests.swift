@@ -29,7 +29,7 @@ import Testing
 @Suite("Conservation survey corpus — measured baseline (cycle 134)", .tags(.subprocess))
 struct ConservationSurveyCorpusMeasuredTests {
 
-    @Test("survey records 1 bothPass + 1 defaultFails; discover promotes only the conserving reducer")
+    @Test("survey records 2 bothPass + 2 defaultFails; discover promotes only the conserving reducers")
     func measuredBaselineSplitsAndPromotes() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("conservation-survey-corpus-measured")
@@ -50,28 +50,34 @@ struct ConservationSurveyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        #expect(summary.contains("Identities: 2 (--family conservation)"))
-        #expect(summary.contains("1 measured-bothPass"))
-        #expect(summary.contains("1 measured-defaultFails"))
+        // Cycle 140 — widened to 4 reducers: InventoryReducer (lockstep) +
+        // CartReducer (recompute) conserve → bothPass; BadgeReducer
+        // (increment-without-append) + RosterReducer (clear-without-reset)
+        // desync → defaultFails.
+        #expect(summary.contains("Identities: 4 (--family conservation)"))
+        #expect(summary.contains("2 measured-bothPass"))
+        #expect(summary.contains("2 measured-defaultFails"))
 
-        // Evidence harvested for both identities.
+        // Evidence harvested for all four identities.
         let evidence = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(evidence.count == 2)
-        #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 1)
-        #expect(evidence.filter { $0.outcome == .measuredDefaultFails }.count == 1)
+        #expect(evidence.count == 4)
+        #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 2)
+        #expect(evidence.filter { $0.outcome == .measuredDefaultFails }.count == 2)
 
-        // Payoff: discover reads the evidence — the conserving reducer is
-        // promoted past .possible to Verified; the false positive is
-        // suppressed (its predicate absent from the stream).
+        // Payoff: discover reads the evidence — the two conserving reducers
+        // are promoted past .possible to Verified; both false positives are
+        // suppressed (their predicates absent from the stream).
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "ConservationSurveyCorpus",
             includePossible: true,
             workingDirectory: root
         )
         #expect(discovered.contains("(Verified)"))
-        #expect(discovered.contains("state.count == state.items.count"))   // Inventory survives
-        #expect(!discovered.contains("state.badgeCount"))                  // Badge suppressed
-        #expect(!discovered.contains("(Possible)"))                        // survivor promoted off .possible
+        #expect(discovered.contains("state.count == state.items.count"))     // Inventory survives
+        #expect(discovered.contains("state.itemCount == state.lineItems.count")) // Cart survives
+        #expect(!discovered.contains("state.badgeCount"))                    // Badge suppressed
+        #expect(!discovered.contains("state.memberCount"))                   // Roster suppressed
+        #expect(!discovered.contains("(Possible)"))                          // survivors promoted off .possible
     }
 
     /// `Tests/Fixtures/conservation-survey-corpus/`, resolved against

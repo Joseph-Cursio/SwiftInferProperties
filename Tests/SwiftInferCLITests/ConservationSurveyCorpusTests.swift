@@ -21,7 +21,7 @@ import Testing
 @Suite("Conservation survey corpus — discovery coverage (cycle 134)")
 struct ConservationSurveyCorpusTests {
 
-    @Test("packaging + discovery surfaces exactly the two curated conservation identities at .possible")
+    @Test("packaging + discovery surfaces exactly the four curated conservation identities at .possible")
     func discoversTheCuratedIdentities() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("conservation-survey-corpus-discovery")
@@ -44,7 +44,11 @@ struct ConservationSurveyCorpusTests {
 
         let expected: Set<String> = [
             "InventoryReducer.reduce state.count == state.items.count",
-            "BadgeReducer.reduce state.badgeCount == state.notifications.count"
+            "BadgeReducer.reduce state.badgeCount == state.notifications.count",
+            // cycle 140 — widened: a recompute-style true positive and a
+            // clear-without-reset false positive.
+            "CartReducer.reduce state.itemCount == state.lineItems.count",
+            "RosterReducer.reduce state.memberCount == state.members.count"
         ]
         #expect(found == expected)
 
