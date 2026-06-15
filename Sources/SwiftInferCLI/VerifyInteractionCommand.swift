@@ -87,10 +87,21 @@ extension SwiftInferCommand {
             evidence to .swiftinfer/verify-evidence.json, and print a \
             per-identity outcome summary. The campaign harvest step — one \
             command instead of N hand-pinned runs. Ignores --reducer; \
-            narrow with --family. Serial (a real build per identity).
+            narrow with --family. Bounded-parallel (see --max-parallel).
             """
         )
         public var all: Bool = false
+
+        @Option(
+            name: .long,
+            help: """
+            With --all, the maximum number of identities verified \
+            concurrently. Each is a real `swift build`, so concurrent \
+            builds contend for cores; default 4 (matches the algebraic \
+            `verify --all-from-index` survey). No-op without --all.
+            """
+        )
+        public var maxParallel: Int = 4
 
         @Option(
             name: .long,
@@ -112,11 +123,12 @@ extension SwiftInferCommand {
                         Data("warning: --reducer is ignored in --all survey mode\n".utf8)
                     )
                 }
-                let rendered = try VerifyInteractionSurvey.run(
+                let rendered = try await VerifyInteractionSurvey.run(
                     target: target,
                     familyFilter: family,
                     sequenceCount: sequenceCount,
                     userModuleName: userModule,
+                    maxParallel: maxParallel,
                     workingDirectory: workingDirectory
                 )
                 print(rendered, terminator: "")

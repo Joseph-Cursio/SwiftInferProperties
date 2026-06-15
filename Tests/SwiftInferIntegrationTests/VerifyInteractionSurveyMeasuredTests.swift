@@ -35,7 +35,7 @@ struct VerifyInteractionSurveyMeasuredTests {
     """
 
     @Test("--all --family idempotence surveys both witnesses serially and records bothPass for each")
-    func surveyRecordsBothPassForEachIdentity() throws {
+    func surveyRecordsBothPassForEachIdentity() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("verify-interaction-survey")
             .appendingPathComponent(UUID().uuidString)
@@ -48,7 +48,7 @@ struct VerifyInteractionSurveyMeasuredTests {
             into: parent
         )
 
-        let rendered = try VerifyInteractionSurvey.run(
+        let rendered = try await VerifyInteractionSurvey.run(
             target: "IdempotenceCorpus",
             familyFilter: "idempotence",
             workingDirectory: root

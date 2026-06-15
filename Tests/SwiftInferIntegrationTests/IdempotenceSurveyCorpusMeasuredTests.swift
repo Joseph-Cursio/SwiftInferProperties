@@ -22,7 +22,7 @@ import Testing
 struct IdempotenceSurveyCorpusMeasuredTests {
 
     @Test("survey records 11 bothPass + 1 defaultFails across 3 carrier shapes; discover promotes only the survivors")
-    func measuredBaselineSplitsAndPromotes() throws {
+    func measuredBaselineSplitsAndPromotes() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("idempotence-survey-corpus-measured")
             .appendingPathComponent(UUID().uuidString)
@@ -38,7 +38,7 @@ struct IdempotenceSurveyCorpusMeasuredTests {
         // A trimmed sequence budget keeps each verifier run brief — the
         // build dominates, and the non-idempotent identity traps on the
         // very first sequence regardless.
-        let summary = try VerifyInteractionSurvey.run(
+        let summary = try await VerifyInteractionSurvey.run(
             target: "IdempotenceSurveyCorpus",
             familyFilter: "idempotence",
             sequenceCount: 128,

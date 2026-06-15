@@ -8,21 +8,34 @@ import SwiftInferCore
 /// `verify-interaction` runs — feeding `verify-evidence.json` so a later
 /// `discover-interaction` surfaces the survivors at `.verified`.
 ///
-/// **Still serial, but no longer *by necessity* (cycle 120).** The two
-/// blockers to parallelism are now removed: milestone 1 made the verify
-/// workdir per-invariant (`workdirSegment(for:identity:)`), so sibling
-/// identities on one reducer no longer share a `.build/`; milestone 2
-/// moved evidence recording out of the per-call hot path
-/// (`persistEvidence: false`) to a single batch write below, so concurrent
-/// verifies can't lose records to interleaved read-modify-writes. The loop
-/// stays a serial `for` here; milestone 3 swaps it for a bounded
-/// `withTaskGroup` (mirroring the algebraic `--all-from-index` survey).
+/// **Bounded-parallel (cycle 120).** The fan-out builds up to
+/// `maxParallel` identities concurrently (`withTaskGroup`, mirroring the
+/// algebraic `--all-from-index` survey). Three pieces make it safe:
+/// milestone 1's per-invariant workdir (`workdirSegment(for:identity:)`)
+/// so sibling identities on one reducer no longer share a `.build/`;
+/// milestone 2's `persistEvidence: false` + single batch write so
+/// concurrent verifies can't lose records to interleaved
+/// read-modify-writes; and a re-sort to discovery order so output stays
+/// deterministic despite nondeterministic completion. Each task is a real
+/// `swift build`, so the cap is conservative (default 4) — concurrent
+/// builds contend for cores.
 enum VerifyInteractionSurvey {
 
     /// One surveyed identity + its measured outcome.
-    struct Entry: Equatable {
+    struct Entry: Equatable, Sendable {
         let suggestion: InteractionInvariantSuggestion
         let result: InteractionVerifyOutcomeParser.Result
+    }
+
+    /// Per-run verify config shared by every identity's worker. Bundled
+    /// (rather than threaded as loose params) so the fan-out helpers stay
+    /// under SwiftLint's parameter-count cap; `Sendable` so it can cross
+    /// the `TaskGroup` boundary.
+    struct RunContext: Sendable {
+        let target: String
+        let sequenceCount: Int
+        let userModuleName: String?
+        let workingDirectory: URL
     }
 
     enum SurveyError: Error, CustomStringConvertible, Equatable {
@@ -40,16 +53,19 @@ enum VerifyInteractionSurvey {
         }
     }
 
-    /// Full path: discover → optional family filter → serial measured verify
-    /// (records evidence per identity) → rendered summary. Returns the
-    /// summary string; the caller prints it.
+    /// Full path: discover → optional family filter → bounded-parallel
+    /// measured verify → batch-record evidence once → rendered summary.
+    /// Returns the summary string; the caller prints it. `maxParallel`
+    /// bounds in-flight `swift build`s (default 4, as the algebraic
+    /// `--all-from-index` survey).
     static func run(
         target: String,
         familyFilter: String?,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
+        maxParallel: Int = 4,
         workingDirectory: URL
-    ) throws -> String {
+    ) async throws -> String {
         let all = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
             target: target,
             workingDirectory: workingDirectory
@@ -61,26 +77,86 @@ enum VerifyInteractionSurvey {
             return render(target: target, family: family, entries: [])
         }
 
-        var entries: [Entry] = []
-        for suggestion in selected {
-            let result = try VerifyInteractionPipeline.runWithInvariant(
-                target: target,
-                invariant: suggestion,
-                sequenceCount: sequenceCount,
-                userModuleName: userModuleName,
-                // Cycle 120 — suppress the per-call upsert; the survey
-                // batch-records once below so a future parallel fan-out
-                // can't lose records to interleaved read-modify-writes.
-                persistEvidence: false,
-                workingDirectory: workingDirectory
-            )
-            entries.append(Entry(suggestion: suggestion, result: result))
-        }
+        let context = RunContext(
+            target: target,
+            sequenceCount: sequenceCount,
+            userModuleName: userModuleName,
+            workingDirectory: workingDirectory
+        )
+        let entries = await runSurvey(
+            selected: selected,
+            context: context,
+            parallelism: max(1, maxParallel)
+        )
+        // Cycle 120 — one batch write after the fan-out joins, so concurrent
+        // verifies never lose records to an interleaved read-modify-write.
         VerifyInteractionPipeline.recordEvidenceBatch(
             entries.map { (invariant: $0.suggestion, result: $0.result) },
             workingDirectory: workingDirectory
         )
         return render(target: target, family: family, entries: entries)
+    }
+
+    /// Cycle 120 — bounded-parallel fan-out over the selected identities
+    /// (mirrors the algebraic `runParallelSurvey`: prime `parallelism`
+    /// tasks, then drain-and-refill). Each identity now builds in its own
+    /// per-invariant workdir (milestone 1) and suppresses per-call
+    /// recording (milestone 2), so the concurrency is safe. Task
+    /// completion order is nondeterministic, so results are re-sorted to
+    /// discovery order before return — the rendered summary and the
+    /// batch-record order stay deterministic regardless of build timing.
+    private static func runSurvey(
+        selected: [InteractionInvariantSuggestion],
+        context: RunContext,
+        parallelism: Int
+    ) async -> [Entry] {
+        var collected: [(index: Int, entry: Entry)] = []
+        await withTaskGroup(of: (index: Int, entry: Entry).self) { group in
+            var inFlight = 0
+            var nextIndex = 0
+            func submitNext() {
+                let index = nextIndex
+                let suggestion = selected[index]
+                nextIndex += 1
+                inFlight += 1
+                group.addTask { (index, surveyOne(suggestion: suggestion, context: context)) }
+            }
+            while nextIndex < selected.count, inFlight < parallelism { submitNext() }
+            while let done = await group.next() {
+                inFlight -= 1
+                collected.append(done)
+                if nextIndex < selected.count { submitNext() }
+            }
+        }
+        return collected.sorted { $0.index < $1.index }.map(\.entry)
+    }
+
+    /// Per-identity worker. Runs the full measured verify; maps any thrown
+    /// error to a `.measuredError` entry so one bad reducer doesn't abort
+    /// the survey (matching the algebraic survey's error tolerance).
+    private static func surveyOne(
+        suggestion: InteractionInvariantSuggestion,
+        context: RunContext
+    ) -> Entry {
+        do {
+            let result = try VerifyInteractionPipeline.runWithInvariant(
+                target: context.target,
+                invariant: suggestion,
+                sequenceCount: context.sequenceCount,
+                userModuleName: context.userModuleName,
+                persistEvidence: false,
+                workingDirectory: context.workingDirectory
+            )
+            return Entry(suggestion: suggestion, result: result)
+        } catch {
+            return Entry(
+                suggestion: suggestion,
+                result: InteractionVerifyOutcomeParser.Result(
+                    outcome: .measuredError,
+                    detail: "verify failed: \(error)"
+                )
+            )
+        }
     }
 
     /// Parse the optional `--family` filter into a family, throwing on an
