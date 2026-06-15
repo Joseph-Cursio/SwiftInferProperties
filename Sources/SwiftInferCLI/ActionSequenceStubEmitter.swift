@@ -60,17 +60,20 @@ public enum ActionSequenceStubEmitter {
         if let invariant = inputs.invariant {
             validateInvariant(invariant.family)
         }
+        let isTCA = inputs.candidate.carrierKind == .tca
         let reducerCall = makeReducerCall(inputs.candidate)
         let stateInit = "\(inputs.candidate.stateTypeName)()"
         let applyStep = makeApplyStep(
             shape: inputs.candidate.signatureShape,
-            reducerCall: reducerCall
+            reducerCall: reducerCall,
+            isTCA: isTCA
         )
         let perStepCheck = makePerStepCheck(invariant: inputs.invariant)
         let postLoopCheck = makePostLoopCheck(
             invariant: inputs.invariant,
             shape: inputs.candidate.signatureShape,
-            reducerCall: reducerCall
+            reducerCall: reducerCall,
+            isTCA: isTCA
         )
         return assembleStub(
             inputs: inputs,
@@ -106,8 +109,17 @@ public enum ActionSequenceStubEmitter {
         }
         lines.append("// DO NOT EDIT — regenerated on each `swift-infer verify-interaction` run.")
         lines.append("")
+        let isTCA = inputs.candidate.carrierKind == .tca
         lines.append("import Foundation")
-        lines.append("import \(inputs.userModuleName)")
+        // Cycle 122 (Phase A): a `.tca` reducer's sources are compiled
+        // INTO this target (direct source inclusion) — no `import
+        // <userModule>` — but it needs `ComposableArchitecture` to name
+        // `Reduce`/`Effect` and call `reduce(into:action:)`.
+        if isTCA {
+            lines.append("import ComposableArchitecture")
+        } else {
+            lines.append("import \(inputs.userModuleName)")
+        }
         lines.append("import PropertyBased")
         lines.append("import PropertyLawKit")
         lines.append("")
@@ -122,10 +134,7 @@ public enum ActionSequenceStubEmitter {
         lines.append("        let pinPrefix = env[\"\(pinPrefixLengthEnvVar)\"].flatMap(Int.init)")
         lines.append("        let pinSuffixStart = env[\"\(pinSuffixStartEnvVar)\"].flatMap(Int.init)")
         lines.append("        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))")
-        lines.append("        let generator = ActionSequenceFactory.actionSequence(")
-        lines.append("            forCaseIterable: \(inputs.candidate.actionTypeName).self,")
-        lines.append("            length: \(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)")
-        lines.append("        )")
+        lines.append(contentsOf: makeGeneratorBlock(inputs: inputs, isTCA: isTCA))
         lines.append("        var clean = 0")
         lines.append("        for sequenceIndex in 0..<\(inputs.sequenceCount) {")
         lines.append(contentsOf: makeIterationBody(
@@ -203,8 +212,13 @@ public enum ActionSequenceStubEmitter {
     /// relative init via `feature.reduce(into:action:)` is separate
     /// scope.
     private static func validate(_ candidate: ReducerCandidate) throws {
-        if candidate.carrierKind == .tca {
-            throw EmitError.unsupportedCarrier(candidate.carrierKind)
+        // Cycle 122 (Phase A) — `.tca` is now supported for reducers whose
+        // Action is fully payload-free (discovery captures the case list in
+        // `actionCaseNames`; empty means a payload case was present, or no
+        // Action enum was found). Payload-bearing Actions stay rejected
+        // until Phase B's value generators.
+        if candidate.carrierKind == .tca, candidate.actionCaseNames.isEmpty {
+            throw EmitError.tcaActionNotEnumerable(actionType: candidate.actionTypeName)
         }
     }
 
@@ -219,6 +233,49 @@ public enum ActionSequenceStubEmitter {
         return candidate.functionName
     }
 
+    /// The action-generator + (for TCA) reducer-instance setup lines,
+    /// pre-indented to 8 spaces. Generic carriers enumerate via
+    /// `forCaseIterable:`; `.tca` carriers use an explicit payload-free
+    /// case list (real TCA Actions don't declare `CaseIterable`) and a
+    /// `let reducer = T()` instance to drive `reduce(into:action:)`.
+    private static func makeGeneratorBlock(inputs: Inputs, isTCA: Bool) -> [String] {
+        let length = "\(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)"
+        guard isTCA else {
+            return [
+                "        let generator = ActionSequenceFactory.actionSequence(",
+                "            forCaseIterable: \(inputs.candidate.actionTypeName).self,",
+                "            length: \(length)",
+                "        )"
+            ]
+        }
+        // `Gen.element(of:)` yields an Optional element (nil only for an
+        // empty list, impossible here — `validate` rejects empty cases),
+        // so unwrap-map back to the bare Action.
+        let reducerType = inputs.candidate.enclosingTypeName ?? inputs.candidate.actionTypeName
+        return [
+            "        let actionGen = Gen.element(of: \(tcaActionListLiteral(inputs.candidate)))",
+            "            .map { $0! }",
+            "        let generator = ActionSequenceFactory.actionSequence(",
+            "            from: actionGen,",
+            "            length: \(length)",
+            "        )",
+            "        let reducer = \(reducerType)()"
+        ]
+    }
+
+    /// Cycle 122 (Phase A) — a Swift array literal of the candidate's
+    /// payload-free Action cases, each fully qualified
+    /// (`[Counter.Action.increment, Counter.Action.decrement, …]`) so the
+    /// `Gen.element(of:)` element type is unambiguous. Precondition: the
+    /// caller only reaches this for `.tca` candidates with a non-empty
+    /// `actionCaseNames` (guaranteed by `validate`).
+    static func tcaActionListLiteral(_ candidate: ReducerCandidate) -> String {
+        let elements = candidate.actionCaseNames
+            .map { "\(candidate.actionTypeName).\($0)" }
+            .joined(separator: ", ")
+        return "[\(elements)]"
+    }
+
     /// One iteration of the action-application loop. Returns the
     /// statement(s) that mutate `state` for the given signature
     /// shape. Effect-bearing shapes (M8.A) discard the returned
@@ -228,8 +285,16 @@ public enum ActionSequenceStubEmitter {
     /// shape needs two lines (destructure + assign).
     static func makeApplyStep(
         shape: ReducerSignatureShape,
-        reducerCall: String
+        reducerCall: String,
+        isTCA: Bool = false
     ) -> [String] {
+        // Cycle 122 (Phase A) — a `.tca` reducer is driven instance-
+        // relative: `reducer.reduce(into:&state, action:)` on a `let
+        // reducer = <Type>()` the assembler emits before the loop. The
+        // returned `Effect` is captured + discarded (PRD §16 #1).
+        if isTCA {
+            return ["_ = reducer.reduce(into: &state, action: action)"]
+        }
         switch shape {
         case .stateActionReturnsState:
             return ["state = \(reducerCall)(state, action)"]

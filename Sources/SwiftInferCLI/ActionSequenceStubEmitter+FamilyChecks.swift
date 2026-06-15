@@ -55,7 +55,8 @@ extension ActionSequenceStubEmitter {
     static func makePostLoopCheck(
         invariant: InteractionInvariantSuggestion?,
         shape: ReducerSignatureShape,
-        reducerCall: String
+        reducerCall: String,
+        isTCA: Bool = false
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
@@ -66,7 +67,8 @@ extension ActionSequenceStubEmitter {
             return makeIdempotenceCheck(
                 actionExpr: invariant.predicate,
                 shape: shape,
-                reducerCall: reducerCall
+                reducerCall: reducerCall,
+                isTCA: isTCA
             )
         }
     }
@@ -80,11 +82,23 @@ extension ActionSequenceStubEmitter {
     static func makeIdempotenceCheck(
         actionExpr: String,
         shape: ReducerSignatureShape,
-        reducerCall: String
+        reducerCall: String,
+        isTCA: Bool = false
     ) -> [String] {
         let assertion =
             "precondition(once == twice, "
                 + "\"Idempotence invariant violated for \(actionExpr)\")"
+        // Cycle 122 (Phase A) — `.tca` double-applies the witness through
+        // the instance reducer; Effects discarded (PRD §16 #1).
+        if isTCA {
+            return [
+                "var once = state",
+                "_ = reducer.reduce(into: &once, action: \(actionExpr))",
+                "var twice = once",
+                "_ = reducer.reduce(into: &twice, action: \(actionExpr))",
+                assertion
+            ]
+        }
         switch shape {
         case .stateActionReturnsState:
             return [

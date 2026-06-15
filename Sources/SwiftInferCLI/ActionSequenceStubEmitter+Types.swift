@@ -42,6 +42,12 @@ extension ActionSequenceStubEmitter {
         case unsupportedShape(ReducerSignatureShape)
         case unsupportedCarrier(ReducerCarrierKind)
         case unsupportedFamily(InteractionInvariantFamily)
+        /// Cycle 122 (Phase A) — a `.tca` candidate whose Action enum
+        /// isn't fully payload-free, so the verifier can't enumerate the
+        /// action space without value generators (Phase B). Distinct from
+        /// `unsupportedCarrier` because `.tca` IS now supported — just not
+        /// for payload-bearing Actions yet.
+        case tcaActionNotEnumerable(actionType: String)
 
         public var description: String {
             switch self {
@@ -51,9 +57,14 @@ extension ActionSequenceStubEmitter {
                     + "shapes."
 
             case let .unsupportedCarrier(kind):
-                return "ActionSequenceStubEmitter does not yet support carrier kind "
-                    + "'\(kind.rawValue)' (TCA `.tca` reducers need closure-relative "
-                    + "state init via `feature.reduce(into:action:)` — deferred)."
+                return "ActionSequenceStubEmitter does not support carrier kind "
+                    + "'\(kind.rawValue)'."
+
+            case let .tcaActionNotEnumerable(actionType):
+                return "ActionSequenceStubEmitter can't enumerate the action space for "
+                    + "'\(actionType)': the Action enum has associated-value cases, which "
+                    + "need value generators (Phase B). Phase A verifies only payload-free "
+                    + "TCA Actions."
 
             case let .unsupportedFamily(family):
                 return "ActionSequenceStubEmitter does not yet support invariant "
