@@ -167,6 +167,14 @@ public enum VerifyInteractionPipeline {
             invariant: invariant,
             workingDirectory: workingDirectory
         )
+        // Cycle 139 — refint Identifiable gate: skip the build (disclosed
+        // architectural-coverage-pending) when `$0.id` provably can't compile.
+        if let skip = applyRefintIdentifiabilityGate(
+            invariant: invariant, candidate: candidate, target: target,
+            persistEvidence: persistEvidence, workingDirectory: workingDirectory
+        ) {
+            return skip
+        }
         let result = try executeAndParse(
             candidate: candidate,
             stubSource: stubSource,

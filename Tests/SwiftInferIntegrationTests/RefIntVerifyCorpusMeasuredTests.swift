@@ -21,13 +21,17 @@ import Testing
 ///   - **CatalogFeature** — `removeFirst` drops an item without fixing the
 ///     selection (the false positive) → `measured-defaultFails` →
 ///     suppressed.
+///   - **NoteFeature** — element type `Note` is non-Identifiable, so the
+///     cycle-139 Identifiable gate SKIPS the build →
+///     `architectural-coverage-pending` with a disclosure → stays
+///     `.possible` (score-neutral).
 ///
 /// Spawns real `swift build`s resolving swift-composable-architecture;
 /// tagged `.subprocess`.
-@Suite("Referential-integrity verify corpus — measured baseline (cycle 138)", .tags(.subprocess))
+@Suite("Referential-integrity verify corpus — measured baseline (cycle 138/139)", .tags(.subprocess))
 struct RefIntVerifyCorpusMeasuredTests {
 
-    @Test("valid reducer verifies (→ Verified, un-gated); the dangling-selection false positive is suppressed")
+    @Test("valid → Verified; false positive suppressed; non-Identifiable element skipped by the gate")
     func measuredBaselineSplitsAndPromotes() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("refint-verify-corpus-measured")
@@ -48,18 +52,22 @@ struct RefIntVerifyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        #expect(summary.contains("Identities: 2 (--family referential-integrity)"))
+        #expect(summary.contains("Identities: 3 (--family referential-integrity)"))
         #expect(summary.contains("1 measured-bothPass"))
         #expect(summary.contains("1 measured-defaultFails"))
+        #expect(summary.contains("1 architectural-coverage-pending"))
+        // The gate's disclosure rides into the survey output (no build run).
+        #expect(summary.contains("element type `Note` is not Identifiable"))
 
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 2)
+        #expect(stored.log.records.count == 3)
         #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 1)
         #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
+        #expect(stored.log.records.filter { $0.outcome == .architecturalCoveragePending }.count == 1)
 
         // Payoff: discover folds the evidence — Library promoted to Verified
-        // through the ungated path (no overrule disclosure); Catalog
-        // suppressed.
+        // (ungated, no overrule disclosure); Catalog suppressed; NoteFeature
+        // stays Possible (architectural-pending is score-neutral).
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "RefIntVerifyCorpus",
             includePossible: true,
@@ -69,7 +77,8 @@ struct RefIntVerifyCorpusMeasuredTests {
         #expect(discovered.contains("state.books.contains"))        // Library survives
         #expect(!discovered.contains("state.items.contains"))       // Catalog suppressed
         #expect(!discovered.contains("overruled"))                  // un-gated: no pin-overrule
-        #expect(!discovered.contains("(Possible)"))                 // survivor promoted off .possible
+        #expect(discovered.contains("state.notes.contains"))        // Note still present…
+        #expect(discovered.contains("(Possible)"))                  // …at .possible (gate-skipped)
     }
 
     /// `Tests/Fixtures/refint-verify-corpus/`, resolved against `#filePath`
