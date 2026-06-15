@@ -34,10 +34,10 @@ struct TCAVerifyCorpusMeasuredTests {
         )
         assertSurvey(summary)
 
-        // Evidence harvested for all 19; 17 bothPass survive.
+        // Evidence harvested for all 21; 19 bothPass survive.
         let stored = VerifyEvidenceStore.load(startingFrom: root)
-        #expect(stored.log.records.count == 19)
-        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 17)
+        #expect(stored.log.records.count == 21)
+        #expect(stored.log.records.filter { $0.outcome == .measuredBothPass }.count == 19)
         #expect(stored.log.records.filter { $0.outcome == .measuredDefaultFails }.count == 2)
 
         // Payoff: discover reads the evidence — survivors render Verified
@@ -54,8 +54,12 @@ struct TCAVerifyCorpusMeasuredTests {
         // eleven real @Reducer reducers and measured verify splits them: only
         // the two name-vs-behavior false positives fail — setBadge (set*) and
         // ToggleFeature.hide (exact witness that toggles).
-        #expect(summary.contains("Identities: 19 (--family idempotence)"))
-        #expect(summary.contains("Summary: 17 measured-bothPass, 2 measured-defaultFails"))
+        #expect(summary.contains("Identities: 21 (--family idempotence)"))
+        #expect(summary.contains("Summary: 19 measured-bothPass, 2 measured-defaultFails"))
+        // Cycle 144 — CombineReducers composed body verifies (whole body via
+        // the dedup), and a reducer driving the Double + Bool raw generators.
+        #expect(summary.contains("CombineFeature.body  idempotence  .dismiss"))
+        #expect(summary.contains("GaugeFeature.body  idempotence  .reset"))
         // The method-reference body form (Reduce(handle)) verifies, and an
         // effect-bearing body (.run) verifies with the Effect discarded.
         #expect(summary.contains("MethodRefFeature.body  idempotence  .dismiss"))
@@ -94,7 +98,10 @@ struct TCAVerifyCorpusMeasuredTests {
         let fullExploration = [
             "NavFeature.body", "SelectionFeature.body", "ToggleFeature.body",
             "MethodRefFeature.body", "EffectFeature.body",
-            "MultiReduceFeature.body", "ChildFeature.body"
+            "MultiReduceFeature.body", "ChildFeature.body",
+            // cycle 144 — CombineReducers (payload-free) + Gauge (Double/Bool
+            // raws are constructible) are both full-coverage.
+            "CombineFeature.body", "GaugeFeature.body"
         ]
         for full in fullExploration {
             #expect(lines.filter { $0.contains(full) }.allSatisfy { !$0.contains("partial") })
