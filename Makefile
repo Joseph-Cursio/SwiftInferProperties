@@ -18,7 +18,7 @@ SUBPROCESS_RE := MeasuredTests|MeasuredExecutionTests|VerifyPipeline
 BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests
 BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests
 BATCH3 := VerifyPipeline
-BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|MeasuredPromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests
+BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|PromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests
 
 # Never run batches concurrently (peak-disk + perf-contention safety), even
 # under `make -j`.

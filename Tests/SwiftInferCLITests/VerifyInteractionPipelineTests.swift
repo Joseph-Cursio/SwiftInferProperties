@@ -182,6 +182,15 @@ struct VerifyInteractionPipelineTests {
             )
         }
     }
+}
+
+// Split out so the primary `VerifyInteractionPipelineTests` struct body stays
+// under SwiftLint's `type_body_length`. `@Test` methods in an extension of the
+// `@Suite` type are still discovered as part of the suite, and extension
+// bodies are exempt from the rule. The `makeFixtureDirectory` / `writeFile`
+// fixture helpers (used only by these resolveAndEmit tests) live at the
+// bottom of this extension.
+extension VerifyInteractionPipelineTests {
 
     // MARK: - End-to-end resolveAndEmit against a fixture directory
     //

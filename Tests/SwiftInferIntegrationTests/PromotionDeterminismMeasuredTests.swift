@@ -14,7 +14,7 @@ import Testing
 ///
 /// Real `swift build` + two verifier runs (~25s) — tagged `.subprocess`.
 @Suite("Measured-promotion determinism — end-to-end reproducibility", .tags(.subprocess))
-struct MeasuredPromotionDeterminismMeasuredTests {
+struct PromotionDeterminismMeasuredTests {
 
     private static let counterSource = """
     public struct CounterReducer {

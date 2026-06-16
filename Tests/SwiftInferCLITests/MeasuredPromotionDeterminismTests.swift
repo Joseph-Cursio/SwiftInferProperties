@@ -10,7 +10,7 @@ import Testing
 /// selection). This suite locks the root of that determinism — the
 /// verifier seed — at the unit level; the end-to-end reproducibility proof
 /// (verify the same identity twice → identical Result) is the
-/// `.subprocess` `MeasuredPromotionDeterminismMeasuredTests`.
+/// `.subprocess` `PromotionDeterminismMeasuredTests`.
 @Suite("Measured-promotion determinism — seed reproducibility (cycle 118)")
 struct MeasuredPromotionDeterminismTests {
 
