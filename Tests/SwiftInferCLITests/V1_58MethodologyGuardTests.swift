@@ -53,15 +53,22 @@ struct V158MethodologyGuardTests {
     /// entries lets the V1.47.D pre-emption stand without polluting
     /// the methodology guard's signal — if a future cycle adds a pick
     /// whose TypeShape's storedMembers include `Self.Element`, those
-    /// will match and the entry can be removed from here. **`Base.Index`
-    /// is NOT in the escape hatch** because cycle-27 ChunkedByCollection
-    /// picks have it as a stored-member type-name — the V1.47.D
-    /// binding for that one matched.
+    /// will match and the entry can be removed from here.
+    ///
+    /// **`Base.Index` (cycle 148)**: previously matched via cycle-27
+    /// `ChunkedByCollection` picks' stored-member type-name, so it was NOT in
+    /// the escape hatch. Cycle 148's Lever A non-public/SPI discovery filter
+    /// dropped that pick (its method was internal-sourced), so `Base.Index`
+    /// no longer matches any surfaced carrier. The binding itself is still a
+    /// legitimate generic-index resolution (`Base.Index → Int` for collection
+    /// generics), so it moves here rather than being removed — exactly the
+    /// "pick removed → move to escape hatch" path this guard anticipates.
     private static let intentionallyUnmatchedKeys: Set<String> = [
         "Self.Index",
         "Self.Element",
         "Base.Element",
-        "Iterator.Element"
+        "Iterator.Element",
+        "Base.Index"
     ]
 
     @Test("every curatedBindings key matches a cycle-27 carrier name or stored-member type-name")

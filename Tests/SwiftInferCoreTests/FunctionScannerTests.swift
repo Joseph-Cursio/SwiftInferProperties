@@ -199,10 +199,10 @@ struct FunctionScannerHeaderTests {
         #expect(summary.location.line == 3)
     }
 
-    // MARK: V1.57.A — private/fileprivate filter
+    // MARK: V1.57.A (cycle 54) + cycle-148 (Lever A) — non-public / SPI filter
 
-    @Test("private functions are skipped at scan time (V1.57.A)")
-    func privateFunctionsAreSkipped() {
+    @Test("access-level filter: public + default-internal kept; explicit internal/private/fileprivate skipped (cycle 148)")
+    func nonPublicAccessLevelsAreSkipped() {
         let source = """
         public func publicFn() {}
         private func privateFn() {}
@@ -213,12 +213,46 @@ struct FunctionScannerHeaderTests {
         let summaries = FunctionScanner.scan(source: source, file: "Test.swift")
         let names = summaries.map(\.name)
         #expect(names.contains("publicFn"))
-        #expect(names.contains("internalFn"))
+        // Cycle 148: internal-BY-DEFAULT (no modifier token) is KEPT — this is
+        // the normal shape of our internal test fixtures, which must stay
+        // discoverable.
         #expect(names.contains("defaultFn"))
+        // Cycle 148: EXPLICIT `internal` is now skipped (externally
+        // unverifiable SPI; safe because default-internal carries no token).
+        #expect(names.contains("internalFn") == false)
         #expect(names.contains("privateFn") == false)
         #expect(names.contains("fileprivateFn") == false)
-        // Final count: 3 (public + internal + default-internal); the 2
-        // private/fileprivate variants are skipped.
-        #expect(summaries.count == 3)
+        #expect(summaries.count == 2)   // publicFn + defaultFn
+    }
+
+    @Test("cycle 148: access modifier (not the `_` prefix) decides — public `_relaxedAdd`-style SPI is KEPT, explicit-internal is dropped")
+    func underscoreNamedPublicSPIIsKept() {
+        // The reliable signal is access level: swift-numerics ships
+        // `public static func _relaxedAdd` (underscore-named but PUBLIC, and
+        // it genuinely verifies → measured), while swift-collections'
+        // `internal mutating func _ensureUnique` is real internal SPI. A
+        // `_`-name filter would wrongly drop the former.
+        let source = """
+        public func _relaxedAdd() {}
+        internal func _ensureUnique() {}
+        func _defaultInternalHelper() {}
+        """
+        let names = FunctionScanner.scan(source: source, file: "Test.swift").map(\.name)
+        #expect(names.contains("_relaxedAdd"))            // public SPI — kept
+        #expect(names.contains("_defaultInternalHelper")) // default-internal — kept (fixture shape)
+        #expect(names.contains("_ensureUnique") == false) // explicit internal — dropped
+    }
+
+    @Test("cycle 148: functions in a `_`-prefixed enclosing type / extension are skipped")
+    func underscoreEnclosingTypesAreSkipped() {
+        let source = """
+        public struct Keep { public func ok() {} }
+        public struct _HashTable { public func wordCount() {} }
+        extension _UnsafeHashTable { public func word() {} }
+        """
+        let names = FunctionScanner.scan(source: source, file: "Test.swift").map(\.name)
+        #expect(names.contains("ok"))
+        #expect(names.contains("wordCount") == false)
+        #expect(names.contains("word") == false)
     }
 }

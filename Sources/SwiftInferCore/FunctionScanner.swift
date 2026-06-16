@@ -118,21 +118,34 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        // V1.57.A — skip functions declared `private` or `fileprivate`.
-        // Cycle-53 measurement (`docs/calibration-cycle-53-findings.md`)
-        // surfaced 3 file-private helpers (`walkCap`, `iterationCap`,
-        // `snapshot`) in SwiftPropertyLaws that ended up indexed as
-        // `(none)`-typeName picks. These helpers aren't reachable from
-        // outside the file and can't be property-tested cross-module;
-        // filtering at scan time prevents them from entering the
-        // SemanticIndex. **Not** filtering `internal` — Swift's default
-        // access level is internal, so most user code carries no
-        // explicit modifier; filtering internal would over-eagerly drop
-        // most picks. Internal-but-explicit symbols (cycle-52's
-        // `rescaledDivide`) are handled at verify time via V1.56.A's
-        // pattern matcher instead.
+        // V1.57.A (cycle 54) — skip `private` / `fileprivate` helpers, which
+        // can't be property-tested cross-module (`docs/calibration-cycle-53/54`).
+        //
+        // Cycle 148 (Lever A) — also skip the other non-public / SPI shapes an
+        // external verifier can never call. Pre-148 they were indexed and only
+        // failed at verify time as `architectural-coverage-pending`
+        // (`unsupported-carrier` on `_`-types, `internal-api-not-accessible`),
+        // inflating the v1 algebraic measured-execution denominator with
+        // false positives. Per PRD §3.5 (high precision, fewer suggestions)
+        // they shouldn't be surfaced at all. Three signals:
+        //   - explicit `internal` modifier (e.g. swift-numerics'
+        //     `internal static func rescaledDivide`, swift-collections'
+        //     `internal mutating func _ensureUnique`). SAFE — Swift's default
+        //     access carries NO token, so internal-BY-default user code (incl.
+        //     our test fixtures) is untouched; only deliberately-marked
+        //     internal SPI is dropped. (Reverses cycle-54's "keep + handle at
+        //     verify": an externally-uncallable symbol is noise, not a
+        //     deferred verdict.) NB: the access modifier — NOT the `_` prefix —
+        //     is the reliable signal: `public static func _relaxedAdd` is an
+        //     underscore-named PUBLIC SPI that genuinely verifies (measured),
+        //     so a `_`-name filter would wrongly drop it.
+        //   - `_`-prefixed enclosing type / extension (e.g. `_HashTable`,
+        //     `_UnsafeHashTable`) — the carrier itself is a private stdlib
+        //     internal; no measured pick has a `_`-prefixed carrier.
         let modifiers = node.modifiers.map(\.name.text)
-        if modifiers.contains("private") || modifiers.contains("fileprivate") {
+        if modifiers.contains("private") || modifiers.contains("fileprivate")
+            || modifiers.contains("internal")
+            || typeStack.contains(where: { $0.hasPrefix("_") }) {
             return .skipChildren
         }
         summaries.append(makeSummary(from: node))

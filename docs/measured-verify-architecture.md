@@ -220,10 +220,11 @@ biconditional c137, refint c138); the gate-overrule (135/136), refint
 Identifiable gate (139), and corpus widening (140–144) shipped; tooling +
 code-health (145) done; full suite green (3200 fast + 33 subprocess).
 
-**Active epic (cycle 147+)**: moving the frozen algebraic 50.5% (§8) via
-levers A (non-public-carrier filter), B (instance/mutating-method emitter),
-C (pair/recipe gaps) — projected ~78%. See
-`docs/calibration-cycle-147-findings.md`.
+**Active epic (cycle 147+)**: moving the frozen algebraic 50.5% (§8).
+**Lever A shipped (cycle 148)** — non-public/SPI discovery filter, 50.5% →
+**61.0%** (index 103→82). Remaining: B (instance/mutating-method emitter, 20
+picks → ~85%), C (pair/recipe gaps → ~92%), D (lazy-wrapper FP filter). See
+`docs/calibration-cycle-147-findings.md` + `-148-findings.md`.
 
 **Open, off the critical path**: the shelved value-generator (c119) and
 `.tca` C1 reducer-slice extractor (c126) — both belong to the *TCA
