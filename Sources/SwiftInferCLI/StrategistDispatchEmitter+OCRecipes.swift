@@ -80,6 +80,17 @@ extension StrategistDispatchEmitter {
             carrierTypeName: "OrderedSet<Int>.SubSequence",
             imports: ocImports
         ),
+        // Cycle 149 (Lever C-1) — the bare OrderedDictionary carrier. The
+        // `.Elements` / `.Values` / `.SubSequence` views were registered
+        // first (V1.63.A / V1.69.B), but the dictionary itself had no
+        // recipe, so its `merge(_:uniquingKeysWith:)` dual-style and
+        // `sort()` idempotence picks stalled at `unsupported-carrier:
+        // OrderedDictionary`. `viewSuffix: ""` returns the whole `dict`.
+        "OrderedDictionary<Int, Int>": GeneratorRecipe(
+            expression: ocDictExpression(viewSuffix: ""),
+            carrierTypeName: "OrderedDictionary<Int, Int>",
+            imports: ocImports
+        ),
         // V1.63.A — OrderedDictionary's `.elements` key-value-pair view.
         "OrderedDictionary<Int, Int>.Elements": GeneratorRecipe(
             expression: ocDictExpression(viewSuffix: ".elements"),

@@ -42,4 +42,14 @@ struct GenericBindingResolverTests {
         #expect(GenericBindingResolver.bound("OrderedSet<Element>") == "OrderedSet<Element>")
         #expect(GenericBindingResolver.bound("Int") == "Int")
     }
+
+    @Test("Cycle 149 (Lever C-1): bare OrderedDictionary binds to OrderedDictionary<Int, Int>")
+    func bareOrderedDictionaryBinds() {
+        // The views (`.Elements` / `.Values` / `.Elements.SubSequence`)
+        // were bound first; the dictionary itself was missing, so its
+        // merge/sort picks couldn't resolve a recipe.
+        #expect(GenericBindingResolver.resolve("OrderedDictionary") == "OrderedDictionary<Int, Int>")
+        #expect(GenericBindingResolver.resolve("OrderedDictionary.Elements")
+            == "OrderedDictionary<Int, Int>.Elements")
+    }
 }

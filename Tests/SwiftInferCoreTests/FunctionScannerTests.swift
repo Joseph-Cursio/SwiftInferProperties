@@ -201,7 +201,7 @@ struct FunctionScannerHeaderTests {
 
     // MARK: V1.57.A (cycle 54) + cycle-148 (Lever A) — non-public / SPI filter
 
-    @Test("access-level filter: public + default-internal kept; explicit internal/private/fileprivate skipped (cycle 148)")
+    @Test("access filter: public + default-internal kept; explicit internal/private/fileprivate skipped (c148)")
     func nonPublicAccessLevelsAreSkipped() {
         let source = """
         public func publicFn() {}
@@ -225,7 +225,7 @@ struct FunctionScannerHeaderTests {
         #expect(summaries.count == 2)   // publicFn + defaultFn
     }
 
-    @Test("cycle 148: access modifier (not the `_` prefix) decides — public `_relaxedAdd`-style SPI is KEPT, explicit-internal is dropped")
+    @Test("c148: access modifier (not `_` prefix) decides — public `_relaxedAdd` SPI kept, explicit-internal dropped")
     func underscoreNamedPublicSPIIsKept() {
         // The reliable signal is access level: swift-numerics ships
         // `public static func _relaxedAdd` (underscore-named but PUBLIC, and

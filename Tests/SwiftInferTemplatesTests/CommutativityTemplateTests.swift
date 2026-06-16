@@ -328,50 +328,9 @@ Suppress:  // swiftinfer: skip \(suggestion.identity.display)
         #expect(rendered == expected)
     }
 
-    // MARK: cycle 149 (Lever B) — Collection index-traversal exclusion
-
-    @Test("distance(from:to:) is NOT a commutativity candidate (Collection index-traversal)")
-    func distanceFromToExcluded() {
-        // On OrderedSet (Index == Int) this is (Int, Int) -> Int by shape, but
-        // `distance` is antisymmetric — a signature false positive.
-        let summary = makeCommutativitySummary(
-            name: "distance",
-            parameters: [
-                Parameter(label: "from", internalName: "a", typeText: "Int", isInout: false),
-                Parameter(label: "to", internalName: "b", typeText: "Int", isInout: false)
-            ],
-            returnType: "Int"
-        )
-        #expect(CommutativityTemplate.suggest(for: summary) == nil)
-    }
-
-    @Test("index(_:offsetBy:) is NOT a commutativity candidate (Collection index-traversal)")
-    func indexOffsetByExcluded() {
-        let summary = makeCommutativitySummary(
-            name: "index",
-            parameters: [
-                Parameter(label: nil, internalName: "i", typeText: "Int", isInout: false),
-                Parameter(label: "offsetBy", internalName: "n", typeText: "Int", isInout: false)
-            ],
-            returnType: "Int"
-        )
-        #expect(CommutativityTemplate.suggest(for: summary) == nil)
-    }
-
-    @Test("a same-named method with different labels is unaffected (matched by base name + labels)")
-    func sameNameDifferentLabelsStillMatches() {
-        // `distance(x:y:)` — not the Collection requirement; a real (Int,Int)->Int
-        // candidate that execution should still adjudicate.
-        let summary = makeCommutativitySummary(
-            name: "distance",
-            parameters: [
-                Parameter(label: "x", internalName: "x", typeText: "Int", isInout: false),
-                Parameter(label: "y", internalName: "y", typeText: "Int", isInout: false)
-            ],
-            returnType: "Int"
-        )
-        #expect(CommutativityTemplate.suggest(for: summary) != nil)
-    }
+    // Cycle 149 (Lever B) index-traversal exclusion tests moved to
+    // CommutativityIndexTraversalExclusionTests.swift (cycle 150,
+    // file-length cap).
 }
 
 // MARK: - Shared helpers

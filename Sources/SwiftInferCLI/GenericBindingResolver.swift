@@ -80,6 +80,13 @@ public enum GenericBindingResolver {
         // OS.UnorderedView reach `.bothPass` via V1.61.B's existing
         // dual-style mutating-instance emission.
         "OrderedSet.UnorderedView": "OrderedSet<Int>.UnorderedView",
+        // Cycle 149 (Lever C-1) — the bare OrderedDictionary carrier,
+        // bound to <Int, Int> for cycle-27 alignment. Mirrors the
+        // `OrderedSet` → `OrderedSet<Int>` base binding above; the views
+        // were bound first (V1.63.A / V1.69), but the dictionary itself
+        // was never bound, so its `merge` dual-style + `sort()`
+        // idempotence picks couldn't resolve a recipe.
+        "OrderedDictionary": "OrderedDictionary<Int, Int>",
         // V1.63.A — OrderedDictionary<Key, Value>.Elements is the
         // key-value-pair view; bound to OrderedDictionary<Int, Int>
         // .Elements for cycle-27 alignment (Int keys + Int values).

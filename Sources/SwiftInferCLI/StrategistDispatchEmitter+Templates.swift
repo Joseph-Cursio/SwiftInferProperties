@@ -111,7 +111,11 @@ extension StrategistDispatchEmitter {
         // V1.63.A — OD.Elements (key-value-pair view) is a
         // MutableCollection with `sort()` etc. Gate it for V1.60.A's
         // mutating-instance idempotence emission.
-        "OrderedDictionary<Int, Int>.Elements"
+        "OrderedDictionary<Int, Int>.Elements",
+        // Cycle 149 (Lever C-1) — the bare dictionary; `merge` (dual-style
+        // mutating side) and `sort()` (idempotence) are mutating instance
+        // methods, so they need the `var copy; copy.method()` shape.
+        "OrderedDictionary<Int, Int>"
     ]
 
     /// V1.60.A — emit the mutating-instance-method idempotence shape.
@@ -336,6 +340,13 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let nonMutMethodName = nonMutCall.split(separator: ".").last.map(String.init) ?? nonMutCall
+        // Cycle 149 (Lever C-1) — the OrderedDictionary `merge` /
+        // `merging` pair takes a required `uniquingKeysWith:` closure that
+        // the SetAlgebra pairs (`union(_:)` etc.) don't. Both halves use
+        // the SAME keep-new closure, so the dual-style equivalence still
+        // holds (the closure is a pure conflict policy, identical on each
+        // side). The SetAlgebra ops get an empty suffix → unchanged shape.
+        let trailing = dualStyleTrailingArgument(forMutating: mutMethodName)
         return """
         // --- Pass 1: default (strategist-derived generator) ---
         // V1.61.B — mutating-instance-method dual-style shape: assert
@@ -348,9 +359,9 @@ extension StrategistDispatchEmitter {
         for trial in 0 ..< trials {
             let original = defaultGenerator.run(using: &rng)
             let other = defaultGenerator.run(using: &rng)
-            let nonMutResult = original.\(nonMutMethodName)(other)
+            let nonMutResult = original.\(nonMutMethodName)(other\(trailing))
             var mutCopy = original
-            mutCopy.\(mutMethodName)(other)
+            mutCopy.\(mutMethodName)(other\(trailing))
             if nonMutResult != mutCopy {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
@@ -364,6 +375,15 @@ extension StrategistDispatchEmitter {
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
         """
+    }
+
+    /// Cycle 149 (Lever C-1) — trailing call argument(s) a curated
+    /// mutating dual-style method needs beyond `(other)`, keyed by the
+    /// bare mutating name. Only the OrderedDictionary `merge`/`merging`
+    /// family needs one: a keep-new `uniquingKeysWith:` conflict closure
+    /// applied identically to both halves, so the equivalence holds.
+    static func dualStyleTrailingArgument(forMutating mutMethodName: String) -> String {
+        mutMethodName == "merge" ? ", uniquingKeysWith: { (_, new) in new }" : ""
     }
 
     // MARK: - V1.48.A Monotonicity

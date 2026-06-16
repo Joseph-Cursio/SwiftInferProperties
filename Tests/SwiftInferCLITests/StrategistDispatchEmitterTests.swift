@@ -89,6 +89,18 @@ struct StrategistDispatchEmitterRecipeTests {
         #expect(!recipe.expression.contains("zip("))
     }
 
+    @Test("Cycle 149 (Lever C-1): bare OrderedDictionary<Int, Int> resolves to a curated recipe")
+    func bareOrderedDictionaryRecipe() throws {
+        let recipe = try StrategistDispatchEmitter.resolveRecipe(
+            carrier: "OrderedDictionary<Int, Int>", typeShape: nil
+        )
+        #expect(recipe.carrierTypeName == "OrderedDictionary<Int, Int>")
+        // `viewSuffix: ""` returns the whole dictionary, no view projection.
+        #expect(recipe.expression.contains("return dict }"))
+        #expect(recipe.expression.contains(".elements") == false)
+        #expect(recipe.imports.contains("OrderedCollections"))
+    }
+
     @Test("non-raw, non-shape carrier throws .unsupportedCarrier")
     func unknownCarrierThrows() throws {
         #expect(throws: VerifyError.self) {
@@ -252,5 +264,43 @@ struct StrategistDispatchEmitterEmitTests {
         #expect(source.contains("let onceResult"))
         #expect(source.contains("let twiceResult"))
         #expect(source.contains("var onceCopy") == false)
+    }
+
+    @Test("Cycle 149 (Lever C-1): dual-style merge on OrderedDictionary emits the uniquing closure on both halves")
+    func dualStyleMergeEmitsUniquingClosure() throws {
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "dual-style-consistency",
+                carrier: "OrderedDictionary<Int, Int>",
+                functionCalls: ["OrderedDictionary.merging", "merge"]
+            )
+        )
+        let closure = ", uniquingKeysWith: { (_, new) in new }"
+        // Both halves must carry the SAME conflict closure so the
+        // dual-style equivalence holds.
+        #expect(source.contains("original.merging(other\(closure))"))
+        #expect(source.contains("mutCopy.merge(other\(closure))"))
+    }
+
+    @Test("Cycle 149 (Lever C-1): dual-style SetAlgebra union takes no trailing closure (regression guard)")
+    func dualStyleUnionNoTrailingClosure() throws {
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "dual-style-consistency",
+                carrier: "OrderedSet<Int>",
+                functionCalls: ["OrderedSet.union", "formUnion"]
+            )
+        )
+        #expect(source.contains("original.union(other)"))
+        #expect(source.contains("mutCopy.formUnion(other)"))
+        #expect(source.contains("uniquingKeysWith") == false)
+    }
+
+    @Test("Cycle 149 (Lever C-1): dualStyleTrailingArgument keyed on mutating method name")
+    func dualStyleTrailingArgumentLookup() {
+        #expect(StrategistDispatchEmitter.dualStyleTrailingArgument(forMutating: "merge")
+            == ", uniquingKeysWith: { (_, new) in new }")
+        #expect(StrategistDispatchEmitter.dualStyleTrailingArgument(forMutating: "formUnion").isEmpty)
+        #expect(StrategistDispatchEmitter.dualStyleTrailingArgument(forMutating: "sort").isEmpty)
     }
 }
