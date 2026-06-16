@@ -12,17 +12,6 @@
       "typeName": "OrderedSet.UnorderedView"
     },
     {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x06A2761D2E509FC7",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:240",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet.SubSequence"
-    },
-    {
       "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x0EE19DA4B456B0F5",
       "lastSeenAt": "2026-05-13T16:46:51Z",
@@ -53,17 +42,6 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x1A2EB97DEE1146E1",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:226",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements"
-    },
-    {
       "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x1C94EE2FCC17B783",
       "lastSeenAt": "2026-05-13T16:46:51Z",
@@ -92,17 +70,6 @@
           }
         ]
       }
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x2074913DD61C9477",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:263",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
       "firstSeenAt": "2026-05-13T16:46:51Z",
@@ -331,17 +298,6 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x518A1B6980755C21",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:309",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements.SubSequence"
-    },
-    {
       "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x51D592C8CBCA0831",
       "lastSeenAt": "2026-05-13T16:46:51Z",
@@ -368,34 +324,6 @@
           {
             "name": "y",
             "typeName": "RealType"
-          }
-        ]
-      }
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x52EE0CC699032D33",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:176",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": true,
-        "inheritedTypes": [],
-        "kind": "struct",
-        "name": "OrderedSet",
-        "storedMembers": [
-          {
-            "name": "__storage",
-            "typeName": "_HashTable.Storage?"
-          },
-          {
-            "name": "_elements",
-            "typeName": "ContiguousArray<Element>"
           }
         ]
       }
@@ -710,17 +638,6 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x7756BB702E3A609D",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:274",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Values"
-    },
-    {
       "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0x89A940C41092CADE",
       "lastSeenAt": "2026-05-13T16:46:51Z",
@@ -791,28 +708,6 @@
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x9DE97AD2E2C4547A",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:240",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet.SubSequence"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0x9F0FBC53CEC24D15",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:272",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xA271032EE79F8993",
       "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:559",
@@ -821,45 +716,6 @@
       "templateName": "dual-style-consistency",
       "tier": "Strong",
       "typeName": "OrderedSet.UnorderedView"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xA459C8D9F7531064",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:176",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": true,
-        "inheritedTypes": [],
-        "kind": "struct",
-        "name": "OrderedSet",
-        "storedMembers": [
-          {
-            "name": "__storage",
-            "typeName": "_HashTable.Storage?"
-          },
-          {
-            "name": "_elements",
-            "typeName": "ContiguousArray<Element>"
-          }
-        ]
-      }
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xA48308B395A07123",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:263",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements.SubSequence"
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
@@ -1153,17 +1009,6 @@
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xBDC8024D684D1B56",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:228",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Values"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xC0B0A68F141A3C6D",
       "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra subtract.swift:37",
@@ -1189,17 +1034,6 @@
           }
         ]
       }
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xC351D23824327898",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:272",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements"
     },
     {
       "firstSeenAt": "2026-05-13T16:46:51Z",
@@ -1270,34 +1104,6 @@
       "templateName": "monotonicity",
       "tier": "Possible",
       "typeName": "OrderedDictionary.Elements"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xD51DAD720E3D46B9",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:222",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": true,
-        "inheritedTypes": [],
-        "kind": "struct",
-        "name": "OrderedSet",
-        "storedMembers": [
-          {
-            "name": "__storage",
-            "typeName": "_HashTable.Storage?"
-          },
-          {
-            "name": "_elements",
-            "typeName": "ContiguousArray<Element>"
-          }
-        ]
-      }
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
@@ -1465,17 +1271,6 @@
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xDBB72D4ECA3D89EB",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:228",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Values"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xDD74883C0D627E95",
       "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:185",
@@ -1590,17 +1385,6 @@
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xE907D73766335014",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:286",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet.SubSequence"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xEC357857FD9090EA",
       "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+Partial SetAlgebra formSymmetricDifference.swift:40",
@@ -1656,17 +1440,6 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xF16FD2125933F37C",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+SubSequence.swift:286",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet.SubSequence"
-    },
-    {
       "firstSeenAt": "2026-05-13T16:46:51Z",
       "identityHash": "0xF19AF076BEC75B25",
       "lastSeenAt": "2026-05-13T16:46:51Z",
@@ -1697,17 +1470,6 @@
       }
     },
     {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xF22ACE5E2EB2F2E0",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Values.swift:274",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Values"
-    },
-    {
       "firstSeenAt": "2026-05-13T16:47:00Z",
       "identityHash": "0xF2C82EDCE79300FB",
       "lastSeenAt": "2026-05-13T16:47:00Z",
@@ -1728,45 +1490,6 @@
     },
     {
       "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xF3869C08573BDDA1",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+RandomAccessCollection.swift:222",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "associativity",
-      "tier": "Possible",
-      "typeName": "OrderedSet",
-      "typeShape": {
-        "hasUserGen": false,
-        "hasUserInit": true,
-        "inheritedTypes": [],
-        "kind": "struct",
-        "name": "OrderedSet",
-        "storedMembers": [
-          {
-            "name": "__storage",
-            "typeName": "_HashTable.Storage?"
-          },
-          {
-            "name": "_elements",
-            "typeName": "ContiguousArray<Element>"
-          }
-        ]
-      }
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xF3A7DBD9B12ED6FB",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.swift:226",
-      "primaryFunctionName": "index(_:offsetBy:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
       "identityHash": "0xFAE7957C96C040A8",
       "lastSeenAt": "2026-05-13T16:46:57Z",
       "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedSet/OrderedSet+UnorderedView.swift:513",
@@ -1775,17 +1498,6 @@
       "templateName": "dual-style-consistency",
       "tier": "Strong",
       "typeName": "OrderedSet.UnorderedView"
-    },
-    {
-      "firstSeenAt": "2026-05-13T16:46:57Z",
-      "identityHash": "0xFCB18682347DB3CC",
-      "lastSeenAt": "2026-05-13T16:46:57Z",
-      "location": "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/.build/checkouts/swift-collections/Sources/OrderedCollections/OrderedDictionary/OrderedDictionary+Elements.SubSequence.swift:309",
-      "primaryFunctionName": "distance(from:to:)",
-      "score": 30,
-      "templateName": "commutativity",
-      "tier": "Possible",
-      "typeName": "OrderedDictionary.Elements.SubSequence"
     }
   ],
   "schemaVersion": 3,

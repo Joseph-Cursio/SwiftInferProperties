@@ -31,6 +31,18 @@ extension FunctionSummary {
               !isMutating else {
             return nil
         }
+        // Cycle 149 (Lever B) — exclude the stdlib Collection index-traversal
+        // requirements. On a Collection whose `Index == Int` (e.g.
+        // `OrderedSet`), `distance(from:to:)` and `index(_:offsetBy:)` are
+        // literally `(Int, Int) -> Int`, so they spuriously match the
+        // `(T, T) -> T` binary-operator shape — but they are never algebraic
+        // binary operators (`distance` is antisymmetric, not commutative;
+        // index/offset arithmetic over indices is neither commutative nor
+        // associative). Matched by base name + argument labels so a same-named
+        // user method with different labels is unaffected.
+        if isCollectionIndexTraversal {
+            return nil
+        }
         let first = parameters[0]
         let second = parameters[1]
         guard !first.isInout,
@@ -47,5 +59,17 @@ extension FunctionSummary {
             weight: 30,
             detail: "Type-symmetry signature: (T, T) -> T (T = \(returnType))"
         )
+    }
+
+    /// Cycle 149 (Lever B) — is this one of the stdlib `Collection` /
+    /// `BidirectionalCollection` index-traversal requirements that, on an
+    /// `Index == Int` collection, masquerade as `(Int, Int) -> Int` binary
+    /// operators? Matched by base name + argument labels (not the full
+    /// signature string) so an unrelated user method named `distance` /
+    /// `index` with different labels still qualifies as a real candidate.
+    var isCollectionIndexTraversal: Bool {
+        let labels = parameters.map(\.label)
+        return (name == "distance" && labels == ["from", "to"])
+            || (name == "index" && labels == [nil, "offsetBy"])
     }
 }

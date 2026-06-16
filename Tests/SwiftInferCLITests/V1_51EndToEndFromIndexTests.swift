@@ -66,7 +66,7 @@ struct V151EndToEndFromIndexTests {
         #expect(bundle.rendererContext.templateName == "round-trip")
     }
 
-    @Test("real-indexer index loads with the expected cycle-27 surface count (82, post-cycle-148 Lever A)")
+    @Test("real-indexer index loads with the expected cycle-27 surface count (62, post-cycle-149 Lever B)")
     func cycle27FixtureHasExpectedSurfaceCount() throws {
         let data = try Data(contentsOf: Self.fixtureIndexPath)
         let store = try JSONDecoder().decode(IndexStore.Index.self, from: data)
@@ -74,8 +74,11 @@ struct V151EndToEndFromIndexTests {
         // baseline to 103 (cycle 54). Cycle 148 (Lever A) extended the
         // filter to explicit-`internal` + `_`-prefixed-enclosing-type
         // declarations, dropping 21 non-public/SPI false positives → 82.
-        // See docs/calibration-cycle-148-findings.md.
-        #expect(store.entries.count == 82)
+        // Cycle 149 (Lever B) excluded the Collection index-traversal
+        // requirements (`distance(from:to:)` / `index(_:offsetBy:)`) — 20
+        // non-algebraic commutativity/associativity false positives → 62.
+        // See docs/calibration-cycle-149-findings.md.
+        #expect(store.entries.count == 62)
     }
 
     // **Why no dual-style E2E test in v1.51**. The cycle-27 fixture's
