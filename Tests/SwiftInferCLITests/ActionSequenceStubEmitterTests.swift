@@ -87,14 +87,34 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains("state = newState"))
     }
 
-    @Test("ReSwift / Mobius / Workflow carriers are gated out of verify (recognized at discovery, not yet emittable)")
-    func frameworkCarriersAreRejected() {
-        // Their call/return conventions differ from the canonical shapes
-        // (reversed args / `Next<…>` return / action-as-receiver), so
-        // emitting would build wrong code — reject rather than mis-emit.
-        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.reSwift)) {
-            _ = try ActionSequenceStubEmitter.emit(inputs(candidate(carrierKind: .reSwift)))
-        }
+    @Test("ReSwift carrier emits the canonical state-returning call with REVERSED args")
+    func reSwiftEmitsReversedArgs() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(
+            functionName: "appReducer", carrierKind: .reSwift
+        )))
+        // Loop step + (if an idempotence witness is present) the double-apply
+        // both pass `(action, state)`, not `(state, action)`.
+        #expect(source.contains("state = appReducer(action, state)"))
+        #expect(!source.contains("appReducer(state, action)"))
+    }
+
+    @Test("ReSwift idempotence double-apply also reverses the args")
+    func reSwiftIdempotenceCheckReversesArgs() {
+        let lines = ActionSequenceStubEmitter.makeIdempotenceCheck(
+            actionExpr: ".reset",
+            shape: .stateActionReturnsState,
+            reducerCall: "appReducer",
+            actionFirst: true
+        )
+        #expect(lines.contains("let once = appReducer(.reset, state)"))
+        #expect(lines.contains("let twice = appReducer(.reset, once)"))
+    }
+
+    @Test("Mobius / Workflow carriers stay gated out of verify (return / receiver conventions not yet wired)")
+    func mobiusAndWorkflowCarriersAreRejected() {
+        // Their `Next<…>` return / action-as-receiver conventions need
+        // verifier-side framework deps + extraction not yet wired — reject
+        // rather than mis-emit.
         #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.mobius)) {
             _ = try ActionSequenceStubEmitter.emit(inputs(candidate(
                 signatureShape: .stateActionReturnsStateAndEffect, carrierKind: .mobius

@@ -12,7 +12,7 @@ import Testing
 @Suite("Idempotence survey corpus — discovery coverage (cycle 115)")
 struct IdempotenceSurveyCorpusTests {
 
-    @Test("packaging + discovery surfaces exactly the curated idempotence identities (12 across 3 carrier shapes)")
+    @Test("packaging + discovery surfaces exactly the curated idempotence identities (13 across 4 carrier shapes)")
     func discoversTheCuratedIdentities() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("idempotence-survey-corpus-discovery")
@@ -49,7 +49,10 @@ struct IdempotenceSurveyCorpusTests {
             "TCAFeatureReducer.reduce .binding",
             // cycle 116 — Elm-style free-function carrier, named `reduce`
             // (cycle-117 pin fix makes the bare free-function name resolvable)
-            "reduce .refresh"
+            "reduce .refresh",
+            // ReSwift-style free function `(Action, State?) -> State`
+            // (the .reSwift carrier; reversed-arg verify emit)
+            "reSwiftCounterReducer .reset"
         ]
         #expect(found == expected)
 

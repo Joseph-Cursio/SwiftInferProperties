@@ -56,7 +56,8 @@ extension ActionSequenceStubEmitter {
         invariant: InteractionInvariantSuggestion?,
         shape: ReducerSignatureShape,
         reducerCall: String,
-        isTCA: Bool = false
+        isTCA: Bool = false,
+        actionFirst: Bool = false
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
@@ -68,9 +69,18 @@ extension ActionSequenceStubEmitter {
                 actionExpr: invariant.predicate,
                 shape: shape,
                 reducerCall: reducerCall,
-                isTCA: isTCA
+                isTCA: isTCA,
+                actionFirst: actionFirst
             )
         }
+    }
+
+    /// The two-argument list for a `(State, Action)` reducer call,
+    /// reversed to `(Action, State)` for ReSwift (`actionFirst`). Only the
+    /// value-returning `.stateActionReturnsState` shape uses this — the
+    /// `inout` shapes pass `&state` and aren't a ReSwift carrier.
+    static func orderedArgs(_ state: String, _ action: String, actionFirst: Bool) -> String {
+        actionFirst ? "\(action), \(state)" : "\(state), \(action)"
     }
 
     /// V2.0 M4.D / M8.A — the idempotence check body, parameterized
@@ -83,7 +93,8 @@ extension ActionSequenceStubEmitter {
         actionExpr: String,
         shape: ReducerSignatureShape,
         reducerCall: String,
-        isTCA: Bool = false
+        isTCA: Bool = false,
+        actionFirst: Bool = false
     ) -> [String] {
         let assertion =
             "precondition(once == twice, "
@@ -102,8 +113,8 @@ extension ActionSequenceStubEmitter {
         switch shape {
         case .stateActionReturnsState:
             return [
-                "let once = \(reducerCall)(state, \(actionExpr))",
-                "let twice = \(reducerCall)(once, \(actionExpr))",
+                "let once = \(reducerCall)(\(orderedArgs("state", actionExpr, actionFirst: actionFirst)))",
+                "let twice = \(reducerCall)(\(orderedArgs("once", actionExpr, actionFirst: actionFirst)))",
                 assertion
             ]
 

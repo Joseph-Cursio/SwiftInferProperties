@@ -62,19 +62,22 @@ public enum ActionSequenceStubEmitter {
             validateInvariant(invariant.family)
         }
         let isTCA = inputs.candidate.carrierKind == .tca
+        let actionFirst = inputs.candidate.carrierKind == .reSwift  // ReSwift: reducer(action, state)
         let reducerCall = makeReducerCall(inputs.candidate)
         let stateInit = "\(inputs.candidate.stateTypeName)()"
         let applyStep = makeApplyStep(
             shape: inputs.candidate.signatureShape,
             reducerCall: reducerCall,
-            isTCA: isTCA
+            isTCA: isTCA,
+            actionFirst: actionFirst
         )
         let perStepCheck = makePerStepCheck(invariant: inputs.invariant)
         let postLoopCheck = makePostLoopCheck(
             invariant: inputs.invariant,
             shape: inputs.candidate.signatureShape,
             reducerCall: reducerCall,
-            isTCA: isTCA
+            isTCA: isTCA,
+            actionFirst: actionFirst
         )
         return assembleStub(
             inputs: inputs,
@@ -207,14 +210,11 @@ public enum ActionSequenceStubEmitter {
     // MARK: - Internals
 
     /// Reject carriers the emitter can't emit a correct call for. `.reSwift`
-    /// / `.mobius` / `.workflow` are recognized at discovery but their
-    /// reversed-arg / `Next<…>`-return / action-as-receiver conventions
-    /// aren't wired for emit — reject rather than mis-emit (discovery is
-    /// unaffected). `.tca` needs a constructible Action (cycle 122/125).
+    /// IS supported (reversed-arg canonical call — see `emit`). `.mobius` /
+    /// `.workflow` need verifier-side framework deps + return/receiver
+    /// handling not yet wired; `.tca` needs a constructible Action.
     private static func validate(_ candidate: ReducerCandidate) throws {
-        if candidate.carrierKind == .reSwift
-            || candidate.carrierKind == .mobius
-            || candidate.carrierKind == .workflow {
+        if candidate.carrierKind == .mobius || candidate.carrierKind == .workflow {
             throw EmitError.unsupportedCarrier(candidate.carrierKind)
         }
         if candidate.carrierKind == .tca, constructibleCases(candidate).isEmpty {
@@ -318,7 +318,8 @@ public enum ActionSequenceStubEmitter {
     static func makeApplyStep(
         shape: ReducerSignatureShape,
         reducerCall: String,
-        isTCA: Bool = false
+        isTCA: Bool = false,
+        actionFirst: Bool = false
     ) -> [String] {
         // Cycle 122 (Phase A) — a `.tca` reducer is driven instance-
         // relative: `reducer.reduce(into:&state, action:)` on a `let
@@ -329,7 +330,7 @@ public enum ActionSequenceStubEmitter {
         }
         switch shape {
         case .stateActionReturnsState:
-            return ["state = \(reducerCall)(state, action)"]
+            return ["state = \(reducerCall)(\(orderedArgs("state", "action", actionFirst: actionFirst)))"]
 
         case .inoutStateActionReturnsVoid:
             return ["\(reducerCall)(&state, action)"]

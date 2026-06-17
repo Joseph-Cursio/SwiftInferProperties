@@ -5,11 +5,13 @@ import Testing
 
 /// Cycle 115 + 116 — the *measured idempotence baseline* over the curated
 /// verify-ready corpus (`Tests/Fixtures/idempotence-survey-corpus/`),
-/// widened in cycle 116 to 5 reducers across 3 carrier shapes (generic
-/// struct method, TCA-convention witnesses, Elm-style free function).
-/// Packages the corpus, runs `verify-interaction --all --family idempotence`,
-/// and asserts the measured split:
-///   - 11 genuinely-idempotent identities → `measured-bothPass` →
+/// widened to 6 reducers across 4 carrier shapes (generic struct method,
+/// TCA-convention witnesses, Elm-style free function, and the ReSwift
+/// `(Action, State?) -> State` free function — the last added once
+/// per-framework verify emit reversed the call args). Packages the corpus,
+/// runs `verify-interaction --all --family idempotence`, and asserts the
+/// measured split:
+///   - 12 genuinely-idempotent identities → `measured-bothPass` →
 ///     `discover-interaction` promotes each to `.verified`;
 ///   - the 1 deliberate `set*` false positive (`SettingsReducer.setBadge`)
 ///     → `measured-defaultFails` → suppressed, NOT promoted.
@@ -21,7 +23,7 @@ import Testing
 @Suite("Idempotence survey corpus — measured baseline", .tags(.subprocess))
 struct IdempotenceSurveyCorpusMeasuredTests {
 
-    @Test("survey records 11 bothPass + 1 defaultFails across 3 carrier shapes; discover promotes only the survivors")
+    @Test("survey records 12 bothPass + 1 defaultFails across 4 carrier shapes; discover promotes only the survivors")
     func measuredBaselineSplitsAndPromotes() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("idempotence-survey-corpus-measured")
@@ -45,16 +47,17 @@ struct IdempotenceSurveyCorpusMeasuredTests {
             workingDirectory: root
         )
 
-        #expect(summary.contains("Identities: 12 (--family idempotence)"))
-        #expect(summary.contains("11 measured-bothPass"))
+        #expect(summary.contains("Identities: 13 (--family idempotence)"))
+        #expect(summary.contains("12 measured-bothPass"))
         #expect(summary.contains("1 measured-defaultFails"))
 
-        // Evidence harvested for all 12: 11 bothPass (incl. the TCA
-        // task/delegate/binding witnesses and the Elm free-function
-        // refresh), 1 defaultFails (setBadge).
+        // Evidence harvested for all 13: 12 bothPass (incl. the TCA
+        // task/delegate/binding witnesses, the Elm free-function refresh,
+        // and the ReSwift `reSwiftCounterReducer .reset` — its reversed-arg
+        // emit compiles + runs), 1 defaultFails (setBadge).
         let evidence = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(evidence.count == 12)
-        #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 11)
+        #expect(evidence.count == 13)
+        #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 12)
         #expect(evidence.filter { $0.outcome == .measuredDefaultFails }.count == 1)
 
         // Payoff: discover reads the evidence — survivors Verified, the
