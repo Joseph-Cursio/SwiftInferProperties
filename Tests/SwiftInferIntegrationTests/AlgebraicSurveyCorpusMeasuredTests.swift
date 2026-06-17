@@ -14,7 +14,7 @@ import Testing
 /// filtered false positives).
 ///
 /// Spawns real `swift build`s resolving the algebraic deps; tagged
-/// `.subprocess`. Twelve picks across five families → 8 bothPass + 4 defaultFails:
+/// `.subprocess`. Fourteen picks across six families → 9 bothPass + 5 defaultFails:
 ///   - commutativity/associativity: `join` / `meet` (semilattice ops) →
 ///     comm + assoc bothPass (4); `leftBiased` (a first-non-medium fold) →
 ///     assoc bothPass but comm defaultFails — execution distinguishes the two
@@ -27,11 +27,15 @@ import Testing
 ///     template over-generates same-signature unary functions) → defaultFails;
 ///   - monotonicity: `Confidence.score` (a strictly-increasing Int projection)
 ///     → bothPass; `Confidence.priority` (a curated-named but non-monotone
-///     projection — `.medium` outranks `.high`) → defaultFails.
+///     projection — `.medium` outranks `.high`) → defaultFails;
+///   - dual-style-consistency: `Toggle.reverse`/`reversed` (mutating + non-mutating
+///     twins that agree) → bothPass, the first dual-style verified on a CUSTOM
+///     (non-OrderedCollections) carrier; `Latch.reverse`/`reversed` (the
+///     non-mutating twin is buggy — returns self unchanged) → defaultFails.
 @Suite("Algebraic survey corpus — measured baseline", .tags(.subprocess))
 struct AlgebraicSurveyCorpusMeasuredTests {
 
-    @Test("curated corpus verifies comm/assoc/idempotence/round-trip/monotonicity (8 bothPass + 4 defaultFails)")
+    @Test("curated corpus verifies six measured families (9 bothPass + 5 defaultFails)")
     func measuredAlgebraicSplits() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-survey-corpus")
@@ -57,9 +61,9 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         )
 
         let records = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(records.count == 12)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 8)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 4)
+        #expect(records.count == 14)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 9)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
         // commutativity false positive (non-commutative `leftBiased`), its
         // associativity true positive, and the idempotence true positive.
         #expect(records.contains {
@@ -87,6 +91,15 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         })
         #expect(records.contains {
             $0.template == "monotonicity" && $0.outcome == .measuredDefaultFails
+        })
+        // dual-style-consistency on a CUSTOM carrier: `Toggle` (mutating +
+        // non-mutating twins agree) bothPasses; `Latch` (buggy non-mutating
+        // twin) is disproven by execution.
+        #expect(records.contains {
+            $0.template == "dual-style-consistency" && $0.outcome == .measuredBothPass
+        })
+        #expect(records.contains {
+            $0.template == "dual-style-consistency" && $0.outcome == .measuredDefaultFails
         })
     }
 

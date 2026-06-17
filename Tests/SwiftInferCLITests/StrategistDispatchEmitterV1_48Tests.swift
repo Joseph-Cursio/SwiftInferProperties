@@ -84,6 +84,23 @@ struct StrategistDispatchEmitterV148Tests {
         #expect(source.contains("nonMutResult != mutCopy"))
     }
 
+    @Test("dual-style-consistency renders a qualified non-mutating member as an instance call")
+    func dualStyleConsistencyInstanceMemberCallShape() throws {
+        // A resolver-qualified member (`Type.method`) must be invoked as
+        // `original.method()` — `Type.method(original)` is the curried
+        // unbound form, not a value. A bare (dot-free) name stays
+        // `name(original)` (the closure / free-function preamble shape).
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "dual-style-consistency",
+                functionCalls: ["Toggle.reversed", "reverse"]
+            )
+        )
+        #expect(source.contains("let nonMutResult = original.reversed()"))
+        #expect(!source.contains("Toggle.reversed(original)"))
+        #expect(source.contains("mutCopy.reverse()"))
+    }
+
     @Test("dual-style-consistency throws if functionCalls.count != 2")
     func dualStyleConsistencyRequiresPair() throws {
         #expect(throws: VerifyError.self) {
