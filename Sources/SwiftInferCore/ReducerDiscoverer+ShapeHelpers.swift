@@ -85,6 +85,38 @@ extension ReducerDiscoverer {
         return nil
     }
 
+    /// Recognize Square's Workflow `func apply(toState state: inout State)
+    /// -> Output?` action method and return the State type + the mapped
+    /// signature shape, or `nil`. Unlike every other carrier the Action is
+    /// the enclosing type (`Self`), so this is an arity-ONE `inout` method
+    /// — the caller supplies the Action from the enclosing-type stack.
+    ///
+    /// Keyed on the distinctive `apply` name + `toState:` argument label +
+    /// `inout` parameter (the `WorkflowAction` requirement's spelling), not
+    /// on conformance — matching the signature-only M1.A posture; §3.5
+    /// default-`Possible` absorbs the rare false match. State must be
+    /// non-scalar. The optional `Output` return maps to the effect-bearing
+    /// shape (effects are discarded at verify); a bare `Void` apply maps to
+    /// the void shape.
+    static func classifyWorkflowApply(
+        node: FunctionDeclSyntax
+    ) -> (state: String, shape: ReducerSignatureShape)? {
+        guard node.name.text == "apply" else { return nil }
+        let params = node.signature.parameterClause.parameters
+        guard params.count == 1 else { return nil }
+        let param = params[params.startIndex]
+        guard param.firstName.text == "toState" else { return nil }
+        let raw = param.type.trimmedDescription
+        guard raw.hasPrefix("inout ") else { return nil }
+        let stateType = String(raw.dropFirst("inout ".count)).trimmingCharacters(in: .whitespaces)
+        if isScalarTypeName(stateType) { return nil }
+        let returnRaw = node.signature.returnClause?.type.trimmedDescription ?? "Void"
+        let shape: ReducerSignatureShape = (returnRaw == "Void" || returnRaw.isEmpty)
+            ? .inoutStateActionReturnsVoid
+            : .inoutStateActionReturnsEffect
+        return (state: stateType, shape: shape)
+    }
+
     /// Recognize ReSwift's `(Action, State?) -> State` reducer shape and
     /// return the un-reversed `(state, action)` type names, or `nil`.
     /// ReSwift's `Reducer` typealias is `(_ action: Action, _ state:

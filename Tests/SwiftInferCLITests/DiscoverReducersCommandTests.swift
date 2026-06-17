@@ -72,7 +72,7 @@ struct DiscoverReducersCommandTests {
         #expect(rendered.contains("action:Inbox.Action"))
     }
 
-    @Test("render surfaces the ReSwift / Mobius carrier label")
+    @Test("render surfaces the ReSwift / Mobius / Workflow carrier label")
     func renderSurfacesFrameworkCarrier() {
         let reSwift = Command.renderSummary(candidates: [candidate(carrierKind: .reSwift)])
         #expect(reSwift.contains("carrier:reswift"))
@@ -80,6 +80,10 @@ struct DiscoverReducersCommandTests {
             signatureShape: .stateActionReturnsStateAndEffect, carrierKind: .mobius
         )
         #expect(Command.renderSummary(candidates: [mobiusCandidate]).contains("carrier:mobius"))
+        let workflowCandidate = candidate(
+            signatureShape: .inoutStateActionReturnsEffect, carrierKind: .workflow
+        )
+        #expect(Command.renderSummary(candidates: [workflowCandidate]).contains("carrier:workflow"))
     }
 
     @Test("candidates sort by (location, functionName) — byte-stable across input order")

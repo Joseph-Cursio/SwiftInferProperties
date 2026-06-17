@@ -206,14 +206,15 @@ public enum ActionSequenceStubEmitter {
 
     // MARK: - Internals
 
-    /// Reject carriers the emitter can't emit a correct call for. All four
-    /// signature shapes are accepted (M8.A discards effects, PRD §16 #1).
-    /// `.reSwift` / `.mobius` are recognized at discovery but their
-    /// reversed-arg / `Next<…>`-return conventions aren't wired for emit —
-    /// reject rather than mis-emit (discovery is unaffected). `.tca` needs
-    /// a constructible Action (cycle 122/125).
+    /// Reject carriers the emitter can't emit a correct call for. `.reSwift`
+    /// / `.mobius` / `.workflow` are recognized at discovery but their
+    /// reversed-arg / `Next<…>`-return / action-as-receiver conventions
+    /// aren't wired for emit — reject rather than mis-emit (discovery is
+    /// unaffected). `.tca` needs a constructible Action (cycle 122/125).
     private static func validate(_ candidate: ReducerCandidate) throws {
-        if candidate.carrierKind == .reSwift || candidate.carrierKind == .mobius {
+        if candidate.carrierKind == .reSwift
+            || candidate.carrierKind == .mobius
+            || candidate.carrierKind == .workflow {
             throw EmitError.unsupportedCarrier(candidate.carrierKind)
         }
         if candidate.carrierKind == .tca, constructibleCases(candidate).isEmpty {

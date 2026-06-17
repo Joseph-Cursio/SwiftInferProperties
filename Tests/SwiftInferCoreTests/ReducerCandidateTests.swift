@@ -138,10 +138,11 @@ struct ReducerCandidateTests {
         #expect(ReducerCarrierKind.generic.rawValue == "generic")
         #expect(ReducerCarrierKind.tca.rawValue == "tca")
         #expect(ReducerCarrierKind.elmStyle.rawValue == "elm-style")
-        // ReSwift + Mobius framework vocabulary.
+        // ReSwift + Mobius + Workflow framework vocabulary.
         #expect(ReducerCarrierKind.reSwift.rawValue == "reswift")
         #expect(ReducerCarrierKind.mobius.rawValue == "mobius")
-        #expect(ReducerCarrierKind.allCases.count == 5)
+        #expect(ReducerCarrierKind.workflow.rawValue == "workflow")
+        #expect(ReducerCarrierKind.allCases.count == 6)
     }
 
     @Test("4th ReducerSignatureShape — TCA Reduce closure synthesized signature")

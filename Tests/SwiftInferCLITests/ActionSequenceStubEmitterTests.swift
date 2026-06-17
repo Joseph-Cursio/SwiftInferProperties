@@ -87,17 +87,22 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains("state = newState"))
     }
 
-    @Test("ReSwift / Mobius carriers are gated out of verify (recognized at discovery, not yet emittable)")
-    func reSwiftAndMobiusCarriersAreRejected() {
+    @Test("ReSwift / Mobius / Workflow carriers are gated out of verify (recognized at discovery, not yet emittable)")
+    func frameworkCarriersAreRejected() {
         // Their call/return conventions differ from the canonical shapes
-        // (reversed args / `Next<…>` return), so emitting would build wrong
-        // code — the emitter rejects rather than mis-emit.
+        // (reversed args / `Next<…>` return / action-as-receiver), so
+        // emitting would build wrong code — reject rather than mis-emit.
         #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.reSwift)) {
             _ = try ActionSequenceStubEmitter.emit(inputs(candidate(carrierKind: .reSwift)))
         }
         #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.mobius)) {
             _ = try ActionSequenceStubEmitter.emit(inputs(candidate(
                 signatureShape: .stateActionReturnsStateAndEffect, carrierKind: .mobius
+            )))
+        }
+        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.workflow)) {
+            _ = try ActionSequenceStubEmitter.emit(inputs(candidate(
+                signatureShape: .inoutStateActionReturnsEffect, carrierKind: .workflow
             )))
         }
     }

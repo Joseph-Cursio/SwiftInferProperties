@@ -306,18 +306,24 @@ public enum ReducerSignatureShape: String, Sendable, Equatable, Codable, CaseIte
 ///     update shape: canonical `(State, Action)` order but an
 ///     effect-bearing `Next<…>` return rather than `Effect<…>` / a
 ///     tuple.
+///   - `.workflow` — Square's Workflow `WorkflowAction.apply(toState:
+///     inout State) -> Output?` — an arity-ONE method where the Action
+///     is the enclosing type (`Self`), the single `inout` parameter is
+///     State, and the optional `Output` is effect-like. The only carrier
+///     whose Action is the receiver, not a parameter.
 ///
 /// Labels are **informational** for discovery + §4 scoring — PRD §6.4:
-/// "templates fire on all carrier kinds equally." The two framework
+/// "templates fire on all carrier kinds equally." The three framework
 /// labels additionally gate measured-verify: `ActionSequenceStubEmitter`
 /// rejects them (their call/return convention differs from the canonical
 /// shapes; wiring the emit is separate, deferred work) so a discovered
-/// ReSwift/Mobius reducer is surfaced + scored but never verified with a
-/// wrong-shaped call.
+/// ReSwift/Mobius/Workflow reducer is surfaced + scored but never
+/// verified with a wrong-shaped call.
 public enum ReducerCarrierKind: String, Sendable, Equatable, Codable, CaseIterable {
     case generic
     case tca
     case elmStyle = "elm-style"
     case reSwift = "reswift"
     case mobius
+    case workflow
 }

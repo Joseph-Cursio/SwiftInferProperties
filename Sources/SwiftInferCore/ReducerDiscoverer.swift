@@ -244,6 +244,17 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     /// all the deliberate-skip cases (wrong arity, return-type
     /// mismatch, etc.).
     private func matchReducer(in node: FunctionDeclSyntax) -> ReducerCandidate? {
+        // Workflow (Square): arity-1 `apply(toState: inout State) ->
+        // Output?` — Action is the enclosing type (Self), so it's matched
+        // before the arity-2 guard; a free `apply` (no enclosing) is skipped.
+        if let workflow = ReducerDiscoverer.classifyWorkflowApply(node: node),
+            let actionType = typeStack.last {
+            return makeCandidate(
+                node: node, stateType: workflow.state, actionType: actionType,
+                shape: workflow.shape, carrierKind: .workflow
+            )
+        }
+
         let parameters = node.signature.parameterClause.parameters
         guard parameters.count == 2 else { return nil }
 
@@ -254,12 +265,9 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         let returnRaw = node.signature.returnClause?.type.trimmedDescription ?? "Void"
         let returnType = returnRaw.trimmingCharacters(in: .whitespaces)
 
-        // ReSwift `(Action, State?) -> State` — Action-FIRST, Optional
-        // incoming State, non-optional returned State. Its reversed param
-        // order can't go through `classifyShape` (which assumes State
-        // first), so it's matched separately and the State/Action are
-        // un-reversed here. Mapped onto `.stateActionReturnsState` (a pure
-        // state-returning reducer) for downstream type-based scoring.
+        // ReSwift `(Action, State?) -> State` — Action-first, Optional
+        // incoming State. Reversed order can't go through `classifyShape`;
+        // matched + un-reversed here, mapped to `.stateActionReturnsState`.
         if let reSwift = ReducerDiscoverer.classifyReSwift(
             firstRaw: firstRaw, secondRaw: secondRaw, returnType: returnType
         ) {
@@ -325,11 +333,8 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         return .generic
     }
 
-    /// Build a `ReducerCandidate` from a matched shape, qualifying nested
-    /// State/Action names to `<Enclosing>.Name` (cycle-108 Blocker A) so
-    /// the stub emitters produce resolvable `Feature.State()` /
-    /// `Feature.Action.self`. Shared by the canonical, ReSwift, and Mobius
-    /// match paths.
+    /// Build a `ReducerCandidate`, qualifying nested State/Action names to
+    /// `<Enclosing>.Name` (cycle-108 Blocker A). Shared by all match paths.
     private func makeCandidate(
         node: FunctionDeclSyntax,
         stateType: String,

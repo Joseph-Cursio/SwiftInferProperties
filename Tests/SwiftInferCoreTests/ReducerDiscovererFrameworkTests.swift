@@ -103,6 +103,65 @@ struct ReducerDiscovererFrameworkTests {
         #expect(result.isEmpty)
     }
 
+    // MARK: - Workflow (Square): apply(toState: inout State) -> Output?
+
+    @Test("Workflow apply(toState: inout State) -> Output? — Action is the enclosing type, labels .workflow")
+    func workflowApplyMethod() {
+        let source = """
+        struct IncrementAction {
+            func apply(toState state: inout CounterState) -> CounterOutput? {
+                state.count += 1
+                return nil
+            }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        let candidate = result[0]
+        #expect(candidate.carrierKind == .workflow)
+        // Action is the enclosing type (Self); State is the inout param.
+        #expect(candidate.actionTypeName == "IncrementAction")
+        #expect(candidate.stateTypeName == "CounterState")
+        #expect(candidate.signatureShape == .inoutStateActionReturnsEffect)
+    }
+
+    @Test("Workflow apply with no Output return maps to the void shape")
+    func workflowApplyVoidReturn() {
+        let source = """
+        struct ResetAction {
+            func apply(toState state: inout CounterState) {
+                state = CounterState()
+            }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .workflow)
+        #expect(result[0].signatureShape == .inoutStateActionReturnsVoid)
+    }
+
+    @Test("a free apply(toState:) function (no enclosing Action type) is not Workflow")
+    func workflowRejectsFreeFunction() {
+        // No enclosing type → no Action → not a WorkflowAction; and arity-1
+        // is rejected by the canonical guard too.
+        let source = """
+        func apply(toState state: inout CounterState) -> CounterOutput? { nil }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
+    @Test("apply with a non-`toState` label is not Workflow")
+    func workflowRejectsWrongLabel() {
+        let source = """
+        struct NotAnAction {
+            func apply(to state: inout CounterState) -> CounterOutput? { nil }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
     // MARK: - Regression: canonical shapes keep their labels
 
     @Test("a canonical free (S, A) -> S stays .elmStyle, not .reSwift/.mobius")
