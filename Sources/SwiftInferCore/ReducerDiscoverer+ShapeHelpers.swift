@@ -85,28 +85,40 @@ extension ReducerDiscoverer {
         return nil
     }
 
-    /// Recognize Square's Workflow `func apply(toState state: inout State)
-    /// -> Output?` action method and return the State type + the mapped
-    /// signature shape, or `nil`. Unlike every other carrier the Action is
-    /// the enclosing type (`Self`), so this is an arity-ONE `inout` method
-    /// — the caller supplies the Action from the enclosing-type stack.
+    /// Recognize Square's Workflow `WorkflowAction.apply(...)` action method
+    /// and return the State type + the mapped signature shape, or `nil`.
+    /// Unlike every other carrier the Action is the enclosing type (`Self`),
+    /// so the caller supplies the Action from the enclosing-type stack.
     ///
-    /// Keyed on the distinctive `apply` name + `toState:` argument label +
-    /// `inout` parameter (the `WorkflowAction` requirement's spelling), not
-    /// on conformance — matching the signature-only M1.A posture; §3.5
-    /// default-`Possible` absorbs the rare false match. State must be
-    /// non-scalar. The optional `Output` return maps to the effect-bearing
-    /// shape (effects are discarded at verify); a bare `Void` apply maps to
-    /// the void shape.
+    /// Two spellings are accepted (the `context` requirement landed in
+    /// workflow-swift v4.0.0):
+    ///   - v3.x: `apply(toState: inout State) -> Output?` (arity 1)
+    ///   - v4/v5: `apply(toState: inout State, context: ApplyContext<…>)
+    ///     -> Output?` (arity 2 — the `context` arg is framework plumbing,
+    ///     NOT the action). The v4/v5 form is discovered + scored here even
+    ///     though measured-verify stays gated for it: `ApplyContext` has no
+    ///     public init, so a verifier can't construct it to call `apply`.
+    ///
+    /// Keyed on the distinctive `apply` name + `toState:` (+ `context:` for
+    /// arity-2) labels + `inout` State, not on conformance — matching the
+    /// signature-only M1.A posture; §3.5 default-`Possible` absorbs the rare
+    /// false match. State must be non-scalar. The optional `Output` return
+    /// maps to the effect-bearing shape (effects discarded at verify); a bare
+    /// `Void` apply maps to the void shape.
     static func classifyWorkflowApply(
         node: FunctionDeclSyntax
     ) -> (state: String, shape: ReducerSignatureShape)? {
         guard node.name.text == "apply" else { return nil }
         let params = node.signature.parameterClause.parameters
-        guard params.count == 1 else { return nil }
-        let param = params[params.startIndex]
-        guard param.firstName.text == "toState" else { return nil }
-        let raw = param.type.trimmedDescription
+        guard params.count == 1 || params.count == 2 else { return nil }
+        let first = params[params.startIndex]
+        guard first.firstName.text == "toState" else { return nil }
+        // Arity-2 (v4/v5): the second arg must be the `context:` requirement.
+        if params.count == 2 {
+            let second = params[params.index(after: params.startIndex)]
+            guard second.firstName.text == "context" else { return nil }
+        }
+        let raw = first.type.trimmedDescription
         guard raw.hasPrefix("inout ") else { return nil }
         let stateType = String(raw.dropFirst("inout ".count)).trimmingCharacters(in: .whitespaces)
         if isScalarTypeName(stateType) { return nil }

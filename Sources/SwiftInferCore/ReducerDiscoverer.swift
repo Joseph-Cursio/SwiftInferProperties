@@ -244,9 +244,9 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     /// all the deliberate-skip cases (wrong arity, return-type
     /// mismatch, etc.).
     private func matchReducer(in node: FunctionDeclSyntax) -> ReducerCandidate? {
-        // Workflow (Square): arity-1 `apply(toState: inout State) ->
-        // Output?` — Action is the enclosing type (Self), so it's matched
-        // before the arity-2 guard; a free `apply` (no enclosing) is skipped.
+        // Workflow (Square): `apply(toState: inout State[, context:])` —
+        // Action is the enclosing type (Self), matched before the arity-2
+        // guard (v3 arity-1 + v4/v5 `context:` forms); free `apply` skipped.
         if let workflow = ReducerDiscoverer.classifyWorkflowApply(node: node),
             let actionType = typeStack.last {
             return makeCandidate(

@@ -140,6 +140,39 @@ struct ReducerDiscovererFrameworkTests {
         #expect(result[0].signatureShape == .inoutStateActionReturnsVoid)
     }
 
+    @Test("Workflow v4/v5 apply(toState:context:) arity-2 form is discovered (current workflow-swift)")
+    func workflowApplyWithContext() {
+        // workflow-swift v4.0.0+ added the `context: ApplyContext<…>` arg.
+        // It's framework plumbing, not the Action — discovered + scored the
+        // same as v3's arity-1 (verify stays gated: ApplyContext is not
+        // publicly constructible).
+        let source = """
+        enum IncrementAction {
+            case bump
+            func apply(toState state: inout CounterState, context: ApplyContext<CounterWorkflow>) -> CounterOutput? {
+                state.count += 1
+                return nil
+            }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.count == 1)
+        #expect(result[0].carrierKind == .workflow)
+        #expect(result[0].actionTypeName == "IncrementAction")
+        #expect(result[0].stateTypeName == "CounterState")
+    }
+
+    @Test("an arity-2 apply whose 2nd arg isn't `context:` is not Workflow")
+    func workflowRejectsNonContextSecondArg() {
+        let source = """
+        struct NotAnAction {
+            func apply(toState state: inout CounterState, extra: Int) -> CounterOutput? { nil }
+        }
+        """
+        let result = ReducerDiscoverer.discover(source: source, file: "F.swift")
+        #expect(result.isEmpty)
+    }
+
     @Test("a free apply(toState:) function (no enclosing Action type) is not Workflow")
     func workflowRejectsFreeFunction() {
         // No enclosing type → no Action → not a WorkflowAction; and arity-1
