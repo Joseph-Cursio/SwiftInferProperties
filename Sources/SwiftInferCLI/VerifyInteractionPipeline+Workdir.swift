@@ -46,20 +46,26 @@ extension VerifyInteractionPipeline {
     static func makeWorkdirInputs(
         _ request: WorkdirRequest
     ) -> (workdir: URL, inputs: VerifierWorkdir.Inputs) {
-        let isTCA = request.candidate.carrierKind == .tca && request.corpusSourceDirectory != nil
-        let segment = isTCA
-            ? "tca-corpus-\(request.userModuleName.replacingOccurrences(of: ".", with: "_"))"
+        // `.tca` / `.mobius` reducers reference framework types, so the corpus
+        // is co-compiled INTO the verifier target (direct source inclusion)
+        // with that framework declared as a package dependency — vs the
+        // standard path-dependency model for plain-Swift carriers.
+        let inlinedMode = inlinedCorpusMode(for: request.candidate.carrierKind)
+        let usesInlinedCorpus = inlinedMode != nil && request.corpusSourceDirectory != nil
+        let segment = usesInlinedCorpus
+            ? "\(request.candidate.carrierKind.rawValue)-corpus-"
+                + request.userModuleName.replacingOccurrences(of: ".", with: "_")
             : workdirSegment(for: request.candidate, identity: request.identity)
         let workdir = request.packageRoot
             .appendingPathComponent(".swiftinfer")
             .appendingPathComponent("verify-interaction-workdir")
             .appendingPathComponent(segment)
-        if isTCA, let corpusSourceDirectory = request.corpusSourceDirectory {
+        if let mode = inlinedMode, let corpusSourceDirectory = request.corpusSourceDirectory {
             return (workdir, VerifierWorkdir.Inputs(
                 workdir: workdir,
                 userPackage: nil,
                 stubSource: request.stubSource,
-                mode: .interactionTCA,
+                mode: mode,
                 inlinedSources: (try? CorpusPackager.readSwiftSources(in: corpusSourceDirectory)) ?? []
             ))
         }
@@ -73,6 +79,17 @@ extension VerifyInteractionPipeline {
             stubSource: request.stubSource,
             mode: .interaction
         ))
+    }
+
+    /// The direct-source-inclusion workdir mode for a carrier whose reducer
+    /// references framework types (`.tca` → ComposableArchitecture, `.mobius`
+    /// → MobiusCore), or `nil` for the plain-Swift path-dependency carriers.
+    private static func inlinedCorpusMode(for kind: ReducerCarrierKind) -> WorkdirMode? {
+        switch kind {
+        case .tca: return .interactionTCA
+        case .mobius: return .interactionMobius
+        case .generic, .elmStyle, .reSwift, .workflow: return nil
+        }
     }
 
     /// Walk up from `directory` looking for `Package.swift`. Same shape as

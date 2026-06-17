@@ -113,6 +113,17 @@ struct VerifierWorkdirTests {
         #expect(!rendered.contains(".package(path:"))
     }
 
+    @Test(".interactionMobius Package.swift pins MobiusCore to the master revision, no user path dep")
+    func mobiusPackageDeclaresMobiusRevision() {
+        let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil, mode: .interactionMobius)
+        #expect(rendered.contains("https://github.com/spotify/Mobius.swift.git"))
+        // Pinned to the unreleased master commit (tagged releases don't build
+        // under the current toolchain).
+        #expect(rendered.contains("revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\""))
+        #expect(rendered.contains(".product(name: \"MobiusCore\", package: \"Mobius.swift\")"))
+        #expect(!rendered.contains(".package(path:"))
+    }
+
     // MARK: - renderPackageSwift(...)
 
     @Test("Package.swift without user package depends only on the kit deps")
@@ -207,6 +218,7 @@ struct VerifierWorkdirTests {
         #expect(WorkdirMode.algebraic.rawValue == "algebraic")
         #expect(WorkdirMode.interaction.rawValue == "interaction")
         #expect(WorkdirMode.interactionTCA.rawValue == "interaction-tca")
-        #expect(WorkdirMode.allCases.count == 3)
+        #expect(WorkdirMode.interactionMobius.rawValue == "interaction-mobius")
+        #expect(WorkdirMode.allCases.count == 4)
     }
 }

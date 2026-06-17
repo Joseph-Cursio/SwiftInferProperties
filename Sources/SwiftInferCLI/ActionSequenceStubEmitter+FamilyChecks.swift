@@ -57,7 +57,8 @@ extension ActionSequenceStubEmitter {
         shape: ReducerSignatureShape,
         reducerCall: String,
         isTCA: Bool = false,
-        actionFirst: Bool = false
+        actionFirst: Bool = false,
+        isMobius: Bool = false
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
@@ -70,7 +71,8 @@ extension ActionSequenceStubEmitter {
                 shape: shape,
                 reducerCall: reducerCall,
                 isTCA: isTCA,
-                actionFirst: actionFirst
+                actionFirst: actionFirst,
+                isMobius: isMobius
             )
         }
     }
@@ -94,11 +96,21 @@ extension ActionSequenceStubEmitter {
         shape: ReducerSignatureShape,
         reducerCall: String,
         isTCA: Bool = false,
-        actionFirst: Bool = false
+        actionFirst: Bool = false,
+        isMobius: Bool = false
     ) -> [String] {
         let assertion =
             "precondition(once == twice, "
                 + "\"Idempotence invariant violated for \(actionExpr)\")"
+        // Mobius: double-apply the witness, taking `Next.model` each time
+        // (nil = `.noChange` → keep the prior model). Effects discarded.
+        if isMobius {
+            return [
+                "let once = \(reducerCall)(state, \(actionExpr)).model ?? state",
+                "let twice = \(reducerCall)(once, \(actionExpr)).model ?? once",
+                assertion
+            ]
+        }
         // Cycle 122 (Phase A) — `.tca` double-applies the witness through
         // the instance reducer; Effects discarded (PRD §16 #1).
         if isTCA {

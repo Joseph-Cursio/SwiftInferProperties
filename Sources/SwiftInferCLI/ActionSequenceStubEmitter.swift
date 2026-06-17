@@ -62,6 +62,7 @@ public enum ActionSequenceStubEmitter {
             validateInvariant(invariant.family)
         }
         let isTCA = inputs.candidate.carrierKind == .tca
+        let isMobius = inputs.candidate.carrierKind == .mobius  // Mobius: extract Next.model
         let actionFirst = inputs.candidate.carrierKind == .reSwift  // ReSwift: reducer(action, state)
         let reducerCall = makeReducerCall(inputs.candidate)
         let stateInit = "\(inputs.candidate.stateTypeName)()"
@@ -69,7 +70,8 @@ public enum ActionSequenceStubEmitter {
             shape: inputs.candidate.signatureShape,
             reducerCall: reducerCall,
             isTCA: isTCA,
-            actionFirst: actionFirst
+            actionFirst: actionFirst,
+            isMobius: isMobius
         )
         let perStepCheck = makePerStepCheck(invariant: inputs.invariant)
         let postLoopCheck = makePostLoopCheck(
@@ -77,7 +79,8 @@ public enum ActionSequenceStubEmitter {
             shape: inputs.candidate.signatureShape,
             reducerCall: reducerCall,
             isTCA: isTCA,
-            actionFirst: actionFirst
+            actionFirst: actionFirst,
+            isMobius: isMobius
         )
         return assembleStub(
             inputs: inputs,
@@ -114,13 +117,15 @@ public enum ActionSequenceStubEmitter {
         lines.append("// DO NOT EDIT — regenerated on each `swift-infer verify-interaction` run.")
         lines.append("")
         let isTCA = inputs.candidate.carrierKind == .tca
+        let isMobius = inputs.candidate.carrierKind == .mobius
         lines.append("import Foundation")
-        // Cycle 122 (Phase A): a `.tca` reducer's sources are compiled
-        // INTO this target (direct source inclusion) — no `import
-        // <userModule>` — but it needs `ComposableArchitecture` to name
-        // `Reduce`/`Effect` and call `reduce(into:action:)`.
+        // `.tca` / `.mobius` reducers are compiled INTO this target (direct
+        // source inclusion) — no `import <userModule>` — but they need their
+        // framework's types: `Reduce`/`Effect` (TCA) or `Next` (Mobius).
         if isTCA {
             lines.append("import ComposableArchitecture")
+        } else if isMobius {
+            lines.append("import MobiusCore")
         } else {
             lines.append("import \(inputs.userModuleName)")
         }
@@ -210,11 +215,12 @@ public enum ActionSequenceStubEmitter {
     // MARK: - Internals
 
     /// Reject carriers the emitter can't emit a correct call for. `.reSwift`
-    /// IS supported (reversed-arg canonical call — see `emit`). `.mobius` /
-    /// `.workflow` need verifier-side framework deps + return/receiver
-    /// handling not yet wired; `.tca` needs a constructible Action.
+    /// (reversed-arg call) + `.mobius` (`Next.model` extraction + MobiusCore
+    /// dep) are supported. `.workflow` stays gated — its `apply` takes an
+    /// `ApplyContext` with no public init, so the action can't be applied
+    /// from a verifier. `.tca` needs a constructible Action.
     private static func validate(_ candidate: ReducerCandidate) throws {
-        if candidate.carrierKind == .mobius || candidate.carrierKind == .workflow {
+        if candidate.carrierKind == .workflow {
             throw EmitError.unsupportedCarrier(candidate.carrierKind)
         }
         if candidate.carrierKind == .tca, constructibleCases(candidate).isEmpty {
@@ -306,44 +312,6 @@ public enum ActionSequenceStubEmitter {
         lines.append("        )")
         lines.append("        let reducer = \(reducerType)()")
         return lines
-    }
-
-    /// One iteration of the action-application loop. Returns the
-    /// statement(s) that mutate `state` for the given signature
-    /// shape. Effect-bearing shapes (M8.A) discard the returned
-    /// `Effect<A>` — captured into `_` and never executed (PRD
-    /// §16 #1). Returned as an array so the assembler can append
-    /// each line at the caller's indent depth — the effect-tuple
-    /// shape needs two lines (destructure + assign).
-    static func makeApplyStep(
-        shape: ReducerSignatureShape,
-        reducerCall: String,
-        isTCA: Bool = false,
-        actionFirst: Bool = false
-    ) -> [String] {
-        // Cycle 122 (Phase A) — a `.tca` reducer is driven instance-
-        // relative: `reducer.reduce(into:&state, action:)` on a `let
-        // reducer = <Type>()` the assembler emits before the loop. The
-        // returned `Effect` is captured + discarded (PRD §16 #1).
-        if isTCA {
-            return ["_ = reducer.reduce(into: &state, action: action)"]
-        }
-        switch shape {
-        case .stateActionReturnsState:
-            return ["state = \(reducerCall)(\(orderedArgs("state", "action", actionFirst: actionFirst)))"]
-
-        case .inoutStateActionReturnsVoid:
-            return ["\(reducerCall)(&state, action)"]
-
-        case .stateActionReturnsStateAndEffect:
-            return [
-                "let (newState, _) = \(reducerCall)(state, action)",
-                "state = newState"
-            ]
-
-        case .inoutStateActionReturnsEffect:
-            return ["_ = \(reducerCall)(&state, action)"]
-        }
     }
 
     /// Derive a deterministic Xoshiro256** seed from the candidate's

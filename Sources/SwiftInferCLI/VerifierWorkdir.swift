@@ -258,6 +258,16 @@ public enum VerifierWorkdir {
                     + "\"https://github.com/pointfreeco/swift-composable-architecture.git\", "
                     + "from: \"1.15.0\")"
             ]
+
+        case .interactionMobius:
+            // Interaction deps + Mobius, pinned to an unreleased `master`
+            // revision (the tags don't build under the current toolchain).
+            entries = [
+                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")",
+                ".package(url: \"https://github.com/spotify/Mobius.swift.git\", "
+                    + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")"
+            ]
         }
         if let userPackage {
             entries.append(".package(path: \(escapedLiteral(userPackage.packagePath.path)))")
@@ -300,6 +310,13 @@ public enum VerifierWorkdir {
                 ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
                 ".product(name: \"ComposableArchitecture\", "
                     + "package: \"swift-composable-architecture\")"
+            ]
+
+        case .interactionMobius:
+            entries = [
+                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
+                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
+                ".product(name: \"MobiusCore\", package: \"Mobius.swift\")"
             ]
         }
         if let userPackage {
@@ -350,4 +367,12 @@ public enum WorkdirMode: String, Sendable, Equatable, Codable, CaseIterable {
     /// `Inputs.inlinedSources` (direct source inclusion); no user-package
     /// path dependency.
     case interactionTCA = "interaction-tca"
+    /// The interaction shape plus Spotify's Mobius (MobiusCore) — so the
+    /// co-compiled `(Model, Event) -> Next<Model, Effect>` reducer + the
+    /// stub's `import MobiusCore` resolve. Same direct-source-inclusion
+    /// model as `.interactionTCA`. Pinned to an unreleased `master`
+    /// revision: the tagged releases (0.5–0.7) don't compile under the
+    /// current Swift toolchain; `master` HEAD does. Revisit when Spotify
+    /// cuts a toolchain-compatible release.
+    case interactionMobius = "interaction-mobius"
 }

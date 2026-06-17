@@ -15,7 +15,7 @@ SWIFT_TEST := swift test
 SUBPROCESS_RE := MeasuredTests|MeasuredExecutionTests|VerifyPipeline
 
 # Subprocess batches — sized to bound peak temp-disk + build contention.
-BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests
+BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests|MobiusVerifyCorpusMeasuredTests
 BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests
 BATCH3 := VerifyPipeline
 BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|PromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests

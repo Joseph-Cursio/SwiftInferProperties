@@ -110,16 +110,22 @@ struct ActionSequenceStubEmitterTests {
         #expect(lines.contains("let twice = appReducer(.reset, once)"))
     }
 
-    @Test("Mobius / Workflow carriers stay gated out of verify (return / receiver conventions not yet wired)")
-    func mobiusAndWorkflowCarriersAreRejected() {
-        // Their `Next<…>` return / action-as-receiver conventions need
-        // verifier-side framework deps + extraction not yet wired — reject
-        // rather than mis-emit.
-        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.mobius)) {
-            _ = try ActionSequenceStubEmitter.emit(inputs(candidate(
-                signatureShape: .stateActionReturnsStateAndEffect, carrierKind: .mobius
-            )))
-        }
+    @Test("Mobius carrier emits the Next.model extraction + imports MobiusCore")
+    func mobiusEmitsNextExtraction() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(candidate(
+            functionName: "update",
+            signatureShape: .stateActionReturnsStateAndEffect,
+            carrierKind: .mobius
+        )))
+        #expect(source.contains("import MobiusCore"))
+        #expect(source.contains("let next = update(state, action)"))
+        #expect(source.contains("if let mobiusModel = next.model { state = mobiusModel }"))
+    }
+
+    @Test("Workflow carrier stays gated out of verify (uncallable ApplyContext)")
+    func workflowCarrierIsRejected() {
+        // v4/v5 `apply` takes an `ApplyContext` with no public init, so the
+        // action can't be applied from a verifier — reject rather than mis-emit.
         #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.workflow)) {
             _ = try ActionSequenceStubEmitter.emit(inputs(candidate(
                 signatureShape: .inoutStateActionReturnsEffect, carrierKind: .workflow
