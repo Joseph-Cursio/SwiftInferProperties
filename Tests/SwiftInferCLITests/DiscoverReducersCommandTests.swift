@@ -19,7 +19,8 @@ struct DiscoverReducersCommandTests {
         functionName: String = "reduce",
         signatureShape: ReducerSignatureShape = .stateActionReturnsState,
         stateTypeName: String = "S",
-        actionTypeName: String = "A"
+        actionTypeName: String = "A",
+        carrierKind: ReducerCarrierKind = .generic
     ) -> ReducerCandidate {
         ReducerCandidate(
             location: location,
@@ -27,7 +28,8 @@ struct DiscoverReducersCommandTests {
             functionName: functionName,
             signatureShape: signatureShape,
             stateTypeName: stateTypeName,
-            actionTypeName: actionTypeName
+            actionTypeName: actionTypeName,
+            carrierKind: carrierKind
         )
     }
 
@@ -65,8 +67,19 @@ struct DiscoverReducersCommandTests {
         #expect(rendered.contains("Sources/MyApp/Inbox.swift:42"))
         #expect(rendered.contains("Inbox.reduce"))
         #expect(rendered.contains("signature:inout-state-action-returns-void"))
+        #expect(rendered.contains("carrier:generic"))
         #expect(rendered.contains("state:Inbox.State"))
         #expect(rendered.contains("action:Inbox.Action"))
+    }
+
+    @Test("render surfaces the ReSwift / Mobius carrier label")
+    func renderSurfacesFrameworkCarrier() {
+        let reSwift = Command.renderSummary(candidates: [candidate(carrierKind: .reSwift)])
+        #expect(reSwift.contains("carrier:reswift"))
+        let mobiusCandidate = candidate(
+            signatureShape: .stateActionReturnsStateAndEffect, carrierKind: .mobius
+        )
+        #expect(Command.renderSummary(candidates: [mobiusCandidate]).contains("carrier:mobius"))
     }
 
     @Test("candidates sort by (location, functionName) — byte-stable across input order")

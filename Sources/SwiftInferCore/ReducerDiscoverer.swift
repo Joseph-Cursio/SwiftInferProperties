@@ -251,20 +251,34 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         let second = parameters[parameters.index(after: parameters.startIndex)]
         let firstRaw = first.type.trimmedDescription
         let secondRaw = second.type.trimmedDescription
+        let returnRaw = node.signature.returnClause?.type.trimmedDescription ?? "Void"
+        let returnType = returnRaw.trimmingCharacters(in: .whitespaces)
 
-        // Strip `inout ` prefix on each param's type.
+        // ReSwift `(Action, State?) -> State` — Action-FIRST, Optional
+        // incoming State, non-optional returned State. Its reversed param
+        // order can't go through `classifyShape` (which assumes State
+        // first), so it's matched separately and the State/Action are
+        // un-reversed here. Mapped onto `.stateActionReturnsState` (a pure
+        // state-returning reducer) for downstream type-based scoring.
+        if let reSwift = ReducerDiscoverer.classifyReSwift(
+            firstRaw: firstRaw, secondRaw: secondRaw, returnType: returnType
+        ) {
+            return makeCandidate(
+                node: node, stateType: reSwift.state, actionType: reSwift.action,
+                shape: .stateActionReturnsState, carrierKind: .reSwift
+            )
+        }
+
+        // Canonical `(State, Action)` order. Strip `inout ` on the State
+        // param; reject `inout` on the Action param (none of the canonical
+        // shapes carry it — keeps the §2.3 strict-Action posture).
         let firstIsInout = firstRaw.hasPrefix("inout ")
         let firstType = firstIsInout
             ? String(firstRaw.dropFirst("inout ".count)).trimmingCharacters(in: .whitespaces)
             : firstRaw
-        // Reject `inout` on the Action parameter — none of the
-        // canonical shapes have it there, and accepting it would
-        // muddy the §2.3 strict-Action-surface posture.
         if secondRaw.hasPrefix("inout ") { return nil }
         let secondType = secondRaw
 
-        let returnRaw = node.signature.returnClause?.type.trimmedDescription ?? "Void"
-        let returnType = returnRaw.trimmingCharacters(in: .whitespaces)
         guard let shape = Self.classifyShape(
             firstType: firstType,
             firstIsInout: firstIsInout,
@@ -274,52 +288,67 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         }
 
         // V1.92 (cycle-89 fix for cycle-87 finding #1) — two-scalar
-        // false-positive filter. `transform(_: Int, _: Int) -> Int`
-        // and friends match `(S, A) -> S` structurally with S = A =
-        // Int, but no plausible reducer has scalar State + scalar
-        // Action. Reject when both types are in the curated scalar
-        // set. PRD §3.5 conservative-inference posture.
+        // false-positive filter. `transform(_: Int, _: Int) -> Int` and
+        // friends match `(S, A) -> S` structurally with S = A = Int, but
+        // no plausible reducer has scalar State + scalar Action. PRD §3.5.
         if ReducerDiscoverer.isScalarTypeName(firstType), ReducerDiscoverer.isScalarTypeName(secondType) {
             return nil
         }
 
+        // V1.C — `.elmStyle` is a free `(S, A) -> S`. Mobius is the
+        // canonical-order `(S, A) -> Next<S, E>` (recognized as the
+        // effect-bearing shape, distinguished from the `(S, Effect)` tuple
+        // by the `Next<…>` return). Everything else stays `.generic`.
+        let carrierKind = classifyCanonicalCarrier(
+            shape: shape, returnType: returnType, stateType: firstType
+        )
+        return makeCandidate(
+            node: node, stateType: firstType, actionType: secondType,
+            shape: shape, carrierKind: carrierKind
+        )
+    }
+
+    /// `.mobius` for an effect-bearing `Next<S, E>` return; `.elmStyle`
+    /// for a free `(S, A) -> S`; `.generic` otherwise.
+    private func classifyCanonicalCarrier(
+        shape: ReducerSignatureShape,
+        returnType: String,
+        stateType: String
+    ) -> ReducerCarrierKind {
+        if shape == .stateActionReturnsStateAndEffect,
+            ReducerDiscoverer.looksLikeMobiusNext(returnType, expectedFirst: stateType) {
+            return .mobius
+        }
+        if typeStack.last == nil, shape == .stateActionReturnsState {
+            return .elmStyle
+        }
+        return .generic
+    }
+
+    /// Build a `ReducerCandidate` from a matched shape, qualifying nested
+    /// State/Action names to `<Enclosing>.Name` (cycle-108 Blocker A) so
+    /// the stub emitters produce resolvable `Feature.State()` /
+    /// `Feature.Action.self`. Shared by the canonical, ReSwift, and Mobius
+    /// match paths.
+    private func makeCandidate(
+        node: FunctionDeclSyntax,
+        stateType: String,
+        actionType: String,
+        shape: ReducerSignatureShape,
+        carrierKind: ReducerCarrierKind
+    ) -> ReducerCandidate {
         let position = node.funcKeyword.positionAfterSkippingLeadingTrivia
         let location = converter.location(for: position)
         let enclosingTypeName = typeStack.last
-        // V1.C — `.elmStyle` differentiation. A free `(S, A) -> S`
-        // reducer (the Elm idiom — `func update(_:_:)` at module
-        // scope) is the canonical carrier of that label. Methods on a
-        // type, and the two `inout` / tuple-return shapes when free,
-        // stay `.generic` — they're not the Elm convention even if
-        // signature-matched.
-        let carrierKind: ReducerCarrierKind
-        if enclosingTypeName == nil, shape == .stateActionReturnsState {
-            carrierKind = .elmStyle
-        } else {
-            carrierKind = .generic
-        }
-        // M8.B — classify the body's purity for the §7 routing
-        // signal: `.hiddenMutability` is suppressed at verify time;
-        // `.pure` + `.effectBearing` both flow through M3.E (the
-        // emit shape differs per signature, not per body).
         let purity = ReducerPurityAnalyzer.analyze(node)
-        // Cycle 109 (cycle-108 Blocker A fix) — when the bare param type
-        // is a type nested in the enclosing reducer (the universal
-        // `struct Feature { struct State; enum Action; func reduce… }`
-        // shape), pre-qualify it to `<Enclosing>.State` so the stub
-        // emitters (`ActionSequenceStubEmitter`, `InteractionTraceEmitter`)
-        // produce a resolvable `Feature.State()` / `Feature.Action.self`.
-        // This matches what M1.B's TCA walker already stores. A bare
-        // param type that is *not* nested (a top-level type referenced by
-        // simple name) is left unqualified.
         let nested = nestedTypeNamesStack.last ?? []
         return ReducerCandidate(
             location: "\(file):\(location.line)",
             enclosingTypeName: enclosingTypeName,
             functionName: node.name.text,
             signatureShape: shape,
-            stateTypeName: ReducerDiscoverer.qualifyIfNested(firstType, enclosing: enclosingTypeName, nested: nested),
-            actionTypeName: ReducerDiscoverer.qualifyIfNested(secondType, enclosing: enclosingTypeName, nested: nested),
+            stateTypeName: ReducerDiscoverer.qualifyIfNested(stateType, enclosing: enclosingTypeName, nested: nested),
+            actionTypeName: ReducerDiscoverer.qualifyIfNested(actionType, enclosing: enclosingTypeName, nested: nested),
             carrierKind: carrierKind,
             purity: purity
         )
@@ -352,6 +381,13 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         }
         if ReducerDiscoverer.isStateEffectTuple(returnType, expectedFirst: firstType) {
             // Shape 3: `(S, A) -> (S, Effect<A>)`.
+            return .stateActionReturnsStateAndEffect
+        }
+        if ReducerDiscoverer.looksLikeMobiusNext(returnType, expectedFirst: firstType) {
+            // Mobius: `(S, A) -> Next<S, E>` — same effect-bearing shape as
+            // the tuple form (the new State + discarded effects), mapped
+            // onto the same case. `matchReducer` re-checks the `Next<…>`
+            // return to label the carrier `.mobius`.
             return .stateActionReturnsStateAndEffect
         }
         return nil

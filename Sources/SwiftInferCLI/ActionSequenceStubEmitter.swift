@@ -206,18 +206,16 @@ public enum ActionSequenceStubEmitter {
 
     // MARK: - Internals
 
-    /// Reject carrier kinds the emitter doesn't support. All four
-    /// signature shapes are now accepted (M8.A lifted the
-    /// effect-shape rejection — effects are captured and discarded
-    /// per PRD §16 #1). `.tca` carrier still rejected: closure-
-    /// relative init via `feature.reduce(into:action:)` is separate
-    /// scope.
+    /// Reject carriers the emitter can't emit a correct call for. All four
+    /// signature shapes are accepted (M8.A discards effects, PRD §16 #1).
+    /// `.reSwift` / `.mobius` are recognized at discovery but their
+    /// reversed-arg / `Next<…>`-return conventions aren't wired for emit —
+    /// reject rather than mis-emit (discovery is unaffected). `.tca` needs
+    /// a constructible Action (cycle 122/125).
     private static func validate(_ candidate: ReducerCandidate) throws {
-        // Cycle 122/125 — `.tca` is supported when the Action has at least
-        // one *constructible* case (payload-free or single recognized-raw
-        // payload). Phase B's relaxed exploration verifies over that subset
-        // and discloses the rest as excluded; only an Action with no
-        // constructible case at all (or no Action enum found) is rejected.
+        if candidate.carrierKind == .reSwift || candidate.carrierKind == .mobius {
+            throw EmitError.unsupportedCarrier(candidate.carrierKind)
+        }
         if candidate.carrierKind == .tca, constructibleCases(candidate).isEmpty {
             throw EmitError.tcaActionNotEnumerable(actionType: candidate.actionTypeName)
         }

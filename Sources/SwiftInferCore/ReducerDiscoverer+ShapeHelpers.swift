@@ -40,6 +40,76 @@ extension ReducerDiscoverer {
         returnType.hasPrefix("Effect<") && returnType.hasSuffix(">")
     }
 
+    /// Does `returnType` look like Mobius's `Next<Model, Effect>` with
+    /// `Model == expectedFirst`? Mobius's `update(_ model:_ event:) ->
+    /// Next<Model, Effect>` keeps the canonical `(State, Action)` param
+    /// order — only the effect-bearing return differs from the curated
+    /// `(S, Effect)` tuple — so the first generic argument must be the
+    /// State type. Matched by name prefix + first-generic only, mirroring
+    /// `looksLikeEffect`'s no-type-resolution posture (§3.5 absorbs false
+    /// matches via default-`Possible` visibility).
+    static func looksLikeMobiusNext(_ returnType: String, expectedFirst: String) -> Bool {
+        guard returnType.hasPrefix("Next<"), returnType.hasSuffix(">") else { return false }
+        let inner = returnType.dropFirst("Next<".count).dropLast()
+        var depth = 0
+        for index in inner.indices {
+            switch inner[index] {
+            case "<", "(", "[": depth += 1
+
+            case ">", ")", "]": depth -= 1
+
+            case "," where depth == 0:
+                let first = inner[..<index].trimmingCharacters(in: .whitespaces)
+                return first == expectedFirst
+
+            default:
+                break
+            }
+        }
+        return false
+    }
+
+    /// The wrapped type of a single-level Optional spelling (`X?` or
+    /// `Optional<X>`), or `nil` if `typeName` isn't optional. Used to
+    /// recognize ReSwift's Optional incoming-State parameter
+    /// (`(Action, State?) -> State`).
+    static func optionalWrappedType(_ typeName: String) -> String? {
+        let trimmed = typeName.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasSuffix("?"), trimmed.count > 1 {
+            return String(trimmed.dropLast()).trimmingCharacters(in: .whitespaces)
+        }
+        if trimmed.hasPrefix("Optional<"), trimmed.hasSuffix(">") {
+            return String(trimmed.dropFirst("Optional<".count).dropLast())
+                .trimmingCharacters(in: .whitespaces)
+        }
+        return nil
+    }
+
+    /// Recognize ReSwift's `(Action, State?) -> State` reducer shape and
+    /// return the un-reversed `(state, action)` type names, or `nil`.
+    /// ReSwift's `Reducer` typealias is `(_ action: Action, _ state:
+    /// State?) -> State` — Action first, Optional incoming State, the
+    /// returned State equal to the parameter's wrapped type.
+    ///
+    /// This shape is looser than the canonical ones (`(X, Y?) -> Y` also
+    /// matches a `coalesce(_:_:)`-style helper), so it carries a stricter
+    /// false-positive guard: neither the State nor the Action may be a
+    /// scalar (a real ReSwift reducer's State is a struct, its Action an
+    /// enum). PRD §3.5 conservative posture.
+    static func classifyReSwift(
+        firstRaw: String,
+        secondRaw: String,
+        returnType: String
+    ) -> (state: String, action: String)? {
+        // Action param isn't `inout`; State param is Optional; the return
+        // is the State param's wrapped (non-optional) type.
+        guard !firstRaw.hasPrefix("inout "), !secondRaw.hasPrefix("inout ") else { return nil }
+        guard let stateType = optionalWrappedType(secondRaw), stateType == returnType else { return nil }
+        let actionType = firstRaw
+        if isScalarTypeName(stateType) || isScalarTypeName(actionType) { return nil }
+        return (state: stateType, action: actionType)
+    }
+
     /// Does `returnType` look like `(<expectedFirst>, Effect<...>)`?
     /// Tuple-shape match by depth-counting comma split — handles
     /// generic args like `Effect<Action>` and `Effect<S.Action>`

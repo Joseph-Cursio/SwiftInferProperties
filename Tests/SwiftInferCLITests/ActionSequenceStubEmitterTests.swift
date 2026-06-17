@@ -87,6 +87,21 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains("state = newState"))
     }
 
+    @Test("ReSwift / Mobius carriers are gated out of verify (recognized at discovery, not yet emittable)")
+    func reSwiftAndMobiusCarriersAreRejected() {
+        // Their call/return conventions differ from the canonical shapes
+        // (reversed args / `Next<…>` return), so emitting would build wrong
+        // code — the emitter rejects rather than mis-emit.
+        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.reSwift)) {
+            _ = try ActionSequenceStubEmitter.emit(inputs(candidate(carrierKind: .reSwift)))
+        }
+        #expect(throws: ActionSequenceStubEmitter.EmitError.unsupportedCarrier(.mobius)) {
+            _ = try ActionSequenceStubEmitter.emit(inputs(candidate(
+                signatureShape: .stateActionReturnsStateAndEffect, carrierKind: .mobius
+            )))
+        }
+    }
+
     @Test("inout-effect shape `(inout S, A) -> Effect<A>` — captures-and-discards effect (M8.A)")
     func inoutEffectShapeEmitsEffectDiscard() throws {
         // `.tca` carrier still rejected; use `.generic` (free / method

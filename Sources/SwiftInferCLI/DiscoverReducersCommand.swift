@@ -130,6 +130,7 @@ extension SwiftInferCommand {
                 lines.append(
                     "  \(candidate.location)  \(candidate.qualifiedName)  "
                         + "signature:\(candidate.signatureShape.rawValue)  "
+                        + "carrier:\(candidate.carrierKind.rawValue)  "
                         + "state:\(candidate.stateTypeName)  action:\(candidate.actionTypeName)"
                 )
             }

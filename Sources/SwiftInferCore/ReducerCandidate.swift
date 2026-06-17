@@ -288,7 +288,7 @@ public enum ReducerSignatureShape: String, Sendable, Equatable, Codable, CaseIte
 /// scoring (M4+) and rendering know the carrier shape without
 /// re-running the signature inspection.
 ///
-/// **Three cases, two shipped at M1.B:**
+/// **Cases:**
 ///   - `.generic` — signature-scan match (M1.A path) where the
 ///     enclosing context isn't a known TCA `Reducer` conformer. The
 ///     default and the catch-all.
@@ -298,13 +298,26 @@ public enum ReducerSignatureShape: String, Sendable, Equatable, Codable, CaseIte
 ///     `(S, A) -> S` reducers (Elm idiom — `func update(state:msg:)`)
 ///     from struct/class methods of the same signature. M1.B leaves
 ///     these in `.generic`.
+///   - `.reSwift` — the ReSwift `(Action, State?) -> State` reducer
+///     shape: Action-FIRST, Optional incoming State, non-optional
+///     returned State. The reversed param order is why this needs its
+///     own label rather than folding into `.elmStyle`.
+///   - `.mobius` — the Mobius `(Model, Event) -> Next<Model, Effect>`
+///     update shape: canonical `(State, Action)` order but an
+///     effect-bearing `Next<…>` return rather than `Effect<…>` / a
+///     tuple.
 ///
-/// Labels are **informational** — PRD §6.4: "templates fire on all
-/// carrier kinds equally." Pipeline routing (`verifyPath`,
-/// `actionGeneratorSource`) lives on later milestones' fields, not
-/// here.
+/// Labels are **informational** for discovery + §4 scoring — PRD §6.4:
+/// "templates fire on all carrier kinds equally." The two framework
+/// labels additionally gate measured-verify: `ActionSequenceStubEmitter`
+/// rejects them (their call/return convention differs from the canonical
+/// shapes; wiring the emit is separate, deferred work) so a discovered
+/// ReSwift/Mobius reducer is surfaced + scored but never verified with a
+/// wrong-shaped call.
 public enum ReducerCarrierKind: String, Sendable, Equatable, Codable, CaseIterable {
     case generic
     case tca
     case elmStyle = "elm-style"
+    case reSwift = "reswift"
+    case mobius
 }
