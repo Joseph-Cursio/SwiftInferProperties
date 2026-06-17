@@ -192,8 +192,11 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             )
 
         case .caseIterable:
+            // `Gen.element(of:)` is `Generator<C.Element?, _>` (nil on an empty
+            // collection), so force-unwrap — `allCases` is non-empty. (Latent
+            // until the first enum-carrier survey: cycle27 has none.)
             return GeneratorRecipe(
-                expression: "Gen<\(carrier)>.element(of: \(carrier).allCases)",
+                expression: "Gen.element(of: \(carrier).allCases).map { $0! }",
                 carrierTypeName: carrier,
                 imports: ["Foundation", "PropertyBased"]
             )

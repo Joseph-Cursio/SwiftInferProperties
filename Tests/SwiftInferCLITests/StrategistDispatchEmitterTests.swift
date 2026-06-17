@@ -43,7 +43,7 @@ struct StrategistDispatchEmitterRecipeTests {
         #expect(recipe.expression == "MyType.gen()")
     }
 
-    @Test("CaseIterable enum resolves to Gen<T>.element(of: T.allCases)")
+    @Test("CaseIterable enum resolves to Gen.element(of: T.allCases).map { $0! }")
     func caseIterableRecipe() throws {
         let shape = IndexedTypeShape(
             name: "MyEnum", kind: .enum,
@@ -52,7 +52,10 @@ struct StrategistDispatchEmitterRecipeTests {
         let recipe = try StrategistDispatchEmitter.resolveRecipe(
             carrier: "MyEnum", typeShape: shape
         )
-        #expect(recipe.expression == "Gen<MyEnum>.element(of: MyEnum.allCases)")
+        // `element(of:)` yields an optional element → force-unwrap (allCases
+        // is non-empty). The plain `Gen<T>.element(of:)` form fails to compile
+        // (Value == C.Element?); latent until the first enum-carrier survey.
+        #expect(recipe.expression == "Gen.element(of: MyEnum.allCases).map { $0! }")
     }
 
     @Test("rawRepresentable enum resolves to lifted compactMap")

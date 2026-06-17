@@ -44,7 +44,8 @@ extension SwiftInferCommand.Verify {
     ///      when the strategist path can't help.
     static func buildStubBundle(
         entry: SemanticIndexEntry,
-        budget: RoundTripStubEmitter.TrialBudget
+        budget: RoundTripStubEmitter.TrialBudget,
+        extraImports: [String] = []
     ) throws -> VerifyStubBundle {
         let supportedTemplates: [String] = [
             "round-trip", "idempotence", "commutativity", "associativity",
@@ -89,7 +90,8 @@ extension SwiftInferCommand.Verify {
         do {
             return try strategistBundle(
                 entry: rebound(entry, toCarrier: boundCarrier),
-                budget: budget
+                budget: budget,
+                extraImports: extraImports
             )
         } catch let error as VerifyError {
             if Self.v146HardcodedTemplates.contains(entry.templateName) {
@@ -167,7 +169,8 @@ extension SwiftInferCommand.Verify {
     /// then emits via `StrategistDispatchEmitter`.
     private static func strategistBundle(
         entry: SemanticIndexEntry,
-        budget: StrategistDispatchEmitter.TrialBudget
+        budget: StrategistDispatchEmitter.TrialBudget,
+        extraImports: [String] = []
     ) throws -> VerifyStubBundle {
         let calls = try resolveFunctionCalls(for: entry)
         let inputs = StrategistDispatchEmitter.Inputs(
@@ -175,7 +178,7 @@ extension SwiftInferCommand.Verify {
             typeShape: entry.typeShape,
             template: entry.templateName,
             functionCalls: calls.expressions,
-            extraImports: [],
+            extraImports: extraImports,
             seedHex: makeSeedHex(from: entry.identityHash),
             trialBudget: budget
         )

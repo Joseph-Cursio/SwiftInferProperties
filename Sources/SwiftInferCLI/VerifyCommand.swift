@@ -114,14 +114,11 @@ extension SwiftInferCommand {
         @Option(
             name: .long,
             help: """
-            Trial budget for the property check. `small` (N=100) is the \
-            v1.42 default — single verify call typically completes in \
-            ~5s on round-trip-on-Complex<Double>, matches the opt-in / \
-            exploration posture of the verify gesture. `standard` \
-            (N=1000) trades ~30-60s for higher statistical confidence; \
-            this is the budget the v1.45+ accept-flow integration will \
-            adopt. Unknown values emit a diagnostic and fall back to \
-            `small`.
+            Trial budget for the property check. `small` (N=100) is the v1.42 \
+            default (~5s on round-trip-on-Complex<Double>; matches the opt-in \
+            exploration posture). `standard` (N=1000) trades ~30-60s for higher \
+            confidence (the v1.45+ accept-flow budget). Unknown values warn and \
+            fall back to `small`.
             """
         )
         public var budget: String = "small"
@@ -139,6 +136,17 @@ extension SwiftInferCommand {
         )
         public var indexPath: String?
 
+        @Option(
+            name: .long,
+            help: """
+            For `--all-from-index` over a CURATED corpus: the corpus's module \
+            name — the verifier path-depends on the working-dir package + \
+            imports it so the corpus's own types resolve as carriers. Omit for \
+            library-carrier surveys (e.g. cycle27-surface).
+            """
+        )
+        public var corpusModule: String?
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -154,7 +162,8 @@ extension SwiftInferCommand {
                     budgetString: budget,
                     workingDirectory: workingDirectory,
                     maxParallel: maxParallel,
-                    templateFilter: template
+                    templateFilter: template,
+                    corpusModuleName: corpusModule
                 )
                 return
             }

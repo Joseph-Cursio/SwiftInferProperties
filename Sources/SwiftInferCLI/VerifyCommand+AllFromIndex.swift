@@ -61,7 +61,8 @@ extension SwiftInferCommand.Verify {
         budgetString: String,
         workingDirectory: URL,
         maxParallel: Int,
-        templateFilter: String?
+        templateFilter: String?,
+        corpusModuleName: String? = nil
     ) async throws {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
@@ -82,7 +83,8 @@ extension SwiftInferCommand.Verify {
             entries: entries,
             packageRoot: packageRoot,
             budget: budget,
-            parallelism: parallelism
+            parallelism: parallelism,
+            corpusModuleName: corpusModuleName
         )
     }
 
@@ -122,7 +124,8 @@ extension SwiftInferCommand.Verify {
         entries: [SemanticIndexEntry],
         packageRoot: URL,
         budget: RoundTripStubEmitter.TrialBudget,
-        parallelism: Int
+        parallelism: Int,
+        corpusModuleName: String? = nil
     ) async {
         var collected: [SurveyRecord] = []
         await withTaskGroup(of: SurveyRecord.self) { group in
@@ -134,7 +137,10 @@ extension SwiftInferCommand.Verify {
                 nextIndex += 1
                 inFlight += 1
                 group.addTask {
-                    surveyRecord(for: entry, packageRoot: packageRoot, budget: budget)
+                    surveyRecord(
+                        for: entry, packageRoot: packageRoot,
+                        budget: budget, corpusModuleName: corpusModuleName
+                    )
                 }
             }
             // For each completion, drain + add the next.
@@ -147,7 +153,10 @@ extension SwiftInferCommand.Verify {
                     nextIndex += 1
                     inFlight += 1
                     group.addTask {
-                        surveyRecord(for: entry, packageRoot: packageRoot, budget: budget)
+                        surveyRecord(
+                            for: entry, packageRoot: packageRoot,
+                            budget: budget, corpusModuleName: corpusModuleName
+                        )
                     }
                 }
             }
@@ -179,11 +188,26 @@ extension SwiftInferCommand.Verify {
     private static func surveyRecord(
         for entry: SemanticIndexEntry,
         packageRoot: URL,
-        budget: RoundTripStubEmitter.TrialBudget
+        budget: RoundTripStubEmitter.TrialBudget,
+        corpusModuleName: String? = nil
     ) -> SurveyRecord {
         let context = recordContext(for: entry)
         do {
-            let stubBundle = try Self.buildStubBundle(entry: entry, budget: budget)
+            // For a curated corpus, the carriers are types in the corpus module
+            // (not declared library deps), so the verifier must path-depend on
+            // the corpus package + `import` it. cycle27-surface (library
+            // carriers) passes nil and is unaffected.
+            let extraImports = corpusModuleName.map { [$0] } ?? []
+            let userPackage = corpusModuleName.map {
+                VerifierWorkdir.UserPackageReference(
+                    packagePath: packageRoot,
+                    packageDeclaredName: $0,
+                    productNames: [$0]
+                )
+            }
+            let stubBundle = try Self.buildStubBundle(
+                entry: entry, budget: budget, extraImports: extraImports
+            )
             let workdir = packageRoot
                 .appendingPathComponent(".swiftinfer")
                 .appendingPathComponent("verify-workdir")
@@ -191,7 +215,7 @@ extension SwiftInferCommand.Verify {
             _ = try VerifierWorkdir.synthesize(
                 VerifierWorkdir.Inputs(
                     workdir: workdir,
-                    userPackage: nil,
+                    userPackage: userPackage,
                     stubSource: stubBundle.source
                 )
             )
