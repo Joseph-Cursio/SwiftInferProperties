@@ -14,15 +14,19 @@ import Testing
 /// filtered false positives).
 ///
 /// Spawns real `swift build`s resolving the algebraic deps; tagged
-/// `.subprocess`. Six picks (3 ops × {commutativity, associativity}) split:
-///   - `join` / `meet` (semilattice ops) → comm + assoc bothPass (4);
-///   - `leftBiased` (a first-non-medium fold) → assoc bothPass but comm
-///     defaultFails — execution distinguishes the two properties on one
-///     function (the deliberate false positive is the commutativity pick).
+/// `.subprocess`. Nine picks across three families → 6 bothPass + 3 defaultFails:
+///   - commutativity/associativity: `join` / `meet` (semilattice ops) →
+///     comm + assoc bothPass (4); `leftBiased` (a first-non-medium fold) →
+///     assoc bothPass but comm defaultFails — execution distinguishes the two
+///     properties on one function;
+///   - idempotence: `atLeastMedium` (clamp-up) → bothPass; `bumpUp` (saturating
+///     step) → defaultFails (the idempotence false positive);
+///   - round-trip: one spurious pairing (`atLeastMedium`/`bumpUp` — the template
+///     over-generates same-signature unary functions) → defaultFails.
 @Suite("Algebraic survey corpus — measured baseline", .tags(.subprocess))
 struct AlgebraicSurveyCorpusMeasuredTests {
 
-    @Test("curated Confidence lattice corpus verifies commutativity + associativity (5 bothPass + 1 defaultFails)")
+    @Test("curated Confidence corpus verifies commutativity/associativity/idempotence (6 bothPass + 3 defaultFails)")
     func measuredAlgebraicSplits() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-survey-corpus")
@@ -48,16 +52,19 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         )
 
         let records = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(records.count == 6)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 5)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 1)
-        // The lone false positive is the commutativity of the non-commutative
-        // `leftBiased` (its associativity, which holds, is a true positive).
+        #expect(records.count == 9)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 6)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 3)
+        // commutativity false positive (non-commutative `leftBiased`), its
+        // associativity true positive, and the idempotence true positive.
         #expect(records.contains {
             $0.template == "commutativity" && $0.outcome == .measuredDefaultFails
         })
         #expect(records.contains {
             $0.template == "associativity" && $0.outcome == .measuredBothPass
+        })
+        #expect(records.contains {
+            $0.template == "idempotence" && $0.outcome == .measuredBothPass
         })
     }
 
