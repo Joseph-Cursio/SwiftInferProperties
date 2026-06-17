@@ -24,15 +24,25 @@ BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests
 # under `make -j`.
 .NOTPARALLEL:
 .DEFAULT_GOAL := help
-.PHONY: help test test-fast batch1 batch2 batch3 batch4 clean-temp
+.PHONY: help test test-fast lint batch1 batch2 batch3 batch4 clean-temp
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort | awk -F'\t' '{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-test: test-fast batch1 batch2 batch3 batch4 ## Fast suite + the four subprocess batches, in sequence (fail-fast)
+test: lint test-fast batch1 batch2 batch3 batch4 ## Lint + fast suite + the four subprocess batches, in sequence (fail-fast)
 
-test-fast: ## Every non-subprocess test (~6s, 3200 tests)
+# `lint` gates `test-fast` (the command cycle commits run) so a SwiftLint
+# regression fails the same way a test failure does. `--strict` upgrades
+# warnings to a non-zero exit; `--quiet` prints only violations. History: lint
+# warnings repeatedly slipped through cycle commits because `swift test` doesn't
+# run SwiftLint (e.g. file_length/type_body_length from added tests). Make is
+# .NOTPARALLEL and dedupes shared prerequisites, so lint runs once before tests.
+test-fast: lint ## SwiftLint + every non-subprocess test (~6s, 3200 tests)
 	$(SWIFT_TEST) --skip '$(SUBPROCESS_RE)'
+
+lint: ## SwiftLint, failing on any warning (--strict)
+	@command -v swiftlint >/dev/null 2>&1 || { echo "Error: swiftlint not installed (brew install swiftlint)." >&2; exit 1; }
+	swiftlint lint --quiet --strict
 
 batch1: ## Subprocess batch 1 — TCA carrier + verify-ready corpus (heaviest)
 	$(SWIFT_TEST) --filter '$(BATCH1)'
