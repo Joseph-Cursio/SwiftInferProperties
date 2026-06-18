@@ -44,26 +44,37 @@ public enum ViewModelIdempotenceStubEmitter {
         public let stateFieldNames: [String]
         /// `nil` for a no-arg action; otherwise the generated argument.
         public let argument: Argument?
+        /// Fake `struct` definitions for injected dependencies, emitted
+        /// before the verifier function (`ViewModelDependencyConstructor`).
+        public let preamble: String
+        /// How to construct the view model — defaults to `Type()`; a
+        /// dependency-injected model passes synthesized fakes.
+        public let construction: String?
 
         public init(
             typeName: String,
             actionName: String,
             stateFieldNames: [String],
-            argument: Argument? = nil
+            argument: Argument? = nil,
+            preamble: String = "",
+            construction: String? = nil
         ) {
             self.typeName = typeName
             self.actionName = actionName
             self.stateFieldNames = stateFieldNames
             self.argument = argument
+            self.preamble = preamble
+            self.construction = construction
         }
     }
 
     public static func emit(_ inputs: Inputs) -> String {
-        """
+        let preamble = inputs.preamble.isEmpty ? "" : "\n\(inputs.preamble)\n"
+        return """
         // PROTOTYPE — auto-generated ViewModel idempotence verifier.
         // Type: \(inputs.typeName)  Action: \(callExpression(inputs, argument: "…"))
         import Foundation
-
+        \(preamble)
         \(checkFunction(inputs))
 
         if runIdempotenceCheck() {
@@ -88,7 +99,7 @@ public enum ViewModelIdempotenceStubEmitter {
             // No-arg: single construction, apply twice, compare.
             return """
             func runIdempotenceCheck() -> Bool {
-                let probe = \(inputs.typeName)()
+                let probe = \(inputs.construction ?? "\(inputs.typeName)()")
                 \(callExpression(inputs, argument: nil))
             \(snapshotBlock(inputs))
                 \(callExpression(inputs, argument: nil))
@@ -100,7 +111,7 @@ public enum ViewModelIdempotenceStubEmitter {
         return """
         func runIdempotenceCheck() -> Bool {
             for arg in \(argument.valuesExpression) {
-                let probe = \(inputs.typeName)()
+                let probe = \(inputs.construction ?? "\(inputs.typeName)()")
                 \(callExpression(inputs, argument: "arg"))
             \(snapshotBlock(inputs))
                 \(callExpression(inputs, argument: "arg"))

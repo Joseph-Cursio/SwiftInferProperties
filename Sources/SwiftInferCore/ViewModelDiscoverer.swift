@@ -118,7 +118,8 @@ public enum ViewModelDiscoverer {
                     stateFields: state.sorted { $0.name < $1.name },
                     excludedFields: excluded.sorted { $0.name < $1.name },
                     actions: actions,
-                    constructibility: constructibility(of: info)
+                    constructibility: constructibility(of: info),
+                    initParameters: info.declaredInits.first ?? []
                 )
             )
         }
@@ -135,6 +136,13 @@ public enum ViewModelDiscoverer {
     static func classifyExclusion(_ field: RawStoredField) -> ViewModelFieldExclusion? {
         if field.isObservationIgnored { return .observationIgnored }
         if isDependencyType(field.typeText) { return .dependency }
+        // A stored field that doesn't self-initialize (no default, not an
+        // Optional `var`) must be supplied at construction — structurally an
+        // injected dependency, not observable State (and often non-Equatable,
+        // so it must stay out of the verifier's field comparison).
+        if !(field.hasDefault || (field.isOptional && field.isMutable)) {
+            return .dependency
+        }
         return nil
     }
 
@@ -151,7 +159,8 @@ public enum ViewModelDiscoverer {
             return .requiresArguments(needsValue.sorted())
         }
         // A custom parameterized init suppresses the synthesized `init()`.
-        if !info.declaredInitParamCounts.isEmpty, !info.declaredInitParamCounts.contains(0) {
+        let initParamCounts = info.declaredInits.map(\.count)
+        if !initParamCounts.isEmpty, !initParamCounts.contains(0) {
             return .requiresArguments(["<no zero-argument initializer>"])
         }
         return .zeroArgument
@@ -215,17 +224,17 @@ struct RawTypeInfo {
     var declLocation: String?
     var rawFields: [RawStoredField] = []
     var methods: [RawMethod] = []
-    /// Parameter count of each declared initializer — drives the
-    /// zero-arg-constructibility gate (a parameterized init suppresses the
-    /// synthesized `init()`).
-    var declaredInitParamCounts: [Int] = []
+    /// Parameters of each declared initializer — drives the zero-arg
+    /// constructibility gate (a parameterized init suppresses the
+    /// synthesized `init()`) and dependency-faking construction.
+    var declaredInits: [[ViewModelInitParameter]] = []
 
     mutating func merge(_ other: Self) {
         observability = observability ?? other.observability
         declLocation = declLocation ?? other.declLocation
         rawFields.append(contentsOf: other.rawFields)
         methods.append(contentsOf: other.methods)
-        declaredInitParamCounts.append(contentsOf: other.declaredInitParamCounts)
+        declaredInits.append(contentsOf: other.declaredInits)
     }
 }
 

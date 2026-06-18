@@ -93,8 +93,14 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
 
     override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
         guard let typeName = typeStack.last else { return .skipChildren }
-        let paramCount = node.signature.parameterClause.parameters.count
-        collected[typeName, default: RawTypeInfo()].declaredInitParamCounts.append(paramCount)
+        let parameters = node.signature.parameterClause.parameters.map { param -> ViewModelInitParameter in
+            let label = param.firstName.text
+            return ViewModelInitParameter(
+                label: label == "_" ? nil : label,
+                typeText: param.type.trimmedDescription
+            )
+        }
+        collected[typeName, default: RawTypeInfo()].declaredInits.append(parameters)
         return .skipChildren
     }
 

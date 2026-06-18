@@ -58,6 +58,12 @@ public struct ViewModelCandidate: Sendable, Equatable {
     /// `Identifiable` gate skips non-verifiable refint candidates.
     public let constructibility: ViewModelConstructibility
 
+    /// The first declared initializer's parameters (label + type), or `[]`
+    /// when the view model has only the synthesized `init()`. Drives
+    /// dependency-faking construction — the verifier calls the init,
+    /// passing a synthesized no-op fake for each protocol dependency.
+    public let initParameters: [ViewModelInitParameter]
+
     public init(
         location: String,
         typeName: String,
@@ -65,7 +71,8 @@ public struct ViewModelCandidate: Sendable, Equatable {
         stateFields: [ViewModelStateField],
         excludedFields: [ViewModelExcludedField] = [],
         actions: [ViewModelAction],
-        constructibility: ViewModelConstructibility = .zeroArgument
+        constructibility: ViewModelConstructibility = .zeroArgument,
+        initParameters: [ViewModelInitParameter] = []
     ) {
         self.location = location
         self.typeName = typeName
@@ -74,6 +81,7 @@ public struct ViewModelCandidate: Sendable, Equatable {
         self.excludedFields = excludedFields
         self.actions = actions
         self.constructibility = constructibility
+        self.initParameters = initParameters
     }
 
     /// `true` when `Type()` constructs the view model — verify-ready.
@@ -88,6 +96,18 @@ public struct ViewModelCandidate: Sendable, Equatable {
 public enum ViewModelConstructibility: Sendable, Equatable {
     case zeroArgument
     case requiresArguments([String])
+}
+
+/// One initializer parameter — its external label (`nil` for `_`) and
+/// type text. Used by dependency-faking construction to call the init.
+public struct ViewModelInitParameter: Sendable, Equatable, Codable {
+    public let label: String?
+    public let typeText: String
+
+    public init(label: String?, typeText: String) {
+        self.label = label
+        self.typeText = typeText
+    }
 }
 
 /// A stored property filtered out of a view model's State, tagged with
