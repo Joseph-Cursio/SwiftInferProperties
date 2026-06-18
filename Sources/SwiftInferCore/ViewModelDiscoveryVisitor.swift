@@ -111,11 +111,13 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
         guard let body = node.body else { return .skipChildren }
 
         let effects = node.signature.effectSpecifiers
-        let parameterTypes = node.signature.parameterClause.parameters
-            .map(\.type.trimmedDescription)
+        let parameters = node.signature.parameterClause.parameters
+        let parameterTypes = parameters.map(\.type.trimmedDescription)
+        let firstLabel = parameters.first.map(\.firstName.text)
         let method = RawMethod(
             name: node.name.text,
             parameterTypes: parameterTypes,
+            firstParameterLabel: (firstLabel == "_") ? nil : firstLabel,
             isAsync: effects?.asyncSpecifier != nil,
             isThrows: effects?.throwsClause != nil,
             signals: ViewModelMethodBodyWalker.signals(for: body)

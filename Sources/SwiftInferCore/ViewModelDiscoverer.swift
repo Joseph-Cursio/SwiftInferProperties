@@ -195,6 +195,7 @@ public enum ViewModelDiscoverer {
                 ViewModelAction(
                     name: method.name,
                     parameterTypes: method.parameterTypes,
+                    firstParameterLabel: method.firstParameterLabel,
                     isAsync: method.isAsync,
                     isThrows: method.isThrows,
                     mutatesStateDirectly: directlyMutates(method)
@@ -245,6 +246,7 @@ struct RawStoredField: Equatable {
 struct RawMethod: Equatable {
     let name: String
     let parameterTypes: [String]
+    let firstParameterLabel: String?
     let isAsync: Bool
     let isThrows: Bool
     let signals: ViewModelMethodSignals

@@ -30,13 +30,17 @@ struct ViewModelVerifyCorpusMeasuredTests {
         #expect(configured.constructibility == .requiresArguments(["endpoint"]))
         #expect(selection.isZeroArgConstructible)
 
-        // The idempotence candidate actions (all no-arg here).
-        let actions = ViewModelInteractionAnalyzer.analyze(selection)
-            .filter { $0.family == .idempotence }
-            .compactMap(\.subjects.first)
-            .map { String($0.dropLast(2)) }      // "selectAll()" → "selectAll"
-            .sorted()
-        #expect(actions == ["reset", "selectAll", "selectNext"])
+        // The idempotence candidate actions — no-arg + single-arg.
+        let idempotenceSignatures = Set(
+            ViewModelInteractionAnalyzer.analyze(selection)
+                .filter { $0.family == .idempotence }
+                .compactMap(\.subjects.first)
+        )
+        let idempotenceActions = selection.actions
+            .filter { idempotenceSignatures.contains($0.signature) }
+            .sorted { $0.name < $1.name }
+        #expect(idempotenceActions.map(\.name)
+            == ["reset", "selectAll", "selectNext", "setActive", "setStep"])
 
         let workdir = try Self.makeWorkdir(corpus: Self.corpusDirectory)
         defer { try? FileManager.default.removeItem(at: workdir) }
@@ -46,33 +50,70 @@ struct ViewModelVerifyCorpusMeasuredTests {
         // declares no `@main`, so there's no conflict.
         let verifierFile = workdir
             .appendingPathComponent("Sources/SwiftInferVerifier/main.swift")
+        let fieldNames = selection.stateFields.map(\.name)
 
         var outcomes: [String: VerifyOutcome] = [:]
-        for action in actions {
-            let stub = ViewModelIdempotenceStubEmitter.emit(
-                .init(
-                    typeName: "SelectionModel",
-                    actionName: action,
-                    stateFieldNames: selection.stateFields.map(\.name)
-                )
-            )
+        for action in idempotenceActions {
+            guard let inputs = Self.makeInputs(action: action, stateFields: fieldNames) else {
+                Issue.record("expected \(action.name) to be verifiable (no-arg or generatable single-arg)")
+                continue
+            }
+            let stub = ViewModelIdempotenceStubEmitter.emit(inputs)
             try stub.write(to: verifierFile, atomically: true, encoding: .utf8)
             let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
             guard build.exitCode == 0 else {
-                Issue.record("build failed for \(action): \(build.stderr)")
+                Issue.record("build failed for \(action.name): \(build.stderr)")
                 continue
             }
             let run = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
-            outcomes[action] = VerifyResultParser.parse(run)
+            outcomes[action.name] = VerifyResultParser.parse(run)
         }
 
+        // No-arg + single-arg idempotent → bothPass.
         expectBothPass(outcomes["selectAll"], "selectAll")
         expectBothPass(outcomes["reset"], "reset")
-        if case .defaultFails = outcomes["selectNext"] {
-            // selectNext advances the cursor — applying twice ≠ once.
-        } else {
-            Issue.record("selectNext expected defaultFails; got \(String(describing: outcomes["selectNext"]))")
+        expectBothPass(outcomes["setActive"], "setActive")    // x-curried over Bool
+        // Advancing actions → defaultFails (execution disproves the candidate).
+        expectDefaultFails(outcomes["selectNext"], "selectNext")
+        expectDefaultFails(outcomes["setStep"], "setStep")    // x-curried fails at n=1
+    }
+
+    /// Build verifier inputs for a no-arg or single-arg-generatable action;
+    /// `nil` (gated) for multi-arg or non-generatable-payload actions.
+    static func makeInputs(
+        action: ViewModelAction,
+        stateFields: [String]
+    ) -> ViewModelIdempotenceStubEmitter.Inputs? {
+        switch action.parameterTypes.count {
+        case 0:
+            return .init(typeName: "SelectionModel", actionName: action.name, stateFieldNames: stateFields)
+
+        case 1:
+            guard let values = ViewModelArgumentGenerator
+                .candidateValuesExpression(for: action.parameterTypes[0]) else {
+                return nil
+            }
+            return .init(
+                typeName: "SelectionModel",
+                actionName: action.name,
+                stateFieldNames: stateFields,
+                argument: .init(
+                    typeText: action.parameterTypes[0],
+                    label: action.firstParameterLabel,
+                    valuesExpression: values
+                )
+            )
+
+        default:
+            return nil
         }
+    }
+
+    private func expectDefaultFails(_ outcome: VerifyOutcome?, _ label: String) {
+        if case .defaultFails = outcome {
+            return
+        }
+        Issue.record("\(label) expected defaultFails; got \(String(describing: outcome))")
     }
 
     private func expectBothPass(_ outcome: VerifyOutcome?, _ label: String) {

@@ -10,6 +10,22 @@ final class SelectionModel: ObservableObject {
     @Published var selectedIDs: Set<Int> = []
     @Published var items: [Int] = [1, 2, 3]
     @Published var cursor: Int = 0
+    @Published var isActive: Bool = false
+
+    /// Parameterized + idempotent — `setActive(b)` twice with the same `b`
+    /// == once (a setter to a fixed value) → x-curried bothPass over both
+    /// Bool candidates.
+    func setActive(_ active: Bool) {
+        isActive = active
+    }
+
+    /// Parameterized + NOT idempotent — `setStep(n)` advances the cursor
+    /// by `n`, so applying twice with the same `n` adds `2n`. The `set*`
+    /// prefix surfaces it as a candidate; execution disproves it on the
+    /// `n = 1` candidate → measured-defaultFails.
+    func setStep(_ n: Int) {
+        cursor = cursor + n
+    }
 
     /// Idempotent — selecting all twice == once → measured-bothPass.
     func selectAll() {

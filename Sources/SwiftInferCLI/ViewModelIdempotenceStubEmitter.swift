@@ -1,61 +1,70 @@
 import Foundation
 
-/// PROTOTYPE — emits a standalone verifier source that checks a no-arg
-/// view-model action is idempotent at the State level: construct the view
-/// model, apply the action once, snapshot every State field, apply it
-/// again, and assert the snapshot is unchanged (`f(f(x)) == f(x)` on the
-/// constructed initial state). The corpus source is co-compiled into the
-/// verifier target (direct source inclusion), so the stub constructs the
-/// view model directly — no import, internal access works.
+/// PROTOTYPE — emits a standalone verifier that checks a view-model action
+/// is idempotent at the State level. Construct the view model, apply the
+/// action, snapshot every State field, apply it *again with the same
+/// argument*, and assert the snapshot is unchanged:
 ///
-/// **Scope (this slice):** no-argument actions on a zero-arg-constructible
-/// view model (`ViewModelConstructibility.zeroArgument`) whose State
-/// fields are `Equatable`. Parameterized actions need a value generator
-/// (the strategist) and are deferred — the MVVM analog of the `.tca`
-/// Phase A → Phase B progression. Emits the same `VERIFY_DEFAULT_*` /
-/// `VERIFY_EDGE_*` marker contract as the algebraic stubs, so
-/// `VerifyResultParser` consumes the output unchanged (deterministic →
-/// single trial; the edge pass is a zero sentinel).
+///   - **No-arg action**: `f(f(x)) == f(x)` on the constructed state.
+///   - **Single-arg action**: x-curried `f(f(s, a), a) == f(s, a)` for
+///     every candidate value `a` (the property must hold for all of them).
+///
+/// The corpus is co-compiled into the verifier target (direct source
+/// inclusion), so the stub constructs the view model directly — no import.
+///
+/// **Scope (this slice):** no-arg + single-argument actions whose
+/// parameter type is generatable (`ViewModelArgumentGenerator`) on a
+/// zero-arg-constructible view model with `Equatable` State fields.
+/// Multi-argument / non-generatable-payload actions are gated out by the
+/// caller — the MVVM analog of the `.tca` constructible-action subset.
+/// Emits the same `VERIFY_*` marker contract as the algebraic stubs
+/// (`exit(1)` on FAIL) so `VerifyResultParser` consumes it unchanged.
 public enum ViewModelIdempotenceStubEmitter {
 
-    public struct Inputs: Equatable, Sendable {
-        /// The view-model type to construct (`SelectionModel`).
-        public let typeName: String
-        /// The no-arg action method to apply twice (`selectAll`).
-        public let actionName: String
-        /// The State field names to snapshot + compare (must be `Equatable`).
-        public let stateFieldNames: [String]
+    /// A single generated argument for a parameterized action.
+    public struct Argument: Equatable, Sendable {
+        /// Parameter type as written (`"Bool"`, `"UUID?"`).
+        public let typeText: String
+        /// External label (`nil` for an unlabelled `_ x:` param).
+        public let label: String?
+        /// A Swift expression of type `[typeText]` — the candidate values
+        /// to apply the action with (from `ViewModelArgumentGenerator`).
+        public let valuesExpression: String
 
-        public init(typeName: String, actionName: String, stateFieldNames: [String]) {
+        public init(typeText: String, label: String?, valuesExpression: String) {
+            self.typeText = typeText
+            self.label = label
+            self.valuesExpression = valuesExpression
+        }
+    }
+
+    public struct Inputs: Equatable, Sendable {
+        public let typeName: String
+        public let actionName: String
+        public let stateFieldNames: [String]
+        /// `nil` for a no-arg action; otherwise the generated argument.
+        public let argument: Argument?
+
+        public init(
+            typeName: String,
+            actionName: String,
+            stateFieldNames: [String],
+            argument: Argument? = nil
+        ) {
             self.typeName = typeName
             self.actionName = actionName
             self.stateFieldNames = stateFieldNames
+            self.argument = argument
         }
     }
 
     public static func emit(_ inputs: Inputs) -> String {
-        let snapshots = inputs.stateFieldNames
-            .map { "    let snapshot_\($0) = probe.\($0)" }
-            .joined(separator: "\n")
-        let comparison = inputs.stateFieldNames.isEmpty
-            ? "true"
-            : inputs.stateFieldNames
-                .map { "probe.\($0) == snapshot_\($0)" }
-                .joined(separator: "\n        && ")
-        return """
+        """
         // PROTOTYPE — auto-generated ViewModel idempotence verifier.
-        // Type: \(inputs.typeName)  Action: \(inputs.actionName)()
-        // Property: applying \(inputs.actionName)() twice == applying it once
-        // (State-level f(f(x)) == f(x) on the constructed initial state).
+        // Type: \(inputs.typeName)  Action: \(callExpression(inputs, argument: "…"))
         import Foundation
 
-        func runIdempotenceCheck() -> Bool {
-            let probe = \(inputs.typeName)()
-            probe.\(inputs.actionName)()
-        \(snapshots)
-            probe.\(inputs.actionName)()
-            return \(comparison)
-        }
+        \(checkFunction(inputs))
 
         if runIdempotenceCheck() {
             print("VERIFY_DEFAULT_RESULT: PASS")
@@ -70,5 +79,60 @@ public enum ViewModelIdempotenceStubEmitter {
             exit(1)
         }
         """
+    }
+
+    // MARK: - Body
+
+    private static func checkFunction(_ inputs: Inputs) -> String {
+        guard let argument = inputs.argument else {
+            // No-arg: single construction, apply twice, compare.
+            return """
+            func runIdempotenceCheck() -> Bool {
+                let probe = \(inputs.typeName)()
+                \(callExpression(inputs, argument: nil))
+            \(snapshotBlock(inputs))
+                \(callExpression(inputs, argument: nil))
+                return \(comparison(inputs))
+            }
+            """
+        }
+        // Single-arg: x-curried — fresh state per candidate value.
+        return """
+        func runIdempotenceCheck() -> Bool {
+            for arg in \(argument.valuesExpression) {
+                let probe = \(inputs.typeName)()
+                \(callExpression(inputs, argument: "arg"))
+            \(snapshotBlock(inputs))
+                \(callExpression(inputs, argument: "arg"))
+                if !(\(comparison(inputs))) { return false }
+            }
+            return true
+        }
+        """
+    }
+
+    /// `probe.action()` / `probe.action(arg)` / `probe.action(label: arg)`.
+    private static func callExpression(_ inputs: Inputs, argument: String?) -> String {
+        guard let value = argument, inputs.argument != nil else {
+            return "probe.\(inputs.actionName)()"
+        }
+        if let label = inputs.argument?.label {
+            return "probe.\(inputs.actionName)(\(label): \(value))"
+        }
+        return "probe.\(inputs.actionName)(\(value))"
+    }
+
+    private static func snapshotBlock(_ inputs: Inputs) -> String {
+        inputs.stateFieldNames
+            .map { "        let snapshot_\($0) = probe.\($0)" }
+            .joined(separator: "\n")
+    }
+
+    private static func comparison(_ inputs: Inputs) -> String {
+        inputs.stateFieldNames.isEmpty
+            ? "true"
+            : inputs.stateFieldNames
+                .map { "probe.\($0) == snapshot_\($0)" }
+                .joined(separator: "\n        && ")
     }
 }

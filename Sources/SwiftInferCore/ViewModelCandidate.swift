@@ -176,6 +176,10 @@ public struct ViewModelStateField: Sendable, Equatable, Codable {
 public struct ViewModelAction: Sendable, Equatable, Codable {
     public let name: String
     public let parameterTypes: [String]
+    /// External label of the first parameter (`nil` for an unlabelled
+    /// `_ x:` param or a nullary action) — needed to emit the call at
+    /// verify time (`probe.select(id: arg)` vs `probe.setColor(arg)`).
+    public let firstParameterLabel: String?
     public let isAsync: Bool
     public let isThrows: Bool
     /// `true` when the body directly assigns a stored field or calls a
@@ -187,12 +191,14 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
     public init(
         name: String,
         parameterTypes: [String],
+        firstParameterLabel: String? = nil,
         isAsync: Bool,
         isThrows: Bool,
         mutatesStateDirectly: Bool
     ) {
         self.name = name
         self.parameterTypes = parameterTypes
+        self.firstParameterLabel = firstParameterLabel
         self.isAsync = isAsync
         self.isThrows = isThrows
         self.mutatesStateDirectly = mutatesStateDirectly

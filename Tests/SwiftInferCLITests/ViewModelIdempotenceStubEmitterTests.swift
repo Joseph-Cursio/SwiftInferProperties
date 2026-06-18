@@ -38,4 +38,34 @@ struct ViewModelIdempotenceStubEmitterTests {
         )
         #expect(source.contains("return true"))
     }
+
+    @Test("single-arg action loops over candidate values, applying the same value twice")
+    func emitsXCurriedCheckForArgument() {
+        let source = ViewModelIdempotenceStubEmitter.emit(
+            .init(
+                typeName: "Toggle",
+                actionName: "setActive",
+                stateFieldNames: ["isActive"],
+                argument: .init(typeText: "Bool", label: nil, valuesExpression: "[true, false]")
+            )
+        )
+        #expect(source.contains("for arg in [true, false]"))
+        // Fresh state per candidate, applied twice with the SAME arg.
+        #expect(source.contains("let probe = Toggle()"))
+        #expect(source.contains("probe.setActive(arg)"))
+        #expect(source.contains("if !(probe.isActive == snapshot_isActive) { return false }"))
+    }
+
+    @Test("labelled single-arg action emits the label at the call site")
+    func emitsLabelledCall() {
+        let source = ViewModelIdempotenceStubEmitter.emit(
+            .init(
+                typeName: "Picker",
+                actionName: "select",
+                stateFieldNames: ["choice"],
+                argument: .init(typeText: "Int", label: "index", valuesExpression: "[0, 1]")
+            )
+        )
+        #expect(source.contains("probe.select(index: arg)"))
+    }
 }
