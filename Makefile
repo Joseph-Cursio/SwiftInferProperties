@@ -56,6 +56,6 @@ batch3: ## Subprocess batch 3 — VerifyPipeline* integration suites
 batch4: ## Subprocess batch 4 — interaction/idempotence/conservation/determinism
 	$(SWIFT_TEST) --filter '$(BATCH4)'
 
-clean-temp: ## Remove leftover verifier/corpus build dirs (from killed runs)
-	find "$${TMPDIR:-/tmp}" -maxdepth 1 \( -name '*verify-pipeline-integration*' -o -name '*verify-interaction*' -o -name '*-corpus*' -o -name '*-survey-corpus*' -o -name 'TemporaryDirectory.*' -o -name '*.lock' \) -exec rm -rf {} + 2>/dev/null || true
-	@df -h / | tail -1
+clean-temp: ## Remove leftover verifier/corpus/measured build dirs (from killed runs)
+	find "$${TMPDIR:-/tmp}" -maxdepth 1 \( -name '*verify-pipeline-integration*' -o -name '*verify-interaction*' -o -name '*-corpus*' -o -name '*-survey-corpus*' -o -name '*measured*' -o -name 'tca-*' -o -name 'vm-*' -o -name 'TemporaryDirectory.*' -o -name '*.lock' \) -exec rm -rf {} + 2>/dev/null || true
+	@df -h "$${TMPDIR:-/tmp}" | tail -1
