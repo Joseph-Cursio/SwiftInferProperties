@@ -32,14 +32,18 @@ public enum ViewModelDependencyConstructor {
 
     public static func resolve(
         _ candidate: ViewModelCandidate,
-        protocols: [ViewModelProtocolScanner.ProtocolRequirements]
+        protocols: [ViewModelProtocolScanner.ProtocolDecl]
     ) -> Construction? {
         if candidate.isZeroArgConstructible {
             return Construction(preamble: "", expression: "\(candidate.typeName)()")
         }
-        let fakeable = Dictionary(
-            protocols.filter(\.isFakeable).map { ($0.name, $0) }
-        ) { first, _ in first }
+        // Pre-synthesize a fake for every fakeable protocol, keyed by name.
+        var fakeable: [String: String] = [:]
+        for proto in protocols where fakeable[proto.name] == nil {
+            if let source = ViewModelProtocolFaker.fakeStruct(for: proto) {
+                fakeable[proto.name] = source
+            }
+        }
         var args: [String] = []
         var fakeSources: [String: String] = [:]
         for parameter in candidate.initParameters {
@@ -60,7 +64,7 @@ public enum ViewModelDependencyConstructor {
     /// satisfied (gates construction).
     private static func satisfy(
         _ parameter: ViewModelInitParameter,
-        fakeable: [String: ViewModelProtocolScanner.ProtocolRequirements],
+        fakeable: [String: String],
         fakeSources: inout [String: String]
     ) -> String? {
         let type = parameter.typeText.trimmingCharacters(in: .whitespaces)
@@ -70,34 +74,10 @@ public enum ViewModelDependencyConstructor {
         let bareType = type.hasPrefix("any ")
             ? String(type.dropFirst(4)).trimmingCharacters(in: .whitespaces)
             : type
-        if let proto = fakeable[bareType] {
-            fakeSources[bareType] = fakeStruct(for: proto)
+        if let fakeSource = fakeable[bareType] {
+            fakeSources[bareType] = fakeSource
             return "Fake_\(bareType)()"
         }
-        return defaultScalar(for: bareType)
-    }
-
-    private static func defaultScalar(for type: String) -> String? {
-        switch type {
-        case "Int", "Int64", "Int32", "UInt": return "0"
-        case "Double", "Float", "CGFloat": return "0"
-        case "Bool": return "false"
-        case "String": return "\"\""
-        default: return nil
-        }
-    }
-
-    private static func fakeStruct(for proto: ViewModelProtocolScanner.ProtocolRequirements) -> String {
-        let stubs = proto.methodSignatures
-            .map { "    \($0) { }" }
-            .joined(separator: "\n")
-        if stubs.isEmpty {
-            return "struct Fake_\(proto.name): \(proto.name) {}"
-        }
-        return """
-        struct Fake_\(proto.name): \(proto.name) {
-        \(stubs)
-        }
-        """
+        return ViewModelDefaultValue.value(for: bareType)
     }
 }

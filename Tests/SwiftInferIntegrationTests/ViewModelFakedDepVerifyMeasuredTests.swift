@@ -21,7 +21,9 @@ struct ViewModelFakedDepVerifyMeasuredTests {
     @Test("a protocol-injected view model is constructed via a synthesized fake and verified")
     func measuredFakedDependencyConstruction() throws {
         let protocols = try ViewModelProtocolScanner.scan(directory: Self.corpusDirectory)
-        #expect(protocols.contains { $0.name == "Store" && $0.isFakeable })
+        #expect(protocols.contains { proto in
+            proto.name == "Store" && ViewModelProtocolFaker.fakeStruct(for: proto) != nil
+        })
 
         let candidates = try ViewModelDiscoverer.discover(directory: Self.corpusDirectory)
         let library = try #require(candidates.first { $0.typeName == "LibraryModel" })
@@ -45,19 +47,41 @@ struct ViewModelFakedDepVerifyMeasuredTests {
             .sorted()
         #expect(actions == ["selectAll", "selectNext"])
 
-        let workdir = try Self.makeWorkdir(corpus: Self.corpusDirectory)
-        defer { try? FileManager.default.removeItem(at: workdir) }
-        let verifierFile = workdir
-            .appendingPathComponent("Sources/SwiftInferVerifier/main.swift")
-        let fields = library.stateFields.map(\.name)
+        let outcomes = try Self.verify(
+            actions: actions,
+            construction: construction,
+            stateFields: library.stateFields.map(\.name)
+        )
 
+        if case .bothPass = outcomes["selectAll"] {
+            // Constructed LibraryModel(store: Fake_Store()); selectAll idempotent.
+        } else {
+            Issue.record("selectAll expected bothPass; got \(String(describing: outcomes["selectAll"]))")
+        }
+        if case .defaultFails = outcomes["selectNext"] {
+            // selectNext advances the cursor.
+        } else {
+            Issue.record("selectNext expected defaultFails; got \(String(describing: outcomes["selectNext"]))")
+        }
+    }
+
+    /// Emit + build + run an idempotence verifier per action, constructing
+    /// `LibraryModel` via the synthesized dependency fake.
+    static func verify(
+        actions: [String],
+        construction: ViewModelDependencyConstructor.Construction,
+        stateFields: [String]
+    ) throws -> [String: VerifyOutcome] {
+        let workdir = try makeWorkdir(corpus: corpusDirectory)
+        defer { try? FileManager.default.removeItem(at: workdir) }
+        let verifierFile = workdir.appendingPathComponent("Sources/SwiftInferVerifier/main.swift")
         var outcomes: [String: VerifyOutcome] = [:]
         for action in actions {
             let stub = ViewModelIdempotenceStubEmitter.emit(
                 .init(
                     typeName: "LibraryModel",
                     actionName: action,
-                    stateFieldNames: fields,
+                    stateFieldNames: stateFields,
                     preamble: construction.preamble,
                     construction: construction.expression
                 )
@@ -70,17 +94,7 @@ struct ViewModelFakedDepVerifyMeasuredTests {
             }
             outcomes[action] = VerifyResultParser.parse(try VerifierSubprocess.runVerifierBinary(workdir: workdir))
         }
-
-        if case .bothPass = outcomes["selectAll"] {
-            // Constructed LibraryModel(store: Fake_Store()); selectAll idempotent.
-        } else {
-            Issue.record("selectAll expected bothPass; got \(String(describing: outcomes["selectAll"]))")
-        }
-        if case .defaultFails = outcomes["selectNext"] {
-            // selectNext advances the cursor.
-        } else {
-            Issue.record("selectNext expected defaultFails; got \(String(describing: outcomes["selectNext"]))")
-        }
+        return outcomes
     }
 
     static let corpusDirectory: URL = {

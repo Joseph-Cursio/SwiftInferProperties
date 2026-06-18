@@ -6,9 +6,14 @@
 
 import Combine
 
+// A richer protocol — a property requirement + non-Void methods + an
+// Optional return — all stubbed by the synthesized fake.
 protocol Store {
+    var name: String { get }
     func save(_ id: Int) async throws
     func clearAll()
+    func count() -> Int
+    func latest() -> Int?
 }
 
 final class LibraryModel: ObservableObject {
