@@ -68,17 +68,22 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
             return .skipChildren
         }
         let isMutable = node.bindingSpecifier.text == "var"
+        let isObservationIgnored = node.attributes.contains { attribute in
+            attribute.as(AttributeSyntax.self)?
+                .attributeName.trimmedDescription == "ObservationIgnored"
+        }
         for binding in node.bindings {
             guard Self.isStored(binding),
                   let pattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
                 continue
             }
             let typeText = binding.typeAnnotation?.type.trimmedDescription ?? "?"
-            collected[typeName, default: RawTypeInfo()].stateFields.append(
-                ViewModelStateField(
+            collected[typeName, default: RawTypeInfo()].rawFields.append(
+                RawStoredField(
                     name: pattern.identifier.text,
                     typeText: typeText,
-                    isMutable: isMutable
+                    isMutable: isMutable,
+                    isObservationIgnored: isObservationIgnored
                 )
             )
         }

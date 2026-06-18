@@ -174,6 +174,12 @@ extension SwiftInferCommand {
                 "  \(viewModel.location)  \(viewModel.typeName)  [\(kind)]",
                 "    state (\(viewModel.stateFields.count)): \(fieldNames)"
             ]
+            if !viewModel.excludedFields.isEmpty {
+                let excluded = viewModel.excludedFields
+                    .map { "\($0.name) [\($0.reason.rawValue)]" }
+                    .joined(separator: ", ")
+                lines.append("    excluded (\(viewModel.excludedFields.count)): \(excluded)")
+            }
             if viewModel.actions.isEmpty {
                 lines.append("    actions: (none detected)")
                 return lines

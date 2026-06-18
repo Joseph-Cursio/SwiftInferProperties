@@ -92,14 +92,31 @@ public enum ViewModelDiscoverer {
                   let location = info.declLocation else {
                 continue
             }
-            let storedNames = Set(info.stateFields.map(\.name))
+            var state: [ViewModelStateField] = []
+            var excluded: [ViewModelExcludedField] = []
+            for field in info.rawFields {
+                if let reason = classifyExclusion(field) {
+                    excluded.append(
+                        ViewModelExcludedField(name: field.name, typeText: field.typeText, reason: reason)
+                    )
+                } else {
+                    state.append(
+                        ViewModelStateField(name: field.name, typeText: field.typeText, isMutable: field.isMutable)
+                    )
+                }
+            }
+            // Action detection keys on the *State* surface only — assigning
+            // an injected dependency or a transient `@ObservationIgnored`
+            // flag is reconfiguration / bookkeeping, not a state transition.
+            let storedNames = Set(state.map(\.name))
             let actions = resolveActions(methods: info.methods, storedNames: storedNames)
             candidates.append(
                 ViewModelCandidate(
                     location: location,
                     typeName: typeName,
                     observability: observability,
-                    stateFields: info.stateFields.sorted { $0.name < $1.name },
+                    stateFields: state.sorted { $0.name < $1.name },
+                    excludedFields: excluded.sorted { $0.name < $1.name },
                     actions: actions
                 )
             )
@@ -108,6 +125,23 @@ public enum ViewModelDiscoverer {
             if lhs.location != rhs.location { return lhs.location < rhs.location }
             return lhs.typeName < rhs.typeName
         }
+    }
+
+    /// Classify a stored field as a non-State exclusion, or `nil` if it is
+    /// genuine observable State. `@ObservationIgnored` → plumbing /
+    /// control flag; an existential (`any Foo`) / `*Protocol`-typed /
+    /// `AnyCancellable` field → an injected dependency.
+    static func classifyExclusion(_ field: RawStoredField) -> ViewModelFieldExclusion? {
+        if field.isObservationIgnored { return .observationIgnored }
+        if isDependencyType(field.typeText) { return .dependency }
+        return nil
+    }
+
+    private static func isDependencyType(_ typeText: String) -> Bool {
+        if typeText.contains("any ") { return true }          // existential service
+        if typeText.contains("AnyCancellable") { return true } // Combine bag
+        let base = typeText.trimmingCharacters(in: CharacterSet(charactersIn: "?! "))
+        return base.hasSuffix("Protocol")
     }
 
     /// Two-pass action resolution: seed with direct mutators, then add
@@ -158,15 +192,24 @@ public enum ViewModelDiscoverer {
 struct RawTypeInfo {
     var observability: ViewModelObservability?
     var declLocation: String?
-    var stateFields: [ViewModelStateField] = []
+    var rawFields: [RawStoredField] = []
     var methods: [RawMethod] = []
 
     mutating func merge(_ other: Self) {
         observability = observability ?? other.observability
         declLocation = declLocation ?? other.declLocation
-        stateFields.append(contentsOf: other.stateFields)
+        rawFields.append(contentsOf: other.rawFields)
         methods.append(contentsOf: other.methods)
     }
+}
+
+/// A stored property gathered during the scan, before State-vs-dependency
+/// classification (`ViewModelDiscoverer.classifyExclusion`).
+struct RawStoredField: Equatable {
+    let name: String
+    let typeText: String
+    let isMutable: Bool
+    let isObservationIgnored: Bool
 }
 
 /// One instance method gathered during the scan, with its precomputed

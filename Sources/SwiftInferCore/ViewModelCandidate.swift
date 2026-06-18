@@ -31,13 +31,21 @@ public struct ViewModelCandidate: Sendable, Equatable {
     /// `: ObservableObject` conformance.
     public let observability: ViewModelObservability
 
-    /// The stored instance properties — the "State" of the reducer view.
-    /// Stored = no computed getter (observers `willSet`/`didSet` count as
-    /// stored). `static` properties are excluded.
+    /// The stored instance properties that form the observable State —
+    /// the surface the interaction invariants reason about. Excludes
+    /// `static` props, computed props, `@ObservationIgnored` plumbing, and
+    /// injected dependencies (see `excludedFields`).
     public let stateFields: [ViewModelStateField]
 
-    /// The action alphabet — instance methods that mutate state, either
-    /// directly (assign a stored field / call a mutator on one) or
+    /// Stored properties deliberately excluded from State, with the reason
+    /// — `@ObservationIgnored` plumbing / transient control flags, or
+    /// injected dependencies (existential / `*Protocol`-typed services,
+    /// `AnyCancellable` bags). Surfaced for transparency so a human can
+    /// see what was filtered and why.
+    public let excludedFields: [ViewModelExcludedField]
+
+    /// The action alphabet — instance methods that mutate State, either
+    /// directly (assign a State field / call a mutator on one) or
     /// transitively (call another action). Sorted by name for stable
     /// output.
     public let actions: [ViewModelAction]
@@ -47,14 +55,41 @@ public struct ViewModelCandidate: Sendable, Equatable {
         typeName: String,
         observability: ViewModelObservability,
         stateFields: [ViewModelStateField],
+        excludedFields: [ViewModelExcludedField] = [],
         actions: [ViewModelAction]
     ) {
         self.location = location
         self.typeName = typeName
         self.observability = observability
         self.stateFields = stateFields
+        self.excludedFields = excludedFields
         self.actions = actions
     }
+}
+
+/// A stored property filtered out of a view model's State, tagged with
+/// why. Kept on the candidate for explainability (the recognizer never
+/// silently drops a field).
+public struct ViewModelExcludedField: Sendable, Equatable, Codable {
+    public let name: String
+    public let typeText: String
+    public let reason: ViewModelFieldExclusion
+
+    public init(name: String, typeText: String, reason: ViewModelFieldExclusion) {
+        self.name = name
+        self.typeText = typeText
+        self.reason = reason
+    }
+}
+
+/// Why a stored property is not part of State.
+public enum ViewModelFieldExclusion: String, Sendable, Equatable, Codable {
+    /// `@ObservationIgnored` — not observed; plumbing (Combine bags) or
+    /// transient control flags (`isUpdatingSelection`, `isInitialized`).
+    case observationIgnored = "observation-ignored"
+    /// Injected dependency — an existential (`any Foo`) / `*Protocol`-typed
+    /// service, or an `AnyCancellable` Combine bag.
+    case dependency
 }
 
 /// How a view model's observability was recognised.

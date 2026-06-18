@@ -147,6 +147,40 @@ struct ViewModelDiscovererTests {
         #expect(Set(candidates[0].actions.map(\.name)) == ["bump", "reset"])
     }
 
+    @Test("filters injected dependencies + @ObservationIgnored plumbing out of State")
+    func filtersDependenciesFromState() {
+        // Mirrors the real ViolationInspectorViewModel: genuine observed
+        // state alongside a protocol-typed service, an existential service,
+        // an AnyCancellable bag, and @ObservationIgnored control flags.
+        let source = """
+        import Observation
+        import Combine
+
+        @Observable
+        final class InspectorViewModel {
+            var violations: [Violation] = []
+            var selectedID: UUID?
+            var storage: ViolationStorageProtocol
+            var analyzer: (any WorkspaceAnalyzerProtocol)?
+            @ObservationIgnored var cancellables = Set<AnyCancellable>()
+            @ObservationIgnored var isUpdating = false
+
+            func select(_ id: UUID) { selectedID = id }
+        }
+        """
+        let viewModel = ViewModelDiscoverer.discover(source: source, file: "Inspector.swift")[0]
+        // State keeps only the genuine observed properties.
+        #expect(Set(viewModel.stateFields.map(\.name)) == ["violations", "selectedID"])
+        // The rest are excluded, tagged with why.
+        let byName = Dictionary(uniqueKeysWithValues: viewModel.excludedFields.map { ($0.name, $0.reason) })
+        #expect(byName["storage"] == .dependency)
+        #expect(byName["analyzer"] == .dependency)
+        #expect(byName["cancellables"] == .observationIgnored)
+        #expect(byName["isUpdating"] == .observationIgnored)
+        // `select` still detected — it assigns the real State field selectedID.
+        #expect(viewModel.actions.map(\.name) == ["select"])
+    }
+
     @Test("plain (non-observable) classes are not emitted")
     func nonObservableClassIgnored() {
         let source = """
