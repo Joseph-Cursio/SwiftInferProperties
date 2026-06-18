@@ -32,6 +32,22 @@ struct MonotonicityTemplateTypePatternTests {
         }
     }
 
+    @Test("String codomain is excluded (dogfood: lexicographic order rarely tracks input)")
+    func stringCodomainExcluded() {
+        // `String` was removed from comparableCodomains — transform/IO verbs
+        // returning String (serialize/generateMarkdown/fetchConfig) are not
+        // monotone, and dogfooding showed bare `X -> String` producing only
+        // Possible-tier false positives. Even a curated-verb name must not
+        // resurrect a String-codomain pick.
+        #expect(!MonotonicityTemplate.comparableCodomains.contains("String"))
+        let summary = makeMonotonicitySummary(
+            name: "score",            // curated verb — still must not fire on String
+            paramType: "Widget",
+            returnType: "String"
+        )
+        #expect(MonotonicityTemplate.suggest(for: summary) == nil)
+    }
+
     @Test("Non-Comparable codomain does not match")
     func nonComparableCodomainRejected() {
         let summary = makeMonotonicitySummary(

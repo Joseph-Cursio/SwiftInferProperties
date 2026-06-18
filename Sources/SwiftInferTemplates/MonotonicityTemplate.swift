@@ -9,7 +9,8 @@ import SwiftInferCore
 ///   - parameter is not `inout`
 ///   - function is not `mutating`
 ///   - return type is one of the curated `Comparable` codomain types
-///     (`Int`, `Double`, `Float`, `String`, `Date`, `Duration`)
+///     (`Int`, `Double`, `Float`, `Date`, `Duration` — `String` excluded;
+///     see `comparableCodomains`)
 ///
 /// Tier policy (PRD §5.2 caveat + M7 plan open decision #4): monotonicity
 /// suggestions stay in the **Possible** tier by default. Without an
@@ -64,11 +65,24 @@ public enum MonotonicityTemplate {
     /// the conservative posture the §5.2 caveat asks for. Project
     /// vocabulary doesn't currently cover codomain types — extending it
     /// is M7.1.x or later if real corpora demand it.
+    ///
+    /// **`String` removed (dogfood finding).** Monotonicity means
+    /// `f(x) <= f(y)` whenever `x <= y` — a NUMERIC / temporal magnitude
+    /// projection (`count`/`size`/`score` → Int/Double; `expiry` → Date).
+    /// A `-> String` codomain orders LEXICOGRAPHICALLY, which rarely tracks
+    /// input order: transform / IO verbs (`serialize`, `generateMarkdown`,
+    /// `fetchConfig`, `toMarkdown`) returning `String` are not monotone.
+    /// Dogfooding across four real packages (BigInt / swift-system /
+    /// CryptoSwift / SwiftLintRuleStudio) showed bare `X -> String`
+    /// producing only Possible-tier false positives, and every curated
+    /// monotonicity verb (`length`/`count`/`size`/`score`/`depth`/`height`/
+    /// `weight`) returns a numeric magnitude — never `String` — so no true
+    /// positive is lost. A project that genuinely wants lexicographic
+    /// monotonicity can re-add it via `Vocabulary` (future extension).
     public static let comparableCodomains: Set<String> = [
         "Int",
         "Double",
         "Float",
-        "String",
         "Date",
         "Duration"
     ]
@@ -149,7 +163,7 @@ public enum MonotonicityTemplate {
         [
             "Ordered-codomain assumption breaks under custom Comparable conformances "
                 + "that don't satisfy strict order; the curated codomain set "
-                + "(Int, Double, Float, String, Date, Duration) is the only one "
+                + "(Int, Double, Float, Date, Duration) is the only one "
                 + "M7.1 recognises.",
             "Possible-tier by default per the §5.2 caveat — explicit "
                 + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "
@@ -257,7 +271,7 @@ public enum MonotonicityTemplate {
         let caveats: [String] = [
             "Ordered-codomain assumption breaks under custom Comparable conformances "
                 + "that don't satisfy strict order; the curated codomain set "
-                + "(Int, Double, Float, String, Date, Duration) is the only one "
+                + "(Int, Double, Float, Date, Duration) is the only one "
                 + "M7.1 recognises.",
             "Possible-tier by default per the §5.2 caveat — explicit "
                 + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "

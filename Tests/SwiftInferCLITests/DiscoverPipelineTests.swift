@@ -55,10 +55,11 @@ struct DiscoverPipelineTests {
             includePossible: true,
             output: recording
         )
-        // `process: String -> String` fires both idempotence (type-pattern
-        // alone, score 30 = Possible) and monotonicity (M7.1 type-pattern
-        // alone, score 25 = Possible) under --include-possible.
-        #expect(recording.text.contains("2 suggestions."))
+        // `process: String -> String` fires idempotence (type-pattern alone,
+        // score 30 = Possible) under --include-possible. It no longer also
+        // fires monotonicity — String was dropped from the codomain set, so
+        // a String-returning transform is not a monotonicity candidate.
+        #expect(recording.text.contains("1 suggestion."))
         #expect(recording.text.contains("(Possible)"))
         #expect(recording.text.contains("process(_:)"))
     }

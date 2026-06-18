@@ -47,7 +47,10 @@ struct TemplateRegistryDiscoveryTests {
         let suggestions = TemplateRegistry.discover(in: [matching, nonMatching])
         #expect(suggestions.allSatisfy { $0.evidence.first?.location.file == "A.swift" })
         let templates = Set(suggestions.map(\.templateName))
-        #expect(templates == ["idempotence", "monotonicity"])
+        // `normalize(String) -> String` is idempotence-only — String was
+        // removed from the monotonicity codomain set (a normalize is not
+        // lexicographically order-preserving).
+        #expect(templates == ["idempotence"])
     }
 
     @Test("Directory scan integration over a single fixture file")
@@ -63,8 +66,9 @@ struct TemplateRegistryDiscoveryTests {
         let suggestions = try TemplateRegistry.discover(in: directory)
         let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
         #expect(idempotence.score.tier == .strong)
-        let monotonicity = try #require(suggestions.first { $0.templateName == "monotonicity" })
-        #expect(monotonicity.score.tier == .possible)
+        // `normalize(String) -> String` no longer surfaces monotonicity —
+        // String is excluded from the codomain set (dogfood finding).
+        #expect(!suggestions.contains { $0.templateName == "monotonicity" })
     }
 
     @Test("Both idempotence and round-trip fire over a mixed corpus")
@@ -98,7 +102,9 @@ struct TemplateRegistryDiscoveryTests {
         let templates = suggestions.map(\.templateName)
         #expect(templates.contains("idempotence"))
         #expect(templates.contains("round-trip"))
-        #expect(templates.contains("monotonicity"))
+        // `normalize(String) -> String` is idempotence-only now (String
+        // dropped from the monotonicity codomain set).
+        #expect(!templates.contains("monotonicity"))
     }
 
     @Test("Associativity reducer-fold signal aggregates corpus-wide via TemplateRegistry.discover")
@@ -195,14 +201,14 @@ struct TemplateRegistryDiscoveryTests {
         let suggestions = TemplateRegistry.discover(in: [earlyNormalize, encode, decode])
         // round-trip and inverse-pair both anchor at encode (line 10) —
         // M8.1's InversePairTemplate fires alongside RoundTripTemplate
-        // when T is `.unknown`. idempotence and monotonicity both anchor
-        // at the same `normalize` (line 50). Within identical (file,
-        // line), template-name ordering is alphabetical.
+        // when T is `.unknown`. idempotence anchors at `normalize`
+        // (line 50) — which no longer also yields monotonicity (String
+        // dropped from the codomain set). Within identical (file, line),
+        // template-name ordering is alphabetical.
         #expect(suggestions.map(\.templateName) == [
             "inverse-pair",
             "round-trip",
-            "idempotence",
-            "monotonicity"
+            "idempotence"
         ])
     }
 }

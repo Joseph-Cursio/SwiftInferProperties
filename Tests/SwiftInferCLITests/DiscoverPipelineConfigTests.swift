@@ -31,8 +31,9 @@ struct DiscoverPipelineConfigTests {
             output: recording,
             diagnostics: diagnostics
         )
-        // `process: String -> String` fires both idempotence + monotonicity.
-        #expect(recording.text.contains("2 suggestions."))
+        // `process: String -> String` fires idempotence only (String dropped
+        // from the monotonicity codomain set — see MonotonicityTemplate).
+        #expect(recording.text.contains("1 suggestion."))
         #expect(recording.text.contains("(Possible)"))
         #expect(diagnostics.lines.isEmpty)
     }
