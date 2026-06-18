@@ -8,10 +8,14 @@
 
 SWIFT_TEST := swift test
 
-# All 16 `.subprocess` suites match this regex: the 10 `*MeasuredTests`,
+# All 23 `.subprocess` suites match this regex: the `*MeasuredTests` family,
 # `InteractionVerifyMeasuredExecutionTests`, and the 5 `VerifyPipeline*`.
 # It deliberately EXCLUDES the fast `MeasuredPromotionDeterminismTests`
 # ("Measured" is a prefix there, not the `…MeasuredTests` suffix).
+# IMPORTANT: every suite matched here MUST appear in exactly one BATCH below
+# (`make test` runs the batches, not this regex), else it's skipped-by-fast
+# AND never run — the cycle-N orphaning trap. The 7 MVVM suites (BATCH5) were
+# orphaned this way until they were wired in.
 SUBPROCESS_RE := MeasuredTests|MeasuredExecutionTests|VerifyPipeline
 
 # Subprocess batches — sized to bound peak temp-disk + build contention.
@@ -19,17 +23,19 @@ BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests|MobiusVerifyCorpu
 BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests
 BATCH3 := VerifyPipeline
 BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|PromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests|AlgebraicSurveyCorpusMeasuredTests
+# MVVM-carrier verify suites (dependency-free builds — light; one batch is fine).
+BATCH5 := ViewModelVerifyCorpusMeasuredTests|ViewModelRefintVerifyCorpusMeasuredTests|ViewModelKeyedRefintVerifyMeasuredTests|VMStateInvariantVerifyMeasuredTests|ViewModelFakedDepVerifyMeasuredTests|ViewModelPackageVerifyMeasuredTests|ViewModelVerifyEvidenceJoinMeasuredTests
 
 # Never run batches concurrently (peak-disk + perf-contention safety), even
 # under `make -j`.
 .NOTPARALLEL:
 .DEFAULT_GOAL := help
-.PHONY: help test test-fast lint batch1 batch2 batch3 batch4 clean-temp
+.PHONY: help test test-fast lint batch1 batch2 batch3 batch4 batch5 clean-temp
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort | awk -F'\t' '{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-test: lint test-fast batch1 batch2 batch3 batch4 ## Lint + fast suite + the four subprocess batches, in sequence (fail-fast)
+test: lint test-fast batch1 batch2 batch3 batch4 batch5 ## Lint + fast suite + the five subprocess batches, in sequence (fail-fast)
 
 # `lint` gates `test-fast` (the command cycle commits run) so a SwiftLint
 # regression fails the same way a test failure does. `--strict` upgrades
@@ -55,6 +61,9 @@ batch3: ## Subprocess batch 3 — VerifyPipeline* integration suites
 
 batch4: ## Subprocess batch 4 — interaction/idempotence/conservation/determinism
 	$(SWIFT_TEST) --filter '$(BATCH4)'
+
+batch5: ## Subprocess batch 5 — MVVM-carrier verify suites (ViewModel/VMState)
+	$(SWIFT_TEST) --filter '$(BATCH5)'
 
 clean-temp: ## Remove leftover verifier/corpus/measured build dirs (from killed runs)
 	find "$${TMPDIR:-/tmp}" -maxdepth 1 \( -name '*verify-pipeline-integration*' -o -name '*verify-interaction*' -o -name '*-corpus*' -o -name '*-survey-corpus*' -o -name '*measured*' -o -name 'tca-*' -o -name 'vm-*' -o -name 'TemporaryDirectory.*' -o -name '*.lock' \) -exec rm -rf {} + 2>/dev/null || true
