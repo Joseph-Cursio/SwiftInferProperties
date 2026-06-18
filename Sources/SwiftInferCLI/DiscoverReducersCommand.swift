@@ -94,8 +94,14 @@ extension SwiftInferCommand {
                 // each mutating method = an Action), which the signature scan
                 // can't see. Appended as a separate section.
                 let viewModels = try ViewModelDiscoverer.discover(directory: directory)
+                // PROTOTYPE — also surface SwiftSyntax lint-rule visitor
+                // carriers (issue-accumulating `SyntaxVisitor` subclasses).
+                // Recognition only (slice 1): no invariant is emitted — see
+                // docs/rule-visitor-carrier-scoping.md.
+                let ruleVisitors = try RuleVisitorDiscoverer.discover(directory: directory)
                 return renderSummary(candidates: candidates)
                     + "\n" + renderViewModelSummary(viewModels)
+                    + "\n" + renderRuleVisitorSummary(ruleVisitors)
             }
             let pin = try ReducerPin.parse(pinRaw)
             let matched = candidates.filter { pin.matches($0) }
@@ -193,6 +199,49 @@ extension SwiftInferCommand {
                 lines.append("      - \(action.signature)\(async)\(throwsText)\(transitive)")
             }
             lines.append(contentsOf: renderInteractionCandidates(viewModel))
+            return lines
+        }
+
+        /// PROTOTYPE — renders the SwiftSyntax lint-rule visitor carriers
+        /// (issue-accumulating `SyntaxVisitor` subclasses). One block per
+        /// visitor: location, the inherited base/conformance, the syntax-node
+        /// types it visits, and the rule identifiers it emits. Recognition
+        /// only (slice 1) — no candidate invariant is surfaced, by design:
+        /// the carrier's generic law (detection determinism) is near-always
+        /// true and would flood `.possible`. See
+        /// `docs/rule-visitor-carrier-scoping.md`.
+        static func renderRuleVisitorSummary(_ candidates: [RuleVisitorCandidate]) -> String {
+            if candidates.isEmpty {
+                return "swift-infer discover-reducers: no SwiftSyntax lint-rule "
+                    + "visitor carriers detected.\n"
+            }
+            let suffix = candidates.count == 1 ? "" : "s"
+            var lines: [String] = [
+                "swift-infer discover-reducers — detected \(candidates.count) "
+                    + "lint-rule visitor carrier\(suffix) "
+                    + "(SwiftSyntax issue-accumulators):",
+                ""
+            ]
+            for visitor in candidates {
+                lines.append(contentsOf: renderRuleVisitor(visitor))
+            }
+            return lines.joined(separator: "\n") + "\n"
+        }
+
+        private static func renderRuleVisitor(_ visitor: RuleVisitorCandidate) -> [String] {
+            let base = visitor.inheritedTypes.isEmpty
+                ? "" : "  [\(visitor.inheritedTypes.joined(separator: ", "))]"
+            var lines = [
+                "  \(visitor.location)  \(visitor.typeName)\(base)",
+                "    visits (\(visitor.visitedNodeTypes.count)): "
+                    + visitor.visitedNodeTypes.joined(separator: ", ")
+            ]
+            if !visitor.emittedRuleNames.isEmpty {
+                lines.append(
+                    "    emits rules (\(visitor.emittedRuleNames.count)): "
+                        + visitor.emittedRuleNames.joined(separator: ", ")
+                )
+            }
             return lines
         }
 
