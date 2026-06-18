@@ -65,4 +65,28 @@ public enum MutatorBlockedFromIdempotence {
         "complement",
         "twosComplement"
     ]
+
+    /// Name *prefixes* for the consuming-iterator family — a `mutating`
+    /// method that **pops or gets the next** element advances/removes state,
+    /// so its lifted shadow is never idempotent (`f(f(s)) ≠ f(s)`), exactly
+    /// like the exact-name `popFirst`/`removeFirst`. Prefix (not exact)
+    /// because the suffix varies per call site (`popNext`, `popNextValue`,
+    /// `popNextElementIfValue`, `popNextHexByte`, `getNext`, …) — "pop/get
+    /// the next X" is unambiguously consuming for every X, so no idempotent
+    /// counterexample exists. (Dogfood findings: `apple/swift-nio`
+    /// `popNextHexByte()`; `apple/swift-argument-parser` `popNext()` /
+    /// `popNextValue()` / `popNextElementIfValue()` (body calls
+    /// `removeFirst()`) + `ArrayWrapper.getNext()` (body does
+    /// `currentIndex += 1`) — all surfaced at Likely across two independent
+    /// libraries, so the family is generalizable, not a one-off name.)
+    public static let consumePrefixes: Set<String> = [
+        "popNext",
+        "getNext"
+    ]
+
+    /// `true` when `name` is a non-idempotent mutator — either an exact
+    /// `curated` name or a `consumePrefixes` member.
+    public static func isBlocked(_ name: String) -> Bool {
+        curated.contains(name) || consumePrefixes.contains { name.hasPrefix($0) }
+    }
 }

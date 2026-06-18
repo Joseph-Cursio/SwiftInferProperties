@@ -74,6 +74,29 @@ struct IdempotenceTemplateMutatorBlocklistTests {
         #expect(signal?.isVeto == true)
     }
 
+    @Test("consume-prefix family (popNext*/getNext*) vetoes — swift-argument-parser dogfood")
+    func consumePrefixFamilyVetoes() {
+        // `apple/swift-argument-parser` surfaced a cluster of consuming-
+        // iterator false positives at Likely: SplitArguments.popNext() /
+        // popNextValue() / popNextElementIfValue() (bodies call removeFirst())
+        // + ArrayWrapper.getNext() (currentIndex += 1) — plus swift-nio's
+        // popNextHexByte(). All "pop/get the next X" → non-idempotent.
+        for name in ["popNext", "popNextValue", "popNextElementIfValue", "popNextHexByte", "getNext"] {
+            #expect(MutatorBlockedFromIdempotence.isBlocked(name), "expected \(name) blocked")
+            #expect(IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: name))?.isVeto == true)
+        }
+    }
+
+    @Test("precision: 'formUnion' / 'getName' are NOT blocked (idempotent / not-consume)")
+    func consumePrefixDoesNotOverVeto() {
+        // formUnion (set union) IS idempotent — the swift-argument-parser
+        // true positive that must survive. `getName` shares the `get` stem
+        // but not the `getNext` consume prefix.
+        for name in ["formUnion", "getName", "populate", "insert", "sort"] {
+            #expect(!MutatorBlockedFromIdempotence.isBlocked(name), "expected \(name) NOT blocked")
+        }
+    }
+
     @Test("MutatorBlockedFromIdempotence.curated includes involutions (negate/toggle/twosComplement — BigInt dogfood)")
     func curatedIncludesInvolutions() {
         // Self-inverse mutators (`f(f(s)) == s`) are non-idempotent, like

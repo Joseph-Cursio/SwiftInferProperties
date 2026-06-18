@@ -37,7 +37,7 @@ extension IdempotenceTemplate {
         forLifted lifted: LiftedTransformation
     ) -> Signal? {
         let methodName = lifted.originalSummary.name
-        guard MutatorBlockedFromIdempotence.curated.contains(methodName) else {
+        guard MutatorBlockedFromIdempotence.isBlocked(methodName) else {
             return nil
         }
         return Signal(
@@ -45,8 +45,9 @@ extension IdempotenceTemplate {
             weight: Signal.vetoWeight,
             detail: "Mutator '\(methodName)' is canonical-Swift non-idempotent "
                 + "by structural construction — `\(methodName)()` advances state "
-                + "(removeFirst/removeLast/popFirst/popLast/dropFirst/dropLast), "
-                + "inverts ordering (reverse), or is a self-inverse involution "
+                + "(removeFirst/removeLast/pop/popFirst/popLast/dropFirst/dropLast, "
+                + "or a consuming popNext*/getNext* iterator), inverts ordering "
+                + "(reverse), or is a self-inverse involution "
                 + "(negate/toggle/invert/complement/twosComplement); lifted shadow "
                 + "is not idempotent regardless of carrier protocol conformance"
         )
