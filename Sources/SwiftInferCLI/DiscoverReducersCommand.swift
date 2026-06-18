@@ -1,6 +1,7 @@
 import ArgumentParser
 import Foundation
 import SwiftInferCore
+import SwiftInferTemplates
 
 /// V2.0 M1.A — `swift-infer discover-reducers` subcommand surface.
 ///
@@ -190,6 +191,29 @@ extension SwiftInferCommand {
                 let throwsText = action.isThrows ? " throws" : ""
                 let transitive = action.mutatesStateDirectly ? "" : "  (transitive)"
                 lines.append("      - \(action.signature)\(async)\(throwsText)\(transitive)")
+            }
+            lines.append(contentsOf: renderInteractionCandidates(viewModel))
+            return lines
+        }
+
+        /// PROTOTYPE — the candidate interaction invariants surfaced over a
+        /// view model's action alphabet + State surface. All unverified
+        /// (`Possible`); a future witness strategy that constructs the view
+        /// model would measure them.
+        private static func renderInteractionCandidates(
+            _ viewModel: ViewModelCandidate
+        ) -> [String] {
+            let invariants = ViewModelInteractionAnalyzer.analyze(viewModel)
+            guard !invariants.isEmpty else { return [] }
+            var lines = [
+                "    candidate interaction invariants "
+                    + "(\(invariants.count), unverified — Possible):"
+            ]
+            for invariant in invariants {
+                lines.append(
+                    "      - [\(invariant.family.rawValue)] "
+                        + "\(invariant.subjects.joined(separator: ", "))  —  \(invariant.rationale)"
+                )
             }
             return lines
         }

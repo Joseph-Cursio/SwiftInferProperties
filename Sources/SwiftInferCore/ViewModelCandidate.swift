@@ -82,6 +82,38 @@ public struct ViewModelExcludedField: Sendable, Equatable, Codable {
     }
 }
 
+/// PROTOTYPE — one candidate interaction invariant statically surfaced
+/// over a `ViewModelCandidate` (its action alphabet + State surface),
+/// before any measured verification. The five families
+/// (`InteractionInvariantFamily`) are the same ones the reducer pipeline
+/// runs; this is the MVVM-shaped *discovery* of them. Always `.possible`
+/// — unverified; execution (a future witness strategy that constructs the
+/// view model) decides.
+public struct ViewModelInteractionCandidate: Sendable, Equatable {
+    /// Which interaction family this candidate belongs to.
+    public let family: InteractionInvariantFamily
+    /// The view model type the candidate was surfaced on.
+    public let typeName: String
+    /// The actions and/or State fields the invariant ranges over (e.g.
+    /// `["selectAll()"]` for idempotence, `["selectedViolationId"]` for
+    /// referential integrity).
+    public let subjects: [String]
+    /// One-line human rationale — why this shape suggests the invariant.
+    public let rationale: String
+
+    public init(
+        family: InteractionInvariantFamily,
+        typeName: String,
+        subjects: [String],
+        rationale: String
+    ) {
+        self.family = family
+        self.typeName = typeName
+        self.subjects = subjects
+        self.rationale = rationale
+    }
+}
+
 /// Why a stored property is not part of State.
 public enum ViewModelFieldExclusion: String, Sendable, Equatable, Codable {
     /// `@ObservationIgnored` — not observed; plumbing (Combine bags) or
