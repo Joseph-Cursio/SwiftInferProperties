@@ -64,6 +64,16 @@ struct IdempotenceTemplateMutatorBlocklistTests {
         }
     }
 
+    @Test("MutatorBlockedFromIdempotence.curated includes involutions (negate/toggle/twosComplement — BigInt dogfood)")
+    func curatedIncludesInvolutions() {
+        // Self-inverse mutators (`f(f(s)) == s`) are non-idempotent, like
+        // `reverse`. `attaswift/BigInt` surfaced real `negate()` +
+        // `twosComplement()` lifted-idempotence false positives at Likely.
+        for name in ["negate", "toggle", "invert", "complement", "twosComplement"] {
+            #expect(MutatorBlockedFromIdempotence.curated.contains(name))
+        }
+    }
+
     // MARK: - Veto fires on curated names (cycle-20 cases)
 
     @Test("'reverse' on OrderedDictionary fires veto (cycle-20 #41 case)")

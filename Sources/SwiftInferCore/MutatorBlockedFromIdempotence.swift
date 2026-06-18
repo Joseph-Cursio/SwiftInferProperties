@@ -11,6 +11,13 @@
 ///   modify state-and-return.
 /// - `dropFirst` / `dropLast`: same shape; "drop" verb is a synonym for
 ///   "remove" in this context.
+/// - `negate` / `toggle` / `invert` / `complement` / `twosComplement`:
+///   canonical **involutions** — `f(f(s)) = s ≠ f(s)` (the same structural
+///   argument as `reverse`, which already inverts ordering). A self-inverse
+///   mutator is non-idempotent for every value `s` where `f(s) ≠ s`.
+///   (Dogfood finding: real `BigInt.negate()` + `Array.twosComplement()`
+///   lifted-idempotence picks surfaced at Likely on `attaswift/BigInt`;
+///   `Bool.toggle()` is the canonical stdlib case.)
 ///
 /// **Distinct from V1.21.A's `iteratorMethodNames`.** V1.21.A's
 /// `next` / `advance` / `nextState` / `step` / `findNext` /
@@ -43,6 +50,13 @@ public enum MutatorBlockedFromIdempotence {
         "popFirst",
         "popLast",
         "dropFirst",
-        "dropLast"
+        "dropLast",
+        // Involutions — self-inverse mutators (`f(f(s)) == s ≠ f(s)`),
+        // the same structural non-idempotence as `reverse`.
+        "negate",
+        "toggle",
+        "invert",
+        "complement",
+        "twosComplement"
     ]
 }

@@ -45,9 +45,10 @@ extension IdempotenceTemplate {
             weight: Signal.vetoWeight,
             detail: "Mutator '\(methodName)' is canonical-Swift non-idempotent "
                 + "by structural construction — `\(methodName)()` advances state "
-                + "(removeFirst/removeLast/popFirst/popLast/dropFirst/dropLast) or "
-                + "inverts ordering (reverse); lifted shadow is not idempotent "
-                + "regardless of carrier protocol conformance"
+                + "(removeFirst/removeLast/popFirst/popLast/dropFirst/dropLast), "
+                + "inverts ordering (reverse), or is a self-inverse involution "
+                + "(negate/toggle/invert/complement/twosComplement); lifted shadow "
+                + "is not idempotent regardless of carrier protocol conformance"
         )
     }
 }
