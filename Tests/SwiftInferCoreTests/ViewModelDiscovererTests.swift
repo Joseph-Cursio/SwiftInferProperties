@@ -181,6 +181,34 @@ struct ViewModelDiscovererTests {
         #expect(viewModel.actions.map(\.name) == ["select"])
     }
 
+    @Test("constructibility: all-defaulted view model is zero-arg, a required dependency gates it")
+    func constructibilityGate() {
+        let constructible = """
+        import Observation
+        @Observable final class A {
+            var count = 0
+            var selected: Int?
+            func reset() { count = 0 }
+        }
+        """
+        #expect(ViewModelDiscoverer.discover(source: constructible, file: "A.swift")[0].isZeroArgConstructible)
+
+        // A required (non-defaulted, non-Optional) dependency + a custom
+        // parameterized init → not zero-arg constructible; verify must skip.
+        let gated = """
+        import Observation
+        @Observable final class B {
+            var ready = false
+            let storage: StorageProtocol
+            init(storage: StorageProtocol) { self.storage = storage }
+            func reset() { ready = false }
+        }
+        """
+        let candidate = ViewModelDiscoverer.discover(source: gated, file: "B.swift")[0]
+        #expect(candidate.constructibility == .requiresArguments(["storage"]))
+        #expect(!candidate.isZeroArgConstructible)
+    }
+
     @Test("plain (non-observable) classes are not emitted")
     func nonObservableClassIgnored() {
         let source = """

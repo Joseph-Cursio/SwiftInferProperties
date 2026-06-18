@@ -83,10 +83,18 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
                     name: pattern.identifier.text,
                     typeText: typeText,
                     isMutable: isMutable,
-                    isObservationIgnored: isObservationIgnored
+                    isObservationIgnored: isObservationIgnored,
+                    hasDefault: binding.initializer != nil
                 )
             )
         }
+        return .skipChildren
+    }
+
+    override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
+        guard let typeName = typeStack.last else { return .skipChildren }
+        let paramCount = node.signature.parameterClause.parameters.count
+        collected[typeName, default: RawTypeInfo()].declaredInitParamCounts.append(paramCount)
         return .skipChildren
     }
 

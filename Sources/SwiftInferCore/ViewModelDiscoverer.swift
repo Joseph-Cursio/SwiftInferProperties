@@ -117,7 +117,8 @@ public enum ViewModelDiscoverer {
                     observability: observability,
                     stateFields: state.sorted { $0.name < $1.name },
                     excludedFields: excluded.sorted { $0.name < $1.name },
-                    actions: actions
+                    actions: actions,
+                    constructibility: constructibility(of: info)
                 )
             )
         }
@@ -135,6 +136,25 @@ public enum ViewModelDiscoverer {
         if field.isObservationIgnored { return .observationIgnored }
         if isDependencyType(field.typeText) { return .dependency }
         return nil
+    }
+
+    /// `Type()` constructs the view model iff every stored property is
+    /// self-initializing (has a default, or is an Optional `var` →
+    /// auto-nil) AND a no-arg initializer is reachable (no custom init, or
+    /// an explicit zero-arg one). A field that needs an init value — an
+    /// injected dependency `let storage: Foo` — makes it `.requiresArguments`.
+    static func constructibility(of info: RawTypeInfo) -> ViewModelConstructibility {
+        let needsValue = info.rawFields
+            .filter { !($0.hasDefault || ($0.isOptional && $0.isMutable)) }
+            .map(\.name)
+        if !needsValue.isEmpty {
+            return .requiresArguments(needsValue.sorted())
+        }
+        // A custom parameterized init suppresses the synthesized `init()`.
+        if !info.declaredInitParamCounts.isEmpty, !info.declaredInitParamCounts.contains(0) {
+            return .requiresArguments(["<no zero-argument initializer>"])
+        }
+        return .zeroArgument
     }
 
     private static func isDependencyType(_ typeText: String) -> Bool {
@@ -194,12 +214,17 @@ struct RawTypeInfo {
     var declLocation: String?
     var rawFields: [RawStoredField] = []
     var methods: [RawMethod] = []
+    /// Parameter count of each declared initializer — drives the
+    /// zero-arg-constructibility gate (a parameterized init suppresses the
+    /// synthesized `init()`).
+    var declaredInitParamCounts: [Int] = []
 
     mutating func merge(_ other: Self) {
         observability = observability ?? other.observability
         declLocation = declLocation ?? other.declLocation
         rawFields.append(contentsOf: other.rawFields)
         methods.append(contentsOf: other.methods)
+        declaredInitParamCounts.append(contentsOf: other.declaredInitParamCounts)
     }
 }
 
@@ -210,6 +235,9 @@ struct RawStoredField: Equatable {
     let typeText: String
     let isMutable: Bool
     let isObservationIgnored: Bool
+    /// `true` when the binding has an initializer (`var x = 0` / `var x: T = …`).
+    let hasDefault: Bool
+    var isOptional: Bool { typeText.hasSuffix("?") }
 }
 
 /// One instance method gathered during the scan, with its precomputed

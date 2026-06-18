@@ -50,13 +50,22 @@ public struct ViewModelCandidate: Sendable, Equatable {
     /// output.
     public let actions: [ViewModelAction]
 
+    /// Whether the view model can be constructed with `Type()` — the
+    /// prerequisite for *verifying* an invariant (the verifier must build
+    /// an instance to drive its actions). `.requiresArguments` when a
+    /// stored property has no default / no-arg initializer (typically an
+    /// injected dependency), which gates verify the way the refint
+    /// `Identifiable` gate skips non-verifiable refint candidates.
+    public let constructibility: ViewModelConstructibility
+
     public init(
         location: String,
         typeName: String,
         observability: ViewModelObservability,
         stateFields: [ViewModelStateField],
         excludedFields: [ViewModelExcludedField] = [],
-        actions: [ViewModelAction]
+        actions: [ViewModelAction],
+        constructibility: ViewModelConstructibility = .zeroArgument
     ) {
         self.location = location
         self.typeName = typeName
@@ -64,7 +73,21 @@ public struct ViewModelCandidate: Sendable, Equatable {
         self.stateFields = stateFields
         self.excludedFields = excludedFields
         self.actions = actions
+        self.constructibility = constructibility
     }
+
+    /// `true` when `Type()` constructs the view model — verify-ready.
+    public var isZeroArgConstructible: Bool {
+        constructibility == .zeroArgument
+    }
+}
+
+/// Whether a view model is constructible with no arguments — the verify
+/// gate. `.requiresArguments` carries the stored-field names that lack a
+/// default (usually injected dependencies), for a clear skip disclosure.
+public enum ViewModelConstructibility: Sendable, Equatable {
+    case zeroArgument
+    case requiresArguments([String])
 }
 
 /// A stored property filtered out of a view model's State, tagged with
