@@ -83,6 +83,36 @@ struct CompositionTemplateMonotoneBoundedTests {
         }
     }
 
+    // MARK: - Dogfood (BigInt) — positional/shift label full veto
+
+    @Test("Positional 'shiftedBy:' label fires full veto (Suppressed) — BigInt decrement(shiftedBy:)")
+    func shiftedByLabelFiresVeto() {
+        // Reproduces the attaswift/BigInt dogfood false positive:
+        // `decrement(shiftedBy: Int)` surfaced as composition Strong (85),
+        // but `shiftedBy:` names a digit POSITION, not an addend, so
+        // `op(s, a).op(s, b) ≠ op(s, a + b)`. The verb here is `advance`
+        // (curated, +40) so only the label distinguishes the veto.
+        let suggestion = CompositionTemplate.suggest(
+            forLifted: liftedAdvance(paramLabel: "shiftedBy"),
+            carrierKindResolver: valueSemanticResolver()
+        )
+        #expect(suggestion == nil, "positional 'shiftedBy' should fire full veto (Suppressed)")
+    }
+
+    @Test("All positional-shift labels fire full veto")
+    func allPositionalShiftLabelsFireVeto() {
+        for label in CompositionTemplate.positionalShiftLabels {
+            let suggestion = CompositionTemplate.suggest(
+                forLifted: liftedAdvance(paramLabel: label),
+                carrierKindResolver: valueSemanticResolver()
+            )
+            #expect(
+                suggestion == nil,
+                "Label '\(label)' should fire full veto (Suppressed); got non-nil"
+            )
+        }
+    }
+
     // MARK: - Veto does NOT fire on non-curated labels
 
     @Test("Additive 'by:' label preserves Strong (no veto)")
