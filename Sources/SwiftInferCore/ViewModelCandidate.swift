@@ -1,0 +1,115 @@
+import Foundation
+
+/// PROTOTYPE (SwiftUI MVVM carrier) — one detected `@Observable` /
+/// `ObservableObject` view model, modelled as a reducer-in-disguise:
+///
+///   | Reducer            | ViewModel                                  |
+///   |--------------------|--------------------------------------------|
+///   | `State`            | the stored properties (`stateFields`)      |
+///   | `Action` alphabet  | the state-mutating methods (`actions`)     |
+///   | `reduce(into:_:)`  | each method body mutating `self`           |
+///
+/// This is the discovery shape the v2.0 interaction-invariant families
+/// (idempotence / cardinality / biconditional / referential-integrity /
+/// conservation) need to fire on MVVM code — `ReducerDiscoverer` only
+/// recognises reducer *signatures* (TCA / Elm / ReSwift / Mobius /
+/// Workflow), so an `@Observable` class with `func selectAll()` etc.
+/// currently yields zero candidates. The candidate captures enough to
+/// (a) render the action alphabet for a human, and (b) feed a future
+/// witness strategy that constructs the view model and drives its
+/// methods as the action sequence.
+public struct ViewModelCandidate: Sendable, Equatable {
+
+    /// `<path>:<line>` of the type declaration — same click-target UX as
+    /// `ReducerCandidate.location`.
+    public let location: String
+
+    /// The view model type name (`"ViolationInspectorViewModel"`).
+    public let typeName: String
+
+    /// How observability was detected — `@Observable` macro vs
+    /// `: ObservableObject` conformance.
+    public let observability: ViewModelObservability
+
+    /// The stored instance properties — the "State" of the reducer view.
+    /// Stored = no computed getter (observers `willSet`/`didSet` count as
+    /// stored). `static` properties are excluded.
+    public let stateFields: [ViewModelStateField]
+
+    /// The action alphabet — instance methods that mutate state, either
+    /// directly (assign a stored field / call a mutator on one) or
+    /// transitively (call another action). Sorted by name for stable
+    /// output.
+    public let actions: [ViewModelAction]
+
+    public init(
+        location: String,
+        typeName: String,
+        observability: ViewModelObservability,
+        stateFields: [ViewModelStateField],
+        actions: [ViewModelAction]
+    ) {
+        self.location = location
+        self.typeName = typeName
+        self.observability = observability
+        self.stateFields = stateFields
+        self.actions = actions
+    }
+}
+
+/// How a view model's observability was recognised.
+public enum ViewModelObservability: String, Sendable, Equatable, Codable {
+    /// The Observation framework `@Observable` macro.
+    case observableMacro = "observable-macro"
+    /// Combine-era `: ObservableObject` conformance.
+    case observableObject = "observable-object"
+}
+
+/// One stored property of a view model — the State surface.
+public struct ViewModelStateField: Sendable, Equatable, Codable {
+    public let name: String
+    public let typeText: String
+    /// `let` constants are state-but-immutable; `var`s are the mutable
+    /// surface the action alphabet writes to.
+    public let isMutable: Bool
+
+    public init(name: String, typeText: String, isMutable: Bool) {
+        self.name = name
+        self.typeText = typeText
+        self.isMutable = isMutable
+    }
+}
+
+/// One action in a view model's action alphabet — a state-mutating
+/// method. `parameterTypes` is the payload a generator would have to
+/// produce (empty = a nullary action like `selectAll()` / `deselectAll()`).
+public struct ViewModelAction: Sendable, Equatable, Codable {
+    public let name: String
+    public let parameterTypes: [String]
+    public let isAsync: Bool
+    public let isThrows: Bool
+    /// `true` when the body directly assigns a stored field or calls a
+    /// mutator on one; `false` when the method qualifies only because it
+    /// calls another action (transitive). Surfaced so a human can see
+    /// which actions are leaf mutators.
+    public let mutatesStateDirectly: Bool
+
+    public init(
+        name: String,
+        parameterTypes: [String],
+        isAsync: Bool,
+        isThrows: Bool,
+        mutatesStateDirectly: Bool
+    ) {
+        self.name = name
+        self.parameterTypes = parameterTypes
+        self.isAsync = isAsync
+        self.isThrows = isThrows
+        self.mutatesStateDirectly = mutatesStateDirectly
+    }
+
+    /// Rendered `name(Type, Type)` / `name()` action signature for output.
+    public var signature: String {
+        "\(name)(\(parameterTypes.joined(separator: ", ")))"
+    }
+}

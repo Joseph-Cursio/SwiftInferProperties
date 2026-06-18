@@ -87,7 +87,14 @@ extension SwiftInferCommand {
         ) throws -> String {
             let candidates = try ReducerDiscoverer.discover(directory: directory)
             guard let pinRaw else {
+                // PROTOTYPE — also surface SwiftUI MVVM view-model carriers
+                // (@Observable / ObservableObject) and their action alphabet.
+                // A view model is a reducer in disguise (stored props = State,
+                // each mutating method = an Action), which the signature scan
+                // can't see. Appended as a separate section.
+                let viewModels = try ViewModelDiscoverer.discover(directory: directory)
                 return renderSummary(candidates: candidates)
+                    + "\n" + renderViewModelSummary(viewModels)
             }
             let pin = try ReducerPin.parse(pinRaw)
             let matched = candidates.filter { pin.matches($0) }
@@ -135,6 +142,50 @@ extension SwiftInferCommand {
                 )
             }
             return lines.joined(separator: "\n") + "\n"
+        }
+
+        /// PROTOTYPE — renders the `@Observable` / `ObservableObject`
+        /// view-model carriers + their action alphabet. One block per view
+        /// model: location, observability kind, the State field names, and
+        /// each detected action (with `async`/`throws` and a `(transitive)`
+        /// marker for methods that mutate only by driving another action).
+        static func renderViewModelSummary(_ candidates: [ViewModelCandidate]) -> String {
+            if candidates.isEmpty {
+                return "swift-infer discover-reducers: no @Observable / "
+                    + "ObservableObject view-model carriers detected.\n"
+            }
+            let suffix = candidates.count == 1 ? "" : "s"
+            var lines: [String] = [
+                "swift-infer discover-reducers — detected \(candidates.count) "
+                    + "view-model carrier\(suffix) (@Observable / ObservableObject):",
+                ""
+            ]
+            for viewModel in candidates {
+                lines.append(contentsOf: renderViewModel(viewModel))
+            }
+            return lines.joined(separator: "\n") + "\n"
+        }
+
+        private static func renderViewModel(_ viewModel: ViewModelCandidate) -> [String] {
+            let kind = viewModel.observability == .observableMacro
+                ? "@Observable" : "ObservableObject"
+            let fieldNames = viewModel.stateFields.map(\.name).joined(separator: ", ")
+            var lines = [
+                "  \(viewModel.location)  \(viewModel.typeName)  [\(kind)]",
+                "    state (\(viewModel.stateFields.count)): \(fieldNames)"
+            ]
+            if viewModel.actions.isEmpty {
+                lines.append("    actions: (none detected)")
+                return lines
+            }
+            lines.append("    action alphabet (\(viewModel.actions.count)):")
+            for action in viewModel.actions {
+                let async = action.isAsync ? " async" : ""
+                let throwsText = action.isThrows ? " throws" : ""
+                let transitive = action.mutatesStateDirectly ? "" : "  (transitive)"
+                lines.append("      - \(action.signature)\(async)\(throwsText)\(transitive)")
+            }
+            return lines
         }
     }
 }
