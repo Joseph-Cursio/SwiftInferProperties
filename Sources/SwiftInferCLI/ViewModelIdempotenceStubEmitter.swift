@@ -50,6 +50,9 @@ public enum ViewModelIdempotenceStubEmitter {
         /// How to construct the view model — defaults to `Type()`; a
         /// dependency-injected model passes synthesized fakes.
         public let construction: String?
+        /// Modules to import beyond `Foundation` — e.g. the path-dependency
+        /// package the view model + its types live in.
+        public let extraImports: [String]
 
         public init(
             typeName: String,
@@ -57,7 +60,8 @@ public enum ViewModelIdempotenceStubEmitter {
             stateFieldNames: [String],
             argument: Argument? = nil,
             preamble: String = "",
-            construction: String? = nil
+            construction: String? = nil,
+            extraImports: [String] = []
         ) {
             self.typeName = typeName
             self.actionName = actionName
@@ -65,15 +69,19 @@ public enum ViewModelIdempotenceStubEmitter {
             self.argument = argument
             self.preamble = preamble
             self.construction = construction
+            self.extraImports = extraImports
         }
     }
 
     public static func emit(_ inputs: Inputs) -> String {
+        let imports = (["Foundation"] + inputs.extraImports)
+            .map { "import \($0)" }
+            .joined(separator: "\n")
         let preamble = inputs.preamble.isEmpty ? "" : "\n\(inputs.preamble)\n"
         return """
         // PROTOTYPE — auto-generated ViewModel idempotence verifier.
         // Type: \(inputs.typeName)  Action: \(callExpression(inputs, argument: "…"))
-        import Foundation
+        \(imports)
         \(preamble)
         \(checkFunction(inputs))
 

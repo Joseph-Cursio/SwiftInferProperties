@@ -132,6 +132,7 @@ public enum CorpusPackager {
 
         let package = Package(
             name: "\(moduleName)",
+            platforms: [.macOS(.v14)],
             products: [.library(name: "\(moduleName)", targets: ["\(moduleName)"])],
             targets: [.target(name: "\(moduleName)")]
         )

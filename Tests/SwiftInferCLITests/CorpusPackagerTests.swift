@@ -34,6 +34,8 @@ struct CorpusPackagerTests {
         #expect(manifest.contains(".library(name: \"IdempotenceCorpus\", targets: [\"IdempotenceCorpus\"])"))
         #expect(manifest.contains(".target(name: \"IdempotenceCorpus\")"))
         #expect(manifest.contains("// swift-tools-version: 6.1"))
+        // Platform floor so packaged Observation / Combine corpora compile.
+        #expect(manifest.contains("platforms: [.macOS(.v14)]"))
 
         // Sources landed under Sources/<module>/.
         let sourcesDir = root
