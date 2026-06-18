@@ -81,10 +81,16 @@ public enum ViewModelRefintResolver {
         candidate: ViewModelCandidate,
         identifiable: IdentifiableResolver
     ) -> Resolved? {
+        // Require name affinity between the selection and the collection's
+        // element type — `selectedViolationId` ↔ `[Violation]`, NOT
+        // `selectedFiles` ↔ `[Violation]` (which would emit a type-mismatched
+        // `Set<String>.isSubset(of: Set<UUID>)`). Real-VM dogfood finding.
+        let stem = selectionStem(selection.name)
         let collections = candidate.stateFields.compactMap { field -> (String, String)? in
             guard !isSelectionName(field.name),
                   let element = collectionElement(of: field.typeText)?.1,
-                  identifiable.classify(typeText: element) == .identifiable else {
+                  identifiable.classify(typeText: element) == .identifiable,
+                  matchesElementAffinity(stem: stem, element: element) else {
                 return nil
             }
             return (field.name, element)
@@ -152,6 +158,32 @@ public enum ViewModelRefintResolver {
 
     static func isSelectionName(_ name: String) -> Bool {
         name.lowercased().hasPrefix("selected")
+    }
+
+    /// The entity stem of a selection name: `selectedViolationId` →
+    /// `"violation"` (strip the `selected` prefix + a trailing `id`/`ids`/`s`).
+    static func selectionStem(_ name: String) -> String {
+        var stem = name.lowercased()
+        if stem.hasPrefix("selected") {
+            stem = String(stem.dropFirst("selected".count))
+        }
+        if stem.hasSuffix("ids") {
+            stem = String(stem.dropLast(3))
+        } else if stem.hasSuffix("id") {
+            stem = String(stem.dropLast(2))
+        } else if stem.hasSuffix("s") {
+            stem = String(stem.dropLast())
+        }
+        return stem
+    }
+
+    /// The selection stem must relate to the collection's *element type*
+    /// name (`violation` ↔ `Violation`), not just any sibling collection —
+    /// the field name is too noisy (`filteredViolations` contains "file").
+    static func matchesElementAffinity(stem: String, element: String) -> Bool {
+        guard stem.count >= 3 else { return false }
+        let lowered = element.lowercased()
+        return lowered.contains(stem) || stem.contains(lowered)
     }
 
     /// `[T]` / `Array<T>` / `Set<T>` → `(shape, T)`; else `nil`.

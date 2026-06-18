@@ -69,6 +69,24 @@ struct ViewModelRefintTests {
             == "(probe.selectedTrackID == nil || probe.tracks.contains { $0.id == probe.selectedTrackID! })")
     }
 
+    @Test("keyed refint requires element-name affinity (real-VM dogfood: selectedFiles ≠ [Violation])")
+    func keyedRequiresAffinity() {
+        let scanned = FunctionScanner.scanCorpus(
+            source: "struct Violation: Identifiable { let id: UUID }",
+            file: "Violation.swift"
+        )
+        let identifiable = IdentifiableResolver(typeDecls: scanned.typeDecls)
+        // `selectedViolationId` pairs with `[Violation]` (stem "violation").
+        let good = candidate([("selectedViolationId", "UUID?"), ("violations", "[Violation]")])
+        let expected = "(probe.selectedViolationId == nil "
+            + "|| probe.violations.contains { $0.id == probe.selectedViolationId! })"
+        #expect(ViewModelRefintResolver.resolve(good, identifiable: identifiable)?.predicate == expected)
+        // `selectedFiles: Set<String>` must NOT pair with `[Violation]` (no
+        // affinity; would emit a type-mismatched Set<String> ⊆ Set<UUID>).
+        let bad = candidate([("selectedFiles", "Set<String>"), ("violations", "[Violation]")])
+        #expect(ViewModelRefintResolver.resolve(bad, identifiable: identifiable) == nil)
+    }
+
     @Test("keyed refint gated when the collection element is not Identifiable")
     func gatesKeyedNonIdentifiable() {
         let scanned = FunctionScanner.scanCorpus(
