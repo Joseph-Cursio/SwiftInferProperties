@@ -51,6 +51,35 @@ struct ViewModelRefintTests {
         ) == nil)
     }
 
+    // MARK: - Keyed (Identifiable) refint
+
+    @Test("keyed refint: scalar-key selection over an Identifiable collection → id predicate")
+    func resolvesKeyedRefint() {
+        let scanned = FunctionScanner.scanCorpus(
+            source: "struct Track: Identifiable { let id: Int; let title: String }",
+            file: "Track.swift"
+        )
+        let identifiable = IdentifiableResolver(typeDecls: scanned.typeDecls)
+        let viewModel = candidate([("selectedTrackID", "Int?"), ("tracks", "[Track]")])
+        // Value-membership alone gates it (UUID/Int key ≠ Track element).
+        #expect(ViewModelRefintResolver.resolve(viewModel) == nil)
+        // The Identifiable resolver unlocks the keyed form.
+        let keyed = ViewModelRefintResolver.resolve(viewModel, identifiable: identifiable)
+        #expect(keyed?.predicate
+            == "(probe.selectedTrackID == nil || probe.tracks.contains { $0.id == probe.selectedTrackID! })")
+    }
+
+    @Test("keyed refint gated when the collection element is not Identifiable")
+    func gatesKeyedNonIdentifiable() {
+        let scanned = FunctionScanner.scanCorpus(
+            source: "struct Widget { let name: String }",
+            file: "Widget.swift"
+        )
+        let identifiable = IdentifiableResolver(typeDecls: scanned.typeDecls)
+        let viewModel = candidate([("selectedID", "Int?"), ("widgets", "[Widget]")])
+        #expect(ViewModelRefintResolver.resolve(viewModel, identifiable: identifiable) == nil)
+    }
+
     // MARK: - Stub emitter
 
     @Test("drives each action and re-checks the invariant after every step")

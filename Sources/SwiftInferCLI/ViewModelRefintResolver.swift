@@ -30,7 +30,16 @@ public enum ViewModelRefintResolver {
 
     enum CollectionShape: Equatable { case array, set }
 
-    public static func resolve(_ candidate: ViewModelCandidate) -> Resolved? {
+    /// `identifiable` (optional) enables the **keyed** form — a scalar-key
+    /// selection (`selectedID: UUID?` / `Set<UUID>`) over a collection of
+    /// `Identifiable` elements referenced by `\.id`. It's gated exactly like
+    /// the reducer refint `Identifiable` gate (cycle 139): keyed pairing
+    /// fires only against a collection whose element classifies
+    /// `.identifiable`. Pass `nil` for value-membership only.
+    public static func resolve(
+        _ candidate: ViewModelCandidate,
+        identifiable: IdentifiableResolver? = nil
+    ) -> Resolved? {
         let collections = candidate.stateFields.compactMap { field -> (String, String)? in
             guard !isSelectionName(field.name),
                   let element = collectionElement(of: field.typeText)?.1 else {
@@ -38,8 +47,8 @@ public enum ViewModelRefintResolver {
             }
             return (field.name, element)
         }
-        guard !collections.isEmpty else { return nil }
 
+        // Value-membership first (selection element type == collection element).
         for selection in candidate.stateFields where isSelectionName(selection.name) {
             if let resolved = resolveSetSelection(selection, collections: collections) {
                 return resolved
@@ -47,6 +56,58 @@ public enum ViewModelRefintResolver {
             if let resolved = resolveOptionalSelection(selection, collections: collections) {
                 return resolved
             }
+        }
+
+        // Keyed (Identifiable) fallback.
+        guard let identifiable else { return nil }
+        for selection in candidate.stateFields where isSelectionName(selection.name) {
+            if let resolved = resolveKeyed(selection, candidate: candidate, identifiable: identifiable) {
+                return resolved
+            }
+        }
+        return nil
+    }
+
+    /// Scalar key types a keyed selection (`selectedID`) plausibly indexes
+    /// a collection by — matched against the selection's element type.
+    static let keyLikeTypes: Set<String> = ["UUID", "Int", "String", "Int64", "Int32"]
+
+    /// Keyed refint: a scalar-key selection over an `Identifiable`-element
+    /// collection, referenced by `\.id`. The selection's key type must be
+    /// scalar (`keyLikeTypes`) and the paired collection's element must
+    /// classify `.identifiable`.
+    private static func resolveKeyed(
+        _ selection: ViewModelStateField,
+        candidate: ViewModelCandidate,
+        identifiable: IdentifiableResolver
+    ) -> Resolved? {
+        let collections = candidate.stateFields.compactMap { field -> (String, String)? in
+            guard !isSelectionName(field.name),
+                  let element = collectionElement(of: field.typeText)?.1,
+                  identifiable.classify(typeText: element) == .identifiable else {
+                return nil
+            }
+            return (field.name, element)
+        }
+        guard let collection = collections.first else { return nil }
+
+        // `Set<K>` selection → subset of the collection's id set.
+        if case let (.set, key)? = collectionElement(of: selection.typeText), keyLikeTypes.contains(key) {
+            return Resolved(
+                predicate: "probe.\(selection.name).isSubset(of: Set(probe.\(collection.0).map { $0.id }))",
+                selectionField: selection.name,
+                collectionField: collection.0
+            )
+        }
+        // `K?` selection → nil, or an element with a matching id exists.
+        if collectionElement(of: selection.typeText) == nil,
+           let key = optionalElement(of: selection.typeText), keyLikeTypes.contains(key) {
+            return Resolved(
+                predicate: "(probe.\(selection.name) == nil "
+                    + "|| probe.\(collection.0).contains { $0.id == probe.\(selection.name)! })",
+                selectionField: selection.name,
+                collectionField: collection.0
+            )
         }
         return nil
     }
