@@ -55,7 +55,7 @@ struct ViewModelRefintTests {
 
     @Test("drives each action and re-checks the invariant after every step")
     func emitsActionDrivenInvariantCheck() {
-        let source = ViewModelRefintStubEmitter.emit(
+        let source = ViewModelInvariantStubEmitter.emit(
             .init(
                 typeName: "Catalog",
                 predicate: "probe.selected.isSubset(of: Set(probe.items))",

@@ -14,7 +14,7 @@ import Foundation
 /// are skipped — disclosed in the header comment, the `.tca`
 /// partial-exploration posture. Multi-step random sequences + shrinking
 /// are a future widening (delegate to the kit's `actionSequence`).
-public enum ViewModelRefintStubEmitter {
+public enum ViewModelInvariantStubEmitter {
 
     /// One action to drive. `valuesExpression` is `nil` for a no-arg
     /// action; otherwise the `[T]` candidate expression.

@@ -3,60 +3,72 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-/// PROTOTYPE — end-to-end measured proof of ViewModel referential-integrity
-/// verification. Recognises the `viewmodel-refint-corpus` models, resolves
-/// the value-membership invariant (`selected ⊆ items`), drives the action
-/// alphabet, and checks the invariant after every step:
+/// PROTOTYPE — end-to-end measured proof of the three remaining
+/// state-invariant families (cardinality / biconditional / conservation),
+/// each via the shared drive-and-check harness. Per model: resolve the
+/// family predicate, drive the action alphabet, re-check after every step.
 ///
-///   - `SafeCatalogModel` (guards membership) → bothPass
-///   - `CatalogModel.toggle` (inserts an arbitrary id) → defaultFails
+///   - cardinality: `RouterModel` (mutex) bothPass / `LeakyRouterModel` defaultFails
+///   - biconditional: `SessionModel` (in sync) bothPass / `DriftModel` defaultFails
+///   - conservation: `CartModel` (recompute) bothPass / `BadgeModel` defaultFails
 ///
 /// Spawns real `swift build`s; tagged `.subprocess`.
-@Suite("ViewModel refint verify corpus — measured (prototype)", .tags(.subprocess))
-struct ViewModelRefintVerifyCorpusMeasuredTests {
+@Suite("ViewModel state-invariant verify corpus — measured (prototype)", .tags(.subprocess))
+struct VMStateInvariantVerifyMeasuredTests {
 
-    @Test("invariant-maintaining model bothPass, invariant-breaking model defaultFails")
-    func measuredViewModelRefint() throws {
+    private struct InvariantCase {
+        let typeName: String
+        let resolve: (ViewModelCandidate) -> String?
+        let expectBothPass: Bool
+    }
+
+    @Test("cardinality / biconditional / conservation — maintainers bothPass, breakers defaultFails")
+    func measuredStateInvariants() throws {
+        let cases: [InvariantCase] = [
+            .init(typeName: "RouterModel", resolve: ViewModelCardinalityResolver.resolve, expectBothPass: true),
+            .init(typeName: "LeakyRouterModel", resolve: ViewModelCardinalityResolver.resolve, expectBothPass: false),
+            .init(typeName: "SessionModel", resolve: ViewModelBiconditionalResolver.resolve, expectBothPass: true),
+            .init(typeName: "DriftModel", resolve: ViewModelBiconditionalResolver.resolve, expectBothPass: false),
+            .init(typeName: "CartModel", resolve: ViewModelConservationResolver.resolve, expectBothPass: true),
+            .init(typeName: "BadgeModel", resolve: ViewModelConservationResolver.resolve, expectBothPass: false)
+        ]
         let candidates = try ViewModelDiscoverer.discover(directory: Self.corpusDirectory)
-        let safe = try #require(candidates.first { $0.typeName == "SafeCatalogModel" })
-        let buggy = try #require(candidates.first { $0.typeName == "CatalogModel" })
+        let byName = Dictionary(uniqueKeysWithValues: candidates.map { ($0.typeName, $0) })
 
         let workdir = try Self.makeWorkdir(corpus: Self.corpusDirectory)
         defer { try? FileManager.default.removeItem(at: workdir) }
         let verifierFile = workdir
             .appendingPathComponent("Sources/SwiftInferVerifier/main.swift")
 
-        func verify(_ candidate: ViewModelCandidate) throws -> VerifyOutcome {
-            let resolved = try #require(
-                ViewModelRefintResolver.resolve(candidate),
-                "expected a verifiable refint pairing on \(candidate.typeName)"
+        for testCase in cases {
+            let candidate = try #require(byName[testCase.typeName])
+            let predicate = try #require(
+                testCase.resolve(candidate),
+                "no predicate resolved for \(testCase.typeName)"
             )
-            let stub = ViewModelInvariantStubEmitter.emit(Self.makeInputs(candidate, resolved: resolved))
+            let stub = ViewModelInvariantStubEmitter.emit(
+                Self.makeInputs(candidate, predicate: predicate)
+            )
             try stub.write(to: verifierFile, atomically: true, encoding: .utf8)
             let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
             guard build.exitCode == 0 else {
-                Issue.record("build failed for \(candidate.typeName): \(build.stderr)")
-                return .error(reason: "build failed")
+                Issue.record("build failed for \(testCase.typeName): \(build.stderr)")
+                continue
             }
-            return VerifyResultParser.parse(try VerifierSubprocess.runVerifierBinary(workdir: workdir))
-        }
-
-        if case .bothPass = try verify(safe) {
-            // SafeCatalogModel guards membership → invariant maintained.
-        } else {
-            Issue.record("SafeCatalogModel expected bothPass")
-        }
-        if case .defaultFails = try verify(buggy) {
-            // CatalogModel.toggle(0) drives `selected` out of `items`.
-        } else {
-            Issue.record("CatalogModel expected defaultFails")
+            let outcome = VerifyResultParser.parse(try VerifierSubprocess.runVerifierBinary(workdir: workdir))
+            let isBothPass: Bool
+            if case .bothPass = outcome { isBothPass = true } else { isBothPass = false }
+            let want = testCase.expectBothPass ? "bothPass" : "defaultFails"
+            #expect(
+                isBothPass == testCase.expectBothPass,
+                "\(testCase.typeName): expected \(want), got \(outcome)"
+            )
         }
     }
 
-    /// Drive every no-arg / single-arg-generatable action; disclose the rest.
     static func makeInputs(
         _ candidate: ViewModelCandidate,
-        resolved: ViewModelRefintResolver.Resolved
+        predicate: String
     ) -> ViewModelInvariantStubEmitter.Inputs {
         var drivers: [ViewModelInvariantStubEmitter.Driver] = []
         var excluded: [String] = []
@@ -83,25 +95,23 @@ struct ViewModelRefintVerifyCorpusMeasuredTests {
         }
         return .init(
             typeName: candidate.typeName,
-            predicate: resolved.predicate,
+            predicate: predicate,
             drivers: drivers,
             excludedActions: excluded
         )
     }
-
-    // MARK: - Fixtures + workdir
 
     static let corpusDirectory: URL = {
         URL(fileURLWithPath: #filePath, isDirectory: false)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Fixtures")
-            .appendingPathComponent("viewmodel-refint-corpus")
+            .appendingPathComponent("viewmodel-invariant-corpus")
     }()
 
     static func makeWorkdir(corpus: URL) throws -> URL {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("vm-refint-\(UUID().uuidString)")
+            .appendingPathComponent("vm-invariant-\(UUID().uuidString)")
         let sources = root.appendingPathComponent("Sources/SwiftInferVerifier")
         try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
         let manifest = """
