@@ -1,3 +1,4 @@
+import Foundation
 import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
@@ -95,6 +96,26 @@ struct ViewModelInteractionAnalyzerTests {
         #expect(result.contains {
             $0.family == .biconditional && Set($0.subjects) == ["isLoading", "loadingTask"]
         })
+    }
+
+    @Test("maps candidates to InteractionInvariantSuggestions at Possible (productionization)")
+    func mapsToProductionSuggestions() {
+        let viewModel = candidate(
+            type: "InboxModel",
+            state: [("selectedID", "UUID?"), ("items", "[Int]")],
+            actions: ["selectAll", "dismiss"]
+        )
+        let suggestions = ViewModelInteractionAnalyzer.suggestions(
+            for: viewModel,
+            firstSeenAt: Date(timeIntervalSince1970: 0)
+        )
+        #expect(!suggestions.isEmpty)
+        #expect(suggestions.allSatisfy { $0.tier == .possible })
+        #expect(suggestions.allSatisfy { $0.reducerQualifiedName == "InboxModel" })
+        #expect(suggestions.contains { $0.family == .idempotence })
+        #expect(suggestions.contains { $0.family == .referentialIntegrity })
+        // Self-describing provenance in the explainability block.
+        #expect(suggestions.allSatisfy { $0.whySuggested.contains { $0.contains("MVVM view model") } })
     }
 
     @Test("no spurious cardinality on plain Bools, no biconditional without a shared stem")

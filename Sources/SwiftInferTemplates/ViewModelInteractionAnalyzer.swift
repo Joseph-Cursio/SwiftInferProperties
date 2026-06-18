@@ -1,3 +1,4 @@
+import Foundation
 import SwiftInferCore
 
 /// PROTOTYPE — statically surfaces candidate interaction invariants over a
@@ -32,6 +33,58 @@ public enum ViewModelInteractionAnalyzer {
         out.append(contentsOf: cardinality(candidate))
         out.append(contentsOf: biconditional(candidate))
         return out
+    }
+
+    /// Productionization — map the candidate interaction invariants onto the
+    /// production `InteractionInvariantSuggestion` shape so MVVM view models
+    /// flow through the same `discover-interaction` render / scoring / drift
+    /// pipeline as reducers. The view model fills the reducer slots (State =
+    /// the view model, Action alphabet = its methods). All `.possible` /
+    /// unverified — a new inference *source*, so it ships at default-Possible
+    /// visibility per PRD §3.5 (hidden until `--include-possible`).
+    public static func suggestions(
+        for candidate: ViewModelCandidate,
+        firstSeenAt: Date
+    ) -> [InteractionInvariantSuggestion] {
+        analyze(candidate).map { makeSuggestion(from: $0, candidate: candidate, firstSeenAt: firstSeenAt) }
+    }
+
+    private static func makeSuggestion(
+        from invariant: ViewModelInteractionCandidate,
+        candidate: ViewModelCandidate,
+        firstSeenAt: Date
+    ) -> InteractionInvariantSuggestion {
+        let identity = SuggestionIdentity(
+            canonicalInput: InteractionInvariantSuggestion.identityCanonicalInput(
+                family: invariant.family,
+                reducerQualifiedName: candidate.typeName,
+                predicate: invariant.subjects.joined(separator: ",")
+            )
+        )
+        let kind = candidate.observability == .observableMacro ? "@Observable" : "ObservableObject"
+        return InteractionInvariantSuggestion(
+            identity: identity,
+            family: invariant.family,
+            reducerQualifiedName: candidate.typeName,
+            reducerLocation: candidate.location,
+            stateTypeName: candidate.typeName,
+            actionTypeName: candidate.typeName,
+            predicate: invariant.rationale,
+            score: 30,
+            tier: .possible,
+            whySuggested: [
+                "SwiftUI MVVM view model (\(kind))",
+                invariant.rationale,
+                "subjects: \(invariant.subjects.joined(separator: ", "))"
+            ],
+            whyMightBeWrong: [
+                "Surfaced from the view model's State + action alphabet by name/shape "
+                    + "heuristics — unverified (default Possible per §3.5).",
+                "Measured verification requires constructing the view model — its injected "
+                    + "dependencies must be fakeable and its State fields Equatable."
+            ],
+            firstSeenAt: firstSeenAt
+        )
     }
 
     // MARK: - Idempotence (action-name vocabulary — reuses the detector)

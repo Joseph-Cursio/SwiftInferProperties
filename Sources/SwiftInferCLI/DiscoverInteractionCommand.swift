@@ -283,9 +283,18 @@ extension SwiftInferCommand {
             let allCandidates = try ReducerDiscoverer.discover(directory: directory)
             let filtered = try filterCandidates(allCandidates, pinRaw: pinRaw)
             let deduped = dedupedByStateAndAction(filtered)
-            return try InteractionTemplateEngine.analyze(
+            let reducerSuggestions = try InteractionTemplateEngine.analyze(
                 candidates: deduped,
                 sourcesDirectory: directory,
+                firstSeenAt: firstSeenAt
+            )
+            // Productionization — merge SwiftUI MVVM view-model invariants
+            // (gated to the no-pin path; `--reducer` is reducer-targeted).
+            // Implemented in `+ViewModels.swift` to keep this file under cap.
+            guard pinRaw == nil else { return reducerSuggestions }
+            return try mergedWithViewModels(
+                reducerSuggestions,
+                directory: directory,
                 firstSeenAt: firstSeenAt
             )
         }
@@ -342,43 +351,6 @@ extension SwiftInferCommand {
             }
             return matched
         }
-    }
-}
-
-extension SwiftInferCommand.DiscoverInteraction {
-
-    /// Cycle 112 — the verify-evidence consumer (the M9 join's read side).
-    /// Loads `.swiftinfer/verify-evidence.json` (written by
-    /// `verify-interaction`, cycle 111) and folds each measured outcome
-    /// into the suggestion grade via `InteractionVerifyEvidenceScoring` —
-    /// a `.measuredBothPass` lifts idempotence off `.likely`, a
-    /// `.measuredDefaultFails` suppresses. Best-effort: a load/parse
-    /// warning is surfaced via `diagnostics`, never fatal; an absent file
-    /// yields an empty map and the suggestions pass through unchanged.
-    ///
-    /// Applied on the **render path only** (`run` / `runPipeline`), not
-    /// inside `collectSuggestions` — that leg is shared with
-    /// `drift-interaction`'s baseline diff, which must keep the pre-verify,
-    /// score-derived tier (a baseline snapshot is a surface marker, not a
-    /// verified decision). Mirrors the algebraic `loadVerifyEvidenceMap`
-    /// in `SwiftInferCommand`. File-scope extension to keep the command
-    /// struct under the SwiftLint type-body-length cap.
-    static func gradedByVerifyEvidence(
-        _ suggestions: [InteractionInvariantSuggestion],
-        workingDirectory: URL,
-        diagnostics: any DiagnosticOutput
-    ) -> [InteractionInvariantSuggestion] {
-        let evidenceResult = VerifyEvidenceStore.load(startingFrom: workingDirectory)
-        for warning in evidenceResult.warnings {
-            diagnostics.writeDiagnostic("warning: \(warning)")
-        }
-        let evidenceByIdentity = Dictionary(
-            evidenceResult.log.records.map { ($0.identityHash, $0) }
-        ) { _, latest in latest }
-        return InteractionVerifyEvidenceScoring.applied(
-            to: suggestions,
-            evidenceByIdentity: evidenceByIdentity
-        )
     }
 }
 
