@@ -64,6 +64,16 @@ struct IdempotenceTemplateMutatorBlocklistTests {
         }
     }
 
+    @Test("MutatorBlockedFromIdempotence.curated includes bare 'pop' (swift-nio dogfood)")
+    func curatedIncludesBarePop() {
+        // `apple/swift-nio` surfaced a real `PriorityQueue.pop()` lifted-
+        // idempotence false positive at Likely — the canonical stack/queue
+        // consume slipped through the `popFirst`/`popLast` exact-name match.
+        #expect(MutatorBlockedFromIdempotence.curated.contains("pop"))
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "pop"))
+        #expect(signal?.isVeto == true)
+    }
+
     @Test("MutatorBlockedFromIdempotence.curated includes involutions (negate/toggle/twosComplement — BigInt dogfood)")
     func curatedIncludesInvolutions() {
         // Self-inverse mutators (`f(f(s)) == s`) are non-idempotent, like

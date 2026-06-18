@@ -7,8 +7,13 @@
 /// - `reverse`: `reverse(reverse(s)) = s ≠ reverse(s)` for non-palindromes.
 /// - `removeFirst` / `removeLast`: state advances per call (removes one
 ///   element); not idempotent.
-/// - `popFirst` / `popLast`: same shape as remove*; pop-shaped APIs that
-///   modify state-and-return.
+/// - `pop` / `popFirst` / `popLast`: same shape as remove*; pop-shaped APIs
+///   that modify state-and-return. Bare `pop` is the canonical stack / queue
+///   / heap consume — it removes (and returns) the top element, so `pop(pop(s))`
+///   removes two elements ≠ `pop(s)`. (Dogfood finding: real
+///   `PriorityQueue.pop()` lifted-idempotence picks surfaced at Likely on
+///   `apple/swift-nio`; the `popFirst`/`popLast` siblings were already curated
+///   but the bare `pop()` slipped through the exact-name match.)
 /// - `dropFirst` / `dropLast`: same shape; "drop" verb is a synonym for
 ///   "remove" in this context.
 /// - `negate` / `toggle` / `invert` / `complement` / `twosComplement`:
@@ -47,6 +52,7 @@ public enum MutatorBlockedFromIdempotence {
         "reverse",
         "removeFirst",
         "removeLast",
+        "pop",
         "popFirst",
         "popLast",
         "dropFirst",
