@@ -198,4 +198,37 @@ struct FunctionScannerHeaderTests {
         #expect(summary.location.file == "Sources/X.swift")
         #expect(summary.location.line == 3)
     }
+
+    // MARK: Directory scan — symlink root
+
+    /// Regression (SwiftMarkdownWiki dogfood): `scanCorpus(directory:)` must
+    /// descend a root URL that is itself a symlink to a directory.
+    /// `FileManager.enumerator(at:)` yields zero entries for a symlinked root
+    /// with no error, which previously made `discover` silently report "0
+    /// suggestions" when pointed at a `Sources/<target>` symlink (the common
+    /// shape for Xcode-layout packages with a custom `path:`).
+    @Test
+    func scanDescendsSymlinkedRootDirectory() throws {
+        let fileManager = FileManager.default
+        let base = fileManager.temporaryDirectory
+            .appendingPathComponent("fnscanner-symlink-\(UUID().uuidString)")
+        let realDir = base.appendingPathComponent("real")
+        try fileManager.createDirectory(at: realDir, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: base) }
+
+        try "func target() {}\n".write(
+            to: realDir.appendingPathComponent("A.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        let linkDir = base.appendingPathComponent("link")
+        try fileManager.createSymbolicLink(at: linkDir, withDestinationURL: realDir)
+
+        let viaReal = try FunctionScanner.scan(directory: realDir)
+        let viaSymlink = try FunctionScanner.scan(directory: linkDir)
+
+        #expect(viaReal.map(\.name) == ["target"])
+        // The fix: the symlinked root descends to the same function (was []).
+        #expect(viaSymlink.map(\.name) == ["target"])
+    }
 }
