@@ -115,6 +115,27 @@ public enum CompositionTemplate {
         "shiftedBy"
     ]
 
+    /// Dogfood finding (`SwiftMarkdownWiki`) — first-parameter labels that
+    /// name a **per-iteration simulation control / clamp** rather than an
+    /// additive quantity. The composition law `op(s, a + b) == op(op(s, a),
+    /// b)` requires the parameter to combine additively, but a
+    /// simulation-control label names a knob that bounds/shapes ONE discrete
+    /// iteration: `GraphLayoutEngine.step(temperature:)` (Fruchterman-Reingold
+    /// layout) applies one physics step whose displacement is clamped to
+    /// `min(magnitude, temperature)`, so `step(temperature: a)` then
+    /// `step(temperature: b)` is two iterations with two distinct clamps —
+    /// NOT `step(temperature: a + b)` (one iteration with a summed clamp). The
+    /// curated additive verb `step` fires the additive-monoid name signal
+    /// (+40), so without this veto a simulation step lifts to Strong (85).
+    /// Sibling category to `monotoneBoundedLabels` / `positionalShiftLabels`,
+    /// kept separate so the veto message stays accurate (per-iteration clamp,
+    /// not `max(a, b)`-bounded and not positional). Conservative +
+    /// evidence-driven — the set starts at the one measured label and future
+    /// cycles extend it (e.g. `damping`, `cooling`, `friction`).
+    public static let simulationControlLabels: Set<String> = [
+        "temperature"
+    ]
+
     /// V1.40.E — migrated to the Constraint Engine (PRD §20.2).
     /// Uses `additionalWhySuggested` to insert `lifted.rationale`
     /// between evidence and signal lines.
@@ -181,6 +202,9 @@ public enum CompositionTemplate {
         }
         if let positionalShift = positionalShiftLabelSignal(for: lifted) {
             signals.append(positionalShift)
+        }
+        if let simulationControl = simulationControlLabelSignal(for: lifted) {
+            signals.append(simulationControl)
         }
         if let veto = lifted.originalSummary.nonDeterministicVetoSignal {
             signals.append(veto)
@@ -265,57 +289,10 @@ public enum CompositionTemplate {
         )
     }
 
-    /// V1.21.B / **V1.29.C** — fires when the first non-self parameter's
-    /// label is in `monotoneBoundedLabels`. V1.21.B introduced a `-25`
-    /// counter-signal demoting Strong → Likely. V1.29.C promotes to a
-    /// full `Signal.vetoWeight` veto per the cycle-25 4-cycle-stable-
-    /// reject finding on `advance(until:)` (cycles 17 + 20 + 23 + 25).
-    /// Returns `nil` for non-monotone-bounded labels (including `nil`
-    /// label and `by:`).
-    ///
-    /// The lift's `liftedParameters[0]` is always the implicit-self
-    /// binding (per `LiftedTransformation.lift`); the user-facing first
-    /// parameter is `originalSummary.parameters[0]`. The composition
-    /// shape gate already enforces `originalParams.count == 1`, so we
-    /// safely read `[0]`.
-    private static func monotoneBoundedLabelSignal(
-        for lifted: LiftedTransformation
-    ) -> Signal? {
-        guard let firstParam = lifted.originalSummary.parameters.first,
-              let label = firstParam.label,
-              monotoneBoundedLabels.contains(label) else {
-            return nil
-        }
-        return Signal(
-            kind: .directionLabel,
-            weight: Signal.vetoWeight,
-            detail: "Monotone-bounded parameter label '\(label)' — "
-                + "`op(s, a).op(s, b) = max(a, b)`-bounded state, not "
-                + "additive composition `op(s, a + b)`"
-        )
-    }
-
-    /// Dogfood finding (`attaswift/BigInt`) — fires a full veto when the
-    /// first parameter's label is in `positionalShiftLabels` (a place-value
-    /// position, not an addend). Mirrors `monotoneBoundedLabelSignal`'s
-    /// shape; `nil` label and `by:` are excluded (genuinely additive).
-    private static func positionalShiftLabelSignal(
-        for lifted: LiftedTransformation
-    ) -> Signal? {
-        guard let firstParam = lifted.originalSummary.parameters.first,
-              let label = firstParam.label,
-              positionalShiftLabels.contains(label) else {
-            return nil
-        }
-        return Signal(
-            kind: .directionLabel,
-            weight: Signal.vetoWeight,
-            detail: "Positional/shift parameter label '\(label)' — names a "
-                + "place-value position, not an additive quantity; `op` at "
-                + "distinct positions does not compose additively "
-                + "(`op(s, a).op(s, b) ≠ op(s, a + b)`)"
-        )
-    }
+    // The three first-parameter-label veto signals
+    // (`monotoneBoundedLabelSignal` / `positionalShiftLabelSignal` /
+    // `simulationControlLabelSignal`) live in
+    // `CompositionTemplate+LabelVetoes.swift`.
 
     // MARK: - Identity + evidence
 

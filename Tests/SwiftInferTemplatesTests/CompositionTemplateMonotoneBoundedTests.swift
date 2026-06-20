@@ -113,6 +113,79 @@ struct CompositionTemplateMonotoneBoundedTests {
         }
     }
 
+    // MARK: - Dogfood (SwiftMarkdownWiki) — simulation-control label full veto
+
+    /// Reproduces the SwiftMarkdownWiki dogfood false positive:
+    /// `GraphLayoutEngine.step(temperature: CGFloat)` (Fruchterman-Reingold
+    /// layout) surfaced as composition Strong (85). The curated additive verb
+    /// `step` fires +40, but `temperature:` clamps one simulation iteration's
+    /// displacement — `step(temperature: a)` then `step(temperature: b)` is
+    /// two iterations, not `step(temperature: a + b)`.
+    private func liftedStep(
+        paramLabel: String?,
+        type: String = "CGFloat",
+        carrier: String = "GraphLayoutEngine"
+    ) -> LiftedTransformation {
+        let summary = FunctionSummary(
+            name: "step",
+            parameters: [
+                Parameter(
+                    label: paramLabel,
+                    internalName: "temperature",
+                    typeText: type,
+                    isInout: false
+                )
+            ],
+            returnTypeText: "Void",
+            isThrows: false,
+            isAsync: false,
+            isMutating: true,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: carrier,
+            bodySignals: .empty
+        )
+        return LiftedTransformation.lift(
+            summary,
+            carrierKindResolver: valueSemanticResolver(carrier: carrier)
+        )!
+    }
+
+    @Test("Simulation-control 'temperature:' fires full veto (Suppressed) — GraphLayoutEngine.step(temperature:)")
+    func temperatureLabelFiresVeto() {
+        let suggestion = CompositionTemplate.suggest(
+            forLifted: liftedStep(paramLabel: "temperature"),
+            carrierKindResolver: valueSemanticResolver(carrier: "GraphLayoutEngine")
+        )
+        #expect(suggestion == nil, "simulation-control 'temperature' should fire full veto (Suppressed)")
+    }
+
+    @Test("All simulation-control labels fire full veto")
+    func allSimulationControlLabelsFireVeto() {
+        for label in CompositionTemplate.simulationControlLabels {
+            let suggestion = CompositionTemplate.suggest(
+                forLifted: liftedStep(paramLabel: label),
+                carrierKindResolver: valueSemanticResolver(carrier: "GraphLayoutEngine")
+            )
+            #expect(
+                suggestion == nil,
+                "Label '\(label)' should fire full veto (Suppressed); got non-nil"
+            )
+        }
+    }
+
+    @Test("Additive 'step(by:)' preserves Strong (no simulation-control veto)")
+    func stepByLabelPreservesStrong() throws {
+        // Over-veto guard: a genuine additive `step(by: Int)` must NOT be
+        // vetoed — only the simulation-control labels are blocked.
+        let suggestion = try #require(CompositionTemplate.suggest(
+            forLifted: liftedStep(paramLabel: "by", type: "Int"),
+            carrierKindResolver: valueSemanticResolver(carrier: "GraphLayoutEngine")
+        ))
+        #expect(suggestion.score.total == 85)
+        #expect(suggestion.score.tier == .strong)
+    }
+
     // MARK: - Veto does NOT fire on non-curated labels
 
     @Test("Additive 'by:' label preserves Strong (no veto)")
