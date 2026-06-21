@@ -37,19 +37,7 @@ public enum SkipMarkerScanner {
     /// file. Files are visited in deterministic (sorted-path) order so
     /// the byte-identical-reproducibility guarantee (§16 #6) holds.
     public static func skipHashes(in directory: URL) throws -> Set<String> {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-        var swiftFiles: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            swiftFiles.append(url)
-        }
-        swiftFiles.sort { $0.path < $1.path }
+        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
         var hashes: Set<String> = []
         for fileURL in swiftFiles {
             let source = try String(contentsOf: fileURL, encoding: .utf8)

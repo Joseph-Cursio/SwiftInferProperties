@@ -51,19 +51,7 @@ public enum TestSuiteParser {
     /// CLI wiring applies the `Tests` / `*Tests` heuristic before
     /// invoking this method.
     public static func scanTests(directory: URL) throws -> [TestMethodSummary] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-        var swiftFiles: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            swiftFiles.append(url)
-        }
-        swiftFiles.sort { $0.path < $1.path }
+        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
         var summaries: [TestMethodSummary] = []
         for fileURL in swiftFiles {
             try summaries.append(contentsOf: scan(file: fileURL))

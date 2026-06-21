@@ -70,19 +70,7 @@ public enum ReducerDiscoverer {
     /// byte-identical-reproducibility posture (PRD §16 #6 carried
     /// from v1.0).
     public static func discover(directory: URL) throws -> [ReducerCandidate] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-        var swiftFiles: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            swiftFiles.append(url)
-        }
-        swiftFiles.sort { $0.path < $1.path }
+        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
         var candidates: [ReducerCandidate] = []
         for fileURL in swiftFiles {
             candidates.append(contentsOf: try discover(file: fileURL))

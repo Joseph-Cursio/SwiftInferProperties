@@ -42,20 +42,7 @@ public enum ViewModelDiscoverer {
     /// per-type info across files (sorted-path order for determinism)
     /// before assembling candidates.
     public static func discover(directory: URL) throws -> [ViewModelCandidate] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-        var swiftFiles: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            swiftFiles.append(url)
-        }
-        swiftFiles.sort { $0.path < $1.path }
-
+        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
         var table: [String: RawTypeInfo] = [:]
         for fileURL in swiftFiles {
             let source = try String(contentsOf: fileURL, encoding: .utf8)

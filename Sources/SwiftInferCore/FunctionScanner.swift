@@ -69,30 +69,7 @@ public enum FunctionScanner {
     /// visited in deterministic (sorted-path) order so the merged output
     /// is stable across runs.
     public static func scanCorpus(directory: URL) throws -> ScannedCorpus {
-        let fileManager = FileManager.default
-        // `FileManager.enumerator(at:)` does NOT descend a root URL that is
-        // itself a symlink to a directory — it yields zero entries with no
-        // error, so `discover` silently reports "0 suggestions" (surfaced by
-        // the SwiftMarkdownWiki dogfood, where an Xcode-layout package with a
-        // custom `path:` was scanned via a `Sources/<target>` symlink).
-        // Resolve only when the leaf is a symlink, so normal real-dir scans
-        // (the frozen corpora) keep their exact paths — `resolvingSymlinksInPath`
-        // would otherwise canonicalize e.g. `/tmp` → `/private/tmp`.
-        let scanRoot = isSymbolicLink(directory)
-            ? directory.resolvingSymlinksInPath()
-            : directory
-        guard let enumerator = fileManager.enumerator(
-            at: scanRoot,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return .empty
-        }
-        var swiftFiles: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            swiftFiles.append(url)
-        }
-        swiftFiles.sort { $0.path < $1.path }
+        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
         var summaries: [FunctionSummary] = []
         var identities: [IdentityCandidate] = []
         var typeDecls: [TypeDecl] = []
@@ -103,13 +80,6 @@ public enum FunctionScanner {
             typeDecls.append(contentsOf: corpus.typeDecls)
         }
         return ScannedCorpus(summaries: summaries, identities: identities, typeDecls: typeDecls)
-    }
-
-    /// Whether `url`'s leaf is a symbolic link (vs. a real directory/file).
-    /// Used to decide whether the scan root needs symlink resolution so the
-    /// enumerator descends it.
-    private static func isSymbolicLink(_ url: URL) -> Bool {
-        (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink ?? false
     }
 }
 

@@ -55,19 +55,7 @@ public enum ViewModelProtocolScanner {
     }
 
     public static func scan(directory: URL) throws -> [ProtocolDecl] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-        var files: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            files.append(url)
-        }
-        files.sort { $0.path < $1.path }
+        let files = SwiftSourceFiles.sorted(in: directory)
         var result: [ProtocolDecl] = []
         for file in files {
             let source = try String(contentsOf: file, encoding: .utf8)
