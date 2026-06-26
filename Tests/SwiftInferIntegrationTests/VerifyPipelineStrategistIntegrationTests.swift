@@ -109,4 +109,22 @@ struct VerifyPipelineStrategistIntegrationTests {
             )
         }
     }
+
+    /// **v1.141 — strategist × Int × monotonicity × shrink.** Negation
+    /// `{ n in -n }` is anti-monotone (`a ≤ b ⇒ f(a) ≥ f(b)`), so the property
+    /// fails; the `Int` carrier is shrinkable, so the gated shrink phase
+    /// compiles + runs and minimizes the failing pair.
+    @Test("strategist × Int × monotonicity: anti-monotone -n shrinks the failing pair")
+    func strategistIntMonotonicityShrinks() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
+            functionCalls: ["{ (value: Int) in -value }"],
+            carrier: "Int",
+            template: "monotonicity"
+        )
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        #expect(detail.shrink != nil)
+    }
 }

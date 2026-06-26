@@ -60,6 +60,12 @@ extension StrategistDispatchEmitter {
                 recipe: recipe
             )
         }
+        // v1.141: shrink only when the carrier is a numeric type with a
+        // `shrink(towards: 0)` (fixed-width ints, Double/Float). String / Bool
+        // monotonicity carriers degrade gracefully — first failure reported.
+        let shrink = shrinkableMonotonicityCarriers.contains(recipe.carrierTypeName)
+            ? monotonicityShrinkPhase(carrier: recipe.carrierTypeName, functionCall: functionCall)
+            : ""
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -79,12 +85,49 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB))")
                 print("VERIFY_DEFAULT_FORWARD: \\(resultA)")
                 print("VERIFY_DEFAULT_INVERSE: \\(resultB)")
+        \(shrink)
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// v1.141 — carrier type-names whose monotonicity value can be shrunk via
+    /// `shrink(towards: 0)` (fixed-width integers + binary floats). Other
+    /// value-monotonicity carriers (`String`, `Bool`) degrade gracefully.
+    static let shrinkableMonotonicityCarriers: Set<String> = [
+        "Int", "Int8", "Int16", "Int32", "Int64",
+        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+        "Double", "Float"
+    ]
+
+    /// v1.141 shrink phase for value monotonicity over a shrinkable scalar
+    /// carrier: shrink each of the ordered pair toward 0, re-`min`/`max`-ing in
+    /// the oracle so a shrunk candidate stays a genuine `f(lo) > f(hi)`
+    /// violation, to a fixpoint.
+    private static func monotonicityShrinkPhase(carrier: String, functionCall: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing pair ---
+                func monotonicityFails(_ xValue: \(carrier), _ yValue: \(carrier)) -> Bool {
+                    \(functionCall)(Swift.min(xValue, yValue)) > \(functionCall)(Swift.max(xValue, yValue))
+                }
+                var shrunkA = valueA
+                var shrunkB = valueB
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for part in shrunkA.shrink(towards: 0) where monotonicityFails(part, shrunkB) {
+                        shrunkA = part; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    for part in shrunkB.shrink(towards: 0) where monotonicityFails(shrunkA, part) {
+                        shrunkB = part; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: (\\(Swift.min(shrunkA, shrunkB)), \\(Swift.max(shrunkA, shrunkB)))")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 
