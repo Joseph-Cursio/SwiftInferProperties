@@ -101,6 +101,40 @@ struct VerifyAutoBridgeTests {
         #expect(path == nil)
     }
 
+    @Test("VerifyEvidence round-trips the v1.142 fields; legacy JSON decodes with nils")
+    func evidenceCodableV142Fields() throws {
+        let evidence = VerifyEvidence(
+            identityHash: "ABCDEF0123456789",
+            template: "idempotence",
+            outcome: .measuredDefaultFails,
+            detail: "trial=7",
+            capturedAt: Date(timeIntervalSinceReferenceDate: 0),
+            swiftInferVersion: "test",
+            counterexample: "999",
+            shrunkCounterexample: "0",
+            seed: "a:b:c:d",
+            regressionTestPath: "Tests/Generated/SwiftInfer/idempotence/Int.f_regression_ab.swift"
+        )
+        let data = try JSONEncoder().encode(evidence)
+        let decoded = try JSONDecoder().decode(VerifyEvidence.self, from: data)
+        #expect(decoded.counterexample == "999")
+        #expect(decoded.shrunkCounterexample == "0")
+        #expect(decoded.seed == "a:b:c:d")
+        #expect(decoded.regressionTestPath?.contains("Generated") == true)
+
+        // Legacy evidence (written before v1.142, no new fields) decodes with
+        // the new fields as nil — no schema bump needed for additive optionals.
+        let legacyJSON = """
+        {"identityHash":"X","template":"idempotence",\
+        "outcome":"measured-bothPass","capturedAt":0,"swiftInferVersion":"old"}
+        """
+        let legacy = try JSONDecoder().decode(VerifyEvidence.self, from: Data(legacyJSON.utf8))
+        #expect(legacy.counterexample == nil)
+        #expect(legacy.shrunkCounterexample == nil)
+        #expect(legacy.seed == nil)
+        #expect(legacy.regressionTestPath == nil)
+    }
+
     @Test("falls back to the raw failing input when no shrink trace is present")
     func noShrinkUsesRawInput() throws {
         let root = try tempRoot()

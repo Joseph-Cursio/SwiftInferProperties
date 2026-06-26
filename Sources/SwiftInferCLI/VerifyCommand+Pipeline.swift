@@ -44,14 +44,41 @@ extension SwiftInferCommand.Verify {
         )
         let runOutput = try buildAndRun(workdir: workdir)
         let parsed = VerifyResultParser.parse(runOutput)
-        persistEvidence(parsed: parsed, entry: entry, packageRoot: packageRoot)
-        return renderWithRegression(
+        // V1.142 — emit the regression test once; its path feeds both the
+        // persisted evidence and the rendered output note.
+        let regressionPath: URL? = {
+            guard emitRegression, case let .defaultFails(detail) = parsed else { return nil }
+            return emitRegressionTest(entry: entry, detail: detail, packageRoot: packageRoot)
+        }()
+        persistEvidence(
             parsed: parsed,
-            context: stubBundle.rendererContext,
             entry: entry,
             packageRoot: packageRoot,
-            emitRegression: emitRegression
+            regressionPath: regressionPath
         )
+        return renderOutcome(
+            parsed: parsed,
+            context: stubBundle.rendererContext,
+            packageRoot: packageRoot,
+            regressionPath: regressionPath
+        )
+    }
+
+    /// V1.142 — the verify stub's replayable seed (deterministic Xoshiro state
+    /// derived from the identity hash), serialized as colon-joined hex for the
+    /// v1.143 replay corpus.
+    static func seedString(for identityHash: String) -> String {
+        let seed = makeSeedHex(from: identityHash)
+        return [seed.stateA, seed.stateB, seed.stateC, seed.stateD]
+            .map { String($0, radix: 16) }
+            .joined(separator: ":")
+    }
+
+    /// Package-relative display path (falls back to the absolute path when the
+    /// URL isn't under `packageRoot`).
+    static func packageRelative(_ url: URL, packageRoot: URL) -> String {
+        let prefix = packageRoot.path + "/"
+        return url.path.hasPrefix(prefix) ? String(url.path.dropFirst(prefix.count)) : url.path
     }
 
     /// V1.64.B — persist the outcome to `.swiftinfer/verify-evidence.json` so
@@ -60,9 +87,21 @@ extension SwiftInferCommand.Verify {
     private static func persistEvidence(
         parsed: VerifyOutcome,
         entry: SemanticIndexEntry,
-        packageRoot: URL
+        packageRoot: URL,
+        regressionPath: URL?
     ) {
         let (evidenceOutcome, evidenceDetail) = VerifyEvidenceRecorder.evidence(for: parsed)
+        // V1.142 — capture the counterexample / shrunk minimal / replay seed
+        // for default-fail runs so the v1.143 corpus + discover annotations
+        // don't need to re-run verify.
+        var counterexample: String?
+        var shrunkCounterexample: String?
+        var seed: String?
+        if case let .defaultFails(detail) = parsed {
+            counterexample = detail.input
+            shrunkCounterexample = detail.shrink?.minimal
+            seed = seedString(for: entry.identityHash)
+        }
         let recordWarnings = VerifyEvidenceRecorder.record(
             VerifyEvidence(
                 identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(entry.identityHash),
@@ -70,7 +109,11 @@ extension SwiftInferCommand.Verify {
                 outcome: evidenceOutcome,
                 detail: evidenceDetail,
                 capturedAt: Date(),
-                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
+                counterexample: counterexample,
+                shrunkCounterexample: shrunkCounterexample,
+                seed: seed,
+                regressionTestPath: regressionPath.map { packageRelative($0, packageRoot: packageRoot) }
             ),
             packageRoot: packageRoot
         )
@@ -79,29 +122,17 @@ extension SwiftInferCommand.Verify {
         }
     }
 
-    /// V1.142 — render the outcome and, when `emitRegression` is set and the
-    /// run found a counterexample, auto-bridge it into a durable regression
-    /// test, appending the written path to the rendered output. Best-effort;
-    /// a write failure never fails the verify gesture.
-    static func renderWithRegression(
+    /// V1.142 — render the outcome, appending the auto-bridge regression-test
+    /// path (already written upstream) when one was produced.
+    static func renderOutcome(
         parsed: VerifyOutcome,
         context: VerifyResultRenderer.Context,
-        entry: SemanticIndexEntry,
         packageRoot: URL,
-        emitRegression: Bool
+        regressionPath: URL?
     ) -> String {
         var rendered = VerifyResultRenderer.render(parsed, context: context)
-        if emitRegression, case let .defaultFails(detail) = parsed,
-            let regressionPath = emitRegressionTest(
-                entry: entry,
-                detail: detail,
-                packageRoot: packageRoot
-            ) {
-            let prefix = packageRoot.path + "/"
-            let shown = regressionPath.path.hasPrefix(prefix)
-                ? String(regressionPath.path.dropFirst(prefix.count))
-                : regressionPath.path
-            rendered += "\n    regression test → \(shown)"
+        if let regressionPath {
+            rendered += "\n    regression test → \(packageRelative(regressionPath, packageRoot: packageRoot))"
         }
         return rendered
     }

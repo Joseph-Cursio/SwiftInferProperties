@@ -92,6 +92,27 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
     /// warning, mirroring the SemanticIndex staleness pattern.
     public let swiftInferVersion: String
 
+    /// V1.142 — the first failing input the verify run found, as rendered by
+    /// the stub (`VERIFY_DEFAULT_INPUT`). `nil` unless `outcome` is
+    /// `.measuredDefaultFails`. Persisted so the v1.143 replay corpus and
+    /// `discover` annotations can surface the counterexample without re-running.
+    public let counterexample: String?
+
+    /// V1.142 — the minimal still-failing input after shrinking
+    /// (`VERIFY_DEFAULT_SHRUNK`), or `nil` when the carrier wasn't shrinkable
+    /// (no shrink phase) or the outcome isn't a default-fail.
+    public let shrunkCounterexample: String?
+
+    /// V1.142 — the verify stub's replayable seed (the deterministic Xoshiro
+    /// state derived from the identity hash), serialized as colon-joined hex.
+    /// Persisted for the v1.143 replay corpus. `nil` for non-default-fail runs.
+    public let seed: String?
+
+    /// V1.142 — package-relative path to the regression test the auto-bridge
+    /// wrote from this counterexample, or `nil` when none was emitted
+    /// (auto-bridge off, non-auto-derivable template, or non-default-fail).
+    public let regressionTestPath: String?
+
     public init(
         identityHash: String,
         template: String,
@@ -99,7 +120,11 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         detail: String?,
         capturedAt: Date,
         swiftInferVersion: String,
-        excludedActionCount: Int? = nil
+        excludedActionCount: Int? = nil,
+        counterexample: String? = nil,
+        shrunkCounterexample: String? = nil,
+        seed: String? = nil,
+        regressionTestPath: String? = nil
     ) {
         self.identityHash = identityHash
         self.template = template
@@ -108,6 +133,10 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         self.capturedAt = capturedAt
         self.swiftInferVersion = swiftInferVersion
         self.excludedActionCount = excludedActionCount
+        self.counterexample = counterexample
+        self.shrunkCounterexample = shrunkCounterexample
+        self.seed = seed
+        self.regressionTestPath = regressionTestPath
     }
 }
 
