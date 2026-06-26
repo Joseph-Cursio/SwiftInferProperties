@@ -119,11 +119,28 @@ struct VerifyPipelineCommAssocIntegrationTests {
             functionCall: "{ (a: Double, b: Double) in a - b }",
             carrierType: "Double"
         )
-        if case .defaultFails = outcome {
-            // Edge pass skipped by short-circuit per proposal §2.2 row 3.
-        } else {
+        guard case let .defaultFails(detail) = outcome else {
             Issue.record("expected .defaultFails; got \(outcome)")
+            return
         }
+        // v1.141: the scalar triple-shrink phase compiled + ran.
+        #expect(detail.shrink != nil)
+    }
+
+    /// **v1.141 — associativity × Complex<Double> × triple-shrink.**
+    /// `{ (a, b) in a - b }` is non-associative; exercises the 6-loop Complex
+    /// triple-shrink (real/imag of each component) end-to-end.
+    @Test("associativity × Complex<Double>: a-b shrinks the failing triple")
+    func associativityComplexDefaultFailsShrinks() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runAssociativityPipeline(
+            functionCall: "{ (a: Complex<Double>, b: Complex<Double>) in a - b }",
+            carrierType: "Complex<Double>"
+        )
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        #expect(detail.shrink != nil)
     }
 
     /// **V1.46.D.4.c — associativity × Int × bothPass.** Int addition

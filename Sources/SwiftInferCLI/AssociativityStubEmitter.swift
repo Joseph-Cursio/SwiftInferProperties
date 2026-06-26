@@ -148,12 +148,82 @@ extension AssociativityStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB), \\(valueC))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(complexDoubleShrinkPhase(functionCall: functionCall))
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// The `associativityFails(a, b, c)` oracle for the Complex shrink phase.
+    private static func complexAssociativityOracle(functionCall: String) -> String {
+        """
+        func associativityFails(
+                    _ aVal: Complex<Double>, _ bVal: Complex<Double>, _ cVal: Complex<Double>
+                ) -> Bool {
+                    let lhs = \(functionCall)(\(functionCall)(aVal, bVal), cVal)
+                    let rhs = \(functionCall)(aVal, \(functionCall)(bVal, cVal))
+                    return !lhs.isApproximatelyEqual(to: rhs)
+                }
+        """
+    }
+
+    /// v1.141 shrink phase for the `Complex<Double>` associativity stub:
+    /// minimize the failing `(a, b, c)` triple one component at a time (real
+    /// then imaginary of each), keeping the first candidate triple that still
+    /// breaks `f(f(a, b), c) ≈ f(a, f(b, c))`.
+    private static func complexDoubleShrinkPhase(functionCall: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing triple ---
+                \(complexAssociativityOracle(functionCall: functionCall))
+                var shrunkA = valueA
+                var shrunkB = valueB
+                var shrunkC = valueC
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for part in shrunkA.real.shrink(towards: 0) {
+                        let candidate = Complex(part, shrunkA.imaginary)
+                        if associativityFails(candidate, shrunkB, shrunkC) {
+                            shrunkA = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for part in shrunkA.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunkA.real, part)
+                        if associativityFails(candidate, shrunkB, shrunkC) {
+                            shrunkA = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for part in shrunkB.real.shrink(towards: 0) {
+                        let candidate = Complex(part, shrunkB.imaginary)
+                        if associativityFails(shrunkA, candidate, shrunkC) {
+                            shrunkB = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for part in shrunkB.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunkB.real, part)
+                        if associativityFails(shrunkA, candidate, shrunkC) {
+                            shrunkB = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for part in shrunkC.real.shrink(towards: 0) {
+                        let candidate = Complex(part, shrunkC.imaginary)
+                        if associativityFails(shrunkA, shrunkB, candidate) {
+                            shrunkC = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for part in shrunkC.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunkC.real, part)
+                        if associativityFails(shrunkA, shrunkB, candidate) {
+                            shrunkC = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: (\\(shrunkA), \\(shrunkB), \\(shrunkC))")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 

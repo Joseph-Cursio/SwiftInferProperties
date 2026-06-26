@@ -264,4 +264,32 @@ struct AssociativityStubEmitterTests {
         // No edge pass — no VERIFY_EDGE_SLOT marker on Int either.
         #expect(!source.contains("VERIFY_EDGE_SLOT:"))
     }
+
+    // MARK: - V1.141 shrink phase (triple)
+
+    @Test("Complex<Double> default pass shrinks all three triple components on failure")
+    func complexCarrierEmitsTripleShrinkPhase() throws {
+        let source = try AssociativityStubEmitter.emit(Self.inputs())
+        #expect(source.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(source.contains("VERIFY_SHRINK_STEPS:"))
+        #expect(source.contains("func associativityFails"))
+        #expect(source.contains("shrunkA.real.shrink(towards: 0)"))
+        #expect(source.contains("shrunkC.imaginary.shrink(towards: 0)"))
+    }
+
+    @Test("Double / Int default passes shrink all three triple components toward 0")
+    func scalarCarriersEmitTripleShrinkPhase() throws {
+        let doubleSource = try AssociativityStubEmitter.emit(
+            Self.inputs(functionCall: "{ (a: Double, b: Double) in a + b }", carrierType: "Double")
+        )
+        #expect(doubleSource.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(doubleSource.contains("shrunkA.shrink(towards: 0)"))
+        #expect(doubleSource.contains("shrunkC.shrink(towards: 0)"))
+
+        let intSource = try AssociativityStubEmitter.emit(
+            Self.inputs(functionCall: "{ (a: Int, b: Int) in a + b }", carrierType: "Int")
+        )
+        #expect(intSource.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(intSource.contains("shrunkB.shrink(towards: 0)"))
+    }
 }

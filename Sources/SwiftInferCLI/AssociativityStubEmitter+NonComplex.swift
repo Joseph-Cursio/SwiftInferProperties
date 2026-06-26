@@ -33,7 +33,10 @@ extension AssociativityStubEmitter {
     }
 
     private static func doubleDefaultPass(functionCall: String) -> String {
-        """
+        let oracle = "!\(functionCall)(\(functionCall)(aValue, bValue), cValue)"
+            + ".isApproximatelyEqual(to: \(functionCall)(aValue, \(functionCall)(bValue, cValue)))"
+        let shrink = scalarShrinkPhase(carrier: "Double", oracle: oracle)
+        return """
         // --- Pass 1: default (inline finite-domain) ---
 
         let defaultGenerator: Generator<Double, some SendableSequenceType> =
@@ -53,12 +56,44 @@ extension AssociativityStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB), \\(valueC))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(shrink)
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// v1.141 shrink phase for a scalar (`Int` / `Double`) associativity
+    /// triple: shrink `valueA`, `valueB`, then `valueC` toward 0, keeping the
+    /// first candidate triple that still satisfies `oracle` (a Bool expression
+    /// over `aValue` / `bValue` / `cValue`).
+    private static func scalarShrinkPhase(carrier: String, oracle: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing triple ---
+                func associativityFails(_ aValue: \(carrier), _ bValue: \(carrier), _ cValue: \(carrier)) -> Bool {
+                    \(oracle)
+                }
+                var shrunkA = valueA
+                var shrunkB = valueB
+                var shrunkC = valueC
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for part in shrunkA.shrink(towards: 0) where associativityFails(part, shrunkB, shrunkC) {
+                        shrunkA = part; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    for part in shrunkB.shrink(towards: 0) where associativityFails(shrunkA, part, shrunkC) {
+                        shrunkB = part; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    for part in shrunkC.shrink(towards: 0) where associativityFails(shrunkA, shrunkB, part) {
+                        shrunkC = part; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: (\\(shrunkA), \\(shrunkB), \\(shrunkC))")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 
@@ -171,7 +206,10 @@ extension AssociativityStubEmitter {
     }
 
     private static func intDefaultPass(functionCall: String) -> String {
-        """
+        let oracle = "\(functionCall)(\(functionCall)(aValue, bValue), cValue)"
+            + " != \(functionCall)(aValue, \(functionCall)(bValue, cValue))"
+        let shrink = scalarShrinkPhase(carrier: "Int", oracle: oracle)
+        return """
         // --- Pass 1: default (bounded-magnitude integer) ---
 
         let intBound = Int(1) << (Int.bitWidth / 4)
@@ -190,6 +228,7 @@ extension AssociativityStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB), \\(valueC))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(shrink)
                 exit(1)
             }
         }
