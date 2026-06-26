@@ -302,9 +302,9 @@ extension SwiftInferCommand.Verify {
             outcome = .measuredEdgeCaseAdvisory
             detail = nil
 
-        case let .defaultFails(trial, _, _, _):
+        case let .defaultFails(failure):
             outcome = .measuredDefaultFails
-            detail = "trial=\(trial)"
+            detail = "trial=\(failure.trial)"
 
         case let .error(reason):
             outcome = .measuredError

@@ -49,8 +49,8 @@ enum VerifyEvidenceRecorder {
         case .edgeCaseAdvisory:
             return (.measuredEdgeCaseAdvisory, nil)
 
-        case let .defaultFails(trial, _, _, _):
-            return (.measuredDefaultFails, "trial=\(trial)")
+        case let .defaultFails(detail):
+            return (.measuredDefaultFails, "trial=\(detail.trial)")
 
         case let .error(reason):
             return (.measuredError, "parse-error: \(reason)")

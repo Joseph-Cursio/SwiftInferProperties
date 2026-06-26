@@ -33,7 +33,9 @@ struct RendererIdempotenceLiftedTests {
                 trial: 0,
                 input: "[3, 1, 2]",
                 forwardResult: "[1, 2, 3]",
-                inverseResult: "[1, 2, 3, 4]"
+                inverseResult: "[1, 2, 3, 4]",
+                shrunk: nil,
+                shrinkSteps: 0
             ),
             context: Self.context
         )
@@ -69,7 +71,9 @@ struct RendererDualStyleConsistencyTests {
                 trial: 0,
                 input: "[3, 1, 2]",
                 forwardResult: "[1, 2, 3]",
-                inverseResult: "[3, 1, 2]"
+                inverseResult: "[3, 1, 2]",
+                shrunk: nil,
+                shrinkSteps: 0
             ),
             context: Self.context
         )
@@ -106,7 +110,9 @@ struct VerifyResultRendererMonotonicityTests {
                 trial: 0,
                 input: "(3, 7)",
                 forwardResult: "6",
-                inverseResult: "5"  // pretend non-monotone
+                inverseResult: "5",  // pretend non-monotone
+                shrunk: nil,
+                shrinkSteps: 0
             ),
             context: Self.context
         )

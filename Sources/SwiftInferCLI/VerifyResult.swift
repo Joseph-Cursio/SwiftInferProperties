@@ -57,16 +57,88 @@ public struct EdgeCaseDetail: Equatable, Sendable {
 /// The parser is tolerant of extra lines (build chatter, debug prints,
 /// etc.) — it locates each marker by line prefix and ignores anything
 /// else. Multiple matches of the same marker take the *first* hit.
-public enum VerifyOutcome: Equatable, Sendable {
-    case bothPass(defaultTrials: Int, edgeTrials: Int, edgeSampled: Int)
-    case edgeCaseAdvisory(defaultTrials: Int, edge: EdgeCaseDetail)
-    case defaultFails(
+/// v1.141 — the minimal counterexample a verify stub shrank the failing input
+/// down to, plus how many steps it took. Bundled (like `EdgeCaseDetail`) so
+/// `DefaultFailDetail` stays within the associated-value / parameter lints.
+public struct ShrinkTrace: Equatable, Sendable {
+    /// The minimal still-failing input, as rendered by the stub.
+    public let minimal: String
+    /// The number of shrink steps taken to reach `minimal`.
+    public let steps: Int
+
+    public init(minimal: String, steps: Int) {
+        self.minimal = minimal
+        self.steps = steps
+    }
+}
+
+/// The default-pass counterexample carried by `VerifyOutcome.defaultFails`.
+/// Bundled into a struct (mirroring `EdgeCaseDetail`) so the enum case stays
+/// within a readable associated-value count.
+public struct DefaultFailDetail: Equatable, Sendable {
+    /// The default-pass trial index at which the counterexample surfaced.
+    public let trial: Int
+    /// The first failing input, as rendered by the stub.
+    public let input: String
+    /// The forward-call result on `input`.
+    public let forwardResult: String
+    /// The inverse-call result on `input`.
+    public let inverseResult: String
+    /// The shrink result (v1.141), or `nil` when the stub ran no shrink phase.
+    public let shrink: ShrinkTrace?
+
+    public init(
         trial: Int,
         input: String,
         forwardResult: String,
-        inverseResult: String
-    )
+        inverseResult: String,
+        shrink: ShrinkTrace? = nil
+    ) {
+        self.trial = trial
+        self.input = input
+        self.forwardResult = forwardResult
+        self.inverseResult = inverseResult
+        self.shrink = shrink
+    }
+}
+
+public enum VerifyOutcome: Equatable, Sendable {
+    case bothPass(defaultTrials: Int, edgeTrials: Int, edgeSampled: Int)
+    case edgeCaseAdvisory(defaultTrials: Int, edge: EdgeCaseDetail)
+    case defaultFails(DefaultFailDetail)
     case error(reason: String)
+
+    // A flat 6-arg counterexample constructor naturally takes one param per
+    // marker the stub prints; the bundling that satisfies the associated-value
+    // limit lives in `DefaultFailDetail`. Waive parameter-count for this one
+    // convenience factory (scoped), rather than forcing every call site to
+    // build the struct inline.
+    // swiftlint:disable function_parameter_count
+
+    /// Flat convenience constructor — keeps call sites ergonomic while the
+    /// case itself carries a single bundled `DefaultFailDetail`. The shrink
+    /// markers default to "none" so pre-v1.141 / non-shrinking emitters
+    /// construct unchanged.
+    public static func defaultFails(
+        trial: Int,
+        input: String,
+        forwardResult: String,
+        inverseResult: String,
+        shrunk: String?,
+        shrinkSteps: Int
+    ) -> Self {
+        let shrink = shrunk.map { ShrinkTrace(minimal: $0, steps: shrinkSteps) }
+        return .defaultFails(
+            DefaultFailDetail(
+                trial: trial,
+                input: input,
+                forwardResult: forwardResult,
+                inverseResult: inverseResult,
+                shrink: shrink
+            )
+        )
+    }
+    // swiftlint:enable function_parameter_count
 }
 
 public enum VerifyResultParser {
@@ -93,11 +165,18 @@ public enum VerifyResultParser {
             let input = value(forMarker: "VERIFY_DEFAULT_INPUT:", in: lines) ?? "(missing)"
             let forwardResult = value(forMarker: "VERIFY_DEFAULT_FORWARD:", in: lines) ?? "(missing)"
             let inverseResult = value(forMarker: "VERIFY_DEFAULT_INVERSE:", in: lines) ?? "(missing)"
+            // v1.141: shrink markers are optional — emitters that don't yet
+            // ship a shrink phase (or carriers with no shrinker) simply omit
+            // them, leaving `shrunk == nil` / `shrinkSteps == 0`.
+            let shrunk = value(forMarker: "VERIFY_DEFAULT_SHRUNK:", in: lines)
+            let shrinkSteps = Int(value(forMarker: "VERIFY_SHRINK_STEPS:", in: lines) ?? "") ?? 0
             return .defaultFails(
                 trial: trial,
                 input: input,
                 forwardResult: forwardResult,
-                inverseResult: inverseResult
+                inverseResult: inverseResult,
+                shrunk: shrunk,
+                shrinkSteps: shrinkSteps
             )
         }
 

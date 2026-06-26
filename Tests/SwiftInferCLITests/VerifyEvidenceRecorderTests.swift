@@ -38,7 +38,7 @@ struct VerifyEvidenceRecorderTests {
     @Test
     func defaultFailsMapsToMeasuredDefaultFailsWithTrialDetail() {
         let (outcome, detail) = VerifyEvidenceRecorder.evidence(
-            for: .defaultFails(trial: 7, input: "a", forwardResult: "b", inverseResult: "c")
+            for: .defaultFails(trial: 7, input: "a", forwardResult: "b", inverseResult: "c", shrunk: nil, shrinkSteps: 0)
         )
         #expect(outcome == .measuredDefaultFails)
         #expect(detail == "trial=7")

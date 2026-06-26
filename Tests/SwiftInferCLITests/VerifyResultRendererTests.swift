@@ -119,7 +119,9 @@ struct VerifyResultRendererTests {
                 trial: 47,
                 input: "Complex(0.0042, -1.7e6)",
                 forwardResult: "Complex(3.1, 2.2)",
-                inverseResult: "Complex(99.0, 0.0)"
+                inverseResult: "Complex(99.0, 0.0)",
+                shrunk: nil,
+                shrinkSteps: 0
             ),
             context: Self.canonicalContext
         )
@@ -129,6 +131,26 @@ struct VerifyResultRendererTests {
         #expect(rendered.contains("trial 47 (default pass)"))
         #expect(rendered.contains("Complex(0.0042, -1.7e6)"))
         #expect(rendered.contains("isApproximatelyEqual"))
+    }
+
+    @Test("defaultFails with a shrunk input renders the minimal counterexample line (v1.141)")
+    func rendersDefaultFailsWithShrink() {
+        let rendered = VerifyResultRenderer.render(
+            .defaultFails(
+                trial: 47,
+                input: "Complex(0.0042, -1.7e6)",
+                forwardResult: "Complex(3.1, 2.2)",
+                inverseResult: "Complex(99.0, 0.0)",
+                shrunk: "Complex(0.0, 0.0)",
+                shrinkSteps: 14
+            ),
+            context: Self.canonicalContext
+        )
+        let lines = rendered.split(separator: "\n")
+        #expect(lines.count == 6) // the 5 base lines + the shrink line
+        #expect(rendered.contains("shrank 14 steps → minimal counterexample: Complex(0.0, 0.0)"))
+        // The original first-failing input is still shown above it.
+        #expect(rendered.contains("Complex(0.0042, -1.7e6)"))
     }
 
     @Test("error renders ! line with the supplied reason")
@@ -181,7 +203,9 @@ struct VerifyResultRendererTests {
                 trial: 3,
                 input: "Complex(1, 2)",
                 forwardResult: "Complex(0.5, 1)",
-                inverseResult: "Complex(0.25, 0.5)"
+                inverseResult: "Complex(0.25, 0.5)",
+                shrunk: nil,
+                shrinkSteps: 0
             ),
             context: Self.idempotenceContext
         )

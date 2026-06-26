@@ -31,7 +31,9 @@ struct VerifyResultRendererCommutativityTests {
                 trial: 0,
                 input: "(5, 2)",
                 forwardResult: "10",
-                inverseResult: "0"
+                inverseResult: "0",
+                shrunk: nil,
+                shrinkSteps: 0
             ),
             context: Self.intContext
         )

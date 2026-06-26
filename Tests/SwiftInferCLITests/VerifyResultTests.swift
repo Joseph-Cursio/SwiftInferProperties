@@ -132,8 +132,34 @@ struct VerifyResultParserTests {
             trial: 47,
             input: "Complex(0.0042, -1.7e6)",
             forwardResult: "Complex(3.1, 2.2)",
-            inverseResult: "Complex(99.0, 0.0)"
+            inverseResult: "Complex(99.0, 0.0)",
+            shrunk: nil,
+            shrinkSteps: 0
         ))
+    }
+
+    @Test("parser captures the v1.141 shrink markers into .defaultFails")
+    func parsesShrinkMarkers() {
+        let raw = Self.output(
+            exitCode: 1,
+            stdout: [
+                "VERIFY_DEFAULT_RESULT: FAIL",
+                "VERIFY_DEFAULT_TRIAL: 12",
+                "VERIFY_DEFAULT_INPUT: Complex(8.3e5, -2.1e5)",
+                "VERIFY_DEFAULT_FORWARD: Complex(1.0, 1.0)",
+                "VERIFY_DEFAULT_INVERSE: Complex(2.0, 2.0)",
+                "VERIFY_DEFAULT_SHRUNK: Complex(0.0, 0.0)",
+                "VERIFY_SHRINK_STEPS: 14"
+            ].joined(separator: "\n")
+        )
+        let outcome = VerifyResultParser.parse(raw)
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        #expect(detail.input == "Complex(8.3e5, -2.1e5)")
+        #expect(detail.shrink?.minimal == "Complex(0.0, 0.0)")
+        #expect(detail.shrink?.steps == 14)
     }
 
     // MARK: - Error

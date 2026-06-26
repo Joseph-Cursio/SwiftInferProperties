@@ -71,14 +71,8 @@ public enum VerifyResultRenderer {
                 context: context
             )
 
-        case let .defaultFails(trial, input, forwardResult, inverseResult):
-            return renderDefaultFails(
-                trial: trial,
-                input: input,
-                forwardResult: forwardResult,
-                inverseResult: inverseResult,
-                context: context
-            )
+        case let .defaultFails(detail):
+            return renderDefaultFails(detail: detail, context: context)
 
         case let .error(reason):
             return "! verify error: \(reason)"
@@ -127,22 +121,26 @@ public enum VerifyResultRenderer {
     }
 
     private static func renderDefaultFails(
-        trial: Int,
-        input: String,
-        forwardResult: String,
-        inverseResult: String,
+        detail: DefaultFailDetail,
         context: Context
     ) -> String {
         let shape = renderShape(for: context)
-        return [
+        var lines = [
             "✗ verify fails: \(shape.subjectLine(context: context)), "
-                + "counterexample at trial \(trial) (default pass):",
-            "    input  = \(input)",
-            "    \(shape.forwardExpression(context: context)) = \(forwardResult)",
-            "    \(shape.inverseExpression(context: context)) = \(inverseResult)",
+                + "counterexample at trial \(detail.trial) (default pass):",
+            "    input  = \(detail.input)",
+            "    \(shape.forwardExpression(context: context)) = \(detail.forwardResult)",
+            "    \(shape.inverseExpression(context: context)) = \(detail.inverseResult)",
             "    expected ≈ \(shape.expectedExpression(context: context)) "
                 + "(within \(context.carrierType).isApproximatelyEqual)"
-        ].joined(separator: "\n")
+        ]
+        // v1.141: when the stub shrank the failing input, surface the minimal
+        // counterexample — the most actionable form for the developer.
+        if let shrink = detail.shrink, shrink.steps > 0 {
+            let stepWord = shrink.steps == 1 ? "step" : "steps"
+            lines.append("    shrank \(shrink.steps) \(stepWord) → minimal counterexample: \(shrink.minimal)")
+        }
+        return lines.joined(separator: "\n")
     }
 
     // MARK: - Template/carrier-aware phrasing
