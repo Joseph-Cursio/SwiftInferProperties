@@ -241,4 +241,32 @@ struct CommutativityStubEmitterTests {
         #expect(!source.contains("VERIFY_EDGE_TRIAL:"))
         #expect(!source.contains("VERIFY_EDGE_INDEX:"))
     }
+
+    // MARK: - V1.141 shrink phase (pair)
+
+    @Test("Complex<Double> default pass shrinks both pair components on failure")
+    func complexCarrierEmitsPairShrinkPhase() throws {
+        let source = try CommutativityStubEmitter.emit(Self.inputs())
+        #expect(source.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(source.contains("VERIFY_SHRINK_STEPS:"))
+        #expect(source.contains("func commutativityFails"))
+        #expect(source.contains("shrunkLhs.real.shrink(towards: 0)"))
+        #expect(source.contains("shrunkRhs.imaginary.shrink(towards: 0)"))
+    }
+
+    @Test("Double / Int default passes shrink both pair components toward 0")
+    func scalarCarriersEmitPairShrinkPhase() throws {
+        let doubleSource = try CommutativityStubEmitter.emit(
+            Self.inputs(functionCall: "{ (a: Double, b: Double) in a + b }", carrierType: "Double")
+        )
+        #expect(doubleSource.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(doubleSource.contains("shrunkLhs.shrink(towards: 0)"))
+        #expect(doubleSource.contains("shrunkRhs.shrink(towards: 0)"))
+
+        let intSource = try CommutativityStubEmitter.emit(
+            Self.inputs(functionCall: "{ (a: Int, b: Int) in a + b }", carrierType: "Int")
+        )
+        #expect(intSource.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(intSource.contains("shrunkRhs.shrink(towards: 0)"))
+    }
 }

@@ -34,7 +34,10 @@ extension CommutativityStubEmitter {
     }
 
     private static func doubleDefaultPass(functionCall: String) -> String {
-        """
+        let oracle = "!\(functionCall)(aValue, bValue)"
+            + ".isApproximatelyEqual(to: \(functionCall)(bValue, aValue))"
+        let shrink = scalarShrinkPhase(carrier: "Double", oracle: oracle)
+        return """
         // --- Pass 1: default (inline finite-domain) ---
 
         let defaultGenerator: Generator<Double, some SendableSequenceType> =
@@ -53,6 +56,7 @@ extension CommutativityStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(lhs), \\(rhs))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(shrink)
                 exit(1)
             }
         }
@@ -138,7 +142,9 @@ extension CommutativityStubEmitter {
     }
 
     private static func intDefaultPass(functionCall: String) -> String {
-        """
+        let oracle = "\(functionCall)(aValue, bValue) != \(functionCall)(bValue, aValue)"
+        let shrink = scalarShrinkPhase(carrier: "Int", oracle: oracle)
+        return """
         // --- Pass 1: default (bounded-magnitude integer) ---
 
         let intBound = Int(1) << (Int.bitWidth / 4)
@@ -156,12 +162,39 @@ extension CommutativityStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(lhs), \\(rhs))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(shrink)
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// v1.141 shrink phase for a scalar (`Int` / `Double`) commutativity pair:
+    /// shrink `lhs` then `rhs` toward 0, keeping the first candidate pair that
+    /// still satisfies `oracle` (a Bool expression over `aValue` / `bValue`).
+    private static func scalarShrinkPhase(carrier: String, oracle: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing pair ---
+                func commutativityFails(_ aValue: \(carrier), _ bValue: \(carrier)) -> Bool {
+                    \(oracle)
+                }
+                var shrunkLhs = lhs
+                var shrunkRhs = rhs
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for candidate in shrunkLhs.shrink(towards: 0) where commutativityFails(candidate, shrunkRhs) {
+                        shrunkLhs = candidate; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    for candidate in shrunkRhs.shrink(towards: 0) where commutativityFails(shrunkLhs, candidate) {
+                        shrunkRhs = candidate; shrinkSteps += 1; continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: (\\(shrunkLhs), \\(shrunkRhs))")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 

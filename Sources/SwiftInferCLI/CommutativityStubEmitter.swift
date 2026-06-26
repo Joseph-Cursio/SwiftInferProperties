@@ -143,12 +143,58 @@ extension CommutativityStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(lhs), \\(rhs))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(complexDoubleShrinkPhase(functionCall: functionCall))
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// v1.141 shrink phase for the `Complex<Double>` commutativity stub:
+    /// minimize the failing `(lhs, rhs)` pair one component at a time (real
+    /// then imaginary of each), keeping the first candidate pair that still
+    /// breaks `f(a, b) ≈ f(b, a)`.
+    private static func complexDoubleShrinkPhase(functionCall: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing pair ---
+                func commutativityFails(_ aValue: Complex<Double>, _ bValue: Complex<Double>) -> Bool {
+                    !\(functionCall)(aValue, bValue).isApproximatelyEqual(to: \(functionCall)(bValue, aValue))
+                }
+                var shrunkLhs = lhs
+                var shrunkRhs = rhs
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for component in shrunkLhs.real.shrink(towards: 0) {
+                        let candidate = Complex(component, shrunkLhs.imaginary)
+                        if commutativityFails(candidate, shrunkRhs) {
+                            shrunkLhs = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for component in shrunkLhs.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunkLhs.real, component)
+                        if commutativityFails(candidate, shrunkRhs) {
+                            shrunkLhs = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for component in shrunkRhs.real.shrink(towards: 0) {
+                        let candidate = Complex(component, shrunkRhs.imaginary)
+                        if commutativityFails(shrunkLhs, candidate) {
+                            shrunkRhs = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    for component in shrunkRhs.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunkRhs.real, component)
+                        if commutativityFails(shrunkLhs, candidate) {
+                            shrunkRhs = candidate; shrinkSteps += 1; continue shrinkLoop
+                        }
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: (\\(shrunkLhs), \\(shrunkRhs))")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 
