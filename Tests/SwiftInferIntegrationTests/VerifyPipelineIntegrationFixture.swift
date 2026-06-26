@@ -38,6 +38,7 @@ enum VerifyPipelineIntegrationFixture {
     static func runPipeline(
         forwardCall: String,
         inverseCall: String,
+        carrierType: String = "Complex<Double>",
         budget: RoundTripStubEmitter.TrialBudget = .small
     ) throws -> VerifyOutcome {
         let workdir = try makeWorkdir()
@@ -47,7 +48,7 @@ enum VerifyPipelineIntegrationFixture {
                 forwardCall: forwardCall,
                 inverseCall: inverseCall,
                 extraImports: [],
-                carrierType: "Complex<Double>",
+                carrierType: carrierType,
                 seedHex: canonicalSeed,
                 trialBudget: budget
             )
