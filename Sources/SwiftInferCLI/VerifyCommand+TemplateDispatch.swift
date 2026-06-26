@@ -192,6 +192,43 @@ extension SwiftInferCommand.Verify {
         return VerifyStubBundle(source: source, rendererContext: context)
     }
 
+    /// V1.142 auto-bridge — render + write a focused regression test from a
+    /// verify counterexample (`.defaultFails`) via `ConvertCounterexampleEngine`.
+    /// Returns the written path, or `nil` when the template isn't auto-derivable
+    /// from the index entry (identity-element / invariant-preservation /
+    /// reduce-equivalence / count-invariance need args the entry doesn't carry;
+    /// dual-style / idempotence-lifted aren't `ConvertCounterexampleEngine`
+    /// shapes) — a graceful skip, since the verify stub already reported the
+    /// counterexample. Best-effort: never throws into the verify gesture.
+    static func emitRegressionTest(
+        entry: SemanticIndexEntry,
+        detail: DefaultFailDetail,
+        packageRoot: URL
+    ) -> URL? {
+        let autoDerivable: Set<String> = [
+            "round-trip", "idempotence", "commutativity", "associativity", "monotonicity"
+        ]
+        guard autoDerivable.contains(entry.templateName),
+            let calls = try? resolveFunctionCalls(for: entry) else { return nil }
+        // Prefer the minimal (shrunk) counterexample; fall back to the first
+        // failing input when the carrier wasn't shrinkable.
+        let counterexample = detail.shrink?.minimal ?? detail.input
+        let args = ConvertCounterexampleEngine.Args(
+            template: entry.templateName,
+            callee: calls.rendererForwardName,
+            type: entry.typeName ?? "(none)",
+            counterexample: counterexample,
+            reverseCallee: entry.templateName == "round-trip" ? calls.rendererInverseName : nil
+        )
+        guard let stub = try? ConvertCounterexampleEngine.renderRegressionStub(args: args),
+            let path = try? ConvertCounterexampleEngine.writeRegressionStub(
+                args: args,
+                stub: stub,
+                packageRoot: packageRoot
+            ) else { return nil }
+        return path
+    }
+
     /// Pair / single-function resolution layer shared across templates
     /// when the strategist path emits. Round-trip resolves the curated
     /// forward+inverse pair; idempotence / commutativity / associativity

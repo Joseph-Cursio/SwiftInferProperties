@@ -147,6 +147,24 @@ extension SwiftInferCommand {
         )
         public var corpusModule: String?
 
+        /// V1.142 — auto-bridge toggle. When verify finds a counterexample
+        /// (`.defaultFails`), render + write a focused regression test from the
+        /// minimal counterexample via `ConvertCounterexampleEngine`. Defaults
+        /// ON for `--suggestion` runs (the user explicitly asked to verify one
+        /// pick) and OFF for `--all-from-index` surveys (which would flood
+        /// `Tests/Generated/`). `--no-emit-regression` / `--emit-regression`
+        /// override per run.
+        @Flag(
+            inversion: .prefixedNo,
+            help: """
+            Auto-generate a focused regression test from the minimal \
+            counterexample when verify finds one. Written to \
+            Tests/Generated/SwiftInfer/<template>/. Default: on for \
+            --suggestion, off for --all-from-index.
+            """
+        )
+        public var emitRegression: Bool?
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -176,136 +194,11 @@ extension SwiftInferCommand {
                 suggestionPrefix: suggestion,
                 indexPathOverride: indexPath,
                 budgetString: budget,
-                workingDirectory: workingDirectory
+                workingDirectory: workingDirectory,
+                emitRegression: emitRegression ?? true
             )
             print(outcome)
         }
-
-        /// V1.42.C.6 — orchestration glue. Pure-ish entry point so
-        /// tests can drive verify end-to-end without going through
-        /// the AsyncParsableCommand shell. Returns the rendered
-        /// outcome string; the CLI's run() just prints it.
-        ///
-        /// Pipeline steps in order:
-        ///   1. Resolve packageRoot by walking up from
-        ///      `workingDirectory` to find `Package.swift`.
-        ///   2. Resolve the SemanticIndex (`VerifyHarness.resolveIndex`).
-        ///   3. Look up the suggestion by hash prefix
-        ///      (`VerifyHarness.lookupSuggestion`).
-        ///   4. Resolve forward/inverse via the curated pair list
-        ///      (`RoundTripPairResolver.resolve`).
-        ///   5. Derive an Xoshiro seed deterministically from the
-        ///      suggestion's identity hash.
-        ///   6. Emit stub (`RoundTripStubEmitter.emit`).
-        ///   7. Synthesize verifier workdir at
-        ///      `<packageRoot>/.swiftinfer/verify-workdir/<prefix>/`.
-        ///   8. Run `swift build` + the verifier binary
-        ///      (`VerifierSubprocess`).
-        ///   9. Parse + render the outcome (`VerifyResult*`).
-        static func runPipeline(
-            suggestionPrefix: String,
-            indexPathOverride: String?,
-            budgetString: String,
-            workingDirectory: URL
-        ) throws -> String {
-            let packageRoot = findPackageRoot(startingFrom: workingDirectory)
-                ?? workingDirectory
-            let entry = try resolveEntry(
-                suggestionPrefix: suggestionPrefix,
-                indexPathOverride: indexPathOverride,
-                packageRoot: packageRoot
-            )
-            // V1.44.D — template dispatch. round-trip uses the v1.42 +
-            // v1.43 + v1.44.B path; idempotence uses the V1.44.A/C
-            // emitter + V1.44.D's single-function resolver. Other
-            // templates surface as `.unsupportedTemplate` for v1.45+.
-            // Builder lives in `VerifyCommand+TemplateDispatch.swift`.
-            let stubBundle = try Self.buildStubBundle(
-                entry: entry,
-                budget: parseBudget(budgetString)
-            )
-            let workdir = packageRoot
-                .appendingPathComponent(".swiftinfer")
-                .appendingPathComponent("verify-workdir")
-                .appendingPathComponent(workdirSegment(for: entry.identityHash))
-            _ = try VerifierWorkdir.synthesize(
-                VerifierWorkdir.Inputs(
-                    workdir: workdir,
-                    userPackage: nil,
-                    stubSource: stubBundle.source
-                )
-            )
-            let runOutput = try buildAndRun(workdir: workdir)
-            let parsed = VerifyResultParser.parse(runOutput)
-            // V1.64.B — persist the outcome to .swiftinfer/verify-evidence.json
-            // so `discover` can annotate this suggestion later. Best-effort:
-            // a persistence failure warns but never fails the verify gesture.
-            let (evidenceOutcome, evidenceDetail) = VerifyEvidenceRecorder.evidence(for: parsed)
-            let recordWarnings = VerifyEvidenceRecorder.record(
-                VerifyEvidence(
-                    identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(entry.identityHash),
-                    template: entry.templateName,
-                    outcome: evidenceOutcome,
-                    detail: evidenceDetail,
-                    capturedAt: Date(),
-                    swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
-                ),
-                packageRoot: packageRoot
-            )
-            for warning in recordWarnings {
-                FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
-            }
-            return VerifyResultRenderer.render(
-                parsed,
-                context: stubBundle.rendererContext
-            )
-        }
-
-        /// Sub-step 1 of the pipeline: load the SemanticIndex + look
-        /// up the suggestion by prefix. Surfaces any stale-index or
-        /// lookup warnings on stderr; returns the matched entry.
-        private static func resolveEntry(
-            suggestionPrefix: String,
-            indexPathOverride: String?,
-            packageRoot: URL
-        ) throws -> SemanticIndexEntry {
-            let now = ISO8601DateFormatter().string(from: Date())
-            let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
-            try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)
-            let resolved = try VerifyHarness.resolveIndex(
-                packageRoot: packageRoot,
-                explicitIndexPath: explicitIndexPath,
-                now: now
-            )
-            let lookup = try VerifyHarness.lookupSuggestion(
-                hashPrefix: suggestionPrefix,
-                in: resolved.index,
-                staleWarnings: resolved.warnings,
-                indexPath: resolved.path
-            )
-            for warning in lookup.warnings {
-                FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
-            }
-            return lookup.entry
-        }
-
-        /// Sub-step 2 of the pipeline: build the synthesized workdir
-        /// and run the resulting verifier binary. Build failures
-        /// surface as `.buildFailed`; the captured run output is
-        /// returned for the parser to consume.
-        private static func buildAndRun(workdir: URL) throws -> VerifierSubprocess.Output {
-            let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
-            guard buildOutput.exitCode == 0 else {
-                throw VerifyError.buildFailed(
-                    exitCode: buildOutput.exitCode,
-                    stderr: buildOutput.stderr
-                )
-            }
-            return try VerifierSubprocess.runVerifierBinary(workdir: workdir)
-        }
-
-        // MARK: - Helpers
-
     }
 }
 
