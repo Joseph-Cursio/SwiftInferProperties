@@ -39,7 +39,7 @@ public enum AssociativityStubEmitter: SeededStubEmitter {
 
     /// Inputs to the emitter — single binary `functionCall` plus the
     /// usual surrounding metadata.
-    public struct Inputs: Equatable, Sendable {
+    public struct Inputs: Equatable, Sendable, CarrierStubInputs {
         /// The function under test, written as a call expression
         /// (e.g. `"Int.add"` or
         /// `"{ (a: Int, b: Int) in a + b }"`). The emitter renders
@@ -86,17 +86,13 @@ public enum AssociativityStubEmitter: SeededStubEmitter {
     /// Emit an associativity verify stub. Validates the carrier first,
     /// then dispatches to the per-carrier composer.
     public static func emit(_ inputs: Inputs) throws -> String {
-        guard let carrier = CarrierKind.from(typeName: inputs.carrierType) else {
-            throw VerifyError.unsupportedCarrier(
-                carrier: inputs.carrierType,
-                expected: supportedCarriers
-            )
-        }
-        switch carrier {
-        case .complexDouble: return composeComplexDoubleSource(inputs)
-        case .double: return composeDoubleSource(inputs)
-        case .int: return composeIntSource(inputs)
-        }
+        try CarrierStubDispatch.emit(
+            inputs,
+            supportedCarriers: supportedCarriers,
+            complexDouble: composeComplexDoubleSource,
+            double: composeDoubleSource,
+            int: composeIntSource
+        )
     }
 }
 

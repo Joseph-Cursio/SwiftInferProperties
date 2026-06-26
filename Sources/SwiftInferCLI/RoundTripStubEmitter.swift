@@ -66,7 +66,7 @@ public enum RoundTripStubEmitter: SeededStubEmitter {
     /// Inputs to the emitter — collected into a struct rather than a
     /// long parameter list so the call sites stay readable and the
     /// `function_parameter_count` lint rule doesn't fire.
-    public struct Inputs: Equatable, Sendable {
+    public struct Inputs: Equatable, Sendable, CarrierStubInputs {
         /// Forward-side function call as it would appear at the call
         /// site. E.g. `"Complex.exp"` or `"abs"`. The emitter does not
         /// validate this is a syntactically-valid Swift expression; the
@@ -127,17 +127,13 @@ public enum RoundTripStubEmitter: SeededStubEmitter {
     /// Emit a round-trip verify stub. Validates the carrier first,
     /// then dispatches to the per-carrier composer.
     public static func emit(_ inputs: Inputs) throws -> String {
-        guard let carrier = CarrierKind.from(typeName: inputs.carrierType) else {
-            throw VerifyError.unsupportedCarrier(
-                carrier: inputs.carrierType,
-                expected: supportedCarriers
-            )
-        }
-        switch carrier {
-        case .complexDouble: return composeComplexDoubleSource(inputs)
-        case .double: return composeDoubleSource(inputs)
-        case .int: return composeIntSource(inputs)
-        }
+        try CarrierStubDispatch.emit(
+            inputs,
+            supportedCarriers: supportedCarriers,
+            complexDouble: composeComplexDoubleSource,
+            double: composeDoubleSource,
+            int: composeIntSource
+        )
     }
 }
 

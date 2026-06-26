@@ -32,7 +32,7 @@ public enum IdempotenceStubEmitter: SeededStubEmitter {
 
     /// Inputs to the emitter. Mirrors `RoundTripStubEmitter.Inputs` but
     /// carries a single `functionCall` (idempotence is single-function).
-    public struct Inputs: Equatable, Sendable {
+    public struct Inputs: Equatable, Sendable, CarrierStubInputs {
         public let functionCall: String
         public let extraImports: [String]
         public let carrierType: String
@@ -66,17 +66,13 @@ public enum IdempotenceStubEmitter: SeededStubEmitter {
     /// Emit an idempotence verify stub. Validates the carrier first,
     /// then dispatches to the per-carrier composer.
     public static func emit(_ inputs: Inputs) throws -> String {
-        guard let carrier = CarrierKind.from(typeName: inputs.carrierType) else {
-            throw VerifyError.unsupportedCarrier(
-                carrier: inputs.carrierType,
-                expected: supportedCarriers
-            )
-        }
-        switch carrier {
-        case .complexDouble: return composeComplexDoubleSource(inputs)
-        case .double: return composeDoubleSource(inputs)
-        case .int: return composeIntSource(inputs)
-        }
+        try CarrierStubDispatch.emit(
+            inputs,
+            supportedCarriers: supportedCarriers,
+            complexDouble: composeComplexDoubleSource,
+            double: composeDoubleSource,
+            int: composeIntSource
+        )
     }
 
     // MARK: - Carrier dispatch
