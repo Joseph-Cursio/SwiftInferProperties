@@ -207,7 +207,15 @@ let package = Package(
         ),
         .testTarget(
             name: "SwiftInferTemplatesTests",
-            dependencies: ["SwiftInferTemplates", "SwiftInferCore"]
+            dependencies: [
+                "SwiftInferTemplates",
+                "SwiftInferCore",
+                // Test-only: the runtime backend, so the precision-boundary
+                // characterization can pair each template suggestion with the
+                // executable idempotence law's ground truth. Test target only —
+                // the SwiftInferTemplates library product is unaffected.
+                .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
+            ]
         ),
         // TestLifter M1.0 — smoke test target. M1.1+ fill out the suites
         // for parser, slicer, detector, identity-equality. M1.4 adds
