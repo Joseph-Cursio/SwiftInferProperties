@@ -27,6 +27,10 @@ extension StrategistDispatchEmitter {
         }
         let forward = inputs.functionCalls[0]
         let inverse = inputs.functionCalls[1]
+        let oracle = "\(inverse)(\(forward)(candidate)) != candidate"
+        let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
+            ? singleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
+            : ""
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -43,6 +47,7 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(forwardResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(inverseResult)")
+        \(shrink)
                 exit(1)
             }
         }
@@ -73,6 +78,10 @@ extension StrategistDispatchEmitter {
                 recipe: recipe
             )
         }
+        let oracle = "\(functionCall)(\(functionCall)(candidate)) != \(functionCall)(candidate)"
+        let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
+            ? singleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
+            : ""
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -89,6 +98,7 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
+        \(shrink)
                 exit(1)
             }
         }
@@ -166,6 +176,10 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
+        let oracle = "\(functionCall)(aValue, bValue) != \(functionCall)(bValue, aValue)"
+        let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
+            ? pairShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
+            : ""
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -183,6 +197,7 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(lhs), \\(rhs))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(shrink)
                 exit(1)
             }
         }
@@ -199,6 +214,11 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
+        let oracle = "\(functionCall)(\(functionCall)(aValue, bValue), cValue)"
+            + " != \(functionCall)(aValue, \(functionCall)(bValue, cValue))"
+        let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
+            ? tripleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
+            : ""
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
@@ -217,6 +237,7 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB), \\(valueC))")
                 print("VERIFY_DEFAULT_FORWARD: \\(lhsResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(rhsResult)")
+        \(shrink)
                 exit(1)
             }
         }

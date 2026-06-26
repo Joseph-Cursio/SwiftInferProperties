@@ -127,4 +127,54 @@ struct VerifyPipelineStrategistIntegrationTests {
         }
         #expect(detail.shrink != nil)
     }
+
+    /// **v1.141 — strategist × Int × round-trip × shrink-to-0.** This is the
+    /// real-CLI path for Int (Route 2). `n + 1` / `n` fails everywhere and
+    /// the single-input shrink minimizes deterministically to 0.
+    @Test("strategist × Int × round-trip: n+1 shrinks to 0")
+    func strategistIntRoundTripShrinksToZero() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
+            functionCalls: ["{ (value: Int) in value &+ 1 }", "{ (value: Int) in value }"],
+            carrier: "Int",
+            template: "round-trip"
+        )
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        let shrink = try #require(detail.shrink)
+        #expect(shrink.minimal == "0")
+    }
+
+    /// **v1.141 — strategist × Int × commutativity × pair-shrink.** `a - b`
+    /// is non-commutative; exercises the strategist pair-shrink end-to-end.
+    @Test("strategist × Int × commutativity: a-b shrinks the failing pair")
+    func strategistIntCommutativityShrinks() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
+            functionCalls: ["{ (aVal: Int, bVal: Int) in aVal &- bVal }"],
+            carrier: "Int",
+            template: "commutativity"
+        )
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        #expect(detail.shrink != nil)
+    }
+
+    /// **v1.141 — strategist × Int × associativity × triple-shrink.** `a - b`
+    /// is non-associative; exercises the strategist triple-shrink end-to-end.
+    @Test("strategist × Int × associativity: a-b shrinks the failing triple")
+    func strategistIntAssociativityShrinks() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
+            functionCalls: ["{ (aVal: Int, bVal: Int) in aVal &- bVal }"],
+            carrier: "Int",
+            template: "associativity"
+        )
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        #expect(detail.shrink != nil)
+    }
 }
