@@ -248,12 +248,50 @@ extension RoundTripStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(forwardResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(inverseResult)")
+        \(complexDoubleShrinkPhase(forwardCall: forwardCall, inverseCall: inverseCall))
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// v1.141 shrink phase for the `Complex<Double>` round-trip stub.
+    /// Carrier-native: shrink the real then imaginary component toward 0 (one
+    /// at a time), keeping the first candidate that still breaks the round-trip,
+    /// to a fixpoint. The oracle is the same `isApproximatelyEqual` check, so a
+    /// shrunk value survives only if it genuinely still fails.
+    private static func complexDoubleShrinkPhase(forwardCall: String, inverseCall: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing input ---
+                func roundTripFails(_ candidate: Complex<Double>) -> Bool {
+                    !\(inverseCall)(\(forwardCall)(candidate)).isApproximatelyEqual(to: candidate)
+                }
+                var shrunk = value
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for realCandidate in shrunk.real.shrink(towards: 0) {
+                        let candidate = Complex(realCandidate, shrunk.imaginary)
+                        if roundTripFails(candidate) {
+                            shrunk = candidate
+                            shrinkSteps += 1
+                            continue shrinkLoop
+                        }
+                    }
+                    for imagCandidate in shrunk.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunk.real, imagCandidate)
+                        if roundTripFails(candidate) {
+                            shrunk = candidate
+                            shrinkSteps += 1
+                            continue shrinkLoop
+                        }
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: \\(shrunk)")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 

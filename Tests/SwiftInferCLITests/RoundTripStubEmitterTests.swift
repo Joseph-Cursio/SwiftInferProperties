@@ -271,4 +271,39 @@ struct RoundTripStubEmitterTests {
         #expect(!source.contains("VERIFY_EDGE_TRIAL:"))
         #expect(!source.contains("VERIFY_EDGE_INDEX:"))
     }
+
+    // MARK: - V1.141 shrink phase (minimal counterexamples)
+
+    @Test("Complex<Double> default pass shrinks each component toward 0 on failure")
+    func complexCarrierEmitsShrinkPhase() throws {
+        let source = try RoundTripStubEmitter.emit(Self.inputs())
+        #expect(source.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(source.contains("VERIFY_SHRINK_STEPS:"))
+        #expect(source.contains("func roundTripFails"))
+        // One component at a time, toward zero.
+        #expect(source.contains("shrunk.real.shrink(towards: 0)"))
+        #expect(source.contains("shrunk.imaginary.shrink(towards: 0)"))
+    }
+
+    @Test("Double default pass shrinks the value toward 0 on failure")
+    func doubleCarrierEmitsShrinkPhase() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "abs", inverseCall: "abs", carrierType: "Double")
+        )
+        #expect(source.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(source.contains("VERIFY_SHRINK_STEPS:"))
+        #expect(source.contains("shrunk.shrink(towards: 0)"))
+    }
+
+    @Test("Int default pass shrinks the value toward 0 on failure (exact equality oracle)")
+    func intCarrierEmitsShrinkPhase() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "negate", inverseCall: "negate", carrierType: "Int")
+        )
+        #expect(source.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(source.contains("VERIFY_SHRINK_STEPS:"))
+        #expect(source.contains("shrunk.shrink(towards: 0)"))
+        // Int oracle is exact inequality, not isApproximatelyEqual.
+        #expect(source.contains("!= candidate"))
+    }
 }

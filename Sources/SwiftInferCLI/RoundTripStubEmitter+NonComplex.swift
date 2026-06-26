@@ -55,6 +55,23 @@ extension RoundTripStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(forwardResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(inverseResult)")
+
+                // --- shrink phase (v1.141): minimize the failing input ---
+                func roundTripFails(_ candidate: Double) -> Bool {
+                    !\(inverseCall)(\(forwardCall)(candidate)).isApproximatelyEqual(to: candidate)
+                }
+                var shrunk = value
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for candidate in shrunk.shrink(towards: 0) where roundTripFails(candidate) {
+                        shrunk = candidate
+                        shrinkSteps += 1
+                        continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: \\(shrunk)")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
                 exit(1)
             }
         }
@@ -161,6 +178,23 @@ extension RoundTripStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(forwardResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(inverseResult)")
+
+                // --- shrink phase (v1.141): minimize the failing input ---
+                func roundTripFails(_ candidate: Int) -> Bool {
+                    \(inverseCall)(\(forwardCall)(candidate)) != candidate
+                }
+                var shrunk = value
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for candidate in shrunk.shrink(towards: 0) where roundTripFails(candidate) {
+                        shrunk = candidate
+                        shrinkSteps += 1
+                        continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: \\(shrunk)")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
                 exit(1)
             }
         }
