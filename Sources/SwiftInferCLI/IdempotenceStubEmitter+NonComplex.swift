@@ -50,6 +50,24 @@ extension IdempotenceStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
+
+                // --- shrink phase (v1.141): minimize the failing input ---
+                func idempotenceFails(_ candidate: Double) -> Bool {
+                    let onceCandidate = \(functionCall)(candidate)
+                    return !\(functionCall)(onceCandidate).isApproximatelyEqual(to: onceCandidate)
+                }
+                var shrunk = value
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for candidate in shrunk.shrink(towards: 0) where idempotenceFails(candidate) {
+                        shrunk = candidate
+                        shrinkSteps += 1
+                        continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: \\(shrunk)")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
                 exit(1)
             }
         }
@@ -151,6 +169,24 @@ extension IdempotenceStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
+
+                // --- shrink phase (v1.141): minimize the failing input ---
+                func idempotenceFails(_ candidate: Int) -> Bool {
+                    let onceCandidate = \(functionCall)(candidate)
+                    return \(functionCall)(onceCandidate) != onceCandidate
+                }
+                var shrunk = value
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for candidate in shrunk.shrink(towards: 0) where idempotenceFails(candidate) {
+                        shrunk = candidate
+                        shrinkSteps += 1
+                        continue shrinkLoop
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: \\(shrunk)")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
                 exit(1)
             }
         }

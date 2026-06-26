@@ -129,12 +129,49 @@ extension IdempotenceStubEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
                 print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
+        \(complexDoubleShrinkPhase(functionCall: functionCall))
                 exit(1)
             }
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// v1.141 shrink phase for the `Complex<Double>` idempotence stub:
+    /// minimize the failing input by shrinking real then imaginary toward 0,
+    /// keeping the first candidate that still breaks `f(f(x)) ≈ f(x)`.
+    private static func complexDoubleShrinkPhase(functionCall: String) -> String {
+        """
+        // --- shrink phase (v1.141): minimize the failing input ---
+                func idempotenceFails(_ candidate: Complex<Double>) -> Bool {
+                    let onceCandidate = \(functionCall)(candidate)
+                    return !\(functionCall)(onceCandidate).isApproximatelyEqual(to: onceCandidate)
+                }
+                var shrunk = value
+                var shrinkSteps = 0
+                shrinkLoop: while shrinkSteps < 1000 {
+                    for realCandidate in shrunk.real.shrink(towards: 0) {
+                        let candidate = Complex(realCandidate, shrunk.imaginary)
+                        if idempotenceFails(candidate) {
+                            shrunk = candidate
+                            shrinkSteps += 1
+                            continue shrinkLoop
+                        }
+                    }
+                    for imagCandidate in shrunk.imaginary.shrink(towards: 0) {
+                        let candidate = Complex(shrunk.real, imagCandidate)
+                        if idempotenceFails(candidate) {
+                            shrunk = candidate
+                            shrinkSteps += 1
+                            continue shrinkLoop
+                        }
+                    }
+                    break
+                }
+                print("VERIFY_DEFAULT_SHRUNK: \\(shrunk)")
+                print("VERIFY_SHRINK_STEPS: \\(shrinkSteps)")
         """
     }
 

@@ -262,4 +262,33 @@ struct IdempotenceStubEmitterTests {
         #expect(!source.contains("VERIFY_EDGE_TRIAL:"))
         #expect(!source.contains("VERIFY_EDGE_INDEX:"))
     }
+
+    // MARK: - V1.141 shrink phase
+
+    @Test("Complex<Double> default pass shrinks the failing input on idempotence failure")
+    func complexCarrierEmitsShrinkPhase() throws {
+        let source = try IdempotenceStubEmitter.emit(Self.inputs())
+        #expect(source.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(source.contains("VERIFY_SHRINK_STEPS:"))
+        #expect(source.contains("func idempotenceFails"))
+        #expect(source.contains("shrunk.real.shrink(towards: 0)"))
+        #expect(source.contains("shrunk.imaginary.shrink(towards: 0)"))
+    }
+
+    @Test("Double / Int default passes shrink the failing input toward 0")
+    func scalarCarriersEmitShrinkPhase() throws {
+        let doubleSource = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Double")
+        )
+        #expect(doubleSource.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(doubleSource.contains("shrunk.shrink(towards: 0)"))
+
+        let intSource = try IdempotenceStubEmitter.emit(
+            Self.inputs(functionCall: "abs", carrierType: "Int")
+        )
+        #expect(intSource.contains("VERIFY_DEFAULT_SHRUNK:"))
+        #expect(intSource.contains("shrunk.shrink(towards: 0)"))
+        // Int oracle is exact inequality.
+        #expect(intSource.contains("!= onceCandidate"))
+    }
 }

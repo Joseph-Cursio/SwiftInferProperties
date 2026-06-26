@@ -41,13 +41,30 @@ struct VerifyPipelineIdempotenceTests {
             functionCall: "{ (xValue: Double) in xValue * 2 }",
             carrierType: "Double"
         )
-        if case .defaultFails = outcome {
-            // Edge pass skipped by short-circuit; per-field
-            // counterexample data depends on the RNG-sampled value
-            // so we only pin the case.
-        } else {
+        guard case let .defaultFails(detail) = outcome else {
             Issue.record("expected .defaultFails; got \(outcome)")
+            return
         }
+        // v1.141: the shrink phase compiled + ran and emitted its markers.
+        #expect(detail.shrink != nil)
+    }
+
+    /// **v1.141 — idempotence × Int × shrink-to-0.** `f(n) = n + 1` is
+    /// non-idempotent everywhere (`f(f(n)) = n + 2 ≠ n + 1`), including 0,
+    /// so the shrink phase minimizes deterministically to 0.
+    @Test("idempotence × Int: non-idempotent f(n) = n + 1 shrinks to 0")
+    func idempotenceIntShrinksToZero() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runIdempotencePipeline(
+            functionCall: "{ (xValue: Int) in xValue &+ 1 }",
+            carrierType: "Int"
+        )
+        guard case let .defaultFails(detail) = outcome else {
+            Issue.record("expected .defaultFails; got \(outcome)")
+            return
+        }
+        let shrink = try #require(detail.shrink)
+        #expect(shrink.minimal == "0")
+        #expect(shrink.steps >= 1)
     }
 
     /// **V1.44.E.3.c — idempotence × Int × bothPass.** Identity
