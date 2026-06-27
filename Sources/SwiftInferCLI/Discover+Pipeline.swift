@@ -53,13 +53,20 @@ extension SwiftInferCommand.Discover {
         /// that don't need it (the renderer / interactive flows).
         public let typeShapesByName: [String: PropertyLawCore.TypeShape]
 
+        /// Generators synthesized from how the tests construct each type
+        /// (mock-synthesis over the full construction record), keyed by type
+        /// name — for *any* test-constructed type, not only suggestion-bearing
+        /// ones. The scaffold pass uses these to fill holes structure can't.
+        public let mockGeneratorsByType: [String: MockGenerator]
+
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
             inverseElementPairs: [InverseElementPair] = [],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
-            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:]
+            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
+            mockGeneratorsByType: [String: MockGenerator] = [:]
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
@@ -67,6 +74,7 @@ extension SwiftInferCommand.Discover {
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.typeShapesByName = typeShapesByName
+            self.mockGeneratorsByType = mockGeneratorsByType
         }
     }
 
@@ -126,8 +134,25 @@ extension SwiftInferCommand.Discover {
             inverseElementPairs: artifacts.inverseElementPairs,
             equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
             consumerProducerChainHintsByIdentity: hints.chainHints,
-            typeShapesByName: hints.typeShapesByName
+            typeShapesByName: hints.typeShapesByName,
+            mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord)
         )
+    }
+
+    /// Mock-synthesize a generator for every distinct type the tests
+    /// construct (≥ the synthesizer's site-count threshold) — broader than
+    /// the per-suggestion `mockGenerator`, which only covers types that also
+    /// surfaced a property suggestion.
+    private static func synthesizeMockGenerators(
+        from record: ConstructionRecord
+    ) -> [String: MockGenerator] {
+        var result: [String: MockGenerator] = [:]
+        for typeName in Set(record.entries.map(\.typeName)) {
+            if let mock = MockGeneratorSynthesizer.synthesize(typeName: typeName, record: record) {
+                result[typeName] = mock
+            }
+        }
+        return result
     }
 
     /// V1.89 lint pass — bundle for the derived per-identity maps

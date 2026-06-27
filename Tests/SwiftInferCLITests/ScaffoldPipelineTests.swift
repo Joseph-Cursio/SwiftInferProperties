@@ -170,6 +170,50 @@ struct ScaffoldPipelineTests {
         )
     }
 
+    // MARK: - Broader evidence reach (no suggestion required)
+
+    @Test func evidenceFromTestsFillsHoleForNonSuggestionType() throws {
+        let root = NSTemporaryDirectory().appending("SIScaffoldEvidence-\(UUID().uuidString)/")
+        let sources = root + "Sources/"
+        let tests = root + "Tests/"
+        try FileManager.default.createDirectory(atPath: sources, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(atPath: tests, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(atPath: root) }
+
+        // Box is a class (structurally non-derivable) with no property
+        // suggestion — only test evidence knows how to build it.
+        try """
+            final class Box: Equatable {
+                let value: Int
+                init(value: Int) { self.value = value }
+                static func == (lhs: Box, rhs: Box) -> Bool { lhs.value == rhs.value }
+            }
+            struct Order: Equatable {
+                let id: Int
+                let box: Box
+                let ref: URL
+            }
+            """.write(toFile: sources + "Models.swift", atomically: true, encoding: .utf8)
+        try """
+            import Testing
+            struct BoxTests {
+                @Test func a() { _ = Box(value: 1) }
+                @Test func b() { _ = Box(value: 2) }
+                @Test func c() { _ = Box(value: 3) }
+            }
+            """.write(toFile: tests + "BoxTests.swift", atomically: true, encoding: .utf8)
+
+        let outcome = try SwiftInferCommand.Scaffold.scaffold(
+            directory: URL(fileURLWithPath: sources),
+            testDirectory: URL(fileURLWithPath: tests),
+            diagnostics: SilentDiagnostics()
+        )
+        let text = try #require(outcome.fileText)
+        #expect(outcome.scaffoldedTypeNames.contains("Order"))
+        #expect(text.contains("Box(value: $0)"))       // hole filled from test evidence
+        #expect(text.contains("<#Generator<URL>#>"))    // ref remains a placeholder
+    }
+
     // MARK: - Helpers
 
     private struct SilentDiagnostics: DiagnosticOutput {

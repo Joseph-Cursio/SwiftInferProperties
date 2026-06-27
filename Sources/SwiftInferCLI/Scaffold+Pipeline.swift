@@ -82,14 +82,10 @@ extension SwiftInferCommand {
             let resolver = GeneratorResolver(types: Array(shapesByName.values))
 
             // Evidence fills: types SwiftInfer observed being constructed in
-            // tests (mock-synthesized) can fill holes that structure can't —
-            // e.g. a user-init type whose construction shape is known only
-            // from the tests. Keyed by type name.
-            let mockByType = Dictionary(
-                pipeline.suggestions.compactMap { suggestion in
-                    suggestion.mockGenerator.map { ($0.typeName, $0) }
-                }
-            ) { first, _ in first }
+            // tests (mock-synthesized over the full construction record) can
+            // fill holes that structure can't — e.g. a user-init type whose
+            // construction shape is known only from the tests.
+            let mockByType = pipeline.mockGeneratorsByType
             // Filling resolver: structural derivation first, then test evidence.
             let filling: DerivationStrategist.CustomTypeResolver = { name in
                 if let structural = resolver.customTypeGenerator(forTypeName: name) {
