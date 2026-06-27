@@ -181,7 +181,8 @@ extension SwiftInferCommand {
                     workingDirectory: workingDirectory,
                     maxParallel: maxParallel,
                     templateFilter: template,
-                    corpusModuleName: corpusModule
+                    corpusModuleName: corpusModule,
+                    emitRegression: emitRegression ?? false
                 )
                 return
             }

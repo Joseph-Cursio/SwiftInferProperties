@@ -62,7 +62,8 @@ extension SwiftInferCommand.Verify {
         workingDirectory: URL,
         maxParallel: Int,
         templateFilter: String?,
-        corpusModuleName: String? = nil
+        corpusModuleName: String? = nil,
+        emitRegression: Bool = false
     ) async throws {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
@@ -77,15 +78,27 @@ extension SwiftInferCommand.Verify {
             )
             return
         }
-        let budget = parseBudget(budgetString)
         let parallelism = max(1, maxParallel)
+        let config = SurveyConfig(
+            budget: parseBudget(budgetString),
+            corpusModuleName: corpusModuleName,
+            emitRegression: emitRegression
+        )
         await runParallelSurvey(
             entries: entries,
             packageRoot: packageRoot,
-            budget: budget,
             parallelism: parallelism,
-            corpusModuleName: corpusModuleName
+            config: config
         )
+    }
+
+    /// V1.142.C — per-survey constants bundled so the parallel loop's task
+    /// submissions and the per-entry worker stay within the closure-/function-
+    /// body-length caps.
+    struct SurveyConfig {
+        let budget: RoundTripStubEmitter.TrialBudget
+        let corpusModuleName: String?
+        let emitRegression: Bool
     }
 
     private static func loadIndex(
@@ -123,9 +136,8 @@ extension SwiftInferCommand.Verify {
     private static func runParallelSurvey(
         entries: [SemanticIndexEntry],
         packageRoot: URL,
-        budget: RoundTripStubEmitter.TrialBudget,
         parallelism: Int,
-        corpusModuleName: String? = nil
+        config: SurveyConfig
     ) async {
         var collected: [SurveyRecord] = []
         await withTaskGroup(of: SurveyRecord.self) { group in
@@ -137,10 +149,7 @@ extension SwiftInferCommand.Verify {
                 nextIndex += 1
                 inFlight += 1
                 group.addTask {
-                    surveyRecord(
-                        for: entry, packageRoot: packageRoot,
-                        budget: budget, corpusModuleName: corpusModuleName
-                    )
+                    surveyRecord(for: entry, packageRoot: packageRoot, config: config)
                 }
             }
             // For each completion, drain + add the next.
@@ -153,10 +162,7 @@ extension SwiftInferCommand.Verify {
                     nextIndex += 1
                     inFlight += 1
                     group.addTask {
-                        surveyRecord(
-                            for: entry, packageRoot: packageRoot,
-                            budget: budget, corpusModuleName: corpusModuleName
-                        )
+                        surveyRecord(for: entry, packageRoot: packageRoot, config: config)
                     }
                 }
             }
@@ -188,8 +194,7 @@ extension SwiftInferCommand.Verify {
     private static func surveyRecord(
         for entry: SemanticIndexEntry,
         packageRoot: URL,
-        budget: RoundTripStubEmitter.TrialBudget,
-        corpusModuleName: String? = nil
+        config: SurveyConfig
     ) -> SurveyRecord {
         let context = recordContext(for: entry)
         do {
@@ -197,8 +202,8 @@ extension SwiftInferCommand.Verify {
             // (not declared library deps), so the verifier must path-depend on
             // the corpus package + `import` it. cycle27-surface (library
             // carriers) passes nil and is unaffected.
-            let extraImports = corpusModuleName.map { [$0] } ?? []
-            let userPackage = corpusModuleName.map {
+            let extraImports = config.corpusModuleName.map { [$0] } ?? []
+            let userPackage = config.corpusModuleName.map {
                 VerifierWorkdir.UserPackageReference(
                     packagePath: packageRoot,
                     packageDeclaredName: $0,
@@ -206,7 +211,7 @@ extension SwiftInferCommand.Verify {
                 )
             }
             let stubBundle = try Self.buildStubBundle(
-                entry: entry, budget: budget, extraImports: extraImports
+                entry: entry, budget: config.budget, extraImports: extraImports
             )
             let workdir = packageRoot
                 .appendingPathComponent(".swiftinfer")
@@ -225,31 +230,35 @@ extension SwiftInferCommand.Verify {
             }
             let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
             let parsed = VerifyResultParser.parse(runOutput)
+            emitSurveyRegression(parsed, entry: entry, packageRoot: packageRoot, enabled: config.emitRegression)
             return surveyRecord(from: parsed, context: context)
         } catch let error as VerifyError {
-            // .unsupportedCarrier, .unsupportedPair, .unsupportedTemplate
-            // all map to architectural-coverage-pending — the architecture
-            // is feature-complete for these errors' fix paths
-            // (cycle-46 framing), so the residual is measurement-tooling
-            // gaps, not architectural gaps.
-            return SurveyRecord(
-                identityHash: context.identityHash,
-                templateName: context.templateName,
-                primaryFunctionName: context.primaryFunctionName,
-                carrier: context.carrier,
-                outcome: .architecturalCoveragePending,
-                outcomeDetail: detail(for: error)
-            )
+            // .unsupportedCarrier / .unsupportedPair / .unsupportedTemplate map
+            // to architectural-coverage-pending — the architecture is
+            // feature-complete for these errors' fix paths (cycle-46 framing),
+            // so the residual is measurement-tooling gaps, not architectural.
+            return surveyErrorRecord(context, .architecturalCoveragePending, detail(for: error))
         } catch {
-            return SurveyRecord(
-                identityHash: context.identityHash,
-                templateName: context.templateName,
-                primaryFunctionName: context.primaryFunctionName,
-                carrier: context.carrier,
-                outcome: .measuredError,
-                outcomeDetail: "exception: \(error.localizedDescription)"
-            )
+            return surveyErrorRecord(context, .measuredError, "exception: \(error.localizedDescription)")
         }
+    }
+
+    /// Build a `SurveyRecord` for an error/architectural-pending outcome from
+    /// the entry's context. Extracted so `surveyRecord(for:…)` stays under the
+    /// function-body-length cap.
+    private static func surveyErrorRecord(
+        _ context: RecordContext,
+        _ outcome: SurveyOutcome,
+        _ detail: String?
+    ) -> SurveyRecord {
+        SurveyRecord(
+            identityHash: context.identityHash,
+            templateName: context.templateName,
+            primaryFunctionName: context.primaryFunctionName,
+            carrier: context.carrier,
+            outcome: outcome,
+            outcomeDetail: detail
+        )
     }
 
     /// V1.89 lint pass — extracted from `surveyRecord(for:…)` so the
@@ -283,6 +292,19 @@ extension SwiftInferCommand.Verify {
             outcome: .measuredError,
             outcomeDetail: "build-failed: exit=\(buildOutput.exitCode)"
         )
+    }
+
+    /// V1.142.C — survey-mode auto-bridge (opt-in via `--emit-regression`):
+    /// write a regression test per counterexample. Off by default so a
+    /// full-index survey doesn't flood `Tests/Generated/`.
+    private static func emitSurveyRegression(
+        _ parsed: VerifyOutcome,
+        entry: SemanticIndexEntry,
+        packageRoot: URL,
+        enabled: Bool
+    ) {
+        guard enabled, case let .defaultFails(detail) = parsed else { return }
+        _ = emitRegressionTest(entry: entry, detail: detail, packageRoot: packageRoot)
     }
 
     /// Translate the `VerifyOutcome` (from the parser) into a
