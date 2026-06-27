@@ -94,6 +94,34 @@ struct VerifyCorpusTests {
         #expect(FileManager.default.fileExists(atPath: path.path))
     }
 
+    @Test("store: recordBatch accumulates distinct entries in one write and dedups")
+    func storeRecordBatch() throws {
+        let root = try tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let warnings = VerifyCorpusStore.recordBatch(
+            [
+                Self.entry(counterexample: "1"),
+                Self.entry(counterexample: "2"),
+                Self.entry(counterexample: "1") // dup of the first
+            ],
+            packageRoot: root
+        )
+        #expect(warnings.isEmpty)
+        let corpus = VerifyCorpusStore.load(packageRoot: root).corpus
+        #expect(corpus.entries.count == 2)
+        // A second batch merges into the existing file (accumulate, dedup).
+        _ = VerifyCorpusStore.recordBatch([Self.entry(counterexample: "2"), Self.entry(counterexample: "3")], packageRoot: root)
+        #expect(VerifyCorpusStore.load(packageRoot: root).corpus.entries.count == 3)
+    }
+
+    @Test("store: empty batch is a no-op")
+    func storeEmptyBatch() throws {
+        let root = try tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        #expect(VerifyCorpusStore.recordBatch([], packageRoot: root).isEmpty)
+        #expect(FileManager.default.fileExists(atPath: VerifyCorpusStore.defaultPath(for: root).path) == false)
+    }
+
     @Test("store: re-recording the same counterexample doesn't duplicate; a new one accumulates")
     func storeAccumulates() throws {
         let root = try tempRoot()

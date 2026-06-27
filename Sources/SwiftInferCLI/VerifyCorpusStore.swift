@@ -56,11 +56,20 @@ public enum VerifyCorpusStore {
     /// Best-effort: a write failure returns a warning rather than throwing into
     /// the verify gesture. Returns any load + write warnings.
     public static func record(_ entry: VerifyCorpusEntry, packageRoot: URL) -> [String] {
+        recordBatch([entry], packageRoot: packageRoot)
+    }
+
+    /// Accumulate a batch of entries in a single load → fold-`adding` → write.
+    /// Used by `--all-from-index` survey mode, where per-entry writes during
+    /// the parallel loop would race. Empty batch is a no-op.
+    public static func recordBatch(_ entries: [VerifyCorpusEntry], packageRoot: URL) -> [String] {
+        guard entries.isEmpty == false else { return [] }
         let (existing, warnings) = load(packageRoot: packageRoot)
         var result = warnings
+        let corpus = entries.reduce(existing) { $0.adding($1) }
         let path = defaultPath(for: packageRoot)
         do {
-            try write(existing.adding(entry), to: path)
+            try write(corpus, to: path)
         } catch {
             result.append("could not write verify-corpus to \(path.path): \(error.localizedDescription)")
         }

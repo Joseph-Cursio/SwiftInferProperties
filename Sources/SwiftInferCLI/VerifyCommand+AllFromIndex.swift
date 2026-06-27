@@ -15,43 +15,6 @@ import SwiftInferCore
 /// build-survey.sh fixture script).
 extension SwiftInferCommand.Verify {
 
-    /// V1.50.B classification — one of five outcomes per pick.
-    /// Matches the v1.50 plan's five categories. Encoded as a string
-    /// in the JSON output for human + machine readability.
-    public enum SurveyOutcome: String, Codable, Sendable {
-        case measuredBothPass = "measured-bothPass"
-        case measuredEdgeCaseAdvisory = "measured-edgeCaseAdvisory"
-        case measuredDefaultFails = "measured-defaultFails"
-        case measuredError = "measured-error"
-        case architecturalCoveragePending = "architectural-coverage-pending"
-    }
-
-    /// V1.50.B JSON output record — one per pick.
-    public struct SurveyRecord: Codable, Sendable {
-        public let identityHash: String
-        public let templateName: String
-        public let primaryFunctionName: String
-        public let carrier: String?
-        public let outcome: SurveyOutcome
-        public let outcomeDetail: String?
-
-        public init(
-            identityHash: String,
-            templateName: String,
-            primaryFunctionName: String,
-            carrier: String?,
-            outcome: SurveyOutcome,
-            outcomeDetail: String?
-        ) {
-            self.identityHash = identityHash
-            self.templateName = templateName
-            self.primaryFunctionName = primaryFunctionName
-            self.carrier = carrier
-            self.outcome = outcome
-            self.outcomeDetail = outcomeDetail
-        }
-    }
-
     /// Survey-mode entry point. Iterates the loaded index, runs
     /// verify per-entry in a bounded `TaskGroup`, prints one JSON
     /// record per entry. Each record line is independently valid JSON
@@ -168,9 +131,14 @@ extension SwiftInferCommand.Verify {
             }
             _ = inFlight  // Defensive: silence unused-var if the compiler tracks it.
         }
-        // V1.64.B — persist the survey batch to verify-evidence.json. The
-        // stdout JSON stream is unchanged; this is an additive side file.
-        // One batch timestamp: the survey is one logical measurement run.
+        persistSurveyBatch(collected, packageRoot: packageRoot)
+    }
+
+    /// Persist a completed survey: verify-evidence (one upsert per record) and
+    /// the v1.143 replay corpus (accumulate the default-fail counterexamples).
+    /// One batch timestamp — the survey is one logical measurement run. Both
+    /// writes are best-effort; warnings surface on stderr.
+    private static func persistSurveyBatch(_ collected: [SurveyRecord], packageRoot: URL) {
         let capturedAt = Date()
         let batch = collected.map { record in
             VerifyEvidence(
@@ -182,7 +150,21 @@ extension SwiftInferCommand.Verify {
                 swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
             )
         }
-        for warning in VerifyEvidenceRecorder.recordBatch(batch, packageRoot: packageRoot) {
+        let corpusEntries: [VerifyCorpusEntry] = collected.compactMap { record in
+            guard let counterexample = record.counterexample else { return nil }
+            return VerifyCorpusEntry(
+                identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(record.identityHash),
+                template: record.templateName,
+                counterexample: counterexample,
+                shrunkCounterexample: record.shrunkCounterexample,
+                seed: seedString(for: record.identityHash),
+                capturedAt: capturedAt,
+                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+            )
+        }
+        let warnings = VerifyEvidenceRecorder.recordBatch(batch, packageRoot: packageRoot)
+            + VerifyCorpusStore.recordBatch(corpusEntries, packageRoot: packageRoot)
+        for warning in warnings {
             FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
         }
     }
@@ -315,6 +297,8 @@ extension SwiftInferCommand.Verify {
     ) -> SurveyRecord {
         let outcome: SurveyOutcome
         let detail: String?
+        var counterexample: String?
+        var shrunkCounterexample: String?
         switch parsed {
         case let .bothPass(defaultTrials, edgeTrials, edgeSampled):
             outcome = .measuredBothPass
@@ -327,6 +311,8 @@ extension SwiftInferCommand.Verify {
         case let .defaultFails(failure):
             outcome = .measuredDefaultFails
             detail = "trial=\(failure.trial)"
+            counterexample = failure.input
+            shrunkCounterexample = failure.shrink?.minimal
 
         case let .error(reason):
             outcome = .measuredError
@@ -338,7 +324,9 @@ extension SwiftInferCommand.Verify {
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
             outcome: outcome,
-            outcomeDetail: detail
+            outcomeDetail: detail,
+            counterexample: counterexample,
+            shrunkCounterexample: shrunkCounterexample
         )
     }
 
