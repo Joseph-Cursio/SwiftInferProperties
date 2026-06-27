@@ -90,6 +90,16 @@ public struct TypeDecl: Sendable, Equatable {
     /// exhaustiveness check.
     public let enumCaseNames: [String]
 
+    /// User-declared initializer signatures (primary struct decls). Feeds the
+    /// Tier 6 `initializerBased` derivation when the synthesized memberwise
+    /// init is suppressed. Empty for non-structs and extension records.
+    public let initializers: [InitializerSignature]
+
+    /// Enum cases with associated values (primary enum decls). Feeds the
+    /// Tier 4 `enumCases` derivation. Distinct from `enumCaseNames`, which is
+    /// names-only for the M14 exhaustiveness detector.
+    public let enumCases: [EnumCase]
+
     public init(
         name: String,
         kind: Kind,
@@ -98,7 +108,9 @@ public struct TypeDecl: Sendable, Equatable {
         hasUserGen: Bool = false,
         storedMembers: [StoredMember] = [],
         hasUserInit: Bool = false,
-        enumCaseNames: [String] = []
+        enumCaseNames: [String] = [],
+        initializers: [InitializerSignature] = [],
+        enumCases: [EnumCase] = []
     ) {
         self.name = name
         self.kind = kind
@@ -108,5 +120,7 @@ public struct TypeDecl: Sendable, Equatable {
         self.storedMembers = storedMembers
         self.hasUserInit = hasUserInit
         self.enumCaseNames = enumCaseNames
+        self.initializers = initializers
+        self.enumCases = enumCases
     }
 }

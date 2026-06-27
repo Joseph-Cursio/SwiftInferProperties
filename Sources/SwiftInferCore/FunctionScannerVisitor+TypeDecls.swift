@@ -37,13 +37,21 @@ extension FunctionScannerVisitor {
         // `case` members. The M14.1 detector unions cases across
         // primary + extension records keyed by `name`.
         let enumCaseNames: [String]
+        let enumCases: [EnumCase]
         switch kind {
         case .enum, .extension:
             enumCaseNames = MemberBlockInspector.enumCaseNames(in: memberBlock)
+            enumCases = MemberBlockInspector.enumCases(in: memberBlock)
 
         case .struct, .class, .actor:
             enumCaseNames = []
+            enumCases = []
         }
+        // Tier 6 — init signatures captured for structs only (the only kind
+        // the strategist lifts a memberwise/init generator through).
+        let initializers = (kind == .struct)
+            ? MemberBlockInspector.initializers(in: memberBlock)
+            : []
         return TypeDecl(
             name: name,
             kind: kind,
@@ -52,7 +60,9 @@ extension FunctionScannerVisitor {
             hasUserGen: MemberBlockInspector.hasUserGen(in: memberBlock),
             storedMembers: storedMembers,
             hasUserInit: hasUserInit,
-            enumCaseNames: enumCaseNames
+            enumCaseNames: enumCaseNames,
+            initializers: initializers,
+            enumCases: enumCases
         )
     }
 }

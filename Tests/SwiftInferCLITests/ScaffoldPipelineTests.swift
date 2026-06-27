@@ -70,6 +70,57 @@ struct ScaffoldPipelineTests {
         #expect(outcome.fileText == nil)
     }
 
+    // MARK: - Increment C: user-init structs + payload enums scaffold
+
+    @Test func userInitStructScaffoldsThroughItsInitializer() throws {
+        let dir = try makeFixtureDir([
+            "Money.swift": """
+                struct Money: Equatable {
+                    let amount: Int
+                    let ref: URL
+                    init(amount: Int, ref: URL) {
+                        self.amount = amount
+                        self.ref = ref
+                    }
+                }
+                """
+        ])
+        defer { try? FileManager.default.removeItem(atPath: dir) }
+
+        let outcome = try SwiftInferCommand.Scaffold.scaffold(
+            directory: URL(fileURLWithPath: dir),
+            diagnostics: SilentDiagnostics()
+        )
+        let text = try #require(outcome.fileText)
+        // Lifted through the user init (was non-scaffoldable before Increment C).
+        #expect(text.contains("Money(amount: $0.0, ref: $0.1)"))
+        #expect(text.contains("Gen<Int>.int()"))
+        #expect(text.contains("<#Generator<URL>#>"))
+    }
+
+    @Test func payloadEnumScaffoldsViaOneOf() throws {
+        let dir = try makeFixtureDir([
+            "Shape.swift": """
+                enum Shape: Equatable {
+                    case empty
+                    case circle(radius: Int)
+                    case tagged(URL)
+                }
+                """
+        ])
+        defer { try? FileManager.default.removeItem(atPath: dir) }
+
+        let outcome = try SwiftInferCommand.Scaffold.scaffold(
+            directory: URL(fileURLWithPath: dir),
+            diagnostics: SilentDiagnostics()
+        )
+        let text = try #require(outcome.fileText)
+        #expect(text.contains("Gen.oneOf("))
+        #expect(text.contains("Gen.always(Shape.empty)"))
+        #expect(text.contains("Shape.circle(radius: $0)"))
+        #expect(text.contains("<#Generator<URL>#>"))   // tagged(URL) hole
+    }
+
     // MARK: - Evidence-based hole-filling (renderer)
 
     @Test func evidenceGeneratorRendersSingleArgConstruction() {

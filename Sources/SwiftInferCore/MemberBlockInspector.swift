@@ -77,6 +77,65 @@ enum MemberBlockInspector {
         return result
     }
 
+    /// User-declared initializers (parameters with resolved call labels,
+    /// failable/throwing flags) for the Tier 6 `initializerBased` strategy.
+    /// Async and variadic-parameter inits are skipped — neither composes
+    /// into a synchronous fixed-arity generator. Mirrors the in-tree port
+    /// the discovery plugin uses.
+    static func initializers(in memberBlock: MemberBlockSyntax) -> [InitializerSignature] {
+        var result: [InitializerSignature] = []
+        for member in memberBlock.members {
+            guard let initDecl = member.decl.as(InitializerDeclSyntax.self) else { continue }
+            let effects = initDecl.signature.effectSpecifiers
+            if effects?.asyncSpecifier != nil { continue }
+
+            var parameters: [InitializerParameter] = []
+            var hasVariadic = false
+            for param in initDecl.signature.parameterClause.parameters {
+                if param.ellipsis != nil { hasVariadic = true; break }
+                let firstName = param.firstName.text
+                let label = firstName == "_" ? nil : firstName
+                parameters.append(InitializerParameter(
+                    label: label,
+                    typeName: param.type.trimmedDescription
+                ))
+            }
+            if hasVariadic { continue }
+
+            result.append(InitializerSignature(
+                parameters: parameters,
+                isFailable: initDecl.optionalMark != nil,
+                isThrowing: effects?.throwsClause != nil
+            ))
+        }
+        return result
+    }
+
+    /// Enum cases with their associated values for the Tier 4 `enumCases`
+    /// strategy. Each associated value's label is its first name (the
+    /// construction label), or `nil` when unlabeled.
+    static func enumCases(in memberBlock: MemberBlockSyntax) -> [EnumCase] {
+        var result: [EnumCase] = []
+        for member in memberBlock.members {
+            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
+            for element in caseDecl.elements {
+                var associatedValues: [InitializerParameter] = []
+                if let parameters = element.parameterClause?.parameters {
+                    for param in parameters {
+                        let first = param.firstName?.text
+                        let label = (first == nil || first == "_") ? nil : first
+                        associatedValues.append(InitializerParameter(
+                            label: label,
+                            typeName: param.type.trimmedDescription
+                        ))
+                    }
+                }
+                result.append(EnumCase(name: element.name.text, associatedValues: associatedValues))
+            }
+        }
+        return result
+    }
+
     private static func isStaticOrClass(_ modifiers: DeclModifierListSyntax) -> Bool {
         modifiers.contains { mod in
             mod.name.tokenKind == .keyword(.static) || mod.name.tokenKind == .keyword(.class)

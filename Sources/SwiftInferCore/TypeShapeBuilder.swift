@@ -61,13 +61,18 @@ public enum TypeShapeBuilder {
             + sameFileExtensions.flatMap(\.inheritedTypes)
         let hasUserGen = primary.hasUserGen
             || sameFileExtensions.contains(where: \.hasUserGen)
+        // Enum cases can be added by same-file extensions; union them.
+        let mergedEnumCases = primary.enumCases
+            + sameFileExtensions.flatMap(\.enumCases)
         return TypeShape(
             name: name,
             kind: kind,
             inheritedTypes: mergedInherited,
             hasUserGen: hasUserGen,
             storedMembers: primary.storedMembers,
-            hasUserInit: primary.hasUserInit
+            hasUserInit: primary.hasUserInit,
+            initializers: primary.initializers,
+            enumCases: mergedEnumCases
         )
     }
 }
