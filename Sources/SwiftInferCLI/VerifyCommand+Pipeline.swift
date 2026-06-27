@@ -60,6 +60,7 @@ extension SwiftInferCommand.Verify {
         return renderOutcome(
             parsed: parsed,
             context: stubBundle.rendererContext,
+            entry: entry,
             packageRoot: packageRoot,
             regressionPath: regressionPath
         )
@@ -147,18 +148,29 @@ extension SwiftInferCommand.Verify {
         }
     }
 
-    /// V1.142 — render the outcome, appending the auto-bridge regression-test
-    /// path (already written upstream) when one was produced.
+    /// V1.144 — render the outcome and, for a counterexample, append the
+    /// unified failure block: the auto-bridge regression-test path (written
+    /// upstream), the replayable seed, and the corpus + replay-gate hints — so
+    /// the developer sees the whole loop (minimal counterexample → durable test
+    /// → replay) in one place. Non-failures render unchanged.
     static func renderOutcome(
         parsed: VerifyOutcome,
         context: VerifyResultRenderer.Context,
+        entry: SemanticIndexEntry,
         packageRoot: URL,
         regressionPath: URL?
     ) -> String {
         var rendered = VerifyResultRenderer.render(parsed, context: context)
+        guard case .defaultFails = parsed else { return rendered }
         if let regressionPath {
             rendered += "\n    regression test → \(packageRelative(regressionPath, packageRoot: packageRoot))"
         }
+        rendered += "\n    seed: \(seedString(for: entry.identityHash))"
+        let corpusCount = VerifyCorpusStore.load(packageRoot: packageRoot).corpus.entries.count
+        let prefix = String(entry.identityHash.prefix(10))
+        rendered += "\n    corpus: \(corpusCount) recorded"
+            + " · re-verify: swift-infer verify --suggestion \(prefix)"
+            + " · gate: swift-infer verify --replay-only"
         return rendered
     }
 

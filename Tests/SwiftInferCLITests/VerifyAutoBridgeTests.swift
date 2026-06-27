@@ -101,6 +101,53 @@ struct VerifyAutoBridgeTests {
         #expect(path == nil)
     }
 
+    @Test("v1.144 unified failure block: defaultFails renders seed + corpus + replay hints")
+    func renderOutcomeUnifiedBlock() throws {
+        let root = try tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let context = VerifyResultRenderer.Context(
+            templateName: "idempotence",
+            forwardName: "Int.f",
+            inverseName: "Int.f",
+            carrierType: "Int"
+        )
+        let parsed = VerifyOutcome.defaultFails(
+            trial: 7, input: "999", forwardResult: "a", inverseResult: "b",
+            shrunk: "0", shrinkSteps: 3
+        )
+        let rendered = SwiftInferCommand.Verify.renderOutcome(
+            parsed: parsed,
+            context: context,
+            entry: Self.entry(template: "idempotence"),
+            packageRoot: root,
+            regressionPath: nil
+        )
+        #expect(rendered.contains("seed: "))
+        #expect(rendered.contains("corpus: 0 recorded"))
+        #expect(rendered.contains("re-verify: swift-infer verify --suggestion"))
+        #expect(rendered.contains("gate: swift-infer verify --replay-only"))
+        // The shrink trace from the underlying renderer is still present.
+        #expect(rendered.contains("shrank 3 steps"))
+    }
+
+    @Test("v1.144 unified block is suppressed for non-failing outcomes")
+    func renderOutcomeNoBlockOnPass() throws {
+        let root = try tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let context = VerifyResultRenderer.Context(
+            templateName: "idempotence", forwardName: "Int.f", inverseName: "Int.f", carrierType: "Int"
+        )
+        let rendered = SwiftInferCommand.Verify.renderOutcome(
+            parsed: .bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0),
+            context: context,
+            entry: Self.entry(template: "idempotence"),
+            packageRoot: root,
+            regressionPath: nil
+        )
+        #expect(rendered.contains("seed:") == false)
+        #expect(rendered.contains("corpus:") == false)
+    }
+
     @Test("VerifyEvidence round-trips the v1.142 fields; legacy JSON decodes with nils")
     func evidenceCodableV142Fields() throws {
         let evidence = VerifyEvidence(
