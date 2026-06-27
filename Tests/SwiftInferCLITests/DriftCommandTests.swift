@@ -141,6 +141,44 @@ struct DriftDetectionTests {
         #expect(recording.lines.contains("1 drift warning emitted."))
     }
 
+    /// V1.144 — drift surfaces the replay corpus (count + `--replay-only`
+    /// pointer) so CI knows recorded counterexamples exist to re-check.
+    @Test
+    func driftSurfacesReplayCorpusSummary() throws {
+        let directory = try makeFixtureDirectory(name: "DriftCorpusSummary")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: directory.appendingPathComponent("Package.swift")
+        )
+        let target = try makeTarget(in: directory, contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        _ = VerifyCorpusStore.record(
+            VerifyCorpusEntry(
+                identityHash: "ABCDEF0123456789",
+                template: "idempotence",
+                counterexample: "\"x\"",
+                shrunkCounterexample: nil,
+                seed: "a:b:c:d",
+                capturedAt: Date(timeIntervalSinceReferenceDate: 0),
+                swiftInferVersion: "test"
+            ),
+            packageRoot: directory
+        )
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Drift.run(
+            directory: target,
+            output: RecordingOutput(),
+            diagnostics: diagnostics
+        )
+        #expect(diagnostics.lines.contains { $0.contains("recorded counterexample(s) in the replay corpus") })
+        #expect(diagnostics.lines.contains { $0.contains("--replay-only") })
+    }
+
     @Test
     func driftAfterUpdateBaselineIsSilent() throws {
         let directory = try makeFixtureDirectory(name: "DriftSilentAfterBaseline")

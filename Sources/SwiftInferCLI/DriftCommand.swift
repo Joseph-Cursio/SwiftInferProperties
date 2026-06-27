@@ -128,6 +128,20 @@ extension SwiftInferCommand {
             for drift in warnings {
                 diagnostics.writeDiagnostic(drift.renderedLine())
             }
+            // V1.144 — surface the replay corpus alongside drift. Verify-
+            // disproven picks are already vetoed out of `pipeline.suggestions`
+            // above (v1.68), so their counterexamples live in the corpus, not
+            // the drift warnings; this points CI at the dedicated replay gate.
+            // (A true "new corpus entries since baseline" diff would need a
+            // *corpus* baseline; `baseline.json` snapshots suggestions, not the
+            // corpus, so the regression check lives in `verify --replay-only`.)
+            let corpus = VerifyCorpusStore.load(packageRoot: packageRoot).corpus
+            if corpus.entries.isEmpty == false {
+                diagnostics.writeDiagnostic(
+                    "drift: \(corpus.entries.count) recorded counterexample(s) in the replay corpus"
+                        + " — run `swift-infer verify --replay-only` to re-check them"
+                )
+            }
             if warnings.isEmpty {
                 output.write("No drift detected.")
             } else {
