@@ -101,7 +101,7 @@ extension SwiftInferCommand.Verify {
         let emitRegression: Bool
     }
 
-    private static func loadIndex(
+    static func loadIndex(
         indexPathOverride: String?,
         packageRoot: URL
     ) throws -> IndexStore.Index {
@@ -191,7 +191,7 @@ extension SwiftInferCommand.Verify {
     /// the result to a `SurveyRecord`. Catches all errors and maps
     /// them to `.measuredError` so a single failure doesn't abort
     /// the survey.
-    private static func surveyRecord(
+    static func surveyRecord(
         for entry: SemanticIndexEntry,
         packageRoot: URL,
         config: SurveyConfig

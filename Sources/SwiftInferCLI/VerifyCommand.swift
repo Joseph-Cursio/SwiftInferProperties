@@ -165,10 +165,34 @@ extension SwiftInferCommand {
         )
         public var emitRegression: Bool?
 
+        /// V1.143.B — corpus-first regression gate. Re-checks every recorded
+        /// counterexample in `.swiftinfer/verify-corpus.json` (re-verifying each
+        /// identity, which reproduces the stored counterexample via the
+        /// deterministic seed) and reports still-failing vs now-holding. Exits
+        /// non-zero if any recorded counterexample still fails. Ignores
+        /// `--suggestion` / `--all-from-index`.
+        @Flag(
+            name: .long,
+            help: """
+            Re-check every recorded counterexample in \
+            .swiftinfer/verify-corpus.json (regression gate). Exits non-zero if \
+            any still fail.
+            """
+        )
+        public var replayOnly: Bool = false
+
         public init() { /* no-op */ }
 
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            if replayOnly {
+                try await Self.runReplayOnly(
+                    indexPathOverride: indexPath,
+                    budgetString: budget,
+                    workingDirectory: workingDirectory
+                )
+                return
+            }
             if allFromIndex {
                 if suggestion != nil {
                     throw VerifyError.invalidArguments(
