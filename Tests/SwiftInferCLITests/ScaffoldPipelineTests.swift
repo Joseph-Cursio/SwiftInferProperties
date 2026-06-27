@@ -1,5 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
+import SwiftInferCore
 import Testing
 
 /// `swift-infer scaffold` pipeline: partially-derivable types get a `gen()`
@@ -67,6 +68,55 @@ struct ScaffoldPipelineTests {
             diagnostics: SilentDiagnostics()
         )
         #expect(outcome.fileText == nil)
+    }
+
+    // MARK: - Evidence-based hole-filling (renderer)
+
+    @Test func evidenceGeneratorRendersSingleArgConstruction() {
+        let mock = MockGenerator(
+            typeName: "Customer",
+            argumentSpec: [.init(label: "name", swiftTypeName: "String", observedLiterals: [])],
+            siteCount: 3
+        )
+        #expect(
+            SwiftInferCommand.Scaffold.evidenceGenerator(for: mock)
+                == "Gen<Character>.letterOrNumber.string(of: 0...8).map { Customer(name: $0) }"
+        )
+    }
+
+    @Test func evidenceGeneratorAppliesPreconditionRefinement() {
+        let mock = MockGenerator(
+            typeName: "Page",
+            argumentSpec: [.init(label: "index", swiftTypeName: "Int", observedLiterals: [])],
+            siteCount: 3,
+            preconditionHints: [
+                PreconditionHint(
+                    position: 0, argumentLabel: "index",
+                    pattern: .intRange(low: 1, high: 10),
+                    siteCount: 3, suggestedGenerator: "Gen.int(in: 1...10)"
+                )
+            ]
+        )
+        // The observed bound refines the leaf instead of the default int gen.
+        #expect(
+            SwiftInferCommand.Scaffold.evidenceGenerator(for: mock)
+                == "Gen.int(in: 1...10).map { Page(index: $0) }"
+        )
+    }
+
+    @Test func evidenceGeneratorZipsMultipleArguments() {
+        let mock = MockGenerator(
+            typeName: "Pair",
+            argumentSpec: [
+                .init(label: "a", swiftTypeName: "Int", observedLiterals: []),
+                .init(label: "b", swiftTypeName: "Bool", observedLiterals: [])
+            ],
+            siteCount: 3
+        )
+        #expect(
+            SwiftInferCommand.Scaffold.evidenceGenerator(for: mock)
+                == "zip(Gen<Int>.int(), Gen<Bool>.bool()).map { Pair(a: $0.0, b: $0.1) }"
+        )
     }
 
     // MARK: - Helpers

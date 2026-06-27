@@ -81,17 +81,35 @@ extension SwiftInferCommand {
             let shapesByName = pipeline.typeShapesByName
             let resolver = GeneratorResolver(types: Array(shapesByName.values))
 
+            // Evidence fills: types SwiftInfer observed being constructed in
+            // tests (mock-synthesized) can fill holes that structure can't —
+            // e.g. a user-init type whose construction shape is known only
+            // from the tests. Keyed by type name.
+            let mockByType = Dictionary(
+                pipeline.suggestions.compactMap { suggestion in
+                    suggestion.mockGenerator.map { ($0.typeName, $0) }
+                }
+            ) { first, _ in first }
+            // Filling resolver: structural derivation first, then test evidence.
+            let filling: DerivationStrategist.CustomTypeResolver = { name in
+                if let structural = resolver.customTypeGenerator(forTypeName: name) {
+                    return structural
+                }
+                if let mock = mockByType[name], let expression = evidenceGenerator(for: mock) {
+                    return DerivationStrategist.ComposedGenerator(expression: expression)
+                }
+                return nil
+            }
+
             var stubs: [String] = []
             var names: [String] = []
             for name in shapesByName.keys.sorted() {
                 let shape = shapesByName[name]!
-                // Only scaffold types that don't fully derive.
+                // Only scaffold types that don't fully derive structurally.
                 guard case .todo = DerivationStrategist.strategy(
                     for: shape, resolve: resolver.customTypeGenerator
                 ) else { continue }
-                guard let stub = ScaffoldEmitter.stub(
-                    for: shape, resolve: resolver.customTypeGenerator
-                ) else { continue }
+                guard let stub = ScaffoldEmitter.stub(for: shape, resolve: filling) else { continue }
                 stubs.append(stub)
                 names.append(name)
             }
@@ -102,6 +120,48 @@ extension SwiftInferCommand {
                 fileText: wrap(stubs: stubs, typeCount: names.count),
                 scaffoldedTypeNames: names
             )
+        }
+
+        /// Render a mock-synthesized generator to a bare, comment-free
+        /// expression suitable for inlining into a scaffold slot. Each
+        /// argument uses its inferred precondition generator
+        /// (`Gen.int(in: 1...10)`) when available, else the default for its
+        /// type. Returns `nil` if the domain hint is vetoed or an argument
+        /// can't be rendered.
+        static func evidenceGenerator(for mock: MockGenerator) -> String? {
+            // A domain hint (e.g. `Gen<T>.map(producer)`) is already a bare
+            // expression and is the strongest evidence when unvetoed.
+            if let hint = mock.domainHint, hint.producerVeto == nil {
+                return hint.suggestedGenerator
+            }
+            let type = mock.typeName
+            guard !mock.argumentSpec.isEmpty else {
+                return "Gen<\(type)> { _ in \(type)() }"
+            }
+            let hintByPosition = Dictionary(
+                mock.preconditionHints.map { ($0.position, $0) }
+            ) { first, _ in first }
+            var generators: [String] = []
+            for (position, argument) in mock.argumentSpec.enumerated() {
+                if let hint = hintByPosition[position] {
+                    generators.append(hint.suggestedGenerator)
+                } else if let raw = RawType(typeName: argument.swiftTypeName) {
+                    generators.append(raw.generatorExpression)
+                } else {
+                    return nil
+                }
+            }
+            if generators.count == 1 {
+                let label = mock.argumentSpec[0].label.map { "\($0): " } ?? ""
+                return "\(generators[0]).map { \(type)(\(label)$0) }"
+            }
+            let arguments = mock.argumentSpec.enumerated()
+                .map { position, argument -> String in
+                    let label = argument.label.map { "\($0): " } ?? ""
+                    return "\(label)$0.\(position)"
+                }
+                .joined(separator: ", ")
+            return "zip(\(generators.joined(separator: ", "))).map { \(type)(\(arguments)) }"
         }
 
         static func defaultOutputURL(packageRoot: URL?) -> URL {
