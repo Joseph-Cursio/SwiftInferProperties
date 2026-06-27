@@ -56,6 +56,7 @@ extension SwiftInferCommand.Verify {
             packageRoot: packageRoot,
             regressionPath: regressionPath
         )
+        persistCorpus(parsed: parsed, entry: entry, packageRoot: packageRoot)
         return renderOutcome(
             parsed: parsed,
             context: stubBundle.rendererContext,
@@ -118,6 +119,30 @@ extension SwiftInferCommand.Verify {
             packageRoot: packageRoot
         )
         for warning in recordWarnings {
+            FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
+        }
+    }
+
+    /// V1.143 — accumulate a found counterexample into the durable replay
+    /// corpus (`.swiftinfer/verify-corpus.json`) so it's re-checked on every
+    /// run as a permanent regression guard. Best-effort; only default-fails
+    /// record. (Single-suggestion path; survey-mode batching is a follow-on.)
+    private static func persistCorpus(
+        parsed: VerifyOutcome,
+        entry: SemanticIndexEntry,
+        packageRoot: URL
+    ) {
+        guard case let .defaultFails(detail) = parsed else { return }
+        let record = VerifyCorpusEntry(
+            identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(entry.identityHash),
+            template: entry.templateName,
+            counterexample: detail.input,
+            shrunkCounterexample: detail.shrink?.minimal,
+            seed: seedString(for: entry.identityHash),
+            capturedAt: Date(),
+            swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+        )
+        for warning in VerifyCorpusStore.record(record, packageRoot: packageRoot) {
             FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
         }
     }
