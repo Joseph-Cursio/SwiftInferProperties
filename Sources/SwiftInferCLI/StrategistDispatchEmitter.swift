@@ -213,6 +213,16 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         case let .memberwiseArbitrary(members):
             return try memberwiseRecipe(members: members, carrier: carrier)
 
+        case .initializerBased, .enumCases:
+            // Tier 6 (user-init) and Tier 4 (enum payloads), v3.0.0. Render via
+            // PropertyLawCore's canonical emitter rather than re-implement the
+            // init-lift / `Gen.oneOf` shapes here.
+            return GeneratorRecipe(
+                expression: GeneratorExpressionEmitter.expression(typeName: carrier, strategy: strategy),
+                carrierTypeName: carrier,
+                imports: ["Foundation", "PropertyBased"]
+            )
+
         case let .todo(reason):
             throw VerifyError.unsupportedCarrier(
                 carrier: carrier,

@@ -14,7 +14,7 @@ extension StrategistDispatchEmitter {
         member: MemberSpec,
         carrier: String
     ) -> GeneratorRecipe {
-        let expression = "\(member.rawType.generatorExpression).map { "
+        let expression = "\(member.generatorExpression).map { "
             + "\(carrier)(\(member.name): $0) }"
         return GeneratorRecipe(
             expression: expression,
@@ -30,7 +30,7 @@ extension StrategistDispatchEmitter {
         carrier: String
     ) -> GeneratorRecipe {
         let generators = members
-            .map(\.rawType.generatorExpression)
+            .map(\.generatorExpression)
             .joined(separator: ", ")
         let bindings = (0 ..< members.count)
             .map { "m\($0)" }

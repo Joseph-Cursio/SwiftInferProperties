@@ -80,7 +80,7 @@ let package = Package(
         // backend shrinking (`CheckResult.shrunkFrom` / `shrinkSteps`, the
         // optional `shrink:` on `checkXxxPropertyLaws` + the per-arity law
         // builders) so verify stubs report the *minimal* counterexample.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "2.6.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.0.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
     ],

@@ -75,6 +75,12 @@ public enum GeneratorSelection {
         case .memberwiseArbitrary:
             return (.derivedMemberwise, .medium)
 
+        case .initializerBased:
+            return (.derivedInitializer, .medium)
+
+        case .enumCases:
+            return (.derivedEnumCases, .medium)
+
         case .todo:
             return (.todo, nil)
         }

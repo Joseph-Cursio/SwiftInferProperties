@@ -123,6 +123,8 @@ public struct GeneratorMetadata: Sendable, Equatable {
         case derivedCaseIterable
         case derivedRawRepresentable
         case derivedMemberwise
+        case derivedInitializer
+        case derivedEnumCases
         case derivedCodableRoundTrip
         case registered
         case todo

@@ -211,7 +211,8 @@ public enum SuggestionRenderer {
             return "Generator: not yet computed (M3 prerequisite)"
 
         case .derivedCaseIterable, .derivedRawRepresentable,
-             .derivedMemberwise, .derivedCodableRoundTrip,
+             .derivedMemberwise, .derivedInitializer, .derivedEnumCases,
+             .derivedCodableRoundTrip,
              .registered, .todo, .inferredFromTests:
             let confidenceFragment = meta.confidence.map { ", confidence: .\($0.rawValue)" } ?? ""
             return "Generator: .\(meta.source.rawValue)\(confidenceFragment)"
