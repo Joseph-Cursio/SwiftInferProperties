@@ -21,7 +21,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         All output is suggestions for human review; nothing auto-executes. \
         See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: "1.140.0",
+        version: "1.141.0",
         subcommands: [
             Discover.self,
             Scaffold.self,
@@ -174,6 +174,19 @@ extension SwiftInferCommand {
         )
         public var testDir: String?
 
+        @Option(
+            name: .long,
+            help: """
+            Path to a JSON seed manifest (the `pbt-seeds` output of an external \
+            linter, e.g. `swiftprojectlint … --format pbt-seeds`). When set, \
+            discovery still scans the whole target but the surfaced suggestions \
+            are FOCUSED to functions named in the manifest — the consumer side \
+            of the lint → infer pipeline. A missing or malformed file is an \
+            error; an empty manifest focuses to zero suggestions.
+            """
+        )
+        public var seeds: String?
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -181,6 +194,7 @@ extension SwiftInferCommand {
             let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
             let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }
             let explicitTestDirPath = testDir.map { URL(fileURLWithPath: $0) }
+            let seedManifest = try seeds.map { try Self.loadSeedManifest(at: URL(fileURLWithPath: $0)) }
             try Self.run(
                 directory: directory,
                 includePossible: includePossible,
@@ -192,6 +206,7 @@ extension SwiftInferCommand {
                 dryRun: dryRun,
                 interactive: interactive,
                 updateBaseline: updateBaseline,
+                seedManifest: seedManifest,
                 output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -217,6 +232,7 @@ extension SwiftInferCommand {
             dryRun: Bool = false,
             interactive: Bool = false,
             updateBaseline: Bool = false,
+            seedManifest: SeedManifest? = nil,
             promptInput: any PromptInput = StdinPromptInput(),
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
@@ -235,7 +251,7 @@ extension SwiftInferCommand {
                 verifyEvidenceByIdentity: evidenceByIdentity,
                 diagnostics: diagnostics
             )
-            let visible = pipeline.suggestions
+            let visible = focus(pipeline.suggestions, with: seedManifest, diagnostics: diagnostics)
 
             if interactive, updateBaseline {
                 diagnostics.writeDiagnostic(
@@ -272,50 +288,6 @@ extension SwiftInferCommand {
                 evidenceByIdentity: evidenceByIdentity,
                 output: output
             )
-        }
-
-        /// V1.89 lint pass — render branch extracted from `Discover.run`
-        /// so the orchestrator body stays under SwiftLint's 50-line cap.
-        /// V1.64.C annotation behavior unchanged: when `evidenceByIdentity`
-        /// is empty, blocks render byte-identically to the pre-v1.64 output.
-        private static func renderAndWrite(
-            visible: [Suggestion],
-            statsOnly: Bool,
-            evidenceByIdentity: [String: VerifyEvidence],
-            output: any DiscoverOutput
-        ) {
-            let rendered: String
-            if statsOnly {
-                rendered = SuggestionRenderer.renderStats(visible)
-            } else {
-                rendered = SuggestionRenderer.render(
-                    visible,
-                    verifyEvidenceByIdentity: evidenceByIdentity
-                )
-            }
-            output.write(rendered)
-        }
-
-        /// V1.67 — load persisted `swift-infer verify` evidence so it
-        /// feeds the pipeline's scoring AND its visibility filter:
-        /// `bothPass` raises the score (and can lift a pick past the
-        /// visibility threshold), `defaultFails` vetoes → `.suppressed`
-        /// → dropped by the pipeline's own filter. The returned map
-        /// is reused for the V1.64.C render-time annotation.
-        ///
-        /// V1.89 lint pass — extracted from `Discover.run` so the
-        /// orchestrator body stays under SwiftLint's 50-line cap.
-        private static func loadVerifyEvidenceMap(
-            directory: URL,
-            diagnostics: any DiagnosticOutput
-        ) -> [String: VerifyEvidence] {
-            let evidenceResult = VerifyEvidenceStore.load(startingFrom: directory)
-            for warning in evidenceResult.warnings {
-                diagnostics.writeDiagnostic("warning: \(warning)")
-            }
-            return Dictionary(
-                evidenceResult.log.records.map { ($0.identityHash, $0) }
-            ) { _, latest in latest }
         }
 
         /// V1.89 lint pass — extracted from `Discover.run`. Builds the
