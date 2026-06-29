@@ -66,6 +66,16 @@ extension InteractiveTriage {
         if let liftedOnly = liftedOnlyTestStub(for: suggestion) {
             return liftedOnly
         }
+        // Determinism is the seed-driven generic law (not a signature template),
+        // so it dispatches ahead of the template switch.
+        if suggestion.templateName == "determinism" {
+            return deterministicStub(for: suggestion)
+        }
+        return templateStub(for: suggestion)
+    }
+
+    /// Dispatches a signature-pattern template suggestion to its stub emitter.
+    private static func templateStub(for suggestion: Suggestion) -> String? {
         switch suggestion.templateName {
         case "idempotence":
             return idempotentStub(for: suggestion)
@@ -94,6 +104,26 @@ extension InteractiveTriage {
         default:
             return nil
         }
+    }
+
+    /// Determinism stub for a seeded pure function `f: T -> U`. Scoped to a
+    /// single parameter — the shared emitter calls `f(value)` with one argument,
+    /// so a multi-parameter function returns `nil` (the suggestion still renders,
+    /// it just has no auto-stub yet). Equality keys off the return type.
+    private static func deterministicStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let funcName = functionName(from: evidence.displayName),
+              let paramTypeText = singleParameterType(from: evidence.signature),
+              let returnTypeText = returnType(from: evidence.signature) else {
+            return nil
+        }
+        let seed = SamplingSeed.derive(from: suggestion.identity)
+        return LiftedTestEmitter.deterministic(
+            funcName: funcName,
+            seed: seed,
+            generator: chooseGenerator(for: suggestion, typeName: paramTypeText),
+            equalityKind: equalityKind(forTypeText: returnTypeText)
+        )
     }
 
     private static func idempotentStub(for suggestion: Suggestion) -> String? {

@@ -351,3 +351,31 @@ private func assertTriageSingleArmRecords(
     #expect(stored.decision == expected)
     #expect(result.writtenFiles.isEmpty)
 }
+
+@Suite("InteractiveTriage — singleParameterType extraction (determinism stub gate)")
+struct InteractiveTriageSingleParamTypeTests {
+
+    @Test func returnsTheTypeForASingleParameter() {
+        #expect(InteractiveTriage.singleParameterType(from: "(String) -> Int") == "String")
+    }
+
+    @Test func returnsNilForMultipleParameters() {
+        #expect(InteractiveTriage.singleParameterType(from: "(Money, Money) -> Money") == nil)
+    }
+
+    @Test func returnsNilForZeroParameters() {
+        #expect(InteractiveTriage.singleParameterType(from: "() -> Int") == nil)
+    }
+
+    @Test func keepsAGenericSingleParameterWhole() {
+        // The comma is inside the generic brackets — still one parameter.
+        #expect(
+            InteractiveTriage.singleParameterType(from: "(Dictionary<String, Int>) -> Int")
+                == "Dictionary<String, Int>"
+        )
+    }
+
+    @Test func handlesAnExistentialParameter() {
+        #expect(InteractiveTriage.singleParameterType(from: "(any Backend) -> Env") == "any Backend")
+    }
+}

@@ -31,6 +31,31 @@ extension InteractiveTriage {
         return stripped.isEmpty ? nil : stripped
     }
 
+    /// The single parameter type from a signature, or `nil` if the function has
+    /// zero or more than one parameter. Unlike `paramType(from:)` — which
+    /// returns only the *first* of several — this is for emitters that call
+    /// `f(value)` with exactly one argument. Bracket-depth aware, so a generic
+    /// single parameter (`(Dictionary<String, Int>) -> Int`) is not mistaken for
+    /// two.
+    static func singleParameterType(from signature: String) -> String? {
+        guard let open = signature.firstIndex(of: "(") else { return nil }
+        let upperBound = signature.range(of: "->")?.lowerBound ?? signature.endIndex
+        guard let close = signature[..<upperBound].lastIndex(of: ")") else { return nil }
+        let inside = signature[signature.index(after: open)..<close]
+            .trimmingCharacters(in: .whitespaces)
+        if inside.isEmpty { return nil }
+        var depth = 0
+        for character in inside {
+            switch character {
+            case "<", "[", "(": depth += 1
+            case ">", "]", ")": depth -= 1
+            case "," where depth == 0: return nil // more than one parameter
+            default: break
+            }
+        }
+        return inside
+    }
+
     /// Pull the return type out of a signature like
     /// `"(String) -> Int"` — returns `"Int"`. Strips any trailing
     /// `preserving X` clause (`InvariantPreservationTemplate`) or

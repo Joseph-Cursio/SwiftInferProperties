@@ -69,6 +69,35 @@ struct LiftedTestEmitterTests {
         #expect(source == expected)
     }
 
+    // MARK: - deterministic(...)
+
+    @Test
+    func deterministicEmitsRunnableStub() {
+        let seed = SamplingSeed.Value(stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4)
+        let source = LiftedTestEmitter.deterministic(
+            funcName: "describe",
+            seed: seed,
+            generator: "Gen<Int>.int()"
+        )
+        #expect(source.contains("@Test func describe_isDeterministic() async {"))
+        #expect(source.contains("trials: 100"))
+        #expect(source.contains("sample: { rng in (Gen<Int>.int()).run(&rng) }"))
+        #expect(source.contains("property: { value in describe(value) == describe(value) }"))
+        #expect(source.contains("is not deterministic"))
+    }
+
+    @Test
+    func deterministicUsesApproximateEqualityForFloatingPointReturn() {
+        let seed = SamplingSeed.Value(stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4)
+        let source = LiftedTestEmitter.deterministic(
+            funcName: "scale",
+            seed: seed,
+            generator: "Gen<Int>.int()",
+            equalityKind: .approximate
+        )
+        #expect(source.contains("scale(value).isApproximatelyEqual(to: scale(value))"))
+    }
+
     // MARK: - roundTrip(...) byte-stable golden
 
     @Test
