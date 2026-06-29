@@ -23,6 +23,10 @@ public struct Signal: Sendable, Equatable {
         case crossValidation
         case samplingPass
         case selfComposition
+        /// The function was supplied as a lint seed (external evidence of
+        /// purity), which justifies the generic determinism law `f(x) == f(x)`.
+        /// Seed-driven rather than inferred from the signature.
+        case deterministicPurity
 
         // Negative (non-veto)
         case sideEffectPenalty

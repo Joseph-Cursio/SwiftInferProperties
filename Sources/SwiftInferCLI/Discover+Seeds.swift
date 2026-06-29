@@ -31,22 +31,30 @@ extension SwiftInferCommand.Discover {
     /// unknown schema version, and reports the focus ratio to stderr so stdout
     /// stays a clean suggestion stream.
     static func focus(
-        _ suggestions: [Suggestion],
+        _ pipeline: PipelineResult,
         with seedManifest: SeedManifest?,
         diagnostics: any DiagnosticOutput
     ) -> [Suggestion] {
-        guard let seedManifest else { return suggestions }
+        guard let seedManifest else { return pipeline.suggestions }
         if seedManifest.version != SeedManifest.supportedVersion {
             diagnostics.writeDiagnostic(
                 "warning: seeds manifest version \(seedManifest.version) is not the supported "
                     + "version \(SeedManifest.supportedVersion); consuming best-effort"
             )
         }
-        let focused = SeedFocus.filter(suggestions, to: seedManifest)
+        let focused = SeedFocus.filter(pipeline.suggestions, to: seedManifest)
         diagnostics.writeDiagnostic(
             "focused on \(seedManifest.seeds.count) seed(s): kept \(focused.count) "
-                + "of \(suggestions.count) suggestion(s)"
+                + "of \(pipeline.suggestions.count) suggestion(s)"
         )
-        return focused
+        // Broaden: a seeded pure function that no template matched still earns
+        // the generic determinism law, so `--seeds` always surfaces something.
+        let generic = synthesizeGenericLaws(
+            for: seedManifest,
+            summaries: pipeline.summaries,
+            covered: focused,
+            diagnostics: diagnostics
+        )
+        return focused + generic
     }
 }

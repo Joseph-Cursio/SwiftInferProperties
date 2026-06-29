@@ -99,6 +99,83 @@ struct DiscoverPipelineSeedsTests {
         #expect(diagnostics.lines.contains { $0.contains("version 99 is not the supported version 1") })
     }
 
+    // MARK: - Generic laws (broaden discover: seeded pure fn → determinism)
+
+    @Test("Synthesizes a determinism law for a seeded function no template matched")
+    func synthesizesDeterminismForUncoveredSeed() throws {
+        let directory = try writeDPFixture(name: "GenericLaw", contents: """
+        func describe(_ n: Int, prefix: String) -> String { prefix + "\\(n)" }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "describe")])
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Template: determinism"))
+        #expect(recording.text.contains("describe(_:prefix:)"))
+        #expect(recording.text.contains("f(x) == f(x)"))
+        #expect(diagnostics.lines.contains { $0.contains("synthesized 1 generic determinism law") })
+    }
+
+    @Test("Skips the determinism law when a template already covers the seeded function")
+    func skipsDeterminismWhenTemplateCovers() throws {
+        let directory = try writeDPFixture(name: "GenericCovered", contents: """
+        func normalize(_ value: String) -> String { normalize(normalize(value)) }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "normalize")])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording
+        )
+        #expect(recording.text.contains("Template: idempotence"))
+        #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    @Test("Determinism requires a total, free/static, value-returning function")
+    func determinismQualificationFilters() throws {
+        let directory = try writeDPFixture(name: "GenericQualify", contents: """
+        func risky(_ s: String) throws -> Int { Int(s) ?? 0 }
+        struct Box { func get(_ key: String) -> Int { 0 } }
+        func noParams() -> Int { 0 }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 1, symbol: "risky"),
+            .init(file: "Source.swift", line: 2, symbol: "get"),
+            .init(file: "Source.swift", line: 3, symbol: "noParams")
+        ])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording
+        )
+        // Throwing, instance-method, and no-parameter functions are all excluded.
+        #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    @Test("No determinism laws without a seed manifest")
+    func noDeterminismWithoutSeeds() throws {
+        let directory = try writeDPFixture(name: "GenericNoSeeds", contents: """
+        func describe(_ n: Int, prefix: String) -> String { prefix + "\\(n)" }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(directory: directory, includePossible: false, output: recording)
+        #expect(recording.text.contains("Template: determinism") == false)
+    }
+
     // MARK: - loadSeedManifest
 
     @Test("loadSeedManifest decodes a producer-shaped manifest")

@@ -59,6 +59,13 @@ extension SwiftInferCommand.Discover {
         /// ones. The scaffold pass uses these to fill holes structure can't.
         public let mockGeneratorsByType: [String: MockGenerator]
 
+        /// Every function the discover pass scanned. Surfaced so the
+        /// `--seeds` path can synthesize generic laws (e.g. determinism) for a
+        /// seeded function that no signature-pattern template matched — the
+        /// seed (lint evidence of purity) is what justifies the law, so it
+        /// lives outside the template engine.
+        public let summaries: [FunctionSummary]
+
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
@@ -66,7 +73,8 @@ extension SwiftInferCommand.Discover {
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
-            mockGeneratorsByType: [String: MockGenerator] = [:]
+            mockGeneratorsByType: [String: MockGenerator] = [:],
+            summaries: [FunctionSummary] = []
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
@@ -75,6 +83,7 @@ extension SwiftInferCommand.Discover {
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.typeShapesByName = typeShapesByName
             self.mockGeneratorsByType = mockGeneratorsByType
+            self.summaries = summaries
         }
     }
 
@@ -135,7 +144,8 @@ extension SwiftInferCommand.Discover {
             equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
             consumerProducerChainHintsByIdentity: hints.chainHints,
             typeShapesByName: hints.typeShapesByName,
-            mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord)
+            mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
+            summaries: artifacts.summaries
         )
     }
 

@@ -21,7 +21,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         All output is suggestions for human review; nothing auto-executes. \
         See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: "1.141.0",
+        version: "1.142.0",
         subcommands: [
             Discover.self,
             Scaffold.self,
@@ -181,8 +181,10 @@ extension SwiftInferCommand {
             linter, e.g. `swiftprojectlint … --format pbt-seeds`). When set, \
             discovery still scans the whole target but the surfaced suggestions \
             are FOCUSED to functions named in the manifest — the consumer side \
-            of the lint → infer pipeline. A missing or malformed file is an \
-            error; an empty manifest focuses to zero suggestions.
+            of the lint → infer pipeline. A seeded pure function that no template \
+            matched still earns the generic determinism law (f(x) == f(x)). A \
+            missing or malformed file is an error; an empty manifest focuses to \
+            zero suggestions.
             """
         )
         public var seeds: String?
@@ -251,7 +253,7 @@ extension SwiftInferCommand {
                 verifyEvidenceByIdentity: evidenceByIdentity,
                 diagnostics: diagnostics
             )
-            let visible = focus(pipeline.suggestions, with: seedManifest, diagnostics: diagnostics)
+            let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)
 
             if interactive, updateBaseline {
                 diagnostics.writeDiagnostic(
