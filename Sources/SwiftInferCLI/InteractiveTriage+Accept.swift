@@ -123,10 +123,11 @@ extension InteractiveTriage {
         }
     }
 
-    /// Determinism stub for a seeded pure function `f: T -> U`. Scoped to a
-    /// single parameter — the shared emitter calls `f(value)` with one argument,
-    /// so a multi-parameter function returns `nil` (the suggestion still renders,
-    /// it just has no auto-stub yet). Equality keys off the return type.
+    /// Determinism stub for a seeded pure function `f: (P0, …) -> U`. Builds one
+    /// generator per parameter and emits `f(args) == f(args)`. Equality keys off
+    /// the return type. An `Int` parameter uses a *bounded* generator (see
+    /// `boundedDeterminismGenerator`) so unchecked arithmetic in `f` doesn't trap
+    /// on overflow.
     private static func deterministicStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)? = nil
@@ -143,11 +144,12 @@ extension InteractiveTriage {
         let parameters = parsed.map { parameter in
             LiftedTestEmitter.DeterminismParameter(
                 label: parameter.label,
-                generator: chooseGenerator(
-                    for: suggestion,
-                    typeName: parameter.type,
-                    customGenerator: customGenerator
-                )
+                generator: boundedDeterminismGenerator(forTypeName: parameter.type)
+                    ?? chooseGenerator(
+                        for: suggestion,
+                        typeName: parameter.type,
+                        customGenerator: customGenerator
+                    )
             )
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -157,6 +159,26 @@ extension InteractiveTriage {
             seed: seed,
             equalityKind: equalityKind(forTypeText: returnTypeText)
         )
+    }
+
+    /// A bounded generator for a numeric parameter type in a *determinism* stub,
+    /// or `nil` for non-numeric types (the caller then chooses normally).
+    ///
+    /// The determinism law `f(x) == f(x)` is a tautology for a pure function, so
+    /// it reveals hidden nondeterminism on *any* input — a narrow domain loses no
+    /// coverage. Bounding `Int` to ±10_000 keeps unchecked arithmetic (`a * b`,
+    /// `a + b`) from overflow-trapping on the full-range extremes a default
+    /// `Gen<Int>.int()` would draw, which would crash the test rather than
+    /// falsify the law. (Other templates keep full-range generators, where
+    /// extremes do matter.)
+    static func boundedDeterminismGenerator(forTypeName typeName: String) -> String? {
+        switch typeName {
+        case "Int":
+            return "Gen<Int>.int(in: -10_000 ... 10_000)"
+
+        default:
+            return nil
+        }
     }
 
     private static func idempotentStub(for suggestion: Suggestion) -> String? {
