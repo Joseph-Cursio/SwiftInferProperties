@@ -270,6 +270,14 @@ let package = Package(
         .testTarget(
             name: "SwiftInferIntegrationTests",
             dependencies: ["SwiftInferTemplates", "SwiftInferTestLifter", "SwiftInferCore", "SwiftInferCLI"]
+        ),
+        // Wall-clock performance budgets, isolated in their own target so their
+        // load-sensitive flakiness can't fail a correctness run. Skip them with
+        // `swift test --skip SwiftInferPerformanceTests`; run them on their own
+        // with `swift test --filter SwiftInferPerformanceTests`.
+        .testTarget(
+            name: "SwiftInferPerformanceTests",
+            dependencies: ["SwiftInferTemplates", "SwiftInferTestLifter", "SwiftInferCore", "SwiftInferCLI"]
         )
     ]
 )
