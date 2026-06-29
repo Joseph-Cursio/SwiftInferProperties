@@ -14,6 +14,13 @@ extension InteractiveTriage {
     ) -> String {
         let location = suggestion.evidence.first?.location
         let sourceLine = location.map { loc in "// Source: \(loc.file):\(loc.line)" } ?? ""
+        // Import the module under test so the generated file compiles drop-in.
+        // `@testable` reaches internal functions (the common case for the free /
+        // internal helpers seeds point at). Derived from the SPM source layout;
+        // absent for non-`Sources/` paths so synthetic fixtures are unaffected.
+        let moduleImport = location
+            .flatMap { Self.moduleName(fromSourceFile: $0.file) }
+            .map { "@testable import \($0)\n" } ?? ""
         let liftedLine = suggestion.liftedOrigin.map { origin in
             "// Lifted from \(origin.sourceLocation.file):\(origin.sourceLocation.line)"
                 + " \(origin.testMethodName)()"
@@ -59,8 +66,23 @@ extension InteractiveTriage {
         \(foundationImport)import Testing
         import PropertyBased
         import PropertyLawKit
-        \(stub)
+        \(moduleImport)\(stub)
         """
+    }
+
+    /// The module under test, derived from a source file path laid out the SPM
+    /// way (`.../Sources/<Module>/<File>.swift`). Returns `nil` for paths with no
+    /// `Sources/` component (e.g. unit-test fixtures), so the `@testable import`
+    /// is added only when it can be inferred — keeping generated tests drop-in
+    /// compilable for real packages without guessing for synthetic ones.
+    static func moduleName(fromSourceFile path: String) -> String? {
+        let components = path.split(separator: "/").map(String.init)
+        guard let sourcesIndex = components.lastIndex(of: "Sources"),
+              sourcesIndex + 1 < components.count else {
+            return nil
+        }
+        let candidate = components[sourcesIndex + 1]
+        return candidate.hasSuffix(".swift") ? nil : candidate
     }
 
     static func stubFileName(for suggestion: Suggestion) -> String? {
