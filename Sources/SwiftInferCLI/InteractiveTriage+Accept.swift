@@ -113,16 +113,24 @@ extension InteractiveTriage {
     private static func deterministicStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
-              let paramTypeText = singleParameterType(from: evidence.signature),
-              let returnTypeText = returnType(from: evidence.signature) else {
+              let returnTypeText = returnType(from: evidence.signature),
+              let parsed = functionParameters(
+                  displayName: evidence.displayName,
+                  signature: evidence.signature
+              ) else {
             return nil
+        }
+        let parameters = parsed.map { parameter in
+            LiftedTestEmitter.DeterminismParameter(
+                label: parameter.label,
+                generator: chooseGenerator(for: suggestion, typeName: parameter.type)
+            )
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.deterministic(
             funcName: funcName,
-            argumentLabel: singleArgumentLabel(from: evidence.displayName),
+            parameters: parameters,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: paramTypeText),
             equalityKind: equalityKind(forTypeText: returnTypeText)
         )
     }

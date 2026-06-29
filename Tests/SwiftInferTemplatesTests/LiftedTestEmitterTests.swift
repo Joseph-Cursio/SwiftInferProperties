@@ -70,13 +70,16 @@ struct LiftedTestEmitterTests {
 
     // MARK: - deterministic(...)
 
+    private static let determinismSeed = SamplingSeed.Value(
+        stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4
+    )
+
     @Test
-    func deterministicEmitsRunnableStub() {
-        let seed = SamplingSeed.Value(stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4)
+    func deterministicEmitsRunnableStubForSingleParam() {
         let source = LiftedTestEmitter.deterministic(
             funcName: "describe",
-            seed: seed,
-            generator: "Gen<Int>.int()"
+            parameters: [.init(label: nil, generator: "Gen<Int>.int()")],
+            seed: Self.determinismSeed
         )
         #expect(source.contains("@Test func describe_isDeterministic() async {"))
         #expect(source.contains("trials: 100"))
@@ -86,13 +89,11 @@ struct LiftedTestEmitterTests {
     }
 
     @Test
-    func deterministicEmitsArgumentLabelForLabeledFunction() {
-        let seed = SamplingSeed.Value(stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4)
+    func deterministicEmitsArgumentLabelForLabeledSingleParam() {
         let source = LiftedTestEmitter.deterministic(
             funcName: "memberGenerator",
-            argumentLabel: "forTypeName",
-            seed: seed,
-            generator: "Gen<Character>.letterOrNumber.string(of: 0...8)"
+            parameters: [.init(label: "forTypeName", generator: "Gen<Character>.letterOrNumber.string(of: 0...8)")],
+            seed: Self.determinismSeed
         )
         #expect(source.contains(
             "memberGenerator(forTypeName: value) == memberGenerator(forTypeName: value)"
@@ -101,14 +102,33 @@ struct LiftedTestEmitterTests {
 
     @Test
     func deterministicUsesApproximateEqualityForFloatingPointReturn() {
-        let seed = SamplingSeed.Value(stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4)
         let source = LiftedTestEmitter.deterministic(
             funcName: "scale",
-            seed: seed,
-            generator: "Gen<Int>.int()",
+            parameters: [.init(label: nil, generator: "Gen<Int>.int()")],
+            seed: Self.determinismSeed,
             equalityKind: .approximate
         )
         #expect(source.contains("scale(value).isApproximatelyEqual(to: scale(value))"))
+    }
+
+    @Test
+    func deterministicEmitsTupleDrawForMultipleParams() {
+        let source = LiftedTestEmitter.deterministic(
+            funcName: "combine",
+            parameters: [
+                .init(label: nil, generator: "Gen<Int>.int()"),
+                .init(label: "with", generator: "Gen<Character>.letterOrNumber.string(of: 0...8)")
+            ],
+            seed: Self.determinismSeed
+        )
+        // One draw per parameter, returned as a tuple.
+        #expect(source.contains("let arg0 = (Gen<Int>.int()).run(using: &rng)"))
+        #expect(source.contains(
+            "let arg1 = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(using: &rng)"
+        ))
+        #expect(source.contains("return (arg0, arg1)"))
+        // The call applies each label positionally from the tuple.
+        #expect(source.contains("combine(args.0, with: args.1) == combine(args.0, with: args.1)"))
     }
 
     // MARK: - roundTrip(...) byte-stable golden
@@ -253,6 +273,10 @@ struct LiftedTestEmitterM7Tests {
 
     // MARK: - invariantPreserving(...) byte-stable golden (M7.3)
 
+    // The expected block is a byte-stable copy of emitted output; the keypath
+    // failure message is legitimately one long line, so line_length is disabled
+    // for this golden only.
+    // swiftlint:disable line_length
     @Test
     func invariantPreservingEmitsByteStableTestStub() {
         let seed = SamplingSeed.Value(
@@ -293,6 +317,7 @@ struct LiftedTestEmitterM7Tests {
             """
         #expect(source == expected)
     }
+    // swiftlint:enable line_length
 
     @Test
     func invariantPreservingSanitizesNestedKeypathInTestName() {

@@ -31,44 +31,75 @@ extension InteractiveTriage {
         return stripped.isEmpty ? nil : stripped
     }
 
-    /// The single parameter's external label from a display name like
-    /// `memberGenerator(forTypeName:)` → `"forTypeName"`. Returns `nil` for an
-    /// `_`-labeled parameter (`describe(_:)`) so the caller emits a bare
-    /// argument. Used by the determinism stub to build a call that compiles for
-    /// labeled functions.
-    static func singleArgumentLabel(from displayName: String) -> String? {
+    /// The external labels of a function's parameters from a display name like
+    /// `add(_:other:)` → `[nil, "other"]`. `_` becomes `nil` so the caller emits
+    /// a bare argument. Empty for a no-parameter function.
+    static func parameterLabels(from displayName: String) -> [String?] {
         guard let open = displayName.firstIndex(of: "("),
-              let colon = displayName[open...].firstIndex(of: ":") else {
-            return nil
+              let close = displayName[open...].firstIndex(of: ")") else {
+            return []
         }
-        let label = displayName[displayName.index(after: open)..<colon]
-            .trimmingCharacters(in: .whitespaces)
-        return (label.isEmpty || label == "_") ? nil : label
+        let inside = displayName[displayName.index(after: open)..<close]
+        if inside.isEmpty { return [] }
+        // Labels are colon-terminated: `_:other:` → ["_", "other"].
+        return inside
+            .split(separator: ":", omittingEmptySubsequences: false)
+            .dropLast()
+            .map { raw in
+                let label = raw.trimmingCharacters(in: .whitespaces)
+                return (label.isEmpty || label == "_") ? nil : label
+            }
     }
 
-    /// The single parameter type from a signature, or `nil` if the function has
-    /// zero or more than one parameter. Unlike `paramType(from:)` — which
-    /// returns only the *first* of several — this is for emitters that call
-    /// `f(value)` with exactly one argument. Bracket-depth aware, so a generic
-    /// single parameter (`(Dictionary<String, Int>) -> Int`) is not mistaken for
-    /// two.
-    static func singleParameterType(from signature: String) -> String? {
-        guard let open = signature.firstIndex(of: "(") else { return nil }
+    /// The parameter types of a function from a signature like
+    /// `(Int, Dictionary<String, Int>) -> R` → `["Int", "Dictionary<String, Int>"]`.
+    /// Bracket-depth aware, so a comma inside a generic / tuple / closure
+    /// parameter doesn't split it. Empty for a no-parameter function.
+    static func parameterTypes(from signature: String) -> [String] {
+        guard let open = signature.firstIndex(of: "(") else { return [] }
         let upperBound = signature.range(of: "->")?.lowerBound ?? signature.endIndex
-        guard let close = signature[..<upperBound].lastIndex(of: ")") else { return nil }
+        guard let close = signature[..<upperBound].lastIndex(of: ")") else { return [] }
         let inside = signature[signature.index(after: open)..<close]
             .trimmingCharacters(in: .whitespaces)
-        if inside.isEmpty { return nil }
+        if inside.isEmpty { return [] }
+        var types: [String] = []
         var depth = 0
+        var current = ""
         for character in inside {
             switch character {
-            case "<", "[", "(": depth += 1
-            case ">", "]", ")": depth -= 1
-            case "," where depth == 0: return nil // more than one parameter
-            default: break
+            case "<", "[", "(":
+                depth += 1
+                current.append(character)
+
+            case ">", "]", ")":
+                depth -= 1
+                current.append(character)
+
+            case "," where depth == 0:
+                types.append(current.trimmingCharacters(in: .whitespaces))
+                current = ""
+
+            default:
+                current.append(character)
             }
         }
-        return inside
+        let last = current.trimmingCharacters(in: .whitespaces)
+        if last.isEmpty == false { types.append(last) }
+        return types
+    }
+
+    /// Pairs each parameter's label with its type, or `nil` when the function
+    /// has no parameters or the label/type counts disagree (a parse the emitter
+    /// shouldn't trust). Used by the determinism stub to build the call for any
+    /// arity.
+    static func functionParameters(
+        displayName: String,
+        signature: String
+    ) -> [(label: String?, type: String)]? {
+        let labels = parameterLabels(from: displayName)
+        let types = parameterTypes(from: signature)
+        guard types.isEmpty == false, labels.count == types.count else { return nil }
+        return zip(labels, types).map { pair in (label: pair.0, type: pair.1) }
     }
 
     /// Pull the return type out of a signature like
