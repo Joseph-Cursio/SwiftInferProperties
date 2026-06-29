@@ -35,16 +35,15 @@ struct LiftedTestEmitterM8Tests {
                     trials: 100,
                     seed: seed,
                     sample: { rng in
-                                let lhs = (IntSet.gen()).run(&rng)
-                                let rhs = (IntSet.gen()).run(&rng)
+                                let lhs = (IntSet.gen()).run(using: &rng)
+                                let rhs = (IntSet.gen()).run(using: &rng)
                                 return (lhs, rhs)
                             },
                     property: { pair in merge(pair.0, pair.1) == merge(pair.1, pair.0) }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "merge(_:_:) failed commutativity at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "merge(_:_:) failed commutativity at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -82,9 +81,9 @@ struct LiftedTestEmitterM8Tests {
                     trials: 100,
                     seed: seed,
                     sample: { rng in
-                                let one = (IntSet.gen()).run(&rng)
-                                let two = (IntSet.gen()).run(&rng)
-                                let three = (IntSet.gen()).run(&rng)
+                                let one = (IntSet.gen()).run(using: &rng)
+                                let two = (IntSet.gen()).run(using: &rng)
+                                let three = (IntSet.gen()).run(using: &rng)
                                 return (one, two, three)
                             },
                     property: { triple in
@@ -94,8 +93,7 @@ struct LiftedTestEmitterM8Tests {
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "merge(_:_:) failed associativity at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "merge(_:_:) failed associativity at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -133,13 +131,12 @@ struct LiftedTestEmitterM8Tests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in (IntSet.gen()).run(&rng) },
+                    sample: { rng in (IntSet.gen()).run(using: &rng) },
                     property: { value in merge(value, IntSet.empty) == value && merge(IntSet.empty, value) == value }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "merge(_:_:) failed identity-element IntSet.empty at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "merge(_:_:) failed identity-element IntSet.empty at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -177,13 +174,12 @@ struct LiftedTestEmitterM8Tests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in (MyType.gen()).run(&rng) },
+                    sample: { rng in (MyType.gen()).run(using: &rng) },
                     property: { value in decode(encode(value)) == value }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "encode/decode inverse-pair failed at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "encode/decode inverse-pair failed at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }

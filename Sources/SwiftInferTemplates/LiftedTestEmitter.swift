@@ -107,8 +107,8 @@ public enum LiftedTestEmitter {
         // T must conform to Comparable for this sample to typecheck.
         let sample = [
             "{ rng in",
-            "                    let lhs = (\(generator)).run(&rng)",
-            "                    let rhs = (\(generator)).run(&rng)",
+            "                    let lhs = (\(generator)).run(using: &rng)",
+            "                    let rhs = (\(generator)).run(using: &rng)",
             "                    return lhs < rhs ? (lhs, rhs) : (rhs, lhs)",
             "                }"
         ].joined(separator: "\n")
@@ -142,8 +142,8 @@ public enum LiftedTestEmitter {
         // share the same indentation envelope. Two values, no sort.
         let sample = [
             "{ rng in",
-            "                    let lhs = (\(generator)).run(&rng)",
-            "                    let rhs = (\(generator)).run(&rng)",
+            "                    let lhs = (\(generator)).run(using: &rng)",
+            "                    let rhs = (\(generator)).run(using: &rng)",
             "                    return (lhs, rhs)",
             "                }"
         ].joined(separator: "\n")
@@ -176,9 +176,9 @@ public enum LiftedTestEmitter {
         // commutative for visual consistency across the binary-op arms.
         let sample = [
             "{ rng in",
-            "                    let one = (\(generator)).run(&rng)",
-            "                    let two = (\(generator)).run(&rng)",
-            "                    let three = (\(generator)).run(&rng)",
+            "                    let one = (\(generator)).run(using: &rng)",
+            "                    let two = (\(generator)).run(using: &rng)",
+            "                    let three = (\(generator)).run(using: &rng)",
             "                    return (one, two, three)",
             "                }"
         ].joined(separator: "\n")
@@ -220,7 +220,7 @@ public enum LiftedTestEmitter {
         let testFunctionName = "\(funcName)_hasIdentity_\(identityName)"
         // Single-value sample — the identity is constant in the body
         // (referenced via `\(typeName).\(identityName)`), so the
-        // canonical `{ rng in (generator).run(&rng) }` shape applies.
+        // canonical `{ rng in (generator).run(using: &rng) }` shape applies.
         let property = "\(funcName)(value, \(typeName).\(identityName)) == value"
             + " && \(funcName)(\(typeName).\(identityName), value) == value"
         let failureLabel = "\(funcName)(_:_:) failed identity-element \(typeName).\(identityName)"
@@ -285,7 +285,7 @@ public enum LiftedTestEmitter {
         _ = typeName
         let suffix = sanitizeKeyPathForIdentifier(invariantName)
         let testFunctionName = "\(funcName)_preservesInvariant_\(suffix)"
-        let sample = "{ rng in (\(generator)).run(&rng) }"
+        let sample = "{ rng in (\(generator)).run(using: &rng) }"
         let property = "{ value in !value[keyPath: \(invariantName)] || "
             + "\(funcName)(value)[keyPath: \(invariantName)] }"
         let failureLabel = "\(funcName)(_:) failed invariant preservation \(invariantName)"
@@ -306,7 +306,7 @@ extension LiftedTestEmitter {
     // MARK: - Shared stub shape
 
     /// Convenience overload for unary-property arms — wraps the canonical
-    /// `{ rng in (generator).run(&rng) }` sample and a single-value
+    /// `{ rng in (generator).run(using: &rng) }` sample and a single-value
     /// property closure, then forwards to `makeTestStubExpression`.
     private static func makeTestStub(
         testFunctionName: String,
@@ -315,7 +315,7 @@ extension LiftedTestEmitter {
         propertyExpression: String,
         failureLabel: String
     ) -> String {
-        let sample = "{ rng in (\(generator)).run(&rng) }"
+        let sample = "{ rng in (\(generator)).run(using: &rng) }"
         let property = "{ value in \(propertyExpression) }"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
@@ -355,8 +355,7 @@ extension LiftedTestEmitter {
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(failureLabel) at input \\(input)."
-                        + " \\(error?.message ?? \\"\\")"
+                    "\(failureLabel) at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }

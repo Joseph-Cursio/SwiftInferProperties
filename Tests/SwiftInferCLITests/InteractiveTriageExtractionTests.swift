@@ -30,6 +30,16 @@ struct InteractiveTriageSingleParamTypeTests {
     @Test func handlesAnExistentialParameter() {
         #expect(InteractiveTriage.singleParameterType(from: "(any Backend) -> Env") == "any Backend")
     }
+
+    @Test func extractsSingleArgumentLabel() {
+        #expect(InteractiveTriage.singleArgumentLabel(from: "memberGenerator(forTypeName:)") == "forTypeName")
+        #expect(InteractiveTriage.singleArgumentLabel(from: "from(typeName:)") == "typeName")
+    }
+
+    @Test func returnsNilForUnlabeledArgument() {
+        #expect(InteractiveTriage.singleArgumentLabel(from: "describe(_:)") == nil)
+        #expect(InteractiveTriage.singleArgumentLabel(from: "add(_:_:)") == nil)
+    }
 }
 
 @Suite("InteractiveTriage — module import in generated stubs (#1 drop-in compile)")

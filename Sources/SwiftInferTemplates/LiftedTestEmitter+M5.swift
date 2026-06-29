@@ -32,7 +32,7 @@ public extension LiftedTestEmitter {
     ) -> String {
         _ = typeName
         let testFunctionName = "\(funcName)_preservesCount"
-        let sample = "{ rng in ((\(generator)).array(of: 0...20)).run(&rng) }"
+        let sample = "{ rng in ((\(generator)).array(of: 0...20)).run(using: &rng) }"
         let property = "{ xs in \(funcName)(xs).count == xs.count }"
         let failureLabel = "\(funcName)(_:) failed count-invariance"
         return makeTestStubExpression(
@@ -67,7 +67,7 @@ public extension LiftedTestEmitter {
     ) -> String {
         _ = elementTypeName
         let testFunctionName = "\(sanitizeOperatorForIdentifier(opName))_reduceIsReversalInvariant"
-        let sample = "{ rng in ((\(generator)).array(of: 0...20)).run(&rng) }"
+        let sample = "{ rng in ((\(generator)).array(of: 0...20)).run(using: &rng) }"
         let property = "{ xs in xs.reduce(\(seedSource), \(opName))"
             + " == xs.reversed().reduce(\(seedSource), \(opName)) }"
         let failureLabel = "\(opName) reduce/.reversed().reduce equivalence failed"

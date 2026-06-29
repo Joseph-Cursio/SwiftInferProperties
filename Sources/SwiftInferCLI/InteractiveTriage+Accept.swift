@@ -120,6 +120,7 @@ extension InteractiveTriage {
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.deterministic(
             funcName: funcName,
+            argumentLabel: singleArgumentLabel(from: evidence.displayName),
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: paramTypeText),
             equalityKind: equalityKind(forTypeText: returnTypeText)

@@ -248,13 +248,12 @@ func expectedIdempotentExpansion(
             let result = await backend.check(
                 trials: 100,
                 seed: seed,
-                sample: { rng in (\(generator)).run(&rng) },
+                sample: { rng in (\(generator)).run(using: &rng) },
                 property: { value in \(funcName)(\(funcName)(value)) == \(funcName)(value) }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(funcName)(_:) failed idempotence at input \\(input)."
-                        + " \\(error?.message ?? \\"\\")"
+                    "\(funcName)(_:) failed idempotence at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }
@@ -288,13 +287,12 @@ func expectedRoundTripExpansion(
             let result = await backend.check(
                 trials: 100,
                 seed: seed,
-                sample: { rng in (\(generator)).run(&rng) },
+                sample: { rng in (\(generator)).run(using: &rng) },
                 property: { value in \(inverseName)(\(forwardName)(value)) == value }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(forwardName)/\(inverseName) round-trip failed at input \\(input)."
-                        + " \\(error?.message ?? \\"\\")"
+                    "\(forwardName)/\(inverseName) round-trip failed at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }
@@ -331,13 +329,12 @@ func expectedPreservesInvariantExpansion(
             let result = await backend.check(
                 trials: 100,
                 seed: seed,
-                sample: { rng in (\(generator)).run(&rng) },
+                sample: { rng in (\(generator)).run(using: &rng) },
                 property: { value in !value[keyPath: \(keyPath)] || \(funcName)(value)[keyPath: \(keyPath)] }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(funcName)(_:) failed invariant preservation \(keyPath) at input \\(input)."
-                        + " \\(error?.message ?? \\"\\")"
+                    "\(funcName)(_:) failed invariant preservation \(keyPath) at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }

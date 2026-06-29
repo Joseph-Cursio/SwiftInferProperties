@@ -31,6 +31,21 @@ extension InteractiveTriage {
         return stripped.isEmpty ? nil : stripped
     }
 
+    /// The single parameter's external label from a display name like
+    /// `memberGenerator(forTypeName:)` → `"forTypeName"`. Returns `nil` for an
+    /// `_`-labeled parameter (`describe(_:)`) so the caller emits a bare
+    /// argument. Used by the determinism stub to build a call that compiles for
+    /// labeled functions.
+    static func singleArgumentLabel(from displayName: String) -> String? {
+        guard let open = displayName.firstIndex(of: "("),
+              let colon = displayName[open...].firstIndex(of: ":") else {
+            return nil
+        }
+        let label = displayName[displayName.index(after: open)..<colon]
+            .trimmingCharacters(in: .whitespaces)
+        return (label.isEmpty || label == "_") ? nil : label
+    }
+
     /// The single parameter type from a signature, or `nil` if the function has
     /// zero or more than one parameter. Unlike `paramType(from:)` — which
     /// returns only the *first* of several — this is for emitters that call

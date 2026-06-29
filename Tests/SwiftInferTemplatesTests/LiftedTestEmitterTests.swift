@@ -55,13 +55,12 @@ struct LiftedTestEmitterTests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in (Gen<Character>.letterOrNumber.string(of: 0...8)).run(&rng) },
+                    sample: { rng in (Gen<Character>.letterOrNumber.string(of: 0...8)).run(using: &rng) },
                     property: { value in normalize(normalize(value)) == normalize(value) }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "normalize(_:) failed idempotence at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "normalize(_:) failed idempotence at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -81,9 +80,23 @@ struct LiftedTestEmitterTests {
         )
         #expect(source.contains("@Test func describe_isDeterministic() async {"))
         #expect(source.contains("trials: 100"))
-        #expect(source.contains("sample: { rng in (Gen<Int>.int()).run(&rng) }"))
+        #expect(source.contains("sample: { rng in (Gen<Int>.int()).run(using: &rng) }"))
         #expect(source.contains("property: { value in describe(value) == describe(value) }"))
         #expect(source.contains("is not deterministic"))
+    }
+
+    @Test
+    func deterministicEmitsArgumentLabelForLabeledFunction() {
+        let seed = SamplingSeed.Value(stateA: 0x1, stateB: 0x2, stateC: 0x3, stateD: 0x4)
+        let source = LiftedTestEmitter.deterministic(
+            funcName: "memberGenerator",
+            argumentLabel: "forTypeName",
+            seed: seed,
+            generator: "Gen<Character>.letterOrNumber.string(of: 0...8)"
+        )
+        #expect(source.contains(
+            "memberGenerator(forTypeName: value) == memberGenerator(forTypeName: value)"
+        ))
     }
 
     @Test
@@ -127,13 +140,12 @@ struct LiftedTestEmitterTests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in (MyType.gen()).run(&rng) },
+                    sample: { rng in (MyType.gen()).run(using: &rng) },
                     property: { value in decode(encode(value)) == value }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "encode/decode round-trip failed at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "encode/decode round-trip failed at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -223,16 +235,15 @@ struct LiftedTestEmitterM7Tests {
                     trials: 100,
                     seed: seed,
                     sample: { rng in
-                                let lhs = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(&rng)
-                                let rhs = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(&rng)
+                                let lhs = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(using: &rng)
+                                let rhs = (Gen<Character>.letterOrNumber.string(of: 0...8)).run(using: &rng)
                                 return lhs < rhs ? (lhs, rhs) : (rhs, lhs)
                             },
                     property: { pair in length(pair.0) <= length(pair.1) }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "length(_:) failed monotonicity at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "length(_:) failed monotonicity at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -270,13 +281,12 @@ struct LiftedTestEmitterM7Tests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in (Widget.gen()).run(&rng) },
+                    sample: { rng in (Widget.gen()).run(using: &rng) },
                     property: { value in !value[keyPath: \\.isValid] || adjust(value)[keyPath: \\.isValid] }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "adjust(_:) failed invariant preservation \\.isValid at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "adjust(_:) failed invariant preservation \\.isValid at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }

@@ -35,13 +35,12 @@ struct LiftedTestEmitterM5Tests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in ((Gen<Int>.int()).array(of: 0...20)).run(&rng) },
+                    sample: { rng in ((Gen<Int>.int()).array(of: 0...20)).run(using: &rng) },
                     property: { xs in filter(xs).count == xs.count }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "filter(_:) failed count-invariance at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "filter(_:) failed count-invariance at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
@@ -88,13 +87,12 @@ struct LiftedTestEmitterM5Tests {
                 let result = await backend.check(
                     trials: 100,
                     seed: seed,
-                    sample: { rng in ((Gen<Int>.int()).array(of: 0...20)).run(&rng) },
+                    sample: { rng in ((Gen<Int>.int()).array(of: 0...20)).run(using: &rng) },
                     property: { xs in xs.reduce(0, +) == xs.reversed().reduce(0, +) }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "+ reduce/.reversed().reduce equivalence failed at input \\(input)."
-                            + " \\(error?.message ?? \\"\\")"
+                        "+ reduce/.reversed().reduce equivalence failed at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }
