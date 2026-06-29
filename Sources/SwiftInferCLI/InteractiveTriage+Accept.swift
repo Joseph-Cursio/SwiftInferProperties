@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 import SwiftInferTemplates
 
@@ -31,7 +32,15 @@ extension InteractiveTriage {
            let hint = context.consumerProducerChainHintsByIdentity[suggestion.identity] {
             return try writeConsumerProducerChainDocument(hint: hint, context: context)
         }
-        guard let stub = liftedTestStub(for: suggestion) else {
+        // A whole-module resolver that derives a generator for any project type
+        // from its parsed shape (memoized, cycle-guarded). Built per accept; the
+        // stub emitter uses it so custom-typed parameters compile without a
+        // hand-written `gen()`.
+        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
+        let customGenerator: (String) -> String? = { typeName in
+            resolver.customTypeGenerator(forTypeName: typeName)?.expression
+        }
+        guard let stub = liftedTestStub(for: suggestion, customGenerator: customGenerator) else {
             context.diagnostics.writeDiagnostic(
                 "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
                     + "decision recorded without writing a file"
@@ -58,7 +67,15 @@ extension InteractiveTriage {
     /// Build the lifted-test source text for `suggestion`. After M8.2
     /// every shipped template has a stub arm — `default` is a
     /// defensive fallback for future templates.
-    private static func liftedTestStub(for suggestion: Suggestion) -> String? {
+    /// `customGenerator` derives a generator expression for a custom type name
+    /// (from the project's parsed type shapes); it's currently wired into the
+    /// determinism path — the lint → infer pipeline's output — so a seeded
+    /// function over a custom struct/enum compiles drop-in. The signature-pattern
+    /// stubs still use the `Type.gen()` fallback (a fast-follow).
+    private static func liftedTestStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
         // M5.5 — lifted-only fast path for countInvariance + reduce-
         // Equivalence: emit what the test body actually claimed rather
         // than the stronger algebraic shape. Production-side suggestions
@@ -69,7 +86,7 @@ extension InteractiveTriage {
         // Determinism is the seed-driven generic law (not a signature template),
         // so it dispatches ahead of the template switch.
         if suggestion.templateName == "determinism" {
-            return deterministicStub(for: suggestion)
+            return deterministicStub(for: suggestion, customGenerator: customGenerator)
         }
         return templateStub(for: suggestion)
     }
@@ -110,7 +127,10 @@ extension InteractiveTriage {
     /// single parameter — the shared emitter calls `f(value)` with one argument,
     /// so a multi-parameter function returns `nil` (the suggestion still renders,
     /// it just has no auto-stub yet). Equality keys off the return type.
-    private static func deterministicStub(for suggestion: Suggestion) -> String? {
+    private static func deterministicStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
               let returnTypeText = returnType(from: evidence.signature),
@@ -123,7 +143,11 @@ extension InteractiveTriage {
         let parameters = parsed.map { parameter in
             LiftedTestEmitter.DeterminismParameter(
                 label: parameter.label,
-                generator: chooseGenerator(for: suggestion, typeName: parameter.type)
+                generator: chooseGenerator(
+                    for: suggestion,
+                    typeName: parameter.type,
+                    customGenerator: customGenerator
+                )
             )
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -315,7 +339,8 @@ extension InteractiveTriage {
     /// share the same dispatch without duplicating the priority order.
     static func chooseGenerator(
         for suggestion: Suggestion,
-        typeName: String
+        typeName: String,
+        customGenerator: ((String) -> String?)? = nil
     ) -> String {
         if suggestion.generator.source == .inferredFromTests,
            let mock = suggestion.mockGenerator {
@@ -323,6 +348,14 @@ extension InteractiveTriage {
         }
         if suggestion.generator.source == .derivedCodableRoundTrip {
             return LiftedTestEmitter.codableRoundTripGenerator(for: typeName)
+        }
+        // Derive a generator for a custom project type — a memberwise struct, a
+        // CaseIterable / RawRepresentable / payload enum — from its parsed shape,
+        // so the stub compiles without the user hand-writing `gen()`. Stdlib and
+        // external types have no shape, so the resolver returns nil and we fall
+        // through to the stdlib mapping (or the `Type.gen()` fallback).
+        if let derived = customGenerator?(typeName) {
+            return derived
         }
         return LiftedTestEmitter.defaultGenerator(for: typeName)
     }

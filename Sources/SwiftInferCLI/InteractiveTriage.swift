@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 import SwiftInferTemplates
 
@@ -115,6 +116,13 @@ public enum InteractiveTriage {
         /// records the base score-derived tier unchanged.
         public let verifyEvidenceByIdentity: [String: VerifyEvidence]
 
+        /// Parsed shapes of the project's types, keyed by name — the input the
+        /// accept flow's `GeneratorResolver` derives custom-type generators from,
+        /// so an emitted stub over a project struct/enum compiles without a
+        /// hand-written `gen()`. Empty for callers that don't supply it
+        /// (generators then fall back to `Type.gen()`).
+        public let typeShapesByName: [String: TypeShape]
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -125,7 +133,8 @@ public enum InteractiveTriage {
             proposalsByType: [String: [RefactorBridgeProposal]] = [:],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
-            verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
+            verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
+            typeShapesByName: [String: TypeShape] = [:]
         ) {
             self.prompt = prompt
             self.output = output
@@ -137,6 +146,7 @@ public enum InteractiveTriage {
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.verifyEvidenceByIdentity = verifyEvidenceByIdentity
+            self.typeShapesByName = typeShapesByName
         }
     }
 

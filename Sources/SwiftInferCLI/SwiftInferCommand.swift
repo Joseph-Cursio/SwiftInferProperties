@@ -21,7 +21,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         All output is suggestions for human review; nothing auto-executes. \
         See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: "1.146.0",
+        version: "1.147.0",
         subcommands: [
             Discover.self,
             Scaffold.self,
@@ -315,7 +315,8 @@ extension SwiftInferCommand {
                 ),
                 equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
                 consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity,
-                verifyEvidenceByIdentity: evidenceByIdentity
+                verifyEvidenceByIdentity: evidenceByIdentity,
+                typeShapesByName: pipeline.typeShapesByName
             )
             try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
         }
