@@ -1,47 +1,44 @@
-# Prototype: SoundPurity (Idea #4, step 2)
+# SoundPurity (Idea #4, step 2)
 
-Status: **design-complete, build-blocked** on an ecosystem swift-syntax skew.
+Status: **wired and validated.** The swift-syntax skew that blocked this leg
+has been resolved.
 
 ## What this branch contains
 
 - `Sources/SwiftInferCore/SoundPurity.swift` — composes SIP's
   `ReducerPurityAnalyzer` with `SwiftEffectInference.PurityInferrer` (the
-  canonical purity oracle relocated into the shared leaf). `.pure` is claimed
+  canonical purity oracle, relocated into the shared leaf). `.pure` is claimed
   only when **both** refutation analyzers agree — the sound mapping. Mapping
   `ReducerPurity.pure → Effect.pure` *alone* is unsound, because
   `ReducerPurityAnalyzer` never inspects I/O / nondeterminism / totality (a
-  reducer can be `ReducerPurity.pure` yet still call `print()` / `Date()` /
-  force-unwrap).
-- `Package.swift` — adds the SEI dependency to `SwiftInferCore` and bumps
-  swift-syntax to `exact: "602.0.0"` (the version SEI and SwiftProjectLint use).
+  reducer can be `ReducerPurity.pure` yet still call `print()` / force-unwrap).
+- `Tests/SwiftInferCoreTests/SoundPurityTests.swift` — 6 tests. The headline
+  case (`reducerPureButLogs_isRefuted`) proves the meet: `ReducerPurity` returns
+  `.pure`, but `SoundPurity` refutes because `PurityInferrer` catches the
+  `print`.
+- `Package.swift` — adds the SEI dependency to `SwiftInferCore` and pins
+  swift-syntax `exact: "602.0.0"`.
 
-## The blocker
+## How the blocker was resolved
 
-`swift build` fails to resolve:
+SIP pinned swift-syntax transitively through SwiftPropertyLaws (capped at the
+600 line), while SEI is on 602. Fixed by **SwiftPropertyLaws v3.1.0** — a clean
+swift-syntax 600 → 602 bump (no API breakage; 574 tests green). SIP's
+`from: "3.0.0"` requirement picks up 3.1.0 automatically, and the dependency
+graph now resolves on swift-syntax 602 across SEI, SwiftProjectLint,
+SwiftPropertyLaws, and SwiftInferProperties.
 
-```
-root depends on 'swiftpropertylaws' 3.0.0..<4.0.0 and
-'swifteffectinference' depends on 'swift-syntax' 602.0.0.
-'swiftpropertylaws' 3.0.0 depends on 'swift-syntax' 600.0.0..<601.0.0
-```
+## Known follow-up (precision, not a blocker)
 
-SIP pins swift-syntax transitively through **SwiftPropertyLaws v3.0.0**, which
-caps it at the 600 line. SwiftEffectInference (and SwiftProjectLint) are on
-602. So the relocation's real blast radius is an **ecosystem-wide swift-syntax
-600 → 602 alignment**, gated on a new SwiftPropertyLaws release built against
-swift-syntax 602.
+The canonical `PurityInferrer` refutes I/O, the randomness family, and
+partiality, but its marker set does **not** yet include clock/UUID
+nondeterminism (`Date()`, `UUID()`). In SwiftProjectLint those were caught by a
+*separate* `NonInjectedNondeterminism` rule. For `Effect.pure` to fully imply
+determinism, those markers should move into the shared oracle — a precision
+improvement worth doing before SIP emits `pure` suggestions in anger.
 
-## Unblock path
+## Remaining wiring (not done here)
 
-1. Bump `SwiftPropertyLaws` swift-syntax to 602; verify its build/tests under
-   the 600 → 602 API changes; cut **v3.0.1** (or v3.1.0).
-2. Point SIP at that SwiftPropertyLaws release.
-3. Re-resolve; `SoundPurity` then compiles. Add the soundness tests
-   (the headline case: a `ReducerPurity.pure` body that calls `print()` must
-   return `nil`, proving the meet refutes what `ReducerPurity` alone misses).
-4. Wire `SoundPurity` into SIP's suggestion path: only emit a
-   `/// @lint.effect pure` suggestion when `SoundPurity.isPure(fn)`.
-
-The SEI leg (canonical `PurityInferrer`, branch `purity-inferrer`) and the
-SwiftProjectLint leg (forwarder onto it, branch `purity-inferrer-relocation`)
-both build and pass tests today; only this SIP leg is version-gated.
+`SoundPurity` is built and tested but not yet called from SIP's suggestion
+path. The final step is: only emit a `/// @lint.effect pure` suggestion when
+`SoundPurity.isPure(fn)`.

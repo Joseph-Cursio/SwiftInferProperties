@@ -86,11 +86,11 @@ let package = Package(
         // Idea #4 — the shared effect-vocabulary leaf. Owns the `Effect` lattice
         // and the canonical `PurityInferrer`. `SoundPurity` composes SIP's
         // `ReducerPurityAnalyzer` with SEI's purity oracle. Revision-pinned
-        // (SEI carries no version tags yet); swift-syntax pins are compatible
-        // (SEI exact 602.0.0 satisfies this package's `from: 600.0.0`).
+        // (SEI carries no version tags yet); both this package and SEI pin
+        // swift-syntax at exactly 602.0.0, so there is no version conflict.
         .package(
             url: "https://github.com/Joseph-Cursio/SwiftEffectInference.git",
-            revision: "978ed7834f9583a9b297be1bf9b8e2899ec49803"
+            revision: "b0751356cba09ed798a01a0a8930902d9955174c"
         )
     ],
     targets: [
