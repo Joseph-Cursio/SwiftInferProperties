@@ -31,6 +31,10 @@ extension FunctionScannerVisitor {
         let bodySignals = scanBody(of: node)
         let discoverableGroup = AttributeScanner.discoverableGroup(in: node.attributes)
         let invariantKeypath = AttributeScanner.invariantKeypath(in: node.attributes)
+        // Sound purity verdict — computed here, the one place the live
+        // `FunctionDeclSyntax` is available, and carried on the summary for the
+        // `@lint.effect pure` advisory channel.
+        let isInferredPure = SoundPurity.isPure(node)
 
         return FunctionSummary(
             name: name,
@@ -44,7 +48,8 @@ extension FunctionScannerVisitor {
             containingTypeName: containingTypeName,
             bodySignals: bodySignals,
             discoverableGroup: discoverableGroup,
-            invariantKeypath: invariantKeypath
+            invariantKeypath: invariantKeypath,
+            isInferredPure: isInferredPure
         )
     }
 

@@ -199,6 +199,13 @@ public enum TemplateRegistry {
         public let suggestions: [Suggestion]
         public let inverseElementPairs: [InverseElementPair]
 
+        /// `@lint.effect pure` advisory records — one per function the scan
+        /// inferred referentially transparent (`SoundPurity`). A separate
+        /// channel from `suggestions`: this is annotation advice, not a
+        /// property-test candidate, so it never enters the templateName-driven
+        /// accept / verify / decisions pipeline. Source-ordered.
+        public let effectAnnotations: [EffectAnnotationAdvice]
+
         /// Function summaries the corpus scan produced. Exposed for
         /// TestLifter M3.2's `LiftedSuggestionRecovery` pass — the
         /// promoted lifted Suggestions need callee-type recovery from
@@ -219,12 +226,14 @@ public enum TemplateRegistry {
             suggestions: [Suggestion],
             inverseElementPairs: [InverseElementPair],
             summaries: [FunctionSummary] = [],
-            typeDecls: [TypeDecl] = []
+            typeDecls: [TypeDecl] = [],
+            effectAnnotations: [EffectAnnotationAdvice] = []
         ) {
             self.suggestions = suggestions
             self.inverseElementPairs = inverseElementPairs
             self.summaries = summaries
             self.typeDecls = typeDecls
+            self.effectAnnotations = effectAnnotations
         }
     }
 
@@ -262,7 +271,8 @@ public enum TemplateRegistry {
             suggestions: suggestions,
             inverseElementPairs: inverseElementPairs,
             summaries: corpus.summaries,
-            typeDecls: corpus.typeDecls
+            typeDecls: corpus.typeDecls,
+            effectAnnotations: EffectAnnotationAdvice.adviceList(from: corpus.summaries)
         )
     }
 }

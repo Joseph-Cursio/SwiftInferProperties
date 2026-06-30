@@ -72,6 +72,15 @@ public struct FunctionSummary: Sendable, Equatable {
     /// unchanged.
     public let invariantKeypath: String?
 
+    /// `true` when `SoundPurity` infers this function is `Effect.pure` —
+    /// referentially transparent (no side effects, deterministic, total).
+    /// Computed once at scan time, where the `FunctionDeclSyntax` is live,
+    /// and consumed by the advisory channel that recommends a
+    /// `/// @lint.effect pure` annotation (`DiscoverArtifacts.effectAnnotations`).
+    /// Defaults to `false` so call sites that don't populate it compile
+    /// unchanged.
+    public let isInferredPure: Bool
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -84,7 +93,8 @@ public struct FunctionSummary: Sendable, Equatable {
         containingTypeName: String?,
         bodySignals: BodySignals,
         discoverableGroup: String? = nil,
-        invariantKeypath: String? = nil
+        invariantKeypath: String? = nil,
+        isInferredPure: Bool = false
     ) {
         self.name = name
         self.parameters = parameters
@@ -98,6 +108,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.bodySignals = bodySignals
         self.discoverableGroup = discoverableGroup
         self.invariantKeypath = invariantKeypath
+        self.isInferredPure = isInferredPure
     }
 }
 

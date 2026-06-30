@@ -15,9 +15,10 @@ extension SwiftInferCommand.Discover {
         visible: [Suggestion],
         statsOnly: Bool,
         evidenceByIdentity: [String: VerifyEvidence],
+        effectAnnotations: [EffectAnnotationAdvice] = [],
         output: any DiscoverOutput
     ) {
-        let rendered: String
+        var rendered: String
         if statsOnly {
             rendered = SuggestionRenderer.renderStats(visible)
         } else {
@@ -26,6 +27,19 @@ extension SwiftInferCommand.Discover {
                 verifyEvidenceByIdentity: evidenceByIdentity
             )
         }
+
+        // Separate advisory channel — appended (never property-test suggestions)
+        // only in full output and only when there is advice, so stats / empty /
+        // advice-free output is byte-identical to before. `DiscoverOutput.write`
+        // replaces rather than appends, so the block joins the rendered string
+        // here and a single `write` carries both.
+        if !statsOnly {
+            let adviceBlock = EffectAnnotationRenderer.render(effectAnnotations)
+            if !adviceBlock.isEmpty {
+                rendered += "\n\n" + adviceBlock
+            }
+        }
+
         output.write(rendered)
     }
 

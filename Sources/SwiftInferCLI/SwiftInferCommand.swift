@@ -126,6 +126,17 @@ extension SwiftInferCommand {
         @Flag(
             name: .long,
             help: """
+            Append a "Pure-effect annotations" advisory section recommending a \
+            `/// @lint.effect pure` line for each function SoundPurity infers \
+            referentially transparent. Off by default; the advice is separate \
+            from property-test suggestions and never enters accept / verify.
+            """
+        )
+        public var effectAnnotations: Bool = false
+
+        @Flag(
+            name: .long,
+            help: """
             Suppress writes during --interactive triage. Accept (A) \
             gestures show the would-be file path on stdout but skip \
             both the file write and the .swiftinfer/decisions.json \
@@ -205,6 +216,7 @@ extension SwiftInferCommand {
                 explicitTestDirectory: explicitTestDirPath,
                 packsOverride: packs,
                 statsOnly: statsOnly,
+                effectAnnotations: effectAnnotations,
                 dryRun: dryRun,
                 interactive: interactive,
                 updateBaseline: updateBaseline,
@@ -231,6 +243,7 @@ extension SwiftInferCommand {
             explicitTestDirectory: URL? = nil,
             packsOverride: String? = nil,
             statsOnly: Bool = false,
+            effectAnnotations: Bool = false,
             dryRun: Bool = false,
             interactive: Bool = false,
             updateBaseline: Bool = false,
@@ -239,10 +252,7 @@ extension SwiftInferCommand {
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
-            let evidenceByIdentity = loadVerifyEvidenceMap(
-                directory: directory,
-                diagnostics: diagnostics
-            )
+            let evidenceByIdentity = loadVerifyEvidenceMap(directory: directory, diagnostics: diagnostics)
             let pipeline = try collectVisibleSuggestions(
                 directory: directory,
                 includePossible: includePossible,
@@ -288,6 +298,8 @@ extension SwiftInferCommand {
                 visible: visible,
                 statsOnly: statsOnly,
                 evidenceByIdentity: evidenceByIdentity,
+                effectAnnotations: effectAnnotations
+                    ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
                 output: output
             )
         }

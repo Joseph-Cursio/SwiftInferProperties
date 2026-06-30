@@ -37,8 +37,22 @@ nondeterminism (`Date()`, `UUID()`). In SwiftProjectLint those were caught by a
 determinism, those markers should move into the shared oracle — a precision
 improvement worth doing before SIP emits `pure` suggestions in anger.
 
-## Remaining wiring (not done here)
+## Wired into discover (done)
 
-`SoundPurity` is built and tested but not yet called from SIP's suggestion
-path. The final step is: only emit a `/// @lint.effect pure` suggestion when
-`SoundPurity.isPure(fn)`.
+`SoundPurity` now runs at scan time (`FunctionScannerVisitor.makeSummary`,
+the one place the live `FunctionDeclSyntax` exists) and the verdict rides on
+`FunctionSummary.isInferredPure`. From there a **separate advisory channel**
+surfaces `/// @lint.effect pure` recommendations:
+
+- `EffectAnnotationAdvice` (Core) — the advisory record. Deliberately **not** a
+  property-test `Suggestion`: pushing it through the `Suggestion` stream would
+  mean a fabricated score/generator/identity and a dead-end in the
+  `templateName`-driven accept / verify / decisions switches.
+- `DiscoverArtifacts.effectAnnotations` — first-class collection built from the
+  pure summaries.
+- `swift-infer discover --effect-annotations` — opt-in flag (off by default so
+  the suggestion-output contract is unchanged) that renders the advice as its
+  own `EffectAnnotationRenderer` section beneath the suggestions.
+
+This closes Idea #4 step 2: the linter, the idempotency rules, and the PBT
+pipeline now share one purity definition end to end.

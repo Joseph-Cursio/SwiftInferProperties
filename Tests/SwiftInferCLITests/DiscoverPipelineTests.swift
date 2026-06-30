@@ -64,6 +64,42 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("process(_:)"))
     }
 
+    @Test("--effect-annotations is off by default and opt-in when set")
+    func effectAnnotationsFlagGatesTheAdvisorySection() throws {
+        // `normalize` is pure (and Strong idempotent). The advisory section
+        // must be ABSENT by default — preserving the suggestion-output
+        // contract — and PRESENT only under the opt-in flag.
+        let directory = try writeDPFixture(name: "EffectAnnotationsFlag", contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let defaultRun = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: defaultRun
+        )
+        #expect(defaultRun.text.contains("Pure-effect annotations") == false)
+
+        let flagged = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            effectAnnotations: true,
+            output: flagged
+        )
+        #expect(flagged.text.contains("Pure-effect annotations (1 function):"))
+        #expect(flagged.text.contains("normalize(_:)"))
+        #expect(flagged.text.contains("/// @lint.effect pure"))
+        // The advice does not displace the property-test suggestion.
+        #expect(flagged.text.contains("Template: idempotence"))
+    }
+
     @Test("Strong idempotent function renders the §4.5 block end-to-end")
     func strongSuggestionRendersFullBlock() throws {
         let directory = try writeDPFixture(name: "StrongIdempotent", contents: """
