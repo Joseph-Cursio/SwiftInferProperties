@@ -1,0 +1,288 @@
+# StatefulRoleDiscoverer — generalizing architecture-aware discovery
+
+Status: **design sketch** (no code landed). Author note: grounds every claim in
+the existing `ReducerDiscoverer` / `ViewModelDiscoverer` implementations.
+
+## Motivation
+
+SwiftInferProperties has two architecture-aware discovery tracks:
+
+- **TCA** — `ReducerDiscoverer` (`Sources/SwiftInferCore/ReducerDiscoverer.swift`
+  + `+TCAWalk`), producing `ReducerCandidate`.
+- **MVVM** — `ViewModelDiscoveryVisitor` / `ViewModelDiscoverer`, producing
+  `ViewModelCandidate`.
+
+Every other SwiftUI/UIKit state architecture — **Redux/Elm, VIPER, MVP, MVC** —
+currently falls back to the architecture-neutral function-level templates
+(idempotence, commutativity, round-trip, …). That misses the architecture's
+*distinctive* contracts (e.g. "a Redux reducer is pure and total", "an MVP
+presenter's view updates are a deterministic function of model + event").
+
+This note proposes folding the two existing tracks — and the four missing ones —
+into a single **`StatefulRoleDiscoverer`** parameterized by a pluggable
+**`RolePolicy`**. The thesis: this is mostly a **refactor that exposes a seam**,
+not new machinery, because the codebase already models the commonality.
+
+## Two facts that make this a lift, not a rewrite
+
+1. **A viewmodel is already modelled as a reducer.** `ViewModelCandidate`'s
+   doc-comment (`Sources/SwiftInferCore/ViewModelCandidate.swift`) states it
+   verbatim:
+
+   | Reducer | ViewModel |
+   |---|---|
+   | `State` | the stored properties (`stateFields`) |
+   | `Action` alphabet | the state-mutating methods (`actions`) |
+   | `reduce(into:_:)` | each method body mutating `self` |
+
+2. **`ReducerDiscoverer` already recognizes multiple frameworks by signature**
+   (`ReducerDiscoverer.swift` header + `ReducerSignatureShape`):
+   - `(S, A) -> S` — Elm-style / hand-rolled / free-function reducers
+   - `(inout S, A) -> Void` — TCA `Reduce` closures
+   - `(S, A) -> (S, Effect<A>)` — TCA pre-2022, **ReSwift with thunks**
+   - Square **Workflow** `apply(toState:)`
+   - TCA `var body: some ReducerOf<Self>` via the conformance walk
+
+   So **Redux (ReSwift) and Elm are already partially discovered** — they simply
+   lack a paradigm label and collaborator-mocking.
+
+Consequently `ReducerCandidate` and `ViewModelCandidate` are near-isomorphic
+(location, type name, state surface, action alphabet, construction recipe), and
+`ViewModelMethodBodyWalker` / `ViewModelMethodSignals` (assignedRoots,
+mutatorCallReceivers, same-object action calls) is a **paradigm-agnostic
+mutation detector** already.
+
+## The unified shape — `StatefulRole`
+
+Lift the common fields of `ReducerCandidate` + `ViewModelCandidate` into one
+type. The only material differences between a reducer and a viewmodel are *how
+you obtain an instance to drive* and *what you mock*.
+
+```swift
+/// A type/function that owns state and exposes mutation entry points — the
+/// unit every state architecture (TCA, MVVM, Redux, VIPER, MVP, MVC) reduces
+/// to. Replaces ReducerCandidate + ViewModelCandidate.
+public struct StatefulRole: Sendable, Equatable {
+    public let location: String
+    public let typeName: String
+    public let paradigm: Paradigm            // tca | mvvm | redux | viper | mvp | mvc
+    public let recognizedBy: RecognitionKind // signatureShape | conformance | macro | convention
+
+    public let state: StateSurface            // named `State` type  OR  stored fields
+    public let actions: [RoleAction]          // unifies ActionCaseInfo + ViewModelAction
+    public let construction: Construction      // how the harness gets an instance to drive
+    public let collaborators: [Collaborator]   // protocols to fake (the View, the Output, …)
+    public let effect: Effect                  // SEI lattice — `.pure` reducers fuzz directly
+}
+
+public enum Construction: Sendable, Equatable {
+    case freeFunction(name: String)                     // reducer: just call it
+    case instance(initParameters: [RoleInitParameter],  // viewmodel / presenter / interactor:
+                  fakedCollaborators: [Collaborator])     //   build it, injecting fakes
+}
+
+/// A collaborator the role calls *out* to, recognized as a protocol so it can
+/// be mocked. Reuses ViewModelProtocolScanner / ProtocolFaker.
+public struct Collaborator: Sendable, Equatable {
+    public let propertyName: String     // "view", "output", "presenter"
+    public let protocolType: String     // "LoginViewProtocol"
+    public let role: CollaboratorRole    // .dependency(noop:) | .output(assertable:)
+}
+```
+
+The pivotal generalization is `CollaboratorRole`: a **dependency** (inject a
+no-op fake — what MVVM does today) vs an **output sink** (inject a *recording*
+fake so the property can assert what the role pushed to it). The recording
+output fake is the one genuinely new capability, and it is exactly what makes
+MVP/VIPER's contracts testable.
+
+## The pluggable seam — `RolePolicy`
+
+Everything paradigm-specific collapses to one protocol. The engine owns the
+walk + the shared mutation analysis; the policy owns recognition and the two
+facts that differ (state surface, construction) plus collaborators and
+distinctive properties.
+
+```swift
+public protocol RolePolicy: Sendable {
+    var paradigm: Paradigm { get }
+
+    /// Cheap structural check against the declaration + file context
+    /// (imports, inheritance, attributes, name). Returns nil if not my role.
+    func recognize(_ decl: DeclSyntax, in ctx: FileContext) -> RoleMatch?
+
+    func extractState(_ match: RoleMatch) -> StateSurface
+    func construction(_ match: RoleMatch) -> Construction
+    func collaborators(_ match: RoleMatch) -> [Collaborator]
+
+    /// Paradigm-specific invariants layered on the shared interaction families.
+    var distinctiveProperties: [PropertyKind] { get }
+}
+```
+
+## The engine
+
+```swift
+public struct StatefulRoleDiscoverer {
+    let policies: [RolePolicy]   // ordered: specific (macro/signature) → generic (convention)
+
+    public func discover(in tree: SourceFileSyntax, file: String) -> [StatefulRole] {
+        var roles: [StatefulRole] = []
+        for decl in tree.statements.declarations {
+            guard let (policy, match) = firstMatch(decl, file) else { continue }
+
+            // SHARED, paradigm-agnostic: the mutation analysis that already
+            // lives in ViewModelMethodBodyWalker, lifted verbatim.
+            let actions = MutationAnalyzer.actions(in: decl, state: policy.extractState(match))
+
+            roles.append(StatefulRole(
+                location: "\(file):\(decl.line)",
+                typeName: match.typeName,
+                paradigm: policy.paradigm,
+                recognizedBy: match.kind,
+                state: policy.extractState(match),
+                actions: actions,
+                construction: policy.construction(match),
+                collaborators: policy.collaborators(match),
+                effect: SoundPurity.inferredEffect(for: decl) ?? .nonIdempotent
+            ))
+        }
+        return roles
+    }
+}
+```
+
+`SoundPurity` (the Idea #4 step-2 oracle) is the effect classifier here: a
+`.pure` reducer can be fuzzed as a free function with no harness; an effectful
+role needs the instance + mock path.
+
+## The existing two become policies (proof it lifts)
+
+```swift
+struct TCAReducerPolicy: RolePolicy {
+    let paradigm = Paradigm.tca
+    func recognize(_ d, _ ctx) -> RoleMatch? {
+        // EXISTING ReducerDiscoverer logic: signature shapes (S,A)->S,
+        // (inout S,A)->Void, … OR ctx.imports("ComposableArchitecture")
+        // && (inherits "Reducer" || hasAttr "@Reducer")
+    }
+    func construction(_ m) -> Construction { .freeFunction(name: m.functionName) }
+    func collaborators(_ m) -> [Collaborator] { [] }   // pure reduce; nothing to mock
+    var distinctiveProperties { [.actionSequence, .idempotence, .interactionInvariants] }
+}
+
+struct MVVMPolicy: RolePolicy {
+    let paradigm = Paradigm.mvvm
+    func recognize(_ d, _ ctx) -> RoleMatch? {
+        // EXISTING ViewModelDiscoveryVisitor: @Observable macro || : ObservableObject
+    }
+    func extractState(_ m) -> StateSurface { .storedFields(m.observableFields) }       // existing
+    func construction(_ m) -> Construction {
+        .instance(initParameters: m.initParams, fakedCollaborators: m.protocolDeps)     // existing
+    }
+    var distinctiveProperties { [.idempotence, .interactionInvariants] }
+}
+```
+
+Both bodies are **code that already exists** — moved behind the seam, not
+rewritten.
+
+## The four new paradigms — thin policies
+
+| Paradigm | Recognize | Collaborators to fake | Distinctive properties | Value / Effort |
+|---|---|---|---|---|
+| **Redux** (ReSwift / Elm) | already-matched `(S,A)->S` + thunk shapes; add ReSwift `Reducer` typealias / `Middleware`; label `redux` | none (pure reducer) | `determinism` (`reduce(s,a)==reduce(s,a)`), `unknownActionIsNoOp`, `actionSequence` | **High / Low** |
+| **VIPER** | conforms to `*InteractorInput` / named `*Interactor` (convention) | the `presenter`/`output` protocol → **recording** fake | `outputDeterminism`, `noUIKitImport`, `interactionInvariants` | **Med / Med** |
+| **MVP** | `*Presenter` / `*Presenting`, holds `weak var view: SomeViewProtocol` (convention) | the `view` protocol → **recording** fake | `viewUpdateDeterminism`, `idempotence` | **Med / Med** |
+| **MVC** | `*Model` class, no UIKit import (convention); a `UIViewController` subclass is low-value | none (or model deps) | `idempotence`, `interactionInvariants` | **Low / Low–Med** |
+
+VIPER/MVP/MVC have no language-level marker, so their `recognize` is
+**data-driven from config** — a `[roles.*]` block compiles to a generic
+`ConventionPolicy`, reusing the existing `Vocabulary` / `[discover]` config
+plumbing, so a project's house naming convention needs no new code:
+
+```toml
+[roles.presenter]
+nameSuffix  = ["Presenter"]
+conformsTo  = ["Presenting"]
+outputCollaborator = "view"     # → recording fake, assertable output
+```
+
+```swift
+ConventionPolicy(paradigm: .mvp, nameSuffix: ["Presenter"],
+                 conformsTo: ["Presenting"], outputCollaborator: "view")
+```
+
+## Distinctive properties worth generating
+
+Beyond the shared interaction-invariant families, each paradigm has a contract
+that is *its* reason to exist as a separate policy:
+
+- **Redux:** the reducer is pure & total — `reduce(s, a) == reduce(s, a)`;
+  unknown/irrelevant actions are a no-op; state invariants hold under any fuzzed
+  action sequence; middleware idempotence. (Most directly fuzzable of all — no
+  effects to strip; `SoundPurity` gates it.)
+- **VIPER:** given the same input + the same mocked-service responses, the
+  interactor's calls to its output protocol are deterministic; the interactor
+  never imports UIKit (a testability invariant); the router fires ≤ once per
+  terminal action.
+- **MVP:** the presenter's `view.show(Y)` is a function of (model, event)
+  (asserted via the recording view fake); re-rendering from the same model is
+  idempotent.
+- **MVC:** model-mutation invariants; controller→model is the only mutation
+  path.
+
+## Migration path (land without disturbing the suite)
+
+- **Phase 0** — introduce `StatefulRole` + `RolePolicy` + engine *alongside* the
+  existing discoverers. Make `ReducerCandidate` / `ViewModelCandidate` thin
+  views over `StatefulRole` (or keep `asReducerCandidate` / `asViewModelCandidate`
+  adapters). Existing stub emitters keep consuming the old types via the
+  adapter — zero behavior change.
+- **Phase 1** — reimplement `ReducerDiscoverer` and `ViewModelDiscoveryVisitor`
+  as `TCAReducerPolicy` / `MVVMPolicy` behind the engine. Snapshot tests prove
+  byte-identical candidates.
+- **Phase 2** — add `ReduxPolicy` first (recognition already ~80% there via the
+  signature shapes). Then VIPER/MVP via `ConventionPolicy`. MVC last.
+- The stub emitters generalize by dispatching on `construction` (free-fn vs
+  instance) instead of on candidate type — the one real consumer-side refactor.
+
+## What's reuse vs. genuinely new
+
+| Piece | Status |
+|---|---|
+| Mutation analysis (`MutationAnalyzer`) | **Reuse** `ViewModelMethodBodyWalker` verbatim |
+| Instance construction + dependency faking | **Reuse** `ViewModelDependencyConstructor` + `ProtocolFaker` |
+| Reducer signature recognition (incl. Redux/Elm) | **Reuse** `ReducerDiscoverer` shapes |
+| `RolePolicy` seam + engine | New, small |
+| **Recording** (assertable) output fakes | **New** — the capability MVP/VIPER need that MVVM didn't |
+| `ConventionPolicy` (config-driven recognition) | New — reuses `Vocabulary` / config plumbing |
+| Per-paradigm distinctive properties | New stub emitters, incremental |
+
+## Risks & open questions
+
+1. **Candidate-type churn.** `ReducerCandidate` / `ViewModelCandidate` are
+   `Codable` and persisted (baseline / index / decisions). Phase 0 must keep
+   their wire shape stable via adapters, or a schema migration is required.
+2. **Recognition precedence.** When a TCA reducer also matches a generic
+   convention, the specific policy must win. Engine resolves by ordering
+   (macro/signature policies before convention policies) — needs a deterministic
+   tie-break and a test.
+3. **Convention false positives.** Name-suffix recognition (`*Presenter`) is
+   weaker than a macro; surface every match's `recognizedBy` so a human can see
+   *why* a type was treated as a presenter, mirroring `ViewModelExcludedField`'s
+   transparency posture.
+4. **Recording-fake semantics.** Asserting "output is deterministic" requires
+   capturing the *sequence and arguments* of output-protocol calls across two
+   runs — a new fake kind beyond the current no-op `ProtocolFaker`. Scope this
+   before committing to MVP/VIPER.
+5. **MVC honesty.** Resist testing `UIViewController` subclasses; the realistic
+   deliverable is a `*Model`-role discoverer, which overlaps the generic
+   function-level templates — confirm it adds signal over the status quo before
+   building it.
+
+## Recommended first step
+
+Phase 0 + `ReduxPolicy`: the lowest-risk, highest-signal slice, because Redux
+recognition is already mostly implemented and a pure reducer is the most
+directly fuzzable target in the whole taxonomy.
