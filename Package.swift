@@ -81,8 +81,17 @@ let package = Package(
         // optional `shrink:` on `checkXxxPropertyLaws` + the per-arity law
         // builders) so verify stubs report the *minimal* counterexample.
         .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "602.0.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+        // Idea #4 — the shared effect-vocabulary leaf. Owns the `Effect` lattice
+        // and the canonical `PurityInferrer`. `SoundPurity` composes SIP's
+        // `ReducerPurityAnalyzer` with SEI's purity oracle. Revision-pinned
+        // (SEI carries no version tags yet); both this package and SEI pin
+        // swift-syntax at exactly 602.0.0, so there is no version conflict.
+        .package(
+            url: "https://github.com/Joseph-Cursio/SwiftEffectInference.git",
+            revision: "b0751356cba09ed798a01a0a8930902d9955174c"
+        )
     ],
     targets: [
         // SwiftInferCore — shared data model (FunctionSummary, Suggestion,
@@ -92,6 +101,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftEffectInference", package: "SwiftEffectInference"),
                 // M3 dep wiring (M3.1) — `PropertyLawCore` exposes
                 // `DerivationStrategist` for the M4 generator-inference
                 // hookup (PRD §11). M3 itself only references the types
