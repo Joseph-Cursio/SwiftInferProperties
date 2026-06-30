@@ -234,18 +234,62 @@ that is *its* reason to exist as a separate policy:
 
 ## Migration path (land without disturbing the suite)
 
-- **Phase 0** — introduce `StatefulRole` + `RolePolicy` + engine *alongside* the
-  existing discoverers. Make `ReducerCandidate` / `ViewModelCandidate` thin
-  views over `StatefulRole` (or keep `asReducerCandidate` / `asViewModelCandidate`
-  adapters). Existing stub emitters keep consuming the old types via the
-  adapter — zero behavior change.
-- **Phase 1** — reimplement `ReducerDiscoverer` and `ViewModelDiscoveryVisitor`
-  as `TCAReducerPolicy` / `MVVMPolicy` behind the engine. Snapshot tests prove
-  byte-identical candidates.
+- **Phase 0 (done)** — introduce `StatefulRole` + the adapters
+  (`asStatefulRole`) *alongside* the existing discoverers, plus an exploratory
+  per-declaration `RolePolicy` engine. Zero behavior change.
+- **Phase 1 (done)** — see the revision below. Wrap the existing discoverers at
+  the corpus level (`UnifiedRoleDiscoverer`) rather than reimplementing them.
 - **Phase 2** — add `ReduxPolicy` first (recognition already ~80% there via the
   signature shapes). Then VIPER/MVP via `ConventionPolicy`. MVC last.
 - The stub emitters generalize by dispatching on `construction` (free-fn vs
   instance) instead of on candidate type — the one real consumer-side refactor.
+
+### Phase 1 finding — the seam is corpus-level, not per-declaration
+
+The Phase 0 engine offered each declaration to a policy and built a role from
+*that decl alone*. Reading the discoverers showed this is the wrong granularity:
+
+- `ReducerDiscoverer` is single-pass per file — a per-decl fit.
+- **`ViewModelDiscoverer` is corpus-level and two-phase.** A view model's methods
+  routinely live in `extension VM {}` blocks in *other files*; the discoverer
+  *accumulates* `RawTypeInfo` per type name across all files, then *assembles*
+  candidates from the merged table, with a fixed-point transitive-action
+  resolution that needs the type's full method set. A per-decl
+  `buildRole(classDecl)` cannot see the class's extensions — even in the same
+  file — so it cannot reproduce that.
+
+So reimplementing the discoverers as per-decl policies was the wrong move. Phase 1
+instead places the seam at the **corpus level** and has each paradigm **wrap its
+existing, heavily-tested discoverer**, adapting the output to `StatefulRole`:
+
+```swift
+public protocol ParadigmDiscoverer: Sendable {
+    var name: String { get }
+    func discover(source: String, file: String) -> [StatefulRole]
+    func discover(directory: URL) throws -> [StatefulRole]
+}
+
+struct MVVMParadigm: ParadigmDiscoverer {        // wraps ViewModelDiscoverer
+    func discover(source: String, file: String) -> [StatefulRole] {
+        ViewModelDiscoverer.discover(source: source, file: file).map { $0.asStatefulRole() }
+    }
+    // directory variant delegates to ViewModelDiscoverer.discover(directory:),
+    // which already does the cross-file accumulate/assemble.
+}
+
+struct UnifiedRoleDiscoverer { let paradigms: [any ParadigmDiscoverer]; … }   // runs all, concatenates
+```
+
+This **reuses the recognition + extraction + cross-file machinery wholesale**
+(the design's "reuse" column) and makes parity with the legacy discoverers true
+*by construction* — there is no reimplemented extraction to keep byte-identical.
+Tests cover both paradigms through one seam and, critically, a view model whose
+methods span two files assembling into one role.
+
+The Phase 0 per-declaration `RolePolicy` / `StatefulRoleDiscoverer` is retained
+as a building block (its `FileContext` / recognition shape will serve the
+convention-based VIPER/MVP/MVC recognizers in Phase 2), but it is **not** the
+top-level discovery path — `UnifiedRoleDiscoverer` is.
 
 ## What's reuse vs. genuinely new
 
