@@ -105,6 +105,19 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// `primaryFunctionName` carries (e.g. `"_scale(forMinimumCapacity:)"`).
     public let secondaryFunctionName: String?
 
+    /// V1.149 — the *generator* carrier, distinct from `typeName` (which
+    /// is the function's owner / call-site qualifier). For a method
+    /// defined on the carrier (`extension Int { … }`) the two coincide
+    /// and this stays `nil`; the verify path falls back to `typeName`.
+    /// For a `static`/free function whose property flows through a
+    /// parameter — e.g. `static func indent(_ s: String) -> String` on an
+    /// unrelated `enum Engine` — `typeName` is `"Engine"` (the call
+    /// qualifier) and `carrierTypeName` is `"String"` (the type the
+    /// generated `Gen<T>` must produce). `nil` for v1.148-and-earlier
+    /// persisted entries and for templates that don't expose a distinct
+    /// parameter carrier.
+    public let carrierTypeName: String?
+
     public init(
         identityHash: String,
         templateName: String,
@@ -118,7 +131,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         firstSeenAt: String,
         lastSeenAt: String,
         typeShape: IndexedTypeShape? = nil,
-        secondaryFunctionName: String? = nil
+        secondaryFunctionName: String? = nil,
+        carrierTypeName: String? = nil
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -133,6 +147,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.lastSeenAt = lastSeenAt
         self.typeShape = typeShape
         self.secondaryFunctionName = secondaryFunctionName
+        self.carrierTypeName = carrierTypeName
     }
 
     // MARK: - Codable
@@ -155,6 +170,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         case lastSeenAt
         case typeShape
         case secondaryFunctionName
+        case carrierTypeName
     }
 
     public init(from decoder: Decoder) throws {
@@ -174,6 +190,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.secondaryFunctionName = try container.decodeIfPresent(
             String.self, forKey: .secondaryFunctionName
         )
+        self.carrierTypeName = try container.decodeIfPresent(String.self, forKey: .carrierTypeName)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -191,6 +208,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         try container.encode(lastSeenAt, forKey: .lastSeenAt)
         try container.encodeIfPresent(typeShape, forKey: .typeShape)
         try container.encodeIfPresent(secondaryFunctionName, forKey: .secondaryFunctionName)
+        try container.encodeIfPresent(carrierTypeName, forKey: .carrierTypeName)
     }
 
     /// Returns a copy of `self` with the upsert-mutable columns
@@ -217,7 +235,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             firstSeenAt: firstSeenAt,
             lastSeenAt: other.lastSeenAt,
             typeShape: other.typeShape,
-            secondaryFunctionName: other.secondaryFunctionName
+            secondaryFunctionName: other.secondaryFunctionName,
+            carrierTypeName: carrierTypeName
         )
     }
 }

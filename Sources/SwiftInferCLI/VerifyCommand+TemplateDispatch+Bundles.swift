@@ -61,4 +61,32 @@ extension SwiftInferCommand.Verify {
         )
         return VerifyStubBundle(source: source, rendererContext: context)
     }
+
+    /// Helper — produce a copy of `entry` with `typeName` set to
+    /// `carrier`. Used to thread the `GenericBindingResolver`-bound
+    /// carrier into the per-template builders without leaking the
+    /// bound form back to the SemanticIndex. (V1.149 — relocated here
+    /// from `+TemplateDispatch` for the file-length cap; `carrierTypeName`
+    /// is preserved so the generator carrier survives owner rebinding.)
+    static func rebound(
+        _ entry: SemanticIndexEntry,
+        toCarrier carrier: String
+    ) -> SemanticIndexEntry {
+        guard entry.typeName != carrier else { return entry }
+        return SemanticIndexEntry(
+            identityHash: entry.identityHash,
+            templateName: entry.templateName,
+            typeName: carrier,
+            score: entry.score,
+            tier: entry.tier,
+            primaryFunctionName: entry.primaryFunctionName,
+            location: entry.location,
+            decision: entry.decision,
+            decisionAt: entry.decisionAt,
+            firstSeenAt: entry.firstSeenAt,
+            lastSeenAt: entry.lastSeenAt,
+            typeShape: entry.typeShape,
+            carrierTypeName: entry.carrierTypeName
+        )
+    }
 }

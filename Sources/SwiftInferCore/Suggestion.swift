@@ -64,6 +64,18 @@ public struct Suggestion: Sendable, Equatable {
     /// that don't pass this argument receive the default-nil value.
     public let carrier: String?
 
+    /// **V1.149** — the *generator* carrier, distinct from `carrier`
+    /// (which is the function's owner / call-site qualifier). For a method
+    /// defined on the carrier the two coincide and this is `nil`. For a
+    /// `static`/free function whose property flows through a parameter —
+    /// e.g. `static func indent(_ s: String) -> String` on an unrelated
+    /// `enum Engine` — `carrier` is `"Engine"` and `carrierTypeName` is
+    /// `"String"` (the `T` the generated `Gen<T>` must produce). Threaded
+    /// into `SemanticIndexEntry.carrierTypeName`; the verify path reads it
+    /// (falling back to `carrier`) to derive the generator. Backward-
+    /// compatible: defaults `nil`.
+    public let carrierTypeName: String?
+
     public init(
         templateName: String,
         evidence: [Evidence],
@@ -73,7 +85,8 @@ public struct Suggestion: Sendable, Equatable {
         identity: SuggestionIdentity,
         liftedOrigin: LiftedOrigin? = nil,
         mockGenerator: MockGenerator? = nil,
-        carrier: String? = nil
+        carrier: String? = nil,
+        carrierTypeName: String? = nil
     ) {
         self.templateName = templateName
         self.evidence = evidence
@@ -84,6 +97,7 @@ public struct Suggestion: Sendable, Equatable {
         self.liftedOrigin = liftedOrigin
         self.mockGenerator = mockGenerator
         self.carrier = carrier
+        self.carrierTypeName = carrierTypeName
     }
 }
 

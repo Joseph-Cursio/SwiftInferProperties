@@ -76,6 +76,14 @@ public struct Constraint<Subject>: Sendable {
     /// `{ _ in nil }` lets simple templates omit this argument.
     public let carrier: @Sendable (Subject) -> String?
 
+    /// V1.149 — generator-carrier accessor for `Suggestion.carrierTypeName`,
+    /// distinct from `carrier` (the call-site owner). Returns the parameter
+    /// type the generated `Gen<T>` must produce when it differs from the
+    /// owner (a `static`/free function over a parameter). Defaults to
+    /// `{ _ in nil }` — the verify path falls back to `carrier`, so
+    /// templates whose carrier already *is* the generator type omit it.
+    public let carrierType: @Sendable (Subject) -> String?
+
     /// Template-specific "why this might be wrong" caveats that aren't
     /// derivable from signals alone. The runner appends these to the
     /// ExplainabilityBlock's `whyMightBeWrong` list. Defaults to empty
@@ -99,6 +107,7 @@ public struct Constraint<Subject>: Sendable {
         evidence: @Sendable @escaping (Subject) -> [Evidence],
         identity: @Sendable @escaping (Subject) -> SuggestionIdentity,
         carrier: @Sendable @escaping (Subject) -> String? = { _ in nil },
+        carrierType: @Sendable @escaping (Subject) -> String? = { _ in nil },
         caveats: @Sendable @escaping (Subject) -> [String] = { _ in [] },
         additionalWhySuggested: @Sendable @escaping (Subject) -> [String] = { _ in [] }
     ) {
@@ -108,6 +117,7 @@ public struct Constraint<Subject>: Sendable {
         self.evidence = evidence
         self.identity = identity
         self.carrier = carrier
+        self.carrierType = carrierType
         self.caveats = caveats
         self.additionalWhySuggested = additionalWhySuggested
     }

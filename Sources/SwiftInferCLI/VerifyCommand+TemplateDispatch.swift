@@ -113,31 +113,6 @@ extension SwiftInferCommand.Verify {
         "round-trip", "idempotence", "commutativity", "associativity"
     ]
 
-    /// Helper — produce a copy of `entry` with `typeName` set to
-    /// `carrier`. Used to thread the `GenericBindingResolver`-bound
-    /// carrier into the per-template builders without leaking the
-    /// bound form back to the SemanticIndex.
-    private static func rebound(
-        _ entry: SemanticIndexEntry,
-        toCarrier carrier: String
-    ) -> SemanticIndexEntry {
-        guard entry.typeName != carrier else { return entry }
-        return SemanticIndexEntry(
-            identityHash: entry.identityHash,
-            templateName: entry.templateName,
-            typeName: carrier,
-            score: entry.score,
-            tier: entry.tier,
-            primaryFunctionName: entry.primaryFunctionName,
-            location: entry.location,
-            decision: entry.decision,
-            decisionAt: entry.decisionAt,
-            firstSeenAt: entry.firstSeenAt,
-            lastSeenAt: entry.lastSeenAt,
-            typeShape: entry.typeShape
-        )
-    }
-
     /// Route 1 — existing v1.46 per-template dispatch.
     private static func v1_46HardcodedBundle(
         entry: SemanticIndexEntry,
@@ -173,8 +148,12 @@ extension SwiftInferCommand.Verify {
         extraImports: [String] = []
     ) throws -> VerifyStubBundle {
         let calls = try resolveFunctionCalls(for: entry)
+        // V1.149 — generator carrier is `carrierTypeName` (param `T`), distinct
+        // from `typeName` (the call-site owner `resolveFunctionCalls` already
+        // used); `?? typeName` keeps pre-v1.149 entries bit-identical.
+        let generatorCarrier = GenericBindingResolver.bound(entry.carrierTypeName ?? entry.typeName ?? "(none)")
         let inputs = StrategistDispatchEmitter.Inputs(
-            carrier: entry.typeName ?? "(none)",
+            carrier: generatorCarrier,
             typeShape: entry.typeShape,
             template: entry.templateName,
             functionCalls: calls.expressions,
@@ -187,7 +166,7 @@ extension SwiftInferCommand.Verify {
             templateName: entry.templateName,
             forwardName: calls.rendererForwardName,
             inverseName: calls.rendererInverseName,
-            carrierType: entry.typeName ?? "(none)"
+            carrierType: generatorCarrier
         )
         return VerifyStubBundle(source: source, rendererContext: context)
     }

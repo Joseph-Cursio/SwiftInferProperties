@@ -88,6 +88,14 @@ public enum IdempotenceTemplate {
             evidence: { summary in [summary.inferenceEvidence] },
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
+            // V1.149 — the generator carrier is the parameter type `T`, not
+            // the owning type. `typeSymmetrySignal` only fires when
+            // `param.typeText == returnTypeText`, so `returnTypeText` is `T`
+            // and is always present here. For a method defined on `T`
+            // (`extension Int`) this equals `carrier` and is a no-op; for a
+            // `static`/free function over a parameter it's the fix that lets
+            // verify derive `Gen<T>` while still calling `Owner.f(_:)`.
+            carrierType: { $0.returnTypeText },
             caveats: { _ in Self.makeCaveats() }
         )
     }

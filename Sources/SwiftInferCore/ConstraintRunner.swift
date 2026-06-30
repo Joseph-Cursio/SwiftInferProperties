@@ -50,7 +50,8 @@ public enum ConstraintRunner {
             generator: .m1Placeholder,
             explainability: explainability,
             identity: constraint.identity(subject),
-            carrier: constraint.carrier(subject)
+            carrier: constraint.carrier(subject),
+            carrierTypeName: constraint.carrierType(subject)
         )
     }
 

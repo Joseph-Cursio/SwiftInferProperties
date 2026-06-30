@@ -298,7 +298,8 @@ extension SwiftInferCommand {
                 firstSeenAt: now,
                 lastSeenAt: now,
                 typeShape: typeShape,
-                secondaryFunctionName: secondaryFunctionName
+                secondaryFunctionName: secondaryFunctionName,
+                carrierTypeName: suggestion.carrierTypeName
             )
         }
 
@@ -324,7 +325,10 @@ extension SwiftInferCommand {
             for suggestion: Suggestion,
             typeShapesByName: [String: PropertyLawCore.TypeShape]
         ) -> IndexedTypeShape? {
-            guard let carrier = suggestion.carrier else { return nil }
+            // V1.149 — prefer the generator carrier (the param type the
+            // `Gen<T>` must produce) over the owner when they diverge, so a
+            // non-raw `T` on an unrelated owner resolves its own shape.
+            guard let carrier = suggestion.carrierTypeName ?? suggestion.carrier else { return nil }
             let bareName = bareTypeName(from: carrier)
             guard let kitShape = typeShapesByName[bareName] else { return nil }
             return IndexedTypeShape(from: kitShape)
