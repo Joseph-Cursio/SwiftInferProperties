@@ -82,6 +82,18 @@ extension SwiftInferCommand.Verify {
     /// the diagnostic Swift produces when a static-call-shape on a
     /// nested generic type can't resolve type arguments. Same
     /// architectural category as the other instance-method-shape errors.
+    /// Protocol-carrier variant — static-calling an instance method whose
+    /// carrier is a *protocol* (e.g. `StringProtocol.addingIntercappedPrefix(x)`)
+    /// does not produce the concrete-type `"cannot be used on type"` diagnostic.
+    /// An instance method is not a static member of the existential metatype, so
+    /// Swift reports `type 'any StringProtocol' has no member
+    /// 'addingIntercappedPrefix'` — the `"type 'any …'"` + `"has no member"`
+    /// pairing is the tell (requiring both keeps it off ordinary
+    /// missing-member typos on concrete types). Same root cause as the other
+    /// cases (an instance method emitted in the static `Type.method(x)` shape),
+    /// fixed by the same v1.60+ instance-method emission. Surfaced dogfooding
+    /// swift-argument-parser's internal `StringProtocol` picks
+    /// (`addingIntercappedPrefix`, `editDistance(to:)`).
     private static func matchesInstanceMethodShape(stdout: String, stderr: String) -> Bool {
         let instanceMemberOnType = "cannot be used on type"
         let noExactMatchesInstance = "no exact matches in call to instance method"
@@ -96,11 +108,13 @@ extension SwiftInferCommand.Verify {
             (stdout.contains("instance member") && stdout.contains(instanceMemberOnType))
             || stdout.contains(noExactMatchesInstance)
             || (stdout.contains("generic parameter") && stdout.contains(cannotInferGenericParam))
+            || (stdout.contains("type 'any ") && stdout.contains("has no member"))
             || compileCrashOnSignal
         let stderrInstanceMember =
             (stderr.contains("instance member") && stderr.contains(instanceMemberOnType))
             || stderr.contains(noExactMatchesInstance)
             || (stderr.contains("generic parameter") && stderr.contains(cannotInferGenericParam))
+            || (stderr.contains("type 'any ") && stderr.contains("has no member"))
             || stderrCrashOnSignal
         return stdoutInstanceMember || stderrInstanceMember
     }

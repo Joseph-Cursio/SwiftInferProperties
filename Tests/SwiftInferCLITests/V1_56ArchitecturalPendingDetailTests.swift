@@ -168,4 +168,32 @@ struct V156ArchitecturalPendingDetailTests {
         )
         #expect(detail == "carrier-missing-required-conformance")
     }
+
+    // MARK: - Protocol-carrier (existential) instance-method variant
+
+    @Test("matches `type 'any P' has no member 'x'` (static-called instance method on a protocol)")
+    func matchesExistentialCarrierNoMember() {
+        // The real diagnostic from static-calling `StringProtocol`'s
+        // `addingIntercappedPrefix(_:)` — an instance method emitted as
+        // `StringProtocol.addingIntercappedPrefix(x)`. Reclassifies the
+        // otherwise-opaque `build-failed` into the instance-method-shape gap.
+        let stdout =
+            "main.swift:26:37: error: type 'any StringProtocol' has no member 'addingIntercappedPrefix'"
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: stdout,
+            buildStderr: ""
+        )
+        #expect(detail == "instance-method-shape-not-supported")
+    }
+
+    @Test("requires both `type 'any` and `has no member` — a plain missing member alone does not match")
+    func plainMissingMemberDoesNotMatch() {
+        // A missing member on a concrete type (no `any` existential) is an
+        // ordinary emitter/typo error and must stay `.measured-error` (nil).
+        let detail = SwiftInferCommand.Verify.architecturalPendingDetail(
+            buildStdout: "error: value of type 'Int' has no member 'wobble'",
+            buildStderr: ""
+        )
+        #expect(detail == nil)
+    }
 }
