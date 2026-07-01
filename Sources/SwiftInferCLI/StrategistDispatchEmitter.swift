@@ -202,6 +202,24 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             let strategy = DerivationStrategist.strategy(for: typeShape.toKitShape(), resolve: resolve)
             return try recipe(for: strategy, carrier: carrier)
         }
+        // WS-6 follow-up — top-level *composite* carrier. A carrier without its
+        // own indexed TypeShape may still be a composite spelling (`[Rule]`,
+        // `Rule?`, `[K: V]`) whose element/leaf types live in the resolver's
+        // universe. The kit's `composedGenerator` (public since
+        // SwiftPropertyLaws 3.3.0) recurses through Optional/Array/Set/Dictionary
+        // and hands leaf custom types to `resolve` — the same whole-module
+        // resolver WS-6 threaded in. Fires only when there's no TypeShape (shaped
+        // carriers took the branch above); an unresolvable leaf returns nil and
+        // falls through to the `gen()` guidance below. With an empty universe the
+        // default `{ _ in nil }` resolver yields nil for custom leaves, so a
+        // pre-v4 index behaves exactly as before.
+        if let composed = DerivationStrategist.composedGenerator(forTypeName: carrier, resolve: resolve) {
+            return GeneratorRecipe(
+                expression: composed.expression,
+                carrierTypeName: carrier,
+                imports: Array(Set(["Foundation", "PropertyBased"]).union(composed.requiredImports)).sorted()
+            )
+        }
         // WS-4 — no RawType and no indexed shape (an external/opaque carrier).
         // Point the user at the `gen()` escape hatch with the exact signature; a
         // same-file `extension \(carrier) { static func gen() }` in the scanned

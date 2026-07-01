@@ -163,6 +163,41 @@ struct StrategistDispatchEmitterRecipeTests {
             )
         }
     }
+
+    // MARK: - Top-level composite carriers (WS-6 follow-up, kit 3.3.0)
+
+    @Test("composite carrier [Money] with a universe resolver derives an array generator")
+    func compositeArrayCarrierDerivesViaResolver() throws {
+        // `[Money]` has no TypeShape of its own (the bare-name lookup misses the
+        // `[...]` syntax), but Money is in the resolver universe — the composite
+        // fallback resolves it to `<Money generator>.array(of:)`.
+        let resolver = GeneratorResolver(types: [moneyKitShape()])
+        let recipe = try StrategistDispatchEmitter.resolveRecipe(
+            carrier: "[Money]", typeShape: nil, resolve: resolver.customTypeGenerator
+        )
+        #expect(recipe.expression.contains("Money("))
+        #expect(recipe.expression.contains(".array(of:"))
+        #expect(recipe.carrierTypeName == "[Money]")
+    }
+
+    @Test("optional composite carrier Money? derives via the universe resolver")
+    func compositeOptionalCarrierDerivesViaResolver() throws {
+        let resolver = GeneratorResolver(types: [moneyKitShape()])
+        let recipe = try StrategistDispatchEmitter.resolveRecipe(
+            carrier: "Money?", typeShape: nil, resolve: resolver.customTypeGenerator
+        )
+        #expect(recipe.expression.contains("Money("))
+        #expect(recipe.expression.contains(".optional"))
+    }
+
+    @Test("composite carrier over an out-of-universe leaf still throws (no resolver)")
+    func compositeCarrierUnresolvedLeafThrows() throws {
+        // Default resolve `{ _ in nil }` — Money isn't reachable, so `[Money]`
+        // bottoms out and the carrier stays unsupported (gen() guidance).
+        #expect(throws: VerifyError.self) {
+            _ = try StrategistDispatchEmitter.resolveRecipe(carrier: "[Money]", typeShape: nil)
+        }
+    }
 }
 
 @Suite("StrategistDispatchEmitter — V1.47.E template × emit dispatch")
