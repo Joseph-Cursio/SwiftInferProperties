@@ -117,4 +117,56 @@ struct IndexedTypeShapeTests {
         )
         #expect(decoded == original)
     }
+
+    @Test("WS-2 — initializers survive kit→mirror→JSON→kit and enable .initializerBased")
+    func initializersRoundTripEnableInitializerBased() throws {
+        // A struct whose user `init` suppresses the memberwise one; both params
+        // are RawType-resolvable, so Tier 6 initializerBased should apply.
+        // Pre-WS-2 the mirror dropped `initializers`, so the persisted shape
+        // round-tripped to hasUserInit=true + empty inits → strategist `.todo`.
+        let kitShape = TypeShape(
+            name: "RuleParams",
+            kind: .struct,
+            inheritedTypes: [],
+            hasUserGen: false,
+            storedMembers: [
+                PropertyLawCore.StoredMember(name: "count", typeName: "Int"),
+                PropertyLawCore.StoredMember(name: "label", typeName: "String")
+            ],
+            hasUserInit: true,
+            initializers: [
+                PropertyLawCore.InitializerSignature(
+                    parameters: [
+                        PropertyLawCore.InitializerParameter(label: "count", typeName: "Int"),
+                        PropertyLawCore.InitializerParameter(label: "label", typeName: "String")
+                    ]
+                )
+            ]
+        )
+        let mirror = IndexedTypeShape(from: kitShape)
+        #expect(mirror.initializers.count == 1)
+        #expect(mirror.initializers[0].parameters.map(\.typeName) == ["Int", "String"])
+
+        let data = try Self.canonicalEncoder.encode(mirror)
+        let decoded = try JSONDecoder().decode(IndexedTypeShape.self, from: data)
+        #expect(decoded.initializers == mirror.initializers)
+
+        let roundTripped = decoded.toKitShape()
+        #expect(roundTripped.initializers.count == 1)
+        // The payoff: memberwise declines (hasUserInit), and the strategist now
+        // derives an init-lift instead of falling through to `.todo`.
+        guard case .initializerBased = DerivationStrategist.strategy(for: roundTripped) else {
+            Issue.record("expected .initializerBased, got \(DerivationStrategist.strategy(for: roundTripped))")
+            return
+        }
+    }
+
+    @Test("missing initializers field decodes to [] (backward compat)")
+    func missingInitializersDecodesEmpty() throws {
+        let json = """
+        { "name": "Foo", "kind": "struct", "inheritedTypes": [], "hasUserGen": false }
+        """
+        let decoded = try JSONDecoder().decode(IndexedTypeShape.self, from: Data(json.utf8))
+        #expect(decoded.initializers.isEmpty)
+    }
 }

@@ -43,12 +43,45 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         }
     }
 
+    /// Mirror of `PropertyLawCore.InitializerParameter` — call-site label
+    /// (nil for an unlabeled `_` param) + source-declared type spelling.
+    public struct InitializerParameter: Codable, Sendable, Equatable {
+        public let label: String?
+        public let typeName: String
+
+        public init(label: String?, typeName: String) {
+            self.label = label
+            self.typeName = typeName
+        }
+    }
+
+    /// Mirror of `PropertyLawCore.InitializerSignature` — a user-declared
+    /// initializer consumed by the Tier 6 `initializerBased` strategy at
+    /// verify time. Persisted so `toKitShape()` can round-trip it; without
+    /// this the strategist saw `hasUserInit == true` with no captured inits
+    /// and fell through to `.todo`.
+    public struct InitializerSignature: Codable, Sendable, Equatable {
+        public let parameters: [InitializerParameter]
+        public let isFailable: Bool
+        public let isThrowing: Bool
+
+        public init(parameters: [InitializerParameter], isFailable: Bool = false, isThrowing: Bool = false) {
+            self.parameters = parameters
+            self.isFailable = isFailable
+            self.isThrowing = isThrowing
+        }
+    }
+
     public let name: String
     public let kind: Kind
     public let inheritedTypes: [String]
     public let hasUserGen: Bool
     public let storedMembers: [StoredMember]
     public let hasUserInit: Bool
+    /// User-declared initializers from the type's primary body (WS-2). Mirrors
+    /// `TypeShape.initializers`; enables the Tier 6 `initializerBased` strategy
+    /// at verify time for structs whose user `init` suppresses the memberwise one.
+    public let initializers: [InitializerSignature]
 
     public init(
         name: String,
@@ -56,7 +89,8 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         inheritedTypes: [String],
         hasUserGen: Bool,
         storedMembers: [StoredMember] = [],
-        hasUserInit: Bool = false
+        hasUserInit: Bool = false,
+        initializers: [InitializerSignature] = []
     ) {
         self.name = name
         self.kind = kind
@@ -64,6 +98,7 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         self.hasUserGen = hasUserGen
         self.storedMembers = storedMembers
         self.hasUserInit = hasUserInit
+        self.initializers = initializers
     }
 
     // MARK: - Codable
@@ -79,6 +114,7 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         case hasUserGen
         case storedMembers
         case hasUserInit
+        case initializers
     }
 
     public init(from decoder: Decoder) throws {
@@ -91,6 +127,8 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
             .decodeIfPresent([StoredMember].self, forKey: .storedMembers) ?? []
         self.hasUserInit = try container
             .decodeIfPresent(Bool.self, forKey: .hasUserInit) ?? false
+        self.initializers = try container
+            .decodeIfPresent([InitializerSignature].self, forKey: .initializers) ?? []
     }
 }
 
@@ -109,7 +147,16 @@ extension IndexedTypeShape {
             storedMembers: kitShape.storedMembers.map {
                 StoredMember(name: $0.name, typeName: $0.typeName)
             },
-            hasUserInit: kitShape.hasUserInit
+            hasUserInit: kitShape.hasUserInit,
+            initializers: kitShape.initializers.map { sig in
+                InitializerSignature(
+                    parameters: sig.parameters.map {
+                        InitializerParameter(label: $0.label, typeName: $0.typeName)
+                    },
+                    isFailable: sig.isFailable,
+                    isThrowing: sig.isThrowing
+                )
+            }
         )
     }
 
@@ -124,7 +171,16 @@ extension IndexedTypeShape {
             storedMembers: storedMembers.map {
                 PropertyLawCore.StoredMember(name: $0.name, typeName: $0.typeName)
             },
-            hasUserInit: hasUserInit
+            hasUserInit: hasUserInit,
+            initializers: initializers.map { sig in
+                PropertyLawCore.InitializerSignature(
+                    parameters: sig.parameters.map {
+                        PropertyLawCore.InitializerParameter(label: $0.label, typeName: $0.typeName)
+                    },
+                    isFailable: sig.isFailable,
+                    isThrowing: sig.isThrowing
+                )
+            }
         )
     }
 }
