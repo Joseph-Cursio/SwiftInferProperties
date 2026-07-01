@@ -46,10 +46,19 @@ public enum TypeShapeBuilder {
     }
 
     /// Build a `TypeShape` for the named type from its corpus records.
-    /// Returns `nil` when `group` is extension-only (no kind to assign).
+    /// Returns `nil` when `group` is extension-only *and* supplies no user
+    /// `gen()` (no kind to assign).
     private static func shape(name: String, group: [TypeDecl]) -> TypeShape? {
         guard let primary = group.first(where: { $0.kind != .extension }) else {
-            return nil
+            // WS-4 — no primary decl: an external/opaque type referenced only via
+            // an extension in the scanned target. If that extension supplies a
+            // user `static func gen()`, emit a synthetic `hasUserGen` shape so the
+            // escape hatch works for external carriers (e.g. `extension URL {
+            // static func gen() }` unblocks a `URL` carrier). The strategist's
+            // `.userGen` short-circuits before any kind/member checks, so the
+            // placeholder `.struct` kind is irrelevant.
+            guard group.contains(where: \.hasUserGen) else { return nil }
+            return TypeShape(name: name, kind: .struct, inheritedTypes: [], hasUserGen: true)
         }
         guard let kind = TypeShape.Kind(swiftInferKind: primary.kind) else {
             return nil

@@ -178,9 +178,17 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             let strategy = DerivationStrategist.strategy(for: typeShape.toKitShape())
             return try recipe(for: strategy, carrier: carrier)
         }
+        // WS-4 — no RawType and no indexed shape (an external/opaque carrier).
+        // Point the user at the `gen()` escape hatch with the exact signature; a
+        // same-file `extension \(carrier) { static func gen() }` in the scanned
+        // target is picked up (TypeShapeBuilder emits a synthetic hasUserGen shape).
         throw VerifyError.unsupportedCarrier(
             carrier: carrier,
-            expected: ["any RawType, or any carrier with an indexed TypeShape"]
+            expected: [
+                "a RawType or a carrier with an indexed TypeShape",
+                "or provide `static func gen() -> Generator<\(carrier), some SendableSequenceType>` "
+                    + "(a same-file extension works for external types)"
+            ]
         )
     }
 

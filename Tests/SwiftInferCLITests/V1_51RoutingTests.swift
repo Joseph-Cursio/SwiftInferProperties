@@ -216,4 +216,20 @@ struct V151RoutingFlipTests {
             #expect(expected.contains(where: { $0.contains("RawType") || $0.contains("TypeShape") }))
         }
     }
+
+    @Test("WS-4: non-derivable carrier error points at the gen() escape hatch")
+    func nonDerivableCarrierSuggestsGen() throws {
+        let entry = Self.entry(template: "idempotence", carrier: "Widget", primary: "normalize(_:)")
+        do {
+            _ = try SwiftInferCommand.Verify.buildStubBundle(entry: entry, budget: .small)
+            Issue.record("expected buildStubBundle to throw for a non-derivable carrier")
+        } catch let error as VerifyError {
+            guard case let .unsupportedCarrier(_, expected) = error else {
+                Issue.record("expected .unsupportedCarrier, got \(error)")
+                return
+            }
+            #expect(expected.contains(where: { $0.contains("static func gen()") }))
+            #expect(expected.contains(where: { $0.contains("Generator<Widget") }))
+        }
+    }
 }

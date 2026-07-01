@@ -77,6 +77,18 @@ struct TypeShapeBuilderTests {
         #expect(TypeShapeBuilder.shapes(from: decls).isEmpty)
     }
 
+    @Test("WS-4: extension-only record with a user gen() yields a synthetic hasUserGen shape")
+    func extensionOnlyWithUserGenYieldsSyntheticShape() throws {
+        // `extension URL { static func gen() -> Generator<URL, ...> }` — URL has no
+        // primary decl in the scanned source, but the escape hatch must work: the
+        // builder emits a synthetic hasUserGen shape so the strategist picks .userGen.
+        let decls = [decl("URL", .extension, hasUserGen: true)]
+        let shape = try #require(TypeShapeBuilder.shapes(from: decls).first)
+        #expect(shape.name == "URL")
+        #expect(shape.hasUserGen == true)
+        #expect(DerivationStrategist.strategy(for: shape) == .userGen)
+    }
+
     // MARK: - Same-file extension fold
 
     @Test
