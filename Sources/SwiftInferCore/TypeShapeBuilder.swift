@@ -68,8 +68,14 @@ public enum TypeShapeBuilder {
         }
         let mergedInherited = primary.inheritedTypes
             + sameFileExtensions.flatMap(\.inheritedTypes)
+        // `hasUserGen` is OR'd across the WHOLE group (any-file extensions), not
+        // just same-file ones: a `static func gen()` supplied in a separate file
+        // (e.g. a dedicated `PBTGenerators.swift`) is a valid escape hatch for a
+        // type declared elsewhere in the scanned target. Merged conformances /
+        // enum cases stay same-file-scoped (they can be conditional and
+        // file-local); the gen() signal is a plain boolean "a generator exists".
         let hasUserGen = primary.hasUserGen
-            || sameFileExtensions.contains(where: \.hasUserGen)
+            || group.contains { $0.kind == .extension && $0.hasUserGen }
         // Enum cases can be added by same-file extensions; union them.
         let mergedEnumCases = primary.enumCases
             + sameFileExtensions.flatMap(\.enumCases)

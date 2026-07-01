@@ -120,12 +120,20 @@ struct TypeShapeBuilderTests {
         #expect(shape.hasUserGen == false)
     }
 
-    @Test
-    func crossFileExtensionDoesNotFlipHasUserGen() throws {
+    @Test("a gen() in a cross-file extension flips hasUserGen on the primary shape")
+    func crossFileExtensionFlipsHasUserGen() throws {
+        // A `static func gen()` supplied in a dedicated `Foo+Generators.swift`
+        // (separate from the primary decl) is a valid escape hatch — the builder
+        // OR's `hasUserGen` across the whole group, not just same-file extensions,
+        // so the strategist picks `.userGen`. (Inherited-type / enum-case merging
+        // stays same-file-scoped — see the two tests above.)
         let primary = decl("Foo", .struct, file: "Foo.swift", hasUserGen: false)
         let crossFile = decl("Foo", .extension, file: "Foo+Generators.swift", hasUserGen: true)
         let shape = try #require(TypeShapeBuilder.shapes(from: [primary, crossFile]).first)
-        #expect(shape.hasUserGen == false)
+        #expect(shape.hasUserGen == true)
+        // Cross-file conformances still don't merge (hasUserGen is the only
+        // cross-file signal): the primary's inheritance is untouched.
+        #expect(shape.inheritedTypes == [])
     }
 
     // MARK: - Stored members + hasUserInit are primary-only
