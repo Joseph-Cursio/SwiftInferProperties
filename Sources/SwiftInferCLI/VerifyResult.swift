@@ -235,11 +235,17 @@ public enum VerifyResultParser {
     }
 
     /// Extract the value following a `MARKER:` prefix on the first
-    /// matching line.
+    /// matching line. V1.151 — strips only the single separator space the
+    /// stub prints after the marker's colon (`print("MARKER: \(value)")`),
+    /// *preserving the value's own leading/trailing whitespace* so a
+    /// whitespace-significant counterexample (e.g. `"  -"` for an
+    /// indentation function) survives faithfully into the rendered output
+    /// and the emitted regression test, instead of collapsing to `"-"`.
     private static func value(forMarker marker: String, in lines: [String]) -> String? {
         for line in lines where line.hasPrefix(marker) {
-            let value = String(line.dropFirst(marker.count))
-            return value.trimmingCharacters(in: .whitespaces)
+            var value = String(line.dropFirst(marker.count))
+            if value.first == " " { value.removeFirst() }
+            return value
         }
         return nil
     }

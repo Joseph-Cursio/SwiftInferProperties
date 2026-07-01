@@ -112,9 +112,9 @@ public enum VerifyResultRenderer {
                 + "\(shape.subjectLine(context: context)),",
             "    default pass \(defaultTrials)/\(defaultTrials), "
                 + "edge pass failed at trial \(edge.trial) on \(edgeTag):",
-            "    input  = \(edge.input)",
-            "    \(shape.forwardExpression(context: context)) = \(edge.forward)",
-            "    \(shape.inverseExpression(context: context)) = \(edge.inverse)",
+            "    input  = \(displayValue(edge.input))",
+            "    \(shape.forwardExpression(context: context)) = \(displayValue(edge.forward))",
+            "    \(shape.inverseExpression(context: context)) = \(displayValue(edge.inverse))",
             "    expected ≈ \(shape.expectedExpression(context: context)) "
                 + "(within \(context.carrierType).isApproximatelyEqual)"
         ].joined(separator: "\n")
@@ -128,9 +128,9 @@ public enum VerifyResultRenderer {
         var lines = [
             "✗ verify fails: \(shape.subjectLine(context: context)), "
                 + "counterexample at trial \(detail.trial) (default pass):",
-            "    input  = \(detail.input)",
-            "    \(shape.forwardExpression(context: context)) = \(detail.forwardResult)",
-            "    \(shape.inverseExpression(context: context)) = \(detail.inverseResult)",
+            "    input  = \(displayValue(detail.input))",
+            "    \(shape.forwardExpression(context: context)) = \(displayValue(detail.forwardResult))",
+            "    \(shape.inverseExpression(context: context)) = \(displayValue(detail.inverseResult))",
             "    expected ≈ \(shape.expectedExpression(context: context)) "
                 + "(within \(context.carrierType).isApproximatelyEqual)"
         ]
@@ -138,9 +138,33 @@ public enum VerifyResultRenderer {
         // counterexample — the most actionable form for the developer.
         if let shrink = detail.shrink, shrink.steps > 0 {
             let stepWord = shrink.steps == 1 ? "step" : "steps"
-            lines.append("    shrank \(shrink.steps) \(stepWord) → minimal counterexample: \(shrink.minimal)")
+            lines.append(
+                "    shrank \(shrink.steps) \(stepWord) → minimal counterexample: "
+                    + "\(displayValue(shrink.minimal))"
+            )
         }
         return lines.joined(separator: "\n")
+    }
+
+    /// V1.151 — render a counterexample value for display. A value with
+    /// significant whitespace (leading/trailing space, tab, newline) or an
+    /// empty value is shown as an escaped, quoted literal so it's
+    /// unambiguous (`"  -"` rather than a bare `-` that reads as no
+    /// whitespace). Ordinary values — numbers, plain strings, tuples —
+    /// render as-is, so numeric counterexample output is unchanged.
+    static func displayValue(_ value: String) -> String {
+        let hasEdgeWhitespace = value.first == " " || value.last == " "
+        let needsQuoting = value.isEmpty
+            || hasEdgeWhitespace
+            || value.contains("\n")
+            || value.contains("\t")
+        guard needsQuoting else { return value }
+        let escaped = value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\t", with: "\\t")
+        return "\"\(escaped)\""
     }
 
     // MARK: - Template/carrier-aware phrasing
