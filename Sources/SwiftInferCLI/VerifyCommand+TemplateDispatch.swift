@@ -38,10 +38,11 @@ extension SwiftInferCommand.Verify {
     ///   2. everything else → `StrategistDispatchEmitter` (handles
     ///      `Int` / `String` / `Bool` / fixed-width ints / enums).
     ///   3. strategist throws (unknown carrier without `typeShape`,
-    ///      strategist returns `.todo` / `.memberwiseArbitrary`) →
-    ///      fall back to the v1.46 per-template builder so existing
-    ///      Int / Complex<Double> / Double pipelines stay green even
-    ///      when the strategist path can't help.
+    ///      strategist returns `.todo`) → the error propagates. **WS-3a**
+    ///      removed the old v1.46 fallback here: a v1.46-template pick that
+    ///      reaches Route 2 always has a non-numeric carrier, so the fallback
+    ///      could only mask the strategist's real reason with a bogus
+    ///      `[Complex<Double>, Double, Int]` list against the owner type.
     static func buildStubBundle(
         entry: SemanticIndexEntry,
         budget: RoundTripStubEmitter.TrialBudget,
@@ -76,39 +77,31 @@ extension SwiftInferCommand.Verify {
                 budget: budget
             )
         }
-        // Route 2: strategist-routed carriers. Falls back to v1.46
-        // when the strategist throws **only for templates the v1.46
-        // path supports** (round-trip / idempotence / commutativity /
-        // associativity). v1.48 templates (idempotence-lifted /
-        // dual-style-consistency / monotonicity) have no v1.46
-        // hardcoded path — the fallback for those would surface a
-        // misleading `.unsupportedTemplate` instead of the original
-        // strategist error. **V1.50.B finding**: the cycle-47 full-
-        // surface measurement revealed this misrouting — 49 of the
-        // 109 picks were classified as "unsupported-template" when
-        // the real reason was strategist-side carrier-unsupported.
-        do {
-            return try strategistBundle(
-                entry: rebound(entry, toCarrier: boundCarrier),
-                budget: budget,
-                extraImports: extraImports
-            )
-        } catch let error as VerifyError {
-            if Self.v146HardcodedTemplates.contains(entry.templateName) {
-                return try v1_46HardcodedBundle(
-                    entry: rebound(entry, toCarrier: boundCarrier),
-                    budget: budget
-                )
-            }
-            throw error
-        }
+        // Route 2: strategist-routed carriers. WS-3a — no v1.46 fallback.
+        // By the time a v1.46-template pick (round-trip / idempotence /
+        // commutativity / associativity) reaches here, its carrier is
+        // necessarily non-numeric: numeric carriers either took Route 1
+        // (Complex<Double> / Double) or derive as RawTypes inside the
+        // strategist (Int). A fallback to the v1.46 hardcoded path could
+        // therefore only re-throw `.unsupportedCarrier([Complex<Double>,
+        // Double, Int])` against the *owner* type, masking the strategist's
+        // real reason (the actual non-derivable generator carrier, or a
+        // `.todo` naming the missing generator). The V1.50.B fallback already
+        // excluded the v1.48 templates for exactly this reason; WS-3a extends
+        // that to the v1.46 templates — let the strategist's truthful error
+        // propagate. (`v146HardcodedTemplates` / `v1_46HardcodedBundle` remain
+        // in use for Route 1's direct numeric-carrier dispatch above.)
+        return try strategistBundle(
+            entry: rebound(entry, toCarrier: boundCarrier),
+            budget: budget,
+            extraImports: extraImports
+        )
     }
 
-    /// V1.50.B — the 4 templates the v1.46 hardcoded emitters
-    /// support. Used to gate the strategist→v1.46 fallback in
-    /// `buildStubBundle` so v1.48-template entries surface their
-    /// real strategist error rather than a misleading
-    /// `.unsupportedTemplate` from the v1.46 path's default case.
+    /// The 4 templates the v1.46 hardcoded emitters support. Gates Route 1's
+    /// direct numeric-carrier dispatch (paired with `v146HardcodedCarriers`).
+    /// The V1.50.B strategist→v1.46 fallback that also read this was removed in
+    /// WS-3a (it only masked the strategist's real error).
     private static let v146HardcodedTemplates: Set<String> = [
         "round-trip", "idempotence", "commutativity", "associativity"
     ]

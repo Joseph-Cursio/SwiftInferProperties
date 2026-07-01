@@ -192,4 +192,28 @@ struct V151RoutingFlipTests {
         )
         #expect(result.source.contains("idempotence-lifted"))
     }
+
+    @Test("WS-3a: idempotence × non-derivable carrier surfaces the strategist error, not the v1.46 numeric list")
+    func nonDerivableCarrierSurfacesStrategistError() throws {
+        // idempotence is a v1.46 template, so pre-WS-3a a strategist throw fell
+        // back to the v1.46 hardcoded path, which re-threw
+        // `.unsupportedCarrier(owner, [Complex<Double>, Double, Int])` — masking
+        // the real reason. `Widget` is a made-up carrier with no TypeShape, so
+        // the strategist can't derive a generator and throws its own error.
+        let entry = Self.entry(template: "idempotence", carrier: "Widget", primary: "normalize(_:)")
+        do {
+            _ = try SwiftInferCommand.Verify.buildStubBundle(entry: entry, budget: .small)
+            Issue.record("expected buildStubBundle to throw for a non-derivable carrier")
+        } catch let error as VerifyError {
+            guard case let .unsupportedCarrier(carrier, expected) = error else {
+                Issue.record("expected .unsupportedCarrier, got \(error)")
+                return
+            }
+            #expect(carrier == "Widget")  // the real generator carrier, not the owner
+            // The strategist's expectation, NOT the v1.46 numeric list.
+            #expect(expected != ["Complex<Double>", "Double", "Int"])
+            #expect(!expected.contains("Int"))
+            #expect(expected.contains(where: { $0.contains("RawType") || $0.contains("TypeShape") }))
+        }
+    }
 }
