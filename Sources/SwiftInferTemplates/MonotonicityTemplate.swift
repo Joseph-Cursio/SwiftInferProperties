@@ -130,6 +130,15 @@ public enum MonotonicityTemplate {
             },
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
+            // V1.151 (WS-1) — the generator carrier is the *input* domain the
+            // monotonic relation quantifies over, i.e. the sole parameter type,
+            // not the owning type. `orderedCodomainSignal` (the `appliesTo`
+            // gate) requires exactly one non-inout parameter, so
+            // `parameters.first?.typeText` is present whenever the constraint
+            // fires. `carrier` (the call-site owner) stays `containingTypeName`;
+            // this only feeds `Suggestion.carrierTypeName` so verify derives
+            // `Gen<Param>` instead of dead-ending on the owner type.
+            carrierType: { $0.parameters.first?.typeText },
             caveats: { _ in Self.makeCaveats() }
         )
     }
