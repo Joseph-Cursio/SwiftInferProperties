@@ -117,6 +117,52 @@ struct StrategistDispatchEmitterRecipeTests {
             )
         }
     }
+
+    // MARK: - WS-6 Slice 2 — recursive nested-type resolution at verify time
+
+    /// `Wallet { balance: Money }` where `Money { amount: Int; currency: String }`
+    /// is a sibling type in the universe. `balance`'s custom type can't resolve
+    /// from Wallet's shape alone, so the bare-shape path leaves Wallet at `.todo`.
+    private func walletShape() -> IndexedTypeShape {
+        IndexedTypeShape(
+            name: "Wallet", kind: .struct, inheritedTypes: [], hasUserGen: false,
+            storedMembers: [IndexedTypeShape.StoredMember(name: "balance", typeName: "Money")],
+            hasUserInit: false
+        )
+    }
+
+    private func moneyKitShape() -> TypeShape {
+        TypeShape(
+            name: "Money", kind: .struct, inheritedTypes: [], hasUserGen: false,
+            storedMembers: [
+                StoredMember(name: "amount", typeName: "Int"),
+                StoredMember(name: "currency", typeName: "String")
+            ],
+            hasUserInit: false
+        )
+    }
+
+    @Test("WS-6 Slice 2: a whole-universe resolver recursively inlines a nested custom-type member")
+    func recursiveResolverInlinesNestedMember() throws {
+        let wallet = walletShape()
+        let resolver = GeneratorResolver(types: [moneyKitShape(), wallet.toKitShape()])
+        let recipe = try StrategistDispatchEmitter.resolveRecipe(
+            carrier: "Wallet", typeShape: wallet, resolve: resolver.customTypeGenerator
+        )
+        // Single-member memberwise: Wallet(balance: $0) over Money's inlined generator.
+        #expect(recipe.expression.contains("Wallet(balance: $0)"))
+        #expect(recipe.expression.contains("Money("))
+    }
+
+    @Test("WS-6 Slice 2: without the resolver the same nested carrier stays .todo (throws)")
+    func withoutResolverNestedMemberThrows() throws {
+        // Default resolve `{ _ in nil }` — the pre-WS-6 single-shape behavior.
+        #expect(throws: VerifyError.self) {
+            _ = try StrategistDispatchEmitter.resolveRecipe(
+                carrier: "Wallet", typeShape: walletShape()
+            )
+        }
+    }
 }
 
 @Suite("StrategistDispatchEmitter — V1.47.E template × emit dispatch")

@@ -74,6 +74,36 @@ struct IndexStoreTests {
         #expect(loadResult.index == index)
     }
 
+    @Test("WS-6 — Index with a typeShapes universe round-trips through JSON")
+    func indexWithTypeShapesRoundTrips() throws {
+        let money = IndexedTypeShape(
+            name: "Money", kind: .struct, inheritedTypes: [], hasUserGen: false,
+            storedMembers: [IndexedTypeShape.StoredMember(name: "amount", typeName: "Int")],
+            hasUserInit: false
+        )
+        let original = IndexStore.Index(
+            updatedAt: "2026-07-01T12:00:00Z",
+            entries: [Self.entry1],
+            typeShapes: ["Money": money]
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(original)
+        let decoded = try JSONDecoder().decode(IndexStore.Index.self, from: data)
+        #expect(decoded == original)
+        #expect(decoded.typeShapes["Money"]?.name == "Money")
+    }
+
+    @Test("WS-6 — a pre-v4 index (no typeShapes key) decodes to an empty map")
+    func preV4IndexDecodesWithEmptyTypeShapes() throws {
+        // A v1–v3 file has no `typeShapes` key; custom `init(from:)` must default
+        // it to `[:]` rather than fail the decode.
+        let legacyJSON = #"{"schemaVersion":3,"updatedAt":"2026-05-11T12:00:00Z","entries":[]}"#
+        let decoded = try JSONDecoder().decode(IndexStore.Index.self, from: Data(legacyJSON.utf8))
+        #expect(decoded.typeShapes.isEmpty)
+        #expect(decoded.schemaVersion == 3)
+    }
+
     @Test("V1.33.B — load on missing path returns empty index without warning")
     func loadMissingPathReturnsEmpty() {
         let nonexistent = FileManager.default.temporaryDirectory
