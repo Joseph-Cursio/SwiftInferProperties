@@ -220,7 +220,8 @@ extension SwiftInferCommand {
                 indexPathOverride: indexPath,
                 budgetString: budget,
                 workingDirectory: workingDirectory,
-                emitRegression: emitRegression ?? true
+                emitRegression: emitRegression ?? true,
+                target: target
             )
             print(outcome)
         }

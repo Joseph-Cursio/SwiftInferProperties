@@ -38,10 +38,18 @@ public enum VerifierSubprocess {
 
     /// Run `swift build` in the given workdir. Returns the
     /// captured output and exit code.
+    ///
+    /// V1.149 — `-Xswiftc -enable-testing` compiles every target (including
+    /// the path-dependency user module) with testing enabled, so a stub's
+    /// `@testable import <UserModule>` resolves `internal` symbols. Harmless
+    /// for stdlib-carrier stubs that don't `@testable`-import anything.
     public static func runSwiftBuild(workdir: URL) throws -> Output {
         try runProcess(
             executable: URL(fileURLWithPath: "/usr/bin/env"),
-            arguments: ["swift", "build", "--package-path", workdir.path],
+            arguments: [
+                "swift", "build", "--package-path", workdir.path,
+                "-Xswiftc", "-enable-testing"
+            ],
             workingDirectory: workdir
         )
     }

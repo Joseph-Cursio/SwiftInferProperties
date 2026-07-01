@@ -18,7 +18,8 @@ extension SwiftInferCommand.Verify {
         indexPathOverride: String?,
         budgetString: String,
         workingDirectory: URL,
-        emitRegression: Bool = false
+        emitRegression: Bool = false,
+        target: String? = nil
     ) throws -> String {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
@@ -27,9 +28,15 @@ extension SwiftInferCommand.Verify {
             indexPathOverride: indexPathOverride,
             packageRoot: packageRoot
         )
+        // V1.149 — when `--target` names the user module, path-depend on the
+        // user package and `@testable`-import it so the stub can call functions
+        // defined there (incl. `internal`). Absent `--target`, behave exactly
+        // as v1.42 (no user package — only stdlib/library-dep carriers verify).
+        let wiring = userPackageWiring(target: target, packageRoot: packageRoot)
         let stubBundle = try Self.buildStubBundle(
             entry: entry,
-            budget: parseBudget(budgetString)
+            budget: parseBudget(budgetString),
+            extraImports: wiring.extraImports
         )
         let workdir = packageRoot
             .appendingPathComponent(".swiftinfer")
@@ -38,7 +45,7 @@ extension SwiftInferCommand.Verify {
         _ = try VerifierWorkdir.synthesize(
             VerifierWorkdir.Inputs(
                 workdir: workdir,
-                userPackage: nil,
+                userPackage: wiring.userPackage,
                 stubSource: stubBundle.source
             )
         )
@@ -64,6 +71,25 @@ extension SwiftInferCommand.Verify {
             packageRoot: packageRoot,
             regressionPath: regressionPath
         )
+    }
+
+    /// V1.149 — resolve the optional user-package wiring for the single-verify
+    /// path. When `target` names a non-empty module, returns a path-dependency
+    /// on `packageRoot` plus a `@testable` import of that module; otherwise
+    /// `(nil, [])` so the v1.42 stdlib-carrier behavior is unchanged. Assumes
+    /// the module's package name == product name == module name (the SwiftPM
+    /// convention, matching the `--all-from-index` survey path).
+    static func userPackageWiring(
+        target: String?,
+        packageRoot: URL
+    ) -> (userPackage: VerifierWorkdir.UserPackageReference?, extraImports: [String]) {
+        guard let module = target, !module.isEmpty else { return (nil, []) }
+        let reference = VerifierWorkdir.UserPackageReference(
+            packagePath: packageRoot,
+            packageDeclaredName: module,
+            productNames: [module]
+        )
+        return (reference, ["@testable \(module)"])
     }
 
     /// V1.142 — the verify stub's replayable seed (deterministic Xoshiro state

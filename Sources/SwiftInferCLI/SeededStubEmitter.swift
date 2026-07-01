@@ -36,13 +36,22 @@ extension SeededStubEmitter {
     }
 
     /// Dedupe + sort `base` plus the trimmed, non-empty entries of `extra`,
-    /// rendered as `import` lines.
+    /// rendered as `import` lines. V1.149 — an entry prefixed with
+    /// `@testable ` (e.g. `"@testable MyModule"`) renders as
+    /// `@testable import MyModule`, so a stub can reach a user module's
+    /// `internal` symbols; all other entries render as plain `import X`.
     static func mergedImports(base: [String], extra: [String]) -> String {
+        let testablePrefix = "@testable "
         let extraTrimmed = extra
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         let combined = Set(base + extraTrimmed).sorted()
-        return combined.map { "import \($0)" }.joined(separator: "\n")
+        let lines = combined.map { entry -> String in
+            entry.hasPrefix(testablePrefix)
+                ? "@testable import \(entry.dropFirst(testablePrefix.count))"
+                : "import \(entry)"
+        }
+        return lines.joined(separator: "\n")
     }
 
     static func hex(_ word: UInt64) -> String {
