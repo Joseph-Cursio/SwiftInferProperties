@@ -34,12 +34,25 @@ public enum GeneratorSelection {
         if shapesByName.isEmpty || generatorTypeByIdentity.isEmpty {
             return suggestions
         }
+        // WS-6 Slice 1 — recursive nested-type resolution at discover time. Build a
+        // `GeneratorResolver` over the whole corpus once, then pass its
+        // `customTypeGenerator` as the `resolve` closure so a carrier that is a
+        // struct/enum with nested custom-type members or init-params *derives*
+        // (the resolver inlines each nested type's generator or references
+        // `Type.gen()`) instead of dead-ending at `.todo`. Nested types external to
+        // the corpus still resolve to nil → `.todo`, unchanged. This affects only
+        // the `discover` command's generated output — verify re-derives from the
+        // persisted shape (WS-6 Slice 2 threads the resolver there separately).
+        let resolver = GeneratorResolver(types: Array(shapesByName.values))
         return suggestions.map { suggestion in
             guard let typeName = generatorTypeByIdentity[suggestion.identity],
                   let shape = shapesByName[typeName] else {
                 return suggestion
             }
-            let strategy = DerivationStrategist.strategy(for: shape)
+            let strategy = DerivationStrategist.strategy(
+                for: shape,
+                resolve: resolver.customTypeGenerator
+            )
             let metadata = makeMetadata(
                 strategy: strategy,
                 sampling: suggestion.generator.sampling

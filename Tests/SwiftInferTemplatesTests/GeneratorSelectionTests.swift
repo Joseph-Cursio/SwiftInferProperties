@@ -133,6 +133,44 @@ struct GeneratorSelectionTests {
     }
 
     @Test
+    func apply_recursivelyDerivesNestedCustomTypeMember() throws {
+        // WS-6 Slice 1 — struct Wallet { let balance: Money } where Money is a
+        // sibling corpus struct { amount: Int; currency: String }. Without the
+        // recursive resolver, Wallet's memberwise derivation can't resolve the
+        // custom `Money` member, so the whole strategy falls through to `.todo`.
+        // With the resolver threaded in, `Money` resolves (it's itself
+        // memberwise-derivable), so Wallet derives as `.derivedMemberwise`.
+        let suggestion = makePlaceholderSuggestion(typeText: "Wallet")
+        let money = TypeShape(
+            name: "Money",
+            kind: .struct,
+            inheritedTypes: [],
+            hasUserGen: false,
+            storedMembers: [
+                StoredMember(name: "amount", typeName: "Int"),
+                StoredMember(name: "currency", typeName: "String")
+            ],
+            hasUserInit: false
+        )
+        let wallet = TypeShape(
+            name: "Wallet",
+            kind: .struct,
+            inheritedTypes: [],
+            hasUserGen: false,
+            storedMembers: [StoredMember(name: "balance", typeName: "Money")],
+            hasUserInit: false
+        )
+        let result = GeneratorSelection.apply(
+            to: [suggestion],
+            generatorTypeByIdentity: [suggestion.identity: "Wallet"],
+            shapesByName: ["Wallet": wallet, "Money": money]
+        )
+        let lifted = try #require(result.first)
+        #expect(lifted.generator.source == .derivedMemberwise)
+        #expect(lifted.generator.confidence == .medium)
+    }
+
+    @Test
     func apply_populatesRegisteredForStaticGenStruct() throws {
         let suggestion = makePlaceholderSuggestion(typeText: "Widget")
         let shape = TypeShape(
