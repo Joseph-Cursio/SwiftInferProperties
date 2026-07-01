@@ -42,13 +42,21 @@ extension TemplateRegistry {
             whySuggested: newWhy,
             whyMightBeWrong: suggestion.explainability.whyMightBeWrong
         )
+        // Preserve the carrier/origin fields — this rebuild only appends a
+        // cross-validation signal; omitting them reset carrier, carrierTypeName,
+        // liftedOrigin, and mockGenerator to nil, so any cross-validated
+        // suggestion lost its owner + generator carrier before the index.
         return Suggestion(
             templateName: suggestion.templateName,
             evidence: suggestion.evidence,
             score: newScore,
             generator: suggestion.generator,
             explainability: newExplainability,
-            identity: suggestion.identity
+            identity: suggestion.identity,
+            liftedOrigin: suggestion.liftedOrigin,
+            mockGenerator: suggestion.mockGenerator,
+            carrier: suggestion.carrier,
+            carrierTypeName: suggestion.carrierTypeName
         )
     }
 
@@ -96,13 +104,18 @@ extension TemplateRegistry {
             whySuggested: suggestion.explainability.whySuggested,
             whyMightBeWrong: newCaveats
         )
+        // Preserve carrier/origin fields (see rebuildWithCrossValidation).
         return Suggestion(
             templateName: suggestion.templateName,
             evidence: suggestion.evidence,
             score: newScore,
             generator: suggestion.generator,
             explainability: newExplainability,
-            identity: suggestion.identity
+            identity: suggestion.identity,
+            liftedOrigin: suggestion.liftedOrigin,
+            mockGenerator: suggestion.mockGenerator,
+            carrier: suggestion.carrier,
+            carrierTypeName: suggestion.carrierTypeName
         )
     }
 
