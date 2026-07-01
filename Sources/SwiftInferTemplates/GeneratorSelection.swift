@@ -111,7 +111,12 @@ public enum GeneratorSelection {
             identity: suggestion.identity,
             liftedOrigin: suggestion.liftedOrigin,
             mockGenerator: suggestion.mockGenerator,
-            carrier: suggestion.carrier
+            carrier: suggestion.carrier,
+            // WS-1 — the generator-carrier (`Suggestion.carrierTypeName`) must
+            // survive the generator-metadata rebuild; omitting it silently
+            // reset it to nil, so the index/verify fell back to the owner type
+            // (this dropped monotonicity's param-domain carrier set in V1.151).
+            carrierTypeName: suggestion.carrierTypeName
         )
     }
 
@@ -200,7 +205,8 @@ public enum GeneratorSelection {
             identity: suggestion.identity,
             liftedOrigin: suggestion.liftedOrigin,
             mockGenerator: suggestion.mockGenerator,
-            carrier: suggestion.carrier
+            carrier: suggestion.carrier,
+            carrierTypeName: suggestion.carrierTypeName  // WS-1 — preserve across Codable rebuild
         )
     }
 }

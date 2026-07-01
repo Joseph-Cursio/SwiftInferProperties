@@ -124,6 +124,12 @@ struct GeneratorSelectionTests {
         #expect(lifted.identity == suggestion.identity)
         #expect(lifted.score == suggestion.score)
         #expect(lifted.evidence == suggestion.evidence)
+        // WS-1 regression — the generator-carrier must survive the rebuild.
+        // makePlaceholderSuggestion is a type-symmetric idempotence pick, so
+        // carrierTypeName == typeText; before WS-1 `rebuild` reset it to nil,
+        // so the index/verify fell back to the owner type.
+        #expect(lifted.carrierTypeName == suggestion.carrierTypeName)
+        #expect(lifted.carrierTypeName == "Money")
     }
 
     @Test
