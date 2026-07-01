@@ -48,6 +48,14 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         /// carriers by name and skips the strategist call.
         public let typeShape: IndexedTypeShape?
 
+        /// WS-6 Slice 2 — the whole-module shape universe (every scanned type,
+        /// keyed by bare name), from the persisted index root. When non-empty,
+        /// `resolveRecipe` builds a `GeneratorResolver` over it and passes the
+        /// recursive resolver to the strategist, so a carrier whose members /
+        /// init-params are nested custom types derives instead of `.todo`.
+        /// Empty (the default) preserves the pre-WS-6 single-shape behavior.
+        public let allShapes: [String: IndexedTypeShape]
+
         /// One of `"round-trip"`, `"idempotence"`, `"commutativity"`,
         /// `"associativity"`. Each template selects a per-trial
         /// value-count + per-trial property-check shape.
@@ -81,7 +89,8 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             extraImports: [String] = [],
             seedHex: SeedHex,
             trialBudget: TrialBudget,
-            preamble: String = ""
+            preamble: String = "",
+            allShapes: [String: IndexedTypeShape] = [:]
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -91,6 +100,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             self.seedHex = seedHex
             self.trialBudget = trialBudget
             self.preamble = preamble
+            self.allShapes = allShapes
         }
     }
 
@@ -98,7 +108,17 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
     /// composes the generator expression, and wraps it in the
     /// template-specific stub shape.
     public static func emit(_ inputs: Inputs) throws -> String {
-        let recipe = try resolveRecipe(carrier: inputs.carrier, typeShape: inputs.typeShape)
+        // WS-6 Slice 2 — build the whole-module resolver once per emit when the
+        // index carried the shape universe. Nil (empty universe) → the strategist
+        // sees the pre-WS-6 default `{ _ in nil }` resolver.
+        let resolver = inputs.allShapes.isEmpty
+            ? nil
+            : GeneratorResolver(types: inputs.allShapes.values.map { $0.toKitShape() })
+        let recipe = try resolveRecipe(
+            carrier: inputs.carrier,
+            typeShape: inputs.typeShape,
+            resolve: resolver?.customTypeGenerator ?? { _ in nil }
+        )
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, recipe: recipe)
         let importsBlock = mergedImports(base: recipe.imports, extra: inputs.extraImports)
@@ -133,7 +153,8 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
     ///   3. Neither → `.noStrategy`.
     static func resolveRecipe(
         carrier: String,
-        typeShape: IndexedTypeShape?
+        typeShape: IndexedTypeShape?,
+        resolve: DerivationStrategist.CustomTypeResolver = { _ in nil }
     ) throws -> GeneratorRecipe {
         if let rawType = RawType(typeName: carrier) {
             // V1.54.C — add `RealModule` for FP carriers so the static
@@ -175,7 +196,10 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return curated
         }
         if let typeShape {
-            let strategy = DerivationStrategist.strategy(for: typeShape.toKitShape())
+            // WS-6 Slice 2 — `resolve` recurses through the whole-module shape
+            // universe so nested custom-type members / init-params derive; the
+            // default `{ _ in nil }` preserves single-shape behavior.
+            let strategy = DerivationStrategist.strategy(for: typeShape.toKitShape(), resolve: resolve)
             return try recipe(for: strategy, carrier: carrier)
         }
         // WS-4 — no RawType and no indexed shape (an external/opaque carrier).

@@ -203,8 +203,18 @@ extension SwiftInferCommand {
                     now: now
                 )
             }
+            // WS-6 Slice 2 — persist the whole-module shape universe (not just
+            // per-entry carrier shapes) so verify can build a `GeneratorResolver`
+            // over every scanned type and recursively derive nested custom-type
+            // carriers. Mirror each kit `TypeShape` to its `IndexedTypeShape`.
+            let freshShapes = pipeline.typeShapesByName.mapValues { IndexedTypeShape(from: $0) }
             let diff = computeDiff(priorIndex: indexLoad.index, freshEntries: freshEntries)
-            let merged = IndexStore.upsert(freshEntries, into: indexLoad.index, at: now)
+            let merged = IndexStore.upsert(
+                freshEntries,
+                into: indexLoad.index,
+                at: now,
+                typeShapes: freshShapes
+            )
             if !inputs.dryRun {
                 try IndexStore.save(merged, to: indexPath)
             }

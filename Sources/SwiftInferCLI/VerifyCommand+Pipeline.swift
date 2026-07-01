@@ -23,11 +23,12 @@ extension SwiftInferCommand.Verify {
     ) throws -> String {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
-        let entry = try resolveEntry(
+        let resolved = try resolveEntry(
             suggestionPrefix: suggestionPrefix,
             indexPathOverride: indexPathOverride,
             packageRoot: packageRoot
         )
+        let entry = resolved.entry
         // V1.149 — when `--target` names the user module, path-depend on the
         // user package and `@testable`-import it so the stub can call functions
         // defined there (incl. `internal`). Absent `--target`, behave exactly
@@ -36,7 +37,8 @@ extension SwiftInferCommand.Verify {
         let stubBundle = try Self.buildStubBundle(
             entry: entry,
             budget: parseBudget(budgetString),
-            extraImports: wiring.extraImports
+            extraImports: wiring.extraImports,
+            allShapes: resolved.allShapes
         )
         let workdir = packageRoot
             .appendingPathComponent(".swiftinfer")
@@ -206,7 +208,7 @@ extension SwiftInferCommand.Verify {
         suggestionPrefix: String,
         indexPathOverride: String?,
         packageRoot: URL
-    ) throws -> SemanticIndexEntry {
+    ) throws -> (entry: SemanticIndexEntry, allShapes: [String: IndexedTypeShape]) {
         let now = ISO8601DateFormatter().string(from: Date())
         let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
         try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)
@@ -224,7 +226,10 @@ extension SwiftInferCommand.Verify {
         for warning in lookup.warnings {
             FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
         }
-        return lookup.entry
+        // WS-6 Slice 2 — carry the whole-module shape universe alongside the
+        // matched entry so verify can recursively derive nested custom-type
+        // carriers. Empty on un-reindexed (pre-v4) indexes → no recursion.
+        return (lookup.entry, resolved.index.typeShapes)
     }
 
     /// Sub-step: build the synthesized workdir and run the verifier binary.

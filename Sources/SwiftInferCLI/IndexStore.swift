@@ -28,11 +28,13 @@ public enum IndexStore {
     /// optional `typeShape: IndexedTypeShape?` field on
     /// `SemanticIndexEntry`. v3 = v1.49 — adds the optional
     /// `secondaryFunctionName: String?` field on `SemanticIndexEntry`
-    /// for non-curated round-trip pair derivation. Both bumps are
-    /// backward-compatible at the entry level (`decodeIfPresent`),
-    /// so v1 / v2 files decode cleanly into v3 — the version bump on
-    /// the wrapping `Index` is informational only.
-    public static let currentSchemaVersion: Int = 3
+    /// for non-curated round-trip pair derivation. v4 = WS-6 — adds the
+    /// optional `typeShapes: [String: IndexedTypeShape]` map on the `Index`
+    /// root (the whole-module shape universe for recursive verify-time
+    /// derivation). Every bump is backward-compatible (`decodeIfPresent`),
+    /// so v1–v3 files decode cleanly into v4 — the version bump on the
+    /// wrapping `Index` is informational only.
+    public static let currentSchemaVersion: Int = 4
 
     /// The on-disk index value. Encoded as JSON with stable key
     /// ordering (alphabetical) + pretty-printing so diffs are clean
@@ -43,14 +45,42 @@ public enum IndexStore {
         public var updatedAt: String
         public var entries: [SemanticIndexEntry]
 
+        /// WS-6 Slice 2 — the whole-module shape universe, keyed by bare type
+        /// name. Lets `verify` build a `GeneratorResolver` over every scanned
+        /// type and recursively derive a carrier whose members / init-params are
+        /// nested custom types (the per-entry `typeShape` only carries the
+        /// carrier's own shape, not its dependencies). Absent in v1–v3 files →
+        /// decodes to `[:]` (back-compat), so an un-reindexed project simply
+        /// gets no recursion until its next `index` run.
+        public var typeShapes: [String: IndexedTypeShape]
+
         public init(
             schemaVersion: Int = IndexStore.currentSchemaVersion,
             updatedAt: String,
-            entries: [SemanticIndexEntry]
+            entries: [SemanticIndexEntry],
+            typeShapes: [String: IndexedTypeShape] = [:]
         ) {
             self.schemaVersion = schemaVersion
             self.updatedAt = updatedAt
             self.entries = entries
+            self.typeShapes = typeShapes
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case schemaVersion, updatedAt, entries, typeShapes
+        }
+
+        /// Custom decode so v1–v3 files (no `typeShapes` key) load cleanly.
+        /// `schemaVersion` / `updatedAt` / `entries` are always present; only
+        /// `typeShapes` is optional-with-default. `encode(to:)` stays synthesized.
+        public init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+            updatedAt = try container.decode(String.self, forKey: .updatedAt)
+            entries = try container.decode([SemanticIndexEntry].self, forKey: .entries)
+            typeShapes = try container.decodeIfPresent(
+                [String: IndexedTypeShape].self, forKey: .typeShapes
+            ) ?? [:]
         }
 
         /// Empty index with the current run timestamp.
@@ -149,7 +179,8 @@ public enum IndexStore {
     public static func upsert(
         _ freshEntries: [SemanticIndexEntry],
         into existing: Index,
-        at runTimestamp: String
+        at runTimestamp: String,
+        typeShapes freshShapes: [String: IndexedTypeShape] = [:]
     ) -> Index {
         var byHash = Dictionary(
             uniqueKeysWithValues: existing.entries.map { ($0.identityHash, $0) }
@@ -162,10 +193,17 @@ public enum IndexStore {
             }
         }
         let merged = byHash.values.sorted { $0.identityHash < $1.identityHash }
+        // WS-6 Slice 2 — the current scan is authoritative for shapes it
+        // rediscovered; keep any prior shapes it didn't (mirrors the
+        // keep-historical-entries policy). Default empty map → shapes unchanged,
+        // so existing callers/tests that don't pass shapes lose nothing.
+        var mergedShapes = existing.typeShapes
+        mergedShapes.merge(freshShapes) { _, fresh in fresh }
         return Index(
             schemaVersion: existing.schemaVersion,
             updatedAt: runTimestamp,
-            entries: Array(merged)
+            entries: Array(merged),
+            typeShapes: mergedShapes
         )
     }
 

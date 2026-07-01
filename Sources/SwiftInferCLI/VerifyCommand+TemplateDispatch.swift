@@ -46,7 +46,8 @@ extension SwiftInferCommand.Verify {
     static func buildStubBundle(
         entry: SemanticIndexEntry,
         budget: RoundTripStubEmitter.TrialBudget,
-        extraImports: [String] = []
+        extraImports: [String] = [],
+        allShapes: [String: IndexedTypeShape] = [:]
     ) throws -> VerifyStubBundle {
         let supportedTemplates: [String] = [
             "round-trip", "idempotence", "commutativity", "associativity",
@@ -94,7 +95,8 @@ extension SwiftInferCommand.Verify {
         return try strategistBundle(
             entry: rebound(entry, toCarrier: boundCarrier),
             budget: budget,
-            extraImports: extraImports
+            extraImports: extraImports,
+            allShapes: allShapes
         )
     }
 
@@ -138,7 +140,8 @@ extension SwiftInferCommand.Verify {
     private static func strategistBundle(
         entry: SemanticIndexEntry,
         budget: StrategistDispatchEmitter.TrialBudget,
-        extraImports: [String] = []
+        extraImports: [String] = [],
+        allShapes: [String: IndexedTypeShape] = [:]
     ) throws -> VerifyStubBundle {
         let calls = try resolveFunctionCalls(for: entry)
         // V1.149 — generator carrier is `carrierTypeName` (param `T`), distinct
@@ -152,7 +155,10 @@ extension SwiftInferCommand.Verify {
             functionCalls: calls.expressions,
             extraImports: extraImports,
             seedHex: makeSeedHex(from: entry.identityHash),
-            trialBudget: budget
+            trialBudget: budget,
+            // WS-6 Slice 2 — pass the whole-module shape universe so the emitter
+            // can build a recursive resolver for nested custom-type carriers.
+            allShapes: allShapes
         )
         let source = try StrategistDispatchEmitter.emit(inputs)
         let context = VerifyResultRenderer.Context(

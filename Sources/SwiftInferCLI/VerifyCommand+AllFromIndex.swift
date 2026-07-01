@@ -45,7 +45,9 @@ extension SwiftInferCommand.Verify {
         let config = SurveyConfig(
             budget: parseBudget(budgetString),
             corpusModuleName: corpusModuleName,
-            emitRegression: emitRegression
+            emitRegression: emitRegression,
+            // WS-6 Slice 2 — whole-module shape universe for recursive derivation.
+            allShapes: index.typeShapes
         )
         await runParallelSurvey(
             entries: entries,
@@ -62,6 +64,9 @@ extension SwiftInferCommand.Verify {
         let budget: RoundTripStubEmitter.TrialBudget
         let corpusModuleName: String?
         let emitRegression: Bool
+        /// WS-6 Slice 2 — the persisted whole-module shape universe, threaded to
+        /// each per-entry `buildStubBundle` so nested custom-type carriers derive.
+        var allShapes: [String: IndexedTypeShape] = [:]
     }
 
     static func loadIndex(
@@ -193,7 +198,10 @@ extension SwiftInferCommand.Verify {
                 )
             }
             let stubBundle = try Self.buildStubBundle(
-                entry: entry, budget: config.budget, extraImports: extraImports
+                entry: entry,
+                budget: config.budget,
+                extraImports: extraImports,
+                allShapes: config.allShapes
             )
             let workdir = packageRoot
                 .appendingPathComponent(".swiftinfer")
