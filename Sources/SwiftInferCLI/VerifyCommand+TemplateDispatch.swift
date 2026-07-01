@@ -234,14 +234,22 @@ extension SwiftInferCommand.Verify {
             return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
 
         case "idempotence", "commutativity", "associativity":
-            let call = CallExpressionShape.render(
+            let reference = CallExpressionShape.render(
                 typeQualifier: typeQualifier,
                 bareFunctionName: funcName
             )
+            // V1.149 — when the function has external argument labels, the stub's
+            // positional application (`ref(value)`) won't compile; wrap in a
+            // label-carrying trampoline closure (`{ ref(in: $0) }`). Label-free
+            // functions return `reference` unchanged (no golden churn).
+            let call = labeledCallExpression(
+                primaryFunctionName: entry.primaryFunctionName,
+                reference: reference
+            )
             return ResolvedCalls(
                 expressions: [call],
-                rendererForwardName: call,
-                rendererInverseName: call
+                rendererForwardName: reference,
+                rendererInverseName: reference
             )
 
         case "idempotence-lifted", "monotonicity":

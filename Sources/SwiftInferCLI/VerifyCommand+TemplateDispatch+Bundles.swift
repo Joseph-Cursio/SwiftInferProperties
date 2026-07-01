@@ -89,4 +89,36 @@ extension SwiftInferCommand.Verify {
             carrierTypeName: entry.carrierTypeName
         )
     }
+
+    /// V1.149 — the argument labels of `primaryFunctionName` (e.g.
+    /// `"indent(in:)"` → `["in"]`, `"pick(a:b:)"` → `["a", "b"]`,
+    /// `"clamp(_:)"` → `["_"]`, `"f()"` → `[]`). Unlabeled parameters
+    /// surface as `"_"`.
+    static func argumentLabels(from primaryFunctionName: String) -> [String] {
+        guard let open = primaryFunctionName.firstIndex(of: "("),
+            let close = primaryFunctionName.lastIndex(of: ")"),
+            open < close else { return [] }
+        let inner = primaryFunctionName[primaryFunctionName.index(after: open)..<close]
+        guard !inner.isEmpty else { return [] }
+        return inner.split(separator: ":", omittingEmptySubsequences: true).map(String.init)
+    }
+
+    /// V1.149 — the call expression the stub applies positionally. A function
+    /// with external argument labels can't be called `reference(value)`, so it
+    /// gets a label-carrying trampoline closure (`{ reference(in: $0) }`) that
+    /// the stub's `\(call)(args)` applies immediately. A label-free function
+    /// (all labels `"_"`, or none) returns `reference` unchanged so existing
+    /// stdlib-carrier stubs stay byte-identical.
+    static func labeledCallExpression(
+        primaryFunctionName: String,
+        reference: String
+    ) -> String {
+        let labels = argumentLabels(from: primaryFunctionName)
+        guard labels.contains(where: { $0 != "_" }) else { return reference }
+        let placeholders = labels.enumerated().map { index, label in
+            label == "_" ? "$\(index)" : "\(label): $\(index)"
+        }
+        let args = placeholders.joined(separator: ", ")
+        return "{ \(reference)(\(args)) }"
+    }
 }
