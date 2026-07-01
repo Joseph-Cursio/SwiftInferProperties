@@ -3,7 +3,11 @@ import Testing
 
 @testable import SwiftInferCLI
 
-// V1.150 — edge-biased top-level String carrier generator.
+// V1.150 — edge-biased top-level String carrier generator. V1.152 — the
+// expression is now sourced from PropertyLawCore's canonical
+// `RawType.edgeBiasedGeneratorExpression`; this suite covers the verify-side
+// policy (top-level String → edge-biased; other carriers → plain). Escaping is
+// covered by the kit's own EdgeBiasedStringGeneratorTests.
 @Suite("StrategistDispatchEmitter — V1.150 String edge bias")
 struct StringEdgeBiasTests {
 
@@ -24,14 +28,5 @@ struct StringEdgeBiasTests {
         #expect(StrategistDispatchEmitter.edgeBiasedStringExpression(for: "Int") == nil)
         #expect(StrategistDispatchEmitter.edgeBiasedStringExpression(for: "Double") == nil)
         #expect(StrategistDispatchEmitter.edgeBiasedStringExpression(for: "Bool") == nil)
-    }
-
-    @Test("swiftStringLiteral escapes quotes, backslashes, newlines, and tabs")
-    func literalEscaping() {
-        #expect(StrategistDispatchEmitter.swiftStringLiteral("-") == "\"-\"")
-        #expect(StrategistDispatchEmitter.swiftStringLiteral("") == "\"\"")
-        #expect(StrategistDispatchEmitter.swiftStringLiteral("\n") == "\"\\n\"")
-        #expect(StrategistDispatchEmitter.swiftStringLiteral("\t") == "\"\\t\"")
-        #expect(StrategistDispatchEmitter.swiftStringLiteral("a\"b\\c") == "\"a\\\"b\\\\c\"")
     }
 }
