@@ -24,12 +24,17 @@ struct StrategistDispatchEmitterRecipeTests {
         #expect(recipe.imports.contains("PropertyBased"))
     }
 
-    @Test("raw-type carrier (String) resolves to letterOrNumber generator")
+    @Test("raw-type carrier (String) resolves to the V1.150 edge-biased generator")
     func stringRawTypeRecipe() throws {
         let recipe = try StrategistDispatchEmitter.resolveRecipe(
             carrier: "String", typeShape: nil
         )
-        #expect(recipe.expression == "Gen<Character>.letterOrNumber.string(of: 0...8)")
+        // Edge-biased: alphanumeric baseline mixed with curated structural edges
+        // (whitespace / newline / `-` markers) so string-structural counterexamples
+        // are reachable. The plain generator remains the majority arm.
+        #expect(recipe.expression.contains("Gen<Character>.letterOrNumber.string(of: 0...8)"))
+        #expect(recipe.expression.contains("Gen.frequency("))
+        #expect(recipe.expression.contains("\"- \""))
     }
 
     @Test("user-gen typeShape resolves to <Type>.gen()")

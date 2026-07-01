@@ -148,8 +148,18 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             let imports = (carrier == "Double" || carrier == "Float")
                 ? ["Foundation", "PropertyBased", "RealModule"]
                 : ["Foundation", "PropertyBased"]
+            // V1.150 — edge-bias the *top-level* String carrier. The kit's raw
+            // `Gen<Character>.letterOrNumber.string` is alphanumeric-only, so it
+            // never generates the whitespace / newline / punctuation inputs that
+            // falsify string-structural logic (YAML markers, indentation, etc.) —
+            // a determinism/idempotence check on such a function *false-passes*.
+            // Mixing in curated structural edge strings makes those counterexamples
+            // reachable. Struct *members* keep the plain generator (they resolve
+            // via `member.generatorExpression`, not this path). Canonical home is
+            // `PropertyLawCore.DerivationStrategist`; upstream when that lands.
+            let expression = edgeBiasedStringExpression(for: carrier) ?? rawType.generatorExpression
             return GeneratorRecipe(
-                expression: rawType.generatorExpression,
+                expression: expression,
                 carrierTypeName: carrier,
                 imports: imports
             )
