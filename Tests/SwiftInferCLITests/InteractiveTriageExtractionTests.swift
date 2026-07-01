@@ -69,6 +69,24 @@ struct InteractiveTriageModuleImportTests {
         )
     }
 
+    @Test func sanitizesTargetDirectoryToASwiftModuleIdentifier() {
+        // SwiftPM imports the target `swift-clone-detector` as
+        // `swift_clone_detector`; emitting the raw directory name produced a
+        // `@testable import swift-clone-detector` syntax error.
+        #expect(
+            InteractiveTriage.moduleName(fromSourceFile: "/r/Sources/swift-clone-detector/F.swift")
+                == "swift_clone_detector"
+        )
+        #expect(
+            InteractiveTriage.moduleName(fromSourceFile: "/r/Sources/My.Odd.Target/F.swift")
+                == "My_Odd_Target"
+        )
+        // An already-valid identifier is untouched.
+        #expect(
+            InteractiveTriage.moduleName(fromSourceFile: "/r/Sources/MyKit/F.swift") == "MyKit"
+        )
+    }
+
     @Test func wrappedFileAddsTestableImportForSpmPath() {
         let suggestion = makeIdempotentSuggestion(
             funcName: "normalize",

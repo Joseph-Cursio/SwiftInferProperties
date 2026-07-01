@@ -82,7 +82,20 @@ extension InteractiveTriage {
             return nil
         }
         let candidate = components[sourcesIndex + 1]
-        return candidate.hasSuffix(".swift") ? nil : candidate
+        return candidate.hasSuffix(".swift") ? nil : moduleIdentifier(from: candidate)
+    }
+
+    /// The Swift module name SwiftPM synthesizes for a target directory. SwiftPM
+    /// replaces every character that isn't valid in a Swift identifier with `_`,
+    /// so the directory `swift-clone-detector` is imported as
+    /// `swift_clone_detector`. Emitting the raw directory name produced
+    /// `@testable import swift-clone-detector`, which is a syntax error and broke
+    /// every generated stub for a hyphen- or dot-named target.
+    static func moduleIdentifier(from targetDirectory: String) -> String {
+        let allowed: Set<Character> = Set(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+        )
+        return String(targetDirectory.map { allowed.contains($0) ? $0 : "_" })
     }
 
     static func stubFileName(for suggestion: Suggestion) -> String? {
