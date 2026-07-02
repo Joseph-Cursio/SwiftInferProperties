@@ -317,9 +317,12 @@ public enum VerifyInteractionPipeline {
 
     /// V2.0 M3.E.4 — five-category outcome rendering. Mirrors
     /// `VerifyResultRenderer.render` shape but for interaction-
-    /// invariant outcomes. M3.0 doesn't ship verify-evidence
-    /// persistence — that comes alongside M9's `metrics --interaction`
-    /// consumer.
+    /// invariant outcomes. (Historical note: this renders the *live*
+    /// verify outcome only; the M9 evidence→tier join it once deferred
+    /// has since shipped — `recordEvidence` persists to
+    /// `verify-evidence.json` (cycle 111), `InteractionVerifyEvidenceScoring`
+    /// folds it back at `discover-interaction` (cycle 112), and
+    /// `metrics-interaction` reports it.)
     static func renderOutcome(
         candidate: ReducerCandidate,
         result: InteractionVerifyOutcomeParser.Result,
