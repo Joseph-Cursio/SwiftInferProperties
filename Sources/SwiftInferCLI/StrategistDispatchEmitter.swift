@@ -348,6 +348,10 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return try composeDualStyleConsistencyPass(inputs: inputs, recipe: recipe)
 
         case "monotonicity":
+            // Pre-flight: value monotonicity orders the domain with `min`/`max`,
+            // so a non-Comparable domain can't be verified — throw before the
+            // build rather than emit a doomed `min`/`max` stub.
+            try requireComparableMonotonicityDomain(inputs: inputs, recipe: recipe)
             return composeMonotonicityPass(inputs: inputs, recipe: recipe)
 
         default:

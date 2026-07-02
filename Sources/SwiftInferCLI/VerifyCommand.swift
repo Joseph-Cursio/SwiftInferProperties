@@ -251,6 +251,11 @@ public enum VerifyError: Error, CustomStringConvertible {
     case runnerCrashed(reason: String)
     case unsupportedTemplate(template: String, expected: [String])
     case unsupportedPair(forward: String, supported: [String])
+    /// Monotonicity pre-flight: the property `a ≤ b ⟹ f(a) ≤ f(b)` orders the
+    /// input domain with `min`/`max`, so a non-`Comparable` domain can't be
+    /// verified (the ordering is undefined). Thrown at emit so the doomed
+    /// `swift build` is skipped; maps to architectural-coverage-pending.
+    case monotonicityDomainNotComparable(domain: String)
     /// V1.50.B — argument-validation error surfaced when the user
     /// passes a forbidden combination (e.g., `--suggestion` and
     /// `--all-from-index` together, or neither).
@@ -313,6 +318,12 @@ public enum VerifyError: Error, CustomStringConvertible {
 
         case let .invalidArguments(reason):
             return "swift-infer verify: \(reason)"
+
+        case let .monotonicityDomainNotComparable(domain):
+            return "swift-infer verify: monotonicity domain '\(domain)' is not Comparable, so "
+                + "`a ≤ b ⟹ f(a) ≤ f(b)` has no input ordering to quantify over. The "
+                + "monotonicity stub orders the domain with `min`/`max`; a non-Comparable "
+                + "domain is architecturally inapplicable, not a measurement gap."
         }
     }
 }

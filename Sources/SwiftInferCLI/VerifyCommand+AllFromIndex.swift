@@ -197,13 +197,10 @@ extension SwiftInferCommand.Verify {
     ) -> SurveyRecord {
         let context = recordContext(for: entry)
         do {
-            // For a curated corpus, the carriers are types in the corpus module
-            // (not declared library deps), so the verifier must path-depend on
-            // the corpus package + `import` it. cycle27-surface (library
-            // carriers) passes nil and is unaffected.
-            // Tier 2 — three distinct names, one per axis: `import` uses the
-            // module, `.product(name:)` the resolved product, `.package` the
-            // path basename (`UserPackageReference.packageIdentity`).
+            // For a curated corpus, the verifier path-depends on the corpus
+            // package + `import`s it (cycle27-surface library carriers pass nil).
+            // Three distinct names, one per axis: `import` = module,
+            // `.product(name:)` = resolved product, `.package` = path basename.
             let extraImports = config.corpusModuleName.map { [$0] } ?? []
             let userPackage = config.corpusProductName.map {
                 VerifierWorkdir.UserPackageReference(
@@ -363,6 +360,9 @@ extension SwiftInferCommand.Verify {
 
         case let .unsupportedPair(forward, _):
             return "unsupported-pair: \(forward)"
+
+        case let .monotonicityDomainNotComparable(domain):
+            return "monotonicity-domain-not-comparable: \(domain)"
 
         default:
             return error.description

@@ -37,6 +37,47 @@ extension StrategistDispatchEmitter {
         "OrderedDictionary<Int, Int>.Elements.SubSequence"
     ]
 
+    /// Value-monotonicity domains the strategist can generate AND order with
+    /// `min`/`max` — the Comparable scalar types. A domain outside this set is
+    /// treated as Comparable only when its indexed shape declares the
+    /// conformance (see `isComparableMonotonicityDomain`).
+    static let comparableMonotonicityDomains: Set<String> = [
+        "Int", "Int8", "Int16", "Int32", "Int64",
+        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+        "Double", "Float", "String", "Bool", "Character"
+    ]
+
+    /// Whether the value-monotonicity domain is orderable by `min`/`max`: a
+    /// known Comparable scalar, or a type whose indexed shape lists `Comparable`
+    /// in its inherited types (e.g. `enum Confidence: Int, Comparable`). A
+    /// custom type without a captured `Comparable` conformance is treated as
+    /// non-orderable — the conservative, build-safe choice.
+    static func isComparableMonotonicityDomain(_ domain: String, inputs: Inputs) -> Bool {
+        if comparableMonotonicityDomains.contains(domain) { return true }
+        if inputs.allShapes[domain]?.inheritedTypes.contains("Comparable") == true { return true }
+        if inputs.typeShape?.name == domain,
+           inputs.typeShape?.inheritedTypes.contains("Comparable") == true {
+            return true
+        }
+        return false
+    }
+
+    /// Pre-flight for value monotonicity: the `min`/`max` ordering requires a
+    /// Comparable domain, so throw (→ architectural-coverage-pending, the
+    /// doomed `swift build` skipped) when the domain isn't Comparable.
+    /// Instance-method monotonicity carriers order *indices* (`Int`), not the
+    /// carrier value, so they're exempt.
+    static func requireComparableMonotonicityDomain(
+        inputs: Inputs,
+        recipe: GeneratorRecipe
+    ) throws {
+        let domain = recipe.carrierTypeName
+        guard !monotonicityInstanceCarriers.contains(domain) else { return }
+        guard isComparableMonotonicityDomain(domain, inputs: inputs) else {
+            throw VerifyError.monotonicityDomainNotComparable(domain: domain)
+        }
+    }
+
     /// Draws two values, sorts so `a ≤ b`, applies the function to
     /// each, and asserts `f(a) ≤ f(b)`. The carrier must conform to
     /// `Comparable`; v1.48 trusts the strategist's surface

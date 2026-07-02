@@ -129,11 +129,14 @@ extension SwiftInferCommand.Verify {
         return stdoutInstanceMember || stderrInstanceMember
     }
 
-    /// V1.59.A — monotonicity picks on non-Comparable carriers hit
-    /// `global function 'min' requires that '<Carrier>' conform to
-    /// 'Comparable'` — the monotonicity stub uses `min`/`max` to order
-    /// the two trial values. v1.61+ may add a Comparable-aware
-    /// monotonicity composer or a different ordering strategy.
+    /// V1.59.A — a carrier that fails a required conformance hits
+    /// `... requires that '<Carrier>' conform to '<Protocol>'`. The original
+    /// motivating case — monotonicity's `min`/`max` on a non-Comparable domain
+    /// — is now caught *before* the build: the emitter pre-flights the domain's
+    /// Comparable-ness and throws `monotonicityDomainNotComparable` (→ a crisp
+    /// `monotonicity-domain-not-comparable` architectural-pending detail, no
+    /// wasted build). This classifier remains the backstop for any *other*
+    /// template whose stub requires a conformance the carrier lacks.
     private static func matchesCarrierConformanceGap(stdout: String, stderr: String) -> Bool {
         let requiresConformance = "requires that"
         let conformTo = "conform to"
