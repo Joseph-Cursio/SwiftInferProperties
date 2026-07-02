@@ -1,4 +1,0 @@
-swift-infer discover-reducers — detected 2 reducer-shaped functions:
-
-  /private/tmp/isowords-dogfood/Sources/LeaderboardFeature/Leaderboard.swift:72  Leaderboard.body  signature:inout-state-action-returns-effect  state:Leaderboard.State  action:Leaderboard.Action
-  /private/tmp/isowords-dogfood/Sources/LeaderboardFeature/LeaderboardResultsView.swift:55  LeaderboardResults.body  signature:inout-state-action-returns-effect  state:LeaderboardResults.State  action:LeaderboardResults.Action

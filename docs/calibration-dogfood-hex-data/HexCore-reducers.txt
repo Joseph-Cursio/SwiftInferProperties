@@ -1,5 +1,0 @@
-swift-infer discover-reducers — detected 3 reducer-shaped functions:
-
-  /private/tmp/hex-dogfood/HexCore/Sources/HexCore/Models/WordRemapping.swift:23  WordRemappingApplier.apply  signature:state-action-returns-state  state:String  action:[WordRemapping]
-  /private/tmp/hex-dogfood/HexCore/Sources/HexCore/Models/WordRemoval.swift:20  WordRemovalApplier.apply  signature:state-action-returns-state  state:String  action:[WordRemoval]
-  /private/tmp/hex-dogfood/HexCore/Sources/HexCore/Settings/HexSettings.swift:202  AnySettingsField.decode  signature:inout-state-action-returns-void  state:HexSettings  action:KeyedDecodingContainer<HexSettingKey>

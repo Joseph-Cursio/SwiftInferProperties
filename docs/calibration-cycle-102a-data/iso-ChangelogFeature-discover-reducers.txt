@@ -1,4 +1,0 @@
-swift-infer discover-reducers — detected 2 reducer-shaped functions:
-
-  /private/tmp/isowords-dogfood/Sources/ChangelogFeature/ChangeView.swift:26  Change.body  signature:inout-state-action-returns-effect  state:Change.State  action:Change.Action
-  /private/tmp/isowords-dogfood/Sources/ChangelogFeature/ChangelogView.swift:56  ChangelogReducer.body  signature:inout-state-action-returns-effect  state:ChangelogReducer.State  action:ChangelogReducer.Action

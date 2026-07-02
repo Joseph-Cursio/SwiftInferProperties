@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/isowords-dogfood/Sources/VocabFeature/Vocab.swift:48  Vocab.body  signature:inout-state-action-returns-effect  state:Vocab.State  action:Vocab.Action

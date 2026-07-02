@@ -1,4 +1,0 @@
-swift-infer discover-reducers — detected 2 reducer-shaped functions:
-
-  /private/tmp/isowords-dogfood/Sources/MultiplayerFeature/MultiplayerView.swift:37  Multiplayer.body  signature:inout-state-action-returns-effect  state:Multiplayer.State  action:Multiplayer.Action
-  /private/tmp/isowords-dogfood/Sources/MultiplayerFeature/PastGamesView.swift:23  PastGames.body  signature:inout-state-action-returns-effect  state:PastGames.State  action:PastGames.Action

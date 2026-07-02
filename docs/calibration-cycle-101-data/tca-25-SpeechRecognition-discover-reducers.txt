@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/tca-25-discovery/Sources/SpeechRecognition/SpeechRecognition.swift:32  SpeechRecognition.body  signature:inout-state-action-returns-effect  state:SpeechRecognition.State  action:SpeechRecognition.Action

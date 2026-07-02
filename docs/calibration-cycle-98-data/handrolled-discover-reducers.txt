@@ -1,9 +1,0 @@
-swift-infer discover-reducers — detected 7 reducer-shaped functions:
-
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand01_Conservation.swift:20  CountedListReducer.reduce  signature:state-action-returns-state  state:State  action:Action
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand02_Idempotence.swift:24  SettingsReducer.reduce  signature:state-action-returns-state  state:State  action:Action
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand03_Cardinality.swift:26  PresentationReducer.reduce  signature:state-action-returns-state  state:State  action:Action
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand04_ReferentialIntegrity.swift:24  MessageListReducer.reduce  signature:state-action-returns-state  state:State  action:Action
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand05_Biconditional.swift:25  FetchReducer.reduce  signature:state-action-returns-state  state:State  action:Action
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand06_ElmStyle.swift:28  reduce  signature:state-action-returns-state  state:CounterState  action:CounterAction
-  /Users/josephcursio/xcode_projects/SwiftInferProperties/Tests/Fixtures/v2.0-corpus/Sources/HandRolled/Hand07_Negative.swift:28  PlainReducer.update  signature:state-action-returns-state  state:State  action:Action

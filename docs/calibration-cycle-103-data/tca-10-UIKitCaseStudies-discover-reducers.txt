@@ -1,5 +1,0 @@
-swift-infer discover-reducers — detected 3 reducer-shaped functions:
-
-  /private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/CounterViewController.swift:17  Counter.reduce  signature:inout-state-action-returns-effect  state:State  action:Action
-  /private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/LoadThenNavigate.swift:23  LazyNavigation.body  signature:inout-state-action-returns-effect  state:LazyNavigation.State  action:LazyNavigation.Action
-  /private/tmp/tca-10-discovery/Sources/UIKitCaseStudies/NavigateAndLoad.swift:22  EagerNavigation.body  signature:inout-state-action-returns-effect  state:EagerNavigation.State  action:EagerNavigation.Action

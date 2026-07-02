@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/tca-25-discovery/Sources/Search/SearchView.swift:45  Search.body  signature:inout-state-action-returns-effect  state:Search.State  action:Search.Action

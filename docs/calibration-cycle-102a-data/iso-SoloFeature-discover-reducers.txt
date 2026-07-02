@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/isowords-dogfood/Sources/SoloFeature/SoloView.swift:31  Solo.body  signature:inout-state-action-returns-effect  state:Solo.State  action:Solo.Action

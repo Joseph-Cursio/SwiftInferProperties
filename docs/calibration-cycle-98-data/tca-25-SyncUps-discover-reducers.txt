@@ -1,7 +1,0 @@
-swift-infer discover-reducers — detected 5 reducer-shaped functions:
-
-  /private/tmp/tca-25-discovery/Sources/SyncUps/AppFeature.swift:31  AppFeature.body  signature:inout-state-action-returns-effect  state:AppFeature.State  action:AppFeature.Action
-  /private/tmp/tca-25-discovery/Sources/SyncUps/RecordMeeting.swift:41  RecordMeeting.body  signature:inout-state-action-returns-effect  state:RecordMeeting.State  action:RecordMeeting.Action
-  /private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpDetail.swift:52  SyncUpDetail.body  signature:inout-state-action-returns-effect  state:SyncUpDetail.State  action:SyncUpDetail.Action
-  /private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpForm.swift:37  SyncUpForm.body  signature:inout-state-action-returns-effect  state:SyncUpForm.State  action:SyncUpForm.Action
-  /private/tmp/tca-25-discovery/Sources/SyncUps/SyncUpsList.swift:34  SyncUpsList.body  signature:inout-state-action-returns-effect  state:SyncUpsList.State  action:SyncUpsList.Action

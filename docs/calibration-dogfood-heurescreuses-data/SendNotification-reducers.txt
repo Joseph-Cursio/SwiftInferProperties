@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/heurescreuses-dogfood/Sources/SendNotification/SendNotification.swift:49  SendNotification.body  signature:inout-state-action-returns-effect  state:SendNotification.State  action:SendNotification.Action

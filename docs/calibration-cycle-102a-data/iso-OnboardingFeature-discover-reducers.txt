@@ -1,5 +1,0 @@
-swift-infer discover-reducers — detected 3 reducer-shaped functions:
-
-  /private/tmp/isowords-dogfood/Sources/OnboardingFeature/OnboardingView.swift:190  Onboarding.body  signature:inout-state-action-returns-effect  state:Onboarding.State  action:Onboarding.Action
-  /private/tmp/isowords-dogfood/Sources/OnboardingFeature/OnboardingView.swift:324  Onboarding.body  signature:inout-state-action-returns-effect  state:Onboarding.State  action:Onboarding.Action
-  /private/tmp/isowords-dogfood/Sources/OnboardingFeature/OnboardingView.swift:340  Onboarding.body  signature:inout-state-action-returns-effect  state:Onboarding.State  action:Onboarding.Action

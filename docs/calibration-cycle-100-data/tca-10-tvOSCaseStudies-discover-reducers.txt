@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/tca-10-discovery/Sources/tvOSCaseStudies/FocusView.swift:24  Focus.reduce  signature:inout-state-action-returns-effect  state:State  action:Action

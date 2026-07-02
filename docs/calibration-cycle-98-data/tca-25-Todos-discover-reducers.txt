@@ -1,3 +1,0 @@
-swift-infer discover-reducers — detected 1 reducer-shaped function:
-
-  /private/tmp/tca-25-discovery/Sources/Todos/Todos.swift:43  Todos.body  signature:inout-state-action-returns-effect  state:Todos.State  action:Todos.Action
