@@ -118,6 +118,30 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// parameter carrier.
     public let carrierTypeName: String?
 
+    /// True when the picked function is an instance method (has a
+    /// containing type and is not `static`). Emitters use this to choose
+    /// the `receiver.method(...)` call shape over the static
+    /// `Type.method(receiver)` shape. `false` for free/static functions
+    /// and for entries persisted before this field existed.
+    public let isInstanceMethod: Bool
+
+    /// True when the picked instance method is `mutating` (or otherwise
+    /// mutates in place / returns `Void`). Combined with
+    /// ``isInstanceMethod`` it selects the `var copy = value;
+    /// copy.method()` idempotence shape rather than the self-returning
+    /// `value.method().method()` shape. `false` unless known.
+    public let isMutatingMethod: Bool
+
+    /// True when the picked function takes no parameters. Receiver-style
+    /// instance-method emit shapes (`value.method()`) are only valid for
+    /// nullary methods; arg-bearing methods fall back to the static shape.
+    public let isNullary: Bool
+
+    /// True when the function's return type is its own carrier type
+    /// (`Self`, or the containing type up to generic arguments). Gates the
+    /// non-mutating self-returning idempotence chain `value.m().m()`.
+    public let returnsSelfType: Bool
+
     public init(
         identityHash: String,
         templateName: String,
@@ -132,7 +156,11 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         lastSeenAt: String,
         typeShape: IndexedTypeShape? = nil,
         secondaryFunctionName: String? = nil,
-        carrierTypeName: String? = nil
+        carrierTypeName: String? = nil,
+        isInstanceMethod: Bool = false,
+        isMutatingMethod: Bool = false,
+        isNullary: Bool = false,
+        returnsSelfType: Bool = false
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -148,6 +176,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.typeShape = typeShape
         self.secondaryFunctionName = secondaryFunctionName
         self.carrierTypeName = carrierTypeName
+        self.isInstanceMethod = isInstanceMethod
+        self.isMutatingMethod = isMutatingMethod
+        self.isNullary = isNullary
+        self.returnsSelfType = returnsSelfType
     }
 
     // MARK: - Codable
@@ -171,6 +203,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         case typeShape
         case secondaryFunctionName
         case carrierTypeName
+        case isInstanceMethod
+        case isMutatingMethod
+        case isNullary
+        case returnsSelfType
     }
 
     public init(from decoder: Decoder) throws {
@@ -191,6 +227,14 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             String.self, forKey: .secondaryFunctionName
         )
         self.carrierTypeName = try container.decodeIfPresent(String.self, forKey: .carrierTypeName)
+        self.isInstanceMethod =
+            try container.decodeIfPresent(Bool.self, forKey: .isInstanceMethod) ?? false
+        self.isMutatingMethod =
+            try container.decodeIfPresent(Bool.self, forKey: .isMutatingMethod) ?? false
+        self.isNullary =
+            try container.decodeIfPresent(Bool.self, forKey: .isNullary) ?? false
+        self.returnsSelfType =
+            try container.decodeIfPresent(Bool.self, forKey: .returnsSelfType) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -209,6 +253,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         try container.encodeIfPresent(typeShape, forKey: .typeShape)
         try container.encodeIfPresent(secondaryFunctionName, forKey: .secondaryFunctionName)
         try container.encodeIfPresent(carrierTypeName, forKey: .carrierTypeName)
+        try container.encode(isInstanceMethod, forKey: .isInstanceMethod)
+        try container.encode(isMutatingMethod, forKey: .isMutatingMethod)
+        try container.encode(isNullary, forKey: .isNullary)
+        try container.encode(returnsSelfType, forKey: .returnsSelfType)
     }
 
     /// Returns a copy of `self` with the upsert-mutable columns
@@ -236,7 +284,11 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             lastSeenAt: other.lastSeenAt,
             typeShape: other.typeShape,
             secondaryFunctionName: other.secondaryFunctionName,
-            carrierTypeName: carrierTypeName
+            carrierTypeName: carrierTypeName,
+            isInstanceMethod: other.isInstanceMethod,
+            isMutatingMethod: other.isMutatingMethod,
+            isNullary: other.isNullary,
+            returnsSelfType: other.returnsSelfType
         )
     }
 }

@@ -309,7 +309,11 @@ extension SwiftInferCommand {
                 lastSeenAt: now,
                 typeShape: typeShape,
                 secondaryFunctionName: secondaryFunctionName,
-                carrierTypeName: suggestion.carrierTypeName
+                carrierTypeName: suggestion.carrierTypeName,
+                isInstanceMethod: evidence?.isInstanceMethod ?? false,
+                isMutatingMethod: evidence?.isMutatingMethod ?? false,
+                isNullary: evidence?.isNullary ?? false,
+                returnsSelfType: evidence?.returnsSelfType ?? false
             )
         }
 

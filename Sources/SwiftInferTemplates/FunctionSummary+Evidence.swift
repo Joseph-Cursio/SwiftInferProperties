@@ -35,7 +35,24 @@ extension FunctionSummary {
         Evidence(
             displayName: inferenceDisplayName,
             signature: inferenceSignature,
-            location: location
+            location: location,
+            isInstanceMethod: containingTypeName != nil && !isStatic,
+            isMutatingMethod: isMutating,
+            isNullary: parameters.isEmpty,
+            returnsSelfType: inferenceReturnsSelfType
         )
+    }
+
+    /// True when the return type names the carrier itself: `Self`, or the
+    /// containing type compared up to generic arguments (so
+    /// `func sorted() -> OrderedSet<Element>` on `OrderedSet` counts).
+    private var inferenceReturnsSelfType: Bool {
+        guard let returnTypeText else { return false }
+        if returnTypeText == "Self" { return true }
+        guard let containingTypeName else { return false }
+        func baseName(_ text: String) -> Substring {
+            text.prefix { $0 != "<" }
+        }
+        return baseName(returnTypeText) == baseName(containingTypeName)
     }
 }

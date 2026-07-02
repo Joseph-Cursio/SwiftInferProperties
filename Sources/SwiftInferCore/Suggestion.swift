@@ -117,10 +117,39 @@ public struct Evidence: Sendable, Equatable {
     /// File-relative location of the `func` keyword.
     public let location: SourceLocation
 
-    public init(displayName: String, signature: String, location: SourceLocation) {
+    /// True when this row is an instance method (has a containing type and
+    /// is not `static`). Lets the verify emitter choose the
+    /// `receiver.method(...)` call shape. Defaults `false` for the many
+    /// non-`FunctionSummary` evidence sites (interaction/verify rows) that
+    /// don't carry callee-shape metadata.
+    public let isInstanceMethod: Bool
+
+    /// True when the instance method is `mutating` / returns `Void`.
+    public let isMutatingMethod: Bool
+
+    /// True when the function takes no parameters.
+    public let isNullary: Bool
+
+    /// True when the return type is the carrier itself (`Self` or the
+    /// containing type up to generic arguments).
+    public let returnsSelfType: Bool
+
+    public init(
+        displayName: String,
+        signature: String,
+        location: SourceLocation,
+        isInstanceMethod: Bool = false,
+        isMutatingMethod: Bool = false,
+        isNullary: Bool = false,
+        returnsSelfType: Bool = false
+    ) {
         self.displayName = displayName
         self.signature = signature
         self.location = location
+        self.isInstanceMethod = isInstanceMethod
+        self.isMutatingMethod = isMutatingMethod
+        self.isNullary = isNullary
+        self.returnsSelfType = returnsSelfType
     }
 }
 

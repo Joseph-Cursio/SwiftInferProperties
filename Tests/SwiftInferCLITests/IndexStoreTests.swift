@@ -53,6 +53,50 @@ struct IndexStoreTests {
         #expect(decoded == original)
     }
 
+    @Test("callee-shape flags round-trip through JSON")
+    func calleeShapeFlagsRoundTrip() throws {
+        let entry = SemanticIndexEntry(
+            identityHash: "0x0000000000000003",
+            templateName: "idempotence",
+            typeName: "OrderedSet",
+            score: 30,
+            tier: "Possible",
+            primaryFunctionName: "sort()",
+            location: "/c.swift:5",
+            firstSeenAt: "2026-05-11T00:00:00Z",
+            lastSeenAt: "2026-05-11T12:00:00Z",
+            isInstanceMethod: true,
+            isMutatingMethod: true,
+            isNullary: true,
+            returnsSelfType: false
+        )
+        let data = try JSONEncoder().encode(entry)
+        let decoded = try JSONDecoder().decode(SemanticIndexEntry.self, from: data)
+        #expect(decoded == entry)
+        #expect(decoded.isInstanceMethod)
+        #expect(decoded.isMutatingMethod)
+        #expect(decoded.isNullary)
+        #expect(decoded.returnsSelfType == false)
+    }
+
+    @Test("an entry persisted before the callee-shape fields decodes them as false")
+    func legacyEntryDecodesCalleeShapeFalse() throws {
+        // No isInstanceMethod / isMutatingMethod / isNullary / returnsSelfType keys.
+        let legacyJSON = """
+        {"identityHash":"0x0000000000000004","templateName":"idempotence",\
+        "typeName":"Foo","score":30,"tier":"Possible",\
+        "primaryFunctionName":"normalize(_:)","location":"/d.swift:1",\
+        "firstSeenAt":"2026-05-11T00:00:00Z","lastSeenAt":"2026-05-11T12:00:00Z"}
+        """
+        let decoded = try JSONDecoder().decode(
+            SemanticIndexEntry.self, from: Data(legacyJSON.utf8)
+        )
+        #expect(decoded.isInstanceMethod == false)
+        #expect(decoded.isMutatingMethod == false)
+        #expect(decoded.isNullary == false)
+        #expect(decoded.returnsSelfType == false)
+    }
+
     @Test("V1.33.B — save + load preserves the index")
     func saveLoadPreserves() throws {
         let tempDir = FileManager.default.temporaryDirectory

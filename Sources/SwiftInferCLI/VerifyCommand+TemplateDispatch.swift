@@ -158,7 +158,11 @@ extension SwiftInferCommand.Verify {
             trialBudget: budget,
             // WS-6 Slice 2 — pass the whole-module shape universe so the emitter
             // can build a recursive resolver for nested custom-type carriers.
-            allShapes: allShapes
+            allShapes: allShapes,
+            isInstanceMethod: entry.isInstanceMethod,
+            isMutatingMethod: entry.isMutatingMethod,
+            isNullary: entry.isNullary,
+            returnsSelfType: entry.returnsSelfType
         )
         let source = try StrategistDispatchEmitter.emit(inputs)
         let context = VerifyResultRenderer.Context(

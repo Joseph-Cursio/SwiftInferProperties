@@ -86,7 +86,11 @@ extension SwiftInferCommand.Verify {
             firstSeenAt: entry.firstSeenAt,
             lastSeenAt: entry.lastSeenAt,
             typeShape: entry.typeShape,
-            carrierTypeName: entry.carrierTypeName
+            carrierTypeName: entry.carrierTypeName,
+            isInstanceMethod: entry.isInstanceMethod,
+            isMutatingMethod: entry.isMutatingMethod,
+            isNullary: entry.isNullary,
+            returnsSelfType: entry.returnsSelfType
         )
     }
 

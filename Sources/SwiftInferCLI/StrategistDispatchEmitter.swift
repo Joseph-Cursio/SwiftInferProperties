@@ -81,6 +81,15 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         /// `RoundTripStubEmitter.Inputs.preamble` for the load-bearing docstring.
         public let preamble: String
 
+        /// Callee-shape signals (from the SemanticIndex) that select the
+        /// instance-method idempotence emit shape: `receiver.method()`
+        /// (mutating) or `value.method().method()` (self-returning) instead
+        /// of the static `Type.method(value)`. All default `false`.
+        public let isInstanceMethod: Bool
+        public let isMutatingMethod: Bool
+        public let isNullary: Bool
+        public let returnsSelfType: Bool
+
         public init(
             carrier: String,
             typeShape: IndexedTypeShape?,
@@ -90,7 +99,11 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             seedHex: SeedHex,
             trialBudget: TrialBudget,
             preamble: String = "",
-            allShapes: [String: IndexedTypeShape] = [:]
+            allShapes: [String: IndexedTypeShape] = [:],
+            isInstanceMethod: Bool = false,
+            isMutatingMethod: Bool = false,
+            isNullary: Bool = false,
+            returnsSelfType: Bool = false
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -101,6 +114,10 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             self.trialBudget = trialBudget
             self.preamble = preamble
             self.allShapes = allShapes
+            self.isInstanceMethod = isInstanceMethod
+            self.isMutatingMethod = isMutatingMethod
+            self.isNullary = isNullary
+            self.returnsSelfType = returnsSelfType
         }
     }
 
