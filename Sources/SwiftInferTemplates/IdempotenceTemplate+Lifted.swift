@@ -245,16 +245,28 @@ extension IdempotenceTemplate {
     // MARK: - Evidence + explainability
 
     private static func makeLiftedEvidence(_ lifted: LiftedTransformation) -> Evidence {
-        let labels = lifted.originalSummary.parameters
+        let summary = lifted.originalSummary
+        let labels = summary.parameters
             .map { ($0.label ?? "_") + ":" }
             .joined()
-        let displayName = "\(lifted.carrier).\(lifted.originalSummary.name)(\(labels))"
-        let paramTypes = lifted.originalSummary.parameters.map(\.typeText).joined(separator: ", ")
+        let displayName = "\(lifted.carrier).\(summary.name)(\(labels))"
+        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
         let signature = "mutating (\(paramTypes)) -> Void  // lifted to (\(lifted.carrier)) -> \(lifted.carrier)"
+        // Carry the callee-shape signal so the verify emitter routes the lifted
+        // pick to the mutating-instance shape (`var copy = value; copy.method()`)
+        // for *any* value-semantic carrier — not just the curated OC set. The lift
+        // admission gate (`LiftedTransformation.lift`) already guarantees a
+        // mutating instance method, so instance/mutating are always true here;
+        // `isNullary` gates out arg-bearing mutators (whose `copy.method()` shape
+        // wouldn't compile). Not self-returning — the mutating shape handles it.
         return Evidence(
             displayName: displayName,
             signature: signature,
-            location: lifted.originalSummary.location
+            location: summary.location,
+            isInstanceMethod: summary.containingTypeName != nil && !summary.isStatic,
+            isMutatingMethod: summary.isMutating,
+            isNullary: summary.parameters.isEmpty,
+            returnsSelfType: false
         )
     }
 

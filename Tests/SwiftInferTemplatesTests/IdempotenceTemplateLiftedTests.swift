@@ -138,6 +138,40 @@ struct IdempotenceTemplateLiftedTests {
         ) == nil)
     }
 
+    // MARK: - Callee-shape signal on lifted evidence
+
+    @Test("A no-param lifted mutating pick carries the mutating-instance callee-shape signal")
+    func liftedNoParamCarriesCalleeShapeSignal() throws {
+        // `mutating func removeAll()` on the value-semantic `Bag`. The evidence
+        // must mark it instance + mutating + nullary so the verify emitter routes
+        // it to `var copy = value; copy.removeAll()` for *any* carrier — not just
+        // the curated OrderedCollections set.
+        let suggestion = try #require(IdempotenceTemplate.suggest(
+            forLifted: liftedNoParam("removeAll"),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        let evidence = try #require(suggestion.evidence.first)
+        #expect(evidence.isInstanceMethod)
+        #expect(evidence.isMutatingMethod)
+        #expect(evidence.isNullary)
+        #expect(evidence.returnsSelfType == false)
+    }
+
+    @Test("An arg-bearing lifted mutating pick is not marked nullary (stays off the receiver shape)")
+    func liftedArgBearingNotNullary() throws {
+        // `mutating func formUnion(_ other: Bag)` — idempotent, but its emit needs
+        // an argument, so `isNullary` must be false so the nullary `copy.method()`
+        // shape (which wouldn't compile) is not selected.
+        let suggestion = try #require(IdempotenceTemplate.suggest(
+            forLifted: liftedParamMatchesCarrier("formUnion"),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        let evidence = try #require(suggestion.evidence.first)
+        #expect(evidence.isInstanceMethod)
+        #expect(evidence.isMutatingMethod)
+        #expect(evidence.isNullary == false)
+    }
+
     @Test("Two-param mutating method is NOT an idempotence candidate")
     func twoParamRejected() {
         let resolver = valueSemanticResolver()
