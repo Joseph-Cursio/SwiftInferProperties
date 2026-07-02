@@ -73,7 +73,6 @@ extension VerifyInteractionPipeline {
             workdir: workdir,
             userPackage: VerifierWorkdir.UserPackageReference(
                 packagePath: request.packageRoot,
-                packageDeclaredName: request.userModuleName,
                 productNames: [request.userModuleName]
             ),
             stubSource: request.stubSource,

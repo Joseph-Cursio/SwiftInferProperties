@@ -36,21 +36,36 @@ public enum VerifierWorkdir {
     /// `.product(name:package:)` declaration to resolve. Targets only
     /// declared (without a matching product) can't be verified in
     /// v1.42 — the build step fails and surfaces via the eventual
-    /// V1.42.C.3 `.buildFailed` error. `packageDeclaredName` is the
-    /// `name:` value the user passed to `Package(name: ..., ...)`,
-    /// which SwiftPM uses as the `package:` argument in
-    /// `.product(name:package:)` resolutions. Most user packages
-    /// declare a name that matches the directory basename; when it
-    /// doesn't, the caller must supply the actual declared name.
+    /// V1.42.C.3 `.buildFailed` error.
+    ///
+    /// **Package identity.** For a `.package(path:)` dependency, SwiftPM
+    /// (tools 5.6+) derives the package *identity* from the dependency
+    /// directory's **basename** — NOT the `name:` value in the user's
+    /// `Package(name: ..., ...)`. That identity is what the
+    /// `.product(name:package:)` `package:` argument must reference, so
+    /// it's computed here from `packagePath` (`packageIdentity`) rather
+    /// than taken as a caller input. Passing the module/product name as
+    /// the `package:` argument — as an earlier revision did — build-fails
+    /// with "unknown package" whenever the repo directory name differs
+    /// from the module name (the common case for real user packages; the
+    /// measured-test corpora dodged it because `CorpusPackager` names the
+    /// corpus directory after the module). `productNames` remains the
+    /// library product name(s) to depend on, which SwiftPM matches
+    /// case-insensitively.
     public struct UserPackageReference: Equatable, Sendable {
         public let packagePath: URL
-        public let packageDeclaredName: String
         public let productNames: [String]
 
-        public init(packagePath: URL, packageDeclaredName: String, productNames: [String]) {
+        public init(packagePath: URL, productNames: [String]) {
             self.packagePath = packagePath
-            self.packageDeclaredName = packageDeclaredName
             self.productNames = productNames
+        }
+
+        /// The SwiftPM package identity for the `.package(path:)`
+        /// dependency — the path basename. Used as the `package:`
+        /// argument in `.product(name:package:)`.
+        var packageIdentity: String {
+            packagePath.lastPathComponent
         }
     }
 
@@ -323,7 +338,7 @@ public enum VerifierWorkdir {
             for productName in userPackage.productNames {
                 entries.append(
                     ".product(name: \(escapedLiteral(productName)), "
-                        + "package: \(escapedLiteral(userPackage.packageDeclaredName)))"
+                        + "package: \(escapedLiteral(userPackage.packageIdentity)))"
                 )
             }
         }

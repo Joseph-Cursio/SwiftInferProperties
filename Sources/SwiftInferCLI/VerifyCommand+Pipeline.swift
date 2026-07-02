@@ -79,8 +79,10 @@ extension SwiftInferCommand.Verify {
     /// path. When `target` names a non-empty module, returns a path-dependency
     /// on `packageRoot` plus a `@testable` import of that module; otherwise
     /// `(nil, [])` so the v1.42 stdlib-carrier behavior is unchanged. Assumes
-    /// the module's package name == product name == module name (the SwiftPM
-    /// convention, matching the `--all-from-index` survey path).
+    /// the target's library product name == module name; the `.package(path:)`
+    /// identity is derived from `packageRoot`'s basename by
+    /// `UserPackageReference` (so a repo directory name that differs from the
+    /// module name resolves correctly).
     static func userPackageWiring(
         target: String?,
         packageRoot: URL
@@ -88,7 +90,6 @@ extension SwiftInferCommand.Verify {
         guard let module = target, !module.isEmpty else { return (nil, []) }
         let reference = VerifierWorkdir.UserPackageReference(
             packagePath: packageRoot,
-            packageDeclaredName: module,
             productNames: [module]
         )
         return (reference, ["@testable \(module)"])

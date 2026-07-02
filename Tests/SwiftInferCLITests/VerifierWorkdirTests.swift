@@ -142,12 +142,31 @@ struct VerifierWorkdirTests {
         let userPath = URL(fileURLWithPath: "/tmp/MyPackage")
         let userRef = VerifierWorkdir.UserPackageReference(
             packagePath: userPath,
-            packageDeclaredName: "MyPackage",
             productNames: ["MyLib"]
         )
         let rendered = VerifierWorkdir.renderPackageSwift(userPackage: userRef)
         #expect(rendered.contains(".package(path: \"/tmp/MyPackage\")"))
         #expect(rendered.contains(".product(name: \"MyLib\", package: \"MyPackage\")"))
+    }
+
+    @Test("package: identity is the path basename, not the module/product name")
+    func packageSwiftUsesPathBasenameForIdentity() {
+        // A real user repo whose directory (`swift-clone-detector`) differs from
+        // its library product (`SwiftCloneDetector`). SwiftPM identifies a
+        // `.package(path:)` dep by the directory basename, so the `package:`
+        // argument must be `swift-clone-detector` — using the product name here
+        // (as an earlier revision did) build-fails with "unknown package".
+        let userRef = VerifierWorkdir.UserPackageReference(
+            packagePath: URL(fileURLWithPath: "/tmp/swift-clone-detector"),
+            productNames: ["SwiftCloneDetector"]
+        )
+        let rendered = VerifierWorkdir.renderPackageSwift(userPackage: userRef)
+        #expect(rendered.contains(".package(path: \"/tmp/swift-clone-detector\")"))
+        #expect(rendered.contains(
+            ".product(name: \"SwiftCloneDetector\", package: \"swift-clone-detector\")"
+        ))
+        // The module/product name must NOT be used as the package identity.
+        #expect(!rendered.contains("package: \"SwiftCloneDetector\""))
     }
 
     @Test("Package.swift always depends on the four mandatory products")
@@ -201,7 +220,6 @@ struct VerifierWorkdirTests {
     func interactionModeWithUserPackage() {
         let userRef = VerifierWorkdir.UserPackageReference(
             packagePath: URL(fileURLWithPath: "/tmp/MyApp"),
-            packageDeclaredName: "MyApp",
             productNames: ["MyAppLib"]
         )
         let rendered = VerifierWorkdir.renderPackageSwift(

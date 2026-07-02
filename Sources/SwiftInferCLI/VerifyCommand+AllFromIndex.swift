@@ -193,7 +193,6 @@ extension SwiftInferCommand.Verify {
             let userPackage = config.corpusModuleName.map {
                 VerifierWorkdir.UserPackageReference(
                     packagePath: packageRoot,
-                    packageDeclaredName: $0,
                     productNames: [$0]
                 )
             }
