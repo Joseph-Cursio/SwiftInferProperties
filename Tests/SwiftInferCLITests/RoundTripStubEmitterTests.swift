@@ -209,6 +209,16 @@ struct RoundTripStubEmitterTests {
         #expect(source.contains("import Foundation"))
     }
 
+    @Test("Double round-trip uses the NaN-reflexive oracle (sameResult)")
+    func doubleNaNReflexiveOracle() throws {
+        let source = try RoundTripStubEmitter.emit(
+            Self.inputs(forwardCall: "abs", inverseCall: "abs", carrierType: "Double")
+        )
+        #expect(source.contains("func sameResult(_ lhs: Double, _ rhs: Double) -> Bool"))
+        #expect(source.contains("!sameResult(inverseResult, value)"))
+        #expect(source.contains("inverseResult.isApproximatelyEqual(to: value)") == false)
+    }
+
     @Test("Double carrier uses inlined doubleWithNaN equivalent (NaN at ~5%) for edge pass")
     func doubleCarrierEdgePassUsesInlinedDoubleWithNaN() throws {
         let source = try RoundTripStubEmitter.emit(

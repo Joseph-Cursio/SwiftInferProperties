@@ -4,7 +4,8 @@ import Foundation
 // `RoundTripStubEmitter+NonComplex.swift`'s `composeDoubleSource` but
 // for the `f(f(x)) ≈ f(x)` shape: emits `onceResult = f(value)` +
 // `twiceResult = f(onceResult)` per trial; equality check is
-// `twiceResult.isApproximatelyEqual(to: onceResult)`.
+// `sameResult(twiceResult, onceResult)` (NaN-reflexive — see
+// `SeededStubEmitter.nanReflexiveDoubleEquality`).
 extension IdempotenceStubEmitter {
 
     static func composeDoubleSource(_ inputs: Inputs) -> String {
@@ -19,7 +20,8 @@ extension IdempotenceStubEmitter {
         )
         let defaultPass = doubleDefaultPass(functionCall: inputs.functionCall)
         let edgePass = doubleEdgePass(functionCall: inputs.functionCall)
-        return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
+        return [header, setup, nanReflexiveDoubleEquality, defaultPass, edgePass]
+            .joined(separator: "\n\n")
     }
 
     private static let doubleHeaderBlurb =
@@ -44,7 +46,7 @@ extension IdempotenceStubEmitter {
             let value = defaultGenerator.run(using: &rng)
             let onceResult = \(functionCall)(value)
             let twiceResult = \(functionCall)(onceResult)
-            if !twiceResult.isApproximatelyEqual(to: onceResult) {
+            if !sameResult(twiceResult, onceResult) {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
@@ -54,7 +56,7 @@ extension IdempotenceStubEmitter {
                 // --- shrink phase (v1.141): minimize the failing input ---
                 func idempotenceFails(_ candidate: Double) -> Bool {
                     let onceCandidate = \(functionCall)(candidate)
-                    return !\(functionCall)(onceCandidate).isApproximatelyEqual(to: onceCandidate)
+                    return !sameResult(\(functionCall)(onceCandidate), onceCandidate)
                 }
                 var shrunk = value
                 var shrinkSteps = 0
@@ -101,7 +103,7 @@ extension IdempotenceStubEmitter {
             if matchedIndex >= 0 { sampledEdgeIndices.insert(matchedIndex) }
             let onceResult = \(functionCall)(value)
             let twiceResult = \(functionCall)(onceResult)
-            if !twiceResult.isApproximatelyEqual(to: onceResult) {
+            if !sameResult(twiceResult, onceResult) {
                 print("VERIFY_EDGE_RESULT: FAIL")
                 print("VERIFY_EDGE_TRIAL: \\(trial)")
                 print("VERIFY_EDGE_INPUT: \\(value)")

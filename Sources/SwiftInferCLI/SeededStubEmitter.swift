@@ -12,6 +12,30 @@ import Foundation
 protocol SeededStubEmitter {}
 
 extension SeededStubEmitter {
+    /// The NaN-reflexive equality oracle emitted into `Double` symmetric-property
+    /// stubs (commutativity / associativity / round-trip / idempotence).
+    ///
+    /// `NaN != NaN` under IEEE 754 makes an *equational* property inevaluable on
+    /// NaN even when both sides are the SAME result: a commutative `f` on NaN
+    /// input yields NaN on both sides, but `nan == nan` is `false`, so the raw
+    /// oracle reports a spurious counterexample — to reflexivity of `==`, not to
+    /// the property. Two NaNs are the same result; compare accordingly. A
+    /// genuinely asymmetric `f` (e.g. `min(nan,1)=nan` vs `min(1,nan)=1`) still
+    /// fails: the sides differ, `both.isNaN` is false, and the approximate check
+    /// rejects them.
+    ///
+    /// No `Complex` analogue is needed — swift-numerics canonicalizes every
+    /// non-finite value to a single equal "point at infinity", so `Complex`'s
+    /// own `==` / `isApproximatelyEqual` are already NaN-reflexive.
+    static var nanReflexiveDoubleEquality: String {
+        """
+        // NaN-reflexive equality (NaN != NaN): two NaNs are the same result.
+        func sameResult(_ lhs: Double, _ rhs: Double) -> Bool {
+            (lhs.isNaN && rhs.isNaN) || lhs.isApproximatelyEqual(to: rhs)
+        }
+        """
+    }
+
     /// Imports + optional preamble + a seeded `Xoshiro` RNG + `trials` count —
     /// the common header every seeded verification stub opens with.
     static func setupSection(

@@ -24,7 +24,8 @@ extension RoundTripStubEmitter {
             forwardCall: inputs.forwardCall,
             inverseCall: inputs.inverseCall
         )
-        return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
+        return [header, setup, nanReflexiveDoubleEquality, defaultPass, edgePass]
+            .joined(separator: "\n\n")
     }
 
     private static let doubleHeaderBlurb =
@@ -49,7 +50,7 @@ extension RoundTripStubEmitter {
             let value = defaultGenerator.run(using: &rng)
             let forwardResult = \(forwardCall)(value)
             let inverseResult = \(inverseCall)(forwardResult)
-            if !inverseResult.isApproximatelyEqual(to: value) {
+            if !sameResult(inverseResult, value) {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
@@ -58,7 +59,7 @@ extension RoundTripStubEmitter {
 
                 // --- shrink phase (v1.141): minimize the failing input ---
                 func roundTripFails(_ candidate: Double) -> Bool {
-                    !\(inverseCall)(\(forwardCall)(candidate)).isApproximatelyEqual(to: candidate)
+                    !sameResult(\(inverseCall)(\(forwardCall)(candidate)), candidate)
                 }
                 var shrunk = value
                 var shrinkSteps = 0
@@ -106,7 +107,7 @@ extension RoundTripStubEmitter {
             if matchedIndex >= 0 { sampledEdgeIndices.insert(matchedIndex) }
             let forwardResult = \(forwardCall)(value)
             let inverseResult = \(inverseCall)(forwardResult)
-            if !inverseResult.isApproximatelyEqual(to: value) {
+            if !sameResult(inverseResult, value) {
                 print("VERIFY_EDGE_RESULT: FAIL")
                 print("VERIFY_EDGE_TRIAL: \\(trial)")
                 print("VERIFY_EDGE_INPUT: \\(value)")

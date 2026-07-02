@@ -20,7 +20,8 @@ extension CommutativityStubEmitter {
         )
         let defaultPass = doubleDefaultPass(functionCall: inputs.functionCall)
         let edgePass = doubleEdgePass(functionCall: inputs.functionCall)
-        return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
+        return [header, setup, nanReflexiveDoubleEquality, defaultPass, edgePass]
+            .joined(separator: "\n\n")
     }
 
     private static let doubleHeaderBlurb =
@@ -34,8 +35,7 @@ extension CommutativityStubEmitter {
     }
 
     private static func doubleDefaultPass(functionCall: String) -> String {
-        let oracle = "!\(functionCall)(aValue, bValue)"
-            + ".isApproximatelyEqual(to: \(functionCall)(bValue, aValue))"
+        let oracle = "!sameResult(\(functionCall)(aValue, bValue), \(functionCall)(bValue, aValue))"
         let shrink = scalarShrinkPhase(carrier: "Double", oracle: oracle)
         return """
         // --- Pass 1: default (inline finite-domain) ---
@@ -50,7 +50,7 @@ extension CommutativityStubEmitter {
             let rhs = defaultGenerator.run(using: &rng)
             let lhsResult = \(functionCall)(lhs, rhs)
             let rhsResult = \(functionCall)(rhs, lhs)
-            if !lhsResult.isApproximatelyEqual(to: rhsResult) {
+            if !sameResult(lhsResult, rhsResult) {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: (\\(lhs), \\(rhs))")
@@ -93,7 +93,7 @@ extension CommutativityStubEmitter {
             if matchedIndex >= 0 { sampledEdgeIndices.insert(matchedIndex) }
             let lhsResult = \(functionCall)(lhs, rhs)
             let rhsResult = \(functionCall)(rhs, lhs)
-            if !lhsResult.isApproximatelyEqual(to: rhsResult) {
+            if !sameResult(lhsResult, rhsResult) {
                 print("VERIFY_EDGE_RESULT: FAIL")
                 print("VERIFY_EDGE_TRIAL: \\(trial)")
                 print("VERIFY_EDGE_INPUT: (\\(lhs), \\(rhs))")

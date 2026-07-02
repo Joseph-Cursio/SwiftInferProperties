@@ -221,6 +221,16 @@ struct AssociativityStubEmitterTests {
         #expect(source.contains("import PropertyBased"))
     }
 
+    @Test("Double associativity uses the NaN-reflexive oracle (sameResult)")
+    func doubleNaNReflexiveOracle() throws {
+        let source = try AssociativityStubEmitter.emit(
+            Self.inputs(functionCall: "{ (a: Double, b: Double) in a + b }", carrierType: "Double")
+        )
+        #expect(source.contains("func sameResult(_ lhs: Double, _ rhs: Double) -> Bool"))
+        #expect(source.contains("!sameResult(lhsResult, rhsResult)"))
+        #expect(source.contains("lhsResult.isApproximatelyEqual(to: rhsResult)") == false)
+    }
+
     @Test("Double carrier uses inlined doubleWithNaN for edge pass + per-slot rotation")
     func doubleCarrierEdgePassUsesDoubleWithNaN() throws {
         let source = try AssociativityStubEmitter.emit(

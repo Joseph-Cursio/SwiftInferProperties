@@ -19,7 +19,8 @@ extension AssociativityStubEmitter {
         )
         let defaultPass = doubleDefaultPass(functionCall: inputs.functionCall)
         let edgePass = doubleEdgePass(functionCall: inputs.functionCall)
-        return [header, setup, defaultPass, edgePass].joined(separator: "\n\n")
+        return [header, setup, nanReflexiveDoubleEquality, defaultPass, edgePass]
+            .joined(separator: "\n\n")
     }
 
     private static let doubleHeaderBlurb =
@@ -33,8 +34,8 @@ extension AssociativityStubEmitter {
     }
 
     private static func doubleDefaultPass(functionCall: String) -> String {
-        let oracle = "!\(functionCall)(\(functionCall)(aValue, bValue), cValue)"
-            + ".isApproximatelyEqual(to: \(functionCall)(aValue, \(functionCall)(bValue, cValue)))"
+        let oracle = "!sameResult(\(functionCall)(\(functionCall)(aValue, bValue), cValue), "
+            + "\(functionCall)(aValue, \(functionCall)(bValue, cValue)))"
         let shrink = scalarShrinkPhase(carrier: "Double", oracle: oracle)
         return """
         // --- Pass 1: default (inline finite-domain) ---
@@ -50,7 +51,7 @@ extension AssociativityStubEmitter {
             let valueC = defaultGenerator.run(using: &rng)
             let lhsResult = \(functionCall)(\(functionCall)(valueA, valueB), valueC)
             let rhsResult = \(functionCall)(valueA, \(functionCall)(valueB, valueC))
-            if !lhsResult.isApproximatelyEqual(to: rhsResult) {
+            if !sameResult(lhsResult, rhsResult) {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: (\\(valueA), \\(valueB), \\(valueC))")
@@ -161,7 +162,7 @@ extension AssociativityStubEmitter {
             if matchedIndex >= 0 { sampledEdgeIndices.insert(matchedIndex) }
             let lhsResult = \(functionCall)(\(functionCall)(valueA, valueB), valueC)
             let rhsResult = \(functionCall)(valueA, \(functionCall)(valueB, valueC))
-            if !lhsResult.isApproximatelyEqual(to: rhsResult) {
+            if !sameResult(lhsResult, rhsResult) {
                 print("VERIFY_EDGE_RESULT: FAIL")
                 print("VERIFY_EDGE_TRIAL: \\(trial)")
                 print("VERIFY_EDGE_INPUT: (\\(valueA), \\(valueB), \\(valueC))")

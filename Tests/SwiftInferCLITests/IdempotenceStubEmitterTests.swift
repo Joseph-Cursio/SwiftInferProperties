@@ -225,8 +225,10 @@ struct IdempotenceStubEmitterTests {
         )
         #expect(source.contains("abs(value)"))
         #expect(source.contains("abs(onceResult)"))
-        // Equality is on once vs twice, not value.
-        #expect(source.contains("twiceResult.isApproximatelyEqual(to: onceResult)"))
+        // Equality is on once vs twice, via the NaN-reflexive oracle
+        // (Double `==`/≈ aren't reflexive on NaN; `sameResult` makes them).
+        #expect(source.contains("sameResult(twiceResult, onceResult)"))
+        #expect(source.contains("func sameResult(_ lhs: Double, _ rhs: Double) -> Bool"))
     }
 
     @Test("Int carrier emits single-pass stub (no FP / Complex imports)")

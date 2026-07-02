@@ -110,6 +110,22 @@ struct CommutativityStubEmitterTests {
         #expect(source.contains("lhsResult.isApproximatelyEqual(to: rhsResult)"))
     }
 
+    @Test("Double commutativity uses the NaN-reflexive oracle (sameResult), not raw ≈")
+    func doubleNaNReflexiveOracle() throws {
+        // `NaN != NaN` makes an equational property inevaluable on NaN even
+        // when both sides are the same result. The Double path compares via a
+        // NaN-reflexive `sameResult` so a symmetric `f` (both sides NaN) holds,
+        // while an asymmetric `f` (sides differ) still fails.
+        let source = try CommutativityStubEmitter.emit(
+            Self.inputs(functionCall: "Double.hypot", carrierType: "Double")
+        )
+        #expect(source.contains("func sameResult(_ lhs: Double, _ rhs: Double) -> Bool"))
+        #expect(source.contains("(lhs.isNaN && rhs.isNaN)"))
+        #expect(source.contains("!sameResult(lhsResult, rhsResult)"))
+        // The raw pair-result approximate check is gone (replaced by sameResult).
+        #expect(source.contains("lhsResult.isApproximatelyEqual(to: rhsResult)") == false)
+    }
+
     // MARK: - Seed hex formatting
 
     @Test("seed components render as uppercase hex")
