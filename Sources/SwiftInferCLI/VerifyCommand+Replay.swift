@@ -32,6 +32,7 @@ extension SwiftInferCommand.Verify {
         let config = SurveyConfig(
             budget: parseBudget(budgetString),
             corpusModuleName: nil,
+            corpusProductName: nil,
             emitRegression: false
         )
 

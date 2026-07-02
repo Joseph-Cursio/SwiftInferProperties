@@ -78,19 +78,25 @@ extension SwiftInferCommand.Verify {
     /// V1.149 — resolve the optional user-package wiring for the single-verify
     /// path. When `target` names a non-empty module, returns a path-dependency
     /// on `packageRoot` plus a `@testable` import of that module; otherwise
-    /// `(nil, [])` so the v1.42 stdlib-carrier behavior is unchanged. Assumes
-    /// the target's library product name == module name; the `.package(path:)`
-    /// identity is derived from `packageRoot`'s basename by
-    /// `UserPackageReference` (so a repo directory name that differs from the
-    /// module name resolves correctly).
+    /// `(nil, [])` so the v1.42 stdlib-carrier behavior is unchanged. The three
+    /// distinct names are each resolved on their own axis: the `.package(path:)`
+    /// identity from `packageRoot`'s basename (inside `UserPackageReference`),
+    /// the `.product(name:)` from `PackageProductResolver` (tier 2 — may differ
+    /// from the module), and the `@testable import` from the module name. Any
+    /// of the three differing from the others now resolves correctly; the
+    /// product resolution falls back to the module name when unresolvable.
     static func userPackageWiring(
         target: String?,
         packageRoot: URL
     ) -> (userPackage: VerifierWorkdir.UserPackageReference?, extraImports: [String]) {
         guard let module = target, !module.isEmpty else { return (nil, []) }
+        let product = PackageProductResolver.libraryProduct(
+            exposingModule: module,
+            packageRoot: packageRoot
+        ) ?? module
         let reference = VerifierWorkdir.UserPackageReference(
             packagePath: packageRoot,
-            productNames: [module]
+            productNames: [product]
         )
         return (reference, ["@testable \(module)"])
     }

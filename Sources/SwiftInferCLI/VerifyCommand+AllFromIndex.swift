@@ -42,9 +42,17 @@ extension SwiftInferCommand.Verify {
             return
         }
         let parallelism = max(1, maxParallel)
+        // Tier 2 — resolve the library product vending the corpus module ONCE
+        // per run (the dump is entry-invariant). Differs from the module when a
+        // package vends it through a differently-named product; falls back to
+        // the module name when unresolvable.
+        let corpusProductName = corpusModuleName.map {
+            PackageProductResolver.libraryProduct(exposingModule: $0, packageRoot: packageRoot) ?? $0
+        }
         let config = SurveyConfig(
             budget: parseBudget(budgetString),
             corpusModuleName: corpusModuleName,
+            corpusProductName: corpusProductName,
             emitRegression: emitRegression,
             // WS-6 Slice 2 — whole-module shape universe for recursive derivation.
             allShapes: index.typeShapes
@@ -63,6 +71,10 @@ extension SwiftInferCommand.Verify {
     struct SurveyConfig {
         let budget: RoundTripStubEmitter.TrialBudget
         let corpusModuleName: String?
+        /// Tier 2 — the library product vending `corpusModuleName`, resolved
+        /// once via `PackageProductResolver`. May differ from the module name;
+        /// drives `.product(name:)` while `corpusModuleName` drives `import`.
+        let corpusProductName: String?
         let emitRegression: Bool
         /// WS-6 Slice 2 — the persisted whole-module shape universe, threaded to
         /// each per-entry `buildStubBundle` so nested custom-type carriers derive.
@@ -189,8 +201,11 @@ extension SwiftInferCommand.Verify {
             // (not declared library deps), so the verifier must path-depend on
             // the corpus package + `import` it. cycle27-surface (library
             // carriers) passes nil and is unaffected.
+            // Tier 2 — three distinct names, one per axis: `import` uses the
+            // module, `.product(name:)` the resolved product, `.package` the
+            // path basename (`UserPackageReference.packageIdentity`).
             let extraImports = config.corpusModuleName.map { [$0] } ?? []
-            let userPackage = config.corpusModuleName.map {
+            let userPackage = config.corpusProductName.map {
                 VerifierWorkdir.UserPackageReference(
                     packagePath: packageRoot,
                     productNames: [$0]

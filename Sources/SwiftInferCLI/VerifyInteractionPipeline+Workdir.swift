@@ -69,11 +69,17 @@ extension VerifyInteractionPipeline {
                 inlinedSources: (try? CorpusPackager.readSwiftSources(in: corpusSourceDirectory)) ?? []
             ))
         }
+        // Tier 2 — depend on the library product that vends the reducer module
+        // (may differ from the module name); the stub still imports the module.
+        let product = PackageProductResolver.libraryProduct(
+            exposingModule: request.userModuleName,
+            packageRoot: request.packageRoot
+        ) ?? request.userModuleName
         return (workdir, VerifierWorkdir.Inputs(
             workdir: workdir,
             userPackage: VerifierWorkdir.UserPackageReference(
                 packagePath: request.packageRoot,
-                productNames: [request.userModuleName]
+                productNames: [product]
             ),
             stubSource: request.stubSource,
             mode: .interaction
