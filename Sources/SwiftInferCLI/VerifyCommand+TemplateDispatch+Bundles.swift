@@ -186,4 +186,27 @@ extension SwiftInferCommand.Verify {
             rendererInverseName: reference
         )
     }
+
+    /// Render one half (forward or inverse) of a round-trip call. Emits the
+    /// instance-method receiver shape (`{ $0.method() }`) only when this half
+    /// IS the entry's signalled non-mutating instance method — i.e. when its
+    /// bare name matches `primaryFunctionName`. This covers the self-inverse
+    /// instance method (forward == inverse == the method, applied twice ==
+    /// identity, e.g. `negated()`); a half we have no instance signal for
+    /// keeps the static/free shape. Mutating and free/static halves fall back
+    /// via `receiverCallExpression`.
+    static func roundTripHalfCall(
+        entry: SemanticIndexEntry,
+        typeQualifier: String,
+        bareName: String
+    ) -> String {
+        let stripped = RoundTripPairResolver.stripParameterLabels(bareName)
+        let reference = CallExpressionShape.render(
+            typeQualifier: typeQualifier,
+            bareFunctionName: stripped
+        )
+        let primaryStripped = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
+        guard entry.isInstanceMethod, stripped == primaryStripped else { return reference }
+        return receiverCallExpression(entry: entry, reference: reference, bareFunctionName: stripped)
+    }
 }

@@ -95,4 +95,32 @@ struct ReceiverCallExpressionTests {
         )
         #expect(call == "{ Engine.combine(lhs: $0, rhs: $1) }")
     }
+
+    // MARK: - round-trip half (self-inverse instance method)
+
+    @Test("a round-trip half that IS the primary instance method emits the receiver shape")
+    func roundTripHalfReceiverForPrimary() {
+        // `flipped()` self-inverse: both halves are the signalled instance method.
+        let signal = entry(function: "flipped()", isInstanceMethod: true)
+        let forward = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Bits", bareName: "flipped()")
+        let inverse = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Bits", bareName: "flipped()")
+        #expect(forward == "{ $0.flipped() }")
+        #expect(inverse == "{ $0.flipped() }")
+    }
+
+    @Test("a round-trip half that is NOT the primary keeps the static shape")
+    func roundTripHalfStaticForNonPrimary() {
+        // Primary (forward) is an instance method, but the inverse half is a
+        // different function we have no instance signal for → static shape.
+        let signal = entry(function: "encoded()", isInstanceMethod: true)
+        let inverse = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Payload", bareName: "decoded()")
+        #expect(inverse == "Payload.decoded")
+    }
+
+    @Test("a round-trip half on a non-instance entry keeps the static shape")
+    func roundTripHalfStaticForFreeFunction() {
+        let signal = entry(function: "encode()", isInstanceMethod: false)
+        let call = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Payload", bareName: "encode()")
+        #expect(call == "Payload.encode")
+    }
 }

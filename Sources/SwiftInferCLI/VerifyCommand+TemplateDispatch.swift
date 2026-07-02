@@ -297,41 +297,26 @@ extension SwiftInferCommand.Verify {
         typeQualifier: String
     ) throws -> ResolvedCalls {
         let forwardBare = entry.primaryFunctionName
-        if let pair = RoundTripPairResolver.curated.first(
-            where: { $0.forwardName == forwardBare }
-        ) {
-            let forwardCall = CallExpressionShape.render(
-                typeQualifier: typeQualifier,
-                bareFunctionName: RoundTripPairResolver.stripParameterLabels(pair.forwardName)
-            )
-            let inverseCall = CallExpressionShape.render(
-                typeQualifier: typeQualifier,
-                bareFunctionName: RoundTripPairResolver.stripParameterLabels(pair.inverseName)
-            )
-            return ResolvedCalls(
-                expressions: [forwardCall, inverseCall],
-                rendererForwardName: forwardCall,
-                rendererInverseName: inverseCall
+        let inverseBare: String
+        if let pair = RoundTripPairResolver.curated.first(where: { $0.forwardName == forwardBare }) {
+            inverseBare = pair.inverseName
+        } else if let secondary = entry.secondaryFunctionName {
+            inverseBare = secondary
+        } else {
+            throw VerifyError.unsupportedPair(
+                forward: forwardBare,
+                supported: RoundTripPairResolver.curated.map(\.forwardName)
             )
         }
-        if let inverseBare = entry.secondaryFunctionName {
-            let forwardCall = CallExpressionShape.render(
-                typeQualifier: typeQualifier,
-                bareFunctionName: RoundTripPairResolver.stripParameterLabels(forwardBare)
-            )
-            let inverseCall = CallExpressionShape.render(
-                typeQualifier: typeQualifier,
-                bareFunctionName: RoundTripPairResolver.stripParameterLabels(inverseBare)
-            )
-            return ResolvedCalls(
-                expressions: [forwardCall, inverseCall],
-                rendererForwardName: forwardCall,
-                rendererInverseName: inverseCall
-            )
-        }
-        throw VerifyError.unsupportedPair(
-            forward: forwardBare,
-            supported: RoundTripPairResolver.curated.map(\.forwardName)
+        // Each half renders static/free by default; a half that IS the entry's
+        // signalled instance method emits the receiver shape (self-inverse
+        // instance-method round-trips like `value.negated().negated() == value`).
+        let forwardCall = roundTripHalfCall(entry: entry, typeQualifier: typeQualifier, bareName: forwardBare)
+        let inverseCall = roundTripHalfCall(entry: entry, typeQualifier: typeQualifier, bareName: inverseBare)
+        return ResolvedCalls(
+            expressions: [forwardCall, inverseCall],
+            rendererForwardName: forwardCall,
+            rendererInverseName: inverseCall
         )
     }
 
