@@ -64,16 +64,24 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
-        // V1.60.A — mutating-instance-method shape for OC carriers.
-        // The cycle-56 surface (`docs/calibration-cycle-56-findings.md`)
-        // showed 5 idempotence picks on OrderedSet<Int> compile-failing
-        // with the static-call-of-instance-method shape. New emit shape:
-        // `var copy1 = value; copy1.method(); var copy2 = value;
-        // copy2.method(); copy2.method(); if copy1 != copy2 { fail }`.
-        // The method name is extracted from the functionCall by
-        // splitting on `.` and taking the last component.
-        if mutatingInstanceCarriers.contains(recipe.carrierTypeName) {
+        // Nullary mutating instance method → `var copy = value;
+        // copy.method()` (V1.60.A). Now driven by the SemanticIndex
+        // callee-shape signal so it generalizes beyond the curated OC
+        // carriers; the `mutatingInstanceCarriers` set is retained as a
+        // belt-and-suspenders OR for entries persisted without the signal.
+        let mutatingInstance =
+            (inputs.isInstanceMethod && inputs.isMutatingMethod && inputs.isNullary)
+            || mutatingInstanceCarriers.contains(recipe.carrierTypeName)
+        if mutatingInstance {
             return composeMutatingIdempotencePass(
+                functionCall: functionCall,
+                recipe: recipe
+            )
+        }
+        // Nullary non-mutating instance method returning its own type →
+        // chain the receiver: `value.method().method() == value.method()`.
+        if inputs.isInstanceMethod && inputs.isNullary && inputs.returnsSelfType {
+            return composeSelfReturningIdempotencePass(
                 functionCall: functionCall,
                 recipe: recipe
             )
@@ -160,6 +168,44 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(onceCopy)")
                 print("VERIFY_DEFAULT_INVERSE: \\(twiceCopy)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    /// Emit the non-mutating self-returning instance-method idempotence
+    /// shape: chain the method on the receiver — `value.method().method()`
+    /// must equal `value.method()`. The method name is extracted from
+    /// `functionCall` the same way as the mutating shape. Only reached for
+    /// nullary instance methods whose return type is the carrier itself
+    /// (`inputs.returnsSelfType`), so the second `.method()` type-checks.
+    private static func composeSelfReturningIdempotencePass(
+        functionCall: String,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+        // self-returning instance-method shape: `value.\(methodName)()`
+        // chained — applying `\(methodName)` twice equals applying it once.
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let value = defaultGenerator.run(using: &rng)
+            let onceResult = value.\(methodName)()
+            let twiceResult = onceResult.\(methodName)()
+            if onceResult != twiceResult {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(value)")
+                print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
+                print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
                 exit(1)
             }
         }

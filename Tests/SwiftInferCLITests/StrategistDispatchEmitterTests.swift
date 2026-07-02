@@ -211,7 +211,11 @@ struct StrategistDispatchEmitterEmitTests {
         template: String,
         carrier: String = "Int",
         functionCalls: [String] = ["{ (x: Int) in x }"],
-        trialBudget: StrategistDispatchEmitter.TrialBudget = .small
+        trialBudget: StrategistDispatchEmitter.TrialBudget = .small,
+        isInstanceMethod: Bool = false,
+        isMutatingMethod: Bool = false,
+        isNullary: Bool = false,
+        returnsSelfType: Bool = false
     ) -> StrategistDispatchEmitter.Inputs {
         StrategistDispatchEmitter.Inputs(
             carrier: carrier,
@@ -220,7 +224,11 @@ struct StrategistDispatchEmitterEmitTests {
             functionCalls: functionCalls,
             extraImports: [],
             seedHex: canonicalSeed,
-            trialBudget: trialBudget
+            trialBudget: trialBudget,
+            isInstanceMethod: isInstanceMethod,
+            isMutatingMethod: isMutatingMethod,
+            isNullary: isNullary,
+            returnsSelfType: returnsSelfType
         )
     }
 
@@ -352,6 +360,50 @@ struct StrategistDispatchEmitterEmitTests {
         )
         #expect(source.contains("let onceResult"))
         #expect(source.contains("let twiceResult"))
+        #expect(source.contains("var onceCopy") == false)
+    }
+
+    // Instance-method idempotence driven by the SemanticIndex callee-shape
+    // signal (generalizes V1.60.A off the hardcoded OC carrier set).
+
+    @Test("signal-driven mutating idempotence emits the receiver shape on a non-OC carrier")
+    func signalDrivenMutatingIdempotenceOnNonOCCarrier() throws {
+        // String is NOT in mutatingInstanceCarriers — the mutating shape
+        // fires solely because the callee-shape signal says so.
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "idempotence",
+                carrier: "String",
+                functionCalls: ["String.normalizeInPlace"],
+                isInstanceMethod: true,
+                isMutatingMethod: true,
+                isNullary: true
+            )
+        )
+        #expect(source.contains("var onceCopy = value"))
+        #expect(source.contains("onceCopy.normalizeInPlace()"))
+        #expect(source.contains("twiceCopy.normalizeInPlace()"))
+        // The static shape must not appear.
+        #expect(source.contains("String.normalizeInPlace(value)") == false)
+    }
+
+    @Test("signal-driven self-returning idempotence chains the method on the receiver")
+    func signalDrivenSelfReturningIdempotence() throws {
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(
+                template: "idempotence",
+                carrier: "String",
+                functionCalls: ["String.trimmedCopy"],
+                isInstanceMethod: true,
+                isMutatingMethod: false,
+                isNullary: true,
+                returnsSelfType: true
+            )
+        )
+        #expect(source.contains("let onceResult = value.trimmedCopy()"))
+        #expect(source.contains("let twiceResult = onceResult.trimmedCopy()"))
+        // Neither the static shape nor the mutating shape.
+        #expect(source.contains("String.trimmedCopy(value)") == false)
         #expect(source.contains("var onceCopy") == false)
     }
 
