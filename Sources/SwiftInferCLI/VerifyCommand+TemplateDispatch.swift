@@ -215,7 +215,7 @@ extension SwiftInferCommand.Verify {
     /// when the strategist path emits. Round-trip resolves the curated
     /// forward+inverse pair; idempotence / commutativity / associativity
     /// resolve the single function call.
-    private struct ResolvedCalls {
+    struct ResolvedCalls {
         let expressions: [String]
         let rendererForwardName: String
         let rendererInverseName: String
@@ -236,23 +236,17 @@ extension SwiftInferCommand.Verify {
         case "round-trip":
             return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
 
-        case "idempotence", "commutativity", "associativity":
-            let reference = CallExpressionShape.render(
-                typeQualifier: typeQualifier,
-                bareFunctionName: funcName
+        case "idempotence":
+            // Static/free shape; idempotence's own composer emits the receiver
+            // form for mutating / self-returning instance methods.
+            return singleCallResolved(
+                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
             )
-            // V1.149 — when the function has external argument labels, the stub's
-            // positional application (`ref(value)`) won't compile; wrap in a
-            // label-carrying trampoline closure (`{ ref(in: $0) }`). Label-free
-            // functions return `reference` unchanged (no golden churn).
-            let call = labeledCallExpression(
-                primaryFunctionName: entry.primaryFunctionName,
-                reference: reference
-            )
-            return ResolvedCalls(
-                expressions: [call],
-                rendererForwardName: reference,
-                rendererInverseName: reference
+
+        case "commutativity", "associativity":
+            // Binary instance ops emit the receiver shape here.
+            return singleCallResolved(
+                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: true
             )
 
         case "idempotence-lifted", "monotonicity":

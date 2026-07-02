@@ -125,4 +125,65 @@ extension SwiftInferCommand.Verify {
         let args = placeholders.joined(separator: ", ")
         return "{ \(reference)(\(args)) }"
     }
+
+    /// The call expression for a *non-mutating instance method*, as a receiver
+    /// closure the stub applies positionally: `{ $0.method(with: $1) }` —
+    /// `$0` is the receiver, the method's own arguments follow as `$1…`
+    /// carrying their labels. Applied by the stub's `\(call)(lhs, rhs)`, this
+    /// yields `lhs.method(with: rhs)` — the receiver shape a binary instance
+    /// operator needs, vs the static `Type.method(lhs, rhs)` (which doesn't
+    /// type-check: `Type.method` is the *curried* `(Type) -> (Arg) -> R`).
+    /// A nullary instance method (e.g. `reversed()`) yields `{ $0.method() }`,
+    /// applied as `\(call)(value)` → `value.method()`.
+    ///
+    /// Falls back to the positional `labeledCallExpression` (free/static shape)
+    /// for free/static functions and for mutating methods — a mutating method
+    /// returns `Void`, so it isn't this value-returning receiver shape (it's
+    /// idempotence's `var copy; copy.method()` shape instead).
+    static func receiverCallExpression(
+        entry: SemanticIndexEntry,
+        reference: String,
+        bareFunctionName: String
+    ) -> String {
+        guard entry.isInstanceMethod, !entry.isMutatingMethod else {
+            return labeledCallExpression(
+                primaryFunctionName: entry.primaryFunctionName,
+                reference: reference
+            )
+        }
+        let qualifierStripped = bareFunctionName.split(separator: ".").last.map(String.init)
+        let methodName = qualifierStripped ?? bareFunctionName
+        let labels = argumentLabels(from: entry.primaryFunctionName)
+        // Receiver is `$0`; the method's own args are `$1…`.
+        let placeholders = labels.enumerated().map { index, label in
+            label == "_" ? "$\(index + 1)" : "\(label): $\(index + 1)"
+        }
+        let args = placeholders.joined(separator: ", ")
+        return "{ $0.\(methodName)(\(args)) }"
+    }
+
+    /// Single-call resolution shared by idempotence / commutativity /
+    /// associativity. `receiverShape` selects the instance-method receiver
+    /// closure (`{ $0.method(with: $1) }`) over the static label-trampoline
+    /// form (`receiverCallExpression` falls back to the trampoline for
+    /// free/static/mutating functions).
+    static func singleCallResolved(
+        entry: SemanticIndexEntry,
+        typeQualifier: String,
+        funcName: String,
+        receiverShape: Bool
+    ) -> ResolvedCalls {
+        let reference = CallExpressionShape.render(
+            typeQualifier: typeQualifier,
+            bareFunctionName: funcName
+        )
+        let call = receiverShape
+            ? receiverCallExpression(entry: entry, reference: reference, bareFunctionName: funcName)
+            : labeledCallExpression(primaryFunctionName: entry.primaryFunctionName, reference: reference)
+        return ResolvedCalls(
+            expressions: [call],
+            rendererForwardName: reference,
+            rendererInverseName: reference
+        )
+    }
 }
