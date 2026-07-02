@@ -25,9 +25,16 @@ extension SwiftInferCommand.Verify {
     ///     `"instance-method-shape-not-supported"`. V1.59.A surfaced
     ///     23 OS picks that compile-fail because the resolver builds
     ///     `OrderedSet.sort(value)` (static call) but `sort()` is an
-    ///     instance method. Mutating-instance-method emission is
-    ///     v1.60+ scope; the picks remain architecturally pending
-    ///     until then.
+    ///     instance method. **Much of this is now emitted directly**:
+    ///     idempotence (nullary mutating-void + self-returning + lifted,
+    ///     V1.60.A), commutativity/associativity (binary instance ops,
+    ///     via `receiverCallExpression`'s `{ $0.method(with: $1) }`
+    ///     shape), and self-inverse round-trips all emit the receiver
+    ///     form. The classifier still fires for the shapes not yet
+    ///     routed to a receiver emit — non-nullary *direct* (unlifted)
+    ///     idempotence instance methods, monotonicity / dual-style
+    ///     instance methods, and mixed round-trip pairs (instance
+    ///     forward + non-instance inverse) — which remain pending.
     ///
     /// **Why both streams**: `swift build` formats compiler diagnostics
     /// to stdout (parent-process-readable) and emits SwiftPM-level
@@ -59,8 +66,11 @@ extension SwiftInferCommand.Verify {
     /// V1.59.A — recognize instance-method-on-type errors. Three
     /// related Swift compiler diagnostics for the same root cause
     /// (synthesized stub calls `<Type>.<method>(value)` static shape
-    /// but `<method>` is an instance method). Mutating-instance-method
-    /// emission is v1.60+ scope.
+    /// but `<method>` is an instance method). The idempotence /
+    /// commutativity / associativity / self-inverse-round-trip shapes
+    /// now emit the receiver form, so these diagnostics only surface for
+    /// the still-static shapes (see `architecturalPendingDetail`); the
+    /// classifier stays as their guard.
     ///
     /// **(a)** `instance member ... cannot be used on type` — the
     ///         canonical diagnostic.
