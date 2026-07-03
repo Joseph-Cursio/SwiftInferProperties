@@ -66,8 +66,33 @@ public enum InteractionTemplateEngine {
         sourcesDirectory: URL?,
         firstSeenAt: Date
     ) throws -> [InteractionInvariantSuggestion] {
-        var collected: [InteractionInvariantSuggestion] = []
+        // V2.0 Phase 2 (Redux) — Determinism. No witness detector (it's the
+        // paradigm-level purity guarantee, not a State/Action pattern), so it
+        // needs no source access and runs even when `sourcesDirectory` is nil.
+        var collected = DeterminismInteractionTemplate.analyze(
+            candidate: candidate,
+            firstSeenAt: firstSeenAt
+        )
         guard let sourcesDirectory else { return collected }
+        collected.append(contentsOf: try witnessBasedFamilies(
+            candidate,
+            sourcesDirectory: sourcesDirectory,
+            firstSeenAt: firstSeenAt
+        ))
+        return collected
+    }
+
+    /// The five witness-based families (Conservation / Idempotence /
+    /// Cardinality / Referential Integrity / Biconditional). Each pairs a
+    /// source-walking witness detector with its template. Split out of
+    /// `analyzeOne` so the witness-free Determinism dispatch stays readable
+    /// and both functions clear SwiftLint's `function_body_length` cap.
+    private static func witnessBasedFamilies(
+        _ candidate: ReducerCandidate,
+        sourcesDirectory: URL,
+        firstSeenAt: Date
+    ) throws -> [InteractionInvariantSuggestion] {
+        var collected: [InteractionInvariantSuggestion] = []
         // V2.0 M4.B — Conservation (count-shaped variant)
         let conservationWitnesses = try ConservationWitnessDetector.detect(
             stateTypeName: candidate.stateQualifiedName,

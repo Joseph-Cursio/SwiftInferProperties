@@ -73,11 +73,20 @@ struct ConservationSurveyCorpusMeasuredTests {
             workingDirectory: root
         )
         #expect(discovered.contains("(Verified)"))
-        #expect(discovered.contains("state.count == state.items.count"))     // Inventory survives
-        #expect(discovered.contains("state.itemCount == state.lineItems.count")) // Cart survives
         #expect(!discovered.contains("state.badgeCount"))                    // Badge suppressed
         #expect(!discovered.contains("state.memberCount"))                   // Roster suppressed
-        #expect(!discovered.contains("(Possible)"))                          // survivors promoted off .possible
+        // The two conserving reducers are promoted off .possible to Verified,
+        // asserted per-predicate rather than via a blanket "nothing is
+        // Possible": Determinism (Phase 2 Redux) now surfaces one witness-free
+        // .possible suggestion per redux reducer in this corpus, and it was NOT
+        // part of this conservation-only verify run, so it correctly stays
+        // .possible — orthogonal noise for this test.
+        let blocks = discovered.components(separatedBy: "[Interaction-Invariant Suggestion]")
+        func block(forPredicate needle: String) -> String? {
+            blocks.first { $0.contains("Predicate: \(needle)") }
+        }
+        #expect(block(forPredicate: "state.count == state.items.count")?.contains("(Verified)") == true)
+        #expect(block(forPredicate: "state.itemCount == state.lineItems.count")?.contains("(Verified)") == true)
     }
 
     /// `Tests/Fixtures/conservation-survey-corpus/`, resolved against

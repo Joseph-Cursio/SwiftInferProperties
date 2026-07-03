@@ -203,6 +203,12 @@ struct DiscoverInteractionCommandTests {
         #expect(rendered.contains("[Interaction-Invariant Suggestion]"))
         #expect(rendered.contains("Family:    idempotence"))
         #expect(rendered.contains("Score:     40 (Likely)"))
+        // Idempotence surfaces at .likely without the flag. Determinism
+        // (Phase 2 Redux) also surfaces for this reducer but at .possible, so
+        // it is silently filtered when a visible suggestion exists — the
+        // hidden-count sentinel (which names --include-possible) is emitted
+        // only when EVERY suggestion is hidden, so it stays absent here.
+        #expect(rendered.contains("Family:    determinism") == false)
         #expect(!rendered.contains("--include-possible"))
     }
 
