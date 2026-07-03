@@ -154,7 +154,14 @@ vocabulary (exact + `set*`/`select*`/`show*`/`present*` prefixes); cardinality
 needs ≥2 presentation fields; biconditional stays cardinality-only by using a
 non-`Showing`/`Presenting` Bool or all-Optional state.
 
-## 8. The frozen 50.5% measured-execution rate
+## 8. The (former) frozen 50.5% measured-execution rate
+
+> **RESOLVED — cycle 151: 50.5% → 100.0% (53/53), epic complete.** The
+> analysis below is the cycle-147 diagnosis that scoped the fix; keep it for
+> the method, but two sizings were superseded during build-out — the "20
+> instance-method-shape picks" were antisymmetric/non-associative *false
+> positives*, **filtered (Lever B, c149), not emitted**, and the rate closed
+> via A→B→C-1→D (§10). The numbers below are historical.
 
 `52/103 = 50.5%`, frozen since cycle 66 — this is the **algebraic** verify
 pipeline (round-trip / idempotence / commutativity / associativity /
@@ -220,11 +227,20 @@ biconditional c137, refint c138); the gate-overrule (135/136), refint
 Identifiable gate (139), and corpus widening (140–144) shipped; tooling +
 code-health (145) done; full suite green (3200 fast + 33 subprocess).
 
-**Active epic (cycle 147+)**: moving the frozen algebraic 50.5% (§8).
-**Lever A shipped (cycle 148)** — non-public/SPI discovery filter, 50.5% →
-**61.0%** (index 103→82). Remaining: B (instance/mutating-method emitter, 20
-picks → ~85%), C (pair/recipe gaps → ~92%), D (lazy-wrapper FP filter). See
-`docs/calibration-cycle-147-findings.md` + `-148-findings.md`.
+**The v1 algebraic measured-rate epic is COMPLETE (cycle 151): 53/53 =
+100.0%** — up from 52/103 = 50.5% frozen since cycle 66 (§8). Full arc:
+**A** non-public/SPI scan filter (c148) → 61.0%; **B** Collection
+index-traversal exclusion (c149) → 80.6% — the 20 `distance(from:to:)` /
+`index(_:offsetBy:)` picks were antisymmetric/non-associative *false
+positives*, so B was a **filter, not an emitter**; **C-1** bare
+`OrderedDictionary` carrier recipe (c150) → 85.5%; **D** `@_spi` /
+nested-local / non-public-type scan filter (c151) → 100.0%. The denominator
+was ~half false-positive (103→53) and half a real carrier gap (the +3 C-1
+recall); both closed. Every surfaced pick now verifies or is a
+measured-disproven true-negative; **zero ACP/FPs remain** — further movement
+needs *new* public algebraic API, not filters/recipes. (Canonical
+current-state: `CLAUDE.md` "Repository state"; the per-cycle 147–151 findings
+docs were pruned from `docs/`.)
 
 **Open, off the critical path**: the shelved value-generator (c119) and
 `.tca` C1 reducer-slice extractor (c126) — both belong to the *TCA
