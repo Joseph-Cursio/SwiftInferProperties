@@ -57,7 +57,7 @@ public extension ReducerCandidate {
         StatefulRole(
             location: location,
             typeName: enclosingTypeName ?? functionName,
-            paradigm: Self.paradigm(for: carrierKind),
+            paradigm: carrierKind.paradigm,
             // The candidate doesn't record its exact recognition path; TCA is
             // conformance/macro-driven, the rest are signature-shape matches.
             recognizedBy: carrierKind == .tca ? .conformance : .signatureShape,
@@ -75,13 +75,6 @@ public extension ReducerCandidate {
             collaborators: [],
             effect: Self.effect(for: purity)
         )
-    }
-
-    private static func paradigm(for carrier: ReducerCarrierKind) -> Paradigm {
-        switch carrier {
-        case .tca: return .tca
-        case .elmStyle, .reSwift, .mobius, .workflow, .generic: return .redux
-        }
     }
 
     /// Sound projection of `ReducerPurity` onto the SEI `Effect` lattice. The

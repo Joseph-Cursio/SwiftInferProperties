@@ -326,4 +326,21 @@ public enum ReducerCarrierKind: String, Sendable, Equatable, Codable, CaseIterab
     case reSwift = "reswift"
     case mobius
     case workflow
+
+    /// The `Paradigm` this carrier maps to. TCA stays `.tca`; every other
+    /// reducer family (Elm / ReSwift / Mobius / Workflow / generic) folds
+    /// into the `.redux` family at this granularity. Single source of truth
+    /// shared by `ReducerCandidate.asStatefulRole()` and the Redux
+    /// distinctive-invariant analyzer.
+    public var paradigm: Paradigm {
+        switch self {
+        case .tca: return .tca
+        case .elmStyle, .reSwift, .mobius, .workflow, .generic: return .redux
+        }
+    }
+
+    /// True for the `.redux`-family carriers — everything except TCA, which
+    /// has its own richer invariant story. Gates the pure-reducer
+    /// determinism / `unknownActionIsNoOp` candidates.
+    public var isReduxFamily: Bool { paradigm == .redux }
 }
