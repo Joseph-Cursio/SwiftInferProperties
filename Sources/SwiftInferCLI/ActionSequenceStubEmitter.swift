@@ -73,7 +73,14 @@ public enum ActionSequenceStubEmitter {
             actionFirst: actionFirst,
             isMobius: isMobius
         )
-        let perStepCheck = makePerStepCheck(invariant: inputs.invariant)
+        let perStepCheck = makePerStepCheck(
+            invariant: inputs.invariant,
+            shape: inputs.candidate.signatureShape,
+            reducerCall: reducerCall,
+            isTCA: isTCA,
+            actionFirst: actionFirst,
+            isMobius: isMobius
+        )
         let postLoopCheck = makePostLoopCheck(
             invariant: inputs.invariant,
             shape: inputs.candidate.signatureShape,
@@ -207,7 +214,7 @@ public enum ActionSequenceStubEmitter {
     private static func validateInvariant(_ family: InteractionInvariantFamily) {
         switch family {
         case .conservation, .idempotence, .cardinality,
-             .referentialIntegrity, .biconditional:
+             .referentialIntegrity, .biconditional, .determinism:
             return
         }
     }

@@ -13,7 +13,14 @@ extension ActionSequenceStubEmitter {
     /// families embed a boolean predicate evaluated at each action
     /// step. Idempotence uses the post-loop double-apply check
     /// instead.
-    static func makePerStepCheck(invariant: InteractionInvariantSuggestion?) -> [String] {
+    static func makePerStepCheck(
+        invariant: InteractionInvariantSuggestion?,
+        shape: ReducerSignatureShape = .stateActionReturnsState,
+        reducerCall: String = "reduce",
+        isTCA: Bool = false,
+        actionFirst: Bool = false,
+        isMobius: Bool = false
+    ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
         case .conservation:
@@ -42,6 +49,18 @@ extension ActionSequenceStubEmitter {
 
         case .idempotence:
             return []
+
+        // Determinism is a per-step check, not a single-witness post-loop one:
+        // it must hold for EVERY action, so it runs on the loop's current
+        // `(state, action)` — two fresh applications, compared.
+        case .determinism:
+            return makeDeterminismCheck(
+                shape: shape,
+                reducerCall: reducerCall,
+                isTCA: isTCA,
+                actionFirst: actionFirst,
+                isMobius: isMobius
+            )
         }
     }
 
@@ -62,7 +81,8 @@ extension ActionSequenceStubEmitter {
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
-        case .conservation, .cardinality, .referentialIntegrity, .biconditional:
+        // Determinism runs as a per-step check (see makePerStepCheck).
+        case .conservation, .cardinality, .referentialIntegrity, .biconditional, .determinism:
             return []
 
         case .idempotence:
@@ -152,6 +172,76 @@ extension ActionSequenceStubEmitter {
                 "_ = \(reducerCall)(&once, \(actionExpr))",
                 "var twice = once",
                 "_ = \(reducerCall)(&twice, \(actionExpr))",
+                assertion
+            ]
+        }
+    }
+
+    /// V2.0 Phase 2 (Redux) — the determinism check body: two INDEPENDENT
+    /// applications of the loop's current `action` to the current `state`,
+    /// asserted equal (`reduce(s, a) == reduce(s, a)`). Unlike idempotence
+    /// (which double-applies a fixed *witness* action post-loop), determinism
+    /// must hold for every action, so it runs per-step on the loop variables
+    /// `state` + `action`. Shape/carrier handling mirrors
+    /// `makeIdempotenceCheck`. A hidden `Date()` / `UUID()` / `.random()`
+    /// makes the two applications differ → `precondition` traps →
+    /// `measuredDefaultFails`, which static purity analysis cannot catch.
+    static func makeDeterminismCheck(
+        shape: ReducerSignatureShape,
+        reducerCall: String,
+        isTCA: Bool = false,
+        actionFirst: Bool = false,
+        isMobius: Bool = false
+    ) -> [String] {
+        let assertion =
+            "precondition(detFirst == detSecond, "
+                + "\"Determinism invariant violated\")"
+        if isMobius {
+            return [
+                "let detFirst = \(reducerCall)(state, action).model ?? state",
+                "let detSecond = \(reducerCall)(state, action).model ?? state",
+                assertion
+            ]
+        }
+        if isTCA {
+            return [
+                "var detFirst = state",
+                "_ = reducer.reduce(into: &detFirst, action: action)",
+                "var detSecond = state",
+                "_ = reducer.reduce(into: &detSecond, action: action)",
+                assertion
+            ]
+        }
+        switch shape {
+        case .stateActionReturnsState:
+            return [
+                "let detFirst = \(reducerCall)(\(orderedArgs("state", "action", actionFirst: actionFirst)))",
+                "let detSecond = \(reducerCall)(\(orderedArgs("state", "action", actionFirst: actionFirst)))",
+                assertion
+            ]
+
+        case .inoutStateActionReturnsVoid:
+            return [
+                "var detFirst = state",
+                "\(reducerCall)(&detFirst, action)",
+                "var detSecond = state",
+                "\(reducerCall)(&detSecond, action)",
+                assertion
+            ]
+
+        case .stateActionReturnsStateAndEffect:
+            return [
+                "let (detFirst, _) = \(reducerCall)(state, action)",
+                "let (detSecond, _) = \(reducerCall)(state, action)",
+                assertion
+            ]
+
+        case .inoutStateActionReturnsEffect:
+            return [
+                "var detFirst = state",
+                "_ = \(reducerCall)(&detFirst, action)",
+                "var detSecond = state",
+                "_ = \(reducerCall)(&detSecond, action)",
                 assertion
             ]
         }

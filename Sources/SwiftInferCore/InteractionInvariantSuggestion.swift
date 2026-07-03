@@ -178,6 +178,14 @@ public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, Ca
     case cardinality
     case referentialIntegrity = "referential-integrity"
     case biconditional
+    /// A `.redux`-family reducer's paradigm-distinctive purity guarantee:
+    /// `reduce(s, a) == reduce(s, a)` for the same inputs. Unlike the other
+    /// families this is not a State-shape predicate but a two-call
+    /// comparison (mirrors `idempotence`'s post-loop double-apply), and it
+    /// is genuinely falsifiable at runtime — a hidden `Date()` / `UUID()` /
+    /// `.random()` makes the two calls differ, which static purity analysis
+    /// cannot catch.
+    case determinism
 }
 
 public extension InteractionInvariantFamily {
@@ -213,7 +221,7 @@ public extension InteractionInvariantFamily {
         case .biconditional:
             return "flag-optional-pair-state"
 
-        case .conservation, .idempotence, .referentialIntegrity:
+        case .conservation, .idempotence, .referentialIntegrity, .determinism:
             return nil
         }
     }
