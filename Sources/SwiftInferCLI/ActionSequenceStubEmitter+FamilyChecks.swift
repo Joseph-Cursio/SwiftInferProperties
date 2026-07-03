@@ -177,6 +177,35 @@ extension ActionSequenceStubEmitter {
         }
     }
 
+    /// Dependency-pinned TCA determinism (docs/tca-determinism-verify-scope.md):
+    /// with declared `@Dependencies` fixed to constant values, two applications
+    /// of the same `(state, action)` must be equal. Any residual difference is
+    /// UN-declared nondeterminism — a raw `Date()` / `UUID()` / `Set`-order in
+    /// the state mutation instead of a `@Dependency` — the TCA anti-pattern this
+    /// catches. The pins return stable values on repeated reads, so one shared
+    /// scope is deterministic across both calls; all are available via
+    /// `import ComposableArchitecture`. (`withRandomNumberGenerator` deferred —
+    /// it needs a seedable RNG emitted into the stub.)
+    static func tcaDeterminismCheck(assertion: String) -> [String] {
+        [
+            "withDependencies {",
+            "    $0.date = .constant(Date(timeIntervalSince1970: 0))",
+            "    $0.uuid = .constant("
+                + "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!)",
+            "    $0.calendar = Calendar(identifier: .gregorian)",
+            "    $0.timeZone = TimeZone(secondsFromGMT: 0)!",
+            "    $0.continuousClock = ImmediateClock()",
+            "    $0.suspendingClock = ImmediateClock()",
+            "} operation: {",
+            "    var detFirst = state",
+            "    _ = reducer.reduce(into: &detFirst, action: action)",
+            "    var detSecond = state",
+            "    _ = reducer.reduce(into: &detSecond, action: action)",
+            "    \(assertion)",
+            "}"
+        ]
+    }
+
     /// V2.0 Phase 2 (Redux) — the determinism check body: two INDEPENDENT
     /// applications of the loop's current `action` to the current `state`,
     /// asserted equal (`reduce(s, a) == reduce(s, a)`). Unlike idempotence
@@ -204,13 +233,7 @@ extension ActionSequenceStubEmitter {
             ]
         }
         if isTCA {
-            return [
-                "var detFirst = state",
-                "_ = reducer.reduce(into: &detFirst, action: action)",
-                "var detSecond = state",
-                "_ = reducer.reduce(into: &detSecond, action: action)",
-                assertion
-            ]
+            return tcaDeterminismCheck(assertion: assertion)
         }
         switch shape {
         case .stateActionReturnsState:

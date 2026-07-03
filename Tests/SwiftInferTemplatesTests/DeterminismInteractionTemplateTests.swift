@@ -26,9 +26,9 @@ struct DeterminismInteractionTemplateTests {
 
     private let firstSeen = ISO8601DateFormatter().date(from: "2026-06-01T00:00:00Z")!
 
-    @Test("emits exactly one determinism suggestion for a redux-family reducer")
-    func emitsOneForRedux() {
-        for carrier in ReducerCarrierKind.allCases where carrier != .tca {
+    @Test("emits exactly one determinism suggestion for every carrier, incl. TCA")
+    func emitsOneForEveryCarrier() {
+        for carrier in ReducerCarrierKind.allCases {
             let out = DeterminismInteractionTemplate.analyze(
                 candidate: candidate(carrierKind: carrier), firstSeenAt: firstSeen
             )
@@ -37,12 +37,15 @@ struct DeterminismInteractionTemplateTests {
         }
     }
 
-    @Test("emits nothing for a TCA carrier")
-    func excludesTCA() {
+    @Test("TCA now surfaces determinism (dependency-pinned) — the real-world audience")
+    func includesTCA() {
         let out = DeterminismInteractionTemplate.analyze(
             candidate: candidate(carrierKind: .tca), firstSeenAt: firstSeen
         )
-        #expect(out.isEmpty)
+        #expect(out.count == 1)
+        #expect(out.first?.family == .determinism)
+        // The why-suggested prose reflects the TCA dependency-pinning framing.
+        #expect(out.first?.whySuggested.contains { $0.contains("@Dependency") } == true)
     }
 
     @Test("ships at .possible (score 30) — default for a new family per §3.5")

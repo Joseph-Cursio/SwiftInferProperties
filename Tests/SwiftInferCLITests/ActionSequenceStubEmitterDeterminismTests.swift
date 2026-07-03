@@ -117,17 +117,24 @@ struct StubEmitterDeterminismTests {
         #expect(block.contains("let detSecond = appReducer(action, state)"))
     }
 
-    @Test("makeDeterminismCheck TCA drives the instance reducer twice from the same state")
+    @Test("makeDeterminismCheck TCA pins dependencies, then drives the reducer twice")
     func makeDeterminismCheckTCA() {
         let block = ActionSequenceStubEmitter.makeDeterminismCheck(
             shape: .inoutStateActionReturnsVoid,
             reducerCall: "reduce",
             isTCA: true
         )
-        #expect(block[0] == "var detFirst = state")
-        #expect(block[1] == "_ = reducer.reduce(into: &detFirst, action: action)")
-        #expect(block[2] == "var detSecond = state")
-        #expect(block[3] == "_ = reducer.reduce(into: &detSecond, action: action)")
+        let joined = block.joined(separator: "\n")
+        // Declared @Dependencies pinned to constants before the two applications.
+        #expect(joined.contains("withDependencies {"))
+        #expect(joined.contains("$0.date = .constant(Date(timeIntervalSince1970: 0))"))
+        #expect(joined.contains("$0.uuid = .constant("))
+        #expect(joined.contains("$0.continuousClock = ImmediateClock()"))
+        #expect(joined.contains("} operation: {"))
+        // Two applications of the same (state, action), compared.
+        #expect(joined.contains("_ = reducer.reduce(into: &detFirst, action: action)"))
+        #expect(joined.contains("_ = reducer.reduce(into: &detSecond, action: action)"))
+        #expect(joined.contains("precondition(detFirst == detSecond"))
     }
 
     @Test("makeDeterminismCheck Mobius extracts Next.model from each application")

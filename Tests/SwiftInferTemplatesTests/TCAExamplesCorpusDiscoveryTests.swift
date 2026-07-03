@@ -40,8 +40,8 @@ struct TCAExamplesCorpusDiscoveryTests {
         #expect(names.contains("Nested.body"))
     }
 
-    @Test("witness families fire on real reducers; determinism is (still) absent")
-    func witnessFamiliesFireDeterminismAbsent() throws {
+    @Test("witness families fire on real reducers; determinism now surfaces for every TCA reducer")
+    func witnessFamiliesFireDeterminismSurfaces() throws {
         let candidates = try ReducerDiscoverer.discover(directory: Self.fixtureDirectory)
         let suggestions = try InteractionTemplateEngine.analyze(
             candidates: candidates,
@@ -54,10 +54,9 @@ struct TCAExamplesCorpusDiscoveryTests {
         #expect(byFamily[.idempotence] == 3)
         #expect(byFamily[.biconditional] == 1)
         #expect(byFamily[.cardinality] == 1)
-        // Determinism does NOT surface — it's gated to the .redux family, and
-        // every real reducer here is .tca. This is the gap the TCA determinism
-        // work (docs/tca-determinism-verify-scope.md) closes; when it lands,
-        // this expectation flips to a positive count.
-        #expect(byFamily[.determinism, default: 0] == 0)
+        // Determinism now surfaces once per reducer — the TCA determinism work
+        // (docs/tca-determinism-verify-scope.md) closed the gap this test used
+        // to pin at 0. One per discovered reducer (dependency-pinned at verify).
+        #expect(byFamily[.determinism] == candidates.count)
     }
 }

@@ -58,8 +58,8 @@ struct InteractionTemplateEngineTests {
         #expect(result.first?.family == .determinism)
     }
 
-    @Test("Determinism does not surface for a TCA carrier")
-    func determinismExcludesTCA() throws {
+    @Test("Determinism now surfaces for a TCA carrier (dependency-pinned)")
+    func determinismIncludesTCA() throws {
         let tcaCandidate = ReducerCandidate(
             location: "Sources/T.swift:1",
             enclosingTypeName: "Feature",
@@ -74,7 +74,7 @@ struct InteractionTemplateEngineTests {
             sourcesDirectory: nil,
             firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
         )
-        #expect(result.contains { $0.family == .determinism } == false)
+        #expect(result.contains { $0.family == .determinism })
     }
 
     // MARK: - V1.91 cycle-88 — bare-State / bare-Action cross-contamination fix
