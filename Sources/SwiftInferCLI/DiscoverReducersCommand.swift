@@ -147,8 +147,32 @@ extension SwiftInferCommand {
                         + "carrier:\(candidate.carrierKind.rawValue)  "
                         + "state:\(candidate.stateTypeName)  action:\(candidate.actionTypeName)"
                 )
+                lines.append(contentsOf: renderReducerInteractionCandidates(candidate))
             }
             return lines.joined(separator: "\n") + "\n"
+        }
+
+        /// PROTOTYPE — the Redux-distinctive candidate interaction invariants
+        /// (`determinism`, `unknownActionIsNoOp`) surfaced over a `.redux`-family
+        /// reducer. All unverified (`Possible`); a witness strategy that
+        /// constructs the reducer's State and drives an action would measure
+        /// them. TCA reducers surface nothing here by design.
+        private static func renderReducerInteractionCandidates(
+            _ candidate: ReducerCandidate
+        ) -> [String] {
+            let invariants = ReducerInteractionAnalyzer.analyze(candidate)
+            guard !invariants.isEmpty else { return [] }
+            var lines = [
+                "    candidate interaction invariants "
+                    + "(\(invariants.count), unverified — Possible):"
+            ]
+            for invariant in invariants {
+                lines.append(
+                    "      - [\(invariant.kind.rawValue)] "
+                        + "\(invariant.subjects.joined(separator: ", "))  —  \(invariant.rationale)"
+                )
+            }
+            return lines
         }
 
         /// PROTOTYPE — renders the `@Observable` / `ObservableObject`

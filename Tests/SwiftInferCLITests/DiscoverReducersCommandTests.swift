@@ -86,6 +86,23 @@ struct DiscoverReducersCommandTests {
         #expect(Command.renderSummary(candidates: [workflowCandidate]).contains("carrier:workflow"))
     }
 
+    @Test("redux reducer renders the distinctive candidate-invariant block")
+    func renderSurfacesReduxCandidateInvariants() {
+        // Default helper: `.generic` carrier (redux family), no resolved action
+        // cases (open alphabet) — so both distinctive candidates surface.
+        let rendered = Command.renderSummary(candidates: [candidate(carrierKind: .generic)])
+        #expect(rendered.contains("candidate interaction invariants"))
+        #expect(rendered.contains("[determinism]"))
+        #expect(rendered.contains("[unknown-action-is-no-op]"))
+    }
+
+    @Test("TCA reducer renders no candidate-invariant block")
+    func renderTCASuppressesCandidateInvariants() {
+        let rendered = Command.renderSummary(candidates: [candidate(carrierKind: .tca)])
+        #expect(rendered.contains("carrier:tca"))
+        #expect(rendered.contains("candidate interaction invariants") == false)
+    }
+
     @Test("candidates sort by (location, functionName) — byte-stable across input order")
     func renderSortsBy() {
         let lhsOrdering = Command.renderSummary(candidates: [

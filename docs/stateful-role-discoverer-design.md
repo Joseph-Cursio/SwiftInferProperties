@@ -239,8 +239,21 @@ that is *its* reason to exist as a separate policy:
   per-declaration `RolePolicy` engine. Zero behavior change.
 - **Phase 1 (done)** — see the revision below. Wrap the existing discoverers at
   the corpus level (`UnifiedRoleDiscoverer`) rather than reimplementing them.
-- **Phase 2** — add `ReduxPolicy` first (recognition already ~80% there via the
-  signature shapes). Then VIPER/MVP via `ConventionPolicy`. MVC last.
+- **Phase 2 (recognition + distinctive candidates: done for Redux)** — Redux was
+  the first slice. Recognition was already there: `ReducerCandidate.carrierKind`
+  spans the `tca` *and* `redux` families, and `carrierKind.paradigm` (the single
+  source of truth, shared with `asStatefulRole()`) folds Elm / ReSwift / Mobius /
+  Workflow / generic into `.redux`. The slice added the two paradigm-distinctive
+  candidate invariants — `ReducerInteractionAnalyzer` surfaces `determinism`
+  (`reduce(s,a) == reduce(s,a)`, for every redux reducer — the static purity
+  analyzer doesn't check `Date()`/`UUID()`/`random()`, so it's genuinely
+  unsettled) and `unknownActionIsNoOp` (`reduce(s, unknown) == s`, only for *open*
+  action alphabets — a closed enum is exhaustive, so the claim would be a
+  tautology). These are unverified (`Possible`) and render under each redux
+  reducer in `discover-reducers`; TCA is excluded by design (its own richer
+  story). The *measured-verify* half (constructing State + driving an action) is
+  the larger, separate lift. Still open in Phase 2: VIPER/MVP via
+  `ConventionPolicy`, then MVC.
 - The stub emitters generalize by dispatching on `construction` (free-fn vs
   instance) instead of on candidate type — the one real consumer-side refactor.
 
