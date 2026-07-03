@@ -15,10 +15,14 @@ import Foundation
 ///     functionName: "reduce")`. Matches free functions only.
 ///   - `"Inbox.body"` → `(nil, "Inbox", "body")`. Matches methods
 ///     and TCA candidates with `enclosingTypeName == "Inbox"`.
-///   - `"MyModule.Inbox.body"` → throws
-///     `.moduleResolutionUnsupported`. Module-name resolution
-///     requires multi-module plumbing that doesn't exist yet;
-///     deferred to M2+.
+///   - `"MyModule.Inbox.body"` → `("MyModule", "Inbox", "body")`.
+///     Parses and matches exactly like `"Inbox.body"`: every run is
+///     already scoped to one module via `--target`, so the module
+///     component is a *redundant qualifier* — accepted (a developer
+///     pasting a fully-qualified name doesn't hit an error) but not
+///     matched against candidates (they carry no module). Real
+///     cross-module disambiguation is deferred to multi-module
+///     discovery (would tag candidates by module and match on it).
 ///
 /// **Why not `module/typeName/funcName` or another separator.** PRD
 /// §3.6 + §6.5 both use the dotted form, matching the Swift-Argument-
@@ -27,9 +31,10 @@ import Foundation
 /// against Swift's qualified-name vocabulary (no separator collision).
 public struct ReducerPin: Sendable, Equatable {
 
-    /// Module name, when present. Currently rejected at parse time
-    /// (M1.C: module resolution not yet available). Reserved for
-    /// M2+ plumbing.
+    /// Module name, when present. Parsed and retained but not used in
+    /// matching — each run is scoped to a single `--target` module, so a
+    /// module prefix is a redundant qualifier. Reserved for multi-module
+    /// discovery, which would tag candidates by module and match on it.
     public let moduleName: String?
 
     /// Enclosing type name, when present. Matched verbatim against
@@ -70,9 +75,14 @@ public struct ReducerPin: Sendable, Equatable {
             return Self(typeName: components[0], functionName: components[1])
 
         case 3:
-            // V1.C — module resolution deferred. The shape is parsed
-            // far enough to give the user a clear error.
-            throw ReducerPinError.moduleResolutionUnsupported(raw: raw)
+            // Module prefix accepted as a redundant qualifier — the run is
+            // already scoped to one `--target` module. Retained on the pin
+            // but ignored in `matches` (candidates carry no module).
+            return Self(
+                moduleName: components[0],
+                typeName: components[1],
+                functionName: components[2]
+            )
 
         default:
             // 4+ components — no canonical interpretation.
@@ -81,9 +91,10 @@ public struct ReducerPin: Sendable, Equatable {
     }
 
     /// Does this pin match `candidate`? Function name must match
-    /// exactly; type name must match if the pin specifies one.
-    /// Module-name matching is unreachable at M1.C — `parse` throws
-    /// before constructing a pin with a non-nil `moduleName`.
+    /// exactly; type name must match if the pin specifies one. A
+    /// `moduleName`, if present, is not matched: candidates carry no
+    /// module and the run is already scoped to one `--target` module,
+    /// so the module component is a redundant qualifier.
     public func matches(_ candidate: ReducerCandidate) -> Bool {
         guard functionName == candidate.functionName else { return false }
         if let typeName, typeName != candidate.enclosingTypeName {
@@ -98,19 +109,16 @@ public struct ReducerPin: Sendable, Equatable {
 public enum ReducerPinError: Error, CustomStringConvertible, Equatable {
     case emptyPin
     case malformed(raw: String)
-    case moduleResolutionUnsupported(raw: String)
 
     public var description: String {
         switch self {
         case .emptyPin:
-            return "--reducer pin is empty; expected `<funcName>` or `<typeName>.<funcName>`"
+            return "--reducer pin is empty; expected `<funcName>`, `<typeName>.<funcName>`, "
+                + "or `<module>.<typeName>.<funcName>`"
 
         case let .malformed(raw):
-            return "--reducer pin '\(raw)' is malformed; expected `<funcName>` or `<typeName>.<funcName>`"
-
-        case let .moduleResolutionUnsupported(raw):
-            return "--reducer pin '\(raw)' uses a module prefix; module-name resolution "
-                + "lands at v2.0 M2+. Drop the module prefix for now."
+            return "--reducer pin '\(raw)' is malformed; expected `<funcName>`, "
+                + "`<typeName>.<funcName>`, or `<module>.<typeName>.<funcName>`"
         }
     }
 }

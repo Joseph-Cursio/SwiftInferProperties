@@ -229,18 +229,23 @@ struct DiscoverReducersCommandTests {
         }
     }
 
-    @Test("V1.C — module-prefixed pin surfaces ReducerPinError.moduleResolutionUnsupported")
-    func pinModulePrefixedSurfacesError() throws {
+    @Test("V1.C — module-prefixed pin resolves (module component is a redundant qualifier)")
+    func pinModulePrefixedResolves() throws {
         let directory = try makeFixtureDirectory(name: "PinModulePrefixed")
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeFile(
             in: directory,
-            named: "A.swift",
-            contents: "func reduce(_ s: StateA, _ a: ActionA) -> StateA { return s }"
+            named: "Inbox.swift",
+            contents: """
+            struct Inbox {
+                static func reduce(_ s: StateA, _ a: ActionA) -> StateA { return s }
+            }
+            """
         )
-        #expect(throws: ReducerPinError.moduleResolutionUnsupported(raw: "MyModule.Inbox.body")) {
-            _ = try Command.runPipeline(directory: directory, pinRaw: "MyModule.Inbox.body")
-        }
+        // `MyModule.Inbox.reduce` parses to (MyModule, Inbox, reduce); the
+        // module is ignored, so it resolves the same as `Inbox.reduce`.
+        let rendered = try Command.runPipeline(directory: directory, pinRaw: "MyModule.Inbox.reduce")
+        #expect(rendered.contains("Inbox.reduce"))
     }
 
     // MARK: - Helpers

@@ -42,10 +42,18 @@ struct ReducerPinTests {
         #expect(pin.moduleName == nil)
     }
 
-    @Test("three-component pin throws moduleResolutionUnsupported — M2+ deferral")
-    func parseModulePrefixedThrows() {
-        #expect(throws: ReducerPinError.moduleResolutionUnsupported(raw: "MyModule.Inbox.body")) {
-            _ = try ReducerPin.parse("MyModule.Inbox.body")
+    @Test("three-component pin parses module/type/func — module is a redundant qualifier")
+    func parseModulePrefixed() throws {
+        let pin = try ReducerPin.parse("MyModule.Inbox.body")
+        #expect(pin.moduleName == "MyModule")
+        #expect(pin.typeName == "Inbox")
+        #expect(pin.functionName == "body")
+    }
+
+    @Test("four-plus-component pin is malformed")
+    func parseFourComponentsMalformed() {
+        #expect(throws: ReducerPinError.malformed(raw: "A.B.C.D")) {
+            _ = try ReducerPin.parse("A.B.C.D")
         }
     }
 

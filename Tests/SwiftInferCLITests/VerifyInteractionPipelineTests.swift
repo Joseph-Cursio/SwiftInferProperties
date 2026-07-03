@@ -172,15 +172,17 @@ struct VerifyInteractionPipelineTests {
         }
     }
 
-    @Test("module-prefixed pin surfaces ReducerPinError.moduleResolutionUnsupported")
-    func modulePrefixedPinSurfacesError() {
-        let candidates = [candidate(functionName: "reduce")]
-        #expect(throws: ReducerPinError.moduleResolutionUnsupported(raw: "M.Inbox.reduce")) {
-            _ = try VerifyInteractionPipeline.resolveCandidate(
-                candidates: candidates,
-                pinRaw: "M.Inbox.reduce"
-            )
-        }
+    @Test("module-prefixed pin resolves — module component is a redundant qualifier")
+    func modulePrefixedPinResolves() throws {
+        // `M.Inbox.reduce` parses to (module: M, type: Inbox, func: reduce);
+        // the module is ignored, so it resolves the same as `Inbox.reduce`.
+        let candidates = [candidate(functionName: "reduce", enclosingTypeName: "Inbox", carrierKind: .generic)]
+        let resolved = try VerifyInteractionPipeline.resolveCandidate(
+            candidates: candidates,
+            pinRaw: "M.Inbox.reduce"
+        )
+        #expect(resolved.functionName == "reduce")
+        #expect(resolved.enclosingTypeName == "Inbox")
     }
 }
 
