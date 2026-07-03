@@ -73,13 +73,13 @@ public enum VerifyInteractionPipeline {
     /// via `InteractionVerifyOutcomeParser` → render in the v1.42
     /// five-category format.
     ///
-    /// **Until SwiftPropertyLaws v2.2.0 is published on remote**:
-    /// the synthesized workdir's `swift build` step will fail to
-    /// resolve the kit pin and the outcome surfaces as
-    /// `.architecturalCoveragePending` with a "kit pin v2.2.0 not yet
-    /// available" detail. This is normal — see
-    /// `docs/calibration-cycle-73-findings.md` "kit-tag-publication
-    /// gap" for the next-action.
+    /// A workdir `swift build` that fails to resolve or compile surfaces
+    /// as `.architecturalCoveragePending` rather than a pass/fail. The
+    /// historical "kit-tag-publication gap" cause (SwiftPropertyLaws v2.2.0
+    /// not yet on remote; `docs/calibration-cycle-73-findings.md`) is
+    /// resolved — the package pins SwiftPropertyLaws 3.3.0+ — so this now
+    /// means a genuine coverage gap (unsupported shape/carrier, non-
+    /// Equatable State), not a missing tag.
     public static func runPipeline(
         target: String,
         pinRaw: String? = nil,
