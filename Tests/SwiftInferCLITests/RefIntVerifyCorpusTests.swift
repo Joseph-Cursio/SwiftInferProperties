@@ -55,10 +55,13 @@ struct RefIntVerifyCorpusTests {
         // Un-gated baseline: refint sits at .possible before any measured run.
         #expect(refint.allSatisfy { $0.tier == .possible })
 
-        // The corpus surfaces no other family (one selected* Optional × one
-        // matching collection per reducer; no count/array, no presentation
+        // The corpus surfaces no other WITNESS family (one selected* Optional ×
+        // one matching collection per reducer; no count/array, no presentation
         // slots, no Bool/Optional pair, no witness-vocab action names).
-        #expect(suggestions.allSatisfy { $0.family == .referentialIntegrity })
+        // Determinism (witness-free) also surfaces once per reducer.
+        #expect(suggestions.allSatisfy {
+            $0.family == .referentialIntegrity || $0.family == .determinism
+        })
     }
 
     /// `Tests/Fixtures/refint-verify-corpus/`, resolved against `#filePath`

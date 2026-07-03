@@ -57,10 +57,13 @@ struct CardinalityVerifyCorpusTests {
         // The 3-field witness sums three `!= nil` indicators.
         #expect(byReducer["PopoverFeature.body"]?.contains("state.activePopover != nil") == true)
 
-        // The corpus surfaces no other family (Bool-only or Optional-only
-        // States, no witness-vocab action names), so cardinality is the whole
-        // story.
-        #expect(suggestions.allSatisfy { $0.family == .cardinality })
+        // The corpus surfaces no other WITNESS family (Bool-only or
+        // Optional-only States, no witness-vocab action names), so cardinality
+        // is the whole witness story. Determinism (witness-free) also surfaces
+        // once per reducer.
+        #expect(suggestions.allSatisfy {
+            $0.family == .cardinality || $0.family == .determinism
+        })
     }
 
     /// `Tests/Fixtures/cardinality-verify-corpus/`, resolved against

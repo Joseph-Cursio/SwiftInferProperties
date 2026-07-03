@@ -47,10 +47,13 @@ struct BiconditionalVerifyCorpusTests {
         // Gated baseline: every biconditional pick sits at .possible pre-verify.
         #expect(biconditional.allSatisfy { $0.tier == .possible })
 
-        // The corpus surfaces no other family (one Bool-flag × one Optional
-        // per reducer; no ≥2 presentation slots, no count/array, no
-        // selected*/collection, no witness-vocab action names).
-        #expect(suggestions.allSatisfy { $0.family == .biconditional })
+        // The corpus surfaces no other WITNESS family (one Bool-flag × one
+        // Optional per reducer; no ≥2 presentation slots, no count/array, no
+        // selected*/collection, no witness-vocab action names). Determinism
+        // (witness-free) also surfaces once per reducer.
+        #expect(suggestions.allSatisfy {
+            $0.family == .biconditional || $0.family == .determinism
+        })
     }
 
     /// `Tests/Fixtures/biconditional-verify-corpus/`, resolved against

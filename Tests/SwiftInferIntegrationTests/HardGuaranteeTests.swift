@@ -122,7 +122,16 @@ struct HardGuaranteeTests {
         // Plan.md` "Subprocess strategy" section. The exemption is
         // file-scoped to keep accidental Process usage elsewhere from
         // slipping through.
-        let processExemptions: Set<String> = ["VerifierSubprocess.swift"]
+        //
+        // `PackageProductResolver.swift` is exempt on the same basis — it
+        // invokes `Process` to run `swift package dump-package` when resolving
+        // the library product that exposes the target module (verify-workdir
+        // synthesis, product ≠ module). Same user-initiated verify-mode gesture,
+        // not a discover/index/drift path.
+        let processExemptions: Set<String> = [
+            "VerifierSubprocess.swift",
+            "PackageProductResolver.swift"
+        ]
         var violations: [String] = []
         let enumerator = FileManager.default.enumerator(
             at: sourcesRoot,
