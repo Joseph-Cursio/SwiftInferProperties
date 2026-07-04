@@ -64,9 +64,17 @@ still disclosed, so no new precision decision.
   `, Error>`); concrete-error `Result`s stay excluded. Corpus:
   `tca-composition-payload-corpus` (`NumberFact`); measured by
   `CompositionPayloadCorpusMeasuredTests` (bothPass). ~14 cases.
-- **Slice 3 — `IdentifiedActionOf<Child>` (open):** **recursive** — construct a
-  child action + id. ~72 cases, high complexity (the biggest blocker, and the
-  hardest).
+- **Slice 3 — `IdentifiedActionOf<Child>` (open, scoped):** **recursive** —
+  construct a child action + id. ~72 cases (but that bucket is *all* nested
+  actions; the `IdentifiedActionOf`-specific share is unmeasured), high
+  complexity (the biggest blocker, and the hardest). **Design worked out in
+  `tca-identified-action-slice3-design.md`** — needs two net-new capabilities
+  (thread child candidates into the emitter; synthesize a `Child.State.ID` — no
+  universal canned literal, and `RawType` doesn't recognize `UUID`), and the
+  constructed `.element` **no-ops against empty initial State**, so near-term
+  value is disclosure-set reduction, not new signal. Recommended: recount the
+  real reach, then land sub-slice **3a** (Int/String id, payload-free child, no
+  recursion) only.
 - **Slice 4 — `BindingAction<State>` (open):** keypath into State + value. ~10
   cases, high complexity (needs State introspection).
 
