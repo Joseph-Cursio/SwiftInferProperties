@@ -24,6 +24,13 @@ public enum ActionSequenceStubEmitter {
     /// hard-coding the same number.
     public static let defaultLengthUpperBound = 16
 
+    /// V2.0 — the file-scope type name minted into the stub for the
+    /// `unknownActionIsNoOp` family: a fresh type conforming to the reducer's
+    /// open Action alphabet that the reducer cannot recognise, so
+    /// `reduce(s, probe)` must be a no-op. Shared by `assembleStub` (which
+    /// declares it) and `makeUnknownActionCheck` (which applies it).
+    public static let unknownActionProbeTypeName = "__UnknownActionProbe"
+
     /// Outcome marker the verifier prints on the clean path. M3.E.3's
     /// parser keys on this byte-stable string.
     public static let cleanOutcomeMarker = "INTERACTION-VERIFY-OUTCOME: bothPass"
@@ -139,6 +146,7 @@ public enum ActionSequenceStubEmitter {
         lines.append("import PropertyBased")
         lines.append("import PropertyLawKit")
         lines.append("")
+        lines.append(contentsOf: probeDeclarationLines(inputs))
         lines.append("@main")
         lines.append("struct InteractionVerifier {")
         lines.append("    static func main() {")
@@ -150,7 +158,7 @@ public enum ActionSequenceStubEmitter {
         lines.append("        let pinPrefix = env[\"\(pinPrefixLengthEnvVar)\"].flatMap(Int.init)")
         lines.append("        let pinSuffixStart = env[\"\(pinSuffixStartEnvVar)\"].flatMap(Int.init)")
         lines.append("        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))")
-        lines.append(contentsOf: makeGeneratorBlock(inputs: inputs, isTCA: isTCA))
+        lines.append(contentsOf: generatorLines(inputs: inputs, isTCA: isTCA))
         lines.append("        var clean = 0")
         lines.append("        for sequenceIndex in 0..<\(inputs.sequenceCount) {")
         lines.append(contentsOf: makeIterationBody(
@@ -214,7 +222,8 @@ public enum ActionSequenceStubEmitter {
     private static func validateInvariant(_ family: InteractionInvariantFamily) {
         switch family {
         case .conservation, .idempotence, .cardinality,
-             .referentialIntegrity, .biconditional, .determinism:
+             .referentialIntegrity, .biconditional, .determinism,
+             .unknownActionIsNoOp:
             return
         }
     }
@@ -298,7 +307,9 @@ public enum ActionSequenceStubEmitter {
     /// `forCaseIterable:`; `.tca` carriers use an explicit payload-free
     /// case list (real TCA Actions don't declare `CaseIterable`) and a
     /// `let reducer = T()` instance to drive `reduce(into:action:)`.
-    private static func makeGeneratorBlock(inputs: Inputs, isTCA: Bool) -> [String] {
+    /// Internal (not `private`) so `+UnknownAction`'s `generatorLines` can
+    /// fall through to it for every non-open-alphabet family.
+    static func makeGeneratorBlock(inputs: Inputs, isTCA: Bool) -> [String] {
         let length = "\(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)"
         guard isTCA else {
             return [

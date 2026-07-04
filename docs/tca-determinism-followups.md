@@ -5,8 +5,8 @@
 Stage 3 (dependency-pinned determinism measured-verify for TCA reducers)
 shipped and verified green under Swift 6.3.3 — the three-way
 `tca-determinism-corpus` (pure / proper-dependency / snuck-raw). This note
-registers the four follow-ups deferred at that point. **Item 4 is now built
-(2026-07-03); items 1–3 remain open.** See `tca-determinism-verify-scope.md`
+registers the four follow-ups deferred at that point. **Items 3 and 4 are now
+built (2026-07-03); items 1–2 remain open.** See `tca-determinism-verify-scope.md`
 for the shipped design.
 
 ## 1. Multi-module reducer pins / cross-module disambiguation
@@ -38,19 +38,26 @@ for the shipped design.
   which overlaps the generator-synthesis machinery — scope carefully rather
   than widening the scanner ad hoc.
 
-## 3. `unknownActionIsNoOp` measured-verify
+## 3. `unknownActionIsNoOp` measured-verify — ✅ BUILT (2026-07-03)
 
-- **Current:** `ReducerInteractionAnalyzer` **surfaces** `unknownActionIsNoOp`
-  (`reduce(s, unknown) == s`) as a discovery-side family, for **open alphabets
-  only** — a closed enum makes "unknown action" unrepresentable, so the claim
-  is vacuous and gets skipped (`ReducerInteractionAnalyzer.swift:51-56`,
-  `92-102`). It is a sibling family to determinism over the `.redux` family.
-- **Open:** give it the same **measured-verify** treatment determinism got in
-  Stage 3 — a stub-emitter arm plus a measured corpus proving it fires on an
-  open-alphabet reducer and correctly skips closed ones. The family/analyzer
-  plumbing exists; the measured e2e does not.
-- **Cheapest of the four** — discovery already emits it; it needs the measured
-  arm, not new discovery.
+- **Shipped:** `reduce(s, unknown) == s` for open-alphabet redux reducers is now
+  a measured `InteractionInvariantFamily`. `UnknownActionIsNoOpInteractionTemplate`
+  surfaces one suggestion per open-alphabet redux reducer (`actionCases` empty),
+  the stub emitter mints a file-scope probe (`__UnknownActionProbe: <ActionType>`)
+  conforming to the reducer's open Action protocol, drives an empty action
+  sequence (open alphabets have no `CaseIterable` action set to generate from),
+  and asserts the reducer leaves State unchanged post-loop.
+  `UnknownActionCorpusMeasuredTests` proves the split on a plain-Swift corpus
+  (no CA): `NoOpCounter` → bothPass → Verified; `LeakyReducer` (mutates State on
+  the default branch) → defaultFails → suppressed (~37s, no toolchain gate).
+- **Correction to the earlier "cheapest" framing:** this was *not* just a stub
+  arm. `unknownActionIsNoOp` existed only as a `PropertyKind` (via
+  `ReducerInteractionAnalyzer`), whose sole consumer was the discovery *render*
+  path — the measured pipeline is keyed on `InteractionInvariantFamily`, which
+  had no such case. So it needed a 7th family case, a template (the measured
+  producer the analyzer's prototype lacked), a new probe-synthesis emitter path
+  (open alphabets aren't `CaseIterable`, so the normal generator can't drive
+  them), a corpus, and tests — comparable to a determinism stage.
 
 ## 4. Tier-2 curated-compilable real-TCA measured corpus — ✅ BUILT (2026-07-03)
 
@@ -80,8 +87,6 @@ for the shipped design.
 
 ## Sequencing
 
-(4) is **done** (see above) — real TCA now compiles-and-measures end-to-end.
-(3) is the cheapest remaining — the family already discovers; it needs only the
-measured arm. (1) and (2) are triggered by specific project shapes (multi-module
-composition; structured-payload actions) — build when a real target demands
-them, not speculatively.
+(3) and (4) are **done** (see above). (1) and (2) remain, both triggered by
+specific project shapes (multi-module composition; structured-payload actions) —
+build when a real target demands them, not speculatively.

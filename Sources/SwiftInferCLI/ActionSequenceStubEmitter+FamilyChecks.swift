@@ -47,7 +47,9 @@ extension ActionSequenceStubEmitter {
                     + "\"Biconditional invariant violated\")"
             ]
 
-        case .idempotence:
+        // Idempotence and unknown-action-is-no-op are single-witness post-loop
+        // checks, not per-step ones.
+        case .idempotence, .unknownActionIsNoOp:
             return []
 
         // Determinism is a per-step check, not a single-witness post-loop one:
@@ -91,6 +93,14 @@ extension ActionSequenceStubEmitter {
                 shape: shape,
                 reducerCall: reducerCall,
                 isTCA: isTCA,
+                actionFirst: actionFirst,
+                isMobius: isMobius
+            )
+
+        case .unknownActionIsNoOp:
+            return makeUnknownActionCheck(
+                shape: shape,
+                reducerCall: reducerCall,
                 actionFirst: actionFirst,
                 isMobius: isMobius
             )
@@ -265,6 +275,58 @@ extension ActionSequenceStubEmitter {
                 "_ = \(reducerCall)(&detFirst, action)",
                 "var detSecond = state",
                 "_ = \(reducerCall)(&detSecond, action)",
+                assertion
+            ]
+        }
+    }
+
+    /// V2.0 — the unknown-action-is-no-op post-loop check. Applies a freshly
+    /// minted probe action (a type conforming to the reducer's *open* Action
+    /// alphabet, declared at file scope by `assembleStub`) to the current
+    /// state and asserts State is unchanged: `reduce(s, unknown) == s`. Open
+    /// alphabets have no generatable actions, so the sequence loop runs empty
+    /// and this checks the initial state. Effect halves are discarded (PRD
+    /// §16 #1). Shape/carrier handling mirrors `makeIdempotenceCheck`.
+    static func makeUnknownActionCheck(
+        shape: ReducerSignatureShape,
+        reducerCall: String,
+        actionFirst: Bool = false,
+        isMobius: Bool = false
+    ) -> [String] {
+        let probe = "\(Self.unknownActionProbeTypeName)()"
+        let assertion =
+            "precondition(afterProbe == state, "
+                + "\"unknown-action-is-no-op invariant violated: reduce(s, unknown) != s\")"
+        if isMobius {
+            return [
+                "let afterProbe = \(reducerCall)(state, \(probe)).model ?? state",
+                assertion
+            ]
+        }
+        switch shape {
+        case .stateActionReturnsState:
+            return [
+                "let afterProbe = \(reducerCall)(\(orderedArgs("state", probe, actionFirst: actionFirst)))",
+                assertion
+            ]
+
+        case .inoutStateActionReturnsVoid:
+            return [
+                "var afterProbe = state",
+                "\(reducerCall)(&afterProbe, \(probe))",
+                assertion
+            ]
+
+        case .stateActionReturnsStateAndEffect:
+            return [
+                "let (afterProbe, _) = \(reducerCall)(state, \(probe))",
+                assertion
+            ]
+
+        case .inoutStateActionReturnsEffect:
+            return [
+                "var afterProbe = state",
+                "_ = \(reducerCall)(&afterProbe, \(probe))",
                 assertion
             ]
         }

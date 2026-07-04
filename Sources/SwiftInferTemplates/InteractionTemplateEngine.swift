@@ -73,6 +73,14 @@ public enum InteractionTemplateEngine {
             candidate: candidate,
             firstSeenAt: firstSeenAt
         )
+        // V2.0 — Unknown-action-is-no-op. Also witness-free: it gates on the
+        // candidate's carrier + open Action alphabet (`actionCases.isEmpty`),
+        // both resolved at discovery, so it needs no source access. Fires only
+        // for open-alphabet redux reducers; a no-op for everything else.
+        collected.append(contentsOf: UnknownActionIsNoOpInteractionTemplate.analyze(
+            candidate: candidate,
+            firstSeenAt: firstSeenAt
+        ))
         guard let sourcesDirectory else { return collected }
         collected.append(contentsOf: try witnessBasedFamilies(
             candidate,

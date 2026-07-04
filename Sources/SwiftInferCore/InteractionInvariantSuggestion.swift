@@ -186,6 +186,15 @@ public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, Ca
     /// `.random()` makes the two calls differ, which static purity analysis
     /// cannot catch.
     case determinism
+    /// A `.redux`-family reducer with an *open* Action alphabet (a protocol
+    /// `Action` à la ReSwift, or String/opaque dispatch — `actionCases` is
+    /// empty): an action the reducer does not recognise should fall through to
+    /// the default branch and leave State unchanged — `reduce(s, unknown) ==
+    /// s`. Measured by minting a fresh probe type conforming to the open
+    /// alphabet and asserting the reducer leaves State untouched. Closed Swift
+    /// enums are exhaustive, so no "unknown" is representable and the family
+    /// never fires on them.
+    case unknownActionIsNoOp = "unknown-action-is-no-op"
 }
 
 public extension InteractionInvariantFamily {
@@ -221,7 +230,8 @@ public extension InteractionInvariantFamily {
         case .biconditional:
             return "flag-optional-pair-state"
 
-        case .conservation, .idempotence, .referentialIntegrity, .determinism:
+        case .conservation, .idempotence, .referentialIntegrity, .determinism,
+             .unknownActionIsNoOp:
             return nil
         }
     }

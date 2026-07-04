@@ -33,29 +33,35 @@ struct InteractionTemplateEngineTests {
         #expect(result.isEmpty)
     }
 
-    @Test("without sourcesDirectory only the witness-free family (Determinism) surfaces")
+    @Test("without sourcesDirectory only the witness-free families surface")
     func analyzeWithoutSourcesDirectory() throws {
-        // The five witness-based families (Conservation / Idempotence / …)
-        // need sourcesDirectory to walk the State / Action source. Determinism
-        // has no witness detector, so it surfaces one suggestion per
-        // redux-family candidate even without source access.
+        // The five witness-based families (Conservation / Idempotence / …) need
+        // sourcesDirectory to walk the State / Action source. Two families are
+        // witness-free and surface without source access: Determinism (every
+        // redux candidate) and UnknownActionIsNoOp (open-alphabet candidates —
+        // these test candidates carry an empty `actionCases` set). So each
+        // candidate yields two suggestions.
         let result = try InteractionTemplateEngine.analyze(candidates: [
             candidate(functionName: "reduceA"),
             candidate(functionName: "reduceB", signatureShape: .inoutStateActionReturnsVoid)
         ])
-        #expect(result.count == 2)
-        #expect(result.allSatisfy { $0.family == .determinism })
+        #expect(result.count == 4)
+        #expect(result.allSatisfy {
+            $0.family == .determinism || $0.family == .unknownActionIsNoOp
+        })
+        #expect(result.filter { $0.family == .determinism }.count == 2)
+        #expect(result.filter { $0.family == .unknownActionIsNoOp }.count == 2)
     }
 
-    @Test("analyzeOne without sourcesDirectory still surfaces the witness-free Determinism")
+    @Test("analyzeOne without sourcesDirectory surfaces the two witness-free families")
     func analyzeOneReturnsDeterminismWithoutDirectory() throws {
         let result = try InteractionTemplateEngine.analyzeOne(
             candidate(),
             sourcesDirectory: nil,
             firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
         )
-        #expect(result.count == 1)
-        #expect(result.first?.family == .determinism)
+        #expect(result.count == 2)
+        #expect(Set(result.map(\.family)) == [.determinism, .unknownActionIsNoOp])
     }
 
     @Test("Determinism now surfaces for a TCA carrier (dependency-pinned)")

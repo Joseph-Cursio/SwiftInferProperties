@@ -54,7 +54,11 @@ struct InteractionInvariantSuggestionTests {
         )
         #expect(InteractionInvariantFamily.biconditional.rawValue == "biconditional")
         #expect(InteractionInvariantFamily.determinism.rawValue == "determinism")
-        #expect(InteractionInvariantFamily.allCases.count == 6)
+        #expect(
+            InteractionInvariantFamily.unknownActionIsNoOp.rawValue
+                == "unknown-action-is-no-op"
+        )
+        #expect(InteractionInvariantFamily.allCases.count == 7)
     }
 
     // MARK: - swiftProjectLintDeferral (Finding G)
