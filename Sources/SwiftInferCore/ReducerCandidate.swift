@@ -110,6 +110,18 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// disambiguated from a same-named reducer in another.
     public var moduleName: String?
 
+    /// Item 2 slice 3 — the reducer's `State.ID` type name (`"UUID"`,
+    /// `"Int"`, `"String"`, a custom id, …), captured from the nested
+    /// `State` struct's `id` member at discovery time, or `nil` when the
+    /// State declares no `id` / no `State` struct was found (non-`.tca`
+    /// carriers, older records). Used by `IdentifiedActionResolver` to
+    /// construct a canonical `.element(id:action:)` value for a *parent*
+    /// reducer whose Action carries `IdentifiedActionOf<Child>`: the parent
+    /// looks up the child's candidate and reads *its* `State.ID`. This is
+    /// the same State-introspection slice 4 (`BindingAction`) needs —
+    /// captured here so both slices share it.
+    public let stateIDTypeName: String?
+
     public init(
         location: String,
         enclosingTypeName: String?,
@@ -120,7 +132,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         carrierKind: ReducerCarrierKind = .generic,
         purity: ReducerPurity = .pure,
         actionCases: [ActionCaseInfo] = [],
-        moduleName: String? = nil
+        moduleName: String? = nil,
+        stateIDTypeName: String? = nil
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -132,6 +145,27 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.purity = purity
         self.actionCases = actionCases
         self.moduleName = moduleName
+        self.stateIDTypeName = stateIDTypeName
+    }
+
+    /// Item 2 slice 3 — a copy of this candidate with its `actionCases`
+    /// replaced. Used by `IdentifiedActionResolver` to enrich the matched
+    /// candidate's `IdentifiedActionOf<Child>` cases with resolved element
+    /// facts without threading a child-candidate map through the emitter.
+    public func replacingActionCases(_ newCases: [ActionCaseInfo]) -> Self {
+        Self(
+            location: location,
+            enclosingTypeName: enclosingTypeName,
+            functionName: functionName,
+            signatureShape: signatureShape,
+            stateTypeName: stateTypeName,
+            actionTypeName: actionTypeName,
+            carrierKind: carrierKind,
+            purity: purity,
+            actionCases: newCases,
+            moduleName: moduleName,
+            stateIDTypeName: stateIDTypeName
+        )
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just
@@ -202,6 +236,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case purity
         case actionCases
         case moduleName
+        case stateIDTypeName
     }
 
     public init(from decoder: Decoder) throws {
@@ -232,23 +267,13 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         ) ?? []
         // Multi-module — pre-multi-module records carry no module tag.
         self.moduleName = try container.decodeIfPresent(String.self, forKey: .moduleName)
+        // Item 2 slice 3 — pre-slice-3 records carry no captured State.ID.
+        self.stateIDTypeName = try container.decodeIfPresent(String.self, forKey: .stateIDTypeName)
     }
 }
 
-/// Cycle 125 (Phase B) — one Action enum case captured at discovery time:
-/// its name plus its associated-value payload types in declaration order
-/// (`[]` = payload-free). The emitter classifies constructibility from
-/// `payloadTypes` (empty → free; single recognized raw type → raw-payload;
-/// anything else → non-derivable, excluded from partial exploration).
-public struct ActionCaseInfo: Sendable, Equatable, Codable {
-    public let name: String
-    public let payloadTypes: [String]
-
-    public init(name: String, payloadTypes: [String] = []) {
-        self.name = name
-        self.payloadTypes = payloadTypes
-    }
-}
+// `ActionCaseInfo` + `ResolvedIdentifiedElement` are declared in
+// `ActionCaseInfo.swift` (extracted for the `file_length` cap).
 
 /// V2.0 M1.A — the three canonical reducer signature shapes from PRD
 /// §6.2 plus a `(S, A) -> (S, Effect<A>)` tuple-return shape.

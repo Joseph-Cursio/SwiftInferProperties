@@ -43,17 +43,24 @@ final class ReduceClosureWalker: SyntaxVisitor {
     /// this reducer, stamped onto every emitted `.tca` candidate. Empty
     /// when no `Action` enum was found.
     let actionCases: [ActionCaseInfo]
+    /// Item 2 slice 3 — the nested `State` struct's `id` type, stamped onto
+    /// every emitted candidate so a parent can resolve this reducer's
+    /// `State.ID` for an `IdentifiedActionOf<Self>` element. `nil` when the
+    /// State declares no `id`.
+    let stateIDTypeName: String?
 
     init(
         file: String,
         converter: SourceLocationConverter,
         enclosingTypeName: String,
-        actionCases: [ActionCaseInfo] = []
+        actionCases: [ActionCaseInfo] = [],
+        stateIDTypeName: String? = nil
     ) {
         self.file = file
         self.converter = converter
         self.enclosingTypeName = enclosingTypeName
         self.actionCases = actionCases
+        self.stateIDTypeName = stateIDTypeName
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -118,7 +125,8 @@ final class ReduceClosureWalker: SyntaxVisitor {
             actionTypeName: "\(enclosingTypeName).Action",
             carrierKind: .tca,
             purity: purity,
-            actionCases: actionCases
+            actionCases: actionCases,
+            stateIDTypeName: stateIDTypeName
         ))
     }
 
@@ -140,7 +148,8 @@ final class ReduceClosureWalker: SyntaxVisitor {
             actionTypeName: "\(enclosingTypeName).Action",
             carrierKind: .tca,
             purity: .effectBearing,
-            actionCases: actionCases
+            actionCases: actionCases,
+            stateIDTypeName: stateIDTypeName
         ))
     }
 }

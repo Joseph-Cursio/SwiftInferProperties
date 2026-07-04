@@ -66,6 +66,10 @@ extension ReducerDiscoveryVisitor {
         // `CaseIterable` (real TCA Actions don't declare it). Phase B's
         // emitter picks the constructible subset; no bail on payloads.
         let actionCases = Self.actionCases(in: memberBlock)
+        // Item 2 slice 3 — capture the nested `State` struct's `id` type so a
+        // *parent* reducer whose Action carries `IdentifiedActionOf<Self>` can
+        // resolve this reducer's `State.ID` when building an `.element` value.
+        let stateIDTypeName = Self.stateIDType(in: memberBlock)
         for member in memberBlock.members {
             guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
             for binding in variable.bindings {
@@ -75,18 +79,51 @@ extension ReducerDiscoveryVisitor {
                     walkForReduceClosures(
                         in: Syntax(initializer),
                         enclosingTypeName: enclosingTypeName,
-                        actionCases: actionCases
+                        actionCases: actionCases,
+                        stateIDTypeName: stateIDTypeName
                     )
                 }
                 if let accessor = binding.accessorBlock {
                     walkForReduceClosures(
                         in: Syntax(accessor),
                         enclosingTypeName: enclosingTypeName,
-                        actionCases: actionCases
+                        actionCases: actionCases,
+                        stateIDTypeName: stateIDTypeName
                     )
                 }
             }
         }
+    }
+
+    /// Item 2 slice 3 — the nested `State` struct's `id` member type
+    /// (`"UUID"` / `"Int"` / `"String"` / a custom type), or `nil` when no
+    /// `State` struct is present or it declares no `id`. Reads an explicit
+    /// type annotation (`let id: UUID`, `var id: UUID { … }`) first, then
+    /// falls back to inferring the type from a simple call-expression
+    /// initializer (`let id = UUID()` → `"UUID"`). Literal-only initializers
+    /// (`var id = 0`) are left unresolved — the id types slice 3 supports are
+    /// exactly the annotated / call-constructed forms real TCA uses.
+    static func stateIDType(in memberBlock: MemberBlockSyntax) -> String? {
+        guard let stateStruct = memberBlock.members
+            .compactMap({ $0.decl.as(StructDeclSyntax.self) })
+            .first(where: { $0.name.text == "State" })
+        else { return nil }
+
+        for member in stateStruct.memberBlock.members {
+            guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
+            for binding in variable.bindings {
+                guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
+                      identifier.identifier.text == "id" else { continue }
+                if let annotation = binding.typeAnnotation {
+                    return annotation.type.trimmedDescription
+                }
+                if let call = binding.initializer?.value.as(FunctionCallExprSyntax.self),
+                   let callee = call.calledExpression.as(DeclReferenceExprSyntax.self) {
+                    return callee.baseName.text
+                }
+            }
+        }
+        return nil
     }
 
     /// Cycle 122/125 — the nested `enum Action`'s cases, in source order,
@@ -121,13 +158,15 @@ extension ReducerDiscoveryVisitor {
     private func walkForReduceClosures(
         in subtree: Syntax,
         enclosingTypeName: String,
-        actionCases: [ActionCaseInfo]
+        actionCases: [ActionCaseInfo],
+        stateIDTypeName: String?
     ) {
         let walker = ReduceClosureWalker(
             file: file,
             converter: converter,
             enclosingTypeName: enclosingTypeName,
-            actionCases: actionCases
+            actionCases: actionCases,
+            stateIDTypeName: stateIDTypeName
         )
         walker.walk(subtree)
         candidates.append(contentsOf: walker.candidates)
