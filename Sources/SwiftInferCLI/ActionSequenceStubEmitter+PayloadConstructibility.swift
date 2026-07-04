@@ -50,9 +50,21 @@ extension ActionSequenceStubEmitter {
         // disclosed `excluded:` cases) without new counterexample signal, per
         // the slice-3 design's ROI reframe.
         if let element = caseInfo.resolvedElement {
-            let idLiteral = identifiedElementIDLiteral(for: element.idType)
+            let idLiteral = defaultValueLiteral(for: element.idType)
             return "Gen.always(\(action).\(caseInfo.name)(.element(id: \(idLiteral)"
                 + ", action: \(element.childActionType).\(element.childActionCase))))"
+        }
+        // Slice 4 — a resolved `binding(BindingAction<State>)` case. The
+        // resolver has enumerated the reducer's `@ObservableState` stored `var`
+        // fields whose type is cheaply defaultable; explore binding each one
+        // (`.set(\.field, <canned value>)` — a real transition through
+        // `BindingReducer`). One field → `Gen.always`; several → `Gen.oneOf`.
+        if let fields = caseInfo.resolvedBinding, !fields.isEmpty {
+            let sets = fields.map { field in
+                "Gen.always(\(action).\(caseInfo.name)(.set(\\.\(field.fieldName), "
+                    + "\(defaultValueLiteral(for: field.valueType)))))"
+            }
+            return sets.count == 1 ? sets[0] : "Gen.oneOf(\(sets.joined(separator: ", ")))"
         }
         guard caseInfo.payloadTypes.count == 1 else { return nil }
         let payload = caseInfo.payloadTypes[0].trimmingCharacters(in: .whitespaces)
@@ -66,16 +78,19 @@ extension ActionSequenceStubEmitter {
         return nil
     }
 
-    /// Slice 3 — the canned deterministic id literal for a resolved
-    /// `IdentifiedArray` element id. `UUID` gets the all-zero literal
-    /// (analogous to slice 2's `CancellationError()` — a fixed constructible
-    /// value, not something `RawType` provides); `String` gets `""`; `Int`
-    /// (the `default`) gets `0`. Only types in
-    /// `IdentifiedActionResolver.defaultableIDTypes` reach here.
-    private static func identifiedElementIDLiteral(for idType: String) -> String {
-        switch idType {
+    /// Slice 3/4 — the canned deterministic literal for a resolved value type:
+    /// an `IdentifiedArray` element id (slice 3) or a `BindingAction` field
+    /// value (slice 4). `UUID` → the all-zero literal (analogous to slice 2's
+    /// `CancellationError()` — a fixed constructible value, not something
+    /// `RawType` provides); `String` → `""`; `Bool` → `false`; `Double` →
+    /// `0.0`; `Int` (the `default`) → `0`. Only types in the resolvers'
+    /// defaultable sets reach here.
+    static func defaultValueLiteral(for type: String) -> String {
+        switch type {
         case "UUID": return "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!"
         case "String": return "\"\""
+        case "Bool": return "false"
+        case "Double": return "0.0"
         default: return "0"
         }
     }

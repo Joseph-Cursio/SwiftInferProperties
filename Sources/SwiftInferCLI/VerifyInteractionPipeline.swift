@@ -43,11 +43,15 @@ public enum VerifyInteractionPipeline {
         // candidate verifies the whole composed body via `T().reduce`.
         let deduped = SwiftInferCommand.DiscoverInteraction.dedupedByStateAndAction(candidates)
         let resolved = try resolveCandidate(candidates: deduped, pinRaw: pinRaw)
-        // Item 2 slice 3 — enrich `IdentifiedActionOf<Child>` cases against the
-        // full candidate set so the relaxed generator can construct an
-        // `.element(id:action:)` value (the enriched candidate is used for emit
-        // AND returned, so the evidence coverage fold sees the same cases).
-        let matched = IdentifiedActionResolver.resolve(resolved, among: deduped)
+        // Item 2 slices 3/4 — enrich composition-action cases so the relaxed
+        // generator can construct them (the enriched candidate is used for emit
+        // AND returned, so the evidence coverage fold sees the same cases):
+        // slice 3 resolves `IdentifiedActionOf<Child>` against the full
+        // candidate set; slice 4 resolves `binding(BindingAction<State>)`
+        // against the candidate's own `@ObservableState` fields.
+        let matched = BindingActionResolver.resolve(
+            IdentifiedActionResolver.resolve(resolved, among: deduped)
+        )
         // M8.B — hidden-mutability bodies write to static / global
         // vars; running N action sequences against such a reducer
         // produces meaningless outcomes (state persists across runs).

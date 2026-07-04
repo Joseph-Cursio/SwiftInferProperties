@@ -100,6 +100,46 @@ struct ActionSequenceCompositionPayloadTests {
         )
     }
 
+    @Test("a resolved binding case → .binding(.set(\\.field, value)) per defaultable field")
+    func bindingActionEmits() {
+        // Single field → Gen.always.
+        let single = ActionCaseInfo(
+            name: "binding",
+            payloadTypes: ["BindingAction<State>"],
+            resolvedBinding: [ResolvedBindingField(fieldName: "text", valueType: "String")]
+        )
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(for: single, action: "Form.Action")
+                == "Gen.always(Form.Action.binding(.set(\\.text, \"\")))"
+        )
+        // Several fields → Gen.oneOf over each, with type-specific literals.
+        let multi = ActionCaseInfo(
+            name: "binding",
+            payloadTypes: ["BindingAction<State>"],
+            resolvedBinding: [
+                ResolvedBindingField(fieldName: "flag", valueType: "Bool"),
+                ResolvedBindingField(fieldName: "count", valueType: "Int"),
+                ResolvedBindingField(fieldName: "ratio", valueType: "Double")
+            ]
+        )
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(for: multi, action: "Form.Action")
+                == "Gen.oneOf(Gen.always(Form.Action.binding(.set(\\.flag, false))), "
+                + "Gen.always(Form.Action.binding(.set(\\.count, 0))), "
+                + "Gen.always(Form.Action.binding(.set(\\.ratio, 0.0))))"
+        )
+    }
+
+    @Test("an unresolved BindingAction payload is not constructible (excluded)")
+    func unresolvedBindingExcluded() {
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(
+                for: ActionCaseInfo(name: "binding", payloadTypes: ["BindingAction<State>"]),
+                action: "Form.Action"
+            ) == nil
+        )
+    }
+
     @Test("an unresolved IdentifiedActionOf payload is not constructible (excluded)")
     func unresolvedIdentifiedActionExcluded() {
         // Without a resolvedElement (the resolver gated the child), the raw
