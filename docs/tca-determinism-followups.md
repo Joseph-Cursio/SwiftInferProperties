@@ -32,13 +32,12 @@ design.
 
 ## 2. Structured associated-value action payloads (composition-actions)
 
-> **▶ Next: Slice 4 — `BindingAction<State>`.** Slices 1 (PresentationAction),
-> 2 (Result), and **3b** (`IdentifiedActionOf<Child>` — canned-UUID / Int / String
-> id + a payload-free child, no recursion) are built. Slice 4 needs State
-> introspection (keypath into State + value); the `State.ID` capture landed in 3b
-> (`ReducerCandidate.stateIDTypeName`, discovered in
-> `ReducerDiscoverer+TCAWalk.stateIDType`) is the same introspection seam and can
-> be generalized for it. See the slice list below.
+> **▶ All four composition-action slices are built.** Slices 1 (PresentationAction),
+> 2 (Result), **3b** (`IdentifiedActionOf<Child>` — canned id + payload-free child,
+> no recursion), and **4** (`BindingAction<State>` — `.set(\.field, value)` over
+> `@ObservableState` fields) are shipped. Remaining open: slice **3c**
+> (depth-bounded child recursion — deferred, 0 added reach on the corpus) and
+> widening any slice's value-type / field coverage. See the slice list below.
 
 **Key finding (from the repo's own cycle 123):** value-type payload synthesis
 (custom structs/tuples/nested enums via `TypeShapeBuilder`) unlocks only ~2/99
@@ -100,9 +99,34 @@ still disclosed, so no new precision decision.
   UUID case already has a payload-free child), and it introduces the
   self-recursive-`Nested` termination hazard — so deferred until a corpus
   justifies it. See the design doc.
-- **Slice 4 — `BindingAction<State>` (open):** keypath into State + value. ~10
-  cases, high complexity (needs State introspection — the `State.ID` capture
-  from 3b is the same seam to generalize).
+- **Slice 4 — `BindingAction<State>` — ✅ BUILT (2026-07-04):** emit
+  `.binding(.set(\.field, <canned value>))` for each `@ObservableState` stored
+  `var` of a defaultable type — **a real transition through `BindingReducer`**,
+  not a no-op (higher value than 3b). **Recount over the real Examples tree: 15
+  `case binding(BindingAction<State>)` cases, 9 files `@ObservableState`** (the
+  modern `.set(\.field, value)` keypath; 2 legacy `@BindingState` files gate —
+  they use `\.$field`), value types **String / Bool / Int / Double dominate**
+  (all defaultable). Discovery captures the `@ObservableState` State's bindable
+  stored `var` fields (`ReducerCandidate.stateFields`, via
+  `ReducerDiscoverer+TCAWalk.stateStoredVarFields` — annotation + literal-type
+  inference; `let` / `static` / computed / attributed fields excluded); a
+  same-candidate resolution pass `BindingActionResolver.resolve` (in
+  `resolveAndEmit`, no cross-candidate lookup — `BindingAction` binds the
+  reducer's own State) enriches the `binding` case with the defaultable fields
+  (`ActionCaseInfo.resolvedBinding`). The emitter binds each field
+  (`Gen.oneOf` over them; `defaultValueLiteral` — `Bool`→`false`, `Int`→`0`,
+  `String`→`""`, `Double`→`0.0`, `UUID`→canned). **Gates (stay excluded +
+  disclosed):** no defaultable field (custom-type-only State — e.g. `SyncUpForm`),
+  non-`@ObservableState` State (legacy), no binding case. **Discovery caveat
+  (pre-existing, not slice-4-specific):** a pure-`BindingReducer()` body with no
+  `Reduce { }` closure surfaces no candidate, so slice 4 reaches binding reducers
+  that also have a `Reduce` closure (most real ones do — onChange/side effects).
+  Corpus: `tca-binding-action-corpus` (`Settings` — String/Bool/Double/Int
+  fields); fast proof `BindingActionCorpusTests` (discover→resolve→emit, no
+  build) + measured `BindingActionCorpusMeasuredTests` (1 identity → bothPass,
+  `Verified`, no `excluded: binding`). Units: `BindingActionResolverTests`,
+  extended `ActionSequenceCompositionPayloadTests` +
+  `ReducerDiscovererStateIDTests`.
 
 ## 3. `unknownActionIsNoOp` measured-verify — ✅ BUILT (2026-07-03)
 
