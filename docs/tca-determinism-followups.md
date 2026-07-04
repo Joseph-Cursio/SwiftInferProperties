@@ -49,8 +49,12 @@ still disclosed, so no new precision decision.
   `ActionSequenceCompositionPayloadTests`; validated end-to-end by the Tier-2
   `AlertAndConfirmationDialog` reducer (its presentation cases are now explored,
   corpus stays green).
-- **Slice 2 — `Result<T,E>` (open):** emit `.case(.failure(<probe error>))` —
-  a canned error, no `Gen<T>` needed. ~14 cases, low-medium complexity.
+- **Slice 2 — `Result<_, any Error>` — ✅ BUILT (2026-07-04):** emit
+  `.case(.failure(CancellationError()))` — a canned type-erased error, no
+  `Gen<T>` needed. Gated to the type-erased error forms (`, any Error>` /
+  `, Error>`); concrete-error `Result`s stay excluded. Corpus:
+  `tca-composition-payload-corpus` (`NumberFact`); measured by
+  `CompositionPayloadCorpusMeasuredTests` (bothPass). ~14 cases.
 - **Slice 3 — `IdentifiedActionOf<Child>` (open):** **recursive** — construct a
   child action + id. ~72 cases, high complexity (the biggest blocker, and the
   hardest).

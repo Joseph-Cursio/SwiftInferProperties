@@ -33,11 +33,21 @@ extension ActionSequenceStubEmitter {
     /// so `case alert(PresentationAction<Alert>)` explores `Action.alert(.dismiss)`
     /// with no `Gen<Alert>` needed. `.dismiss` drives the reducer's presentation
     /// dismissal path — a real, constructible transition.
+    ///
+    /// Slice 2 — `Result<_, any Error>`: emit `.failure(CancellationError())` — a
+    /// canned type-erased error, no `Gen<Success>` needed — driving the reducer's
+    /// failure branch. Gated to the *type-erased* error forms (`, any Error>` /
+    /// `, Error>`); a concrete error type (`Result<T, MyError>`) is left excluded
+    /// because `CancellationError()` would not conform to it.
     static func compositionGenerator(for caseInfo: ActionCaseInfo, action: String) -> String? {
         guard caseInfo.payloadTypes.count == 1 else { return nil }
         let payload = caseInfo.payloadTypes[0].trimmingCharacters(in: .whitespaces)
         if payload.hasPrefix("PresentationAction<") {
             return "Gen.always(\(action).\(caseInfo.name)(.dismiss))"
+        }
+        if payload.hasPrefix("Result<"),
+           payload.hasSuffix(", any Error>") || payload.hasSuffix(", Error>") {
+            return "Gen.always(\(action).\(caseInfo.name)(.failure(CancellationError())))"
         }
         return nil
     }

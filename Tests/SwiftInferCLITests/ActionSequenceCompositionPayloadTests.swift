@@ -33,6 +33,25 @@ struct ActionSequenceCompositionPayloadTests {
         #expect(expr == "Gen.always(Feature.Action.alert(.dismiss))")
     }
 
+    @Test("Result<_, any Error> payload → Gen.always(.case(.failure(CancellationError())))")
+    func resultPayloadEmitsFailure() {
+        // Type-erased error forms are constructible with a canned error.
+        for errorForm in ["Result<String, any Error>", "Result<Int, Error>"] {
+            let expr = ActionSequenceStubEmitter.compositionGenerator(
+                for: ActionCaseInfo(name: "response", payloadTypes: [errorForm]),
+                action: "Feature.Action"
+            )
+            #expect(expr == "Gen.always(Feature.Action.response(.failure(CancellationError())))")
+        }
+        // A concrete error type is NOT constructible with CancellationError().
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(
+                for: ActionCaseInfo(name: "response", payloadTypes: ["Result<String, MyError>"]),
+                action: "Feature.Action"
+            ) == nil
+        )
+    }
+
     @Test("a non-wrapper single payload is not a composition case")
     func nonWrapperPayloadIsNil() {
         #expect(
