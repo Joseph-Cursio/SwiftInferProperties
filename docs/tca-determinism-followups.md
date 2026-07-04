@@ -32,14 +32,13 @@ design.
 
 ## 2. Structured associated-value action payloads (composition-actions)
 
-> **▶ Next: Slice 3 — `IdentifiedActionOf<Child>`.** Slices 1 (PresentationAction)
-> and 2 (Result) are built; slice 3 is the next open increment. Resume by
-> extending `ActionSequenceStubEmitter.compositionGenerator` (in
-> `Sources/SwiftInferCLI/ActionSequenceStubEmitter+PayloadConstructibility.swift`)
-> — follow the slice-1/2 pattern, plus a measured corpus + unit tests. Slice 3
-> is **recursive** (a child action is itself a composition target), so it needs
-> the classifier to recurse over the child's `actionCases` with depth bounding —
-> more than a one-line branch. See the slice list below.
+> **▶ Next: Slice 4 — `BindingAction<State>`.** Slices 1 (PresentationAction),
+> 2 (Result), and **3b** (`IdentifiedActionOf<Child>` — canned-UUID / Int / String
+> id + a payload-free child, no recursion) are built. Slice 4 needs State
+> introspection (keypath into State + value); the `State.ID` capture landed in 3b
+> (`ReducerCandidate.stateIDTypeName`, discovered in
+> `ReducerDiscoverer+TCAWalk.stateIDType`) is the same introspection seam and can
+> be generalized for it. See the slice list below.
 
 **Key finding (from the repo's own cycle 123):** value-type payload synthesis
 (custom structs/tuples/nested enums via `TypeShapeBuilder`) unlocks only ~2/99
@@ -64,19 +63,46 @@ still disclosed, so no new precision decision.
   `, Error>`); concrete-error `Result`s stay excluded. Corpus:
   `tca-composition-payload-corpus` (`NumberFact`); measured by
   `CompositionPayloadCorpusMeasuredTests` (bothPass). ~14 cases.
-- **Slice 3 — `IdentifiedActionOf<Child>` (open, scoped):** **recursive** —
-  construct a child action + id. ~72 cases (but that bucket is *all* nested
-  actions; the `IdentifiedActionOf`-specific share is unmeasured), high
-  complexity (the biggest blocker, and the hardest). **Design worked out in
-  `tca-identified-action-slice3-design.md`** — needs two net-new capabilities
-  (thread child candidates into the emitter; synthesize a `Child.State.ID` — no
-  universal canned literal, and `RawType` doesn't recognize `UUID`), and the
-  constructed `.element` **no-ops against empty initial State**, so near-term
-  value is disclosure-set reduction, not new signal. Recommended: recount the
-  real reach, then land sub-slice **3a** (Int/String id, payload-free child, no
-  recursion) only.
+- **Slice 3b — `IdentifiedActionOf<Child>` — ✅ BUILT (2026-07-04):** emit
+  `.case(.element(id: <canned id>, action: .<childFreeCase>))` — a canonical
+  identified-array element, no `Gen` over the child needed. **Design +
+  recount in `tca-identified-action-slice3-design.md`.** The recount over
+  Point-Free's real Examples tree (8 `IdentifiedActionOf<Child>` cases) killed
+  the design's original "land 3a" plan: **id distribution UUID 6/8, URL 1, none
+  1, Int/String 0/8** — 3a (Int/String only) had zero reach, so **3b (canned
+  UUID)** is the minimal honest increment. Two net-new capabilities landed:
+  (i) discovery captures each reducer's `State.ID`
+  (`ReducerCandidate.stateIDTypeName`, via `ReducerDiscoverer+TCAWalk.stateIDType`);
+  (ii) a resolution pass `IdentifiedActionResolver.resolve` (run once in
+  `VerifyInteractionPipeline.resolveAndEmit`, before Inputs) enriches a parent's
+  `IdentifiedActionOf<Child>` cases with resolved facts (`ActionCaseInfo`'s new
+  `resolvedElement`) against the discovered child — so the emitter needs **no
+  threaded child map** and emit + evidence coverage stay consistent (both read
+  the enriched candidate). `compositionGenerator` formats the id literal
+  (`UUID` → all-zero canned literal; `Int`→`0`; `String`→`""`). **Gates
+  (stay excluded + disclosed):** non-defaultable id (URL / custom), no
+  payload-free child case (Todo — child is pure `BindingAction`), unresolvable /
+  undiscovered child, spelled-out `IdentifiedAction<_, _>` (recount: 0 real).
+  **Depth 0 — no recursion** (3c below), so a self-recursive
+  `IdentifiedActionOf<Self>` terminates by picking a payload-free child case.
+  **ROI is disclosure-set reduction, not new signal:** the constructed
+  `.element` no-ops against the empty initial-State `IdentifiedArray`. Corpus:
+  `tca-identified-action-corpus` (`RowList` `.forEach` parent + UUID-id `Row`);
+  fast proof `IdentifiedActionCorpusTests` (discover→resolve→emit, no build) +
+  measured `IdentifiedActionCorpusMeasuredTests` (2 identities → 2 bothPass,
+  parent `Verified` with no `excluded: rows`). Units:
+  `IdentifiedActionResolverTests`, extended `ActionSequenceCompositionPayloadTests`,
+  `ReducerDiscovererStateIDTests`.
+- **Slice 3c — depth-bounded child recursion (open, deferred):** reuse
+  `compositionGenerator` on the child action to pick a *non*-payload-free child
+  (raw / `PresentationAction` / `Result` / nested `IdentifiedActionOf`) with a
+  depth bound. **Recount: 0 added reach** on the real corpus (every reachable
+  UUID case already has a payload-free child), and it introduces the
+  self-recursive-`Nested` termination hazard — so deferred until a corpus
+  justifies it. See the design doc.
 - **Slice 4 — `BindingAction<State>` (open):** keypath into State + value. ~10
-  cases, high complexity (needs State introspection).
+  cases, high complexity (needs State introspection — the `State.ID` capture
+  from 3b is the same seam to generalize).
 
 ## 3. `unknownActionIsNoOp` measured-verify — ✅ BUILT (2026-07-03)
 

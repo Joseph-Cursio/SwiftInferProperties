@@ -1,5 +1,12 @@
 # Design: composition-action slice 3 — `IdentifiedActionOf<Child>`
 
+> **Status: 3b SHIPPED (2026-07-04).** The recount (below) killed 3a (0 real
+> reach — all real ids are UUID) and landed **3b** (canned-UUID / Int / String
+> id + payload-free child, no recursion) instead. **3c (recursion) deferred**
+> (0 added reach on the corpus + the self-recursion hazard). See the
+> "Recount results" + "Recommendation (revised)" sections and the
+> `## 2 · Slice 3b` entry in `docs/tca-determinism-followups.md`.
+
 Design note for follow-up item 2, slice 3 (`docs/tca-determinism-followups.md`).
 Slices 1 (`PresentationAction`) and 2 (`Result<_, any Error>`) are built; this
 note works out slice 3 before any code, because it is categorically harder than
@@ -177,11 +184,58 @@ Mirror slices 1–2:
    shared prerequisite landed with slice 4 (`BindingAction<State>`), which also
    needs State introspection?
 
-## Recommendation
+## Recount results (Q2) — done, and it revises the recommendation
 
-Do the **recount (Q2) first**, then land **3a** only (Int/String id, payload-free
-child, no recursion) as the minimal honest increment, with the verdict annotation
-stating the no-op-against-empty-State caveat. Defer 3b/3c until the recount
-justifies them and Q1/Q4 are answered. This keeps to the cycle-124 posture
-(widen the constructible subset, disclose the rest) without overbuilding the
-recursion for reach that may not be there.
+The `tca-10`/`tca-25` road-test corpora are not checked into this repo, so the
+recount was run over the faithful at-scale real-TCA source: Point-Free's own
+**Examples + CaseStudies tree** (the local `swift-composable-architecture`
+checkout), cross-checked against the in-repo faithful copies in
+`Tests/Fixtures/tca-examples-corpus/`.
+
+**8 `IdentifiedActionOf<Child>` cases** in the real Examples tree; **zero**
+spelled-out `IdentifiedAction<_, _>`:
+
+| # | Case | Child | `State.ID` | Defaultable? | Payload-free child case? |
+|---|------|-------|-----------|--------------|--------------------------|
+| 1 | `CounterList.counters` | Counter | *none visible* (`var count = 0`) | ✗ | — |
+| 2 | `Nested.rows` | Nested | **UUID** | 3b canned | ✓ `addRowButtonTapped` — **self-recursive** |
+| 3 | `Favoriting.episodes` | Favoriting | **UUID** | 3b | ✓ `buttonTapped` |
+| 4 | `CityMap.cityMaps` | DownloadComponent | **UUID** | 3b | ✓ `buttonTapped` |
+| 5 | `VoiceMemos.voiceMemos` | VoiceMemo | URL (computed) | ✗ | — |
+| 6 | `iOS17 IdentifiedList.rows` | ObservableBasicsView.Feature | **UUID** | 3b | ✓ many |
+| 7 | `iOS16 IdentifiedList.rows` | BasicsView.Feature | **UUID** | 3b | ✓ |
+| 8 | `Todos.todos` | Todo | **UUID** | 3b | ✗ — child is **only** `binding(BindingAction)` |
+
+**ID distribution: UUID 6/8 (75%), URL 1, none-visible 1, `Int`/`String` 0/8.**
+
+Consequences for the sub-slices:
+
+- **3a (Int/String id) has ZERO reach.** No real reducer uses an `Int`/`String`
+  `IdentifiedArray` id — they are all `UUID`. The originally-recommended
+  "land 3a only" would recognize nothing. The Int/String `RawType` path is
+  speculative and must not be the standalone deliverable.
+- **3b (canned zero-UUID) is the actual minimal honest increment — reach ≈ 5/8.**
+  UUID id + a constructible payload-free child both hold for Nested, Favoriting,
+  CityMap, and the two Integration Features. Excluded: Todo (child is pure
+  `BindingAction` → slice 4), VoiceMemo (URL id), Counter (no visible id).
+- **3c (depth-bounded recursion) adds 0 reach on this corpus** and only
+  introduces the self-recursive-`Nested` termination hazard — every reachable
+  UUID case already has a payload-free child, so depth-0 suffices (Nested
+  included: pick `addRowButtonTapped`, don't recurse). Confirmed low-value; defer.
+- **The no-op-against-empty-State caveat is confirmed empirically**: all 8 are
+  `.forEach` over an initially-empty `IdentifiedArray`, so every constructed
+  `.element(id:action:)` no-ops. Even 3b's 5/8 buys disclosure-set reduction,
+  not new counterexample-finding signal — exactly the ROI reframe above.
+
+## Recommendation (revised by the recount)
+
+Skip 3a as a standalone (0 real reach) and build **3b directly**: recognize
+`IdentifiedActionOf<Child>` / `IdentifiedAction<ID, Action>`, resolve `Child`'s
+candidate, require a defaultable id (`UUID` via the canned zero-UUID literal;
+`Int`/`String` via `RawType` folded in for free) **and** a payload-free child
+case, and emit `Gen.always(.<case>(.element(id: <id>, action: .<childFreeCase>)))`
+— no recursion. Everything else stays excluded + disclosed, and the verdict
+annotation states the no-op-against-empty-State caveat. Keep **3c deferred**
+(confirmed 0 added reach + the recursion hazard). This holds the cycle-124
+posture (widen the constructible subset, disclose the rest) without overbuilding
+recursion for reach that isn't there.
