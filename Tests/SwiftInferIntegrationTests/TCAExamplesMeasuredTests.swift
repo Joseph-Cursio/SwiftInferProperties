@@ -11,12 +11,19 @@ import Testing
 /// tree, View scaffolding stripped (`Tests/Fixtures/tca-examples-measured-corpus/`,
 /// see its ATTRIBUTION.md).
 ///
-/// All three are clean Point-Free code, so all three should measure bothPass and
-/// promote to Verified:
+/// This is the **maximal** subset of the 13-file discovery corpus that
+/// co-compiles against ComposableArchitecture alone — reducers needing custom
+/// `DependencyKey` types (`\.factClient`, `\.weatherClient`, `\.screenshots`),
+/// `@Shared`, `StackState`, an external sub-reducer (`Todos` → `Todo`), or a
+/// required stored closure (generic `Favoriting<ID>`) are excluded because they
+/// can't build flat. The six that remain are all clean Point-Free code, so all
+/// six measure bothPass and promote to Verified:
 ///   - `Counter` — pure;
 ///   - `OptionalBasics` — pure, composes `Counter` via `.ifLet`;
-///   - `Timers` — one CA built-in dependency (`\.continuousClock`), pinned by the
-///     verifier → a declared/pinned dependency is fine → bothPass.
+///   - `BindingBasics` — pure;
+///   - `AlertAndConfirmationDialog` — pure; CA `@Presents` / `AlertState` built-ins;
+///   - `Timers` — one pinned CA built-in dependency (`\.continuousClock`);
+///   - `Nested` — recursive (`.forEach` over `Self()`), pinned `\.uuid`.
 ///
 /// Real `swift build` against ComposableArchitecture — tagged `.subprocess`.
 ///
@@ -28,7 +35,7 @@ import Testing
 @Suite("TCA examples measured corpus — real reducers, dependency-pinned determinism", .tags(.subprocess))
 struct TCAExamplesMeasuredTests {
 
-    @Test("real curated TCA reducers compile and measure determinism — 3 bothPass, 0 defaultFails")
+    @Test("real curated TCA reducers compile and measure determinism — 6 bothPass, 0 defaultFails")
     func realReducersDeterminismAllPass() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("tca-examples-measured-corpus")
@@ -48,12 +55,12 @@ struct TCAExamplesMeasuredTests {
             sequenceCount: 64,
             workingDirectory: root
         )
-        #expect(summary.contains("Identities: 3 (--family determinism)"))
-        #expect(summary.contains("3 measured-bothPass"))
+        #expect(summary.contains("Identities: 6 (--family determinism)"))
+        #expect(summary.contains("6 measured-bothPass"))
 
         let evidence = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(evidence.count == 3)
-        #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 3)
+        #expect(evidence.count == 6)
+        #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 6)
         #expect(evidence.filter { $0.outcome == .measuredDefaultFails }.isEmpty)
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
@@ -67,9 +74,19 @@ struct TCAExamplesMeasuredTests {
                 $0.contains("Family:    determinism") && $0.contains(reducer)
             }
         }
-        #expect(determinismBlock(reducer: "Counter")?.contains("(Verified)") == true)
-        #expect(determinismBlock(reducer: "OptionalBasics")?.contains("(Verified)") == true)
-        #expect(determinismBlock(reducer: "Timers")?.contains("(Verified)") == true)
+        for reducer in [
+            "Counter",
+            "OptionalBasics",
+            "BindingBasics",
+            "AlertAndConfirmationDialog",
+            "Timers",
+            "Nested"
+        ] {
+            #expect(
+                determinismBlock(reducer: reducer)?.contains("(Verified)") == true,
+                "\(reducer) did not promote to Verified"
+            )
+        }
     }
 
     static let fixtureDirectory: URL = {

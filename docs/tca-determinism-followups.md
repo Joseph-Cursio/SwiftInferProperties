@@ -54,18 +54,24 @@ for the shipped design.
 
 ## 4. Tier-2 curated-compilable real-TCA measured corpus — ✅ BUILT (2026-07-03)
 
-- **Shipped:** `Tests/Fixtures/tca-examples-measured-corpus/` — three real
-  Point-Free reducers curated from the `Examples/` tree (SwiftUI View / `#Preview`
-  scaffolding stripped, `@Reducer` verbatim): `Counter` (pure), `OptionalBasics`
-  (pure, composes `Counter` via `.ifLet`), `Timers` (one pinned CA built-in
-  dependency, `\.continuousClock`). `TCAExamplesMeasuredTests` packages them via
-  `CorpusPackager`, runs a real `swift build` against ComposableArchitecture in
-  the verify-workdir, and measures determinism: 3 identities → 3 measured-bothPass
-  → all Verified (~62s under 6.3.3). `.subprocess`-tagged, 6.3.3-gated.
-- **Curation rule (minimal & faithful):** only reducers that co-compile against
-  CA alone are included — `03-Effects-Basics` and others were excluded because
-  they reference custom `DependencyKey` types (`\.factClient`) or app-level
-  navigation/shared-model types that don't resolve in a flat module.
+- **Shipped:** `Tests/Fixtures/tca-examples-measured-corpus/` — the **maximal
+  six** real Point-Free reducers that co-compile against CA alone, curated from
+  the `Examples/` tree (SwiftUI View / `#Preview` scaffolding stripped, `@Reducer`
+  verbatim): `Counter` (pure), `OptionalBasics` (pure, composes `Counter` via
+  `.ifLet`), `BindingBasics` (pure), `AlertAndConfirmationDialog` (pure; CA
+  `@Presents` / `AlertState` built-ins), `Timers` (pinned `\.continuousClock`),
+  `Nested` (recursive `.forEach` over `Self()`, pinned `\.uuid`).
+  `TCAExamplesMeasuredTests` packages them via `CorpusPackager`, runs a real
+  `swift build` against ComposableArchitecture in the verify-workdir, and measures
+  determinism: 6 identities → 6 measured-bothPass → all Verified (~71s under
+  6.3.3). `.subprocess`-tagged, 6.3.3-gated.
+- **Curation rule (faithful, maximal-compilable):** only reducers that co-compile
+  against CA alone are included. Excluded, because one non-compiling file poisons
+  the shared module: custom `DependencyKey` types (`\.factClient` in
+  `Effects-Basics` / `NavigationStack`, `\.weatherClient` in `SearchView`,
+  `\.screenshots` in `Effects-LongLiving`), `@Shared` (`SharedState-InMemory`),
+  an external sub-reducer (`Todos` → `Todo`), and a generic reducer with a
+  required stored closure (`Favoriting<ID>` — the verifier can't construct it).
 - The discovery-only `tca-examples-corpus` (13 vendored files) stays as-is; this
   is the separate curated compilable subset its ATTRIBUTION.md always pointed to.
 - Answers `tca-determinism-verify-scope.md` "Open questions for sign-off" #3 in
