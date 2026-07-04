@@ -40,6 +40,20 @@ extension ActionSequenceStubEmitter {
     /// `, Error>`); a concrete error type (`Result<T, MyError>`) is left excluded
     /// because `CancellationError()` would not conform to it.
     static func compositionGenerator(for caseInfo: ActionCaseInfo, action: String) -> String? {
+        // Slice 3 — a resolved `IdentifiedActionOf<Child>` element. The
+        // resolver (`IdentifiedActionResolver`) has already looked up the child
+        // reducer and confirmed a defaultable id + a payload-free child case;
+        // here we only format the canned id literal + the `.element(id:action:)`
+        // expression. The constructed element **no-ops against the empty
+        // initial-State `IdentifiedArray`** (`.forEach` finds no element with
+        // the canned id) — so this widens the explored action space (fewer
+        // disclosed `excluded:` cases) without new counterexample signal, per
+        // the slice-3 design's ROI reframe.
+        if let element = caseInfo.resolvedElement {
+            let idLiteral = identifiedElementIDLiteral(for: element.idType)
+            return "Gen.always(\(action).\(caseInfo.name)(.element(id: \(idLiteral)"
+                + ", action: \(element.childActionType).\(element.childActionCase))))"
+        }
         guard caseInfo.payloadTypes.count == 1 else { return nil }
         let payload = caseInfo.payloadTypes[0].trimmingCharacters(in: .whitespaces)
         if payload.hasPrefix("PresentationAction<") {
@@ -50,6 +64,20 @@ extension ActionSequenceStubEmitter {
             return "Gen.always(\(action).\(caseInfo.name)(.failure(CancellationError())))"
         }
         return nil
+    }
+
+    /// Slice 3 — the canned deterministic id literal for a resolved
+    /// `IdentifiedArray` element id. `UUID` gets the all-zero literal
+    /// (analogous to slice 2's `CancellationError()` — a fixed constructible
+    /// value, not something `RawType` provides); `String` gets `""`; `Int`
+    /// (the `default`) gets `0`. Only types in
+    /// `IdentifiedActionResolver.defaultableIDTypes` reach here.
+    private static func identifiedElementIDLiteral(for idType: String) -> String {
+        switch idType {
+        case "UUID": return "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!"
+        case "String": return "\"\""
+        default: return "0"
+        }
     }
 
     /// Names of the excluded (non-constructible) cases, in source order —

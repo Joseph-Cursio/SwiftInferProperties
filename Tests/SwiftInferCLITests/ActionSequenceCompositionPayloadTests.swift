@@ -52,6 +52,85 @@ struct ActionSequenceCompositionPayloadTests {
         )
     }
 
+    @Test("a resolved IdentifiedActionOf element → Gen.always(.case(.element(id:action:)))")
+    func identifiedActionElementEmits() {
+        // UUID id → canned zero-UUID literal (slice 3, 3b).
+        let uuidCase = ActionCaseInfo(
+            name: "rows",
+            payloadTypes: ["IdentifiedActionOf<Row>"],
+            resolvedElement: ResolvedIdentifiedElement(
+                idType: "UUID",
+                childActionType: "Row.Action",
+                childActionCase: "increment"
+            )
+        )
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(for: uuidCase, action: "Feature.Action")
+                == "Gen.always(Feature.Action.rows(.element(id: "
+                + "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!, "
+                + "action: Row.Action.increment)))"
+        )
+        // Int id → 0.
+        let intCase = ActionCaseInfo(
+            name: "rows",
+            payloadTypes: ["IdentifiedActionOf<Row>"],
+            resolvedElement: ResolvedIdentifiedElement(
+                idType: "Int",
+                childActionType: "Row.Action",
+                childActionCase: "tap"
+            )
+        )
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(for: intCase, action: "Feature.Action")
+                == "Gen.always(Feature.Action.rows(.element(id: 0, action: Row.Action.tap)))"
+        )
+        // String id → "".
+        let stringCase = ActionCaseInfo(
+            name: "rows",
+            payloadTypes: ["IdentifiedActionOf<Row>"],
+            resolvedElement: ResolvedIdentifiedElement(
+                idType: "String",
+                childActionType: "Row.Action",
+                childActionCase: "tap"
+            )
+        )
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(for: stringCase, action: "Feature.Action")
+                == "Gen.always(Feature.Action.rows(.element(id: \"\", action: Row.Action.tap)))"
+        )
+    }
+
+    @Test("an unresolved IdentifiedActionOf payload is not constructible (excluded)")
+    func unresolvedIdentifiedActionExcluded() {
+        // Without a resolvedElement (the resolver gated the child), the raw
+        // IdentifiedActionOf<Child> payload is not a recognized wrapper.
+        #expect(
+            ActionSequenceStubEmitter.compositionGenerator(
+                for: ActionCaseInfo(name: "rows", payloadTypes: ["IdentifiedActionOf<Row>"]),
+                action: "Feature.Action"
+            ) == nil
+        )
+    }
+
+    @Test("a resolved rows case is constructible and no longer excluded")
+    func resolvedRowsCaseConstructible() {
+        let reducer = candidate([
+            ActionCaseInfo(name: "addButtonTapped"),
+            ActionCaseInfo(
+                name: "rows",
+                payloadTypes: ["IdentifiedActionOf<Row>"],
+                resolvedElement: ResolvedIdentifiedElement(
+                    idType: "UUID",
+                    childActionType: "Row.Action",
+                    childActionCase: "increment"
+                )
+            )
+        ])
+        let constructible = Set(ActionSequenceStubEmitter.constructibleCases(reducer).map(\.name))
+        #expect(constructible.contains("rows"))
+        #expect(ActionSequenceStubEmitter.excludedCaseNames(reducer).contains("rows") == false)
+    }
+
     @Test("a non-wrapper single payload is not a composition case")
     func nonWrapperPayloadIsNil() {
         #expect(

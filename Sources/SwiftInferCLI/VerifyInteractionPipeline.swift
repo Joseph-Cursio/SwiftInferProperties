@@ -42,7 +42,12 @@ public enum VerifyInteractionPipeline {
         // `ambiguousPin`. Mirrors the discover path's dedup; the deduped
         // candidate verifies the whole composed body via `T().reduce`.
         let deduped = SwiftInferCommand.DiscoverInteraction.dedupedByStateAndAction(candidates)
-        let matched = try resolveCandidate(candidates: deduped, pinRaw: pinRaw)
+        let resolved = try resolveCandidate(candidates: deduped, pinRaw: pinRaw)
+        // Item 2 slice 3 — enrich `IdentifiedActionOf<Child>` cases against the
+        // full candidate set so the relaxed generator can construct an
+        // `.element(id:action:)` value (the enriched candidate is used for emit
+        // AND returned, so the evidence coverage fold sees the same cases).
+        let matched = IdentifiedActionResolver.resolve(resolved, among: deduped)
         // M8.B — hidden-mutability bodies write to static / global
         // vars; running N action sequences against such a reducer
         // produces meaningless outcomes (state persists across runs).
@@ -354,47 +359,5 @@ public enum VerifyInteractionPipeline {
     }
 }
 
-/// V2.0 M3.C — errors thrown by the interaction-verify pipeline.
-/// Hoisted to file scope for the SwiftLint nesting cap; public so
-/// tests can pattern-match on the case rather than the rendered text.
-public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
-    case noReducersDetected
-    case noMatchingReducer(pin: String)
-    case ambiguousPin(pin: String, matches: [String])
-    case requiresPin(candidates: [String])
-    case unsupported(reason: String)
-    /// V2.0 M8.B — body writes to a static / global var; running N
-    /// action sequences against it produces meaningless outcomes
-    /// because state persists across runs. PRD §4.1 `-∞` veto.
-    case hiddenMutability(reducer: String)
-
-    public var description: String {
-        switch self {
-        case .noReducersDetected:
-            return "swift-infer verify-interaction: no reducer-shaped functions detected in target."
-
-        case let .noMatchingReducer(pin):
-            return "swift-infer verify-interaction: no reducer matches pin '\(pin)'."
-
-        case let .ambiguousPin(pin, matches):
-            return "swift-infer verify-interaction: pin '\(pin)' is ambiguous — matches "
-                + "\(matches.count) reducers: \(matches.joined(separator: ", ")). "
-                + "Lengthen the pin to disambiguate."
-
-        case let .requiresPin(candidates):
-            return "swift-infer verify-interaction: \(candidates.count) reducer candidates "
-                + "detected. Pin one via --reducer <typeName>.<funcName>. "
-                + "Candidates: \(candidates.joined(separator: ", "))"
-
-        case let .unsupported(reason):
-            return "swift-infer verify-interaction: \(reason)"
-
-        case let .hiddenMutability(reducer):
-            return "swift-infer verify-interaction: reducer '\(reducer)' has hidden "
-                + "mutability (writes to static / global state). Running random action "
-                + "sequences against it produces non-deterministic outcomes; PRD §4.1 "
-                + "vetoes the verify path here. Rework the reducer to be pure or move "
-                + "the static state to the State type."
-        }
-    }
-}
+// `VerifyInteractionError` is declared in `VerifyInteractionError.swift`
+// (extracted for the `file_length` cap).
