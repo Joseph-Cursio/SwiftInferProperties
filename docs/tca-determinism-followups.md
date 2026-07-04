@@ -5,8 +5,9 @@
 Stage 3 (dependency-pinned determinism measured-verify for TCA reducers)
 shipped and verified green under Swift 6.3.3 — the three-way
 `tca-determinism-corpus` (pure / proper-dependency / snuck-raw). This note
-registers the four follow-ups deferred at that point. **None are built.** See
-`tca-determinism-verify-scope.md` for the shipped design.
+registers the four follow-ups deferred at that point. **Item 4 is now built
+(2026-07-03); items 1–3 remain open.** See `tca-determinism-verify-scope.md`
+for the shipped design.
 
 ## 1. Multi-module reducer pins / cross-module disambiguation
 
@@ -51,25 +52,30 @@ registers the four follow-ups deferred at that point. **None are built.** See
 - **Cheapest of the four** — discovery already emits it; it needs the measured
   arm, not new discovery.
 
-## 4. Tier-2 curated-compilable real-TCA measured corpus
+## 4. Tier-2 curated-compilable real-TCA measured corpus — ✅ BUILT (2026-07-03)
 
-- **Current:** two corpora. `tca-determinism-corpus` (synthetic three-way
-  pure / proper-dependency / snuck-raw) is **measured** — Stage 3, green under
-  6.3.3. `tca-examples-corpus` (13 vendored Point-Free files) is
-  **discovery-only** — parsed, never compiled or measured.
-- **Open:** a **Tier-2** corpus of real vendored TCA reducers that actually
-  **compiles and runs** the determinism measured-verify — the highest-fidelity
-  proof the pipeline works on idiomatic TCA, not just synthetic fixtures.
-- **Newly feasible:** this was blocked by the Swift 6.2.4 compiler crash on The
-  Composable Architecture, which the switch to the 6.3.3 toolchain this cycle
-  resolved — so a compilable real-TCA corpus is now buildable.
-- Connects to `tca-determinism-verify-scope.md` "Open questions for sign-off"
-  #3 (is the synthetic three-way corpus sufficient, or do we need real TCA?).
+- **Shipped:** `Tests/Fixtures/tca-examples-measured-corpus/` — three real
+  Point-Free reducers curated from the `Examples/` tree (SwiftUI View / `#Preview`
+  scaffolding stripped, `@Reducer` verbatim): `Counter` (pure), `OptionalBasics`
+  (pure, composes `Counter` via `.ifLet`), `Timers` (one pinned CA built-in
+  dependency, `\.continuousClock`). `TCAExamplesMeasuredTests` packages them via
+  `CorpusPackager`, runs a real `swift build` against ComposableArchitecture in
+  the verify-workdir, and measures determinism: 3 identities → 3 measured-bothPass
+  → all Verified (~62s under 6.3.3). `.subprocess`-tagged, 6.3.3-gated.
+- **Curation rule (minimal & faithful):** only reducers that co-compile against
+  CA alone are included — `03-Effects-Basics` and others were excluded because
+  they reference custom `DependencyKey` types (`\.factClient`) or app-level
+  navigation/shared-model types that don't resolve in a flat module.
+- The discovery-only `tca-examples-corpus` (13 vendored files) stays as-is; this
+  is the separate curated compilable subset its ATTRIBUTION.md always pointed to.
+- Answers `tca-determinism-verify-scope.md` "Open questions for sign-off" #3 in
+  the affirmative: the pipeline works on real idiomatic TCA, not just synthetic
+  fixtures.
 
 ## Sequencing
 
-(3) is cheapest — the family already discovers; it needs the measured arm.
-(4) is now unblocked by the 6.3.3 toolchain and would validate the whole line
-end-to-end on real code. (1) and (2) are triggered by specific project shapes
-(multi-module composition; structured-payload actions) — build when a real
-target demands them, not speculatively.
+(4) is **done** (see above) — real TCA now compiles-and-measures end-to-end.
+(3) is the cheapest remaining — the family already discovers; it needs only the
+measured arm. (1) and (2) are triggered by specific project shapes (multi-module
+composition; structured-payload actions) — build when a real target demands
+them, not speculatively.
