@@ -70,6 +70,10 @@ extension ReducerDiscoveryVisitor {
         // *parent* reducer whose Action carries `IdentifiedActionOf<Self>` can
         // resolve this reducer's `State.ID` when building an `.element` value.
         let stateIDTypeName = Self.stateIDType(in: memberBlock)
+        // Item 2 slice 4 — capture the `@ObservableState` State's bindable
+        // stored `var` fields so a `case binding(BindingAction<State>)` action
+        // can be constructed via `.set(\.field, value)`.
+        let stateFields = Self.stateStoredVarFields(in: memberBlock)
         for member in memberBlock.members {
             guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
             for binding in variable.bindings {
@@ -80,7 +84,8 @@ extension ReducerDiscoveryVisitor {
                         in: Syntax(initializer),
                         enclosingTypeName: enclosingTypeName,
                         actionCases: actionCases,
-                        stateIDTypeName: stateIDTypeName
+                        stateIDTypeName: stateIDTypeName,
+                        stateFields: stateFields
                     )
                 }
                 if let accessor = binding.accessorBlock {
@@ -88,7 +93,8 @@ extension ReducerDiscoveryVisitor {
                         in: Syntax(accessor),
                         enclosingTypeName: enclosingTypeName,
                         actionCases: actionCases,
-                        stateIDTypeName: stateIDTypeName
+                        stateIDTypeName: stateIDTypeName,
+                        stateFields: stateFields
                     )
                 }
             }
@@ -126,6 +132,61 @@ extension ReducerDiscoveryVisitor {
         return nil
     }
 
+    /// Item 2 slice 4 — the `@ObservableState` State's bindable stored `var`
+    /// fields (name + resolved type), in source order. Returns `[]` unless the
+    /// `State` struct carries `@ObservableState` (the gate: only observable
+    /// States support the modern `.set(\.field, value)` keypath binding; legacy
+    /// `@BindingState` reducers use `\.$field` and stay excluded). Each field is
+    /// a stored, non-attributed `var` with a resolvable type; `let` / `static` /
+    /// computed / attributed (`@Presents` / `@Shared` / `@Dependency` / …)
+    /// fields are excluded — they aren't simple bindable targets.
+    static func stateStoredVarFields(in memberBlock: MemberBlockSyntax) -> [StateFieldInfo] {
+        guard let stateStruct = memberBlock.members
+            .compactMap({ $0.decl.as(StructDeclSyntax.self) })
+            .first(where: { $0.name.text == "State" }),
+            stateStruct.attributes.contains(where: { attribute in
+                attribute.as(AttributeSyntax.self)?.attributeName.trimmedDescription == "ObservableState"
+            })
+        else { return [] }
+
+        var fields: [StateFieldInfo] = []
+        for member in stateStruct.memberBlock.members {
+            guard let variable = member.decl.as(VariableDeclSyntax.self),
+                  variable.bindingSpecifier.text == "var",
+                  variable.attributes.isEmpty,
+                  !variable.modifiers.contains(where: { $0.name.text == "static" || $0.name.text == "class" })
+            else { continue }
+            for binding in variable.bindings {
+                guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self),
+                      binding.accessorBlock == nil,  // stored, not computed
+                      let type = Self.fieldType(of: binding)
+                else { continue }
+                fields.append(StateFieldInfo(name: identifier.identifier.text, typeName: type))
+            }
+        }
+        return fields
+    }
+
+    /// The type of a stored `var` binding — an explicit annotation, else the
+    /// type inferred from a literal / call-expression initializer (`= ""` →
+    /// `String`, `= 0` → `Int`, `= false` → `Bool`, `= 5.0` → `Double`,
+    /// `= UUID()` → `UUID`), else `nil` (unresolvable → excluded).
+    private static func fieldType(of binding: PatternBindingSyntax) -> String? {
+        if let annotation = binding.typeAnnotation {
+            return annotation.type.trimmedDescription
+        }
+        guard let initializer = binding.initializer?.value else { return nil }
+        if initializer.is(StringLiteralExprSyntax.self) { return "String" }
+        if initializer.is(BooleanLiteralExprSyntax.self) { return "Bool" }
+        if initializer.is(IntegerLiteralExprSyntax.self) { return "Int" }
+        if initializer.is(FloatLiteralExprSyntax.self) { return "Double" }
+        if let call = initializer.as(FunctionCallExprSyntax.self),
+           let callee = call.calledExpression.as(DeclReferenceExprSyntax.self) {
+            return callee.baseName.text
+        }
+        return nil
+    }
+
     /// Cycle 122/125 — the nested `enum Action`'s cases, in source order,
     /// each with its associated-value payload types (`[]` = payload-free).
     /// Returns `[]` when no `Action` enum is found in this member block.
@@ -159,14 +220,16 @@ extension ReducerDiscoveryVisitor {
         in subtree: Syntax,
         enclosingTypeName: String,
         actionCases: [ActionCaseInfo],
-        stateIDTypeName: String?
+        stateIDTypeName: String?,
+        stateFields: [StateFieldInfo]
     ) {
         let walker = ReduceClosureWalker(
             file: file,
             converter: converter,
             enclosingTypeName: enclosingTypeName,
             actionCases: actionCases,
-            stateIDTypeName: stateIDTypeName
+            stateIDTypeName: stateIDTypeName,
+            stateFields: stateFields
         )
         walker.walk(subtree)
         candidates.append(contentsOf: walker.candidates)

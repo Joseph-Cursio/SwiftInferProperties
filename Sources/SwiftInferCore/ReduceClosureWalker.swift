@@ -48,19 +48,26 @@ final class ReduceClosureWalker: SyntaxVisitor {
     /// `State.ID` for an `IdentifiedActionOf<Self>` element. `nil` when the
     /// State declares no `id`.
     let stateIDTypeName: String?
+    /// Item 2 slice 4 — the `@ObservableState` State's bindable stored `var`
+    /// fields, stamped onto every emitted candidate so a
+    /// `case binding(BindingAction<State>)` action can be constructed. `[]`
+    /// for non-observable States.
+    let stateFields: [StateFieldInfo]
 
     init(
         file: String,
         converter: SourceLocationConverter,
         enclosingTypeName: String,
         actionCases: [ActionCaseInfo] = [],
-        stateIDTypeName: String? = nil
+        stateIDTypeName: String? = nil,
+        stateFields: [StateFieldInfo] = []
     ) {
         self.file = file
         self.converter = converter
         self.enclosingTypeName = enclosingTypeName
         self.actionCases = actionCases
         self.stateIDTypeName = stateIDTypeName
+        self.stateFields = stateFields
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -126,7 +133,8 @@ final class ReduceClosureWalker: SyntaxVisitor {
             carrierKind: .tca,
             purity: purity,
             actionCases: actionCases,
-            stateIDTypeName: stateIDTypeName
+            stateIDTypeName: stateIDTypeName,
+            stateFields: stateFields
         ))
     }
 
@@ -149,7 +157,8 @@ final class ReduceClosureWalker: SyntaxVisitor {
             carrierKind: .tca,
             purity: .effectBearing,
             actionCases: actionCases,
-            stateIDTypeName: stateIDTypeName
+            stateIDTypeName: stateIDTypeName,
+            stateFields: stateFields
         ))
     }
 }
