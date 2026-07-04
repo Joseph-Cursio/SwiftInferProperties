@@ -32,6 +32,15 @@ design.
 
 ## 2. Structured associated-value action payloads (composition-actions)
 
+> **▶ Next: Slice 3 — `IdentifiedActionOf<Child>`.** Slices 1 (PresentationAction)
+> and 2 (Result) are built; slice 3 is the next open increment. Resume by
+> extending `ActionSequenceStubEmitter.compositionGenerator` (in
+> `Sources/SwiftInferCLI/ActionSequenceStubEmitter+PayloadConstructibility.swift`)
+> — follow the slice-1/2 pattern, plus a measured corpus + unit tests. Slice 3
+> is **recursive** (a child action is itself a composition target), so it needs
+> the classifier to recurse over the child's `actionCases` with depth bounding —
+> more than a one-line branch. See the slice list below.
+
 **Key finding (from the repo's own cycle 123):** value-type payload synthesis
 (custom structs/tuples/nested enums via `TypeShapeBuilder`) unlocks only ~2/99
 real Action enums — non-raw payloads in real reducers are overwhelmingly
