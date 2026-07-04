@@ -213,7 +213,7 @@ struct V151RoutingFlipTests {
             // The strategist's expectation, NOT the v1.46 numeric list.
             #expect(expected != ["Complex<Double>", "Double", "Int"])
             #expect(!expected.contains("Int"))
-            #expect(expected.contains(where: { $0.contains("RawType") || $0.contains("TypeShape") }))
+            #expect(expected.contains { $0.contains("RawType") || $0.contains("TypeShape") })
         }
     }
 
@@ -228,8 +228,8 @@ struct V151RoutingFlipTests {
                 Issue.record("expected .unsupportedCarrier, got \(error)")
                 return
             }
-            #expect(expected.contains(where: { $0.contains("static func gen()") }))
-            #expect(expected.contains(where: { $0.contains("Generator<Widget") }))
+            #expect(expected.contains { $0.contains("static func gen()") })
+            #expect(expected.contains { $0.contains("Generator<Widget") })
         }
     }
 }

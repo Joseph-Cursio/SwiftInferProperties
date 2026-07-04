@@ -22,7 +22,7 @@ struct AsymmetricRoundTripNegativeTests {
         """
         let detections = detectAsymmetric(in: source)
         #expect(detections.count == 1)
-        if case .roundTrip(let forward, let backward) = detections.first {
+        if case let .roundTrip(forward, backward) = detections.first {
             #expect(forward == "encode")
             #expect(backward == "decode")
         } else {

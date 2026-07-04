@@ -9,7 +9,7 @@ import Testing
 /// to nil — so any cross-validated suggestion lost its owner + generator carrier
 /// before reaching the index/verify.
 @Suite("TemplateRegistry cross-validation — carrier/origin preservation")
-struct TemplateRegistryCrossValidationCarrierTests {
+struct RegistryCrossValidationCarrierTests {
 
     /// A type-symmetric idempotence pick carries both `carrier` (the owner
     /// `Engine`) and `carrierTypeName` (the generator domain `String`).

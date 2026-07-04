@@ -28,9 +28,9 @@ struct SoundPurityTests {
 
     @Test
     func transparentFunction_isPure() throws {
-        let fn = try #require(parse("func add(_ a: Int, _ b: Int) -> Int { a + b }"))
-        #expect(SoundPurity.inferredEffect(for: fn) == .pure)
-        #expect(SoundPurity.isPure(fn))
+        let function = try #require(parse("func add(_ a: Int, _ b: Int) -> Int { a + b }"))
+        #expect(SoundPurity.inferredEffect(for: function) == .pure)
+        #expect(SoundPurity.isPure(function))
     }
 
     // MARK: - The soundness cases — ReducerPurity.pure, but NOT Effect.pure
@@ -46,9 +46,9 @@ struct SoundPurityTests {
             return values.reduce(0, +)
         }
         """
-        let fn = try #require(parse(source))
-        #expect(ReducerPurityAnalyzer.analyze(fn) == .pure)   // narrow analyzer: "pure"
-        #expect(SoundPurity.inferredEffect(for: fn) == nil)   // sound mapping: refuted
+        let function = try #require(parse(source))
+        #expect(ReducerPurityAnalyzer.analyze(function) == .pure)   // narrow analyzer: "pure"
+        #expect(SoundPurity.inferredEffect(for: function) == nil)   // sound mapping: refuted
     }
 
     @Test
@@ -58,9 +58,9 @@ struct SoundPurityTests {
             values.randomElement() ?? 0
         }
         """
-        let fn = try #require(parse(source))
-        #expect(ReducerPurityAnalyzer.analyze(fn) == .pure)
-        #expect(SoundPurity.inferredEffect(for: fn) == nil)
+        let function = try #require(parse(source))
+        #expect(ReducerPurityAnalyzer.analyze(function) == .pure)
+        #expect(SoundPurity.inferredEffect(for: function) == nil)
     }
 
     @Test
@@ -69,9 +69,9 @@ struct SoundPurityTests {
         let source = """
         func firstOf(_ values: [Int]) -> Int { values.first! }
         """
-        let fn = try #require(parse(source))
-        #expect(ReducerPurityAnalyzer.analyze(fn) == .pure)
-        #expect(SoundPurity.inferredEffect(for: fn) == nil)
+        let function = try #require(parse(source))
+        #expect(ReducerPurityAnalyzer.analyze(function) == .pure)
+        #expect(SoundPurity.inferredEffect(for: function) == nil)
     }
 
     // MARK: - ReducerPurity refutes (effect-bearing / hidden mutation)
@@ -83,11 +83,11 @@ struct SoundPurityTests {
             await fetch(id)
         }
         """
-        let fn = try #require(parse(source))
+        let function = try #require(parse(source))
         // ReducerPurity sees `await` → effectBearing; and async refutes in
         // PurityInferrer too. Either way, not pure.
-        #expect(ReducerPurityAnalyzer.analyze(fn) != .pure)
-        #expect(SoundPurity.inferredEffect(for: fn) == nil)
+        #expect(ReducerPurityAnalyzer.analyze(function) != .pure)
+        #expect(SoundPurity.inferredEffect(for: function) == nil)
     }
 
     @Test
@@ -98,8 +98,8 @@ struct SoundPurityTests {
             return id
         }
         """
-        let fn = try #require(parse(source))
-        #expect(ReducerPurityAnalyzer.analyze(fn) == .hiddenMutability)
-        #expect(SoundPurity.inferredEffect(for: fn) == nil)
+        let function = try #require(parse(source))
+        #expect(ReducerPurityAnalyzer.analyze(function) == .hiddenMutability)
+        #expect(SoundPurity.inferredEffect(for: function) == nil)
     }
 }

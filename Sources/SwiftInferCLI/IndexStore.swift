@@ -40,6 +40,10 @@ public enum IndexStore {
     /// ordering (alphabetical) + pretty-printing so diffs are clean
     /// across runs. Entries are sorted by `identityHash` to make
     /// version-control diffs minimal.
+    private enum IndexCodingKeys: String, CodingKey {
+        case schemaVersion, updatedAt, entries, typeShapes
+    }
+
     public struct Index: Codable, Sendable, Equatable {
         public var schemaVersion: Int
         public var updatedAt: String
@@ -66,15 +70,11 @@ public enum IndexStore {
             self.typeShapes = typeShapes
         }
 
-        private enum CodingKeys: String, CodingKey {
-            case schemaVersion, updatedAt, entries, typeShapes
-        }
-
         /// Custom decode so v1–v3 files (no `typeShapes` key) load cleanly.
         /// `schemaVersion` / `updatedAt` / `entries` are always present; only
         /// `typeShapes` is optional-with-default. `encode(to:)` stays synthesized.
         public init(from decoder: any Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let container = try decoder.container(keyedBy: IndexCodingKeys.self)
             schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
             updatedAt = try container.decode(String.self, forKey: .updatedAt)
             entries = try container.decode([SemanticIndexEntry].self, forKey: .entries)

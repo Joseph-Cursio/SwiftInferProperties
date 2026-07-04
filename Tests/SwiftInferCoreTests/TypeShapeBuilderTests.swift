@@ -133,7 +133,7 @@ struct TypeShapeBuilderTests {
         #expect(shape.hasUserGen == true)
         // Cross-file conformances still don't merge (hasUserGen is the only
         // cross-file signal): the primary's inheritance is untouched.
-        #expect(shape.inheritedTypes == [])
+        #expect(shape.inheritedTypes.isEmpty)
     }
 
     // MARK: - Stored members + hasUserInit are primary-only

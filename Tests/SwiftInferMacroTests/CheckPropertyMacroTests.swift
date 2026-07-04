@@ -334,7 +334,8 @@ func expectedPreservesInvariantExpansion(
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(funcName)(_:) failed invariant preservation \(keyPath) at input \\(input). \\(error?.message ?? "")"
+                    "\(funcName)(_:) failed invariant preservation \(keyPath) " +
+                    "at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }

@@ -61,7 +61,7 @@ struct TCAExamplesMeasuredTests {
         let evidence = VerifyEvidenceStore.load(startingFrom: root).log.records
         #expect(evidence.count == 6)
         #expect(evidence.filter { $0.outcome == .measuredBothPass }.count == 6)
-        #expect(evidence.filter { $0.outcome == .measuredDefaultFails }.isEmpty)
+        #expect(!evidence.contains { $0.outcome == .measuredDefaultFails })
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "TCAExamplesCorpus",

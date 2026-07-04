@@ -37,7 +37,10 @@ struct ViewModelVerifyEvidenceTests {
 
         let fail = ViewModelVerifyEvidence.evidence(
             for: suggestion(),
-            outcome: .defaultFails(trial: 0, input: "", forwardResult: "", inverseResult: "", shrunk: nil, shrinkSteps: 0)
+            outcome: .defaultFails(
+                trial: 0, input: "", forwardResult: "",
+                inverseResult: "", shrunk: nil, shrinkSteps: 0
+            )
         )
         #expect(fail.outcome == .measuredDefaultFails)
     }

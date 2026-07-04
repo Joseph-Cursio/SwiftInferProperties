@@ -110,7 +110,10 @@ struct VerifyCorpusTests {
         let corpus = VerifyCorpusStore.load(packageRoot: root).corpus
         #expect(corpus.entries.count == 2)
         // A second batch merges into the existing file (accumulate, dedup).
-        _ = VerifyCorpusStore.recordBatch([Self.entry(counterexample: "2"), Self.entry(counterexample: "3")], packageRoot: root)
+        _ = VerifyCorpusStore.recordBatch(
+            [Self.entry(counterexample: "2"), Self.entry(counterexample: "3")],
+            packageRoot: root
+        )
         #expect(VerifyCorpusStore.load(packageRoot: root).corpus.entries.count == 3)
     }
 

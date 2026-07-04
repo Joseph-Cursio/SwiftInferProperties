@@ -10,19 +10,19 @@ import Testing
 @Suite("VerifyCommand — V1.149 labeled call expression")
 struct LabeledCallExpressionTests {
 
-    private typealias V = SwiftInferCommand.Verify
+    private typealias VerifyCLI = SwiftInferCommand.Verify
 
     @Test("argument labels parse from the display name")
     func labelsParse() {
-        #expect(V.argumentLabels(from: "indent(in:)") == ["in"])
-        #expect(V.argumentLabels(from: "pick(a:b:)") == ["a", "b"])
-        #expect(V.argumentLabels(from: "clamp(_:)") == ["_"])
-        #expect(V.argumentLabels(from: "now()") == [])
+        #expect(VerifyCLI.argumentLabels(from: "indent(in:)") == ["in"])
+        #expect(VerifyCLI.argumentLabels(from: "pick(a:b:)") == ["a", "b"])
+        #expect(VerifyCLI.argumentLabels(from: "clamp(_:)") == ["_"])
+        #expect(VerifyCLI.argumentLabels(from: "now()").isEmpty)
     }
 
     @Test("a labeled single-arg function is wrapped in a trampoline closure")
     func labeledSingleArgWraps() {
-        let call = V.labeledCallExpression(
+        let call = VerifyCLI.labeledCallExpression(
             primaryFunctionName: "indentBlockSequences(in:)",
             reference: "YAMLConfigurationEngine.indentBlockSequences"
         )
@@ -31,7 +31,7 @@ struct LabeledCallExpressionTests {
 
     @Test("a labeled two-arg function threads both labels positionally")
     func labeledTwoArgWraps() {
-        let call = V.labeledCallExpression(
+        let call = VerifyCLI.labeledCallExpression(
             primaryFunctionName: "combine(lhs:rhs:)",
             reference: "Engine.combine"
         )
@@ -40,12 +40,12 @@ struct LabeledCallExpressionTests {
 
     @Test("a label-free function is returned unchanged (no golden churn)")
     func unlabeledUnchanged() {
-        let underscore = V.labeledCallExpression(
+        let underscore = VerifyCLI.labeledCallExpression(
             primaryFunctionName: "normalize(_:)",
             reference: "Foo.normalize"
         )
         #expect(underscore == "Foo.normalize")
-        let noArgs = V.labeledCallExpression(
+        let noArgs = VerifyCLI.labeledCallExpression(
             primaryFunctionName: "identity()",
             reference: "Foo.identity"
         )

@@ -36,54 +36,54 @@ struct FunctionSummaryCalleeShapeTests {
 
     @Test("nullary mutating instance method (sort()) → instance + mutating + nullary")
     func mutatingNullaryInstance() {
-        let ev = Self.summary(name: "sort", isMutating: true, container: "OrderedSet").inferenceEvidence
-        #expect(ev.isInstanceMethod)
-        #expect(ev.isMutatingMethod)
-        #expect(ev.isNullary)
-        #expect(ev.returnsSelfType == false) // Void return
+        let evidence = Self.summary(name: "sort", isMutating: true, container: "OrderedSet").inferenceEvidence
+        #expect(evidence.isInstanceMethod)
+        #expect(evidence.isMutatingMethod)
+        #expect(evidence.isNullary)
+        #expect(evidence.returnsSelfType == false) // Void return
     }
 
     @Test("nullary non-mutating self-returning (sorted() -> Self) → instance + nullary + returnsSelf")
     func selfReturningNullaryInstance() {
-        let ev = Self.summary(name: "sorted", ret: "Self").inferenceEvidence
-        #expect(ev.isInstanceMethod)
-        #expect(ev.isMutatingMethod == false)
-        #expect(ev.isNullary)
-        #expect(ev.returnsSelfType)
+        let evidence = Self.summary(name: "sorted", ret: "Self").inferenceEvidence
+        #expect(evidence.isInstanceMethod)
+        #expect(evidence.isMutatingMethod == false)
+        #expect(evidence.isNullary)
+        #expect(evidence.returnsSelfType)
     }
 
     @Test("self-returning compares up to generic arguments (OrderedSet<Element> on OrderedSet)")
     func selfReturningGenericStripped() {
-        let ev = Self.summary(
+        let evidence = Self.summary(
             name: "sorted", ret: "OrderedSet<Element>", container: "OrderedSet"
         ).inferenceEvidence
-        #expect(ev.returnsSelfType)
+        #expect(evidence.returnsSelfType)
     }
 
     @Test("arg-bearing instance method is not nullary (stays out of the receiver shapes)")
     func argBearingInstance() {
-        let ev = Self.summary(
+        let evidence = Self.summary(
             name: "adding", params: [Self.stringParam], ret: "String"
         ).inferenceEvidence
-        #expect(ev.isInstanceMethod)
-        #expect(ev.isNullary == false)
+        #expect(evidence.isInstanceMethod)
+        #expect(evidence.isNullary == false)
     }
 
     @Test("free function (no containing type) is not an instance method")
     func freeFunction() {
-        let ev = Self.summary(name: "exp", ret: "Double", container: nil).inferenceEvidence
-        #expect(ev.isInstanceMethod == false)
+        let evidence = Self.summary(name: "exp", ret: "Double", container: nil).inferenceEvidence
+        #expect(evidence.isInstanceMethod == false)
     }
 
     @Test("static method is not an instance method even with a containing type")
     func staticMethod() {
-        let ev = Self.summary(name: "make", ret: "Foo", isStatic: true).inferenceEvidence
-        #expect(ev.isInstanceMethod == false)
+        let evidence = Self.summary(name: "make", ret: "Foo", isStatic: true).inferenceEvidence
+        #expect(evidence.isInstanceMethod == false)
     }
 
     @Test("a non-carrier return type is not self-returning (count() -> Int on Foo)")
     func nonSelfReturn() {
-        let ev = Self.summary(name: "count", ret: "Int").inferenceEvidence
-        #expect(ev.returnsSelfType == false)
+        let evidence = Self.summary(name: "count", ret: "Int").inferenceEvidence
+        #expect(evidence.returnsSelfType == false)
     }
 }

@@ -80,7 +80,7 @@ extension StrategistDispatchEmitter {
         }
         // Nullary non-mutating instance method returning its own type →
         // chain the receiver: `value.method().method() == value.method()`.
-        if inputs.isInstanceMethod && inputs.isNullary && inputs.returnsSelfType {
+        if inputs.isInstanceMethod, inputs.isNullary, inputs.returnsSelfType {
             return composeSelfReturningIdempotencePass(
                 functionCall: functionCall,
                 recipe: recipe

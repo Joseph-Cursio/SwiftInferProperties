@@ -13,7 +13,7 @@ import Testing
 /// **runs**: a known-bad `forward = { x in x + 1 }`, `inverse = { x in x }`
 /// fails every trial, so the shrink phase minimizes toward 0.
 @Suite("Verify pipeline — v1.141 round-trip shrink (Int/Double)", .tags(.subprocess))
-struct VerifyPipelineRoundTripShrinkIntegrationTests {
+struct VerifyPipelineRoundTripShrinkTests {
 
     @Test("Int known-bad round-trip shrinks the counterexample to 0")
     func intRoundTripShrinksToZero() throws {
