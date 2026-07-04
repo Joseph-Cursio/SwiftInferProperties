@@ -244,52 +244,9 @@ public enum ActionSequenceStubEmitter {
         }
     }
 
-    // MARK: - Cycle 125 (Phase B) — Action-case constructibility
-
-    /// The constructible Action cases — payload-free, or a single
-    /// associated value of a recognized raw type. These are what the
-    /// relaxed generator explores; everything else (composition cases like
-    /// `binding`/`child`, multi-value or non-raw payloads) is excluded.
-    static func constructibleCases(_ candidate: ReducerCandidate) -> [ActionCaseInfo] {
-        candidate.actionCases.filter { $0.payloadTypes.isEmpty || rawGenerator(for: $0) != nil }
-    }
-
-    /// Names of the excluded (non-constructible) cases, in source order —
-    /// the partial-exploration disclosure (guardrail #1, cycle 124).
-    static func excludedCaseNames(_ candidate: ReducerCandidate) -> [String] {
-        let constructible = Set(constructibleCases(candidate).map(\.name))
-        return candidate.actionCases.map(\.name).filter { !constructible.contains($0) }
-    }
-
-    /// The raw scalar generator expression for a single-raw-payload case
-    /// (delegated to `DerivationStrategist`'s `RawType`, PRD §11), or nil
-    /// when the case isn't a single recognized-raw-payload case.
-    private static func rawGenerator(for caseInfo: ActionCaseInfo) -> String? {
-        guard caseInfo.payloadTypes.count == 1,
-              let raw = RawType(typeName: caseInfo.payloadTypes[0]) else { return nil }
-        return raw.generatorExpression
-    }
-
-    /// The `let actionGen = …` lines for a `.tca` reducer (8-space base
-    /// indent): `Gen.always(.free)` per payload-free case,
-    /// `<rawGen>.map(Action.case)` per raw-payload case, combined with
-    /// `Gen.oneOf(...)` (or used directly when there's exactly one).
-    private static func tcaActionGenLines(_ candidate: ReducerCandidate) -> [String] {
-        let action = candidate.actionTypeName
-        let gens = constructibleCases(candidate).map { caseInfo -> String in
-            if let raw = rawGenerator(for: caseInfo) {
-                return "\(raw).map(\(action).\(caseInfo.name))"
-            }
-            return "Gen.always(\(action).\(caseInfo.name))"
-        }
-        if gens.count == 1 { return ["        let actionGen = \(gens[0])"] }
-        var lines = ["        let actionGen = Gen.oneOf("]
-        for (index, gen) in gens.enumerated() {
-            lines.append("            \(gen)" + (index == gens.count - 1 ? "" : ","))
-        }
-        lines.append("        )")
-        return lines
-    }
+    // Phase B action-case constructibility (`constructibleCases`,
+    // `compositionGenerator`, `excludedCaseNames`, `rawGenerator`,
+    // `tcaActionGenLines`) lives in `+PayloadConstructibility.swift`.
 
     /// `<EnclosingType>.<functionName>` if the candidate has an
     /// enclosing type; just `<functionName>` for free functions.

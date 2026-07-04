@@ -30,20 +30,32 @@ design.
   module-aware). Discovery + disambiguation — the stated cross-module problem —
   is done; measured verify of a *pinned* cross-module reducer waits on M3.
 
-## 2. Structured associated-value action payloads
+## 2. Structured associated-value action payloads (composition-actions)
 
-- **Current:** Phase B classifies action-case constructibility from
-  `payloadTypes` and emits the **constructible subset** — payload-free plus
-  single-recognized-raw-type cases (`ReducerCandidate.swift:97-99`, `225-231`;
-  `ReducerDiscoverer+TCAWalk.swift:65-93`). The verifier enumerates those
-  without bailing on richer payloads.
-- **Open:** **non-raw / structured payloads** — cases carrying custom types,
-  nested enums, or multiple/labeled associated values. These are currently
-  skipped (not constructed), so a reducer whose interesting behavior sits
-  behind a structured-payload action gets thinner action coverage.
-- **Risk:** constructing arbitrary payload types needs a generator per type,
-  which overlaps the generator-synthesis machinery — scope carefully rather
-  than widening the scanner ad hoc.
+**Key finding (from the repo's own cycle 123):** value-type payload synthesis
+(custom structs/tuples/nested enums via `TypeShapeBuilder`) unlocks only ~2/99
+real Action enums — non-raw payloads in real reducers are overwhelmingly
+**composition wrappers**. The 81/99 blockers are `nested-X.Action` (72),
+`PresentationAction` (25), `Result`/`TaskResult` (14), `BindingAction` (10). So
+the valuable work is **constructing composition actions**, not deriving
+`Gen<T>`. Each slice widens the already-ratified Phase B relaxed-exploration
+subset (`ActionSequenceStubEmitter.compositionGenerator`) — the excluded set is
+still disclosed, so no new precision decision.
+
+- **Slice 1 — `PresentationAction<T>` — ✅ BUILT (2026-07-04):** emit the
+  payload-free `.dismiss` case, so `case alert(PresentationAction<Alert>)`
+  explores `Action.alert(.dismiss)` with no `Gen<Alert>` needed.
+  `+PayloadConstructibility.swift`; units in
+  `ActionSequenceCompositionPayloadTests`; validated end-to-end by the Tier-2
+  `AlertAndConfirmationDialog` reducer (its presentation cases are now explored,
+  corpus stays green).
+- **Slice 2 — `Result<T,E>` (open):** emit `.case(.failure(<probe error>))` —
+  a canned error, no `Gen<T>` needed. ~14 cases, low-medium complexity.
+- **Slice 3 — `IdentifiedActionOf<Child>` (open):** **recursive** — construct a
+  child action + id. ~72 cases, high complexity (the biggest blocker, and the
+  hardest).
+- **Slice 4 — `BindingAction<State>` (open):** keypath into State + value. ~10
+  cases, high complexity (needs State introspection).
 
 ## 3. `unknownActionIsNoOp` measured-verify — ✅ BUILT (2026-07-03)
 
