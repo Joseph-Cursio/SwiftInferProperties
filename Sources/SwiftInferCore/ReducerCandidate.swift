@@ -101,6 +101,15 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// gone. Empty for non-`.tca` carriers and older records.
     public let actionCases: [ActionCaseInfo]
 
+    /// Multi-module — the module (SwiftPM target) this candidate was discovered
+    /// in, or `nil` for a single-target run / older records. A `var` because it
+    /// is stamped by the discovery caller (`DiscoverInteractionCommand`), which
+    /// knows the target each sources directory belongs to, rather than at the
+    /// three visitor init sites. Matched against a module-qualified
+    /// `--reducer <module>.<type>.<func>` pin so a reducer in one module is
+    /// disambiguated from a same-named reducer in another.
+    public var moduleName: String?
+
     public init(
         location: String,
         enclosingTypeName: String?,
@@ -110,7 +119,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         actionTypeName: String,
         carrierKind: ReducerCarrierKind = .generic,
         purity: ReducerPurity = .pure,
-        actionCases: [ActionCaseInfo] = []
+        actionCases: [ActionCaseInfo] = [],
+        moduleName: String? = nil
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -121,6 +131,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.carrierKind = carrierKind
         self.purity = purity
         self.actionCases = actionCases
+        self.moduleName = moduleName
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just
@@ -190,6 +201,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case carrierKind
         case purity
         case actionCases
+        case moduleName
     }
 
     public init(from decoder: Decoder) throws {
@@ -218,6 +230,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             [ActionCaseInfo].self,
             forKey: .actionCases
         ) ?? []
+        // Multi-module — pre-multi-module records carry no module tag.
+        self.moduleName = try container.decodeIfPresent(String.self, forKey: .moduleName)
     }
 }
 

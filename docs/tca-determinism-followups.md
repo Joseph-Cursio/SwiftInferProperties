@@ -5,23 +5,30 @@
 Stage 3 (dependency-pinned determinism measured-verify for TCA reducers)
 shipped and verified green under Swift 6.3.3 — the three-way
 `tca-determinism-corpus` (pure / proper-dependency / snuck-raw). This note
-registers the four follow-ups deferred at that point. **Items 3 and 4 are now
-built (2026-07-03); items 1–2 remain open.** See `tca-determinism-verify-scope.md`
-for the shipped design.
+registers the four follow-ups deferred at that point. **Items 3 and 4 are built;
+item 1's discovery + pin disambiguation is built (its measured-verify M3
+remains); item 2 remains.** See `tca-determinism-verify-scope.md` for the shipped
+design.
 
 ## 1. Multi-module reducer pins / cross-module disambiguation
 
-- **Current:** `ReducerPin` parses a 3-component `<module>.<type>.<func>` pin,
-  but the **module prefix is ignored in matching** — a redundant qualifier
-  (`ReducerPin.swift:36`; `:24` "cross-module disambiguation is deferred to
-  multi-module [plumbing]"). Both entry points punt: "defer to M2+ when
-  multi-module plumbing lands" (`VerifyInteractionCommand.swift:55`,
-  `DiscoverInteractionCommand.swift:59`).
-- **Open:** real disambiguation when two modules declare same-named reducer
-  types — the pin must resolve *by module*, and discovery must carry module
-  identity through the candidate so the match isn't ambiguous.
-- **Trigger:** a project composing internal packages with same-named reducers
-  in different modules. Build when a real target needs it.
+- **Shipped (discovery + pin disambiguation):** `discover-interaction` now
+  accepts `--target` more than once. `ReducerCandidate` carries a `moduleName`
+  (`ReducerCandidate.swift`); `collectSuggestions(targets:)`
+  (`DiscoverInteractionCommand+MultiModule.swift`) scans each target's
+  `Sources/<target>/`, tags candidates by module (only in multi-target runs, so
+  a single-target run stays backward-compatible), applies the `--reducer` pin
+  across the aggregate, dedupes module-aware, and runs the engine per module.
+  `ReducerPin.matches` compares module when both the pin and candidate carry
+  one, so `Bar.Counter.reduce` selects Bar's `Counter` over Alpha's. Fixture:
+  `multi-module-discovery-corpus` (identical `CounterReducer` in `Alpha` +
+  `Beta`); tests in `MultiModuleDiscoveryTests`.
+- **Still open (multi-module measured *verify* — M3):** the measured
+  verify-workdir builds one user package/product. Measuring reducers from
+  different modules in one run needs per-module product resolution threaded
+  through `VerifierWorkdir` (`PackageProductResolver.libraryProduct` is already
+  module-aware). Discovery + disambiguation — the stated cross-module problem —
+  is done; measured verify of a *pinned* cross-module reducer waits on M3.
 
 ## 2. Structured associated-value action payloads
 
@@ -87,6 +94,8 @@ for the shipped design.
 
 ## Sequencing
 
-(3) and (4) are **done** (see above). (1) and (2) remain, both triggered by
-specific project shapes (multi-module composition; structured-payload actions) —
-build when a real target demands them, not speculatively.
+(3) and (4) are **done**. (1)'s discovery + pin disambiguation is **done**; its
+measured-verify M3 (per-module product resolution in the verify-workdir) remains.
+(2) remains — the value-type slice is low reach (~2/99 per cycle 123); the
+high-reach version is composition-action construction (nested child actions,
+`PresentationAction`, `Result`, `BindingAction`), the epic the team shelved.

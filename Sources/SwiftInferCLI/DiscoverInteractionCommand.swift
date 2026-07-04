@@ -41,13 +41,16 @@ extension SwiftInferCommand {
         @Option(
             name: .long,
             help: """
-            Name of the SwiftPM target containing reducer-shaped \
+            Name of a SwiftPM target containing reducer-shaped \
             functions. Resolved to Sources/<target>/ relative to \
             the working directory — mirrors `swift-infer \
-            discover-reducers` and `verify-interaction`.
+            discover-reducers` and `verify-interaction`. Pass more \
+            than once for multi-module discovery: candidates are \
+            tagged by their module and a module-qualified pin \
+            (`Bar.Counter.reduce`) disambiguates same-named reducers.
             """
         )
-        public var target: String
+        public var target: [String]
 
         @Option(
             name: .long,
@@ -147,7 +150,7 @@ extension SwiftInferCommand {
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             try Self.run(
-                target: target,
+                targets: target,
                 pinRaw: reducer,
                 includePossible: includePossible,
                 updateBaseline: updateBaseline,
@@ -189,8 +192,41 @@ extension SwiftInferCommand {
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             firstSeenAt: Date = Date()
         ) throws {
+            try run(
+                targets: [target],
+                pinRaw: pinRaw,
+                includePossible: includePossible,
+                updateBaseline: updateBaseline,
+                interactive: interactive,
+                interactiveBridges: interactiveBridges,
+                dryRun: dryRun,
+                workingDirectory: workingDirectory,
+                promptInput: promptInput,
+                output: output,
+                diagnostics: diagnostics,
+                firstSeenAt: firstSeenAt
+            )
+        }
+
+        /// Multi-module variant of the full orchestrator (see the single-target
+        /// wrapper above). The side-orchestrator's `target` label is the
+        /// comma-joined target list.
+        public static func run(
+            targets: [String],
+            pinRaw: String? = nil,
+            includePossible: Bool = false,
+            updateBaseline: Bool = false,
+            interactive: Bool = false,
+            interactiveBridges: Bool = false,
+            dryRun: Bool = false,
+            workingDirectory: URL,
+            promptInput: any PromptInput = StdinPromptInput(),
+            output: any DiscoverOutput,
+            diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
+            firstSeenAt: Date = Date()
+        ) throws {
             let suggestions = try collectSuggestions(
-                target: target,
+                targets: targets,
                 pinRaw: pinRaw,
                 workingDirectory: workingDirectory,
                 firstSeenAt: firstSeenAt
@@ -206,7 +242,7 @@ extension SwiftInferCommand {
                 inputs: SideOrchestratorInputs(
                     effectiveFlags: effectiveFlags,
                     workingDirectory: workingDirectory,
-                    target: target,
+                    target: targets.joined(separator: ", "),
                     promptInput: promptInput,
                     output: output,
                     diagnostics: diagnostics,
@@ -266,71 +302,8 @@ extension SwiftInferCommand {
             )
         }
 
-        /// V2.0 M10 — pure pipeline leg that stops before rendering.
-        /// Exposed for `swift-infer drift-interaction` which needs the
-        /// raw suggestion list to diff against the baseline, not a
-        /// rendered string. Same M1 discovery + pin filter + M4
-        /// engine path as `runPipeline`.
-        static func collectSuggestions(
-            target: String,
-            pinRaw: String? = nil,
-            workingDirectory: URL,
-            firstSeenAt: Date = Date()
-        ) throws -> [InteractionInvariantSuggestion] {
-            let directory = workingDirectory
-                .appendingPathComponent("Sources")
-                .appendingPathComponent(target)
-            let allCandidates = try ReducerDiscoverer.discover(directory: directory)
-            let filtered = try filterCandidates(allCandidates, pinRaw: pinRaw)
-            let deduped = dedupedByStateAndAction(filtered)
-            let reducerSuggestions = try InteractionTemplateEngine.analyze(
-                candidates: deduped,
-                sourcesDirectory: directory,
-                firstSeenAt: firstSeenAt
-            )
-            // Productionization — merge SwiftUI MVVM view-model invariants
-            // (gated to the no-pin path; `--reducer` is reducer-targeted).
-            // Implemented in `+ViewModels.swift` to keep this file under cap.
-            guard pinRaw == nil else { return reducerSuggestions }
-            return try mergedWithViewModels(
-                reducerSuggestions,
-                directory: directory,
-                firstSeenAt: firstSeenAt
-            )
-        }
-
-        /// V1.107 (cycle-103 Finding F fix) — dedupe candidates by
-        /// `(stateQualifiedName, actionQualifiedName)` before the
-        /// interaction template engine runs. `ReduceClosureWalker`
-        /// emits one `ReducerCandidate` per `Reduce { ... }` closure
-        /// in a body, but the interaction templates are State+Action
-        /// shape-driven — multiple closures with the same State and
-        /// Action produce identical suggestions, redundant analysis
-        /// work, and identity-duplicated output.
-        ///
-        /// Real-world example (cycle-102a isowords dogfood):
-        /// `Settings.body` has 10 inline `Reduce { ... }` closures
-        /// via `.onChange(of:)` composition. Pre-fix produced 20
-        /// raw suggestions for 2 unique identities — 10× redundant
-        /// engine runs. Post-fix: 1 candidate → 2 suggestions.
-        ///
-        /// First-seen wins; subsequent candidates with the same key
-        /// are dropped. `discover-reducers` output is unaffected —
-        /// per-closure locations stay visible there because this
-        /// dedupe is local to the interaction pipeline.
-        static func dedupedByStateAndAction(
-            _ candidates: [ReducerCandidate]
-        ) -> [ReducerCandidate] {
-            var seen: Set<String> = []
-            var result: [ReducerCandidate] = []
-            for candidate in candidates {
-                let key = candidate.stateQualifiedName + "|" + candidate.actionQualifiedName
-                if seen.insert(key).inserted {
-                    result.append(candidate)
-                }
-            }
-            return result
-        }
+        // `collectSuggestions(target:)` / `collectSuggestions(targets:)` /
+        // `dedupedByStateAndAction` live in `+MultiModule.swift`.
 
         /// V2.0 M4.E — apply the `--reducer <pin>` filter when
         /// present. When `pinRaw` is `nil`, returns the candidates

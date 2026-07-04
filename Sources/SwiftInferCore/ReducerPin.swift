@@ -31,10 +31,11 @@ import Foundation
 /// against Swift's qualified-name vocabulary (no separator collision).
 public struct ReducerPin: Sendable, Equatable {
 
-    /// Module name, when present. Parsed and retained but not used in
-    /// matching — each run is scoped to a single `--target` module, so a
-    /// module prefix is a redundant qualifier. Reserved for multi-module
-    /// discovery, which would tag candidates by module and match on it.
+    /// Module name, when present. Matched against `ReducerCandidate.moduleName`
+    /// when **both** are set — a multi-module discovery run (`--target` given
+    /// more than once) tags each candidate by its source module. In a
+    /// single-target run candidates are untagged, so the module component stays
+    /// a redundant qualifier (accepted, not matched).
     public let moduleName: String?
 
     /// Enclosing type name, when present. Matched verbatim against
@@ -90,14 +91,20 @@ public struct ReducerPin: Sendable, Equatable {
         }
     }
 
-    /// Does this pin match `candidate`? Function name must match
-    /// exactly; type name must match if the pin specifies one. A
-    /// `moduleName`, if present, is not matched: candidates carry no
-    /// module and the run is already scoped to one `--target` module,
-    /// so the module component is a redundant qualifier.
+    /// Does this pin match `candidate`? Function name must match exactly; type
+    /// name must match if the pin specifies one. A `moduleName` is matched only
+    /// when **both** the pin and the candidate carry one: a single-target run
+    /// leaves candidates untagged (`moduleName == nil`), so a module-qualified
+    /// pin still matches (the module component stays a redundant qualifier); a
+    /// multi-module run tags candidates by their source module, so the module
+    /// then disambiguates same-named reducers across modules.
     public func matches(_ candidate: ReducerCandidate) -> Bool {
         guard functionName == candidate.functionName else { return false }
         if let typeName, typeName != candidate.enclosingTypeName {
+            return false
+        }
+        if let moduleName, let candidateModule = candidate.moduleName,
+           moduleName != candidateModule {
             return false
         }
         return true

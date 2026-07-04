@@ -38,7 +38,7 @@ struct DiscoverInteractionCommandTests {
             "--reducer", "Inbox.body",
             "--include-possible"
         ])
-        #expect(parsed.target == "MyApp")
+        #expect(parsed.target == ["MyApp"])
         #expect(parsed.reducer == "Inbox.body")
         #expect(parsed.includePossible == true)
     }
