@@ -94,6 +94,56 @@ struct ViewModelDiscovererTests {
         #expect(selectAll?.isAsync == false)
     }
 
+    /// A view model whose actions span the three payload shapes the
+    /// synthetic-Action-enum emitter must render: a labelled multi-arg
+    /// method, a positional (`_`) single-arg method, and a nullary method.
+    private static let payloadShapesSource = """
+    import Observation
+
+    @Observable
+    final class EditorViewModel {
+        var title: String = ""
+        var tags: [String] = []
+
+        func rename(id: UUID, to newTitle: String) {
+            title = newTitle
+        }
+
+        func addTag(_ tag: String) {
+            tags.append(tag)
+        }
+
+        func clear() {
+            tags.removeAll()
+        }
+    }
+    """
+
+    @Test("captures full label+type per parameter for enum synthesis")
+    func actionParametersFullList() {
+        let viewModel = ViewModelDiscoverer.discover(
+            source: Self.payloadShapesSource,
+            file: "Editor.swift"
+        )[0]
+
+        let rename = viewModel.actions.first { $0.name == "rename" }
+        // Labelled multi-arg: both labels + types preserved, in order.
+        #expect(rename?.parameters == [
+            ViewModelActionParameter(label: "id", typeText: "UUID"),
+            ViewModelActionParameter(label: "to", typeText: "String")
+        ])
+
+        let addTag = viewModel.actions.first { $0.name == "addTag" }
+        // Positional `_` param ⇒ nil label.
+        #expect(addTag?.parameters == [
+            ViewModelActionParameter(label: nil, typeText: "String")
+        ])
+
+        let clear = viewModel.actions.first { $0.name == "clear" }
+        // Nullary ⇒ empty parameter list.
+        #expect(clear?.parameters.isEmpty == true)
+    }
+
     @Test("recognizes ObservableObject conformance + async/throws actions")
     func detectsObservableObject() {
         let source = """

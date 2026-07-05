@@ -190,6 +190,22 @@ public struct ViewModelStateField: Sendable, Equatable, Codable {
     }
 }
 
+/// One parameter of a lifted action method — its external argument label
+/// (`nil` for an unlabelled `_ x:` param) and its type text. The full
+/// per-parameter list an enum-case synthesizer needs: a faithful multi-arg
+/// case (`case update(id: Item.ID, name: String)`) and the matching
+/// dispatch call (`model.update(id: a0, name: a1)`) both require *every*
+/// label, not just the first.
+public struct ViewModelActionParameter: Sendable, Equatable, Codable {
+    public let label: String?
+    public let typeText: String
+
+    public init(label: String?, typeText: String) {
+        self.label = label
+        self.typeText = typeText
+    }
+}
+
 /// One action in a view model's action alphabet — a state-mutating
 /// method. `parameterTypes` is the payload a generator would have to
 /// produce (empty = a nullary action like `selectAll()` / `deselectAll()`).
@@ -200,6 +216,12 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
     /// `_ x:` param or a nullary action) — needed to emit the call at
     /// verify time (`probe.select(id: arg)` vs `probe.setColor(arg)`).
     public let firstParameterLabel: String?
+    /// The full parameter list (label + type per position). Superset of
+    /// `parameterTypes` + `firstParameterLabel`; the source of truth the
+    /// synthetic-Action-enum emitter builds cases and dispatch calls from.
+    /// Defaults to `[]` for back-compat with callers built before the
+    /// enum-materialization work (they read the two legacy fields).
+    public let parameters: [ViewModelActionParameter]
     public let isAsync: Bool
     public let isThrows: Bool
     /// `true` when the body directly assigns a stored field or calls a
@@ -212,6 +234,7 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
         name: String,
         parameterTypes: [String],
         firstParameterLabel: String? = nil,
+        parameters: [ViewModelActionParameter] = [],
         isAsync: Bool,
         isThrows: Bool,
         mutatesStateDirectly: Bool
@@ -219,6 +242,7 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
         self.name = name
         self.parameterTypes = parameterTypes
         self.firstParameterLabel = firstParameterLabel
+        self.parameters = parameters
         self.isAsync = isAsync
         self.isThrows = isThrows
         self.mutatesStateDirectly = mutatesStateDirectly

@@ -120,10 +120,20 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
         let parameters = node.signature.parameterClause.parameters
         let parameterTypes = parameters.map(\.type.trimmedDescription)
         let firstLabel = parameters.first.map(\.firstName.text)
+        // Full label+type per position. `firstName` is the external
+        // argument label (`_` ⇒ no label / positional).
+        let actionParameters = parameters.map { param in
+            let label = param.firstName.text
+            return ViewModelActionParameter(
+                label: label == "_" ? nil : label,
+                typeText: param.type.trimmedDescription
+            )
+        }
         let method = RawMethod(
             name: node.name.text,
             parameterTypes: parameterTypes,
             firstParameterLabel: (firstLabel == "_") ? nil : firstLabel,
+            parameters: actionParameters,
             isAsync: effects?.asyncSpecifier != nil,
             isThrows: effects?.throwsClause != nil,
             signals: ViewModelMethodBodyWalker.signals(for: body)

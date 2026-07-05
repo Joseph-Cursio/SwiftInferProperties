@@ -192,6 +192,7 @@ public enum ViewModelDiscoverer {
                     name: method.name,
                     parameterTypes: method.parameterTypes,
                     firstParameterLabel: method.firstParameterLabel,
+                    parameters: method.parameters,
                     isAsync: method.isAsync,
                     isThrows: method.isThrows,
                     mutatesStateDirectly: directlyMutates(method)
@@ -243,6 +244,9 @@ struct RawMethod: Equatable {
     let name: String
     let parameterTypes: [String]
     let firstParameterLabel: String?
+    /// Full label+type per parameter — the source of truth for synthetic
+    /// Action-enum case + dispatch-call emission.
+    let parameters: [ViewModelActionParameter]
     let isAsync: Bool
     let isThrows: Bool
     let signals: ViewModelMethodSignals
