@@ -32,7 +32,11 @@ enum VerifyInteractionSurvey {
     /// under SwiftLint's parameter-count cap; `Sendable` so it can cross
     /// the `TaskGroup` boundary.
     struct RunContext: Sendable {
-        let target: String
+        /// M3 — the surveyed targets (modules). One for a single-module run;
+        /// several when the survey spans modules. Each identity is verified
+        /// against *its own* module (`suggestion.moduleName`), falling back to
+        /// the first target when untagged (single-module runs don't tag).
+        let targets: [String]
         let sequenceCount: Int
         let userModuleName: String?
         let workingDirectory: URL
@@ -58,6 +62,7 @@ enum VerifyInteractionSurvey {
     /// Returns the summary string; the caller prints it. `maxParallel`
     /// bounds in-flight `swift build`s (default 4, as the algebraic
     /// `--all-from-index` survey).
+    /// Single-target convenience — delegates to the multi-target form.
     static func run(
         target: String,
         familyFilter: String?,
@@ -66,19 +71,43 @@ enum VerifyInteractionSurvey {
         maxParallel: Int = 4,
         workingDirectory: URL
     ) async throws -> String {
+        try await run(
+            targets: [target],
+            familyFilter: familyFilter,
+            sequenceCount: sequenceCount,
+            userModuleName: userModuleName,
+            maxParallel: maxParallel,
+            workingDirectory: workingDirectory
+        )
+    }
+
+    /// M3 — multi-target survey. Discovers across every `--target` (module),
+    /// tagging each identity with its module, and verifies each against *its*
+    /// module's library product — so reducers from different modules are
+    /// measured in one run. Single-target is the `targets == [x]` case
+    /// (identities untagged; verified against `x` as before).
+    static func run(
+        targets: [String],
+        familyFilter: String?,
+        sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
+        userModuleName: String? = nil,
+        maxParallel: Int = 4,
+        workingDirectory: URL
+    ) async throws -> String {
         let all = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
-            target: target,
+            targets: targets,
             workingDirectory: workingDirectory
         )
         let family = try parseFamily(familyFilter)
         let selected = family.map { chosen in all.filter { $0.family == chosen } } ?? all
+        let display = targets.joined(separator: ", ")
 
         guard !selected.isEmpty else {
-            return render(target: target, family: family, entries: [])
+            return render(target: display, family: family, entries: [])
         }
 
         let context = RunContext(
-            target: target,
+            targets: targets,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
             workingDirectory: workingDirectory
@@ -94,7 +123,7 @@ enum VerifyInteractionSurvey {
             entries.map { (invariant: $0.suggestion, result: $0.result) },
             workingDirectory: workingDirectory
         )
-        return render(target: target, family: family, entries: entries)
+        return render(target: display, family: family, entries: entries)
     }
 
     /// One identity tagged with its discovery position, so completion in
@@ -148,7 +177,9 @@ enum VerifyInteractionSurvey {
         var order: [String] = []
         var byReducer: [String: [IndexedSuggestion]] = [:]
         for (index, suggestion) in selected.enumerated() {
-            let key = suggestion.reducerQualifiedName
+            // M3 — key includes the module so same-named reducers in different
+            // modules form distinct groups (distinct workdirs), not one shared.
+            let key = (suggestion.moduleName ?? "") + "|" + suggestion.reducerQualifiedName
             if byReducer[key] == nil { order.append(key) }
             byReducer[key, default: []].append((index, suggestion))
         }
@@ -163,8 +194,13 @@ enum VerifyInteractionSurvey {
         context: RunContext
     ) -> Entry {
         do {
+            // M3 — verify against this identity's own module: the module is
+            // both the `Sources/<module>/` discovery dir and the library
+            // product. Untagged (single-module) → the first target, preserving
+            // the pre-M3 behavior exactly.
+            let verifyTarget = suggestion.moduleName ?? context.targets.first ?? ""
             let result = try VerifyInteractionPipeline.runWithInvariant(
-                target: context.target,
+                target: verifyTarget,
                 invariant: suggestion,
                 sequenceCount: context.sequenceCount,
                 userModuleName: context.userModuleName,

@@ -138,4 +138,72 @@ public enum CorpusPackager {
         )
         """
     }
+
+    /// M3 — package several modules into ONE SwiftPM package, one dependency-
+    /// free library product per module (product name == module name), so
+    /// `verify-interaction` can resolve + build each module's product
+    /// independently for multi-module measured verify. Each module's top-level
+    /// `.swift` files become `Sources/<module>/`. The root dir is named
+    /// `packageName` (the resolver derives package identity from the basename);
+    /// product names match module names so
+    /// `PackageProductResolver.libraryProduct(exposingModule:)` picks each.
+    @discardableResult
+    public static func packageMultiModule(
+        packageName: String,
+        modules: [(name: String, sourcesDirectory: URL)],
+        into destinationParent: URL,
+        toolsVersion: String = defaultToolsVersion
+    ) throws -> URL {
+        guard !packageName.isEmpty else { throw PackagerError.emptyModuleName }
+        guard !modules.isEmpty else { throw PackagerError.noSourceFiles }
+
+        let root = destinationParent.appendingPathComponent(packageName)
+        for module in modules {
+            guard !module.name.isEmpty else { throw PackagerError.emptyModuleName }
+            let sourcesDir = root
+                .appendingPathComponent("Sources")
+                .appendingPathComponent(module.name)
+            try FileManager.default.createDirectory(at: sourcesDir, withIntermediateDirectories: true)
+            for file in try readSwiftSources(in: module.sourcesDirectory) {
+                try Data(file.contents.utf8)
+                    .write(to: sourcesDir.appendingPathComponent(file.name))
+            }
+        }
+        try Data(multiModuleManifestSource(
+            packageName: packageName,
+            moduleNames: modules.map(\.name),
+            toolsVersion: toolsVersion
+        ).utf8).write(to: root.appendingPathComponent("Package.swift"))
+        return root
+    }
+
+    /// The generated `Package.swift` for a multi-module corpus — one library
+    /// product + target per module (product name == module name).
+    static func multiModuleManifestSource(
+        packageName: String,
+        moduleNames: [String],
+        toolsVersion: String
+    ) -> String {
+        let products = moduleNames
+            .map { ".library(name: \"\($0)\", targets: [\"\($0)\"])" }
+            .joined(separator: ",\n            ")
+        let targets = moduleNames
+            .map { ".target(name: \"\($0)\")" }
+            .joined(separator: ",\n            ")
+        return """
+        // swift-tools-version: \(toolsVersion)
+        import PackageDescription
+
+        let package = Package(
+            name: "\(packageName)",
+            platforms: [.macOS(.v14)],
+            products: [
+                \(products)
+            ],
+            targets: [
+                \(targets)
+            ]
+        )
+        """
+    }
 }

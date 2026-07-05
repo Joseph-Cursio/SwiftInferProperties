@@ -26,16 +26,19 @@ struct VerifyInteractionCommandTests {
             "--user-module", "MyAppLib",
             "--sequence-count", "100"
         ])
-        #expect(parsed.target == "MyApp")
+        #expect(parsed.target == ["MyApp"])
         #expect(parsed.reducer == "Inbox.reduce")
         #expect(parsed.userModule == "MyAppLib")
         #expect(parsed.sequenceCount == 100)
     }
 
-    @Test("--target is required; absent --target is a parse error")
+    @Test("--target is required; absent --target fails validation")
     func targetIsRequired() {
+        // M3 — --target is a repeatable [String]; an empty array parses but
+        // validate() rejects it (ArgumentParser calls validate() before run()).
         #expect(throws: (any Error).self) {
-            _ = try SwiftInferCommand.VerifyInteraction.parse([])
+            var parsed = try SwiftInferCommand.VerifyInteraction.parse([])
+            try parsed.validate()
         }
     }
 

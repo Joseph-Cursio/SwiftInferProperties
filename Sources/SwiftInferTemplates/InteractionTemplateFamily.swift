@@ -70,7 +70,8 @@ extension InteractionTemplateFamily {
             tier: tierFor(family: family, score: initialScore),
             whySuggested: whySuggestedFor(witness: witness, candidate: candidate),
             whyMightBeWrong: whyMightBeWrongFor(witness: witness),
-            firstSeenAt: firstSeenAt
+            firstSeenAt: firstSeenAt,
+            moduleName: candidate.moduleName
         )
     }
 

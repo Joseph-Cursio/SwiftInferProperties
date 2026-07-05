@@ -19,9 +19,17 @@ struct VerifyInteractionSurveyTests {
             "--all",
             "--family", "idempotence"
         ])
-        #expect(parsed.target == "MyApp")
+        #expect(parsed.target == ["MyApp"])
         #expect(parsed.all == true)
         #expect(parsed.family == "idempotence")
+    }
+
+    @Test("--target is repeatable (M3 multi-module survey)")
+    func repeatableTarget() throws {
+        let parsed = try SwiftInferCommand.VerifyInteraction.parse([
+            "--target", "Alpha", "--target", "Beta", "--all"
+        ])
+        #expect(parsed.target == ["Alpha", "Beta"])
     }
 
     @Test("--all defaults off; --family defaults nil")

@@ -39,10 +39,13 @@ extension SwiftInferCommand {
             help: """
             Name of the SwiftPM target containing the reducer. \
             Resolved to Sources/<target>/ relative to the working \
-            directory — mirrors `swift-infer discover-reducers`.
+            directory — mirrors `swift-infer discover-reducers`. \
+            Repeatable: with --all (M3), pass --target more than once to \
+            survey reducers across several modules in one run, each verified \
+            against its own library product.
             """
         )
-        public var target: String
+        public var target: [String] = []
 
         @Option(
             name: .long,
@@ -51,8 +54,9 @@ extension SwiftInferCommand {
             for free functions) pin selecting which reducer to \
             verify. Required when ≥ 2 reducer-shaped functions are \
             detected; zero / multiple matches are an error. Module-\
-            prefixed pins (`MyModule.Inbox.body`) defer to M2+ when \
-            multi-module plumbing lands.
+            prefixed pins (`MyModule.Inbox.body`) disambiguate across \
+            modules (M3); the single-reducer path verifies within the \
+            first --target.
             """
         )
         public var reducer: String?
@@ -115,6 +119,15 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
+        /// M3 — `--target` became a repeatable `[String]` (an empty array is a
+        /// valid *parse*), so enforce "at least one" here; ArgumentParser calls
+        /// `validate()` after decoding and before `run()`.
+        public func validate() throws {
+            guard !target.isEmpty else {
+                throw ValidationError("at least one --target is required.")
+            }
+        }
+
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             if all {
@@ -123,8 +136,10 @@ extension SwiftInferCommand {
                         Data("warning: --reducer is ignored in --all survey mode\n".utf8)
                     )
                 }
+                // M3 — survey across every --target module, each verified
+                // against its own product.
                 let rendered = try await VerifyInteractionSurvey.run(
-                    target: target,
+                    targets: target,
                     familyFilter: family,
                     sequenceCount: sequenceCount,
                     userModuleName: userModule,
@@ -134,8 +149,16 @@ extension SwiftInferCommand {
                 print(rendered, terminator: "")
                 return
             }
+            // Single-reducer path: multi-target only applies to --all; verify
+            // within the first target (a module-prefixed --reducer still
+            // disambiguates if it resolves there).
+            if target.count > 1 {
+                FileHandle.standardError.write(Data(
+                    "warning: multiple --target only apply with --all; using '\(target[0])'\n".utf8
+                ))
+            }
             let rendered = try VerifyInteractionPipeline.runPipeline(
-                target: target,
+                target: target[0],
                 pinRaw: reducer,
                 sequenceCount: sequenceCount,
                 userModuleName: userModule,

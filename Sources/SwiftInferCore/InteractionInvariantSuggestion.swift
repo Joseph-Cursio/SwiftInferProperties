@@ -86,6 +86,16 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     /// for algebraic suggestions via the SemanticIndex.
     public let firstSeenAt: Date
 
+    /// M3 (multi-module measured verify) — the SwiftPM target/module the
+    /// source `ReducerCandidate` was discovered in, or `nil` for a
+    /// single-target run / non-reducer (view-model) carrier / older records.
+    /// Copied from `ReducerCandidate.moduleName` at emission so the verify
+    /// survey can build each identity against *its* module's library product
+    /// (via `PackageProductResolver.libraryProduct(exposingModule:)`), rather
+    /// than assuming one module for the whole run. Backward-compatible
+    /// optional (missing key → `nil`).
+    public let moduleName: String?
+
     public init(
         identity: SuggestionIdentity,
         family: InteractionInvariantFamily,
@@ -98,7 +108,8 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
         tier: Tier,
         whySuggested: [String],
         whyMightBeWrong: [String],
-        firstSeenAt: Date
+        firstSeenAt: Date,
+        moduleName: String? = nil
     ) {
         self.identity = identity
         self.family = family
@@ -112,6 +123,7 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
         self.whySuggested = whySuggested
         self.whyMightBeWrong = whyMightBeWrong
         self.firstSeenAt = firstSeenAt
+        self.moduleName = moduleName
     }
 
     /// Cycle 112 — return a copy with selected fields overridden. Used by
@@ -137,7 +149,8 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
             tier: tier ?? self.tier,
             whySuggested: whySuggested ?? self.whySuggested,
             whyMightBeWrong: whyMightBeWrong ?? self.whyMightBeWrong,
-            firstSeenAt: firstSeenAt
+            firstSeenAt: firstSeenAt,
+            moduleName: moduleName
         )
     }
 
