@@ -19,16 +19,17 @@ import SwiftInferCore
 /// binding path, not just widening the disclosed action space.
 enum BindingActionResolver {
 
-    /// Field value types the verifier can construct a canned literal for.
-    static let defaultableValueTypes: Set<String> = ["Bool", "Int", "String", "Double", "UUID"]
-
     /// Enrich `candidate`'s `binding(BindingAction<State>)` case with the
     /// defaultable bindable fields. Returns the candidate unchanged when it's
     /// non-`.tca`, has no observable State fields, or has no binding case.
+    /// A field is bindable iff `ActionSequenceStubEmitter.defaultValueLiteral`
+    /// can construct a canned value for its type — the shared defaultable-type
+    /// table: UUID / sized ints / Bool / String / Double / **Optionals (→ nil)
+    /// / collections (→ [] / [:])**. A custom (non-defaultable) field gates.
     static func resolve(_ candidate: ReducerCandidate) -> ReducerCandidate {
         guard candidate.carrierKind == .tca, !candidate.stateFields.isEmpty else { return candidate }
         let bindableFields = candidate.stateFields
-            .filter { defaultableValueTypes.contains($0.typeName) }
+            .filter { ActionSequenceStubEmitter.defaultValueLiteral(for: $0.typeName) != nil }
             .map { ResolvedBindingField(fieldName: $0.name, valueType: $0.typeName) }
         guard !bindableFields.isEmpty else { return candidate }
 

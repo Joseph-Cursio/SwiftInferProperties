@@ -50,7 +50,7 @@ extension ActionSequenceStubEmitter {
         // disclosed `excluded:` cases) without new counterexample signal, per
         // the slice-3 design's ROI reframe.
         if let element = caseInfo.resolvedElement {
-            let idLiteral = defaultValueLiteral(for: element.idType)
+            guard let idLiteral = defaultValueLiteral(for: element.idType) else { return nil }
             return "Gen.always(\(action).\(caseInfo.name)(.element(id: \(idLiteral)"
                 + ", action: \(element.childActionType).\(element.childActionCase))))"
         }
@@ -60,10 +60,11 @@ extension ActionSequenceStubEmitter {
         // (`.set(\.field, <canned value>)` — a real transition through
         // `BindingReducer`). One field → `Gen.always`; several → `Gen.oneOf`.
         if let fields = caseInfo.resolvedBinding, !fields.isEmpty {
-            let sets = fields.map { field in
-                "Gen.always(\(action).\(caseInfo.name)(.set(\\.\(field.fieldName), "
-                    + "\(defaultValueLiteral(for: field.valueType)))))"
+            let sets = fields.compactMap { field -> String? in
+                guard let literal = defaultValueLiteral(for: field.valueType) else { return nil }
+                return "Gen.always(\(action).\(caseInfo.name)(.set(\\.\(field.fieldName), \(literal))))"
             }
+            guard !sets.isEmpty else { return nil }
             return sets.count == 1 ? sets[0] : "Gen.oneOf(\(sets.joined(separator: ", ")))"
         }
         guard caseInfo.payloadTypes.count == 1 else { return nil }
@@ -78,21 +79,24 @@ extension ActionSequenceStubEmitter {
         return nil
     }
 
-    /// Slice 3/4 — the canned deterministic literal for a resolved value type:
-    /// an `IdentifiedArray` element id (slice 3) or a `BindingAction` field
-    /// value (slice 4). `UUID` → the all-zero literal (analogous to slice 2's
-    /// `CancellationError()` — a fixed constructible value, not something
-    /// `RawType` provides); `String` → `""`; `Bool` → `false`; `Double` →
-    /// `0.0`; `Int` (the `default`) → `0`. Only types in the resolvers'
-    /// defaultable sets reach here.
-    static func defaultValueLiteral(for type: String) -> String {
-        switch type {
-        case "UUID": return "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!"
-        case "String": return "\"\""
-        case "Bool": return "false"
-        case "Double": return "0.0"
-        default: return "0"
+    /// Slice 3/4 (+ coverage widening) — the canned deterministic literal for a
+    /// resolved value type (an `IdentifiedArray` element id, slice 3; or a
+    /// `BindingAction` field value, slice 4), or `nil` when the type isn't
+    /// cheaply defaultable. `UUID` → the all-zero literal (analogous to slice
+    /// 2's `CancellationError()` — a fixed constructible value not in the shared
+    /// table); everything else delegates to `ViewModelDefaultValue` — the same
+    /// defaultable-type table the MVVM protocol faker uses — so both composition
+    /// slices cover the same broad surface: **Optionals → `nil`, collections →
+    /// `[]` / `[:]`, sized integers / `Float` / `CGFloat` → `0`, `Bool` →
+    /// `false`, `String` → `""`**. A custom/concrete type returns `nil` (gates).
+    /// This single function is the resolvers' defaultability gate *and* the
+    /// emitter's literal source, so the two can't drift.
+    static func defaultValueLiteral(for type: String) -> String? {
+        let trimmed = type.trimmingCharacters(in: .whitespaces)
+        if trimmed == "UUID" {
+            return "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!"
         }
+        return ViewModelDefaultValue.value(for: trimmed)
     }
 
     /// Names of the excluded (non-constructible) cases, in source order —

@@ -28,10 +28,16 @@ import SwiftInferCore
 /// Everything else is left unresolved → stays excluded + disclosed.
 enum IdentifiedActionResolver {
 
-    /// `State.ID` types the verifier can construct a canonical id literal for.
-    /// `UUID` is the dominant real TCA id (recount: 6/8); `Int`/`String` are
-    /// cheap and folded in even though the recount found no real use.
-    static let defaultableIDTypes: Set<String> = ["UUID", "Int", "String"]
+    /// True when the `State.ID` type is one the verifier can construct a
+    /// canonical literal for — the single source of truth is
+    /// `ActionSequenceStubEmitter.defaultValueLiteral` (UUID + the shared
+    /// defaultable-type table: sized ints / Bool / String / Double / Optionals
+    /// / collections). In practice real ids are `UUID` (recount: 6/8) or
+    /// `Int`/`String`; the wider set is harmless (a constructed `.element`
+    /// no-ops against the empty initial State regardless).
+    static func isDefaultableIDType(_ type: String) -> Bool {
+        ActionSequenceStubEmitter.defaultValueLiteral(for: type) != nil
+    }
 
     /// Enrich `candidate`'s `IdentifiedActionOf<Child>` cases against `all`
     /// (the full discovered/deduped candidate set). Returns the candidate
@@ -48,7 +54,7 @@ enum IdentifiedActionResolver {
                   let childName = identifiedActionChild(caseInfo.payloadTypes[0]),
                   let child = lookupChild(childName, among: all),
                   let idType = child.stateIDTypeName,
-                  defaultableIDTypes.contains(idType),
+                  isDefaultableIDType(idType),
                   let freeCase = child.actionCases.first(where: \.payloadTypes.isEmpty)
             else { return caseInfo }
             changed = true

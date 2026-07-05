@@ -56,17 +56,20 @@ struct BindingActionResolverTests {
         #expect(enriched.actionCases.first { $0.name == "submitTapped" }?.resolvedBinding == nil)
     }
 
-    @Test("non-defaultable fields are filtered out")
+    @Test("non-defaultable (custom, non-Optional) fields are filtered out")
     func filtersCustomTypes() {
         let enriched = BindingActionResolver.resolve(candidate(
             cases: [ActionCaseInfo(name: "binding", payloadTypes: ["BindingAction<State>"])],
             fields: [
                 StateFieldInfo(name: "text", typeName: "String"),
+                // An Optional of ANY type is now bindable via `nil` (widening).
                 StateFieldInfo(name: "focus", typeName: "Field?"),
+                StateFieldInfo(name: "tags", typeName: "[String]"),
+                // A non-Optional custom struct still gates (no canned literal).
                 StateFieldInfo(name: "syncUp", typeName: "SyncUp")
             ]
         ))
-        #expect(enriched.actionCases[0].resolvedBinding?.map(\.fieldName) == ["text"])
+        #expect(enriched.actionCases[0].resolvedBinding?.map(\.fieldName) == ["text", "focus", "tags"])
     }
 
     // MARK: - gates

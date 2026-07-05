@@ -32,15 +32,18 @@ struct BindingActionCorpusTests {
         )
         #expect(candidate.qualifiedName == "Settings.body")
 
-        // Each defaultable field is bound with its canned literal.
+        // Each defaultable field is bound with its canned literal — including
+        // the widened Optional (→ nil) and collection (→ []) fields.
         #expect(stub.contains("Settings.Action.binding(.set(\\.displayName, \"\"))"))
         #expect(stub.contains("Settings.Action.binding(.set(\\.notificationsEnabled, false))"))
-        #expect(stub.contains("Settings.Action.binding(.set(\\.fontScale, 0.0))"))
+        #expect(stub.contains("Settings.Action.binding(.set(\\.fontScale, 0))"))
         #expect(stub.contains("Settings.Action.binding(.set(\\.retryCount, 0))"))
+        #expect(stub.contains("Settings.Action.binding(.set(\\.note, nil))"))
+        #expect(stub.contains("Settings.Action.binding(.set(\\.tags, []))"))
 
         // Slice-4 payoff: `binding` is now explored (constructible), not excluded.
         let binding = candidate.actionCases.first { $0.name == "binding" }
-        #expect(binding?.resolvedBinding?.count == 4)
+        #expect(binding?.resolvedBinding?.count == 6)
         #expect(ActionSequenceStubEmitter.excludedCaseNames(candidate).contains("binding") == false)
     }
 

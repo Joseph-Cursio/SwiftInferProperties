@@ -55,9 +55,13 @@ slice 3c. See `tca-determinism-verify-scope.md` for the shipped design.
 > **▶ All four composition-action slices are built.** Slices 1 (PresentationAction),
 > 2 (Result), **3b** (`IdentifiedActionOf<Child>` — canned id + payload-free child,
 > no recursion), and **4** (`BindingAction<State>` — `.set(\.field, value)` over
-> `@ObservableState` fields) are shipped. Remaining open: slice **3c**
-> (depth-bounded child recursion — deferred, 0 added reach on the corpus) and
-> widening any slice's value-type / field coverage. See the slice list below.
+> `@ObservableState` fields) are shipped. The 3b/4 value-type coverage was
+> **widened** (2026-07-05) to the shared `ViewModelDefaultValue` table —
+> Optionals → `nil`, collections → `[]` / `[:]`, sized integers / `Float` /
+> `CGFloat`, plus `UUID`/`Bool`/`String`/`Double` — via one
+> `defaultValueLiteral` that is both resolvers' gate and the emitter's literal
+> source (they can't drift). Remaining open: slice **3c** (depth-bounded child
+> recursion — deferred, 0 added reach on the corpus). See the slice list below.
 
 **Key finding (from the repo's own cycle 123):** value-type payload synthesis
 (custom structs/tuples/nested enums via `TypeShapeBuilder`) unlocks only ~2/99
@@ -134,9 +138,11 @@ still disclosed, so no new precision decision.
   `resolveAndEmit`, no cross-candidate lookup — `BindingAction` binds the
   reducer's own State) enriches the `binding` case with the defaultable fields
   (`ActionCaseInfo.resolvedBinding`). The emitter binds each field
-  (`Gen.oneOf` over them; `defaultValueLiteral` — `Bool`→`false`, `Int`→`0`,
-  `String`→`""`, `Double`→`0.0`, `UUID`→canned). **Gates (stay excluded +
-  disclosed):** no defaultable field (custom-type-only State — e.g. `SyncUpForm`),
+  (`Gen.oneOf` over them; `defaultValueLiteral` — `UUID`→canned, and the shared
+  `ViewModelDefaultValue` table for the rest: Optionals→`nil`, collections→`[]`/
+  `[:]`, sized ints / `Float` / `CGFloat`→`0`, `Bool`→`false`, `String`→`""`,
+  `Double`→`0`). **Gates (stay excluded +
+  disclosed):** no defaultable field (custom-non-Optional-type-only State),
   non-`@ObservableState` State (legacy), no binding case. **Discovery caveat
   (pre-existing, not slice-4-specific):** a pure-`BindingReducer()` body with no
   `Reduce { }` closure surfaces no candidate, so slice 4 reaches binding reducers

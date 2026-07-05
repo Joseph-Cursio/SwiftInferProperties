@@ -126,8 +126,47 @@ struct ActionSequenceCompositionPayloadTests {
             ActionSequenceStubEmitter.compositionGenerator(for: multi, action: "Form.Action")
                 == "Gen.oneOf(Gen.always(Form.Action.binding(.set(\\.flag, false))), "
                 + "Gen.always(Form.Action.binding(.set(\\.count, 0))), "
-                + "Gen.always(Form.Action.binding(.set(\\.ratio, 0.0))))"
+                + "Gen.always(Form.Action.binding(.set(\\.ratio, 0))))"
         )
+    }
+
+    @Test("widened value types: Optional → nil, collection → [] / [:], sized int / Float → 0")
+    func bindingActionWidenedTypes() {
+        let widened = ActionSequenceStubEmitter.compositionGenerator(
+            for: ActionCaseInfo(
+                name: "binding",
+                payloadTypes: ["BindingAction<State>"],
+                resolvedBinding: [
+                    ResolvedBindingField(fieldName: "note", valueType: "String?"),
+                    ResolvedBindingField(fieldName: "tags", valueType: "[String]"),
+                    ResolvedBindingField(fieldName: "attrs", valueType: "[String: Int]"),
+                    ResolvedBindingField(fieldName: "big", valueType: "Int64"),
+                    ResolvedBindingField(fieldName: "ratio", valueType: "Float")
+                ]
+            ),
+            action: "Form.Action"
+        )
+        #expect(
+            widened == "Gen.oneOf("
+                + "Gen.always(Form.Action.binding(.set(\\.note, nil))), "
+                + "Gen.always(Form.Action.binding(.set(\\.tags, []))), "
+                + "Gen.always(Form.Action.binding(.set(\\.attrs, [:]))), "
+                + "Gen.always(Form.Action.binding(.set(\\.big, 0))), "
+                + "Gen.always(Form.Action.binding(.set(\\.ratio, 0))))"
+        )
+        // A custom (non-defaultable) field is dropped from the explored set.
+        let mixed = ActionSequenceStubEmitter.compositionGenerator(
+            for: ActionCaseInfo(
+                name: "binding",
+                payloadTypes: ["BindingAction<State>"],
+                resolvedBinding: [
+                    ResolvedBindingField(fieldName: "custom", valueType: "MyStruct"),
+                    ResolvedBindingField(fieldName: "text", valueType: "String")
+                ]
+            ),
+            action: "Form.Action"
+        )
+        #expect(mixed == "Gen.always(Form.Action.binding(.set(\\.text, \"\")))")
     }
 
     @Test("an unresolved BindingAction payload is not constructible (excluded)")

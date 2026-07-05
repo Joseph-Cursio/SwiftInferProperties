@@ -20,6 +20,10 @@ struct Settings {
         var notificationsEnabled = false
         var fontScale = 1.0
         var retryCount = 0
+        // Widened coverage: an Optional (bound to nil) and a collection (bound
+        // to []) — both cheaply defaultable without a `Gen` over the element.
+        var note: String? = nil
+        var tags: [String] = []
     }
 
     enum Action: BindableAction {
