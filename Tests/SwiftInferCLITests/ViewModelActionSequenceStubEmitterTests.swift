@@ -105,6 +105,24 @@ struct ViewModelActionSequenceStubEmitterTests {
         #expect(source.contains("from: actionGen,"))
     }
 
+    @Test("inlined shape (userModuleName nil) omits the user import for same-target verify")
+    func inlinedShapeOmitsUserImport() throws {
+        let inputs = ViewModelActionSequenceStubEmitter.Inputs(
+            typeName: "SelectionModel",
+            userModuleName: nil,
+            predicate: Self.predicate,
+            actions: [vmAction("selectAll"), vmAction("deselectAll")]
+        )
+        let source = try ViewModelActionSequenceStubEmitter.emit(inputs)
+        // Model is compiled into the verifier target → no `import <module>`…
+        #expect(!source.contains("import AppCore"))
+        #expect(!source.contains("\nimport SelectionModel"))
+        // …but the kit imports stay, and the verifier still references the type.
+        #expect(source.contains("import PropertyLawKit"))
+        #expect(source.contains("func drive(_ model: SelectionModel,"))
+        #expect(source.contains("let probe = SelectionModel()"))
+    }
+
     @Test("no constructible action is rejected")
     func rejectsNoConstructibleActions() {
         let inputs = ViewModelActionSequenceStubEmitter.Inputs(

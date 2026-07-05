@@ -32,7 +32,11 @@ public enum ViewModelActionSequenceStubEmitter {
 
     public struct Inputs: Equatable, Sendable {
         public let typeName: String
-        public let userModuleName: String
+        /// The module to `import` for the view model type, or `nil` when the
+        /// model is compiled **into** the verifier target (same-target inlined
+        /// verification — `VerifierWorkdir`'s `inlinedSources` shape), where no
+        /// import is needed and one would fail to resolve.
+        public let userModuleName: String?
         /// The invariant predicate over a `probe` instance, re-checked after
         /// every action (e.g. `probe.selectedID == nil || probe.items...`).
         public let predicate: String
@@ -43,7 +47,7 @@ public enum ViewModelActionSequenceStubEmitter {
 
         public init(
             typeName: String,
-            userModuleName: String,
+            userModuleName: String?,
             predicate: String,
             actions: [ViewModelAction],
             sequenceCount: Int = 100,
@@ -195,12 +199,13 @@ public enum ViewModelActionSequenceStubEmitter {
         let note = excluded.isEmpty
             ? ""
             : "\n// Excluded from the action surface: " + excluded.joined(separator: ", ")
+        // No user-module import when the model is inlined into this target.
+        let userImport = inputs.userModuleName.map { "\nimport \($0)" } ?? ""
         return """
         // PROTOTYPE — auto-generated M1′ ViewModel interaction verifier.
         // Type: \(inputs.typeName)
         // Invariant (after every action): \(inputs.predicate)\(note)
-        import Foundation
-        import \(inputs.userModuleName)
+        import Foundation\(userImport)
         import PropertyBased
         import PropertyLawKit
         """
