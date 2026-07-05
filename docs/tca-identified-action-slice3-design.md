@@ -1,11 +1,12 @@
 # Design: composition-action slice 3 — `IdentifiedActionOf<Child>`
 
-> **Status: 3b SHIPPED (2026-07-04).** The recount (below) killed 3a (0 real
-> reach — all real ids are UUID) and landed **3b** (canned-UUID / Int / String
-> id + payload-free child, no recursion) instead. **3c (recursion) deferred**
-> (0 added reach on the corpus + the self-recursion hazard). See the
-> "Recount results" + "Recommendation (revised)" sections and the
-> `## 2 · Slice 3b` entry in `docs/tca-determinism-followups.md`.
+> **Status: 3b + 3c SHIPPED (3b 2026-07-04, 3c 2026-07-05).** The recount (below)
+> killed 3a (0 real reach — all real ids are UUID) and landed **3b** (canned id +
+> payload-free child). **3c** (depth-bounded payload-bearing / recursive child
+> action, `maxChildDepth = 2`) followed — ~0 added real reach as the recount
+> predicted, but it completes construction for payload-only children (composing
+> slice 4) and proves the self-recursion termination bound. See the "Recount
+> results" section and the slice-2 entry in `docs/tca-determinism-followups.md`.
 
 Design note for follow-up item 2, slice 3 (`docs/tca-determinism-followups.md`).
 Slices 1 (`PresentationAction`) and 2 (`Result<_, any Error>`) are built; this

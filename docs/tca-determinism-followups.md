@@ -52,16 +52,17 @@ slice 3c. See `tca-determinism-verify-scope.md` for the shipped design.
 
 ## 2. Structured associated-value action payloads (composition-actions)
 
-> **▶ All four composition-action slices are built.** Slices 1 (PresentationAction),
-> 2 (Result), **3b** (`IdentifiedActionOf<Child>` — canned id + payload-free child,
-> no recursion), and **4** (`BindingAction<State>` — `.set(\.field, value)` over
+> **▶ All composition-action slices are built.** Slices 1 (PresentationAction),
+> 2 (Result), **3b** (`IdentifiedActionOf<Child>` — canned id + payload-free
+> child), **3c** (depth-bounded payload-bearing / recursive child action), and
+> **4** (`BindingAction<State>` — `.set(\.field, value)` over
 > `@ObservableState` fields) are shipped. The 3b/4 value-type coverage was
 > **widened** (2026-07-05) to the shared `ViewModelDefaultValue` table —
 > Optionals → `nil`, collections → `[]` / `[:]`, sized integers / `Float` /
 > `CGFloat`, plus `UUID`/`Bool`/`String`/`Double` — via one
 > `defaultValueLiteral` that is both resolvers' gate and the emitter's literal
-> source (they can't drift). Remaining open: slice **3c** (depth-bounded child
-> recursion — deferred, 0 added reach on the corpus). See the slice list below.
+> source (they can't drift). Nothing composition-action remains open. See the
+> slice list below.
 
 **Key finding (from the repo's own cycle 123):** value-type payload synthesis
 (custom structs/tuples/nested enums via `TypeShapeBuilder`) unlocks only ~2/99
@@ -104,25 +105,40 @@ still disclosed, so no new precision decision.
   the enriched candidate). `compositionGenerator` formats the id literal
   (`UUID` → all-zero canned literal; `Int`→`0`; `String`→`""`). **Gates
   (stay excluded + disclosed):** non-defaultable id (URL / custom), no
-  payload-free child case (Todo — child is pure `BindingAction`), unresolvable /
+  *constructible* child action (extended by 3c below), unresolvable /
   undiscovered child, spelled-out `IdentifiedAction<_, _>` (recount: 0 real).
-  **Depth 0 — no recursion** (3c below), so a self-recursive
-  `IdentifiedActionOf<Self>` terminates by picking a payload-free child case.
   **ROI is disclosure-set reduction, not new signal:** the constructed
   `.element` no-ops against the empty initial-State `IdentifiedArray`. Corpus:
-  `tca-identified-action-corpus` (`RowList` `.forEach` parent + UUID-id `Row`);
-  fast proof `IdentifiedActionCorpusTests` (discover→resolve→emit, no build) +
-  measured `IdentifiedActionCorpusMeasuredTests` (2 identities → 2 bothPass,
-  parent `Verified` with no `excluded: rows`). Units:
+  `tca-identified-action-corpus` (`RowList` `.forEach` parent + UUID-id `Row`;
+  the 3c row adds `EditorList` + `Editor`); fast proof
+  `IdentifiedActionCorpusTests` (discover→resolve→emit, no build) + measured
+  `IdentifiedActionCorpusMeasuredTests` (4 identities → 4 bothPass, both parents
+  `Verified` with no `excluded:` disclosure). Units:
   `IdentifiedActionResolverTests`, extended `ActionSequenceCompositionPayloadTests`,
   `ReducerDiscovererStateIDTests`.
-- **Slice 3c — depth-bounded child recursion (open, deferred):** reuse
-  `compositionGenerator` on the child action to pick a *non*-payload-free child
-  (raw / `PresentationAction` / `Result` / nested `IdentifiedActionOf`) with a
-  depth bound. **Recount: 0 added reach** on the real corpus (every reachable
-  UUID case already has a payload-free child), and it introduces the
-  self-recursive-`Nested` termination hazard — so deferred until a corpus
-  justifies it. See the design doc.
+- **Slice 3c — depth-bounded child recursion — ✅ BUILT (2026-07-05):**
+  generalizes 3b's "pick a payload-free child case" into
+  `IdentifiedActionResolver.childActionValue`, which builds a concrete
+  `Child.Action` value: a **payload-free case first** (3b base case — always
+  terminates), else the first constructible **payload-bearing** case — raw
+  scalar/Optional/collection (via the shared `defaultValueLiteral`),
+  `PresentationAction` → `.dismiss`, type-erased `Result` →
+  `.failure(CancellationError())`, `BindingAction` → `.set(\.field, value)` over
+  a defaultable State field (**composes slice 4** — a `binding`-only child like
+  Todo is now reachable), or a **nested `IdentifiedActionOf<GrandChild>`** which
+  recurses with `depth + 1`. **Depth bound (`maxChildDepth = 2`)** skips the
+  nested case once reached, so a self-recursive `IdentifiedActionOf<Self>` with
+  no payload-free case terminates (falls back to excluded) instead of looping.
+  `ResolvedIdentifiedElement` now carries the full `childActionValue` string
+  (was `childActionType` + `childActionCase`) so arbitrary nesting composes.
+  **Per the recount, ~0 added reach on the real corpus** (every real child has a
+  payload-free case) — the value is *completeness* (payload-only children) + a
+  proven termination bound, not new real-world reach. Corpus:
+  `tca-identified-action-corpus` +`Editor` (no payload-free case — only raw
+  `setText(String)`) + `EditorList` (`.forEach` over it) → 3c builds
+  `.element(id:, action: Editor.Action.setText(""))`, measured `bothPass`. Units:
+  `IdentifiedActionResolverTests` (+raw / binding-only / nested / depth-bound
+  termination / self-recursive-with-free-case).
 - **Slice 4 — `BindingAction<State>` — ✅ BUILT (2026-07-04):** emit
   `.binding(.set(\.field, <canned value>))` for each `@ObservableState` stored
   `var` of a defaultable type — **a real transition through `BindingReducer`**,
