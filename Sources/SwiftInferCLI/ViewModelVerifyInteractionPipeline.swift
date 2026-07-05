@@ -39,11 +39,16 @@ public enum ViewModelVerifyInteractionPipeline {
     ///   `ViewModel*Resolver` family — resolution stays with the resolvers;
     ///   this pipeline orchestrates).
     /// - `sourceFiles`: the candidate's originating source, compiled into the
-    ///   verifier target so `Type()` is in-module (no user import).
+    ///   verifier target so `Type()` is in-module (used by the *inlined* runner;
+    ///   empty for the *imported* runner).
+    /// - `userModuleName`: `nil` (inlined — model in the verifier target) or the
+    ///   module to `import` (imported — model in a path-dependency product).
+    ///   Must match the runner's workdir shape.
     public static func verify(
         candidate: ViewModelCandidate,
         predicate: String,
         sourceFiles: [CorpusPackager.SourceFile],
+        userModuleName: String? = nil,
         workdir: URL,
         runner: VerifyRunner
     ) -> StepResult {
@@ -61,7 +66,7 @@ public enum ViewModelVerifyInteractionPipeline {
             stub = try ViewModelActionSequenceStubEmitter.emit(
                 ViewModelActionSequenceStubEmitter.Inputs(
                     typeName: candidate.typeName,
-                    userModuleName: nil, // inlined into the verifier target
+                    userModuleName: userModuleName,
                     predicate: predicate,
                     actions: candidate.actions
                 )
@@ -89,6 +94,32 @@ public enum ViewModelVerifyInteractionPipeline {
                     stubSource: stubSource,
                     mode: .interaction,
                     inlinedSources: inlinedSources
+                )
+            )
+            let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+            guard build.exitCode == 0 else {
+                return .error(reason: "build failed: \(build.stderr)")
+            }
+            let run = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+            return VerifyResultParser.parse(run)
+        }
+    }
+
+    /// The runner for a **real user package**: the model stays in its own
+    /// module (imported, not inlined), reached via a `.package(path:)`
+    /// dependency on `userPackage`. Pair with `verify(..., userModuleName: <the
+    /// module>)` so the emitted stub imports it. `inlinedSources` is ignored.
+    public static func importedRunner(
+        userPackage: VerifierWorkdir.UserPackageReference
+    ) -> VerifyRunner {
+        { stubSource, _, workdir in
+            _ = try VerifierWorkdir.synthesize(
+                VerifierWorkdir.Inputs(
+                    workdir: workdir,
+                    userPackage: userPackage,
+                    stubSource: stubSource,
+                    mode: .interaction,
+                    inlinedSources: []
                 )
             )
             let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)

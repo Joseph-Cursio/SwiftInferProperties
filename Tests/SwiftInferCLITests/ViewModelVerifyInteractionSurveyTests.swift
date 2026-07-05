@@ -73,4 +73,19 @@ struct ViewModelVerifyInteractionSurveyTests {
         let render = ViewModelVerifyInteractionSurvey.render(target: "App", entries: [])
         #expect(render.contains("no verifiable @Observable carriers"))
     }
+
+    @Test("runLive returns empty (no build) for a directory with no @Observable carriers")
+    func runLiveEmptyForNoCarriers() throws {
+        let empty = FileManager.default.temporaryDirectory
+            .appendingPathComponent("vm-survey-empty-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: empty, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: empty) }
+        let rendered = try ViewModelVerifyInteractionSurvey.runLive(
+            sourceDirectory: empty,
+            userModuleName: "AppCore",
+            packageRoot: empty,
+            workdirRoot: empty
+        )
+        #expect(rendered.isEmpty)
+    }
 }

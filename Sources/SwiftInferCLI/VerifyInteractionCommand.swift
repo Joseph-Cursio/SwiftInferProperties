@@ -147,6 +147,25 @@ extension SwiftInferCommand {
                     workingDirectory: workingDirectory
                 )
                 print(rendered, terminator: "")
+                // Observable Carrier (milestone S4) — additive ViewModel verify
+                // pass: execution-back the @Observable carriers in each target
+                // (previously discover-only at `.possible`) and append their
+                // VERIFIED / REFUTED verdicts. Guarded (`try?`) so it never
+                // destabilizes the reducer survey output.
+                let packageRoot = VerifyInteractionPipeline
+                    .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+                for module in target {
+                    let sourceDir = workingDirectory
+                        .appendingPathComponent("Sources")
+                        .appendingPathComponent(module)
+                    let vmRender = (try? ViewModelVerifyInteractionSurvey.runLive(
+                        sourceDirectory: sourceDir,
+                        userModuleName: module,
+                        packageRoot: packageRoot,
+                        workdirRoot: packageRoot
+                    )) ?? ""
+                    print(vmRender, terminator: "")
+                }
                 return
             }
             // Single-reducer path: multi-target only applies to --all; verify

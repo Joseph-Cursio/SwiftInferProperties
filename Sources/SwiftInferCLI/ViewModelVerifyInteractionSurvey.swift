@@ -38,10 +38,12 @@ enum ViewModelVerifyInteractionSurvey {
     }
 
     /// Verify every resolvable (candidate × family) through the M1′ pipeline.
-    /// Deterministic order: candidate name, then family.
+    /// Deterministic order: candidate name, then family. `userModuleName` is
+    /// forwarded to the pipeline (`nil` inlined / a module for imported).
     static func run(
         candidates: [ViewModelCandidate],
         sourceFiles: [CorpusPackager.SourceFile],
+        userModuleName: String? = nil,
         workdir: URL,
         runner: ViewModelVerifyInteractionPipeline.VerifyRunner
     ) -> [Entry] {
@@ -52,6 +54,7 @@ enum ViewModelVerifyInteractionSurvey {
                     candidate: candidate,
                     predicate: predicate,
                     sourceFiles: sourceFiles,
+                    userModuleName: userModuleName,
                     workdir: workdir,
                     runner: runner
                 )
@@ -59,6 +62,40 @@ enum ViewModelVerifyInteractionSurvey {
             }
         }
         return entries
+    }
+
+    /// Discover the `@Observable` carriers under `sourceDirectory` and verify
+    /// each against `packageRoot`'s library product for `userModuleName` (the
+    /// *imported* path — the model stays in its own module). Returns `""` when
+    /// there are no carriers, so the caller appends nothing.
+    static func runLive(
+        sourceDirectory: URL,
+        userModuleName: String,
+        packageRoot: URL,
+        workdirRoot: URL
+    ) throws -> String {
+        let candidates = try ViewModelDiscoverer.discover(directory: sourceDirectory)
+        guard !candidates.isEmpty else { return "" }
+        let product = PackageProductResolver.libraryProduct(
+            exposingModule: userModuleName,
+            packageRoot: packageRoot
+        ) ?? userModuleName
+        let userPackage = VerifierWorkdir.UserPackageReference(
+            packagePath: packageRoot,
+            productNames: [product]
+        )
+        let workdir = workdirRoot
+            .appendingPathComponent(".swiftinfer")
+            .appendingPathComponent("vm-verify-workdir")
+            .appendingPathComponent(userModuleName.replacingOccurrences(of: ".", with: "_"))
+        let entries = run(
+            candidates: candidates,
+            sourceFiles: [],
+            userModuleName: userModuleName,
+            workdir: workdir,
+            runner: ViewModelVerifyInteractionPipeline.importedRunner(userPackage: userPackage)
+        )
+        return render(target: userModuleName, entries: entries)
     }
 
     /// The render-level verdict for one entry (`VERIFIED` = promoted).
