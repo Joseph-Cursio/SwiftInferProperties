@@ -41,12 +41,13 @@ struct IdentifiedActionCorpusMeasuredTests {
             sequenceCount: 64,
             workingDirectory: root
         )
-        // Parent (RowList) + child (Row) each surface one determinism identity.
-        #expect(summary.contains("Identities: 2 (--family determinism)"))
-        #expect(summary.contains("2 measured-bothPass"))
+        // RowList + Row (3b) and EditorList + Editor (3c) each surface one
+        // determinism identity.
+        #expect(summary.contains("Identities: 4 (--family determinism)"))
+        #expect(summary.contains("4 measured-bothPass"))
 
         let evidence = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(evidence.count == 2)
+        #expect(evidence.count == 4)
         #expect(evidence.allSatisfy { $0.outcome == .measuredBothPass })
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
@@ -54,13 +55,15 @@ struct IdentifiedActionCorpusMeasuredTests {
             includePossible: true,
             workingDirectory: root
         )
-        let parentBlock = discovered
-            .components(separatedBy: "[Interaction-Invariant Suggestion]")
-            .first { $0.contains("Family:    determinism") && $0.contains("RowList") }
-        #expect(parentBlock?.contains("(Verified)") == true)
-        // Slice-3 payoff: `rows` is explored (full coverage), so the parent
-        // carries no partial-exploration `excluded: rows` disclosure.
-        #expect(parentBlock?.contains("excluded: rows") != true)
+        // Both parents are Verified with their composition case fully explored
+        // (RowList via 3b payload-free child; EditorList via 3c raw child action).
+        for (reducer, excluded) in [("RowList", "excluded: rows"), ("EditorList", "excluded: editors")] {
+            let block = discovered
+                .components(separatedBy: "[Interaction-Invariant Suggestion]")
+                .first { $0.contains("Family:    determinism") && $0.contains(reducer) }
+            #expect(block?.contains("(Verified)") == true)
+            #expect(block?.contains(excluded) != true)
+        }
     }
 
     static let fixtureDirectory: URL = {

@@ -60,8 +60,7 @@ struct ActionSequenceCompositionPayloadTests {
             payloadTypes: ["IdentifiedActionOf<Row>"],
             resolvedElement: ResolvedIdentifiedElement(
                 idType: "UUID",
-                childActionType: "Row.Action",
-                childActionCase: "increment"
+                childActionValue: "Row.Action.increment"
             )
         )
         #expect(
@@ -76,8 +75,7 @@ struct ActionSequenceCompositionPayloadTests {
             payloadTypes: ["IdentifiedActionOf<Row>"],
             resolvedElement: ResolvedIdentifiedElement(
                 idType: "Int",
-                childActionType: "Row.Action",
-                childActionCase: "tap"
+                childActionValue: "Row.Action.tap"
             )
         )
         #expect(
@@ -90,8 +88,7 @@ struct ActionSequenceCompositionPayloadTests {
             payloadTypes: ["IdentifiedActionOf<Row>"],
             resolvedElement: ResolvedIdentifiedElement(
                 idType: "String",
-                childActionType: "Row.Action",
-                childActionCase: "tap"
+                childActionValue: "Row.Action.tap"
             )
         )
         #expect(
@@ -200,8 +197,7 @@ struct ActionSequenceCompositionPayloadTests {
                 payloadTypes: ["IdentifiedActionOf<Row>"],
                 resolvedElement: ResolvedIdentifiedElement(
                     idType: "UUID",
-                    childActionType: "Row.Action",
-                    childActionCase: "increment"
+                    childActionValue: "Row.Action.increment"
                 )
             )
         ])

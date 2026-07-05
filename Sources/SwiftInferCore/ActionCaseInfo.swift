@@ -84,23 +84,22 @@ public struct ResolvedBindingField: Sendable, Equatable, Codable {
 
 /// Item 2 slice 3 — the resolved facts for constructing a canonical
 /// `IdentifiedAction.element(id:action:)` value against an
-/// `IdentifiedActionOf<Child>` payload. Pure data (type names + a case
-/// name) — the emitter formats the id literal + the `Gen.always(...)`
-/// expression, keeping the "how to spell a canned UUID" knowledge in the
-/// CLI emit layer rather than in Core.
+/// `IdentifiedActionOf<Child>` payload. The emitter formats the id literal +
+/// the `Gen.always(...)` wrapper; the child-action value is pre-built by
+/// `IdentifiedActionResolver.childActionValue` so it can carry arbitrary
+/// (slice 3c) nesting.
 public struct ResolvedIdentifiedElement: Sendable, Equatable, Codable {
-    /// The child `State.ID` type — one of the cheaply-defaultable set
-    /// (`UUID` / `Int` / `String`); the emitter maps it to a canned literal.
+    /// The child `State.ID` type — a cheaply-defaultable type; the emitter maps
+    /// it to a canned literal.
     public let idType: String
-    /// The child's Action type, qualified (`"Row.Action"`).
-    public let childActionType: String
-    /// A payload-free case of the child's Action (`"increment"`), driven
-    /// at depth 0 — no recursion into further composition wrappers.
-    public let childActionCase: String
+    /// Slice 3b/3c — the complete `action:` argument: a concrete `Child.Action`
+    /// value expression. Payload-free (3b) → `"Row.Action.increment"`; a
+    /// payload-bearing case (3c) → e.g. `"Editor.Action.setText(\"\")"`, or a
+    /// depth-bounded nested `".element(...)"` for `IdentifiedActionOf<GrandChild>`.
+    public let childActionValue: String
 
-    public init(idType: String, childActionType: String, childActionCase: String) {
+    public init(idType: String, childActionValue: String) {
         self.idType = idType
-        self.childActionType = childActionType
-        self.childActionCase = childActionCase
+        self.childActionValue = childActionValue
     }
 }

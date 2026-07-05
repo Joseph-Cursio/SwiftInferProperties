@@ -45,6 +45,33 @@ struct IdentifiedActionCorpusTests {
         #expect(ActionSequenceStubEmitter.excludedCaseNames(candidate).contains("rows") == false)
     }
 
+    @Test("EditorList's editors(IdentifiedActionOf<Editor>) resolves via 3c (raw child action)")
+    func resolvesPayloadBearingChildAction() throws {
+        let parent = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tca-identified-action-corpus-3c")
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: parent) }
+
+        let root = try CorpusPackager.package(
+            moduleName: "TCAIdentifiedActionCorpus",
+            fromSourcesDirectory: Self.fixtureDirectory,
+            into: parent
+        )
+
+        let (_, stub) = try VerifyInteractionPipeline.resolveAndEmit(
+            target: "TCAIdentifiedActionCorpus",
+            pinRaw: "EditorList.body",
+            workingDirectory: root
+        )
+        // Editor has NO payload-free case, so 3c picks the raw `setText(String)`
+        // and constructs `.setText("")` as the child action.
+        #expect(stub.contains(
+            ".element(id: UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!, "
+            + "action: Editor.Action.setText(\"\"))"
+        ))
+    }
+
     static let fixtureDirectory: URL = {
         URL(fileURLWithPath: #filePath, isDirectory: false)
             .deletingLastPathComponent()  // SwiftInferIntegrationTests/

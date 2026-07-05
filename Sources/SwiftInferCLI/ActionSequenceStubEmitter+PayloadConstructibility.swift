@@ -52,7 +52,7 @@ extension ActionSequenceStubEmitter {
         if let element = caseInfo.resolvedElement {
             guard let idLiteral = defaultValueLiteral(for: element.idType) else { return nil }
             return "Gen.always(\(action).\(caseInfo.name)(.element(id: \(idLiteral)"
-                + ", action: \(element.childActionType).\(element.childActionCase))))"
+                + ", action: \(element.childActionValue))))"
         }
         // Slice 4 — a resolved `binding(BindingAction<State>)` case. The
         // resolver has enumerated the reducer's `@ObservableState` stored `var`
