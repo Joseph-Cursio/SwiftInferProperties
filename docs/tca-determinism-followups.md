@@ -5,10 +5,13 @@
 Stage 3 (dependency-pinned determinism measured-verify for TCA reducers)
 shipped and verified green under Swift 6.3.3 — the three-way
 `tca-determinism-corpus` (pure / proper-dependency / snuck-raw). This note
-registers the four follow-ups deferred at that point. **Items 3 and 4 are built;
-item 1's discovery + pin disambiguation is built (its measured-verify M3
-remains); item 2 remains.** See `tca-determinism-verify-scope.md` for the shipped
-design.
+registers the four follow-ups deferred at that point. **Items 3 and 4 are built.
+Item 2 is now 4/5 slices built** — slices 1 (PresentationAction), 2 (Result),
+3b (IdentifiedActionOf), and 4 (BindingAction) shipped 2026-07-04; only slice 3c
+(child recursion — deferred, 0 added reach) remains. **Item 1 is now fully built
+— discovery + pin disambiguation *and* multi-module measured verify (M3, 2026-07-05).**
+All four registered follow-ups are complete but for the deliberately-deferred
+slice 3c. See `tca-determinism-verify-scope.md` for the shipped design.
 
 ## 1. Multi-module reducer pins / cross-module disambiguation
 
@@ -23,12 +26,29 @@ design.
   one, so `Bar.Counter.reduce` selects Bar's `Counter` over Alpha's. Fixture:
   `multi-module-discovery-corpus` (identical `CounterReducer` in `Alpha` +
   `Beta`); tests in `MultiModuleDiscoveryTests`.
-- **Still open (multi-module measured *verify* — M3):** the measured
-  verify-workdir builds one user package/product. Measuring reducers from
-  different modules in one run needs per-module product resolution threaded
-  through `VerifierWorkdir` (`PackageProductResolver.libraryProduct` is already
-  module-aware). Discovery + disambiguation — the stated cross-module problem —
-  is done; measured verify of a *pinned* cross-module reducer waits on M3.
+- **Shipped (multi-module measured *verify* — M3, 2026-07-05):** the survey
+  (`verify-interaction --all`) now takes a **repeatable `--target`** and verifies
+  each reducer against **its own** module's library product in one run. The key
+  insight: the module *is* the verify target (both the `Sources/<module>/`
+  discovery dir and the product name), so no pipeline-internal rewiring was
+  needed — `InteractionInvariantSuggestion` gained a `moduleName` (stamped from
+  `ReducerCandidate.moduleName` at emission in `InteractionTemplateFamily`), the
+  survey discovers via `collectSuggestions(targets:)` and passes each identity's
+  `moduleName` as the per-verify target, and `makeWorkdirInputs`'s existing
+  `PackageProductResolver.libraryProduct(exposingModule:)` call already resolves
+  the right product from it. `CorpusPackager.packageMultiModule` packages N
+  modules into one SwiftPM package (one library product each). Proof:
+  `Tests/Fixtures/multi-module-verify-corpus/` (`AlphaCounter` + `BetaCounter`,
+  distinct names + a module-local helper each so a wrong-product build would
+  fail) → `MultiModuleVerifyMeasuredTests` (survey over `[Alpha, Beta]` → 2
+  determinism identities → 2 `measured-bothPass`, each built against its own
+  product; ~34s, dependency-free) + fast `MultiModuleVerifyTests` (module
+  tagging, no build). **Known limitation:** two *identically-named* reducers in
+  different modules share an identity hash (the hash omits module, to keep the
+  existing single-module evidence-join keys stable), so a measured survey must
+  use distinct type names across modules; the fixture does. The single-reducer
+  (non-`--all`) path verifies within the first `--target` (a module-prefixed
+  `--reducer` still disambiguates).
 
 ## 2. Structured associated-value action payloads (composition-actions)
 
@@ -177,8 +197,13 @@ still disclosed, so no new precision decision.
 
 ## Sequencing
 
-(3) and (4) are **done**. (1)'s discovery + pin disambiguation is **done**; its
-measured-verify M3 (per-module product resolution in the verify-workdir) remains.
-(2) remains — the value-type slice is low reach (~2/99 per cycle 123); the
-high-reach version is composition-action construction (nested child actions,
-`PresentationAction`, `Result`, `BindingAction`), the epic the team shelved.
+(3) and (4) are **done**. (2)'s composition-action epic is **done** for the four
+high-reach slices — the value-type slice was correctly bypassed (low reach,
+~2/99 per cycle 123) in favour of composition-action construction
+(`PresentationAction`, `Result`, `IdentifiedActionOf`, `BindingAction`), all
+shipped; only slice 3c (child recursion — 0 added reach) is deferred. (1) is **done** —
+discovery + pin disambiguation *and* measured-verify M3 (multi-module survey,
+per-module product resolution). Everything registered here is now complete
+except the deliberately-deferred slice 3c (0 reach). Remaining TCA-track items
+are all off this list: blocked upstream (Workflow's uncallable `ApplyContext`;
+the Mobius release pin) or optional volume (corpus / value-type widening).
