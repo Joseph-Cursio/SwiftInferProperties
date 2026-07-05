@@ -157,7 +157,27 @@ public enum ViewModelActionSequenceStubEmitter {
         guard params.count == 1, let raw = RawType(typeName: params[0].typeText) else {
             return nil
         }
-        return "\(raw.generatorExpression).map(\(enumName).\(liftedCase.caseName))"
+        return "\(payloadGenerator(for: raw, typeText: params[0].typeText))"
+            + ".map(\(enumName).\(liftedCase.caseName))"
+    }
+
+    /// The payload generator for a raw-scalar type. Integer types use the kit's
+    /// **`boundedForArithmetic()`** (magnitude `2^(bitWidth/4)`) rather than the
+    /// full-range `Gen<Int>.int()`: a method that *accumulates* an unbounded
+    /// integer payload over a 16-step sequence (`cursor = cursor + n`) otherwise
+    /// overflow-traps the verifier subprocess — a generator-domain crash, not an
+    /// invariant break (surfaced by the corpus diff on `SelectionModel.setStep`).
+    /// A bounded payload still reaches the out-of-range / negative / zero values
+    /// that falsify membership invariants. Non-integer scalars are unaffected
+    /// (float overflow saturates to `inf`, no trap; `String`/`Bool` don't
+    /// accumulate) so they keep `generatorExpression`.
+    private static func payloadGenerator(for raw: RawType, typeText: String) -> String {
+        let integerRawTypes: Set<RawType> = [
+            .int, .int8, .int16, .int32, .int64,
+            .uint, .uint8, .uint16, .uint32, .uint64
+        ]
+        guard integerRawTypes.contains(raw) else { return raw.generatorExpression }
+        return "Gen<\(typeText)>.boundedForArithmetic()"
     }
 
     /// `let actionGen = <gen>` (single) or a `Gen.oneOf(…)` block (8-space base).

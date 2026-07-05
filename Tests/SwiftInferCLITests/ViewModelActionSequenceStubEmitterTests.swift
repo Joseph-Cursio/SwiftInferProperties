@@ -81,7 +81,8 @@ struct ViewModelActionSequenceStubEmitterTests {
         // Payloaded surface ⇒ enum is not CaseIterable ⇒ composed Gen<Action>.
         #expect(source.contains("let actionGen = Gen.oneOf("))
         #expect(source.contains("Gen.always(CounterModelAction.reset)"))
-        #expect(source.contains("Gen<Int>.int().map(CounterModelAction.setCount)"))
+        // Integer payloads use the kit's overflow-safe bounded generator.
+        #expect(source.contains("Gen<Int>.boundedForArithmetic().map(CounterModelAction.setCount)"))
         #expect(source.contains("from: actionGen,"))
         #expect(!source.contains("forCaseIterable:"))
     }
