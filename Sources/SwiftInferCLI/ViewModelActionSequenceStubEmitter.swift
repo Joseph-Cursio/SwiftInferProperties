@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 
 /// PROTOTYPE — the M1′ multi-step ViewModel interaction verifier
@@ -15,13 +16,18 @@ import SwiftInferCore
 /// The instance is reference-typed and mutated in place (no synthetic value
 /// `State`); a fresh `probe` per trial keeps trials independent.
 ///
-/// **Scope (this slice):** the *nullary* action surface — every lifted case
-/// is payload-free, so the sequence generator is
-/// `actionSequence(forCaseIterable:)` and needs no per-case payload
-/// generator. A payloaded surface throws `.payloadedSurfaceUnsupported`
-/// (composing a `Gen<Action>` from `ViewModelArgumentGenerator` per case is
-/// Slice 3b). Emits the `VERIFY_*` marker contract `VerifyResult` consumes,
-/// so it is a drop-in richer replacement for the single-pass emitter.
+/// **Scope.** An all-nullary surface enumerates directly via
+/// `actionSequence(forCaseIterable:)`. A payloaded surface composes a
+/// `Gen<Action>` (Slice 3b) over the *constructible* subset — payload-free
+/// cases (`Gen.always(.case)`) and single raw-scalar payloads
+/// (`<RawType gen>.map(Enum.case)`, mirroring the reducer path's
+/// `tcaActionGenLines`). Non-constructible cases (multi-arg, or a non-raw
+/// single payload such as `UUID` / a model type) are **disclosed** in the
+/// header and left out of exploration, not silently dropped — the same
+/// partial-exploration posture as the `.tca` path. A surface with *no*
+/// constructible case throws `.noConstructibleActions`. Emits the `VERIFY_*`
+/// marker contract `VerifyResult` consumes, so it is a drop-in richer
+/// replacement for the single-pass emitter.
 public enum ViewModelActionSequenceStubEmitter {
 
     public struct Inputs: Equatable, Sendable {
@@ -55,22 +61,22 @@ public enum ViewModelActionSequenceStubEmitter {
     }
 
     public enum EmitError: Error, CustomStringConvertible, Equatable {
-        /// The lifted surface has ≥1 payloaded case, so `forCaseIterable:`
-        /// can't enumerate it. Slice 3b composes a `Gen<Action>` per case.
-        case payloadedSurfaceUnsupported(enumName: String)
         /// No liftable (sync, non-throwing) actions — nothing to drive.
         case emptyActionSurface(typeName: String)
+        /// Every lifted case has a non-constructible payload (multi-arg, or a
+        /// non-raw single payload), so no `Gen<Action>` can be composed.
+        case noConstructibleActions(typeName: String)
 
         public var description: String {
             switch self {
-            case let .payloadedSurfaceUnsupported(enumName):
-                return "ViewModelActionSequenceStubEmitter: '\(enumName)' has payloaded "
-                    + "cases; the CaseIterable sequence path only supports a nullary "
-                    + "surface (payloaded Gen<Action> composition is Slice 3b)."
-
             case let .emptyActionSurface(typeName):
                 return "ViewModelActionSequenceStubEmitter: '\(typeName)' has no liftable "
                     + "(synchronous, non-throwing) actions to drive."
+
+            case let .noConstructibleActions(typeName):
+                return "ViewModelActionSequenceStubEmitter: '\(typeName)' has no constructible "
+                    + "action — every case has a multi-arg or non-raw payload the generator "
+                    + "can't produce."
             }
         }
     }
@@ -83,41 +89,116 @@ public enum ViewModelActionSequenceStubEmitter {
         guard !lifted.lifted.isEmpty else {
             throw EmitError.emptyActionSurface(typeName: inputs.typeName)
         }
-        guard lifted.isCaseIterable else {
-            throw EmitError.payloadedSurfaceUnsupported(enumName: lifted.enumName)
-        }
-        return renderVerifier(inputs: inputs, lifted: lifted)
+        let plan = try generatorPlan(inputs: inputs, lifted: lifted)
+        return renderVerifier(inputs: inputs, lifted: lifted, plan: plan)
     }
 
-    /// Assemble the full verifier source once the action surface has been
-    /// validated as a non-empty, nullary (CaseIterable) alphabet. Built from
-    /// column-0 blocks (header / enum+drive / verifier struct) joined with the
-    /// codebase's line-block idiom, so no single function trips the length cap.
-    private static func renderVerifier(
+    // MARK: - Generator plan
+
+    /// The `let generator = …` setup lines (8-space indented) plus the cases
+    /// left out of exploration because their payload isn't generatable.
+    private struct GeneratorPlan {
+        let setup: [String]
+        let excludedNonConstructible: [String]
+    }
+
+    private static func generatorPlan(
         inputs: Inputs,
         lifted: ViewModelActionEnumEmitter.Result
+    ) throws -> GeneratorPlan {
+        let length = "\(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)"
+        // All-nullary → the enum is CaseIterable; enumerate it directly.
+        if lifted.isCaseIterable {
+            return GeneratorPlan(
+                setup: [
+                    "        let generator = ActionSequenceFactory.actionSequence(",
+                    "            forCaseIterable: \(lifted.enumName).self,",
+                    "            length: \(length)",
+                    "        )"
+                ],
+                excludedNonConstructible: []
+            )
+        }
+        // Payloaded → compose a Gen<Action> over the constructible subset.
+        var gens: [String] = []
+        var excluded: [String] = []
+        for liftedCase in lifted.lifted {
+            if let gen = caseGenerator(enumName: lifted.enumName, liftedCase: liftedCase) {
+                gens.append(gen)
+            } else {
+                excluded.append(liftedCase.action.name)
+            }
+        }
+        guard !gens.isEmpty else {
+            throw EmitError.noConstructibleActions(typeName: inputs.typeName)
+        }
+        var setup = actionGenLines(gens)
+        setup.append("        let generator = ActionSequenceFactory.actionSequence(")
+        setup.append("            from: actionGen,")
+        setup.append("            length: \(length)")
+        setup.append("        )")
+        return GeneratorPlan(setup: setup, excludedNonConstructible: excluded)
+    }
+
+    /// `Gen.always(.case)` for a payload-free case; `<rawGen>.map(Enum.case)`
+    /// for a single raw-scalar payload; `nil` (non-constructible) otherwise.
+    private static func caseGenerator(
+        enumName: String,
+        liftedCase: ViewModelActionEnumEmitter.LiftedCase
+    ) -> String? {
+        let params = liftedCase.action.parameters
+        if params.isEmpty {
+            return "Gen.always(\(enumName).\(liftedCase.caseName))"
+        }
+        guard params.count == 1, let raw = RawType(typeName: params[0].typeText) else {
+            return nil
+        }
+        return "\(raw.generatorExpression).map(\(enumName).\(liftedCase.caseName))"
+    }
+
+    /// `let actionGen = <gen>` (single) or a `Gen.oneOf(…)` block (8-space base).
+    private static func actionGenLines(_ gens: [String]) -> [String] {
+        if gens.count == 1 { return ["        let actionGen = \(gens[0])"] }
+        var lines = ["        let actionGen = Gen.oneOf("]
+        for (index, gen) in gens.enumerated() {
+            lines.append("            \(gen)" + (index == gens.count - 1 ? "" : ","))
+        }
+        lines.append("        )")
+        return lines
+    }
+
+    // MARK: - Rendering
+
+    /// Assemble the verifier from column-0 blocks (header / enum+drive /
+    /// verifier struct), joined with the codebase's line-block idiom so no
+    /// single function trips the length cap.
+    private static func renderVerifier(
+        inputs: Inputs,
+        lifted: ViewModelActionEnumEmitter.Result,
+        plan: GeneratorPlan
     ) -> String {
         [
-            headerBlock(inputs: inputs, skipped: lifted.skipped),
+            headerBlock(inputs: inputs, lifted: lifted, plan: plan),
             lifted.source,
-            verifierStruct(inputs: inputs, enumName: lifted.enumName)
+            verifierStruct(inputs: inputs, generatorSetup: plan.setup)
         ]
         .joined(separator: "\n\n")
     }
 
     private static func headerBlock(
         inputs: Inputs,
-        skipped: [ViewModelActionEnumEmitter.Skipped]
+        lifted: ViewModelActionEnumEmitter.Result,
+        plan: GeneratorPlan
     ) -> String {
-        let skippedNote = skipped.isEmpty
+        var excluded = lifted.skipped.map { "\($0.action) (\($0.reason.rawValue))" }
+        excluded += plan.excludedNonConstructible.map { "\($0) (non-generatable payload)" }
+        let note = excluded.isEmpty
             ? ""
-            : "\n// Excluded from the action surface: "
-                + skipped.map { "\($0.action) (\($0.reason.rawValue))" }
-                    .joined(separator: ", ")
+            : "\n// Excluded from the action surface: " + excluded.joined(separator: ", ")
         return """
         // PROTOTYPE — auto-generated M1′ ViewModel interaction verifier.
         // Type: \(inputs.typeName)
-        // Invariant (after every action): \(inputs.predicate)\(skippedNote)
+        // Invariant (after every action): \(inputs.predicate)\(note)
         import Foundation
         import \(inputs.userModuleName)
         import PropertyBased
@@ -125,54 +206,53 @@ public enum ViewModelActionSequenceStubEmitter {
         """
     }
 
-    private static func verifierStruct(inputs: Inputs, enumName: String) -> String {
-        let length = "\(inputs.lengthLowerBound)...\(inputs.lengthUpperBound)"
-        return """
-        @main
-        struct ViewModelInteractionVerifier {
-            static func main() {
-                var rng = Xoshiro(seed: (\(seedTuple(from: inputs.typeName))))
-                let generator = ActionSequenceFactory.actionSequence(
-                    forCaseIterable: \(enumName).self,
-                    length: \(length)
-                )
-                var clean = 0
-                for trial in 0..<\(inputs.sequenceCount) {
-                    let actions = generator.run(using: &rng)
-                    let probe = \(inputs.typeName)()
-                    if !(\(inputs.predicate)) { report(fail: trial); return }
-                    for action in actions {
-                        drive(probe, action)
-                        if !(\(inputs.predicate)) { report(fail: trial); return }
-                    }
-                    clean += 1
-                }
-                report(passTrials: clean)
-            }
-        \(Self.reportHelpers)
-        }
-        """
+    private static func verifierStruct(inputs: Inputs, generatorSetup: [String]) -> String {
+        var lines: [String] = [
+            "@main",
+            "struct ViewModelInteractionVerifier {",
+            "    static func main() {",
+            "        var rng = Xoshiro(seed: (\(seedTuple(from: inputs.typeName))))"
+        ]
+        lines.append(contentsOf: generatorSetup)
+        lines.append(contentsOf: [
+            "        var clean = 0",
+            "        for trial in 0..<\(inputs.sequenceCount) {",
+            "            let actions = generator.run(using: &rng)",
+            "            let probe = \(inputs.typeName)()",
+            "            if !(\(inputs.predicate)) { report(fail: trial); return }",
+            "            for action in actions {",
+            "                drive(probe, action)",
+            "                if !(\(inputs.predicate)) { report(fail: trial); return }",
+            "            }",
+            "            clean += 1",
+            "        }",
+            "        report(passTrials: clean)",
+            "    }",
+            ""
+        ])
+        lines.append(contentsOf: Self.reportHelperLines)
+        lines.append("}")
+        return lines.joined(separator: "\n")
     }
 
-    /// The two `VERIFY_*` marker reporters — static text, hoisted to a
-    /// type-scope constant so `verifierStruct` stays within the length cap.
-    /// Indented 4 spaces to sit inside the emitted struct body.
-    private static let reportHelpers = """
-            static func report(fail trial: Int) {
-                print("VERIFY_DEFAULT_RESULT: FAIL")
-                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                exit(1)
-            }
-
-            static func report(passTrials trials: Int) {
-                print("VERIFY_DEFAULT_RESULT: PASS")
-                print("VERIFY_DEFAULT_TRIALS: \\(trials)")
-                print("VERIFY_EDGE_RESULT: PASS")
-                print("VERIFY_EDGE_TRIALS: 0")
-                print("VERIFY_EDGE_SAMPLED: 0")
-                exit(0)
-            }
-        """
+    /// The two `VERIFY_*` marker reporters (4-space indented, inside the emitted
+    /// struct) — static text hoisted out so `verifierStruct` stays short.
+    private static let reportHelperLines: [String] = [
+        "    static func report(fail trial: Int) {",
+        "        print(\"VERIFY_DEFAULT_RESULT: FAIL\")",
+        "        print(\"VERIFY_DEFAULT_TRIAL: \\(trial)\")",
+        "        exit(1)",
+        "    }",
+        "",
+        "    static func report(passTrials trials: Int) {",
+        "        print(\"VERIFY_DEFAULT_RESULT: PASS\")",
+        "        print(\"VERIFY_DEFAULT_TRIALS: \\(trials)\")",
+        "        print(\"VERIFY_EDGE_RESULT: PASS\")",
+        "        print(\"VERIFY_EDGE_TRIALS: 0\")",
+        "        print(\"VERIFY_EDGE_SAMPLED: 0\")",
+        "        exit(0)",
+        "    }"
+    ]
 
     // MARK: - Deterministic seed
 

@@ -66,8 +66,28 @@ struct ViewModelActionSequenceStubEmitterTests {
         #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
     }
 
-    @Test("payloaded surface is rejected (deferred to Slice 3b)")
-    func rejectsPayloadedSurface() {
+    @Test("single raw-scalar payload composes a Gen<Action> via from: actionGen")
+    func emitsSingleRawPayloadGenerator() throws {
+        let inputs = ViewModelActionSequenceStubEmitter.Inputs(
+            typeName: "CounterModel",
+            userModuleName: "AppCore",
+            predicate: "probe.count >= 0",
+            actions: [
+                vmAction("reset"),
+                vmAction("setCount", [.init(label: nil, typeText: "Int")])
+            ]
+        )
+        let source = try ViewModelActionSequenceStubEmitter.emit(inputs)
+        // Payloaded surface ⇒ enum is not CaseIterable ⇒ composed Gen<Action>.
+        #expect(source.contains("let actionGen = Gen.oneOf("))
+        #expect(source.contains("Gen.always(CounterModelAction.reset)"))
+        #expect(source.contains("Gen<Int>.int().map(CounterModelAction.setCount)"))
+        #expect(source.contains("from: actionGen,"))
+        #expect(!source.contains("forCaseIterable:"))
+    }
+
+    @Test("non-raw payload case is disclosed as excluded, constructible cases still drive")
+    func discloseNonRawPayloadButStillEmits() throws {
         let inputs = ViewModelActionSequenceStubEmitter.Inputs(
             typeName: "CartModel",
             userModuleName: "AppCore",
@@ -76,6 +96,22 @@ struct ViewModelActionSequenceStubEmitterTests {
                 vmAction("clear"),
                 vmAction("add", [.init(label: nil, typeText: "Item")])
             ]
+        )
+        let source = try ViewModelActionSequenceStubEmitter.emit(inputs)
+        // `add(Item)` can't be generated (Item isn't a raw scalar) → disclosed…
+        #expect(source.contains("Excluded from the action surface: add (non-generatable payload)"))
+        // …but `clear` still drives, via the composed generator.
+        #expect(source.contains("Gen.always(CartModelAction.clear)"))
+        #expect(source.contains("from: actionGen,"))
+    }
+
+    @Test("no constructible action is rejected")
+    func rejectsNoConstructibleActions() {
+        let inputs = ViewModelActionSequenceStubEmitter.Inputs(
+            typeName: "CartModel",
+            userModuleName: "AppCore",
+            predicate: "true",
+            actions: [vmAction("add", [.init(label: nil, typeText: "Item")])]
         )
         #expect(throws: ViewModelActionSequenceStubEmitter.EmitError.self) {
             try ViewModelActionSequenceStubEmitter.emit(inputs)
