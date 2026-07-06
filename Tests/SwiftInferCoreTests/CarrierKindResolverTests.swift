@@ -191,7 +191,7 @@ struct CarrierKindResolverTests {
 
     @Test("Struct with same-corpus class-typed member classifies as .mixed (Worked Example 1)")
     func structWithSameCorpusClassMemberIsMixed() {
-        // ValueSemantic Kit Proposal §2.2 worked example 1 — struct holding
+        // ValueSemantic build plan §2.1 shape 1 — struct holding
         // a same-corpus class instance (or in this textual approximation,
         // a class-typed stored property whose class IS in the corpus).
         let resolver = makeResolver([
@@ -205,7 +205,7 @@ struct CarrierKindResolverTests {
 
     @Test("Struct with closure-typed member classifies as .mixed (Worked Example 3)")
     func structWithClosureMemberIsMixed() {
-        // ValueSemantic Kit Proposal §2.2 worked example 3 — closure
+        // ValueSemantic build plan §2.1 shape 3 — closure
         // captures shared mutable state through reference semantics.
         let resolver = makeResolver([
             decl("Counter", .struct, members: [

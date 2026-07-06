@@ -113,8 +113,8 @@ public struct Signal: Sendable, Equatable {
         /// than missed value-semantic positives.
         ///
         /// Mixed carriers (struct with a class-typed or closure-typed
-        /// stored property) emit no signal — conservative; the worked
-        /// examples in `docs/ideas/ValueSemantic Kit Proposal.md` §2.2
+        /// stored property) emit no signal — conservative; the bug shapes
+        /// in `docs/valuesemantic-build-plan.md` §2.1
         /// (broken CoW / closure-captured state) are bugs that look
         /// value-semantic structurally and would falsely score positive
         /// otherwise.
