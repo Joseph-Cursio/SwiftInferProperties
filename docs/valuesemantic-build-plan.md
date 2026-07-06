@@ -9,7 +9,10 @@ and a user-runnable **`verify-value-semantics` command** that reports confirmed
 leaks with minimal repros on real `internal`-typed packages. Three kit releases
 (v3.4.0 protocol + single-step, v3.5.0 multi-step interleaving, v3.6.0
 `@ValueSemanticTests` macro). See **§10 What shipped** + **§11** (the command).
-Remaining (optional): the slice-6 identity companion for reference types.
+Slice 6 (defensive copy for reference types, Ch. 9 §9.3) is also shipped —
+`verify-value-semantics` now finds shallow-copy / `return self` bugs in classes
+alongside struct copy-independence (kit v3.7.0, §12). Remaining (both optional):
+a `@DefensiveCopyTests` macro + the slice-6e identity-stability law.
 
 **Conceptual source: `~/xcode_projects/pbt-book` Chapter 9, "Value semantics,
 COW and identity."** That chapter is effectively the spec for the property this
@@ -444,16 +447,24 @@ containing type).
 - Constructibility / Equatable gates reuse the value-semantics gates verbatim.
 
 ### Slicing
-- **6a — kit `DefensiveCopy` protocol + harness** (v3.7.0). Fixtures: correct
-  deep-copy (bothPass), `return self` (fails A1), shallow copy sharing a
-  reference member (fails A2). *Load-bearing.*
-- **6b — engine discovery.** `DefensiveCopyDiscoverer` + candidate + a
-  `discover-reducers` line; precision guards (non-class / no copy method /
-  non-Equatable excluded).
-- **6c — verify wiring.** Emitter variant + fold into `ValueSemanticVerifier`
-  (both modes) + report; measured `.subprocess` test.
-- **6d — `@DefensiveCopyTests` macro** (optional).
-- **6e — Law B** — shelved unless wanted.
+- **6a — ✅ SHIPPED (kit v3.7.0).** `DefensiveCopy` protocol +
+  `checkDefensiveCopyPropertyLaws` (`copyIsDistinctInstance` + `copyIsIndependent`
+  = the ValueSemantic law via `copyUnderTest()`). Fixtures: deep copy (both pass),
+  `return self` (fails distinctness), shallow copy sharing a `Box` (fails
+  independence).
+- **6b — ✅ SHIPPED.** `DefensiveCopyDiscoverer` + `DefensiveCopyCandidate` +
+  `discover-reducers` section (extracted to a `+DefensiveCopy` extension for the
+  length caps). High-precision: class + curated copy-verb method returning its
+  own type; struct / no-copy-method / foreign-return excluded.
+- **6c — ✅ SHIPPED.** `DefensiveCopyStubEmitter` + fold into
+  `ValueSemanticVerifier` (a `VerifyJob` abstraction — both candidate kinds share
+  the packaging / path-dep+`@testable` / warm-workdir loop) + the unified report.
+  The emitter uses CONCRETE type names, not `Self` (a final-class witness with the
+  concrete type satisfies the `Self` requirements; `Self` in a class parameter
+  position is a covariant-Self error). Measured test verifies both a correct-copy
+  and a shallow-copy INTERNAL class alongside the structs.
+- **6d — `@DefensiveCopyTests` macro** (optional; not built).
+- **6e — Law B** (identity stability) — shelved unless wanted.
 
 ### Scope boundaries (Law A v1 does NOT)
 Multi-arg mutation payloads (gated); actors; `NSCopying`-only classes without an
