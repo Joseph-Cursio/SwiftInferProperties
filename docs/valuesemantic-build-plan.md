@@ -1,12 +1,14 @@
 # ValueSemantic — build plan (type-level copy-independence verification)
 
-Status: **design plan** (no code landed) — needs sign-off before implementation.
-Supersedes the discovery/verify half of `docs/ideas/ValueSemantic Kit Proposal.md`
-(2026-05-04). Grounds every claim in the shipped `SwiftInferCore` /
-`VerifyInteractionPipeline` code and the current `SwiftPropertyLaws` (v3.2.0)
-surface. Author note: this is the **one workstream of that proposal still
-unbuilt** — shrinking + generator primitives from the same proposal have
-largely landed kit-side; the `ValueSemantic` protocol + engine discovery have not.
+Status: **SHIPPED — slices 1–5 complete** (2026-07-06). Supersedes the
+discovery/verify half of `docs/ideas/ValueSemantic Kit Proposal.md` (2026-05-04).
+The feature discovers reference-backed struct candidates AND verifies the
+copy-mutate-compare law end-to-end, catching all three pbt-book Ch. 9 bug shapes
+(reference container / broken CoW / closure capture), plus a CI macro for
+adopters. Three kit releases (v3.4.0 protocol + single-step, v3.5.0 multi-step
+interleaving, v3.6.0 `@ValueSemanticTests` macro). See **§10 What shipped** for
+the commit/version map. Remaining (optional, deferred): the engine-side
+evidence-join `.possible → .verified` promotion + the slice-6 identity companion.
 
 **Conceptual source: `~/xcode_projects/pbt-book` Chapter 9, "Value semantics,
 COW and identity."** That chapter is effectively the spec for the property this
@@ -191,24 +193,35 @@ Split cleanly across the two repos, mirroring the existing kit/engine seam.
 
 ## 6. Slicing (each slice independently landable + testable)
 
-1. **Kit protocol + single-step harness** (Examples 1–2). Corpus of
-   deliberately-leaky + correct fixtures; `checkValueSemanticPropertyLaws`
-   green/red. No engine work. *This is the load-bearing slice.*
-2. **Engine recognition only** — `ValueSemanticDiscoverer` +
-   `ValueSemanticCandidate`, surfaced in a new `discover` section (empty-sentinel
-   when absent). Precision guards: pure-value struct excluded; class/actor
-   excluded; `.unknown`-member excluded. No invariant emitted yet.
-3. **Verify emission end-to-end** — stub emitter + packaged-corpus path-dep
-   build; a leaky fixture → `measured-defaultFails` (bug found), a correct CoW
-   fixture → `measured-bothPass`. `.subprocess` measured test.
-4. **Multi-step (Example 3)** — closure-capture leak via the stateful step-driver;
-   interference-free replay comparison.
-5. **Productionize** — fold into the standard `discover` pipeline + evidence
-   join + `.possible → .verified` promotion; `@ValueSemanticTests` macro (kit);
-   surface the shrunk minimal repro in FAIL output (§5.2 shrink note).
-6. **(optional companion) Identity stability for reference types** — the
+1. ✅ **SHIPPED (kit v3.4.0) — Kit protocol + single-step harness** (Examples 1–2).
+   `checkValueSemanticPropertyLaws` with the `copyMutationDoesNotLeak` law;
+   independent-twin comparison; deliberately-leaky + correct-CoW fixtures. *The
+   load-bearing slice.*
+2. ✅ **SHIPPED — Engine recognition.** `ValueSemanticDiscoverer` +
+   `ValueSemanticCandidate` (corpus fold; closure / mutable-container / corpus-
+   class shapes; pure-value/class/actor/unknown/no-surface guards), surfaced as a
+   `discover-reducers` section (empty-sentinel when absent). No invariant emitted.
+3. ✅ **SHIPPED — Verify emission end-to-end.** `ValueSemanticStubEmitter` emits a
+   verifier that path-deps the packaged corpus + `PropertyLawKit`, retroactively
+   conforms the imported struct (deriving `Mutation`/`apply` from the mutation
+   surface), and runs the kit law. `SafeStore` → bothPass, `LeakyStore` →
+   defaultFails; `.subprocess` measured test.
+4. ✅ **SHIPPED (kit v3.5.0) — Multi-step (Example 3).** Second law
+   `copyMutationDoesNotLeakUnderInterleaving` (interference-on-a-copy then own-
+   script vs interference-free replay). `ClosureCounter` fixture → defaultFails,
+   caught only by this law.
+5. ⏳ **PARTIAL — Productionize.** ✅ `@ValueSemanticTests` kit macro (v3.6.0) +
+   ✅ shrunk minimal repro in FAIL output (done in slice 3, via
+   `VERIFY_DEFAULT_INPUT`). ⬜ **Deferred:** the engine-side evidence-join
+   `.possible → .verified` promotion — value semantics is *type-level*, so it
+   doesn't fit the `InteractionInvariantSuggestion` machinery (action-sequence
+   predicates over reducers) and there's no `verify-value-semantics` command
+   writing evidence for discover to read. Needs new per-family infrastructure — a
+   separate epic, deferred by design.
+6. ⬜ **(optional companion) Identity stability for reference types** — the
    Chapter 9 §9.3 dual law (`===`/vended-id invariant under mutation, changed
    under copy) for `class`/`actor` candidates, same plumbing, different predicate.
+   Not built.
 
 ## 7. Open questions / risks
 
@@ -254,3 +267,47 @@ Split cleanly across the two repos, mirroring the existing kit/engine seam.
 - Recommended order: kit §5.1 slice 1 → engine slice 2 → engine slice 3 → slice 4
   → productionize. Ship Examples 1–2 first; defer Example 3 until the single-step
   path is proven end-to-end.
+
+## 10. What shipped (2026-07-06)
+
+Built in the order above; the actual sequencing matched the plan. The plan's
+"§8" reference was stale (PRD v2.0 §8 is ActionSequenceGenerator) — ValueSemantic
+remains a new type-level section, unassigned here. During slice 1 the kit's
+`v3.3.0` tag was found to already exist (composedGenerator); the ValueSemantic
+work was released as **v3.4.0** instead (the commit message's "(v3.3.0)" is a
+known mislabel, corrected by the v3.4.0 tag notes).
+
+### Kit (`SwiftPropertyLaws`)
+
+| Release | Adds | Key files |
+|---|---|---|
+| **v3.4.0** | `ValueSemantic` protocol + `checkValueSemanticPropertyLaws` (single-step `copyMutationDoesNotLeak`) | `PropertyLawKit/Public/ValueSemantic.swift`, `ValueSemanticLaws.swift` |
+| **v3.5.0** | second law `copyMutationDoesNotLeakUnderInterleaving` (multi-step, Example 3) | `ValueSemanticLaws.swift` (+`ClosureLeak` fixture) |
+| **v3.6.0** | `@ValueSemanticTests` peer macro (auto CI test) | `PropertyLawMacro/PropertyLawMacro.swift`, `PropertyLawMacroImpl/ValueSemanticTestsMacro.swift`, `Plugin.swift`, `Diagnostics.swift` |
+
+Kit design notes: leak observation is **independent-twin comparison** (compare
+`original == reference` after mutating only a copy — a value-copied snapshot
+would share the leaky reference and hide the bug). The mutation surface is a
+`CaseIterable` enum so `ActionSequenceFactory` (v2.2.0) samples/shrinks it. Both
+laws are Strict; failures shrink to a minimal script (Ch. 9 §9.2.3).
+
+### Engine (`SwiftInferProperties`)
+
+| Slice | Files | Tests |
+|---|---|---|
+| 2 recognition | `SwiftInferCore/ValueSemanticCandidate.swift`, `ValueSemanticDiscoverer.swift`; `SwiftInferCLI/DiscoverReducersCommand.swift` (section) | `ValueSemanticDiscovererTests` (10), `DiscoverReducersCommandTests` (+3 render) |
+| 3 verify emission | `SwiftInferCLI/ValueSemanticStubEmitter.swift`; `Tests/Fixtures/valuesemantic-verify-corpus/{SafeStore,LeakyStore}.swift` | `ValueSemanticStubEmitterTests` (4), `ValueSemanticVerifyMeasuredTests` (`.subprocess`) |
+| 4 multi-step | `Tests/Fixtures/valuesemantic-verify-corpus/ClosureCounter.swift`; kit pin → 3.5.0 | measured test asserts `ClosureCounter` → defaultFails |
+
+Discovery signal: `struct` + ≥1 reference-backed stored member (closure /
+`NSMutable*`-family container / corpus `class`/`actor`) + ≥1 mutation-surface
+method (`mutating`, or `Void`-returning non-`mutating` — the Example-1 shape).
+The verifier retroactively conforms the imported corpus struct to `ValueSemantic`
+(deriving `Mutation`/`apply` from the payload-free mutation surface), keeping the
+packaged corpus dependency-free. Verify-readiness gates: non-`Equatable` or no
+payload-free mutation → skipped.
+
+**Known limitation (surfaced by a slice-2 dogfood):** a stored member declared
+without a type annotation (`var storage = Storage()`) isn't classified — the
+scanner captures declared type spellings only (engine-wide textual-type posture);
+annotate to detect.
