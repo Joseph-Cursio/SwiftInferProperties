@@ -44,6 +44,19 @@ struct ValueSemanticPackageVerifyMeasuredTests {
         } else {
             Issue.record("PackageSafe expected verifiedSafe; got \(String(describing: status("PackageSafe")))")
         }
+        // Slice 6c — defensive-copy classes in the same package.
+        if case .verifiedSafe = status("PackageCorrectCopy") {
+            // Deep copy — distinct + independent.
+        } else {
+            let got = String(describing: status("PackageCorrectCopy"))
+            Issue.record("PackageCorrectCopy expected verifiedSafe; got \(got)")
+        }
+        if case .confirmedLeak = status("PackageShallowCopy") {
+            // Shallow copy shares the Box reference → fails copyIsIndependent.
+        } else {
+            let got = String(describing: status("PackageShallowCopy"))
+            Issue.record("PackageShallowCopy expected confirmedLeak; got \(got)")
+        }
     }
 
     static let packageRoot: URL = {

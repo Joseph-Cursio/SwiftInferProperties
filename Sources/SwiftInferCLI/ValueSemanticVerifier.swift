@@ -1,23 +1,21 @@
 import Foundation
 import SwiftInferCore
 
-/// Productionizes the slice-3/4 measured pipeline: discover value-semantics
-/// candidates in a target, verify each against the kit's copy-mutate-compare
-/// law, and return a per-candidate outcome.
+/// Productionizes the measured pipeline into a runnable verifier. Discovers
+/// **both** value-semantics candidates (structs, copy-mutate-compare) and
+/// defensive-copy candidates (classes with a `copy()`/`clone()`, Ch. 9 §9.3),
+/// verifies each against its kit law, and returns a unified per-candidate
+/// outcome.
 ///
 /// Two reachability modes:
-/// - **Self-contained (5a)** — `verify(...)`: the target's sources are packaged
-///   as a standalone module (`CorpusPackager`) and imported plainly. Works when
-///   the target is self-contained + `public`; deps / `internal` types surface as
-///   `.buildFailed`.
-/// - **Path-dependency (5b)** — `verifyInPackage(...)`: the verifier
-///   `.package(path:)`-depends on the user's real package and `@testable import`s
-///   the target module, reaching **`internal` types** + the package's real
-///   dependencies (the build already passes `-enable-testing`).
+/// - **Self-contained (5a)** — `verify(...)`: package the target's sources
+///   standalone + plain `import` (`public`, dependency-free targets).
+/// - **Path-dependency (5b)** — `verifyInPackage(...)`: `.package(path:)` the
+///   user's real package + `@testable import` (reaches `internal` types + real
+///   dependencies; the build passes `-enable-testing`).
 ///
 /// Serial by design: one verifier workdir is reused across candidates (only
-/// `main.swift` changes), so the path-dependency + kit graph builds cold once
-/// and the rest are incremental.
+/// `main.swift` changes), so the path-dep + kit graph builds cold once.
 public enum ValueSemanticVerifier {
 
     /// 5a — self-contained: package the target's sources standalone.
@@ -26,91 +24,122 @@ public enum ValueSemanticVerifier {
         moduleName: String,
         workParent: URL
     ) throws -> [ValueSemanticVerifyResult] {
-        let candidates = try ValueSemanticDiscoverer.discover(directory: targetDirectory)
-        guard !candidates.isEmpty else { return [] }
+        let jobs = try jobs(in: targetDirectory, moduleName: moduleName, testable: false)
+        guard !jobs.isEmpty else { return [] }
         let corpusRoot = try CorpusPackager.package(
             moduleName: moduleName,
             fromSourcesDirectory: targetDirectory,
             into: workParent
         )
-        return try run(
-            candidates,
-            moduleName: moduleName,
-            manifest: selfContainedManifest(corpusRoot: corpusRoot, moduleName: moduleName),
-            testable: false,
-            workParent: workParent
-        )
+        let manifest = selfContainedManifest(corpusRoot: corpusRoot, moduleName: moduleName)
+        return try run(jobs, manifest: manifest, workParent: workParent)
     }
 
-    /// 5b — path-dependency: verify against the target module inside the user's
-    /// real package (`packagePath`), reaching `internal` types via `@testable`.
+    /// 5b — path-dependency: verify the target module inside the user's real
+    /// package (`packagePath`), reaching `internal` types via `@testable`.
     public static func verifyInPackage(
         packagePath: URL,
         targetDirectory: URL,
         moduleName: String,
         workParent: URL
     ) throws -> [ValueSemanticVerifyResult] {
-        let candidates = try ValueSemanticDiscoverer.discover(directory: targetDirectory)
-        guard !candidates.isEmpty else { return [] }
-        return try run(
-            candidates,
-            moduleName: moduleName,
-            manifest: pathDependencyManifest(packagePath: packagePath, moduleName: moduleName),
-            testable: true,
-            workParent: workParent
+        let jobs = try jobs(in: targetDirectory, moduleName: moduleName, testable: true)
+        guard !jobs.isEmpty else { return [] }
+        let manifest = pathDependencyManifest(packagePath: packagePath, moduleName: moduleName)
+        return try run(jobs, manifest: manifest, workParent: workParent)
+    }
+
+    // MARK: - Jobs
+
+    /// A unit of verification work — a pre-emitted stub, or a skip reason.
+    private struct VerifyJob {
+        let typeName: String
+        let location: SourceLocation
+        let stub: String?
+        let notVerifiableReason: String?
+    }
+
+    /// Discover value-semantics (struct) + defensive-copy (class) candidates and
+    /// turn each into a job (an emitted stub, or a not-verifiable reason).
+    private static func jobs(
+        in targetDirectory: URL,
+        moduleName: String,
+        testable: Bool
+    ) throws -> [VerifyJob] {
+        let valueSemantic = try ValueSemanticDiscoverer.discover(directory: targetDirectory)
+            .map { valueSemanticJob($0, moduleName: moduleName, testable: testable) }
+        let defensiveCopy = try DefensiveCopyDiscoverer.discover(directory: targetDirectory)
+            .map { defensiveCopyJob($0, moduleName: moduleName, testable: testable) }
+        return valueSemantic + defensiveCopy
+    }
+
+    private static func valueSemanticJob(
+        _ candidate: ValueSemanticCandidate,
+        moduleName: String,
+        testable: Bool
+    ) -> VerifyJob {
+        let stub = ValueSemanticStubEmitter
+            .inputs(for: candidate, moduleName: moduleName, testable: testable)
+            .map(ValueSemanticStubEmitter.emit)
+        let reason = candidate.equatability != .equatable
+            ? "not Equatable (the copy-mutate-compare law compares instances with ==)"
+            : "no payload-free mutation method to drive"
+        return VerifyJob(
+            typeName: candidate.typeName,
+            location: candidate.location,
+            stub: stub,
+            notVerifiableReason: stub == nil ? reason : nil
+        )
+    }
+
+    private static func defensiveCopyJob(
+        _ candidate: DefensiveCopyCandidate,
+        moduleName: String,
+        testable: Bool
+    ) -> VerifyJob {
+        let stub = DefensiveCopyStubEmitter
+            .inputs(for: candidate, moduleName: moduleName, testable: testable)
+            .map(DefensiveCopyStubEmitter.emit)
+        let reason = candidate.equatability != .equatable
+            ? "not Equatable (the defensive-copy law compares instances with ==)"
+            : "no payload-free mutation method to drive"
+        return VerifyJob(
+            typeName: candidate.typeName,
+            location: candidate.location,
+            stub: stub,
+            notVerifiableReason: stub == nil ? reason : nil
         )
     }
 
     // MARK: - Shared verify loop
 
     private static func run(
-        _ candidates: [ValueSemanticCandidate],
-        moduleName: String,
+        _ jobs: [VerifyJob],
         manifest: String,
-        testable: Bool,
         workParent: URL
     ) throws -> [ValueSemanticVerifyResult] {
         let workdir = workParent.appendingPathComponent("verifier")
         let sources = workdir.appendingPathComponent("Sources/SwiftInferVerifier")
         try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
-        try manifest.write(
-            to: workdir.appendingPathComponent("Package.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
+        try manifest.write(to: workdir.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
         let mainFile = sources.appendingPathComponent("main.swift")
-        return candidates.map { candidate in
-            classify(candidate, moduleName: moduleName, testable: testable, workdir: workdir, mainFile: mainFile)
-        }
+        return jobs.map { classify($0, workdir: workdir, mainFile: mainFile) }
     }
 
-    private static func classify(
-        _ candidate: ValueSemanticCandidate,
-        moduleName: String,
-        testable: Bool,
-        workdir: URL,
-        mainFile: URL
-    ) -> ValueSemanticVerifyResult {
-        guard let inputs = ValueSemanticStubEmitter.inputs(
-            for: candidate,
-            moduleName: moduleName,
-            testable: testable
-        ) else {
-            let reason = candidate.equatability != .equatable
-                ? "not Equatable (the copy-mutate-compare law compares instances with ==)"
-                : "no payload-free mutation method to drive"
-            return result(candidate, .notVerifiable(reason: reason))
+    private static func classify(_ job: VerifyJob, workdir: URL, mainFile: URL) -> ValueSemanticVerifyResult {
+        guard let stub = job.stub else {
+            return result(job, .notVerifiable(reason: job.notVerifiableReason ?? "not verify-ready"))
         }
         do {
-            try ValueSemanticStubEmitter.emit(inputs).write(to: mainFile, atomically: true, encoding: .utf8)
+            try stub.write(to: mainFile, atomically: true, encoding: .utf8)
             let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
             guard build.exitCode == 0 else {
-                return result(candidate, .buildFailed(detail: excerpt(build.stderr)))
+                return result(job, .buildFailed(detail: excerpt(build.stderr)))
             }
             let outcome = VerifyResultParser.parse(try VerifierSubprocess.runVerifierBinary(workdir: workdir))
-            return result(candidate, status(from: outcome))
+            return result(job, status(from: outcome))
         } catch {
-            return result(candidate, .error(reason: "\(error)"))
+            return result(job, .error(reason: "\(error)"))
         }
     }
 
@@ -128,18 +157,12 @@ public enum ValueSemanticVerifier {
     }
 
     private static func result(
-        _ candidate: ValueSemanticCandidate,
+        _ job: VerifyJob,
         _ status: ValueSemanticVerifyResult.Status
     ) -> ValueSemanticVerifyResult {
-        ValueSemanticVerifyResult(
-            typeName: candidate.typeName,
-            location: candidate.location,
-            status: status
-        )
+        ValueSemanticVerifyResult(typeName: job.typeName, location: job.location, status: status)
     }
 
-    /// Last few non-empty stderr lines — enough to see the compile error
-    /// without dumping the whole build log into the report.
     private static func excerpt(_ stderr: String) -> String {
         let lines = stderr.split(separator: "\n").map(String.init).filter { !$0.isEmpty }
         return lines.suffix(3).joined(separator: " / ")
@@ -147,13 +170,10 @@ public enum ValueSemanticVerifier {
 
     // MARK: - Verifier manifests
 
-    /// 5a — path-depend the standalone-packaged corpus module.
     static func selfContainedManifest(corpusRoot: URL, moduleName: String) -> String {
         manifest(packagePath: corpusRoot.path, packageIdentity: moduleName, moduleName: moduleName)
     }
 
-    /// 5b — path-depend the user's real package; product resolved by the path
-    /// basename (the SwiftPM identity for a `.package(path:)` dependency).
     static func pathDependencyManifest(packagePath: URL, moduleName: String) -> String {
         manifest(packagePath: packagePath.path, packageIdentity: packagePath.lastPathComponent, moduleName: moduleName)
     }
