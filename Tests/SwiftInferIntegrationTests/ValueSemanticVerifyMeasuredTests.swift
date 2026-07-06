@@ -13,6 +13,8 @@ import Testing
 ///   - `SafeStore` (correct copy-on-write) → bothPass — no false positive.
 ///   - `LeakyStore` (shared reference, non-`mutating` leak) → defaultFails —
 ///     the kit surfaces the minimal leaking mutation script.
+///   - `ClosureCounter` (stored closure capturing a heap `var`) → defaultFails,
+///     caught only by the kit v3.5.0 multi-step interleaving law.
 ///
 /// Spawns real `swift build`s resolving the path-dependency + the kit; tagged
 /// `.subprocess` (runs under `make batch*`, skipped by `make test-fast`).
@@ -30,6 +32,7 @@ struct ValueSemanticVerifyMeasuredTests {
         let candidates = try ValueSemanticDiscoverer.discover(directory: Self.fixtureDirectory)
         #expect(candidates.contains { $0.typeName == "SafeStore" })
         #expect(candidates.contains { $0.typeName == "LeakyStore" })
+        #expect(candidates.contains { $0.typeName == "ClosureCounter" })
 
         // 2. Package the corpus into its own dependency-free module.
         let corpusRoot = try CorpusPackager.package(
@@ -80,6 +83,11 @@ struct ValueSemanticVerifyMeasuredTests {
         } else {
             Issue.record("LeakyStore expected defaultFails; got \(String(describing: outcomes["LeakyStore"]))")
         }
+        if case .defaultFails = outcomes["ClosureCounter"] {
+            // Closure capture: caught only by the multi-step interleaving law.
+        } else {
+            Issue.record("ClosureCounter expected defaultFails; got \(String(describing: outcomes["ClosureCounter"]))")
+        }
     }
 
     static func verifierManifest(corpusRoot: URL) -> String {
@@ -92,7 +100,7 @@ struct ValueSemanticVerifyMeasuredTests {
             dependencies: [
                 .package(path: "\(corpusRoot.path)"),
                 .package(url: "https://github.com/x-sheep/swift-property-based.git", from: "1.0.0"),
-                .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.4.0")
+                .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.5.0")
             ],
             targets: [
                 .executableTarget(
