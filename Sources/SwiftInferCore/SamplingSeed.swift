@@ -1,13 +1,13 @@
 import CryptoKit
 import Foundation
 
-/// Deterministic sampling-seed derivation per PRD v0.4 §16 #6. Each
+/// Deterministic sampling-seed derivation per PRD §16 #6. Each
 /// suggestion's lifted property test (M5+) seeds its property-based
 /// runner from `SamplingSeed.derive(from: suggestion.identity)` so
 /// re-running the test under fixed source produces identical pass /
 /// counterexample output across machines.
 ///
-/// **Spec (PRD v0.4 §16 #6):** all 256 bits of
+/// **Spec (PRD §16 #6):** all 256 bits of
 /// `SHA256(suggestion-identity-hash || "|sampling")` packed as four
 /// big-endian `UInt64`s for the `Xoshiro256**` state. The v0.3 spec
 /// read "low 64 bits of SHA256(...)"; v0.4 widened to 256 bits because
@@ -31,7 +31,7 @@ import Foundation
 /// `import PropertyLawKit` is appropriate.
 ///
 /// `--seed-override` (PRD §16 #6 debugging-only override) is *not*
-/// modelled here. Per the PRD v0.4 it is v1.1+ — no v1 milestone owner.
+/// modelled here. Per the PRD it is v1.1+ — no v1 milestone owner.
 public enum SamplingSeed {
 
     /// 256-bit Xoshiro state, four `UInt64`s. Matches the layout of

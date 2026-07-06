@@ -1,7 +1,7 @@
 import SwiftInferCore
 
 /// Cross-cutting filter pass over `[Suggestion]` that resolves the
-/// contradiction-detection rules from PRD v0.3 §5.6's frozen v0.2 table.
+/// contradiction-detection rules from PRD §5.6's frozen v0.2 table.
 /// M3.4 wires the two contradictions reachable in v1's template surface:
 ///
 /// - **#2 — Commutative + non-Equatable output → drop commutativity.**

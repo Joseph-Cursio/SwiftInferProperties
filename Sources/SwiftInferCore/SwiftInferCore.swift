@@ -5,7 +5,7 @@
 /// `ExplainabilityBlock`), the suggestion-identity hash
 /// (`SuggestionIdentity`), the `// swiftinfer: skip` marker scanner
 /// (`SkipMarkerScanner`), and the `Vocabulary` schema. The full scope
-/// is documented in `docs/SwiftInferProperties PRD v0.4.md`.
+/// is documented in `docs/SwiftInferProperties PRD v1.0.md`.
 ///
 /// The module intentionally exposes no top-level enum / struct / class
 /// named `SwiftInferCore` — that name collision shadowed the module

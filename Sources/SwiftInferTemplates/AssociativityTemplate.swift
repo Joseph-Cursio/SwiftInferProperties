@@ -3,7 +3,7 @@ import SwiftInferCore
 /// Associativity template — `f: (T, T) -> T` where applying `f` to three
 /// arguments grouped either way yields the same result:
 /// `f(f(a, b), c) == f(a, f(b, c))`. Single-function template (no
-/// cross-function pairing); scoring drawn from PRD v0.3 §4 + §5.2.
+/// cross-function pairing); scoring drawn from PRD §4 + §5.2.
 ///
 /// Necessary type pattern (PRD §5.2): identical to commutativity —
 ///   - exactly two parameters

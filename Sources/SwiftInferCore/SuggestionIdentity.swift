@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-/// Stable identity hash for a suggestion per PRD v0.3 §7.5.
+/// Stable identity hash for a suggestion per PRD §7.5.
 ///
 /// Computed from `(template ID, function signature canonical form, AST shape
 /// of property region)`. M1.5 uses template ID + canonical signature(s) only —

@@ -1,4 +1,4 @@
-/// Visibility tier a `Score` falls into per PRD v0.3 §4.2.
+/// Visibility tier a `Score` falls into per PRD §4.2.
 ///
 /// Thresholds are tunable starting points — §17's calibration loop is what
 /// fixes them empirically once SwiftInfer has run against open-source
@@ -42,7 +42,7 @@ public enum Tier: String, Sendable, Equatable, Comparable, CaseIterable, Codable
     /// with a runnable suggestion.
     case advisory
 
-    /// Tier mapping per PRD v0.3 §4.2. Never produces `.verified` or
+    /// Tier mapping per PRD §4.2. Never produces `.verified` or
     /// `.advisory` — both are set explicitly by the surfacing pipeline
     /// (verify evidence / equivalence-class detection), not derived from
     /// score alone.

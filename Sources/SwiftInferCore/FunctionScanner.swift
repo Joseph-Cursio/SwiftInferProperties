@@ -36,7 +36,7 @@ public enum FunctionScanner {
     /// Recursively scan every `.swift` file under `directory`. Files are
     /// visited in deterministic (sorted-path) order so output is stable
     /// across runs — supports the byte-identical-reproducibility guarantee
-    /// (PRD v0.3 §16 #6).
+    /// (PRD §16 #6).
     public static func scan(directory: URL) throws -> [FunctionSummary] {
         try scanCorpus(directory: directory).summaries
     }

@@ -1,5 +1,5 @@
 /// Project-extensible naming vocabulary loaded from `.swiftinfer/vocabulary.json`
-/// per PRD v0.3 §4.5. Templates consult vocabulary entries alongside their
+/// per PRD §4.5. Templates consult vocabulary entries alongside their
 /// curated lists; project-vocabulary matches contribute the same +40 / +25 /
 /// -30 weights as the built-in lists.
 ///

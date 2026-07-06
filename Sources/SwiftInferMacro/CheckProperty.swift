@@ -36,7 +36,7 @@ public enum CheckPropertyKind: @unchecked Sendable {
 }
 
 /// Attach to a function declaration to expand a peer `@Test` stub
-/// running the named property under the M4.3 sampling seed (PRD v0.4
+/// running the named property under the M4.3 sampling seed (PRD
 /// §16 #6) and `SwiftPropertyBasedBackend`. PRD §5.7 + §5.8 M5.
 ///
 /// The macro expands at *the user's* compile time (it's a peer macro

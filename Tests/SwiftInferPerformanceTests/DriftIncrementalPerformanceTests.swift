@@ -4,7 +4,7 @@ import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 
-/// PRD v0.4 §13 row 3 — `swift-infer drift` re-run after one-file
+/// PRD §13 row 3 — `swift-infer drift` re-run after one-file
 /// change must complete in < 500ms (incremental). The drift command
 /// currently does a full discover scan + baseline diff (no caching);
 /// the budget asserts that on a typical small project the full scan

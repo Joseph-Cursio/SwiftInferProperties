@@ -3,7 +3,7 @@ import SwiftInferCore
 
 /// Disk-resident decisions lookup for `swift-infer discover --interactive`
 /// + `swift-infer drift`. Resolves `.swiftinfer/decisions.json` per
-/// PRD v0.4 §5.8 M6 with the same two shapes as `ConfigLoader`:
+/// PRD §5.8 M6 with the same two shapes as `ConfigLoader`:
 ///
 /// 1. **Explicit override** — `--decisions <path>`. Missing or malformed
 ///    file produces a warning (the user explicitly asked for it).

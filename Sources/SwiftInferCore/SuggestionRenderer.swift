@@ -1,5 +1,5 @@
 /// Pure-Swift renderer that turns a `Suggestion` (or list of them) into
-/// the two-sided text block PRD v0.3 §4.5 specifies. Output is byte-stable
+/// the two-sided text block PRD §4.5 specifies. Output is byte-stable
 /// — the caller controls the trailing newline (rendering returns no
 /// terminator), and every formatting choice (alignment, bullet glyphs,
 /// section ordering) is fixed so golden-file tests can pin it.
@@ -130,7 +130,7 @@ public enum SuggestionRenderer {
     /// count of Strong-tier suggestions regress this commit?" without
     /// piping through the full output.
     ///
-    /// Shape (PRD v0.4 §5.8 M5 example):
+    /// Shape (PRD §5.8 M5 example):
     /// ```
     /// 37 suggestions across 5 templates.
     ///   idempotence:        12 (8 Strong, 3 Likely, 1 Possible)

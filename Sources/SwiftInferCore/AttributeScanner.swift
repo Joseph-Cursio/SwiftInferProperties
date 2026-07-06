@@ -2,7 +2,7 @@ import SwiftSyntax
 
 /// Scans function-decl attribute lists for the `@Discoverable(group:)` and
 /// `@CheckProperty(.preservesInvariant(\..))` attributes that downstream
-/// templates and bridge arms consume. Recognize-only per PRD v0.4 §5.7 —
+/// templates and bridge arms consume. Recognize-only per PRD §5.7 —
 /// SwiftInferProperties does not take a runtime dependency on
 /// `PropertyLawMacro`'s definitions; attribute-name matching tolerates
 /// fully-qualified `@PropertyLawMacro.Discoverable(...)` by checking the
@@ -33,7 +33,7 @@ enum AttributeScanner {
     /// `@CheckProperty(.preservesInvariant(\.foo))` keypath source text
     /// (e.g. `"\.isValid"`), or `nil` when the attribute is absent or
     /// malformed. M7.2 plan row: scanner-side recognition only, mirroring
-    /// `discoverableGroup`'s posture (PRD v0.4 §5.7) — match the
+    /// `discoverableGroup`'s posture (PRD §5.7) — match the
     /// attribute by name (`CheckProperty`) and capture the keypath
     /// opaquely per M7 plan open decision #5(a).
     ///

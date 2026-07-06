@@ -22,7 +22,7 @@ extension RefactorBridgeAccumulator {
     ]
 
     /// Promote the accumulated signal set to one or more
-    /// `RefactorBridgeProposal`s per PRD v0.4 §5.4 + the M8.4.b.1
+    /// `RefactorBridgeProposal`s per PRD §5.4 + the M8.4.b.1
     /// open-decision resolutions:
     /// - **Strict-greatest within each chain branch** — Semilattice
     ///   beats CommutativeMonoid beats Monoid beats Semigroup; Group

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Parses `// swiftinfer: skip <hash>` rejection markers out of Swift
-/// source per PRD v0.3 §7.5. The marker tells `swift-infer discover` to
+/// source per PRD §7.5. The marker tells `swift-infer discover` to
 /// suppress any suggestion whose `SuggestionIdentity` matches `<hash>`.
 ///
 /// The scanner is intentionally line-oriented (not full SwiftSyntax) —

@@ -2,7 +2,7 @@ import Foundation
 import SwiftInferCore
 
 /// Disk-resident baseline lookup for `swift-infer drift` (M6.5).
-/// Resolves `.swiftinfer/baseline.json` per PRD v0.4 §5.8 M6 with the
+/// Resolves `.swiftinfer/baseline.json` per PRD §5.8 M6 with the
 /// same shape as `DecisionsLoader` (M6.1) and `ConfigLoader` (M2):
 ///
 /// 1. **Explicit override** — `drift --baseline <path>`. Missing or

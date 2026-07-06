@@ -4,7 +4,7 @@ import SwiftInferCore
 import SwiftInferTestLifter
 import Testing
 
-/// PRD v0.4 §16 #1 hard-guarantee extension for TestLifter — the
+/// PRD §16 #1 hard-guarantee extension for TestLifter — the
 /// "discover never writes to source files" guarantee TemplateEngine
 /// already passes is widened in M1.6 to cover the new TestLifter scan
 /// path. Snapshots the source-file tree before and after

@@ -3,7 +3,7 @@ import SwiftInferCLI
 import SwiftInferCore
 import Testing
 
-/// PRD v0.4 §13 row 5 — `swift-infer discover --interactive` must
+/// PRD §13 row 5 — `swift-infer discover --interactive` must
 /// reach the first prompt in < 1s after process start. The row had
 /// no regression test before R1.1.c. The test drives `Discover.run`
 /// with a `PromptInput` stub that records the wall-clock time of its

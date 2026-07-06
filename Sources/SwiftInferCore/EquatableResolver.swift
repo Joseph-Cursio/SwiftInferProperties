@@ -1,5 +1,5 @@
 /// Three-valued evidence about whether a Swift type conforms to `Equatable`,
-/// per PRD v0.3 §5.6's contradiction-detection scope. The `.notEquatable`
+/// per PRD §5.6's contradiction-detection scope. The `.notEquatable`
 /// case is reserved for *clear* evidence (curated non-Equatable shapes);
 /// `.unknown` is the default when textual analysis can't decide.
 ///

@@ -3,7 +3,7 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
-@Suite("SamplingSeed — PRD v0.4 §16 #6 256-bit deterministic seed derivation")
+@Suite("SamplingSeed — PRD §16 #6 256-bit deterministic seed derivation")
 struct SamplingSeedTests {
 
     // MARK: - Determinism + reproducibility
@@ -80,7 +80,7 @@ struct SamplingSeedTests {
         let seed = SamplingSeed.derive(from: identity)
         let hex = SamplingSeed.renderHex(seed)
         #expect(hex.hasPrefix("0x"))
-        // "0x" + 4 × 16 = 66 chars total (PRD v0.4 §16 #6 widening).
+        // "0x" + 4 × 16 = 66 chars total (PRD §16 #6 widening).
         #expect(hex.count == 66)
         let bare = String(hex.dropFirst(2))
         #expect(bare.allSatisfy { $0.isHexDigit && ($0.isNumber || $0.isUppercase) })
@@ -107,7 +107,7 @@ struct SamplingSeedTests {
 
     @Test
     func derivationInputIsTheNormalizedHashPlusPipeSampling() {
-        // Pin the exact input convention PRD v0.4 §16 #6 specifies so
+        // Pin the exact input convention PRD §16 #6 specifies so
         // a future contributor doesn't accidentally drop the `|`
         // separator (which would shift every seed in lockstep but
         // still be deterministic — silent breakage). Re-derive

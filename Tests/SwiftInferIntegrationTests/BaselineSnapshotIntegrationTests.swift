@@ -4,7 +4,7 @@ import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 
-/// PRD v0.4 §5.8 M6 / M6 plan §M6.2 acceptance — the canonical
+/// PRD §5.8 M6 / M6 plan §M6.2 acceptance — the canonical
 /// "discover → snapshot to baseline.json → reload" round-trip.
 /// Proves the M6.5 `discover --update-baseline` pipeline (which
 /// will compose these three steps inside `Discover.run`) gets a

@@ -13,7 +13,7 @@ public enum SwiftSourceFiles {
 
     /// Recursively enumerate every `.swift` file under `directory`, returned in
     /// deterministic sorted-path order (supports the byte-identical-repro
-    /// guarantee, PRD v0.3 §16 #6). Returns `[]` when the directory can't be
+    /// guarantee, PRD §16 #6). Returns `[]` when the directory can't be
     /// enumerated.
     ///
     /// Resolves the root when its leaf is a symlink, because

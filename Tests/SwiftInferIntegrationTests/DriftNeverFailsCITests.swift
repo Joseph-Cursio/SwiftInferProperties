@@ -3,7 +3,7 @@ import SwiftInferCLI
 import SwiftInferCore
 import Testing
 
-/// PRD v0.4 §16 #3 hard guarantee — "SwiftInfer never auto-accepts
+/// PRD §16 #3 hard guarantee — "SwiftInfer never auto-accepts
 /// suggestions. Even in CI mode, `drift` emits warnings, not
 /// failures. The accept/reject step is always human." The contract
 /// was implicitly covered by existing `DriftCommandTests` (every

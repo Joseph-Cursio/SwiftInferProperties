@@ -3,7 +3,7 @@ import SwiftInferCore
 
 /// SwiftInferTemplates — TemplateEngine template registry.
 ///
-/// PRD v0.3 §5.2 specifies eight shipped templates: round-trip,
+/// PRD §5.2 specifies eight shipped templates: round-trip,
 /// idempotence, commutativity, associativity, monotonicity,
 /// identity-element, invariant-preservation, inverse-pair. M1.3
 /// shipped **idempotence**; M1.4 added **round-trip** + cross-function

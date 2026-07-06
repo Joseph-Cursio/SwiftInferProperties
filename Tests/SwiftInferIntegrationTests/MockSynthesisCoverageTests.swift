@@ -5,7 +5,7 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
-/// PRD v0.4 §13 numerical acceptance for TestLifter M4.3 — verbatim:
+/// PRD §13 numerical acceptance for TestLifter M4.3 — verbatim:
 ///
 /// > Mock-based generator synthesis produces a valid `Gen<T>` for at
 /// > least 50% of the types where ≥3 test sites construct via the same

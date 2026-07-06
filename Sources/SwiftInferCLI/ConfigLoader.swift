@@ -2,7 +2,7 @@ import Foundation
 import SwiftInferCore
 
 /// Disk-resident config lookup for `swift-infer discover`. Resolves
-/// `.swiftinfer/config.toml` per PRD v0.3 §5.8 (M2) with the same two
+/// `.swiftinfer/config.toml` per PRD §5.8 (M2) with the same two
 /// shapes as `VocabularyLoader`:
 ///
 /// 1. **Explicit override** — `--config <path>`. Missing or malformed

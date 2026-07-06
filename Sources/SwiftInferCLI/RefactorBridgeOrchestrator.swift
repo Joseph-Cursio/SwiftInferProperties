@@ -7,7 +7,7 @@ import SwiftInferTemplates
 /// CommutativeMonoid + Group + Semilattice; M8.4.b.2 added Ring +
 /// the SetAlgebra secondary arm.
 ///
-/// **Promotion table (PRD v0.4 §5.4).** Strict-greatest within each
+/// **Promotion table (PRD §5.4).** Strict-greatest within each
 /// inheritance chain branch — Semigroup → Monoid → CommutativeMonoid →
 /// Semilattice on the commutativity branch; Semigroup → Monoid →
 /// Group on the inverse branch. At each level, every contributing

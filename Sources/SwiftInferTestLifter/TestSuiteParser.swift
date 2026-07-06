@@ -44,7 +44,7 @@ public enum TestSuiteParser {
     /// Recursively scan every `.swift` file under `directory`. Files
     /// are visited in deterministic (sorted-path) order so output is
     /// stable across runs — supports the byte-identical-reproducibility
-    /// guarantee (PRD v0.4 §16 #6).
+    /// guarantee (PRD §16 #6).
     ///
     /// **No directory filtering at this layer.** Callers pass a
     /// pre-filtered tests root (e.g. `<project>/Tests/`); the M1.5

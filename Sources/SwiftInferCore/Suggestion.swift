@@ -1,5 +1,5 @@
 /// A candidate property suggestion emitted by a template. The full record
-/// the M1 CLI renders for human review per PRD v0.3 §4.5.
+/// the M1 CLI renders for human review per PRD §4.5.
 public struct Suggestion: Sendable, Equatable {
 
     /// Template that produced this suggestion (e.g. `"idempotence"`,

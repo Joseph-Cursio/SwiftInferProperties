@@ -2,7 +2,7 @@ import Foundation
 import SwiftInferCore
 
 /// Disk-resident vocabulary lookup for `swift-infer discover`. Resolves
-/// `.swiftinfer/vocabulary.json` per PRD v0.3 §4.5 with two paths:
+/// `.swiftinfer/vocabulary.json` per PRD §4.5 with two paths:
 ///
 /// 1. **Explicit override** — when the caller passes `--vocabulary <path>`
 ///    we use that exact path. A missing or malformed file produces a

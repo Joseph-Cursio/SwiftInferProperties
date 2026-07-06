@@ -1,6 +1,6 @@
 /// One contributing signal collected by a template against a candidate.
 ///
-/// Signals are independent per PRD v0.3 §4.1 — a suggestion can earn or
+/// Signals are independent per PRD §4.1 — a suggestion can earn or
 /// lose confidence from naming alone, types alone, or any combination.
 /// The `weight` is signed; vetoes use `Signal.vetoWeight` rather than a
 /// large negative number, and `Score` collapses any vetoed signal to the

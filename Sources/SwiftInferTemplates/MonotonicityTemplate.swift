@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// Monotonicity template — `f: T -> U` where `U` is `Comparable` and the
 /// function name + signature shape suggest `f(x) <= f(y)` whenever
-/// `x <= y` (or some user-supplied total order over `T`). PRD v0.4 §5.2.
+/// `x <= y` (or some user-supplied total order over `T`). PRD §5.2.
 ///
 /// Necessary type pattern (PRD §5.2):
 ///   - exactly one parameter

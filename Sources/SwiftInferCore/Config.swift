@@ -1,5 +1,5 @@
 /// Project-level configuration loaded from `.swiftinfer/config.toml`
-/// per PRD v0.3 §5.8 (M2). The config layer carries knobs that the CLI
+/// per PRD §5.8 (M2). The config layer carries knobs that the CLI
 /// can override via flags; effective values are resolved at the CLI
 /// layer with precedence CLI > config > defaults.
 ///

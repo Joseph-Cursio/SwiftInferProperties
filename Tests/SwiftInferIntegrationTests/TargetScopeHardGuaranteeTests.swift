@@ -5,7 +5,7 @@ import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 
-/// PRD v0.4 §16 #5 hard guarantee — "SwiftInfer never operates
+/// PRD §16 #5 hard guarantee — "SwiftInfer never operates
 /// outside the configured target. `--target` is required for
 /// `discover`; the tool refuses to scan files outside the named
 /// target's source roots." The contract had no explicit release-gate

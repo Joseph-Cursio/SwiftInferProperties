@@ -8,7 +8,7 @@ import SwiftInferCore
 /// informational suggestion the user can act on with a custom equality
 /// witness or annotation API extension.
 ///
-/// Necessary type pattern (PRD v0.4 §5.2 + §5.8 M8 row): the pair's
+/// Necessary type pattern (PRD §5.2 + §5.8 M8 row): the pair's
 /// type shape (enforced by `FunctionPairing`) plus `T` *not*
 /// classifying as `.equatable`. Equatable `T` defers to RoundTripTemplate;
 /// this template only fires when the resolver returns `.notEquatable` or
@@ -18,7 +18,7 @@ import SwiftInferCore
 /// still fires — same posture as RoundTripTemplate's `vocabulary: .empty`
 /// default.
 ///
-/// Score lands in the Possible tier (20–39) per PRD v0.4 §5.8's
+/// Score lands in the Possible tier (20–39) per PRD §5.8's
 /// "suppressed by default" posture — type-pattern alone scores 25;
 /// curated naming or project-vocabulary `inversePairs` adds 10.
 /// Hidden behind `--include-possible` per the §5.8 M8 row; explicit

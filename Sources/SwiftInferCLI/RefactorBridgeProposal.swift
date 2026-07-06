@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// One RefactorBridge proposal — a structural-conformance suggestion the
 /// `[A/B/s/n/?]` interactive prompt surfaces alongside per-suggestion
-/// Option A. PRD v0.4 §6 + M7.5 plan row.
+/// Option A. PRD §6 + M7.5 plan row.
 ///
 /// Built by `RefactorBridgeOrchestrator.proposals(from:)` from a list of
 /// surviving suggestions. One proposal per type (per M7 plan open

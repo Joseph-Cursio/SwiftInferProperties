@@ -2,7 +2,7 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-/// PRD v0.3 §5.6 / M3.6 acceptance-bar (c) integration suite for
+/// PRD §5.6 / M3.6 acceptance-bar (c) integration suite for
 /// `EquatableResolver`. Closes the bar by exercising the three-state
 /// `.equatable` / `.notEquatable` / `.unknown` semantics against
 /// real on-disk fixture corpora rather than synthesised `TypeDecl`s —

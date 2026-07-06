@@ -118,7 +118,7 @@ extension SwiftInferCommand {
             Render a per-template / per-tier summary block instead of \
             the full §4.5 explainability blocks. Useful for CI \
             dashboards tracking suggestion-count regressions over time. \
-            (M5.4, PRD v0.4 §5.8.)
+            (M5.4, PRD §5.8.)
             """
         )
         public var statsOnly: Bool = false
@@ -141,7 +141,7 @@ extension SwiftInferCommand {
             gestures show the would-be file path on stdout but skip \
             both the file write and the .swiftinfer/decisions.json \
             update. Without --interactive there are no writes to \
-            suppress, so --dry-run is a no-op. (M5.5 + M6.4, PRD v0.4 \
+            suppress, so --dry-run is a no-op. (M5.5 + M6.4, PRD \
             §5.8.)
             """
         )
@@ -154,7 +154,7 @@ extension SwiftInferCommand {
             [A/s/n/?]: Accept writes a property-test stub to \
             Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift \
             and records the decision; Skip / Reject record the decision \
-            without writing files. (M6.4, PRD v0.4 §5.8.)
+            without writing files. (M6.4, PRD §5.8.)
             """
         )
         public var interactive: Bool = false
@@ -168,7 +168,7 @@ extension SwiftInferCommand {
             suggestions added after this snapshot (and lacking a recorded \
             decision) earn a drift warning. Mutually exclusive with \
             --interactive in v1: triage and snapshot are different gestures. \
-            Honors --dry-run by skipping the write. (M6.5, PRD v0.4 §5.8.)
+            Honors --dry-run by skipping the write. (M6.5, PRD §5.8.)
             """
         )
         public var updateBaseline: Bool = false
@@ -180,7 +180,7 @@ extension SwiftInferCommand {
             swift-infer walks up from the --target directory to find \
             Package.swift, then scans <package-root>/Tests/ if it exists. \
             When the explicit path is missing, swift-infer warns and falls \
-            back to the walk-up resolver. (TestLifter M6.0, PRD v0.4 §7.9.)
+            back to the walk-up resolver. (TestLifter M6.0, PRD §7.9.)
             """
         )
         public var testDir: String?

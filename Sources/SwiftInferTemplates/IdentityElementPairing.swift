@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// Binary-op `(T, T) -> T` paired with a static identity candidate of the
 /// same type `T`. Consumed by `IdentityElementTemplate` to score the
-/// "monoid candidate" claim per PRD v0.3 §5.2.
+/// "monoid candidate" claim per PRD §5.2.
 ///
 /// Pairs are oriented by `(file, line)` of the operation summary so output
 /// is byte-stable — `IdentityCandidate.location` is rendered alongside in

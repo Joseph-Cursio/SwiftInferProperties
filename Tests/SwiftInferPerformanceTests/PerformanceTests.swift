@@ -4,7 +4,7 @@ import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 
-/// PRD v0.3 §13 performance budget integration suite.
+/// PRD §13 performance budget integration suite.
 ///
 /// The hard target is `swift-infer discover` on a 50-file module in
 /// **< 2 seconds wall** — a regression breaks this and blocks release.

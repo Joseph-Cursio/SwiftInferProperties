@@ -1,7 +1,7 @@
 import SwiftInferCore
 
 /// Pure-function emit of a Swift `extension TypeName: Protocol {}`
-/// source string for SwiftInfer's RefactorBridge (PRD v0.4 §6 +
+/// source string for SwiftInfer's RefactorBridge (PRD §6 +
 /// M7.4 plan row). Parallel to `LiftedTestEmitter` but operates on
 /// type + protocol inputs instead of function + property.
 ///

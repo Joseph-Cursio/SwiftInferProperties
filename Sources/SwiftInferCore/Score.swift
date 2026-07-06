@@ -1,5 +1,5 @@
 /// Aggregated score for a single suggestion. Built from a bag of `Signal`s
-/// per PRD v0.3 §4 — the total is the sum of non-veto weights, and any
+/// per PRD §4 — the total is the sum of non-veto weights, and any
 /// vetoed signal collapses the tier to `.suppressed` regardless of total.
 public struct Score: Sendable, Equatable {
 

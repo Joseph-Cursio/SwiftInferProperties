@@ -3,7 +3,7 @@ import SwiftInferCore
 /// Binary-op `(T, T) -> T` paired with a unary inverse function
 /// `(T) -> T` named like an inverse on the same type `T`. Consumed by
 /// M8.4's `RefactorBridgeOrchestrator` to score the **Group** claim per
-/// PRD v0.4 §5.4 — Group requires Monoid (associativity + identity)
+/// PRD §5.4 — Group requires Monoid (associativity + identity)
 /// plus an inverse witness.
 ///
 /// `InverseElementPair` is the Group analogue of `IdentityElementPair`:
@@ -42,7 +42,7 @@ public struct InverseElementPair: Sendable, Equatable {
 /// + `IdentityElementPairing`).
 public enum InverseElementPairing {
 
-    /// Curated unary inverse names. PRD v0.2 §5.2 priority-1 list for
+    /// Curated unary inverse names. PRD §5.2 priority-1 list for
     /// the inverse signal. The shipped list covers the natural
     /// algebraic-inverse names (`negate`, `inverse`, `reciprocal`)
     /// plus the lattice-theoretic complement and the geometry-shaped

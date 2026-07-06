@@ -2,7 +2,7 @@
 /// declaration found in a Swift source file. Carries the header info the
 /// scoring engine (M1.3+) needs to evaluate templates against, plus a
 /// small set of body-derived signals computed by the M1.2 scanner via
-/// type-flow lite (PRD v0.3 §5.3).
+/// type-flow lite (PRD §5.3).
 ///
 /// `FunctionSummary` is intentionally textual — types and return signatures
 /// are captured as their source representation. Full semantic resolution
@@ -44,13 +44,13 @@ public struct FunctionSummary: Sendable, Equatable {
     /// innermost wins.
     public let containingTypeName: String?
 
-    /// Body-derived type-flow signals (PRD v0.3 §5.3).
+    /// Body-derived type-flow signals (PRD §5.3).
     public let bodySignals: BodySignals
 
     /// Group identifier from a `@Discoverable(group: "...")` attribute on
     /// the function decl, when the user has tagged it. `nil` when the
     /// function carries no `@Discoverable` attribute or the attribute
-    /// has no `group:` argument. PRD v0.4 §5.7 + §4.1: SwiftInferProperties
+    /// has no `group:` argument. PRD §5.7 + §4.1: SwiftInferProperties
     /// recognizes the attribute *by name match* during the SwiftSyntax
     /// walk — no runtime dep on `PropertyLawMacro`. Two functions sharing
     /// the same non-nil `discoverableGroup` earn a `+35` cross-pair
@@ -62,7 +62,7 @@ public struct FunctionSummary: Sendable, Equatable {
     /// Keypath text from a `@CheckProperty(.preservesInvariant(\.foo))`
     /// attribute on the function decl, when the user has tagged it. `nil`
     /// when the function carries no such attribute or the attribute's
-    /// argument isn't a well-formed key-path literal. PRD v0.4 §5.2 +
+    /// argument isn't a well-formed key-path literal. PRD §5.2 +
     /// M7.2 plan row: SwiftInferProperties recognizes the attribute by
     /// name match (same posture as `discoverableGroup`); the keypath is
     /// captured opaquely as source text per M7 plan open decision #5(a).
@@ -165,14 +165,14 @@ public struct SourceLocation: Sendable, Equatable, Hashable {
 public struct BodySignals: Sendable, Equatable {
 
     /// `true` when the body invokes any API in the curated
-    /// non-deterministic list (PRD v0.3 §4.1's -∞ counter-signal). Drives
+    /// non-deterministic list (PRD §4.1's -∞ counter-signal). Drives
     /// the structural disqualifier for idempotence and most algebraic
     /// claims (Appendix B.3).
     public let hasNonDeterministicCall: Bool
 
     /// `true` when the body contains a self-composition pattern of the form
     /// `f(f(x))` where `f` is the function's own name. Feeds the
-    /// idempotence type-flow signal (PRD v0.3 §5.3, +20).
+    /// idempotence type-flow signal (PRD §5.3, +20).
     public let hasSelfComposition: Bool
 
     /// Distinct callee texts that matched the non-deterministic list,
@@ -184,7 +184,7 @@ public struct BodySignals: Sendable, Equatable {
     /// of `.reduce(_, X)` calls in this body (e.g. `xs.reduce(0, add)` or
     /// `xs.reduce(into: 0, MyType.combine)` records `add` and `combine`).
     /// Feeds the associativity template's reducer/builder-usage signal
-    /// (PRD v0.3 §5.3, +20). Sorted alphabetically for deterministic output;
+    /// (PRD §5.3, +20). Sorted alphabetically for deterministic output;
     /// the corpus-level union is computed at template-discovery time.
     public let reducerOpsReferenced: [String]
 
@@ -193,7 +193,7 @@ public struct BodySignals: Sendable, Equatable {
     /// `false`, or a member-access reference whose leaf name is in the
     /// curated identity list (`.empty`, `.zero`, `.identity`, `.none`,
     /// `.default`). Feeds the identity-element template's
-    /// accumulator-with-empty-seed signal (PRD v0.3 §5.3, +20). Sorted
+    /// accumulator-with-empty-seed signal (PRD §5.3, +20). Sorted
     /// alphabetically for deterministic output.
     public let reducerOpsWithIdentitySeed: [String]
 

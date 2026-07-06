@@ -11,7 +11,7 @@ import Testing
 /// 50ms during the scan and asserts that the **peak delta over the
 /// pre-discover baseline** stays inside the budget.
 ///
-/// **v0.3 → v0.1.0 calibration.** PRD v0.3 §13 row 4 set the target at
+/// **v0.3 → v0.1.0 calibration.** PRD §13 row 4 set the target at
 /// "< 200 MB resident on 500-file module" — the line explicitly
 /// authorized raising calibration-busted targets ("if the targets are
 /// already missed there, raise them in v0.4 rather than ship a tool

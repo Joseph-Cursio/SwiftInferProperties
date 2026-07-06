@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// Commutativity template — `f: (T, T) -> T` where applying `f` to two
 /// arguments in either order yields the same result. Single-function
-/// template (no cross-function pairing); scoring drawn from PRD v0.3
+/// template (no cross-function pairing); scoring drawn from PRD
 /// §4 + §5.2.
 ///
 /// Necessary type pattern (PRD §5.2):
@@ -19,7 +19,7 @@ import SwiftInferCore
 /// template still returns `nil`.
 public enum CommutativityTemplate {
 
-    /// Curated commutativity-verb list per PRD v0.3 §4 / §5.2. Project
+    /// Curated commutativity-verb list per PRD §4 / §5.2. Project
     /// vocabulary entries (`commutativityVerbs` from `vocabulary.json`)
     /// are consulted alongside this list at the same +40 weight per
     /// PRD §4.5; curated takes precedence so a project repeating a
@@ -32,7 +32,7 @@ public enum CommutativityTemplate {
         "intersect"
     ]
 
-    /// Curated anti-commutativity-verb list per PRD v0.3 §4.1's -30
+    /// Curated anti-commutativity-verb list per PRD §4.1's -30
     /// counter-signal row. Function names that strongly suggest
     /// ordered/asymmetric semantics — they're typically not commutative
     /// even when the type pattern holds. Combined with the +30

@@ -15,7 +15,7 @@ import SwiftInferCore
 /// veto (Appendix B.3 + B.4).
 public enum RoundTripTemplate {
 
-    /// Curated inverse-name pairs per PRD v0.3 §5.2. Project-vocabulary
+    /// Curated inverse-name pairs per PRD §5.2. Project-vocabulary
     /// extension (§4.5's `inversePairs` from `vocabulary.json`) lands at
     /// M2; M1.4 ships the curated list, exact-match in either order.
     public static let curatedInversePairs: [(String, String)] = [
@@ -243,7 +243,7 @@ extension RoundTripTemplate {
     /// PRD §4.1 `+35` cross-pair signal — fires when both halves of
     /// the pair share the same non-nil `@Discoverable(group:)` value.
     /// M5.1 introduces this signal in the recognize-only mode per
-    /// PRD v0.4 §5.7 (no runtime dep on `PropertyLawMacro`). The detail
+    /// PRD §5.7 (no runtime dep on `PropertyLawMacro`). The detail
     /// line cites the matched group name so the §4.5 explainability
     /// block can show what the signal was scoped to.
     private static func discoverableSignal(for pair: FunctionPair) -> Signal? {

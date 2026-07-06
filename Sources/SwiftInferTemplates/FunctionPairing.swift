@@ -37,7 +37,7 @@ public struct FunctionPair: Sendable, Equatable {
     }
 }
 
-/// Type-driven candidate-pair finder. Implements PRD v0.3 §5.5's first
+/// Type-driven candidate-pair finder. Implements PRD §5.5's first
 /// tier — the type filter — at module scope (the entire scanned corpus).
 /// Naming and explicit-`@Discoverable` filters live in the per-template
 /// scorers (M1.4 only ships the type filter; naming is a *signal*, not a

@@ -1,7 +1,7 @@
 /// Identity-element candidate emitted by `FunctionScanner` alongside
 /// `FunctionSummary`. Captures static value declarations whose name matches
 /// the curated identity-shaped list (`zero`, `empty`, `identity`, `none`,
-/// `default`) per PRD v0.3 §5.2's identity-element priority-1 signal.
+/// `default`) per PRD §5.2's identity-element priority-1 signal.
 ///
 /// `IdentityCandidate` is intentionally textual: `typeText` is the trimmed
 /// source representation of the explicit type annotation, mirroring how

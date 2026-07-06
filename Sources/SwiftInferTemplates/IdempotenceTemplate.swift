@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// Idempotence template — `f: T -> T` where applying `f` twice equals
 /// applying it once. The simplest M1 template: single-function, no
-/// pairing, scoring drawn from PRD v0.3 §4 + §5.2.
+/// pairing, scoring drawn from PRD §4 + §5.2.
 ///
 /// Necessary type pattern (PRD §5.2):
 ///   - exactly one parameter
@@ -17,7 +17,7 @@ import SwiftInferCore
 /// returns `nil`. Suppressed suggestions are never rendered.
 public enum IdempotenceTemplate {
 
-    /// Curated idempotence-verb list per PRD v0.3 §5.2. Project-vocabulary
+    /// Curated idempotence-verb list per PRD §5.2. Project-vocabulary
     /// extension (§4.5's `idempotenceVerbs` from `vocabulary.json`) lands
     /// at M2; for M1.3 the list is the curated set, exact-match only.
     public static let curatedVerbs: Set<String> = [

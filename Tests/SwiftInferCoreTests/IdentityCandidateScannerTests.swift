@@ -23,7 +23,7 @@ struct IdentityCandidateScannerTests {
 
     @Test
     func detectsAllCuratedIdentityNames() {
-        // PRD v0.3 §5.2 priority-1 list: zero, empty, identity, none, default.
+        // PRD §5.2 priority-1 list: zero, empty, identity, none, default.
         let source = """
         enum Group {
             static let zero: Group = .init()

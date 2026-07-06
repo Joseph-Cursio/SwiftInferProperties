@@ -5,7 +5,7 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
-/// PRD v0.4 §14 + §19 success criterion — "All §14 privacy guarantees
+/// PRD §14 + §19 success criterion — "All §14 privacy guarantees
 /// are testable: integration test verifies no network sockets opened
 /// during any subcommand." The contract was implicitly covered by the
 /// static no-networking-APIs grep in `HardGuaranteeTests`, but PRD §19

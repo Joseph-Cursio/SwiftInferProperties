@@ -8,7 +8,7 @@ import SwiftSyntaxMacros
 ///
 /// Expands a tagged function decl into a peer `@Test func` that runs
 /// the named property under `SwiftPropertyBasedBackend` with a
-/// PRD v0.4 §16 #6 sampling seed derived from the function's identity.
+/// PRD §16 #6 sampling seed derived from the function's identity.
 /// M5.2 ships the `.idempotent` arm; M5.3 will add `.roundTrip`.
 public struct CheckPropertyMacro: PeerMacro {
 

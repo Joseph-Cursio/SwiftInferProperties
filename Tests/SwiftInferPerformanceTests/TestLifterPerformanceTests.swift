@@ -3,7 +3,7 @@ import SwiftInferCLI
 import SwiftInferTestLifter
 import Testing
 
-/// PRD v0.4 §13 performance budget enforcement for TestLifter — the
+/// PRD §13 performance budget enforcement for TestLifter — the
 /// "TestLifter parse of 100 test files" row mandates `< 3 seconds wall`.
 /// A regression test failure blocks release per PRD §13 conventions.
 ///
