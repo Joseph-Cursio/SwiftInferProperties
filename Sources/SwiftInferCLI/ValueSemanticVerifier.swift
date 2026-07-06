@@ -5,20 +5,22 @@ import SwiftInferCore
 /// candidates in a target, verify each against the kit's copy-mutate-compare
 /// law, and return a per-candidate outcome.
 ///
-/// **Slice 5a — self-contained mode.** The target's sources are packaged as a
-/// standalone module (`CorpusPackager`) and the verifier path-depends on it.
-/// This works when the target is self-contained + its types are `public`; a
-/// target with external dependencies or `internal` types surfaces as
-/// `.buildFailed`. Slice 5b adds a path-dependency + `@testable import` mode
-/// (spiked) that reaches real `internal` types.
+/// Two reachability modes:
+/// - **Self-contained (5a)** — `verify(...)`: the target's sources are packaged
+///   as a standalone module (`CorpusPackager`) and imported plainly. Works when
+///   the target is self-contained + `public`; deps / `internal` types surface as
+///   `.buildFailed`.
+/// - **Path-dependency (5b)** — `verifyInPackage(...)`: the verifier
+///   `.package(path:)`-depends on the user's real package and `@testable import`s
+///   the target module, reaching **`internal` types** + the package's real
+///   dependencies (the build already passes `-enable-testing`).
 ///
 /// Serial by design: one verifier workdir is reused across candidates (only
-/// `main.swift` changes), so a warm `.build/` gives incremental rebuilds
-/// instead of N cold ones.
+/// `main.swift` changes), so the path-dependency + kit graph builds cold once
+/// and the rest are incremental.
 public enum ValueSemanticVerifier {
 
-    /// Verify every value-semantics candidate discovered in `targetDirectory`.
-    /// Results are returned in discovery order; the renderer sorts + groups.
+    /// 5a — self-contained: package the target's sources standalone.
     public static func verify(
         targetDirectory: URL,
         moduleName: String,
@@ -26,36 +28,74 @@ public enum ValueSemanticVerifier {
     ) throws -> [ValueSemanticVerifyResult] {
         let candidates = try ValueSemanticDiscoverer.discover(directory: targetDirectory)
         guard !candidates.isEmpty else { return [] }
-
         let corpusRoot = try CorpusPackager.package(
             moduleName: moduleName,
             fromSourcesDirectory: targetDirectory,
             into: workParent
         )
+        return try run(
+            candidates,
+            moduleName: moduleName,
+            manifest: selfContainedManifest(corpusRoot: corpusRoot, moduleName: moduleName),
+            testable: false,
+            workParent: workParent
+        )
+    }
+
+    /// 5b — path-dependency: verify against the target module inside the user's
+    /// real package (`packagePath`), reaching `internal` types via `@testable`.
+    public static func verifyInPackage(
+        packagePath: URL,
+        targetDirectory: URL,
+        moduleName: String,
+        workParent: URL
+    ) throws -> [ValueSemanticVerifyResult] {
+        let candidates = try ValueSemanticDiscoverer.discover(directory: targetDirectory)
+        guard !candidates.isEmpty else { return [] }
+        return try run(
+            candidates,
+            moduleName: moduleName,
+            manifest: pathDependencyManifest(packagePath: packagePath, moduleName: moduleName),
+            testable: true,
+            workParent: workParent
+        )
+    }
+
+    // MARK: - Shared verify loop
+
+    private static func run(
+        _ candidates: [ValueSemanticCandidate],
+        moduleName: String,
+        manifest: String,
+        testable: Bool,
+        workParent: URL
+    ) throws -> [ValueSemanticVerifyResult] {
         let workdir = workParent.appendingPathComponent("verifier")
         let sources = workdir.appendingPathComponent("Sources/SwiftInferVerifier")
         try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
-        try verifierManifest(corpusRoot: corpusRoot, moduleName: moduleName).write(
+        try manifest.write(
             to: workdir.appendingPathComponent("Package.swift"),
             atomically: true,
             encoding: .utf8
         )
         let mainFile = sources.appendingPathComponent("main.swift")
-
         return candidates.map { candidate in
-            classify(candidate, moduleName: moduleName, workdir: workdir, mainFile: mainFile)
+            classify(candidate, moduleName: moduleName, testable: testable, workdir: workdir, mainFile: mainFile)
         }
     }
-
-    // MARK: - Per-candidate
 
     private static func classify(
         _ candidate: ValueSemanticCandidate,
         moduleName: String,
+        testable: Bool,
         workdir: URL,
         mainFile: URL
     ) -> ValueSemanticVerifyResult {
-        guard let inputs = ValueSemanticStubEmitter.inputs(for: candidate, moduleName: moduleName) else {
+        guard let inputs = ValueSemanticStubEmitter.inputs(
+            for: candidate,
+            moduleName: moduleName,
+            testable: testable
+        ) else {
             let reason = candidate.equatability != .equatable
                 ? "not Equatable (the copy-mutate-compare law compares instances with ==)"
                 : "no payload-free mutation method to drive"
@@ -105,9 +145,20 @@ public enum ValueSemanticVerifier {
         return lines.suffix(3).joined(separator: " / ")
     }
 
-    // MARK: - Verifier package
+    // MARK: - Verifier manifests
 
-    static func verifierManifest(corpusRoot: URL, moduleName: String) -> String {
+    /// 5a — path-depend the standalone-packaged corpus module.
+    static func selfContainedManifest(corpusRoot: URL, moduleName: String) -> String {
+        manifest(packagePath: corpusRoot.path, packageIdentity: moduleName, moduleName: moduleName)
+    }
+
+    /// 5b — path-depend the user's real package; product resolved by the path
+    /// basename (the SwiftPM identity for a `.package(path:)` dependency).
+    static func pathDependencyManifest(packagePath: URL, moduleName: String) -> String {
+        manifest(packagePath: packagePath.path, packageIdentity: packagePath.lastPathComponent, moduleName: moduleName)
+    }
+
+    private static func manifest(packagePath: String, packageIdentity: String, moduleName: String) -> String {
         """
         // swift-tools-version: 6.1
         import PackageDescription
@@ -115,7 +166,7 @@ public enum ValueSemanticVerifier {
             name: "SwiftInferVerifier",
             platforms: [.macOS(.v14)],
             dependencies: [
-                .package(path: "\(corpusRoot.path)"),
+                .package(path: "\(packagePath)"),
                 .package(url: "https://github.com/x-sheep/swift-property-based.git", from: "1.0.0"),
                 .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.5.0")
             ],
@@ -123,7 +174,7 @@ public enum ValueSemanticVerifier {
                 .executableTarget(
                     name: "SwiftInferVerifier",
                     dependencies: [
-                        .product(name: "\(moduleName)", package: "\(moduleName)"),
+                        .product(name: "\(moduleName)", package: "\(packageIdentity)"),
                         .product(name: "PropertyBased", package: "swift-property-based"),
                         .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
                     ]

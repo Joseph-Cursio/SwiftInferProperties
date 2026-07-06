@@ -71,6 +71,19 @@ struct ValueSemanticStubEmitterTests {
         #expect(gated == nil)
     }
 
+    @Test func testableFlagControlsImportKind() {
+        let plain = ValueSemanticStubEmitter.emit(
+            .init(typeName: "T", mutationMethods: ["go"], moduleName: "M")
+        )
+        #expect(plain.contains("import M"))
+        #expect(!plain.contains("@testable"))
+
+        let testable = ValueSemanticStubEmitter.emit(
+            .init(typeName: "T", mutationMethods: ["go"], moduleName: "M", testable: true)
+        )
+        #expect(testable.contains("@testable import M"))
+    }
+
     @Test func gatesCandidateWithNoPayloadFreeMutation() {
         let gated = ValueSemanticStubEmitter.inputs(
             for: candidate(surface: [MutationMethod(name: "set", isMutating: true, parameterCount: 1)]),

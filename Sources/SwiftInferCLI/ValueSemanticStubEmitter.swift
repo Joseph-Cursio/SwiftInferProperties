@@ -29,13 +29,23 @@ public enum ValueSemanticStubEmitter {
         public let typeName: String
         /// Payload-free mutation-method names → the `Mutation` alphabet.
         public let mutationMethods: [String]
-        /// The packaged corpus module the verifier imports.
+        /// The module the verifier imports the type from.
         public let moduleName: String
+        /// `@testable import` (5b path-dependency mode) so the retroactive
+        /// conformance reaches `internal` types; plain `import` (5a
+        /// self-contained mode) for `public` types.
+        public let testable: Bool
 
-        public init(typeName: String, mutationMethods: [String], moduleName: String) {
+        public init(
+            typeName: String,
+            mutationMethods: [String],
+            moduleName: String,
+            testable: Bool = false
+        ) {
             self.typeName = typeName
             self.mutationMethods = mutationMethods
             self.moduleName = moduleName
+            self.testable = testable
         }
     }
 
@@ -43,7 +53,8 @@ public enum ValueSemanticStubEmitter {
     /// isn't verify-ready (non-Equatable, or no payload-free mutation method).
     public static func inputs(
         for candidate: ValueSemanticCandidate,
-        moduleName: String
+        moduleName: String,
+        testable: Bool = false
     ) -> Inputs? {
         guard candidate.equatability == .equatable else { return nil }
         let methods = candidate.mutationSurface
@@ -53,7 +64,12 @@ public enum ValueSemanticStubEmitter {
         var seen: Set<String> = []
         let cases = methods.filter { seen.insert($0).inserted }
         guard !cases.isEmpty else { return nil }
-        return Inputs(typeName: candidate.typeName, mutationMethods: cases, moduleName: moduleName)
+        return Inputs(
+            typeName: candidate.typeName,
+            mutationMethods: cases,
+            moduleName: moduleName,
+            testable: testable
+        )
     }
 
     public static func emit(_ inputs: Inputs) -> String {
@@ -68,7 +84,7 @@ public enum ValueSemanticStubEmitter {
         // Type: \(inputs.typeName)  (module: \(inputs.moduleName))
         import Foundation
         import PropertyLawKit
-        import \(inputs.moduleName)
+        \(inputs.testable ? "@testable " : "")import \(inputs.moduleName)
 
         // Retroactive conformance lives in the verifier (not the corpus module),
         // so the packaged corpus stays dependency-free.

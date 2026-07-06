@@ -36,6 +36,17 @@ extension SwiftInferCommand {
         )
         public var failOnLeak: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            Package the target's sources as a standalone module instead of \
+            path-depending the working-directory package. Use for an isolated \
+            source dir with no external dependencies; the default reaches \
+            `internal` types + real dependencies in a proper SwiftPM package.
+            """
+        )
+        public var selfContained: Bool = false
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -45,11 +56,22 @@ extension SwiftInferCommand {
             try FileManager.default.createDirectory(at: workParent, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: workParent) }
 
-            let results = try ValueSemanticVerifier.verify(
-                targetDirectory: directory,
-                moduleName: target,
-                workParent: workParent
-            )
+            let results: [ValueSemanticVerifyResult]
+            if selfContained {
+                results = try ValueSemanticVerifier.verify(
+                    targetDirectory: directory,
+                    moduleName: target,
+                    workParent: workParent
+                )
+            } else {
+                let packageRoot = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                results = try ValueSemanticVerifier.verifyInPackage(
+                    packagePath: packageRoot,
+                    targetDirectory: directory,
+                    moduleName: target,
+                    workParent: workParent
+                )
+            }
             print(ValueSemanticVerifyReport.render(results: results, moduleName: target), terminator: "")
 
             if failOnLeak, ValueSemanticVerifyReport.leaksFound(in: results) {
