@@ -389,3 +389,76 @@ identity companion (slice 6).
 Medium, high value: slices 2–4 did the hard parts, and the 5b reachability
 unknown is now spiked. This is productionizing a proven pipeline with
 polarity-correct reporting.
+
+## 12. Slice 6 — identity/copy laws for reference types (build plan)
+
+The Ch. 9 §9.3 companion: value semantics is a *struct* property
+(copy-independence); slice 6 is the *class* dual. Two laws, of which only the
+first is recommended:
+
+- **Law A — defensive-copy correctness.** A class's `copy()`/`clone()` must
+  return an instance equal by value but a **distinct object**, and mutating that
+  copy must not affect the original. Catches `return self` AND shallow copies
+  that share a mutable reference member.
+- **Law B — identity stability under mutation** (`==`/`hashValue` invariant under
+  mutation). Subtler to discover; overlaps the kit's Hashable-consistency law
+  (Ch. 8). **Shelved** unless specifically wanted.
+
+### Key insight — Law A ≈ value semantics via `copy()`
+Defensive copy decomposes into **A1 distinctness** (`x.copy() !== x`, catches
+`return self`) + **A2 independence** (mutating `x.copy()` must not affect `x` —
+*exactly* the value-semantics copy-mutate-compare law, with the copy operation
+being `x.copy()` instead of `var b = a`). So the kit harness is a small variant
+of `checkValueSemanticPropertyLaws`: same independent-twin comparison + mutation
+scripts, but copy via `copyUnderTest()`, no `inout` (classes mutate in place),
+plus the `!==` assertion.
+
+### Reuse (nearly the whole stack)
+Verify pipeline (`CorpusPackager`, `VerifierSubprocess`, `VerifyResultParser`,
+the 5b path-dep + `@testable` mode, the warm-workdir loop), the result taxonomy +
+renderer (polarity is identical — a confirmed bug is the payoff), and the
+`FunctionScanner` corpus-fold (it already captures methods with return types +
+containing type).
+
+### Genuinely-new pieces
+1. **Kit `DefensiveCopy` protocol + `checkDefensiveCopyPropertyLaws`** (v3.7.0):
+   `AnyObject, Equatable`, `associatedtype Mutation: CaseIterable`, `makeProbe()`,
+   `copyUnderTest() -> Self`, `apply(_:to:)`. Two Strict laws:
+   `copyIsDistinctInstance` (`!==`) + `copyIsIndependent` (value-semantics check
+   via `copyUnderTest()`).
+2. **`DefensiveCopyDiscoverer`** (or extend `ValueSemanticDiscoverer`): a
+   candidate is a **`class`** that declares a curated copy-verb method
+   (`copy`/`clone`/`copied`/`duplicate`/`mutableCopy`/`deepCopy`) returning
+   `Self`/its own type, is `Equatable`, and is constructible. High-precision —
+   only classes with an explicit copy method.
+3. **A stub-emitter variant** retroactively conforming the class to
+   `DefensiveCopy` (`copyUnderTest()` = the discovered method).
+4. **`@DefensiveCopyTests` macro** (kit, mirrors `@ValueSemanticTests`) —
+   optional, later.
+
+### Design decisions
+- **Fold into `verify-value-semantics`** as a second candidate kind (unified
+  report; matches the Ch. 9 pairing) rather than a sibling command.
+- Copy-verb name-gating keeps precision high (conservative posture); a `Self`-
+  returning method on a class is a strong structural signal but name-gated.
+- Constructibility / Equatable gates reuse the value-semantics gates verbatim.
+
+### Slicing
+- **6a — kit `DefensiveCopy` protocol + harness** (v3.7.0). Fixtures: correct
+  deep-copy (bothPass), `return self` (fails A1), shallow copy sharing a
+  reference member (fails A2). *Load-bearing.*
+- **6b — engine discovery.** `DefensiveCopyDiscoverer` + candidate + a
+  `discover-reducers` line; precision guards (non-class / no copy method /
+  non-Equatable excluded).
+- **6c — verify wiring.** Emitter variant + fold into `ValueSemanticVerifier`
+  (both modes) + report; measured `.subprocess` test.
+- **6d — `@DefensiveCopyTests` macro** (optional).
+- **6e — Law B** — shelved unless wanted.
+
+### Scope boundaries (Law A v1 does NOT)
+Multi-arg mutation payloads (gated); actors; `NSCopying`-only classes without an
+in-type copy method (optional later); Law B.
+
+### Effort
+~2 days for Law A end-to-end — slices 1–5 built the verify machinery and Law A's
+harness is a small variant of the value-semantics one.
