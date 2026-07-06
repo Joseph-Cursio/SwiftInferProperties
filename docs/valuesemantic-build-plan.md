@@ -4,11 +4,12 @@ Status: **SHIPPED — slices 1–5 complete** (2026-07-06). Supersedes the
 discovery/verify half of `docs/ideas/ValueSemantic Kit Proposal.md` (2026-05-04).
 The feature discovers reference-backed struct candidates AND verifies the
 copy-mutate-compare law end-to-end, catching all three pbt-book Ch. 9 bug shapes
-(reference container / broken CoW / closure capture), plus a CI macro for
-adopters. Three kit releases (v3.4.0 protocol + single-step, v3.5.0 multi-step
-interleaving, v3.6.0 `@ValueSemanticTests` macro). See **§10 What shipped** for
-the commit/version map. Remaining (optional, deferred): the engine-side
-evidence-join `.possible → .verified` promotion + the slice-6 identity companion.
+(reference container / broken CoW / closure capture), a CI macro for adopters,
+and a user-runnable **`verify-value-semantics` command** that reports confirmed
+leaks with minimal repros on real `internal`-typed packages. Three kit releases
+(v3.4.0 protocol + single-step, v3.5.0 multi-step interleaving, v3.6.0
+`@ValueSemanticTests` macro). See **§10 What shipped** + **§11** (the command).
+Remaining (optional): the slice-6 identity companion for reference types.
 
 **Conceptual source: `~/xcode_projects/pbt-book` Chapter 9, "Value semantics,
 COW and identity."** That chapter is effectively the spec for the property this
@@ -210,14 +211,14 @@ Split cleanly across the two repos, mirroring the existing kit/engine seam.
    `copyMutationDoesNotLeakUnderInterleaving` (interference-on-a-copy then own-
    script vs interference-free replay). `ClosureCounter` fixture → defaultFails,
    caught only by this law.
-5. ⏳ **PARTIAL — Productionize.** ✅ `@ValueSemanticTests` kit macro (v3.6.0) +
-   ✅ shrunk minimal repro in FAIL output (done in slice 3, via
-   `VERIFY_DEFAULT_INPUT`). ⬜ **Remaining (build plan in §11; reachability
-   spiked):** a purpose-built **`verify-value-semantics` command** — NOT the
-   evidence-join fold the plan first imagined. Value semantics is *type-level*
-   with *inverted polarity* (a `defaultFails` is the confirmed-leak payoff, not a
-   suppression), so it must not ride the `InteractionInvariantSuggestion`
-   machinery. See §11 for the concrete plan.
+5. ✅ **SHIPPED — Productionize.** `@ValueSemanticTests` kit macro (v3.6.0) +
+   shrunk minimal repro in FAIL output + the **`verify-value-semantics`
+   command** (§11): a purpose-built command, NOT the evidence-join fold the plan
+   first imagined — value semantics is *type-level* with *inverted polarity* (a
+   `defaultFails` is the confirmed-leak payoff, not a suppression), so it must
+   not ride the `InteractionInvariantSuggestion` machinery. Both reachability
+   modes shipped: 5a (standalone packaging) + 5b (path-dep + `@testable` for real
+   `internal` types; command defaults to 5b). See §11.
 6. ⬜ **(optional companion) Identity stability for reference types** — the
    Chapter 9 §9.3 dual law (`===`/vended-id invariant under mutation, changed
    under copy) for `class`/`actor` candidates, same plumbing, different predicate.
@@ -363,16 +364,21 @@ A pure `render([CandidateOutcome]) -> String` (sorted, byte-stable) keeps it
 unit-testable.
 
 ### Slicing
-- **5a — command over the proven path.** Wire the command from the existing
-  standalone-packaging flow + taxonomy + renderer + exit code; measured
-  `.subprocess` test against `valuesemantic-verify-corpus/` asserting
-  LeakyStore + ClosureCounter → leaks, SafeStore → safe. Mostly "lift the test
-  into a command." (~half a day.)
-- **5b — real-package reachability.** Add the path-dep + `@testable import` mode
-  (spiked above) so it runs on real `internal` types; reuse the warm-shared-
-  workdir trick (cycle 129: one workdir, `writeIfChanged`, swap `main.swift` per
-  candidate) so N candidates aren't N cold builds; optional bounded parallelism.
-  (~1 day; the only unknown — reachability — is now retired.)
+- **5a — ✅ SHIPPED.** `VerifyValueSemantics` subcommand +
+  `ValueSemanticVerifier.verify(...)` (standalone packaging) + the
+  `ValueSemanticVerifyResult` taxonomy + the byte-stable
+  `ValueSemanticVerifyReport` renderer + `--fail-on-leak`. Emitter enriched to
+  surface the kit's shrunk minimal counterexample (catch `PropertyLawViolation`
+  → `CheckResult.counterexample`). Measured test drives the production verifier
+  against `valuesemantic-verify-corpus/`.
+- **5b — ✅ SHIPPED.** `ValueSemanticVerifier.verifyInPackage(...)`:
+  `.package(path:)` on the user's package + `@testable import` (emitter `testable`
+  flag) reaches real `internal` types; the command **defaults to 5b**
+  (`--self-contained` selects 5a). One workdir reused → the path-dep + kit graph
+  builds cold once, the rest incremental. Fixture
+  `valuesemantic-package-corpus/` (a real package with INTERNAL PackageLeaky +
+  PackageSafe) + `ValueSemanticPackageVerifyMeasuredTests`. Bounded parallelism
+  left as an optional future add.
 
 ### Scope boundaries (v1 does NOT)
 Multi-argument mutation payloads (gated, the value-generation slice); dependency
