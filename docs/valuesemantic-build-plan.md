@@ -463,8 +463,17 @@ containing type).
   concrete type satisfies the `Self` requirements; `Self` in a class parameter
   position is a covariant-Self error). Measured test verifies both a correct-copy
   and a shallow-copy INTERNAL class alongside the structs.
-- **6d — `@DefensiveCopyTests` macro** (optional; not built).
-- **6e — Law B** (identity stability) — shelved unless wanted.
+- **6d — ✅ SHIPPED (kit v3.9.0): `@DefensiveCopyTests` + `@StableIdentityTests`
+  macros.** CI auto-generation for the reference-type families, mirroring
+  `@ValueSemanticTests`. All three law-test macros now share one
+  `LawTestPeerMacro` implementation (protocol name + suffix + harness are the
+  only differences).
+- **6e — ✅ SHIPPED (Law B, identity stability).** Kit v3.8.0
+  `StableIdentity` + `checkStableIdentityPropertyLaws` (hash / equality invariant
+  under mutation); engine `StableIdentityDiscoverer` (mutable Hashable class,
+  verify-decides) + emitter, folded into `verify-value-semantics` as a third bug
+  family. Catches mutable `Set`/`Dictionary` keys. (Originally shelved; built on
+  request.)
 
 ### Scope boundaries (Law A v1 does NOT)
 Multi-arg mutation payloads (gated); actors; `NSCopying`-only classes without an
