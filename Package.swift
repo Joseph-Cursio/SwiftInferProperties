@@ -84,7 +84,7 @@ let package = Package(
         // now-`public` `DerivationStrategist.composedGenerator(forTypeName:resolve:)`
         // lets verify derive a top-level composite carrier (`[Rule]`, `Rule?`)
         // over an in-universe element type.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.3.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.4.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "602.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         // Idea #4 — the shared effect-vocabulary leaf. Owns the `Effect` lattice
