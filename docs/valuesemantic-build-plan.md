@@ -212,12 +212,12 @@ Split cleanly across the two repos, mirroring the existing kit/engine seam.
    caught only by this law.
 5. ⏳ **PARTIAL — Productionize.** ✅ `@ValueSemanticTests` kit macro (v3.6.0) +
    ✅ shrunk minimal repro in FAIL output (done in slice 3, via
-   `VERIFY_DEFAULT_INPUT`). ⬜ **Deferred:** the engine-side evidence-join
-   `.possible → .verified` promotion — value semantics is *type-level*, so it
-   doesn't fit the `InteractionInvariantSuggestion` machinery (action-sequence
-   predicates over reducers) and there's no `verify-value-semantics` command
-   writing evidence for discover to read. Needs new per-family infrastructure — a
-   separate epic, deferred by design.
+   `VERIFY_DEFAULT_INPUT`). ⬜ **Remaining (build plan in §11; reachability
+   spiked):** a purpose-built **`verify-value-semantics` command** — NOT the
+   evidence-join fold the plan first imagined. Value semantics is *type-level*
+   with *inverted polarity* (a `defaultFails` is the confirmed-leak payoff, not a
+   suppression), so it must not ride the `InteractionInvariantSuggestion`
+   machinery. See §11 for the concrete plan.
 6. ⬜ **(optional companion) Identity stability for reference types** — the
    Chapter 9 §9.3 dual law (`===`/vended-id invariant under mutation, changed
    under copy) for `class`/`actor` candidates, same plumbing, different predicate.
@@ -311,3 +311,75 @@ payload-free mutation → skipped.
 without a type annotation (`var storage = Storage()`) isn't classified — the
 scanner captures declared type spellings only (engine-wide textual-type posture);
 annotate to detect.
+
+## 11. Slice 5 (remaining) — `verify-value-semantics` command (build plan)
+
+The deferred half of slice 5. **Not** a fold into `discover-interaction`: value
+semantics is type-level and its polarity is inverted from the interaction
+families — a `measured-defaultFails` is the *payoff* (a confirmed leak), not a
+suppression — so reusing the interaction evidence fold would hide the very bugs
+the feature finds. The right shape is a **purpose-built verify command** that
+turns recognition ("here are structs that *could* leak") into detection ("here
+are the ones that *do*, with a minimal repro each").
+
+### Goal
+`swift-infer verify-value-semantics --target MyKit` → discovers candidates,
+verifies each, and reports **confirmed leaks with the kit's shrunk minimal
+repro**, safe types quietly, and honestly-skipped ones with a reason.
+
+### Reuse (most of the pipeline already exists)
+`ValueSemanticDiscoverer.discover(directory:)`, `ValueSemanticStubEmitter`
+(the verify-readiness gate + emit), `CorpusPackager`, the verifier manifest,
+`VerifierSubprocess.runSwiftBuild/runVerifierBinary`, `VerifyResultParser`. The
+per-candidate loop in `ValueSemanticVerifyMeasuredTests.verify(...)` is
+essentially the command's core already.
+
+### Reachability decision — SPIKED ✅
+Real targets aren't the self-contained, `public`, dependency-free fixture the
+measured test packages; their types are usually `internal` with dependencies.
+**Confirmed by spike (2026-07-06):** a verifier that `.package(path:)`-depends on
+the user's package and uses **`@testable import <Target>`** reaches, extends, and
+**retroactively conforms `internal` types** — because `VerifierSubprocess`
+already builds with `-Xswiftc -enable-testing`, and the emitter's `public`
+conformance witnesses satisfy an internal type's conformance (public ≥ internal).
+The full retroactive `ValueSemantic` conformance on an `internal` type + kit
+harness compiles and links across the path dependency. So the command can verify
+real `internal` types, not just `public` ones — the key enabler for usefulness.
+
+### Command surface
+`SwiftInferCommand.VerifyValueSemantics` (mirrors `verify-interaction`):
+`--target <name>` (resolves `Sources/<target>/`), `--fail-on-leak` (CI gate;
+**default exit 0** per the advisory posture, PRD §3.5), later `--max-parallel`.
+
+### Per-candidate result taxonomy (drives the report; polarity-correct)
+1. **`confirmedLeak(repro)`** ← `defaultFails` — surfaced prominently; repro from
+   `VERIFY_DEFAULT_INPUT` (kit's already-shrunk minimal script).
+2. **`verifiedSafe`** ← `bothPass` — quiet.
+3. **`notVerifiable(reason)`** ← emitter gate (non-`Equatable` / no payload-free
+   mutation).
+4. **`buildFailed(excerpt)`** ← verifier didn't compile.
+5. **`error`** ← runtime/parse error.
+A pure `render([CandidateOutcome]) -> String` (sorted, byte-stable) keeps it
+unit-testable.
+
+### Slicing
+- **5a — command over the proven path.** Wire the command from the existing
+  standalone-packaging flow + taxonomy + renderer + exit code; measured
+  `.subprocess` test against `valuesemantic-verify-corpus/` asserting
+  LeakyStore + ClosureCounter → leaks, SafeStore → safe. Mostly "lift the test
+  into a command." (~half a day.)
+- **5b — real-package reachability.** Add the path-dep + `@testable import` mode
+  (spiked above) so it runs on real `internal` types; reuse the warm-shared-
+  workdir trick (cycle 129: one workdir, `writeIfChanged`, swap `main.swift` per
+  candidate) so N candidates aren't N cold builds; optional bounded parallelism.
+  (~1 day; the only unknown — reachability — is now retired.)
+
+### Scope boundaries (v1 does NOT)
+Multi-argument mutation payloads (gated, the value-generation slice); dependency
+faking for non-constructible types (portable from MVVM slice 9 later); the
+identity companion (slice 6).
+
+### Effort
+Medium, high value: slices 2–4 did the hard parts, and the 5b reachability
+unknown is now spiked. This is productionizing a proven pipeline with
+polarity-correct reporting.
