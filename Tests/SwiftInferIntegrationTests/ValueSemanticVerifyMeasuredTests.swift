@@ -51,27 +51,7 @@ struct ValueSemanticVerifyMeasuredTests {
             encoding: .utf8
         )
 
-        var outcomes: [String: VerifyOutcome] = [:]
-        for candidate in candidates.sorted(by: { $0.typeName < $1.typeName }) {
-            guard let inputs = ValueSemanticStubEmitter.inputs(
-                for: candidate,
-                moduleName: "ValueSemanticCorpus"
-            ) else { continue }
-            let stub = ValueSemanticStubEmitter.emit(inputs)
-            try stub.write(
-                to: sources.appendingPathComponent("main.swift"),
-                atomically: true,
-                encoding: .utf8
-            )
-            let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
-            guard build.exitCode == 0 else {
-                Issue.record("build failed for \(candidate.typeName): \(build.stderr)")
-                continue
-            }
-            outcomes[candidate.typeName] = VerifyResultParser.parse(
-                try VerifierSubprocess.runVerifierBinary(workdir: workdir)
-            )
-        }
+        let outcomes = try Self.verify(candidates: candidates, workdir: workdir, sources: sources)
 
         if case .bothPass = outcomes["SafeStore"] {
             // Correct CoW: mutation on a copy clones storage; original untouched.
@@ -88,6 +68,36 @@ struct ValueSemanticVerifyMeasuredTests {
         } else {
             Issue.record("ClosureCounter expected defaultFails; got \(String(describing: outcomes["ClosureCounter"]))")
         }
+    }
+
+    /// Emit + build + run a verifier per verify-ready candidate, keyed by type
+    /// name. Non-verify-ready candidates (gated by the emitter) are skipped.
+    static func verify(
+        candidates: [ValueSemanticCandidate],
+        workdir: URL,
+        sources: URL
+    ) throws -> [String: VerifyOutcome] {
+        var outcomes: [String: VerifyOutcome] = [:]
+        for candidate in candidates.sorted(by: { $0.typeName < $1.typeName }) {
+            guard let inputs = ValueSemanticStubEmitter.inputs(
+                for: candidate,
+                moduleName: "ValueSemanticCorpus"
+            ) else { continue }
+            try ValueSemanticStubEmitter.emit(inputs).write(
+                to: sources.appendingPathComponent("main.swift"),
+                atomically: true,
+                encoding: .utf8
+            )
+            let build = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
+            guard build.exitCode == 0 else {
+                Issue.record("build failed for \(candidate.typeName): \(build.stderr)")
+                continue
+            }
+            outcomes[candidate.typeName] = VerifyResultParser.parse(
+                try VerifierSubprocess.runVerifierBinary(workdir: workdir)
+            )
+        }
+        return outcomes
     }
 
     static func verifierManifest(corpusRoot: URL) -> String {
