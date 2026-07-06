@@ -92,6 +92,14 @@ public enum ValueSemanticStubEmitter {
             print("VERIFY_EDGE_TRIALS: 0")
             print("VERIFY_EDGE_SAMPLED: 0")
             exit(0)
+        } catch let violation as PropertyLawViolation {
+            // Surface the kit's already-shrunk minimal counterexample (e.g.
+            // "copy, then apply [addOne]"), not the law-summary description.
+            let repro = violation.results.compactMap(\\.counterexample).first ?? "\\(violation)"
+            print("VERIFY_DEFAULT_RESULT: FAIL")
+            print("VERIFY_DEFAULT_TRIAL: 0")
+            print("VERIFY_DEFAULT_INPUT: \\(repro)")
+            exit(1)
         } catch {
             print("VERIFY_DEFAULT_RESULT: FAIL")
             print("VERIFY_DEFAULT_TRIAL: 0")

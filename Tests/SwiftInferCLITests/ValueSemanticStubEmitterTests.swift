@@ -40,6 +40,9 @@ struct ValueSemanticStubEmitterTests {
         #expect(stub.contains("VERIFY_DEFAULT_RESULT: PASS"))
         #expect(stub.contains("VERIFY_EDGE_RESULT: PASS"))
         #expect(stub.contains("VERIFY_DEFAULT_RESULT: FAIL"))
+        // Surfaces the kit's minimal counterexample, not the law-summary text.
+        #expect(stub.contains("catch let violation as PropertyLawViolation"))
+        #expect(stub.contains("compactMap(\\.counterexample)"))
     }
 
     @Test func buildsInputsFromPayloadFreeSurfaceOnly() throws {
