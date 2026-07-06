@@ -65,6 +65,13 @@ public enum ValueSemanticDiscoverer {
         }
     }
 
+    /// Convenience: scan a source directory and discover candidates. Mirrors
+    /// the other carrier discoverers' `discover(directory:)` entry.
+    public static func discover(directory: URL) throws -> [ValueSemanticCandidate] {
+        let corpus = try FunctionScanner.scanCorpus(directory: directory)
+        return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
+    }
+
     // MARK: - Reference-backed classification
 
     /// Classify a stored member as reference-backed, or `nil` if it is a value

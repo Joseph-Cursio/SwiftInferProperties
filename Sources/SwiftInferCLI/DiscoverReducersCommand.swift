@@ -99,9 +99,16 @@ extension SwiftInferCommand {
                 // Recognition only (slice 1): no invariant is emitted — see
                 // docs/rule-visitor-carrier-scoping.md.
                 let ruleVisitors = try RuleVisitorDiscoverer.discover(directory: directory)
+                // PROTOTYPE — also surface value-semantics carriers: structs
+                // holding reference-backed storage (a closure / mutable
+                // container / corpus class), through which a "value" can leak
+                // shared mutable state. Recognition only (slice 2): no invariant
+                // is emitted yet — see docs/valuesemantic-build-plan.md.
+                let valueSemantics = try ValueSemanticDiscoverer.discover(directory: directory)
                 return renderSummary(candidates: candidates)
                     + "\n" + renderViewModelSummary(viewModels)
                     + "\n" + renderRuleVisitorSummary(ruleVisitors)
+                    + "\n" + renderValueSemanticSummary(valueSemantics)
             }
             let pin = try ReducerPin.parse(pinRaw)
             let matched = candidates.filter { pin.matches($0) }
@@ -267,6 +274,48 @@ extension SwiftInferCommand {
                 )
             }
             return lines
+        }
+
+        /// PROTOTYPE — renders value-semantics carriers: structs holding
+        /// reference-backed storage (a closure / mutable container / corpus
+        /// class) through which a copy could leak shared mutable state. One
+        /// block per struct: location + Equatability note, the reference-backed
+        /// members (with why each qualifies), and the mutation surface.
+        /// Recognition only (slice 2) — no invariant is emitted yet. See
+        /// docs/valuesemantic-build-plan.md.
+        static func renderValueSemanticSummary(_ candidates: [ValueSemanticCandidate]) -> String {
+            if candidates.isEmpty {
+                return "swift-infer discover-reducers: no value-semantics "
+                    + "carriers detected.\n"
+            }
+            let suffix = candidates.count == 1 ? "" : "s"
+            var lines: [String] = [
+                "swift-infer discover-reducers — detected \(candidates.count) "
+                    + "value-semantics carrier\(suffix) (reference-backed structs):",
+                ""
+            ]
+            for candidate in candidates {
+                lines.append(contentsOf: renderValueSemantic(candidate))
+            }
+            return lines.joined(separator: "\n") + "\n"
+        }
+
+        private static func renderValueSemantic(_ candidate: ValueSemanticCandidate) -> [String] {
+            let note = candidate.equatability == .equatable
+                ? "" : "  [not verify-ready: \(candidate.equatability)]"
+            let members = candidate.referenceBackedMembers
+                .map { "\($0.name): \($0.typeName) [\($0.kind.rawValue)]" }
+                .joined(separator: ", ")
+            let surface = candidate.mutationSurface
+                .map { $0.isMutating ? $0.name : "\($0.name) (non-mutating)" }
+                .joined(separator: ", ")
+            let origin = "\(candidate.location.file):\(candidate.location.line)"
+            return [
+                "  \(origin)  \(candidate.typeName)\(note)",
+                "    reference-backed members "
+                    + "(\(candidate.referenceBackedMembers.count)): \(members)",
+                "    mutation surface (\(candidate.mutationSurface.count)): \(surface)"
+            ]
         }
 
         /// PROTOTYPE — the candidate interaction invariants surfaced over a
