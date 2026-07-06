@@ -26,7 +26,7 @@ extension IdempotenceStubEmitter {
 
     private static let doubleHeaderBlurb =
         "Pass 1 (default): inline finite-domain (Double.random in ±1e6).\n"
-        + "// Pass 2 (edge):    inlined doubleWithNaN — NaN at ~5%, rest finite-domain."
+        + "// Pass 2 (edge):    real-axis edge set (NaN/±Inf/±0/overflow/subnormal at ~10%)."
 
     private static func importsForDouble(_ extra: [String]) -> String {
         let base = ["Foundation", "PropertyBased", "RealModule"]
@@ -79,21 +79,15 @@ extension IdempotenceStubEmitter {
         """
     }
 
-    /// Double edge match: single-entry curated list (`[Double.nan]`);
-    /// NaN → index 0, finite-slice failures → -1.
+    /// Double edge match: the curated real-axis set (`DoubleEdgeCaseStub`);
+    /// NaN/±Inf/±0/overflow/subnormal → their index, finite-slice → -1.
     private static func doubleEdgePass(functionCall: String) -> String {
         """
-        // --- Pass 2: edge-case-biased (inlined doubleWithNaN) ---
+        // --- Pass 2: edge-case-biased (real-axis edge set) ---
 
-        func matchEdgeCaseIndex(_ value: Double) -> Int {
-            return value.isNaN ? 0 : -1
-        }
+        \(DoubleEdgeCaseStub.matchFunctionSource)
 
-        let edgeGenerator: Generator<Double, some SendableSequenceType> =
-            Gen<Int>.int(in: 0 ..< 20).map { tag -> Double in
-                if tag == 0 { return Double.nan }
-                return Double.random(in: -1_000_000.0 ... 1_000_000.0)
-            }
+        \(DoubleEdgeCaseStub.generatorSource)
 
         var sampledEdgeIndices: Set<Int> = []
 

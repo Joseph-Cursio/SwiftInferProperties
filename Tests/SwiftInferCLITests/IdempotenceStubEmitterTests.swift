@@ -206,15 +206,22 @@ struct IdempotenceStubEmitterTests {
         #expect(source.contains("import Foundation"))
     }
 
-    @Test("Double carrier uses inlined doubleWithNaN equivalent for edge pass")
-    func doubleCarrierEdgePassUsesInlinedDoubleWithNaN() throws {
+    @Test("Double carrier uses the real-axis edge set for edge pass")
+    func doubleCarrierEdgePassUsesRealAxisEdgeSet() throws {
         let source = try IdempotenceStubEmitter.emit(
             Self.inputs(functionCall: "abs", carrierType: "Double")
         )
-        #expect(source.contains("Gen<Int>.int(in: 0 ..< 20)"))
+        // 9-entry curated set → 90-tag bias band (9 edge tags / 90 = ~10%).
+        #expect(source.contains("Gen<Int>.int(in: 0 ..< 90)"))
         #expect(source.contains("return Double.nan"))
-        // Single-entry edge match — NaN → index 0, else -1.
-        #expect(source.contains("value.isNaN ? 0 : -1"))
+        #expect(source.contains("return Double.infinity"))
+        #expect(source.contains("return -0.0"))
+        #expect(source.contains("return Double.greatestFiniteMagnitude"))
+        #expect(source.contains("return Double.leastNonzeroMagnitude"))
+        // Multi-entry edge match — NaN → 0, ±Inf/±0/overflow/subnormal → their index.
+        #expect(source.contains("if value.isNaN { return 0 }"))
+        #expect(source.contains("if value == .infinity { return 1 }"))
+        #expect(!source.contains("value.isNaN ? 0 : -1"))
         #expect(!source.contains("complexEdgeCases"))
     }
 

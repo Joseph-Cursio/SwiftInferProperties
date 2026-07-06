@@ -231,14 +231,15 @@ struct AssociativityStubEmitterTests {
         #expect(source.contains("lhsResult.isApproximatelyEqual(to: rhsResult)") == false)
     }
 
-    @Test("Double carrier uses inlined doubleWithNaN for edge pass + per-slot rotation")
-    func doubleCarrierEdgePassUsesDoubleWithNaN() throws {
+    @Test("Double carrier uses the real-axis edge set for edge pass + per-slot rotation")
+    func doubleCarrierEdgePassUsesRealAxisEdgeSet() throws {
         let source = try AssociativityStubEmitter.emit(
             Self.inputs(functionCall: "{ (a: Double, b: Double) in a + b }", carrierType: "Double")
         )
-        #expect(source.contains("Gen<Int>.int(in: 0 ..< 20)"))
+        #expect(source.contains("Gen<Int>.int(in: 0 ..< 90)"))
         #expect(source.contains("return Double.nan"))
-        #expect(source.contains("value.isNaN ? 0 : -1"))
+        #expect(source.contains("if value.isNaN { return 0 }"))
+        #expect(!source.contains("value.isNaN ? 0 : -1"))
         // Per-slot rotation applies on the Double edge pass too.
         #expect(source.contains("let edgeSlot = trial % 3"))
         #expect(source.contains("VERIFY_EDGE_SLOT:"))

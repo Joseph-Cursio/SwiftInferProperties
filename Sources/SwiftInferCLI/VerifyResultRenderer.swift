@@ -185,8 +185,8 @@ public enum VerifyResultRenderer {
     /// zero-edge sentinel (`edgeTrials == 0` per V1.44.B/C); the
     /// renderer detects it and reports the n/a phrasing instead of the
     /// curated-cases-sampled count. FP carriers map to their curated
-    /// list size — 12 entries for `Complex<Double>`, 1 entry
-    /// (`Double.nan`) for `Double`.
+    /// list size — 12 entries for `Complex<Double>`, `DoubleEdgeCaseStub`'s
+    /// real-axis set for `Double`.
     private static func edgeCoverageLine(
         edgeTrials: Int,
         edgeSampled: Int,
@@ -201,7 +201,7 @@ public enum VerifyResultRenderer {
 
     /// Per-carrier curated edge-case index tag for `.edgeCaseAdvisory`.
     /// `Complex<Double>` uses the 12-entry `edgeCaseLabels` table;
-    /// `Double` uses a single-entry `[Double.nan]` synthesized label.
+    /// `Double` uses `DoubleEdgeCaseStub`'s real-axis labels.
     private static func edgeIndexTag(
         edgeCaseIndex: Int,
         context: Context
@@ -217,10 +217,11 @@ public enum VerifyResultRenderer {
             return "edge case #\(edgeCaseIndex) (\(edgeCaseLabels[edgeCaseIndex]))"
 
         case "Double":
-            // Single-entry curated list — index 0 is NaN per V1.44.B.
-            return edgeCaseIndex == 0
-                ? "edge case #0 (Double.nan)"
-                : "a non-curated value"
+            // Curated real-axis set — see `DoubleEdgeCaseStub`.
+            guard edgeCaseIndex < DoubleEdgeCaseStub.labels.count else {
+                return "a non-curated value"
+            }
+            return "edge case #\(edgeCaseIndex) (\(DoubleEdgeCaseStub.labels[edgeCaseIndex]))"
 
         default:
             // Int carrier shouldn't fire `.edgeCaseAdvisory` (no edge
@@ -232,7 +233,7 @@ public enum VerifyResultRenderer {
     private static func curatedEdgeCaseCount(for carrierType: String) -> Int {
         switch carrierType {
         case "Complex<Double>": return edgeCaseLabels.count
-        case "Double": return 1
+        case "Double": return DoubleEdgeCaseStub.curatedCount
         default: return 0
         }
     }

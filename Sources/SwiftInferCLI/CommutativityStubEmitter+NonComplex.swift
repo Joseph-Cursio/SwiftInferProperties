@@ -3,8 +3,8 @@ import Foundation
 // V1.45.A carrier — Double two-pass commutativity emission. Mirrors
 // `IdempotenceStubEmitter+NonComplex.swift`'s `composeDoubleSource`
 // but for the `f(a, b) ≈ f(b, a)` shape: each trial draws two values;
-// the edge pass biases the first to the inlined doubleWithNaN
-// equivalent (NaN at ~5%) and draws the second from the default
+// the edge pass biases the first to the curated real-axis edge set
+// (`DoubleEdgeCaseStub`, ~10%) and draws the second from the default
 // finite generator.
 extension CommutativityStubEmitter {
 
@@ -26,7 +26,7 @@ extension CommutativityStubEmitter {
 
     private static let doubleHeaderBlurb =
         "Pass 1 (default): inline finite-domain (Double.random in ±1e6).\n"
-        + "// Pass 2 (edge):    first value biased to inlined doubleWithNaN,\n"
+        + "// Pass 2 (edge):    first value biased to the real-axis edge set,\n"
         + "//                   second value drawn from the finite-default generator."
 
     private static func importsForDouble(_ extra: [String]) -> String {
@@ -66,22 +66,16 @@ extension CommutativityStubEmitter {
         """
     }
 
-    /// Double edge match: single-entry curated list (`[Double.nan]`);
-    /// NaN → index 0, finite-slice failures → -1. Applied to `lhs`
-    /// only (the edge-biased value).
+    /// Double edge match: the curated real-axis set (`DoubleEdgeCaseStub`);
+    /// NaN/±Inf/±0/overflow/subnormal → their index, finite-slice → -1.
+    /// Applied to `lhs` only (the edge-biased value).
     private static func doubleEdgePass(functionCall: String) -> String {
         """
-        // --- Pass 2: edge-case-biased (inlined doubleWithNaN; lhs only) ---
+        // --- Pass 2: edge-case-biased (real-axis edge set; lhs only) ---
 
-        func matchEdgeCaseIndex(_ value: Double) -> Int {
-            return value.isNaN ? 0 : -1
-        }
+        \(DoubleEdgeCaseStub.matchFunctionSource)
 
-        let edgeGenerator: Generator<Double, some SendableSequenceType> =
-            Gen<Int>.int(in: 0 ..< 20).map { tag -> Double in
-                if tag == 0 { return Double.nan }
-                return Double.random(in: -1_000_000.0 ... 1_000_000.0)
-            }
+        \(DoubleEdgeCaseStub.generatorSource)
         // Pass 2's rhs reuses Pass 1's top-level `defaultGenerator`.
 
         var sampledEdgeIndices: Set<Int> = []

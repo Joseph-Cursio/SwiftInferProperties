@@ -87,4 +87,29 @@ struct VerifyPipelineIdempotenceTests {
             Issue.record("expected .bothPass; got \(outcome)")
         }
     }
+
+    /// **Real-axis edge-set idempotence × Double × bothPass.** `abs` is
+    /// idempotent on every real, including all nine curated edge cases
+    /// (`abs(abs(x)) == abs(x)` for NaN/±Inf/±0/overflow/subnormal under
+    /// the NaN-reflexive oracle). The edge pass therefore reaches a
+    /// verdict and samples MULTIPLE distinct curated entries — the guard
+    /// that the widened real-axis set is live end-to-end: the prior
+    /// NaN-only set could sample at most 1.
+    @Test("idempotence × Double: abs samples multiple real-axis edge cases (bothPass)")
+    func idempotenceDoubleRealAxisEdgeSampling() throws {
+        let outcome = try VerifyPipelineIntegrationFixture.runIdempotencePipeline(
+            functionCall: "abs",
+            carrierType: "Double"
+        )
+        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+            #expect(defaultTrials == 100)
+            #expect(edgeTrials == 100)
+            // > 1 is impossible under the old NaN-only edge set; <= 9 is
+            // the curated real-axis count.
+            #expect(edgeSampled > 1)
+            #expect(edgeSampled <= 9)
+        } else {
+            Issue.record("expected .bothPass; got \(outcome)")
+        }
+    }
 }

@@ -1,9 +1,9 @@
 import Foundation
 
-// V1.44.B carrier — Double two-pass emission. The edge generator
-// inlines the kit's `Gen<Double>.doubleWithNaN()` definition (NaN at
-// ~5% per trial; the kit gates ship with a tighter coupling to
-// FloatingPoint laws than the verifier needs).
+// V1.44.B carrier — Double two-pass emission. The edge generator emits
+// the curated real-axis edge set (`DoubleEdgeCaseStub`: NaN/±Inf/±0/
+// overflow/subnormal at ~10% per trial), inline rather than delegated
+// to a kit generator the frozen 2.x algebraic verifier can't reach.
 extension RoundTripStubEmitter {
 
     static func composeDoubleSource(_ inputs: Inputs) -> String {
@@ -30,7 +30,7 @@ extension RoundTripStubEmitter {
 
     private static let doubleHeaderBlurb =
         "Pass 1 (default): inline finite-domain (Double.random in ±1e6).\n"
-        + "// Pass 2 (edge):    inlined doubleWithNaN — NaN at ~5%, rest finite-domain."
+        + "// Pass 2 (edge):    real-axis edge set (NaN/±Inf/±0/overflow/subnormal at ~10%)."
 
     private static func importsForDouble(_ extra: [String]) -> String {
         let base = ["Foundation", "PropertyBased", "RealModule"]
@@ -82,22 +82,15 @@ extension RoundTripStubEmitter {
         """
     }
 
-    /// Double edge match: the only curated edge case is `Double.nan`,
-    /// at index 0. Non-NaN failures from the 95% finite-path slice
-    /// resolve to `-1`.
+    /// Double edge match: the curated real-axis set (`DoubleEdgeCaseStub`);
+    /// NaN/±Inf/±0/overflow/subnormal → their index, finite-slice → -1.
     private static func doubleEdgePass(forwardCall: String, inverseCall: String) -> String {
         """
-        // --- Pass 2: edge-case-biased (inlined doubleWithNaN) ---
+        // --- Pass 2: edge-case-biased (real-axis edge set) ---
 
-        func matchEdgeCaseIndex(_ value: Double) -> Int {
-            return value.isNaN ? 0 : -1
-        }
+        \(DoubleEdgeCaseStub.matchFunctionSource)
 
-        let edgeGenerator: Generator<Double, some SendableSequenceType> =
-            Gen<Int>.int(in: 0 ..< 20).map { tag -> Double in
-                if tag == 0 { return Double.nan }
-                return Double.random(in: -1_000_000.0 ... 1_000_000.0)
-            }
+        \(DoubleEdgeCaseStub.generatorSource)
 
         var sampledEdgeIndices: Set<Int> = []
 

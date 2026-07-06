@@ -219,16 +219,18 @@ struct RoundTripStubEmitterTests {
         #expect(source.contains("inverseResult.isApproximatelyEqual(to: value)") == false)
     }
 
-    @Test("Double carrier uses inlined doubleWithNaN equivalent (NaN at ~5%) for edge pass")
-    func doubleCarrierEdgePassUsesInlinedDoubleWithNaN() throws {
+    @Test("Double carrier uses the real-axis edge set (NaN/±Inf/±0/overflow/subnormal) for edge pass")
+    func doubleCarrierEdgePassUsesRealAxisEdgeSet() throws {
         let source = try RoundTripStubEmitter.emit(
             Self.inputs(forwardCall: "abs", inverseCall: "abs", carrierType: "Double")
         )
-        // The inlined doubleWithNaN: Gen<Int>.int(in: 0 ..< 20).map { tag → NaN at tag==0 }
-        #expect(source.contains("Gen<Int>.int(in: 0 ..< 20)"))
+        // 9-entry curated set → 90-tag bias band; NaN at tag 0.
+        #expect(source.contains("Gen<Int>.int(in: 0 ..< 90)"))
         #expect(source.contains("return Double.nan"))
-        // Single-entry edge match — NaN → index 0, else -1.
-        #expect(source.contains("value.isNaN ? 0 : -1"))
+        #expect(source.contains("return Double.leastNormalMagnitude"))
+        // Multi-entry edge match — NaN → 0, ±Inf/±0/overflow/subnormal → their index.
+        #expect(source.contains("if value.isNaN { return 0 }"))
+        #expect(!source.contains("value.isNaN ? 0 : -1"))
         // No Complex-specific edge match.
         #expect(!source.contains("complexEdgeCases"))
     }

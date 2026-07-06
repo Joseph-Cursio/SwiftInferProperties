@@ -223,14 +223,16 @@ struct CommutativityStubEmitterTests {
         #expect(source.contains("import PropertyBased"))
     }
 
-    @Test("Double carrier uses inlined doubleWithNaN for edge pass")
-    func doubleCarrierEdgePassUsesDoubleWithNaN() throws {
+    @Test("Double carrier uses the real-axis edge set for edge pass")
+    func doubleCarrierEdgePassUsesRealAxisEdgeSet() throws {
         let source = try CommutativityStubEmitter.emit(
             Self.inputs(functionCall: "{ (a: Double, b: Double) in a + b }", carrierType: "Double")
         )
-        #expect(source.contains("Gen<Int>.int(in: 0 ..< 20)"))
+        #expect(source.contains("Gen<Int>.int(in: 0 ..< 90)"))
         #expect(source.contains("return Double.nan"))
-        #expect(source.contains("value.isNaN ? 0 : -1"))
+        #expect(source.contains("return -Double.infinity"))
+        #expect(source.contains("if value.isNaN { return 0 }"))
+        #expect(!source.contains("value.isNaN ? 0 : -1"))
     }
 
     // MARK: - V1.45.A Int carrier
