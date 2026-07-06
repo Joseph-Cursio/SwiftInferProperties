@@ -108,11 +108,15 @@ extension SwiftInferCommand {
                 // PROTOTYPE — also surface defensive-copy carriers: classes that
                 // vend a copy()/clone() (Ch. 9 §9.3). Recognition only.
                 let defensiveCopies = try DefensiveCopyDiscoverer.discover(directory: directory)
+                // PROTOTYPE — also surface identity-stability carriers: Hashable
+                // classes whose == / hash may read mutable state (Ch. 9 §9.3.3).
+                let stableIdentities = try StableIdentityDiscoverer.discover(directory: directory)
                 return renderSummary(candidates: candidates)
                     + "\n" + renderViewModelSummary(viewModels)
                     + "\n" + renderRuleVisitorSummary(ruleVisitors)
                     + "\n" + renderValueSemanticSummary(valueSemantics)
                     + "\n" + renderDefensiveCopySummary(defensiveCopies)
+                    + "\n" + renderStableIdentitySummary(stableIdentities)
             }
             let pin = try ReducerPin.parse(pinRaw)
             let matched = candidates.filter { pin.matches($0) }

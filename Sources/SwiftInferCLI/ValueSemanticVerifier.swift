@@ -70,7 +70,9 @@ public enum ValueSemanticVerifier {
             .map { valueSemanticJob($0, moduleName: moduleName, testable: testable) }
         let defensiveCopy = try DefensiveCopyDiscoverer.discover(directory: targetDirectory)
             .map { defensiveCopyJob($0, moduleName: moduleName, testable: testable) }
-        return valueSemantic + defensiveCopy
+        let stableIdentity = try StableIdentityDiscoverer.discover(directory: targetDirectory)
+            .map { stableIdentityJob($0, moduleName: moduleName, testable: testable) }
+        return valueSemantic + defensiveCopy + stableIdentity
     }
 
     private static func valueSemanticJob(
@@ -108,6 +110,22 @@ public enum ValueSemanticVerifier {
             location: candidate.location,
             stub: stub,
             notVerifiableReason: stub == nil ? reason : nil
+        )
+    }
+
+    private static func stableIdentityJob(
+        _ candidate: StableIdentityCandidate,
+        moduleName: String,
+        testable: Bool
+    ) -> VerifyJob {
+        let stub = StableIdentityStubEmitter
+            .inputs(for: candidate, moduleName: moduleName, testable: testable)
+            .map(StableIdentityStubEmitter.emit)
+        return VerifyJob(
+            typeName: candidate.typeName,
+            location: candidate.location,
+            stub: stub,
+            notVerifiableReason: stub == nil ? "no payload-free mutation method to drive" : nil
         )
     }
 

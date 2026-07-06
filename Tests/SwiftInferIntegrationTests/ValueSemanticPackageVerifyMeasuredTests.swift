@@ -57,6 +57,19 @@ struct ValueSemanticPackageVerifyMeasuredTests {
             let got = String(describing: status("PackageShallowCopy"))
             Issue.record("PackageShallowCopy expected confirmedLeak; got \(got)")
         }
+        // Slice 6e — identity-stability Hashable classes in the same package.
+        if case .verifiedSafe = status("PackageStableId") {
+            // Identity keyed on an immutable field — hash / == stay stable.
+        } else {
+            let got = String(describing: status("PackageStableId"))
+            Issue.record("PackageStableId expected verifiedSafe; got \(got)")
+        }
+        if case .confirmedLeak = status("PackageMutableKey") {
+            // == / hash read a mutated field → unsafe as a Set/Dictionary key.
+        } else {
+            let got = String(describing: status("PackageMutableKey"))
+            Issue.record("PackageMutableKey expected confirmedLeak; got \(got)")
+        }
     }
 
     static let packageRoot: URL = {
