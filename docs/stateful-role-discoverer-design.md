@@ -267,8 +267,29 @@ that is *its* reason to exist as a separate policy:
   protocol (`ActionSequenceStubEmitter+UnknownAction`) and asserts
   `reduce(s, unknown) == s` over an empty sequence — measured baseline
   `Tests/Fixtures/unknown-action-corpus/` (`NoOpCounter` → Verified,
-  `LeakyReducer` → suppressed). Still open in Phase 2: **VIPER/MVP** via a
-  convention-driven policy + recording output fakes (in progress), then MVC.
+  `LeakyReducer` → suppressed).
+- **Phase 2 (VIPER/MVP: SHIPPED)** — convention roles now have the complete
+  discover → surface → verify → promote loop. **Slice A:** `ConventionRule`
+  (built-in `*Presenter`/`*Interactor` defaults; name-or-conformance match) +
+  `ConventionRoleDiscoverer` reuses the MVVM scan (visitor / `classifyExclusion`
+  / `resolveActions`) to emit a `StatefulRole` per matched class, flagging the
+  named output collaborator as `.output(assertable:)`; registered as
+  `ConventionParadigm` and surfaced in `discover-reducers`. **Slice B (the
+  genuinely-new capability — recording output fakes, the design's risk #4):**
+  `RecordingFakeEmitter` synthesizes a `Recording_<P>` that logs each output call
+  (name + args) to `callLog`, and `OutputDeterminismVerifierEmitter` constructs
+  the role twice (recording fake for the output, no-op fakes for other deps),
+  drives the same actions, and compares the two logs — a hidden `UUID()`/`Date()`
+  in the output path makes them differ. Measured corpus
+  (`Tests/Fixtures/output-determinism-corpus/`): `SafePresenter` → bothPass,
+  `LeakyPresenter` → defaultFails. **Productionized:** new 8th
+  `InteractionInvariantFamily.outputDeterminism` (no Finding-G deferral →
+  promotable); `ConventionRoleInteractionAnalyzer` surfaces it in
+  `discover-interaction` at `.possible`; `OutputDeterminismVerify` +
+  `OutputDeterminismVerifyEvidence` close the verify-evidence join so a verified
+  role promotes to `.verified` (`OutputDeterminismJoinMeasuredTests`). Still open
+  in Phase 2: **MVC** (flagged low-value — confirm it beats the generic
+  function-level templates before building; the doc's own §6.5 caution).
 - The stub emitters generalize by dispatching on `construction` (free-fn vs
   instance) instead of on candidate type — the one real consumer-side refactor.
 
