@@ -146,6 +146,7 @@ SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategis
 | **Measured-verify design (v2 interaction families)** | `docs/measured-verify-architecture.md` (consolidation — read first) |
 | Interaction-surface SemanticIndex (`index`/`query` over reducer/MVVM invariants) | `docs/interaction-semantic-index.md` (V1.141) |
 | Verified-only DocC generation (`swift-infer docc`) | `docs/docc-generation.md` (V1.142) |
+| Cross-type design insights (`swift-infer insights`) | `docs/insights-command.md` (V1.143) |
 | Per-cycle change story | `git log` + `docs/calibration-cycle-N-findings.md` |
 | Calibration corpus + baseline | `docs/calibration-corpus-v2.0.md` |
 | Triage rubrics (archived — superseded by measured execution, cycle 118+) | `docs/archive/interaction-invariant-triage-rubric.md` (v2.0) + `docs/cycle-6-triage-rubric.md` (v1) |
