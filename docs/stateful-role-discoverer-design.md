@@ -250,22 +250,25 @@ that is *its* reason to exist as a separate policy:
   unsettled) and `unknownActionIsNoOp` (`reduce(s, unknown) == s`, only for *open*
   action alphabets — a closed enum is exhaustive, so the claim would be a
   tautology). TCA is excluded by design (its own richer story).
-- **Phase 2 (measured-verify: done for `determinism`)** — determinism is now a
-  first-class 6th `InteractionInvariantFamily`. The template engine emits one
-  determinism `InteractionInvariantSuggestion` per redux reducer
-  (`DeterminismInteractionTemplate` — the first *witness-free* family), and
-  `ActionSequenceStubEmitter.makeDeterminismCheck` runs it as a **per-step
-  two-call comparison** (`reduce(s, a) == reduce(s, a)` on the loop's current
-  `(state, action)` — distinct from idempotence's post-loop single-witness
-  double-apply, since determinism must hold for every action). A `bothPass`
-  folds +50 → `.verified` through the existing M9 evidence→tier join;
+- **Phase 2 (measured-verify: done for `determinism` AND `unknownActionIsNoOp`)** —
+  both are now first-class `InteractionInvariantFamily` cases (the 6th + 7th).
+  The template engine emits one determinism `InteractionInvariantSuggestion` per
+  redux reducer (`DeterminismInteractionTemplate` — the first *witness-free*
+  family), and `ActionSequenceStubEmitter.makeDeterminismCheck` runs it as a
+  **per-step two-call comparison** (`reduce(s, a) == reduce(s, a)` on the loop's
+  current `(state, action)` — distinct from idempotence's post-loop
+  single-witness double-apply, since determinism must hold for every action). A
+  `bothPass` folds +50 → `.verified` through the existing M9 evidence→tier join;
   determinism carries no Finding-G deferral, so the fold isn't clamped. The
   measured baseline (`Tests/Fixtures/determinism-verify-corpus/`) proves it
   catches an `Int.random` reducer the static purity analyzer labels `.pure`.
-  Still deferred: `unknownActionIsNoOp` *measured*-verify (it needs synthesizing
-  an unrecognized action for an open protocol alphabet — a fabricated conforming
-  dummy — materially harder); it currently ships candidate-only. Still open in
-  Phase 2: VIPER/MVP via `ConventionPolicy`, then MVC.
+  `unknownActionIsNoOp` **measured-verify shipped** (commit `d4a4fc7`): the
+  verifier mints a fresh probe type conforming to the reducer's open `Action`
+  protocol (`ActionSequenceStubEmitter+UnknownAction`) and asserts
+  `reduce(s, unknown) == s` over an empty sequence — measured baseline
+  `Tests/Fixtures/unknown-action-corpus/` (`NoOpCounter` → Verified,
+  `LeakyReducer` → suppressed). Still open in Phase 2: **VIPER/MVP** via a
+  convention-driven policy + recording output fakes (in progress), then MVC.
 - The stub emitters generalize by dispatching on `construction` (free-fn vs
   instance) instead of on candidate type — the one real consumer-side refactor.
 
