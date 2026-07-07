@@ -3,11 +3,11 @@
 ## SwiftInferProperties v2.0: Interaction-Invariant Inference for SwiftUI State Systems
 
 **Version:** 2.0 (draft)
-**Status:** Planned (no v2.0 surface has shipped; v1.71.0 is the current release line)
+**Status:** Substantially shipped on the v1.x release line (current: v1.140.0). All five interaction-invariant families — cardinality, referential integrity, biconditional, conservation, idempotence — are discovered, surfaced, and verified end-to-end via measured execution, over both reducer carriers (`(State, Action) -> State`, TCA `Reducer.body`) and the SwiftUI `@Observable`/`ObservableObject` MVVM carrier. Idempotence is promoted `.possible → .likely → .verified`; the other four stay `.possible` behind `--include-possible` pending their promotion gates. Remaining §20-deferred families (reachability, temporal, accessibility) are unshipped. This document stays forward-looking prose; the CLAUDE.md "Current" block + `docs/measured-verify-architecture.md` are the authority on what has actually landed.
 **Audience:** Open Source Contributors, Swift Ecosystem
 **Depends On:** SwiftPropertyLaws next minor (additive bump — new `InteractionInvariant` law surface; see §13)
 
-> This document is forward-looking. v1.0 described a shipped surface; v2.0 describes what is *planned*. No claims here should be read as commitments until the corresponding §5–§9 milestones land and a calibration cycle confirms them. Where this document differs from v1.0's "shipped" framing, that is deliberate — the v2.0 surface is conjectural and the calibration record will overrule any prose below that turns out to be wrong.
+> This document was written forward-looking, before any v2.0 surface shipped. Much of it has since landed on the v1.x line (see the Status note above), but the prose is preserved in its original *planning* voice and should be read as design intent, not as a shipped-feature manifest. No individual claim here should be read as a commitment or as evidence a feature exists — the CLAUDE.md "Current" block, `git log`, and `docs/measured-verify-architecture.md` are the authority on what has actually landed, and the calibration record overrules any prose below that turns out to be wrong.
 
 -----
 
