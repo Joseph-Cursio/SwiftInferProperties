@@ -773,6 +773,8 @@ These are explicitly out of v1 scope. Listed here so the v1 architecture leaves 
 
 ### 20.1 Contribution 4: SemanticIndex (v1.1)
 
+> **Status update (post-v1.0):** This "deferred v1.1" item **shipped at v1.33** — `swift-infer index` writes `.swiftinfer/index.json` (JSON, not the sketched SQLite; see the "Why JSON not SQLite" note in `IndexStore.swift`) and `swift-infer query` reads it. The row schema below is realized as `SemanticIndexEntry`. Two things remain genuinely open: the index covers only the **algebraic** surface (the v2 interaction/MVVM suggestions are not indexed), and incrementality/SQLite/NL-query are still the sketched-but-unbuilt future. Treat the prose below as the original design intent, now partially realized.
+
 A **persistent, queryable graph of inferred properties and relationships across runs**. This becomes a "semantic lens over a Swift codebase that reveals latent algebraic structure" — useful for:
 
 - API design feedback ("you have three monoids; consider unifying them under a custom Monoid protocol")
