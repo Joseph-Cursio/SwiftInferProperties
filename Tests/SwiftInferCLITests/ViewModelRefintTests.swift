@@ -100,7 +100,7 @@ struct ViewModelRefintTests {
 
     // MARK: - Stub emitter
 
-    @Test("drives each action and re-checks the invariant after every step")
+    @Test("drives randomized action sequences and re-checks the invariant after every step")
     func emitsActionDrivenInvariantCheck() {
         let source = ViewModelInvariantStubEmitter.emit(
             .init(
@@ -114,11 +114,17 @@ struct ViewModelRefintTests {
             )
         )
         #expect(source.contains("let probe = Catalog()"))
-        // Initial + per-step invariant checks.
-        #expect(source.contains("if !(probe.selected.isSubset(of: Set(probe.items))) { return false }"))
-        #expect(source.contains("probe.selectAll()"))
-        #expect(source.contains("for arg in [0, 1, -1]"))
-        #expect(source.contains("probe.toggle(arg)"))
+        // Seeded randomized multi-step sequences + per-step invariant check.
+        #expect(source.contains("struct SeededRNG: RandomNumberGenerator"))
+        #expect(source.contains("func findCounterexample() -> [(Int, Int)]?"))
+        #expect(source.contains("if violates(probe) { return steps }"))
+        #expect(source.contains("func violates(_ probe: Catalog) -> Bool "
+            + "{ !(probe.selected.isSubset(of: Set(probe.items))) }"))
+        // The two actions become switch arms; the single-arg one indexes its candidates.
+        #expect(source.contains("case 0: probe.selectAll()"))
+        #expect(source.contains("let values = [0, 1, -1]; probe.toggle(values[argIndex % values.count])"))
+        // Greedy shrink on failure.
+        #expect(source.contains("if replayFails(candidate) { minimal = candidate }"))
         // Disclosure of the gated actions.
         #expect(source.contains("Excluded (non-generatable / multi-arg): configure"))
         #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))

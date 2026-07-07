@@ -51,6 +51,15 @@ struct ViewModelRefintVerifyCorpusMeasuredTests {
         } else {
             Issue.record("CatalogModel expected defaultFails")
         }
+
+        // Payoff: an ORDER-DEPENDENT bug the old single-pass (sorted: drop, pick)
+        // PASSED, now caught because randomized sequences reach `pick` before `drop`.
+        let orderBug = try #require(candidates.first { $0.typeName == "OrderBugModel" })
+        if case .defaultFails = try verify(orderBug) {
+            // pick()-then-drop() leaves `selected` dangling over empty `items`.
+        } else {
+            Issue.record("OrderBugModel expected defaultFails (interleaving bug missed by single-pass)")
+        }
     }
 
     /// Drive every no-arg / single-arg-generatable action; disclose the rest.
