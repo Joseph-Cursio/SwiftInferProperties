@@ -35,10 +35,30 @@ public enum ViewModelProtocolScanner {
     public struct MethodRequirement: Sendable, Equatable {
         public let signature: String
         public let returnType: String?
+        /// The method's name + its parameters (external label + type). Lets a
+        /// *recording* fake re-declare a conforming method with its own internal
+        /// parameter names and log the call arguments. Default `[]`/`""` keeps
+        /// the no-op faker (which needs only `signature`) source-compatible.
+        public let name: String
+        public let parameters: [Parameter]
 
-        public init(signature: String, returnType: String?) {
+        public init(signature: String, returnType: String?, name: String = "", parameters: [Parameter] = []) {
             self.signature = signature
             self.returnType = returnType
+            self.name = name
+            self.parameters = parameters
+        }
+    }
+
+    /// One method parameter: its external argument label (`nil` for `_` /
+    /// positional) and its type. The internal name is the fake's to choose.
+    public struct Parameter: Sendable, Equatable {
+        public let label: String?
+        public let type: String
+
+        public init(label: String?, type: String) {
+            self.label = label
+            self.type = type
         }
     }
 
@@ -118,9 +138,18 @@ public enum ViewModelProtocolScanner {
         static func requirement(_ method: FunctionDeclSyntax) -> MethodRequirement {
             let returnType = method.signature.returnClause?.type.trimmedDescription
             let isVoid = returnType == nil || returnType == "Void" || returnType == "()"
+            let parameters = method.signature.parameterClause.parameters.map { param in
+                let label = param.firstName.text
+                return Parameter(
+                    label: label == "_" ? nil : label,
+                    type: param.type.trimmedDescription
+                )
+            }
             return MethodRequirement(
                 signature: method.trimmedDescription,
-                returnType: isVoid ? nil : returnType
+                returnType: isVoid ? nil : returnType,
+                name: method.name.text,
+                parameters: parameters
             )
         }
 
