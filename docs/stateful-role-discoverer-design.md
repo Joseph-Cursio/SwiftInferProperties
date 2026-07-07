@@ -372,7 +372,20 @@ top-level discovery path — `UnifiedRoleDiscoverer` is.
 5. **MVC honesty.** Resist testing `UIViewController` subclasses; the realistic
    deliverable is a `*Model`-role discoverer, which overlaps the generic
    function-level templates — confirm it adds signal over the status quo before
-   building it.
+   building it. **RESOLVED: do NOT build MVC.** The status-quo check was run (a
+   scan of every `*Model` class across the owner's projects) and came back
+   negative: (a) MVC adds **no new invariant type** — its distinctive properties
+   are `idempotence` + the five families, which `ViewModelInteractionAnalyzer`
+   already runs, so it would only *extend recognition* to plain `*Model` classes;
+   (b) **86% of `*Model` classes (59/69) are already caught** as observable by
+   `ViewModelDiscoverer`, and the naming is dominated by `*ViewModel` (MVVM), so
+   `*Model` is a Daikon-trap recognition signal; (c) the genuinely-missed set —
+   plain non-observable `*Model` classes — is **10 files, all noise** (9 test
+   fixtures for other tools' lint rules + 1 SwiftLint rule-example), with **zero
+   real MVC state-models**. Modern Swift stateful UI is SwiftUI MVVM (`@Observable`)
+   or TCA, both already covered; the classic UIKit MVC "Model class" is effectively
+   absent. Building `*Model` recognition would trade a clean miss of ~nothing for a
+   low-precision flood — against the conservative posture. MVC stays unbuilt.
 
 ## Recommended first step
 
