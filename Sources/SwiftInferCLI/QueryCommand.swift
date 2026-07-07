@@ -23,29 +23,39 @@ public struct QueryOutcome: Equatable {
     public let matchedCount: Int
 }
 
-/// Bundle for `Query.applyFilters`'s six filter params, keeping the
-/// function under the `function_parameter_count` cap. Each field is
-/// optional with the same "nil means don't filter" semantics as the
-/// original parameters.
+/// Bundle for `Query.applyFilters`'s filter params, keeping the function
+/// under the `function_parameter_count` cap. Each field is optional with
+/// the same "nil means don't filter" semantics as the original
+/// parameters.
 public struct QueryFilters: Equatable {
     public let template: String?
     public let type: String?
     public let tier: String?
     public let decision: String?
     public let minScore: Int?
+    /// V1.141 — interaction-only: filter by invariant family rawValue
+    /// (e.g. `idempotence`, `referential-integrity`). Setting it excludes
+    /// algebraic rows (they have no family).
+    public let family: String?
+    /// V1.141 — which surface(s) to return. Default `.all`.
+    public let surface: QuerySurface
 
     public init(
         template: String? = nil,
         type: String? = nil,
         tier: String? = nil,
         decision: String? = nil,
-        minScore: Int? = nil
+        minScore: Int? = nil,
+        family: String? = nil,
+        surface: QuerySurface = .all
     ) {
         self.template = template
         self.type = type
         self.tier = tier
         self.decision = decision
         self.minScore = minScore
+        self.family = family
+        self.surface = surface
     }
 }
 
@@ -111,6 +121,25 @@ extension SwiftInferCommand {
 
         @Option(
             name: .long,
+            help: """
+            Interaction-only: filter by invariant family (e.g. 'idempotence', \
+            'referential-integrity', 'cardinality', 'biconditional', \
+            'conservation'). Setting it excludes algebraic rows.
+            """
+        )
+        public var family: String?
+
+        @Option(
+            name: .long,
+            help: """
+            Which index surface to query: algebraic (pure-function laws), \
+            interaction (reducer / MVVM invariants), or all (default).
+            """
+        )
+        public var surface: String?
+
+        @Option(
+            name: .long,
             help: "Cap output to the first N entries (after score-descending sort)."
         )
         public var limit: Int?
@@ -118,6 +147,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async {
+            let (parsedSurface, surfaceWarning) = QuerySurface.parse(surface)
             let result = Self.runQuery(
                 directoryOverride: directory,
                 explicitIndexPath: indexPath,
@@ -126,11 +156,15 @@ extension SwiftInferCommand {
                     type: type,
                     tier: tier,
                     decision: decision,
-                    minScore: minScore
+                    minScore: minScore,
+                    family: family,
+                    surface: parsedSurface
                 ),
                 limit: limit
             )
-            for warning in result.warnings {
+            var warnings = result.warnings
+            if let surfaceWarning { warnings.insert(surfaceWarning, at: 0) }
+            for warning in warnings {
                 FileHandle.standardError.write(
                     Data("warning: \(warning)\n".utf8)
                 )
@@ -162,16 +196,39 @@ extension SwiftInferCommand {
                 )
             }
             let load = IndexStore.load(from: resolvedPath, nowTimestamp: now)
-            let filtered = applyFilters(load.index.entries, filters: filters)
-            let sorted = filtered.sorted { $0.score > $1.score }
-            let capped: [SemanticIndexEntry]
-            if let limit, limit >= 0, limit < sorted.count {
-                capped = Array(sorted.prefix(limit))
-            } else {
-                capped = sorted
-            }
-            let rendered = renderEntries(capped, totalMatched: filtered.count)
-            return QueryOutcome(rendered: rendered, warnings: load.warnings, matchedCount: filtered.count)
+
+            // Algebraic surface: included when --surface allows it AND no
+            // interaction-only filter (--family) is active (algebraic rows
+            // have no family, so they could never match one).
+            let algebraicMatched = (filters.surface.includesAlgebraic && filters.family == nil)
+                ? applyFilters(load.index.entries, filters: filters).sorted { $0.score > $1.score }
+                : []
+            // Interaction surface: included when --surface allows it AND no
+            // algebraic-only filter (--template / --type) is active.
+            let algebraicOnlyFilter = filters.template != nil || filters.type != nil
+            let interactionMatched = (filters.surface.includesInteraction && !algebraicOnlyFilter)
+                ? applyInteractionFilters(load.index.interactionEntries, filters: filters)
+                    .sorted { $0.score > $1.score }
+                : []
+
+            let totalMatched = algebraicMatched.count + interactionMatched.count
+            // Limit caps the combined output: algebraic rows first, then
+            // interaction rows fill any remainder.
+            let cappedAlgebraic = capped(algebraicMatched, to: limit)
+            let interactionLimit = limit.map { max(0, $0 - cappedAlgebraic.count) }
+            let cappedInteraction = capped(interactionMatched, to: interactionLimit)
+
+            let rendered = renderCombined(
+                algebraic: cappedAlgebraic,
+                interaction: cappedInteraction,
+                totalMatched: totalMatched
+            )
+            return QueryOutcome(rendered: rendered, warnings: load.warnings, matchedCount: totalMatched)
+        }
+
+        private static func capped<Element>(_ items: [Element], to limit: Int?) -> [Element] {
+            guard let limit, limit >= 0, limit < items.count else { return items }
+            return Array(items.prefix(limit))
         }
 
         // MARK: - Filtering
@@ -222,7 +279,8 @@ extension SwiftInferCommand {
 
         // MARK: - Rendering
 
-        /// Module-internal for V1.33.D unit tests.
+        /// Module-internal for V1.33.D unit tests. The algebraic-only
+        /// renderer (unchanged output); `runQuery` uses `renderCombined`.
         static func renderEntries(
             _ entries: [SemanticIndexEntry],
             totalMatched: Int
@@ -233,22 +291,44 @@ extension SwiftInferCommand {
             var lines: [String] = []
             lines.append("\(totalMatched) entr\(totalMatched == 1 ? "y" : "ies") matched.")
             lines.append("")
-            for entry in entries {
-                let typeDisplay = entry.typeName ?? "(none)"
-                let decisionDisplay = entry.decision ?? "untriaged"
-                lines.append(
-                    "[\(entry.tier) \(entry.score)] "
-                        + "\(entry.templateName) | \(typeDisplay) | "
-                        + "\(entry.primaryFunctionName) — \(entry.location)"
-                )
-                lines.append(
-                    "  decision: \(decisionDisplay)"
-                        + (entry.decisionAt.map { " (\($0))" } ?? "")
-                        + ", first seen: \(entry.firstSeenAt), last seen: \(entry.lastSeenAt)"
-                        + ", identity: \(entry.identityHash)"
-                )
+            for entry in entries { lines += algebraicEntryLines(entry) }
+            return lines.joined(separator: "\n") + "\n"
+        }
+
+        /// V1.141 — render both surfaces under one match header. Algebraic
+        /// rows first, then (if any) an "Interaction invariants:" section.
+        static func renderCombined(
+            algebraic: [SemanticIndexEntry],
+            interaction: [InteractionIndexEntry],
+            totalMatched: Int
+        ) -> String {
+            if algebraic.isEmpty, interaction.isEmpty {
+                return "No entries match.\n"
+            }
+            var lines: [String] = []
+            lines.append("\(totalMatched) entr\(totalMatched == 1 ? "y" : "ies") matched.")
+            lines.append("")
+            for entry in algebraic { lines += algebraicEntryLines(entry) }
+            if !interaction.isEmpty {
+                if !algebraic.isEmpty { lines.append("") }
+                lines.append("Interaction invariants:")
+                for entry in interaction { lines += interactionEntryLines(entry) }
             }
             return lines.joined(separator: "\n") + "\n"
+        }
+
+        private static func algebraicEntryLines(_ entry: SemanticIndexEntry) -> [String] {
+            let typeDisplay = entry.typeName ?? "(none)"
+            let decisionDisplay = entry.decision ?? "untriaged"
+            return [
+                "[\(entry.tier) \(entry.score)] "
+                    + "\(entry.templateName) | \(typeDisplay) | "
+                    + "\(entry.primaryFunctionName) — \(entry.location)",
+                "  decision: \(decisionDisplay)"
+                    + (entry.decisionAt.map { " (\($0))" } ?? "")
+                    + ", first seen: \(entry.firstSeenAt), last seen: \(entry.lastSeenAt)"
+                    + ", identity: \(entry.identityHash)"
+            ]
         }
 
         // MARK: - Path resolution
