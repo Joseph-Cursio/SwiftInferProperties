@@ -210,24 +210,11 @@ When shrinking succeeds, the test failure should include both the *original* gen
 
 -----
 
-## 5. More PBT Primitives
+## 5. More PBT Primitives — MOVED to the kit's own roadmap
 
-**Status:** `frequency`, `recursive`, `sized`, and the edge-case-biased generators (v2.1.0) already exist in the kit / swift-property-based. The only genuine gap is the **Foundation generators** (`Gen.date/url/data/uuid`) — and they're **low-value for this project** because the engine's verify path emits its own deterministic curated literals (`ViewModelArgumentGenerator`) rather than consuming kit generators (verify needs fixed values). So the remaining table below is an **optional kit-user convenience**, not an engine capability. Ship on demand if kit users ask.
+This workstream is a **SwiftPropertyLaws concern, not a SwiftInferProperties one** (the proposal itself says "primitives *in the kit*"). Most already exist — `frequency` / `recursive` / `sized` / the edge-case-biased generators (v2.1.0). The only genuine gap is the **Foundation generators** (`Gen.date/url/data/uuid`), and they deliver **zero engine capability** (the engine emits its own deterministic curated literals via `ViewModelArgumentGenerator`, not kit generators) — their value is purely kit-user convenience for hand-authored PBT.
 
-Each shippable independently as a kit minor version. Order is a sequencing decision, not a design decision.
-
-| Primitive | Purpose |
-|---|---|
-| `Gen.frequency([(weight, gen)])` | Weighted choice — e.g., "10% empty, 90% non-empty" |
-| `Gen.oneOf([gen])` | Uniform choice (verify whether already exists) |
-| `Gen.recursive(depth:_:)` | Tree-shaped types with explicit depth bound |
-| `Gen.filter(_:retries:)` | Bounded filter; replaces unbounded variant |
-| `Gen.sized { size in ... }` | Generators that scale with framework size parameter |
-| `Gen.date()` | Foundation `Date` |
-| `Gen.url()` | Foundation `URL`; valid URLs only |
-| `Gen.data(of: countRange)` | Foundation `Data` with size control |
-| `Gen.uuid()` | Foundation `UUID` |
-| `Gen.array(of: elementGen, count: range)` | Size-controlled array (verify whether already exists) |
+So the detail now lives where the work + the users are: **`SwiftPropertyLaws/docs/ideas/Foundation Generators.md`** (a low-priority, non-breaking `PropertyLawKit` minor). The original primitive table is preserved there.
 
 -----
 
