@@ -52,6 +52,15 @@ extension ActionSequenceStubEmitter {
         case .idempotence, .unknownActionIsNoOp:
             return []
 
+        // outputDeterminism is verified by OutputDeterminismVerifierEmitter, not
+        // this reducer emitter. It must be routed away before emit; if it isn't,
+        // trap loudly rather than emit a vacuously-passing stub.
+        case .outputDeterminism:
+            return [
+                "precondition(false, \"output-determinism uses a dedicated "
+                    + "recording-fake verifier, not the action-sequence emitter\")"
+            ]
+
         // Determinism is a per-step check, not a single-witness post-loop one:
         // it must hold for EVERY action, so it runs on the loop's current
         // `(state, action)` — two fresh applications, compared.
@@ -83,8 +92,10 @@ extension ActionSequenceStubEmitter {
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
-        // Determinism runs as a per-step check (see makePerStepCheck).
-        case .conservation, .cardinality, .referentialIntegrity, .biconditional, .determinism:
+        // Determinism runs as a per-step check (see makePerStepCheck);
+        // outputDeterminism is verified by its own harness, not here.
+        case .conservation, .cardinality, .referentialIntegrity, .biconditional,
+             .determinism, .outputDeterminism:
             return []
 
         case .idempotence:

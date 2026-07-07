@@ -208,6 +208,16 @@ public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, Ca
     /// enums are exhaustive, so no "unknown" is representable and the family
     /// never fires on them.
     case unknownActionIsNoOp = "unknown-action-is-no-op"
+    /// A convention role's (VIPER interactor / MVP presenter) paradigm-
+    /// distinctive guarantee: given the same input, the role's calls to its
+    /// output protocol are deterministic. Unlike the other families this is
+    /// neither a State-shape predicate nor a reducer property — it's verified
+    /// by a dedicated harness (`OutputDeterminismVerifierEmitter`) that runs the
+    /// role twice with a *recording* fake for the output collaborator and
+    /// compares the recorded call logs. A hidden `Date()` / `UUID()` /
+    /// `.random()` in the output path makes the two logs differ. Discovered off
+    /// `ConventionRoleDiscoverer` roles, not the reducer template engine.
+    case outputDeterminism = "output-determinism"
 }
 
 public extension InteractionInvariantFamily {
@@ -244,7 +254,7 @@ public extension InteractionInvariantFamily {
             return "flag-optional-pair-state"
 
         case .conservation, .idempotence, .referentialIntegrity, .determinism,
-             .unknownActionIsNoOp:
+             .unknownActionIsNoOp, .outputDeterminism:
             return nil
         }
     }

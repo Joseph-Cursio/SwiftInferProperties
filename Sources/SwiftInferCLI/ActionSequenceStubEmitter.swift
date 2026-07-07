@@ -225,6 +225,13 @@ public enum ActionSequenceStubEmitter {
              .referentialIntegrity, .biconditional, .determinism,
              .unknownActionIsNoOp:
             return
+
+        // outputDeterminism is a convention-role (VIPER/MVP) property verified
+        // by a dedicated harness (OutputDeterminismVerifierEmitter), never
+        // through the reducer action-sequence emitter. It should be routed away
+        // before reaching here; the FamilyChecks guard traps loudly if it isn't.
+        case .outputDeterminism:
+            return
         }
     }
 

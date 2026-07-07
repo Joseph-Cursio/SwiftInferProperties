@@ -225,7 +225,8 @@ public enum InteractionMetricsRenderer {
         .referentialIntegrity,
         .conservation,
         .determinism,
-        .unknownActionIsNoOp
+        .unknownActionIsNoOp,
+        .outputDeterminism
     ]
 
     private static func familyDisplayName(_ family: InteractionInvariantFamily) -> String {
@@ -237,6 +238,7 @@ public enum InteractionMetricsRenderer {
         case .conservation: return "Conservation"
         case .determinism: return "Determinism"
         case .unknownActionIsNoOp: return "Unknown-Action-Is-No-Op"
+        case .outputDeterminism: return "Output-Determinism"
         }
     }
 

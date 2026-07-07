@@ -85,6 +85,11 @@ extension SwiftInferCommand.DiscoverInteraction {
                 directory: directory(target),
                 firstSeenAt: firstSeenAt
             )
+            merged = try mergedWithConventionRoles(
+                merged,
+                directory: directory(target),
+                firstSeenAt: firstSeenAt
+            )
         }
         return merged
     }

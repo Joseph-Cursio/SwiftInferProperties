@@ -115,6 +115,7 @@ public struct PeerProposal: Sendable, Equatable, Codable {
         case .biconditional: familyLabel = "Biconditional"
         case .determinism: familyLabel = "Determinism"
         case .unknownActionIsNoOp: familyLabel = "UnknownActionIsNoOp"
+        case .outputDeterminism: familyLabel = "OutputDeterminism"
         }
         return "\(stateRoot)\(familyLabel)"
     }
@@ -142,5 +143,10 @@ public func kitProtocolName(for family: InteractionInvariantFamily) -> String {
     // kit-side conformance protocol yet, so this name is a placeholder the
     // measured-verify path never consumes.
     case .unknownActionIsNoOp: return "UnknownActionIsNoOpInvariant"
+
+    // outputDeterminism ships verify-only via its own harness; there is no
+    // kit-side conformance protocol, so this name is a placeholder the
+    // measured-verify path never consumes.
+    case .outputDeterminism: return "OutputDeterminismInvariant"
     }
 }

@@ -58,7 +58,8 @@ struct InteractionInvariantSuggestionTests {
             InteractionInvariantFamily.unknownActionIsNoOp.rawValue
                 == "unknown-action-is-no-op"
         )
-        #expect(InteractionInvariantFamily.allCases.count == 7)
+        #expect(InteractionInvariantFamily.outputDeterminism.rawValue == "output-determinism")
+        #expect(InteractionInvariantFamily.allCases.count == 8)
     }
 
     // MARK: - swiftProjectLintDeferral (Finding G)
@@ -76,6 +77,7 @@ struct InteractionInvariantSuggestionTests {
         #expect(InteractionInvariantFamily.conservation.swiftProjectLintDeferral == nil)
         #expect(InteractionInvariantFamily.idempotence.swiftProjectLintDeferral == nil)
         #expect(InteractionInvariantFamily.referentialIntegrity.swiftProjectLintDeferral == nil)
+        #expect(InteractionInvariantFamily.outputDeterminism.swiftProjectLintDeferral == nil)
     }
 
     // MARK: - identityCanonicalInput
