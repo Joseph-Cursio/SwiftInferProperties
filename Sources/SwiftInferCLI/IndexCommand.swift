@@ -20,6 +20,15 @@ private struct IndexDiff {
     let updatedCount: Int
 }
 
+/// V1.141 — freshly-discovered row counts for the run summary, bundled so
+/// `indexSummaryLine` stays within SwiftLint's `function_parameter_count`
+/// cap. `algebraic` = `Suggestion` rows, `interaction` = reducer / MVVM
+/// invariant rows.
+private struct IndexFreshCounts {
+    let algebraic: Int
+    let interaction: Int
+}
+
 /// V1.42.C.5 — inputs to `Index.performIndex`. Bundled into one struct
 /// (rather than a 7-parameter function) so the static reindex entry
 /// point stays under SwiftLint's `function_parameter_count` cap. At
@@ -34,6 +43,37 @@ struct IndexInputs {
     let explicitTestDirPath: URL?
     let packsOverride: String?
     let dryRun: Bool
+    /// V1.141 — the bare `--target` name, present only on the single-target
+    /// `index --target` path. `nil` on verify's whole-`Sources` reindex,
+    /// where interaction-surface indexing is skipped (the interaction
+    /// discoverer takes a target name + working directory, not a raw
+    /// directory).
+    let targetName: String?
+    /// V1.141 — working directory the interaction discoverer resolves
+    /// `Sources/<target>` against. `nil` alongside `targetName`.
+    let workingDirectory: URL?
+
+    init(
+        scanDirectory: URL,
+        includePossible: Bool,
+        explicitVocabularyPath: URL?,
+        explicitConfigPath: URL?,
+        explicitTestDirPath: URL?,
+        packsOverride: String?,
+        dryRun: Bool,
+        targetName: String? = nil,
+        workingDirectory: URL? = nil
+    ) {
+        self.scanDirectory = scanDirectory
+        self.includePossible = includePossible
+        self.explicitVocabularyPath = explicitVocabularyPath
+        self.explicitConfigPath = explicitConfigPath
+        self.explicitTestDirPath = explicitTestDirPath
+        self.packsOverride = packsOverride
+        self.dryRun = dryRun
+        self.targetName = targetName
+        self.workingDirectory = workingDirectory
+    }
 }
 
 /// Build the human-readable index-run summary. V1.42.C.5 split this out
@@ -44,16 +84,19 @@ struct IndexInputs {
 private func indexSummaryLine(
     merged: IndexStore.Index,
     indexPath: URL,
-    freshCount: Int,
+    counts: IndexFreshCounts,
     diff: IndexDiff,
     dryRun: Bool
 ) -> String {
+    let interactionClause = counts.interaction > 0
+        ? " + \(counts.interaction) interaction invariant(s)"
+        : ""
     if dryRun {
-        return "Indexed \(freshCount) suggestion(s) "
+        return "Indexed \(counts.algebraic) suggestion(s)\(interactionClause) "
             + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
             + "prior index had \(diff.priorCount); --dry-run, no write)"
     }
-    return "Indexed \(freshCount) suggestion(s) → \(indexPath.path) "
+    return "Indexed \(counts.algebraic) suggestion(s)\(interactionClause) → \(indexPath.path) "
         + "(\(diff.newCount) new, \(diff.updatedCount) updated; "
         + "total entries \(merged.entries.count))"
 }
@@ -155,7 +198,13 @@ extension SwiftInferCommand {
                     explicitConfigPath: config.map { URL(fileURLWithPath: $0) },
                     explicitTestDirPath: testDir.map { URL(fileURLWithPath: $0) },
                     packsOverride: packs,
-                    dryRun: dryRun
+                    dryRun: dryRun,
+                    // V1.141 — enable interaction-surface indexing: the
+                    // interaction discoverer resolves Sources/<target> against
+                    // the working directory (matching `directory`'s relative
+                    // `Sources/<target>` for the algebraic scan).
+                    targetName: target,
+                    workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                 ),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -209,12 +258,17 @@ extension SwiftInferCommand {
             // carriers. Mirror each kit `TypeShape` to its `IndexedTypeShape`.
             let freshShapes = pipeline.typeShapesByName.mapValues { IndexedTypeShape(from: $0) }
             let diff = computeDiff(priorIndex: indexLoad.index, freshEntries: freshEntries)
-            let merged = IndexStore.upsert(
+            var merged = IndexStore.upsert(
                 freshEntries,
                 into: indexLoad.index,
                 at: now,
                 typeShapes: freshShapes
             )
+            // V1.141 — also index the interaction surface (reducer / MVVM
+            // invariant families) on the single-target `index --target` path.
+            // No-op on verify's whole-Sources reindex (no targetName).
+            let freshInteraction = interactionEntries(for: inputs, now: now, diagnostics: diagnostics)
+            merged = IndexStore.upsertInteraction(freshInteraction, into: merged, at: now)
             if !inputs.dryRun {
                 try IndexStore.save(merged, to: indexPath)
             }
@@ -223,7 +277,10 @@ extension SwiftInferCommand {
                 indexSummaryLine(
                     merged: merged,
                     indexPath: indexPath,
-                    freshCount: freshEntries.count,
+                    counts: IndexFreshCounts(
+                        algebraic: freshEntries.count,
+                        interaction: freshInteraction.count
+                    ),
                     diff: diff,
                     dryRun: inputs.dryRun
                 )
@@ -233,7 +290,10 @@ extension SwiftInferCommand {
         // MARK: - V1.43 cleanup helpers — split out of `run()` to
         // keep the body within SwiftLint's function_body_length cap.
 
-        private static func replayWarnings(
+        // Internal (not private): `IndexCommand+Projection`'s
+        // `interactionEntries` replays interaction-decision load warnings
+        // through this same helper across the file boundary.
+        static func replayWarnings(
             _ warnings: [String],
             to diagnostics: any DiagnosticOutput
         ) {
@@ -259,127 +319,6 @@ extension SwiftInferCommand {
                 newCount: freshHashes.subtracting(priorHashes).count,
                 updatedCount: freshHashes.intersection(priorHashes).count
             )
-        }
-
-        // MARK: - Suggestion → SemanticIndexEntry projection
-
-        /// Module-internal for V1.33.C unit tests. V1.47.C adds the
-        /// optional `typeShapesByName` parameter — when present, the
-        /// projection looks up the carrier's `TypeShape` and mirrors
-        /// it onto the entry as `IndexedTypeShape`. Tests that don't
-        /// care can pass an empty map.
-        static func buildEntry(
-            from suggestion: Suggestion,
-            decisionsByHash: [String: DecisionRecord],
-            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
-            now: String
-        ) -> SemanticIndexEntry {
-            let evidence = suggestion.evidence.first
-            let primaryName = evidence?.displayName ?? "(unknown)"
-            let location: String
-            if let loc = evidence?.location {
-                location = "\(loc.file):\(loc.line)"
-            } else {
-                location = "(unknown)"
-            }
-            // SuggestionIdentity.display = "0x<16-char hex>".
-            // DecisionRecord.identityHash = "<16-char hex>" (no 0x prefix).
-            // Join on the normalized form.
-            let displayHash = suggestion.identity.display
-            let normalizedHash = suggestion.identity.normalized
-            let decisionRecord = decisionsByHash[normalizedHash]
-            let decisionString = decisionRecord?.decision.rawValue
-            let decisionAt = decisionRecord.map { isoTimestamp(from: $0.timestamp) }
-            let typeShape = indexedTypeShape(
-                for: suggestion,
-                typeShapesByName: typeShapesByName
-            )
-            let secondaryFunctionName = secondaryFunctionName(for: suggestion)
-            return SemanticIndexEntry(
-                identityHash: displayHash,
-                templateName: suggestion.templateName,
-                typeName: carrierType(for: suggestion),
-                score: suggestion.score.total,
-                tier: humanReadableTier(suggestion.score.tier),
-                primaryFunctionName: primaryName,
-                location: location,
-                decision: decisionString,
-                decisionAt: decisionAt,
-                firstSeenAt: now,
-                lastSeenAt: now,
-                typeShape: typeShape,
-                secondaryFunctionName: secondaryFunctionName,
-                carrierTypeName: suggestion.carrierTypeName,
-                isInstanceMethod: evidence?.isInstanceMethod ?? false,
-                isMutatingMethod: evidence?.isMutatingMethod ?? false,
-                isNullary: evidence?.isNullary ?? false,
-                returnsSelfType: evidence?.returnsSelfType ?? false
-            )
-        }
-
-        /// V1.49.C.2 — read the round-trip inverse-half name from the
-        /// Suggestion's evidence array. The round-trip template emits
-        /// `evidence = [forward, reverse]`; v1.49 persists the second
-        /// half so the verify resolver can use it as a non-curated
-        /// fallback. Returns `nil` for non-round-trip templates and
-        /// for evidence arrays with fewer than 2 entries.
-        private static func secondaryFunctionName(for suggestion: Suggestion) -> String? {
-            guard suggestion.templateName == "round-trip" else { return nil }
-            guard suggestion.evidence.count >= 2 else { return nil }
-            return suggestion.evidence[1].displayName
-        }
-
-        /// V1.47.C — look up the carrier's TypeShape by bare name (no
-        /// generic argument list) and mirror it onto the entry. Returns
-        /// `nil` when the carrier is a free function (no carrier), a
-        /// stdlib raw type the indexer doesn't store TypeShapes for,
-        /// or a third-party type whose primary declaration isn't in the
-        /// indexed source.
-        private static func indexedTypeShape(
-            for suggestion: Suggestion,
-            typeShapesByName: [String: PropertyLawCore.TypeShape]
-        ) -> IndexedTypeShape? {
-            // V1.149 — prefer the generator carrier (the param type the
-            // `Gen<T>` must produce) over the owner when they diverge, so a
-            // non-raw `T` on an unrelated owner resolves its own shape.
-            guard let carrier = suggestion.carrierTypeName ?? suggestion.carrier else { return nil }
-            let bareName = bareTypeName(from: carrier)
-            guard let kitShape = typeShapesByName[bareName] else { return nil }
-            return IndexedTypeShape(from: kitShape)
-        }
-
-        /// Strip the generic argument list from a carrier name so the
-        /// `TypeShape` lookup hits the bare declaration name. e.g.
-        /// `"OrderedSet<Element>"` → `"OrderedSet"`,
-        /// `"Complex<Double>"` → `"Complex"`, `"Int"` → `"Int"`.
-        static func bareTypeName(from carrier: String) -> String {
-            if let openAngle = carrier.firstIndex(of: "<") {
-                return String(carrier[..<openAngle])
-            }
-            return carrier
-        }
-
-        /// V1.34.C — carrier-type extraction. v1.33 deferred this by
-        /// returning nil (no `--type` query support). v1.34.A widened
-        /// the `Suggestion` data model with `carrier: String?`, and
-        /// v1.34.B threaded it through every template's suggest()
-        /// emitter + post-template rebuilder + TestLifter promotion.
-        /// v1.34.C reads it directly here. `nil` flows through to the
-        /// emitted `SemanticIndexEntry.typeName`, which renders as
-        /// `(none)` in `query` output and matches `query --type none`.
-        private static func carrierType(for suggestion: Suggestion) -> String? {
-            suggestion.carrier
-        }
-
-        private static func humanReadableTier(_ tier: Tier) -> String {
-            switch tier {
-            case .verified:   return "Verified"
-            case .strong:     return "Strong"
-            case .likely:     return "Likely"
-            case .possible:   return "Possible"
-            case .suppressed: return "Suppressed"
-            case .advisory:   return "Advisory"
-            }
         }
 
         private static func isoTimestampNow() -> String {
