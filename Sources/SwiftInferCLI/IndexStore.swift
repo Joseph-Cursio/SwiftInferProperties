@@ -31,17 +31,20 @@ public enum IndexStore {
     /// for non-curated round-trip pair derivation. v4 = WS-6 — adds the
     /// optional `typeShapes: [String: IndexedTypeShape]` map on the `Index`
     /// root (the whole-module shape universe for recursive verify-time
-    /// derivation). Every bump is backward-compatible (`decodeIfPresent`),
-    /// so v1–v3 files decode cleanly into v4 — the version bump on the
-    /// wrapping `Index` is informational only.
-    public static let currentSchemaVersion: Int = 4
+    /// derivation). v5 = V1.141 — adds the optional `interactionEntries:
+    /// [InteractionIndexEntry]` array on the `Index` root (the
+    /// interaction-surface index rows: reducer / MVVM invariant families).
+    /// Every bump is backward-compatible (`decodeIfPresent`), so v1–v4
+    /// files decode cleanly into v5 — the version bump on the wrapping
+    /// `Index` is informational only.
+    public static let currentSchemaVersion: Int = 5
 
     /// The on-disk index value. Encoded as JSON with stable key
     /// ordering (alphabetical) + pretty-printing so diffs are clean
     /// across runs. Entries are sorted by `identityHash` to make
     /// version-control diffs minimal.
     private enum IndexCodingKeys: String, CodingKey {
-        case schemaVersion, updatedAt, entries, typeShapes
+        case schemaVersion, updatedAt, entries, typeShapes, interactionEntries
     }
 
     public struct Index: Codable, Sendable, Equatable {
@@ -58,21 +61,33 @@ public enum IndexStore {
         /// gets no recursion until its next `index` run.
         public var typeShapes: [String: IndexedTypeShape]
 
+        /// V1.141 — the interaction-surface index rows (reducer / MVVM
+        /// invariant families). Parallel to `entries` (the algebraic
+        /// surface) rather than merged into it, because
+        /// `InteractionIndexEntry` and `SemanticIndexEntry` carry disjoint
+        /// column sets. Absent in v1–v4 files → decodes to `[]`
+        /// (back-compat), so an un-reindexed project simply has no
+        /// interaction rows until its next `index` run.
+        public var interactionEntries: [InteractionIndexEntry]
+
         public init(
             schemaVersion: Int = IndexStore.currentSchemaVersion,
             updatedAt: String,
             entries: [SemanticIndexEntry],
-            typeShapes: [String: IndexedTypeShape] = [:]
+            typeShapes: [String: IndexedTypeShape] = [:],
+            interactionEntries: [InteractionIndexEntry] = []
         ) {
             self.schemaVersion = schemaVersion
             self.updatedAt = updatedAt
             self.entries = entries
             self.typeShapes = typeShapes
+            self.interactionEntries = interactionEntries
         }
 
-        /// Custom decode so v1–v3 files (no `typeShapes` key) load cleanly.
-        /// `schemaVersion` / `updatedAt` / `entries` are always present; only
-        /// `typeShapes` is optional-with-default. `encode(to:)` stays synthesized.
+        /// Custom decode so v1–v4 files (no `typeShapes` / `interactionEntries`
+        /// key) load cleanly. `schemaVersion` / `updatedAt` / `entries` are
+        /// always present; `typeShapes` and `interactionEntries` are
+        /// optional-with-default. `encode(to:)` stays synthesized.
         public init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: IndexCodingKeys.self)
             schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
@@ -81,6 +96,9 @@ public enum IndexStore {
             typeShapes = try container.decodeIfPresent(
                 [String: IndexedTypeShape].self, forKey: .typeShapes
             ) ?? [:]
+            interactionEntries = try container.decodeIfPresent(
+                [InteractionIndexEntry].self, forKey: .interactionEntries
+            ) ?? []
         }
 
         /// Empty index with the current run timestamp.
@@ -203,7 +221,41 @@ public enum IndexStore {
             schemaVersion: existing.schemaVersion,
             updatedAt: runTimestamp,
             entries: Array(merged),
-            typeShapes: mergedShapes
+            typeShapes: mergedShapes,
+            interactionEntries: existing.interactionEntries
+        )
+    }
+
+    /// V1.141 — merge `freshEntries` (interaction-surface rows) into
+    /// `existing.interactionEntries` at `runTimestamp`. Same semantics as
+    /// ``upsert(_:into:at:typeShapes:)`` on the algebraic surface: match on
+    /// `identityHash`, refresh via `InteractionIndexEntry.updated(from:)`
+    /// (preserving `firstSeenAt`), keep historical entries that no longer
+    /// appear, and sort by `identityHash` for stable diffs. The algebraic
+    /// `entries` / `typeShapes` are carried through unchanged, so this
+    /// composes after `upsert` in the same index-build pass.
+    public static func upsertInteraction(
+        _ freshEntries: [InteractionIndexEntry],
+        into existing: Index,
+        at runTimestamp: String
+    ) -> Index {
+        var byHash = Dictionary(
+            uniqueKeysWithValues: existing.interactionEntries.map { ($0.identityHash, $0) }
+        )
+        for fresh in freshEntries {
+            if let priorEntry = byHash[fresh.identityHash] {
+                byHash[fresh.identityHash] = priorEntry.updated(from: fresh)
+            } else {
+                byHash[fresh.identityHash] = fresh
+            }
+        }
+        let merged = byHash.values.sorted { $0.identityHash < $1.identityHash }
+        return Index(
+            schemaVersion: existing.schemaVersion,
+            updatedAt: runTimestamp,
+            entries: existing.entries,
+            typeShapes: existing.typeShapes,
+            interactionEntries: Array(merged)
         )
     }
 
