@@ -24,13 +24,20 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         let name = node.name.text
         typeStack.append(name)
+        let line = converter.location(
+            for: node.name.positionAfterSkippingLeadingTrivia
+        ).line
+        // Recorded for *every* class (not gated on observability) — the
+        // class-ness signal + conformance list convention recognition needs.
+        collected[name, default: RawTypeInfo()].classLocation = "\(file):\(line)"
+        if let inherited = node.inheritanceClause?.inheritedTypes {
+            collected[name, default: RawTypeInfo()].inheritedTypeNames
+                .append(contentsOf: inherited.map(\.type.trimmedDescription))
+        }
         if let observability = Self.observability(
             attributes: node.attributes,
             inheritanceClause: node.inheritanceClause
         ) {
-            let line = converter.location(
-                for: node.name.positionAfterSkippingLeadingTrivia
-            ).line
             collected[name, default: RawTypeInfo()].observability = observability
             collected[name, default: RawTypeInfo()].declLocation = "\(file):\(line)"
         }
@@ -39,7 +46,14 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
     override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
 
     override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        typeStack.append(node.extendedType.trimmedDescription)
+        let extendedType = node.extendedType.trimmedDescription
+        typeStack.append(extendedType)
+        // A conformance can be declared on an extension (`extension Foo:
+        // BarInput {}`) — fold it into the type's conformance list too.
+        if let inherited = node.inheritanceClause?.inheritedTypes {
+            collected[extendedType, default: RawTypeInfo()].inheritedTypeNames
+                .append(contentsOf: inherited.map(\.type.trimmedDescription))
+        }
         return .visitChildren
     }
     override func visitPost(_: ExtensionDeclSyntax) { typeStack.removeLast() }

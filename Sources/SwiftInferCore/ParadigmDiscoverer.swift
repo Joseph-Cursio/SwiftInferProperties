@@ -69,6 +69,26 @@ public struct MVVMParadigm: ParadigmDiscoverer {
     }
 }
 
+/// VIPER / MVP roles recognized by naming/conformance convention, via
+/// `ConventionRoleDiscoverer`. Carries the rule set (built-in defaults unless a
+/// project overrides them).
+public struct ConventionParadigm: ParadigmDiscoverer {
+    public let name = "convention"
+    public let rules: [ConventionRule]
+
+    public init(rules: [ConventionRule] = ConventionRule.builtInDefaults) {
+        self.rules = rules
+    }
+
+    public func discover(source: String, file: String) -> [StatefulRole] {
+        ConventionRoleDiscoverer.discover(source: source, file: file, rules: rules)
+    }
+
+    public func discover(directory: URL) throws -> [StatefulRole] {
+        try ConventionRoleDiscoverer.discover(directory: directory, rules: rules)
+    }
+}
+
 /// Runs a set of `ParadigmDiscoverer`s and unifies their output into one
 /// `[StatefulRole]` stream — the single entry point a caller uses instead of
 /// reaching for `ReducerDiscoverer` / `ViewModelDiscoverer` directly.
@@ -80,11 +100,10 @@ public struct UnifiedRoleDiscoverer: Sendable {
         self.paradigms = paradigms
     }
 
-    /// The standard registry: the two paradigms with first-class support today.
-    /// Phase 2 appends `ReduxPolicy` and the convention-driven VIPER/MVP/MVC
-    /// discoverers.
+    /// The standard registry: reducers (TCA / Redux family), MVVM view models,
+    /// and convention-recognized VIPER/MVP roles. Phase 2 appends MVC.
     public static let standard = Self(
-        paradigms: [TCAReducerParadigm(), MVVMParadigm()]
+        paradigms: [TCAReducerParadigm(), MVVMParadigm(), ConventionParadigm()]
     )
 
     public func discover(source: String, file: String) -> [StatefulRole] {

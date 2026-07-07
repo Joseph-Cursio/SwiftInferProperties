@@ -319,4 +319,33 @@ extension DiscoverReducersCommandTests {
         let lineA = rendered.split(separator: "\n").first { $0.contains("  A") }
         #expect(lineA?.contains("not verify-ready") == false)
     }
+
+    // MARK: - Convention-role (VIPER/MVP) section
+
+    @Test("empty roles yields the convention-role sentinel")
+    func renderConventionRoleEmpty() {
+        let rendered = Command.renderConventionRoleSummary([])
+        #expect(rendered == "swift-infer discover-reducers: no convention roles (VIPER/MVP) detected.\n")
+    }
+
+    @Test("convention-role block carries paradigm, state, actions, and the output sink")
+    func renderConventionRolePopulated() {
+        let source = """
+        final class LoginPresenter {
+            var title: String = ""
+            weak var view: LoginViewProtocol?
+            let service: AuthServiceProtocol
+            init(service: AuthServiceProtocol) { self.service = service }
+            func present(_ user: String) { title = user }
+        }
+        """
+        let roles = ConventionRoleDiscoverer.discover(source: source, file: "F.swift")
+        let rendered = Command.renderConventionRoleSummary(roles)
+        #expect(rendered.contains("detected 1 convention role (VIPER/MVP, by naming/conformance):"))
+        #expect(rendered.contains("LoginPresenter  [mvp]"))
+        #expect(rendered.contains("state (1): title"))
+        #expect(rendered.contains("- present(String)"))
+        #expect(rendered.contains("view: LoginViewProtocol?  → output sink [assertable]"))
+        #expect(rendered.contains("service: AuthServiceProtocol  → dependency"))
+    }
 }

@@ -111,12 +111,19 @@ extension SwiftInferCommand {
                 // PROTOTYPE — also surface identity-stability carriers: Hashable
                 // classes whose == / hash may read mutable state (Ch. 9 §9.3.3).
                 let stableIdentities = try StableIdentityDiscoverer.discover(directory: directory)
+                // PROTOTYPE — also surface convention-recognized VIPER/MVP roles
+                // (`*Presenter` / `*Interactor`): a presenter is a view model
+                // minus @Observable — stored state + mutating methods + injected
+                // protocol collaborators (one of which is the assertable output
+                // sink). See docs/stateful-role-discoverer-design.md.
+                let conventionRoles = try ConventionRoleDiscoverer.discover(directory: directory)
                 return renderSummary(candidates: candidates)
                     + "\n" + renderViewModelSummary(viewModels)
                     + "\n" + renderRuleVisitorSummary(ruleVisitors)
                     + "\n" + renderValueSemanticSummary(valueSemantics)
                     + "\n" + renderDefensiveCopySummary(defensiveCopies)
                     + "\n" + renderStableIdentitySummary(stableIdentities)
+                    + "\n" + renderConventionRoleSummary(conventionRoles)
             }
             let pin = try ReducerPin.parse(pinRaw)
             let matched = candidates.filter { pin.matches($0) }

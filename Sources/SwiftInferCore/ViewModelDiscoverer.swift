@@ -162,7 +162,9 @@ public enum ViewModelDiscoverer {
 
     /// Two-pass action resolution: seed with direct mutators, then add
     /// methods that transitively drive an action until the set is stable.
-    private static func resolveActions(
+    /// Internal (not `private`) so `ConventionRoleDiscoverer` reuses the same
+    /// action alphabet resolution for VIPER/MVP roles.
+    static func resolveActions(
         methods: [RawMethod],
         storedNames: Set<String>
     ) -> [ViewModelAction] {
@@ -216,13 +218,24 @@ struct RawTypeInfo {
     /// constructibility gate (a parameterized init suppresses the
     /// synthesized `init()`) and dependency-faking construction.
     var declaredInits: [[ViewModelInitParameter]] = []
+    /// `<file>:<line>` of the type's `class` declaration, set for *every*
+    /// class (not gated on observability). Non-`nil` iff the type is a class —
+    /// the recognition signal `ConventionRoleDiscoverer` uses (presenters /
+    /// interactors are reference types).
+    var classLocation: String?
+    /// Inherited-type names from the class declaration + any extensions —
+    /// the conformance signal for convention recognition (VIPER
+    /// `FooInteractor: FooInteractorInput`). Not used by MVVM assembly.
+    var inheritedTypeNames: [String] = []
 
     mutating func merge(_ other: Self) {
         observability = observability ?? other.observability
         declLocation = declLocation ?? other.declLocation
+        classLocation = classLocation ?? other.classLocation
         rawFields.append(contentsOf: other.rawFields)
         methods.append(contentsOf: other.methods)
         declaredInits.append(contentsOf: other.declaredInits)
+        inheritedTypeNames.append(contentsOf: other.inheritedTypeNames)
     }
 }
 
