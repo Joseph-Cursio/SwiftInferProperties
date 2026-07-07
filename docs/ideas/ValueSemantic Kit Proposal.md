@@ -1,16 +1,21 @@
 # ValueSemantic Kit Proposal
 
-**Status:** Draft / proposal — not yet committed to any milestone.
-**Target:** SwiftPropertyLaws (kit, currently at v2.0.0 — the rename release) + swift-property-based (engine); pre-requisite to a SwiftInferProperties §8 PRD section.
-**Date:** 2026-05-04
+**Status (updated 2026-07-07):** **Workstream 1 SHIPPED; Workstream 2 resolved (no action); Workstream 3 mostly pre-existing, remainder low-value.**
+- **WS1 `ValueSemantic`** — **delivered end-to-end.** The kit ships `ValueSemantic` + `DefensiveCopy` + `StableIdentity` (protocols + `*Laws` + peer macros, kit **v3.4.0–v3.9.0**), and the engine discovers + measured-verifies all three §2.2 bug classes (`valuesemantic-verify-corpus`: `SafeStore`/`LeakyStore`/`ClosureCounter`). The closure-capture case (open decision #8) shipped as multi-step interleaving (`copyMutationDoesNotLeakUnderInterleaving`, kit v3.5.0). See §6 for the as-built version map.
+- **WS2 shrinking** — **premise resolved, nothing to build here.** `swift-property-based` already provides `.shrink(towards:)`, and the engine uses it in its emitted verifiers (algebraic since v1.141; MVVM state-invariant sequences since 2026-07). The proposal's actual workstream — refactoring `Gen<T>` to carry a shrinker — targets `x-sheep/swift-property-based`, an **external dependency the owner doesn't control**; the practical need is met engine-side.
+- **WS3 primitives** — `frequency` / `recursive` / `sized` / the edge-case-biased generators (v2.1.0) already exist; the only genuine gap is the **Foundation generators** (`Gen.date/url/data/uuid`), which are **low-value** because the engine's verify path uses its own deterministic curated literals (`ViewModelArgumentGenerator`), not kit generators. Optional kit-user convenience only.
+
+**Original status:** Draft / proposal — not yet committed to any milestone.
+**Target:** SwiftPropertyLaws (kit) + swift-property-based (engine); pre-requisite to a SwiftInferProperties §8 PRD section. *(Kit is now at v3.9.0, well past the v2.0.0 this note was drafted against.)*
+**Date:** 2026-05-04 (status refreshed 2026-07-07)
 
 ## 1. Summary
 
 Three related workstreams, each independently shippable:
 
-1. **`ValueSemantic` protocol** — a new kit-defined property family covering type-level integrity ("copying then mutating doesn't affect the original"). New PRD section in SwiftInferProperties (not a §5 retrofit) since it's *type-level*, not *function-level*.
-2. **Shrinking** in swift-property-based — when a property fails on a generated 200-element array, narrow it to the minimal failing case. Architecturally load-bearing; touches the `Gen<T>` API.
-3. **More PBT primitives** in the kit — `Gen.frequency`, `Gen.recursive`, ergonomic `Gen.filter`, Foundation generators, sized generators. Incremental; ship one at a time.
+1. **`ValueSemantic` protocol** — a new kit-defined property family covering type-level integrity ("copying then mutating doesn't affect the original"). New PRD section in SwiftInferProperties (not a §5 retrofit) since it's *type-level*, not *function-level*. — **✅ SHIPPED (kit v3.4.0–v3.9.0), extended to `DefensiveCopy` + `StableIdentity` reference-type companions.**
+2. **Shrinking** in swift-property-based — when a property fails on a generated 200-element array, narrow it to the minimal failing case. Architecturally load-bearing; touches the `Gen<T>` API. — **RESOLVED: `.shrink(towards:)` already exists in swift-property-based and the engine uses it; the `Gen<T>` refactor is on an external unowned library. No owner action.**
+3. **More PBT primitives** in the kit — `Gen.frequency`, `Gen.recursive`, ergonomic `Gen.filter`, Foundation generators, sized generators. Incremental; ship one at a time. — **PARTLY PRE-EXISTING** (`frequency` / `recursive` / `sized` / edge-case-biased present); only the Foundation generators are missing, and they're low-value (engine uses curated literals, not kit generators).
 
 The three are linked: `ValueSemantic` test stubs benefit immediately from shrinking; mutation-parameter generators benefit from new primitives. But each can ship on its own schedule.
 
@@ -157,9 +162,9 @@ Opt-in is the answer. Types like `Array` deliberately conform to `ValueSemantic`
 
 ## 4. Shrinking
 
-### 4.1 Prerequisite: audit the current state
+### 4.1 Prerequisite: audit the current state — ✅ RESOLVED
 
-I don't know what swift-property-based does today. **Step zero** is reading the current `Gen<T>` definition and reporting whether shrinking already exists, partially exists, or is absent. Everything below assumes it's absent or external; if it's already integrated, V2 shrinks (heh) to "expand the shrinker library" and the API-break concern goes away.
+**Step zero was done: shrinking already exists in swift-property-based.** Values expose `.shrink(towards:)`, and the engine drives it in its emitted verifiers — the algebraic stubs since v1.141 (`scalarShrinkPhase` shrinks a failing Int/Double counterexample toward 0, emitting `VERIFY_DEFAULT_SHRUNK` + `VERIFY_SHRINK_STEPS`), and the MVVM state-invariant sequences since 2026-07 (greedy-shrink the failing action sequence). So the whole "is shrinking absent?" branch collapses: the API-break concern is moot, and **the `Gen<T>` refactor below targets `x-sheep/swift-property-based` — an external dependency the owner doesn't control.** The rest of §4 is retained as background; there is no owner-side work here.
 
 ### 4.2 Architecture choice
 
@@ -207,6 +212,8 @@ When shrinking succeeds, the test failure should include both the *original* gen
 
 ## 5. More PBT Primitives
 
+**Status:** `frequency`, `recursive`, `sized`, and the edge-case-biased generators (v2.1.0) already exist in the kit / swift-property-based. The only genuine gap is the **Foundation generators** (`Gen.date/url/data/uuid`) — and they're **low-value for this project** because the engine's verify path emits its own deterministic curated literals (`ViewModelArgumentGenerator`) rather than consuming kit generators (verify needs fixed values). So the remaining table below is an **optional kit-user convenience**, not an engine capability. Ship on demand if kit users ask.
+
 Each shippable independently as a kit minor version. Order is a sequencing decision, not a design decision.
 
 | Primitive | Purpose |
@@ -228,14 +235,24 @@ Each shippable independently as a kit minor version. Order is a sequencing decis
 
 Three K-prep series, mirroring the M7-prep / M8-prep pattern.
 
-### K-prep-V1 — `ValueSemantic` (kit)
+### K-prep-V1 — `ValueSemantic` (kit) — ✅ SHIPPED (as-built version map)
 
+The as-built shape went further than this sketch — a copy-mutate-compare law plus two reference-type companions, each with its own peer macro + engine discoverer + measured verifier:
+
+- **kit v3.4.0** — `ValueSemantic` protocol + `ValueSemanticLaws` (`copyMutationDoesNotLeak`, single-step).
+- **kit v3.5.0** — multi-step `copyMutationDoesNotLeakUnderInterleaving` (resolves open decision #8 — the closure-capture case).
+- **kit v3.6.0** — `@ValueSemanticTests` peer macro.
+- **kit v3.7.0 / v3.8.0** — `DefensiveCopy` + `StableIdentity` (reference-type companions: distinct-copy + identity-stability laws).
+- **kit v3.9.0** — `@DefensiveCopyTests` + `@StableIdentityTests` macros (shared `LawTestPeerMacro`).
+- **Engine side** — `ValueSemanticDiscoverer` / `DefensiveCopyDiscoverer` / `StableIdentityDiscoverer` (surfaced in `discover-reducers`) + `ValueSemanticVerifier` (self-contained + package-path-dep), proven on `valuesemantic-verify-corpus` (`SafeStore` bothPass / `LeakyStore` defaultFails / `ClosureCounter`) + `valuesemantic-package-corpus`. See `docs/valuesemantic-build-plan.md`.
+
+*(Original sketch, for the record:)*
 1. **V1.0** — Audit existing macro discovery; sketch the extension surface for mutating-method enumeration.
 2. **V1.1** — `ValueSemantic` protocol declaration + auto-derived `Equatable` integration.
 3. **V1.2** — Macro extension for mutating-method discovery.
 4. **V1.3** — Auto-generated property tests (one sub-test per mutating operation).
 5. **V1.4** — Validation suite + release docs.
-6. **Ship as kit v2.1.0** (next minor after the v2.0.0 rename release).
+6. ~~Ship as kit v2.1.0~~ — shipped across v3.4.0–v3.9.0 instead (v2.1.0 became the edge-case-biased generators).
 
 ### K-prep-V2 — Shrinking (engine, breaking)
 
@@ -271,7 +288,7 @@ Each primitive ships as a minor bump after V2 (so v3.1.0, v3.2.0, …). No archi
 5. **Sequencing V1 vs. V2.** Ship `ValueSemantic` (V1) first to deliver the user-visible property family fastest, or ship shrinking (V2) first so `ValueSemantic` debuts with shrunk counterexamples? V1-first → faster shipping; V2-first → better debut. Lean: V1-first, accept that early `ValueSemantic` failures show unminimized counterexamples until V2 lands.
 6. **Versioning.** Bundle V2 + V3 into a single 2.0 cut to amortize the breakage, or ship V2 alone and add primitives non-breakingly afterward? Lean: V2 alone, then primitives — primitives shouldn't wait on each other.
 7. **`Gen.oneOf` / `Gen.array(of:count:)` existence.** Verify whether these already exist in swift-property-based before listing them as "additions".
-8. **Multi-step test architecture (closure-capture case, §2.2 Example 3).** The simple "copy → mutate copy → compare original" test shape doesn't catch closure-captured shared state — the leak manifests on the *next* mutation of the original, not immediately. Options: (a) extend the test to a two-step sequence (`mutate b; mutate a; compare a against a-mutated-without-b`); (b) defer this case to V1.x with explicit "single-step semantics only" documentation in V1; (c) detect closure-typed stored properties at the structural layer and flag them as inherently incompatible with `ValueSemantic` conformance. Lean: (b) for V1 + a §6 §6.3 follow-up milestone for multi-step tests once the basic surface is proven.
+8. **Multi-step test architecture (closure-capture case, §2.2 Example 3).** The simple "copy → mutate copy → compare original" test shape doesn't catch closure-captured shared state — the leak manifests on the *next* mutation of the original, not immediately. Options: (a) extend the test to a two-step sequence (`mutate b; mutate a; compare a against a-mutated-without-b`); (b) defer this case to V1.x with explicit "single-step semantics only" documentation in V1; (c) detect closure-typed stored properties at the structural layer and flag them as inherently incompatible with `ValueSemantic` conformance. Lean: (b) for V1 + a §6 §6.3 follow-up milestone for multi-step tests once the basic surface is proven. — **✅ RESOLVED: shipped option (a).** `ValueSemanticLaws.copyMutationDoesNotLeakUnderInterleaving` (kit v3.5.0) does the two-step interleaving; the `ClosureCounter` corpus fixture is the closure-capture proof. Decisions #4/#7 are moot per §4.1 (shrinking already exists, external); #1 (`Equatable`) shipped as required.
 
 -----
 
