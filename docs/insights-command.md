@@ -77,6 +77,29 @@ Cross-type structure  (.swiftinfer/index.json)
   carry. The *adoption-gap* note is the index-derivable slice of that idea.
 - **Read-only.** Never mutates source or writes files — it's a report.
 
+## Dogfood — attaswift/BigInt (2026-07-08)
+
+First dogfood, on a real independent package (BigUInt + BigInt).
+
+- **True positive at the structure level.** `insights --include-possible`
+  correctly grouped **BigInt + BigUInt as a shared commutative structure** — a
+  genuine API-design observation (the two numeric types share semiring
+  structure and a protocol could unify them).
+- **Default is silent here** — the engine surfaces BigInt's
+  associativity/commutativity at **Possible**, so default (`Strong`/`Likely`)
+  `insights` reports nothing. Conservative-by-design, but the practical
+  consequence is that cross-type algebraic insights on real numeric code
+  usually need `--include-possible`.
+- **Fixed — representative-op selection.** The group first rendered BigUInt's
+  operation as `power(_:modulus:)` (which is neither associative nor
+  commutative — one of the engine's Possible-tier false positives). The
+  representative now prefers a canonical operator (`+`, then `*`), so both
+  types render `+(a:b:)` — the operation the structure is actually about.
+- **Known caveat:** `--include-possible` inherits the engine's Possible-tier
+  commutativity false positives (`-` / `/` / `%` / `power` tagged commutative),
+  which the default tier gate correctly buries. That's an engine-side property
+  of where those rows land, not an insights bug.
+
 ## Files / tests
 
 - `InsightsBuilder.swift` (pure: structure composition, grouping, render),

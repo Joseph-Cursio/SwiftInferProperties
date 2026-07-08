@@ -146,6 +146,22 @@ struct InsightsBuilderTests {
         #expect(rendered.contains("Strong/Likely"))
     }
 
+    @Test("V1.143 — representative op prefers a canonical operator (+/*) over an arbitrary associativity row")
+    func canonicalOperatorPreferred() {
+        // Mirrors the BigInt dogfood: `power` is (falsely) tagged associative
+        // and would otherwise be picked as the representative; `+` must win.
+        let entries = [
+            Self.row("BigUInt", "associativity", function: "power(_:modulus:)"),
+            Self.row("BigUInt", "associativity", function: "+(a:b:)"),
+            Self.row("BigUInt", "commutativity", function: "+(a:b:)"),
+            Self.row("BigInt", "associativity", function: "+(a:b:)"),
+            Self.row("BigInt", "commutativity", function: "+(a:b:)")
+        ]
+        let groups = InsightsBuilder.groups(in: Self.index(entries), minTypes: 2, includeTiers: Self.allStrongLikely)
+        let bigUInt = groups.first?.members.first { $0.typeName == "BigUInt" }
+        #expect(bigUInt?.operationName == "+(a:b:)")   // not power(_:modulus:)
+    }
+
     @Test("V1.143 — larger groups sort before smaller ones")
     func groupsSortedBySize() {
         // 2 commutative-monoid types + 3 semigroup types.

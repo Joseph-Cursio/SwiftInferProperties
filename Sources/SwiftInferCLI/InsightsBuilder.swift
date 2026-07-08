@@ -187,9 +187,25 @@ public enum InsightsBuilder {
         rows.min { (tierRank[$0.tier] ?? 0) < (tierRank[$1.tier] ?? 0) }?.tier ?? "Likely"
     }
 
+    /// Canonical associative/commutative operators, preferred as the group's
+    /// representative op. Without this, `operationName` would surface an
+    /// arbitrary associativity row — which, at `--include-possible`, can be
+    /// one of the engine's Possible-tier false positives (e.g. `power` /
+    /// `-` / `/` tagged associative), misrepresenting the shared structure.
+    /// A BigInt dogfood (2026-07-08) surfaced exactly that: BigUInt's
+    /// representative rendered as `power(_:modulus:)` for a "commutative
+    /// semigroup". Preferring `+` / `*` shows the operation the structure is
+    /// actually about.
+    private static let canonicalOperators = ["+", "*"]
+
     private static func operationName(in rows: [SemanticIndexEntry]) -> String {
-        let opRow = rows.first { $0.templateName == "associativity" }
-            ?? rows.first { $0.templateName == "commutativity" }
-        return opRow?.primaryFunctionName ?? "(operation)"
+        let associative = rows.filter { $0.templateName == "associativity" }
+        for symbol in canonicalOperators {
+            if let match = associative.first(where: { $0.primaryFunctionName.hasPrefix("\(symbol)(") }) {
+                return match.primaryFunctionName
+            }
+        }
+        let fallback = associative.first ?? rows.first { $0.templateName == "commutativity" }
+        return fallback?.primaryFunctionName ?? "(operation)"
     }
 }
