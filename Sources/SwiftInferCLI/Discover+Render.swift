@@ -18,12 +18,16 @@ extension SwiftInferCommand.Discover {
         effectAnnotations: [EffectAnnotationAdvice] = [],
         output: any DiscoverOutput
     ) {
+        // V1.147 — enrich each candidate's explainability with stdlib-anchor
+        // provenance (proven analog / known trap). Score-neutral; fires only
+        // for catalogued stdlib carriers, so custom-type output is unchanged.
+        let anchored = visible.map { StdlibAnchor.enriched($0) }
         var rendered: String
         if statsOnly {
-            rendered = SuggestionRenderer.renderStats(visible)
+            rendered = SuggestionRenderer.renderStats(anchored)
         } else {
             rendered = SuggestionRenderer.render(
-                visible,
+                anchored,
                 verifyEvidenceByIdentity: evidenceByIdentity
             )
         }

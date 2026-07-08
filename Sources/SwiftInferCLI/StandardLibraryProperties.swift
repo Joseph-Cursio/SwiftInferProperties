@@ -32,6 +32,11 @@ public struct KnownProperty: Sendable, Equatable {
     /// `"CommutativeMonoid"`), or `nil` when the structure conforms to no
     /// kit protocol (see the type doc for the Double / unary cases).
     public let witnesses: String?
+    /// The `discover` template family this entry corresponds to (e.g.
+    /// `"commutativity"`), so the stdlib anchor can match a discovered
+    /// candidate's `(templateName, carrier)` to a proven analog (a law) or
+    /// trap (a caveat). `nil` when it maps to no single template.
+    public let template: String?
     public let note: String?
     /// A Swift expression (returning `Bool`) over the catalog's `rand*`
     /// helpers, run under `--verify`. `nil` for caveats.
@@ -50,12 +55,12 @@ public enum StandardLibraryProperties {
         law(
             "Int", "commutative monoid under +", "a + b == b + a",
             "let a = randInt(), b = randInt(); return a + b == b + a",
-            witnesses: "CommutativeMonoid"
+            witnesses: "CommutativeMonoid", template: "commutativity"
         ),
         law(
             "Int", "commutative monoid under +", "(a + b) + c == a + (b + c)",
             "let a = randInt(), b = randInt(), c = randInt(); return (a + b) + c == a + (b + c)",
-            witnesses: "CommutativeMonoid"
+            witnesses: "CommutativeMonoid", template: "associativity"
         ),
         law(
             "Int", "additive identity", "a + 0 == a",
@@ -131,7 +136,7 @@ public enum StandardLibraryProperties {
         law(
             "String", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
             "let a = randStr(), b = randStr(), c = randStr(); return (a + b) + c == a + (b + c)",
-            witnesses: "Monoid"
+            witnesses: "Monoid", template: "associativity"
         ),
         law(
             "String", "concatenation identity", "a + \"\" == a",
@@ -153,7 +158,7 @@ public enum StandardLibraryProperties {
         law(
             "Array", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
             "let a = randArr(), b = randArr(), c = randArr(); return (a + b) + c == a + (b + c)",
-            witnesses: "Monoid"
+            witnesses: "Monoid", template: "associativity"
         )
     ]
 
@@ -162,7 +167,7 @@ public enum StandardLibraryProperties {
         law(
             "Set", "semilattice under union", "a.union(b) == b.union(a)",
             "let a = randSet(), b = randSet(); return a.union(b) == b.union(a)",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "commutativity"
         ),
         law(
             "Set", "semilattice under union", "a.union(b).union(c) == a.union(b.union(c))",
@@ -185,19 +190,23 @@ public enum StandardLibraryProperties {
     private static let caveatEntries: [KnownProperty] = [
         caveat(
             "String", "+ is NOT commutative",
-            "`a + b != b + a` in general — concatenation is ordered."
+            "`a + b != b + a` in general — concatenation is ordered.",
+            template: "commutativity"
         ),
         caveat(
             "Array", "+ is NOT commutative",
-            "`a + b != b + a` in general — concatenation is ordered."
+            "`a + b != b + a` in general — concatenation is ordered.",
+            template: "commutativity"
         ),
         caveat(
             "Double", "+ is NOT associative",
-            "IEEE-754 rounding: `(a + b) + c != a + (b + c)` for some values."
+            "IEEE-754 rounding: `(a + b) + c != a + (b + c)` for some values.",
+            template: "associativity"
         ),
         caveat(
             "Set", "subtracting is NOT commutative",
-            "`a.subtracting(b) != b.subtracting(a)` in general."
+            "`a.subtracting(b) != b.subtracting(a)` in general.",
+            template: "commutativity"
         ),
         caveat(
             "Bool", "&& / || short-circuit — laws hold for VALUES, not evaluation",
@@ -217,18 +226,24 @@ public enum StandardLibraryProperties {
         _ statement: String,
         _ checkBody: String,
         witnesses: String? = nil,
+        template: String? = nil,
         note: String? = nil
     ) -> KnownProperty {
         KnownProperty(
             type: type, structure: structure, statement: statement,
-            kind: .law, witnesses: witnesses, note: note, checkBody: checkBody
+            kind: .law, witnesses: witnesses, template: template, note: note, checkBody: checkBody
         )
     }
 
-    private static func caveat(_ type: String, _ statement: String, _ note: String) -> KnownProperty {
+    private static func caveat(
+        _ type: String,
+        _ statement: String,
+        _ note: String,
+        template: String? = nil
+    ) -> KnownProperty {
         KnownProperty(
             type: type, structure: statement, statement: statement,
-            kind: .caveat, witnesses: nil, note: note, checkBody: nil
+            kind: .caveat, witnesses: nil, template: template, note: note, checkBody: nil
         )
     }
 }

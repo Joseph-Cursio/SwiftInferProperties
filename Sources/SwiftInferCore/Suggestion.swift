@@ -99,6 +99,24 @@ public struct Suggestion: Sendable, Equatable {
         self.carrier = carrier
         self.carrierTypeName = carrierTypeName
     }
+
+    /// A copy with `explainability` replaced — used by the render-time stdlib
+    /// anchor to append proven-analog / known-trap provenance lines without
+    /// touching the score.
+    public func withExplainability(_ block: ExplainabilityBlock) -> Self {
+        Self(
+            templateName: templateName,
+            evidence: evidence,
+            score: score,
+            generator: generator,
+            explainability: block,
+            identity: identity,
+            liftedOrigin: liftedOrigin,
+            mockGenerator: mockGenerator,
+            carrier: carrier,
+            carrierTypeName: carrierTypeName
+        )
+    }
 }
 
 /// Source-level evidence row — one function or function pair the template
