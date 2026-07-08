@@ -44,6 +44,26 @@ Cross-type structure — none (need ≥2 types sharing a Strong/Likely shape)
 Detail: `swift-infer query` · `insights` · `prove-then-show`
 ```
 
+## Dogfood — attaswift/BigInt (2026-07-08, clean)
+
+Validated on a real, independent package. `report` composed correctly with no
+fix warranted (like the swift-system / SwiftEffectInference clean-precision
+dogfoods): **Algebraic surface — 51 properties** (`Strong 1 · Likely 3 ·
+Possible 47`, by-template breakdown), **Interaction surface — 6** (all
+Possible), **Cross-type structure — none** (BigInt's structure sits at
+Possible, below the Strong/Likely insights gate). The standout is that the
+**Measured verify** section is *honest about the constructibility wall*: after
+a verify run it read `51 record(s) — Proven 0 · Disproven 0 · Unverifiable 51`,
+faithfully surfacing that the engine found 51 properties but could test none
+(`BigUInt`/`BigInt` aren't constructible carriers) — never a misleading "0
+problems".
+
+Known limitation (not a bug): the Measured-verify section counts the flat
+`verify-evidence.json` log, which on BigInt is all algebraic; the 6 interaction
+invariants would need `verify-interaction --all` for evidence, so 51 ≠ the full
+57 picks. The section doesn't split evidence by surface — fine for a one-glance
+overview.
+
 ## Files / tests
 
 - `ReportRenderer.swift` (pure: composes the sections from an `IndexStore.Index`
