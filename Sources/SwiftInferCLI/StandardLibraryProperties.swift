@@ -9,9 +9,15 @@ import Foundation
 /// These are the one class of property that is both *known-true by contract*
 /// and *verifiable* (their carriers — `Int`, `String`, `[T]`, `Set`, `Bool`
 /// — are exactly the ones the generator can construct), so `--verify` can
-/// confirm them live rather than assert them. The caveats encode the same
-/// counter-signals the scoring engine already knows (`Double.+` is not
-/// associative; `String`/`Array` `+` is not commutative).
+/// confirm them live rather than assert them.
+///
+/// Each law is tagged with the **SwiftPropertyLaws protocol it witnesses**
+/// (`Semigroup` / `Monoid` / `CommutativeMonoid` / `Semilattice`) — the
+/// upstream kit protocol a conforming type satisfies. A law tags a protocol
+/// only when the *whole structure* conforms: `Double.+` is commutative with
+/// an identity but is NOT associative, so it witnesses no protocol (it is not
+/// a `Monoid`); unary idempotence / involutions aren't algebraic protocols
+/// either, so they tag none.
 public enum KnownPropertyKind: String, Sendable, Equatable {
     case law      // known-true; carries a `checkBody` so `--verify` can run it
     case caveat   // a plausible-looking NON-property; documented, never asserted true
@@ -22,6 +28,10 @@ public struct KnownProperty: Sendable, Equatable {
     public let structure: String
     public let statement: String
     public let kind: KnownPropertyKind
+    /// The SwiftPropertyLaws kit protocol this law witnesses (e.g.
+    /// `"CommutativeMonoid"`), or `nil` when the structure conforms to no
+    /// kit protocol (see the type doc for the Double / unary cases).
+    public let witnesses: String?
     public let note: String?
     /// A Swift expression (returning `Bool`) over the catalog's `rand*`
     /// helpers, run under `--verify`. `nil` for caveats.
@@ -35,47 +45,53 @@ public enum StandardLibraryProperties {
     public static let laws: [KnownProperty] = all.filter { $0.kind == .law }
     public static let caveats: [KnownProperty] = all.filter { $0.kind == .caveat }
 
-    // Int — additive monoid + max/min semilattice
+    // Int — additive commutative monoid + max semilattice
     private static let intLaws: [KnownProperty] = [
         law(
             "Int", "commutative monoid under +", "a + b == b + a",
-            "let a = randInt(), b = randInt(); return a + b == b + a"
+            "let a = randInt(), b = randInt(); return a + b == b + a",
+            witnesses: "CommutativeMonoid"
         ),
         law(
             "Int", "commutative monoid under +", "(a + b) + c == a + (b + c)",
-            "let a = randInt(), b = randInt(), c = randInt(); return (a + b) + c == a + (b + c)"
+            "let a = randInt(), b = randInt(), c = randInt(); return (a + b) + c == a + (b + c)",
+            witnesses: "CommutativeMonoid"
         ),
         law(
             "Int", "additive identity", "a + 0 == a",
-            "let a = randInt(); return a + 0 == a"
+            "let a = randInt(); return a + 0 == a",
+            witnesses: "CommutativeMonoid"
         ),
         law(
-            "Int", "commutative semilattice under max", "max(a, b) == max(b, a)",
-            "let a = randInt(), b = randInt(); return max(a, b) == max(b, a)"
+            "Int", "semilattice under max", "max(a, b) == max(b, a)",
+            "let a = randInt(), b = randInt(); return max(a, b) == max(b, a)",
+            witnesses: "Semilattice"
         ),
         law(
-            "Int", "commutative semilattice under max", "max(max(a, b), c) == max(a, max(b, c))",
-            "let a = randInt(), b = randInt(), c = randInt(); return max(max(a, b), c) == max(a, max(b, c))"
+            "Int", "semilattice under max", "max(max(a, b), c) == max(a, max(b, c))",
+            "let a = randInt(), b = randInt(), c = randInt(); return max(max(a, b), c) == max(a, max(b, c))",
+            witnesses: "Semilattice"
         ),
         law(
             "Int", "idempotent under max", "max(a, a) == a",
-            "let a = randInt(); return max(a, a) == a"
+            "let a = randInt(); return max(a, a) == a",
+            witnesses: "Semilattice"
         ),
         law(
-            "Int", "idempotent", "abs(abs(a)) == abs(a)",
+            "Int", "idempotent unary function", "abs(abs(a)) == abs(a)",
             "let a = randInt(); return abs(abs(a)) == abs(a)"
         )
     ]
 
-    // Double — floating point holds the commutative/identity laws ONLY for
-    // finite inputs (NaN/±∞ break them under ==), and is NOT associative even
-    // for finite values (see caveats). Listed explicitly so its special-case
+    // Double — floating point holds commutativity/identity ONLY for finite
+    // inputs, and is NOT associative even for finite values → witnesses NO
+    // protocol (it is not a Monoid). Listed explicitly so its special-case
     // status is visible rather than read as an oversight.
     private static let doubleLaws: [KnownProperty] = [
         law(
             "Double", "commutative under + (finite inputs)", "a + b == b + a",
             "let a = randDouble(), b = randDouble(); return a + b == b + a",
-            note: "Finite inputs only — NaN/±∞ break these under ==, and + is NOT associative (see caveats)."
+            note: "Finite inputs only. NOT a Monoid — `+` is not associative (see caveats)."
         ),
         law(
             "Double", "commutative under * (finite inputs)", "a * b == b * a",
@@ -91,31 +107,36 @@ public enum StandardLibraryProperties {
         )
     ]
 
-    // Bool — boolean algebra
+    // Bool — && / || are bounded semilattices (over boolean values)
     private static let boolLaws: [KnownProperty] = [
         law(
-            "Bool", "commutative under &&", "(a && b) == (b && a)",
-            "let a = randBool(), b = randBool(); return (a && b) == (b && a)"
+            "Bool", "semilattice under &&", "(a && b) == (b && a)",
+            "let a = randBool(), b = randBool(); return (a && b) == (b && a)",
+            witnesses: "Semilattice"
         ),
         law(
-            "Bool", "associative under ||", "((a || b) || c) == (a || (b || c))",
-            "let a = randBool(), b = randBool(), c = randBool(); return ((a || b) || c) == (a || (b || c))"
+            "Bool", "semilattice under ||", "((a || b) || c) == (a || (b || c))",
+            "let a = randBool(), b = randBool(), c = randBool(); return ((a || b) || c) == (a || (b || c))",
+            witnesses: "Semilattice"
         ),
         law(
             "Bool", "idempotent under &&", "(a && a) == a",
-            "let a = randBool(); return (a && a) == a"
+            "let a = randBool(); return (a && a) == a",
+            witnesses: "Semilattice"
         )
     ]
 
-    // String — free monoid under concatenation
+    // String — free monoid under concatenation (NOT commutative)
     private static let stringLaws: [KnownProperty] = [
         law(
             "String", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
-            "let a = randStr(), b = randStr(), c = randStr(); return (a + b) + c == a + (b + c)"
+            "let a = randStr(), b = randStr(), c = randStr(); return (a + b) + c == a + (b + c)",
+            witnesses: "Monoid"
         ),
         law(
             "String", "concatenation identity", "a + \"\" == a",
-            "let a = randStr(); return a + \"\" == a"
+            "let a = randStr(); return a + \"\" == a",
+            witnesses: "Monoid"
         )
     ]
 
@@ -131,27 +152,32 @@ public enum StandardLibraryProperties {
         ),
         law(
             "Array", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
-            "let a = randArr(), b = randArr(), c = randArr(); return (a + b) + c == a + (b + c)"
+            "let a = randArr(), b = randArr(), c = randArr(); return (a + b) + c == a + (b + c)",
+            witnesses: "Monoid"
         )
     ]
 
     // Set — bounded semilattice under union / intersection
     private static let setLaws: [KnownProperty] = [
         law(
-            "Set", "commutative under union", "a.union(b) == b.union(a)",
-            "let a = randSet(), b = randSet(); return a.union(b) == b.union(a)"
+            "Set", "semilattice under union", "a.union(b) == b.union(a)",
+            "let a = randSet(), b = randSet(); return a.union(b) == b.union(a)",
+            witnesses: "Semilattice"
         ),
         law(
-            "Set", "associative under union", "a.union(b).union(c) == a.union(b.union(c))",
-            "let a = randSet(), b = randSet(), c = randSet(); return a.union(b).union(c) == a.union(b.union(c))"
+            "Set", "semilattice under union", "a.union(b).union(c) == a.union(b.union(c))",
+            "let a = randSet(), b = randSet(), c = randSet(); return a.union(b).union(c) == a.union(b.union(c))",
+            witnesses: "Semilattice"
         ),
         law(
             "Set", "idempotent under union", "a.union(a) == a",
-            "let a = randSet(); return a.union(a) == a"
+            "let a = randSet(); return a.union(a) == a",
+            witnesses: "Semilattice"
         ),
         law(
-            "Set", "commutative under intersection", "a.intersection(b) == b.intersection(a)",
-            "let a = randSet(), b = randSet(); return a.intersection(b) == b.intersection(a)"
+            "Set", "semilattice under intersection", "a.intersection(b) == b.intersection(a)",
+            "let a = randSet(), b = randSet(); return a.intersection(b) == b.intersection(a)",
+            witnesses: "Semilattice"
         )
     ]
 
@@ -190,18 +216,19 @@ public enum StandardLibraryProperties {
         _ structure: String,
         _ statement: String,
         _ checkBody: String,
+        witnesses: String? = nil,
         note: String? = nil
     ) -> KnownProperty {
         KnownProperty(
             type: type, structure: structure, statement: statement,
-            kind: .law, note: note, checkBody: checkBody
+            kind: .law, witnesses: witnesses, note: note, checkBody: checkBody
         )
     }
 
     private static func caveat(_ type: String, _ statement: String, _ note: String) -> KnownProperty {
         KnownProperty(
             type: type, structure: statement, statement: statement,
-            kind: .caveat, note: note, checkBody: nil
+            kind: .caveat, witnesses: nil, note: note, checkBody: nil
         )
     }
 }

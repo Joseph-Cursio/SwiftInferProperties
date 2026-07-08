@@ -24,6 +24,28 @@ struct KnownPropertiesTests {
         #expect(!StandardLibraryProperties.caveats.isEmpty)
     }
 
+    @Test("V1.145 — laws are tagged with the kit protocol they witness")
+    func witnessTags() {
+        func witness(_ type: String, _ statement: String) -> String?? {
+            StandardLibraryProperties.laws.first {
+                $0.type == type && $0.statement == statement
+            }?.witnesses
+        }
+        // Int under + is a CommutativeMonoid; max is a Semilattice.
+        #expect(witness("Int", "a + b == b + a") == "CommutativeMonoid")
+        #expect(witness("Int", "max(a, b) == max(b, a)") == "Semilattice")
+        // Set union / Bool && are Semilattices; String + is a (non-commutative) Monoid.
+        #expect(witness("Set", "a.union(b) == b.union(a)") == "Semilattice")
+        #expect(witness("String", "(a + b) + c == a + (b + c)") == "Monoid")
+        // Double witnesses NO protocol (commutative + identity, but not associative).
+        for law in StandardLibraryProperties.laws where law.type == "Double" {
+            #expect(law.witnesses == nil, "Double is not a Monoid (not associative): \(law.statement)")
+        }
+        // Unary idempotence / involution are not algebraic protocols → no tag.
+        #expect(witness("Int", "abs(abs(a)) == abs(a)") == .some(nil))
+        #expect(witness("Array", "a.reversed().reversed() == a") == .some(nil))
+    }
+
     @Test("V1.145 — the known counter-signals are present as caveats")
     func caveatsCoverKnownTraps() {
         let caveatTypes = Set(StandardLibraryProperties.caveats.map(\.type))

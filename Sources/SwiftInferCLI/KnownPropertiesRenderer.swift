@@ -32,7 +32,8 @@ enum KnownPropertiesRenderer {
                 let mark = verifyResults.map { results in
                     results[law.displayName].map { $0 ? "✓ " : "✗ " } ?? "· "
                 } ?? "• "
-                lines.append("  \(mark)\(law.statement)   [\(law.structure)]")
+                let tag = law.witnesses.map { "  → witnesses \($0)" } ?? ""
+                lines.append("  \(mark)\(law.statement)   [\(law.structure)]\(tag)")
                 if let note = law.note { lines.append("      \(note)") }
             }
             lines.append("")
