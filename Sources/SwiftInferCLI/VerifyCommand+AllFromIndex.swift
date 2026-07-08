@@ -19,6 +19,12 @@ extension SwiftInferCommand.Verify {
     /// verify per-entry in a bounded `TaskGroup`, prints one JSON
     /// record per entry. Each record line is independently valid JSON
     /// (concat them with `jq -s` to produce a top-level array).
+    /// Returns the per-pick `SurveyRecord`s (with the live 5-way outcome,
+    /// including `architecturalCoveragePending` — which is NOT recoverable
+    /// from the persisted evidence, where it collapses to `measuredError`).
+    /// `quiet` suppresses the JSON stream for callers that render their own
+    /// summary (`prove-then-show`).
+    @discardableResult
     static func runAllFromIndex(
         indexPathOverride: String?,
         budgetString: String,
@@ -26,8 +32,9 @@ extension SwiftInferCommand.Verify {
         maxParallel: Int,
         templateFilter: String?,
         corpusModuleName: String? = nil,
-        emitRegression: Bool = false
-    ) async throws {
+        emitRegression: Bool = false,
+        quiet: Bool = false
+    ) async throws -> [SurveyRecord] {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
         let index = try loadIndex(
@@ -39,7 +46,7 @@ extension SwiftInferCommand.Verify {
             FileHandle.standardError.write(
                 Data("warning: --all-from-index found 0 entries to verify\n".utf8)
             )
-            return
+            return []
         }
         let parallelism = max(1, maxParallel)
         // Tier 2 — resolve the library product vending the corpus module ONCE
@@ -57,11 +64,12 @@ extension SwiftInferCommand.Verify {
             // WS-6 Slice 2 — whole-module shape universe for recursive derivation.
             allShapes: index.typeShapes
         )
-        await runParallelSurvey(
+        return await runParallelSurvey(
             entries: entries,
             packageRoot: packageRoot,
             parallelism: parallelism,
-            config: config
+            config: config,
+            quiet: quiet
         )
     }
 
@@ -113,12 +121,17 @@ extension SwiftInferCommand.Verify {
     /// avoid spawning all 109 SwiftPM builds simultaneously. Output
     /// stream is `print`-serialized in submission order — JSON
     /// records emit as their pipelines complete, not in input order.
+    /// `quiet` suppresses the per-record JSON stream (the default `verify
+    /// --all-from-index` output). `prove-then-show` sets it so it can render
+    /// its own classified summary from the returned records instead.
+    @discardableResult
     private static func runParallelSurvey(
         entries: [SemanticIndexEntry],
         packageRoot: URL,
         parallelism: Int,
-        config: SurveyConfig
-    ) async {
+        config: SurveyConfig,
+        quiet: Bool = false
+    ) async -> [SurveyRecord] {
         var collected: [SurveyRecord] = []
         await withTaskGroup(of: SurveyRecord.self) { group in
             var inFlight = 0
@@ -135,7 +148,7 @@ extension SwiftInferCommand.Verify {
             // For each completion, drain + add the next.
             while let record = await group.next() {
                 inFlight -= 1
-                emit(record)
+                if !quiet { emit(record) }
                 collected.append(record)
                 if nextIndex < entries.count {
                     let entry = entries[nextIndex]
@@ -149,41 +162,7 @@ extension SwiftInferCommand.Verify {
             _ = inFlight  // Defensive: silence unused-var if the compiler tracks it.
         }
         persistSurveyBatch(collected, packageRoot: packageRoot)
-    }
-
-    /// Persist a completed survey: verify-evidence (one upsert per record) and
-    /// the v1.143 replay corpus (accumulate the default-fail counterexamples).
-    /// One batch timestamp — the survey is one logical measurement run. Both
-    /// writes are best-effort; warnings surface on stderr.
-    private static func persistSurveyBatch(_ collected: [SurveyRecord], packageRoot: URL) {
-        let capturedAt = Date()
-        let batch = collected.map { record in
-            VerifyEvidence(
-                identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(record.identityHash),
-                template: record.templateName,
-                outcome: VerifyEvidenceRecorder.evidenceOutcome(for: record.outcome),
-                detail: record.outcomeDetail,
-                capturedAt: capturedAt,
-                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
-            )
-        }
-        let corpusEntries: [VerifyCorpusEntry] = collected.compactMap { record in
-            guard let counterexample = record.counterexample else { return nil }
-            return VerifyCorpusEntry(
-                identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(record.identityHash),
-                template: record.templateName,
-                counterexample: counterexample,
-                shrunkCounterexample: record.shrunkCounterexample,
-                seed: seedString(for: record.identityHash),
-                capturedAt: capturedAt,
-                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
-            )
-        }
-        let warnings = VerifyEvidenceRecorder.recordBatch(batch, packageRoot: packageRoot)
-            + VerifyCorpusStore.recordBatch(corpusEntries, packageRoot: packageRoot)
-        for warning in warnings {
-            FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
-        }
+        return collected
     }
 
     /// Per-entry survey worker. Runs the full verify pipeline; maps
