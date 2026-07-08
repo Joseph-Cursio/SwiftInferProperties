@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import SwiftInferCore
 
 /// V1.145 — `swift-infer known-properties`. Lists the built-in catalog of
 /// known-true algebraic properties on standard-library types (plus the
@@ -22,6 +23,18 @@ extension SwiftInferCommand {
         @Option(name: .long, help: "Only show properties for this type (e.g. 'Set', 'Array').")
         public var type: String?
 
+        @Option(
+            name: .long,
+            help: """
+            Scope to the standard-library types the target's source actually \
+            uses (scans Sources/<target>; a best-effort heuristic).
+            """
+        )
+        public var target: String?
+
+        @Option(name: .long, help: "Override the working directory for the --target scan.")
+        public var directory: String?
+
         @Flag(
             name: .long,
             help: "Property-test each law live (generates + runs a stdlib-only Swift script)."
@@ -31,9 +44,14 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() throws {
-            let properties = type.map { wanted in
-                StandardLibraryProperties.all.filter { $0.type == wanted }
-            } ?? StandardLibraryProperties.all
+            var properties = StandardLibraryProperties.all
+            if let target {
+                let used = Self.usedTypes(forTarget: target, directory: directory)
+                properties = properties.filter { used.contains($0.type) }
+            }
+            if let type {
+                properties = properties.filter { $0.type == type }
+            }
 
             guard verify else {
                 print(KnownPropertiesRenderer.renderList(properties), terminator: "")
@@ -45,6 +63,25 @@ extension SwiftInferCommand {
             let output = try Self.runSwiftScript(program)
             let results = KnownPropertiesRenderer.parseVerifyOutput(output)
             print(KnownPropertiesRenderer.renderList(properties, verifyResults: results), terminator: "")
+        }
+
+        /// Scan `Sources/<target>` for the standard-library types it uses.
+        /// Best-effort: an unreadable/empty target warns and returns `[]` (so
+        /// the filter shows nothing rather than everything).
+        private static func usedTypes(forTarget target: String, directory: String?) -> Set<String> {
+            let base = URL(fileURLWithPath: directory ?? ".")
+                .appendingPathComponent("Sources")
+                .appendingPathComponent(target)
+            let files = SwiftSourceFiles.sorted(in: base)
+            if files.isEmpty {
+                FileHandle.standardError.write(
+                    Data("warning: no Swift sources found under \(base.path)\n".utf8)
+                )
+                return []
+            }
+            let sources = files.compactMap { try? String(contentsOf: $0, encoding: .utf8) }
+            let candidates = Set(StandardLibraryProperties.all.map(\.type))
+            return StdlibTypeUsage.typesUsed(in: sources, among: candidates)
         }
 
         /// Write `source` to a temp `.swift` file and run it via the `swift`
