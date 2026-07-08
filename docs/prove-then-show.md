@@ -17,11 +17,21 @@ Three steps in one command:
 
 ```
 swift-infer prove-then-show --target <T> --corpus-module <T>
-            [--max-parallel N] [--budget small|medium|large] [--template <name>]
+            [--surface algebraic|interaction] [--max-parallel N]
+            [--budget small|medium|large] [--template <name>] [--family <name>]
 ```
 
 `--corpus-module` is required: the verifier builds against the target's
 compiled module to construct carrier values.
+
+**Two surfaces (V1.148).** `--surface algebraic` (default) rides
+`verify --all-from-index` over the algebraic picks. `--surface interaction`
+rides `verify-interaction --all` over the reducer / MVVM invariant families
+(`--family` restricts to one), classifying the same four buckets — so a
+`.possible` interaction invariant that *passed* execution surfaces, one that
+*failed* is dropped, and a reducer that couldn't be constructed lands in
+Unverifiable. A shared row-based renderer serves both; the algebraic and
+interaction surveys already speak the same 5-outcome vocabulary.
 
 ## The four buckets
 

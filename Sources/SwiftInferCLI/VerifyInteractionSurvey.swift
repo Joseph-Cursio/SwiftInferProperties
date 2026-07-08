@@ -94,17 +94,38 @@ enum VerifyInteractionSurvey {
         maxParallel: Int = 4,
         workingDirectory: URL
     ) async throws -> String {
+        let family = try parseFamily(familyFilter)
+        let display = targets.joined(separator: ", ")
+        let entries = try await collectEntries(
+            targets: targets,
+            familyFilter: familyFilter,
+            sequenceCount: sequenceCount,
+            userModuleName: userModuleName,
+            maxParallel: maxParallel,
+            workingDirectory: workingDirectory
+        )
+        return render(target: display, family: family, entries: entries)
+    }
+
+    /// V1.148 — the discover → filter → measured-verify → batch-record path
+    /// WITHOUT rendering, so `prove-then-show --surface interaction` can
+    /// classify the raw `Entry`s into its own view (mirrors the algebraic
+    /// `Verify.runAllFromIndex` returning `SurveyRecord`s).
+    static func collectEntries(
+        targets: [String],
+        familyFilter: String?,
+        sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
+        userModuleName: String? = nil,
+        maxParallel: Int = 4,
+        workingDirectory: URL
+    ) async throws -> [Entry] {
         let all = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
             targets: targets,
             workingDirectory: workingDirectory
         )
         let family = try parseFamily(familyFilter)
         let selected = family.map { chosen in all.filter { $0.family == chosen } } ?? all
-        let display = targets.joined(separator: ", ")
-
-        guard !selected.isEmpty else {
-            return render(target: display, family: family, entries: [])
-        }
+        guard !selected.isEmpty else { return [] }
 
         let context = RunContext(
             targets: targets,
@@ -123,7 +144,7 @@ enum VerifyInteractionSurvey {
             entries.map { (invariant: $0.suggestion, result: $0.result) },
             workingDirectory: workingDirectory
         )
-        return render(target: display, family: family, entries: entries)
+        return entries
     }
 
     /// One identity tagged with its discovery position, so completion in

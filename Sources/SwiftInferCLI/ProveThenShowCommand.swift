@@ -49,10 +49,43 @@ extension SwiftInferCommand {
         @Option(name: .long, help: "Only verify picks from this template (e.g. 'commutativity').")
         public var template: String?
 
+        @Option(
+            name: .long,
+            help: "Which surface to prove: algebraic (default) or interaction (reducer/MVVM invariants)."
+        )
+        public var surface: String = "algebraic"
+
+        @Option(
+            name: .long,
+            help: "Interaction only: restrict to one invariant family (e.g. 'idempotence')."
+        )
+        public var family: String?
+
         public init() { /* no-op */ }
 
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: directory ?? ".")
+
+            if surface == "interaction" {
+                let entries = try await VerifyInteractionSurvey.collectEntries(
+                    targets: [target],
+                    familyFilter: family,
+                    userModuleName: corpusModule,
+                    maxParallel: maxParallel,
+                    workingDirectory: workingDirectory
+                )
+                print(ProveThenShowRenderer.render(interactionEntries: entries), terminator: "")
+                return
+            }
+            if surface != "algebraic" {
+                FileHandle.standardError.write(
+                    Data("warning: unknown --surface '\(surface)'; using algebraic\n".utf8)
+                )
+            }
+            try await runAlgebraic(workingDirectory: workingDirectory)
+        }
+
+        private func runAlgebraic(workingDirectory: URL) async throws {
 
             // 1. Index WITH Possible — the whole point is to test the
             //    low-confidence picks the default view hides.
