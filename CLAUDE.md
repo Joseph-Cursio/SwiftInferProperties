@@ -152,6 +152,7 @@ SwiftInferProperties → SwiftPropertyLaws (PropertyBackend, DerivationStrategis
 | Prove-then-show (test Possible picks, surface survivors) (`swift-infer prove-then-show`) | `docs/prove-then-show.md` (V1.144) |
 | Standard-library known-properties catalog (`swift-infer known-properties`) | `docs/known-properties.md` (V1.145) |
 | Stdlib confidence anchor (proven-analog / known-trap provenance in `discover`) | `docs/stdlib-anchor.md` (V1.147) |
+| Project overview (`swift-infer report`) | `docs/report-command.md` (V1.149) |
 | Per-cycle change story | `git log` + `docs/calibration-cycle-N-findings.md` |
 | Calibration corpus + baseline | `docs/calibration-corpus-v2.0.md` |
 | Triage rubrics (archived — superseded by measured execution, cycle 118+) | `docs/archive/interaction-invariant-triage-rubric.md` (v2.0) + `docs/cycle-6-triage-rubric.md` (v1) |
