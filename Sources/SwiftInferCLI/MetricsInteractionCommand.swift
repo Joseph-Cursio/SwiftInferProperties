@@ -20,7 +20,7 @@ import SwiftInferCore
 
 /// Module-level (not nested in `MetricsInteraction`) per SwiftLint's
 /// type-nesting cap. Same posture as v1's `MetricsLoadResult`.
-private struct MetricsInteractionLoaded {
+struct MetricsInteractionLoaded {
     let decisions: InteractionDecisions
     let sources: [String]
     let warnings: [String]
@@ -57,8 +57,8 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let parsedFormat = try parseFormat(format)
-            let loaded = loadDecisions()
+            let parsedFormat = try Self.parseFormat(format)
+            let loaded = Self.loadDecisions(directoryOverride: directory, explicitPaths: decisions)
             let report = InteractionDecisionsAggregator.aggregate(loaded.decisions)
             let rendered = InteractionMetricsRenderer.render(
                 report,
@@ -73,17 +73,23 @@ extension SwiftInferCommand {
 
         // MARK: - Loading
 
-        private func loadDecisions() -> MetricsInteractionLoaded {
-            if decisions.isEmpty {
-                return loadDefault()
+        /// Dispatches between default walk-up and explicit-path aggregation
+        /// on whether any `--decisions` path was supplied. Exposed (non-private
+        /// static) for direct testing, mirroring v1's `Metrics.loadAggregate`.
+        static func loadDecisions(
+            directoryOverride: String?,
+            explicitPaths: [String]
+        ) -> MetricsInteractionLoaded {
+            if explicitPaths.isEmpty {
+                return loadDefault(directoryOverride: directoryOverride)
             }
-            return loadAggregation()
+            return loadAggregation(explicitPaths: explicitPaths)
         }
 
-        private func loadDefault() -> MetricsInteractionLoaded {
+        private static func loadDefault(directoryOverride: String?) -> MetricsInteractionLoaded {
             let directoryURL: URL
-            if let directory {
-                directoryURL = URL(fileURLWithPath: directory).standardizedFileURL
+            if let directoryOverride {
+                directoryURL = URL(fileURLWithPath: directoryOverride).standardizedFileURL
             } else {
                 directoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                     .standardizedFileURL
@@ -97,11 +103,11 @@ extension SwiftInferCommand {
             )
         }
 
-        private func loadAggregation() -> MetricsInteractionLoaded {
+        private static func loadAggregation(explicitPaths: [String]) -> MetricsInteractionLoaded {
             var aggregate = InteractionDecisions.empty
             var sources: [String] = []
             var warnings: [String] = []
-            for path in decisions {
+            for path in explicitPaths {
                 let pathURL = URL(fileURLWithPath: path).standardizedFileURL
                 let result = InteractionDecisionsLoader.load(
                     startingFrom: pathURL.deletingLastPathComponent(),
@@ -118,7 +124,7 @@ extension SwiftInferCommand {
             )
         }
 
-        private func parseFormat(_ raw: String) throws -> InteractionMetricsRenderer.Format {
+        static func parseFormat(_ raw: String) throws -> InteractionMetricsRenderer.Format {
             guard let parsed = InteractionMetricsRenderer.Format(rawValue: raw.lowercased()) else {
                 throw ValidationError(
                     "unknown --format value '\(raw)'. Allowed: "
