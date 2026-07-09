@@ -62,5 +62,15 @@ struct ProveThenShowInteractionRenderTests {
         #expect(out.contains("✗ cardinality  RouterFeature.reduce   [counterexample: failing action-sequence #3]"))
         #expect(out.contains("? referential-integrity  LibFeature.reduce   (non-Identifiable element)"))
         #expect(out.contains("· conservation  CartFeature.reduce   (build-failed)"))
+        // The gen() hook hint surfaces because there's an Unverifiable row.
+        #expect(out.contains("static func gen()"))
+    }
+
+    @Test("V1.150 — no gen() hint when nothing is Unverifiable")
+    func noHintWithoutUnverifiable() {
+        let out = ProveThenShowRenderer.render(interactionEntries: [
+            entry(.idempotence, "NavFeature.reduce", .measuredBothPass)
+        ])
+        #expect(!out.contains("static func gen()"))
     }
 }

@@ -96,6 +96,7 @@ struct ReportRendererTests {
         #expect(out.contains("Interaction surface — 3 invariant(s)"))
         #expect(out.contains("by family: idempotence 2, cardinality 1"))
         #expect(out.contains("Proven 1 · Disproven 1 · Unverifiable 1 · Inconclusive 0"))
+        #expect(out.contains("static func gen()"))   // hint surfaces (1 Unverifiable)
         #expect(out.contains("Cross-type structure — 1 group(s)"))
         #expect(out.contains("2 types share a commutative monoid shape (Config, EventLog)"))
     }

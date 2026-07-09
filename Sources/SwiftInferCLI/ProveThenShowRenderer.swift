@@ -107,6 +107,10 @@ enum ProveThenShowRenderer {
             "INCONCLUSIVE — edge-case advisory or tooling error",
             inconclusive, marker: "·", showDetail: true
         )
+        if !unverifiable.isEmpty {
+            lines.append(GenHookHint.text)
+            lines.append("")
+        }
         return lines.joined(separator: "\n") + "\n"
     }
 

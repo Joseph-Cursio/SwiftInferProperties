@@ -53,12 +53,16 @@ enum ReportRenderer {
             evidence.records.filter { $0.outcome == outcome }.count
         }
         let inconclusive = count(.measuredEdgeCaseAdvisory) + count(.measuredError)
-        return [
+        var lines = [
             "Measured verify — \(evidence.records.count) record(s)",
             "  Proven \(count(.measuredBothPass)) · Disproven \(count(.measuredDefaultFails)) "
-                + "· Unverifiable \(count(.architecturalCoveragePending)) · Inconclusive \(inconclusive)",
-            ""
+                + "· Unverifiable \(count(.architecturalCoveragePending)) · Inconclusive \(inconclusive)"
         ]
+        if count(.architecturalCoveragePending) > 0 {
+            lines.append("  " + GenHookHint.text)
+        }
+        lines.append("")
+        return lines
     }
 
     private static func insightsSection(_ groups: [InsightsGroup]) -> [String] {
