@@ -51,4 +51,27 @@ struct LabeledCallExpressionTests {
         )
         #expect(noArgs == "Foo.identity")
     }
+
+    // V1.151 — operators never take argument labels: the `a`/`b` in `+(a:b:)`
+    // are parameter NAMES, so `(+)(a: $0, b: $1)` doesn't compile. Applied
+    // positionally instead — the exact BigInt bug the gen()-hook demo surfaced.
+    @Test("an operator with parameter names is called positionally, NOT labeled")
+    func operatorCalledPositionally() {
+        // BigInt's `+` is indexed as `+(a:b:)` with a `(+)` reference.
+        #expect(VerifyCLI.labeledCallExpression(primaryFunctionName: "+(a:b:)", reference: "(+)") == "(+)")
+        #expect(VerifyCLI.labeledCallExpression(primaryFunctionName: "*(x:y:)", reference: "(*)") == "(*)")
+        #expect(
+            VerifyCLI.labeledCallExpression(primaryFunctionName: "&<<(left:right:)", reference: "(&<<)")
+                == "(&<<)"
+        )
+    }
+
+    @Test("a non-operator two-arg function still gets the labeled trampoline")
+    func nonOperatorStillLabeled() {
+        // Guard against over-broadening the operator skip.
+        #expect(
+            VerifyCLI.labeledCallExpression(primaryFunctionName: "plus(a:b:)", reference: "Math.plus")
+                == "{ Math.plus(a: $0, b: $1) }"
+        )
+    }
 }

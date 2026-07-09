@@ -119,6 +119,14 @@ extension SwiftInferCommand.Verify {
     ) -> String {
         let labels = argumentLabels(from: primaryFunctionName)
         guard labels.contains(where: { $0 != "_" }) else { return reference }
+        // Operators (`+`, `*`, `<<`, …) never take argument labels — the
+        // `a`/`b` in `+(a:b:)` are parameter NAMES, not call labels, so a
+        // labeled call `(+)(a: $0, b: $1)` doesn't compile. Apply positionally:
+        // `reference` is already the callable operator form `(+)`, so the stub
+        // invokes `(+)(lhs, rhs)`. (Only the `.userGen`/strategist dispatch
+        // path reaches operators here; `CommutativityPairResolver` never did.)
+        let bareName = RoundTripPairResolver.stripParameterLabels(primaryFunctionName)
+        if CallExpressionShape.isOperatorName(bareName) { return reference }
         let placeholders = labels.enumerated().map { index, label in
             label == "_" ? "$\(index)" : "\(label): $\(index)"
         }
