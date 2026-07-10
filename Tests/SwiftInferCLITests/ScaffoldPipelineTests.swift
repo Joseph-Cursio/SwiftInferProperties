@@ -13,7 +13,7 @@ struct ScaffoldPipelineTests {
             "Models.swift": """
                 struct Doc: Equatable {
                     let id: Int
-                    let url: URL
+                    let widget: Widget
                 }
                 """
         ])
@@ -27,8 +27,8 @@ struct ScaffoldPipelineTests {
         #expect(outcome.scaffoldedTypeNames.contains("Doc"))
         #expect(text.contains("extension Doc {"))
         #expect(text.contains("Gen<Int>.int()"))            // id derived
-        #expect(text.contains("<#Generator<URL>#>"))         // url placeholder
-        #expect(text.contains("Doc(id: $0.0, url: $0.1)"))
+        #expect(text.contains("<#Generator<Widget>#>"))      // widget placeholder
+        #expect(text.contains("Doc(id: $0.0, widget: $0.1)"))
         #expect(text.contains("import PropertyLawKit"))
     }
 
@@ -39,7 +39,7 @@ struct ScaffoldPipelineTests {
                 struct Order: Equatable {
                     let id: Int
                     let customer: Customer
-                    let token: URL
+                    let token: Widget
                 }
                 """
         ])
@@ -52,7 +52,7 @@ struct ScaffoldPipelineTests {
         let text = try #require(outcome.fileText)
         // Order is the partial type; Customer resolves and is inlined.
         #expect(text.contains("Customer(name: $0)"))
-        #expect(text.contains("<#Generator<URL>#>"))
+        #expect(text.contains("<#Generator<Widget>#>"))
         // Customer fully derives → not itself scaffolded.
         #expect(outcome.scaffoldedTypeNames.contains("Customer") == false)
     }
@@ -77,8 +77,8 @@ struct ScaffoldPipelineTests {
             "Money.swift": """
                 struct Money: Equatable {
                     let amount: Int
-                    let ref: URL
-                    init(amount: Int, ref: URL) {
+                    let ref: Widget
+                    init(amount: Int, ref: Widget) {
                         self.amount = amount
                         self.ref = ref
                     }
@@ -95,7 +95,7 @@ struct ScaffoldPipelineTests {
         // Lifted through the user init (was non-scaffoldable before Increment C).
         #expect(text.contains("Money(amount: $0.0, ref: $0.1)"))
         #expect(text.contains("Gen<Int>.int()"))
-        #expect(text.contains("<#Generator<URL>#>"))
+        #expect(text.contains("<#Generator<Widget>#>"))
     }
 
     @Test func payloadEnumScaffoldsViaOneOf() throws {
@@ -104,7 +104,7 @@ struct ScaffoldPipelineTests {
                 enum Shape: Equatable {
                     case empty
                     case circle(radius: Int)
-                    case tagged(URL)
+                    case tagged(Widget)
                 }
                 """
         ])
@@ -118,7 +118,7 @@ struct ScaffoldPipelineTests {
         #expect(text.contains("Gen.oneOf("))
         #expect(text.contains("Gen.always(Shape.empty)"))
         #expect(text.contains("Shape.circle(radius: $0)"))
-        #expect(text.contains("<#Generator<URL>#>"))   // tagged(URL) hole
+        #expect(text.contains("<#Generator<Widget>#>"))   // tagged(Widget) hole
     }
 
     // MARK: - Evidence-based hole-filling (renderer)
@@ -191,7 +191,7 @@ struct ScaffoldPipelineTests {
             struct Order: Equatable {
                 let id: Int
                 let box: Box
-                let ref: URL
+                let ref: Widget
             }
             """.write(toFile: sources + "Models.swift", atomically: true, encoding: .utf8)
         try """
@@ -210,8 +210,8 @@ struct ScaffoldPipelineTests {
         )
         let text = try #require(outcome.fileText)
         #expect(outcome.scaffoldedTypeNames.contains("Order"))
-        #expect(text.contains("Box(value: $0)"))       // hole filled from test evidence
-        #expect(text.contains("<#Generator<URL>#>"))    // ref remains a placeholder
+        #expect(text.contains("Box(value: $0)"))         // hole filled from test evidence
+        #expect(text.contains("<#Generator<Widget>#>"))  // ref remains a placeholder
     }
 
     // MARK: - Helpers

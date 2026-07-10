@@ -215,15 +215,16 @@ struct V149MemberwiseTests {
 
     @Test("non-stdlib member type falls through to .todo via strategist")
     func nonStdlibMemberFallsThroughToTodo() throws {
-        // Stored property URL is not in RawType — strategist returns
-        // .todo, our emitter throws .unsupportedCarrier.
+        // Stored property Widget is a bespoke type with no recognized
+        // generator — strategist returns .todo, our emitter throws
+        // .unsupportedCarrier. (URL et al. now auto-derive as of kit v3.11.0.)
         let shape = IndexedTypeShape(
             name: "Unsupported",
             kind: .struct,
             inheritedTypes: [],
             hasUserGen: false,
             storedMembers: [
-                IndexedTypeShape.StoredMember(name: "u", typeName: "URL")
+                IndexedTypeShape.StoredMember(name: "widget", typeName: "Widget")
             ],
             hasUserInit: false
         )

@@ -91,7 +91,7 @@ struct VerifyPipelineStrategistIntegrationTests {
             inheritedTypes: [],
             hasUserGen: false,
             storedMembers: [
-                IndexedTypeShape.StoredMember(name: "x", typeName: "URL")
+                IndexedTypeShape.StoredMember(name: "x", typeName: "Widget")
             ],
             hasUserInit: false
         )
