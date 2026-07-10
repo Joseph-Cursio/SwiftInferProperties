@@ -183,6 +183,32 @@ public enum StandardLibraryProperties {
             "Set", "semilattice under intersection", "a.intersection(b) == b.intersection(a)",
             "let a = randSet(), b = randSet(); return a.intersection(b) == b.intersection(a)",
             witnesses: "Semilattice"
+        ),
+        // Collections/async workplan Phase 1 M4 — stdlib analogs of the
+        // kit's SetAlgebra Boolean-algebra completion (SwiftPropertyLaws
+        // v3.12.0: distributivity / absorption / relative De Morgan), so
+        // the catalog stays in lockstep with what the kit can check.
+        law(
+            "Set", "distributive lattice",
+            "a.union(b.intersection(c)) == a.union(b).intersection(a.union(c))",
+            "let a = randSet(), b = randSet(), c = randSet(); "
+                + "return a.union(b.intersection(c)) == a.union(b).intersection(a.union(c))",
+            witnesses: "SetAlgebra"
+        ),
+        law(
+            "Set", "absorption", "a.union(a.intersection(b)) == a",
+            "let a = randSet(), b = randSet(); return a.union(a.intersection(b)) == a",
+            witnesses: "SetAlgebra"
+        ),
+        law(
+            "Set", "De Morgan (relative form)",
+            "a.subtracting(b.union(c)) == a.subtracting(b).intersection(a.subtracting(c))",
+            "let a = randSet(), b = randSet(), c = randSet(); "
+                + "return a.subtracting(b.union(c)) == a.subtracting(b).intersection(a.subtracting(c))",
+            witnesses: "SetAlgebra",
+            note: "Stated against a minuend — SetAlgebra has no complement. A subtracting "
+                + "implemented as symmetricDifference passes every other Set law here; "
+                + "only this shape catches it (kit: SetAlgebra.deMorganForUnion)."
         )
     ]
 

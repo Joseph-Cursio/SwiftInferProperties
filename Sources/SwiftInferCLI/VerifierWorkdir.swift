@@ -308,6 +308,10 @@ public enum VerifierWorkdir {
             entries = [
                 ".product(name: \"ComplexModule\", package: \"swift-numerics\")",
                 ".product(name: \"OrderedCollections\", package: \"swift-collections\")",
+                // Phase 1 M4 (collections/async workplan) — DequeModule for
+                // the curated Deque<Int> recipe, same pattern as V1.59.A's
+                // OrderedCollections entry above.
+                ".product(name: \"DequeModule\", package: \"swift-collections\")",
                 ".product(name: \"RealModule\", package: \"swift-numerics\")",
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
                 ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"

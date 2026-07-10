@@ -109,6 +109,17 @@ extension StrategistDispatchEmitter {
             expression: ocDictExpression(viewSuffix: ".elements[...]"),
             carrierTypeName: "OrderedDictionary<Int, Int>.Elements.SubSequence",
             imports: ocImports
+        ),
+        // Collections/async workplan Phase 1 M4 — Deque<Int>, previously
+        // the one swift-collections calibration type with no recipe (its
+        // picks stalled at `unsupported-carrier: Deque`). Lives in
+        // DequeModule, not OrderedCollections, hence its own import set;
+        // the `.algebraic` workdir manifest declares the product.
+        "Deque<Int>": GeneratorRecipe(
+            expression: "Gen<Int>.int(in: 0 ... 100).map { "
+                + "Deque([$0, $0 + 1, $0 + 2, $0 + 3]) }",
+            carrierTypeName: "Deque<Int>",
+            imports: ["Foundation", "DequeModule", "PropertyBased"]
         )
     ]
 }
