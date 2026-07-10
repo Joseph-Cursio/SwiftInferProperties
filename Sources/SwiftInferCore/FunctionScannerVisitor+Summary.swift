@@ -1,4 +1,5 @@
 import PropertyLawCore
+import SwiftEffectInference
 import SwiftSyntax
 
 extension FunctionScannerVisitor {
@@ -35,6 +36,10 @@ extension FunctionScannerVisitor {
         // `FunctionDeclSyntax` is available, and carried on the summary for the
         // `@lint.effect pure` advisory channel.
         let isInferredPure = SoundPurity.isPure(node)
+        // Clock-determinism claim — same scan-time posture as the purity
+        // verdict above; consumed by the async-veto relaxation (workplan
+        // Phase 4). First EffectAnnotationParser use in this repo.
+        let isClockDeterministic = EffectAnnotationParser.isClockDeterministic(declaration: node)
 
         return FunctionSummary(
             name: name,
@@ -49,7 +54,8 @@ extension FunctionScannerVisitor {
             bodySignals: bodySignals,
             discoverableGroup: discoverableGroup,
             invariantKeypath: invariantKeypath,
-            isInferredPure: isInferredPure
+            isInferredPure: isInferredPure,
+            isClockDeterministic: isClockDeterministic
         )
     }
 

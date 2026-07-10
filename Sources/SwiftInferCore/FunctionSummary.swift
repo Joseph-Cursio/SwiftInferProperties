@@ -81,6 +81,18 @@ public struct FunctionSummary: Sendable, Equatable {
     /// unchanged.
     public let isInferredPure: Bool
 
+    /// `true` when the declaration carries SwiftEffectInference's
+    /// clock-determinism marker (`/// @lint.determinism clock_deterministic`
+    /// or `@ClockDeterministic`) — a user-declared claim that this `async`
+    /// function is deterministic given an injected `Clock`. Computed once at
+    /// scan time like `isInferredPure`, and consumed by the async-veto
+    /// relaxation (collections/async workplan Phase 4 deferral close-out):
+    /// vetoes relax only on the *conjunction* of this claim with the local
+    /// gates staying quiet. Content-blind — presence is a claim the emitted
+    /// determinism law then checks, not an analysis result. Defaults to
+    /// `false` so call sites that don't populate it compile unchanged.
+    public let isClockDeterministic: Bool
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -94,7 +106,8 @@ public struct FunctionSummary: Sendable, Equatable {
         bodySignals: BodySignals,
         discoverableGroup: String? = nil,
         invariantKeypath: String? = nil,
-        isInferredPure: Bool = false
+        isInferredPure: Bool = false,
+        isClockDeterministic: Bool = false
     ) {
         self.name = name
         self.parameters = parameters
@@ -109,6 +122,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.discoverableGroup = discoverableGroup
         self.invariantKeypath = invariantKeypath
         self.isInferredPure = isInferredPure
+        self.isClockDeterministic = isClockDeterministic
     }
 }
 
