@@ -229,6 +229,14 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
     /// calls another action (transitive). Surfaced so a human can see
     /// which actions are leaf mutators.
     public let mutatesStateDirectly: Bool
+    /// `true` when the method carries the clock-determinism claim
+    /// (`/// @lint.determinism clock_deterministic` / `@ClockDeterministic`)
+    /// — the conjunction gate under which an `async` action is admitted to
+    /// the synthetic action surface (collections/async workplan Phase 4:
+    /// un-annotated async would make seeded sequence replays
+    /// nondeterministic). Defaults to `false`; decoded with a default so
+    /// records persisted before this field existed keep loading.
+    public let isClockDeterministic: Bool
 
     public init(
         name: String,
@@ -237,7 +245,8 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
         parameters: [ViewModelActionParameter] = [],
         isAsync: Bool,
         isThrows: Bool,
-        mutatesStateDirectly: Bool
+        mutatesStateDirectly: Bool,
+        isClockDeterministic: Bool = false
     ) {
         self.name = name
         self.parameterTypes = parameterTypes
@@ -246,6 +255,29 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
         self.isAsync = isAsync
         self.isThrows = isThrows
         self.mutatesStateDirectly = mutatesStateDirectly
+        self.isClockDeterministic = isClockDeterministic
+    }
+
+    /// Custom decode solely for `isClockDeterministic` back-compat: the
+    /// synthesized decoder would reject persisted records missing the new
+    /// key. Every pre-existing field decodes exactly as the synthesized
+    /// form did; encoding stays synthesized.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.parameterTypes = try container.decode([String].self, forKey: .parameterTypes)
+        self.firstParameterLabel = try container.decodeIfPresent(
+            String.self, forKey: .firstParameterLabel
+        )
+        self.parameters = try container.decode(
+            [ViewModelActionParameter].self, forKey: .parameters
+        )
+        self.isAsync = try container.decode(Bool.self, forKey: .isAsync)
+        self.isThrows = try container.decode(Bool.self, forKey: .isThrows)
+        self.mutatesStateDirectly = try container.decode(Bool.self, forKey: .mutatesStateDirectly)
+        self.isClockDeterministic = try container.decodeIfPresent(
+            Bool.self, forKey: .isClockDeterministic
+        ) ?? false
     }
 
     /// Rendered `name(Type, Type)` / `name()` action signature for output.

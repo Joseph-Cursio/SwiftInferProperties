@@ -197,7 +197,8 @@ public enum ViewModelDiscoverer {
                     parameters: method.parameters,
                     isAsync: method.isAsync,
                     isThrows: method.isThrows,
-                    mutatesStateDirectly: directlyMutates(method)
+                    mutatesStateDirectly: directlyMutates(method),
+                    isClockDeterministic: method.isClockDeterministic
                 )
             }
             .sorted { $0.name < $1.name }
@@ -262,5 +263,10 @@ struct RawMethod: Equatable {
     let parameters: [ViewModelActionParameter]
     let isAsync: Bool
     let isThrows: Bool
+    /// Clock-determinism claim on the method decl (workplan Phase 4) —
+    /// carried through to `ViewModelAction` so the enum emitter's async
+    /// gate can apply the conjunction. Defaults to `false` so signal-only
+    /// fabrication sites stay terse.
+    var isClockDeterministic: Bool = false
     let signals: ViewModelMethodSignals
 }

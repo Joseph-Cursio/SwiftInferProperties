@@ -1,3 +1,4 @@
+import SwiftEffectInference
 import SwiftSyntax
 
 /// PROTOTYPE — single-pass walker collecting per-type view-model info for
@@ -150,6 +151,7 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
             parameters: actionParameters,
             isAsync: effects?.asyncSpecifier != nil,
             isThrows: effects?.throwsClause != nil,
+            isClockDeterministic: EffectAnnotationParser.isClockDeterministic(declaration: node),
             signals: ViewModelMethodBodyWalker.signals(for: body)
         )
         collected[typeName, default: RawTypeInfo()].methods.append(method)
