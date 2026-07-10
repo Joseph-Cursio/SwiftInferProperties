@@ -52,25 +52,57 @@ extension SwiftInferCommand.Discover {
     }
 
     /// A seeded function earns the determinism law when it takes inputs, returns
-    /// a value, runs synchronously without throwing, and is free or `static`
-    /// (an instance method could read mutable `self`). The lint seed already
-    /// vouched for purity; these are the shape requirements for writing the law.
+    /// a value, runs without throwing, and is free or `static` (an instance
+    /// method could read mutable `self`). The lint seed already vouched for
+    /// purity; these are the shape requirements for writing the law.
+    ///
+    /// **Async relaxation (collections/async workplan Phase 4):** an `async`
+    /// function qualifies only when it carries the clock-determinism claim
+    /// (`/// @lint.determinism clock_deterministic` / `@ClockDeterministic`)
+    /// — the conjunction posture SwiftEffectInference's annotation
+    /// documents. Purity can't vouch for an async function (async refutes
+    /// `.pure` by contract), so the user-declared claim substitutes for the
+    /// seed's purity justification, and the emitted determinism law is
+    /// exactly the check that falsifies a wrong claim. Bare async stays
+    /// vetoed.
     private static func qualifiesForDeterminism(_ summary: FunctionSummary) -> Bool {
         guard let returnType = summary.returnTypeText, returnType != "Void", returnType != "()" else {
             return false
         }
         guard summary.parameters.isEmpty == false else { return false }
-        guard summary.isThrows == false, summary.isAsync == false else { return false }
+        guard summary.isThrows == false else { return false }
+        if summary.isAsync {
+            guard summary.isClockDeterministic else { return false }
+        }
         return summary.containingTypeName == nil || summary.isStatic
     }
 
     private static func determinismSuggestion(for summary: FunctionSummary) -> Suggestion {
         let evidence = makeEvidence(for: summary)
-        let signal = Signal(
-            kind: .deterministicPurity,
-            weight: 30,
-            detail: "Lint-seeded pure function — a pure function is deterministic: f(x) == f(x)"
-        )
+        let signal = summary.isAsync
+            ? Signal(
+                kind: .deterministicPurity,
+                weight: 30,
+                detail: "Clock-deterministic-annotated async function — deterministic "
+                    + "given an injected Clock: f(x) == f(x) awaited twice"
+            )
+            : Signal(
+                kind: .deterministicPurity,
+                weight: 30,
+                detail: "Lint-seeded pure function — a pure function is deterministic: f(x) == f(x)"
+            )
+        let whyMightBeWrong = summary.isAsync
+            ? [
+                "Holds only if time is genuinely injected — a wall-clock read, Task.sleep "
+                    + "on the continuous clock, or any await on shared mutable state would "
+                    + "falsify the @ClockDeterministic claim, which is exactly what the test catches.",
+                "The return type must be Equatable for the law to compile."
+            ]
+            : [
+                "Holds only if the function is genuinely pure — a hidden global read or "
+                    + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
+                "The return type must be Equatable for the law to compile."
+            ]
         return Suggestion(
             templateName: "determinism",
             evidence: [evidence],
@@ -78,11 +110,7 @@ extension SwiftInferCommand.Discover {
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(
                 whySuggested: ["\(evidence.displayName) \(evidence.signature)", signal.formattedLine],
-                whyMightBeWrong: [
-                    "Holds only if the function is genuinely pure — a hidden global read or "
-                        + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
-                    "The return type must be Equatable for the law to compile."
-                ]
+                whyMightBeWrong: whyMightBeWrong
             ),
             identity: SuggestionIdentity(
                 canonicalInput: "determinism|" + canonicalInput(for: summary, evidence: evidence)
@@ -92,16 +120,23 @@ extension SwiftInferCommand.Discover {
     }
 
     /// Builds the renderer's `Evidence` row from a summary: a labelled display
-    /// name (`add(_:_:)`) and a trimmed signature (`(Int, Int) -> Int`). Mirrors
-    /// the templates' internal `inferenceEvidence` (not accessible cross-module).
+    /// name (`add(_:_:)`) and a trimmed signature (`(Int, Int) -> Int`, or
+    /// `(Int) async -> String` for a clock-deterministic async candidate).
+    /// Mirrors the templates' internal `inferenceEvidence` (not accessible
+    /// cross-module) — including its ` async` marker, which the acceptance
+    /// path's `deterministicStub` reads to emit the awaited stub form. Sync
+    /// signatures are byte-identical to before (identity hashes stable);
+    /// async candidates are new with the Phase 4 relaxation, so their
+    /// identities have no prior corpus to drift from.
     private static func makeEvidence(for summary: FunctionSummary) -> Evidence {
         let labels = summary.parameters.map { "\($0.label ?? "_"):" }.joined()
         let displayName = "\(summary.name)(\(labels))"
         let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
         let returnType = summary.returnTypeText ?? "Void"
+        let effectMarker = summary.isAsync ? " async" : ""
         return Evidence(
             displayName: displayName,
-            signature: "(\(paramTypes)) -> \(returnType)",
+            signature: "(\(paramTypes))\(effectMarker) -> \(returnType)",
             location: summary.location
         )
     }
