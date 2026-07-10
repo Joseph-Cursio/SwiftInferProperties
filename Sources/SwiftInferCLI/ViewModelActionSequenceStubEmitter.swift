@@ -204,7 +204,11 @@ public enum ViewModelActionSequenceStubEmitter {
         [
             headerBlock(inputs: inputs, lifted: lifted, plan: plan),
             lifted.source,
-            verifierStruct(inputs: inputs, generatorSetup: plan.setup)
+            verifierStruct(
+                inputs: inputs,
+                generatorSetup: plan.setup,
+                isAsyncDispatcher: lifted.isAsyncDispatcher
+            )
         ]
         .joined(separator: "\n\n")
     }
@@ -231,11 +235,21 @@ public enum ViewModelActionSequenceStubEmitter {
         """
     }
 
-    private static func verifierStruct(inputs: Inputs, generatorSetup: [String]) -> String {
+    private static func verifierStruct(
+        inputs: Inputs,
+        generatorSetup: [String],
+        isAsyncDispatcher: Bool
+    ) -> String {
+        // `@main` supports `static func main() async`; the marker (and the
+        // `await` on the drive call) appears only when an admitted action is
+        // async, so all-sync verifiers stay byte-identical to the
+        // pre-Phase-4 output (workplan Phase 4, interaction-path slice).
+        let effectMarker = isAsyncDispatcher ? " async" : ""
+        let driveCall = isAsyncDispatcher ? "await drive(probe, action)" : "drive(probe, action)"
         var lines: [String] = [
             "@main",
             "struct ViewModelInteractionVerifier {",
-            "    static func main() {",
+            "    static func main()\(effectMarker) {",
             "        var rng = Xoshiro(seed: (\(seedTuple(from: inputs.typeName))))"
         ]
         lines.append(contentsOf: generatorSetup)
@@ -246,7 +260,7 @@ public enum ViewModelActionSequenceStubEmitter {
             "            let probe = \(inputs.typeName)()",
             "            if !(\(inputs.predicate)) { report(fail: trial); return }",
             "            for action in actions {",
-            "                drive(probe, action)",
+            "                \(driveCall)",
             "                if !(\(inputs.predicate)) { report(fail: trial); return }",
             "            }",
             "            clean += 1",

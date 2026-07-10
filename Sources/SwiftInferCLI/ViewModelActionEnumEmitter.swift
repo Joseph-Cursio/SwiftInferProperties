@@ -27,16 +27,23 @@ import SwiftInferCore
 /// reach. The dispatcher drives a *live* instance (methods mutate the
 /// reference in place) — no synthetic value-`State` projection.
 ///
-/// **Scope (this slice):** the enum + dispatcher text only. Methods that
-/// can't sit in a synchronous dispatcher — `async` / `throws` — are dropped
-/// from the surface **with a recorded reason** (explainability is
-/// first-class), never silently. Payload *generatability* filtering and the
-/// sequence loop are Slice 3.
+/// **Scope (this slice):** the enum + dispatcher text only. `throws`
+/// methods are dropped from the surface **with a recorded reason**
+/// (explainability is first-class), never silently. `async` methods are
+/// dropped *unless* they carry the clock-determinism claim
+/// (`@ClockDeterministic` / `/// @lint.determinism clock_deterministic`,
+/// collections/async workplan Phase 4) — an un-annotated async action would
+/// make seeded sequence replays nondeterministic. When any admitted action
+/// is async, the emitted dispatcher is `func drive(…) async` with `await`
+/// on exactly the async arms; the all-sync form is byte-identical to
+/// before. Payload *generatability* filtering and the sequence loop are
+/// Slice 3.
 public enum ViewModelActionEnumEmitter {
 
     /// Why a method was left out of the synthetic action surface.
     public enum SkipReason: String, Equatable, Sendable {
-        /// `async` — can't be called from the synchronous dispatcher.
+        /// `async` without the clock-determinism claim — can't sit in the
+        /// dispatcher without making seeded replays nondeterministic.
         case asyncMethod = "async"
         /// `throws` — ditto; a throwing call needs a `try`/handler the
         /// dispatcher doesn't model.
@@ -80,19 +87,25 @@ public enum ViewModelActionEnumEmitter {
         /// in Slice 3). Mixed/payloaded ⇒ `false` (needs a composed
         /// `Gen<Action>`).
         public let isCaseIterable: Bool
+        /// `true` when any lifted action is async — the emitted `drive` is
+        /// then `async`, and the stub emitter must `await` it from an
+        /// async `main()`.
+        public let isAsyncDispatcher: Bool
 
         public init(
             enumName: String,
             source: String,
             lifted: [LiftedCase],
             skipped: [Skipped],
-            isCaseIterable: Bool
+            isCaseIterable: Bool,
+            isAsyncDispatcher: Bool = false
         ) {
             self.enumName = enumName
             self.source = source
             self.lifted = lifted
             self.skipped = skipped
             self.isCaseIterable = isCaseIterable
+            self.isAsyncDispatcher = isAsyncDispatcher
         }
     }
 
@@ -105,7 +118,7 @@ public enum ViewModelActionEnumEmitter {
         var usedCaseNames: Set<String> = []
 
         for action in actions {
-            if action.isAsync {
+            if action.isAsync, action.isClockDeterministic == false {
                 skipped.append(Skipped(action: action.name, reason: .asyncMethod))
                 continue
             }
@@ -118,18 +131,21 @@ public enum ViewModelActionEnumEmitter {
         }
 
         let isCaseIterable = lifted.allSatisfy(\.action.parameters.isEmpty)
+        let isAsyncDispatcher = lifted.contains(where: \.action.isAsync)
         let source = renderSource(
             typeName: typeName,
             enumName: enumName,
             lifted: lifted,
-            isCaseIterable: isCaseIterable
+            isCaseIterable: isCaseIterable,
+            isAsyncDispatcher: isAsyncDispatcher
         )
         return Result(
             enumName: enumName,
             source: source,
             lifted: lifted,
             skipped: skipped,
-            isCaseIterable: isCaseIterable
+            isCaseIterable: isCaseIterable,
+            isAsyncDispatcher: isAsyncDispatcher
         )
     }
 
@@ -166,7 +182,8 @@ public enum ViewModelActionEnumEmitter {
         typeName: String,
         enumName: String,
         lifted: [LiftedCase],
-        isCaseIterable: Bool
+        isCaseIterable: Bool,
+        isAsyncDispatcher: Bool
     ) -> String {
         let conformances = isCaseIterable ? "CaseIterable, Sendable" : "Sendable"
 
@@ -176,12 +193,15 @@ public enum ViewModelActionEnumEmitter {
             ? "enum \(enumName): \(conformances) {}"
             : "enum \(enumName): \(conformances) {\n\(cases)\n}"
 
+        // `async` only when an admitted action needs it — the all-sync form
+        // stays byte-identical to the pre-Phase-4 output.
+        let effectMarker = isAsyncDispatcher ? " async" : ""
         let arms = lifted.map { "    case \(dispatchArm($0, modelName: "model"))" }
             .joined(separator: "\n")
         let driveBlock = lifted.isEmpty
-            ? "func drive(_ model: \(typeName), _ action: \(enumName)) {}"
+            ? "func drive(_ model: \(typeName), _ action: \(enumName))\(effectMarker) {}"
             : """
-            func drive(_ model: \(typeName), _ action: \(enumName)) {
+            func drive(_ model: \(typeName), _ action: \(enumName))\(effectMarker) {
                 switch action {
             \(arms)
                 }
@@ -220,6 +240,8 @@ public enum ViewModelActionEnumEmitter {
     }
 
     /// `model.rename(id: a0, to: a1)` — original method name + labels.
+    /// Async (clock-deterministic-admitted) actions get an `await` prefix;
+    /// sync arms inside an async dispatcher stay bare.
     private static func callExpression(
         _ action: ViewModelAction,
         modelName: String,
@@ -232,7 +254,8 @@ public enum ViewModelActionEnumEmitter {
         .joined(separator: ", ")
         // Escape a keyword method name at the call site too (the recognizer
         // stores `node.name.text`, which has the backticks stripped).
-        return "\(modelName).\(escapeIfKeyword(action.name))(\(arguments))"
+        let awaitPrefix = action.isAsync ? "await " : ""
+        return "\(awaitPrefix)\(modelName).\(escapeIfKeyword(action.name))(\(arguments))"
     }
 
     // MARK: - Identifier helpers
