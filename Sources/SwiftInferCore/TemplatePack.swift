@@ -41,7 +41,14 @@ public enum TemplatePack: String, CaseIterable, Sendable {
     /// Aspirational per PRD §20.3 — task composition, cancellation
     /// idempotence, merge associativity. No current SwiftInfer templates
     /// target concurrency primitives; the pack name is reserved for
-    /// future template additions.
+    /// future template additions. Runnable *checker-side* laws now exist
+    /// upstream: SwiftPropertyLaws v3.14.0's `PropertyLawAsync` product
+    /// ships nine clock-free AsyncSequence laws (sync-model equivalence
+    /// for deterministic swift-async-algorithms combinators, the merge
+    /// multiset law, zip determinism, iterator exhaustion) — the concrete
+    /// law targets this pack's templates would infer *toward* when the
+    /// async hard-veto is eventually relaxed (collections/async workplan
+    /// Phase 4: Clock-injected determinism).
     case concurrency
 
     /// Set of `Suggestion.templateName` values associated with this pack.
