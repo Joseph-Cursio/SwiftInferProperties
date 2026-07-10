@@ -29,16 +29,27 @@ extension LiftedTestEmitter {
     /// One parameter draws a single `value`; two or more draw a tuple, one slot
     /// per parameter from its own generator. Labels are emitted so the call
     /// compiles for labeled functions.
+    ///
+    /// **Async form (collections/async workplan Phase 4):** with
+    /// `isAsync: true`, each side of the equality becomes `(await f(args))` —
+    /// two sequentially awaited calls compared for equality, the same shape
+    /// as PropertyLawAsync's `debounceIsDeterministicUnderTestClock`. No
+    /// scaffold change is needed: the backend's `property` closure is
+    /// already `async` (`PropertyBackend`'s check contract), so the emitted
+    /// closure may await. Justified only for clock-deterministic-annotated
+    /// candidates — the discover gate enforces that.
     public static func deterministic(
         funcName: String,
         parameters: [DeterminismParameter],
         seed: SamplingSeed.Value,
-        equalityKind: EqualityKind = .strict
+        equalityKind: EqualityKind = .strict,
+        isAsync: Bool = false
     ) -> String {
         let shape = parameters.count == 1
             ? singleParameterShape(funcName: funcName, parameter: parameters[0])
             : tupleShape(funcName: funcName, parameters: parameters)
-        let property = equalityExpression(lhs: shape.call, rhs: shape.call, kind: equalityKind)
+        let call = isAsync ? "(await \(shape.call))" : shape.call
+        let property = equalityExpression(lhs: call, rhs: call, kind: equalityKind)
         return makeTestStubExpression(
             testFunctionName: "\(funcName)_isDeterministic",
             seed: seed,

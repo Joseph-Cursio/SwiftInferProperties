@@ -133,11 +133,21 @@ extension InteractiveTriage {
         customGenerator: ((String) -> String?)? = nil
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName),
-              let returnTypeText = returnType(from: evidence.signature),
+              let funcName = functionName(from: evidence.displayName) else {
+            return nil
+        }
+        // Async candidates (clock-deterministic-annotated; the discover gate
+        // admits no other async) render as `(P0) async -> U` in the evidence
+        // signature — detect the marker, then parse the de-sugared form so
+        // the existing parameter/return extraction stays untouched.
+        let isAsync = evidence.signature.contains(" async ->")
+        let signature = isAsync
+            ? evidence.signature.replacingOccurrences(of: " async ->", with: " ->")
+            : evidence.signature
+        guard let returnTypeText = returnType(from: signature),
               let parsed = functionParameters(
                   displayName: evidence.displayName,
-                  signature: evidence.signature
+                  signature: signature
               ) else {
             return nil
         }
@@ -157,7 +167,8 @@ extension InteractiveTriage {
             funcName: funcName,
             parameters: parameters,
             seed: seed,
-            equalityKind: equalityKind(forTypeText: returnTypeText)
+            equalityKind: equalityKind(forTypeText: returnTypeText),
+            isAsync: isAsync
         )
     }
 
