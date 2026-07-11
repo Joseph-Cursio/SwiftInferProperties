@@ -79,7 +79,8 @@ public enum InteractionTraceEmitter {
         let reducerCall = ActionSequenceStubEmitter.makeReducerCall(inputs.candidate)
         let applyStep = ActionSequenceStubEmitter.makeApplyStep(
             shape: inputs.candidate.signatureShape,
-            reducerCall: reducerCall
+            reducerCall: reducerCall,
+            isAsync: inputs.candidate.isAsync
         )
         let seed = ActionSequenceStubEmitter.seedTuple(for: inputs.candidate)
         var lines: [String] = [
@@ -109,7 +110,9 @@ public enum InteractionTraceEmitter {
         lines.append("@Suite(\"SwiftInferTraces — \(inputs.candidate.qualifiedName)\")")
         lines.append("struct \(suiteIdentifier(for: inputs.candidate)) {")
         lines.append("    @Test(\"Replay of failing action sequence (deterministic seed)\")")
-        lines.append("    func replay() {")
+        // Async candidate (clock-deterministic-admitted, workplan Phase 4)
+        // → async @Test awaiting the apply step; sync traces byte-identical.
+        lines.append("    func replay()\(inputs.candidate.isAsync ? " async" : "") {")
         lines.append("        var rng = Xoshiro(seed: (\(seed)))")
         lines.append("        let generator = ActionSequenceFactory.actionSequence(")
         lines.append("            forCaseIterable: \(inputs.candidate.actionTypeName).self,")

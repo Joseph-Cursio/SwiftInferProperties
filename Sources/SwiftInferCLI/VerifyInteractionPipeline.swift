@@ -60,12 +60,14 @@ public enum VerifyInteractionPipeline {
         if matched.purity == .hiddenMutability {
             throw VerifyInteractionError.hiddenMutability(reducer: matched.qualifiedName)
         }
-        // Workplan Phase 4 breadcrumb — the emitter is synchronous, and an
-        // async reducer would otherwise surface as a confusing workdir
-        // COMPILE failure ("call is 'async' but is not marked with
-        // 'await'"). Rejecting here names the deferred slice and asks for
-        // the example (same clean-rejection posture as hiddenMutability).
-        if matched.isAsync {
+        // Workplan Phase 4, reducer-path slice — async reducers are admitted
+        // under the clock-determinism claim (`@ClockDeterministic` /
+        // `/// @lint.determinism clock_deterministic`): the emitter awaits
+        // the reducer from an async `main()`. Bare async stays rejected —
+        // un-annotated async would make seeded sequence replays
+        // nondeterministic (same conjunction posture as the ViewModel action
+        // surface and the generic-laws determinism template).
+        if matched.isAsync, matched.isClockDeterministic == false {
             throw VerifyInteractionError.asyncReducer(reducer: matched.qualifiedName)
         }
         let resolvedModuleName = userModuleName ?? target

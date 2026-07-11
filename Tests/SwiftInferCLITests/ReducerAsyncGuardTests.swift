@@ -1,14 +1,14 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
-/// The async-reducer breadcrumb (collections/async workplan Phase 4): the
+/// The async-reducer guard (collections/async workplan Phase 4): the
 /// shape matchers never inspected effect specifiers, so an async reducer
 /// becomes a candidate — and would fail the verify workdir *compile* with a
-/// confusing await error. The pipeline now rejects it cleanly with the
-/// error that names the deferred reducer-path async slice and asks for the
-/// real-world example.
+/// confusing await error. Bare async is rejected cleanly (seeded replays
+/// would be nondeterministic); the clock-determinism claim admits it to
+/// the async emit path (`ReducerAsyncSliceTests`).
 @Suite
 struct ReducerAsyncGuardTests {
 
@@ -40,7 +40,8 @@ struct ReducerAsyncGuardTests {
             switch error {
             case let .asyncReducer(reducer):
                 #expect(reducer == "Counter.reduce")
-                #expect(error.description.contains("reducer-path verify emitter is currently synchronous"))
+                #expect(error.description.contains("async without the clock-determinism claim"))
+                #expect(error.description.contains("@ClockDeterministic"))
 
             default:
                 Issue.record("expected .asyncReducer, got \(error)")

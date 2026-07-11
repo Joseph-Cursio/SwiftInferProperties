@@ -73,12 +73,18 @@ public enum ActionSequenceStubEmitter {
         let actionFirst = inputs.candidate.carrierKind == .reSwift  // ReSwift: reducer(action, state)
         let reducerCall = makeReducerCall(inputs.candidate)
         let stateInit = "\(inputs.candidate.stateTypeName)()"
+        // Workplan Phase 4, reducer-path slice — an admitted async candidate
+        // (clock-deterministic; the pipeline rejects the bare-async rest)
+        // awaits every reducer call and runs from an async `main()`. Sync
+        // candidates emit byte-identical output to the pre-slice form.
+        let isAsync = inputs.candidate.isAsync
         let applyStep = makeApplyStep(
             shape: inputs.candidate.signatureShape,
             reducerCall: reducerCall,
             isTCA: isTCA,
             actionFirst: actionFirst,
-            isMobius: isMobius
+            isMobius: isMobius,
+            isAsync: isAsync
         )
         let perStepCheck = makePerStepCheck(
             invariant: inputs.invariant,
@@ -86,7 +92,8 @@ public enum ActionSequenceStubEmitter {
             reducerCall: reducerCall,
             isTCA: isTCA,
             actionFirst: actionFirst,
-            isMobius: isMobius
+            isMobius: isMobius,
+            isAsync: isAsync
         )
         let postLoopCheck = makePostLoopCheck(
             invariant: inputs.invariant,
@@ -94,7 +101,8 @@ public enum ActionSequenceStubEmitter {
             reducerCall: reducerCall,
             isTCA: isTCA,
             actionFirst: actionFirst,
-            isMobius: isMobius
+            isMobius: isMobius,
+            isAsync: isAsync
         )
         return assembleStub(
             inputs: inputs,
@@ -149,7 +157,12 @@ public enum ActionSequenceStubEmitter {
         lines.append(contentsOf: probeDeclarationLines(inputs))
         lines.append("@main")
         lines.append("struct InteractionVerifier {")
-        lines.append("    static func main() {")
+        // `@main` supports `static func main() async`; the marker appears
+        // only for an async candidate, so all-sync verifiers stay
+        // byte-identical to the pre-Phase-4 output (mirrors the ViewModel
+        // slice's wrapper flip).
+        let effectMarker = inputs.candidate.isAsync ? " async" : ""
+        lines.append("    static func main()\(effectMarker) {")
         // M8.D.2 — env-var-driven single-sequence replay. nil
         // (env var unset) → full N-sequence loop (M8.D.1 posture).
         // Non-nil → skip-then-replay-one (the shrinker's primitive).

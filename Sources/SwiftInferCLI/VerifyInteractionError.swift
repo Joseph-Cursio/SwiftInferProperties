@@ -18,14 +18,14 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
     /// action sequences against it produces meaningless outcomes
     /// because state persists across runs. PRD §4.1 `-∞` veto.
     case hiddenMutability(reducer: String)
-    /// Collections/async workplan Phase 4 breadcrumb — the reducer is
-    /// `async`, and the reducer-path verify emitter is synchronous
-    /// (deliberately: async reducers were non-idiomatic in every
-    /// discovered framework when the ViewModel slice shipped). Without
-    /// this guard the emitted workdir fails to COMPILE with a confusing
-    /// "call is 'async' but is not marked with 'await'". Surfacing this
-    /// error on a real corpus is the agreed trigger for building the
-    /// reducer-path async slice.
+    /// Collections/async workplan Phase 4, reducer-path slice — the
+    /// reducer is `async` WITHOUT the clock-determinism claim. Annotated
+    /// async reducers (`@ClockDeterministic` / `/// @lint.determinism
+    /// clock_deterministic`) are admitted: the emitter awaits the reducer
+    /// from an async `main()`. Bare async stays rejected because seeded
+    /// sequence replays would be nondeterministic; without this guard the
+    /// emitted workdir would fail to COMPILE with a confusing "call is
+    /// 'async' but is not marked with 'await'".
     case asyncReducer(reducer: String)
 
     public var description: String {
@@ -57,12 +57,12 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
                 + "the static state to the State type."
 
         case let .asyncReducer(reducer):
-            return "swift-infer verify-interaction: reducer '\(reducer)' is async — the "
-                + "reducer-path verify emitter is currently synchronous. You have found "
-                + "the real-world case the async reducer slice was deferred for "
-                + "(collections/async workplan Phase 4): please report this example so "
-                + "that slice gets built. The ViewModel action surface already supports "
-                + "async via @ClockDeterministic."
+            return "swift-infer verify-interaction: reducer '\(reducer)' is async without "
+                + "the clock-determinism claim — seeded action-sequence replays against it "
+                + "would be nondeterministic. If the reducer's timing is injected (Clock "
+                + "parameter, no wall-clock reads), declare it with @ClockDeterministic or "
+                + "'/// @lint.determinism clock_deterministic' and verify-interaction will "
+                + "await it from an async verifier."
         }
     }
 }
