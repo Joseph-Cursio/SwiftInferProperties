@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 /// The interaction-path async-main slice (collections/async workplan
 /// Phase 4 follow-up): clock-deterministic-annotated async actions join

@@ -1,7 +1,7 @@
 import Foundation
-import Testing
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
+import Testing
 
 /// The async-veto relaxation on the generic-laws path (collections/async
 /// workplan Phase 4): a seeded `async` function synthesizes a determinism

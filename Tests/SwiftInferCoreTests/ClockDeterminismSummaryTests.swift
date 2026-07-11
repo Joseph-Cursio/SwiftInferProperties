@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCore
+import Testing
 
 /// Scan-time population of `FunctionSummary.isClockDeterministic`
 /// (collections/async workplan Phase 4) — the same posture as

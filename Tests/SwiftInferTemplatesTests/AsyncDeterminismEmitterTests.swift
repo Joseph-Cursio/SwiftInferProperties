@@ -1,6 +1,6 @@
 import SwiftInferCore
-import Testing
 @testable import SwiftInferTemplates
+import Testing
 
 /// The async determinism stub (collections/async workplan Phase 4): two
 /// sequentially awaited calls compared for equality, inside the backend's
