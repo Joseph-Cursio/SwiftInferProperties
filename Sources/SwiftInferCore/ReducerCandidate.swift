@@ -141,6 +141,16 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// from before this field keep loading.
     public let isAsync: Bool
 
+    /// `true` when the reducer declaration carries the clock-determinism
+    /// claim (`/// @lint.determinism clock_deterministic` /
+    /// `@ClockDeterministic`) — the conjunction gate under which an
+    /// `async` reducer is admitted to the verify path (collections/async
+    /// workplan Phase 4, reducer-path slice: un-annotated async would make
+    /// seeded sequence replays nondeterministic). Same posture as
+    /// `ViewModelAction.isClockDeterministic`. Decoded with a `false`
+    /// default so persisted candidates from before this field keep loading.
+    public let isClockDeterministic: Bool
+
     public init(
         location: String,
         enclosingTypeName: String?,
@@ -154,7 +164,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         moduleName: String? = nil,
         stateIDTypeName: String? = nil,
         stateFields: [StateFieldInfo] = [],
-        isAsync: Bool = false
+        isAsync: Bool = false,
+        isClockDeterministic: Bool = false
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -169,6 +180,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.stateIDTypeName = stateIDTypeName
         self.stateFields = stateFields
         self.isAsync = isAsync
+        self.isClockDeterministic = isClockDeterministic
     }
 
     /// Item 2 slice 3 — a copy of this candidate with its `actionCases`
@@ -189,9 +201,10 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             moduleName: moduleName,
             stateIDTypeName: stateIDTypeName,
             stateFields: stateFields,
-            // Dropping this here would silently bypass the pipeline's
+            // Dropping these here would silently bypass the pipeline's
             // async-reducer guard after resolver enrichment.
-            isAsync: isAsync
+            isAsync: isAsync,
+            isClockDeterministic: isClockDeterministic
         )
     }
 
@@ -266,6 +279,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case stateIDTypeName
         case stateFields
         case isAsync
+        case isClockDeterministic
     }
 
     public init(from decoder: Decoder) throws {
@@ -306,6 +320,12 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         // Workplan Phase 4 breadcrumb — pre-async-guard records default to
         // the synchronous reading.
         self.isAsync = try container.decodeIfPresent(Bool.self, forKey: .isAsync) ?? false
+        // Workplan Phase 4 reducer-path slice — pre-slice records carry no
+        // clock-determinism claim.
+        self.isClockDeterministic = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .isClockDeterministic
+        ) ?? false
     }
 }
 

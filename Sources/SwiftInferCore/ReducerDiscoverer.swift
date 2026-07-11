@@ -1,4 +1,5 @@
 import Foundation
+import SwiftEffectInference
 import SwiftParser
 import SwiftSyntax
 
@@ -344,7 +345,11 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
             actionTypeName: ReducerDiscoverer.qualifyIfNested(actionType, enclosing: enclosingTypeName, nested: nested),
             carrierKind: carrierKind,
             purity: purity,
-            isAsync: node.signature.effectSpecifiers?.asyncSpecifier != nil
+            isAsync: node.signature.effectSpecifiers?.asyncSpecifier != nil,
+            // Third EffectAnnotationParser use (after FunctionSummary and
+            // ViewModelAction) — the claim under which the pipeline admits
+            // an async candidate instead of rejecting `.asyncReducer`.
+            isClockDeterministic: EffectAnnotationParser.isClockDeterministic(declaration: node)
         )
     }
 
