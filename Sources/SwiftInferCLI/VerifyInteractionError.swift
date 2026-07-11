@@ -18,6 +18,15 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
     /// action sequences against it produces meaningless outcomes
     /// because state persists across runs. PRD §4.1 `-∞` veto.
     case hiddenMutability(reducer: String)
+    /// Collections/async workplan Phase 4 breadcrumb — the reducer is
+    /// `async`, and the reducer-path verify emitter is synchronous
+    /// (deliberately: async reducers were non-idiomatic in every
+    /// discovered framework when the ViewModel slice shipped). Without
+    /// this guard the emitted workdir fails to COMPILE with a confusing
+    /// "call is 'async' but is not marked with 'await'". Surfacing this
+    /// error on a real corpus is the agreed trigger for building the
+    /// reducer-path async slice.
+    case asyncReducer(reducer: String)
 
     public var description: String {
         switch self {
@@ -46,6 +55,14 @@ public enum VerifyInteractionError: Error, CustomStringConvertible, Equatable {
                 + "sequences against it produces non-deterministic outcomes; PRD §4.1 "
                 + "vetoes the verify path here. Rework the reducer to be pure or move "
                 + "the static state to the State type."
+
+        case let .asyncReducer(reducer):
+            return "swift-infer verify-interaction: reducer '\(reducer)' is async — the "
+                + "reducer-path verify emitter is currently synchronous. You have found "
+                + "the real-world case the async reducer slice was deferred for "
+                + "(collections/async workplan Phase 4): please report this example so "
+                + "that slice gets built. The ViewModel action surface already supports "
+                + "async via @ClockDeterministic."
         }
     }
 }

@@ -343,7 +343,8 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
             stateTypeName: ReducerDiscoverer.qualifyIfNested(stateType, enclosing: enclosingTypeName, nested: nested),
             actionTypeName: ReducerDiscoverer.qualifyIfNested(actionType, enclosing: enclosingTypeName, nested: nested),
             carrierKind: carrierKind,
-            purity: purity
+            purity: purity,
+            isAsync: node.signature.effectSpecifiers?.asyncSpecifier != nil
         )
     }
 

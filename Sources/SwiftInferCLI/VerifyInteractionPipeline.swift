@@ -60,6 +60,14 @@ public enum VerifyInteractionPipeline {
         if matched.purity == .hiddenMutability {
             throw VerifyInteractionError.hiddenMutability(reducer: matched.qualifiedName)
         }
+        // Workplan Phase 4 breadcrumb — the emitter is synchronous, and an
+        // async reducer would otherwise surface as a confusing workdir
+        // COMPILE failure ("call is 'async' but is not marked with
+        // 'await'"). Rejecting here names the deferred slice and asks for
+        // the example (same clean-rejection posture as hiddenMutability).
+        if matched.isAsync {
+            throw VerifyInteractionError.asyncReducer(reducer: matched.qualifiedName)
+        }
         let resolvedModuleName = userModuleName ?? target
         let inputs = ActionSequenceStubEmitter.Inputs(
             candidate: matched,

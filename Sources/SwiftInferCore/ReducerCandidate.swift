@@ -130,6 +130,17 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// `case binding(BindingAction<State>)` action.
     public let stateFields: [StateFieldInfo]
 
+    /// `true` when the reducer function is declared `async`. The shape
+    /// matchers never inspected effect specifiers, so async reducers match
+    /// and become candidates — but the reducer-path verify emitter is
+    /// synchronous, and an unguarded async candidate fails the workdir
+    /// *compile* with a confusing await error. Carried so the pipeline can
+    /// reject cleanly (`VerifyInteractionError.asyncReducer` — the agreed
+    /// trigger signal for building the reducer-path async slice, workplan
+    /// Phase 4). Decoded with a `false` default so persisted candidates
+    /// from before this field keep loading.
+    public let isAsync: Bool
+
     public init(
         location: String,
         enclosingTypeName: String?,
@@ -142,7 +153,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         actionCases: [ActionCaseInfo] = [],
         moduleName: String? = nil,
         stateIDTypeName: String? = nil,
-        stateFields: [StateFieldInfo] = []
+        stateFields: [StateFieldInfo] = [],
+        isAsync: Bool = false
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -156,6 +168,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.moduleName = moduleName
         self.stateIDTypeName = stateIDTypeName
         self.stateFields = stateFields
+        self.isAsync = isAsync
     }
 
     /// Item 2 slice 3 — a copy of this candidate with its `actionCases`
@@ -175,7 +188,10 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             actionCases: newCases,
             moduleName: moduleName,
             stateIDTypeName: stateIDTypeName,
-            stateFields: stateFields
+            stateFields: stateFields,
+            // Dropping this here would silently bypass the pipeline's
+            // async-reducer guard after resolver enrichment.
+            isAsync: isAsync
         )
     }
 
@@ -249,6 +265,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case moduleName
         case stateIDTypeName
         case stateFields
+        case isAsync
     }
 
     public init(from decoder: Decoder) throws {
@@ -286,6 +303,9 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             [StateFieldInfo].self,
             forKey: .stateFields
         ) ?? []
+        // Workplan Phase 4 breadcrumb — pre-async-guard records default to
+        // the synchronous reading.
+        self.isAsync = try container.decodeIfPresent(Bool.self, forKey: .isAsync) ?? false
     }
 }
 
