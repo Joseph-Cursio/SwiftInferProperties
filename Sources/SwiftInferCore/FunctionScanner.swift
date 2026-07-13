@@ -55,7 +55,8 @@ public enum FunctionScanner {
         return ScannedCorpus(
             summaries: visitor.summaries,
             identities: visitor.identities,
-            typeDecls: visitor.typeDecls
+            typeDecls: visitor.typeDecls,
+            restricted: visitor.restricted
         )
     }
 
@@ -73,13 +74,20 @@ public enum FunctionScanner {
         var summaries: [FunctionSummary] = []
         var identities: [IdentityCandidate] = []
         var typeDecls: [TypeDecl] = []
+        var restricted: [RestrictedFunction] = []
         for fileURL in swiftFiles {
             let corpus = try scanCorpus(file: fileURL)
             summaries.append(contentsOf: corpus.summaries)
             identities.append(contentsOf: corpus.identities)
             typeDecls.append(contentsOf: corpus.typeDecls)
+            restricted.append(contentsOf: corpus.restricted)
         }
-        return ScannedCorpus(summaries: summaries, identities: identities, typeDecls: typeDecls)
+        return ScannedCorpus(
+            summaries: summaries,
+            identities: identities,
+            typeDecls: typeDecls,
+            restricted: restricted
+        )
     }
 }
 
@@ -95,6 +103,9 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     var summaries: [FunctionSummary] = []
     var identities: [IdentityCandidate] = []
     var typeDecls: [TypeDecl] = []
+    /// Functions set aside because no external test could call them, kept with the reason so a
+    /// seed that names one can rescue it.
+    var restricted: [RestrictedFunction] = []
     let file: String
     let converter: SourceLocationConverter
     var typeStack: [String] = []
@@ -152,17 +163,43 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         //     modifier. Extends the explicit-`internal` function rule to the
         //     type level. SAFE — internal-BY-default types (our fixtures) carry
         //     no token, so they're untouched; only deliberately-marked types.
-        let modifiers = node.modifiers.map(\.name.text)
-        if modifiers.contains("private") || modifiers.contains("fileprivate")
-            || modifiers.contains("internal")
-            || typeStack.contains(where: { $0.hasPrefix("_") })
-            || hasSPIAttribute(node)
-            || isNestedLocalFunction(node)
-            || enclosingTypeNonPublic.contains(true) {
+        //
+        // Cycle A2 — the *reason* is now kept rather than thrown away. Discovery is unchanged:
+        // these never enter `summaries`, so no unseeded run surfaces them and the precision the
+        // cycles above bought is intact. But a **seed** naming one of them is an explicit request
+        // from a producer that has already examined the function, and silently overruling an
+        // explicit request is not precision — it is a confident zero. The calibration above was
+        // measured on library corpora, where `private` really is an implementation detail; an app
+        // has no public API at all, and its pure logic lives almost entirely in `private` helpers
+        // inside views and view models. Dropping them without a word is what left the tool with
+        // nothing to say about application code.
+        if let restriction = accessRestriction(of: node) {
+            restricted.append(
+                RestrictedFunction(summary: makeSummary(from: node), restriction: restriction)
+            )
             return .skipChildren
         }
         summaries.append(makeSummary(from: node))
         return .skipChildren
+    }
+
+    /// Why an external test could not call `node`, or `nil` when it could.
+    private func accessRestriction(of node: FunctionDeclSyntax) -> AccessRestriction? {
+        let modifiers = node.modifiers.map(\.name.text)
+
+        if modifiers.contains("private") || modifiers.contains("fileprivate") {
+            return .notVisibleToTests
+        }
+        if isNestedLocalFunction(node) {
+            return .nestedLocal
+        }
+        if modifiers.contains("internal")
+            || hasSPIAttribute(node)
+            || typeStack.contains(where: { $0.hasPrefix("_") })
+            || enclosingTypeNonPublic.contains(true) {
+            return .internalOrSPI
+        }
+        return nil
     }
 
     /// Cycle 151 (Lever D) — true if the function carries an `@_spi(...)`

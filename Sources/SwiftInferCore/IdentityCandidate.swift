@@ -53,14 +53,21 @@ public struct ScannedCorpus: Sendable, Equatable {
     public let identities: [IdentityCandidate]
     public let typeDecls: [TypeDecl]
 
+    /// Functions the scan found but set aside as uncallable from an external test. Never part of
+    /// `summaries`, so discovery is unaffected — but a seed naming one can rescue it, with the
+    /// access caveat attached.
+    public let restricted: [RestrictedFunction]
+
     public init(
         summaries: [FunctionSummary],
         identities: [IdentityCandidate],
-        typeDecls: [TypeDecl]
+        typeDecls: [TypeDecl],
+        restricted: [RestrictedFunction] = []
     ) {
         self.summaries = summaries
         self.identities = identities
         self.typeDecls = typeDecls
+        self.restricted = restricted
     }
 
     public static let empty = Self(summaries: [], identities: [], typeDecls: [])

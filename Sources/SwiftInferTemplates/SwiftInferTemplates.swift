@@ -222,18 +222,27 @@ public enum TemplateRegistry {
         /// `[String: TypeShape]` index built from `typeDecls`.
         public let typeDecls: [TypeDecl]
 
+        /// Functions the scan set aside as uncallable from an external test. A separate channel
+        /// from `summaries` for the same reason `effectAnnotations` is: these are not
+        /// property-test candidates by default and never enter the template pipeline. A **seed**
+        /// naming one is an explicit request, though, and can rescue it — with the access caveat
+        /// attached, so the reader learns what refactor unlocks the test.
+        public let restrictedFunctions: [RestrictedFunction]
+
         public init(
             suggestions: [Suggestion],
             inverseElementPairs: [InverseElementPair],
             summaries: [FunctionSummary] = [],
             typeDecls: [TypeDecl] = [],
-            effectAnnotations: [EffectAnnotationAdvice] = []
+            effectAnnotations: [EffectAnnotationAdvice] = [],
+            restrictedFunctions: [RestrictedFunction] = []
         ) {
             self.suggestions = suggestions
             self.inverseElementPairs = inverseElementPairs
             self.summaries = summaries
             self.typeDecls = typeDecls
             self.effectAnnotations = effectAnnotations
+            self.restrictedFunctions = restrictedFunctions
         }
     }
 
@@ -272,7 +281,8 @@ public enum TemplateRegistry {
             inverseElementPairs: inverseElementPairs,
             summaries: corpus.summaries,
             typeDecls: corpus.typeDecls,
-            effectAnnotations: EffectAnnotationAdvice.adviceList(from: corpus.summaries)
+            effectAnnotations: EffectAnnotationAdvice.adviceList(from: corpus.summaries),
+            restrictedFunctions: corpus.restricted
         )
     }
 }

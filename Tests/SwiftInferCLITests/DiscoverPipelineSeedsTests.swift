@@ -154,18 +154,16 @@ struct DiscoverPipelineSeedsTests {
         #expect(recording.text.contains("Template: determinism") == false)
     }
 
-    @Test("Determinism requires a total, free/static, value-returning function")
+    @Test("Determinism requires a total, value-returning function that takes inputs")
     func determinismQualificationFilters() throws {
         let directory = try writeDPFixture(name: "GenericQualify", contents: """
         func risky(_ s: String) throws -> Int { Int(s) ?? 0 }
-        struct Box { func get(_ key: String) -> Int { 0 } }
         func noParams() -> Int { 0 }
         """)
         defer { try? FileManager.default.removeItem(at: directory) }
         let manifest = SeedManifest(seeds: [
             .init(file: "Source.swift", line: 1, symbol: "risky"),
-            .init(file: "Source.swift", line: 2, symbol: "get"),
-            .init(file: "Source.swift", line: 3, symbol: "noParams")
+            .init(file: "Source.swift", line: 2, symbol: "noParams")
         ])
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
@@ -174,8 +172,42 @@ struct DiscoverPipelineSeedsTests {
             seedManifest: manifest,
             output: recording
         )
-        // Throwing, instance-method, and no-parameter functions are all excluded.
+        // A throwing function has no value to compare on some inputs; a nullary one has nothing
+        // to vary. Both remain excluded — these are shape requirements for *writing* the law.
         #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    @Test("A seeded instance method earns the determinism law")
+    func determinismCoversInstanceMethods() throws {
+        // This used to be bundled into the exclusions above, on the grounds that "an instance
+        // method could read mutable `self`" — the same blanket refusal the producing linter made,
+        // in the same words. It is redundant twice over. The seed IS the purity claim: a producer
+        // that analyses what a method reads from `self` has already answered the objection, and
+        // this end cannot re-litigate it anyway. And the law is self-falsifying — a hidden state
+        // read is exactly what running it catches. Refusing to write a law because it might fail
+        // is refusing to test.
+        //
+        // The cost was concrete: in an app almost all logic is instance methods, so every seed the
+        // linter handed over was discarded here and the pipeline reported nothing.
+        let directory = try writeDPFixture(name: "GenericInstance", contents: """
+        struct Box {
+            func get(_ key: String) -> Int { key.count }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 2, symbol: "get")
+        ])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording
+        )
+
+        #expect(recording.text.contains("Template: determinism"))
+        #expect(recording.text.contains("get(_:)"))
     }
 
     @Test("No determinism laws without a seed manifest")

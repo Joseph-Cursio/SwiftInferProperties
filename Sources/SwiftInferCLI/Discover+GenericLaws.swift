@@ -22,7 +22,8 @@ extension SwiftInferCommand.Discover {
         for manifest: SeedManifest,
         summaries: [FunctionSummary],
         covered: [Suggestion],
-        diagnostics: any DiagnosticOutput
+        diagnostics: any DiagnosticOutput,
+        restrictedFunctions: [RestrictedFunction] = []
     ) -> [Suggestion] {
         let seedKeys = Set(manifest.seeds.map { genericLawKey(file: $0.file, symbol: $0.symbol) })
         guard !seedKeys.isEmpty else { return [] }
@@ -43,6 +44,26 @@ extension SwiftInferCommand.Discover {
             seen.insert(key)
             synthesized.append(determinismSuggestion(for: summary))
         }
+
+        // A seed naming a function the scan set aside is an explicit request from a producer that
+        // has already examined it. The scan is right that no external test can *call* it — but the
+        // answer to that is to say so, not to drop the reader's best candidate without a word.
+        for restricted in restrictedFunctions {
+            let summary = restricted.summary
+            let key = genericLawKey(file: summary.location.file, symbol: summary.name)
+            guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
+            guard qualifiesForDeterminism(summary) else { continue }
+            seen.insert(key)
+            synthesized.append(
+                determinismSuggestion(for: summary, accessRestriction: restricted.restriction)
+            )
+            diagnostics.writeDiagnostic(
+                "note: seeded function `\(summary.name)` "
+                    + "(\(summary.location.file):\(summary.location.line)) is not reachable from a "
+                    + "test as written — \(restricted.restriction.remedy)"
+            )
+        }
+
         if synthesized.isEmpty == false {
             diagnostics.writeDiagnostic(
                 "synthesized \(synthesized.count) generic determinism law(s) for seeded functions"
@@ -51,10 +72,20 @@ extension SwiftInferCommand.Discover {
         return synthesized
     }
 
-    /// A seeded function earns the determinism law when it takes inputs, returns
-    /// a value, runs without throwing, and is free or `static` (an instance
-    /// method could read mutable `self`). The lint seed already vouched for
-    /// purity; these are the shape requirements for writing the law.
+    /// A seeded function earns the determinism law when it takes inputs, returns a value, and
+    /// runs without throwing. These are the shape requirements for *writing* the law; the lint
+    /// seed is what vouches for purity.
+    ///
+    /// **Instance methods qualify.** They used to be refused here — "an instance method could read
+    /// mutable `self`" — which was the same blanket refusal the producing linter made, in the same
+    /// words, and it is redundant twice over. The seed is the purity claim: a producer that
+    /// analyses what a method reads from `self` has already answered the objection, and this end
+    /// has no way to re-litigate it anyway. And the law is self-falsifying — as its own "why this
+    /// might be wrong" says, a hidden state read "would falsify it, which is exactly what the test
+    /// catches." Refusing to *write* a law because it might fail is refusing to test.
+    ///
+    /// The cost of the old gate was concrete: in an app almost all logic is instance methods, so
+    /// every seed the linter handed over was discarded here, and the pipeline reported nothing.
     ///
     /// **Async relaxation (collections/async workplan Phase 4):** an `async`
     /// function qualifies only when it carries the clock-determinism claim
@@ -74,10 +105,19 @@ extension SwiftInferCommand.Discover {
         if summary.isAsync {
             guard summary.isClockDeterministic else { return false }
         }
-        return summary.containingTypeName == nil || summary.isStatic
+        return true
     }
 
-    private static func determinismSuggestion(for summary: FunctionSummary) -> Suggestion {
+    /// The determinism law for `summary`.
+    ///
+    /// `accessRestriction` is non-nil when the scan set the function aside as uncallable from an
+    /// external test and only a seed rescued it. The law is still worth stating — the reader asked
+    /// for it, and it is the right law — but it cannot be *run* until the access is widened, so the
+    /// caveat leads with the remedy rather than leaving them to discover it at verify time.
+    private static func determinismSuggestion(
+        for summary: FunctionSummary,
+        accessRestriction: AccessRestriction? = nil
+    ) -> Suggestion {
         let evidence = makeEvidence(for: summary)
         let signal = summary.isAsync
             ? Signal(
@@ -103,6 +143,9 @@ extension SwiftInferCommand.Discover {
                     + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
                 "The return type must be Equatable for the law to compile."
             ]
+        let caveats = accessRestriction.map { restriction in
+            ["No test can run this law as written: \(restriction.remedy)"] + whyMightBeWrong
+        } ?? whyMightBeWrong
         return Suggestion(
             templateName: "determinism",
             evidence: [evidence],
@@ -110,7 +153,7 @@ extension SwiftInferCommand.Discover {
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(
                 whySuggested: ["\(evidence.displayName) \(evidence.signature)", signal.formattedLine],
-                whyMightBeWrong: whyMightBeWrong
+                whyMightBeWrong: caveats
             ),
             identity: SuggestionIdentity(
                 canonicalInput: "determinism|" + canonicalInput(for: summary, evidence: evidence)

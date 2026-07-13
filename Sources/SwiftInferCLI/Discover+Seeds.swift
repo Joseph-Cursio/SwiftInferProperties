@@ -62,7 +62,8 @@ extension SwiftInferCommand.Discover {
                 for: seedManifest,
                 summaries: pipeline.summaries,
                 covered: pipeline.suggestions,
-                diagnostics: diagnostics
+                diagnostics: diagnostics,
+                restrictedFunctions: pipeline.restrictedFunctions
             )
         }
 
@@ -89,7 +90,8 @@ extension SwiftInferCommand.Discover {
             for: seedManifest,
             summaries: pipeline.summaries,
             covered: focused,
-            diagnostics: diagnostics
+            diagnostics: diagnostics,
+            restrictedFunctions: pipeline.restrictedFunctions
         )
         return focused + generic
     }

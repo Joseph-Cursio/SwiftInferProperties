@@ -66,6 +66,10 @@ extension SwiftInferCommand.Discover {
         /// lives outside the template engine.
         public let summaries: [FunctionSummary]
 
+        /// Functions the scan set aside as uncallable from an external test. Consulted only when
+        /// a seed names one.
+        public let restrictedFunctions: [RestrictedFunction]
+
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
@@ -74,7 +78,8 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
-            summaries: [FunctionSummary] = []
+            summaries: [FunctionSummary] = [],
+            restrictedFunctions: [RestrictedFunction] = []
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
@@ -84,6 +89,7 @@ extension SwiftInferCommand.Discover {
             self.typeShapesByName = typeShapesByName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries
+            self.restrictedFunctions = restrictedFunctions
         }
     }
 
@@ -145,7 +151,8 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: hints.chainHints,
             typeShapesByName: hints.typeShapesByName,
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
-            summaries: artifacts.summaries
+            summaries: artifacts.summaries,
+            restrictedFunctions: artifacts.restrictedFunctions
         )
     }
 
