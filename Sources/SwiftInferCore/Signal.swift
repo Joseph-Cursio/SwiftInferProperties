@@ -28,6 +28,24 @@ public struct Signal: Sendable, Equatable {
         /// Seed-driven rather than inferred from the signature.
         case deterministicPurity
 
+        /// B3 — a member of shape `(Int) -> Range<Int>`: give me a part index,
+        /// get the slice of the whole it covers. That signature is a *partition*,
+        /// and essentially nothing else has it by accident, so it carries a
+        /// primary-evidence weight (+40).
+        ///
+        /// Deliberately a **signature** signal rather than a name one. The
+        /// road-test's type calls this `byteRange(ofChunk:)`, but another author
+        /// writes `slice(at:)`, and a template keyed on vocabulary would find one
+        /// and miss the other — which is the mistake the effect lattice made when
+        /// it graded `createRequest` by its prefix.
+        case indexToRangeSignature
+
+        /// B3 — a member of shape `(Int) -> Double` over the same index domain as
+        /// an `indexToRangeSignature` member: a progress fraction. Corroborating
+        /// evidence (+20), and the place the real bugs live — an empty whole whose
+        /// progress never reaches 1.0 is a bar that hangs forever.
+        case progressFractionSignature
+
         // Negative (non-veto)
         case sideEffectPenalty
         case generatorQualityPenalty
