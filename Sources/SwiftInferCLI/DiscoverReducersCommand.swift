@@ -69,7 +69,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
+            let directory = try TargetDirectory.resolve(target)
             let rendered = try Self.runPipeline(directory: directory, pinRaw: reducer)
             print(rendered, terminator: "")
         }

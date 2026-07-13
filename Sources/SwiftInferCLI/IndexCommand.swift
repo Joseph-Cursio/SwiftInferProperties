@@ -184,7 +184,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
+            let directory = try TargetDirectory.resolve(target)
             // Default to includePossible=true for the index — the index
             // is a recall surface and users filter via
             // `swift-infer query --min-score`. Pass --no-include-possible

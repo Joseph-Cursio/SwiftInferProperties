@@ -76,7 +76,7 @@ extension SwiftInferCommand {
 
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
+            let directory = try TargetDirectory.resolve(target)
             try Self.run(
                 target: target,
                 workingDirectory: workingDirectory,

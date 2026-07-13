@@ -46,7 +46,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
+            let directory = try TargetDirectory.resolve(target)
             let outcome = try Self.scaffold(
                 directory: directory,
                 testDirectory: testDir.map { URL(fileURLWithPath: $0) },

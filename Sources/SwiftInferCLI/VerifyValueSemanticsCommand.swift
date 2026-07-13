@@ -50,7 +50,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let directory = URL(fileURLWithPath: "Sources").appendingPathComponent(target)
+            let directory = try TargetDirectory.resolve(target)
             let workParent = FileManager.default.temporaryDirectory
                 .appendingPathComponent("vs-verify-\(UUID().uuidString)")
             try FileManager.default.createDirectory(at: workParent, withIntermediateDirectories: true)

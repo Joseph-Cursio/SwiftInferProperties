@@ -103,6 +103,11 @@ extension SwiftInferCommand.Discover {
         verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
+        // A run over an empty corpus must not be mistaken for a run that found nothing in your
+        // code. Only the empty case speaks: stderr is byte-stable here, and a per-run line naming
+        // an absolute path would differ from machine to machine.
+        TargetDirectory.warnIfEmpty(directory, to: diagnostics)
+
         let setup = resolvePipelineSetup(
             directory: directory,
             includePossible: includePossible,
