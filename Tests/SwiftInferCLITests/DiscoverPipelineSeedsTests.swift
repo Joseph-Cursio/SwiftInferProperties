@@ -67,18 +67,31 @@ struct DiscoverPipelineSeedsTests {
         #expect(recording.text == "0 suggestions.")
     }
 
-    @Test("An empty manifest focuses to zero suggestions, not 'no filter'")
-    func emptyManifestFocusesToZero() throws {
+    @Test("An empty manifest applies no focus rather than discarding everything")
+    func emptyManifestAppliesNoFocus() throws {
+        // This used to assert `"0 suggestions."`, on the reading that "focus on these zero
+        // functions" means "keep zero suggestions". Defensible for a manifest someone sat down and
+        // wrote. But nobody writes this manifest — it is whatever the producing linter found, and a
+        // linter with a blind spot emits an empty one. The filter then threw away every genuine
+        // suggestion and reported a confident zero, which made running the documented lint → infer
+        // pipeline *strictly worse* than running swift-infer alone.
+        //
+        // Focusing on nothing is not a request anyone makes. It is what a producer that found
+        // nothing looks like, and the honest answer is to say so and not filter.
         let directory = try writeDPFixture(name: "SeedsEmpty", contents: Self.twoCandidates)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
             includePossible: false,
             seedManifest: SeedManifest(seeds: []),
-            output: recording
+            output: recording,
+            diagnostics: diagnostics
         )
-        #expect(recording.text == "0 suggestions.")
+
+        #expect(recording.text.contains("2 suggestions."))
+        #expect(diagnostics.joined.contains("warning"))
     }
 
     @Test("An off-version manifest is consumed best-effort with a warning")

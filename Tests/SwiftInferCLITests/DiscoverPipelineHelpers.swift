@@ -57,6 +57,10 @@ final class DPRecordingOutput: DiscoverOutput, @unchecked Sendable {
 final class DPRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
     var lines: [String] = []
 
+    /// Every diagnostic as one string, for assertions that care what was said rather than how
+    /// many times it was said.
+    var joined: String { lines.joined(separator: "\n") }
+
     func writeDiagnostic(_ text: String) {
         lines.append(text)
     }

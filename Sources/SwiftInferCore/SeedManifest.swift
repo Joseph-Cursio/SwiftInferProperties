@@ -65,9 +65,17 @@ public enum SeedFocus {
     /// seeded: a property over a seeded function is relevant even if its
     /// partner wasn't independently flagged.
     ///
-    /// An empty manifest focuses to nothing (returns `[]`) — "focus on these
-    /// zero functions" means zero suggestions, not "no filter".
+    /// **An empty manifest does not focus.** It used to: "focus on these zero functions" was read
+    /// as "keep zero suggestions". That is defensible in isolation and ruinous in a pipeline,
+    /// because the manifest is not authored by hand — it is whatever the linter happened to find.
+    /// A linter with a blind spot emits an empty manifest, the filter throws away every genuine
+    /// suggestion, and the reader is told "0 suggestions" by a tool that found several. Running
+    /// the documented `lint → infer` pipeline was then *strictly worse* than running `swift-infer`
+    /// alone. Focusing on nothing is not a request anyone makes; it is what a producer that found
+    /// nothing looks like, and the honest response is to say so and not filter.
     public static func filter(_ suggestions: [Suggestion], to manifest: SeedManifest) -> [Suggestion] {
+        guard !manifest.seeds.isEmpty else { return suggestions }
+
         let keys = Set(manifest.seeds.map { key(file: $0.file, symbol: $0.symbol) })
         return suggestions.filter { suggestion in
             suggestion.evidence.contains { evidence in
