@@ -29,6 +29,75 @@ struct DiscoverEmptySeedManifestTests {
     }
     """
 
+    // MARK: - A manifest of kernels is not a manifest of nothing
+
+    @Test("an extractable kernel is announced, never focused on")
+    func kernelIsReportedRatherThanFocusedOn() throws {
+        // A kernel seed's symbol names the *impure method the pure logic is trapped inside*. Focus
+        // on it and this tool must refuse the function (async/throws refute purity) and then report
+        // `kept 0` for a codebase with property-testable logic in it — the confident zero this suite
+        // exists to prevent, arriving by a new route.
+        //
+        // So it is neither focused on nor silently dropped: it is NAMED, with the one instruction
+        // that unblocks it.
+        let directory = try writeDPFixture(name: "SeedsKernel", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: SeedManifest(seeds: [
+                SeedManifest.Seed(
+                    file: "Upload.swift", line: 73, symbol: "uploadRemainingChunks",
+                    kind: .extractableKernel
+                )
+            ]),
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        // Named, with its location and its remedy.
+        #expect(diagnostics.joined.contains("1 extractable kernel(s)"))
+        #expect(diagnostics.joined.contains("uploadRemainingChunks"))
+        #expect(diagnostics.joined.contains("extract it into a named value type"))
+
+        // And the run was NOT narrowed to it: both real suggestions survive.
+        #expect(recording.text.contains("normalize(_:)"))
+        #expect(recording.text.contains("sanitize(_:)"))
+
+        // The "no analysable seeds" warning must not claim the manifest was empty — it was not, and
+        // the remedy for "the linter found nothing" is the opposite of "extract these first".
+        #expect(diagnostics.joined.contains("must be done by hand first"))
+        #expect(diagnostics.joined.contains("the seeds manifest is empty") == false)
+    }
+
+    @Test("an unrecognised kind is skipped loudly, not focused on silently")
+    func unknownKindWarns() throws {
+        let directory = try writeDPFixture(name: "SeedsUnknown", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: SeedManifest(seeds: [
+                SeedManifest.Seed(
+                    file: "View.swift", line: 57, symbol: "fetchLocalFiles",
+                    kind: .unrecognised("pure-closure")
+                )
+            ]),
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        #expect(diagnostics.joined.contains("warning"))
+        #expect(diagnostics.joined.contains("'pure-closure', which this build does not recognise"))
+        #expect(recording.text.contains("normalize(_:)"))
+    }
+
     @Test("an empty manifest surfaces every suggestion rather than none")
     func emptyManifestDoesNotFocusToNothing() throws {
         let directory = try writeDPFixture(name: "SeedsEmpty", contents: Self.twoCandidates)
@@ -95,7 +164,9 @@ struct DiscoverEmptySeedManifestTests {
         )
 
         #expect(diagnostics.joined.contains("warning"))
-        #expect(diagnostics.joined.contains("none of the 1 seed(s) matched"))
+        // "analysable" now qualifies the count, because a manifest can also carry seeds that name
+        // work a human must do first — and those never focus, so they must not be counted here.
+        #expect(diagnostics.joined.contains("none of the 1 analysable seed(s) matched"))
     }
 
     @Test("a matching manifest still focuses — the fix does not disable seeding")

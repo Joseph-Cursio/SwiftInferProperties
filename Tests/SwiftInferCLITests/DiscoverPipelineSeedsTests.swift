@@ -49,7 +49,9 @@ struct DiscoverPipelineSeedsTests {
         #expect(recording.text.contains("1 suggestion."))
         #expect(recording.text.contains("normalize(_:)"))
         #expect(recording.text.contains("sanitize(_:)") == false)
-        #expect(diagnostics.lines.contains { $0.contains("focused on 1 seed(s): kept 1 of 2 suggestion(s)") })
+        #expect(diagnostics.lines.contains {
+            $0.contains("focused on 1 analysable seed(s): kept 1 of 2 suggestion(s)")
+        })
     }
 
     @Test("Seeding by a different filename (basename mismatch) focuses to nothing")
@@ -109,7 +111,7 @@ struct DiscoverPipelineSeedsTests {
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("1 suggestion."))
-        #expect(diagnostics.lines.contains { $0.contains("version 99 is not the supported version 1") })
+        #expect(diagnostics.lines.contains { $0.contains("version 99 is not the supported version 2") })
     }
 
     // MARK: - Generic laws (broaden discover: seeded pure fn → determinism)
