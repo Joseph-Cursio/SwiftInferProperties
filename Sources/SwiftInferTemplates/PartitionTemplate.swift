@@ -45,13 +45,19 @@ public enum PartitionTemplate {
     }
 
     static func accumulatedSignals(for shape: PartitionShape) -> [Signal] {
+        let evidence: String
+        switch shape.tilerForm {
+        case .range:
+            evidence = "`\(shape.tiler.name)` maps a part index to a range of the whole — that is a "
+                + "partition, and its parts must tile the whole exactly"
+
+        case .slice:
+            evidence = "`\(shape.tiler.name)` takes the whole and a part index and returns a part of "
+                + "it — that is a partition, and its parts must reassemble the whole exactly"
+        }
+
         var signals: [Signal] = [
-            Signal(
-                kind: .indexToRangeSignature,
-                weight: 40,
-                detail: "`\(shape.tiler.name)` maps a part index to a range of the whole — that is a "
-                    + "partition, and its parts must tile the whole exactly"
-            )
+            Signal(kind: .indexToRangeSignature, weight: 40, detail: evidence)
         ]
 
         if let progress = shape.progress {
@@ -71,14 +77,38 @@ public enum PartitionTemplate {
     /// The laws — each stated as *what it rejects*, because a law that rejects nothing is a
     /// tautology, and a tautology is what this template exists to replace.
     static func makeCaveats(for shape: PartitionShape) -> [String] {
+        // The tiling law and the totality law both read differently depending on what the tiler hands
+        // back. Stating a *range* law at a function that returns bytes would send the reader looking
+        // for upper bounds it does not have — a law the reader cannot encode is worse than silence.
+        let tiling: String
+        let totality: String
+        switch shape.tilerForm {
+        case .range:
+            tiling = "The tiling law is: consecutive parts abut and never overlap — part `i`'s upper "
+                + "bound is part `i+1`'s lower bound — and together they cover the whole exactly. It "
+                + "rejects an off-by-one in the last part, a chunker that drops the remainder, and "
+                + "one that double-counts a boundary byte."
+            totality = "TOTALITY: an index outside the valid range must yield an empty range, not a "
+                + "trap. It rejects the `dropFirst(negative)` family, which crashes rather than "
+                + "returning nothing — and a negative index is exactly what a corrupt server counter "
+                + "supplies."
+
+        case .slice:
+            tiling = "The tiling law is: CONCATENATING the parts, in index order, reproduces the "
+                + "whole EXACTLY — same bytes, same length, nothing dropped and nothing repeated. "
+                + "Assert on the join, not on each part: a chunker that drops the remainder and one "
+                + "that double-counts a boundary byte both produce parts that look individually "
+                + "plausible, and only the join tells you."
+            totality = "TOTALITY: an index outside the valid range must yield an EMPTY part, not a "
+                + "trap. Generate negative indices and indices past the end **on purpose** — this is "
+                + "the clause that rejects the `dropFirst(negative)` family, which crashes rather "
+                + "than returning nothing, and a negative index is exactly what a corrupt server "
+                + "counter supplies."
+        }
+
         var caveats: [String] = [
-            "The tiling law is: consecutive parts abut and never overlap — part `i`'s upper bound is "
-                + "part `i+1`'s lower bound — and together they cover the whole exactly. It rejects "
-                + "an off-by-one in the last part, a chunker that drops the remainder, and one that "
-                + "double-counts a boundary byte.",
-            "TOTALITY: an index outside the valid range must yield an empty range, not a trap. It "
-                + "rejects the `dropFirst(negative)` family, which crashes rather than returning "
-                + "nothing — and a negative index is exactly what a corrupt server counter supplies.",
+            tiling,
+            totality,
             "The part count must be `ceil(whole / partSize)` — not `whole / partSize`, which silently "
                 + "drops a trailing partial part, and not `whole / partSize + 1`, which invents an "
                 + "empty one when the division is exact."

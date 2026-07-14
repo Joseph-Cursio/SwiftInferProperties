@@ -158,4 +158,133 @@ struct PartitionTemplateTests {
         // No progress member ⇒ no progress law to state.
         #expect(caveats.contains("including for an empty whole") == false)
     }
+
+    // MARK: - The OTHER way to write a tiler (B12)
+
+    /// **The shape three cold readers actually wrote.**
+    ///
+    /// This template recognised only `(Int) -> Range<Int>` — the signature the *reference*
+    /// implementation happened to use. Three independent readers, each performing the extraction the
+    /// linter demanded, each wrote `chunk(of:at:) -> Data` instead. None was offered a partition law,
+    /// so none reached the unclamped-resume-counter bug that the law's own caveat names. The template
+    /// was keyed on one author's signature, which is the "keyed on names" mistake in a better
+    /// disguise.
+    @Test("a tiler that returns the PART, not the range, is still a partition")
+    func sliceTilerIsATiler() throws {
+        let members = [
+            member(
+                "chunk",
+                parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
+                returns: "Data"
+            ),
+            member(
+                "progress",
+                parameters: [parameter("afterSending", "index", "Int")],
+                returns: "Double"
+            )
+        ]
+
+        let shape = try #require(PartitionPairing.candidates(in: members).first)
+        #expect(shape.tilerForm == .slice)
+        #expect(shape.tiler.name == "chunk")
+        #expect(shape.progress?.name == "progress")
+    }
+
+    /// The tiling law reads differently for each form, and stating a *range* law at a function that
+    /// hands back bytes would send the reader hunting for upper bounds it does not have. A law the
+    /// reader cannot encode is worse than silence.
+    @Test("a slice tiler is told to assert on the JOIN, not on bounds")
+    func sliceTilerStatesTheJoinLaw() {
+        let shape = PartitionShape(
+            typeName: "ChunkPlan",
+            tiler: member(
+                "chunk",
+                parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
+                returns: "Data"
+            ),
+            tilerForm: .slice,
+            progress: nil
+        )
+        let caveats = PartitionTemplate.makeCaveats(for: shape).joined(separator: " ")
+
+        #expect(caveats.contains("CONCATENATING the parts"))
+        #expect(caveats.contains("Assert on the join"))
+        // The totality clause — the one that reaches the resume-counter bug — survives in slice form.
+        #expect(caveats.contains("EMPTY part, not a trap"))
+        #expect(caveats.contains("dropFirst(negative)"))
+        // And it must NOT tell a byte-returning function about upper bounds it does not have.
+        #expect(caveats.contains("part `i`'s upper bound") == false)
+    }
+
+    /// **The false positive this nearly shipped, and the reason the slice form needs a tiebreak.**
+    ///
+    /// `(C, Int) -> C` is a filter-with-a-scalar, a prefix, a page, *and* a partition — the signature
+    /// does not choose. Uncorroborated, the template proposed a tiling law over `above(_:threshold:)`,
+    /// which tiles nothing; a reader would have watched it fail for a reason that is not a bug. The
+    /// range form needs no tiebreak precisely because `Range<Int>` already made the claim.
+    @Test("a filter with a scalar parameter is NOT a partition")
+    func filterWithScalarIsNotATiler() {
+        let members = [
+            member(
+                "above",
+                parameters: [parameter(nil, "items", "[Int]"), parameter("threshold", "threshold", "Int")],
+                returns: "[Int]",
+                type: "Library"
+            )
+        ]
+
+        #expect(PartitionPairing.candidates(in: members).isEmpty)
+    }
+
+    @Test("a prefix taking a COUNT is not a partition either")
+    func prefixByCountIsNotATiler() {
+        let members = [
+            member(
+                "first",
+                parameters: [parameter(nil, "docs", "[String]"), parameter("count", "count", "Int")],
+                returns: "[String]",
+                type: "Library"
+            )
+        ]
+
+        #expect(PartitionPairing.candidates(in: members).isEmpty)
+    }
+
+    /// A one-parameter slice form is not distinctive at all — every `item(at:) -> [Tag]` lookup in
+    /// existence has that signature. Requiring the whole to appear, with the type the function
+    /// returns, is what makes "these are parts *of that*" legible from the signature alone.
+    @Test("a lookup returning a sub-collection is not a partition")
+    func lookupWithoutTheWholeIsNotATiler() {
+        let members = [
+            member(
+                "tags",
+                parameters: [parameter("at", "index", "Int")],
+                returns: "[String]",
+                type: "Library"
+            )
+        ]
+
+        #expect(PartitionPairing.candidates(in: members).isEmpty)
+    }
+
+    /// When a type offers both, the range form is the stronger evidence and wins.
+    @Test("a range tiler outranks a slice tiler on the same type")
+    func rangeTilerWins() throws {
+        let members = [
+            member(
+                "chunk",
+                parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
+                returns: "Data"
+            ),
+            member(
+                "byteRange",
+                parameters: [parameter("ofChunk", "index", "Int")],
+                returns: "Range<Int>"
+            )
+        ]
+
+        let shape = try #require(PartitionPairing.candidates(in: members).first)
+        #expect(shape.tilerForm == .range)
+        #expect(shape.tiler.name == "byteRange")
+    }
 }
