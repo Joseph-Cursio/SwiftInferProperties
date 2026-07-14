@@ -49,8 +49,11 @@ struct DiscoverPipelineSeedsTests {
         #expect(recording.text.contains("1 suggestion."))
         #expect(recording.text.contains("normalize(_:)"))
         #expect(recording.text.contains("sanitize(_:)") == false)
+        // "seedable" qualifies the denominator: a law whose subject a pure-function manifest could
+        // never name (a state machine's impure mutators) is not counted against the seed match,
+        // because it was never in the search the seeds narrow.
         #expect(diagnostics.lines.contains {
-            $0.contains("focused on 1 analysable seed(s): kept 1 of 2 suggestion(s)")
+            $0.contains("focused on 1 analysable seed(s): kept 1 of 2 seedable suggestion(s)")
         })
     }
 

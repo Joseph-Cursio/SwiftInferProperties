@@ -21,6 +21,11 @@ extension SwiftInferCommand.Discover {
         public let suggestions: [Suggestion]
         public let packageRoot: URL?
 
+        /// Refutable laws the tier cut hid — see `VisibilityCut`. Consumed by the final-answer
+        /// guard in `focus(_:with:diagnostics:)`, which is the only stage that can see whether
+        /// hiding them left the reader with an honest empty or a confident pile of tautologies.
+        public let tierHiddenRefutableLaws: [Suggestion]
+
         /// Inverse-element witness pairs (M8.3) — feeds M8.4.a's
         /// `RefactorBridgeOrchestrator.proposals(from:inverseElementPairs:)`
         /// to surface `Group` conformance proposals when the corpus
@@ -73,6 +78,7 @@ extension SwiftInferCommand.Discover {
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
+            tierHiddenRefutableLaws: [Suggestion] = [],
             inverseElementPairs: [InverseElementPair] = [],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
@@ -83,6 +89,7 @@ extension SwiftInferCommand.Discover {
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
+            self.tierHiddenRefutableLaws = tierHiddenRefutableLaws
             self.inverseElementPairs = inverseElementPairs
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
@@ -137,7 +144,7 @@ extension SwiftInferCommand.Discover {
         // TestLifter M3.2 — promote LiftedSuggestions, share TemplateEngine's
         // GeneratorSelection pass, suppress duplicates already covered by
         // the +20 cross-validation seam. Survivors get +50 testBodyPattern.
-        let visible = combineAndFilter(
+        let cut = combineAndFilter(
             artifacts: artifacts,
             liftedArtifacts: liftedArtifacts,
             setup: setup,
@@ -149,8 +156,9 @@ extension SwiftInferCommand.Discover {
             liftedArtifacts: liftedArtifacts
         )
         return PipelineResult(
-            suggestions: visible,
+            suggestions: cut.visible,
             packageRoot: setup.packageRoot,
+            tierHiddenRefutableLaws: cut.hiddenRefutable,
             inverseElementPairs: artifacts.inverseElementPairs,
             equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
             consumerProducerChainHintsByIdentity: hints.chainHints,
@@ -234,7 +242,7 @@ extension SwiftInferCommand.Discover {
         setup: PipelineSetup,
         verifyEvidenceByIdentity: [String: VerifyEvidence],
         diagnostics: any DiagnosticOutput
-    ) -> [Suggestion] {
+    ) -> VisibilityCut {
         let promotedLifted = LiftedSuggestionPipeline.promote(
             lifted: liftedArtifacts.liftedSuggestions,
             templateEngineSuggestions: artifacts.suggestions,
@@ -269,17 +277,39 @@ extension SwiftInferCommand.Discover {
             to: combined,
             evidenceByIdentity: verifyEvidenceByIdentity
         )
-        return graded.filter { suggestion in
-            let tier = suggestion.score.tier
-            // `.suppressed` is never shown — not even with
-            // `--include-possible` (`Tier.suppressed` doc; `renderStats`
-            // assumes it). V1.67 makes this explicit: verify-disproven
-            // picks land here as `.suppressed`, and the prior
-            // `includePossible || isVisibleByDefault` filter would have
-            // leaked them through under `--include-possible`.
-            guard tier != .suppressed else { return false }
-            return setup.includePossible || tier.isVisibleByDefault
-        }
+        // `.suppressed` is never shown — not even with `--include-possible`
+        // (`Tier.suppressed` doc; `renderStats` assumes it). V1.67 makes this
+        // explicit: verify-disproven picks land here as `.suppressed`, and the
+        // prior `includePossible || isVisibleByDefault` filter would have
+        // leaked them through under `--include-possible`.
+        //
+        // A suppressed pick is a law we **checked and refuted**, not one we failed to
+        // show, so it is excluded from `hiddenRefutable` as well: the final answer
+        // guard must never resurrect it.
+        let live = graded.filter { $0.score.tier != .suppressed }
+        let visible = live.filter { setup.includePossible || $0.score.tier.isVisibleByDefault }
+        let visibleIdentities = Set(visible.map(\.identity))
+
+        return VisibilityCut(
+            visible: visible,
+            hiddenRefutable: live.filter { candidate in
+                Refutability.isRefutable(candidate) && !visibleIdentities.contains(candidate.identity)
+            }
+        )
+    }
+
+    /// The tier cut's verdict, plus what it hid that could have failed.
+    ///
+    /// The hidden laws are carried rather than dropped because **this stage cannot tell whether
+    /// hiding them is honest.** On its own, a run with nothing above the confidence bar should
+    /// print "0 suggestions" and let the reader ask for `--include-possible` — that is the tier
+    /// cut working. But `--seeds` synthesizes determinism laws *downstream of here*, and those
+    /// turn the same run into a confident "6 suggestions", every one of them a tautology, with
+    /// the only refutable law in the bin. Whether this cut told the truth depends on what a later
+    /// stage does, so the judgement belongs there, and the evidence has to reach it.
+    struct VisibilityCut {
+        let visible: [Suggestion]
+        let hiddenRefutable: [Suggestion]
     }
 
     /// Bundle of resolved settings the discover pipeline pulls from

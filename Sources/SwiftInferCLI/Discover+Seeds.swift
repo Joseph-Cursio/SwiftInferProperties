@@ -57,32 +57,54 @@ extension SwiftInferCommand.Discover {
         // and the reader needs to be told which, because the remedy differs.
         if focusing.isEmpty {
             diagnostics.writeDiagnostic(noFocusWarning(for: seedManifest, pipeline: pipeline))
-            return pipeline.suggestions + synthesizeGenericLaws(
+            let unfocused = pipeline.suggestions + synthesizeGenericLaws(
                 for: analysableManifest,
                 summaries: pipeline.summaries,
                 covered: pipeline.suggestions,
                 diagnostics: diagnostics,
                 restrictedFunctions: pipeline.restrictedFunctions
             )
+            // This path synthesizes determinism laws too, so it can hand back a confident pile of
+            // tautologies exactly as the focused path can — the tier cut may still be holding the
+            // only law that could fail. Same guard, same reason.
+            return guardFinalAnswer(unfocused, pipeline: pipeline, diagnostics: diagnostics)
         }
 
         let focused = SeedFocus.filter(pipeline.suggestions, to: analysableManifest)
+
+        // A seed-independent law was never *in* the search the seeds narrow — its subject is impure,
+        // and a pure-function manifest cannot name one. Counting it as a "seed match" would be a lie,
+        // and filtering it out would throw away the only law in the run that can fail.
+        let exempt = SeedFocus.seedIndependent(in: focused)
+        let matched = focused.count - exempt.count
+
         diagnostics.writeDiagnostic(
-            "focused on \(focusing.count) analysable seed(s): kept \(focused.count) "
-                + "of \(pipeline.suggestions.count) suggestion(s)"
+            "focused on \(focusing.count) analysable seed(s): kept \(matched) "
+                + "of \(pipeline.suggestions.count - exempt.count) seedable suggestion(s)"
         )
+
+        if !exempt.isEmpty {
+            diagnostics.writeDiagnostic(
+                "kept \(exempt.count) law(s) no seed manifest could name — their subjects are impure "
+                    + "(a state machine's moves are `Void`-returning mutators), so the linter's "
+                    + "pure-function rule can never seed them. They were never in the search the "
+                    + "seeds narrow, so the focus does not get to discard them."
+            )
+        }
 
         // Seeds that match nothing are the other way to end up at a confident zero. The focus is
         // honoured — the user asked for it — but they are told it emptied the run, and why.
-        if focused.isEmpty, !pipeline.suggestions.isEmpty {
+        let seedableFound = pipeline.suggestions.count - exempt.count
+        if matched == 0, seedableFound > 0 {
             diagnostics.writeDiagnostic(
                 "warning: none of the \(focusing.count) analysable seed(s) matched any of the "
-                    + "\(pipeline.suggestions.count) suggestion(s) found, so the focus discarded "
+                    + "\(seedableFound) seedable suggestion(s) found, so the focus discarded "
                     + "all of them. The join is on (file basename, bare symbol) — a mismatch here "
                     + "usually means the linter and swift-infer disagree about which functions are "
-                    + "candidates. Re-run without --seeds to see what was discarded."
+                    + "candidates."
             )
         }
+
         // Broaden: a seeded pure function that no template matched still earns
         // the generic determinism law, so `--seeds` always surfaces something.
         let generic = synthesizeGenericLaws(
@@ -92,7 +114,99 @@ extension SwiftInferCommand.Discover {
             diagnostics: diagnostics,
             restrictedFunctions: pipeline.restrictedFunctions
         )
-        return focused + generic
+        return guardFinalAnswer(focused + generic, pipeline: pipeline, diagnostics: diagnostics)
+    }
+
+    /// **The reader is never handed a non-empty answer containing zero refutable laws, when this
+    /// run found one.**
+    ///
+    /// Two filters stand between discovery and the reader — the tier cut and the seed focus — and
+    /// each can independently discard the last law that could fail. On the road-test fixture both
+    /// did. The guard is applied *here*, once, on the finished answer, rather than inside either
+    /// filter, and the reason is worth stating because the first attempt got it wrong:
+    ///
+    /// **A filter cannot tell, on its own, whether hiding a law is honest.** When the tier cut hides
+    /// every `Possible` pick and the run then prints "0 suggestions", that is the cut working as
+    /// designed — a `Possible` law is a guess, defaulting to hide guesses is the point, and
+    /// `--include-possible` is right there. Guarding *inside* the cut would make that flag a no-op.
+    /// What turns the same hiding into a lie is a *later* stage: `--seeds` synthesizes determinism
+    /// laws downstream, and the reader is handed a confident "6 suggestions", every one of them a
+    /// tautology, with the only refutable claim in the run in the bin. Whether a filter told the
+    /// truth is therefore a property of the **final answer**, and only this stage can see it.
+    ///
+    /// So: an **empty** answer stays empty — that is an honest "nothing confident here". A
+    /// **non-empty** answer that cannot fail, when something in the run could have, is the lie, and
+    /// the laws come back.
+    private static func guardFinalAnswer(
+        _ answer: [Suggestion],
+        pipeline: PipelineResult,
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        // An honest empty. Say nothing and hide nothing: the reader was told there is no confident
+        // finding, which is true, and `--include-possible` is the documented next step.
+        guard !answer.isEmpty else { return answer }
+
+        let pool = pipeline.suggestions + pipeline.tierHiddenRefutableLaws
+        let guarded = Refutability.preservingLastRefutable(filtered: answer, from: pool)
+        guard !guarded.rescued.isEmpty else { return guarded.kept }
+
+        // A rescue is a bug report. Which upstream stage is at fault depends on which filter ate
+        // the law, and the two demand opposite fixes — so they get opposite messages.
+        let tierHidden = Set(pipeline.tierHiddenRefutableLaws.map(\.identity))
+        let scored = guarded.rescued.filter { tierHidden.contains($0.identity) }
+        let unjoined = guarded.rescued.filter { !tierHidden.contains($0.identity) }
+
+        if !scored.isEmpty {
+            diagnostics.writeDiagnostic(scoringRescueWarning(for: scored))
+        }
+        if !unjoined.isEmpty {
+            diagnostics.writeDiagnostic(focusRescueWarning(for: unjoined))
+        }
+        return guarded.kept
+    }
+
+    /// Said when the *tier cut* hid the only law in the run that could fail, and the answer the
+    /// reader would otherwise have received was a pile of tautologies.
+    ///
+    /// Built from an array, not a `+` chain: a long concatenation of interpolated strings is the
+    /// shape that blows the Swift type-checker's time budget, and it does so on a CI runner's
+    /// slower toolchain long before it does so locally.
+    private static func scoringRescueWarning(for rescued: [Suggestion]) -> String {
+        let subjects = rescued
+            .map { "`\($0.templateName)` (\($0.score.total), \($0.score.tier.rawValue))" }
+            .joined(separator: ", ")
+        return [
+            "warning: \(subjects) scored below the default visibility cut, but every other",
+            "suggestion in this run is a tautology — so it is shown anyway rather than handing you",
+            "a confident answer that cannot fail. Treat this as a SCORING bug: a law that can be",
+            "refuted is worth more than any number of laws that cannot, and the score does not yet",
+            "say so."
+        ].joined(separator: " ")
+    }
+
+    /// Said when the *seed focus* discarded the only law in the run that could fail.
+    ///
+    /// This names the **linter** as the culprit on purpose. A rescue here does not mean the focus is
+    /// too aggressive; it means the manifest was missing a function it should have contained, and
+    /// the commonest way that happens is the linter failing to see methods on a value type it
+    /// *itself* asked the reader to extract. Sending the reader to `--seeds` would send them to the
+    /// wrong repo — which is exactly what the old warning did, while discarding the law anyway.
+    ///
+    /// Note this is NOT `seedIndependentTemplates`, and the distinction is why both exist. That set
+    /// means *a manifest could never name this subject* — an impure `Void` mutator — a permanent,
+    /// principled exemption. This is the opposite claim: the subject is an ordinary pure function a
+    /// manifest **should** have named, and the join failed regardless. That is a producer defect,
+    /// and the rescue only keeps the reader from paying for it.
+    private static func focusRescueWarning(for rescued: [Suggestion]) -> String {
+        let subjects = rescued.map { "`\($0.templateName)`" }.joined(separator: ", ")
+        return [
+            "warning: the focus discarded every law in this run that could fail, so \(subjects) is",
+            "shown anyway — narrowing a reader down to nothing but tautologies is not a narrowing,",
+            "it is an erasure. Treat this as a LINTER bug, not a swift-infer one: the subject is an",
+            "ordinary pure function the seed manifest should have named and did not. The usual cause",
+            "is a shape the linter cannot see — methods on a value type it just told you to extract,",
+            "for one. Seed it, and this warning goes away."
+        ].joined(separator: " ")
     }
 
     /// The two ways a manifest can carry no *analysable* seed, told apart — because "the linter
