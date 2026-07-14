@@ -113,7 +113,7 @@ extension TemplateRegistry {
             context: context,
             into: &collector
         )
-        collectPartitionSuggestions(
+        collectApplicationShapeSuggestions(
             summaries: summaries,
             into: &collector
         )
@@ -145,23 +145,6 @@ extension TemplateRegistry {
                 carrierKindResolver: context.carrierKindResolver
             ) {
                 collector.record(suggestion, generatorType: generatorType(for: pair.operation))
-            }
-        }
-    }
-
-    /// B3 — the partition / tiling law: the parts must reconstitute the whole.
-    ///
-    /// The catalogue was algebraic and calibrated on libraries. Application code is not shaped like
-    /// an algebra: the most valuable property in a file-sync client is not a semigroup, it is *the
-    /// chunks tile the payload exactly* — and no template in the set could say it. That gap is why a
-    /// real app produced six suggestions and **zero refutable claims**.
-    private static func collectPartitionSuggestions(
-        summaries: [FunctionSummary],
-        into collector: inout SuggestionCollector
-    ) {
-        for shape in PartitionPairing.candidates(in: summaries) {
-            if let suggestion = PartitionTemplate.suggest(for: shape) {
-                collector.record(suggestion, generatorType: shape.typeName)
             }
         }
     }

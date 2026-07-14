@@ -45,12 +45,23 @@ struct TemplateRegistryDiscoveryTests {
             bodySignals: .empty
         )
         let suggestions = TemplateRegistry.discover(in: [matching, nonMatching])
-        #expect(suggestions.allSatisfy { $0.evidence.first?.location.file == "A.swift" })
         let templates = Set(suggestions.map(\.templateName))
+
         // `normalize(String) -> String` is idempotence-only — String was
         // removed from the monotonicity codomain set (a normalize is not
         // lexicographically order-preserving).
-        #expect(templates == ["idempotence"])
+        //
+        // B3 grew the catalogue, and this fixture stopped being a non-match. `tickle(from: Int, to:
+        // String) -> Bool` IS a predicate by shape, and the predicate template is right to say so —
+        // *every* Bool-returning function is one. That breadth is why the template carries the lowest
+        // weight in the catalogue (20): it lands in the Possible tier, hidden unless the reader passes
+        // `--include-possible`. Available when you go looking; silent when you are not.
+        #expect(templates == ["idempotence", "predicate"])
+
+        // The idempotence finding still comes only from A.swift — the new predicate is the only thing
+        // B.swift contributes, and it is a legitimate reading of that signature.
+        let idempotence = suggestions.filter { $0.templateName == "idempotence" }
+        #expect(idempotence.allSatisfy { $0.evidence.first?.location.file == "A.swift" })
     }
 
     @Test("Directory scan integration over a single fixture file")

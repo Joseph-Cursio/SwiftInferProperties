@@ -46,6 +46,29 @@ public struct Signal: Sendable, Equatable {
         /// progress never reaches 1.0 is a bar that hangs forever.
         case progressFractionSignature
 
+        /// B3 — `(T, T) -> Bool` with **both operands positional**: a comparator,
+        /// the thing you hand to `sorted(by:)`. It owes a *strict weak ordering*,
+        /// which is not a stylistic nicety — a comparator that is not one can crash
+        /// `sorted(by:)`, and no example test tells you which triple broke it (+40).
+        ///
+        /// The positional-operand requirement is what separates a comparator from a
+        /// binary *predicate* of the same shape: `isImmediateChild(_ path:, of:)`
+        /// is also `(String, String) -> Bool`, but its second operand carries a
+        /// distinguished role. In Swift the argument label is part of the signature,
+        /// so this remains a signature test rather than a name test.
+        case comparatorSignature
+
+        /// B3 — a `Bool`-returning function that is not a comparator: a predicate.
+        /// Weak evidence (+20) *on purpose* — see `PredicateTemplate`, which is the
+        /// one role in this catalogue that carries **no free law**.
+        case predicateSignature
+
+        /// B3 — two void-returning mutators on one type whose names are a
+        /// direction pair (`navigateToFolder` / `navigateUp`): a state machine with
+        /// an inverse. It owes `up ∘ down == id` plus an invariant that survives any
+        /// action sequence (+35).
+        case inverseMutatorPair
+
         // Negative (non-veto)
         case sideEffectPenalty
         case generatorQualityPenalty
