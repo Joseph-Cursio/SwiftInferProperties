@@ -105,16 +105,178 @@ extension SwiftInferCommand.Discover {
             )
         }
 
+        // A law the code OWES is never discarded for want of a seed.
+        let owed = keepRoleEntailedLaws(
+            in: pipeline.suggestions,
+            alreadyShown: focused,
+            diagnostics: diagnostics
+        )
+
+        // A seeded function whose real law the tier cut hid does not get a tautology instead.
+        let promoted = promoteTierHiddenLaws(
+            for: analysableManifest,
+            pipeline: pipeline,
+            alreadyShown: focused + owed,
+            diagnostics: diagnostics
+        )
+
         // Broaden: a seeded pure function that no template matched still earns
         // the generic determinism law, so `--seeds` always surfaces something.
+        let covered = focused + owed + promoted
         let generic = synthesizeGenericLaws(
             for: analysableManifest,
             summaries: pipeline.summaries,
-            covered: focused,
+            covered: covered,
             diagnostics: diagnostics,
             restrictedFunctions: pipeline.restrictedFunctions
         )
-        return guardFinalAnswer(focused + generic, pipeline: pipeline, diagnostics: diagnostics)
+        return guardFinalAnswer(covered + generic, pipeline: pipeline, diagnostics: diagnostics)
+    }
+
+    /// **Never replace a function's real law with a tautology about that same function.**
+    ///
+    /// The determinism law is a *fallback*: `synthesizeGenericLaws` emits it for a seeded pure
+    /// function that **no template matched**, so that `--seeds` always surfaces something. Its entire
+    /// justification is "I had nothing better." When a template *did* match and the tier cut merely
+    /// hid it, that justification evaporates — and without this promotion the tool does something
+    /// indefensible:
+    ///
+    /// > `isImmediateChild` earns a **predicate** law, which scores `Possible` and is hidden. The
+    /// > fallback then fires *because nothing is covering that function* and prints
+    /// > `isImmediateChild(x) == isImmediateChild(x)`. The reader is shown a tautology about the very
+    /// > function whose real law is sitting in the bin — and the real law is the one carrying *"state
+    /// > the reference definition in one English sentence; that sentence is the property"*, which is
+    /// > the only thing in the run that leads to the bug living in that predicate.
+    ///
+    /// The `Refutability` guard does not catch this, and should not: the answer as a whole *does*
+    /// contain a refutable law (the comparator on `precedes`), so the invariant is satisfied. This is
+    /// a per-function claim, not a per-run one — hence a separate rule.
+    ///
+    /// **The linter has already vouched for this function.** It is in the manifest precisely because
+    /// the linter judged it worth property-testing. Proposing a law for it and then hiding that law
+    /// on confidence grounds, while printing a tautology in its place, is the scorer overruling the
+    /// producer to no one's benefit. A weak real law beats a strong fake one.
+    /// **The focus narrows guesses. It never hides a law the code OWES.**
+    ///
+    /// A cold reader found this the hard way, and their sentence is the specification: *"Doing what
+    /// the tool asked **lost** coverage."* They performed the extraction the linter demanded, the
+    /// linter then failed to seed the value type it had just told them to create (it cannot see
+    /// through a computed-property read), the focus therefore found no match for the `partition` law
+    /// discovery had produced — and dropped it. The single sharpest law in the run, about the code
+    /// the whole exercise is aimed at, silently vanished *because the reader complied*.
+    ///
+    /// `Refutability`'s run-level guard does not save it, and cannot: that guard only fires when the
+    /// answer would otherwise be **all tautologies**, and by then the run had a comparator and a
+    /// predicate law. One good law was buying silence for the loss of another. A guarantee of
+    /// *"at least one refutable law somewhere"* is not a guarantee about the law you needed.
+    ///
+    /// So the rule is stated on the law itself, not on the run. A **role-entailed** law — totality,
+    /// an ordering, a tiling — is one a *correct* implementation cannot fail, so surfacing it can
+    /// never waste the reader's time on a false alarm. There is therefore nothing for the focus to
+    /// protect them *from*, and no honest reason to hide it. Conjectures (`monotonicity`,
+    /// `idempotence`, guessed from a name) are exactly what focusing exists to narrow, and they are
+    /// still narrowed.
+    ///
+    /// This does not weaken the seed focus in the case it was built for. It weakens it in the case it
+    /// was getting wrong.
+    private static func keepRoleEntailedLaws(
+        in suggestions: [Suggestion],
+        alreadyShown: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        let shown = Set(alreadyShown.map(\.identity))
+        let owed = suggestions.filter { suggestion in
+            Refutability.isRoleEntailed(suggestion) && !shown.contains(suggestion.identity)
+        }
+        guard !owed.isEmpty else { return [] }
+
+        diagnostics.writeDiagnostic(owedLawWarning(for: owed))
+        return owed
+    }
+
+    /// Built from an array, not a `+` chain — see `promotionWarning`.
+    private static func owedLawWarning(for owed: [Suggestion]) -> String {
+        let subjects = owed
+            .map { "`\($0.templateName)` on `\($0.evidence.first?.displayName ?? "?")`" }
+            .joined(separator: ", ")
+        return [
+            "warning: \(subjects) — the seed manifest does not name the subject, but this law is owed",
+            "by the code's ROLE (a correct implementation cannot fail it), so the focus does not get",
+            "to hide it. The manifest SHOULD have named it: this is a LINTER gap, and the usual cause",
+            "is a shape the linter cannot see — methods on a value type it just told you to extract,",
+            "a computed-property read, a call to `min`. Seed it, and this warning goes away."
+        ].joined(separator: " ")
+    }
+
+    /// **Four gates, and the first draft had none of them.** Each was put there by a failure.
+    ///
+    /// - **Role-entailed only.** This is the one that matters. A law shown *below the confidence cut*
+    ///   must be one a **correct** implementation cannot fail — totality, an ordering, a tiling —
+    ///   because the cut is the only thing standing between the reader and every low-confidence
+    ///   guess the catalogue can make. The first draft promoted a `monotonicity` law onto
+    ///   `func get(_ key: String) -> Int { key.count }`, which is **not monotone** (`"aa" < "b"` yet
+    ///   `count("aa") > count("b")`) — a law a correct function fails. That is the
+    ///   `selectAllFiles`/`deselectAllFiles` mistake wearing a promotion's clothes, and **a tool that
+    ///   proposes a false law is worse than one that proposes nothing.** `Refutability` names the two
+    ///   axes: *refutable* (a wrong implementation **can** fail it) and *role-entailed* (a right one
+    ///   **cannot**). A promotion needs both.
+    /// - **Unary only.** A *pair* law (round-trip, dual-style) carries two subjects, and the focus
+    ///   keeps a pair when **either** half is seeded. Promote one and it drags its partner into the
+    ///   output — a function the manifest never named. The first draft surfaced `sanitize` because it
+    ///   partners `normalize`, and keeping `sanitize` out is the entire job of the focus.
+    /// - **Only if the function has nothing else.** The justification is *"do not print a tautology in
+    ///   place of a real law"*. If a real law for that function is already on screen, there is no
+    ///   tautology to displace and nothing to justify overriding the score.
+    /// - **Only if the manifest named it.** The promotion trades on the linter's judgement, so a
+    ///   suggestion the linter never vouched for gets no such credit.
+    private static func promoteTierHiddenLaws(
+        for manifest: SeedManifest,
+        pipeline: PipelineResult,
+        alreadyShown: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        guard !pipeline.tierHiddenRefutableLaws.isEmpty else { return [] }
+
+        // Functions that already have a real law on screen. They are not at risk of being handed a
+        // tautology, so the score stands.
+        let covered = Set(alreadyShown.flatMap { $0.evidence.map { baseName(of: $0.displayName) } })
+        let shown = Set(alreadyShown.map(\.identity))
+
+        let candidates = pipeline.tierHiddenRefutableLaws.filter { suggestion in
+            guard Refutability.isRoleEntailed(suggestion),
+                  !shown.contains(suggestion.identity),
+                  !SeedFocus.seedIndependentTemplates.contains(suggestion.templateName),
+                  suggestion.evidence.count == 1,
+                  let subject = suggestion.evidence.first
+            else { return false }
+            return !covered.contains(baseName(of: subject.displayName))
+        }
+        guard !candidates.isEmpty else { return [] }
+
+        let promoted = SeedFocus.filter(candidates, to: manifest)
+        for suggestion in promoted {
+            diagnostics.writeDiagnostic(promotionWarning(for: suggestion))
+        }
+        return promoted
+    }
+
+    /// `isImmediateChild(_:of:)` → `isImmediateChild`. The argument labels are part of the display
+    /// name but not of the identity we are comparing on.
+    private static func baseName(of displayName: String) -> String {
+        String(displayName.prefix { $0 != "(" })
+    }
+
+    /// Built from an array, not a `+` chain — a long concatenation of interpolated strings is the
+    /// shape that blows the Swift type-checker's time budget.
+    private static func promotionWarning(for suggestion: Suggestion) -> String {
+        let subject = suggestion.evidence.first?.displayName ?? "a seeded function"
+        let score = "\(suggestion.score.total), \(suggestion.score.tier.rawValue)"
+        return [
+            "note: `\(suggestion.templateName)` on `\(subject)` scored \(score) — below the default",
+            "visibility cut — but the linter seeded that function, so it is shown rather than",
+            "replaced by a determinism tautology about the same function. A weak law that can fail",
+            "beats a strong one that cannot."
+        ].joined(separator: " ")
     }
 
     /// **The reader is never handed a non-empty answer containing zero refutable laws, when this

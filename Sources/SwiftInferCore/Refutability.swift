@@ -46,6 +46,50 @@ public enum Refutability {
         !tautologicalTemplates.contains(suggestion.templateName)
     }
 
+    /// Templates whose law a **correct implementation cannot fail** — it is *entailed by the role*,
+    /// not conjectured from a name.
+    ///
+    /// This is a different axis from `tautologicalTemplates`, and confusing the two is a mistake I
+    /// made and had to be shown. Refutable means *a wrong implementation can fail it*. Role-entailed
+    /// means *a right implementation cannot*. A law wants both: it must be able to catch a bug, and
+    /// it must not cry wolf on correct code.
+    ///
+    /// - A **comparator** owes a strict weak ordering, a **partition** owes a tiling, a **predicate**
+    ///   owes totality — *by virtue of being one*. Any implementation that fails these is broken.
+    /// - **`monotonicity`** and **`idempotence`** are **conjectures**, inferred from a name. They can
+    ///   be false of perfectly correct code: `func get(_ key: String) -> Int { key.count }` is not
+    ///   monotone in its argument — `"aa" < "b"` while `count("aa") > count("b")` — and no bug is
+    ///   involved. Proposing that law to a reader spends their trust and returns nothing.
+    ///
+    /// The distinction earns its keep in exactly one place: deciding which laws may be shown *below
+    /// the confidence cut*. A weak law that is owed beats a tautology. A weak law that is **guessed**
+    /// does not — that is what the cut is for, and **a tool that proposes a false law is worse than
+    /// one that proposes nothing.**
+    public static let roleEntailedTemplates: Set<String> = [
+        "predicate",     // totality: it must answer for every input its type admits
+        "comparator",    // a strict weak ordering, or `sorted` may trap
+        "partition",     // the parts tile the whole, exactly
+        "state-machine"  // `up ∘ down == id` — gated so the forward move NAMES what it did
+    ]
+
+    /// Whether a correct implementation is *guaranteed* to satisfy this suggestion's law.
+    public static func isRoleEntailed(_ suggestion: Suggestion) -> Bool {
+        roleEntailedTemplates.contains(suggestion.templateName)
+    }
+
+    /// A law worth showing a reader **below the confidence cut**: it can catch a bug, and it cannot
+    /// cry wolf on correct code.
+    ///
+    /// Both halves are load-bearing, and I shipped a version with only the first. `monotonicity` on
+    /// `func get(_ key: String) -> Int { key.count }` is refutable — a wrong implementation could
+    /// fail it — and it is **also false of the correct one** (`"aa" < "b"`, yet
+    /// `count("aa") > count("b")`). Surfacing it because "at least it isn't a tautology" hands the
+    /// reader a test that goes red for no reason. The tautology was useless; this is worse than
+    /// useless.
+    public static func isWorthSurfacingBelowCut(_ suggestion: Suggestion) -> Bool {
+        isRefutable(suggestion) && isRoleEntailed(suggestion)
+    }
+
     /// The outcome of applying a filter under the invariant.
     public struct Outcome: Sendable, Equatable {
         /// What the caller should actually surface: the filter's own result, plus any rescue.
@@ -83,11 +127,17 @@ public enum Refutability {
             return Outcome(kept: filtered, rescued: [])
         }
 
-        // Nothing refutable survived. Was there anything refutable to begin with? If not, this is
-        // an honest empty — the code under analysis offered no law, and saying so is correct.
+        // Nothing refutable survived. Was there anything **worth surfacing** to begin with?
+        //
+        // Note the asymmetry, which is deliberate: the *trigger* is `isRefutable` (would the reader
+        // be handed nothing but tautologies?) but the *rescue* is `isWorthSurfacingBelowCut` (may
+        // this particular law be shown below the cut?). A run whose only non-tautology is a
+        // conjecture — `monotonicity` guessed from a name — triggers the check and rescues nothing,
+        // and that is right. The reader keeps their tautologies and their trust; a law that a
+        // *correct* implementation fails would cost them both.
         let keptIdentities = Set(filtered.map(\.identity))
         let dropped = candidates.filter { candidate in
-            isRefutable(candidate) && !keptIdentities.contains(candidate.identity)
+            isWorthSurfacingBelowCut(candidate) && !keptIdentities.contains(candidate.identity)
         }
         guard !dropped.isEmpty else {
             return Outcome(kept: filtered, rescued: [])
