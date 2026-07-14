@@ -190,20 +190,58 @@ public enum SeedFocus {
     /// the documented `lint → infer` pipeline was then *strictly worse* than running `swift-infer`
     /// alone. Focusing on nothing is not a request anyone makes; it is what a producer that found
     /// nothing looks like, and the honest response is to say so and not filter.
+    /// Templates whose subject a seed manifest **cannot contain**, and which the focus must therefore
+    /// never filter.
+    ///
+    /// The manifest holds what the linter's *pure-function* rule found. A state machine's moves are
+    /// `Void`-returning **impure** mutators — `navigateToFolder(_:)`, `navigateUp()` — which that rule
+    /// will never seed and never could. Join a state-machine suggestion against a pure-function
+    /// manifest and it misses, every time, by construction.
+    ///
+    /// **Left unguarded, that is A1's disease in a new organ.** On the road-test fixture, discovery
+    /// found exactly one suggestion that could ever fail — the state-machine law — and the focus threw
+    /// it away, then synthesised six determinism laws that cannot fail. The reader was handed six
+    /// suggestions, all tautologies, with the only refutable claim in the run in the bin. The
+    /// documented `lint → infer` pipeline was once again *strictly worse* than running `swift-infer`
+    /// alone, which is the precise sentence A1 was raised to delete.
+    ///
+    /// **The fix is not to make seeding additive.** That was considered and declined: focus exists to
+    /// narrow a large codebase, and gutting it would cost more than it buys. The insight is narrower
+    /// and truer — **the seed focus was designed to narrow a search for *pure functions***, and a
+    /// template whose subject is impure by nature was never in that search to begin with. It is not
+    /// being *narrowed out*; it was never in scope for narrowing.
+    ///
+    /// Adding a template here is a deliberate, reviewable act: state why a seed manifest could never
+    /// name its subject. If the answer is "it could, the linter just doesn't yet," the fix belongs in
+    /// the linter, not here.
+    public static let seedIndependentTemplates: Set<String> = [
+        // Subject: two impure `Void` mutators. A pure-function manifest cannot name them.
+        "state-machine"
+    ]
+
     /// **Only *analysable* seeds focus.** A kernel seed's symbol names the impure method the kernel
     /// is trapped inside, so joining on it would narrow the run to a function this tool must then
     /// refuse — a confident zero by a new route. Those seeds are reported to the reader instead; see
     /// `SeedKind`.
+    ///
+    /// **And a seed-independent suggestion is never filtered** — see `seedIndependentTemplates`.
     public static func filter(_ suggestions: [Suggestion], to manifest: SeedManifest) -> [Suggestion] {
         let focusing = manifest.analysableSeeds
         guard !focusing.isEmpty else { return suggestions }
 
         let keys = Set(focusing.map { key(file: $0.file, symbol: $0.symbol) })
         return suggestions.filter { suggestion in
-            suggestion.evidence.contains { evidence in
+            if seedIndependentTemplates.contains(suggestion.templateName) { return true }
+            return suggestion.evidence.contains { evidence in
                 keys.contains(key(file: evidence.location.file, symbol: functionBaseName(evidence.displayName)))
             }
         }
+    }
+
+    /// The suggestions the focus kept *because no manifest could ever have named them* — so the CLI
+    /// can say so, rather than letting them look like a lucky seed match.
+    public static func seedIndependent(in suggestions: [Suggestion]) -> [Suggestion] {
+        suggestions.filter { seedIndependentTemplates.contains($0.templateName) }
     }
 
     /// The bare function name from an evidence display name: everything before

@@ -29,6 +29,58 @@ struct DiscoverEmptySeedManifestTests {
     }
     """
 
+    // MARK: - The focus must not discard the one law that can fail
+
+    /// A view model with a navigation pair — `up ∘ down == id`, a law that CAN fail — and nothing a
+    /// pure-function linter would ever seed.
+    private static let stateMachine = """
+    final class Browser {
+        var currentPath = "/"
+        func navigateToFolder(_ name: String) { currentPath += name + "/" }
+        func navigateUp() { currentPath = "/" }
+    }
+    """
+
+    @Test("a law no seed manifest could name survives the focus")
+    func seedIndependentLawIsNotDiscarded() throws {
+        // B5, and it is A1's disease in a new organ. The manifest holds what the linter's
+        // PURE-FUNCTION rule found. A state machine's moves are Void-returning IMPURE mutators, which
+        // that rule will never seed and never could — so the join misses by construction, every time.
+        //
+        // Left unguarded, the focus threw away the only suggestion in the run that could ever fail
+        // and kept six determinism laws that cannot. The reader saw "6 suggestions", all tautologies.
+        // Running lint → infer was strictly worse than running swift-infer alone, which is the exact
+        // sentence A1 was raised to delete.
+        //
+        // The fix is not "make seeds additive" — that was declined, and rightly. It is that the seed
+        // focus was designed to narrow a search for PURE FUNCTIONS, and this law's subject was never
+        // in that search to begin with. It is not being narrowed out; it was never in scope.
+        let directory = try writeDPFixture(name: "SeedsIndependent", contents: Self.stateMachine)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            // A manifest naming a function that exists nowhere in this fixture: the focus matches
+            // nothing, which is precisely the condition that used to bin the state-machine law.
+            seedManifest: SeedManifest(seeds: [
+                SeedManifest.Seed(file: "Other.swift", line: 1, symbol: "unrelated")
+            ]),
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        // It survived.
+        #expect(recording.text.contains("state-machine"))
+        #expect(diagnostics.joined.contains("no seed manifest could name"))
+
+        // And the counts do not lie about why: it was never a seed match, so it is not reported as
+        // one.
+        #expect(diagnostics.joined.contains("kept 1 law(s) no seed manifest could name"))
+    }
+
     // MARK: - A manifest of kernels is not a manifest of nothing
 
     @Test("an extractable kernel is announced, never focused on")
