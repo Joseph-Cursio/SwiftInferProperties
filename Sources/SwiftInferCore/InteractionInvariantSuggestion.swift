@@ -28,13 +28,13 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     /// display, stripped on normalized) so the existing
     /// SemanticIndex / decisions.json / verify-evidence join pattern
     /// extends.
-    public let identity: SuggestionIdentity
+    public var identity: SuggestionIdentity
 
     /// Which of the five PRD §5 interaction-invariant families this
     /// suggestion belongs to. M4 ships Conservation + Idempotence
     /// (lifted from v1); M5–M7 add Cardinality, Referential
     /// integrity, Biconditional.
-    public let family: InteractionInvariantFamily
+    public var family: InteractionInvariantFamily
 
     /// `reducerQualifiedName`, `reducerLocation`, `stateTypeName`,
     /// and `actionTypeName` are copied from the source `ReducerCandidate`
@@ -42,10 +42,10 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     /// that need the full `ReducerCandidate` re-load it from the
     /// SemanticIndex (or in v2.0's not-yet-shipped equivalent) keyed
     /// by `reducerQualifiedName`.
-    public let reducerQualifiedName: String
-    public let reducerLocation: String
-    public let stateTypeName: String
-    public let actionTypeName: String
+    public var reducerQualifiedName: String
+    public var reducerLocation: String
+    public var stateTypeName: String
+    public var actionTypeName: String
 
     /// Swift-source predicate the M4.D stub emitter will embed into
     /// the verifier as `#expect(<predicate>)` per generated action.
@@ -53,12 +53,12 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     /// for a Conservation invariant. The predicate's free variable
     /// is `state` — the closure parameter the stub binds at each
     /// step.
-    public let predicate: String
+    public var predicate: String
 
     /// V1-shape score. Same 0..N+ integer scale as the v1
     /// `Suggestion.score`, fed by the §4.1 per-family signals from
     /// PRD v2.0.
-    public let score: Int
+    public var score: Int
 
     /// Effective tier. Set by the M4+ template engine per the §4.2
     /// score → tier mapping (≥75 strong, 40–74 likely, 20–39
@@ -67,24 +67,24 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     /// calibration cycles, so M4.B/C's scoring weights are
     /// deliberately tuned to land in the `.possible` range until
     /// promotion.
-    public let tier: Tier
+    public var tier: Tier
 
     /// "Why suggested" bullet points per PRD §4.5 — one per active
     /// signal that contributed to the score. Rendered in the
     /// `discover-interaction` explainability block.
-    public let whySuggested: [String]
+    public var whySuggested: [String]
 
     /// "Why this might be wrong" bullet points per PRD §4.5 —
     /// active counter-signals + known limitations (e.g.
     /// floating-point round-off, action enum size, edge cases the
     /// generator might not cover).
-    public let whyMightBeWrong: [String]
+    public var whyMightBeWrong: [String]
 
     /// Wall-clock time the suggestion was first emitted. ISO8601-
     /// encoded in JSON. Used by §17.2's time-to-adoption metric
     /// (decision timestamp − firstSeenAt) — same anchor v1.71 wired
     /// for algebraic suggestions via the SemanticIndex.
-    public let firstSeenAt: Date
+    public var firstSeenAt: Date
 
     /// M3 (multi-module measured verify) — the SwiftPM target/module the
     /// source `ReducerCandidate` was discovered in, or `nil` for a
@@ -94,7 +94,7 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     /// (via `PackageProductResolver.libraryProduct(exposingModule:)`), rather
     /// than assuming one module for the whole run. Backward-compatible
     /// optional (missing key → `nil`).
-    public let moduleName: String?
+    public var moduleName: String?
 
     public init(
         identity: SuggestionIdentity,
@@ -137,21 +137,16 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
         whySuggested: [String]? = nil,
         whyMightBeWrong: [String]? = nil
     ) -> Self {
-        Self(
-            identity: identity,
-            family: family,
-            reducerQualifiedName: reducerQualifiedName,
-            reducerLocation: reducerLocation,
-            stateTypeName: stateTypeName,
-            actionTypeName: actionTypeName,
-            predicate: predicate,
-            score: score ?? self.score,
-            tier: tier ?? self.tier,
-            whySuggested: whySuggested ?? self.whySuggested,
-            whyMightBeWrong: whyMightBeWrong ?? self.whyMightBeWrong,
-            firstSeenAt: firstSeenAt,
-            moduleName: moduleName
-        )
+        // **Centralising the rebuild into one `with(…)` was half the fix, and this is the other
+        // half.** A single site is far better than eight — but a single site that still rebuilds
+        // field-by-field still drops any field it forgets, silently, because the initialiser's
+        // parameters have defaults. Mutating a copy cannot.
+        var copy = self
+        if let score { copy.score = score }
+        if let tier { copy.tier = tier }
+        if let whySuggested { copy.whySuggested = whySuggested }
+        if let whyMightBeWrong { copy.whyMightBeWrong = whyMightBeWrong }
+        return copy
     }
 
     /// V2.0 M4.A — convenience constructor that derives `identity`

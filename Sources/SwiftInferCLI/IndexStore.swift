@@ -250,13 +250,12 @@ public enum IndexStore {
             }
         }
         let merged = byHash.values.sorted { $0.identityHash < $1.identityHash }
-        return Index(
-            schemaVersion: existing.schemaVersion,
-            updatedAt: runTimestamp,
-            entries: existing.entries,
-            typeShapes: existing.typeShapes,
-            interactionEntries: Array(merged)
-        )
+        // Mutate a copy; never rebuild field-by-field. A field added to `Index` later would be
+        // silently dropped here — its initialiser has defaults, so the omission compiles.
+        var updated = existing
+        updated.updatedAt = runTimestamp
+        updated.interactionEntries = Array(merged)
+        return updated
     }
 
     // MARK: - Encoders

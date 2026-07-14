@@ -29,7 +29,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// `<path>:<line>` form — mirrors v1's `FunctionSummary.location`
     /// shape so the rendered output threads through the same
     /// "file:line click target" UX.
-    public let location: String
+    public var location: String
 
     /// Name of the enclosing type if the function is an instance /
     /// static method (`"Inbox"`, `"AppLogic"`, etc.); `nil` for
@@ -37,7 +37,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// downstream pipelines (M3 verify, M4+ templates) consume both
     /// kinds. M1.C uses this signal to distinguish `.elmStyle` (free
     /// function) from `.generic` (method on a non-Reducer type).
-    public let enclosingTypeName: String?
+    public var enclosingTypeName: String?
 
     /// The function's own name (`"reduce"`, `"update"`, `"body"`,
     /// `"handle"`, etc.). M1.A does NOT filter on function name — a
@@ -46,7 +46,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// `reduce` / `update`) is a §4 scoring signal at M4+. TCA
     /// candidates (M1.B) use the synthetic name `"body"` since the
     /// closure isn't a declared function.
-    public let functionName: String
+    public var functionName: String
 
     /// The matched canonical signature shape — see
     /// `ReducerSignatureShape`. Downstream pipelines branch on this:
@@ -55,7 +55,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// (S, Effect<A>)` routes to the §7.3 subprocess verify path;
     /// `(inout S, A) -> Effect<A>` is the synthesized TCA-closure
     /// shape (M1.B) and routes the same as the tuple form.
-    public let signatureShape: ReducerSignatureShape
+    public var signatureShape: ReducerSignatureShape
 
     /// The State type's textual name as it appears in source
     /// (`"Inbox.State"`, `"AppState"`, `"State"`, etc.). M1.A does
@@ -65,13 +65,13 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// rendering. M1.B's TCA path synthesizes
     /// `"<EnclosingType>.State"` from the conventional TCA shape
     /// (the conforming type has nested `State` / `Action` types).
-    public let stateTypeName: String
+    public var stateTypeName: String
 
     /// The Action type's textual name as it appears in source
     /// (`"Inbox.Action"`, `"AppAction"`, etc.). Same posture as
     /// `stateTypeName` — verbatim for M1.A, synthesized as
     /// `"<EnclosingType>.Action"` for M1.B's TCA path.
-    public let actionTypeName: String
+    public var actionTypeName: String
 
     /// V1.B — carrier-kind label inferred at discovery time. M1.A
     /// candidates default to `.generic` (signature-scan); M1.B's TCA
@@ -79,7 +79,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// function) from `.generic`. The label is informational —
     /// downstream pipelines (M3 verify, M4+ scoring) consume it for
     /// routing and rendering decisions, not as a hard filter.
-    public let carrierKind: ReducerCarrierKind
+    public var carrierKind: ReducerCarrierKind
 
     /// V2.0 M8.B — body-purity classification (`.pure` /
     /// `.effectBearing` / `.hiddenMutability`) computed by
@@ -88,7 +88,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// across action sequences); `.pure` + `.effectBearing` both run
     /// through M3.E (the emit shape differs per signature). Defaults
     /// to `.pure` for older JSON records (none on disk yet).
-    public let purity: ReducerPurity
+    public var purity: ReducerPurity
 
     /// Cycle 122 (Phase A) → cycle 125 (Phase B) — the Action enum's
     /// cases, in source order, captured at discovery time for `.tca`
@@ -99,7 +99,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// *constructible* subset (payload-free + raw-payload cases) and
     /// discloses the rest as excluded; the all-or-nothing Phase A gate is
     /// gone. Empty for non-`.tca` carriers and older records.
-    public let actionCases: [ActionCaseInfo]
+    public var actionCases: [ActionCaseInfo]
 
     /// Multi-module — the module (SwiftPM target) this candidate was discovered
     /// in, or `nil` for a single-target run / older records. A `var` because it
@@ -120,7 +120,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// looks up the child's candidate and reads *its* `State.ID`. This is
     /// the same State-introspection slice 4 (`BindingAction`) needs —
     /// captured here so both slices share it.
-    public let stateIDTypeName: String?
+    public var stateIDTypeName: String?
 
     /// Item 2 slice 4 — the reducer State's bindable stored `var` fields
     /// (name + type), captured at discovery time when the State is
@@ -128,7 +128,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// carriers, and older records. `BindingActionResolver` reads these to
     /// construct a `BindingAction.set(\.field, value)` value for a
     /// `case binding(BindingAction<State>)` action.
-    public let stateFields: [StateFieldInfo]
+    public var stateFields: [StateFieldInfo]
 
     /// `true` when the reducer function is declared `async`. The shape
     /// matchers never inspected effect specifiers, so async reducers match
@@ -139,7 +139,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// trigger signal for building the reducer-path async slice, workplan
     /// Phase 4). Decoded with a `false` default so persisted candidates
     /// from before this field keep loading.
-    public let isAsync: Bool
+    public var isAsync: Bool
 
     /// `true` when the reducer declaration carries the clock-determinism
     /// claim (`/// @lint.determinism clock_deterministic` /
@@ -149,7 +149,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// seeded sequence replays nondeterministic). Same posture as
     /// `ViewModelAction.isClockDeterministic`. Decoded with a `false`
     /// default so persisted candidates from before this field keep loading.
-    public let isClockDeterministic: Bool
+    public var isClockDeterministic: Bool
 
     public init(
         location: String,
@@ -188,24 +188,13 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// candidate's `IdentifiedActionOf<Child>` cases with resolved element
     /// facts without threading a child-candidate map through the emitter.
     public func replacingActionCases(_ newCases: [ActionCaseInfo]) -> Self {
-        Self(
-            location: location,
-            enclosingTypeName: enclosingTypeName,
-            functionName: functionName,
-            signatureShape: signatureShape,
-            stateTypeName: stateTypeName,
-            actionTypeName: actionTypeName,
-            carrierKind: carrierKind,
-            purity: purity,
-            actionCases: newCases,
-            moduleName: moduleName,
-            stateIDTypeName: stateIDTypeName,
-            stateFields: stateFields,
-            // Dropping these here would silently bypass the pipeline's
-            // async-reducer guard after resolver enrichment.
-            isAsync: isAsync,
-            isClockDeterministic: isClockDeterministic
-        )
+        // Mutate a copy; never rebuild field-by-field. The comment this replaces —
+        // "dropping these here would silently bypass the pipeline's async-reducer guard" —
+        // was the fix for exactly this bug, applied by adding the missing fields back, which
+        // leaves the trap armed for the next one. A copy cannot drop a field at all.
+        var copy = self
+        copy.actionCases = newCases
+        return copy
     }
 
     /// Fully-qualified name `<enclosingType>.<functionName>` (or just

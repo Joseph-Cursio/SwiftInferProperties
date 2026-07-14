@@ -31,58 +31,58 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// Suggestion identity hex (the V1.7.5 PRD §7.5 canonical-input
     /// hash). The upsert key. Format: 16-char uppercase hex with `0x`
     /// prefix, e.g. `"0xBC43359C0574816B"`.
-    public let identityHash: String
+    public var identityHash: String
 
     /// Template name as it appears in discover output. One of
     /// `"round-trip"`, `"idempotence"`, `"monotonicity"`,
     /// `"commutativity"`, `"associativity"`, `"inverse-pair"`,
     /// `"identity-element"`, `"dual-style-consistency"`,
     /// `"composition"`, `"invariant-preservation"`.
-    public let templateName: String
+    public var templateName: String
 
     /// Carrier type name (the suggestion's `containingTypeName`).
     /// `nil` for free functions or templates that don't have a carrier
     /// (the M1 idempotence template's no-carrier case).
-    public let typeName: String?
+    public var typeName: String?
 
     /// The suggestion's total score (signal sum). Useful for
     /// `--min-score` query filtering.
-    public let score: Int
+    public var score: Int
 
     /// Score tier as a human-readable string: `"Strong"`, `"Likely"`,
     /// `"Possible"`, or `"Suppressed"` (the last is rare in an index
     /// since Suppressed suggestions don't surface, but allowed for
     /// completeness).
-    public let tier: String
+    public var tier: String
 
     /// First-evidence function display name, e.g. `"exp(_:)"` or
     /// `"OrderedSet.sort()"`. Mirrors how discover renders the
     /// suggestion's first `Why suggested` line.
-    public let primaryFunctionName: String
+    public var primaryFunctionName: String
 
     /// `"<file>:<line>"` of the suggestion's first evidence. Mirrors
     /// the SwiftLint-friendly format the renderer uses.
-    public let location: String
+    public var location: String
 
     /// User's triage decision recorded in `.swiftinfer/decisions.json`,
     /// or `nil` when no decision has been made yet. One of `"accept"`,
     /// `"reject"`, `"skip"`.
-    public let decision: String?
+    public var decision: String?
 
     /// ISO8601 timestamp of the user's decision, copied from
     /// `.swiftinfer/decisions.json`. `nil` when no decision recorded.
-    public let decisionAt: String?
+    public var decisionAt: String?
 
     /// ISO8601 timestamp of the first `swift-infer index` run that
     /// produced this entry. Preserved across upserts so historical
     /// "when did this signature appear" queries remain accurate.
-    public let firstSeenAt: String
+    public var firstSeenAt: String
 
     /// ISO8601 timestamp of the most recent `swift-infer index` run.
     /// Updated on every upsert so the user can identify entries
     /// dropped out of the current discover state (where `lastSeenAt`
     /// is older than the most recent run).
-    public let lastSeenAt: String
+    public var lastSeenAt: String
 
     /// V1.47.A — JSON-encodable mirror of the carrier type's
     /// `PropertyLawCore.TypeShape` (kind + inherited types + stored
@@ -93,7 +93,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// earlier `swift-infer` releases. The verify pipeline reads this
     /// to call `DerivationStrategist.strategy(for:)` without
     /// re-parsing the user's source.
-    public let typeShape: IndexedTypeShape?
+    public var typeShape: IndexedTypeShape?
 
     /// V1.49.C — non-curated round-trip pair inverse-half name.
     /// Populated by discover when the suggestion's evidence array
@@ -103,7 +103,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// non-round-trip templates and for v1.47-and-earlier persisted
     /// entries. Format: bare function name in the same shape
     /// `primaryFunctionName` carries (e.g. `"_scale(forMinimumCapacity:)"`).
-    public let secondaryFunctionName: String?
+    public var secondaryFunctionName: String?
 
     /// V1.149 — the *generator* carrier, distinct from `typeName` (which
     /// is the function's owner / call-site qualifier). For a method
@@ -116,31 +116,31 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// generated `Gen<T>` must produce). `nil` for v1.148-and-earlier
     /// persisted entries and for templates that don't expose a distinct
     /// parameter carrier.
-    public let carrierTypeName: String?
+    public var carrierTypeName: String?
 
     /// True when the picked function is an instance method (has a
     /// containing type and is not `static`). Emitters use this to choose
     /// the `receiver.method(...)` call shape over the static
     /// `Type.method(receiver)` shape. `false` for free/static functions
     /// and for entries persisted before this field existed.
-    public let isInstanceMethod: Bool
+    public var isInstanceMethod: Bool
 
     /// True when the picked instance method is `mutating` (or otherwise
     /// mutates in place / returns `Void`). Combined with
     /// ``isInstanceMethod`` it selects the `var copy = value;
     /// copy.method()` idempotence shape rather than the self-returning
     /// `value.method().method()` shape. `false` unless known.
-    public let isMutatingMethod: Bool
+    public var isMutatingMethod: Bool
 
     /// True when the picked function takes no parameters. Receiver-style
     /// instance-method emit shapes (`value.method()`) are only valid for
     /// nullary methods; arg-bearing methods fall back to the static shape.
-    public let isNullary: Bool
+    public var isNullary: Bool
 
     /// True when the function's return type is its own carrier type
     /// (`Self`, or the containing type up to generic arguments). Gates the
     /// non-mutating self-returning idempotence chain `value.m().m()`.
-    public let returnsSelfType: Bool
+    public var returnsSelfType: Bool
 
     public init(
         identityHash: String,

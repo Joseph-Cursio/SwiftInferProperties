@@ -73,25 +73,12 @@ extension SwiftInferCommand.Verify {
         toCarrier carrier: String
     ) -> SemanticIndexEntry {
         guard entry.typeName != carrier else { return entry }
-        return SemanticIndexEntry(
-            identityHash: entry.identityHash,
-            templateName: entry.templateName,
-            typeName: carrier,
-            score: entry.score,
-            tier: entry.tier,
-            primaryFunctionName: entry.primaryFunctionName,
-            location: entry.location,
-            decision: entry.decision,
-            decisionAt: entry.decisionAt,
-            firstSeenAt: entry.firstSeenAt,
-            lastSeenAt: entry.lastSeenAt,
-            typeShape: entry.typeShape,
-            carrierTypeName: entry.carrierTypeName,
-            isInstanceMethod: entry.isInstanceMethod,
-            isMutatingMethod: entry.isMutatingMethod,
-            isNullary: entry.isNullary,
-            returnsSelfType: entry.returnsSelfType
-        )
+        // Mutate a copy. The rebuild this replaces already carried a note that `carrierTypeName`
+        // "is preserved so the generator carrier survives owner rebinding" — the fix for this very
+        // bug, applied by adding the missing field back, which leaves the trap armed for the next.
+        var copy = entry
+        copy.typeName = carrier
+        return copy
     }
 
     /// V1.149 — the argument labels of `primaryFunctionName` (e.g.
