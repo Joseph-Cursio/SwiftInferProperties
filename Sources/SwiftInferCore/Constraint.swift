@@ -100,6 +100,15 @@ public struct Constraint<Subject>: Sendable {
     /// evidence + signals are self-documenting.
     public let additionalWhySuggested: @Sendable (Subject) -> [String]
 
+    /// The generators this law needs — see `GeneratorRecipe`.
+    ///
+    /// A law and the inputs it is checked against are ONE artefact. A template that states a law and
+    /// leaves the generator to the reader has not divided the labour; it has handed over the half
+    /// that fails silently. On the road-test fixture the only bug the loop reliably finds is
+    /// invisible to a uniform generator, and every reader who found it had to hand-write the biased
+    /// generator from a caveat first.
+    public let generators: @Sendable (Subject) -> [GeneratorRecipe]
+
     public init(
         templateName: String,
         appliesTo: @Sendable @escaping (Subject) -> Bool,
@@ -109,7 +118,8 @@ public struct Constraint<Subject>: Sendable {
         carrier: @Sendable @escaping (Subject) -> String? = { _ in nil },
         carrierType: @Sendable @escaping (Subject) -> String? = { _ in nil },
         caveats: @Sendable @escaping (Subject) -> [String] = { _ in [] },
-        additionalWhySuggested: @Sendable @escaping (Subject) -> [String] = { _ in [] }
+        additionalWhySuggested: @Sendable @escaping (Subject) -> [String] = { _ in [] },
+        generators: @Sendable @escaping (Subject) -> [GeneratorRecipe] = { _ in [] }
     ) {
         self.templateName = templateName
         self.appliesTo = appliesTo
@@ -120,5 +130,6 @@ public struct Constraint<Subject>: Sendable {
         self.carrierType = carrierType
         self.caveats = caveats
         self.additionalWhySuggested = additionalWhySuggested
+        self.generators = generators
     }
 }

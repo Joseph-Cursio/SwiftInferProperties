@@ -267,6 +267,53 @@ struct PartitionTemplateTests {
         #expect(PartitionPairing.candidates(in: members).isEmpty)
     }
 
+    // MARK: - The law ships the generator it needs
+
+    /// **A generator over `0..<count` checks totality against the indices that were never in
+    /// question.** The clause claims something about the indices the code did *not* expect, and the
+    /// only way to refute it is to supply them: negative, and past the end. `dropFirst(negative)`
+    /// traps — and a negative index is what a corrupt resume counter supplies, which is the bug this
+    /// law exists to catch.
+    @Test("the partition law ships an out-of-range index generator")
+    func partitionShipsOutOfRangeIndexGenerator() throws {
+        let shape = PartitionShape(
+            typeName: "ChunkPlan",
+            tiler: member(
+                "chunk",
+                parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
+                returns: "Data"
+            ),
+            tilerForm: .slice,
+            progress: nil
+        )
+
+        let recipe = try #require(PartitionTemplate.makeGenerators(for: shape).first)
+        #expect(recipe.subject == "index")
+        #expect(recipe.expression.contains("-50...500"))
+        #expect(recipe.rationale.contains("corrupt resume counter"))
+    }
+
+    /// The recipe must survive the whole pipeline, not just the template. A `Suggestion` copy that
+    /// silently drops the field renders correctly in every respect except that the generators are
+    /// gone — which is the half that decides whether the law can fail.
+    @Test("the generator survives into the Suggestion")
+    func generatorSurvivesIntoSuggestion() throws {
+        let shape = PartitionShape(
+            typeName: "ChunkPlan",
+            tiler: member(
+                "chunk",
+                parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
+                returns: "Data"
+            ),
+            tilerForm: .slice,
+            progress: nil
+        )
+
+        let suggestion = try #require(PartitionTemplate.suggest(for: shape))
+        #expect(suggestion.generatorRecipes.isEmpty == false)
+        #expect(suggestion.generatorRecipes.first?.subject == "index")
+    }
+
     /// When a type offers both, the range form is the stronger evidence and wins.
     @Test("a range tiler outranks a slice tiler on the same type")
     func rangeTilerWins() throws {

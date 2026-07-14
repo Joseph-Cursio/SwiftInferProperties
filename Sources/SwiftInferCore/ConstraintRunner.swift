@@ -51,7 +51,8 @@ public enum ConstraintRunner {
             explainability: explainability,
             identity: constraint.identity(subject),
             carrier: constraint.carrier(subject),
-            carrierTypeName: constraint.carrierType(subject)
+            carrierTypeName: constraint.carrierType(subject),
+            generatorRecipes: constraint.generators(subject)
         )
     }
 

@@ -42,22 +42,15 @@ extension TemplateRegistry {
             whySuggested: newWhy,
             whyMightBeWrong: suggestion.explainability.whyMightBeWrong
         )
-        // Preserve the carrier/origin fields — this rebuild only appends a
-        // cross-validation signal; omitting them reset carrier, carrierTypeName,
-        // liftedOrigin, and mockGenerator to nil, so any cross-validated
-        // suggestion lost its owner + generator carrier before the index.
-        return Suggestion(
-            templateName: suggestion.templateName,
-            evidence: suggestion.evidence,
-            score: newScore,
-            generator: suggestion.generator,
-            explainability: newExplainability,
-            identity: suggestion.identity,
-            liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: suggestion.mockGenerator,
-            carrier: suggestion.carrier,
-            carrierTypeName: suggestion.carrierTypeName
-        )
+        // Mutate a copy; never rebuild field-by-field. The comment this replaces was the SECOND
+        // recorded instance of the same bug — "omitting them reset carrier, carrierTypeName,
+        // liftedOrigin, and mockGenerator to nil, so any cross-validated suggestion lost its owner
+        // + generator carrier before the index" — and the fix each time was to add the missing
+        // field, which leaves the trap armed for the next one. It then ate `generatorRecipes`.
+        var updated = suggestion
+        updated.score = newScore
+        updated.explainability = newExplainability
+        return updated
     }
 
     /// Detail text rendered for the counter-signal Signal.
@@ -104,19 +97,10 @@ extension TemplateRegistry {
             whySuggested: suggestion.explainability.whySuggested,
             whyMightBeWrong: newCaveats
         )
-        // Preserve carrier/origin fields (see rebuildWithCrossValidation).
-        return Suggestion(
-            templateName: suggestion.templateName,
-            evidence: suggestion.evidence,
-            score: newScore,
-            generator: suggestion.generator,
-            explainability: newExplainability,
-            identity: suggestion.identity,
-            liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: suggestion.mockGenerator,
-            carrier: suggestion.carrier,
-            carrierTypeName: suggestion.carrierTypeName
-        )
+        var updated = suggestion
+        updated.score = newScore
+        updated.explainability = newExplainability
+        return updated
     }
 
     /// Sort suggestions by (file path, line) of the first evidence row,

@@ -32,17 +32,10 @@ extension Suggestion {
                 whyMightBeWrong: explainability.whyMightBeWrong + [signal.formattedLine]
             )
         }
-        return Suggestion(
-            templateName: templateName,
-            evidence: evidence,
-            score: Score(signals: score.signals + [signal]),
-            generator: generator,
-            explainability: newExplainability,
-            identity: identity,
-            liftedOrigin: liftedOrigin,
-            mockGenerator: mockGenerator,
-            carrier: carrier
-        )
+        // Mutate a copy. The field-by-field rebuild this replaces silently dropped BOTH
+        // `carrierTypeName` and `generatorRecipes` — the omitted arguments have defaults, so the
+        // compiler said nothing and the suggestion rendered fine with half of itself missing.
+        return withAdditionalSignal(signal, explainability: newExplainability)
     }
 }
 

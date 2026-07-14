@@ -40,8 +40,29 @@ public enum PartitionTemplate {
             identity: Self.makeIdentity(for:),
             carrier: { $0.typeName },
             carrierType: { $0.typeName },
-            caveats: Self.makeCaveats(for:)
+            caveats: Self.makeCaveats(for:),
+            generators: Self.makeGenerators(for:)
         )
+    }
+
+    /// The generator the totality clause needs — and without which that clause is decoration.
+    ///
+    /// **A generator over `0..<count` checks totality against precisely the indices that were never
+    /// in question.** The clause claims something about the indices the code did *not* expect, and
+    /// the only way to refute it is to supply them: negative, and past the end. `dropFirst(negative)`
+    /// **traps** — and a negative index is exactly what a corrupt resume counter supplies, which is
+    /// the bug this law exists to catch.
+    ///
+    /// The caveat has said "generate negative indices on purpose" for as long as the template has
+    /// existed. Three cold readers read it and wrote the generator by hand; none of them was wrong to,
+    /// and all of them should have been spared it.
+    static func makeGenerators(for shape: PartitionShape) -> [GeneratorRecipe] {
+        let index = shape.tiler.parameters.first { parameter in
+            ["Int", "Int64", "Int32", "UInt", "UInt64"]
+                .contains(parameter.typeText.trimmingCharacters(in: .whitespaces))
+        }
+        guard let index else { return [] }
+        return [CollisionBias.outOfRangeIndex(subject: index.internalName)]
     }
 
     static func accumulatedSignals(for shape: PartitionShape) -> [Signal] {

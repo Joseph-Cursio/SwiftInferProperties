@@ -111,26 +111,21 @@ public enum GeneratorSelection {
         )
     }
 
+    /// **Mutate a copy. Never rebuild field-by-field.**
+    ///
+    /// This used to reconstruct `Suggestion` argument-by-argument, and the comment it carried told
+    /// the story: *"the generator-carrier must survive the generator-metadata rebuild; omitting it
+    /// silently reset it to nil … this dropped monotonicity's param-domain carrier set in V1.151."*
+    ///
+    /// The lesson was written down and the trap was left armed, because the omitted argument has a
+    /// default and the compiler says nothing. It caught the very next field: `generatorRecipes` — the
+    /// half of a law that decides whether it can fail — vanished here, and the partition law reached
+    /// the reader with no generator at all.
     private static func rebuild(
         _ suggestion: Suggestion,
         withGenerator metadata: GeneratorMetadata
     ) -> Suggestion {
-        Suggestion(
-            templateName: suggestion.templateName,
-            evidence: suggestion.evidence,
-            score: suggestion.score,
-            generator: metadata,
-            explainability: suggestion.explainability,
-            identity: suggestion.identity,
-            liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: suggestion.mockGenerator,
-            carrier: suggestion.carrier,
-            // WS-1 — the generator-carrier (`Suggestion.carrierTypeName`) must
-            // survive the generator-metadata rebuild; omitting it silently
-            // reset it to nil, so the index/verify fell back to the owner type
-            // (this dropped monotonicity's param-domain carrier set in V1.151).
-            carrierTypeName: suggestion.carrierTypeName
-        )
+        suggestion.withGenerator(metadata)
     }
 
     // MARK: - TestLifter M5.4 — Codable round-trip fallback
@@ -209,17 +204,6 @@ public enum GeneratorSelection {
             confidence: .medium,
             sampling: suggestion.generator.sampling
         )
-        return Suggestion(
-            templateName: suggestion.templateName,
-            evidence: suggestion.evidence,
-            score: suggestion.score,
-            generator: metadata,
-            explainability: suggestion.explainability,
-            identity: suggestion.identity,
-            liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: suggestion.mockGenerator,
-            carrier: suggestion.carrier,
-            carrierTypeName: suggestion.carrierTypeName  // WS-1 — preserve across Codable rebuild
-        )
+        return suggestion.withGenerator(metadata)
     }
 }

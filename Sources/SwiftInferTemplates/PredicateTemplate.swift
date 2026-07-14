@@ -59,7 +59,8 @@ public enum PredicateTemplate {
             },
             carrier: { $0.containingTypeName },
             carrierType: { $0.parameters.first?.typeText },
-            caveats: { _ in Self.makeCaveats() }
+            caveats: { _ in Self.makeCaveats() },
+            generators: Self.makeGenerators(for:)
         )
     }
 
@@ -77,6 +78,41 @@ public enum PredicateTemplate {
             return false
         }
         return true
+    }
+
+    /// The generator the predicate law needs — and the reason this template ships one at all.
+    ///
+    /// **The caveat below already tells the reader to bias toward collisions. That was not enough,
+    /// and we know exactly how not-enough it was.** Three cold readers found the road-test's listing
+    /// bug, and all three found it the same way: they read that sentence, then **hand-wrote the
+    /// generator themselves**. One measured 5341 failures in 20000 inputs once they had; under a
+    /// wide alphabet the identical law passes clean and the reader goes home satisfied.
+    ///
+    /// A law and the inputs it is checked against are one artefact. Handing over the law and
+    /// describing the generator is not a division of labour — it is keeping the half that fails
+    /// silently. So the template emits it.
+    ///
+    /// Only `String` parameters get a recipe: those are the ones whose structure can *collide*. An
+    /// `Int` predicate's counterexamples are not hiding behind a wide alphabet, and shipping a
+    /// generator for it would be cargo-culting the shape of a fix.
+    ///
+    /// **And when the predicate is an instance method, the carrier gets one too.** The collision is
+    /// frequently between an argument and the receiver's own state — `isImmediateChild(_ path:)` on a
+    /// type holding `currentPath` puts one half in each — and a generator that varies only the
+    /// argument, against a carrier pinned to some plausible `"/Documents/"`, quantifies over exactly
+    /// the inputs where the two notions agree. Both halves must come from the same small universe.
+    static func makeGenerators(for summary: FunctionSummary) -> [GeneratorRecipe] {
+        var recipes = summary.parameters
+            .filter { $0.typeText.trimmingCharacters(in: .whitespaces) == "String" }
+            .map { CollisionBias.collidingString(subject: $0.internalName) }
+
+        guard !recipes.isEmpty else { return [] }
+
+        // A `static` function has no receiver, so there is no state for the argument to collide with.
+        if let carrier = summary.containingTypeName, !summary.isStatic {
+            recipes.append(CollisionBias.carrierState(typeName: carrier))
+        }
+        return recipes
     }
 
     static func makeCaveats() -> [String] {

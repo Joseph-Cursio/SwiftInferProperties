@@ -50,6 +50,7 @@ public enum SuggestionRenderer {
             }
         }
         lines.append("")
+        lines.append(contentsOf: renderGeneratorRecipes(suggestion.generatorRecipes))
         lines.append(renderGeneratorLine(suggestion.generator))
         lines.append(renderSamplingLine(
             suggestion.generator,
@@ -203,6 +204,28 @@ public enum SuggestionRenderer {
             return "\(value) \(tier.label)"
         }
         return parts.joined(separator: ", ")
+    }
+
+    /// The generators the law needs, written out so the reader can paste and run them.
+    ///
+    /// Rendered **above** the `Generator:` metadata line and not folded into the caveats, because a
+    /// caveat is something you read and a generator is something you *use* — and the whole reason
+    /// this block exists is that three readers read the caveat and then had to write this code
+    /// themselves. Each recipe carries its rationale inline: a reader who does not know why the
+    /// alphabet is small will widen it on the first cleanup pass, and the law will go quiet without
+    /// anyone noticing it stopped testing anything.
+    static func renderGeneratorRecipes(_ recipes: [GeneratorRecipe]) -> [String] {
+        guard !recipes.isEmpty else { return [] }
+
+        var lines = ["", "Generators the law needs (a uniform one will pass VACUOUSLY):"]
+        for recipe in recipes {
+            lines.append("")
+            lines.append("  // \(recipe.subject): \(recipe.typeName) — \(recipe.rationale)")
+            for line in recipe.expression.split(separator: "\n", omittingEmptySubsequences: false) {
+                lines.append("  \(line)")
+            }
+        }
+        return lines
     }
 
     private static func renderGeneratorLine(_ meta: GeneratorMetadata) -> String {

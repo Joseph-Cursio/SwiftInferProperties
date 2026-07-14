@@ -265,16 +265,10 @@ public enum LiftedSuggestionPipeline {
             confidence: .low,
             sampling: suggestion.generator.sampling
         )
-        return Suggestion(
-            templateName: suggestion.templateName,
-            evidence: suggestion.evidence,
-            score: suggestion.score,
-            generator: mockMetadata,
-            explainability: suggestion.explainability,
-            identity: suggestion.identity,
-            liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: mockGenerator,
-            carrier: suggestion.carrier
-        )
+        // Mutate a copy — see LiftedSuggestionPipeline+DomainInference.
+        var copy = suggestion
+        copy.generator = mockMetadata
+        copy.mockGenerator = mockGenerator
+        return copy
     }
 }

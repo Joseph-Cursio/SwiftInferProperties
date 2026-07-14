@@ -40,7 +40,8 @@ public enum ComparatorTemplate {
             },
             carrier: { $0.containingTypeName },
             carrierType: { $0.parameters.first?.typeText },
-            caveats: { _ in Self.makeCaveats() }
+            caveats: { _ in Self.makeCaveats() },
+            generators: Self.makeGenerators(for:)
         )
     }
 
@@ -74,6 +75,26 @@ public enum ComparatorTemplate {
 
     private static func isOperator(_ name: String) -> Bool {
         name.allSatisfy { !$0.isLetter && !$0.isNumber && $0 != "_" }
+    }
+
+    /// The generator the hardest clause needs — **ties**.
+    ///
+    /// Transitivity of *incomparability* — the clause the caveats single out as the one hand-written
+    /// tests never check, and the one a folders-first-then-name comparator most often breaks — is
+    /// **vacuous without pairs that compare equal**. Over a wide key space two generated values are
+    /// essentially never incomparable, so the clause is quantified over no input that could break it,
+    /// and a broken comparator passes.
+    ///
+    /// This is the same failure as the predicate's: a law about a distinction, checked only on inputs
+    /// where the distinction never arises. Shrink the key universe until the ties appear.
+    ///
+    /// Only `String` keys get a recipe. A comparator over `Int` already collides freely, and one over
+    /// a struct needs a generator for the struct — which this template cannot synthesize and should
+    /// not pretend to.
+    static func makeGenerators(for summary: FunctionSummary) -> [GeneratorRecipe] {
+        summary.parameters
+            .filter { $0.typeText.trimmingCharacters(in: .whitespaces) == "String" }
+            .map { CollisionBias.tiedKeys(subject: $0.internalName, typeName: "String") }
     }
 
     static func makeCaveats() -> [String] {

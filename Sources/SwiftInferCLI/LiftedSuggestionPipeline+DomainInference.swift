@@ -87,17 +87,11 @@ extension LiftedSuggestionPipeline {
             preconditionHints: mockGenerator.preconditionHints,
             domainHint: hint
         )
-        return Suggestion(
-            templateName: suggestion.templateName,
-            evidence: suggestion.evidence,
-            score: suggestion.score,
-            generator: suggestion.generator,
-            explainability: suggestion.explainability,
-            identity: suggestion.identity,
-            liftedOrigin: suggestion.liftedOrigin,
-            mockGenerator: updated,
-            carrier: suggestion.carrier
-        )
+        // Mutate a copy. The field-by-field rebuild this replaces dropped `carrierTypeName` AND
+        // `generatorRecipes` — both silently, because the omitted arguments have defaults.
+        var copy = suggestion
+        copy.mockGenerator = updated
+        return copy
     }
 
     /// Strip parameter labels from an `Evidence.displayName` like
