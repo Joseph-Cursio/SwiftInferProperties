@@ -82,7 +82,7 @@ public enum CollisionBias {
     /// *strip every occurrence* diverge most violently, because stripping `/` deletes **every**
     /// separator and collapses any path to a single component — and `""`.
     public static func collidingString(subject: String) -> GeneratorRecipe {
-        return GeneratorRecipe(
+        GeneratorRecipe(
             subject: subject,
             typeName: "String",
             expression: collidingStringExpression,
