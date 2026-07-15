@@ -51,10 +51,10 @@ swift-infer known-properties [--type <T>] [--verify]
 `--verify` spawns `swift` locally (no network) — an opt-in verify gesture, on
 the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 
-## What's in it (42 laws, 6 caveats)
+## What's in it (44 laws, 6 caveats)
 
 - **Int** — additive commutative monoid; `max`/`min` semilattice; `abs`
-  idempotent.
+  idempotent; `abs`/`signum` multiplicative (`h(a·b) == h(a)·h(b)`).
 - **Double** — commutative `+`/`*` and identities, **for finite inputs only**
   (NaN/±∞ break them under `==`). Listed explicitly so the special-case status
   is visible rather than read as an oversight. `+` non-associativity is a caveat.

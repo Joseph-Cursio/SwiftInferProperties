@@ -24,6 +24,9 @@ extension StrategistDispatchEmitter {
         case "homomorphism":
             return composeHomomorphismPass(inputs: inputs, recipe: recipe)
 
+        case "multiplicative-homomorphism":
+            return composeMultiplicativeHomomorphismPass(inputs: inputs)
+
         default:
             return nil
         }
@@ -164,6 +167,40 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(aValue), \\(bValue))")
                 print("VERIFY_DEFAULT_FORWARD: \\(combined)")
                 print("VERIFY_DEFAULT_INVERSE: \\(summed)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    // MARK: - Multiplicative homomorphism (2 Ints per trial; h(a * b) == h(a) * h(b))
+
+    /// Scoped to `Int`; draws from a BOUNDED domain (±10_000) so `a * b` and the
+    /// measure's own product cannot overflow-trap on full-range operands — a
+    /// genuine counterexample lives in the sign/measure logic, not at the extremes.
+    static func composeMultiplicativeHomomorphismPass(inputs: Inputs) -> String {
+        let functionCall = inputs.functionCalls.first ?? "(missing)"
+        return """
+        // --- Pass 1: default (bounded to avoid multiplication overflow) ---
+        // multiplicative homomorphism: h(a * b) == h(a) * h(b) over Int.
+
+        let defaultGenerator: Generator<Int, some SendableSequenceType> =
+            Gen<Int>.int(in: -10_000 ... 10_000)
+
+        for trial in 0 ..< trials {
+            let aValue = defaultGenerator.run(using: &rng)
+            let bValue = defaultGenerator.run(using: &rng)
+            let combined = \(functionCall)(aValue * bValue)
+            let multiplied = \(functionCall)(aValue) * \(functionCall)(bValue)
+            if combined != multiplied {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: (\\(aValue), \\(bValue))")
+                print("VERIFY_DEFAULT_FORWARD: \\(combined)")
+                print("VERIFY_DEFAULT_INVERSE: \\(multiplied)")
                 exit(1)
             }
         }

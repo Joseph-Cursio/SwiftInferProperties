@@ -289,6 +289,10 @@ extension TemplateRegistry {
         if let suggestion = HomomorphismTemplate.suggest(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
+        // Its multiplicative sibling — `abs`/`signum` over `Int`, `h(a * b) == h(a) * h(b)`.
+        if let suggestion = HomomorphismTemplate.suggestMultiplicative(for: summary) {
+            collector.record(suggestion, generatorType: summaryGenType)
+        }
         if let suggestion = InvariantPreservationTemplate.suggest(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }

@@ -51,4 +51,14 @@ struct StrategistAlgebraicLawEmitTests {
         #expect(source.contains("let summed = Laws.tally(aValue) + Laws.tally(bValue)"))
         #expect(source.contains("if combined != summed"))
     }
+
+    @Test("multiplicative-homomorphism emits h(a * b) == h(a) * h(b), bounded")
+    func multiplicativeHomomorphismOracle() throws {
+        let source = try emit(template: "multiplicative-homomorphism", carrier: "Int", calls: ["M.abs"])
+        // Bounded so `a * b` can't overflow-trap on full-range Ints.
+        #expect(source.contains("Gen<Int>.int(in: -10_000 ... 10_000)"))
+        #expect(source.contains("let combined = M.abs(aValue * bValue)"))
+        #expect(source.contains("let multiplied = M.abs(aValue) * M.abs(bValue)"))
+        #expect(source.contains("if combined != multiplied"))
+    }
 }

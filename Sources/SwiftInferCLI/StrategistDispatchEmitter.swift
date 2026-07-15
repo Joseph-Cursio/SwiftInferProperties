@@ -366,7 +366,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
                 expected: [
                     "round-trip", "idempotence", "commutativity", "associativity",
                     "idempotence-lifted", "dual-style-consistency", "monotonicity",
-                    "involution", "binary-idempotence", "homomorphism"
+                    "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
                 ]
             )
         }

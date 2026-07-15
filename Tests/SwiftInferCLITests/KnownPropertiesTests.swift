@@ -86,8 +86,10 @@ struct KnownPropertiesTests {
         #expect(role("Set", "a.union(a) == a") == .anchor)
         #expect(role("Int", "max(a, a) == a") == .anchor)
         #expect(role("Bool", "(a && a) == a") == .anchor)
-        // The HomomorphismTemplate anchors the additive-measure row.
+        // The HomomorphismTemplate anchors the additive-measure row; its
+        // multiplicative form anchors the abs/signum rows.
         #expect(role("Array", "(a + b).count == a.count + b.count") == .anchor)
+        #expect(role("Int", "abs(a * b) == abs(a) * abs(b)") == .anchor)
     }
 
     @Test("common data types — Optional / Dictionary carry verifiable functor laws")

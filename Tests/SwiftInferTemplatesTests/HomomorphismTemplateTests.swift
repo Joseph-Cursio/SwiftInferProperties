@@ -73,4 +73,27 @@ struct HomomorphismTemplateTests {
         let sum = measure("sum", param: "[Double]", returns: "Double")
         #expect(HomomorphismTemplate.isAdditiveMeasure(sum) == false)
     }
+
+    // MARK: - Multiplicative form: h(a * b) == h(a) * h(b)
+
+    @Test("a curated multiplicative measure over Int owes h(a * b) == h(a) * h(b)")
+    func multiplicativeMeasureFires() throws {
+        let abs = measure("abs", param: "Int", returns: "Int")
+        #expect(HomomorphismTemplate.isMultiplicativeHomomorphism(abs))
+        let suggestion = try #require(HomomorphismTemplate.suggestMultiplicative(for: abs))
+        #expect(suggestion.templateName == "multiplicative-homomorphism")
+        #expect(suggestion.score.tier == .likely)
+        let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
+        #expect(caveats.contains("h(a * b) == h(a) * h(b)"))
+        #expect(caveats.contains("MIND OVERFLOW"))
+    }
+
+    @Test("a non-multiplicative name of the same shape stays silent")
+    func nonMultiplicativeNameRejected() {
+        // `double(a * b) = 2ab`, but `double(a) * double(b) = 4ab` — not a
+        // homomorphism, and `double` is not a curated multiplicative measure.
+        let double = measure("double", param: "Int", returns: "Int")
+        #expect(HomomorphismTemplate.isMultiplicativeHomomorphism(double) == false)
+        #expect(HomomorphismTemplate.suggestMultiplicative(for: double) == nil)
+    }
 }

@@ -15,4 +15,8 @@ public enum Laws {
     /// homomorphism — the tally (element count) is additive over concatenation:
     /// `tally(a + b) == tally(a) + tally(b)`.
     public static func tally(_ items: [Int]) -> Int { items.count }
+
+    /// multiplicative-homomorphism — absolute value is multiplicative:
+    /// `abs(a * b) == abs(a) * abs(b)`.
+    public static func magnitude(_ value: Int) -> Int { value < 0 ? -value : value }
 }

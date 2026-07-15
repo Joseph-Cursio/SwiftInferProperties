@@ -22,7 +22,7 @@ import Testing
 @Suite("Algebraic-law templates — measured verify", .tags(.subprocess))
 struct AlgebraicLawsVerifyMeasuredTests {
 
-    @Test("involution / binary-idempotence / homomorphism each verify bothPass")
+    @Test("involution / binary-idempotence / (multiplicative-)homomorphism each verify bothPass")
     func measuredLawsVerifyBothPass() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-laws-corpus")
@@ -46,7 +46,9 @@ struct AlgebraicLawsVerifyMeasuredTests {
         )
 
         let records = VerifyEvidenceStore.load(startingFrom: root).log.records
-        for template in ["involution", "binary-idempotence", "homomorphism"] {
+        for template in [
+            "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
+        ] {
             #expect(
                 records.contains { $0.template == template && $0.outcome == .measuredBothPass },
                 "\(template) did not produce a measured-bothPass record"

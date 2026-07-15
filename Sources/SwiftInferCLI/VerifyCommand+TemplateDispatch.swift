@@ -52,7 +52,7 @@ extension SwiftInferCommand.Verify {
         let supportedTemplates: [String] = [
             "round-trip", "idempotence", "commutativity", "associativity",
             "idempotence-lifted", "dual-style-consistency", "monotonicity",
-            "involution", "binary-idempotence", "homomorphism"
+            "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
         ]
         guard supportedTemplates.contains(entry.templateName) else {
             throw VerifyError.unsupportedTemplate(
@@ -283,7 +283,7 @@ extension SwiftInferCommand.Verify {
                 rendererInverseName: call
             )
 
-        case "involution", "binary-idempotence", "homomorphism":
+        case "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism":
             // Single-function algebraic laws. Involution's self-returning
             // instance form emits the receiver shape from `inputs` flags in the
             // composer; the free/static call resolves the same way idempotence's
@@ -310,7 +310,7 @@ extension SwiftInferCommand.Verify {
                 expected: [
                     "round-trip", "idempotence", "commutativity", "associativity",
                     "idempotence-lifted", "dual-style-consistency", "monotonicity",
-                    "involution", "binary-idempotence", "homomorphism"
+                    "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
                 ]
             )
         }

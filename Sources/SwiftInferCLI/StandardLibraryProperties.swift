@@ -104,6 +104,17 @@ public enum StandardLibraryProperties {
         law(
             "Int", "idempotent unary function", "abs(abs(a)) == abs(a)",
             "let a = randInt(); return abs(abs(a)) == abs(a)"
+        ),
+        law(
+            "Int", "abs is multiplicative (a homomorphism under ×)",
+            "abs(a * b) == abs(a) * abs(b)",
+            "let a = randInt(), b = randInt(); return abs(a * b) == abs(a) * abs(b)",
+            template: "multiplicative-homomorphism"
+        ),
+        law(
+            "Int", "signum is multiplicative", "(a * b).signum() == a.signum() * b.signum()",
+            "let a = randInt(), b = randInt(); return (a * b).signum() == a.signum() * b.signum()",
+            template: "multiplicative-homomorphism"
         )
     ]
 
