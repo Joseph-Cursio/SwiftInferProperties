@@ -82,25 +82,10 @@ public enum CollisionBias {
     /// *strip every occurrence* diverge most violently, because stripping `/` deletes **every**
     /// separator and collapses any path to a single component — and `""`.
     public static func collidingString(subject: String) -> GeneratorRecipe {
-        let symbols = (alphabet + ["/"]).map { "\"\($0)\"" }.joined(separator: ", ")
-        let expression = """
-            Gen.frequency(
-                // The degenerate values. `/` is where "strip the prefix" and "strip every
-                // occurrence" diverge worst: it deletes EVERY separator at once.
-                (1.0, Gen<String?>.element(of: ["/", ""] as [String]).map { $0! }),
-                // A FOUR-symbol alphabet, one of which is the separator. Substrings repeat, and
-                // anything path-shaped contains its own ancestors. That recurrence IS the
-                // counterexample, and a wide alphabet will not produce it in a million draws.
-                (4.0, Gen.array(
-                    of: Gen<String?>.element(of: [\(symbols)] as [String]).map { $0! },
-                    count: 0...6
-                ).map { "/" + $0.joined() })
-            )
-            """
         return GeneratorRecipe(
             subject: subject,
             typeName: "String",
-            expression: expression,
+            expression: collidingStringExpression,
             rationale: "A four-symbol alphabet including the separator, so substrings REPEAT and any "
                 + "path contains its own ancestors. A wide alphabet never produces that, and a "
                 + "predicate that confuses `strip the prefix` with `strip every occurrence` agrees "
@@ -108,6 +93,32 @@ public enum CollisionBias {
                 + "they collide. Do not widen this alphabet."
         )
     }
+
+    /// The colliding-string generator, as runnable `swift-property-based` Swift.
+    ///
+    /// **Every construct here compiles against the vendored kit, and that is not incidental — it is
+    /// the whole point of shipping a generator instead of describing one.** Walk 6 caught the earlier
+    /// version emitting `Gen.frequency` (which is `@available(swift 6.2)`) and `Gen.array(of:count:)`
+    /// (a *static* form the kit does not have — it has only an instance `.array(of:)`), so every cold
+    /// reader had to hand-re-implement it. This version uses only what exists in every language mode:
+    /// `Gen<String?>.element(of:)`, instance `.array(of:)`, and `.map`.
+    ///
+    /// The degenerate `"/"` case is not a separate weighted arm any more; it falls out for free when
+    /// the array draws **zero** components (`"/" + [].joined()` is `"/"`), which happens often over
+    /// `0...6`. That removes the need for `frequency` without losing the case that matters most — the
+    /// root, where a strip-all and a strip-prefix diverge worst.
+    private static let collidingStringExpression: String = {
+        let symbols = (alphabet + ["/"]).map { "\"\($0)\"" }.joined(separator: ", ")
+        return """
+            // A FOUR-symbol alphabet, one of which is the separator, so substrings repeat and any
+            // path contains its own ancestors — the recurrence a wide alphabet never produces.
+            // Zero components yields "/", the root case, for free.
+            Gen<String?>.element(of: [\(symbols)] as [String])
+                .map { $0! }
+                .array(of: 0...6)
+                .map { "/" + $0.joined() }
+            """
+    }()
 
     /// **The collision is often between a parameter and the carrier's STATE, and a generator that
     /// varies only the parameter cannot produce it.**
@@ -122,18 +133,24 @@ public enum CollisionBias {
     /// and the parent never recurs inside the child — the law passes, and the bug is untouched.
     /// **Both halves have to be drawn from the same small universe.**
     public static func carrierState(typeName: String) -> GeneratorRecipe {
+        // Do NOT emit `\(typeName).gen()` — that method does not exist, and walk 6 caught it not
+        // compiling. The template cannot know the carrier's initialiser, so it ships the runnable
+        // half (a colliding *String* for the carrier's path-like state) and names the one manual
+        // step: feed it into the carrier's own init. Compiles; honest about the seam it cannot cross.
         GeneratorRecipe(
             subject: "\(typeName) (the carrier's own state)",
             typeName: typeName,
             expression: """
-                // Build the carrier from the SAME alphabet as the parameters above. Holding its
-                // stored state fixed while varying only the arguments cannot produce a collision
-                // between the two — and that collision is the counterexample.
-                \(typeName).gen()   // ← must draw its String state from `collidingString`, not a wide alphabet
+                // Draw the CARRIER's String state from the SAME colliding alphabet, then build the
+                // carrier from it — e.g. `.map { \(typeName)(currentPath: $0) }` for whatever its
+                // path-like stored property is called. Holding that state fixed while varying only
+                // the arguments cannot produce the collision, and the collision is the counterexample.
+                \(collidingStringExpression)
                 """,
             rationale: "Half the collision lives in the carrier's stored state. A generator that "
                 + "varies only the arguments, against a carrier fixed at some plausible value, "
-                + "quantifies over exactly the inputs where the two notions agree."
+                + "quantifies over exactly the inputs where the two notions agree — so the carrier's "
+                + "own String state must be drawn from this same generator, not a wide one."
         )
     }
 
