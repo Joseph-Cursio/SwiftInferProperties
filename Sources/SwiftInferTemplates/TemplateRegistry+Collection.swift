@@ -284,6 +284,11 @@ extension TemplateRegistry {
         if let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: context.vocabulary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
+        // An additive measure over an array `[T]` — a monoid homomorphism
+        // `h(a + b) == h(a) + h(b)`.
+        if let suggestion = HomomorphismTemplate.suggest(for: summary) {
+            collector.record(suggestion, generatorType: summaryGenType)
+        }
         if let suggestion = InvariantPreservationTemplate.suggest(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }

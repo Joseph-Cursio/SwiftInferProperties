@@ -190,6 +190,12 @@ public enum StandardLibraryProperties {
             "Array", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
             "let a = randArr(), b = randArr(), c = randArr(); return (a + b) + c == a + (b + c)",
             witnesses: "Monoid", template: "associativity"
+        ),
+        law(
+            "Array", "count is additive over concatenation (a monoid homomorphism)",
+            "(a + b).count == a.count + b.count",
+            "let a = randArr(), b = randArr(); return (a + b).count == a.count + b.count",
+            template: "homomorphism"
         )
     ]
 

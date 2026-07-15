@@ -51,7 +51,7 @@ swift-infer known-properties [--type <T>] [--verify]
 `--verify` spawns `swift` locally (no network) — an opt-in verify gesture, on
 the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 
-## What's in it (41 laws, 6 caveats)
+## What's in it (42 laws, 6 caveats)
 
 - **Int** — additive commutative monoid; `max`/`min` semilattice; `abs`
   idempotent.
@@ -61,7 +61,8 @@ the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 - **Bool** — `&&`/`||` commutative/associative/idempotent (as boolean *values*).
 - **String** — concatenation monoid (not commutative) + identity; `uppercased`
   idempotent; `reversed` involution.
-- **Array** — concatenation monoid; `reversed` involution; `sorted` idempotent.
+- **Array** — concatenation monoid; `reversed` involution; `sorted` idempotent;
+  `count` additive over concatenation (a monoid homomorphism).
 - **Set** — `union`/`intersection` bounded semilattice; distributivity /
   absorption / relative De Morgan; `symmetricDifference` commutative +
   self-inverse.
