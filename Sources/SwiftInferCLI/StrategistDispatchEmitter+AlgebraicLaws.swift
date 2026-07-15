@@ -27,6 +27,9 @@ extension StrategistDispatchEmitter {
         case "multiplicative-homomorphism":
             return composeMultiplicativeHomomorphismPass(inputs: inputs)
 
+        case "measure-non-negativity":
+            return composeMeasureNonNegativityPass(inputs: inputs, recipe: recipe)
+
         default:
             return nil
         }
@@ -209,6 +212,48 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: (\\(aValue), \\(bValue))")
                 print("VERIFY_DEFAULT_FORWARD: \\(combined)")
                 print("VERIFY_DEFAULT_INVERSE: \\(multiplied)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    // MARK: - Measure non-negativity (1 value per trial; measure >= 0)
+
+    /// Two call shapes: a 0-parameter measure of `self` — a computed property
+    /// `value.count` or a nullary method `value.size()` — over the generated
+    /// receiver, or a 1-parameter free/static measure `length(value)` over the
+    /// generated argument. The law is the one free thing a cardinality owes:
+    /// `measure >= 0`.
+    static func composeMeasureNonNegativityPass(inputs: Inputs, recipe: GeneratorRecipe) -> String {
+        let functionCall = inputs.functionCalls.first ?? "(missing)"
+        let measureExpression: String
+        if inputs.isInstanceMethod, inputs.isNullary {
+            let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
+            let accessor = inputs.isComputedProperty ? "" : "()"
+            measureExpression = "value.\(methodName)\(accessor)"
+        } else {
+            measureExpression = "\(functionCall)(value)"
+        }
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+        // measure non-negativity: a count / size / magnitude is never negative.
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let value = defaultGenerator.run(using: &rng)
+            let measured = \(measureExpression)
+            if measured < 0 {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(value)")
+                print("VERIFY_DEFAULT_FORWARD: \\(measured)")
+                print("VERIFY_DEFAULT_INVERSE: 0")
                 exit(1)
             }
         }

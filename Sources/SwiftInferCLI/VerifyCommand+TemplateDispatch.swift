@@ -52,7 +52,8 @@ extension SwiftInferCommand.Verify {
         let supportedTemplates: [String] = [
             "round-trip", "idempotence", "commutativity", "associativity",
             "idempotence-lifted", "dual-style-consistency", "monotonicity",
-            "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
+            "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
+            "measure-non-negativity"
         ]
         guard supportedTemplates.contains(entry.templateName) else {
             throw VerifyError.unsupportedTemplate(
@@ -280,11 +281,11 @@ extension SwiftInferCommand.Verify {
                 entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: true
             )
 
-        case "involution", "homomorphism", "multiplicative-homomorphism":
-            // Single-function laws. Involution's self-returning instance form
-            // emits the receiver shape from `inputs` flags in the composer; the
-            // free/static call resolves the same way idempotence's non-receiver
-            // shape does.
+        case "involution", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity":
+            // Single-function laws. Involution's self-returning instance form and
+            // measure's 0-param instance form both emit the receiver shape from
+            // `inputs` flags in the composer; the free/static call resolves the
+            // same way idempotence's non-receiver shape does.
             return singleCallResolved(
                 entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
             )
@@ -307,7 +308,8 @@ extension SwiftInferCommand.Verify {
                 expected: [
                     "round-trip", "idempotence", "commutativity", "associativity",
                     "idempotence-lifted", "dual-style-consistency", "monotonicity",
-                    "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
+                    "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
+                    "measure-non-negativity"
                 ]
             )
         }

@@ -91,9 +91,21 @@ The dogfood's value is the **precision confirmation** and this documented bounda
    declared type (stored / read-write / effectful / top-level / non-public
    excluded). Empirically de-risked: only involution fires on the 0-param shape
    (idempotence / monotonicity / homomorphism all need >= 1 param), so no flood.
-   **Computed-property MEASURES (`var count`) remain open** — a 0-param `-> N`
-   property has no template home; the scanner surfaces it but nothing fires.
-   Covering them needs a *new* measure-property template.
+   **Computed-property MEASURES (`var count`) — now DONE too (`MeasureTemplate`).**
+   The `measure-non-negativity` template gives a lone measure a home via the one
+   free law it owes: `measure >= 0`. Fires on a curated non-negative cardinality /
+   magnitude name (`count` / `size` / `length` / `cardinality` / `magnitude` /
+   `depth` / `height` / `width`) returning a SIGNED integer (`UInt` is a
+   compile-time tautology, excluded), in three shapes — a 0-param computed
+   property (`value.count`), a 0-param method (`value.size()`), and a 1-param
+   function (`length(value)`). Deliberately **Possible-tier** (35, surfaced with
+   `--include-possible`): non-negativity is the weakest law in the catalogue,
+   nearly always true for a correctly-named measure, so it sits one tier below the
+   additive `homomorphism` on the same measure and adds no default-tier noise. It
+   earns its keep only on the integer-underflow edge (`capacity - used`,
+   `end - start`). Verified end-to-end: `magnitude(value) >= 0` bothPasses through
+   the `--all-from-index` survey, and all three shapes bothPass in the emitter
+   compile-matrix.
 2. **Instance-method binary ops — DONE (Epic 2), broader than scoped.** Widened
    `binaryOperatorTypeSymmetrySignal` itself to accept `self: T`,
    `func op(_ other: T) -> T`, so commutativity / associativity /
@@ -104,6 +116,5 @@ The dogfood's value is the **precision confirmation** and this documented bounda
 **Still open (deliberately):**
 - **Mutating involutions** (`BigInt.negate()` returning `Void`) — gated out by the
   non-mutating requirement; would need a lifted `var copy; copy.negate()` shape.
-- **Computed-property measures** (see #1 above).
 - **Cross-type `reversed()`** is NOT a gap — it is a round-trip, not a unary
   involution, and correctly stays out of the involution template.

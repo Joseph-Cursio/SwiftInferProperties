@@ -103,7 +103,14 @@ struct VerifyEmitterMatrixMeasuredTests {
         instanceCell(
             "involution", "involution", "mirrored",
             nullary: true, returnsSelf: true, computedProperty: true
-        )
+        ),
+        // measure non-negativity — the three shapes it fires on: a 1-parameter
+        // free/static measure (`length(value) >= 0`), a 0-parameter measure of
+        // `self` as a computed property (`value.size >= 0`), and the same as a
+        // nullary method (`value.width() >= 0`).
+        staticCell("measure", "measure-non-negativity", "length(_:)"),
+        instanceCell("measure", "measure-non-negativity", "size", nullary: true, computedProperty: true),
+        instanceCell("measure", "measure-non-negativity", "width()", nullary: true)
     ]
 
     @Test("every emitter cell compiles and bothPasses on a correct implementation")

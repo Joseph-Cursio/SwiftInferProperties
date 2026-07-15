@@ -293,6 +293,15 @@ extension TemplateRegistry {
         if let suggestion = HomomorphismTemplate.suggestMultiplicative(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
+        // A lone measure — `count` / `size` / `magnitude` — owes the one free
+        // law of a cardinality: `measure >= 0`. Generates the argument for a
+        // 1-parameter measure, else the receiver (a measure of `self`).
+        if let suggestion = MeasureTemplate.suggest(for: summary) {
+            collector.record(
+                suggestion,
+                generatorType: summary.parameters.first?.typeText ?? summary.containingTypeName
+            )
+        }
         if let suggestion = InvariantPreservationTemplate.suggest(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }

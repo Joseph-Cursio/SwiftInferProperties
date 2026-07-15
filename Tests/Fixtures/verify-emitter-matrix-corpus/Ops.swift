@@ -15,6 +15,9 @@ public enum FreeOps {
 
     /// unary idempotent — `abs(abs(x)) == abs(x)`.
     public static func absolute(_ value: Int) -> Int { value < 0 ? -value : value }
+
+    /// A 1-parameter free/static measure — `length(x) >= 0` (a cardinality).
+    public static func length(_ value: Int) -> Int { value < 0 ? -value : value }
 }
 
 /// The INSTANCE call shape over a generatable (`CaseIterable`) carrier — the
@@ -43,6 +46,13 @@ public enum Tri: CaseIterable, Sendable, Equatable {
     /// The same involution as a read-only COMPUTED PROPERTY — recall epic #1:
     /// `x.mirrored.mirrored == x`, accessed without parentheses.
     public var mirrored: Tri { flipped() }
+
+    /// A 0-parameter measure of `self` as a COMPUTED PROPERTY — `value.size >= 0`
+    /// (the measure template's non-negativity law, computed-property shape).
+    public var size: Int { rank + 1 }
+
+    /// The same measure as a nullary METHOD — `value.width() >= 0`.
+    public func width() -> Int { rank + 1 }
 
     private var rank: Int {
         switch self {
