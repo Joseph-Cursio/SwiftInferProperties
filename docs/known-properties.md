@@ -32,7 +32,9 @@ The listing tags reference laws `[reference]` and trap caveats `[trap]` so a
 reader can tell the weight-bearing rows from the documentation. The role is
 derived, so it can't drift: the day a shape gets a template, its entries stop
 being reference and start anchoring — as the `reversed` involution rows did the
-day the `InvolutionTemplate` shipped (they now carry `template: "involution"`).
+day the `InvolutionTemplate` shipped (`template: "involution"`), and the
+`op(x, x) == x` rows (`Set.union`, `Int.max`, `Bool.&&`) did with the
+`BinaryIdempotenceTemplate` (`template: "binary-idempotence"`).
 
 ## CLI
 

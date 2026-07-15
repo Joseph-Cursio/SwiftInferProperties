@@ -99,7 +99,7 @@ public enum StandardLibraryProperties {
         law(
             "Int", "idempotent under max", "max(a, a) == a",
             "let a = randInt(); return max(a, a) == a",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "binary-idempotence"
         ),
         law(
             "Int", "idempotent unary function", "abs(abs(a)) == abs(a)",
@@ -146,7 +146,7 @@ public enum StandardLibraryProperties {
         law(
             "Bool", "idempotent under &&", "(a && a) == a",
             "let a = randBool(); return (a && a) == a",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "binary-idempotence"
         )
     ]
 
@@ -208,7 +208,7 @@ public enum StandardLibraryProperties {
         law(
             "Set", "idempotent under union", "a.union(a) == a",
             "let a = randSet(); return a.union(a) == a",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "binary-idempotence"
         ),
         law(
             "Set", "semilattice under intersection", "a.intersection(b) == b.intersection(a)",

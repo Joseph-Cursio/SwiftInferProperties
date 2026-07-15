@@ -81,6 +81,11 @@ struct KnownPropertiesTests {
         // reference to anchor: they now name a template `discover` emits.
         #expect(role("Array", "a.reversed().reversed() == a") == .anchor)
         #expect(role("String", "String(String(s.reversed()).reversed()) == s") == .anchor)
+        // The BinaryIdempotenceTemplate promoted the semilattice `op(x, x) == x`
+        // rows likewise.
+        #expect(role("Set", "a.union(a) == a") == .anchor)
+        #expect(role("Int", "max(a, a) == a") == .anchor)
+        #expect(role("Bool", "(a && a) == a") == .anchor)
     }
 
     @Test("common data types — Optional / Dictionary carry verifiable functor laws")

@@ -277,6 +277,10 @@ extension TemplateRegistry {
         ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
+        // The third semilattice leg: `op(x, x) == x` for a curated join/meet.
+        if let suggestion = BinaryIdempotenceTemplate.suggest(for: summary) {
+            collector.record(suggestion, generatorType: summaryGenType)
+        }
         if let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: context.vocabulary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
