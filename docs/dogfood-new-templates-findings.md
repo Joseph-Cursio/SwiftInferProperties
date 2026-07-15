@@ -1,5 +1,21 @@
 # Dogfood — involution / binary-idempotence / homomorphism on real packages
 
+> **Update (2026-07-15): the two follow-ups below were built** as the
+> recall-widening epics. **Epic 2** widened `binaryOperatorTypeSymmetrySignal`
+> to instance-method binary operators (`x.union(y)`), so commutativity /
+> associativity / binary-idempotence now all fire on them (broader than
+> follow-up #2, which scoped only binary-idempotence). **Epic 1** made the
+> scanner surface read-only computed properties as nullary `self -> T` summaries,
+> so involution now fires on `Complex.conjugate` (verified: +1 pick on real
+> swift-numerics ComplexModule). Two near-misses recorded below are now
+> *correctly covered* rather than *correctly silent* — `Complex.conjugate`
+> (involution) and instance joins like `x.union(y)`. **Still open** (deliberately):
+> **computed-property MEASURES** (`var count`) — a 0-param `-> N` property has no
+> template home (homomorphism needs a `[T]` param), so the scanner surfaces it but
+> nothing fires; and **mutating involutions** (`BigInt.negate()`), gated out as
+> `mutating`. The precision conclusion held through both epics: no default-tier
+> false positives; the recall boundary narrowed exactly where measured to be safe.
+
 **No binary change.** A precision/recall validation of the three catalogue-work
 templates (`involution`, `binary-idempotence`, `homomorphism`) against real,
 unseen algebraic code. Conclusion: **precision is perfect (zero false positives
@@ -68,10 +84,26 @@ real precision risk — out of scope for a dogfood, and against the "raise
 thresholds, don't pile on filters / when in doubt, fewer suggestions" posture.
 The dogfood's value is the **precision confirmation** and this documented boundary.
 
-**Follow-ups, only if recall on real code becomes a goal (each is its own epic):**
-1. Recognize **computed-property** involutions/measures (`var conjugate`,
-   `var count`) — a `FunctionSummary`-vs-property scope widening across the
-   algebraic family.
-2. Recognize **instance-method** binary ops with an implicit receiver
-   (`x.union(y)`) for binary-idempotence — the same widening
-   `binaryOperatorTypeSymmetrySignal` would need for commutativity/associativity.
+**Follow-ups (each its own epic) — status as of 2026-07-15:**
+1. **Computed-property involutions — DONE (Epic 1).** The scanner surfaces a
+   read-only computed property as a nullary `self -> T` summary, so involution
+   fires on `var conjugate: Self`. Gated to a single read-only getter with a
+   declared type (stored / read-write / effectful / top-level / non-public
+   excluded). Empirically de-risked: only involution fires on the 0-param shape
+   (idempotence / monotonicity / homomorphism all need >= 1 param), so no flood.
+   **Computed-property MEASURES (`var count`) remain open** — a 0-param `-> N`
+   property has no template home; the scanner surfaces it but nothing fires.
+   Covering them needs a *new* measure-property template.
+2. **Instance-method binary ops — DONE (Epic 2), broader than scoped.** Widened
+   `binaryOperatorTypeSymmetrySignal` itself to accept `self: T`,
+   `func op(_ other: T) -> T`, so commutativity / associativity /
+   binary-idempotence all fire on `x.union(y)`. The receiver-closure verify path
+   already existed; the fix was the discovery signal (plus routing
+   binary-idempotence through the receiver shape).
+
+**Still open (deliberately):**
+- **Mutating involutions** (`BigInt.negate()` returning `Void`) — gated out by the
+  non-mutating requirement; would need a lifted `var copy; copy.negate()` shape.
+- **Computed-property measures** (see #1 above).
+- **Cross-type `reversed()`** is NOT a gap — it is a round-trip, not a unary
+  involution, and correctly stays out of the involution template.
