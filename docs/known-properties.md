@@ -30,7 +30,7 @@ swift-infer known-properties [--type <T>] [--verify]
 `--verify` spawns `swift` locally (no network) — an opt-in verify gesture, on
 the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 
-## What's in it (V1.145: 23 laws, 5 caveats)
+## What's in it (37 laws, 6 caveats)
 
 - **Int** — additive commutative monoid; `max`/`min` semilattice; `abs`
   idempotent.
@@ -38,12 +38,19 @@ the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
   (NaN/±∞ break them under `==`). Listed explicitly so the special-case status
   is visible rather than read as an oversight. `+` non-associativity is a caveat.
 - **Bool** — `&&`/`||` commutative/associative/idempotent (as boolean *values*).
-- **String** — concatenation monoid (not commutative) + identity.
+- **String** — concatenation monoid (not commutative) + identity; `uppercased`
+  idempotent; `reversed` involution.
 - **Array** — concatenation monoid; `reversed` involution; `sorted` idempotent.
-- **Set** — `union`/`intersection` bounded semilattice.
+- **Set** — `union`/`intersection` bounded semilattice; distributivity /
+  absorption / relative De Morgan; `symmetricDifference` commutative +
+  self-inverse.
+- **Optional** — functor laws (identity + composition) + monad right identity.
+- **Dictionary** — `mapValues` functor laws; `filter` idempotent;
+  merge-with-self identity (keep first).
 
 Caveats (documented, never asserted true): `String`/`Array` `+` not commutative;
-`Double` `+` not associative; `Set.subtracting` not commutative; and **`&&`/`||`
+`Double` `+` not associative; `Set.subtracting` not commutative;
+`Dictionary.merging` not commutative on key collisions; and **`&&`/`||`
 short-circuit** — the laws hold for boolean *values*, but not for *evaluation*
 when operands have side effects (Swift does not evaluate the right operand when
 the left decides the result, so `a && f()` and `f() && a` differ in what runs).

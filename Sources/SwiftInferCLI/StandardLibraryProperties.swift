@@ -7,9 +7,9 @@ import Foundation
 /// `.swiftinfer/`, which stays the user's own discovered corpus.
 ///
 /// These are the one class of property that is both *known-true by contract*
-/// and *verifiable* (their carriers — `Int`, `String`, `[T]`, `Set`, `Bool`
-/// — are exactly the ones the generator can construct), so `--verify` can
-/// confirm them live rather than assert them.
+/// and *verifiable* (their carriers — `Int`, `Double`, `Bool`, `String`,
+/// `[T]`, `Set`, `Optional`, `Dictionary` — are exactly the ones the generator
+/// can construct), so `--verify` can confirm them live rather than assert them.
 ///
 /// Each law is tagged with the **SwiftPropertyLaws protocol it witnesses**
 /// (`Semigroup` / `Monoid` / `CommutativeMonoid` / `Semilattice`) — the
@@ -131,7 +131,8 @@ public enum StandardLibraryProperties {
         )
     ]
 
-    // String — free monoid under concatenation (NOT commutative)
+    // String — free monoid under concatenation (NOT commutative), plus
+    // uppercasing idempotence and the reverse involution.
     private static let stringLaws: [KnownProperty] = [
         law(
             "String", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
@@ -142,6 +143,15 @@ public enum StandardLibraryProperties {
             "String", "concatenation identity", "a + \"\" == a",
             "let a = randStr(); return a + \"\" == a",
             witnesses: "Monoid"
+        ),
+        law(
+            "String", "idempotent under uppercasing", "s.uppercased().uppercased() == s.uppercased()",
+            "let s = randStr(); return s.uppercased().uppercased() == s.uppercased()"
+        ),
+        law(
+            "String", "reverse is an involution",
+            "String(String(s.reversed()).reversed()) == s",
+            "let s = randStr(); return String(String(s.reversed()).reversed()) == s"
         )
     ]
 
@@ -209,6 +219,22 @@ public enum StandardLibraryProperties {
             note: "Stated against a minuend — SetAlgebra has no complement. A subtracting "
                 + "implemented as symmetricDifference passes every other Set law here; "
                 + "only this shape catches it (kit: SetAlgebra.deMorganForUnion)."
+        ),
+        // Symmetric difference is a commutative group (identity ∅, self-inverse).
+        // The kit models no such protocol (CommutativeGroup is deferred), so these
+        // tag no witness — the truths are stated and verified directly.
+        law(
+            "Set", "commutative under symmetricDifference",
+            "a.symmetricDifference(b) == b.symmetricDifference(a)",
+            "let a = randSet(), b = randSet(); "
+                + "return a.symmetricDifference(b) == b.symmetricDifference(a)",
+            template: "commutativity"
+        ),
+        law(
+            "Set", "symmetricDifference self-inverse",
+            "a.symmetricDifference(b).symmetricDifference(b) == a",
+            "let a = randSet(), b = randSet(); "
+                + "return a.symmetricDifference(b).symmetricDifference(b) == a"
         )
     ]
 
@@ -235,6 +261,12 @@ public enum StandardLibraryProperties {
             template: "commutativity"
         ),
         caveat(
+            "Dictionary", "merging is NOT commutative on key collisions",
+            "`d1.merging(d2) { a, _ in a } != d2.merging(d1) { a, _ in a }` when a key is in "
+                + "both with different values — the uniquing closure's `first` argument differs.",
+            template: "commutativity"
+        ),
+        caveat(
             "Bool", "&& / || short-circuit — laws hold for VALUES, not evaluation",
             "Swift does not evaluate the right operand when the left decides the result, "
                 + "so with side effects `a && f()` and `f() && a` differ in what runs."
@@ -242,11 +274,67 @@ public enum StandardLibraryProperties {
     ]
 
     public static let all: [KnownProperty] =
-        intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws + caveatEntries
+        intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws
+            + optionalLaws + dictionaryLaws + caveatEntries
+}
+
+// MARK: - Optional / Dictionary laws + builders
+//
+// Split into a same-file extension purely to keep the enum's primary body
+// under the `type_body_length` cap — extension bodies are exempt. No behavior
+// change; `all` (above) aggregates these groups exactly as before.
+extension StandardLibraryProperties {
+
+    // Optional — the functor laws (identity + composition) and the monad
+    // right-identity. Universally true; `Int?` is Equatable so `--verify` runs
+    // them directly. None witnesses a kit ALGEBRAIC protocol (functor/monad
+    // laws aren't Semigroup/Monoid/…), so all tag none.
+    static let optionalLaws: [KnownProperty] = [
+        law(
+            "Optional", "functor identity", "o.map { $0 } == o",
+            "let o = randOpt(); return o.map { $0 } == o"
+        ),
+        law(
+            "Optional", "functor composition",
+            "o.map(f).map(g) == o.map { g(f($0)) }",
+            "let o = randOpt(); return o.map { $0 + 1 }.map { $0 * 2 } == o.map { ($0 + 1) * 2 }"
+        ),
+        law(
+            "Optional", "monad right identity", "o.flatMap { Optional($0) } == o",
+            "let o = randOpt(); return o.flatMap { Optional($0) } == o"
+        )
+    ]
+
+    // Dictionary — the mapValues functor laws, filter idempotence, and the
+    // merge-with-self identity. `merging` is NOT commutative on key collisions
+    // (see caveats).
+    static let dictionaryLaws: [KnownProperty] = [
+        law(
+            "Dictionary", "mapValues functor identity", "d.mapValues { $0 } == d",
+            "let d = randDict(); return d.mapValues { $0 } == d"
+        ),
+        law(
+            "Dictionary", "mapValues functor composition",
+            "d.mapValues(f).mapValues(g) == d.mapValues { g(f($0)) }",
+            "let d = randDict(); "
+                + "return d.mapValues { $0 + 1 }.mapValues { $0 * 2 } == d.mapValues { ($0 + 1) * 2 }"
+        ),
+        law(
+            "Dictionary", "idempotent under filter",
+            "d.filter(p).filter(p) == d.filter(p)",
+            "let d = randDict(); "
+                + "return d.filter { $0.value > 0 }.filter { $0.value > 0 } == d.filter { $0.value > 0 }"
+        ),
+        law(
+            "Dictionary", "merge-with-self identity (keep first)",
+            "d.merging(d) { a, _ in a } == d",
+            "let d = randDict(); return d.merging(d, uniquingKeysWith: { a, _ in a }) == d"
+        )
+    ]
 
     // MARK: - Builders
 
-    private static func law(
+    static func law(
         _ type: String,
         _ structure: String,
         _ statement: String,
@@ -261,7 +349,7 @@ public enum StandardLibraryProperties {
         )
     }
 
-    private static func caveat(
+    static func caveat(
         _ type: String,
         _ statement: String,
         _ note: String,

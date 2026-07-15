@@ -55,6 +55,27 @@ struct KnownPropertiesTests {
         #expect(caveatTypes.contains("Double"))
         #expect(caveatTypes.contains("String"))
         #expect(caveatTypes.contains("Array"))
+        // Dictionary `merging` non-commutativity is the same class of trap.
+        #expect(caveatTypes.contains("Dictionary"))
+    }
+
+    @Test("common data types — Optional / Dictionary carry verifiable functor laws")
+    func commonDataTypesCovered() {
+        let lawTypes = Set(StandardLibraryProperties.laws.map(\.type))
+        // The two most-common Swift containers after Array/Set are now covered.
+        #expect(lawTypes.contains("Optional"))
+        #expect(lawTypes.contains("Dictionary"))
+
+        func statements(_ type: String) -> Set<String> {
+            Set(StandardLibraryProperties.laws.filter { $0.type == type }.map(\.statement))
+        }
+        #expect(statements("Optional").contains("o.map { $0 } == o"))
+        #expect(statements("Dictionary").contains("d.mapValues { $0 } == d"))
+        // Every new law is executable — it must carry a checkBody, or `--verify`
+        // silently skips it (a law you cannot run is not a property test).
+        for law in StandardLibraryProperties.laws where law.type == "Optional" || law.type == "Dictionary" {
+            #expect(law.checkBody != nil, "unrunnable law: \(law.displayName)")
+        }
     }
 
     // MARK: - Listing

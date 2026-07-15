@@ -116,6 +116,13 @@ enum KnownPropertiesRenderer {
     func randBool() -> Bool { Bool.random(using: &rng) }
     func randArr() -> [Int] { (0..<Int.random(in: 0...6, using: &rng)).map { _ in randInt() } }
     func randSet() -> Set<Int> { Set(randArr()) }
+    func randOpt() -> Int? { Bool.random(using: &rng) ? randInt() : nil }
+    func randDict() -> [Int: Int] {
+        // Keys from a SMALL space (0...4) so merges and collisions actually occur.
+        var dict = [Int: Int]()
+        for _ in 0..<Int.random(in: 0...5, using: &rng) { dict[Int.random(in: 0...4, using: &rng)] = randInt() }
+        return dict
+    }
     func randStr() -> String {
         String((0..<Int.random(in: 0...6, using: &rng)).map { _ in "abcde".randomElement(using: &rng)! })
     }
