@@ -235,7 +235,41 @@ final class FunctionScannerVisitor: SyntaxVisitor {
 
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
         captureIdentityCandidates(from: node)
+        // Recall-widening epic #1 — a read-only computed property is a nullary
+        // `self -> T` map, so surface it as a summary (the involution template's
+        // instance shape). Skip non-public / SPI properties on the same basis as
+        // functions: an external test can't reach them.
+        if let summary = makeSummary(fromComputedProperty: node) {
+            if let restriction = accessRestriction(ofVariable: node) {
+                restricted.append(RestrictedFunction(summary: summary, restriction: restriction))
+            } else {
+                summaries.append(summary)
+            }
+        }
         return .visitChildren
+    }
+
+    /// Access restriction for a computed property, mirroring `accessRestriction`
+    /// for functions (private/fileprivate → not visible; internal/SPI/`_`-type →
+    /// internal). Properties are never "nested local", so that case is omitted.
+    private func accessRestriction(ofVariable node: VariableDeclSyntax) -> AccessRestriction? {
+        let modifiers = node.modifiers.map(\.name.text)
+        if modifiers.contains("private") || modifiers.contains("fileprivate") {
+            return .notVisibleToTests
+        }
+        let hasSPI = node.attributes.contains { element in
+            if case let .attribute(attr) = element {
+                return attr.attributeName.trimmedDescription == "_spi"
+            }
+            return false
+        }
+        if modifiers.contains("internal")
+            || hasSPI
+            || typeStack.contains(where: { $0.hasPrefix("_") })
+            || enclosingTypeNonPublic.contains(true) {
+            return .internalOrSPI
+        }
+        return nil
     }
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {

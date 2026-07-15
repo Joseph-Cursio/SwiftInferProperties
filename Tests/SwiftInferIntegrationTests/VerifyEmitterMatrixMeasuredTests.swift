@@ -41,6 +41,7 @@ struct VerifyEmitterMatrixMeasuredTests {
         let isInstanceMethod: Bool
         var isNullary = false
         var returnsSelfType = false
+        var isComputedProperty = false
     }
 
     private static let triShape = IndexedTypeShape(
@@ -69,10 +70,11 @@ struct VerifyEmitterMatrixMeasuredTests {
         _ template: String,
         _ function: String,
         nullary: Bool = false,
-        returnsSelf: Bool = false
+        returnsSelf: Bool = false,
+        computedProperty: Bool = false
     ) -> Cell {
         Cell(
-            name: "\(name)/instance",
+            name: "\(name)/\(computedProperty ? "computed-property" : "instance")",
             template: template,
             typeName: "Tri",
             function: function,
@@ -80,7 +82,8 @@ struct VerifyEmitterMatrixMeasuredTests {
             typeShape: triShape,
             isInstanceMethod: true,
             isNullary: nullary,
-            returnsSelfType: returnsSelf
+            returnsSelfType: returnsSelf,
+            isComputedProperty: computedProperty
         )
     }
 
@@ -94,7 +97,13 @@ struct VerifyEmitterMatrixMeasuredTests {
         instanceCell("associativity", "associativity", "union(_:)"),
         // The bug's cell: binary-idempotence on an instance operator.
         instanceCell("binary-idempotence", "binary-idempotence", "union(_:)"),
-        instanceCell("involution", "involution", "flipped()", nullary: true, returnsSelf: true)
+        instanceCell("involution", "involution", "flipped()", nullary: true, returnsSelf: true),
+        // Recall epic #1 — an involution written as a read-only COMPUTED PROPERTY
+        // (`value.mirrored.mirrored == value`, no parens).
+        instanceCell(
+            "involution", "involution", "mirrored",
+            nullary: true, returnsSelf: true, computedProperty: true
+        )
     ]
 
     @Test("every emitter cell compiles and bothPasses on a correct implementation")
@@ -133,7 +142,8 @@ struct VerifyEmitterMatrixMeasuredTests {
                 carrierTypeName: cell.carrierTypeName,
                 isInstanceMethod: cell.isInstanceMethod,
                 isNullary: cell.isNullary,
-                returnsSelfType: cell.returnsSelfType
+                returnsSelfType: cell.returnsSelfType,
+                isComputedProperty: cell.isComputedProperty
             )
             let record = Verify.surveyRecord(for: entry, packageRoot: root, config: config)
             #expect(

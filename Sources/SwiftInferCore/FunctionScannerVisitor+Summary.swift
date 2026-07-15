@@ -59,6 +59,68 @@ extension FunctionScannerVisitor {
         )
     }
 
+    /// Build a `FunctionSummary` from a read-only COMPUTED PROPERTY, modelled as
+    /// a nullary `self -> T` method (0 parameters, returns the property type). A
+    /// getter is a pure `self -> T` map, so a computed property named like an
+    /// involution (`var conjugate: Self`) is exactly the involution template's
+    /// instance shape. `nil` for anything that isn't a single read-only computed
+    /// property with a declared type — a stored property, a `get set` pair, or an
+    /// `async`/`throws` getter. Recall-widening epic #1 (2026-07).
+    func makeSummary(fromComputedProperty node: VariableDeclSyntax) -> FunctionSummary? {
+        guard node.bindings.count == 1,
+              let binding = node.bindings.first,
+              let pattern = binding.pattern.as(IdentifierPatternSyntax.self),
+              let typeAnnotation = binding.typeAnnotation,
+              let accessorBlock = binding.accessorBlock,
+              Self.isReadOnlyGetter(accessorBlock) else {
+            return nil
+        }
+        // Instance member only: the involution shape is `self -> Self`, so it
+        // needs a containing type. A top-level computed `var` has none.
+        guard let containingTypeName = typeStack.last else {
+            return nil
+        }
+        let modifiers = node.modifiers.map(\.name.text)
+        let isStatic = modifiers.contains("static") || modifiers.contains("class")
+        let position = node.bindingSpecifier.positionAfterSkippingLeadingTrivia
+        let sourceLocation = converter.location(for: position)
+        return FunctionSummary(
+            name: pattern.identifier.text,
+            parameters: [],
+            returnTypeText: typeAnnotation.type.trimmedDescription,
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: isStatic,
+            location: SourceLocation(file: file, line: sourceLocation.line, column: sourceLocation.column),
+            containingTypeName: containingTypeName,
+            bodySignals: .empty,
+            isInferredPure: true,
+            isComputedProperty: true
+        )
+    }
+
+    /// A read-only computed accessor: the implicit-getter form `var x: T { … }`,
+    /// or an explicit block containing `get` and no `set` — and no `async` /
+    /// `throws` getter (a getter that can fail or suspend isn't the pure
+    /// `self -> T` map the templates assume).
+    private static func isReadOnlyGetter(_ block: AccessorBlockSyntax) -> Bool {
+        switch block.accessors {
+        case .getter:
+            return true
+
+        case let .accessors(list):
+            let specifiers = list.map(\.accessorSpecifier.text)
+            guard specifiers.contains("get"), !specifiers.contains("set") else {
+                return false
+            }
+            return !list.contains { accessor in
+                accessor.effectSpecifiers?.asyncSpecifier != nil
+                    || accessor.effectSpecifiers?.throwsClause != nil
+            }
+        }
+    }
+
     private func makeParameter(from syntax: FunctionParameterSyntax) -> Parameter {
         // Swift parameter shapes:
         //   `func f(a: Int)`       → firstName=a, secondName=nil → label=a, name=a

@@ -93,6 +93,12 @@ public struct FunctionSummary: Sendable, Equatable {
     /// `false` so call sites that don't populate it compile unchanged.
     public let isClockDeterministic: Bool
 
+    /// Recall-widening epic #1 — true when this summary was synthesized from a
+    /// read-only COMPUTED PROPERTY (`var conjugate: Self`), modelled as a nullary
+    /// `self -> T` method. The verify emitter reads it to emit a property access
+    /// (`value.conjugate`) rather than a call (`value.conjugate()`).
+    public let isComputedProperty: Bool
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -107,7 +113,8 @@ public struct FunctionSummary: Sendable, Equatable {
         discoverableGroup: String? = nil,
         invariantKeypath: String? = nil,
         isInferredPure: Bool = false,
-        isClockDeterministic: Bool = false
+        isClockDeterministic: Bool = false,
+        isComputedProperty: Bool = false
     ) {
         self.name = name
         self.parameters = parameters
@@ -123,6 +130,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.invariantKeypath = invariantKeypath
         self.isInferredPure = isInferredPure
         self.isClockDeterministic = isClockDeterministic
+        self.isComputedProperty = isComputedProperty
     }
 }
 

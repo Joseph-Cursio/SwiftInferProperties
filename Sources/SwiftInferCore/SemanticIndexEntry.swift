@@ -142,6 +142,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// non-mutating self-returning idempotence chain `value.m().m()`.
     public var returnsSelfType: Bool
 
+    /// Recall epic #1 — this entry is a read-only computed property; the verify
+    /// emitter emits `value.name` (property access) rather than `value.name()`.
+    public var isComputedProperty: Bool
+
     public init(
         identityHash: String,
         templateName: String,
@@ -160,7 +164,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         isInstanceMethod: Bool = false,
         isMutatingMethod: Bool = false,
         isNullary: Bool = false,
-        returnsSelfType: Bool = false
+        returnsSelfType: Bool = false,
+        isComputedProperty: Bool = false
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -180,6 +185,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.isMutatingMethod = isMutatingMethod
         self.isNullary = isNullary
         self.returnsSelfType = returnsSelfType
+        self.isComputedProperty = isComputedProperty
     }
 
     // MARK: - Codable
@@ -207,6 +213,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         case isMutatingMethod
         case isNullary
         case returnsSelfType
+        case isComputedProperty
     }
 
     public init(from decoder: Decoder) throws {
@@ -235,6 +242,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             try container.decodeIfPresent(Bool.self, forKey: .isNullary) ?? false
         self.returnsSelfType =
             try container.decodeIfPresent(Bool.self, forKey: .returnsSelfType) ?? false
+        self.isComputedProperty =
+            try container.decodeIfPresent(Bool.self, forKey: .isComputedProperty) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -257,6 +266,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         try container.encode(isMutatingMethod, forKey: .isMutatingMethod)
         try container.encode(isNullary, forKey: .isNullary)
         try container.encode(returnsSelfType, forKey: .returnsSelfType)
+        try container.encode(isComputedProperty, forKey: .isComputedProperty)
     }
 
     /// Returns a copy of `self` with the upsert-mutable columns
@@ -288,7 +298,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             isInstanceMethod: other.isInstanceMethod,
             isMutatingMethod: other.isMutatingMethod,
             isNullary: other.isNullary,
-            returnsSelfType: other.returnsSelfType
+            returnsSelfType: other.returnsSelfType,
+            isComputedProperty: other.isComputedProperty
         )
     }
 }

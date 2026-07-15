@@ -169,7 +169,8 @@ extension SwiftInferCommand.Verify {
             isInstanceMethod: entry.isInstanceMethod,
             isMutatingMethod: entry.isMutatingMethod,
             isNullary: entry.isNullary,
-            returnsSelfType: entry.returnsSelfType
+            returnsSelfType: entry.returnsSelfType,
+            isComputedProperty: entry.isComputedProperty
         )
         let source = try StrategistDispatchEmitter.emit(inputs)
         let context = VerifyResultRenderer.Context(

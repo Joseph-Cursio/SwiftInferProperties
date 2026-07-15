@@ -89,6 +89,8 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         public let isMutatingMethod: Bool
         public let isNullary: Bool
         public let returnsSelfType: Bool
+        /// Recall epic #1 — emit a property access (`value.name`) not a call.
+        public let isComputedProperty: Bool
 
         public init(
             carrier: String,
@@ -103,7 +105,8 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             isInstanceMethod: Bool = false,
             isMutatingMethod: Bool = false,
             isNullary: Bool = false,
-            returnsSelfType: Bool = false
+            returnsSelfType: Bool = false,
+            isComputedProperty: Bool = false
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -118,6 +121,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             self.isMutatingMethod = isMutatingMethod
             self.isNullary = isNullary
             self.returnsSelfType = returnsSelfType
+            self.isComputedProperty = isComputedProperty
         }
     }
 

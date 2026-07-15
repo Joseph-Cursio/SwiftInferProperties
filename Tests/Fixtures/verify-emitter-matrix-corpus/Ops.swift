@@ -40,6 +40,10 @@ public enum Tri: CaseIterable, Sendable, Equatable {
         }
     }
 
+    /// The same involution as a read-only COMPUTED PROPERTY — recall epic #1:
+    /// `x.mirrored.mirrored == x`, accessed without parentheses.
+    public var mirrored: Tri { flipped() }
+
     private var rank: Int {
         switch self {
         case .lo: return 0

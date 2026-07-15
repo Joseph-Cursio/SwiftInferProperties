@@ -190,6 +190,11 @@ public struct Evidence: Sendable, Equatable {
     /// containing type up to generic arguments).
     public let returnsSelfType: Bool
 
+    /// True when this row is a read-only COMPUTED PROPERTY (recall epic #1).
+    /// Lets the verify emitter emit a property access (`value.conjugate`) rather
+    /// than a call (`value.conjugate()`).
+    public let isComputedProperty: Bool
+
     public init(
         displayName: String,
         signature: String,
@@ -197,7 +202,8 @@ public struct Evidence: Sendable, Equatable {
         isInstanceMethod: Bool = false,
         isMutatingMethod: Bool = false,
         isNullary: Bool = false,
-        returnsSelfType: Bool = false
+        returnsSelfType: Bool = false,
+        isComputedProperty: Bool = false
     ) {
         self.displayName = displayName
         self.signature = signature
@@ -206,6 +212,7 @@ public struct Evidence: Sendable, Equatable {
         self.isMutatingMethod = isMutatingMethod
         self.isNullary = isNullary
         self.returnsSelfType = returnsSelfType
+        self.isComputedProperty = isComputedProperty
     }
 }
 

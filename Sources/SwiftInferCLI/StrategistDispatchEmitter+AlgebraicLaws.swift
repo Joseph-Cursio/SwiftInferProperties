@@ -39,7 +39,11 @@ extension StrategistDispatchEmitter {
         // A nullary non-mutating instance method returning its own type chains on
         // the receiver: `value.m().m() == value`.
         if inputs.isInstanceMethod, inputs.isNullary, inputs.returnsSelfType {
-            return composeSelfReturningInvolutionPass(functionCall: functionCall, recipe: recipe)
+            return composeSelfReturningInvolutionPass(
+                functionCall: functionCall,
+                recipe: recipe,
+                isComputedProperty: inputs.isComputedProperty
+            )
         }
         let oracle = "\(functionCall)(\(functionCall)(candidate)) != candidate"
         let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
@@ -76,21 +80,25 @@ extension StrategistDispatchEmitter {
     /// `value.m().m() == value`.
     private static func composeSelfReturningInvolutionPass(
         functionCall: String,
-        recipe: GeneratorRecipe
+        recipe: GeneratorRecipe,
+        isComputedProperty: Bool
     ) -> String {
         let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
+        // A computed property is accessed `value.conjugate`, a nullary method
+        // called `value.flipped()` — recall epic #1.
+        let accessor = isComputedProperty ? "" : "()"
         return """
         // --- Pass 1: default (strategist-derived generator) ---
-        // self-returning instance-method involution: applying `\(methodName)`
-        // twice on the receiver returns the original.
+        // self-returning instance involution: applying `\(methodName)` twice on
+        // the receiver returns the original.
 
         let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
             \(recipe.expression)
 
         for trial in 0 ..< trials {
             let value = defaultGenerator.run(using: &rng)
-            let onceResult = value.\(methodName)()
-            let twiceResult = onceResult.\(methodName)()
+            let onceResult = value.\(methodName)\(accessor)
+            let twiceResult = onceResult.\(methodName)\(accessor)
             if twiceResult != value {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")

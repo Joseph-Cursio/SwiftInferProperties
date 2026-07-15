@@ -39,7 +39,8 @@ extension FunctionSummary {
             isInstanceMethod: containingTypeName != nil && !isStatic,
             isMutatingMethod: isMutating,
             isNullary: parameters.isEmpty,
-            returnsSelfType: inferenceReturnsSelfType
+            returnsSelfType: inferenceReturnsSelfType,
+            isComputedProperty: isComputedProperty
         )
     }
 
