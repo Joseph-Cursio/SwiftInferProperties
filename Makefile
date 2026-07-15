@@ -30,8 +30,9 @@ BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests
 BATCH5 := ViewModelVerifyCorpusMeasuredTests|ViewModelRefintVerifyCorpusMeasuredTests|ViewModelKeyedRefintVerifyMeasuredTests|VMStateInvariantVerifyMeasuredTests|ViewModelFakedDepVerifyMeasuredTests|ViewModelPackageVerifyMeasuredTests|ViewModelVerifyEvidenceJoinMeasuredTests
 # Composition-action payload measured suites (slices 2/3/4 — TCA corpus builds).
 BATCH6 := CompositionPayloadCorpusMeasuredTests|IdentifiedActionCorpusMeasuredTests|BindingActionCorpusMeasuredTests
-# TCA/redux determinism / real-examples / unknown-action / multi-module corpora.
-BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests|TCAExamplesMeasuredTests|UnknownActionCorpusMeasuredTests|MultiModuleVerifyMeasuredTests
+# TCA/redux determinism / real-examples / unknown-action / multi-module corpora,
+# plus the generator-recipe compile guard (a single light kit-only build).
+BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests|TCAExamplesMeasuredTests|UnknownActionCorpusMeasuredTests|MultiModuleVerifyMeasuredTests|GeneratorRecipeCompileMeasuredTests
 
 # Never run batches concurrently (peak-disk + perf-contention safety), even
 # under `make -j`.
