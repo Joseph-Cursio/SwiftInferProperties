@@ -110,7 +110,18 @@ struct VerifyEmitterMatrixMeasuredTests {
         // nullary method (`value.width() >= 0`).
         staticCell("measure", "measure-non-negativity", "length(_:)"),
         instanceCell("measure", "measure-non-negativity", "size", nullary: true, computedProperty: true),
-        instanceCell("measure", "measure-non-negativity", "width()", nullary: true)
+        instanceCell("measure", "measure-non-negativity", "width()", nullary: true),
+        // A TUPLE carrier — `ordered((Int, Int))` sorts the pair (idempotent),
+        // generated via the kit's `zip` combinator over the component generators.
+        Cell(
+            name: "idempotence/tuple",
+            template: "idempotence",
+            typeName: "FreeOps",
+            function: "ordered(_:)",
+            carrierTypeName: "(Int, Int)",
+            typeShape: nil,
+            isInstanceMethod: false
+        )
     ]
 
     @Test("every emitter cell compiles and bothPasses on a correct implementation")

@@ -223,6 +223,12 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             let strategy = DerivationStrategist.strategy(for: typeShape.toKitShape(), resolve: resolve)
             return try recipe(for: strategy, carrier: carrier)
         }
+        // Tuple carrier `(A, B, …)` — the kit's `composedGenerator` recurses
+        // through Array/Set/Dictionary/Optional but NOT tuples, so compose them
+        // here via the free `zip` combinator over the component generators.
+        if let tuple = tupleRecipe(carrier: carrier, resolve: resolve) {
+            return tuple
+        }
         // WS-6 follow-up — top-level *composite* carrier. A carrier without its
         // own indexed TypeShape may still be a composite spelling (`[Rule]`,
         // `Rule?`, `[K: V]`) whose element/leaf types live in the resolver's

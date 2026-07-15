@@ -18,6 +18,13 @@ public enum FreeOps {
 
     /// A 1-parameter free/static measure — `length(x) >= 0` (a cardinality).
     public static func length(_ value: Int) -> Int { value < 0 ? -value : value }
+
+    /// A TUPLE carrier `(Int, Int)` — sort the pair, so applying it twice is a
+    /// no-op (`ordered(ordered(t)) == ordered(t)`, genuinely idempotent). Proves
+    /// the tuple generator's success path.
+    public static func ordered(_ pair: (Int, Int)) -> (Int, Int) {
+        pair.0 <= pair.1 ? pair : (pair.1, pair.0)
+    }
 }
 
 /// The INSTANCE call shape over a generatable (`CaseIterable`) carrier — the
