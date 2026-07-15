@@ -161,4 +161,50 @@ struct ApplicationShapeTemplateTests {
         ])
         #expect(pairs.isEmpty)
     }
+
+    // MARK: - The involution, and the idempotence it must not be confused with
+
+    /// `self -> Self`, named like a self-inverse: `x.transposed().transposed() == x`.
+    @Test("an instance self -> Self named like an involution owes f(f(x)) == x")
+    func instanceInvolution() throws {
+        let transposed = member("transposed", [], returns: "Matrix", type: "Matrix")
+        #expect(InvolutionTemplate.isInvolution(transposed))
+
+        let suggestion = try #require(InvolutionTemplate.suggest(for: transposed))
+        #expect(suggestion.templateName == "involution")
+        // Name-required, so it always clears the visible tier — Likely (70), not Possible.
+        #expect(suggestion.score.total == 70)
+        #expect(suggestion.score.tier == .likely)
+        let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
+        // The one confusion that makes this template worth having.
+        #expect(caveats.contains("self-inverse, NOT idempotent"))
+    }
+
+    /// The free / static form: `(T) -> T`, `func negate(_ x: Int) -> Int`.
+    @Test("a free (T) -> T named like an involution is accepted")
+    func freeFunctionInvolution() throws {
+        let negate = member("negate", [parameter(nil, "Int")], returns: "Int", type: nil)
+        #expect(InvolutionTemplate.isInvolution(negate))
+        let suggestion = try #require(InvolutionTemplate.suggest(for: negate))
+        #expect(suggestion.templateName == "involution")
+    }
+
+    /// The name is required. A `(T) -> T` with a name that is not an involution
+    /// verb stays silent — the whole point, or it would flood on every
+    /// endomorphism (the Daikon trap).
+    @Test("the same shape without an involution name is NOT an involution")
+    func shapeWithoutNameIsRejected() {
+        let scaled = member("scaled", [], returns: "Matrix", type: "Matrix")
+        #expect(InvolutionTemplate.isInvolution(scaled) == false)
+        #expect(InvolutionTemplate.suggest(for: scaled) == nil)
+    }
+
+    /// An involution *name* on the wrong shape (return type ≠ operand type) is
+    /// not an endomorphism, so no `f(f(x))` even type-checks.
+    @Test("an involution name on a non-endomorphism shape is rejected")
+    func involutionNameWrongShapeIsRejected() {
+        let negated = member("negated", [parameter(nil, "Int")], returns: "String", type: nil)
+        #expect(InvolutionTemplate.isInvolution(negated) == false)
+        #expect(InvolutionTemplate.suggest(for: negated) == nil)
+    }
 }

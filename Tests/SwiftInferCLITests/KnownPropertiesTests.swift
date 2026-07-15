@@ -77,6 +77,10 @@ struct KnownPropertiesTests {
         // Reference: true + self-verified, but no template names its shape.
         #expect(role("Optional", "o.map { $0 } == o") == .reference)
         #expect(role("Int", "abs(abs(a)) == abs(a)") == .reference)
+        // The InvolutionTemplate promoted the reverse-involution rows from
+        // reference to anchor: they now name a template `discover` emits.
+        #expect(role("Array", "a.reversed().reversed() == a") == .anchor)
+        #expect(role("String", "String(String(s.reversed()).reversed()) == s") == .anchor)
     }
 
     @Test("common data types — Optional / Dictionary carry verifiable functor laws")

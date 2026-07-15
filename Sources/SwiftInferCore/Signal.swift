@@ -69,6 +69,14 @@ public struct Signal: Sendable, Equatable {
         /// action sequence (+35).
         case inverseMutatorPair
 
+        /// A unary `(T) -> T` whose name is an involution verb (`reversed`,
+        /// `negated`, `inverted`, `transposed`, …): applying it twice returns the
+        /// original, so it owes `f(f(x)) == x`. The name is the load-bearing
+        /// signal (+40) — required to fire — paired with the `(T) -> T`
+        /// type-symmetry shape. Distinct from idempotence (`f(f(x)) == f(x)`),
+        /// which is exactly why these names are vetoed FROM idempotence.
+        case involutionSignature
+
         // Negative (non-veto)
         case sideEffectPenalty
         case generatorQualityPenalty

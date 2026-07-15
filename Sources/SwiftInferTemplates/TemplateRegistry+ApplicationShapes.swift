@@ -37,6 +37,22 @@ extension TemplateRegistry {
         collectPartitionSuggestions(summaries: summaries, into: &collector)
         collectFunctionShapeSuggestions(summaries: summaries, into: &collector)
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
+        collectInvolutionSuggestions(summaries: summaries, into: &collector)
+    }
+
+    /// A unary `(T) -> T` named like an involution: it owes `f(f(x)) == x`. Kept
+    /// separate from the `(T, T) -> Bool` comparator/predicate loop because it is
+    /// a different shape, and separate from idempotence because it is a different
+    /// law over the same shape — the reason these names are vetoed from it.
+    private static func collectInvolutionSuggestions(
+        summaries: [FunctionSummary],
+        into collector: inout SuggestionCollector
+    ) {
+        for summary in summaries {
+            if let suggestion = InvolutionTemplate.suggest(for: summary) {
+                collector.record(suggestion, generatorType: summary.returnTypeText)
+            }
+        }
     }
 
     /// The comparator and the predicate: two roles that share a signature and are told apart by their

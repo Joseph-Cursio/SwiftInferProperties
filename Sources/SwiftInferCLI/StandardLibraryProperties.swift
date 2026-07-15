@@ -170,7 +170,8 @@ public enum StandardLibraryProperties {
         law(
             "String", "reverse is an involution",
             "String(String(s.reversed()).reversed()) == s",
-            "let s = randStr(); return String(String(s.reversed()).reversed()) == s"
+            "let s = randStr(); return String(String(s.reversed()).reversed()) == s",
+            template: "involution"
         )
     ]
 
@@ -178,7 +179,8 @@ public enum StandardLibraryProperties {
     private static let arrayLaws: [KnownProperty] = [
         law(
             "Array", "reverse is an involution", "a.reversed().reversed() == a",
-            "let a = randArr(); return Array(a.reversed().reversed()) == a"
+            "let a = randArr(); return Array(a.reversed().reversed()) == a",
+            template: "involution"
         ),
         law(
             "Array", "idempotent under sort", "a.sorted().sorted() == a.sorted()",

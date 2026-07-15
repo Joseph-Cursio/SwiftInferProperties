@@ -25,13 +25,14 @@ Every entry carries a `role`, derived from whether it has a `template` the
   discovered candidate. These pull weight in `discover` (e.g. `Set.union`
   commutativity; the `Set.subtracting` non-commutativity trap).
 - **`reference`** — true and self-verified under `--verify`, but invisible to
-  `discover` because no template names its shape (functor / stack / queue /
-  involution laws). Documentation + a portability self-check, not enforcement.
+  `discover` because no template names its shape (functor / stack / queue laws).
+  Documentation + a portability self-check, not enforcement.
 
 The listing tags reference laws `[reference]` and trap caveats `[trap]` so a
 reader can tell the weight-bearing rows from the documentation. The role is
 derived, so it can't drift: the day a shape gets a template, its entries stop
-being reference and start anchoring.
+being reference and start anchoring — as the `reversed` involution rows did the
+day the `InvolutionTemplate` shipped (they now carry `template: "involution"`).
 
 ## CLI
 
