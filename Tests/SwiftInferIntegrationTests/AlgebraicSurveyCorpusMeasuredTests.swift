@@ -61,9 +61,23 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         )
 
         let records = VerifyEvidenceStore.load(startingFrom: root).log.records
-        #expect(records.count == 14)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 9)
+        // 14 → 17 (+3 bothPass): the catalogue-work templates (2026-07) surface
+        // three more true positives on this corpus — `involution` on
+        // `Toggle.reversed` and `Latch.reversed` (`f(f(x)) == x`), and
+        // `binary-idempotence` on `Confidence.meet` (`meet(x, x) == x`). (Latch's
+        // `reversed` is a buggy *reverse* that returns self unchanged, but the
+        // identity IS an involution, so it bothPasses the involution law — the
+        // reverse-bug is the dual-style `defaultFails`, a different law.)
+        #expect(records.count == 17)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 12)
         #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
+        // The catalogue-work true positives.
+        #expect(records.contains {
+            $0.template == "involution" && $0.outcome == .measuredBothPass
+        })
+        #expect(records.contains {
+            $0.template == "binary-idempotence" && $0.outcome == .measuredBothPass
+        })
         // commutativity false positive (non-commutative `leftBiased`), its
         // associativity true positive, and the idempotence true positive.
         #expect(records.contains {
