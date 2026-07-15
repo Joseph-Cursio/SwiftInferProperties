@@ -64,11 +64,18 @@ enum KnownPropertiesRenderer {
 
     // MARK: - Verify program generation
 
-    /// A self-contained Swift script that samples inputs with a seeded RNG and
-    /// prints one `PASS\t<name>` / `FAIL\t<name>` line per law. Stdlib-only —
-    /// no package, no dependency — so it runs via `swift <file>`.
-    static func renderVerifyProgram(_ laws: [KnownProperty]) -> String {
-        var lines = [preamble]
+    /// A Swift program that samples inputs with a seeded RNG and prints one
+    /// `PASS\t<name>` / `FAIL\t<name>` line per law. With no `imports` it is
+    /// stdlib-only and runs via `swift <file>` (the fast interpreter path); with
+    /// `imports` it prepends those module imports and is compiled as a temp
+    /// package's `main.swift` (the package path) so external Apple-library laws
+    /// build against the real releases.
+    static func renderVerifyProgram(_ laws: [KnownProperty], imports: [String] = []) -> String {
+        var lines: [String] = []
+        for module in imports.sorted() {
+            lines.append("import \(module)")
+        }
+        lines.append(preamble)
         for law in laws where law.checkBody != nil {
             lines.append("check(\(escaped(law.displayName))) { \(law.checkBody!) }")
         }

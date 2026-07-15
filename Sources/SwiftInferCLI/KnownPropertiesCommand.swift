@@ -59,9 +59,21 @@ extension SwiftInferCommand {
             }
 
             let laws = properties.filter { $0.kind == .law }
-            let program = KnownPropertiesRenderer.renderVerifyProgram(laws)
-            let output = try Self.runSwiftScript(program)
-            let results = KnownPropertiesRenderer.parseVerifyOutput(output)
+            // Partition: stdlib + Foundation laws run in the fast `swift`
+            // interpreter; laws importing an external Apple package build a temp
+            // package against the real releases. Splitting keeps the common
+            // stdlib-only run fast — the package build fires only when an
+            // external law is in scope.
+            var results: [String: Bool] = [:]
+            let stdlibLaws = laws.filter { !$0.needsPackage }
+            if !stdlibLaws.isEmpty {
+                let output = try Self.runSwiftScript(KnownPropertiesRenderer.renderVerifyProgram(stdlibLaws))
+                results.merge(KnownPropertiesRenderer.parseVerifyOutput(output)) { _, updated in updated }
+            }
+            let packageLaws = laws.filter(\.needsPackage)
+            if !packageLaws.isEmpty {
+                results.merge(try KnownPropertiesPackageVerify.run(laws: packageLaws)) { _, updated in updated }
+            }
             print(KnownPropertiesRenderer.renderList(properties, verifyResults: results), terminator: "")
         }
 

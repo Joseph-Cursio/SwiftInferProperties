@@ -133,10 +133,21 @@ struct HardGuaranteeTests {
         // interpreter over a generated stdlib-only property-test script. Opt-in
         // (only under `--verify`), user-initiated, local-only (no network) —
         // the same verify-mode gesture, not a discover/index/drift path.
+        //
+        // `KnownPropertiesPackageVerify.swift` is exempt on the SAME opt-in
+        // verify-mode gesture, with one honest difference: it spawns `swift run`
+        // over a temp SwiftPM package that declares Apple first-party
+        // dependencies (swift-numerics / swift-collections / swift-algorithms), so
+        // SwiftPM DOES fetch those packages on the first run (network). That
+        // network access is inherent to verifying a law against a real external
+        // package — it fires only under `--verify` when an external-library law is
+        // in scope, never on discover/index/drift, and only reaches the declared
+        // Apple package URLs.
         let processExemptions: Set<String> = [
             "VerifierSubprocess.swift",
             "PackageProductResolver.swift",
-            "KnownPropertiesCommand.swift"
+            "KnownPropertiesCommand.swift",
+            "KnownPropertiesPackageVerify.swift"
         ]
         var violations: [String] = []
         let enumerator = FileManager.default.enumerator(

@@ -96,12 +96,14 @@ extension StandardLibraryProperties {
         _ checkBody: String,
         witnesses: String? = nil,
         template: String? = nil,
-        note: String? = nil
+        note: String? = nil,
+        imports: [String] = []
     ) -> KnownProperty {
         KnownProperty(
             type: type, structure: structure, statement: statement,
             kind: .law, role: template != nil ? .anchor : .reference,
-            witnesses: witnesses, template: template, note: note, checkBody: checkBody
+            witnesses: witnesses, template: template, note: note, checkBody: checkBody,
+            imports: imports
         )
     }
 
@@ -114,7 +116,8 @@ extension StandardLibraryProperties {
         KnownProperty(
             type: type, structure: statement, statement: statement,
             kind: .caveat, role: template != nil ? .anchor : .reference,
-            witnesses: nil, template: template, note: note, checkBody: nil
+            witnesses: nil, template: template, note: note, checkBody: nil,
+            imports: []
         )
     }
 }

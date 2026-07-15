@@ -44,14 +44,31 @@ swift-infer known-properties [--type <T>] [--verify]
 
 - default: list the catalog grouped by type, with a Caveats section.
 - `--type Set`: filter to one type.
-- `--verify`: generate a self-contained, stdlib-only Swift script that
-  property-tests each law with a seeded RNG (64 sampled inputs), run it via the
-  `swift` interpreter, and annotate each law ✓/✗ with a tally.
+- `--verify`: property-test each law with a seeded RNG (64 sampled inputs) and
+  annotate each ✓/✗ with a tally. Two paths, partitioned automatically:
+  - **stdlib + `Foundation` laws** → a self-contained script run via the `swift`
+    interpreter (fast, no package).
+  - **external Apple-package laws** (swift-numerics / swift-collections /
+    swift-algorithms) → compiled as a temp SwiftPM package's `main.swift`, built
+    against the **real** package releases and run. The package build fires only
+    when an external-library law is in scope (so `--type Int --verify` stays on
+    the fast path), and reuses a warm workdir keyed by the imported-module set.
 
-`--verify` spawns `swift` locally (no network) — an opt-in verify gesture, on
-the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
+`--verify` spawns `swift` locally — an opt-in verify gesture, on the §16
+hard-guarantee `Process` allowlist alongside the verifier subprocess. The
+package path additionally lets SwiftPM **fetch** the declared Apple packages on
+first run (inherent to verifying against a real external package).
 
-## What's in it (44 laws, 6 caveats)
+## Adding a library
+
+An external-library law carries `imports: ["<Module>"]`; the module → package
+mapping lives in `KnownPropertiesPackages.byModule`. A `checkBody` constructs the
+external type inline from the stdlib `rand*` helpers (`Deque(randArr())`,
+`Complex(randDouble(), randDouble())`), so no new generator is needed — just the
+import + a mapping entry. A catalog-consistency test guards that every imported
+module is mapped.
+
+## What's in it (71 laws, 6 caveats)
 
 - **Int** — additive commutative monoid; `max`/`min` semilattice; `abs`
   idempotent; `abs`/`signum` multiplicative (`h(a·b) == h(a)·h(b)`).
@@ -72,6 +89,25 @@ the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 - **Stack / Queue** — the LIFO and FIFO contracts, realized on `Array`
   (`append`/`removeLast`, `append`/`removeFirst`).
 
+**External Apple first-party packages** (verified against the real releases):
+
+- **swift-numerics** — `Complex<Double>`: `+`/`×` commutative (finite inputs),
+  additive identity, `conjugate` involution. Not a `Monoid` (inherits Double's
+  non-associativity), mirroring the `Double` rows.
+- **swift-collections** — `Deque` (reverse involution, count-additive,
+  prepend/removeFirst double-ended symmetry); `OrderedSet` (union idempotent;
+  membership-commutative but order-preserving — the "commutative under *which*
+  equality" lesson); `OrderedDictionary` / `TreeDictionary` (`mapValues` functor
+  identity); `BitSet` (full SetAlgebra — union/intersection commutative,
+  idempotent, absorption); `TreeSet` (union commutative + persistent-CHAMP value
+  semantics); `Heap` (model-based — `popMin` drains sorted, `min`/`max` agree
+  with the array model, since no protocol row applies).
+- **swift-algorithms** — `uniqued` idempotent; `chunks` then flatten is the
+  identity; `min(count:)` agrees with the sorted prefix.
+- **Foundation** — `Data` (base64 round-trip, count-additive over append) and
+  `IndexSet` (SetAlgebra: union commutative + idempotent). Run on the fast path
+  (Foundation is available to the interpreter).
+
 Caveats (documented, never asserted true): `String`/`Array` `+` not commutative;
 `Double` `+` not associative; `Set.subtracting` not commutative;
 `Dictionary.merging` not commutative on key collisions; and **`&&`/`||`
@@ -81,9 +117,15 @@ the left decides the result, so `a && f()` and `f() && a` differ in what runs).
 
 ## Files / tests
 
-- `StandardLibraryProperties.swift` (the catalog + model),
-  `KnownPropertiesRenderer.swift` (pure: list render + verify-program generation
-  + output parsing), `KnownPropertiesCommand.swift` (the subcommand + `swift`
-  subprocess).
-- Tests: `KnownPropertiesTests` (7). Verified end-to-end: `--verify` compiles +
-  runs and reports 23/23 laws hold.
+- `StandardLibraryProperties.swift` (the catalog + model) + per-library
+  extensions (`+Numerics` / `+Collections` / `+Algorithms` / `+Foundation` /
+  `+Containers`); `KnownPropertiesRenderer.swift` (pure: list render +
+  verify-program generation + output parsing); `KnownPropertiesCommand.swift`
+  (the subcommand + interpreter subprocess + stdlib/package partition);
+  `KnownPropertiesPackages.swift` (module → package mapping);
+  `KnownPropertiesPackageVerify.swift` (temp-package build + run).
+- Tests: `KnownPropertiesTests` (10) + `KnownPropertiesPackageTests` (7, incl.
+  the every-imported-module-is-mapped consistency guard). Verified end-to-end:
+  `--verify` reports **71/71** laws hold (stdlib + Foundation on the fast path;
+  swift-numerics / swift-collections / swift-algorithms built against the real
+  releases).

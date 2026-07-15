@@ -60,8 +60,19 @@ public struct KnownProperty: Sendable, Equatable {
     /// A Swift expression (returning `Bool`) over the catalog's `rand*`
     /// helpers, run under `--verify`. `nil` for caveats.
     public let checkBody: String?
+    /// Modules a `--verify` run must `import` to run this law's `checkBody`
+    /// (e.g. `["DequeModule"]`, `["ComplexModule"]`). Empty for the
+    /// standard-library + `Foundation` laws, which run in the fast `swift`
+    /// interpreter; a non-empty set routes the law through the package-based
+    /// verify (a temp SwiftPM package declaring the modules' packages). The
+    /// module → package dependency mapping lives in `KnownPropertiesPackages`.
+    public let imports: [String]
 
     public var displayName: String { "\(type): \(statement)" }
+
+    /// Whether this law needs an external package to verify (so `--verify` must
+    /// build a temp package rather than run the stdlib interpreter script).
+    public var needsPackage: Bool { !imports.isEmpty }
 }
 
 public enum StandardLibraryProperties {
@@ -313,5 +324,6 @@ public enum StandardLibraryProperties {
 
     public static let all: [KnownProperty] =
         intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws
-            + optionalLaws + dictionaryLaws + stackLaws + queueLaws + caveatEntries
+            + optionalLaws + dictionaryLaws + stackLaws + queueLaws
+            + numericsLaws + collectionsLaws + algorithmsLaws + foundationLaws + caveatEntries
 }
