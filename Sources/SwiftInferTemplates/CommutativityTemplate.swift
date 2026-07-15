@@ -46,7 +46,16 @@ public enum CommutativityTemplate {
         "append",
         "concat",
         "concatenate",
-        "concatenated"
+        "concatenated",
+        // Participle / gerund forms — the non-mutating instance spelling
+        // (`x.subtracting(y)`, `x.appending(y)`) that the 2026-07 instance-op
+        // recall widening now surfaces. Same asymmetric semantics as their bare
+        // stems above; without these the widened detector would Possible-fire
+        // commutativity on `Set.subtracting` / `Array.appending`.
+        "subtracting",
+        "dividing",
+        "appending",
+        "prepending"
     ]
 
     /// Build a suggestion for `summary`, or return `nil` if the type

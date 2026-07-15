@@ -20,3 +20,17 @@ public enum Laws {
     /// `abs(a * b) == abs(a) * abs(b)`.
     public static func magnitude(_ value: Int) -> Int { value < 0 ? -value : value }
 }
+
+/// An INSTANCE binary operator over a generatable (`CaseIterable`) carrier —
+/// proves the 2026-07 instance-op recall widening end-to-end: `x.union(y)` fires
+/// binary-idempotence / commutativity / associativity, and the verifier drives it
+/// through the `{ $0.union($1) }` receiver trampoline. Logical OR is a
+/// semilattice, so all three hold.
+public enum Flag: CaseIterable, Equatable, Sendable {
+    case off, on
+
+    /// `union(x, x) == x`, commutative, associative — a bounded semilattice.
+    public func union(_ other: Flag) -> Flag {
+        (self == .on || other == .on) ? .on : .off
+    }
+}

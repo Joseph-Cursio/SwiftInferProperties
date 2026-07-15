@@ -5,7 +5,7 @@ import Testing
 @testable import SwiftInferCLI
 
 // A binary/unary *instance* method emits the receiver-closure call
-// expression `{ $0.method(with: $1) }` so a template's positional
+// expression `{ (p0: T, p1: T) in p0.method(with: p1) }` so a template's positional
 // application (`f(a, b)`) becomes `a.method(with: b)` — the shape a binary
 // instance operator needs, vs the static `Type.method(a, b)` that doesn't
 // type-check. Mutating and free/static functions fall back to the
@@ -42,7 +42,7 @@ struct ReceiverCallExpressionTests {
             reference: "Bag.combined",
             bareFunctionName: "combined"
         )
-        #expect(call == "{ $0.combined(with: $1) }")
+        #expect(call == "{ (p0: Bag, p1: Bag) in p0.combined(with: p1) }")
     }
 
     @Test("an unlabeled binary instance method drops the label")
@@ -52,7 +52,7 @@ struct ReceiverCallExpressionTests {
             reference: "Bag.merged",
             bareFunctionName: "merged"
         )
-        #expect(call == "{ $0.merged($1) }")
+        #expect(call == "{ (p0: Bag, p1: Bag) in p0.merged(p1) }")
     }
 
     @Test("a nullary instance method emits a receiver call with no args")
@@ -62,7 +62,7 @@ struct ReceiverCallExpressionTests {
             reference: "Bag.normalized",
             bareFunctionName: "normalized"
         )
-        #expect(call == "{ $0.normalized() }")
+        #expect(call == "{ (p0: Bag) in p0.normalized() }")
     }
 
     @Test("a type-qualified bare name is stripped to the method name")
@@ -72,7 +72,7 @@ struct ReceiverCallExpressionTests {
             reference: "Bag.combined",
             bareFunctionName: "Bag.combined"
         )
-        #expect(call == "{ $0.combined(with: $1) }")
+        #expect(call == "{ (p0: Bag, p1: Bag) in p0.combined(with: p1) }")
     }
 
     @Test("a mutating instance method falls back to the static/trampoline shape")
@@ -104,8 +104,8 @@ struct ReceiverCallExpressionTests {
         let signal = entry(function: "flipped()", isInstanceMethod: true)
         let forward = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Bits", bareName: "flipped()")
         let inverse = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Bits", bareName: "flipped()")
-        #expect(forward == "{ $0.flipped() }")
-        #expect(inverse == "{ $0.flipped() }")
+        #expect(forward == "{ (p0: Bag) in p0.flipped() }")
+        #expect(inverse == "{ (p0: Bag) in p0.flipped() }")
     }
 
     @Test("a round-trip half that is NOT the primary keeps the static shape")

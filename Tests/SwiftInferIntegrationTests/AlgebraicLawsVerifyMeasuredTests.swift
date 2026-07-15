@@ -54,6 +54,13 @@ struct AlgebraicLawsVerifyMeasuredTests {
                 "\(template) did not produce a measured-bothPass record"
             )
         }
+        // `Flag.union` (an INSTANCE binary operator) rides the same survey; its
+        // stub is synthesized/built/run through the `{ $0.union($1) }` receiver
+        // trampoline, so a broken instance path would sink the survey. Its
+        // `commutativity`/`associativity`/`binary-idempotence` picks fold into the
+        // template assertions above. (`VerifyEvidence` carries no carrier column,
+        // so the instance form can't be isolated here; the discovery half is
+        // pinned by `BinaryOperatorInstanceFormTests`.)
     }
 
     static let fixtureDirectory: URL = {

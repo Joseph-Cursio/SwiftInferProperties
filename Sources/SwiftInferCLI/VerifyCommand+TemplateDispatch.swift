@@ -218,18 +218,6 @@ extension SwiftInferCommand.Verify {
         return path
     }
 
-    /// `[Int]` → `Int` — the element type the homomorphism composer generates
-    /// (then wraps in `.array(of:)`). Returns the input unchanged when it isn't a
-    /// bracketed array, so a non-array carrier degrades to a truthful strategist
-    /// error rather than a silent mis-strip.
-    static func arrayElementType(of carrier: String) -> String {
-        let trimmed = carrier.trimmingCharacters(in: .whitespaces)
-        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]"), !trimmed.contains(":") else {
-            return trimmed
-        }
-        return String(trimmed.dropFirst().dropLast()).trimmingCharacters(in: .whitespaces)
-    }
-
     /// Pair / single-function resolution layer shared across templates
     /// when the strategist path emits. Round-trip resolves the curated
     /// forward+inverse pair; idempotence / commutativity / associativity
@@ -283,11 +271,19 @@ extension SwiftInferCommand.Verify {
                 rendererInverseName: call
             )
 
-        case "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism":
-            // Single-function algebraic laws. Involution's self-returning
-            // instance form emits the receiver shape from `inputs` flags in the
-            // composer; the free/static call resolves the same way idempotence's
-            // non-receiver shape does.
+        case "binary-idempotence":
+            // A binary operator — receiver shape so an INSTANCE op emits
+            // `x.union(x)` (via the closure trampoline); a free/static op falls
+            // back to `union(x, x)` (receiverCallExpression's non-instance path).
+            return singleCallResolved(
+                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: true
+            )
+
+        case "involution", "homomorphism", "multiplicative-homomorphism":
+            // Single-function laws. Involution's self-returning instance form
+            // emits the receiver shape from `inputs` flags in the composer; the
+            // free/static call resolves the same way idempotence's non-receiver
+            // shape does.
             return singleCallResolved(
                 entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
             )

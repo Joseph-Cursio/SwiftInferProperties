@@ -149,12 +149,34 @@ extension SwiftInferCommand.Verify {
         let qualifierStripped = bareFunctionName.split(separator: ".").last.map(String.init)
         let methodName = qualifierStripped ?? bareFunctionName
         let labels = argumentLabels(from: entry.primaryFunctionName)
-        // Receiver is `$0`; the method's own args are `$1…`.
-        let placeholders = labels.enumerated().map { index, label in
-            label == "_" ? "$\(index + 1)" : "\(label): $\(index + 1)"
+        // The composers apply this closure IMMEDIATELY — `closure(lhs, rhs)`. The
+        // `$0`/`$1` shorthand form fails to infer its parameter types when the
+        // arguments come from an opaque-typed generator ("cannot infer type of
+        // closure parameter '$0'"), so type the parameters explicitly. A binary
+        // operator's operands all share the receiver's type (the widened
+        // `binaryOperatorTypeSymmetrySignal` requires `param == Self / carrier`),
+        // so every parameter is the carrier type. Receiver is `p0`, the method's
+        // own operands `p1…`.
+        let carrier = entry.typeName ?? "(none)"
+        let paramDecls = ([carrier] + labels.map { _ in carrier }).enumerated()
+            .map { "p\($0.offset): \($0.element)" }
+            .joined(separator: ", ")
+        let callArgs = labels.enumerated()
+            .map { index, label in label == "_" ? "p\(index + 1)" : "\(label): p\(index + 1)" }
+            .joined(separator: ", ")
+        return "{ (\(paramDecls)) in p0.\(methodName)(\(callArgs)) }"
+    }
+
+    /// `[Int]` → `Int` — the element type the homomorphism composer generates
+    /// (then wraps in `.array(of:)`). Returns the input unchanged when it isn't a
+    /// bracketed array, so a non-array carrier degrades to a truthful strategist
+    /// error rather than a silent mis-strip.
+    static func arrayElementType(of carrier: String) -> String {
+        let trimmed = carrier.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]"), !trimmed.contains(":") else {
+            return trimmed
         }
-        let args = placeholders.joined(separator: ", ")
-        return "{ $0.\(methodName)(\(args)) }"
+        return String(trimmed.dropFirst().dropLast()).trimmingCharacters(in: .whitespaces)
     }
 
     /// Single-call resolution shared by idempotence / commutativity /
