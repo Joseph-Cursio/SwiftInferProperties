@@ -51,7 +51,8 @@ extension SwiftInferCommand.Verify {
     ) throws -> VerifyStubBundle {
         let supportedTemplates: [String] = [
             "round-trip", "idempotence", "commutativity", "associativity",
-            "idempotence-lifted", "dual-style-consistency", "monotonicity"
+            "idempotence-lifted", "dual-style-consistency", "monotonicity",
+            "involution", "binary-idempotence", "homomorphism"
         ]
         guard supportedTemplates.contains(entry.templateName) else {
             throw VerifyError.unsupportedTemplate(
@@ -147,7 +148,13 @@ extension SwiftInferCommand.Verify {
         // V1.149 — generator carrier is `carrierTypeName` (param `T`), distinct
         // from `typeName` (the call-site owner `resolveFunctionCalls` already
         // used); `?? typeName` keeps pre-v1.149 entries bit-identical.
-        let generatorCarrier = GenericBindingResolver.bound(entry.carrierTypeName ?? entry.typeName ?? "(none)")
+        let boundCarrier = GenericBindingResolver.bound(entry.carrierTypeName ?? entry.typeName ?? "(none)")
+        // Homomorphism quantifies over arrays `[T]`; its composer draws arrays by
+        // wrapping an ELEMENT generator, so the generator carrier is the element
+        // type — strip the array brackets (`[Int]` → `Int`).
+        let generatorCarrier = entry.templateName == "homomorphism"
+            ? arrayElementType(of: boundCarrier)
+            : boundCarrier
         let inputs = StrategistDispatchEmitter.Inputs(
             carrier: generatorCarrier,
             typeShape: entry.typeShape,
@@ -211,6 +218,18 @@ extension SwiftInferCommand.Verify {
         return path
     }
 
+    /// `[Int]` → `Int` — the element type the homomorphism composer generates
+    /// (then wraps in `.array(of:)`). Returns the input unchanged when it isn't a
+    /// bracketed array, so a non-array carrier degrades to a truthful strategist
+    /// error rather than a silent mis-strip.
+    static func arrayElementType(of carrier: String) -> String {
+        let trimmed = carrier.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]"), !trimmed.contains(":") else {
+            return trimmed
+        }
+        return String(trimmed.dropFirst().dropLast()).trimmingCharacters(in: .whitespaces)
+    }
+
     /// Pair / single-function resolution layer shared across templates
     /// when the strategist path emits. Round-trip resolves the curated
     /// forward+inverse pair; idempotence / commutativity / associativity
@@ -264,6 +283,15 @@ extension SwiftInferCommand.Verify {
                 rendererInverseName: call
             )
 
+        case "involution", "binary-idempotence", "homomorphism":
+            // Single-function algebraic laws. Involution's self-returning
+            // instance form emits the receiver shape from `inputs` flags in the
+            // composer; the free/static call resolves the same way idempotence's
+            // non-receiver shape does.
+            return singleCallResolved(
+                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
+            )
+
         case "dual-style-consistency":
             // V1.48.B — pair of expressions: [nonMutCall, mutMethodName].
             // Resolver fires its own validation (carrier-agnostic;
@@ -281,7 +309,8 @@ extension SwiftInferCommand.Verify {
                 template: entry.templateName,
                 expected: [
                     "round-trip", "idempotence", "commutativity", "associativity",
-                    "idempotence-lifted", "dual-style-consistency", "monotonicity"
+                    "idempotence-lifted", "dual-style-consistency", "monotonicity",
+                    "involution", "binary-idempotence", "homomorphism"
                 ]
             )
         }

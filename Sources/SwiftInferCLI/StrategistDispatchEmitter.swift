@@ -355,11 +355,18 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return composeMonotonicityPass(inputs: inputs, recipe: recipe)
 
         default:
+            // involution / binary-idempotence / homomorphism dispatch in a
+            // sibling helper (in +AlgebraicLaws) to keep this switch under the
+            // complexity cap.
+            if let algebraicLaw = algebraicLawPass(inputs: inputs, recipe: recipe) {
+                return algebraicLaw
+            }
             throw VerifyError.unsupportedTemplate(
                 template: inputs.template,
                 expected: [
                     "round-trip", "idempotence", "commutativity", "associativity",
-                    "idempotence-lifted", "dual-style-consistency", "monotonicity"
+                    "idempotence-lifted", "dual-style-consistency", "monotonicity",
+                    "involution", "binary-idempotence", "homomorphism"
                 ]
             )
         }
