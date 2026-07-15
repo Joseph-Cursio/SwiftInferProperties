@@ -72,49 +72,35 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         #expect(records.filter { $0.outcome == .measuredBothPass }.count == 12)
         #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
         // The catalogue-work true positives.
-        #expect(records.contains {
-            $0.template == "involution" && $0.outcome == .measuredBothPass
-        })
-        #expect(records.contains {
-            $0.template == "binary-idempotence" && $0.outcome == .measuredBothPass
-        })
+        #expect(hasRecord(records, "involution", .measuredBothPass))
+        #expect(hasRecord(records, "binary-idempotence", .measuredBothPass))
         // commutativity false positive (non-commutative `leftBiased`), its
         // associativity true positive, and the idempotence true positive.
-        #expect(records.contains {
-            $0.template == "commutativity" && $0.outcome == .measuredDefaultFails
-        })
-        #expect(records.contains {
-            $0.template == "associativity" && $0.outcome == .measuredBothPass
-        })
-        #expect(records.contains {
-            $0.template == "idempotence" && $0.outcome == .measuredBothPass
-        })
+        #expect(hasRecord(records, "commutativity", .measuredDefaultFails))
+        #expect(hasRecord(records, "associativity", .measuredBothPass))
+        #expect(hasRecord(records, "idempotence", .measuredBothPass))
         // The first verifying round-trip in the project — the `Move.encode`/
         // `Move.decode` bijection bothPasses, alongside the spurious
         // `atLeastMedium`/`bumpUp` endomorphism pairing that defaultFails.
-        #expect(records.contains {
-            $0.template == "round-trip" && $0.outcome == .measuredBothPass
-        })
-        #expect(records.contains {
-            $0.template == "round-trip" && $0.outcome == .measuredDefaultFails
-        })
+        #expect(hasRecord(records, "round-trip", .measuredBothPass))
+        #expect(hasRecord(records, "round-trip", .measuredDefaultFails))
         // monotonicity: `score` (strictly increasing) bothPasses; `priority`
         // (curated name, non-monotone) is disproven by execution.
-        #expect(records.contains {
-            $0.template == "monotonicity" && $0.outcome == .measuredBothPass
-        })
-        #expect(records.contains {
-            $0.template == "monotonicity" && $0.outcome == .measuredDefaultFails
-        })
+        #expect(hasRecord(records, "monotonicity", .measuredBothPass))
+        #expect(hasRecord(records, "monotonicity", .measuredDefaultFails))
         // dual-style-consistency on a CUSTOM carrier: `Toggle` (mutating +
         // non-mutating twins agree) bothPasses; `Latch` (buggy non-mutating
         // twin) is disproven by execution.
-        #expect(records.contains {
-            $0.template == "dual-style-consistency" && $0.outcome == .measuredBothPass
-        })
-        #expect(records.contains {
-            $0.template == "dual-style-consistency" && $0.outcome == .measuredDefaultFails
-        })
+        #expect(hasRecord(records, "dual-style-consistency", .measuredBothPass))
+        #expect(hasRecord(records, "dual-style-consistency", .measuredDefaultFails))
+    }
+
+    private func hasRecord(
+        _ records: [VerifyEvidence],
+        _ template: String,
+        _ outcome: VerifyEvidenceOutcome
+    ) -> Bool {
+        records.contains { $0.template == template && $0.outcome == outcome }
     }
 
     /// `Tests/Fixtures/algebraic-survey-corpus/`, resolved against `#filePath`.
