@@ -33,7 +33,8 @@ enum KnownPropertiesRenderer {
                     results[law.displayName].map { $0 ? "✓ " : "✗ " } ?? "· "
                 } ?? "• "
                 let tag = law.witnesses.map { "  → witnesses \($0)" } ?? ""
-                lines.append("  \(mark)\(law.statement)   [\(law.structure)]\(tag)")
+                let roleTag = law.role == .reference ? "  [reference]" : ""
+                lines.append("  \(mark)\(law.statement)   [\(law.structure)]\(tag)\(roleTag)")
                 if let note = law.note { lines.append("      \(note)") }
             }
             lines.append("")
@@ -42,7 +43,8 @@ enum KnownPropertiesRenderer {
         if !caveats.isEmpty {
             lines.append("Caveats — plausible but FALSE (never assert these):")
             for caveat in caveats {
-                lines.append("  ✗ \(caveat.type): \(caveat.statement)")
+                let roleTag = caveat.role == .reference ? "  [reference]" : "  [trap]"
+                lines.append("  ✗ \(caveat.type): \(caveat.statement)\(roleTag)")
                 if let note = caveat.note { lines.append("      \(note)") }
             }
             lines.append("")

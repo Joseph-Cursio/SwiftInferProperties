@@ -23,11 +23,30 @@ public enum KnownPropertyKind: String, Sendable, Equatable {
     case caveat   // a plausible-looking NON-property; documented, never asserted true
 }
 
+/// Whether an entry does confidence work in `discover`, or is documentation.
+///
+/// The catalog serves two masters and they must be told apart, or reference
+/// laws masquerade as enforced ones. An entry `anchor`s iff it carries a
+/// `template` a discovered candidate can match (`StdlibAnchor` keys on
+/// `template == candidate.templateName`): a `.law` becomes a "proven analog"
+/// line, a `.caveat` becomes a "known counter-example" line. Everything else is
+/// `.reference` — true and self-verifiable, but invisible to `discover` because
+/// no template names its shape (functor / stack / queue / involution laws). The
+/// role is DERIVED from `template`, so it cannot drift: the day a shape gets a
+/// template, its entries stop being reference and start anchoring.
+public enum KnownPropertyRole: String, Sendable, Equatable {
+    case anchor      // feeds StdlibAnchor — a proven analog (law) or a trap (caveat)
+    case reference   // documentation + self-check only; `discover` never consults it
+}
+
 public struct KnownProperty: Sendable, Equatable {
     public let type: String
     public let structure: String
     public let statement: String
     public let kind: KnownPropertyKind
+    /// Whether `discover` consults this entry (`.anchor`) or it is pure
+    /// documentation (`.reference`). Derived from `template` by the builders.
+    public let role: KnownPropertyRole
     /// The SwiftPropertyLaws kit protocol this law witnesses (e.g.
     /// `"CommutativeMonoid"`), or `nil` when the structure conforms to no
     /// kit protocol (see the type doc for the Double / unary cases).
@@ -276,121 +295,4 @@ public enum StandardLibraryProperties {
     public static let all: [KnownProperty] =
         intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws
             + optionalLaws + dictionaryLaws + stackLaws + queueLaws + caveatEntries
-}
-
-// MARK: - Optional / Dictionary laws + builders
-//
-// Split into a same-file extension purely to keep the enum's primary body
-// under the `type_body_length` cap — extension bodies are exempt. No behavior
-// change; `all` (above) aggregates these groups exactly as before.
-extension StandardLibraryProperties {
-
-    // Optional — the functor laws (identity + composition) and the monad
-    // right-identity. Universally true; `Int?` is Equatable so `--verify` runs
-    // them directly. None witnesses a kit ALGEBRAIC protocol (functor/monad
-    // laws aren't Semigroup/Monoid/…), so all tag none.
-    static let optionalLaws: [KnownProperty] = [
-        law(
-            "Optional", "functor identity", "o.map { $0 } == o",
-            "let o = randOpt(); return o.map { $0 } == o"
-        ),
-        law(
-            "Optional", "functor composition",
-            "o.map(f).map(g) == o.map { g(f($0)) }",
-            "let o = randOpt(); return o.map { $0 + 1 }.map { $0 * 2 } == o.map { ($0 + 1) * 2 }"
-        ),
-        law(
-            "Optional", "monad right identity", "o.flatMap { Optional($0) } == o",
-            "let o = randOpt(); return o.flatMap { Optional($0) } == o"
-        )
-    ]
-
-    // Dictionary — the mapValues functor laws, filter idempotence, and the
-    // merge-with-self identity. `merging` is NOT commutative on key collisions
-    // (see caveats).
-    static let dictionaryLaws: [KnownProperty] = [
-        law(
-            "Dictionary", "mapValues functor identity", "d.mapValues { $0 } == d",
-            "let d = randDict(); return d.mapValues { $0 } == d"
-        ),
-        law(
-            "Dictionary", "mapValues functor composition",
-            "d.mapValues(f).mapValues(g) == d.mapValues { g(f($0)) }",
-            "let d = randDict(); "
-                + "return d.mapValues { $0 + 1 }.mapValues { $0 * 2 } == d.mapValues { ($0 + 1) * 2 }"
-        ),
-        law(
-            "Dictionary", "idempotent under filter",
-            "d.filter(p).filter(p) == d.filter(p)",
-            "let d = randDict(); "
-                + "return d.filter { $0.value > 0 }.filter { $0.value > 0 } == d.filter { $0.value > 0 }"
-        ),
-        law(
-            "Dictionary", "merge-with-self identity (keep first)",
-            "d.merging(d) { a, _ in a } == d",
-            "let d = randDict(); return d.merging(d, uniquingKeysWith: { a, _ in a }) == d"
-        )
-    ]
-
-    // Stack — the LIFO contract, realized on `Array` (`append` / `removeLast`).
-    // Not a stdlib type; these document the contract a user's own `Stack` owes,
-    // verified against the canonical Array realization so the stdlib anchor has a
-    // ground truth to match a discovered `push`/`pop` pair against.
-    static let stackLaws: [KnownProperty] = [
-        law(
-            "Stack", "LIFO via append/removeLast", "push x then pop ⇒ x, and the stack is restored",
-            "let a = randArr(); var s = a; let x = randInt(); "
-                + "s.append(x); let top = s.removeLast(); return top == x && s == a"
-        ),
-        law(
-            "Stack", "LIFO via append/removeLast", "the last pushed is the first popped",
-            "var s = randArr(); let x = randInt(), y = randInt(); s.append(x); s.append(y); "
-                + "return s.removeLast() == y && s.removeLast() == x"
-        )
-    ]
-
-    // Queue — the FIFO contract, realized on `Array` (`append` / `removeFirst`).
-    // Same framing as Stack: the contract a user's `Queue` owes, anchored to the
-    // Array realization.
-    static let queueLaws: [KnownProperty] = [
-        law(
-            "Queue", "FIFO via append/removeFirst", "enqueue adds at the back; the front dequeues first",
-            "let a = randArr(); var q = a; let x = randInt(); q.append(x); "
-                + "let front = q.removeFirst(); return front == (a.isEmpty ? x : a.first!)"
-        ),
-        law(
-            "Queue", "FIFO via append/removeFirst", "the first enqueued is the first dequeued",
-            "var q = [Int](); let x = randInt(), y = randInt(); q.append(x); q.append(y); "
-                + "return q.removeFirst() == x && q.removeFirst() == y"
-        )
-    ]
-
-    // MARK: - Builders
-
-    static func law(
-        _ type: String,
-        _ structure: String,
-        _ statement: String,
-        _ checkBody: String,
-        witnesses: String? = nil,
-        template: String? = nil,
-        note: String? = nil
-    ) -> KnownProperty {
-        KnownProperty(
-            type: type, structure: structure, statement: statement,
-            kind: .law, witnesses: witnesses, template: template, note: note, checkBody: checkBody
-        )
-    }
-
-    static func caveat(
-        _ type: String,
-        _ statement: String,
-        _ note: String,
-        template: String? = nil
-    ) -> KnownProperty {
-        KnownProperty(
-            type: type, structure: statement, statement: statement,
-            kind: .caveat, witnesses: nil, template: template, note: note, checkBody: nil
-        )
-    }
 }

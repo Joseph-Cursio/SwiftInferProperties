@@ -15,6 +15,24 @@ can *confirm* the catalog live rather than assert it.
 It is **universal engine knowledge**, shipped built-in and versioned — it never
 reads or writes a project's `.swiftinfer/`, which stays the user's own corpus.
 
+## Anchor vs reference (the `role` field)
+
+Every entry carries a `role`, derived from whether it has a `template` the
+`discover` confidence-anchor can match:
+
+- **`anchor`** — feeds `StdlibAnchor`: a law becomes a "proven analog" line, a
+  caveat (a **trap**) becomes a "known counter-example" line on a matching
+  discovered candidate. These pull weight in `discover` (e.g. `Set.union`
+  commutativity; the `Set.subtracting` non-commutativity trap).
+- **`reference`** — true and self-verified under `--verify`, but invisible to
+  `discover` because no template names its shape (functor / stack / queue /
+  involution laws). Documentation + a portability self-check, not enforcement.
+
+The listing tags reference laws `[reference]` and trap caveats `[trap]` so a
+reader can tell the weight-bearing rows from the documentation. The role is
+derived, so it can't drift: the day a shape gets a template, its entries stop
+being reference and start anchoring.
+
 ## CLI
 
 ```

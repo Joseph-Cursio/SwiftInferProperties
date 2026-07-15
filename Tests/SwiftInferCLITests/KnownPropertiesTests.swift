@@ -59,6 +59,26 @@ struct KnownPropertiesTests {
         #expect(caveatTypes.contains("Dictionary"))
     }
 
+    @Test("role distinguishes discover-anchors from documentation, derived from template")
+    func roleDerivedFromTemplate() {
+        // The invariant the field exists to hold: an entry anchors iff it has a
+        // template `discover` can match — never drifting from that fact.
+        for property in StandardLibraryProperties.all {
+            let expected: KnownPropertyRole = property.template != nil ? .anchor : .reference
+            #expect(property.role == expected, "role/template out of sync: \(property.displayName)")
+        }
+
+        func role(_ type: String, _ statement: String) -> KnownPropertyRole? {
+            StandardLibraryProperties.all.first { $0.type == type && $0.statement == statement }?.role
+        }
+        // Anchors: a proven-analog law and a trap caveat both feed StdlibAnchor.
+        #expect(role("Set", "a.union(b) == b.union(a)") == .anchor)
+        #expect(role("Set", "subtracting is NOT commutative") == .anchor)   // a caveat, but enforced
+        // Reference: true + self-verified, but no template names its shape.
+        #expect(role("Optional", "o.map { $0 } == o") == .reference)
+        #expect(role("Int", "abs(abs(a)) == abs(a)") == .reference)
+    }
+
     @Test("common data types — Optional / Dictionary carry verifiable functor laws")
     func commonDataTypesCovered() {
         let lawTypes = Set(StandardLibraryProperties.laws.map(\.type))
