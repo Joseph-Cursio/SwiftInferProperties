@@ -149,22 +149,16 @@ extension SwiftInferCommand.Verify {
         let qualifierStripped = bareFunctionName.split(separator: ".").last.map(String.init)
         let methodName = qualifierStripped ?? bareFunctionName
         let labels = argumentLabels(from: entry.primaryFunctionName)
-        // The composers apply this closure IMMEDIATELY — `closure(lhs, rhs)`. The
-        // `$0`/`$1` shorthand form fails to infer its parameter types when the
-        // arguments come from an opaque-typed generator ("cannot infer type of
-        // closure parameter '$0'"), so type the parameters explicitly. A binary
-        // operator's operands all share the receiver's type (the widened
-        // `binaryOperatorTypeSymmetrySignal` requires `param == Self / carrier`),
-        // so every parameter is the carrier type. Receiver is `p0`, the method's
-        // own operands `p1…`.
-        let carrier = entry.typeName ?? "(none)"
-        let paramDecls = ([carrier] + labels.map { _ in carrier }).enumerated()
-            .map { "p\($0.offset): \($0.element)" }
-            .joined(separator: ", ")
-        let callArgs = labels.enumerated()
-            .map { index, label in label == "_" ? "p\(index + 1)" : "\(label): p\(index + 1)" }
-            .joined(separator: ", ")
-        return "{ (\(paramDecls)) in p0.\(methodName)(\(callArgs)) }"
+        // Receiver is `$0`; the method's own args are `$1…`. The composers apply
+        // this closure immediately (`closure(lhs, rhs)` → `lhs.method(rhs)`) with
+        // CONCRETELY-typed generator values, so the `$0`/`$1` shorthand infers
+        // cleanly — the verify-emitter matrix test confirms every instance-op
+        // cell compiles with this form.
+        let placeholders = labels.enumerated().map { index, label in
+            label == "_" ? "$\(index + 1)" : "\(label): $\(index + 1)"
+        }
+        let args = placeholders.joined(separator: ", ")
+        return "{ $0.\(methodName)(\(args)) }"
     }
 
     /// `[Int]` → `Int` — the element type the homomorphism composer generates
