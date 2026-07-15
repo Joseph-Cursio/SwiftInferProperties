@@ -275,7 +275,7 @@ public enum StandardLibraryProperties {
 
     public static let all: [KnownProperty] =
         intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws
-            + optionalLaws + dictionaryLaws + caveatEntries
+            + optionalLaws + dictionaryLaws + stackLaws + queueLaws + caveatEntries
 }
 
 // MARK: - Optional / Dictionary laws + builders
@@ -329,6 +329,39 @@ extension StandardLibraryProperties {
             "Dictionary", "merge-with-self identity (keep first)",
             "d.merging(d) { a, _ in a } == d",
             "let d = randDict(); return d.merging(d, uniquingKeysWith: { a, _ in a }) == d"
+        )
+    ]
+
+    // Stack — the LIFO contract, realized on `Array` (`append` / `removeLast`).
+    // Not a stdlib type; these document the contract a user's own `Stack` owes,
+    // verified against the canonical Array realization so the stdlib anchor has a
+    // ground truth to match a discovered `push`/`pop` pair against.
+    static let stackLaws: [KnownProperty] = [
+        law(
+            "Stack", "LIFO via append/removeLast", "push x then pop ⇒ x, and the stack is restored",
+            "let a = randArr(); var s = a; let x = randInt(); "
+                + "s.append(x); let top = s.removeLast(); return top == x && s == a"
+        ),
+        law(
+            "Stack", "LIFO via append/removeLast", "the last pushed is the first popped",
+            "var s = randArr(); let x = randInt(), y = randInt(); s.append(x); s.append(y); "
+                + "return s.removeLast() == y && s.removeLast() == x"
+        )
+    ]
+
+    // Queue — the FIFO contract, realized on `Array` (`append` / `removeFirst`).
+    // Same framing as Stack: the contract a user's `Queue` owes, anchored to the
+    // Array realization.
+    static let queueLaws: [KnownProperty] = [
+        law(
+            "Queue", "FIFO via append/removeFirst", "enqueue adds at the back; the front dequeues first",
+            "let a = randArr(); var q = a; let x = randInt(); q.append(x); "
+                + "let front = q.removeFirst(); return front == (a.isEmpty ? x : a.first!)"
+        ),
+        law(
+            "Queue", "FIFO via append/removeFirst", "the first enqueued is the first dequeued",
+            "var q = [Int](); let x = randInt(), y = randInt(); q.append(x); q.append(y); "
+                + "return q.removeFirst() == x && q.removeFirst() == y"
         )
     ]
 

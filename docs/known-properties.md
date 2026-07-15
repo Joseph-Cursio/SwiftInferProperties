@@ -30,7 +30,7 @@ swift-infer known-properties [--type <T>] [--verify]
 `--verify` spawns `swift` locally (no network) — an opt-in verify gesture, on
 the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 
-## What's in it (37 laws, 6 caveats)
+## What's in it (41 laws, 6 caveats)
 
 - **Int** — additive commutative monoid; `max`/`min` semilattice; `abs`
   idempotent.
@@ -47,6 +47,8 @@ the §16 hard-guarantee `Process` allowlist alongside the verifier subprocess.
 - **Optional** — functor laws (identity + composition) + monad right identity.
 - **Dictionary** — `mapValues` functor laws; `filter` idempotent;
   merge-with-self identity (keep first).
+- **Stack / Queue** — the LIFO and FIFO contracts, realized on `Array`
+  (`append`/`removeLast`, `append`/`removeFirst`).
 
 Caveats (documented, never asserted true): `String`/`Array` `+` not commutative;
 `Double` `+` not associative; `Set.subtracting` not commutative;
