@@ -40,6 +40,9 @@ extension FunctionScannerVisitor {
         // verdict above; consumed by the async-veto relaxation (workplan
         // Phase 4). First EffectAnnotationParser use in this repo.
         let isClockDeterministic = EffectAnnotationParser.isClockDeterministic(declaration: node)
+        // The leading doc comment — carried on the summary as a candidate
+        // reference definition for the docstring advisory. Unclassified here.
+        let docComment = DocCommentExtractor.docComment(from: node.leadingTrivia)
 
         return FunctionSummary(
             name: name,
@@ -55,7 +58,8 @@ extension FunctionScannerVisitor {
             discoverableGroup: discoverableGroup,
             invariantKeypath: invariantKeypath,
             isInferredPure: isInferredPure,
-            isClockDeterministic: isClockDeterministic
+            isClockDeterministic: isClockDeterministic,
+            docComment: docComment
         )
     }
 
@@ -96,7 +100,8 @@ extension FunctionScannerVisitor {
             containingTypeName: containingTypeName,
             bodySignals: .empty,
             isInferredPure: true,
-            isComputedProperty: true
+            isComputedProperty: true,
+            docComment: DocCommentExtractor.docComment(from: node.leadingTrivia)
         )
     }
 

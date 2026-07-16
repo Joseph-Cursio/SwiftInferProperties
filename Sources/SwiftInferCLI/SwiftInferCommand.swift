@@ -149,6 +149,20 @@ extension SwiftInferCommand {
         @Flag(
             name: .long,
             help: """
+            Append a "Reference definitions from docstrings" advisory section. For \
+            a documented function whose doc states a checkable contract, it pairs \
+            that sentence with the law it defines — the reference definition a \
+            `predicate` law openly owes, the spec a lifted example test needs, or \
+            the only refutable contract on a function the templates could offer \
+            nothing owed for. Off by default; the advice is separate from \
+            property-test suggestions and never enters accept / verify.
+            """
+        )
+        public var docstringAdvice: Bool = false
+
+        @Flag(
+            name: .long,
+            help: """
             Suppress writes during --interactive triage. Accept (A) \
             gestures show the would-be file path on stdout but skip \
             both the file write and the .swiftinfer/decisions.json \
@@ -256,6 +270,7 @@ extension SwiftInferCommand {
                 packsOverride: packs,
                 statsOnly: statsOnly,
                 effectAnnotations: effectAnnotations,
+                docstringAdvice: docstringAdvice,
                 dryRun: dryRun,
                 interactive: interactive,
                 updateBaseline: updateBaseline,
@@ -283,6 +298,7 @@ extension SwiftInferCommand {
             packsOverride: String? = nil,
             statsOnly: Bool = false,
             effectAnnotations: Bool = false,
+            docstringAdvice: Bool = false,
             dryRun: Bool = false,
             interactive: Bool = false,
             updateBaseline: Bool = false,
@@ -304,12 +320,9 @@ extension SwiftInferCommand {
             )
             let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)
 
-            if interactive, updateBaseline {
-                diagnostics.writeDiagnostic(
-                    "warning: --interactive and --update-baseline are mutually exclusive; "
-                        + "--update-baseline ignored for this run"
-                )
-            }
+            warnIfConflictingModes(
+                interactive: interactive, updateBaseline: updateBaseline, diagnostics: diagnostics
+            )
             if interactive {
                 try runInteractiveBranch(
                     visible: visible,
@@ -339,6 +352,10 @@ extension SwiftInferCommand {
                 evidenceByIdentity: evidenceByIdentity,
                 effectAnnotations: effectAnnotations
                     ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
+                docstringAdvice: docstringAdvice
+                    ? Self.docstringAdvice(
+                        summaries: pipeline.summaries, suggestions: visible, seedManifest: seedManifest
+                    ) : [],
                 output: output
             )
         }

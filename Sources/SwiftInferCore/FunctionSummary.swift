@@ -99,6 +99,20 @@ public struct FunctionSummary: Sendable, Equatable {
     /// (`value.conjugate`) rather than a call (`value.conjugate()`).
     public let isComputedProperty: Bool
 
+    /// The function's leading documentation comment, reflowed to plain prose —
+    /// `///` line markers and `/** */` fences stripped, lines joined — or `nil`
+    /// when the declaration carries no doc comment. Captured verbatim and left
+    /// **unclassified**: whether the text states a refutable *contract*
+    /// ("returns the nearest multiple, ties upward") or merely *narrates*
+    /// ("a helper for the retry loop") is decided downstream by the docstring
+    /// advisory, next to `Refutability`, not here — `FunctionSummary` stays
+    /// textual by design (see the type header). The advisory reads this as a
+    /// candidate **reference definition**: the sentence a `predicate` law owes,
+    /// the spec a lifted example test needs, or the only contract on a function
+    /// the templates could offer nothing but a tautology for. Defaults to `nil`
+    /// so call sites that don't populate it compile unchanged.
+    public let docComment: String?
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -114,7 +128,8 @@ public struct FunctionSummary: Sendable, Equatable {
         invariantKeypath: String? = nil,
         isInferredPure: Bool = false,
         isClockDeterministic: Bool = false,
-        isComputedProperty: Bool = false
+        isComputedProperty: Bool = false,
+        docComment: String? = nil
     ) {
         self.name = name
         self.parameters = parameters
@@ -131,6 +146,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.isInferredPure = isInferredPure
         self.isClockDeterministic = isClockDeterministic
         self.isComputedProperty = isComputedProperty
+        self.docComment = docComment
     }
 }
 

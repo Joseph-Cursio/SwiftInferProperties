@@ -16,6 +16,7 @@ extension SwiftInferCommand.Discover {
         statsOnly: Bool,
         evidenceByIdentity: [String: VerifyEvidence],
         effectAnnotations: [EffectAnnotationAdvice] = [],
+        docstringAdvice: [DocstringAdviceItem] = [],
         output: any DiscoverOutput
     ) {
         // V1.147 — enrich each candidate's explainability with stdlib-anchor
@@ -42,9 +43,29 @@ extension SwiftInferCommand.Discover {
             if !adviceBlock.isEmpty {
                 rendered += "\n\n" + adviceBlock
             }
+            let docstringBlock = DocstringAdvisoryRenderer.render(docstringAdvice)
+            if !docstringBlock.isEmpty {
+                rendered += "\n\n" + docstringBlock
+            }
         }
 
         output.write(rendered)
+    }
+
+    /// `--interactive` and `--update-baseline` are mutually exclusive; the early
+    /// return in the interactive branch enforces it, so this only warns. Extracted
+    /// from `run` to keep its body under the 50-line cap.
+    static func warnIfConflictingModes(
+        interactive: Bool,
+        updateBaseline: Bool,
+        diagnostics: any DiagnosticOutput
+    ) {
+        if interactive, updateBaseline {
+            diagnostics.writeDiagnostic(
+                "warning: --interactive and --update-baseline are mutually exclusive; "
+                    + "--update-baseline ignored for this run"
+            )
+        }
     }
 
     /// V1.67 — load persisted `swift-infer verify` evidence so it

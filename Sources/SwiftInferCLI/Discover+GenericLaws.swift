@@ -190,14 +190,18 @@ extension SwiftInferCommand.Discover {
     }
 
     /// The bare function name from an evidence display name: `add(_:_:)` → `add`.
-    private static func functionBaseName(_ displayName: String) -> String {
+    /// Internal (not private) so the docstring-advice pass shares the exact same
+    /// function-keying — the two must agree or advice would attach to the wrong
+    /// suggestion set.
+    static func functionBaseName(_ displayName: String) -> String {
         guard let paren = displayName.firstIndex(of: "(") else { return displayName }
         return String(displayName[..<paren])
     }
 
     /// `(file basename, symbol)` join key — robust to relative-vs-absolute path
-    /// spellings between the linter and the scanner.
-    private static func genericLawKey(file: String, symbol: String) -> String {
+    /// spellings between the linter and the scanner. Internal (see
+    /// `functionBaseName`) so the docstring-advice pass keys identically.
+    static func genericLawKey(file: String, symbol: String) -> String {
         "\(URL(fileURLWithPath: file).lastPathComponent)::\(symbol)"
     }
 }
