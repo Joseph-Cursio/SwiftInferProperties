@@ -16,6 +16,7 @@ extension SwiftInferCommand.Discover {
     static func focusOnAnalysableSeeds(
         focusing: [SeedManifest.Seed],
         analysableManifest: SeedManifest,
+        pendingKernelCount: Int = 0,
         pipeline: PipelineResult,
         diagnostics: any DiagnosticOutput
     ) -> [Suggestion] {
@@ -43,15 +44,36 @@ extension SwiftInferCommand.Discover {
 
         // Seeds that match nothing are the other way to end up at a confident zero. The focus is
         // honoured — the user asked for it — but they are told it emptied the run, and why.
+        //
+        // **W1 — but "kept 0" before any extraction is EXPECTED, not a warning.** Every cold reader
+        // hit this on their first run and read it as a failure: the manifest's analysable seeds are
+        // pure functions, the only refutable law found is over an impure state machine, so they miss —
+        // while the linter's `extractable-kernel` advisories (reported just above) name the pure logic
+        // that has no name yet. A seed can only match a *named* function, so of course the kernels
+        // don't match until they are extracted. When kernels are pending, this is a **note** that says
+        // "extract first, then re-run"; the alarming "the tools disagree" reading is kept only for the
+        // genuine post-extraction case, where there is nothing left to extract and a miss is real.
         let seedableFound = pipeline.suggestions.count - exempt.count
         if matched == 0, seedableFound > 0 {
-            diagnostics.writeDiagnostic(
-                "warning: none of the \(focusing.count) analysable seed(s) matched any of the "
-                    + "\(seedableFound) seedable suggestion(s) found, so the focus discarded "
-                    + "all of them. The join is on (file basename, bare symbol) — a mismatch here "
-                    + "usually means the linter and swift-infer disagree about which functions are "
-                    + "candidates."
-            )
+            if pendingKernelCount > 0 {
+                diagnostics.writeDiagnostic(
+                    "note: kept 0 of \(seedableFound) seedable suggestion(s) — this is EXPECTED "
+                        + "before you extract. The \(pendingKernelCount) `extractable-kernel` "
+                        + "advisor(y/ies) above name pure logic that has no name yet, and a seed can "
+                        + "only match a named function. Extract those kernels into named value types "
+                        + "and re-run — the seeds will match then. (Already extracted everything? Then "
+                        + "the join on (file basename, bare symbol) missed, and the linter and "
+                        + "swift-infer disagree about which functions are candidates.)"
+                )
+            } else {
+                diagnostics.writeDiagnostic(
+                    "warning: none of the \(focusing.count) analysable seed(s) matched any of the "
+                        + "\(seedableFound) seedable suggestion(s) found, so the focus discarded "
+                        + "all of them. The join is on (file basename, bare symbol) — a mismatch here "
+                        + "usually means the linter and swift-infer disagree about which functions are "
+                        + "candidates."
+                )
+            }
         }
 
         // A law the code OWES is never discarded for want of a seed.

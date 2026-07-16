@@ -221,6 +221,40 @@ struct DiscoverEmptySeedManifestTests {
         #expect(diagnostics.joined.contains("none of the 1 analysable seed(s) matched"))
     }
 
+    /// **W1 — "kept 0" before extraction is a note, not a warning.** Every cold reader read the
+    /// no-match warning as a failure on their first run, when it was expected: the manifest names pure
+    /// functions, but the refutable law is over an impure kernel that has no name yet. When the
+    /// manifest carries `extractable-kernel` seeds (work a human must do first), the message points
+    /// the reader at the extraction instead of accusing the tools of disagreeing.
+    @Test("with a kernel pending, the no-match message is an expected note, not a warning")
+    func kernelPendingReframesTheNoMatchNote() throws {
+        let directory = try writeDPFixture(name: "SeedsKernelPending", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        // An analysable seed that matches nothing, PLUS a kernel seed — the phase-1 shape a real
+        // reader has before performing any extraction.
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 1, symbol: "noSuchFunction", rule: nil),
+            .init(file: "Source.swift", line: 9, symbol: "uploadRemainingChunks", rule: nil,
+                  kind: .extractableKernel)
+        ])
+
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        #expect(diagnostics.joined.contains("note: kept 0"))
+        #expect(diagnostics.joined.contains("EXPECTED before you extract"))
+        // The alarming "disagree" reading is demoted to a parenthetical, not the headline warning.
+        #expect(diagnostics.joined.contains("warning: none of the") == false)
+    }
+
     @Test("a matching manifest still focuses — the fix does not disable seeding")
     func matchingManifestStillFocuses() throws {
         let directory = try writeDPFixture(name: "SeedsStillFocus", contents: Self.twoCandidates)

@@ -139,4 +139,54 @@ struct TargetDirectoryTests {
         // empty one warns — so what is left is a zero worth believing.
         #expect(diagnostics.lines.isEmpty)
     }
+
+    // MARK: - --sources, the Xcode escape hatch (W4 / C1)
+
+    /// An app has no `Sources/<target>/` layout, so `--sources` scans a directory as given. This is
+    /// what lets the loop run against an `.xcodeproj` tree with no hand-built SwiftPM shim.
+    @Test("an existing --sources directory resolves to itself")
+    func existingSourcesResolves() throws {
+        let root = try makeBareDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let appDir = root.appendingPathComponent("App")
+        try FileManager.default.createDirectory(at: appDir, withIntermediateDirectories: true)
+
+        let resolved = try TargetDirectory.resolveSources("App", relativeTo: root)
+        #expect(resolved.lastPathComponent == "App")
+    }
+
+    @Test("a --sources directory that does not exist throws, naming the path and the Xcode case")
+    func missingSourcesThrows() throws {
+        let root = try makeBareDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        do {
+            _ = try TargetDirectory.resolveSources("Nope", relativeTo: root)
+            Issue.record("expected a ValidationError for a --sources directory that does not exist")
+        } catch {
+            let message = "\(error)"
+            #expect(message.contains("no directory at"))
+            #expect(message.contains("Nope"))
+            #expect(message.contains("Xcode"))
+        }
+    }
+
+    @Test("resolveScanDirectory takes exactly one of --target / --sources")
+    func scanDirectoryRequiresExactlyOne() throws {
+        // Both is ambiguous; neither leaves nothing to scan. Both are loud errors, not a silent
+        // default — the same no-confident-zero discipline the resolvers hold to.
+        do {
+            _ = try SwiftInferCommand.Discover.resolveScanDirectory(target: "A", sources: "B")
+            Issue.record("expected a ValidationError when both flags are passed")
+        } catch {
+            #expect("\(error)".contains("mutually exclusive"))
+        }
+
+        do {
+            _ = try SwiftInferCommand.Discover.resolveScanDirectory(target: nil, sources: nil)
+            Issue.record("expected a ValidationError when neither flag is passed")
+        } catch {
+            #expect("\(error)".contains("exactly one"))
+        }
+    }
 }

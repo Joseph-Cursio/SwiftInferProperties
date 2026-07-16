@@ -68,9 +68,15 @@ extension SwiftInferCommand {
 
         @Option(
             name: .long,
-            help: "Name of the SwiftPM target to scan. Resolved to Sources/<target>/ relative to the working directory."
+            help: "Name of the SwiftPM target to scan. Resolved to Sources/<target>/ relative to the working directory. Mutually exclusive with --sources; pass exactly one."
         )
-        public var target: String
+        public var target: String?
+
+        @Option(
+            name: .long,
+            help: "Path to a source directory to scan directly, bypassing the Sources/<target>/ convention. The Xcode escape hatch: an app has no SwiftPM target, so point this at the folder your .swift files live in. Mutually exclusive with --target; pass exactly one."
+        )
+        public var sources: String?
 
         @Flag(
             name: .long,
@@ -208,8 +214,35 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
+        /// Resolves the directory to scan from exactly one of `--target` / `--sources`.
+        ///
+        /// `--target` keeps the SwiftPM `Sources/<target>/` convention; `--sources` scans a directory
+        /// as given (the Xcode escape hatch, C1). Passing both is ambiguous and passing neither leaves
+        /// nothing to scan — both are loud errors rather than a silent default, the same
+        /// no-confident-zero discipline the rest of this command holds to.
+        public static func resolveScanDirectory(target: String?, sources: String?) throws -> URL {
+            switch (target, sources) {
+            case let (targetName?, nil):
+                return try TargetDirectory.resolve(targetName)
+            case let (nil, sourcesPath?):
+                return try TargetDirectory.resolveSources(sourcesPath)
+            case (nil, nil):
+                throw ValidationError(
+                    "pass exactly one of --target <SwiftPM target> or --sources <directory>. For an "
+                        + "Xcode project — which has no `Sources/<target>/` layout — use --sources and "
+                        + "point it at the folder your `.swift` files live in."
+                )
+            case (.some, .some):
+                throw ValidationError(
+                    "--target and --sources are mutually exclusive: --target applies the "
+                        + "`Sources/<target>/` convention, --sources scans a directory as given. Pass "
+                        + "one."
+                )
+            }
+        }
+
         public func run() async throws {
-            let directory = try TargetDirectory.resolve(target)
+            let directory = try Self.resolveScanDirectory(target: target, sources: sources)
             let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
             let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }
             let explicitTestDirPath = testDir.map { URL(fileURLWithPath: $0) }

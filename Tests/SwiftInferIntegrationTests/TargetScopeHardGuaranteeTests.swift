@@ -12,8 +12,11 @@ import Testing
 /// test before R1.1.g.
 ///
 /// Two assertions, matching the two halves of the PRD line:
-/// 1. `discover` requires `--target` — ArgumentParser fails when the
-///    flag is omitted.
+/// 1. `discover` refuses to scan with **no explicit scope**. Since `--sources` (C1) became an
+///    alternative to `--target`, the requirement is no longer "parse fails without `--target`" —
+///    both flags are optional at the type level, and exactly one must be given. The guarantee moved
+///    from parse time to `resolveScanDirectory`, which is a **hard error** when neither is passed, so
+///    the tool never scans without an explicitly configured scope.
 /// 2. When `--target Foo` is set, files in sibling targets (`Bar/`)
 ///    or above the `Sources/` tree (`Helpers.swift` next to
 ///    `Package.swift`) are not scanned.
@@ -22,26 +25,21 @@ import Testing
 @Suite("Discover — PRD §16 #5 target scope (R1.1.g)")
 struct TargetScopeHardGuaranteeTests {
 
-    @Test("discover requires --target — parse fails without it (PRD §16 #5)")
-    func discoverRequiresTargetFlag() {
-        // ArgumentParser surfaces missing-required-flag as a thrown
-        // error from `parseAsRoot` before any code in `run()` executes.
-        // The §16 #5 contract is satisfied by the type-level
-        // declaration of `var target: String` (no default), but pinning
-        // the parse-failure shape protects against an accidental
-        // future change that adds a default value.
+    @Test("discover refuses to scan with no explicit scope — neither --target nor --sources (PRD §16 #5)")
+    func discoverRequiresAnExplicitScope() {
+        // §16 #5 — "never operates outside the configured target." `--target` used to be required at
+        // parse time; now that `--sources` is a peer way to name the scope, both are optional and the
+        // requirement is enforced at resolve time: passing NEITHER throws, so a default-scope scan is
+        // impossible. Passing exactly one is the only way through, which is what the other resolver
+        // tests cover.
         do {
-            _ = try SwiftInferCommand.Discover.parseAsRoot([])
-            Issue.record("Discover.parseAsRoot succeeded without --target — §16 #5 was bypassed")
+            _ = try SwiftInferCommand.Discover.resolveScanDirectory(target: nil, sources: nil)
+            Issue.record("resolveScanDirectory succeeded with no scope — §16 #5 was bypassed")
         } catch {
-            // ArgumentParser's missing-argument errors render with a
-            // "Missing expected argument" or "--target" hint depending
-            // on version; both are acceptable as long as the error
-            // mentions the flag name.
             let message = "\(error)"
             #expect(
-                message.contains("target") || message.contains("required"),
-                "Parse failure did not name --target as the missing argument:\n\(message)"
+                message.contains("--target") && message.contains("--sources"),
+                "The no-scope error did not name the two ways to configure a scope:\n\(message)"
             )
         }
     }

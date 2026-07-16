@@ -64,6 +64,39 @@ enum TargetDirectory {
         return directory
     }
 
+    /// Resolves an explicit `--sources <dir>`: the directory is scanned **as given**, with no
+    /// `Sources/<target>/` convention applied.
+    ///
+    /// This is the Xcode escape hatch (C1). `--target` resolves under `Sources/`, which an app does
+    /// not have — so an Xcode user's first meeting with the tool was an error telling them their code
+    /// was unreachable. `--sources` points swift-infer straight at a source directory instead, which
+    /// is what "aim it at the `.xcodeproj` tree" means in practice: pass the folder your `.swift`
+    /// files live in. Fails loudly, naming the path, when the directory is not there — the same
+    /// no-silent-zero discipline `resolve(_:)` enforces for `--target`.
+    static func resolveSources(
+        _ path: String,
+        relativeTo root: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    ) throws -> URL {
+        // `appendingPathComponent` for the relative case, not `URL(fileURLWithPath:relativeTo:)`: the
+        // latter resolves a relative path against `root`'s *last component* when `root` carries no
+        // trailing slash, silently making the directory a sibling rather than a child. An absolute
+        // `--sources` path is taken as-is.
+        let directory = (path as NSString).isAbsolutePath
+            ? URL(fileURLWithPath: path)
+            : root.appendingPathComponent(path)
+
+        guard isDirectory(directory) else {
+            throw ValidationError(
+                "no directory at \(directory.absoluteURL.standardizedFileURL.path). `--sources` "
+                    + "names a source directory to scan directly — the Xcode escape hatch for a "
+                    + "project that has no `Sources/<target>/` layout. Point it at the folder your "
+                    + "`.swift` files live in."
+            )
+        }
+
+        return directory
+    }
+
     /// Warns when the target holds no Swift files at all, so a run over an empty corpus cannot be
     /// mistaken for a run that found nothing in your code.
     ///

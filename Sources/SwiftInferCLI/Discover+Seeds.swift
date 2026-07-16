@@ -73,6 +73,7 @@ extension SwiftInferCommand.Discover {
         return focusOnAnalysableSeeds(
             focusing: focusing,
             analysableManifest: analysableManifest,
+            pendingKernelCount: seedManifest.refactorPendingSeeds.count,
             pipeline: pipeline,
             diagnostics: diagnostics
         )
