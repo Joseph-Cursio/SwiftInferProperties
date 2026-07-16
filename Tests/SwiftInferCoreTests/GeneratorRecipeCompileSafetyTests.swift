@@ -59,6 +59,22 @@ struct GeneratorRecipeCompileSafetyTests {
         #expect(recipe.expression.contains("Gen<Int>.int(in: -50...500)"))
     }
 
+    /// **B19 — the index generator must warn the reader off clamping it.** Walk 8 measured a reader
+    /// who folded the resume index into a tiler exactly as advised, then wrapped the *input* in
+    /// `min(queued, total)` — re-encoding the assumption the totality law exists to refute — so the
+    /// shipped negatives never ran. The guard is stated in the pasted comment and the rationale, the
+    /// same way `collidingString` says "do not widen this alphabet."
+    @Test("the out-of-range index recipe warns against clamping the generator (B19)")
+    func outOfRangeIndexWarnsAgainstClamping() {
+        let recipe = CollisionBias.outOfRangeIndex(subject: "index")
+        // The warning travels with the pasted code, naming the exact anti-pattern …
+        #expect(recipe.expression.contains("Do NOT wrap this in"))
+        #expect(recipe.expression.contains("clamp"))
+        // … and is restated in the prose.
+        #expect(recipe.rationale.contains("Do not clamp this generator"))
+        #expect(recipe.rationale.contains("min(queued, total)"))
+    }
+
     @Test("the tied-keys recipe is compile-safe")
     func tiedKeysIsCompileSafe() {
         let recipe = CollisionBias.tiedKeys(subject: "key", typeName: "String")

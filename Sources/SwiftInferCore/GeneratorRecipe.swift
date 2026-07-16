@@ -159,19 +159,31 @@ public enum CollisionBias {
     /// The interesting values are the ones the code did not expect, and a generator over `0..<count`
     /// asserts the totality clause against exactly the inputs that were never in doubt. A negative
     /// index is what a corrupt server counter supplies, and `dropFirst(negative)` traps.
+    ///
+    /// **B19 — and the one thing the reader must not do is clamp it back.** A cold-reader walk (walk 8)
+    /// measured the cost: a reader folded the resume index into a tiler exactly as advised, then
+    /// wrapped the *input* in `min(queued, total)` — "the server can't have queued more than exist" —
+    /// and the shipped negatives never reached the code. Clamping the generator re-encodes the very
+    /// assumption the law is here to refute. So the guard is stated twice, in the paste and in the
+    /// prose, the same way `collidingString` says *"do not widen this alphabet."*
     public static func outOfRangeIndex(subject: String) -> GeneratorRecipe {
         GeneratorRecipe(
             subject: subject,
             typeName: "Int",
             expression: """
                 // NEGATIVE and PAST-THE-END on purpose. Generating `0..<count` would check totality
-                // against precisely the indices that were never in question.
+                // against precisely the indices that were never in question. Do NOT wrap this in
+                // `min(index, count)` or `max(0, index)`: clamping the INPUT re-encodes the exact
+                // assumption the law exists to refute — that the counter is in range — and the bug
+                // walks free. Paste the range as-is; the clamp belongs in the code under test.
                 Gen<Int>.int(in: -50...500)
                 """,
             rationale: "Totality is a claim about the indices the code did NOT expect. A generator "
                 + "bounded to the valid range cannot refute it. A negative index is exactly what a "
                 + "corrupt resume counter supplies, and `dropFirst(negative)` traps rather than "
-                + "returning nothing."
+                + "returning nothing. Do not clamp this generator — a `min(queued, total)` guard on "
+                + "the input, however 'sensible,' asserts the counter is trustworthy, which is the one "
+                + "thing this law is here to deny."
         )
     }
 
