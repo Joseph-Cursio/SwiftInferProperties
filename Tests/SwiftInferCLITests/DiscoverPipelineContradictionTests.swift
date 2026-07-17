@@ -57,13 +57,13 @@ struct DiscoverPipelineContradictionTests {
 
     @Test("Contradiction-dropped commutativity suggestion is elided from stdout")
     func contradictionDroppedSuggestionIsElidedFromStdout() throws {
-        // `combineAny` isn't in any curated naming list — both
-        // commutativity and associativity score 30 (just type-symmetry)
-        // → Possible. Default flags hide Possible-tier output.
+        // `+` corroborates the algebraic shape (so B24's unsupported-shape
+        // counter does not fire) WITHOUT the +40 curated bump, so commutativity
+        // and associativity stay at Score 30 → Possible. Default flags hide
+        // Possible-tier output; the commutativity suggestion is contradiction-
+        // dropped for the non-Equatable `Any` return and emits its diagnostic.
         let directory = try writeDPFixture(name: "ContradictionElide", contents: """
-        struct AnyMixer {
-            func combineAny(_ first: Any, _ second: Any) -> Any { return first }
-        }
+        func + (_ first: Any, _ second: Any) -> Any { return first }
         """)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()

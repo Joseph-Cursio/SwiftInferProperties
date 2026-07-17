@@ -136,11 +136,24 @@ public enum CommutativityTemplate {
             return []
         }
         var signals: [Signal] = [typeShape]
-        if let name = nameSignal(for: summary, vocabulary: vocabulary) {
+        let name = nameSignal(for: summary, vocabulary: vocabulary)
+        if let name {
             signals.append(name)
         }
-        if let counter = antiCommutativitySignal(for: summary, vocabulary: vocabulary) {
-            signals.append(counter)
+        let anti = antiCommutativitySignal(for: summary, vocabulary: vocabulary)
+        if let anti {
+            signals.append(anti)
+        }
+        // B24 — a shape-only candidate with neither a commutative name nor an
+        // anti-commutativity name has nothing corroborating that its `(T,T)->T`
+        // shape is a commutative op. Suppress it; the anti path already handles
+        // the names it recognizes, and `+`/`*` plus the semilattice/order verbs
+        // (join/meet/min/max/gcd/lcm) are canonically commutative.
+        let hasOperator = AssociativityTemplate.knownAlgebraicOperators.contains(summary.name)
+        let hasAlgebraicVerb = AssociativityTemplate.commutativeAssociativeVerbs.contains(summary.name)
+        if name == nil, anti == nil, !hasOperator, !hasAlgebraicVerb,
+           let unsupported = unsupportedShapeCounterSignal(for: summary) {
+            signals.append(unsupported)
         }
         if let fpCounter = floatingPointStorageCounterSignal(for: summary) {
             signals.append(fpCounter)
@@ -230,6 +243,23 @@ extension CommutativityTemplate {
             )
         }
         return nil
+    }
+
+    /// B24 — counter-signal that suppresses a shape-only commutativity candidate.
+    /// The caller invokes it only when neither a commutative name nor an
+    /// anti-commutativity name matched, so the bare `(T, T) -> T` shape is all
+    /// there is — and a correct `backoffDelay` / `weighted` matches that shape
+    /// without being commutative. `-20` drops Score 30 → 10, below the Possible
+    /// floor; a named commutative op keeps this from firing.
+    private static func unsupportedShapeCounterSignal(
+        for summary: FunctionSummary
+    ) -> Signal? {
+        Signal(
+            kind: .unsupportedAlgebraicShape,
+            weight: -20,
+            detail: "'\(summary.name)' matched only the (T, T) -> T shape — no commutative "
+                + "name; commutativity is not entailed by the shape alone"
+        )
     }
 
     /// V1.5.2 — fires when the candidate type's existing protocol

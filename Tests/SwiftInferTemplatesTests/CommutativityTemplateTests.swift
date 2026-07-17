@@ -5,16 +5,26 @@ import Testing
 @Suite("CommutativityTemplate — type pattern")
 struct CommutativityTemplateTypePatternTests {
 
-    @Test("Two same-type params and matching return scores 30 (Possible) with no name signal")
-    func typeShapeAlone() {
+    @Test("B24 — a bare (T, T) -> T shape with no commutative name is suppressed, not Possible")
+    func typeShapeAloneIsSuppressed() {
+        // `blend` has no curated/vocabulary commutative name and is not `+`/`*`,
+        // so the shape alone no longer surfaces commutativity: a correct
+        // non-commutative `(T,T)->T` (backoffDelay) matches the same shape. The
+        // shape signal still contributes +30, but the B24 counter (-20) drops
+        // the net below the Possible floor.
         let summary = makeCommutativitySummary(
             name: "blend",
             paramTypes: ("Color", "Color"),
             returnType: "Color"
         )
-        let suggestion = CommutativityTemplate.suggest(for: summary)
-        #expect(suggestion?.score.total == 30)
-        #expect(suggestion?.score.tier == .possible)
+        #expect(CommutativityTemplate.suggest(for: summary) == nil)
+        let signals = CommutativityTemplate.accumulatedSignals(
+            for: summary,
+            vocabulary: .empty,
+            inheritedTypesByName: [:]
+        )
+        #expect(signals.contains { $0.kind == .typeSymmetrySignature && $0.weight == 30 })
+        #expect(signals.contains { $0.kind == .unsupportedAlgebraicShape && $0.weight == -20 })
     }
 
     @Test("Curated commutativity verb on (T, T) -> T scores 70 (Likely)")

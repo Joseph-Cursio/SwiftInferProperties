@@ -35,7 +35,7 @@ import Testing
 @Suite("Algebraic survey corpus — measured baseline", .tags(.subprocess))
 struct AlgebraicSurveyCorpusMeasuredTests {
 
-    @Test("curated corpus verifies six measured families (9 bothPass + 5 defaultFails)")
+    @Test("curated corpus verifies six measured families (11 bothPass + 4 defaultFails)")
     func measuredAlgebraicSplits() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-survey-corpus")
@@ -68,15 +68,24 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         // `reversed` is a buggy *reverse* that returns self unchanged, but the
         // identity IS an involution, so it bothPasses the involution law — the
         // reverse-bug is the dual-style `defaultFails`, a different law.)
-        #expect(records.count == 17)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 12)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
+        // 17 → 15 (B24): the associativity/commutativity templates no longer fire
+        // on a bare `(T,T)->T` shape without corroboration. `join` / `meet` are
+        // in the semilattice-verb corroboration set, so their four true positives
+        // (assoc + comm, both bothPass) survive — but `leftBiased`, an arbitrary
+        // projection with no algebraic name, is now declined at PROPOSAL rather
+        // than caught at verify, dropping its associativity true positive and its
+        // commutativity false positive (the corpus's only commutativity
+        // defaultFails). Net −2 records: one bothPass, one defaultFails.
+        #expect(records.count == 15)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 11)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 4)
         // The catalogue-work true positives.
         #expect(hasRecord(records, "involution", .measuredBothPass))
         #expect(hasRecord(records, "binary-idempotence", .measuredBothPass))
-        // commutativity false positive (non-commutative `leftBiased`), its
-        // associativity true positive, and the idempotence true positive.
-        #expect(hasRecord(records, "commutativity", .measuredDefaultFails))
+        // `join` / `meet` semilattice ops — associativity/commutativity true
+        // positives (corroborated by the semilattice-verb set post-B24), plus the
+        // idempotence true positive.
+        #expect(hasRecord(records, "commutativity", .measuredBothPass))
         #expect(hasRecord(records, "associativity", .measuredBothPass))
         #expect(hasRecord(records, "idempotence", .measuredBothPass))
         // The first verifying round-trip in the project — the `Move.encode`/

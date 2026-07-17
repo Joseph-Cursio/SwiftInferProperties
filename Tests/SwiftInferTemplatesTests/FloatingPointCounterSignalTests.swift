@@ -7,8 +7,14 @@ struct FloatingPointCounterSignalTests {
 
     // MARK: - Fixtures
 
-    /// Build a binary-op summary `func op(_:_:) -> T` with the given T.
-    private static func binaryOp(name: String = "op", typeText: String) -> FunctionSummary {
+    /// Build a binary-op summary `func +(_:_:) -> T` with the given T.
+    ///
+    /// The default name is the `+` operator deliberately: it corroborates the
+    /// algebraic shape (so B24's unsupported-shape counter does not fire) WITHOUT
+    /// the `+40` curated-verb bump, so the score is exactly shape (30) plus the
+    /// FP counter under test — which is what these cases isolate. A bare name
+    /// like "op" would now be suppressed by B24 before the FP counter matters.
+    private static func binaryOp(name: String = "+", typeText: String) -> FunctionSummary {
         FunctionSummary(
             name: name,
             parameters: [

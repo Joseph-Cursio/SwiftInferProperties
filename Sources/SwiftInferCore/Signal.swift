@@ -83,6 +83,17 @@ public struct Signal: Sendable, Equatable {
         case asymmetricAssertion
         case antiCommutativityNaming
         case partialFunction
+        /// B24 — fires on an associativity / commutativity candidate that
+        /// matched only on the bare `(T, T) -> T` type shape, with nothing to
+        /// corroborate that this particular operation is a genuine monoid /
+        /// commutative op: no curated / vocabulary name, no reduce-fold usage,
+        /// and (for associativity) not a concatenation-family name. The shape is
+        /// necessary but not sufficient — a correct `backoffDelay` / `weighted` /
+        /// `scaleQuantity` matches it and need not be associative or commutative,
+        /// so a shape-only proposal cries wolf. Weight `-20` drops Score 30 → 10
+        /// (below the Possible floor of 20), suppressing the shape-only candidate;
+        /// any real corroboration keeps the counter from firing at all.
+        case unsupportedAlgebraicShape
         /// V1.4.3 — fires on candidates whose parameter type is a curated
         /// IEEE 754 floating-point-storage type (Float / Double / Float16 /
         /// Float32 / Float64 / Float80 / CGFloat / Complex / Decimal). Emitted

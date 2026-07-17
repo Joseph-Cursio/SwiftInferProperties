@@ -5,16 +5,27 @@ import Testing
 @Suite("AssociativityTemplate — type pattern")
 struct AssociativityTemplateTypePatternTests {
 
-    @Test("Two same-type params and matching return scores 30 (Possible) with no name signal")
-    func typeShapeAlone() {
+    @Test("B24 — a bare (T, T) -> T shape with no corroboration is suppressed, not Possible")
+    func typeShapeAloneIsSuppressed() {
+        // `blend` is not a curated/concat/operator name and isn't used as a
+        // reducer, so the shape alone no longer surfaces associativity: a
+        // correct non-monoid `(T,T)->T` (backoffDelay / weighted) matches the
+        // shape without being associative. The shape signal still contributes
+        // +30, but the B24 counter (-20) drops the net below the Possible floor.
         let summary = makeAssociativitySummary(
             name: "blend",
             paramTypes: ("Color", "Color"),
             returnType: "Color"
         )
-        let suggestion = AssociativityTemplate.suggest(for: summary)
-        #expect(suggestion?.score.total == 30)
-        #expect(suggestion?.score.tier == .possible)
+        #expect(AssociativityTemplate.suggest(for: summary) == nil)
+        let signals = AssociativityTemplate.accumulatedSignals(
+            for: summary,
+            vocabulary: .empty,
+            reducerOps: [],
+            inheritedTypesByName: [:]
+        )
+        #expect(signals.contains { $0.kind == .typeSymmetrySignature && $0.weight == 30 })
+        #expect(signals.contains { $0.kind == .unsupportedAlgebraicShape && $0.weight == -20 })
     }
 
     @Test("Curated commutativity verb on (T, T) -> T scores 70 (Likely) under associativity too")

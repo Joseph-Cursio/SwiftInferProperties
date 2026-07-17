@@ -65,8 +65,8 @@ struct DiscoverDocstringAdviceTests {
         #expect(recording.text.contains("non-empty and contains no slash"))
     }
 
-    @Test("a function left with only red herrings gets its docstring as the fallback contract")
-    func fallbackContractNamesRedHerrings() throws {
+    @Test("a function the templates can only tautologize gets its docstring as the fallback contract")
+    func fallbackContractOnDeterminismOnly() throws {
         let directory = try writeDPFixture(name: "DocAdviceFallback", contents: Self.source)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
@@ -77,10 +77,13 @@ struct DiscoverDocstringAdviceTests {
             seedManifest: manifest(),
             output: recording
         )
+        // Post-B24 the bare `(Int, Int) -> Int` shape no longer over-fires
+        // associativity/commutativity, so `backoffDelay` reaches only the
+        // determinism tautology — and the docstring is surfaced as the one
+        // refutable contract the templates could not name.
         #expect(recording.text.contains("backoffDelay"))
         #expect(recording.text.contains("capped at the ceiling and never negative"))
-        // It names the shape-matched guesses so the reader sees why the sentence is needed.
-        #expect(recording.text.contains("commutativity") || recording.text.contains("associativity"))
+        #expect(recording.text.contains("determinism tautology"))
     }
 
     @Test("a narrating docstring is not surfaced")

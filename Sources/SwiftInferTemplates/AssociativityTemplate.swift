@@ -126,6 +126,13 @@ public enum AssociativityTemplate {
         if let reducer = reducerUsageSignal(for: summary, reducerOps: reducerOps) {
             signals.append(reducer)
         }
+        if let unsupported = unsupportedShapeCounterSignal(
+            for: summary,
+            vocabulary: vocabulary,
+            reducerOps: reducerOps
+        ) {
+            signals.append(unsupported)
+        }
         if let fpCounter = floatingPointStorageCounterSignal(for: summary) {
             signals.append(fpCounter)
         }
@@ -208,6 +215,63 @@ extension AssociativityTemplate {
             kind: .reduceFoldUsage,
             weight: 20,
             detail: "Reduce/fold usage detected in corpus: '\(summary.name)' referenced as a reducer op"
+        )
+    }
+
+    /// Concatenation-family names that suggest a genuinely *associative*
+    /// operation even though it is not commutative — list/string `++`-style
+    /// joins. These corroborate associativity (they keep the shape-only counter
+    /// below from firing), but deliberately do NOT earn the `+40` curated-verb
+    /// bump, so a `concat` still surfaces at the Possible tier rather than being
+    /// promoted to a shown-by-default Strong. Distinct from the commutativity
+    /// template's anti-commutativity list, which *suppresses* these — a concat
+    /// is associative but not commutative.
+    static let curatedAssociativeVerbs: Set<String> = [
+        "concat", "concatenate", "concatenated", "concatenating",
+        "append", "appending", "prepend", "prepending", "joined"
+    ]
+
+    /// Operator spellings that name a canonically associative op. `+` and `*`
+    /// are associative (and are what the protocol-coverage map already treats as
+    /// additive / multiplicative); `-` and `/` are not, so they stay gated. These
+    /// corroborate the shape without the `+40` curated bump, so `+` keeps its
+    /// existing Possible-tier associativity rather than being promoted.
+    static let knownAlgebraicOperators: Set<String> = ["+", "*"]
+
+    /// Textbook associative-AND-commutative word ops beyond the curated verbs:
+    /// semilattice (`join`, `meet`), order (`min`, `max`), number-theory (`gcd`,
+    /// `lcm`). Corroborate BOTH templates without the `+40` bump (kept at
+    /// Possible). Unlike `leftBiased` / `weighted`, whose shape entails nothing.
+    static let commutativeAssociativeVerbs: Set<String> = [
+        "join", "meet", "min", "max", "gcd", "lcm"
+    ]
+
+    /// B24 — counter-signal that suppresses a shape-only associativity candidate.
+    /// Fires when the `(T, T) -> T` shape matched but nothing corroborates that
+    /// the operation is a genuine monoid: no curated / vocabulary name, no
+    /// concatenation-family name, and it is never used as a reduce/fold op in the
+    /// corpus. The bare shape matches a correct `backoffDelay` / `weighted` /
+    /// `scaleQuantity`, none of which is associative, so a shape-only proposal
+    /// spends the reader's trust for nothing. `-20` drops Score 30 → 10, below the
+    /// Possible floor; a real corroboration keeps this from firing.
+    private static func unsupportedShapeCounterSignal(
+        for summary: FunctionSummary,
+        vocabulary: Vocabulary,
+        reducerOps: Set<String>
+    ) -> Signal? {
+        let hasName = nameSignal(for: summary, vocabulary: vocabulary) != nil
+        let hasAssociativeName = curatedAssociativeVerbs.contains(summary.name)
+        let hasAlgebraicVerb = commutativeAssociativeVerbs.contains(summary.name)
+        let hasOperator = knownAlgebraicOperators.contains(summary.name)
+        let hasReducer = reducerOps.contains(summary.name)
+        guard !hasName, !hasAssociativeName, !hasAlgebraicVerb, !hasOperator, !hasReducer else {
+            return nil
+        }
+        return Signal(
+            kind: .unsupportedAlgebraicShape,
+            weight: -20,
+            detail: "'\(summary.name)' matched only the (T, T) -> T shape — no monoid/concat "
+                + "name and no reduce-fold usage; associativity is not entailed by the shape alone"
         )
     }
 

@@ -64,10 +64,12 @@ struct ContradictionDetectorCommutativityTests {
     func commutativityDroppedOnFunctionTypeReturn() throws {
         // A `((Int) -> Int, (Int) -> Int) -> (Int) -> Int` shape — the
         // return type is provably non-Equatable. Drop, with reason text
-        // citing the offending type and PRD §5.6 #2.
+        // citing the offending type and PRD §5.6 #2. Uses the curated name
+        // `merge` so a valid commutativity suggestion is produced for the
+        // detector to drop (a bare name would now be gated by B24 upstream).
         let (suggestion, summary) = try makeCommutativitySuggestion(
             type: "(Int) -> Int",
-            name: "compose",
+            name: "merge",
             file: "Compose.swift",
             line: 7
         )
@@ -80,7 +82,7 @@ struct ContradictionDetectorCommutativityTests {
         let drop = try #require(outcome.dropped.first)
         #expect(drop.suggestion == suggestion)
         #expect(drop.reason.contains("commutativity"))
-        #expect(drop.reason.contains("compose"))
+        #expect(drop.reason.contains("merge"))
         #expect(drop.reason.contains("Compose.swift:7"))
         #expect(drop.reason.contains("(Int) -> Int"))
         #expect(drop.reason.contains("not Equatable"))

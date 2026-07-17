@@ -37,8 +37,11 @@ struct CommutativityIndexTraversalTests {
 
     @Test("a same-named method with different labels is unaffected (matched by base name + labels)")
     func sameNameDifferentLabelsStillMatches() {
-        // `distance(x:y:)` — not the Collection requirement; a real (Int,Int)->Int
-        // candidate that execution should still adjudicate.
+        // `distance(x:y:)` — not the Collection requirement, so the index-traversal
+        // exclusion (this test's subject) does NOT fire and the shape signal
+        // survives. The final `suggest(...)` is now separately gated by B24 (no
+        // commutative name), so assert the exclusion at the signal it controls
+        // rather than at the downstream suggestion.
         let summary = Self.summary(
             name: "distance",
             parameters: [
@@ -46,7 +49,7 @@ struct CommutativityIndexTraversalTests {
                 Parameter(label: "y", internalName: "y", typeText: "Int", isInout: false)
             ]
         )
-        #expect(CommutativityTemplate.suggest(for: summary) != nil)
+        #expect(summary.binaryOperatorTypeSymmetrySignal != nil)
     }
 
     private static func summary(name: String, parameters: [Parameter]) -> FunctionSummary {

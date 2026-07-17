@@ -76,9 +76,12 @@ struct TemplateRegistryContradictionTests {
 
     @Test("Directory scan threads typeDecls through discover and emits contradiction diagnostics")
     func directoryScanFiresContradictionDiagnostic() throws {
+        // `merge` is a curated commutativity verb, so the suggestion is produced
+        // (B24 does not gate it) and the contradiction pass is what drops it for
+        // the non-Equatable function-type return — which is what this exercises.
         let directory = try writeRegistryFixture(named: "ContradictionDirScan", contents: """
         struct Composer {
-            func compose(_ a: (Int) -> Int, _ b: (Int) -> Int) -> (Int) -> Int { return a }
+            func merge(_ a: (Int) -> Int, _ b: (Int) -> Int) -> (Int) -> Int { return a }
         }
         """)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -90,7 +93,7 @@ struct TemplateRegistryContradictionTests {
         #expect(diagnostics.contains { line in
             line.hasPrefix("contradiction: ")
                 && line.contains("commutativity")
-                && line.contains("compose")
+                && line.contains("merge")
         })
     }
 }
