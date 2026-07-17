@@ -107,6 +107,35 @@ struct FunctionScannerHeaderTests {
         #expect(param.internalName == "name")
     }
 
+    @Test("B26 — ownership specifiers are stripped from parameter type text")
+    func ownershipSpecifiersStripped() throws {
+        // The value-semantic `union(_ other: __owned Self) -> Self` idiom
+        // (SetAlgebra / OrderedSet) was silent because the type read as the
+        // literal `"__owned Self"`. Strip the sigil so it reads as `Self`.
+        let source = """
+        struct Ring {
+            func union(_ other: __owned Self) -> Self { self }
+            func consume(_ item: consuming Int) {}
+        }
+        """
+        let summaries = FunctionScanner.scan(source: source, file: "Test.swift")
+        let union = try #require(summaries.first { $0.name == "union" })
+        #expect(union.parameters.first?.typeText == "Self")
+        #expect(union.parameters.first?.isInout == false)
+        let consume = try #require(summaries.first { $0.name == "consume" })
+        #expect(consume.parameters.first?.typeText == "Int")
+    }
+
+    @Test("inout is still tracked, not conflated with ownership stripping")
+    func inoutStillTracked() throws {
+        let source = "func f(_ x: inout Int) {}"
+        let param = try #require(
+            FunctionScanner.scan(source: source, file: "Test.swift").first?.parameters.first
+        )
+        #expect(param.typeText == "Int")
+        #expect(param.isInout == true)
+    }
+
     @Test
     func parameterWithSingleNameUsesItForBothLabelAndName() throws {
         let source = "func f(value: Int) {}"

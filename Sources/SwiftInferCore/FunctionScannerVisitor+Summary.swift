@@ -144,9 +144,7 @@ extension FunctionScannerVisitor {
             internalName = firstName
         }
 
-        let rawType = syntax.type.trimmedDescription
-        let isInout = rawType.hasPrefix("inout ")
-        let typeText = isInout ? String(rawType.dropFirst("inout ".count)) : rawType
+        let (typeText, isInout) = Self.strippingParameterSpecifiers(syntax.type.trimmedDescription)
 
         return Parameter(
             label: label,
@@ -154,6 +152,35 @@ extension FunctionScannerVisitor {
             typeText: typeText,
             isInout: isInout
         )
+    }
+
+    /// Strip leading parameter specifiers so the type text is the bare type.
+    /// `inout` is tracked separately (it changes value semantics); the ownership
+    /// sigils (`__owned` / `__shared` / `consuming` / `borrowing` / `sending` /
+    /// `_const`) are erased — they are calling-convention detail the property
+    /// never sees. Without this, `__owned Self` reads as the literal type text
+    /// `"__owned Self"` and matches no template, so the value-semantic
+    /// `union(_ other: __owned Self) -> Self` idiom of `SetAlgebra` / OrderedSet
+    /// was silent (B26). Plain `Self` already works via textual `Self == Self`,
+    /// so this stripping — not `Self`-resolution — is the actual fix on the
+    /// swift-infer side.
+    static func strippingParameterSpecifiers(_ raw: String) -> (typeText: String, isInout: Bool) {
+        var text = Substring(raw)
+        var isInout = false
+        let ownership = ["__owned ", "__shared ", "consuming ", "borrowing ", "sending ", "_const "]
+        stripping: while true {
+            if text.hasPrefix("inout ") {
+                isInout = true
+                text = text.dropFirst("inout ".count)
+                continue
+            }
+            for specifier in ownership where text.hasPrefix(specifier) {
+                text = text.dropFirst(specifier.count)
+                continue stripping
+            }
+            break
+        }
+        return (String(text), isInout)
     }
 
     private func scanBody(of node: FunctionDeclSyntax) -> BodySignals {
