@@ -1,5 +1,6 @@
 import Foundation
 import SwiftInferCore
+import SwiftInferTemplates
 
 /// `swift-infer discover --docstring-advice` — pairs a documented function's
 /// docstring with the law it defines.
@@ -16,6 +17,12 @@ extension SwiftInferCommand.Discover {
         let signature: String
         let location: SourceLocation
         let advisory: DocstringAdvisory
+        /// B25 (issue #1) — for a single-parameter documented predicate, the
+        /// runnable reference-oracle scaffold: the `<name>_reference` stub plus
+        /// the predicate-vs-oracle property. `nil` for every other case. The
+        /// reader fills the one boolean the docstring dictates; the generator
+        /// then finds the input where the code disagrees with its documentation.
+        let runnableScaffold: String?
     }
 
     /// Compute docstring advice for the documented functions in the run.
@@ -69,11 +76,49 @@ extension SwiftInferCommand.Discover {
                     displayName: displayName(for: summary),
                     signature: signature(for: summary),
                     location: summary.location,
-                    advisory: advisory
+                    advisory: advisory,
+                    runnableScaffold: predicateScaffold(
+                        for: summary,
+                        advisory: advisory,
+                        suggestions: suggestionsByFunction[key] ?? []
+                    )
                 )
             )
         }
         return items
+    }
+
+    /// The runnable reference-oracle scaffold for a single-parameter documented
+    /// predicate, or `nil` when it does not apply. Fires only when the advisory
+    /// is a `predicate` reference definition (the case the verify pipeline
+    /// reports as `unsupported-template: predicate` for lack of an oracle) and
+    /// the function takes exactly one parameter. Multi-parameter predicates are
+    /// a follow-on — the sample would need a tuple draw.
+    private static func predicateScaffold(
+        for summary: FunctionSummary,
+        advisory: DocstringAdvisory,
+        suggestions: [Suggestion]
+    ) -> String? {
+        guard case let .referenceDefinition(reference) = advisory,
+              reference.template == "predicate",
+              !reference.fromLiftedTest,
+              summary.parameters.count == 1,
+              let parameter = summary.parameters.first,
+              let docComment = summary.docComment,
+              let predicateSuggestion = suggestions.first(where: { $0.templateName == "predicate" })
+        else {
+            return nil
+        }
+        return LiftedTestEmitter.predicateReferenceOracle(
+            funcName: summary.name,
+            parameter: parameter,
+            docComment: docComment,
+            seed: SamplingSeed.derive(from: predicateSuggestion.identity),
+            generator: InteractiveTriage.chooseGenerator(
+                for: predicateSuggestion,
+                typeName: parameter.typeText
+            )
+        )
     }
 
     /// `name(label:)` — the labelled display form, matching the evidence renderer.

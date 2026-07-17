@@ -63,6 +63,11 @@ struct DiscoverDocstringAdviceTests {
         #expect(recording.text.contains("isValidName"))
         #expect(recording.text.contains("the `predicate` law openly owes a reference definition"))
         #expect(recording.text.contains("non-empty and contains no slash"))
+        // B25 (issue #1) — the runnable reference-oracle scaffold: a stub the
+        // reader fills and the predicate-vs-oracle property the machine runs.
+        #expect(recording.text.contains("runnable reference oracle"))
+        #expect(recording.text.contains("func isValidName_reference(_ name: String) -> Bool"))
+        #expect(recording.text.contains("isValidName(value) == isValidName_reference(value)"))
     }
 
     @Test("a function the templates can only tautologize gets its docstring as the fallback contract")

@@ -30,6 +30,12 @@ enum DocstringAdvisoryRenderer {
             for line in body(for: item.advisory) {
                 lines.append("    \(line)")
             }
+            if let scaffold = item.runnableScaffold {
+                lines.append("    ── runnable reference oracle (fill the stub, then run it) ──")
+                for line in scaffold.split(separator: "\n", omittingEmptySubsequences: false) {
+                    lines.append("    \(line)")
+                }
+            }
         }
         return lines.joined(separator: "\n")
     }
