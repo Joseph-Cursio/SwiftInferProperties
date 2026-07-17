@@ -95,32 +95,59 @@ extension SwiftInferCommand.Discover {
     /// uniformly — a comparator is just a two-argument predicate on ordering.
     private static let oracleStubTemplates: Set<String> = ["predicate", "comparator"]
 
-    /// The runnable reference-oracle scaffold for a documented predicate or
-    /// comparator, or `nil` when it does not apply. Handles any arity (the
-    /// emitter draws a scalar for one parameter, a tuple for several).
+    /// The runnable reference-oracle scaffold for a documented function, or `nil`
+    /// when it does not apply. Three shapes: a `predicate` / `comparator`
+    /// reference definition (return `Bool`), and the determinism-fallback
+    /// contract (the return is the value type, the reference a from-the-spec
+    /// re-implementation). Handles any arity — scalar draw for one parameter,
+    /// tuple for several.
     private static func referenceOracleScaffold(
         for summary: FunctionSummary,
         advisory: DocstringAdvisory,
         suggestions: [Suggestion]
     ) -> String? {
-        guard case let .referenceDefinition(reference) = advisory,
-              oracleStubTemplates.contains(reference.template),
-              !reference.fromLiftedTest,
-              !summary.parameters.isEmpty,
-              let docComment = summary.docComment,
-              let suggestion = suggestions.first(where: { $0.templateName == reference.template })
-        else {
+        guard !summary.parameters.isEmpty, let docComment = summary.docComment else {
             return nil
         }
-        let generators = summary.parameters.map { parameter in
-            InteractiveTriage.chooseGenerator(for: suggestion, typeName: parameter.typeText)
+
+        let returnTypeText: String
+        let sourceSuggestion: Suggestion?
+        switch advisory {
+        case let .referenceDefinition(reference):
+            guard oracleStubTemplates.contains(reference.template), !reference.fromLiftedTest else {
+                return nil
+            }
+            returnTypeText = "Bool"
+            sourceSuggestion = suggestions.first { $0.templateName == reference.template }
+
+        case .fallbackContract:
+            // The docstring is the only contract the templates could name. Make it
+            // runnable as a from-the-spec reference implementation — needs a
+            // concrete, non-Void return to compare against.
+            guard let returned = summary.returnTypeText, returned != "Void", returned != "()" else {
+                return nil
+            }
+            returnTypeText = returned
+            // Any surviving pick (determinism / red herring) gives a stable seed
+            // and generator source; the fallback fired because none was owed.
+            sourceSuggestion = suggestions.first
         }
-        return LiftedTestEmitter.predicateReferenceOracle(
+        guard let suggestion = sourceSuggestion else {
+            return nil
+        }
+
+        let arguments = summary.parameters.map { parameter in
+            LiftedTestEmitter.ReferenceOracleArgument(
+                parameter: parameter,
+                generator: InteractiveTriage.chooseGenerator(for: suggestion, typeName: parameter.typeText)
+            )
+        }
+        return LiftedTestEmitter.referenceOracle(
             funcName: summary.name,
-            parameters: summary.parameters,
+            arguments: arguments,
+            returnTypeText: returnTypeText,
             docComment: docComment,
-            seed: SamplingSeed.derive(from: suggestion.identity),
-            generators: generators
+            seed: SamplingSeed.derive(from: suggestion.identity)
         )
     }
 
