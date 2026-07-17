@@ -7,53 +7,71 @@ struct PredicateReferenceOracleEmitterTests {
 
     private static let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
 
-    @Test("emits a reference stub carrying the docstring, plus the predicate-vs-oracle property")
-    func emitsStubAndProperty() {
+    @Test("single param: emits a reference stub carrying the docstring, plus the predicate-vs-oracle property")
+    func singleParameter() {
         let source = LiftedTestEmitter.predicateReferenceOracle(
             funcName: "isValidQuantity",
-            parameter: Parameter(label: nil, internalName: "quantity", typeText: "Double", isInout: false),
+            parameters: [Parameter(label: nil, internalName: "quantity", typeText: "Double", isInout: false)],
             docComment: "A quantity is valid when it is finite and not negative. Zero is allowed.",
             seed: Self.seed,
-            generator: "Gen<Double>.double()"
+            generators: ["Gen<Double>.double()"]
         )
-        // The reference-oracle stub the reader fills.
         #expect(source.contains("func isValidQuantity_reference(_ quantity: Double) -> Bool"))
         #expect(source.contains("fatalError(\"state the reference definition"))
-        // The docstring is surfaced verbatim as the definition being encoded.
         #expect(source.contains("A quantity is valid when it is finite and not negative. Zero is allowed."))
-        // The property runs the predicate against the reader's oracle.
         #expect(source.contains("isValidQuantity(value) == isValidQuantity_reference(value)"))
         #expect(source.contains("@Test func isValidQuantity_matchesReferenceDefinition()"))
-        // It draws inputs from an EDGE-BIASED generator — the uniform baseline
-        // mixed with the boundary values (above all 0.0) where predicate contract
-        // bugs like `> 0` vs `>= 0` hide. A uniform draw would false-pass.
+        // Edge-biased generator: the uniform baseline mixed with the boundary
+        // values (above all 0.0) where `> 0` vs `>= 0` contract bugs hide.
         #expect(source.contains("Gen.frequency"))
-        #expect(source.contains("Gen<Double>.double()"))
         #expect(source.contains("[0.0, -1.0, 1.0] as [Double]"))
     }
 
-    @Test("an Int predicate edge-biases toward 0 and ±1")
+    @Test("single param: a labelled parameter is reconstructed and called with its label")
+    func labelledParameter() {
+        let source = LiftedTestEmitter.predicateReferenceOracle(
+            funcName: "accepts",
+            parameters: [Parameter(label: "code", internalName: "value", typeText: "String", isInout: false)],
+            docComment: "Accepts a code when it is exactly six uppercase letters.",
+            seed: Self.seed,
+            generators: ["Gen<String>.string()"]
+        )
+        #expect(source.contains("func accepts_reference(code value: String) -> Bool"))
+        #expect(source.contains("accepts(code: value) == accepts_reference(code: value)"))
+    }
+
+    @Test("single param: an Int predicate edge-biases toward 0 and ±1")
     func integerEdgeBias() {
         let source = LiftedTestEmitter.predicateReferenceOracle(
             funcName: "isValidServings",
-            parameter: Parameter(label: nil, internalName: "servings", typeText: "Int", isInout: false),
+            parameters: [Parameter(label: nil, internalName: "servings", typeText: "Int", isInout: false)],
             docComment: "A serving count is valid when it is strictly greater than zero.",
             seed: Self.seed,
-            generator: "Gen<Int>.int()"
+            generators: ["Gen<Int>.int()"]
         )
         #expect(source.contains("[0, -1, 1] as [Int]"))
     }
 
-    @Test("a labelled parameter is reconstructed with its label")
-    func labelledParameterClause() {
+    @Test("multi param: draws a tuple, indexes it, and preserves labels in both calls")
+    func multiParameter() {
         let source = LiftedTestEmitter.predicateReferenceOracle(
-            funcName: "accepts",
-            parameter: Parameter(label: "code", internalName: "value", typeText: "String", isInout: false),
-            docComment: "Accepts a code when it is exactly six uppercase letters.",
+            funcName: "canReach",
+            parameters: [
+                Parameter(label: "from", internalName: "origin", typeText: "Int", isInout: false),
+                Parameter(label: "to", internalName: "target", typeText: "Int", isInout: false)
+            ],
+            docComment: "Reachable when the target is within range of the origin.",
             seed: Self.seed,
-            generator: "Gen<String>.string()"
+            generators: ["Gen<Int>.int()", "Gen<Int>.int()"]
         )
-        #expect(source.contains("func accepts_reference(code value: String) -> Bool"))
-        #expect(source.contains("accepts(value) == accepts_reference(value)"))
+        // Reference stub carries the full labelled signature.
+        #expect(source.contains("func canReach_reference(from origin: Int, to target: Int) -> Bool"))
+        // Tuple sample + tuple-indexed, label-preserving calls.
+        #expect(source.contains("{ tuple in"))
+        #expect(source.contains(
+            "canReach(from: tuple.0, to: tuple.1) == canReach_reference(from: tuple.0, to: tuple.1)"
+        ))
+        // Each parameter is edge-biased.
+        #expect(source.contains("[0, -1, 1] as [Int]"))
     }
 }

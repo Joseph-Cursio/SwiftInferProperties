@@ -16,30 +16,37 @@ import SwiftInferCore
 /// the pointed-at sentence becomes executable.
 extension LiftedTestEmitter {
 
-    /// Emit the reference-oracle stub + property for a single-parameter
-    /// documented predicate `funcName: (T) -> Bool`.
+    /// Emit the reference-oracle stub + property for a documented predicate
+    /// `funcName: (T...) -> Bool` of any arity.
+    ///
+    /// A single parameter draws one `value`; two or more draw a `tuple` and the
+    /// property indexes it (`tuple.0`, `tuple.1`, …) — the same shape the
+    /// commutativity arm uses for its pair. Argument labels are preserved in both
+    /// calls, so a `canReach(from:to:)` predicate compares against a
+    /// `canReach_reference(from:to:)` the reader writes with the same signature.
     ///
     /// - Parameters:
     ///   - funcName: the predicate's base name (e.g. `isValidQuantity`).
-    ///   - parameter: the predicate's single parameter (label / name / type).
+    ///   - parameters: the predicate's parameters, in order (non-empty).
     ///   - docComment: the predicate's reflowed docstring — shown verbatim as the
     ///     reference definition the reader is encoding.
     ///   - seed: sampling seed (derive from the suggestion identity for stability).
-    ///   - generator: the `Gen<T>` expression the sample draws from.
+    ///   - generators: the fallback `Gen<T>` expression per parameter, in order —
+    ///     parallel to `parameters`. Each is edge-biased internally.
     public static func predicateReferenceOracle(
         funcName: String,
-        parameter: Parameter,
+        parameters: [Parameter],
         docComment: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generators: [String]
     ) -> String {
+        guard !parameters.isEmpty, parameters.count == generators.count else {
+            return ""
+        }
         let referenceName = "\(funcName)_reference"
-        let paramTypeText = parameter.typeText
-        let paramClause = parameterClause(
-            label: parameter.label,
-            name: parameter.internalName,
-            typeText: paramTypeText
-        )
+        let paramClause = parameters
+            .map { parameterClause(label: $0.label, name: $0.internalName, typeText: $0.typeText) }
+            .joined(separator: ", ")
 
         let stub = """
         // Fill in the reference definition below — your docstring already states it:
@@ -51,17 +58,52 @@ extension LiftedTestEmitter {
         }
         """
 
-        let property = "{ value in \(funcName)(value) == \(referenceName)(value) }"
-        let biased = edgeBiasedGenerator(forTypeText: paramTypeText, fallback: generator)
-        let sample = "{ rng in (\(biased)).run(using: &rng) }"
+        let biased = zip(parameters, generators).map { parameter, generator in
+            edgeBiasedGenerator(forTypeText: parameter.typeText, fallback: generator)
+        }
+        let (closureParam, sample) = sampleClause(generators: biased)
+        let callArgs = callArguments(parameters: parameters, boundTo: closureParam)
+        let property = "{ \(closureParam) in "
+            + "\(funcName)(\(callArgs)) == \(referenceName)(\(callArgs)) }"
+
         let test = makeTestStubExpression(
             testFunctionName: "\(funcName)_matchesReferenceDefinition",
             seed: seed,
             sampleExpression: sample,
             propertyExpression: property,
-            failureLabel: "\(funcName)(_:) disagrees with its documented reference definition"
+            failureLabel: "\(funcName)\(labelSelector(parameters)) "
+                + "disagrees with its documented reference definition"
         )
         return stub + "\n" + test
+    }
+
+    /// The sample closure and the name its produced value binds to. One
+    /// parameter yields a scalar bound to `value`; several yield a tuple bound
+    /// to `tuple`, drawn component-wise.
+    private static func sampleClause(generators: [String]) -> (closureParam: String, sample: String) {
+        if generators.count == 1 {
+            return ("value", "{ rng in (\(generators[0])).run(using: &rng) }")
+        }
+        let draws = generators.map { "(\($0)).run(using: &rng)" }.joined(separator: ", ")
+        return ("tuple", "{ rng in (\(draws)) }")
+    }
+
+    /// The argument list for a call to the predicate / its reference, binding
+    /// each parameter to `value` (single) or `tuple.<i>` (multi), with labels.
+    private static func callArguments(parameters: [Parameter], boundTo closureParam: String) -> String {
+        let arguments = parameters.enumerated().map { index, parameter -> String in
+            let valueExpression = parameters.count == 1 ? closureParam : "\(closureParam).\(index)"
+            if let label = parameter.label {
+                return "\(label): \(valueExpression)"
+            }
+            return valueExpression
+        }
+        return arguments.joined(separator: ", ")
+    }
+
+    /// `(_:)`, `(from:to:)` — the labelled selector for the failure message.
+    private static func labelSelector(_ parameters: [Parameter]) -> String {
+        "(" + parameters.map { "\($0.label ?? "_"):" }.joined() + ")"
     }
 
     /// Wrap a numeric generator to mix its uniform baseline (weight 3) with the

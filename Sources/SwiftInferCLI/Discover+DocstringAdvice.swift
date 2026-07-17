@@ -88,12 +88,11 @@ extension SwiftInferCommand.Discover {
         return items
     }
 
-    /// The runnable reference-oracle scaffold for a single-parameter documented
-    /// predicate, or `nil` when it does not apply. Fires only when the advisory
-    /// is a `predicate` reference definition (the case the verify pipeline
-    /// reports as `unsupported-template: predicate` for lack of an oracle) and
-    /// the function takes exactly one parameter. Multi-parameter predicates are
-    /// a follow-on — the sample would need a tuple draw.
+    /// The runnable reference-oracle scaffold for a documented predicate, or
+    /// `nil` when it does not apply. Fires only when the advisory is a
+    /// `predicate` reference definition — the case the verify pipeline reports as
+    /// `unsupported-template: predicate` for lack of an oracle. Handles any arity
+    /// (the emitter draws a scalar for one parameter, a tuple for several).
     private static func predicateScaffold(
         for summary: FunctionSummary,
         advisory: DocstringAdvisory,
@@ -102,22 +101,21 @@ extension SwiftInferCommand.Discover {
         guard case let .referenceDefinition(reference) = advisory,
               reference.template == "predicate",
               !reference.fromLiftedTest,
-              summary.parameters.count == 1,
-              let parameter = summary.parameters.first,
+              !summary.parameters.isEmpty,
               let docComment = summary.docComment,
               let predicateSuggestion = suggestions.first(where: { $0.templateName == "predicate" })
         else {
             return nil
         }
+        let generators = summary.parameters.map { parameter in
+            InteractiveTriage.chooseGenerator(for: predicateSuggestion, typeName: parameter.typeText)
+        }
         return LiftedTestEmitter.predicateReferenceOracle(
             funcName: summary.name,
-            parameter: parameter,
+            parameters: summary.parameters,
             docComment: docComment,
             seed: SamplingSeed.derive(from: predicateSuggestion.identity),
-            generator: InteractiveTriage.chooseGenerator(
-                for: predicateSuggestion,
-                typeName: parameter.typeText
-            )
+            generators: generators
         )
     }
 
