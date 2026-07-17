@@ -116,8 +116,8 @@ struct ViewModelRefintTests {
         #expect(source.contains("let probe = Catalog()"))
         // Seeded randomized multi-step sequences + per-step invariant check.
         #expect(source.contains("struct SeededRNG: RandomNumberGenerator"))
-        #expect(source.contains("func findCounterexample() -> [(Int, Int)]?"))
-        #expect(source.contains("if violates(probe) { return steps }"))
+        #expect(source.contains("func findCounterexample() -> (steps: [(Int, Int)], trial: Int)?"))
+        #expect(source.contains("if violates(probe) { return (steps, trial) }"))
         #expect(source.contains("func violates(_ probe: Catalog) -> Bool "
             + "{ !(probe.selected.isSubset(of: Set(probe.items))) }"))
         // The two actions become switch arms; the single-arg one indexes its candidates.
@@ -125,6 +125,18 @@ struct ViewModelRefintTests {
         #expect(source.contains("let values = [0, 1, -1]; probe.toggle(values[argIndex % values.count])"))
         // Greedy shrink on failure.
         #expect(source.contains("if replayFails(candidate) { minimal = candidate }"))
+        // Both the found sequence and the shrunk one are reported: SHRUNK alone
+        // hides shrink migration, and the parser reads INPUT (defaulting it to
+        // "(missing)" when absent).
+        #expect(source.contains("print(\"VERIFY_DEFAULT_INPUT: \\(render(found.steps))\")"))
+        #expect(source.contains("print(\"VERIFY_DEFAULT_SHRUNK: \\(render(minimal))\")"))
+        // The real trial index, not a hardcoded 0.
+        #expect(source.contains("print(\"VERIFY_DEFAULT_TRIAL: \\(found.trial)\")"))
+        #expect(!source.contains("VERIFY_DEFAULT_TRIAL: 0"))
+        // The action alphabet is rendered with arity so a single-arg action's
+        // candidate survives into the counterexample (Ch21 §21.3.1).
+        #expect(source.contains("let actionNames = [\"selectAll\", \"toggle\"]"))
+        #expect(source.contains("let actionTakesArg = [false, true]"))
         // Disclosure of the gated actions.
         #expect(source.contains("Excluded (non-generatable / multi-arg): configure"))
         #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))

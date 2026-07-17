@@ -20,6 +20,17 @@ import Foundation
 /// **Scope (this slice):** zero-arg-constructible view models over the
 /// generatable action alphabet (no-arg + single-arg-over-candidates). Non-
 /// generatable / multi-arg actions are skipped — disclosed in the header.
+///
+/// **Known limitation — shrink migration.** The greedy shrink asks `replayFails`,
+/// which answers *did this still fail*, not *did this fail the same way*: the
+/// invariant is a single opaque `predicate`, so there is no failure signature to
+/// compare against. When a view model can violate one predicate two ways, a
+/// shorter candidate that trips the *other* violation is accepted, and the shrunk
+/// sequence then demonstrates a different bug than the search found. Verified,
+/// not theorised — a two-bug probe migrates on the first seeded run (found
+/// `[clear, clear, toggle]`, shrank to `[toggle]`, different cause). Mitigated,
+/// not fixed: `VERIFY_DEFAULT_INPUT` carries the sequence actually found so the
+/// two can be compared, and disagreement between them is the tell.
 public enum ViewModelInvariantStubEmitter {
 
     /// One action to drive. `valuesExpression` is `nil` for a no-arg action;
@@ -83,11 +94,17 @@ public enum ViewModelInvariantStubEmitter {
         """
     }
 
-    /// Type-parameterized helpers: the action count, the invariant predicate,
-    /// and the replayable per-step dispatch.
+    /// Type-parameterized helpers: the action count, the action alphabet (names
+    /// and arity, for rendering replayable counterexamples), the invariant
+    /// predicate, and the replayable per-step dispatch.
     private static func typeHelpers(_ inputs: Inputs) -> String {
-        """
+        let names = inputs.drivers.map { "\"\($0.name)\"" }.joined(separator: ", ")
+        let takesArg = inputs.drivers.map { $0.valuesExpression == nil ? "false" : "true" }
+            .joined(separator: ", ")
+        return """
         let actionCount = \(inputs.drivers.count)
+        let actionNames = [\(names)]
+        let actionTakesArg = [\(takesArg)]
 
         func violates(_ probe: \(inputs.typeName)) -> Bool { !(\(inputs.predicate)) }
 
@@ -114,11 +131,11 @@ public enum ViewModelInvariantStubEmitter {
             return false
         }
 
-        func findCounterexample() -> [(Int, Int)]? {
+        func findCounterexample() -> (steps: [(Int, Int)], trial: Int)? {
             var rng = SeededRNG(seed: 0xD1B54A32D192ED03)
-            for _ in 0 ..< \(sequenceCount) {
+            for trial in 0 ..< \(sequenceCount) {
                 let probe = \(inputs.typeName)()
-                if violates(probe) { return [] }
+                if violates(probe) { return ([], trial) }
                 if actionCount == 0 { break }
                 var steps: [(Int, Int)] = []
                 let length = Int.random(in: 1 ... \(maxSteps), using: &rng)
@@ -127,10 +144,18 @@ public enum ViewModelInvariantStubEmitter {
                     let arg = Int.random(in: 0 ..< 8, using: &rng)
                     steps.append((action, arg))
                     applyStep(probe, action, arg)
-                    if violates(probe) { return steps }
+                    if violates(probe) { return (steps, trial) }
                 }
             }
             return nil
+        }
+
+        /// Render a sequence as a replayable recipe: action name plus, for
+        /// single-arg actions, the candidate index that was applied. Dropping
+        /// the arg would make the sequence unreproducible (Ch21 §21.3.1).
+        func render(_ steps: [(Int, Int)]) -> String {
+            "[" + steps.map { actionNames[$0.0] + (actionTakesArg[$0.0] ? "(arg: \\($0.1))" : "") }
+                .joined(separator: ", ") + "]"
         }
 
         \(outcomeBlock)
@@ -138,9 +163,21 @@ public enum ViewModelInvariantStubEmitter {
     }
 
     /// Greedy-shrink the counterexample and emit the outcome markers.
+    ///
+    /// Both `VERIFY_DEFAULT_INPUT` (the sequence the search actually found) and
+    /// `VERIFY_DEFAULT_SHRUNK` (the greedily minimised one) are emitted, matching
+    /// the sibling emitters' contract and what `VerifyResultParser` already reads.
+    /// Emitting only the shrunk sequence is not merely lossy — it hides shrink
+    /// migration. `replayFails` answers *did this still fail*, not *did this fail
+    /// the same way*, so a shorter candidate that trips a **different** violation
+    /// of the same predicate is accepted, and the shrunk sequence can demonstrate
+    /// a different bug than the one found. No generic fix exists here: `predicate`
+    /// arrives as an opaque expression, so there is no failure signature to
+    /// compare. Printing both lets a reader see it; when they disagree, trust
+    /// `INPUT` and treat `SHRUNK` as a lead.
     private static let outcomeBlock = """
-    if let failing = findCounterexample() {
-        var minimal = failing
+    if let found = findCounterexample() {
+        var minimal = found.steps
         var index = 0
         while index < minimal.count {
             var candidate = minimal
@@ -148,8 +185,9 @@ public enum ViewModelInvariantStubEmitter {
             if replayFails(candidate) { minimal = candidate } else { index += 1 }
         }
         print("VERIFY_DEFAULT_RESULT: FAIL")
-        print("VERIFY_DEFAULT_TRIAL: 0")
-        print("VERIFY_DEFAULT_SHRUNK: \\(minimal.map { $0.0 })")
+        print("VERIFY_DEFAULT_TRIAL: \\(found.trial)")
+        print("VERIFY_DEFAULT_INPUT: \\(render(found.steps))")
+        print("VERIFY_DEFAULT_SHRUNK: \\(render(minimal))")
         exit(1)
     } else {
         print("VERIFY_DEFAULT_RESULT: PASS")
