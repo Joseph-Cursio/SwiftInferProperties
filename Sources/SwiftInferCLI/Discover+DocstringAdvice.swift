@@ -77,7 +77,7 @@ extension SwiftInferCommand.Discover {
                     signature: signature(for: summary),
                     location: summary.location,
                     advisory: advisory,
-                    runnableScaffold: predicateScaffold(
+                    runnableScaffold: referenceOracleScaffold(
                         for: summary,
                         advisory: advisory,
                         suggestions: suggestionsByFunction[key] ?? []
@@ -88,33 +88,38 @@ extension SwiftInferCommand.Discover {
         return items
     }
 
-    /// The runnable reference-oracle scaffold for a documented predicate, or
-    /// `nil` when it does not apply. Fires only when the advisory is a
-    /// `predicate` reference definition — the case the verify pipeline reports as
-    /// `unsupported-template: predicate` for lack of an oracle. Handles any arity
-    /// (the emitter draws a scalar for one parameter, a tuple for several).
-    private static func predicateScaffold(
+    /// Templates whose reference-definition advisory carries a runnable
+    /// oracle stub: a `predicate` (the docstring IS the boolean law) and a
+    /// `comparator` (the docstring is the ordering KEY the strict-weak-ordering
+    /// law can't capture). Both are Bool-returning functions the emitter handles
+    /// uniformly — a comparator is just a two-argument predicate on ordering.
+    private static let oracleStubTemplates: Set<String> = ["predicate", "comparator"]
+
+    /// The runnable reference-oracle scaffold for a documented predicate or
+    /// comparator, or `nil` when it does not apply. Handles any arity (the
+    /// emitter draws a scalar for one parameter, a tuple for several).
+    private static func referenceOracleScaffold(
         for summary: FunctionSummary,
         advisory: DocstringAdvisory,
         suggestions: [Suggestion]
     ) -> String? {
         guard case let .referenceDefinition(reference) = advisory,
-              reference.template == "predicate",
+              oracleStubTemplates.contains(reference.template),
               !reference.fromLiftedTest,
               !summary.parameters.isEmpty,
               let docComment = summary.docComment,
-              let predicateSuggestion = suggestions.first(where: { $0.templateName == "predicate" })
+              let suggestion = suggestions.first(where: { $0.templateName == reference.template })
         else {
             return nil
         }
         let generators = summary.parameters.map { parameter in
-            InteractiveTriage.chooseGenerator(for: predicateSuggestion, typeName: parameter.typeText)
+            InteractiveTriage.chooseGenerator(for: suggestion, typeName: parameter.typeText)
         }
         return LiftedTestEmitter.predicateReferenceOracle(
             funcName: summary.name,
             parameters: summary.parameters,
             docComment: docComment,
-            seed: SamplingSeed.derive(from: predicateSuggestion.identity),
+            seed: SamplingSeed.derive(from: suggestion.identity),
             generators: generators
         )
     }

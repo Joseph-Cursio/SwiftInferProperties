@@ -44,11 +44,17 @@ enum DocstringAdvisoryRenderer {
     private static func body(for advisory: DocstringAdvisory) -> [String] {
         switch advisory {
         case let .referenceDefinition(reference):
-            let owed = reference.fromLiftedTest
-                ? "the example test lifted for `\(reference.template)` needs the definition it "
+            let owed: String
+            if reference.fromLiftedTest {
+                owed = "the example test lifted for `\(reference.template)` needs the definition it "
                     + "generalizes — your docstring states one:"
-                : "the `\(reference.template)` law openly owes a reference definition — your "
+            } else if reference.template == "comparator" {
+                owed = "the strict-weak-ordering law checks this is a VALID ordering, but not WHICH "
+                    + "one — a comparator on the wrong key passes it. Your docstring states the key:"
+            } else {
+                owed = "the `\(reference.template)` law openly owes a reference definition — your "
                     + "docstring states one:"
+            }
             return [
                 owed,
                 "  \"\(reference.docComment)\"",

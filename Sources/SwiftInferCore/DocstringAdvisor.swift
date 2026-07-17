@@ -79,10 +79,19 @@ public enum DocstringAdvisor {
     /// Deliberately *not* every role-entailed template: a `comparator`'s strict
     /// weak ordering and a `partition`'s tiling are fully specified by the
     /// template itself — they are owed *and* self-contained, so they need no
-    /// prose. `predicate` alone is the role-entailed law that leaves a hole for
-    /// the definition ("it must agree with a reference definition only you can
-    /// state"), which is why it is the one that pulls a docstring in.
-    public static let referenceDefinitionHungryTemplates: Set<String> = ["predicate"]
+    /// prose. `predicate` is the role-entailed law that leaves a hole for the
+    /// definition ("it must agree with a reference definition only you can
+    /// state"), which is why it pulls a docstring in.
+    ///
+    /// `comparator` joins it — but for a subtler reason (B25 follow-on). The
+    /// strict-weak-ordering law is self-contained as a *validity* check, and
+    /// verifies the comparator is *a* valid ordering. It says nothing about
+    /// *which* ordering: a comparator that sorts by the wrong key (name length
+    /// where the docstring says lexicographic) is a perfectly valid strict weak
+    /// order and passes the SWO law clean. The docstring states the intended key;
+    /// that is a reference definition the SWO law cannot capture, so the
+    /// ordering-key oracle rides alongside it.
+    public static let referenceDefinitionHungryTemplates: Set<String> = ["predicate", "comparator"]
 
     /// The advisory for one function, or `nil` for no advisory.
     ///

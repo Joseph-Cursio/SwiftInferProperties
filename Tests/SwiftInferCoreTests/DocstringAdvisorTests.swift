@@ -125,13 +125,21 @@ struct DocstringAdvisorTests {
 
     // MARK: - Path 4: a self-contained role-entailed law already serves it
 
-    @Test("a comparator's strict weak ordering is self-contained — no advisory even with a contract doc")
-    func comparatorNeedsNoDocstring() {
+    @Test("a comparator gets the ordering-key reference definition — the SWO law can't say WHICH ordering")
+    func comparatorGetsOrderingKeyDefinition() {
+        // The strict-weak-ordering law verifies validity, not the intended key
+        // (name length vs lexicographic both pass it). The docstring states the
+        // key, so the ordering-key oracle rides alongside the SWO law.
         let advisory = DocstringAdvisor.advisory(
-            forFunctionWith: "Orders widgets rank-first, then by name.",
+            forFunctionWith: "Orders widgets rank-first, then by name ascending.",
             suggestions: [suggestion(template: "comparator")]
         )
-        #expect(advisory == nil)
+        guard case let .referenceDefinition(reference) = advisory else {
+            Issue.record("expected .referenceDefinition, got \(String(describing: advisory))")
+            return
+        }
+        #expect(reference.template == "comparator")
+        #expect(reference.fromLiftedTest == false)
     }
 
     @Test("a partition's tiling is self-contained — no advisory")

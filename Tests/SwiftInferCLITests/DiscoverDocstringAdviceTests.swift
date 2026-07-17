@@ -91,6 +91,35 @@ struct DiscoverDocstringAdviceTests {
         #expect(recording.text.contains("determinism tautology"))
     }
 
+    @Test("a comparator gets an ordering-key oracle — the SWO law can't say which ordering")
+    func comparatorOrderingKey() throws {
+        let source = """
+        struct Entry { let size: Int; let name: String }
+        /// Orders entries by size ascending, then by name in ascending lexicographic order.
+        func precedes(_ lhs: Entry, _ rhs: Entry) -> Bool {
+            lhs.size != rhs.size ? lhs.size < rhs.size : lhs.name.count < rhs.name.count
+        }
+        """
+        let directory = try writeDPFixture(name: "DocAdviceComparator", contents: source)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            docstringAdvice: true,
+            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 3, symbol: "precedes")]),
+            output: recording
+        )
+        #expect(recording.text.contains("precedes"))
+        // Comparator-specific framing: the SWO law checks validity, the docstring the key.
+        #expect(recording.text.contains("strict-weak-ordering law checks this is a VALID ordering"))
+        // The ordering-key oracle stub + the comparator-vs-oracle property (two operands).
+        #expect(recording.text.contains("func precedes_reference(_ lhs: Entry, _ rhs: Entry) -> Bool"))
+        #expect(recording.text.contains(
+            "precedes(tuple.0, tuple.1) == precedes_reference(tuple.0, tuple.1)"
+        ))
+    }
+
     @Test("a narrating docstring is not surfaced")
     func narrationIsNotSurfaced() throws {
         let directory = try writeDPFixture(name: "DocAdviceNarration", contents: Self.source)
