@@ -39,6 +39,82 @@ struct CommutativityTemplateTypePatternTests {
         #expect(suggestion?.score.tier == .likely)
     }
 
+    // MARK: - B29 — order-sensitive carrier veto
+
+    @Test("B29 — union commutativity is vetoed on an order-sensitive carrier (OrderedSet)")
+    func orderSensitiveCarrierVetoesUnionCommutativity() {
+        // `OrderedSet.union` scores 70 (curated 'union' +40, shape +30) but its
+        // `==` compares element order, so commutativity is FALSE — veto it.
+        let summary = makeCommutativitySummary(
+            name: "union",
+            paramTypes: ("OrderedSet", "OrderedSet"),
+            returnType: "OrderedSet",
+            containingType: "OrderedSet"
+        )
+        #expect(CommutativityTemplate.suggest(for: summary) == nil)
+        let signals = CommutativityTemplate.accumulatedSignals(
+            for: summary,
+            vocabulary: .empty,
+            inheritedTypesByName: [:]
+        )
+        let veto = signals.first { $0.kind == .orderSensitiveCarrier }
+        #expect(veto?.isVeto == true)
+        #expect(veto?.detail.contains("isEqualSet") == true)
+    }
+
+    @Test("B29 — a generic OrderedSet<Int> carrier still vetoes (generics stripped)")
+    func orderSensitiveCarrierVetoStripsGenerics() {
+        let summary = makeCommutativitySummary(
+            name: "union",
+            paramTypes: ("OrderedSet<Int>", "OrderedSet<Int>"),
+            returnType: "OrderedSet<Int>",
+            containingType: "OrderedSet<Int>"
+        )
+        #expect(CommutativityTemplate.suggest(for: summary) == nil)
+    }
+
+    @Test("B29 — stdlib Set.union is NOT vetoed — its == is order-insensitive")
+    func stdlibSetUnionNotVetoed() {
+        let summary = makeCommutativitySummary(
+            name: "union",
+            paramTypes: ("Set", "Set"),
+            returnType: "Set",
+            containingType: "Set"
+        )
+        let suggestion = CommutativityTemplate.suggest(for: summary)
+        #expect(suggestion?.score.tier == .likely)
+        #expect(suggestion?.score.total == 70)
+    }
+
+    @Test("B29 — a union on a carrier NOT on the denylist still fires (guard is carrier-specific)")
+    func nonDenylistCarrierUnionStillFires() {
+        let summary = makeCommutativitySummary(
+            name: "union",
+            paramTypes: ("Bag", "Bag"),
+            returnType: "Bag",
+            containingType: "Bag"
+        )
+        #expect(CommutativityTemplate.suggest(for: summary)?.score.tier == .likely)
+    }
+
+    @Test("B29 — a non-set verb on an order-sensitive carrier is untouched by the veto")
+    func nonSetVerbOnOrderSensitiveCarrierUnaffected() {
+        // `merge` is not a set-combination verb, so the veto does not fire even
+        // on an order-sensitive carrier; it keeps its normal curated-verb score.
+        let summary = makeCommutativitySummary(
+            name: "merge",
+            paramTypes: ("OrderedSet", "OrderedSet"),
+            returnType: "OrderedSet",
+            containingType: "OrderedSet"
+        )
+        let signals = CommutativityTemplate.accumulatedSignals(
+            for: summary,
+            vocabulary: .empty,
+            inheritedTypesByName: [:]
+        )
+        #expect(!signals.contains { $0.kind == .orderSensitiveCarrier })
+    }
+
     @Test("Single-parameter function never matches the commutativity pattern")
     func singleParamDoesNotMatch() {
         let summary = makeCommutativitySummary(
@@ -351,6 +427,7 @@ private func makeCommutativitySummary(
     parameters explicitParameters: [Parameter]? = nil,
     returnType: String?,
     isMutating: Bool = false,
+    containingType: String? = nil,
     bodySignals: BodySignals = .empty
 ) -> FunctionSummary {
     let parameters: [Parameter]
@@ -373,7 +450,7 @@ private func makeCommutativitySummary(
         isMutating: isMutating,
         isStatic: false,
         location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-        containingTypeName: nil,
+        containingTypeName: containingType,
         bodySignals: bodySignals
     )
 }

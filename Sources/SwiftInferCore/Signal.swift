@@ -249,6 +249,16 @@ public struct Signal: Sendable, Equatable {
         /// by conformance to 'AdditiveArithmetic' — checked by
         /// PropertyLawKit's checkAdditiveArithmeticPropertyLaws"`.
         case protocolCoveredProperty
+        /// B29 — fires when a set-combination commutativity suggestion
+        /// (`union` / `intersection` / …) lands on an order-sensitive carrier
+        /// (`OrderedSet`, `Array`, …), whose `==` compares element order. The
+        /// semilattice commutativity law is FALSE under that `==` — `a.union(b)`
+        /// and `b.union(a)` differ in order — and true only under an
+        /// order-insensitive comparison such as `isEqualSet`. So the suggestion
+        /// is genuinely wrong, not merely low-confidence: full veto. The curated
+        /// `OrderSensitiveCarrierNames` denylist stands in for structural
+        /// order-sensitivity detection pre-SemanticIndex.
+        case orderSensitiveCarrier
     }
 
     /// Sentinel weight that marks a veto. Score arithmetic never sums this

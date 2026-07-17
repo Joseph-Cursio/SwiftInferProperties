@@ -58,6 +58,18 @@ public enum CommutativityTemplate {
         "prepending"
     ]
 
+    /// B29 — set-combination verbs whose commutativity is a *semilattice* law:
+    /// true under set equality, but FALSE on an order-sensitive carrier whose
+    /// `==` compares element order (`OrderedSet` / `Array` / …), because the
+    /// operation preserves insertion order. `orderSensitiveCarrierVetoSignal`
+    /// suppresses a commutativity suggestion for these verbs on such carriers.
+    public static let setCombinationVerbs: Set<String> = [
+        "union",
+        "intersection",
+        "intersect",
+        "symmetricDifference"
+    ]
+
     /// Build a suggestion for `summary`, or return `nil` if the type
     /// pattern doesn't match or the score collapses to `.suppressed`.
     ///
@@ -143,6 +155,13 @@ public enum CommutativityTemplate {
         let anti = antiCommutativitySignal(for: summary, vocabulary: vocabulary)
         if let anti {
             signals.append(anti)
+        }
+        // B29 — a set-combination commutativity law is order-dependent; on an
+        // order-sensitive carrier it is genuinely false (`a.union(b)` and
+        // `b.union(a)` differ in order under the carrier's `==`). Veto rather
+        // than counter-weight: it is wrong, not low-confidence.
+        if let orderVeto = orderSensitiveCarrierVetoSignal(for: summary) {
+            signals.append(orderVeto)
         }
         // B24 — a shape-only candidate with neither a commutative name nor an
         // anti-commutativity name has nothing corroborating that its `(T,T)->T`
@@ -243,6 +262,36 @@ extension CommutativityTemplate {
             )
         }
         return nil
+    }
+
+    /// B29 — veto for a set-combination commutativity suggestion on an
+    /// order-sensitive carrier. `union` / `intersection` are commutative as a
+    /// *set* semilattice, but `OrderedSet` / `Array` / … compare element order
+    /// in `==`, so `a.union(b) == b.union(a)` is false there (it holds only
+    /// under an order-insensitive comparison such as `isEqualSet`). The carrier
+    /// (`containingTypeName`) is matched against the curated
+    /// `OrderSensitiveCarrierNames` denylist — the pre-SemanticIndex stand-in
+    /// for detecting an order-sensitive `==` structurally. Associativity and
+    /// idempotence are NOT vetoed: both hold on these carriers (order-preserving
+    /// append is associative; `x ∪ x == x`).
+    private static func orderSensitiveCarrierVetoSignal(
+        for summary: FunctionSummary
+    ) -> Signal? {
+        guard setCombinationVerbs.contains(summary.name),
+              let carrier = summary.containingTypeName,
+              OrderSensitiveCarrierNames.contains(carrier) else {
+            return nil
+        }
+        let stripped = OrderSensitiveCarrierNames.strippingGenericParameters(carrier)
+        return Signal(
+            kind: .orderSensitiveCarrier,
+            weight: Signal.vetoWeight,
+            detail: "Order-sensitive carrier: \(stripped).== compares element order, so "
+                + "'\(summary.name)' is NOT commutative under it — a.\(summary.name)(b) and "
+                + "b.\(summary.name)(a) hold the same members in a different order. The "
+                + "semilattice commutativity law holds only under an order-insensitive "
+                + "comparison such as isEqualSet"
+        )
     }
 
     /// B24 — counter-signal that suppresses a shape-only commutativity candidate.
