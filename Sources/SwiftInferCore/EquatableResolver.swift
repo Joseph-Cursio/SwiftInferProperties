@@ -36,13 +36,21 @@ public struct EquatableResolver: Sendable {
     /// unconditionally. PRD §5.6 plan list: `Int`, `String`, `Bool`,
     /// `Double`, `Float`, fixed-width integer family, `UUID`, `Date`,
     /// `URL`. Internal so M3.6's tests can exercise the boundary.
+    ///
+    /// `Data` added from the MacCloud_client_MacOS road-test (2026-07-18): a
+    /// `(Data) throws -> Data` encrypt/decrypt round-trip is a flagship property,
+    /// but `Data` (Foundation, unconditionally `Equatable`) classified `.unknown`,
+    /// demoting it out of `RoundTripTemplate` into the weaker inverse-pair tier.
+    /// It's as common a round-trip carrier as `String`/`URL` (encrypt/decrypt,
+    /// serialize/deserialize, compress/decompress).
     static let curatedEquatableStdlib: Set<String> = [
         "Int", "Int8", "Int16", "Int32", "Int64",
         "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
         "Bool",
         "Float", "Double",
         "String",
-        "UUID", "Date", "URL"
+        "UUID", "Date", "URL",
+        "Data"
     ]
 
     /// Protocols whose presence in an inheritance clause implies

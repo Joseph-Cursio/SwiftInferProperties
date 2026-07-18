@@ -26,7 +26,7 @@ struct EquatableResolverTests {
     @Test
     func curatedStdlibScalarsClassifyAsEquatable() {
         let resolver = makeResolver()
-        for typeText in ["Int", "String", "Bool", "Double", "Float", "UUID", "Date", "URL"] {
+        for typeText in ["Int", "String", "Bool", "Double", "Float", "UUID", "Date", "URL", "Data"] {
             #expect(resolver.classify(typeText: typeText) == .equatable, "expected \(typeText) → .equatable")
         }
     }
