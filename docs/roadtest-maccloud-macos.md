@@ -114,6 +114,18 @@ road-test walked, at which point its strict-weak-ordering property becomes seeda
 and verifiable. Gap #3 is therefore the *designed two-step*, not a defect — the
 lesson is that comparator SWO properties require the seed step, not `discover` alone.
 
+## Follow-up — comparator extraction completed (the full two-tool loop)
+
+`sortByName`/`sortByType`'s inline `.sorted {}` comparators were extracted to
+named `precedesByName`/`precedesByType` functions. Re-seeding then surfaces them
+as the **`comparator` template** (fired 2×, was 0) with the full SWO law;
+`SortComparatorTests` checks all four clauses + sort idempotence + partition
+preservation. Both are valid SWOs (durable guards, no bug). One process note: the
+Bug A key-change had a **second masking test** (`MacCloudSyncManagerTests`) that
+only surfaced when the *whole* unit target was run — the `makeLocalFileMap` helper
+also keyed by `"/name"`; fixed to key by `lastPathComponent`. Lesson: run the full
+target, not just the touched suites.
+
 ## Net
 
 - **Toolchain fix landed** (this repo): `Data` ∈ `curatedEquatableStdlib`.
