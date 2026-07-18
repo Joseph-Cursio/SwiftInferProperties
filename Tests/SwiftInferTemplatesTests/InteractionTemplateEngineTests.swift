@@ -148,13 +148,20 @@ struct InteractionTemplateEngineTests {
     }
 
     private func sharedNameCandidate(enclosingTypeName: String, location: String) -> ReducerCandidate {
+        // Discovery-faithful: `ReducerDiscoverer.qualifyIfNested` (cycle-109) qualifies a
+        // NESTED `State`/`Action` to `<Enclosing>.State` at discovery time — so two
+        // reducers sharing the nested names `State`/`Action` arrive here already
+        // disambiguated (`AReducer.State` ≠ `BReducer.State`). That is what scopes each
+        // reducer's witnesses to its own State without any cross-contamination; the
+        // qualified name is stored verbatim (the `qualify()` computed-property prepend was
+        // removed once qualifyIfNested made it redundant).
         ReducerCandidate(
             location: location,
             enclosingTypeName: enclosingTypeName,
             functionName: "reduce",
             signatureShape: .stateActionReturnsState,
-            stateTypeName: "State",
-            actionTypeName: "Action",
+            stateTypeName: "\(enclosingTypeName).State",
+            actionTypeName: "\(enclosingTypeName).Action",
             carrierKind: .generic
         )
     }

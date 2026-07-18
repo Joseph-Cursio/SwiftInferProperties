@@ -42,10 +42,17 @@ struct ReducerCandidateTests {
 
     // MARK: - stateQualifiedName / actionQualifiedName (V1.91 cross-contam fix)
 
-    @Test("stateQualifiedName prefixes bare State with enclosing type (M1.A shape)")
-    func stateQualifiedNameFromBareName() {
-        let target = candidate(enclosingTypeName: "Inbox", stateTypeName: "State")
-        #expect(target.stateQualifiedName == "Inbox.State")
+    @Test("stateQualifiedName returns a bare top-level State as-is (no namespace double-qualify)")
+    func stateQualifiedNameTopLevelStaysBare() {
+        // A reducer that is a method on a namespace (`enum SyncEngine`) whose State is a
+        // TOP-LEVEL type: discovery's `qualifyIfNested` (cycle-109) leaves it bare because
+        // it is not in the namespace's nested-type set. The computed property must trust
+        // that — re-prepending "SyncEngine." double-qualified the name and broke the
+        // witness detectors' type-stack suffix match, silently dropping this shape's
+        // idempotence/conservation/cardinality invariants. A NESTED State is already
+        // stored dotted by discovery (see `stateQualifiedNamePassesQualifiedThrough`).
+        let target = candidate(enclosingTypeName: "SyncEngine", stateTypeName: "SyncState")
+        #expect(target.stateQualifiedName == "SyncState")
     }
 
     @Test("stateQualifiedName passes already-qualified names through (M1.B shape)")
@@ -64,10 +71,13 @@ struct ReducerCandidateTests {
         #expect(target.stateQualifiedName == "CounterState")
     }
 
-    @Test("actionQualifiedName prefixes bare Action with enclosing type (M1.A shape)")
-    func actionQualifiedNameFromBareName() {
-        let target = candidate(enclosingTypeName: "Inbox", actionTypeName: "Action")
-        #expect(target.actionQualifiedName == "Inbox.Action")
+    @Test("actionQualifiedName returns a bare top-level Action as-is (no namespace double-qualify)")
+    func actionQualifiedNameTopLevelStaysBare() {
+        // Sister to `stateQualifiedNameTopLevelStaysBare`: a top-level `SyncAction`
+        // referenced from `SyncEngine.reduce` stays bare so the idempotence witness
+        // detector's suffix match finds the top-level enum.
+        let target = candidate(enclosingTypeName: "SyncEngine", actionTypeName: "SyncAction")
+        #expect(target.actionQualifiedName == "SyncAction")
     }
 
     @Test("actionQualifiedName passes already-qualified names through (M1.B shape)")

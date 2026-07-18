@@ -19,13 +19,21 @@ struct DiscoverInteractionDedupeTests {
         actionName: String = "Action",
         enclosing: String? = nil
     ) -> ReducerCandidate {
-        ReducerCandidate(
+        // Discovery-faithful qualification: a nested `State`/`Action` under an enclosing
+        // type is stored `<Enclosing>.State` at discovery (qualifyIfNested / M1.B TCA
+        // pre-qualification). Dedup keys on those qualified names, so two DISTINCT
+        // reducers (`Foo.State` ≠ `Bar.State`) never collapse while a composed body's
+        // repeated `Settings.State` candidates do. Mirror that here rather than storing
+        // the bare name and leaning on a computed-property prepend (now removed).
+        let qualifiedState = enclosing.map { "\($0).\(stateName)" } ?? stateName
+        let qualifiedAction = enclosing.map { "\($0).\(actionName)" } ?? actionName
+        return ReducerCandidate(
             location: location,
             enclosingTypeName: enclosing,
             functionName: functionName,
             signatureShape: .inoutStateActionReturnsEffect,
-            stateTypeName: stateName,
-            actionTypeName: actionName,
+            stateTypeName: qualifiedState,
+            actionTypeName: qualifiedAction,
             carrierKind: .tca,
             purity: .pure
         )

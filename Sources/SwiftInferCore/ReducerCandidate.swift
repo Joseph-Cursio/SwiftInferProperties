@@ -223,9 +223,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// `ActionSequenceStubEmitter`'s `\(stateTypeName)()`
     /// constructor); when `stateTypeName` already contains a dot,
     /// return it as-is to avoid double-qualifying.
-    public var stateQualifiedName: String {
-        Self.qualify(typeName: stateTypeName, enclosing: enclosingTypeName)
-    }
+    public var stateQualifiedName: String { stateTypeName }
 
     /// V1.91 (cycle-88 fix for cycle-87 finding #2) — sister to
     /// `stateQualifiedName` for the Action enum. Same mechanism, same
@@ -235,22 +233,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// `Action` match fires against every reducer's Action. Cycle-87
     /// measurement showed idempotence at 49 suggestions vs designed
     /// 9 — the same ~8× inflation factor as State.
-    public var actionQualifiedName: String {
-        Self.qualify(typeName: actionTypeName, enclosing: enclosingTypeName)
-    }
-
-    private static func qualify(typeName: String, enclosing: String?) -> String {
-        // Already-qualified names (containing a dot) come from M1.B's
-        // TCA walker, which pre-qualifies for stub-emission reasons.
-        // Pass them through untouched.
-        if typeName.contains(".") {
-            return typeName
-        }
-        if let enclosing {
-            return "\(enclosing).\(typeName)"
-        }
-        return typeName
-    }
+    public var actionQualifiedName: String { actionTypeName }
 
     // MARK: - Codable (carrierKind backward-compat default)
 
