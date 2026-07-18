@@ -29,7 +29,17 @@ public enum CommutativityTemplate {
         "combine",
         "merge",
         "union",
-        "intersect"
+        // `intersect` was a stale stem — the stdlib SetAlgebra method is
+        // `intersection` (non-mutating), which never matched it. `intersection`
+        // and `symmetricDifference` are genuinely commutative (a∩b == b∩a,
+        // a△b == b△a); the B29 order-sensitive-carrier veto still guards the
+        // `OrderedSet`/`Array` case where `==` compares order. Added from the
+        // swift-collections `876177db` historical backtest — the pre-fix
+        // `symmetricDifference` was `subtracting` in disguise (non-commutative),
+        // and this is what lets commutativity + verify catch that class of bug.
+        "intersect",
+        "intersection",
+        "symmetricDifference"
     ]
 
     /// Curated anti-commutativity-verb list per PRD §4.1's -30

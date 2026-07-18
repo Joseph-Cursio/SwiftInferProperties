@@ -27,6 +27,25 @@ struct CommutativityTemplateTypePatternTests {
         #expect(signals.contains { $0.kind == .unsupportedAlgebraicShape && $0.weight == -20 })
     }
 
+    @Test("SetAlgebra combination verbs intersection / symmetricDifference score 70 (Likely)")
+    func setCombinationVerbsFireCommutativity() {
+        // Regression for the swift-collections `876177db` backtest: `intersection`
+        // and `symmetricDifference` are genuinely commutative but were missing from
+        // curatedVerbs (only the stale stem `intersect` and `union` were present),
+        // so commutativity never surfaced on them — and the pre-fix
+        // `symmetricDifference` (which was `subtracting` in disguise) went uncaught.
+        for verb in ["intersection", "symmetricDifference"] {
+            let summary = makeCommutativitySummary(
+                name: verb,
+                paramTypes: ("Set", "Set"),
+                returnType: "Set"
+            )
+            let suggestion = CommutativityTemplate.suggest(for: summary)
+            #expect(suggestion?.score.total == 70, "\(verb) should score 70 (Likely)")
+            #expect(suggestion?.score.tier == .likely)
+        }
+    }
+
     @Test("Curated commutativity verb on (T, T) -> T scores 70 (Likely)")
     func curatedVerbAdds40() {
         let summary = makeCommutativitySummary(
