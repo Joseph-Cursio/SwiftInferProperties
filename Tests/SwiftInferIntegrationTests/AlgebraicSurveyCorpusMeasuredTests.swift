@@ -84,9 +84,16 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         // bothPass; `Toggle.reversed` is a genuine involution, so idempotence is
         // false → defaultFails (the involution law, surfaced separately, is the
         // right one). Net +2: one bothPass, one defaultFails.
-        #expect(records.count == 17)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 12)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
+        // 17 → 19: a later catalogue-template widening added +2 measured records
+        // (one bothPass, one defaultFails) — all legitimate algebraic picks — but
+        // this slow, fast-suite-skipped measured baseline was not refreshed at the
+        // time. Confirmed by re-running the survey (13 bothPass + 6 defaultFails).
+        // NB the commutativity set-verb fix (intersection / symmetricDifference)
+        // is corpus-orthogonal — this corpus has no such functions — verified by
+        // identical survey discovery with and without it.
+        #expect(records.count == 19)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 13)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 6)
         // The catalogue-work true positives.
         #expect(hasRecord(records, "involution", .measuredBothPass))
         #expect(hasRecord(records, "binary-idempotence", .measuredBothPass))
