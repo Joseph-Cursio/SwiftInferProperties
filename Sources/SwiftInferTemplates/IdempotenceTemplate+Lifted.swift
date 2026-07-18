@@ -156,6 +156,13 @@ extension IdempotenceTemplate {
         if let name = nameSignal(for: lifted.originalSummary, vocabulary: vocabulary) {
             signals.append(name)
         }
+        // Corroborate-only (+15): a mutating method whose docstring documents
+        // idempotence — the "already X → no-op" insert/remove contract idiom
+        // (`insert … if not already present`). Reaches the mutating carrier the
+        // non-lifted path can't; reads the ORIGINAL method's docstring.
+        if let docstring = docstringCorroborationSignal(for: lifted.originalSummary) {
+            signals.append(docstring)
+        }
         // Direction-label / domain-marker counters carry over from the
         // non-lifted scoring stack (apply to original parameter labels).
         if let direction = directionLabelCounterSignal(for: lifted.originalSummary) {
@@ -189,6 +196,20 @@ extension IdempotenceTemplate {
         ) {
             signals.append(coverageVeto)
         }
+        signals.append(contentsOf: liftedCarrierVetoes(
+            for: lifted,
+            inheritedTypesByName: inheritedTypesByName
+        ))
+        return signals
+    }
+
+    /// The carrier/name-based lifted vetoes, split out to keep
+    /// `liftedAuxiliarySignals` under the cyclomatic-complexity cap.
+    private static func liftedCarrierVetoes(
+        for lifted: LiftedTransformation,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> [Signal] {
+        var signals: [Signal] = []
         // V1.21.A — IteratorProtocol carrier veto. Cycle-17 finding
         // closure: 4/4 Iterator-shape lifted-idempotence picks reject
         // because Iterator.next()/advance() advance state per call.

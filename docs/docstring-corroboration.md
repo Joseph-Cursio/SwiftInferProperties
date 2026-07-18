@@ -80,6 +80,42 @@ cross-type pair keeps its structural filter (the cycle-4 over-generation guard
 dominates prose). The clean win there is a documented free-function / same-carrier
 codec pair.
 
+## Behavioral idempotence idioms (the "already X → no-op" contract)
+
+Beyond the algebraic keywords, the idempotence vocabulary also carries the
+mutation-contract idiom real code uses — `insert … if it is not already present`,
+`does nothing if already sealed`. These are wired into the **lifted** path too
+(`IdempotenceTemplate+Lifted.liftedAuxiliarySignals` reads the original mutating
+method's docstring), so a documented idempotent **mutator** gets the boost.
+
+**The trap exclusion is the load-bearing precision decision.** The bare phrases a
+library uses to document *other* behaviour — `has no effect` (index-limit prose),
+`in-place` (mutation), `noop in release builds` (debug assertion) — are **not** in
+the vocabulary and must never be, because they are not idempotence assertions and
+would flood false boosts. Every behavioral phrase is self-anchored on
+`already` / `not already` + a no-change outcome; the guard tests assert the traps
+stay out.
+
+**Reach limit (honest).** The lifted path only produces an idempotence candidate
+for a *nullary* mutator or an arity-1 mutator whose param **is** the carrier — so
+`mutating func seal()` "does nothing if already sealed" corroborates (→ Likely),
+but `mutating func insert(_ x: Element)` (param ≠ carrier) never lifts, so its
+`not already present` docstring has no candidate to boost. Surfacing the insert
+idiom needs the x-curried lift to accept an Element-typed param — separate work.
+
+## Dogfood — swift-collections (2026-07-18)
+
+Ran `discover` over `OrderedCollections`. **0 docstring corroborations fired** —
+the 47 `no effect` + 18 `in-place` docstrings produced **zero false boosts**
+(precision confirmed), while the algebraic templates fired richly (26 Strong /
+8 Likely / 60 Possible) on the SetAlgebra surface *without* needing docstrings.
+A cross-repo survey (8 swift-* libraries) found **near-zero** algebraic-property
+assertions in function docstrings (`idempotent`/`self-inverse`: 0 everywhere).
+**Conclusion: docstring corroboration's value is in documented app/domain code, not
+algebra libraries** — which document complexity and behaviour, and express algebra
+through conformance the templates already read. Verified the counterpart on a
+crafted app mutator: `seal()` "does nothing if already sealed" → 60 (Likely).
+
 ## Scope
 
 All six families are shipped: `idempotence`, `involution`, `commutativity`,

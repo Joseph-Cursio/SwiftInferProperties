@@ -77,7 +77,21 @@ public enum DocstringPropertyCorroborator {
         "applying it twice has no",
         "applying twice has no",
         "second application has no",
-        "reapplying has no"
+        "reapplying has no",
+        // The "already X → no-op" mutation-contract idiom (the swift-collections
+        // insert/remove idempotence phrasing). Every phrase is self-anchored on
+        // "already"/"if present" + a no-change outcome — deliberately NOT the
+        // bare "no effect" / "in-place", which document index-limit and mutation
+        // behaviour, not idempotence, and would flood false boosts.
+        "not already present",
+        "not already a member",
+        "not already in the set",
+        "not already contained",
+        "does nothing if already",
+        "no change if already",
+        "leaves it unchanged if already",
+        "if already present, this does nothing",
+        "if already a member"
     ]
 
     static let involutionVocabulary: [String] = [

@@ -165,3 +165,47 @@ struct DocstringPropertyCorroboratorBinaryTests {
         #expect(DocstringPropertyCorroborator.corroboration(for: .monotonicity, in: negatedMonotone) == nil)
     }
 }
+
+@Suite("DocstringPropertyCorroborator — behavioral idempotence idioms (+ trap exclusion)")
+struct DocstringBehavioralIdiomTests {
+
+    @Test("'insert … if not already present' corroborates idempotence")
+    func insertIfNotPresentMatches() {
+        let doc = "Inserts the given element in the set if it is not already present."
+        let hit = DocstringPropertyCorroborator.corroboration(for: .idempotence, in: doc)
+        #expect(hit?.matchedPhrase == "not already present")
+    }
+
+    @Test("'if already present, this does nothing' corroborates idempotence")
+    func alreadyPresentDoesNothingMatches() {
+        let doc = "Marks the bucket occupied. If already present, this does nothing."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .idempotence, in: doc) != nil)
+    }
+
+    // The precision proof: the bare behavioral phrases swift-collections uses to
+    // document index-limit and mutation behaviour must NOT corroborate — they are
+    // not idempotence assertions, and matching them would flood false boosts.
+    @Test("bare 'has no effect' (index-limit prose) does NOT corroborate")
+    func bareNoEffectIsNotIdempotence() {
+        let doc = "If `distance < 0`, a limit that is greater than `i` has no effect."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .idempotence, in: doc) == nil)
+    }
+
+    @Test("'in-place' does NOT corroborate")
+    func inPlaceIsNotIdempotence() {
+        let doc = "Sorts the elements of the collection in-place."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .idempotence, in: doc) == nil)
+    }
+
+    @Test("'noop in release builds' (debug-assertion prose) does NOT corroborate")
+    func releaseNoopIsNotIdempotence() {
+        let doc = "Validates internal invariants. Note that this is a noop in release builds."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .idempotence, in: doc) == nil)
+    }
+
+    @Test("degenerate 'same index … has no effect' does NOT corroborate")
+    func degenerateArgumentNoEffectIsNotIdempotence() {
+        let doc = "Exchanges the values at the given indices. Passing the same index as both `i` and `j` has no effect."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .idempotence, in: doc) == nil)
+    }
+}
