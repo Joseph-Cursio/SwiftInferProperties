@@ -121,9 +121,48 @@ Measured-safe: the survey corpus's `join`/`meet` commutativity picks bump 45→8
 Lesson: a backtest's value is not only the hit/miss on its named bug — reproducing
 the fixture is itself a fuzz of the tool's recall surface.
 
+## Case 5 — swift-algorithms `stablePartition(subrange:by:)` (`0dba0e5`): MISS (word-sense mismatch)
+
+`stablePartition(subrange:by:)` used the whole-collection `count` instead of
+`self[subrange].count`, so it partitioned the wrong range. The bug is squarely
+**partition-property-shaped** — the fixing test asserts exactly the two-sided law
+(`b[range.lowerBound..<p]` are the elements failing the predicate, `b[p..<upper]`
+the ones satisfying it). And the tool *has* a `partition` template. Yet it surfaces
+**0 suggestions** on either `stablePartition(by:)` or `stablePartition(subrange:by:)`.
+
+The reason is a **word-sense mismatch**, not a recall or shape gap: the tool's
+`partition` template models a **set-tiling** — a `(Int) -> Range<Int>` range tiler or
+a `(C, Int) -> C` slice tiler whose *parts reassemble a whole* (paging / chunking).
+swift-algorithms' `stablePartition` is the other sense of the word — an **in-place
+reorder-by-predicate** (`mutating (by: (Element) -> Bool) -> Index`) that returns the
+pivot separating the two groups. Same English word, disjoint law:
+
+- *tiling* partition owes **"the parts tile the whole exactly"** (the template's law);
+- *reorder* partition owes **"everything before the pivot fails the predicate,
+  everything at/after it satisfies it, and the result is a permutation of the input"**
+  (stable adds: relative order preserved within each group).
+
+The `0dba0e5` bug violates the *reorder* law (on the subrange), which the tool does
+not model — so it is neither surfaced nor verified.
+
+**This is a concrete candidate template, not just a boundary.** A *reorder-partition*
+template would recognize the mutating-predicate-returns-index shape and own a
+verifiable law (generate an array, apply, check the two-sided predicate split +
+multiset preservation; stable adds within-group order). Like Case 3's tuple-return,
+it is deferred under the conservative posture — one library-idiom shape, needs its
+own verify strategy — but unlike Case 3 the missing piece is a *law the tool could
+state*, not a signature the templates can't parse. Recorded here as the sharpest
+"template we don't have yet" the backtest has produced.
+
 ## Remaining candidates
 
-The other `PersistentSet` `union`/`intersection` fixes (collections),
+A *reorder-partition* template (Case 5) is the most concrete new-template candidate.
+Data-structure-internal bugs are out of reach by construction: the `PersistentSet`
+`union`/`intersection`/`subtracting` fixes (`4a4c4a75` / `a887a77e`) are deep HAMT
+node-builder / collision-recursion bugs (the fix adds `_fullInvariantCheck`), not
+formula-level, so no faithful tiny fixture reproduces them; `OrderedSet.reverse()`
+(`86ddbd97`) turned out to be a *performance* fix (the pre-fix path already called
+the correct `_regenerateHashTable()`), i.e. no bug to catch. Still open:
 BitSet/GRDB Codable round-trips. The breadth **robustness sweep** ran clean on 7
 more libraries (Alamofire/RxSwift/GRDB/Kingfisher/SwiftyJSON/Moya/CombineExt — no
 crashes, no default-tier FP floods; ~18 libraries validated total).
