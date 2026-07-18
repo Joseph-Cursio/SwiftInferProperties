@@ -78,13 +78,29 @@ veto still guards `OrderedSet`/`Array`).
 So the tool now catches the real 2020 swift-collections bug before its fix — the
 first non-synthetic "caught a real library bug" demonstration.
 
+## Case 3 — swift-numerics `Augmented.sum` / twoSum (`f6e5563`): MISS (shape boundary)
+
+`Fix argument ordering in twoSum` — the pre-fix error term in the 2Sum
+error-free-transformation was computed against the wrong operand (`x = head - a`
+instead of `ɑ = head - b`). The bug is commutativity-flavored, but the tool
+surfaces **nothing** on it: `Augmented.sum(_ a: T, _ b: T) -> (head: T, tail: T)`
+returns a **tuple** (the exact-sum pair), and the algebraic templates require a
+single-value `(T,T)->T`. **New boundary:** augmented / error-free-transformation
+functions (`twoSum`/`twoProd` returning `(value, error)`) aren't reachable —
+extending to them needs tuple-return recognition + a tuple-equality property, a
+niche numerical-computing pattern, low priority.
+
+**Bonus — precision holds at scale:** RealModule surfaces **2244** picks with
+`--include-possible` and **every one is Possible-tier** (0 Strong, 0 Likely) — no
+default-tier flood on a 2000+-pick module.
+
 ## Remaining candidates
 
-`twoSum` argument ordering (numerics — commutativity), `gcd` on `Int.min`
-(numerics — bounds), the other `PersistentSet` `union`/`intersection` fixes
-(collections), BitSet/GRDB Codable round-trips. Plus a breadth **robustness sweep**
-(run discover across the fetched libraries; success = no crashes / no default-tier
-false-positive floods — extends the 11+ clean dogfoods).
+`gcd` on `Int.min` (numerics — bounds; returns a single `T`, so not shape-blocked
+like twoSum), the other `PersistentSet` `union`/`intersection` fixes (collections),
+BitSet/GRDB Codable round-trips. The breadth **robustness sweep** ran clean on 7
+more libraries (Alamofire/RxSwift/GRDB/Kingfisher/SwiftyJSON/Moya/CombineExt — no
+crashes, no default-tier FP floods; ~18 libraries validated total).
 
 ## Measured-safety
 
