@@ -229,6 +229,28 @@ struct IdempotenceTemplateVocabularyTests {
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
     }
 
+    @Test("Self-return: a nullary instance method written `-> Self` matches the self-form")
+    func instanceSelfFormAcceptsLiteralSelfReturn() {
+        // `func canonicalized() -> Self` / `var canonicalizedTransform: Self` — the
+        // literal `Self` is canonicalized to the container (as DualStylePairing /
+        // SetAlgebraShape already do). A curated verb reaches Likely.
+        let curated = makeIdempotenceSummary(
+            name: "normalized",
+            returnType: "Self",
+            containingType: "Doc"
+        )
+        let suggestion = IdempotenceTemplate.suggest(for: curated)
+        #expect(suggestion?.score.total == 70)
+        #expect(suggestion?.score.tier == .likely)
+        // A non-curated name still surfaces at Possible via the shape signal.
+        let bare = makeIdempotenceSummary(
+            name: "recompute",
+            returnType: "Self",
+            containingType: "Cache"
+        )
+        #expect(IdempotenceTemplate.suggest(for: bare)?.score.tier == .possible)
+    }
+
     @Test("B32 — a mutating instance self-form is not a candidate")
     func mutatingInstanceSelfFormRejected() {
         let summary = makeIdempotenceSummary(

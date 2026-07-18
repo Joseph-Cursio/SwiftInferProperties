@@ -96,9 +96,13 @@ public enum InvolutionTemplate {
            param.typeText == returnType {
             return true
         }
-        // Instance: `self -> Self`.
+        // Instance: `self -> Self`. The return may be written as the literal `Self`
+        // (`func inverted() -> Self`) — canonicalize it to the container. Involution is
+        // name-gated (a curated verb is required above), so this stays low-volume; and
+        // it is the nullary self-form only, so the binary-param hazard is untouched.
         if summary.parameters.isEmpty,
-           summary.containingTypeName == returnType {
+           let container = summary.containingTypeName,
+           container == returnType || returnType == "Self" {
             return true
         }
         return false

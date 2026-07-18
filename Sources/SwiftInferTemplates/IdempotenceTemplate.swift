@@ -245,13 +245,20 @@ extension IdempotenceTemplate {
         // InvolutionTemplate's two-shape acceptance so instance idempotent
         // transforms surface, not only the free `f(x)` form. `self` is the
         // operand; `Array`-materialised wrapper returns remain out of scope.
+        //
+        // The return may be written as the literal `Self` (`var canonicalizedTransform:
+        // Self`, `func normalized() -> Self`) — canonicalize it to the container, the
+        // same way DualStylePairing / SetAlgebraShape / the binary-op type-symmetry
+        // signal already do. Return-position only, and only on the NULLARY self-form,
+        // so the binary `merge(_ other: Self)` x-curried-idempotence hazard is untouched.
         if summary.parameters.isEmpty,
            let container = summary.containingTypeName,
-           container == returnType {
+           container == returnType || returnType == "Self" {
+            let resolved = returnType == "Self" ? container : returnType
             return Signal(
                 kind: .typeSymmetrySignature,
                 weight: 30,
-                detail: "Type-symmetry signature: self -> Self (Self = \(returnType))"
+                detail: "Type-symmetry signature: self -> Self (Self = \(resolved))"
             )
         }
         return nil

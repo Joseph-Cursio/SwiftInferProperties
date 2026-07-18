@@ -182,6 +182,17 @@ struct ApplicationShapeTemplateTests {
         #expect(caveats.contains("self-inverse, NOT idempotent"))
     }
 
+    /// Self-return: `func inverted() -> Self` — the literal `Self` return is
+    /// canonicalized to the container, so an involution written against `Self`
+    /// (the idiomatic spelling) surfaces just like `-> Matrix`.
+    @Test("an instance self-form written `-> Self` is accepted as an involution")
+    func instanceInvolutionWithSelfReturn() throws {
+        let inverted = member("inverted", [], returns: "Self", type: "Matrix")
+        #expect(InvolutionTemplate.isInvolution(inverted))
+        let suggestion = try #require(InvolutionTemplate.suggest(for: inverted))
+        #expect(suggestion.templateName == "involution")
+    }
+
     /// The free / static form: `(T) -> T`, `func negate(_ x: Int) -> Int`.
     @Test("a free (T) -> T named like an involution is accepted")
     func freeFunctionInvolution() throws {
