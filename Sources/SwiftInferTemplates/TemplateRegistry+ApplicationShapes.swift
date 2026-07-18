@@ -38,6 +38,22 @@ extension TemplateRegistry {
         collectFunctionShapeSuggestions(summaries: summaries, into: &collector)
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
         collectInvolutionSuggestions(summaries: summaries, into: &collector)
+        collectReorderPartitionSuggestions(summaries: summaries, into: &collector)
+    }
+
+    /// The *reorder* sense of "partition": a `mutating` method that rearranges its
+    /// elements around a predicate and returns the pivot. Disjoint from the tiling
+    /// `collectPartitionSuggestions` above — same word, a different law — so it is
+    /// its own pass rather than folded into `PartitionPairing`.
+    private static func collectReorderPartitionSuggestions(
+        summaries: [FunctionSummary],
+        into collector: inout SuggestionCollector
+    ) {
+        for summary in summaries {
+            if let suggestion = ReorderPartitionTemplate.suggest(for: summary) {
+                collector.record(suggestion, generatorType: summary.containingTypeName)
+            }
+        }
     }
 
     /// A unary `(T) -> T` named like an involution: it owes `f(f(x)) == x`. Kept

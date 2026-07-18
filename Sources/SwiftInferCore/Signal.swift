@@ -89,6 +89,16 @@ public struct Signal: Sendable, Equatable {
         /// which is exactly why these names are vetoed FROM idempotence.
         case involutionSignature
 
+        /// An in-place **reorder-partition**: a `mutating` method named like a
+        /// partition (`partition`, `stablePartition`) that takes a predicate
+        /// `(Element) -> Bool` and returns the pivot index. Distinct from the
+        /// *tiling* partition (`partitionSignature` / `indexToRangeSignature`,
+        /// whose parts reassemble a whole): this one rearranges the elements
+        /// around the pivot so the predicate splits them, and owes a two-sided
+        /// split + permutation law. Name-gated to avoid flooding on every
+        /// mutating method that happens to take a closure.
+        case reorderPartitionSignature
+
         // Negative (non-veto)
         case sideEffectPenalty
         case generatorQualityPenalty
