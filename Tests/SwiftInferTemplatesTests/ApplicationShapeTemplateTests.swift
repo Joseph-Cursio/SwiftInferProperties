@@ -14,7 +14,8 @@ struct ApplicationShapeTemplateTests {
         _ parameters: [Parameter],
         returns: String?,
         type: String? = "FileListing",
-        isStatic: Bool = false
+        isStatic: Bool = false,
+        docComment: String? = nil
     ) -> FunctionSummary {
         FunctionSummary(
             name: name,
@@ -26,7 +27,8 @@ struct ApplicationShapeTemplateTests {
             isStatic: isStatic,
             location: Self.loc,
             containingTypeName: type,
-            bodySignals: .empty
+            bodySignals: .empty,
+            docComment: docComment
         )
     }
 
@@ -206,5 +208,39 @@ struct ApplicationShapeTemplateTests {
         let negated = member("negated", [parameter(nil, "Int")], returns: "String", type: nil)
         #expect(InvolutionTemplate.isInvolution(negated) == false)
         #expect(InvolutionTemplate.suggest(for: negated) == nil)
+    }
+
+    // MARK: - Docstring corroboration (+15, corroborate-only)
+
+    /// A documented `self-inverse` on an already name+shape-matched involution
+    /// raises Likely 70 -> Strong 85 (three-signal agreement).
+    @Test("a docstring asserting self-inverse lifts an involution Likely 70 -> Strong 85")
+    func docstringLiftsInvolutionToStrong() throws {
+        let transposed = member(
+            "transposed",
+            [],
+            returns: "Matrix",
+            type: "Matrix",
+            docComment: "Transposes the matrix. The operation is self-inverse."
+        )
+        let suggestion = try #require(InvolutionTemplate.suggest(for: transposed))
+        #expect(suggestion.score.total == 85)
+        #expect(suggestion.score.tier == .strong)
+        let why = suggestion.explainability.whySuggested.joined(separator: "\n")
+        #expect(why.contains("Docstring corroborates involution"))
+    }
+
+    /// Corroborate-only: prose never surfaces an involution the *name* didn't
+    /// already gate (involution stays name-required).
+    @Test("involution docstring on a non-involution name stays silent")
+    func involutionDocstringNeedsTheName() {
+        let scaled = member(
+            "scaled",
+            [],
+            returns: "Matrix",
+            type: "Matrix",
+            docComment: "Scales the matrix. Self-inverse only for unit scale."
+        )
+        #expect(InvolutionTemplate.suggest(for: scaled) == nil)
     }
 }

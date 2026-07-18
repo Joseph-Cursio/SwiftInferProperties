@@ -108,7 +108,7 @@ public enum InvolutionTemplate {
         guard isInvolution(summary), let returnType = summary.returnTypeText else {
             return []
         }
-        return [
+        var signals = [
             Signal(
                 kind: .typeSymmetrySignature,
                 weight: 30,
@@ -121,6 +121,22 @@ public enum InvolutionTemplate {
                     + "returns the original, so it owes `f(f(x)) == x`"
             )
         ]
+        // Corroborate-only docstring signal (+15): a documented `self-inverse` /
+        // `own inverse` / `twice returns the original` raises the tier of the
+        // already name+shape-matched involution. Negation-gated at the source.
+        if let corroboration = DocstringPropertyCorroborator.corroboration(
+            for: .involution,
+            in: summary.docComment
+        ) {
+            signals.append(
+                Signal(
+                    kind: .docstringCorroboration,
+                    weight: 15,
+                    detail: "Docstring corroborates involution: '\(corroboration.matchedPhrase)'"
+                )
+            )
+        }
+        return signals
     }
 
     private static func isOperator(_ name: String) -> Bool {

@@ -146,6 +146,9 @@ public enum IdempotenceTemplate {
         if let domainMarker = domainMarkerCounterSignal(for: summary) {
             signals.append(domainMarker)
         }
+        if let docstring = docstringCorroborationSignal(for: summary) {
+            signals.append(docstring)
+        }
         return signals
     }
 

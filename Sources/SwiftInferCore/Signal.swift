@@ -28,6 +28,18 @@ public struct Signal: Sendable, Equatable {
         /// Seed-driven rather than inferred from the signature.
         case deterministicPurity
 
+        /// The function's own docstring independently asserts the property a
+        /// template has already matched by *shape* — a documented `idempotent`,
+        /// `self-inverse`, etc. **Corroborate-only** (`DocstringPropertyCorroborator`):
+        /// emitted at +15 to *raise the tier* of a shape-matched candidate
+        /// (typically Possible 30 → Likely 45, surfacing a documented-but-not-
+        /// curated-name law by default), never to surface a law the shape did not
+        /// match. Weaker than an exact curated-verb name (+40) — prose can be
+        /// aspirational — but stronger than a fuzzy fixed-point name (+10), since
+        /// an explicit assertion is direct evidence. Negation-gated at the source
+        /// so "not idempotent" never corroborates.
+        case docstringCorroboration
+
         /// B3 — a member of shape `(Int) -> Range<Int>`: give me a part index,
         /// get the slice of the whole it covers. That signature is a *partition*,
         /// and essentially nothing else has it by accident, so it carries a
