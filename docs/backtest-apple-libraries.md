@@ -145,18 +145,25 @@ pivot separating the two groups. Same English word, disjoint law:
 The `0dba0e5` bug violates the *reorder* law (on the subrange), which the tool does
 not model — so it is neither surfaced nor verified.
 
-**This is a concrete candidate template, not just a boundary.** A *reorder-partition*
-template would recognize the mutating-predicate-returns-index shape and own a
-verifiable law (generate an array, apply, check the two-sided predicate split +
-multiset preservation; stable adds within-group order). Like Case 3's tuple-return,
-it is deferred under the conservative posture — one library-idiom shape, needs its
-own verify strategy — but unlike Case 3 the missing piece is a *law the tool could
-state*, not a signature the templates can't parse. Recorded here as the sharpest
-"template we don't have yet" the backtest has produced.
+**This was a concrete candidate template, not just a boundary — and it is now BUILT**
+(`2196a3c`). `ReorderPartitionTemplate` recognizes the mutating-predicate-returns-index
+shape (name-gated on "partition" plus mutating + one `-> Bool` predicate + a non-Bool
+pivot return) and states the law directly: the two-sided predicate split around the
+pivot, the **permutation** invariant (the load-bearing one), stability *only* when the
+name says `stable`, and — for a subrange variant — a fence caveat that names the exact
+`0dba0e5` failure mode ("splitting over the whole collection's count instead of the
+subrange's"). It fires at **Likely 70** on the real swift-algorithms `Partition.swift`
+(both `partition` and `stablePartition`, whole and subrange) **including the pre-fix
+`0dba0e5^` source** — so discover now surfaces the property whose violation *is* the
+bug. It is **discover-only**, like the sibling comparator / predicate / state-machine
+application-shape templates; a measured-verify stub (generate an array with duplicates,
+apply, assert the split + `sorted() == input.sorted()`) is the follow-up. Unlike Case 3
+(tuple-return), the missing piece here was a *law the tool could state*, not a signature
+the templates couldn't parse — which is why this one was worth building rather than
+recording as a boundary.
 
 ## Remaining candidates
 
-A *reorder-partition* template (Case 5) is the most concrete new-template candidate.
 Data-structure-internal bugs are out of reach by construction: the `PersistentSet`
 `union`/`intersection`/`subtracting` fixes (`4a4c4a75` / `a887a77e`) are deep HAMT
 node-builder / collision-recursion bugs (the fix adds `_fullInvariantCheck`), not
