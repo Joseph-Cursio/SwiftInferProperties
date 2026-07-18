@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift b/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
+index 514fed1..8fa19cb 100644
+--- a/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
++++ b/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
+@@ -57,7 +57,7 @@ public enum IdempotenceWitnessDetector {
+     static let exactNames: Set<String> = [
+         "refresh", "reset", "clear", "dismiss", "cancel", "close", "hide",
+         "select",
+-        "task", "delegate", "binding"
++        "task", "delegate", "binding", "increment"
+     ]
+ 
+     /// Prefix-match names. The case identifier must start with one

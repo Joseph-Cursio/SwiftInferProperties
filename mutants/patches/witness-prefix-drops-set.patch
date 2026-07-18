@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift b/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
+index 514fed1..830981c 100644
+--- a/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
++++ b/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
+@@ -65,7 +65,7 @@ public enum IdempotenceWitnessDetector {
+     /// (so `set` alone is exact-match-bound; `setColor` matches the
+     /// prefix). Case-insensitive.
+     static let namePrefixes: [String] = [
+-        "set", "select", "show", "present"
++        "select", "show", "present"
+     ]
+ 
+     /// V2.0 M4.C — detect Idempotence witnesses in `source`. Pure.

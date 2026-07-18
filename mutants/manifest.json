@@ -1,0 +1,30 @@
+{
+  "kind": "spm",
+  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Mutants live in the IdempotenceWitnessDetector's own name-classifier; each is killed by that detector's own unit tests, which pin both what it should and should not match. Run via `swift test --filter`. Not a scored benchmark.",
+  "mutants": [
+    {
+      "id": "witness-drops-reset",
+      "patch": "patches/witness-drops-reset.patch",
+      "shape": "witness-recall",
+      "expected": "killed",
+      "test": "classifyExactNames",
+      "label": "drop `reset` from the exact-name set — a genuinely idempotent action is no longer recognized as a witness"
+    },
+    {
+      "id": "witness-admits-increment",
+      "patch": "patches/witness-admits-increment.patch",
+      "shape": "witness-precision",
+      "expected": "killed",
+      "test": "classifyNonMatching",
+      "label": "add `increment` to the exact-name set — a non-idempotent action is falsely classified as an idempotence witness"
+    },
+    {
+      "id": "witness-prefix-drops-set",
+      "patch": "patches/witness-prefix-drops-set.patch",
+      "shape": "witness-recall",
+      "expected": "killed",
+      "test": "classifyPrefixes",
+      "label": "drop the `set` prefix — `setX`-style assignments are no longer recognized as prefix-match witnesses"
+    }
+  ]
+}

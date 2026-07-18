@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift b/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
+index 514fed1..0e0541c 100644
+--- a/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
++++ b/Sources/SwiftInferTemplates/IdempotenceWitnessDetector.swift
+@@ -55,7 +55,7 @@ public enum IdempotenceWitnessDetector {
+     /// excluded — toggling toggles, applying twice returns to original
+     /// state, not idempotent.
+     static let exactNames: Set<String> = [
+-        "refresh", "reset", "clear", "dismiss", "cancel", "close", "hide",
++        "refresh", "clear", "dismiss", "cancel", "close", "hide",
+         "select",
+         "task", "delegate", "binding"
+     ]
