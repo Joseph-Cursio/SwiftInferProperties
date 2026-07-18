@@ -238,48 +238,6 @@ extension CommutativityTemplate {
 
     // MARK: - Signals
 
-    private static func nameSignal(
-        for summary: FunctionSummary,
-        vocabulary: Vocabulary
-    ) -> Signal? {
-        if curatedVerbs.contains(summary.name) {
-            return Signal(
-                kind: .exactNameMatch,
-                weight: 40,
-                detail: "Curated commutativity verb match: '\(summary.name)'"
-            )
-        }
-        if vocabulary.commutativityVerbs.contains(summary.name) {
-            return Signal(
-                kind: .exactNameMatch,
-                weight: 40,
-                detail: "Project-vocabulary commutativity verb match: '\(summary.name)'"
-            )
-        }
-        return nil
-    }
-
-    private static func antiCommutativitySignal(
-        for summary: FunctionSummary,
-        vocabulary: Vocabulary
-    ) -> Signal? {
-        if curatedAntiCommutativityVerbs.contains(summary.name) {
-            return Signal(
-                kind: .antiCommutativityNaming,
-                weight: -30,
-                detail: "Curated anti-commutativity verb match: '\(summary.name)'"
-            )
-        }
-        if vocabulary.antiCommutativityVerbs.contains(summary.name) {
-            return Signal(
-                kind: .antiCommutativityNaming,
-                weight: -30,
-                detail: "Project-vocabulary anti-commutativity verb match: '\(summary.name)'"
-            )
-        }
-        return nil
-    }
-
     /// B29 — veto for a set-combination commutativity suggestion on an
     /// order-sensitive carrier. `union` / `intersection` are commutative as a
     /// *set* semilattice, but `OrderedSet` / `Array` / … compare element order

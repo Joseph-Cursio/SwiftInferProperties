@@ -46,6 +46,25 @@ struct CommutativityTemplateTypePatternTests {
         }
     }
 
+    @Test("Semilattice verbs gcd / lcm / min / max / join / meet score 70 (Likely) for commutativity")
+    func semilatticeVerbsFireCommutativity() {
+        // Regression for the swift-numerics gcd backtest recall gap: gcd / lcm / min /
+        // max / join / meet are commutative AND associative by definition, so they
+        // already earned Likely 70 for ASSOCIATIVITY but surfaced commutativity only at
+        // Possible 30 (name +0, shape +30). `CommutativityTemplate.nameSignal` now reads
+        // `AssociativityTemplate.commutativeAssociativeVerbs`, closing the asymmetry.
+        for verb in AssociativityTemplate.commutativeAssociativeVerbs.sorted() {
+            let summary = makeCommutativitySummary(
+                name: verb,
+                paramTypes: ("Int", "Int"),
+                returnType: "Int"
+            )
+            let suggestion = CommutativityTemplate.suggest(for: summary)
+            #expect(suggestion?.score.total == 70, "\(verb) should score 70 (Likely)")
+            #expect(suggestion?.score.tier == .likely, "\(verb) should be Likely")
+        }
+    }
+
     @Test("Curated commutativity verb on (T, T) -> T scores 70 (Likely)")
     func curatedVerbAdds40() {
         let summary = makeCommutativitySummary(
