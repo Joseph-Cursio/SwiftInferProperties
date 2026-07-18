@@ -94,10 +94,36 @@ niche numerical-computing pattern, low priority.
 `--include-possible` and **every one is Possible-tier** (0 Strong, 0 Likely) — no
 default-tier flood on a 2000+-pick module.
 
+## Case 4 — swift-numerics `gcd` base case (`7f2d022`): MISS on the bug, but exposed + closed a recall gap
+
+The specific `gcd` fix was a missing `if x == 0 { return y }` base case. An
+exhaustive scan of the pre-fix `gcd` over `0...60 × 0...60` found **0 commutativity
+violations and 0 wrong-value results** — the buggy `gcd` is still commutative and
+still returns the correct value on that range (the base case only affected an
+edge/termination path, not the algebraic law), so both discover and verify are a
+clean **MISS**. The bug is a termination/edge invariant, not a law violation — the
+same shape-of-boundary lesson as Case 1's rotation-equivalence.
+
+**But the backtest paid off indirectly.** Setting up the `gcd`/`lcm`/`min`/`max`
+recall fixture exposed a real asymmetry: those verbs — plus `join`/`meet` — are
+commutative AND associative by definition, and surfaced **associativity at Likely
+70** but **commutativity only at Possible 30** (shape +30, name +0).
+`CommutativityTemplate.nameSignal` read `curatedVerbs` and the project vocabulary
+but not `AssociativityTemplate.commutativeAssociativeVerbs`, the exact set already
+gating the associativity name signal. **Fix shipped** (`b940bec`): nameSignal now
+emits +40 for those verbs, so commutativity reaches Likely 70 to match — the same
+safe recall pattern as Case 2's `symmetricDifference`. Not set-combination verbs, so
+the B29 order-sensitive-carrier veto is untouched; the deliberate non-commutative
+`leftBiased` FP (not a semilattice verb) stays Likely 45 for verify to disprove.
+Measured-safe: the survey corpus's `join`/`meet` commutativity picks bump 45→85
+(still surfaced), pick count unchanged, so the measured record count holds at 19.
+
+Lesson: a backtest's value is not only the hit/miss on its named bug — reproducing
+the fixture is itself a fuzz of the tool's recall surface.
+
 ## Remaining candidates
 
-`gcd` on `Int.min` (numerics — bounds; returns a single `T`, so not shape-blocked
-like twoSum), the other `PersistentSet` `union`/`intersection` fixes (collections),
+The other `PersistentSet` `union`/`intersection` fixes (collections),
 BitSet/GRDB Codable round-trips. The breadth **robustness sweep** ran clean on 7
 more libraries (Alamofire/RxSwift/GRDB/Kingfisher/SwiftyJSON/Moya/CombineExt — no
 crashes, no default-tier FP floods; ~18 libraries validated total).
