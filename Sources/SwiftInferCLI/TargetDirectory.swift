@@ -81,7 +81,7 @@ enum TargetDirectory {
         // latter resolves a relative path against `root`'s *last component* when `root` carries no
         // trailing slash, silently making the directory a sibling rather than a child. An absolute
         // `--sources` path is taken as-is.
-        let directory = (path as NSString).isAbsolutePath
+        let directory = path.hasPrefix("/")
             ? URL(fileURLWithPath: path)
             : root.appendingPathComponent(path)
 

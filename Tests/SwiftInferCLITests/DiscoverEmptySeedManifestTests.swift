@@ -235,8 +235,10 @@ struct DiscoverEmptySeedManifestTests {
         // reader has before performing any extraction.
         let manifest = SeedManifest(seeds: [
             .init(file: "Source.swift", line: 1, symbol: "noSuchFunction", rule: nil),
-            .init(file: "Source.swift", line: 9, symbol: "uploadRemainingChunks", rule: nil,
-                  kind: .extractableKernel)
+            .init(
+                file: "Source.swift", line: 9, symbol: "uploadRemainingChunks", rule: nil,
+                kind: .extractableKernel
+            )
         ])
 
         let recording = DPRecordingOutput()

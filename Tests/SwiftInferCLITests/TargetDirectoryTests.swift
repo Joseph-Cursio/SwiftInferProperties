@@ -172,7 +172,7 @@ struct TargetDirectoryTests {
     }
 
     @Test("resolveScanDirectory takes exactly one of --target / --sources")
-    func scanDirectoryRequiresExactlyOne() throws {
+    func scanDirectoryRequiresExactlyOne() {
         // Both is ambiguous; neither leaves nothing to scan. Both are loud errors, not a silent
         // default — the same no-confident-zero discipline the resolvers hold to.
         do {
