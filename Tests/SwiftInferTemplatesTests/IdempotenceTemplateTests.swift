@@ -182,6 +182,63 @@ struct IdempotenceTemplateVocabularyTests {
         #expect(suggestion?.score.total == 30)
         #expect(suggestion?.score.tier == .possible)
     }
+
+    // MARK: - B32 — instance self-form (`self -> Self`)
+
+    @Test("B32 — an instance self-form idempotent transform matches and surfaces at Likely")
+    func instanceSelfFormCuratedFires() {
+        // `func normalized() -> Doc` on `Doc` — zero params, returns the
+        // containing type. Was invisible (idempotence required 1 param); now
+        // matches, like InvolutionTemplate's instance form.
+        let summary = makeIdempotenceSummary(
+            name: "normalized",
+            returnType: "Doc",
+            containingType: "Doc"
+        )
+        let suggestion = IdempotenceTemplate.suggest(for: summary)
+        let tier = suggestion?.score.tier
+        #expect(tier == .likely || tier == .strong)
+        #expect(suggestion?.explainability.whySuggested.contains { $0.contains("self -> Self") } == true)
+    }
+
+    @Test("B32 — a past-participle verb is curated (the non-mutating instance spelling)")
+    func participleVerbIsCurated() {
+        #expect(IdempotenceTemplate.curatedVerbs.contains("sorted"))
+        #expect(IdempotenceTemplate.curatedVerbs.contains("normalized"))
+        let summary = makeIdempotenceSummary(name: "sorted", paramType: "[Int]", returnType: "[Int]")
+        #expect(IdempotenceTemplate.suggest(for: summary)?.score.tier == .likely)
+    }
+
+    @Test("B32 — an instance self-form with a non-curated name still surfaces at Possible")
+    func instanceSelfFormBaselineIsPossible() {
+        let summary = makeIdempotenceSummary(
+            name: "rendered",
+            returnType: "Widget",
+            containingType: "Widget"
+        )
+        #expect(IdempotenceTemplate.suggest(for: summary)?.score.tier == .possible)
+    }
+
+    @Test("B32 — self -> OtherType is NOT matched (materialised/wrapper returns stay out of scope)")
+    func instanceSelfFormRequiresContainerMatchesReturn() {
+        let summary = makeIdempotenceSummary(
+            name: "normalized",
+            returnType: "OtherType",
+            containingType: "Doc"
+        )
+        #expect(IdempotenceTemplate.suggest(for: summary) == nil)
+    }
+
+    @Test("B32 — a mutating instance self-form is not a candidate")
+    func mutatingInstanceSelfFormRejected() {
+        let summary = makeIdempotenceSummary(
+            name: "normalized",
+            returnType: "Doc",
+            isMutating: true,
+            containingType: "Doc"
+        )
+        #expect(IdempotenceTemplate.suggest(for: summary) == nil)
+    }
 }
 
 // MARK: - Shared helpers
@@ -192,6 +249,7 @@ func makeIdempotenceSummary(
     parameters explicitParameters: [Parameter]? = nil,
     returnType: String?,
     isMutating: Bool = false,
+    containingType: String? = nil,
     bodySignals: BodySignals = .empty,
     file: String = "Test.swift",
     line: Int = 1
@@ -213,7 +271,7 @@ func makeIdempotenceSummary(
         isMutating: isMutating,
         isStatic: false,
         location: SourceLocation(file: file, line: line, column: 1),
-        containingTypeName: nil,
+        containingTypeName: containingType,
         bodySignals: bodySignals
     )
 }

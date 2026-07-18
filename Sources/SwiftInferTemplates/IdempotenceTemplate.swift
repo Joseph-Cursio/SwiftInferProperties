@@ -21,14 +21,18 @@ public enum IdempotenceTemplate {
     /// extension (§4.5's `idempotenceVerbs` from `vocabulary.json`) lands
     /// at M2; for M1.3 the list is the curated set, exact-match only.
     public static let curatedVerbs: Set<String> = [
-        "normalize",
-        "canonicalize",
-        "trim",
-        "flatten",
-        "sort",
-        "deduplicate",
-        "sanitize",
-        "format"
+        // Base (free/mutating-stem) and past-participle (non-mutating instance)
+        // spellings both listed — Swift names the pure transform as the
+        // participle (`x.normalized()`), which the B32 instance self-form now
+        // surfaces. Mirrors InvolutionTemplate's dual base/participle listing.
+        "normalize", "normalized",
+        "canonicalize", "canonicalized",
+        "trim", "trimmed",
+        "flatten", "flattened",
+        "sort", "sorted",
+        "deduplicate", "deduplicated",
+        "sanitize", "sanitized",
+        "format", "formatted"
     ]
 
     /// Build a suggestion for `summary`, or return `nil` if the type
@@ -215,21 +219,39 @@ extension IdempotenceTemplate {
     // MARK: - Signals
 
     private static func typeSymmetrySignal(for summary: FunctionSummary) -> Signal? {
-        guard summary.parameters.count == 1,
-              let param = summary.parameters.first,
-              !param.isInout,
-              !summary.isMutating,
+        guard !summary.isMutating,
               let returnType = summary.returnTypeText,
-              returnType == param.typeText,
               returnType != "Void",
               returnType != "()" else {
             return nil
         }
-        return Signal(
-            kind: .typeSymmetrySignature,
-            weight: 30,
-            detail: "Type-symmetry signature: T -> T (T = \(returnType))"
-        )
+        // Free / static: exactly one non-`inout` parameter whose type is the
+        // return type — `func normalize(_ x: T) -> T`.
+        if summary.parameters.count == 1,
+           let param = summary.parameters.first,
+           !param.isInout,
+           returnType == param.typeText {
+            return Signal(
+                kind: .typeSymmetrySignature,
+                weight: 30,
+                detail: "Type-symmetry signature: T -> T (T = \(returnType))"
+            )
+        }
+        // Instance: zero parameters, returning the containing type —
+        // `func normalized() -> Doc` (`self -> Self`). B32 — mirrors
+        // InvolutionTemplate's two-shape acceptance so instance idempotent
+        // transforms surface, not only the free `f(x)` form. `self` is the
+        // operand; `Array`-materialised wrapper returns remain out of scope.
+        if summary.parameters.isEmpty,
+           let container = summary.containingTypeName,
+           container == returnType {
+            return Signal(
+                kind: .typeSymmetrySignature,
+                weight: 30,
+                detail: "Type-symmetry signature: self -> Self (Self = \(returnType))"
+            )
+        }
+        return nil
     }
 
     static func nameSignal(

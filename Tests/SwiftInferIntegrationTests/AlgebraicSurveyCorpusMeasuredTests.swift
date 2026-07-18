@@ -35,7 +35,7 @@ import Testing
 @Suite("Algebraic survey corpus — measured baseline", .tags(.subprocess))
 struct AlgebraicSurveyCorpusMeasuredTests {
 
-    @Test("curated corpus verifies six measured families (11 bothPass + 4 defaultFails)")
+    @Test("curated corpus verifies six measured families (12 bothPass + 5 defaultFails)")
     func measuredAlgebraicSplits() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-survey-corpus")
@@ -76,9 +76,17 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         // than caught at verify, dropping its associativity true positive and its
         // commutativity false positive (the corpus's only commutativity
         // defaultFails). Net −2 records: one bothPass, one defaultFails.
-        #expect(records.count == 15)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 11)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 4)
+        // 15 → 17 (B32): idempotence now accepts the instance self-form
+        // (`self -> Self`), so it proposes on the two `reversed()` instance
+        // methods — exactly as it already does on involution-named FREE functions.
+        // Both are correct measured outcomes: `Latch.reversed` is the buggy
+        // identity (`f(x) == x`), so idempotence `f(f(x)) == f(x)` holds →
+        // bothPass; `Toggle.reversed` is a genuine involution, so idempotence is
+        // false → defaultFails (the involution law, surfaced separately, is the
+        // right one). Net +2: one bothPass, one defaultFails.
+        #expect(records.count == 17)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 12)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
         // The catalogue-work true positives.
         #expect(hasRecord(records, "involution", .measuredBothPass))
         #expect(hasRecord(records, "binary-idempotence", .measuredBothPass))
