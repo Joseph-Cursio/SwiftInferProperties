@@ -107,6 +107,9 @@ public enum RoundTripTemplate {
         if let name = nameSignal(for: pair, vocabulary: vocabulary) {
             signals.append(name)
         }
+        if let docstring = docstringCorroborationSignal(for: pair) {
+            signals.append(docstring)
+        }
         if let discoverable = discoverableSignal(for: pair) {
             signals.append(discoverable)
         }

@@ -159,6 +159,11 @@ public enum MonotonicityTemplate {
         if let accumulator = accumulatorBodySignal(for: summary) {
             signals.append(accumulator)
         }
+        // Corroborate-only (+15): a documented monotone projection. Lifts the
+        // Possible-by-default shape-match to Likely, like the annotation path.
+        if let docstring = docstringCorroborationSignal(for: summary) {
+            signals.append(docstring)
+        }
         if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }

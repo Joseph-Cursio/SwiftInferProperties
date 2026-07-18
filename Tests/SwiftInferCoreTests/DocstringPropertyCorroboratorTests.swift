@@ -106,3 +106,62 @@ struct DocstringPropertyCorroboratorTests {
         #expect(DocstringPropertyCorroborator.corroboration(for: .involution, in: doc) == nil)
     }
 }
+
+@Suite("DocstringPropertyCorroborator — binary + projection families")
+struct DocstringPropertyCorroboratorBinaryTests {
+
+    @Test("'commutative' corroborates commutativity only")
+    func commutativeMatches() {
+        let doc = "Merges two sets. The operation is commutative."
+        let hit = DocstringPropertyCorroborator.corroboration(for: .commutativity, in: doc)
+        #expect(hit?.matchedPhrase == "commutative")
+        #expect(DocstringPropertyCorroborator.corroboration(for: .associativity, in: doc) == nil)
+    }
+
+    @Test("'order of the arguments doesn't matter' corroborates commutativity")
+    func argumentOrderMatches() {
+        let doc = "Combines the two inputs; the order of the arguments doesn't matter."
+        let result = DocstringPropertyCorroborator.corroboration(for: .commutativity, in: doc)
+        #expect(result?.matchedPhrase == "order of the arguments doesn't matter")
+    }
+
+    @Test("'associative' corroborates associativity only")
+    func associativeMatches() {
+        let doc = "Folds the elements. This combine is associative."
+        let hit = DocstringPropertyCorroborator.corroboration(for: .associativity, in: doc)
+        #expect(hit?.matchedPhrase == "associative")
+        #expect(DocstringPropertyCorroborator.corroboration(for: .commutativity, in: doc) == nil)
+    }
+
+    @Test("'grouping doesn't matter' corroborates associativity, not commutativity")
+    func groupingDiscriminates() {
+        let doc = "Concatenates; grouping doesn't matter."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .associativity, in: doc) != nil)
+        #expect(DocstringPropertyCorroborator.corroboration(for: .commutativity, in: doc) == nil)
+    }
+
+    @Test("'round-trip' and 'recovers the original' corroborate round-trip")
+    func roundTripMatches() {
+        #expect(DocstringPropertyCorroborator.corroboration(
+            for: .roundTrip, in: "Decodes a previously-encoded value in a round-trip."
+        )?.matchedPhrase == "round-trip")
+        #expect(DocstringPropertyCorroborator.corroboration(
+            for: .roundTrip, in: "Parsing then printing recovers the original text."
+        )?.matchedPhrase == "recovers the original")
+    }
+
+    @Test("'monotone' / 'order-preserving' / 'non-decreasing' corroborate monotonicity")
+    func monotonicityMatches() {
+        #expect(DocstringPropertyCorroborator.corroboration(for: .monotonicity, in: "A monotone score.") != nil)
+        #expect(DocstringPropertyCorroborator.corroboration(for: .monotonicity, in: "An order-preserving map.") != nil)
+        #expect(DocstringPropertyCorroborator.corroboration(for: .monotonicity, in: "A non-decreasing counter.") != nil)
+    }
+
+    @Test("Negation suppresses each binary/projection family")
+    func negationGates() {
+        #expect(DocstringPropertyCorroborator.corroboration(for: .commutativity, in: "This is not commutative.") == nil)
+        #expect(DocstringPropertyCorroborator.corroboration(for: .associativity, in: "A non-associative fold.") == nil)
+        let negatedMonotone = "This map is not order-preserving."
+        #expect(DocstringPropertyCorroborator.corroboration(for: .monotonicity, in: negatedMonotone) == nil)
+    }
+}

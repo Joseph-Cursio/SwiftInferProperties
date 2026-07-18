@@ -1,6 +1,7 @@
 # Docstring corroboration — docstrings touch first-stage inference
 
-**Status:** shipped (first slice: idempotence + involution), 2026-07-18.
+**Status:** shipped — all six families (idempotence, involution, commutativity,
+associativity, round-trip, monotonicity), 2026-07-18.
 **Posture:** corroborate-only. A docstring can only *strengthen* a candidate the
 shape already matched — never surface a law the shape didn't.
 
@@ -53,29 +54,50 @@ is **negation-gated**: a phrase preceded by a negator (`not`, `n't`, `non-`,
 | shape-only idempotence | 30 | 45 | Possible → **Likely** (surfaces) |
 | curated-verb idempotence | 70 | 85 | Likely → **Strong** |
 | name+shape involution | 70 | 85 | Likely → **Strong** |
-| negated / ambiguous prose | 30 / 70 | 30 / 70 | unchanged |
+| documented commutativity/associativity (shape-only) | suppressed (10) | 45 | **Likely** (see gating) |
+| shape-only monotonicity | 25 | 40 | Possible → **Likely** |
+| free-function round-trip pair | +15 on either half's docstring | | boost |
+| negated / ambiguous prose | unchanged | | unchanged |
 
 +15 sits between `fixedPointName` (+10, a fuzzy name hint) and `selfComposition`
 (+20, body evidence): an explicit documented assertion is stronger than a fuzzy
 name but weaker than an exact curated verb (+40) — prose can be aspirational.
 Per `Tier`'s own note the weight is a tunable calibration constant.
 
+## The unsupported-shape gate (commutativity / associativity)
+
+Commutativity and associativity suppress a bare `(T,T)->T` shape-only candidate
+with a −20 `unsupportedAlgebraicShape` counter (the B24 anti-flood rule): the
+shape alone doesn't entail a monoid. A docstring that asserts the property **is**
+exactly the corroboration that counter demands, so a docstring corroboration both
+adds +15 **and gates the counter off** — a documented commutative op on a
+non-curated name surfaces at 45 (Likely) instead of being suppressed. An
+*undocumented* shape-only op stays suppressed, unchanged.
+
+Round-trip is the one exception to "docstring boosts": it adds +15 but does **not**
+override the structural `crossTypeRoundTripPair` (−25) counter — a documented
+cross-type pair keeps its structural filter (the cycle-4 over-generation guard
+dominates prose). The clean win there is a documented free-function / same-carrier
+codec pair.
+
 ## Scope
 
-- **Shipped:** `idempotence`, `involution`.
-- **Obvious extension (same pattern, one `Property` case + vocabulary + signal per
-  template):** `commutativity` ("commutative", "order doesn't matter"),
-  `associativity`, `round-trip` ("recovers the original", "losslessly"),
-  `monotonicity` ("monotone", "order-preserving"). The binary-op vocabularies are
-  more prone to ambiguous matches, so each deserves its own tight vocabulary +
-  negation review before wiring.
+All six families are shipped: `idempotence`, `involution`, `commutativity`,
+`associativity`, `roundTrip`, `monotonicity`. Each is one `Property` case + a tight
+negation-safe vocabulary + a `docstringCorroborationSignal` per template. Adding a
+future property is the same three steps.
 
 ## Where
 
-- `Sources/SwiftInferCore/DocstringPropertyCorroborator.swift` — the pure matcher.
+- `Sources/SwiftInferCore/DocstringPropertyCorroborator.swift` — the pure matcher
+  (per-property vocabularies + negation gate).
 - `Sources/SwiftInferCore/Signal.swift` — `Signal.Kind.docstringCorroboration`.
-- `Sources/SwiftInferTemplates/IdempotenceTemplate+DocstringCorroboration.swift`,
-  `InvolutionTemplate.swift` — the wiring.
-- Tests: `DocstringPropertyCorroboratorTests` (Core, 13),
-  `IdempotenceDocstringCorroborationTests` (5), involution corroboration in
-  `ApplicationShapeTemplateTests` (2).
+- Wiring: `IdempotenceTemplate+DocstringCorroboration.swift`, `InvolutionTemplate.swift`,
+  `CommutativityTemplate+DocstringCorroboration.swift` (+ B24 gate in
+  `CommutativityTemplate.swift`), `AssociativityTemplate+DocstringCorroboration.swift`
+  (+ counter gate), `MonotonicityTemplate+DocstringCorroboration.swift`,
+  `RoundTripTemplate+DocstringCorroboration.swift`.
+- Tests: `DocstringPropertyCorroboratorTests` (Core — unary + binary suites),
+  `IdempotenceDocstringCorroborationTests`, involution corroboration in
+  `ApplicationShapeTemplateTests`, `AlgebraicDocstringCorroborationTests`
+  (commutativity / associativity / monotonicity / round-trip tier movement).

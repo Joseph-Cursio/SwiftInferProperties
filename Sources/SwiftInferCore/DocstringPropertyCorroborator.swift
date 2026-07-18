@@ -29,6 +29,10 @@ public enum DocstringPropertyCorroborator {
     public enum Property: String, Sendable, Equatable, CaseIterable {
         case idempotence
         case involution
+        case commutativity
+        case associativity
+        case roundTrip
+        case monotonicity
     }
 
     /// A successful corroboration, carrying the matched phrase so the template's
@@ -48,43 +52,103 @@ public enum DocstringPropertyCorroborator {
     /// one never leaks into another.
     static func vocabulary(for property: Property) -> [String] {
         switch property {
-        case .idempotence:
-            return [
-                "idempotent",
-                "idempotence",
-                "no further effect",
-                "no additional effect",
-                "no-op if already",
-                "no effect if already",
-                "already normalized",
-                "already canonical",
-                "canonical form",
-                "normal form",
-                "normalized form",
-                "fixed point",
-                "applying it twice has no",
-                "applying twice has no",
-                "second application has no",
-                "reapplying has no"
-            ]
-
-        case .involution:
-            return [
-                "self-inverse",
-                "self inverse",
-                "own inverse",
-                "inverse of itself",
-                "undoes itself",
-                "is its own inverse",
-                "applying it twice returns the original",
-                "applying twice returns the original",
-                "twice returns the original",
-                "twice yields the original",
-                "twice restores the original",
-                "returns to the original"
-            ]
+        case .idempotence: return idempotenceVocabulary
+        case .involution: return involutionVocabulary
+        case .commutativity: return commutativityVocabulary
+        case .associativity: return associativityVocabulary
+        case .roundTrip: return roundTripVocabulary
+        case .monotonicity: return monotonicityVocabulary
         }
     }
+
+    static let idempotenceVocabulary: [String] = [
+        "idempotent",
+        "idempotence",
+        "no further effect",
+        "no additional effect",
+        "no-op if already",
+        "no effect if already",
+        "already normalized",
+        "already canonical",
+        "canonical form",
+        "normal form",
+        "normalized form",
+        "fixed point",
+        "applying it twice has no",
+        "applying twice has no",
+        "second application has no",
+        "reapplying has no"
+    ]
+
+    static let involutionVocabulary: [String] = [
+        "self-inverse",
+        "self inverse",
+        "own inverse",
+        "inverse of itself",
+        "undoes itself",
+        "is its own inverse",
+        "applying it twice returns the original",
+        "applying twice returns the original",
+        "twice returns the original",
+        "twice yields the original",
+        "twice restores the original",
+        "returns to the original"
+    ]
+
+    static let commutativityVocabulary: [String] = [
+        "commutative",
+        "commutativity",
+        "order of the arguments doesn't matter",
+        "order of the arguments does not matter",
+        "order of the operands doesn't matter",
+        "order of the operands does not matter",
+        "argument order doesn't matter",
+        "argument order does not matter",
+        "order-independent",
+        "order independent",
+        "either order gives the same",
+        "same result in either order",
+        "symmetric in its arguments",
+        "symmetric in both arguments"
+    ]
+
+    static let associativityVocabulary: [String] = [
+        "associative",
+        "associativity",
+        "grouping doesn't matter",
+        "grouping does not matter",
+        "regardless of grouping",
+        "regardless of how they are grouped",
+        "regardless of how they're grouped",
+        "how the operands are grouped doesn't matter",
+        "how the arguments are grouped doesn't matter"
+    ]
+
+    static let roundTripVocabulary: [String] = [
+        "round-trip",
+        "round trip",
+        "roundtrip",
+        "recovers the original",
+        "recovers the original value",
+        "restores the original value",
+        "losslessly",
+        "lossless round",
+        "encodes and decodes"
+    ]
+
+    static let monotonicityVocabulary: [String] = [
+        "monotone",
+        "monotonic",
+        "monotonically",
+        "non-decreasing",
+        "nondecreasing",
+        "order-preserving",
+        "order preserving",
+        "preserves order",
+        "preserves the order",
+        "preserves ordering",
+        "preserves the ordering"
+    ]
 
     /// Tokens that negate a following assertion. Checked in the window of source
     /// text immediately preceding a matched phrase.
