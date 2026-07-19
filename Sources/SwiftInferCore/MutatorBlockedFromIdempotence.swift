@@ -84,9 +84,30 @@ public enum MutatorBlockedFromIdempotence {
         "getNext"
     ]
 
-    /// `true` when `name` is a non-idempotent mutator — either an exact
-    /// `curated` name or a `consumePrefixes` member.
+    /// Involution verb *prefixes* — a `mutating` method that **toggles /
+    /// negates / inverts / complements** something is a self-inverse
+    /// (`f(f(s)) == s ≠ f(s)`), so its lifted shadow is never idempotent,
+    /// exactly like the bare `toggle` / `negate` in `curated`. Prefix (not
+    /// exact) because the object is usually named in the suffix (`toggleAll`,
+    /// `invertColors`, `negatePolarity`, `complementAll`) — "toggle / negate /
+    /// invert / complement X" is a self-inverse for every X, so no idempotent
+    /// counterexample exists. (Backtest finding: swift-collections
+    /// `BitArray.toggleAll()` surfaced lifted-idempotence at Likely 45 — the
+    /// bare `toggle` was curated, but the `toggleAll` compound slipped the
+    /// exact-name match, the same gap the `pop` → `popNext*` prefix fix
+    /// closed.)
+    public static let involutionPrefixes: Set<String> = [
+        "toggle",
+        "negate",
+        "invert",
+        "complement"
+    ]
+
+    /// `true` when `name` is a non-idempotent mutator — an exact `curated`
+    /// name, a `consumePrefixes` member, or an `involutionPrefixes` member.
     public static func isBlocked(_ name: String) -> Bool {
-        curated.contains(name) || consumePrefixes.contains { name.hasPrefix($0) }
+        curated.contains(name)
+            || consumePrefixes.contains { name.hasPrefix($0) }
+            || involutionPrefixes.contains { name.hasPrefix($0) }
     }
 }

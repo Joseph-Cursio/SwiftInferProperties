@@ -107,6 +107,21 @@ struct IdempotenceTemplateMutatorBlocklistTests {
         }
     }
 
+    @Test("involutionPrefixes block compound involution names (toggleAll — swift-collections backtest FP)")
+    func involutionPrefixesBlockCompounds() {
+        // The bare verbs are curated (exact); the compounds slipped through, exactly
+        // like `pop` → `popNext*`. `BitArray.toggleAll()` surfaced lifted-idempotence
+        // at Likely 45 on `apple/swift-collections` — a self-inverse, not idempotent.
+        for name in ["toggleAll", "invertColors", "negatePolarity", "complementAll", "toggleVisibility"] {
+            #expect(MutatorBlockedFromIdempotence.isBlocked(name), "expected \(name) blocked")
+        }
+        // Over-block guard: a name that merely starts *similarly* is NOT blocked —
+        // `convert` is not `invert`, `negotiate` is not `negate`.
+        for name in ["convert", "negotiate", "invalidate", "insertAll", "completeAll"] {
+            #expect(!MutatorBlockedFromIdempotence.isBlocked(name), "expected \(name) NOT blocked")
+        }
+    }
+
     // MARK: - Veto fires on curated names (cycle-20 cases)
 
     @Test("'reverse' on OrderedDictionary fires veto (cycle-20 #41 case)")
