@@ -167,6 +167,34 @@ template is no longer discover-only. Unlike Case 3
 the templates couldn't parse — which is why this one was worth building rather than
 recording as a boundary.
 
+## Case 6 — swift-collections `BitArray.toggleAll()` (`e01391e5`): MISS on the bug, but exposed a tool-side FALSE POSITIVE
+
+`e01391e5` fixed a logic error in `BitArray.toggleAll(in range:)` — an empty
+range still ran the word-update and corrupted a bit (`guard !range.isEmpty else
+{ return }`). Like the gcd base case (Case 4), the bug is an **empty-input edge
+invariant** in the *ranged* overload, not a violation of any law on the whole
+collection, so it is a MISS — the whole `toggleAll()` is correct in both
+versions.
+
+**But discover on the pre-fix file exposed a tool-side default-tier FALSE
+POSITIVE.** The whole `toggleAll()` surfaces at **lifted-idempotence Likely 45**
+— wrong: toggling all bits twice returns the original (`f(f(x)) == x`, an
+**involution**), not `f(f(x)) == f(x)`. The bare `toggle` was already curated in
+`MutatorBlockedFromIdempotence`, but `isBlocked` matches curated names *exactly*,
+so the `toggleAll` compound slipped through — the identical exact-vs-compound gap
+the swift-nio `pop` → swift-argument-parser `popNext*` prefix fix closed.
+
+**Fix shipped** (`582b6fc`): a new `involutionPrefixes = {toggle, negate, invert,
+complement}` matched by prefix. "Toggle / negate / invert / complement X" is a
+self-inverse for every X, so `toggleAll` / `invertColors` / `negatePolarity` /
+`complementAll` are all blocked from lifted-idempotence; additive, so the bare
+verbs stay curated and the over-block guard (`convert` ≠ `invert`, `negotiate` ≠
+`negate`) holds. This is the **fifth** backtest to pay off through the
+*reproduction* rather than the named bug (cf. Case 2 symmetricDifference recall,
+Case 4 gcd/semilattice recall, Case 5 reorder-partition template) — the honest
+pattern here is that mining fixtures from real fixed bugs is as much a fuzz of
+the tool's own precision surface as a test of its bug-catching.
+
 ## Remaining candidates
 
 Data-structure-internal bugs are out of reach by construction: the `PersistentSet`
