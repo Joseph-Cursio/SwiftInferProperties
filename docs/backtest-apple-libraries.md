@@ -155,9 +155,14 @@ name says `stable`, and — for a subrange variant — a fence caveat that names
 subrange's"). It fires at **Likely 70** on the real swift-algorithms `Partition.swift`
 (both `partition` and `stablePartition`, whole and subrange) **including the pre-fix
 `0dba0e5^` source** — so discover now surfaces the property whose violation *is* the
-bug. It is **discover-only**, like the sibling comparator / predicate / state-machine
-application-shape templates; a measured-verify stub (generate an array with duplicates,
-apply, assert the split + `sorted() == input.sorted()`) is the follow-up. Unlike Case 3
+bug. **The measured-verify stub is now built too** (`ae52b22`):
+`ReorderPartitionStubEmitter` drives a mutating `partition(by:)` /
+`stablePartition(subrange:by:)` over deterministically generated `[Int]` arrays and
+asserts the split + permutation (+ the subrange fence), emitting the standard `VERIFY_*`
+contract; the `reorder-partition-corpus` proves the split end-to-end — a correct stable /
+non-stable / subrange partition → **bothPass**; an element-dropping partition and a
+whole-array-reordering subrange partition (the `0dba0e5` shape) → **defaultFails** — so the
+template is no longer discover-only. Unlike Case 3
 (tuple-return), the missing piece here was a *law the tool could state*, not a signature
 the templates couldn't parse — which is why this one was worth building rather than
 recording as a boundary.
