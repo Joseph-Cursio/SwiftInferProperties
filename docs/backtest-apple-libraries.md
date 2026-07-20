@@ -249,6 +249,34 @@ the Optional round-trip law `decode(encode(x)) == .some(x)`. Recorded as the
 round-trip twin of Case 5's reorder-partition finding: the instance-method-encode
 half is now reachable; the init-decode half is the remaining common shape.
 
+## Review round 2 — boundary confirmations (all principled MISSes)
+
+A further sweep (swift-syntax, swift-foundation, SwiftyJSON, swift-nio, swift-async)
+turned up no new actionable fix — every property-adjacent bug fell outside the
+value-semantic / named-default-law scope, which is itself the honest finding:
+
+- **swift-syntax `JSONMapValue.equals(to:)` (`869b4e41`)** — a `memcmp`
+  nil-`baseAddress` crash on empty buffers on some platforms. A *platform/edge*
+  fix, not a symmetry/reflexivity violation, so no equivalence law is broken. (It
+  does reinforce a candidate template — an **equivalence-relation** template for
+  named `equals(to:)` / `isEqual(to:)` owing reflexivity + symmetry + transitivity,
+  the `==` analog of the comparator's SWO — but with no bug here that it would
+  catch, it stays a low-priority idea.)
+- **swift-foundation path canonicalisation (`654fa54` / `50d7537` / `08d50c1`)** —
+  `canonicalize` *looks* idempotent-shaped, but the fixes are in **internal,
+  Windows-specific** filesystem-representation helpers (`/`→`\`), not a public
+  value-semantic method with a stateable idempotence law.
+- **SwiftyJSON round-trips (`e79ac38` and kin)** — `JSON.rawString()` (instance
+  encode, now pairable after Case 7) with `JSON(parseJSON:)` / `init(data:)`
+  decode — but the decode is an **`init?`**, the exact Part-2 shape
+  `FunctionPairing` still can't reach. Recurs here, confirming Part 2's value.
+
+Net: two actionable items remain from the review — **Case 7 Part 2** (init-decode
+`FunctionSummary` synthesis + Optional round-trip law) and the speculative
+**equivalence-relation template** — and the mature-library HIT vein
+(isolated formula bug on a named default-law method, buildable) is largely mined;
+Case 2 (`symmetricDifference`) remains the one clean library-bug catch.
+
 ## Remaining candidates
 
 Data-structure-internal bugs are out of reach by construction: the `PersistentSet`
