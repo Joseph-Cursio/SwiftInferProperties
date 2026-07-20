@@ -99,6 +99,17 @@ public struct FunctionSummary: Sendable, Equatable {
     /// (`value.conjugate`) rather than a call (`value.conjugate()`).
     public let isComputedProperty: Bool
 
+    /// Case 7 Part 2 — true when this summary was synthesized from an
+    /// **initializer** (`init?(base64Encoded: String)`), modelled as the decode
+    /// half of a codec: a function `paramType -> Self`. Set only on the
+    /// synthetic summaries `InitializerDecodeSynthesizer` feeds into the
+    /// round-trip pairing input — never on a scanned declaration — so the
+    /// general per-summary template pass never sees them. `RoundTripTemplate`
+    /// reads it to fire the label-stem name signal and to disclose that a
+    /// failable initializer's round-trip law is `decode(encode(x)) == .some(x)`.
+    /// Defaults to `false`.
+    public let isInitializer: Bool
+
     /// The function's leading documentation comment, reflowed to plain prose —
     /// `///` line markers and `/** */` fences stripped, lines joined — or `nil`
     /// when the declaration carries no doc comment. Captured verbatim and left
@@ -129,6 +140,7 @@ public struct FunctionSummary: Sendable, Equatable {
         isInferredPure: Bool = false,
         isClockDeterministic: Bool = false,
         isComputedProperty: Bool = false,
+        isInitializer: Bool = false,
         docComment: String? = nil
     ) {
         self.name = name
@@ -146,6 +158,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.isInferredPure = isInferredPure
         self.isClockDeterministic = isClockDeterministic
         self.isComputedProperty = isComputedProperty
+        self.isInitializer = isInitializer
         self.docComment = docComment
     }
 }

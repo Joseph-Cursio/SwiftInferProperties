@@ -100,7 +100,8 @@ public enum TemplateRegistry {
             equatableResolver: resolver,
             inheritedTypesByName: inheritedTypesByName,
             carrierKindResolver: carrierKindResolver,
-            liftedTransformations: liftedTransformations
+            liftedTransformations: liftedTransformations,
+            typeDecls: typeDecls
         )
         let outcome = ContradictionDetector.filter(
             collector.suggestions,

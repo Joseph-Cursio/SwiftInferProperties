@@ -66,7 +66,8 @@ extension TemplateRegistry {
         equatableResolver: EquatableResolver,
         inheritedTypesByName: [String: Set<String>] = [:],
         carrierKindResolver: CarrierKindResolver? = nil,
-        liftedTransformations: [LiftedTransformation] = []
+        liftedTransformations: [LiftedTransformation] = [],
+        typeDecls: [TypeDecl] = []
     ) -> SuggestionCollector {
         // Corpus-wide union of names referenced as the closure-position
         // argument of any `.reduce(_, X)` call — feeds the associativity
@@ -75,9 +76,7 @@ extension TemplateRegistry {
         let reducerOps: Set<String> = Set(summaries.flatMap(\.bodySignals.reducerOpsReferenced))
         // Subset whose `.reduce(seed, op)` seed was identity-shaped — feeds
         // identity-element's accumulator-with-empty-seed signal (+20).
-        let opsWithIdentitySeed: Set<String> = Set(
-            summaries.flatMap(\.bodySignals.reducerOpsWithIdentitySeed)
-        )
+        let opsWithIdentitySeed = Set(summaries.flatMap(\.bodySignals.reducerOpsWithIdentitySeed))
         let context = CollectionResolverContext(
             vocabulary: vocabulary,
             inheritedTypesByName: inheritedTypesByName,
@@ -93,7 +92,13 @@ extension TemplateRegistry {
                 into: &collector
             )
         }
-        for pair in FunctionPairing.candidates(in: summaries) {
+        // Case 7 Part 2 — synthesized codec *decode* summaries from struct
+        // initializers are merged into the pairing input ONLY (never the
+        // per-summary pass above, so no other template sees them); the
+        // round-trip scorer treats an init-derived half via `isInitializer`.
+        for pair in FunctionPairing.candidates(
+            in: summaries + InitializerDecodeSynthesizer.summaries(from: typeDecls)
+        ) {
             collectPerPairSuggestions(
                 pair: pair,
                 equatableResolver: equatableResolver,

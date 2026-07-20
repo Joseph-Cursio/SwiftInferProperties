@@ -76,7 +76,7 @@ public enum RoundTripTemplate {
             },
             identity: Self.makeIdentity(for:),
             carrier: { $0.forward.containingTypeName },
-            caveats: { _ in Self.makeCaveats() }
+            caveats: { Self.makeCaveats(for: $0) }
         )
     }
 
@@ -161,14 +161,25 @@ public enum RoundTripTemplate {
     }
 
     /// V1.39.A — caveat list (2 constant entries).
-    static func makeCaveats() -> [String] {
-        [
+    static func makeCaveats(for pair: FunctionPair) -> [String] {
+        var caveats = [
             "Throws on either side narrows the property's domain to the success set "
                 + "of the inner function; a generator that produces values outside that "
                 + "set will surface false-positive failures (Appendix B.4).",
             "T must conform to Equatable for the emitted property to compile. "
                 + "SwiftInfer M1 does not verify protocol conformance — confirm before applying."
         ]
+        if pair.forward.isInitializer || pair.reverse.isInitializer {
+            caveats.append(
+                "DECODE IS AN INITIALIZER, so the round trip is DIRECTIONAL: the law is "
+                    + "`Type(<label>: x.encode()) == x` over the VALUE domain, not the other way — "
+                    + "`encode` applied to an arbitrary encoded string need not round-trip, because "
+                    + "not every string is a valid encoding. For a FAILABLE `init?`, unwrap first: "
+                    + "the decode of a freshly-encoded value must succeed and equal the original "
+                    + "(`decode(encode(x)) == .some(x)`)."
+            )
+        }
+        return caveats
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical
@@ -231,6 +242,9 @@ extension RoundTripTemplate {
                 detail: "Project-vocabulary inverse name pair: "
                     + "\(projectPair.forward)/\(projectPair.reverse)"
             )
+        }
+        if let initStem = initializerLabelStemSignal(for: pair) {
+            return initStem
         }
         return nil
     }

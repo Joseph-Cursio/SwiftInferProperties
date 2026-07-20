@@ -92,6 +92,67 @@ struct RoundTripTemplateBasicsTests {
         #expect(!why.contains("? -> Data"))
     }
 
+    @Test("An init-decode whose label stems the encode name scores Strong and discloses the direction")
+    func initializerCodecScoresAndDiscloses() throws {
+        // `func base64EncodedString() -> String` (instance) + a synthesized
+        // `init?(base64Encoded:)` decode: the init label "base64Encoded" is a
+        // substring of the encode name → +40, so the codec reaches the default tier.
+        let encode = FunctionSummary(
+            name: "base64EncodedString",
+            parameters: [],
+            returnTypeText: "String",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 5, column: 1),
+            containingTypeName: "Blob",
+            bodySignals: .empty
+        )
+        let decode = FunctionSummary(
+            name: "base64Encoded",   // synthetic: the init's argument label
+            parameters: [Parameter(label: "base64Encoded", internalName: "v", typeText: "String", isInout: false)],
+            returnTypeText: "Blob",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: "Blob",
+            bodySignals: .empty,
+            isInitializer: true
+        )
+        let suggestion = try #require(
+            RoundTripTemplate.suggest(for: FunctionPair(forward: decode, reverse: encode))
+        )
+        #expect(suggestion.score.total >= 70)
+        let why = suggestion.explainability.whySuggested.joined(separator: "\n")
+        #expect(why.contains("Codec initializer label match"))
+        // The directional / failable disclosure must be present.
+        let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
+        #expect(caveats.contains("DECODE IS AN INITIALIZER"))
+        #expect(caveats.contains(".some(x)"))
+    }
+
+    @Test("An init-decode whose label does NOT stem the encode name stays Possible")
+    func initializerWithoutStemStaysPossible() throws {
+        // A single-param init whose label is unrelated to the encode name gets no
+        // name signal → type-symmetry only (Possible). Guards against a flood of
+        // every single-param struct init pairing at the default tier.
+        let encode = FunctionSummary(
+            name: "serialize", parameters: [], returnTypeText: "String",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 5, column: 1),
+            containingTypeName: "Blob", bodySignals: .empty
+        )
+        let decode = FunctionSummary(
+            name: "wibble",
+            parameters: [Parameter(label: "wibble", internalName: "v", typeText: "String", isInout: false)],
+            returnTypeText: "Blob",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: "Blob", bodySignals: .empty, isInitializer: true
+        )
+        let suggestion = try #require(
+            RoundTripTemplate.suggest(for: FunctionPair(forward: decode, reverse: encode))
+        )
+        #expect(suggestion.score.tier == .possible)
+    }
+
     @Test("Non-deterministic API in either body suppresses the suggestion")
     func nonDeterministicVeto() {
         let pair = makeRoundTripPair(
