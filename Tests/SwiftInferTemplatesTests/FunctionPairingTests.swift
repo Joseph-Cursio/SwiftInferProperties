@@ -119,6 +119,55 @@ struct FunctionPairingTests {
         #expect(pairs[1].forward.location.file == "B.swift")
     }
 
+    // MARK: - Instance-method codec (0-param encode, domain = receiver)
+
+    @Test("A 0-param instance-method encode pairs with a free/static decode (the codec recall gap)")
+    func instanceMethodEncodePairs() throws {
+        // `func base64EncodedString() -> String` on Blob reads as `Blob -> String`
+        // (domain = the receiver), so it pairs with `decode(String) -> Blob`.
+        // Previously invisible: the pairing keyed on `parameters.first`.
+        let encode = makeSummary(
+            name: "base64EncodedString",
+            returnType: "String",
+            containingType: "Blob",
+            line: 3
+        )
+        let decode = makeSummary(name: "decode", paramType: "String", returnType: "Blob", line: 7)
+        let pairs = FunctionPairing.candidates(in: [encode, decode])
+        #expect(pairs.count == 1)
+        let pair = try #require(pairs.first)
+        #expect(pair.forward.name == "base64EncodedString")
+        #expect(pair.reverse.name == "decode")
+    }
+
+    @Test("transformationDomain: receiver for a 0-param instance method, param otherwise, nil for static/free")
+    func transformationDomainByShape() {
+        let instance = makeSummary(name: "encode", returnType: "String", containingType: "Blob")
+        #expect(FunctionPairing.transformationDomain(instance) == "Blob")
+
+        let oneParam = makeSummary(name: "decode", paramType: "String", returnType: "Blob")
+        #expect(FunctionPairing.transformationDomain(oneParam) == "String")
+
+        // A 0-param *static* method has no receiver to stand in as the domain.
+        let staticNullary = makeSummary(
+            name: "make", returnType: "Blob", isStatic: true, containingType: "Blob"
+        )
+        #expect(FunctionPairing.transformationDomain(staticNullary) == nil)
+
+        // A 0-param *free* function likewise has no domain.
+        let freeNullary = makeSummary(name: "now", returnType: "Date")
+        #expect(FunctionPairing.transformationDomain(freeNullary) == nil)
+    }
+
+    @Test("A 0-param static factory does NOT pair as an encode (no receiver domain)")
+    func staticNullaryDoesNotPair() {
+        let make = makeSummary(
+            name: "make", returnType: "String", isStatic: true, containingType: "Blob"
+        )
+        let decode = makeSummary(name: "decode", paramType: "String", returnType: "Blob")
+        #expect(FunctionPairing.candidates(in: [make, decode]).isEmpty)
+    }
+
     // MARK: - sharedDiscoverableGroup (M5.1)
 
     @Test("sharedDiscoverableGroup is nil when neither half is annotated")
@@ -176,6 +225,8 @@ struct FunctionPairingTests {
         parameters explicitParameters: [Parameter]? = nil,
         returnType: String?,
         isMutating: Bool = false,
+        isStatic: Bool = false,
+        containingType: String? = nil,
         file: String = "Test.swift",
         line: Int = 1,
         discoverableGroup: String? = nil
@@ -195,9 +246,9 @@ struct FunctionPairingTests {
             isThrows: false,
             isAsync: false,
             isMutating: isMutating,
-            isStatic: false,
+            isStatic: isStatic,
             location: SourceLocation(file: file, line: line, column: 1),
-            containingTypeName: nil,
+            containingTypeName: containingType,
             bodySignals: .empty,
             discoverableGroup: discoverableGroup
         )

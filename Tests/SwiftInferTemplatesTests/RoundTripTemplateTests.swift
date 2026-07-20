@@ -49,6 +49,49 @@ struct RoundTripTemplateBasicsTests {
         #expect(RoundTripTemplate.suggest(for: swapped)?.score.total == 70)
     }
 
+    @Test("An instance-method encode (domain = receiver) pairs with a decode and renders the receiver domain")
+    func instanceMethodCodecScoresAndRendersDomain() throws {
+        // `func encode() -> Data` on `MyType` (0-param instance method) reads as
+        // `MyType -> Data`, so it pairs with a free `decode(Data) -> MyType`.
+        // The recall gap this closes: the pairing previously keyed on
+        // `parameters.first`, so the instance-method encode was invisible.
+        let encode = FunctionSummary(
+            name: "encode",
+            parameters: [],
+            returnTypeText: "Data",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: "MyType",
+            bodySignals: .empty
+        )
+        let decode = FunctionSummary(
+            name: "decode",
+            parameters: [Parameter(label: nil, internalName: "x", typeText: "Data", isInout: false)],
+            returnTypeText: "MyType",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 5, column: 1),
+            containingTypeName: "MyType",
+            bodySignals: .empty
+        )
+        let suggestion = try #require(
+            RoundTripTemplate.suggest(for: FunctionPair(forward: encode, reverse: decode))
+        )
+        // Type-symmetry (30) + curated encode/decode (40) → at least Likely.
+        #expect(suggestion.score.total >= 70)
+        #expect(suggestion.score.tier == .likely || suggestion.score.tier == .strong)
+        // The domain must render as the receiver type, not `?` (the bug the
+        // explainability fix addresses).
+        let why = suggestion.explainability.whySuggested.joined(separator: "\n")
+        #expect(why.contains("MyType -> Data"))
+        #expect(!why.contains("? -> Data"))
+    }
+
     @Test("Non-deterministic API in either body suppresses the suggestion")
     func nonDeterministicVeto() {
         let pair = makeRoundTripPair(

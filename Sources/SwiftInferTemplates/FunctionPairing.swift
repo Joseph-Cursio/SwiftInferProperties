@@ -62,15 +62,44 @@ public enum FunctionPairing {
         return pairs.sorted(by: lessThan)
     }
 
+    /// The **domain** of `summary` viewed as a transformation
+    /// `domain -> codomain`:
+    ///   - a function with an explicit first parameter → that parameter's type
+    ///     (free / static / instance binary-op — unchanged behaviour);
+    ///   - a **0-parameter, non-`static` instance method** → the receiver type
+    ///     (`self`), so an instance-method encode
+    ///     `func base64EncodedString() -> String` reads as `Blob -> String`
+    ///     and can pair with a free / static `decode(String) -> Blob`. This is
+    ///     the idiomatic Swift codec shape the pairing was previously blind to
+    ///     (it keyed on `parameters.first`).
+    /// `nil` for a shape with no domain (a 0-parameter free or `static`
+    /// function has no receiver to stand in as the input).
+    public static func transformationDomain(_ summary: FunctionSummary) -> String? {
+        if let param = summary.parameters.first {
+            return param.typeText
+        }
+        guard summary.parameters.isEmpty,
+              !summary.isStatic,
+              let container = summary.containingTypeName else {
+            return nil
+        }
+        return container
+    }
+
     private static func isPairable(_ summary: FunctionSummary) -> Bool {
-        guard summary.parameters.count == 1,
-              let param = summary.parameters.first,
-              !param.isInout,
-              !summary.isMutating,
+        guard !summary.isMutating,
               let returnType = summary.returnTypeText,
               returnType != "Void",
-              returnType != "()" else {
+              returnType != "()",
+              transformationDomain(summary) != nil else {
             return false
+        }
+        // With an explicit parameter it must be a *single*, non-`inout` one; a
+        // multi-argument function is not a simple `domain -> codomain`
+        // transformation. A 0-parameter instance method (domain = receiver) is
+        // already gated by `transformationDomain`.
+        if let param = summary.parameters.first {
+            return summary.parameters.count == 1 && !param.isInout
         }
         return true
     }
@@ -79,13 +108,13 @@ public enum FunctionPairing {
         _ lhs: FunctionSummary,
         _ rhs: FunctionSummary
     ) -> Bool {
-        guard let lhsParam = lhs.parameters.first?.typeText,
-              let rhsParam = rhs.parameters.first?.typeText,
+        guard let lhsDomain = transformationDomain(lhs),
+              let rhsDomain = transformationDomain(rhs),
               let lhsReturn = lhs.returnTypeText,
               let rhsReturn = rhs.returnTypeText else {
             return false
         }
-        return lhsReturn == rhsParam && lhsParam == rhsReturn
+        return lhsReturn == rhsDomain && lhsDomain == rhsReturn
     }
 
     private static func orientedPair(

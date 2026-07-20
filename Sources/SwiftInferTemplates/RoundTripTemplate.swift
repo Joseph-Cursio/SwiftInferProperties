@@ -191,7 +191,10 @@ extension RoundTripTemplate {
     // MARK: - Signals
 
     private static func typeSymmetrySignal(for pair: FunctionPair) -> Signal {
-        let domain = pair.forward.parameters.first?.typeText ?? "?"
+        // Effective domain: the receiver type for a 0-param instance-method
+        // encode (`func encode() -> String` on `Blob` reads as `Blob -> String`),
+        // the explicit first parameter otherwise.
+        let domain = FunctionPairing.transformationDomain(pair.forward) ?? "?"
         let codomain = pair.forward.returnTypeText ?? "?"
         return Signal(
             kind: .typeSymmetrySignature,
