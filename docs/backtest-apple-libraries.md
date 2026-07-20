@@ -369,6 +369,23 @@ round-2 finding: the productive/HIT vein on mature first-party libraries is larg
 mined, and continued mining now returns boundary confirmations that keep bounding
 the claim honestly (the Appendix C posture).
 
+**Boundary pressure-test → the coder-mediated boundary was CROSSED for `Codable`.**
+Rather than only catalogue the swift-asn1 boundary, it was pressure-tested (should
+it stop being a boundary?) and the answer was yes for `Codable` with a
+custom-conformance gate — see `docs/backtest-codable-roundtrip-pressuretest.md`.
+The `codable-round-trip` template now ships (`92da233` discover + `5146629`
+measured verify): a type with a *hand-written* `Codable` conformance
+(`encode(to:)` + `init(from:)`) surfaces at Likely 50, and
+`CodableRoundTripStubEmitter` verifies `decode(encode(x)) == x` through JSON. The
+custom-conformance gate is automatic (synthesized `Codable` emits no source
+declarations, so the synthesized flood never appears); real-code precision is
+targeted (8 in swift-collections, 1 in swift-numerics, 0 in swift-asn1 — whose DER
+coder is a separate, still-closed framework-coder boundary). So the asn1 bug
+*class* is now caught wherever it rides the standard-library coder, even though
+asn1's own DER coder stays out of scope. **4 templates now shipped from this
+backtest** (reorder-partition, codec-init pairing, equivalence-relation,
+codable-round-trip).
+
 ## Remaining candidates
 
 Data-structure-internal bugs are out of reach by construction: the `PersistentSet`

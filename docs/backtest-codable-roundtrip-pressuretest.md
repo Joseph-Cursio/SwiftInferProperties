@@ -12,6 +12,14 @@ Answer: **Yes for `Codable` with a custom-conformance gate; no for framework
 coders (DER, protobuf, …).** The Codable crossing is high-value, precision-safe,
 and generically verifiable. The evidence below is empirical, not asserted.
 
+> **SHIPPED** (`92da233` discover + `5146629` measured verify). The
+> `codable-round-trip` template surfaces a custom-`Codable` type at Likely 50
+> (validated on real code: 8 in swift-collections, 1 in swift-numerics, 0 in
+> swift-asn1/algorithms — synthesized stays silent), and
+> `CodableRoundTripStubEmitter` verifies `decode(encode(x)) == x` through JSON
+> (corpus: `Temperature` bothPass, `ScaledRatio` — the asn1 scale-bug class —
+> defaultFails). The recommendation below is the built design.
+
 ## The boundary is total today
 
 `discover --include-possible` on a fixture with three Codable shapes — a
