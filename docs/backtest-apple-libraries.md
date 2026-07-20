@@ -296,6 +296,79 @@ named default-law method, buildable) is largely mined; Case 2
 3 templates shipped** (reorder-partition, codec-init pairing, equivalence-relation),
 each with a measured-verify path where one applies.
 
+## Review round 3 — a real round-trip bug behind the coder-mediated (Codable-shape) boundary (2026-07-20)
+
+A further sweep (swift-asn1, swift-collections `BitCollections`, swift-numerics
+`BigInt`) turned up one substantive in-scope bug and two more boundary
+confirmations. The substantive one is the most instructive case yet of the
+**boundary the tool draws around coder-mediated serialization**.
+
+- **swift-asn1 signed-integer DER encoding (`a9a5efd`, "Encode signed integers
+  correctly", #124)** — a genuine **round-trip** bug. Pre-fix,
+  `FixedWidthInteger.neededBytes` undercounts by one for a positive value whose
+  minimal big-endian representation fills N bytes exactly (`neededBits % 8 == 0`),
+  omitting the required DER `0x00` sign byte: `Int64(128)` encodes to `[0x80]`
+  and **decodes back as `-128`**. The library's own regression test is exactly
+  the law — `Int64(derEncoded: DER.parse(serialize(0x80))) == 0x80`.
+  - **On the real library: MISS — but a principled BOUNDARY, not a recall gap.**
+    The integer round-trip is *coder-mediated*: encode is
+    `serialize(into coder: inout DER.Serializer, withIdentifier:)` (a `Void`-
+    returning, inout-accumulator method with an extra tag argument), decode is
+    `init(derEncoded: ASN1Node, withIdentifier:)`, and there is a
+    `DER.parse(bytes) -> ASN1Node` step *between* them. That is the ASN.1 analog
+    of Swift's own `Codable` (`encode(to: Encoder)` / `init(from: Decoder)`),
+    which the tool deliberately does **not** compose directly — you cannot invoke
+    an inout-coder encoder against a generated value without the framework's
+    `serialize`/`parse` harness (the JSONEncoder/JSONDecoder problem). Discover on
+    the real pre-fix `SwiftASN1` surfaces three *other* round-trips —
+    `pemString`/`init(pemString:)` (Strong 75), the `IntegerBytesCollection.Index`
+    `advanced(by:)`/`distance(to:)` pair (Possible 35), and a UTF8 test-body
+    round-trip — but **nothing on the integer path**. Unlike Case 7 (instance-
+    method encode + init decode, a genuine recall gap that was *fixed*), the
+    inout-coder-plus-node-tree-plus-parse shape can't be composed even if the
+    inout-encoder were recognized: it is the Codable boundary, excluded by design.
+  - **The bug's LAW is in-scope, and the formula IS catchable in direct shape**
+    (the Case 7 / Base64 pattern). A faithful minimal reproduction of the exact
+    `neededBytes` undercount as a direct-shape codec —
+    `DERInt.encode(Int) -> [UInt8]` / `decode([UInt8]) -> Int` — makes discover
+    surface **round-trip at Strong 75** (curated `encode`/`decode` inverse pair
+    +40, on the `Int -> [UInt8] ↔ [UInt8] -> Int` type-symmetry +30), and direct
+    execution reproduces the library's documented failures byte-for-byte:
+    `decode(encode(128)) == -128`, `255 → -1`, `32768 → -32768`. So the tool
+    catches the underlying formula bug the moment it is expressed as a value-
+    returning `encode`/`decode` pair; the real API only hides it behind the
+    coder-mediated boundary.
+- **swift-collections `BitSet.isEqualSet` (`de0f594`, "Fix a thinko")** — a
+  word-splitting bug in the **cross-type `isEqualSet(to: Range<Int>)`** overload
+  (`BitSet(i..<j).isEqualSet(to: i..<(j+1))` misjudged near a word boundary). This
+  is the *exact* boundary the equivalence-relation template (`dd3d632`) draws, now
+  confirmed a **second** time (after the round-2 BitArray sibling): discover on the
+  pre-fix `BitCollections` fires reflexivity/symmetry/transitivity (+40) **only**
+  on the same-type `isEqualSet(to: Self)` (correct in both versions), and on the
+  buggy `to: Range<Int>` overload (and the `Counted`/`Sequence` overloads) attaches
+  **only** a +20 Possible-tier classifier note ("must agree with a reference
+  definition only you can state") — never the equivalence laws, because operands
+  that cannot swap have no symmetry. The bug is a cross-type *correctness*
+  fault against a user-stateable reference, not a symmetry/reflexivity/transitivity
+  violation. Its two BitSet siblings are boundary for the same family of reasons —
+  `isSubset(of: Range<Int>)` (`cef6301`) is a cross-type partial-order relation
+  (unmodeled), and `insert(repeating:count:at:)` (`1447248`) is an edge/precondition
+  fix (the `toggleAll`/`gcd`-base-case family).
+- **swift-numerics `BigInt` division (`1995176`, "Another case where we'd get
+  wrong negatives")** — a quotient word-count edge case (`if quot[1] > UInt(Int.max)
+  { quot.append(0) }`). The only law it touches is the division identity
+  `q*d + r == n`, a multi-operand numerical shape the tool does not model (the
+  Case 3 `twoSum` family), and `BigInt` is impractical to build. Boundary.
+
+Net for round 3: continued mining across four first-party repos yields **no new
+productive miss** — the strongest lead (swift-asn1 signed-integer round-trip) is a
+real, in-scope round-trip bug that is *catchable in direct shape* but hidden behind
+the **coder-mediated (Codable-shape) serialization boundary** on the real API, and
+the rest are cross-type / edge / multi-operand boundaries. This reinforces the
+round-2 finding: the productive/HIT vein on mature first-party libraries is largely
+mined, and continued mining now returns boundary confirmations that keep bounding
+the claim honestly (the Appendix C posture).
+
 ## Remaining candidates
 
 Data-structure-internal bugs are out of reach by construction: the `PersistentSet`
