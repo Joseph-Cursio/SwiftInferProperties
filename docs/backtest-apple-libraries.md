@@ -271,10 +271,12 @@ value-semantic / named-default-law scope, which is itself the honest finding:
 - **swift-syntax `JSONMapValue.equals(to:)` (`869b4e41`)** — a `memcmp`
   nil-`baseAddress` crash on empty buffers on some platforms. A *platform/edge*
   fix, not a symmetry/reflexivity violation, so no equivalence law is broken. (It
-  does reinforce a candidate template — an **equivalence-relation** template for
-  named `equals(to:)` / `isEqual(to:)` owing reflexivity + symmetry + transitivity,
-  the `==` analog of the comparator's SWO — but with no bug here that it would
-  catch, it stays a low-priority idea.)
+  reinforced a candidate template — an **equivalence-relation** template for named
+  `equals(to:)` / `isEqual(to:)` owing reflexivity + symmetry + transitivity, the
+  `==` analog of the comparator's SWO — now **built** (`dd3d632`): it fires at
+  Likely on a same-type equality method and correctly leaves the cross-type
+  `isEqualSet(to: Range<Int>)` overload alone, since operands that cannot swap
+  have no symmetry — the exact boundary this MISS drew.)
 - **swift-foundation path canonicalisation (`654fa54` / `50d7537` / `08d50c1`)** —
   `canonicalize` *looks* idempotent-shaped, but the fixes are in **internal,
   Windows-specific** filesystem-representation helpers (`/`→`\`), not a public
@@ -285,12 +287,14 @@ value-semantic / named-default-law scope, which is itself the honest finding:
   now shipped (`4cdd91e`), so this instance-encode / init-decode round-trip is
   reachable.
 
-Net: after Part 2 shipped, one speculative item remains from the review — an
-**equivalence-relation template** for named `equals(to:)` / `isEqual(to:)`. The
-mature-library HIT vein (isolated formula bug on a named default-law method,
-buildable) is largely mined; Case 2 (`symmetricDifference`) remains the one clean
-library-bug catch, while the *reproduction* pathway keeps paying off (5 recall
-gaps + 1 precision gap fixed, 2 templates shipped).
+Net: every actionable item the review surfaced is now shipped — Case 7 Part 2
+(init-decode round-trips, discover + measured) and the **equivalence-relation
+template** (`dd3d632`). The mature-library HIT vein (isolated formula bug on a
+named default-law method, buildable) is largely mined; Case 2
+(`symmetricDifference`) remains the one clean library-bug catch, while the
+*reproduction* pathway kept paying off: **6 recall gaps + 1 precision gap fixed,
+3 templates shipped** (reorder-partition, codec-init pairing, equivalence-relation),
+each with a measured-verify path where one applies.
 
 ## Remaining candidates
 
