@@ -50,7 +50,7 @@ extension SwiftInferCommand.Verify {
         allShapes: [String: IndexedTypeShape] = [:]
     ) throws -> VerifyStubBundle {
         let supportedTemplates: [String] = [
-            "round-trip", "idempotence", "commutativity", "associativity",
+            "round-trip", "codable-round-trip", "idempotence", "commutativity", "associativity",
             "idempotence-lifted", "dual-style-consistency", "monotonicity",
             "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
             "measure-non-negativity"
@@ -245,6 +245,9 @@ extension SwiftInferCommand.Verify {
         case "round-trip":
             return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
 
+        case "codable-round-trip":
+            return try resolveCodableRoundTripCalls(entry: entry, carrier: carrier)
+
         case "idempotence":
             // Static/free shape; idempotence's own composer emits the receiver
             // form for mutating / self-returning instance methods.
@@ -259,19 +262,7 @@ extension SwiftInferCommand.Verify {
             )
 
         case "idempotence-lifted", "monotonicity":
-            // V1.48.B — single-function shape. V1.69 — monotonicity's OC
-            // composer also needs the un-stripped `primaryFunctionName`
-            // (e.g. `"index(after:)"`) to recover the labeled-arg name;
-            // the Int/String composer reads only `functionCalls.first`.
-            let call = CallExpressionShape.render(typeQualifier: typeQualifier, bareFunctionName: funcName)
-            let expressions = entry.templateName == "monotonicity"
-                ? [call, entry.primaryFunctionName]
-                : [call]
-            return ResolvedCalls(
-                expressions: expressions,
-                rendererForwardName: call,
-                rendererInverseName: call
-            )
+            return liftedOrMonotonicityCalls(entry: entry, typeQualifier: typeQualifier, funcName: funcName)
 
         case "binary-idempotence":
             // A binary operator — receiver shape so an INSTANCE op emits

@@ -342,6 +342,9 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         case "round-trip":
             return try composeRoundTripPass(inputs: inputs, recipe: recipe)
 
+        case "codable-round-trip":
+            return composeCodableRoundTripPass(recipe: recipe)
+
         case "idempotence":
             return composeIdempotencePass(inputs: inputs, recipe: recipe)
 

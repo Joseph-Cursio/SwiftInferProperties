@@ -57,6 +57,52 @@ extension StrategistDispatchEmitter {
         """
     }
 
+    // MARK: - Codable round-trip (1 value per trial; decode(encode(x)) == x via JSON)
+
+    /// The measured half of `CodableRoundTripTemplate` on the live-index path.
+    /// Unlike `composeRoundTripPass` there is no forward/inverse function pair —
+    /// the oracle is the carrier's own `Codable` conformance, exercised through
+    /// `JSONEncoder` / `JSONDecoder` (the concrete coder named in the template's
+    /// caveat). A codec that throws for a generated value is a round-trip failure
+    /// too. `Foundation` is already in every strategist recipe's imports.
+    static func composeCodableRoundTripPass(
+        recipe: GeneratorRecipe
+    ) -> String {
+        let carrier = recipe.carrierTypeName
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+
+        let defaultGenerator: Generator<\(carrier), some SendableSequenceType> =
+            \(recipe.expression)
+        let roundTripEncoder = JSONEncoder()
+        let roundTripDecoder = JSONDecoder()
+
+        for trial in 0 ..< trials {
+            let value = defaultGenerator.run(using: &rng)
+            do {
+                let encoded = try roundTripEncoder.encode(value)
+                let decoded = try roundTripDecoder.decode(\(carrier).self, from: encoded)
+                if decoded != value {
+                    print("VERIFY_DEFAULT_RESULT: FAIL")
+                    print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                    print("VERIFY_DEFAULT_INPUT: \\(value)")
+                    print("VERIFY_DEFAULT_DECODED: \\(decoded)")
+                    exit(1)
+                }
+            } catch {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(value)")
+                print("VERIFY_DEFAULT_DETAIL: codec threw: \\(error)")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
     // MARK: - Idempotence (1 value per trial; f(f(x)) == f(x))
 
     static func composeIdempotencePass(
