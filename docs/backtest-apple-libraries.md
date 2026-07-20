@@ -253,8 +253,14 @@ stays hidden Possible; a caveat discloses the directional / failable law
 (`Type(label: x.encode()) == x`; for `init?`, `decode(encode(x)) == .some(x)`).
 So `func base64EncodedString()` / `init?(base64Encoded:)` — the literal Base64
 shape — now surfaces at Strong. Contained + safe (the flag defaults false, set only
-on synthetics; zero drift on the frozen cycle27-surface corpus). Discover-only; a
-measured-verify emitter for init-decodes is the remaining follow-up.
+on synthetics; zero drift on the frozen cycle27-surface corpus). **The
+measured-verify half is also built** (`7098ee9`): `InitDecodeStubEmitter` drives
+the directional law over candidate values — for a failable `init?`,
+`Type(label: x.encode())` must succeed and equal `x`; a nil for a freshly-encoded
+value or a mismatch is a failure — proven by the `init-decode-corpus` (a correct
+hex codec → bothPass; a lossy encode and an over-strict failable init →
+defaultFails, one per failure mode). So the codec-init round-trip is now
+discovered, scored, AND measured end-to-end.
 
 ## Review round 2 — boundary confirmations (all principled MISSes)
 
