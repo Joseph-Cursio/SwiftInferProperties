@@ -47,9 +47,15 @@ extension FunctionScannerVisitor {
             enumCaseNames = []
             enumCases = []
         }
-        // Tier 6 — init signatures captured for structs only (the only kind
-        // the strategist lifts a memberwise/init generator through).
-        let initializers = (kind == .struct)
+        // Tier 6 — init signatures captured for structs (the only kind the
+        // strategist lifts a memberwise/init generator through, via
+        // `TypeShapeBuilder`'s `primary.initializers`) AND for extensions, whose
+        // records `TypeShapeBuilder` never reads for inits but which carry the
+        // idiomatic `init(from: Decoder)` half of a custom `Codable` conformance
+        // (`CodableRoundTripTemplate`). `InitializerDecodeSynthesizer` stays
+        // struct-gated, so extension inits reach only the codable-round-trip
+        // recogniser, which hard-filters to `Decoder`-typed inits.
+        let initializers = (kind == .struct || kind == .extension)
             ? MemberBlockInspector.initializers(in: memberBlock)
             : []
         return TypeDecl(

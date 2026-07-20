@@ -118,10 +118,8 @@ extension TemplateRegistry {
             context: context,
             into: &collector
         )
-        collectApplicationShapeSuggestions(
-            summaries: summaries,
-            into: &collector
-        )
+        collectCodableRoundTripSuggestions(summaries: summaries, typeDecls: typeDecls, into: &collector)
+        collectApplicationShapeSuggestions(summaries: summaries, into: &collector)
         collectLiftedSuggestions(
             lifted: liftedTransformations,
             identities: identities,
