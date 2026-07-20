@@ -240,14 +240,21 @@ is still name-gated (curated `encode`/`decode` vocabulary), so non-codec
 instance-method pairs stay at hidden Possible; and the frozen cycle27-surface index
 gains **zero** new pairs (53/53 stays valid).
 
-**Part 2 (not built — a separate lift):** the failable-`init?` decode
-(`init?(base64Encoded:)`) — initializers are scanned only as
-`IndexedTypeShape.initializers`, never as `FunctionSummary`, so they never reach
-`FunctionPairing`. Surfacing `func base64EncodedString()` / `init?(base64Encoded:)`
-literally needs (a) synthesizing a `FunctionSummary` from an initializer and (b)
-the Optional round-trip law `decode(encode(x)) == .some(x)`. Recorded as the
-round-trip twin of Case 5's reorder-partition finding: the instance-method-encode
-half is now reachable; the init-decode half is the remaining common shape.
+**Part 2 shipped** (`4cdd91e`): the failable-`init?` decode now surfaces too.
+`InitializerDecodeSynthesizer` turns each single-parameter struct initializer
+(already captured on `TypeDecl.initializers`) into a synthetic `paramType -> Self`
+decode summary — named after the init's argument label, marked
+`FunctionSummary.isInitializer`, and merged **only** into the round-trip pairing
+input, so no other template sees it. `RoundTripTemplate` gains a label-stem name
+signal gated to `isInitializer` (the init label being a case-insensitive substring
+of the encode's name — `base64EncodedString` ⊃ `base64Encoded`, `toHexString` ⊃
+`hex` — is +40), so a genuine codec reaches **Strong 75** while an unrelated label
+stays hidden Possible; a caveat discloses the directional / failable law
+(`Type(label: x.encode()) == x`; for `init?`, `decode(encode(x)) == .some(x)`).
+So `func base64EncodedString()` / `init?(base64Encoded:)` — the literal Base64
+shape — now surfaces at Strong. Contained + safe (the flag defaults false, set only
+on synthetics; zero drift on the frozen cycle27-surface corpus). Discover-only; a
+measured-verify emitter for init-decodes is the remaining follow-up.
 
 ## Review round 2 — boundary confirmations (all principled MISSes)
 
@@ -267,15 +274,17 @@ value-semantic / named-default-law scope, which is itself the honest finding:
   Windows-specific** filesystem-representation helpers (`/`→`\`), not a public
   value-semantic method with a stateable idempotence law.
 - **SwiftyJSON round-trips (`e79ac38` and kin)** — `JSON.rawString()` (instance
-  encode, now pairable after Case 7) with `JSON(parseJSON:)` / `init(data:)`
-  decode — but the decode is an **`init?`**, the exact Part-2 shape
-  `FunctionPairing` still can't reach. Recurs here, confirming Part 2's value.
+  encode, pairable after Case 7 Part 1) with `JSON(parseJSON:)` / `init(data:)`
+  decode. The decode is an **`init?`** — the exact shape that motivated **Part 2**,
+  now shipped (`4cdd91e`), so this instance-encode / init-decode round-trip is
+  reachable.
 
-Net: two actionable items remain from the review — **Case 7 Part 2** (init-decode
-`FunctionSummary` synthesis + Optional round-trip law) and the speculative
-**equivalence-relation template** — and the mature-library HIT vein
-(isolated formula bug on a named default-law method, buildable) is largely mined;
-Case 2 (`symmetricDifference`) remains the one clean library-bug catch.
+Net: after Part 2 shipped, one speculative item remains from the review — an
+**equivalence-relation template** for named `equals(to:)` / `isEqual(to:)`. The
+mature-library HIT vein (isolated formula bug on a named default-law method,
+buildable) is largely mined; Case 2 (`symmetricDifference`) remains the one clean
+library-bug catch, while the *reproduction* pathway keeps paying off (5 recall
+gaps + 1 precision gap fixed, 2 templates shipped).
 
 ## Remaining candidates
 
