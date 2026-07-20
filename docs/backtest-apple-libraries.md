@@ -228,16 +228,26 @@ invisible to the pairing. This is the *most common* codec shape in real Swift
 `description` / `init?(_:)`, `rawValue` / `init?(rawValue:)`), and it is entirely
 unsurfaced.
 
-**Candidate fix** (not yet built — a precision call, like the twoSum boundary):
-canonicalize an instance method `func f() -> B` on `A` as the function `A -> B`
-(domain = `containingTypeName`) inside `FunctionPairing`, so it can pair with a
-static / `init?` decode. The precision guard already exists — the round-trip
-template's default tier is name-gated (`encode`/`decode`/`parse` vocabulary), so
-random instance-method pairs stay at hidden Possible while a genuine codec pair
-earns Strong; the failable `init?` decode additionally needs the Optional
-round-trip law (`decode(encode(x)) == .some(x)`). Recorded as the round-trip twin
-of Case 5's reorder-partition finding: a real, common shape the templates cannot
-currently reach.
+**Fix shipped** (`eb18730`): a shared `FunctionPairing.transformationDomain(_:)`
+canonicalizes a 0-param non-static instance method `func f() -> B` on `A` as the
+transformation `A -> B` (domain = the receiver), so it pairs with a free/static
+`decode(B) -> A`; `RoundTripTemplate`'s explainability uses the same helper so the
+domain renders as the receiver (`Blob -> String`, not `? -> String`). Now
+`func encode() -> String` (instance) + `static func decode(String) -> Blob` earns
+**Strong 75**. Precision held: a 0-param *static*/free function has no receiver, so
+it stays unpairable (a `make() -> Blob` factory is not an encode); the default tier
+is still name-gated (curated `encode`/`decode` vocabulary), so non-codec
+instance-method pairs stay at hidden Possible; and the frozen cycle27-surface index
+gains **zero** new pairs (53/53 stays valid).
+
+**Part 2 (not built — a separate lift):** the failable-`init?` decode
+(`init?(base64Encoded:)`) — initializers are scanned only as
+`IndexedTypeShape.initializers`, never as `FunctionSummary`, so they never reach
+`FunctionPairing`. Surfacing `func base64EncodedString()` / `init?(base64Encoded:)`
+literally needs (a) synthesizing a `FunctionSummary` from an initializer and (b)
+the Optional round-trip law `decode(encode(x)) == .some(x)`. Recorded as the
+round-trip twin of Case 5's reorder-partition finding: the instance-method-encode
+half is now reachable; the init-decode half is the remaining common shape.
 
 ## Remaining candidates
 
