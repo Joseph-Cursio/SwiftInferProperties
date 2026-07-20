@@ -195,6 +195,50 @@ Case 4 gcd/semilattice recall, Case 5 reorder-partition template) — the honest
 pattern here is that mining fixtures from real fixed bugs is as much a fuzz of
 the tool's own precision surface as a test of its bug-catching.
 
+## Case 7 — swift-foundation `Data` Base64 (`2d2e249`): MISS, and it exposed a round-trip recall gap
+
+`2d2e249` fixed a capacity over-allocation in `encodeComputeCapacity` — with a
+line-break option (`.lineLength64Characters`), a last row that exactly filled the
+line still reserved a separator, so `base64EncodedString` and `base64EncodedData`
+disagreed at lengths 46–48. The bug is a MISS on two grounds: it is **gated by a
+non-default option** (the tool tests the default-argument round-trip), and it is a
+**cross-method consistency** bug (string-form vs data-form agree) that no template
+states.
+
+**But probing the Base64 round-trip exposed a recall gap in the round-trip
+pairing.** The canonical property here is `Data(base64Encoded:
+data.base64EncodedString()) == data` — a textbook codec round-trip on named
+methods. The tool surfaces **nothing** on it, and isolation shows why it is
+neither the `init?` nor the `Optional`:
+
+| Encode | Decode | Surfaced? |
+|---|---|---|
+| `func base64EncodedString() -> String` (instance) | `init?(base64Encoded: String)` | ✗ |
+| `func encodeA() -> String` (instance) | `static func decodeA(String) -> Blob` | ✗ |
+| `func encodeB() -> String` (instance) | `static func decodeB(String) -> Blob?` | ✗ |
+| `func toHexString() -> String` (instance) | `static func fromHexString(String) -> Blob` | ✗ |
+| `static func encode(Blob) -> String` | `static func decode(String) -> Blob` | ✓ **Strong 75** |
+
+The discriminator is the **instance-method encode**: `FunctionPairing` pairs on
+`parameters.first` (an *explicit* parameter), so a free/static `encode(Blob) ->
+String` pairs fine, but an instance `func base64EncodedString() -> String` — whose
+domain is the implicit `self` (`containingTypeName`), not a parameter — is
+invisible to the pairing. This is the *most common* codec shape in real Swift
+(`base64EncodedString` / `init?(base64Encoded:)`, `toHexString` / `init(hex:)`,
+`description` / `init?(_:)`, `rawValue` / `init?(rawValue:)`), and it is entirely
+unsurfaced.
+
+**Candidate fix** (not yet built — a precision call, like the twoSum boundary):
+canonicalize an instance method `func f() -> B` on `A` as the function `A -> B`
+(domain = `containingTypeName`) inside `FunctionPairing`, so it can pair with a
+static / `init?` decode. The precision guard already exists — the round-trip
+template's default tier is name-gated (`encode`/`decode`/`parse` vocabulary), so
+random instance-method pairs stay at hidden Possible while a genuine codec pair
+earns Strong; the failable `init?` decode additionally needs the Optional
+round-trip law (`decode(encode(x)) == .some(x)`). Recorded as the round-trip twin
+of Case 5's reorder-partition finding: a real, common shape the templates cannot
+currently reach.
+
 ## Remaining candidates
 
 Data-structure-internal bugs are out of reach by construction: the `PersistentSet`
