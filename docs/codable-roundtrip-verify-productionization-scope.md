@@ -7,6 +7,15 @@ productionization: wiring it into the live-index `verify --all-from-index` path 
 `swift-infer verify` runs it on a user's own `.swiftinfer/index.json`, generating
 values via `DerivationStrategist` instead of a hand-written `valueExpression`.
 
+> **SHIPPED** (`66f568d`). Built exactly as scoped below — index projection +
+> generator resolution + workdir reused as-is; the work was Stage-2 dispatch
+> (`composeCodableRoundTripPass`, `"codable-round-trip"` in `supportedTemplates`, a
+> carrier-only `resolveFunctionCalls` branch, and the Equatable gate). The
+> pre-build-validation concern (strategy resolution + NaN) resolved by using an
+> Int-field live corpus (`codable-roundtrip-live-corpus`): `Meters`
+> `measured-bothPass`, `OffByOne` `measured-defaultFails`, both through the real
+> strategist generator (`CodableRoundTripLiveSurveyMeasuredTests`).
+
 ## Where codable-round-trip stands at each pipeline stage
 
 The measured-verify pipeline is: **discover → index (project Suggestion →
