@@ -78,7 +78,12 @@ extension TemplateRegistry {
         into collector: inout SuggestionCollector
     ) {
         for summary in summaries {
-            if let suggestion = ComparatorTemplate.suggest(for: summary) {
+            if let suggestion = EquivalenceRelationTemplate.suggest(for: summary) {
+                // Checked first: a named equality (`equals(_:_:)` positional /
+                // `equals(to:)` labelled) would otherwise be mis-read as a comparator or a
+                // predicate. Its law (reflexivity/symmetry/transitivity) is the specific one.
+                collector.record(suggestion, generatorType: summary.parameters.first?.typeText)
+            } else if let suggestion = ComparatorTemplate.suggest(for: summary) {
                 collector.record(suggestion, generatorType: summary.parameters.first?.typeText)
             } else if let suggestion = PredicateTemplate.suggest(for: summary) {
                 // `else if` on purpose: a comparator is `(T, T) -> Bool` and so is a binary

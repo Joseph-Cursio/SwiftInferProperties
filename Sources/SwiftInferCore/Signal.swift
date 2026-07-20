@@ -99,6 +99,17 @@ public struct Signal: Sendable, Equatable {
         /// mutating method that happens to take a closure.
         case reorderPartitionSignature
 
+        /// A named **equivalence relation** — a `(T, T) -> Bool` (or instance
+        /// `(self, T) -> Bool`) method named like an equality (`equals(to:)`,
+        /// `isEqual(to:)`, `isEquivalent(to:)`, `isEqualSet(to:)`) over two
+        /// operands of the SAME type. Owes reflexivity + symmetry + transitivity,
+        /// the `==` analog of the comparator's strict weak ordering — laws an
+        /// example test cannot make (they quantify over pairs and triples).
+        /// Name-gated so it never fires on an arbitrary `Bool`-returning binary
+        /// method (that is the weaker predicate). Operators are excluded — `==`
+        /// is `Equatable`'s and the kit already runs its law.
+        case equivalenceRelationSignature
+
         // Negative (non-veto)
         case sideEffectPenalty
         case generatorQualityPenalty
