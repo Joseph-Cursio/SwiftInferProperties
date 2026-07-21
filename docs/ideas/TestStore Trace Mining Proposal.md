@@ -1,9 +1,9 @@
 # TestStore Trace Mining Proposal
 
-**Status:** Draft / proposal — not yet committed to any milestone.
-**Target:** SwiftInferProperties (this repo). Extends SwiftInferTestLifter and the ActionSequenceGenerator (Contribution 4); no kit changes required.
-**Date:** 2026-06-07
-**Relates to:** PRD v2.0 §20 ("Action-sequence mining from user trace logs"), §21 open question #1 (default sequence length), Contribution 4 (ActionSequenceGenerator), the existing TestLifter milestone arc.
+**Status:** **Slices 1–2 SHIPPED (2026-07-21); mode (a) replay-then-extend is live.** The build-out and the remaining work are tracked in `docs/teststore-trace-mining-build-plan.md` — read it first; this proposal is the design record it was grounded against. What shipped: **Slice 1** — `TestStoreTraceExtractor` + `MinedActionTrace`/`MinedAction` in `SwiftInferTestLifter` (mines `store.send`/`receive` orderings, reducer type, and initial-state expr from a repo's TCA `TestStore` tests; `send` feeds the user-action corpus, `receive` kept separate per §6 #1). **Slice 2** — payload-free mode (a) replay-then-extend: `ActionSequenceStubEmitter.Inputs.seedTraces` + `MinedTraceSelector` (`.tca`-only, payload-free, stale-case-guarded per §6 #3/#5) + `VerifyInteractionPipeline.resolveEmitAndSeed`, checking mined orderings through the same invariant loop *before* random generation, with the coverage floor preserved. **Not yet built:** payload-bearing generalization (§6 #2), generic-carrier injection, initial-state seeding (§5), prefix-biasing (mode b), Markov weighting (mode c) — see the build plan's Slice 3.
+**Target:** SwiftInferProperties (this repo). Extends SwiftInferTestLifter and the ActionSequenceGenerator (Contribution 4); no kit changes required (confirmed — mode (a) needed none).
+**Date:** 2026-06-07 (status refreshed 2026-07-21)
+**Relates to:** PRD v2.0 §20 ("Action-sequence mining from user trace logs"), §21 open question #1 (default sequence length), Contribution 4 (ActionSequenceGenerator), the existing TestLifter milestone arc. **As-built plan:** `docs/teststore-trace-mining-build-plan.md`.
 
 ## 1. Summary
 
@@ -52,11 +52,11 @@ The result per reducer is a set of **observed action traces**: `[[Action]]`, eac
 
 Three modes, increasingly aggressive — ship mode (a), gate (b)/(c) on calibration:
 
-**(a) Replay-then-extend (default).** The verify run prepends observed traces to the random corpus: every mined trace is checked verbatim first, then random generation continues for the remaining budget. Cheap, strictly additive coverage, and any invariant the developer's own test ordering already exercises gets checked immediately.
+**(a) Replay-then-extend (default). — ✅ SHIPPED (Slice 2, payload-free).** The verify run prepends observed traces to the random corpus: every mined trace is checked verbatim first, then random generation continues for the remaining budget. Cheap, strictly additive coverage, and any invariant the developer's own test ordering already exercises gets checked immediately. *As built: the emitter runs each mined payload-free ordering through the same per-step invariant + post-loop check as a generated sequence, ahead of the random loop, guarded by the shrink pin. Payload-bearing traces are mined but not yet replayed (§6 #2).*
 
-**(b) Prefix-biased generation.** Use observed traces as *prefixes* the generator extends with random tails. Reaches "developer set up this realistic state, then what happens under arbitrary continued use?" — the highest-value sequences, since they start from human-plausible states and explore outward.
+**(b) Prefix-biased generation. — ❌ not built (Slice 3).** Use observed traces as *prefixes* the generator extends with random tails. Reaches "developer set up this realistic state, then what happens under arbitrary continued use?" — the highest-value sequences, since they start from human-plausible states and explore outward. *Needs the kit-side `seedPrefixes:` overload (§4.1) and payload generalization.*
 
-**(c) Alphabet/transition weighting.** Build a first-order Markov model of action→action transitions from the mined traces and bias random generation toward observed transitions. Most aggressive; risks overfitting to the test suite's habits (the binding-table problem, §21 #4). Behind a flag.
+**(c) Alphabet/transition weighting. — ❌ not built (Slice 3, lowest priority).** Build a first-order Markov model of action→action transitions from the mined traces and bias random generation toward observed transitions. Most aggressive; risks overfitting to the test suite's habits (the binding-table problem, §21 #4). Behind a flag.
 
 ### 3.3 Shrinking benefit
 
@@ -82,11 +82,11 @@ Mode (a) needs no kit change (the verify driver just runs extra explicit sequenc
 
 ## 6. Open questions
 
-1. **`send` vs `receive`.** A `receive` is an *effect output*, not a user action — replaying it as a user-sent action is wrong (it asserts the system produced it). v2.0's in-process path doesn't run effects at all. Proposal: mine only `send` actions for the user-action corpus; record `receive` separately as effect-shape evidence for the subprocess path, or ignore in v1.
-2. **Argument concreteness.** Mined actions carry *concrete* args (`.select(a.id)` for a specific `a`). For generation we want the *case* with *generated* args, but the concrete trace is also valuable verbatim. Mode (a) uses concrete; modes (b)/(c) generalize to the case and re-generate args. Decide per mode.
-3. **Overfitting (the binding-table risk).** §21 #4 warns TCA-tuned heuristics may not generalize. Trace mining is *more* susceptible — it biases toward exactly what the test author already thought of, potentially missing the orderings they *didn't* test (which is where bugs hide). Mitigation: replay-then-extend (mode a) keeps full random coverage as the floor; never *replace* random generation with mined traces, only prepend/bias. This must be a hard design rule.
-4. **Non-TCA carriers.** Hand-rolled and Elm-style reducers rarely have a `TestStore`; their tests dispatch differently (direct `reduce(&state, action)` calls). The extractor can be generalized to "sequences of reduce-shaped calls in any test body," but TCA `TestStore` is the high-density, uniform-syntax starting point. Generalize on demand.
-5. **Stale traces.** A mined trace references an Action case that was later renamed/removed compiles-fails in the host repo anyway, so the test suite is a self-validating source — if it compiles, the traces are current. This is a quiet advantage over production logs (which can reference long-dead action shapes).
+1. **`send` vs `receive`.** ✅ **RESOLVED as proposed.** `MinedAction.Kind` mines `send` into the user-action corpus and records `receive` separately (unused in v1). A `receive` is an *effect output*, not a user action — replaying it as a user-sent action is wrong.
+2. **Argument concreteness.** ◑ **Partially resolved.** Mode (a) ships **payload-free only** — a payload-bearing arg (`.select(a.id)`) references a test-body-local binding the standalone verifier can't reconstruct, so those traces are mined but dropped from replay (the `MinedTraceSelector` payload-free gate). Generalizing to *case + generated args* (for the concrete verbatim value or a re-generated one) is Slice 3, and re-opens the shelved value-generator precision question.
+3. **Overfitting (the binding-table risk).** ✅ **RESOLVED — enforced as a hard rule.** Slice 2 mined traces only ever *prepend*; random generation stays the coverage floor and is never replaced. Baked into the emitter (mined block precedes the `for sequenceIndex` random loop) and the build plan.
+4. **Non-TCA carriers.** ◑ **Scoped, deferred.** Selection is `.tca`-only for now because that's where the Action alphabet is captured at discovery (a stale name would otherwise fail the verifier *build*). Generic/Elm injection needs a CaseIterable-alphabet capture at discovery — Slice 3. TCA `TestStore` was the high-density starting point, as predicted.
+5. **Stale traces.** ✅ **RESOLVED — plus a belt-and-suspenders guard.** The host suite is self-validating (if it compiles, the cases are current), *and* `MinedTraceSelector`'s stale-case guard drops any trace referencing a case absent from the candidate's current Action alphabet, so discovery/test drift can't emit an uncompilable literal.
 
 ## 7. What this proposal will NOT do
 
