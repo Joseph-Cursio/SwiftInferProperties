@@ -138,6 +138,15 @@ public enum VerifyInteractionPipeline {
         ) {
             return skip
         }
+        // Payload-bearing idempotence witness with a non-constructible payload:
+        // the emitter's bare-`.select` fallback can't compile, so skip the
+        // build (disclosed coverage-pending) instead of wasting it.
+        if let skip = applyIdempotenceWitnessConstructibilityGate(
+            invariant: invariant, candidate: candidate, target: target,
+            persistEvidence: persistEvidence, workingDirectory: workingDirectory
+        ) {
+            return skip
+        }
         let result = try executeAndParse(
             candidate: candidate,
             stubSource: stubSource,
