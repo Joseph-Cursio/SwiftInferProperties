@@ -102,7 +102,8 @@ public enum ActionSequenceStubEmitter {
             isTCA: isTCA,
             actionFirst: actionFirst,
             isMobius: isMobius,
-            isAsync: isAsync
+            isAsync: isAsync,
+            witnessExpr: idempotenceWitnessExpression(inputs)
         )
         return assembleStub(
             inputs: inputs,

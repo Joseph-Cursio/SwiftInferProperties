@@ -1,13 +1,17 @@
 import ComposableArchitecture
 
-/// TestStore Trace Mining — measured proof corpus. A real `@Reducer` with a
-/// **payload-bearing** Action case (`adjust(Int)`) so the Slice-3b payload
-/// generalization is exercised end-to-end: a sibling `TestStore` test sends
-/// `.adjust(5)`, which the miner can't reconstruct verbatim (the `5` is a
-/// literal here, but the mechanism replaces it with the canned `adjust(0)`),
-/// plus the payload-free `reset` idempotence witness the invariant verifies.
-/// `adjust` is deliberately a NON-witness name so `reset` is the sole surfaced
-/// idempotence identity — the payload-bearing case exists only to be mined.
+/// TestStore Trace Mining — measured proof corpus. A real `@Reducer` covering
+/// two things at once:
+///   - **Slice-3b payload generalization** via `adjust(Int)`, a NON-witness
+///     payload-bearing case: a sibling `TestStore` test sends `.adjust(5)`,
+///     which the miner generalizes to the canned `.adjust(0)`.
+///   - **The payload-bearing idempotence-witness fix** via `select(Int)`, a
+///     WITNESS (`select*`) that carries a payload. The reducer emitter used to
+///     emit the bare `.select` here (uncompilable → build-fail → coverage-
+///     pending); the fix synthesizes the payload (`.select(0)`, x-curried), so
+///     it now verifies. `select(v)` is genuinely idempotent (sets, not
+///     accumulates), so it verifies bothPass.
+///   - `reset` is the payload-free idempotence witness (the baseline).
 @Reducer
 struct TraceFeature {
 
@@ -18,6 +22,7 @@ struct TraceFeature {
 
     enum Action {
         case reset
+        case select(Int)
         case adjust(Int)
     }
 
@@ -26,6 +31,9 @@ struct TraceFeature {
             switch action {
             case .reset:
                 state.selected = 0
+
+            case let .select(value):
+                state.selected = value
 
             case let .adjust(value):
                 state.selected = value

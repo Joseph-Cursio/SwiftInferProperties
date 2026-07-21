@@ -105,7 +105,8 @@ extension VerifyInteractionPipeline {
             sequenceCount: sequenceCount,
             invariant: invariant,
             seedTraces: seedTraces,
-            prefixBias: traceMining.prefixBias
+            prefixBias: traceMining.prefixBias,
+            actionAlphabet: alphabet
         )
         let stubSource: String
         do {

@@ -7,19 +7,47 @@ import SwiftSyntax
 /// type text. Used by the trace-mining selector to emit a *labeled*,
 /// type-correct generated argument when generalizing a payload-bearing mined
 /// action (Slice 3b).
-struct ActionParam: Equatable, Sendable {
+public struct ActionParam: Equatable, Sendable {
     let label: String?
     let type: String
+
+    public init(label: String?, type: String) {
+        self.label = label
+        self.type = type
+    }
 }
 
 /// One case of an Action enum — its name plus ordered parameters. The
 /// trace-mining alphabet: `payloadFree` cases replay verbatim; payload-bearing
 /// cases are generalized to `.case(label: <generated>, …)` when every
 /// parameter type is cheaply defaultable, else the trace is dropped.
-struct ActionCaseSpec: Equatable, Sendable {
+public struct ActionCaseSpec: Equatable, Sendable {
     let name: String
     let parameters: [ActionParam]
     var isPayloadFree: Bool { parameters.isEmpty }
+
+    public init(name: String, parameters: [ActionParam]) {
+        self.name = name
+        self.parameters = parameters
+    }
+
+    /// The constructible call expression *without* a leading dot —
+    /// `"dismiss"` (payload-free), `"select(0)"` / `"setColor(color: 0)"`
+    /// (canned, label-correct literals via `defaultValueLiteral`). `nil` when
+    /// any parameter type isn't cheaply defaultable. Shared by the trace-mining
+    /// selector (payload generalization) and the idempotence-witness emitter
+    /// (x-curried payload synthesis) so the two can't drift.
+    func constructibleExpression() -> String? {
+        guard !isPayloadFree else { return name }
+        var args: [String] = []
+        for param in parameters {
+            guard let literal = ActionSequenceStubEmitter.defaultValueLiteral(for: param.type) else {
+                return nil
+            }
+            args.append(param.label.map { "\($0): \(literal)" } ?? literal)
+        }
+        return "\(name)(\(args.joined(separator: ", ")))"
+    }
 }
 
 /// TestStore Trace Mining (Slice 3a) — resolves an Action enum's cases +

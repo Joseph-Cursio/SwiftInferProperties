@@ -8,6 +8,31 @@ import SwiftInferCore
 
 extension ActionSequenceStubEmitter {
 
+    /// The idempotence witness action expression, payload-synthesized when the
+    /// witness is a **payload-bearing** case. `IdempotenceInteractionTemplate`
+    /// emits the bare `.caseName` in `invariant.predicate` (the witness carries
+    /// no payload), so for `case select(Int)` that is `.select` — which fails
+    /// to compile in `reduce(into:action:)`. Using the resolved alphabet we
+    /// synthesize the canned, label-correct payload (`.select(0)`) applied the
+    /// same way in both x-curried applications. `nil` invariant / non-
+    /// idempotence / payload-free / no-alphabet / non-constructible-payload all
+    /// fall back to the original predicate (the last case keeps today's
+    /// build-fails→coverage-pending behavior — no regression).
+    static func idempotenceWitnessExpression(_ inputs: Inputs) -> String? {
+        guard let invariant = inputs.invariant, invariant.family == .idempotence else {
+            return nil
+        }
+        let predicate = invariant.predicate
+        guard predicate.hasPrefix(".") else { return predicate }
+        let name = String(predicate.dropFirst())
+        guard let spec = inputs.actionAlphabet.first(where: { $0.name == name }),
+              !spec.isPayloadFree,
+              let expr = spec.constructibleExpression() else {
+            return predicate
+        }
+        return "." + expr
+    }
+
     /// The whole `main()` loop body below the RNG setup: the generator
     /// construction, clean counter, mined-trace replay (Slice 2), random
     /// sequence loop, and the outcome-marker print. Pre-indented to the

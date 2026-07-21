@@ -4,17 +4,20 @@ import SwiftInferCore
 import Testing
 
 /// TestStore Trace Mining — the gold-standard measured proof (Slices 1–3
-/// end-to-end). Packages `Tests/Fixtures/tca-trace-mining-corpus/` (a real
-/// `@Reducer` with a payload-bearing `select(Int)` case), drops a sibling
-/// `TestStore` test into the packaged root, and shows that the **payload-
-/// generalized** mined ordering (`.select(0)` — the canned literal replacing
-/// the test's `.select(5)`) is BOTH emitted into the verifier stub AND
-/// compiles + runs through the real `.tca` verify path. Spawns a real
-/// `swift build` resolving swift-composable-architecture; tagged `.subprocess`.
+/// end-to-end) + the payload-bearing idempotence-witness fix. Packages
+/// `Tests/Fixtures/tca-trace-mining-corpus/` (a real `@Reducer` with a
+/// payload-bearing `adjust(Int)` case for mining + a payload-bearing `select`
+/// witness for the fix), drops a sibling `TestStore` test into the packaged
+/// root, and shows that (1) the **payload-generalized** mined ordering
+/// (`.adjust(0)` — the canned literal replacing the test's `.adjust(5)`) is
+/// emitted AND compiles + runs, and (2) the payload-bearing `select` witness
+/// verifies (`.select(0)` synthesized, not the bare uncompilable `.select`).
+/// Spawns a real `swift build` resolving swift-composable-architecture; tagged
+/// `.subprocess`.
 @Suite("TestStore Trace Mining — measured end-to-end proof", .tags(.subprocess))
 struct TraceMiningMeasuredTests {
 
-    @Test("a payload-generalized mined trace is emitted, compiles, and verifies bothPass")
+    @Test("a payload-generalized mined trace + a payload-bearing witness both compile and verify")
     func generalizedTraceCompilesAndVerifies() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("tca-trace-mining-corpus")
@@ -47,21 +50,26 @@ struct TraceMiningMeasuredTests {
         // Proof 2 (build + run): the same mining feeds the survey's verifier,
         // so a `measured-bothPass` means the stub *containing* that generalized
         // ordering compiled and executed. A malformed `.adjust(0)` would fail
-        // the build → architectural-coverage-pending, never bothPass. `reset`
-        // is the sole surfaced identity (adjust is a non-witness name), so the
-        // whole survey is one clean bothPass. `clean=1025` (1024 random + the
-        // 1 mined ordering) is the direct fingerprint of replay-then-extend.
+        // the build → architectural-coverage-pending, never bothPass.
+        // `clean=1025` (1024 random + the 1 mined ordering) is the direct
+        // fingerprint of replay-then-extend. Two witnesses surface: `reset`
+        // (payload-free) and `select` (payload-BEARING). The latter is the
+        // regression guard for the witness-payload fix — before it, `.select`
+        // was emitted bare and the build failed (coverage-pending); now the
+        // payload is synthesized (`.select(0)`, x-curried) and it verifies.
         let summary = try await VerifyInteractionSurvey.run(
             target: "TraceMiningCorpus",
             familyFilter: "idempotence",
             workingDirectory: root
         )
-        #expect(summary.contains("[measured-bothPass]"))
         #expect(summary.contains("TraceFeature.body  idempotence  .reset"))
+        #expect(summary.contains("TraceFeature.body  idempotence  .select"))
         #expect(summary.contains("replay-then-extend: checked 1 developer-authored trace"))
         #expect(summary.contains("clean=1025"))
+        // Both witnesses verify — no build failure for the payload-bearing one.
         #expect(!summary.contains("architectural-coverage-pending"))
         #expect(!summary.contains("measured-defaultFails"))
+        #expect(summary.contains("Summary: 2 measured-bothPass"))
 
         // The evidence records a bothPass (the survivor discover would promote).
         let stored = VerifyEvidenceStore.load(startingFrom: root)

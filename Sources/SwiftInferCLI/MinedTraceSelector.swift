@@ -61,30 +61,15 @@ enum MinedTraceSelector {
         guard !trace.sent.isEmpty else { return nil }
         var actions: [String] = []
         for mined in trace.sent {
-            guard let expr = caseExpression(spec: specs[mined.caseName]) else {
-                return nil  // stale case, or a non-defaultable payload → drop the whole trace
+            // A stale case (not in the alphabet) or a non-defaultable payload
+            // drops the whole trace.
+            guard let expr = specs[mined.caseName]?.constructibleExpression() else {
+                return nil
             }
             actions.append(expr)
         }
         let initialState = selfContainedInitialState(trace.initialStateExpr)
         return ActionSequenceStubEmitter.SeedTrace(initialState: initialState, actions: actions)
-    }
-
-    /// The case expression (minus the leading dot) for one mined action:
-    /// `"dismiss"` (payload-free), `"select(0)"` / `"setColor(color: 0)"`
-    /// (generalized). `nil` when the case is stale (not in the alphabet) or a
-    /// parameter type isn't defaultable.
-    private static func caseExpression(spec: ActionCaseSpec?) -> String? {
-        guard let spec else { return nil }
-        guard !spec.isPayloadFree else { return spec.name }
-        var args: [String] = []
-        for param in spec.parameters {
-            guard let literal = ActionSequenceStubEmitter.defaultValueLiteral(for: param.type) else {
-                return nil
-            }
-            args.append(param.label.map { "\($0): \(literal)" } ?? literal)
-        }
-        return "\(spec.name)(\(args.joined(separator: ", ")))"
     }
 
     // MARK: - 3c: self-contained initial state

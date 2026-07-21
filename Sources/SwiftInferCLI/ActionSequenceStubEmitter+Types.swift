@@ -36,6 +36,15 @@ extension ActionSequenceStubEmitter {
         /// selector as extra synthesized `seedTraces`.)
         public let prefixBias: Bool
 
+        /// The Action enum's cases + labels/types (`ActionAlphabetScanner`),
+        /// used to synthesize a payload for a **payload-bearing idempotence
+        /// witness** (x-curried: `reduce(reduce(s, .select(0)), .select(0))`).
+        /// Empty (the default) → the witness expression is left as the bare
+        /// `.caseName` — correct for a payload-free witness, and the
+        /// pre-existing (build-failing) behavior for a payload-bearing one when
+        /// no alphabet is available.
+        public let actionAlphabet: [ActionCaseSpec]
+
         public init(
             candidate: ReducerCandidate,
             userModuleName: String,
@@ -44,7 +53,8 @@ extension ActionSequenceStubEmitter {
             lengthUpperBound: Int = 16,
             invariant: InteractionInvariantSuggestion? = nil,
             seedTraces: [SeedTrace] = [],
-            prefixBias: Bool = false
+            prefixBias: Bool = false,
+            actionAlphabet: [ActionCaseSpec] = []
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
@@ -54,6 +64,7 @@ extension ActionSequenceStubEmitter {
             self.invariant = invariant
             self.seedTraces = seedTraces
             self.prefixBias = prefixBias
+            self.actionAlphabet = actionAlphabet
         }
     }
 

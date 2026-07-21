@@ -91,7 +91,8 @@ extension ActionSequenceStubEmitter {
         isTCA: Bool = false,
         actionFirst: Bool = false,
         isMobius: Bool = false,
-        isAsync: Bool = false
+        isAsync: Bool = false,
+        witnessExpr: String? = nil
     ) -> [String] {
         guard let invariant else { return [] }
         switch invariant.family {
@@ -102,8 +103,11 @@ extension ActionSequenceStubEmitter {
             return []
 
         case .idempotence:
+            // `witnessExpr` is the payload-synthesized witness for a
+            // payload-bearing case (`.select(0)`); nil → the bare predicate
+            // (payload-free witness).
             return makeIdempotenceCheck(
-                actionExpr: invariant.predicate,
+                actionExpr: witnessExpr ?? invariant.predicate,
                 shape: shape,
                 reducerCall: reducerCall,
                 isTCA: isTCA,
