@@ -37,7 +37,7 @@ counterexample would abort the run and destroy the shrink search that is PBT's
 whole payoff. It would need a **non-trapping harness** — intercept the
 contract violation (e.g. run the subject in a way that converts a trap into a
 recorded failure, or instrument the assert sites) so generation + shrinking to a
-minimal witness survive. That interception is the real cost, and the reason the
+minimal witness are preserved. That interception is the real cost, and the reason the
 static-signal note is the cheaper first cut.
 
 ## The three contract legs, mapped
