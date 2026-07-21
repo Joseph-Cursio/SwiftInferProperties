@@ -21,16 +21,20 @@ extension ActionSequenceStubEmitter {
         /// post-loop double-apply for Idempotence).
         public let invariant: InteractionInvariantSuggestion?
 
-        /// TestStore Trace Mining (Slice 2) — developer-authored,
-        /// payload-free action orderings mined from the repo's own
-        /// `TestStore` tests. Each element is a trace: an ordered list of
-        /// enum case names (`["dismiss", "refresh"]`), emitted as
-        /// `[.dismiss, .refresh]` and checked through the same per-step
-        /// invariant loop *before* random generation (replay-then-extend).
-        /// Empty (the default) → byte-identical output to the pre-Slice-2
-        /// stub. The selector guarantees every name is a payload-free case
-        /// in the candidate's Action alphabet, so the literals compile.
-        public let seedTraces: [[String]]
+        /// TestStore Trace Mining — developer-authored action orderings
+        /// mined from the repo's own `TestStore` tests, replayed through the
+        /// same per-step invariant loop *before* random generation
+        /// (replay-then-extend). Empty (the default) → byte-identical output
+        /// to the un-mined stub. The selector guarantees every case
+        /// expression compiles against the candidate's Action alphabet.
+        public let seedTraces: [SeedTrace]
+
+        /// Slice 3d — also run each mined trace as a *prefix* extended by a
+        /// random tail (mode (b) prefix-biased generation): reach the
+        /// developer-set-up state, then explore outward. Off by default. (The
+        /// mode (c) Markov mode needs no emitter flag — it's realized in the
+        /// selector as extra synthesized `seedTraces`.)
+        public let prefixBias: Bool
 
         public init(
             candidate: ReducerCandidate,
@@ -39,7 +43,8 @@ extension ActionSequenceStubEmitter {
             lengthLowerBound: Int = 0,
             lengthUpperBound: Int = 16,
             invariant: InteractionInvariantSuggestion? = nil,
-            seedTraces: [[String]] = []
+            seedTraces: [SeedTrace] = [],
+            prefixBias: Bool = false
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
@@ -48,6 +53,22 @@ extension ActionSequenceStubEmitter {
             self.lengthUpperBound = lengthUpperBound
             self.invariant = invariant
             self.seedTraces = seedTraces
+            self.prefixBias = prefixBias
+        }
+    }
+
+    /// One mined ordering ready for emission: an optional verifier-constructible
+    /// initial-State expression (Slice 3c — nil uses the reducer's default
+    /// `State()`) plus the case expressions *minus* the leading dot
+    /// (`"dismiss"`, `"select(0)"`, `"setColor(color: 0)"`). The selector
+    /// guarantees each element compiles against the Action alphabet.
+    public struct SeedTrace: Sendable, Equatable {
+        public let initialState: String?
+        public let actions: [String]
+
+        public init(initialState: String?, actions: [String]) {
+            self.initialState = initialState
+            self.actions = actions
         }
     }
 

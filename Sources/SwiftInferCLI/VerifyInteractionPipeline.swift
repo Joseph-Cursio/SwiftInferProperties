@@ -41,6 +41,7 @@ public enum VerifyInteractionPipeline {
         pinRaw: String? = nil,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
+        traceMining: TraceMiningOptions = .off,
         workingDirectory: URL
     ) throws -> String {
         let seeded = try resolveEmitAndSeed(
@@ -48,6 +49,7 @@ public enum VerifyInteractionPipeline {
             pinRaw: pinRaw,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
+            traceMining: traceMining,
             workingDirectory: workingDirectory
         )
         let candidate = seeded.candidate

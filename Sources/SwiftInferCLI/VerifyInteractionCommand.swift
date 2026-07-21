@@ -117,6 +117,28 @@ extension SwiftInferCommand {
         )
         public var family: String?
 
+        @Flag(
+            name: .long,
+            help: """
+            TestStore Trace Mining (Slice 3d) — also run each mined \
+            developer-authored ordering as a *prefix* extended by a random \
+            tail (mode (b) prefix-biased generation): reach the state the \
+            test set up, then explore outward. Off by default.
+            """
+        )
+        public var tracePrefixBias: Bool = false
+
+        @Flag(
+            name: .long,
+            help: """
+            TestStore Trace Mining (Slice 3e) — synthesize extra orderings \
+            from a first-order Markov model of the mined action transitions \
+            (mode (c)). Novel recombinations of observed steps; overfitting \
+            risk (§21 #4), so off by default.
+            """
+        )
+        public var traceMarkov: Bool = false
+
         public init() { /* no-op */ }
 
         /// M3 — `--target` became a repeatable `[String]` (an empty array is a
@@ -181,6 +203,7 @@ extension SwiftInferCommand {
                 pinRaw: reducer,
                 sequenceCount: sequenceCount,
                 userModuleName: userModule,
+                traceMining: .init(prefixBias: tracePrefixBias, markov: traceMarkov),
                 workingDirectory: workingDirectory
             )
             print(rendered, terminator: "")

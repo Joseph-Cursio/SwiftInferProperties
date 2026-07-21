@@ -1,51 +1,156 @@
+import Foundation
 import SwiftInferCore
 import SwiftInferTestLifter
+import SwiftParser
+import SwiftSyntax
 
-/// TestStore Trace Mining (Slice 2) — turns raw mined `MinedActionTrace`s
-/// into the payload-free case-name sequences the verifier can replay for a
-/// given reducer candidate. The filtering here is what keeps the emitted
-/// `let minedTraces: [[Action]] = …` literals **compilable**, so it is
-/// deliberately strict:
+/// TestStore Trace Mining — turns raw mined `MinedActionTrace`s into the
+/// verifier-replayable `SeedTrace`s for a reducer candidate. Slice 3 widens
+/// Slice 2's payload-free-`.tca`-only selection:
 ///
-///   1. **Carrier gate — `.tca` only (for now).** Selection needs the
-///      candidate's Action alphabet to validate case names, and that alphabet
-///      (`actionCases`) is captured at discovery for `.tca` carriers only.
-///      Generic / Elm carriers don't carry it yet, so they get no mined traces
-///      (a stale name would otherwise fail the verifier *build*). Widening to
-///      generic carriers is a follow-up (capture the CaseIterable alphabet at
-///      discovery) — see `docs/teststore-trace-mining-build-plan.md` Slice 3.
-///   2. **Reducer join.** Keep only traces whose `reducerTypeName` matches the
-///      candidate's `enclosingTypeName` (a nil-reducer bare-`store` fallback
-///      trace never joins — it can't be attributed to a specific reducer).
-///   3. **Payload-free only.** A payload-bearing action's args reference
-///      test-body-local bindings the standalone verifier can't reconstruct
-///      (build-plan §3); those traces are dropped whole.
-///   4. **Stale-case guard.** Every case name must be in the candidate's
-///      current Action alphabet; a renamed/removed case drops the trace (the
-///      host suite is self-validating, but discovery and the tests can drift).
-///   5. **Non-empty.** An empty `sent` list yields nothing to replay.
+///   - **3a — any carrier.** Selection is driven by the `alphabet`
+///     (`ActionAlphabetScanner`), which resolves the Action enum's cases +
+///     labels for `.tca`, `.elmStyle`, or `.generic`, so the `.tca`-only gate
+///     is gone. (In practice `TestStore` is a TCA construct, but the alphabet
+///     is what makes the mechanism carrier-agnostic and label-correct.)
+///   - **3b — payload generalization.** A payload-bearing mined action
+///     (`.select(a.id)` — its arg references a test-body local the verifier
+///     can't see) is generalized to `.select(<generated>)` when every
+///     parameter type is cheaply defaultable, reusing the same canned literals
+///     the random `.tca` generator already explores (so no new precision risk).
+///     A non-defaultable parameter drops the trace.
+///   - **3c — initial-state mining.** A self-contained `TestStore(initialState:)`
+///     expression (no test-body-local references) becomes the trace's starting
+///     State; a fixture-referencing one falls back to the reducer default.
+///   - **3e — Markov synthesis.** With `includeMarkov`, extra orderings are
+///     synthesized from a first-order model of the mined transitions (novel
+///     recombinations of observed steps), appended as more seed traces.
+///
+/// Invariants preserved from Slice 2: reducer join, stale-case guard, non-empty.
 enum MinedTraceSelector {
 
-    static func payloadFreeSeedTraces(
+    static func select(
         from traces: [MinedActionTrace],
-        candidate: ReducerCandidate
-    ) -> [[String]] {
-        guard candidate.carrierKind == .tca,
-              let enclosing = candidate.enclosingTypeName else {
-            return []
+        candidate: ReducerCandidate,
+        alphabet: [ActionCaseSpec],
+        includeMarkov: Bool = false
+    ) -> [ActionSequenceStubEmitter.SeedTrace] {
+        guard !alphabet.isEmpty else { return [] }
+        let specs = Dictionary(alphabet.map { ($0.name, $0) }) { first, _ in first }
+        let joined = traces.filter { joins($0, candidate: candidate) }
+        let selected = joined.compactMap { seedTrace(for: $0, specs: specs) }
+        guard includeMarkov else { return selected }
+        return selected + markovSynthesized(from: selected)
+    }
+
+    // MARK: - Join
+
+    private static func joins(_ trace: MinedActionTrace, candidate: ReducerCandidate) -> Bool {
+        // A reducer method/struct joins by enclosing type; a nil-reducer
+        // (bare-`store` fallback) trace can't be attributed and is dropped.
+        guard let enclosing = candidate.enclosingTypeName else { return false }
+        return trace.reducerTypeName == enclosing
+    }
+
+    // MARK: - Per-trace selection
+
+    private static func seedTrace(
+        for trace: MinedActionTrace,
+        specs: [String: ActionCaseSpec]
+    ) -> ActionSequenceStubEmitter.SeedTrace? {
+        guard !trace.sent.isEmpty else { return nil }
+        var actions: [String] = []
+        for mined in trace.sent {
+            guard let expr = caseExpression(spec: specs[mined.caseName]) else {
+                return nil  // stale case, or a non-defaultable payload → drop the whole trace
+            }
+            actions.append(expr)
         }
-        let alphabet = Set(candidate.actionCases.map(\.name))
-        return traces.compactMap { trace -> [String]? in
-            guard trace.reducerTypeName == enclosing else {
+        let initialState = selfContainedInitialState(trace.initialStateExpr)
+        return ActionSequenceStubEmitter.SeedTrace(initialState: initialState, actions: actions)
+    }
+
+    /// The case expression (minus the leading dot) for one mined action:
+    /// `"dismiss"` (payload-free), `"select(0)"` / `"setColor(color: 0)"`
+    /// (generalized). `nil` when the case is stale (not in the alphabet) or a
+    /// parameter type isn't defaultable.
+    private static func caseExpression(spec: ActionCaseSpec?) -> String? {
+        guard let spec else { return nil }
+        guard !spec.isPayloadFree else { return spec.name }
+        var args: [String] = []
+        for param in spec.parameters {
+            guard let literal = ActionSequenceStubEmitter.defaultValueLiteral(for: param.type) else {
                 return nil
             }
-            let names = trace.sent.map(\.caseName)
-            guard !names.isEmpty,
-                  trace.sent.allSatisfy(\.isPayloadFree),
-                  names.allSatisfy(alphabet.contains) else {
-                return nil
-            }
-            return names
+            args.append(param.label.map { "\($0): \(literal)" } ?? literal)
         }
+        return "\(spec.name)(\(args.joined(separator: ", ")))"
+    }
+
+    // MARK: - 3c: self-contained initial state
+
+    /// Returns the mined `TestStore(initialState:)` expression when it is
+    /// verifier-constructible — i.e. references no test-body-local binding.
+    /// Heuristic: any lowercase-leading identifier reference (`a`, `items`,
+    /// `fixture`) marks a local; type/enum references (`Feature`, `.red`) and
+    /// literals are fine. Conservative — a false "not self-contained" only
+    /// costs a mined starting state (falls back to the reducer default).
+    static func selfContainedInitialState(_ expr: String?) -> String? {
+        guard let expr, !expr.isEmpty else { return nil }
+        let tree = Parser.parse(source: expr)
+        let collector = LowercaseReferenceCollector(viewMode: .sourceAccurate)
+        collector.walk(tree)
+        return collector.sawLowercaseReference ? nil : expr
+    }
+
+    // MARK: - 3e: Markov synthesis
+
+    /// Synthesize novel orderings from a first-order Markov model of the mined
+    /// transitions. Deterministic (no RNG — byte-stable emit): for each distinct
+    /// starting action, greedily follow first-observed successors until a cycle
+    /// or a length cap, recombining steps that appeared in *different* traces
+    /// (e.g. `[A,B]` + `[B,C]` → `[A,B,C]`). Only emits a synthesized trace when
+    /// it differs from every input trace. Uses the reducer default initial state.
+    static func markovSynthesized(
+        from traces: [ActionSequenceStubEmitter.SeedTrace]
+    ) -> [ActionSequenceStubEmitter.SeedTrace] {
+        let sequences = traces.map(\.actions)
+        var successors: [String: [String]] = [:]
+        for sequence in sequences {
+            for (index, action) in sequence.enumerated() where index + 1 < sequence.count {
+                successors[action, default: []].append(sequence[index + 1])
+            }
+        }
+        let starts = Array(Set(sequences.compactMap(\.first))).sorted()
+        let existing = Set(sequences)
+        let lengthCap = 16
+        var synthesized: [[String]] = []
+        for start in starts {
+            var walk = [start]
+            var seen: Set<String> = [start]
+            while walk.count < lengthCap, let next = successors[walk[walk.count - 1]]?.first(
+                where: { !seen.contains($0) }
+            ) {
+                walk.append(next)
+                seen.insert(next)
+            }
+            if walk.count > 1, !existing.contains(walk), !synthesized.contains(walk) {
+                synthesized.append(walk)
+            }
+        }
+        return synthesized.map { ActionSequenceStubEmitter.SeedTrace(initialState: nil, actions: $0) }
+    }
+}
+
+/// Detects any lowercase-leading identifier reference in a parsed expression —
+/// the marker of a test-body-local binding in a mined `initialState:` expr.
+private final class LowercaseReferenceCollector: SyntaxVisitor {
+    private(set) var sawLowercaseReference = false
+
+    override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
+        if let first = node.baseName.text.first, first.isLowercase {
+            sawLowercaseReference = true
+        }
+        return .visitChildren
     }
 }

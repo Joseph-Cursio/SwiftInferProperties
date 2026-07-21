@@ -4,11 +4,14 @@ import SwiftInferCore
 import SwiftInferTestLifter
 import Testing
 
-// TestStore Trace Mining (Slice 2) — replay-then-extend emission + the
-// MinedTraceSelector filters. Pure text / value assertions: no subprocess.
+// TestStore Trace Mining (Slices 2–3) — replay-then-extend emission +
+// MinedTraceSelector (alphabet-driven selection, payload generalization,
+// initial-state mining, Markov synthesis). Pure text / value assertions.
 
-@Suite("TestStore Trace Mining — Slice 2 replay-then-extend")
+@Suite("TestStore Trace Mining — replay-then-extend + selection")
 struct TraceMiningReplayTests {
+
+    private typealias SeedTrace = ActionSequenceStubEmitter.SeedTrace
 
     private func candidate(
         enclosingTypeName: String? = "Inbox",
@@ -29,12 +32,14 @@ struct TraceMiningReplayTests {
 
     private func inputs(
         _ candidate: ReducerCandidate,
-        seedTraces: [[String]] = []
+        seedTraces: [SeedTrace] = [],
+        prefixBias: Bool = false
     ) -> ActionSequenceStubEmitter.Inputs {
         ActionSequenceStubEmitter.Inputs(
             candidate: candidate,
             userModuleName: "MyApp",
-            seedTraces: seedTraces
+            seedTraces: seedTraces,
+            prefixBias: prefixBias
         )
     }
 
@@ -48,22 +53,22 @@ struct TraceMiningReplayTests {
         #expect(!base.contains("minedTraces"))
     }
 
-    // MARK: - Emitter: replay block when traces are present
+    // MARK: - Emitter: replay block
 
-    @Test("Non-empty seedTraces → emits the minedTraces literal + replay loop")
+    @Test("Non-empty seedTraces → emits the tuple minedTraces literal + replay loop")
     func seedTracesEmitReplayBlock() throws {
         let source = try ActionSequenceStubEmitter.emit(inputs(
             candidate(),
-            seedTraces: [["dismiss", "refresh"], ["select"]]
+            seedTraces: [
+                SeedTrace(initialState: nil, actions: ["dismiss", "refresh"]),
+                SeedTrace(initialState: nil, actions: ["select"])
+            ]
         ))
-        // The literal array is typed to the Action and lists dotted cases.
-        #expect(source.contains("let minedTraces: [[AppAction]] = ["))
-        #expect(source.contains("[.dismiss, .refresh],"))
-        #expect(source.contains("[.select],"))
-        // Replayed through the same apply loop, gated behind the shrink pin.
+        #expect(source.contains("let minedTraces: [(state: AppState, actions: [AppAction])] = ["))
+        #expect(source.contains("(AppState(), [.dismiss, .refresh]),"))
+        #expect(source.contains("(AppState(), [.select]),"))
         #expect(source.contains("for minedTrace in minedTraces {"))
-        #expect(source.contains("for action in minedTrace {"))
-        // The mined loop reuses the same apply step as the random loop.
+        #expect(source.contains("for action in minedTrace.actions {"))
         #expect(source.contains("state = Inbox.reduce(state, action)"))
         // Mined block precedes the random loop (replay-then-extend order).
         let minedIndex = try #require(source.range(of: "minedTraces"))
@@ -71,90 +76,201 @@ struct TraceMiningReplayTests {
         #expect(minedIndex.lowerBound < randomIndex.lowerBound)
     }
 
-    @Test("Replay block is guarded by the shrink pin so a pin run skips mined traces")
+    @Test("Slice 3c — a mined initial state is used verbatim in the tuple entry")
+    func initialStateEmitted() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(
+            candidate(),
+            seedTraces: [SeedTrace(initialState: "AppState(count: 3)", actions: ["dismiss"])]
+        ))
+        #expect(source.contains("(AppState(count: 3), [.dismiss]),"))
+    }
+
+    @Test("Slice 3d — prefixBias emits the prefix + random-tail loop")
+    func prefixBiasEmitsTailLoop() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(
+            candidate(),
+            seedTraces: [SeedTrace(initialState: nil, actions: ["dismiss"])],
+            prefixBias: true
+        ))
+        #expect(source.contains("let tail = generator.run(using: &rng)"))
+        #expect(source.contains("for action in minedTrace.actions + tail {"))
+    }
+
+    @Test("prefixBias off → no tail loop emitted")
+    func noPrefixBiasNoTailLoop() throws {
+        let source = try ActionSequenceStubEmitter.emit(inputs(
+            candidate(),
+            seedTraces: [SeedTrace(initialState: nil, actions: ["dismiss"])]
+        ))
+        #expect(!source.contains("minedTrace.actions + tail"))
+    }
+
+    @Test("Replay block is guarded by the shrink pin")
     func replaySkippedUnderShrinkPin() throws {
         let source = try ActionSequenceStubEmitter.emit(inputs(
             candidate(),
-            seedTraces: [["dismiss"]]
+            seedTraces: [SeedTrace(initialState: nil, actions: ["dismiss"])]
         ))
-        // The `if pinSequence == nil {` guard wraps the mined block.
         let guardRange = try #require(source.range(of: "if pinSequence == nil {"))
         let minedRange = try #require(source.range(of: "let minedTraces"))
         #expect(guardRange.lowerBound < minedRange.lowerBound)
     }
+}
+
+// Selector + end-to-end tests live in an extension so the suite body stays
+// under SwiftLint's type_body_length cap (extension bodies are exempt; cycle
+// 145 pattern).
+extension TraceMiningReplayTests {
 
     // MARK: - MinedTraceSelector
 
     private func trace(
         reducer: String?,
-        sent: [(String, [String])]
+        sent: [(String, [String])],
+        initialState: String? = nil
     ) -> MinedActionTrace {
         MinedActionTrace(
             reducerTypeName: reducer,
-            initialStateExpr: nil,
+            initialStateExpr: initialState,
             sent: sent.map { MinedAction(kind: .send, caseName: $0.0, argumentTexts: $0.1) },
             received: [],
             location: SourceLocation(file: "T.swift", line: 1, column: 1)
         )
     }
 
-    private func tcaCandidate(cases: [String]) -> ReducerCandidate {
-        ReducerCandidate(
-            location: "Sources/MyApp/Feature.swift:1",
-            enclosingTypeName: "Feature",
-            functionName: "body",
-            signatureShape: .inoutStateActionReturnsEffect,
-            stateTypeName: "Feature.State",
-            actionTypeName: "Feature.Action",
-            carrierKind: .tca,
-            actionCases: cases.map { ActionCaseInfo(name: $0, payloadTypes: []) }
-        )
+    private func spec(_ name: String, _ params: [ActionParam] = []) -> ActionCaseSpec {
+        ActionCaseSpec(name: name, parameters: params)
     }
 
     @Test("Selector keeps a payload-free trace joined by reducer type, in-alphabet")
-    func selectorHappyPath() {
-        let candidate = tcaCandidate(cases: ["dismiss", "refresh", "select"])
-        let traces = [trace(reducer: "Feature", sent: [("dismiss", []), ("refresh", [])])]
-        let selected = MinedTraceSelector.payloadFreeSeedTraces(from: traces, candidate: candidate)
-        #expect(selected == [["dismiss", "refresh"]])
+    func selectorPayloadFree() {
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "Inbox", sent: [("dismiss", []), ("refresh", [])])],
+            candidate: candidate(),
+            alphabet: [spec("dismiss"), spec("refresh")]
+        )
+        #expect(selected == [SeedTrace(initialState: nil, actions: ["dismiss", "refresh"])])
     }
 
     @Test("Selector drops a trace whose reducer type doesn't match the candidate")
     func selectorReducerJoin() {
-        let candidate = tcaCandidate(cases: ["dismiss"])
-        let traces = [trace(reducer: "OtherFeature", sent: [("dismiss", [])])]
-        #expect(MinedTraceSelector.payloadFreeSeedTraces(from: traces, candidate: candidate).isEmpty)
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "OtherFeature", sent: [("dismiss", [])])],
+            candidate: candidate(),
+            alphabet: [spec("dismiss")]
+        )
+        #expect(selected.isEmpty)
     }
 
-    @Test("Selector drops a payload-bearing trace (args not reconstructible)")
-    func selectorPayloadBearingDropped() {
-        let candidate = tcaCandidate(cases: ["select"])
-        let traces = [trace(reducer: "Feature", sent: [("select", ["a.id"])])]
-        #expect(MinedTraceSelector.payloadFreeSeedTraces(from: traces, candidate: candidate).isEmpty)
+    @Test("Slice 3b — payload-bearing trace is generalized to a canned literal")
+    func selectorPayloadGeneralizedUnlabeled() {
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "Inbox", sent: [("select", ["a.id"])])],
+            candidate: candidate(),
+            alphabet: [spec("select", [ActionParam(label: nil, type: "Int")])]
+        )
+        #expect(selected == [SeedTrace(initialState: nil, actions: ["select(0)"])])
+    }
+
+    @Test("Slice 3b — a labeled payload keeps its label in the generalized call")
+    func selectorPayloadGeneralizedLabeled() {
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "Inbox", sent: [("setCount", ["n"])])],
+            candidate: candidate(),
+            alphabet: [spec("setCount", [ActionParam(label: "value", type: "Int")])]
+        )
+        #expect(selected == [SeedTrace(initialState: nil, actions: ["setCount(value: 0)"])])
+    }
+
+    @Test("Slice 3b — a non-defaultable payload type drops the whole trace")
+    func selectorNonDefaultablePayloadDropped() {
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "Inbox", sent: [("setColor", ["c"])])],
+            candidate: candidate(),
+            alphabet: [spec("setColor", [ActionParam(label: nil, type: "Color")])]
+        )
+        #expect(selected.isEmpty)
     }
 
     @Test("Selector drops a trace referencing a stale (out-of-alphabet) case")
     func selectorStaleCaseGuard() {
-        let candidate = tcaCandidate(cases: ["dismiss"])
-        let traces = [trace(reducer: "Feature", sent: [("dismiss", []), ("renamedGone", [])])]
-        #expect(MinedTraceSelector.payloadFreeSeedTraces(from: traces, candidate: candidate).isEmpty)
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "Inbox", sent: [("dismiss", []), ("goneCase", [])])],
+            candidate: candidate(),
+            alphabet: [spec("dismiss")]
+        )
+        #expect(selected.isEmpty)
     }
 
-    @Test("Selector yields nothing for a non-.tca candidate (no captured alphabet)")
-    func selectorNonTCAExcluded() {
-        // Generic carrier: alphabet not captured at discovery → no seeding yet.
-        let generic = candidate(carrierKind: .elmStyle)
-        let traces = [trace(reducer: "Inbox", sent: [("dismiss", [])])]
-        #expect(MinedTraceSelector.payloadFreeSeedTraces(from: traces, candidate: generic).isEmpty)
+    @Test("Empty alphabet → nothing selected")
+    func selectorEmptyAlphabet() {
+        let selected = MinedTraceSelector.select(
+            from: [trace(reducer: "Inbox", sent: [("dismiss", [])])],
+            candidate: candidate(),
+            alphabet: []
+        )
+        #expect(selected.isEmpty)
     }
 
-    // MARK: - End-to-end wiring (discover + mine + select + emit; no subprocess)
+    // MARK: - Slice 3c: self-contained initial state
+
+    @Test("Self-contained initial state (literal args) is preserved")
+    func selfContainedInitialStateKept() {
+        #expect(MinedTraceSelector.selfContainedInitialState("Feature.State(count: 3)")
+            == "Feature.State(count: 3)")
+        #expect(MinedTraceSelector.selfContainedInitialState("Feature.State()")
+            == "Feature.State()")
+    }
+
+    @Test("Fixture-referencing initial state (local binding) is dropped")
+    func fixtureReferencingInitialStateDropped() {
+        #expect(MinedTraceSelector.selfContainedInitialState("Feature.State(items: [a, b])") == nil)
+    }
+
+    @Test("Selector attaches a self-contained mined initial state to the seed trace")
+    func selectorAttachesInitialState() {
+        let mined = trace(reducer: "Inbox", sent: [("dismiss", [])], initialState: "AppState(count: 3)")
+        let selected = MinedTraceSelector.select(
+            from: [mined],
+            candidate: candidate(),
+            alphabet: [spec("dismiss")]
+        )
+        #expect(selected == [SeedTrace(initialState: "AppState(count: 3)", actions: ["dismiss"])])
+    }
+
+    // MARK: - Slice 3e: Markov synthesis
+
+    @Test("Markov synthesis recombines observed transitions into a novel ordering")
+    func markovRecombines() {
+        let input = [
+            SeedTrace(initialState: nil, actions: ["a", "b"]),
+            SeedTrace(initialState: nil, actions: ["b", "c"])
+        ]
+        let synthesized = MinedTraceSelector.markovSynthesized(from: input)
+        // Starting from 'a', follow a→b then b→c → [a, b, c] (novel, not an input).
+        #expect(synthesized.contains(SeedTrace(initialState: nil, actions: ["a", "b", "c"])))
+    }
+
+    @Test("Markov synthesis via select(includeMarkov:) appends the synthesized trace")
+    func markovViaSelect() {
+        let selected = MinedTraceSelector.select(
+            from: [
+                trace(reducer: "Inbox", sent: [("a", []), ("b", [])]),
+                trace(reducer: "Inbox", sent: [("b", []), ("c", [])])
+            ],
+            candidate: candidate(),
+            alphabet: [spec("a"), spec("b"), spec("c")],
+            includeMarkov: true
+        )
+        #expect(selected.contains(SeedTrace(initialState: nil, actions: ["a", "b", "c"])))
+    }
+
+    // MARK: - End-to-end wiring (discover + scan alphabet + mine + emit)
 
     @Test("resolveEmitAndSeed mines a sibling TestStore test and injects it into the stub")
     func wiringInjectsMinedTraces() throws {
         let directory = try makeFixtureDirectory(name: "TraceMiningWiring")
         defer { try? FileManager.default.removeItem(at: directory) }
-        // A real @Reducer the TCA discoverer recognizes (payload-free Action).
         try writeFile(
             in: directory,
             relativePath: "Sources/MyApp",
@@ -171,7 +287,6 @@ struct TraceMiningReplayTests {
             }
             """
         )
-        // A sibling TestStore test whose ordering the extractor mines.
         try writeFile(
             in: directory,
             relativePath: "Tests/MyAppTests",
@@ -195,8 +310,9 @@ struct TraceMiningReplayTests {
         )
         #expect(seeded.candidate.carrierKind == .tca)
         #expect(seeded.seedTraceCount == 1)
-        #expect(seeded.stubSource.contains("let minedTraces: [[Feature.Action]] = ["))
-        #expect(seeded.stubSource.contains("[.close, .refresh],"))
+        let header = "let minedTraces: [(state: Feature.State, actions: [Feature.Action])] = ["
+        #expect(seeded.stubSource.contains(header))
+        #expect(seeded.stubSource.contains("(Feature.State(), [.close, .refresh]),"))
     }
 
     @Test("resolveEmitAndSeed with no Tests dir yields no seed traces (byte-identical path)")

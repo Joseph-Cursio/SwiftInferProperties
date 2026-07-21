@@ -44,6 +44,19 @@ extension VerifyInteractionPipeline {
         return (seeded.candidate, seeded.stubSource)
     }
 
+    /// TestStore Trace Mining options threaded from the CLI (Slice 3d/3e).
+    public struct TraceMiningOptions: Sendable {
+        public var prefixBias: Bool
+        public var markov: Bool
+
+        public static let off = Self()
+
+        public init(prefixBias: Bool = false, markov: Bool = false) {
+            self.prefixBias = prefixBias
+            self.markov = markov
+        }
+    }
+
     /// Slice-2-aware core of `resolveAndEmit`: additionally mines the
     /// project's `TestStore` tests, selects the payload-free orderings for the
     /// resolved candidate, threads them into the stub, and reports the count
@@ -57,6 +70,7 @@ extension VerifyInteractionPipeline {
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
         invariant: InteractionInvariantSuggestion? = nil,
+        traceMining: TraceMiningOptions = .off,
         workingDirectory: URL
     ) throws -> SeededEmission {
         let matched = try resolveCandidate(
@@ -65,22 +79,33 @@ extension VerifyInteractionPipeline {
             workingDirectory: workingDirectory
         )
         let resolvedModuleName = userModuleName ?? target
-        // TestStore Trace Mining (Slice 2) — mine the project's tests and
-        // select the payload-free orderings for this candidate. Best-effort:
-        // no `Tests/` dir / non-`.tca` candidate → empty → byte-identical stub.
+        // TestStore Trace Mining — mine the project's tests, resolve the Action
+        // alphabet, and select replayable orderings for this candidate.
+        // Best-effort: no `Tests/` dir / no matching reducer → empty →
+        // byte-identical un-mined stub.
+        let sourcesDir = workingDirectory
+            .appendingPathComponent("Sources")
+            .appendingPathComponent(target)
         let minedTraces = (try? TestStoreTraceExtractor.extract(
             fromTestsDirectory: workingDirectory.appendingPathComponent("Tests")
         )) ?? []
-        let seedTraces = MinedTraceSelector.payloadFreeSeedTraces(
+        let alphabet = ActionAlphabetScanner.scan(
+            directory: sourcesDir,
+            actionTypeName: matched.actionTypeName
+        )
+        let seedTraces = MinedTraceSelector.select(
             from: minedTraces,
-            candidate: matched
+            candidate: matched,
+            alphabet: alphabet,
+            includeMarkov: traceMining.markov
         )
         let inputs = ActionSequenceStubEmitter.Inputs(
             candidate: matched,
             userModuleName: resolvedModuleName,
             sequenceCount: sequenceCount,
             invariant: invariant,
-            seedTraces: seedTraces
+            seedTraces: seedTraces,
+            prefixBias: traceMining.prefixBias
         )
         let stubSource: String
         do {

@@ -47,10 +47,14 @@ extension ActionSequenceStubEmitter {
     /// random `for sequenceIndex` loop. Each mined trace runs through the
     /// *same* per-step apply + invariant check + post-loop check as a
     /// generated sequence, so a developer-authored ordering that violates the
-    /// invariant traps exactly as a random one would. Skipped when a shrink
-    /// pin is active (`pinSequence != nil`) — the shrinker replays one
-    /// *random* sequence and must not have the mined runs perturb its `clean`
-    /// accounting. Returns `[]` for empty `seedTraces` (byte-identical output).
+    /// invariant traps exactly as a random one would. Each trace carries its
+    /// own initial State (Slice 3c) — a mined `TestStore(initialState:)` when
+    /// self-contained, else the reducer default. Skipped when a shrink pin is
+    /// active (`pinSequence != nil`) — the shrinker replays one *random*
+    /// sequence and must not have the mined runs perturb its `clean`
+    /// accounting. With `prefixBias` (Slice 3d) each mined ordering is *also*
+    /// run as a prefix extended by a random tail. Returns `[]` for empty
+    /// `seedTraces` (byte-identical output).
     static func minedTraceReplayLines(
         inputs: Inputs,
         stateInit: String,
@@ -61,28 +65,73 @@ extension ActionSequenceStubEmitter {
         guard !inputs.seedTraces.isEmpty else {
             return []
         }
-        let elementType = inputs.candidate.actionTypeName
-        let literals = inputs.seedTraces.map { trace in
-            "                [" + trace.map { ".\($0)" }.joined(separator: ", ") + "],"
+        let stateType = inputs.candidate.stateTypeName
+        let actionType = inputs.candidate.actionTypeName
+        let entries = inputs.seedTraces.map { trace -> String in
+            let state = trace.initialState ?? stateInit
+            let acts = trace.actions.map { ".\($0)" }.joined(separator: ", ")
+            return "                (\(state), [\(acts)]),"
         }
         var lines: [String] = [
-            "        // TestStore Trace Mining (Slice 2): developer-authored "
+            "        // TestStore Trace Mining (Slice 3): developer-authored "
                 + "orderings, checked before random generation.",
             "        if pinSequence == nil {",
-            "            let minedTraces: [[\(elementType)]] = ["
+            "            let minedTraces: [(state: \(stateType), actions: [\(actionType)])] = ["
         ]
-        lines.append(contentsOf: literals)
+        lines.append(contentsOf: entries)
         lines.append("            ]")
-        lines.append("            for minedTrace in minedTraces {")
-        lines.append("                var state = \(stateInit)")
-        lines.append("                for action in minedTrace {")
+        lines.append(contentsOf: replayLoopLines(
+            applyStep: applyStep, perStepCheck: perStepCheck, postLoopCheck: postLoopCheck
+        ))
+        if inputs.prefixBias {
+            lines.append(contentsOf: prefixBiasLines(
+                applyStep: applyStep, perStepCheck: perStepCheck, postLoopCheck: postLoopCheck
+            ))
+        }
+        lines.append("        }")
+        return lines
+    }
+
+    /// The verbatim mode-(a) replay loop over `minedTraces` (12-space indent).
+    private static func replayLoopLines(
+        applyStep: [String],
+        perStepCheck: [String],
+        postLoopCheck: [String]
+    ) -> [String] {
+        var lines = [
+            "            for minedTrace in minedTraces {",
+            "                var state = minedTrace.state",
+            "                for action in minedTrace.actions {"
+        ]
         lines.append(contentsOf: applyStep.map { "                    \($0)" })
         lines.append(contentsOf: perStepCheck.map { "                    \($0)" })
         lines.append("                }")
         lines.append(contentsOf: postLoopCheck.map { "                \($0)" })
         lines.append("                clean += 1")
         lines.append("            }")
-        lines.append("        }")
+        return lines
+    }
+
+    /// Slice 3d — mode (b) prefix-biased loop: each mined ordering as a prefix,
+    /// extended by a random tail from the same generator, so verification
+    /// starts from human-plausible states and explores outward.
+    private static func prefixBiasLines(
+        applyStep: [String],
+        perStepCheck: [String],
+        postLoopCheck: [String]
+    ) -> [String] {
+        var lines = [
+            "            for minedTrace in minedTraces {",
+            "                var state = minedTrace.state",
+            "                let tail = generator.run(using: &rng)",
+            "                for action in minedTrace.actions + tail {"
+        ]
+        lines.append(contentsOf: applyStep.map { "                    \($0)" })
+        lines.append(contentsOf: perStepCheck.map { "                    \($0)" })
+        lines.append("                }")
+        lines.append(contentsOf: postLoopCheck.map { "                \($0)" })
+        lines.append("                clean += 1")
+        lines.append("            }")
         return lines
     }
 }

@@ -1,6 +1,6 @@
 # TestStore Trace Mining — Build Plan / Scope
 
-**Status:** Slices 1–2 SHIPPED (2026-07-21); Slice 3 scoped, not started. Grounds the `docs/ideas/TestStore Trace Mining Proposal.md` direction against the current code.
+**Status:** Slices 1–3 SHIPPED (2026-07-21). Grounds the `docs/ideas/TestStore Trace Mining Proposal.md` direction against the current code.
 **Target:** SwiftInferProperties (this repo). New extractor in `SwiftInferTestLifter`; additive threading into the interaction verify path. **No kit change for the default (payload-free replay) slice.**
 **One-line goal:** seed the interaction verifier's action sequences from the orderings a repo's own TCA `TestStore` tests already contain, instead of random generation alone.
 
@@ -108,7 +108,23 @@ Thread mined **payload-free** traces for a candidate into `ActionSequenceStubEmi
 
 **Risk:** medium — golden-output stability (guarded by the empty-default), and the join heuristic.
 
-### Slice 3 (optional, later) — payload generalization + initial-state mining
+### Slice 3 — payload generalization + generic carriers + initial-state + modes (b)/(c) — ✅ SHIPPED
+
+Built as five sub-parts, each conservatively gated so it is correct-or-skips:
+
+- **3a — generic-carrier alphabet capture.** New `ActionAlphabetScanner` resolves the Action enum's cases *and parameter labels/types* by scanning the target's sources — for `.tca`, `.elmStyle`, or `.generic` (nested `Feature.Action` or top-level `enum AppAction`). `MinedTraceSelector.select(from:candidate:alphabet:includeMarkov:)` is now alphabet-driven, so the Slice-2 `.tca`-only gate is gone. (`TestStore` is a TCA construct in practice; the alphabet is what makes the mechanism carrier-agnostic *and* label-correct — which 3b needs.)
+- **3b — payload generalization.** A payload-bearing mined action (`.select(a.id)` — arg references a test-body local) is generalized to `.select(<generated>)` using the **same canned literals** (`ActionSequenceStubEmitter.defaultValueLiteral`) the random `.tca` generator already explores — so **no new precision risk** (a canned arg the random path already covers cannot produce a novel false positive), which keeps it inside the conservative-precision posture even though it formally re-opens cycle-119. Labels preserved (`setColor(color: 0)`); a non-defaultable parameter (`Color`) drops the trace.
+- **3c — initial-state mining.** A **self-contained** `TestStore(initialState:)` expr (no lowercase-leading identifier references — the local-binding marker) becomes the trace's starting State; a fixture-referencing one falls back to the reducer default. Emitted as a per-trace tuple `[(state: State, actions: [Action])]`.
+- **3d — mode (b) prefix-biasing** (`--trace-prefix-bias`, off by default). Each mined ordering is *also* run as a prefix extended by a random tail from the same generator — reach the developer-set-up state, then explore outward. Engine-side; **no kit change** needed.
+- **3e — mode (c) Markov synthesis** (`--trace-markov`, off by default). Deterministic (byte-stable) recombination of observed transitions into novel orderings (`[A,B] + [B,C] → [A,B,C]`), appended as extra seed traces. Realized selector-side (data), so the emitter needs no Markov path. Overfitting risk (§21 #4) → opt-in.
+
+**Hard rule still held:** mined + synthesized traces only ever *prepend*; random generation stays the coverage floor.
+
+Files: `ActionAlphabetScanner.swift` (new), `MinedTraceSelector.swift` (rewritten), `ActionSequenceStubEmitter+TraceMining.swift` / `+Types.swift` (tuple `SeedTrace` + `prefixBias`), `VerifyInteractionPipeline+Resolve.swift` (alphabet scan + `TraceMiningOptions`), `VerifyInteractionCommand.swift` (two flags). Tests: `ActionAlphabetScannerTests` (4) + `TraceMiningReplayTests` (20 — emitter tuple/initial-state/prefix-bias/shrink-pin, selector join/generalization/labels/non-defaultable/stale/initial-state, Markov recombination, end-to-end wiring). Lint silent; fast suite green (4041); a measured survey confirms the no-seed path is byte-preserved and the emitter still builds+runs.
+
+**Remaining verification (as for Slice 2):** a purpose-built measured corpus proving a *generalized* mined trace compiles + runs end-to-end — the emitted tuple/`.case(0)` literals are trivially valid Swift and the wiring + emit are proven, so this only reconfirms compilation. Gold-standard follow-up, not a gap.
+
+_Original sketch:_
 
 - Generalize payload-bearing mined actions to `case + generated args` by routing through the existing `+PayloadConstructibility` machinery (raw scalars + `CaseIterable` enum recipe already exist). This is where mode (b) prefix-biasing becomes real, and it re-opens the value-generator question the corpus data shelved (cycle 119) — **gate on demand.**
 - Consume `initialStateExpr` as a seed starting state — needs the verifier to reconstruct a non-default `State`, same concreteness wall. Defer with Slice 3.
