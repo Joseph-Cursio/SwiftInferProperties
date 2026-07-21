@@ -1,6 +1,6 @@
 # TestStore Trace Mining — Build Plan / Scope
 
-**Status:** Slice 1 SHIPPED (2026-07-21); Slices 2–3 scoped, not started. Grounds the `docs/ideas/TestStore Trace Mining Proposal.md` direction against the current code.
+**Status:** Slices 1–2 SHIPPED (2026-07-21); Slice 3 scoped, not started. Grounds the `docs/ideas/TestStore Trace Mining Proposal.md` direction against the current code.
 **Target:** SwiftInferProperties (this repo). New extractor in `SwiftInferTestLifter`; additive threading into the interaction verify path. **No kit change for the default (payload-free replay) slice.**
 **One-line goal:** seed the interaction verifier's action sequences from the orderings a repo's own TCA `TestStore` tests already contain, instead of random generation alone.
 
@@ -84,7 +84,17 @@ public enum TestStoreTraceExtractor {
 
 **Risk:** low. Pure AST, offline, deterministic. No kit coordination.
 
-### Slice 2 — payload-free replay-then-extend in the verifier (proves the loop)
+### Slice 2 — payload-free replay-then-extend in the verifier — ✅ SHIPPED
+
+Threads mined **payload-free** traces for a candidate into `ActionSequenceStubEmitter` and checks them **before** the random loop. As built:
+- `Inputs.seedTraces: [[String]]` (default `[]`); the replay block (`ActionSequenceStubEmitter+TraceMining.swift`) emits `let minedTraces: [[Action]] = [[.dismiss, .refresh], …]` and runs each through the **same** apply + per-step + post-loop check as a generated sequence, guarded by `if pinSequence == nil` (a shrink pin skips mined runs). Empty `seedTraces` → **byte-identical** output (golden test enforces it).
+- `MinedTraceSelector` (`.tca`-only for now — that's where the Action alphabet is captured): join by reducer type, payload-free only, stale-case guard. `VerifyInteractionPipeline.resolveEmitAndSeed` (`+Resolve.swift`) mines `<workingDir>/Tests` best-effort, selects, threads, and reports the count.
+- Explainability: `foldSeedTraceDisclosure` appends `replay-then-extend: checked N developer-authored trace(s) before random generation` to the verdict detail (rides into evidence + render).
+- Tests: `TraceMiningReplayTests` (10 — emitter golden/replay-block/shrink-pin, selector filters, and an end-to-end `resolveEmitAndSeed` proof: discover a real `@Reducer` + mine a sibling `TestStore` test → `[.close, .refresh]` injected). Lint silent; fast suite green (4027); a measured survey confirms the refactored emitter still builds+runs and the no-seed path is byte-preserved.
+
+**Deliberately OUT (as planned):** payload-bearing traces (recorded, not emitted), generic-carrier injection (needs alphabet capture — Slice 3), initial-state mining, prefix/Markov biasing. **Hard rule held: mined traces only prepend; random generation stays the coverage floor.** A dedicated measured proof that a mined ordering is checked *first* on a purpose-built corpus is the one remaining verification (the wiring + emit are proven; a subprocess run would only reconfirm the trivially-valid `.case` literals compile).
+
+_Original sketch:_
 
 Thread mined **payload-free** traces for a candidate into `ActionSequenceStubEmitter` and check them **before** the random loop.
 

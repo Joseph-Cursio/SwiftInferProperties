@@ -1,5 +1,6 @@
 import Foundation
 import SwiftInferCore
+import SwiftInferTestLifter
 
 /// V2.0 M3.C → M3.E — orchestration glue for the in-process
 /// interaction verify path. Threads M1's reducer discovery → M1.C's
@@ -16,75 +17,11 @@ import SwiftInferCore
 ///     CLI subcommand (M3.D) calls this.
 public enum VerifyInteractionPipeline {
 
-    /// V2.0 M3.C — pure leg: discover candidates, apply pin filter,
-    /// emit the stub source. No subprocess; no disk writes outside
-    /// the source-tree walk. Returns the resolved candidate plus
-    /// the M3.B-emitted main.swift source so callers can route into
-    /// the build/run leg (M3.E) or render a dry-run stub-only output
-    /// (the M3.C ship before M3.E landed).
-    public static func resolveAndEmit(
-        target: String,
-        pinRaw: String? = nil,
-        sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
-        userModuleName: String? = nil,
-        invariant: InteractionInvariantSuggestion? = nil,
-        workingDirectory: URL
-    ) throws -> (candidate: ReducerCandidate, stubSource: String) {
-        let directory = workingDirectory
-            .appendingPathComponent("Sources")
-            .appendingPathComponent(target)
-        let candidates = try ReducerDiscoverer.discover(directory: directory)
-        // Cycle 133 — collapse composed-body duplicates before pin
-        // resolution. A composed `var body` (multiple `Reduce {}` closures,
-        // or `Reduce` + `Scope`/`CombineReducers`) emits one candidate per
-        // closure (PRD §6.3), all with the same qualifiedName / State /
-        // Action — which `resolveCandidate` would otherwise reject as
-        // `ambiguousPin`. Mirrors the discover path's dedup; the deduped
-        // candidate verifies the whole composed body via `T().reduce`.
-        let deduped = SwiftInferCommand.DiscoverInteraction.dedupedByStateAndAction(candidates)
-        let resolved = try resolveCandidate(candidates: deduped, pinRaw: pinRaw)
-        // Item 2 slices 3/4 — enrich composition-action cases so the relaxed
-        // generator can construct them (the enriched candidate is used for emit
-        // AND returned, so the evidence coverage fold sees the same cases):
-        // slice 3 resolves `IdentifiedActionOf<Child>` against the full
-        // candidate set; slice 4 resolves `binding(BindingAction<State>)`
-        // against the candidate's own `@ObservableState` fields.
-        let matched = BindingActionResolver.resolve(
-            IdentifiedActionResolver.resolve(resolved, among: deduped)
-        )
-        // M8.B — hidden-mutability bodies write to static / global
-        // vars; running N action sequences against such a reducer
-        // produces meaningless outcomes (state persists across runs).
-        // Reject cleanly so the caller surfaces an actionable error
-        // instead of a confusing `.measuredDefaultFails`.
-        if matched.purity == .hiddenMutability {
-            throw VerifyInteractionError.hiddenMutability(reducer: matched.qualifiedName)
-        }
-        // Workplan Phase 4, reducer-path slice — async reducers are admitted
-        // under the clock-determinism claim (`@ClockDeterministic` /
-        // `/// @lint.determinism clock_deterministic`): the emitter awaits
-        // the reducer from an async `main()`. Bare async stays rejected —
-        // un-annotated async would make seeded sequence replays
-        // nondeterministic (same conjunction posture as the ViewModel action
-        // surface and the generic-laws determinism template).
-        if matched.isAsync, matched.isClockDeterministic == false {
-            throw VerifyInteractionError.asyncReducer(reducer: matched.qualifiedName)
-        }
-        let resolvedModuleName = userModuleName ?? target
-        let inputs = ActionSequenceStubEmitter.Inputs(
-            candidate: matched,
-            userModuleName: resolvedModuleName,
-            sequenceCount: sequenceCount,
-            invariant: invariant
-        )
-        let stubSource: String
-        do {
-            stubSource = try ActionSequenceStubEmitter.emit(inputs)
-        } catch let error as ActionSequenceStubEmitter.EmitError {
-            throw VerifyInteractionError.unsupported(reason: error.description)
-        }
-        return (matched, stubSource)
-    }
+    // `resolveAndEmit` (public pure leg) + `resolveEmitAndSeed` (its
+    // Slice-2-aware core, which mines the project's `TestStore` tests and
+    // threads the payload-free orderings into the stub) + the `SeededEmission`
+    // result live in VerifyInteractionPipeline+Resolve.swift (extracted for
+    // the SwiftLint file_length / type_body_length caps).
 
     /// V2.0 M3.E.4 — full path: resolveAndEmit → synthesize a
     /// workdir under `<packageRoot>/.swiftinfer/verify-interaction-workdir/`
@@ -106,20 +43,23 @@ public enum VerifyInteractionPipeline {
         userModuleName: String? = nil,
         workingDirectory: URL
     ) throws -> String {
-        let (candidate, stubSource) = try resolveAndEmit(
+        let seeded = try resolveEmitAndSeed(
             target: target,
             pinRaw: pinRaw,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
             workingDirectory: workingDirectory
         )
+        let candidate = seeded.candidate
+        let stubSource = seeded.stubSource
         let resolvedModuleName = userModuleName ?? target
         let result = try executeAndParse(
             candidate: candidate,
             stubSource: stubSource,
             userModuleName: resolvedModuleName,
             workingDirectory: workingDirectory,
-            corpusSourceDirectory: corpusSourceDirectory(target: target, workingDirectory: workingDirectory)
+            corpusSourceDirectory: corpusSourceDirectory(target: target, workingDirectory: workingDirectory),
+            seedTraceCount: seeded.seedTraceCount
         )
         // V2.0 M8.C — on `.measuredDefaultFails`, persist a @Test-shape
         // regression file under `Tests/Generated/SwiftInferTraces/`.
@@ -178,7 +118,7 @@ public enum VerifyInteractionPipeline {
         persistEvidence: Bool = true,
         workingDirectory: URL
     ) throws -> InteractionVerifyOutcomeParser.Result {
-        let (candidate, stubSource) = try resolveAndEmit(
+        let seeded = try resolveEmitAndSeed(
             target: target,
             pinRaw: invariant.reducerQualifiedName,
             sequenceCount: sequenceCount,
@@ -186,6 +126,8 @@ public enum VerifyInteractionPipeline {
             invariant: invariant,
             workingDirectory: workingDirectory
         )
+        let candidate = seeded.candidate
+        let stubSource = seeded.stubSource
         // Cycle 139 — refint Identifiable gate: skip the build (disclosed
         // architectural-coverage-pending) when `$0.id` provably can't compile.
         if let skip = applyRefintIdentifiabilityGate(
@@ -199,7 +141,8 @@ public enum VerifyInteractionPipeline {
             stubSource: stubSource,
             userModuleName: userModuleName ?? target,
             workingDirectory: workingDirectory,
-            corpusSourceDirectory: corpusSourceDirectory(target: target, workingDirectory: workingDirectory)
+            corpusSourceDirectory: corpusSourceDirectory(target: target, workingDirectory: workingDirectory),
+            seedTraceCount: seeded.seedTraceCount
             // Cycle 120 m4 — reducer-keyed workdir (identity omitted). The
             // survey parallelizes *across* reducers but runs one reducer's
             // sibling identities serially in this shared warm workdir, so
@@ -292,7 +235,8 @@ public enum VerifyInteractionPipeline {
         userModuleName: String,
         workingDirectory: URL,
         identity: String? = nil,
-        corpusSourceDirectory: URL? = nil
+        corpusSourceDirectory: URL? = nil,
+        seedTraceCount: Int = 0
     ) throws -> InteractionVerifyOutcomeParser.Result {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
         let (workdir, workdirInputs) = makeWorkdirInputs(WorkdirRequest(
@@ -325,7 +269,8 @@ public enum VerifyInteractionPipeline {
             stdout: runOutput.stdout,
             stderr: runOutput.stderr
         )
-        return foldPartialExplorationDisclosure(parsed, candidate: candidate)
+        let folded = foldPartialExplorationDisclosure(parsed, candidate: candidate)
+        return foldSeedTraceDisclosure(folded, seedTraceCount: seedTraceCount)
     }
 
     // `findPackageRoot` + `workdirSegment` live in

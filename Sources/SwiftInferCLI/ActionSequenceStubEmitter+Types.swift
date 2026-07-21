@@ -21,13 +21,25 @@ extension ActionSequenceStubEmitter {
         /// post-loop double-apply for Idempotence).
         public let invariant: InteractionInvariantSuggestion?
 
+        /// TestStore Trace Mining (Slice 2) — developer-authored,
+        /// payload-free action orderings mined from the repo's own
+        /// `TestStore` tests. Each element is a trace: an ordered list of
+        /// enum case names (`["dismiss", "refresh"]`), emitted as
+        /// `[.dismiss, .refresh]` and checked through the same per-step
+        /// invariant loop *before* random generation (replay-then-extend).
+        /// Empty (the default) → byte-identical output to the pre-Slice-2
+        /// stub. The selector guarantees every name is a payload-free case
+        /// in the candidate's Action alphabet, so the literals compile.
+        public let seedTraces: [[String]]
+
         public init(
             candidate: ReducerCandidate,
             userModuleName: String,
             sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
             lengthLowerBound: Int = 0,
             lengthUpperBound: Int = 16,
-            invariant: InteractionInvariantSuggestion? = nil
+            invariant: InteractionInvariantSuggestion? = nil,
+            seedTraces: [[String]] = []
         ) {
             self.candidate = candidate
             self.userModuleName = userModuleName
@@ -35,6 +47,7 @@ extension ActionSequenceStubEmitter {
             self.lengthLowerBound = lengthLowerBound
             self.lengthUpperBound = lengthUpperBound
             self.invariant = invariant
+            self.seedTraces = seedTraces
         }
     }
 

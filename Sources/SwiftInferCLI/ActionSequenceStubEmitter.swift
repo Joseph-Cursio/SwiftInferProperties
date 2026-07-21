@@ -171,17 +171,16 @@ public enum ActionSequenceStubEmitter {
         lines.append("        let pinPrefix = env[\"\(pinPrefixLengthEnvVar)\"].flatMap(Int.init)")
         lines.append("        let pinSuffixStart = env[\"\(pinSuffixStartEnvVar)\"].flatMap(Int.init)")
         lines.append("        var rng = Xoshiro(seed: (\(seedTuple(for: inputs.candidate))))")
-        lines.append(contentsOf: generatorLines(inputs: inputs, isTCA: isTCA))
-        lines.append("        var clean = 0")
-        lines.append("        for sequenceIndex in 0..<\(inputs.sequenceCount) {")
-        lines.append(contentsOf: makeIterationBody(
+        // `var clean = 0` + mined-trace replay + random loop + outcome
+        // marker — assembled in `+TraceMining.swift` to keep this function
+        // and file under SwiftLint's caps.
+        lines.append(contentsOf: mainLoopLines(
+            inputs: inputs,
             stateInit: stateInit,
             applyStep: applyStep,
             perStepCheck: perStepCheck,
             postLoopCheck: postLoopCheck
         ))
-        lines.append("        }")
-        lines.append("        print(\"\(cleanOutcomeMarker) totalRuns=\\(\(inputs.sequenceCount)) clean=\\(clean)\")")
         lines.append("    }")
         lines.append("}")
         lines.append("")
@@ -193,7 +192,7 @@ public enum ActionSequenceStubEmitter {
     /// cap as the M8.D.1 stderr-marker write + M8.D.2 pin-sequence
     /// branches landed. Lines are pre-indented to 12 spaces (the
     /// `for sequenceIndex` block's interior depth).
-    private static func makeIterationBody(
+    static func makeIterationBody(
         stateInit: String,
         applyStep: [String],
         perStepCheck: [String],
@@ -226,6 +225,8 @@ public enum ActionSequenceStubEmitter {
 
     // `makePerStepCheck` / `makePostLoopCheck` / `makeIdempotenceCheck`
     // are nested via extension in ActionSequenceStubEmitter+FamilyChecks.swift.
+    // `mainLoopLines` / `minedTraceReplayLines` (TestStore Trace Mining,
+    // Slice 2) are nested via extension in ActionSequenceStubEmitter+TraceMining.swift.
 
     /// V2.0 M4.D / M5 / M6 — reject invariant families that don't
     /// have an emission path yet. Conservation + Idempotence ship

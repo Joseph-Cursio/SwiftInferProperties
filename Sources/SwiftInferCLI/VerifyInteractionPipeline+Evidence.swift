@@ -117,4 +117,32 @@ extension VerifyInteractionPipeline {
             excludedActionCount: excluded.count
         )
     }
+
+    /// TestStore Trace Mining (Slice 2) — append a replay-then-extend note to
+    /// the verdict `detail` so the evidence record + render disclose that
+    /// developer-authored orderings were checked ahead of random generation
+    /// (explainability, PRD §4.5). No-op when nothing was mined
+    /// (`seedTraceCount == 0`) — preserves the un-mined verdict text exactly.
+    /// Preserves every other `Result` field (notably `excludedActionCount`,
+    /// which the discover-side full-coverage gate reads).
+    static func foldSeedTraceDisclosure(
+        _ result: InteractionVerifyOutcomeParser.Result,
+        seedTraceCount: Int
+    ) -> InteractionVerifyOutcomeParser.Result {
+        guard seedTraceCount > 0 else {
+            return result
+        }
+        let noun = seedTraceCount == 1 ? "trace" : "traces"
+        let note = "replay-then-extend: checked \(seedTraceCount) developer-authored "
+            + "\(noun) before random generation"
+        let detail = result.detail.map { "\($0) | \(note)" } ?? note
+        return InteractionVerifyOutcomeParser.Result(
+            outcome: result.outcome,
+            totalRuns: result.totalRuns,
+            cleanRuns: result.cleanRuns,
+            detail: detail,
+            failingSequenceIndex: result.failingSequenceIndex,
+            excludedActionCount: result.excludedActionCount
+        )
+    }
 }
