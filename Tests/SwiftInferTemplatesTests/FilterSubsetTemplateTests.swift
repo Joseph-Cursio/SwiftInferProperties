@@ -64,6 +64,13 @@ struct FilterSubsetTemplateTests {
         #expect(FilterSubsetTemplate.isFilter(fn))
     }
 
+    @Test("the Array<T> element form fires, not just the [T] bracket form")
+    func arrayGenericFormFires() {
+        // `arrayElement` handles `Array<Rule>` as well as `[Rule]` — this pins that branch.
+        let fn = filterFn("keepRules", params: [param(nil, "Array<Rule>")], returns: "Array<Rule>")
+        #expect(FilterSubsetTemplate.isFilter(fn))
+    }
+
     // MARK: - Does not fire
 
     @Test("a map-shaped [Int] -> [Int] with a non-filter name does NOT fire")
