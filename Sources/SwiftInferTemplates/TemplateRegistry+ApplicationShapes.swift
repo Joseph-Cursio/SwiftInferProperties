@@ -39,6 +39,22 @@ extension TemplateRegistry {
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
         collectInvolutionSuggestions(summaries: summaries, into: &collector)
         collectReorderPartitionSuggestions(summaries: summaries, into: &collector)
+        collectFilterSubsetSuggestions(summaries: summaries, into: &collector)
+    }
+
+    /// A `[T], … -> [T]` named like a filter: it owes `Set(result) ⊆ Set(haystack)`.
+    /// Its own pass because it is a single-function shape the algebraic catalogue
+    /// never named — the gap that made a real app fall back to the determinism
+    /// tautology on `filterViolations` (see `docs/roadtest-swiftlintrulestudio.md`).
+    private static func collectFilterSubsetSuggestions(
+        summaries: [FunctionSummary],
+        into collector: inout SuggestionCollector
+    ) {
+        for summary in summaries {
+            if let suggestion = FilterSubsetTemplate.suggest(for: summary) {
+                collector.record(suggestion, generatorType: FilterSubsetTemplate.haystackType(of: summary))
+            }
+        }
     }
 
     /// The *reorder* sense of "partition": a `mutating` method that rearranges its
