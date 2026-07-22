@@ -168,6 +168,64 @@ struct FunctionPairingTests {
         #expect(FunctionPairing.candidates(in: [make, decode]).isEmpty)
     }
 
+    // MARK: - Synthetic init-decode admission gate (road-test #10)
+
+    @Test("A synthetic init-decode pairs with an encode whose name embeds its label stem")
+    func initDecodePairsWhenLabelStems() throws {
+        // `func base64EncodedString() -> String` on Blob (domain = receiver) +
+        // a synthesized `init(base64Encoded:)` decode: "base64EncodedString"
+        // embeds "base64Encoded", so the codec pair is admitted.
+        let encode = makeSummary(
+            name: "base64EncodedString", returnType: "String", containingType: "Blob", line: 5
+        )
+        let decode = makeSummary(
+            name: "base64Encoded", paramType: "String", returnType: "Blob",
+            isInitializer: true, containingType: "Blob", line: 1
+        )
+        let pairs = FunctionPairing.candidates(in: [encode, decode])
+        #expect(pairs.count == 1)
+        #expect(try #require(pairs.first).reverse.name == "base64EncodedString")
+    }
+
+    @Test("A synthetic init-decode does NOT pair with a same-typed getter whose name is unrelated")
+    func initDecodeDoesNotPairWithUnrelatedGetter() {
+        // The SwiftLintRuleStudio road-test noise: `CustomRuleConflict(ruleIdentifier:)`
+        // type-matches every `CustomRuleConflict -> String` getter. Neither `id()`
+        // nor `message()` embeds "ruleIdentifier", so no spurious codec pair forms.
+        let initDecode = makeSummary(
+            name: "ruleIdentifier", paramType: "String", returnType: "CustomRuleConflict",
+            isInitializer: true, containingType: "CustomRuleConflict", line: 1
+        )
+        let identifier = makeSummary(
+            name: "id", returnType: "String", containingType: "CustomRuleConflict", line: 5
+        )
+        let message = makeSummary(
+            name: "message", returnType: "String", containingType: "CustomRuleConflict", line: 9
+        )
+        #expect(FunctionPairing.candidates(in: [initDecode, identifier, message]).isEmpty)
+    }
+
+    @Test("An unlabelled synthetic init (bare name \"init\") never pairs — no stem to match")
+    func unlabelledInitNeverPairs() {
+        let initDecode = makeSummary(
+            name: "init", paramType: "String", returnType: "Blob",
+            isInitializer: true, containingType: "Blob", line: 1
+        )
+        let encode = makeSummary(
+            name: "serialize", returnType: "String", containingType: "Blob", line: 5
+        )
+        #expect(FunctionPairing.candidates(in: [initDecode, encode]).isEmpty)
+    }
+
+    @Test("The gate does not touch ordinary (non-initializer) pairs")
+    func ordinaryPairsUnaffectedByGate() {
+        // Two non-init functions with inverse type shape and unrelated names
+        // still pair — naming stays a signal, not a pre-filter, for real pairs.
+        let encode = makeSummary(name: "alpha", paramType: "MyType", returnType: "Data", line: 3)
+        let decode = makeSummary(name: "omega", paramType: "Data", returnType: "MyType", line: 7)
+        #expect(FunctionPairing.candidates(in: [encode, decode]).count == 1)
+    }
+
     // MARK: - sharedDiscoverableGroup (M5.1)
 
     @Test("sharedDiscoverableGroup is nil when neither half is annotated")
@@ -195,8 +253,11 @@ struct FunctionPairingTests {
         let pair = makePair(forwardGroup: "codec", reverseGroup: "codec")
         #expect(pair.sharedDiscoverableGroup == "codec")
     }
+}
 
-    // MARK: - Helpers
+// Helpers live in an extension so the primary suite body stays under
+// SwiftLint's `type_body_length` cap (extension bodies are exempt).
+extension FunctionPairingTests {
 
     private func makePair(
         forwardGroup: String?,
@@ -226,6 +287,7 @@ struct FunctionPairingTests {
         returnType: String?,
         isMutating: Bool = false,
         isStatic: Bool = false,
+        isInitializer: Bool = false,
         containingType: String? = nil,
         file: String = "Test.swift",
         line: Int = 1,
@@ -250,7 +312,8 @@ struct FunctionPairingTests {
             location: SourceLocation(file: file, line: line, column: 1),
             containingTypeName: containingType,
             bodySignals: .empty,
-            discoverableGroup: discoverableGroup
+            discoverableGroup: discoverableGroup,
+            isInitializer: isInitializer
         )
     }
 }

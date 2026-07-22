@@ -55,11 +55,54 @@ public enum FunctionPairing {
         let pairable = summaries.filter(isPairable)
         var pairs: [FunctionPair] = []
         for (lhsIndex, lhs) in pairable.enumerated() {
-            for rhs in pairable.dropFirst(lhsIndex + 1) where hasInverseTypeShape(lhs, rhs) {
+            for rhs in pairable.dropFirst(lhsIndex + 1)
+                where hasInverseTypeShape(lhs, rhs) && initializerPairAdmissible(lhs, rhs) {
                 pairs.append(orientedPair(lhs, rhs))
             }
         }
         return pairs.sorted(by: lessThan)
+    }
+
+    /// A synthetic init-derived decode half (`isInitializer`, produced only by
+    /// `InitializerDecodeSynthesizer`) exists solely to complete a codec
+    /// round-trip: it may pair ONLY with an encode half whose name embeds the
+    /// init's argument-label stem (`base64EncodedString` embeds `base64Encoded`).
+    /// Without that relationship a synthetic init pairs by bare type-shape with
+    /// every same-typed getter on its carrier — e.g.
+    /// `CustomRuleConflict(ruleIdentifier:)` × `id()` / `message()` — which is
+    /// pure noise (SwiftLintRuleStudio road-test #10). Real scanned functions
+    /// never carry `isInitializer` (see its doc comment), so this gate is scoped
+    /// precisely to the synthetic halves and does NOT reintroduce a naming
+    /// pre-filter for ordinary pairs ("naming is a signal, not a pre-filter",
+    /// cycle-4).
+    static func initializerPairAdmissible(
+        _ lhs: FunctionSummary,
+        _ rhs: FunctionSummary
+    ) -> Bool {
+        let initHalf: FunctionSummary
+        let encodeHalf: FunctionSummary
+        if lhs.isInitializer {
+            initHalf = lhs
+            encodeHalf = rhs
+        } else if rhs.isInitializer {
+            initHalf = rhs
+            encodeHalf = lhs
+        } else {
+            return true   // neither half is a synthetic init — no gate
+        }
+        return initializerLabelStemMatches(label: initHalf.name, encodeName: encodeHalf.name)
+    }
+
+    /// Whether a synthetic init-decode half named `label` (its argument-label
+    /// stem) is embedded, case-insensitively, in `encodeName` — the codec
+    /// relationship `base64EncodedString` ⊃ `base64Encoded`. An unlabelled init
+    /// synthesizes to the bare name `"init"` (no stem to match); a <3-char label
+    /// is too short to be a meaningful stem. Shared by the pairing admission gate
+    /// above and `RoundTripTemplate.initializerLabelStemSignal`'s `+40` name
+    /// signal, so the pairing filter and the scorer can't drift.
+    static func initializerLabelStemMatches(label: String, encodeName: String) -> Bool {
+        guard label != "init", label.count >= 3 else { return false }
+        return encodeName.lowercased().contains(label.lowercased())
     }
 
     /// The **domain** of `summary` viewed as a transformation

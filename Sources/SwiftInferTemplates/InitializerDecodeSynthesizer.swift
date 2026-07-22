@@ -80,10 +80,11 @@ extension RoundTripTemplate {
             return nil
         }
         let label = initHalf.name
-        // An unlabelled init (`init(_:)`) synthesizes to the bare name "init" —
-        // no stem to match. Require a real label of ≥3 characters.
-        guard label != "init", label.count >= 3,
-              encodeHalf.name.lowercased().contains(label.lowercased()) else {
+        // Same admission predicate `FunctionPairing` gates the pair on, so the
+        // filter and this +40 signal can't drift: an unlabelled init (`init(_:)`)
+        // synthesizes to the bare name "init" (no stem), a <3-char label is too
+        // short, and the encode name must embed the label case-insensitively.
+        guard FunctionPairing.initializerLabelStemMatches(label: label, encodeName: encodeHalf.name) else {
             return nil
         }
         return Signal(
