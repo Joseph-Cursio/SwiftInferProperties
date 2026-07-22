@@ -45,19 +45,38 @@ public enum GeneratorSelection {
         // persisted shape (WS-6 Slice 2 threads the resolver there separately).
         let resolver = GeneratorResolver(types: Array(shapesByName.values))
         return suggestions.map { suggestion in
-            guard let typeName = generatorTypeByIdentity[suggestion.identity],
-                  let shape = shapesByName[typeName] else {
+            guard let typeName = generatorTypeByIdentity[suggestion.identity] else {
                 return suggestion
             }
-            let strategy = DerivationStrategist.strategy(
-                for: shape,
+            if let shape = shapesByName[typeName] {
+                let strategy = DerivationStrategist.strategy(
+                    for: shape,
+                    resolve: resolver.customTypeGenerator
+                )
+                return rebuild(
+                    suggestion,
+                    withGenerator: makeMetadata(strategy: strategy, sampling: suggestion.generator.sampling)
+                )
+            }
+            // Fix 1 (road-test): the carrier isn't a corpus struct/enum — it's a
+            // stdlib / collection / composite type (`String`, `[String]`,
+            // `[String: Int]`, a composite of resolvable leaves). The M4 default
+            // skipped these to `.notYetComputed`, but app kernels are overwhelmingly
+            // stdlib/collection-typed, and `CompositeMemberParser` already derives
+            // them (it is what the accept path uses). Only fall through to
+            // `.notYetComputed` when even it can't — an external / unrecognized type.
+            if DerivationStrategist.composedGenerator(
+                forTypeName: typeName,
                 resolve: resolver.customTypeGenerator
-            )
-            let metadata = makeMetadata(
-                strategy: strategy,
-                sampling: suggestion.generator.sampling
-            )
-            return rebuild(suggestion, withGenerator: metadata)
+            ) != nil {
+                let metadata = GeneratorMetadata(
+                    source: .derivedComposite,
+                    confidence: .high,
+                    sampling: suggestion.generator.sampling
+                )
+                return rebuild(suggestion, withGenerator: metadata)
+            }
+            return suggestion
         }
     }
 

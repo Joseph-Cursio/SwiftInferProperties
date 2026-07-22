@@ -32,11 +32,14 @@ struct TemplateRegistryGeneratorTests {
         #expect(idempotence.generator.sampling == .notRun)
     }
 
-    @Test("GeneratorSelection skips stdlib-typed properties — open decision #2 default")
-    func generatorSelectionSkipsStdlibTypedProperties() throws {
-        // String isn't in the corpus's TypeShape index — selection
-        // skips, generator stays .notYetComputed.
-        let directory = try writeRegistryFixture(named: "GenSelectSkipStdlib", contents: """
+    @Test("GeneratorSelection derives stdlib-typed carriers via the composite fallback")
+    func generatorSelectionDerivesStdlibTypedProperties() throws {
+        // `normalize(String) -> String` — String isn't a corpus TypeShape, but it is
+        // trivially generatable. The old "open decision #2 (a) skip non-corpus types"
+        // left it `.notYetComputed`; the road-test showed app kernels are
+        // overwhelmingly stdlib/collection-typed, so selection now derives it
+        // directly (`.derivedComposite`) rather than telling the reader "not derived".
+        let directory = try writeRegistryFixture(named: "GenSelectStdlib", contents: """
         struct Sanitizer {
             func normalize(_ value: String) -> String {
                 return normalize(normalize(value))
@@ -46,8 +49,8 @@ struct TemplateRegistryGeneratorTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = try TemplateRegistry.discover(in: directory)
         let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
-        #expect(idempotence.generator.source == .notYetComputed)
-        #expect(idempotence.generator.confidence == nil)
+        #expect(idempotence.generator.source == .derivedComposite)
+        #expect(idempotence.generator.confidence == .high)
     }
 
     @Test("GeneratorSelection populates registered for static gen() corpus types")

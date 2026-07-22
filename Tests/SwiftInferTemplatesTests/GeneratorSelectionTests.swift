@@ -132,6 +132,57 @@ struct GeneratorSelectionTests {
         #expect(lifted.carrierTypeName == "Money")
     }
 
+    // MARK: apply — composite fallback for stdlib / collection carriers (road-test Fix 1)
+
+    /// A non-empty corpus so the `shapesByName.isEmpty` early return doesn't fire,
+    /// while the carrier under test is NOT a corpus type.
+    private func dummyCorpus() -> [String: TypeShape] {
+        ["Widget": TypeShape(
+            name: "Widget", kind: .struct, inheritedTypes: [],
+            hasUserGen: false, storedMembers: [], hasUserInit: false
+        )]
+    }
+
+    @Test("apply derives a stdlib collection carrier ([String]) as .derivedComposite")
+    func apply_derivesStdlibCollectionCarrier() throws {
+        // A `deindent([String]) -> [String]` / `mergedWith([String]?)`-style carrier:
+        // a stdlib composite the corpus doesn't declare. Was skipped to
+        // notYetComputed; the composite parser derives it directly.
+        let suggestion = makePlaceholderSuggestion(typeText: "[String]")
+        let result = GeneratorSelection.apply(
+            to: [suggestion],
+            generatorTypeByIdentity: [suggestion.identity: "[String]"],
+            shapesByName: dummyCorpus()
+        )
+        #expect(result.first?.generator.source == .derivedComposite)
+    }
+
+    @Test("apply derives a bare String carrier as .derivedComposite")
+    func apply_derivesStringCarrier() throws {
+        // `isVersion(String, String) -> Bool` — String is trivially generatable.
+        let suggestion = makePlaceholderSuggestion(typeText: "String")
+        let result = GeneratorSelection.apply(
+            to: [suggestion],
+            generatorTypeByIdentity: [suggestion.identity: "String"],
+            shapesByName: dummyCorpus()
+        )
+        #expect(result.first?.generator.source == .derivedComposite)
+    }
+
+    @Test("apply leaves a non-corpus custom carrier (external Node) at notYetComputed")
+    func apply_leavesExternalCustomCarrierNotDerived() throws {
+        // A type the corpus doesn't declare and the composite parser can't
+        // recognize (an external Yams `Node`): stays not-derived — the fallback
+        // never over-claims. This is the designed `.todo`/gen() boundary.
+        let suggestion = makePlaceholderSuggestion(typeText: "Node")
+        let result = GeneratorSelection.apply(
+            to: [suggestion],
+            generatorTypeByIdentity: [suggestion.identity: "Node"],
+            shapesByName: dummyCorpus()
+        )
+        #expect(result.first?.generator.source == .notYetComputed)
+    }
+
     @Test
     func apply_recursivelyDerivesNestedCustomTypeMember() throws {
         // WS-6 Slice 1 — struct Wallet { let balance: Money } where Money is a

@@ -126,7 +126,9 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("✓ Self-composition detected in body"))
         #expect(recording.text.contains("✓ Value-semantic carrier (Sanitizer)"))
         #expect(recording.text.contains("⚠ T must conform to Equatable"))
-        #expect(recording.text.contains("Generator: not derived (no strategy matched this type)"))
+        // The `String` carrier is not a corpus type but is trivially generatable —
+        // the composite fallback derives it rather than reporting "not derived".
+        #expect(recording.text.contains("Generator: .derivedComposite, confidence: .high"))
         #expect(recording.text.contains("Sampling:  not run; lifted test seed: 0x"))
     }
 

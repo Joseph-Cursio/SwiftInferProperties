@@ -232,6 +232,13 @@ public struct GeneratorMetadata: Sendable, Equatable {
         case derivedInitializer
         case derivedEnumCases
         case derivedCodableRoundTrip
+        /// A stdlib / collection / composite carrier the corpus doesn't declare
+        /// (`String`, `[String]`, `[String: Int]`, a composite of resolvable
+        /// leaves) — derived directly via `CompositeMemberParser`, not by matching
+        /// a corpus `TypeShape`. Fills the gap the app road-test surfaced: kernels
+        /// are overwhelmingly stdlib/collection-typed, and those were being skipped
+        /// to `.notYetComputed` despite being trivially generatable.
+        case derivedComposite
         case registered
         case todo
         case inferredFromTests

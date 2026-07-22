@@ -235,7 +235,7 @@ public enum SuggestionRenderer {
 
         case .derivedCaseIterable, .derivedRawRepresentable,
              .derivedMemberwise, .derivedInitializer, .derivedEnumCases,
-             .derivedCodableRoundTrip,
+             .derivedCodableRoundTrip, .derivedComposite,
              .registered, .todo, .inferredFromTests:
             let confidenceFragment = meta.confidence.map { ", confidence: .\($0.rawValue)" } ?? ""
             return "Generator: .\(meta.source.rawValue)\(confidenceFragment)"
