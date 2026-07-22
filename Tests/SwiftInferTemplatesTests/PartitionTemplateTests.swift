@@ -71,6 +71,17 @@ struct PartitionTemplateTests {
         #expect(shape.progress?.name == "progress")
     }
 
+    /// Registry-wiring coverage: `partition` is pairing-based, so it is not in the
+    /// `singleFunctionAppShapes` registry `ApplicationShapeRegistryTests` iterates —
+    /// its `collectPartitionSuggestions` `record` branch is only proven by driving a
+    /// partition corpus through `discover`, which the coverage run showed nothing did
+    /// (it sat at 57%). This closes that branch.
+    @Test("a partition shape fires through discover")
+    func partitionFiresThroughDiscover() {
+        let suggestions = TemplateRegistry.discover(in: chunkPlan)
+        #expect(suggestions.contains { $0.templateName == "partition" })
+    }
+
     @Test("the suggested laws are ones an implementation can fail")
     func lawsAreRefutable() throws {
         let shape = try #require(PartitionPairing.candidates(in: chunkPlan).first)
