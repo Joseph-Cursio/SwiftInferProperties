@@ -12,8 +12,14 @@ The verdict: **the tool is not broken, it is out-of-catalog.** The subject's
 interesting kernels are filter / selection / set-algebra / parse shapes the law
 families don't name; one key kernel is gated out by `throws`; and everything
 that isn't a primitive-typed pure function scores below the visibility cut for
-lack of a derivable generator. No fixes landed yet — this is the write-up that
-precedes them.
+lack of a derivable generator.
+
+> **Reconciled 2026-07-22.** This began as the pre-fix write-up. Three of the
+> prioritised fixes have since shipped (subset/filter template, throwing-function
+> determinism, generator derivation incl. the upstream >10-member kit change) —
+> see [Fixes shipped](#fixes-shipped-reconciled-2026-07-22), which also carries a
+> correction to root cause 2. The diagnosis below is left as the record of what
+> was found.
 
 ## Setup (honesty)
 
@@ -138,7 +144,7 @@ six role-entailed `predicate` laws that SwiftProjectLint's pure-function rule
 *failed to seed* — "a shape the linter cannot see (a computed-property read, a
 call to `min`)." Part of the under-recommendation is upstream of `swift-infer`.
 
-## Prioritised toolchain fixes (for the follow-up, not done here)
+## Prioritised toolchain fixes
 
 1. **Throws-tolerant round-trip pairing** (root cause 2) — smallest change,
    unblocks the highest-value law (`serialize ↔ parse`). Let a throwing producer
@@ -157,12 +163,59 @@ call to `min`)." Part of the under-recommendation is upstream of `swift-infer`.
 5. **Report the linter gap** (root cause 5) upstream in SwiftProjectLint's
    pure-function detection (computed-property reads, `min`/`max` calls).
 
+## Fixes shipped (reconciled 2026-07-22)
+
+The prioritised list above is now a changelog. What landed — and one correction
+to the diagnosis:
+
+| Fix | Root cause | Status |
+|---|---|---|
+| Subset/filter law family | 1 | ✅ `filter-subset` template (`748dd81`) — `filterViolations` owes a refutable `Set(result) ⊆ Set(haystack)` instead of `f(x)==f(x)` |
+| Throwing functions earn a law | 2 (re-diagnosed) | ✅ `9e1e066` — see correction below |
+| Generator derivation | 3 | ✅ discover-side composite fallback (`3bf23e0`) + upstream nested-`zip` >10 members (`SwiftPropertyLaws v3.17.0`; floor-bumped `830c344`) |
+| Widen monotonicity / selection-ancestry | 1 (`layerChain`) | ⬜ open — `layerChain` still gets the tautology |
+| Report the linter gap | 5 | ⬜ open — upstream in SwiftProjectLint's pure-function detection |
+| Don't let generator-readiness hide refutable laws | 4 | ⬜ open — the tier cut is unchanged |
+
+**Correction to root cause 2.** *"`throws` refutes purity at index time"* was
+wrong, and tracing the code showed why: the `round-trip` template already
+*tolerates* `throws` (it renders a domain-narrowing caveat, not a veto).
+`serialize` produced nothing for two other reasons — the generic **determinism**
+fallback explicitly excluded throwing functions (`qualifiesForDeterminism`'s
+`isThrows == false` guard), and the `serialize ↔ parse` round-trip can't form
+because the app exposes no `String -> YAMLConfig` inverse (`load()` mutates
+`self`). The fix (`9e1e066`) un-gates the determinism synthesis for throwing pure
+functions and emits a sound `(try? f(x)) == (try? f(x))` stub (a throwing input
+collapses to `nil == nil`, so no false positive). That earns `serialize` the
+determinism **floor** — a tautology, not the round-trip. The refutable round-trip
+still needs an app-side `parse(String) -> YAMLConfig`; the tool is correctly
+silent until one exists.
+
+**After the fixes (same two commands):**
+- Unseeded whole-target *"not derived"*: **20 → 6**. The 15 that flipped to
+  `.derivedComposite` are the stdlib/collection carriers (`deindent`,
+  `mergedWith`, `isVersion`, …) the selection layer used to skip.
+- With the >10-member nesting, `filterViolations`'s `[Violation]` carrier now
+  derives (`.derivedComposite`) — it needed **both** the composite fallback *and*
+  `Violation`'s 11 members composing past the old zip-10 wall.
+- `serialize` moved from *nothing* to the determinism floor, with a throws-aware
+  caveat.
+
+**Still open, by design or scope:** `layerChain`'s selection/ancestry law (no
+template), SwiftProjectLint's pure-function seeding gap, the tier cut (root cause
+4), and — the honest boundary — `YAMLConfig`'s external Yams `Node` field, which
+no auto-derivation can reach (`.todo` is the right answer there).
+
 ## Net
 
 - **Runs:** 2 (`discover` unseeded + seeded), fully categorised.
 - **Confirmed:** the low yield is structural, not access — every miss traces to a
-  missing template, the `throws` veto, or an underivable generator, none to a
-  permissions/scan problem.
-- **Fixes landed:** 0 (deliberate — this is the pre-fix write-up).
-- **Next:** fix (1) then (2), test-first against the kit suite, then re-run this
-  road-test's two commands and diff the disposition table.
+  missing template, a determinism gate on `throws`, or an underivable generator,
+  none to a permissions/scan problem.
+- **Fixes landed:** 3 of 6 prioritised — subset/filter template (`748dd81`),
+  throwing-function determinism (`9e1e066`), generator derivation (`3bf23e0` +
+  `SwiftPropertyLaws v3.17.0`). "not derived" fell 20 → 6; the residual is the
+  designed boundary. See [Fixes shipped](#fixes-shipped-reconciled-2026-07-22).
+- **Still open:** the selection/ancestry law for `layerChain`, the linter
+  seeding gap, and the tier cut — plus the app-side `parse(String) -> YAMLConfig`
+  extraction that would unlock the `serialize ↔ parse` round-trip.
