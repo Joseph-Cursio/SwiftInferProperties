@@ -188,6 +188,8 @@ to the diagnosis:
 | Selection-ancestry template | 1 (`layerChain`) | ✅ `selection-subset` template (`288fdc4`) — `layerChain` owes `result ⊆ ConfigTree.configs` |
 | Diff characterization template | 1 (`generateDiff`) | ✅ `diff-disjointness` template (`f723744`) — `generateDiff` owes `added ∩ removed = ∅` |
 | Refutability decides visibility (the tier cut) | 4 | ✅ `52a16d7` — role-entailed refutable laws (incl. filter/selection/diff) surface on a default run, not just `--include-possible` |
+| Stop the spurious `CustomRuleConflict` round-trip pairing (the "noise" finding) | — | ✅ #10 — `FunctionPairing` admits a synthetic init-decode half only when the encode name embeds the init's argument-label stem (the same predicate `RoundTripTemplate` scores +40 on), so `CustomRuleConflict(ruleIdentifier:)` no longer pairs with the unrelated `id()` / `message()` getters |
+| Registered-generator hook for the external `Node` boundary | 3 (residual) | ✅ #10 — `Vocabulary.registeredGenerators` supplies a generator for an underivable external member (`{ "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }`); `discover` on a `YAMLConfig`-shaped struct moves from `Generator: .todo` to a derived generator, composing the rest of the struct rather than gating the whole carrier |
 | Report the linter gap | 5 | ✗ withdrawn — verified a phantom: `swiftprojectlint --format pbt-seeds` emits 85 seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest (see the correction under root cause 5) |
 
 **Correction to root cause 2.** *"`throws` refutes purity at index time"* was
@@ -215,10 +217,12 @@ silent until one exists.
   caveat.
 
 **Still open, by design or scope:** `parseParameters`' metamorphic laws
-(domain-specific — belong in the app's hand-written suite, not a template); the
-`serialize ↔ parse` round-trip (needs an app-side `parse(String) -> YAMLConfig`);
-and — the honest boundary — `YAMLConfig`'s external Yams `Node` field, which no
-auto-derivation can reach (`.todo` is the right answer there). *Withdrawn:* the
+(domain-specific — belong in the app's hand-written suite, not a template); and
+the `serialize ↔ parse` round-trip (needs an app-side `parse(String) ->
+YAMLConfig`). *Closed by #10:* the `CustomRuleConflict` round-trip noise (a
+pairing tightening) and the `YAMLConfig` external-`Node` boundary — no longer a
+hard `.todo` wall but a *registration*: `Node`'s generator is now something the
+project can supply rather than something the tool must derive. *Withdrawn:* the
 "linter seeding gap" (root cause 5) was a phantom — see the correction above.
 
 ## Net
@@ -237,3 +241,7 @@ auto-derivation can reach (`.todo` is the right answer there). *Withdrawn:* the
 - **Still open:** `parseParameters`' metamorphic laws (out-of-catalog, → the app's
   hand-written suite) and the app-side `parse(String) -> YAMLConfig` extraction
   that would unlock the `serialize ↔ parse` round-trip.
+- **#10 closed** the two smaller items: the `CustomRuleConflict` round-trip noise
+  (`FunctionPairing` label-stem admission gate) and the external-`Node`
+  generator boundary (`Vocabulary.registeredGenerators` hook — `discover` moves
+  `YAMLConfig` off `.todo` once `Node`'s generator is registered).
