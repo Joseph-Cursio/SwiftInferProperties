@@ -62,7 +62,7 @@ SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 A one-sided identity (e.g. left-identity only) will pass the type pattern but \
 fail one of the emitted assertions under M4 sampling.
 
-Generator: not yet computed (M3 prerequisite)
+Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)

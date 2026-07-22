@@ -231,7 +231,7 @@ public enum SuggestionRenderer {
     private static func renderGeneratorLine(_ meta: GeneratorMetadata) -> String {
         switch meta.source {
         case .notYetComputed:
-            return "Generator: not yet computed (M3 prerequisite)"
+            return "Generator: not derived (no strategy matched this type)"
 
         case .derivedCaseIterable, .derivedRawRepresentable,
              .derivedMemberwise, .derivedInitializer, .derivedEnumCases,

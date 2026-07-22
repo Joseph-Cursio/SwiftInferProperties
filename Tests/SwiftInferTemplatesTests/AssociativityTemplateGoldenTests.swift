@@ -102,7 +102,7 @@ SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ Floating-point operations are typically not exactly associative under IEEE 754 — \
 a Double-typed candidate may pass the type pattern but fail sampling under M4.
 
-Generator: not yet computed (M3 prerequisite)
+Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)

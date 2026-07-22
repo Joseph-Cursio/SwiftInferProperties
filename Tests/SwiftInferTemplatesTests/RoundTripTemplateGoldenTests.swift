@@ -109,7 +109,7 @@ will surface false-positive failures (Appendix B.4).
   ⚠ T must conform to Equatable for the emitted property to compile. \
 SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 
-Generator: not yet computed (M3 prerequisite)
+Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)
@@ -144,7 +144,7 @@ will surface false-positive failures (Appendix B.4).
   ⚠ T must conform to Equatable for the emitted property to compile. \
 SwiftInfer M1 does not verify protocol conformance — confirm before applying.
 
-Generator: not yet computed (M3 prerequisite)
+Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  0x4C3618BEBBE59391
 Suppress:  // swiftinfer: skip 0x4C3618BEBBE59391

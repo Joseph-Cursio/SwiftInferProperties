@@ -98,7 +98,7 @@ Why this might be wrong:
 SwiftInfer M1 does not verify protocol conformance — confirm before applying.
   ⚠ If T is a class with a custom ==, the property is over value equality as T.== defines it.
 
-Generator: not yet computed (M3 prerequisite)
+Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
 Identity:  \(suggestion.identity.display)
 Suppress:  // swiftinfer: skip \(suggestion.identity.display)
