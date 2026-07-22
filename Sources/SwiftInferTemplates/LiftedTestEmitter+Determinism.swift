@@ -43,13 +43,26 @@ extension LiftedTestEmitter {
         parameters: [DeterminismParameter],
         seed: SamplingSeed.Value,
         equalityKind: EqualityKind = .strict,
-        isAsync: Bool = false
+        isAsync: Bool = false,
+        isThrows: Bool = false
     ) -> String {
         let shape = parameters.count == 1
             ? singleParameterShape(funcName: funcName, parameter: parameters[0])
             : tupleShape(funcName: funcName, parameters: parameters)
-        let call = isAsync ? "(await \(shape.call))" : shape.call
-        let property = equalityExpression(lhs: call, rhs: call, kind: equalityKind)
+        let property: String
+        if isThrows {
+            // A throwing pure function is deterministic over `Result`: compare
+            // `try? f(x)` on both sides. An input in the throwing domain collapses
+            // to `nil == nil` (no false positive); only a value difference — the
+            // hidden nondeterminism the law targets — falsifies it. Strict `==` on
+            // the resulting optional; the caveat already requires `Equatable`.
+            let prefix = isAsync ? "try? await " : "try? "
+            let call = "(\(prefix)\(shape.call))"
+            property = "\(call) == \(call)"
+        } else {
+            let call = isAsync ? "(await \(shape.call))" : shape.call
+            property = equalityExpression(lhs: call, rhs: call, kind: equalityKind)
+        }
         return makeTestStubExpression(
             testFunctionName: "\(funcName)_isDeterministic",
             seed: seed,

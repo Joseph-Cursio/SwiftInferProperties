@@ -80,4 +80,57 @@ struct EmittedDeterminismLawSoundnessTests {
             #expect(failed, "Nondeterministic '\(entry.name)' should fail the emitted law; got \(result)")
         }
     }
+
+    // MARK: - Throwing form: `(try? f(value)) == (try? f(value))`
+
+    private struct SampleError: Error {}
+
+    /// Runs the *throwing* determinism law the emitter writes for a throwing
+    /// function — `(try? f(value)) == (try? f(value))` — over generated Ints.
+    private static func checkThrowingDeterminism(
+        of transform: @escaping @Sendable (Int) throws -> Int
+    ) async -> BackendCheckResult<Int> {
+        await SwiftPropertyBasedBackend().check(
+            trials: 200,
+            seed: seed,
+            sample: { rng in Int.random(in: -10_000 ... 10_000, using: &rng) },
+            property: { value in
+                (try? transform(value)) == (try? transform(value))
+            }
+        )
+    }
+
+    @Test
+    func throwingLaw_passes_deterministicFunctionsThatThrowOnSomeInputs() async {
+        // Each throws on part of its domain and is deterministic elsewhere. `try?`
+        // collapses the throwing half to `nil == nil`, so the law must NOT
+        // false-positive — the whole point of the throwing form.
+        let corpus: [(name: String, transform: @Sendable (Int) throws -> Int)] = [
+            ("throwsOnNegative", { value in if value < 0 { throw SampleError() }; return value &* 2 }),
+            ("throwsOnEven", { value in if value % 2 == 0 { throw SampleError() }; return value &+ 7 }),
+            ("alwaysThrows", { _ in throw SampleError() })
+        ]
+        for entry in corpus {
+            let result = await Self.checkThrowingDeterminism(of: entry.transform)
+            let passed: Bool = if case .passed = result { true } else { false }
+            #expect(passed, "Throwing-but-deterministic '\(entry.name)' should pass; got \(result)")
+        }
+    }
+
+    @Test
+    func throwingLaw_fails_nondeterministicThrowingFunctions() async {
+        // Throws on negatives, but returns a random value where it succeeds — the
+        // form still discriminates hidden nondeterminism on the non-throwing domain.
+        let corpus: [(name: String, transform: @Sendable (Int) throws -> Int)] = [
+            ("randomWhenNonNegative", { value in
+                if value < 0 { throw SampleError() }
+                return Int.random(in: Int.min ... Int.max)
+            })
+        ]
+        for entry in corpus {
+            let result = await Self.checkThrowingDeterminism(of: entry.transform)
+            let failed: Bool = if case .failed = result { true } else { false }
+            #expect(failed, "Nondeterministic throwing '\(entry.name)' should fail; got \(result)")
+        }
+    }
 }

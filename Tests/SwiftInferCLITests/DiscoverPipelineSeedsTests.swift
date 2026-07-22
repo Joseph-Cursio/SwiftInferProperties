@@ -159,16 +159,14 @@ struct DiscoverPipelineSeedsTests {
         #expect(recording.text.contains("Template: determinism") == false)
     }
 
-    @Test("Determinism requires a total, value-returning function that takes inputs")
+    @Test("Determinism requires a value-returning function that takes inputs")
     func determinismQualificationFilters() throws {
         let directory = try writeDPFixture(name: "GenericQualify", contents: """
-        func risky(_ s: String) throws -> Int { Int(s) ?? 0 }
         func noParams() -> Int { 0 }
         """)
         defer { try? FileManager.default.removeItem(at: directory) }
         let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 1, symbol: "risky"),
-            .init(file: "Source.swift", line: 2, symbol: "noParams")
+            .init(file: "Source.swift", line: 1, symbol: "noParams")
         ])
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
@@ -177,9 +175,33 @@ struct DiscoverPipelineSeedsTests {
             seedManifest: manifest,
             output: recording
         )
-        // A throwing function has no value to compare on some inputs; a nullary one has nothing
-        // to vary. Both remain excluded — these are shape requirements for *writing* the law.
+        // A nullary function has nothing to vary — still excluded; these are shape
+        // requirements for *writing* the law.
         #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    @Test("A seeded throwing function earns the determinism law")
+    func determinismCoversThrowingFunctions() throws {
+        // Used to be excluded on the grounds that "a throwing function has no value to compare on
+        // some inputs" — the identical mistake as the instance-method refusal, un-fixed until the
+        // SwiftLintRuleStudio road-test hit it on `serialize`. A pure function is deterministic
+        // whether or not it throws; the emitted stub compares `try? f(x)` on both sides, so a
+        // throwing input is `nil == nil` and only a value difference falsifies it.
+        let directory = try writeDPFixture(name: "GenericThrows", contents: """
+        func risky(_ text: String) throws -> Int { Int(text) ?? 0 }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 1, symbol: "risky")
+        ])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording
+        )
+        #expect(recording.text.contains("Template: determinism"))
     }
 
     @Test("A seeded instance method earns the determinism law")

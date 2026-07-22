@@ -136,14 +136,16 @@ extension InteractiveTriage {
               let funcName = functionName(from: evidence.displayName) else {
             return nil
         }
-        // Async candidates (clock-deterministic-annotated; the discover gate
-        // admits no other async) render as `(P0) async -> U` in the evidence
-        // signature — detect the marker, then parse the de-sugared form so
-        // the existing parameter/return extraction stays untouched.
-        let isAsync = evidence.signature.contains(" async ->")
-        let signature = isAsync
-            ? evidence.signature.replacingOccurrences(of: " async ->", with: " ->")
-            : evidence.signature
+        // Async / throwing candidates render as `(P0) async throws -> U` (Swift
+        // order) in the evidence signature — detect the markers, then strip them
+        // so the existing parameter/return extraction stays untouched. The emitter
+        // reassembles the effect prefix (`await` / `try?`) on the call.
+        let isAsync = evidence.signature.contains(" async")
+        let isThrows = evidence.signature.contains(" throws")
+        let signature = evidence.signature
+            .replacingOccurrences(of: " async throws ->", with: " ->")
+            .replacingOccurrences(of: " async ->", with: " ->")
+            .replacingOccurrences(of: " throws ->", with: " ->")
         guard let returnTypeText = returnType(from: signature),
               let parsed = functionParameters(
                   displayName: evidence.displayName,
@@ -168,7 +170,8 @@ extension InteractiveTriage {
             parameters: parameters,
             seed: seed,
             equalityKind: equalityKind(forTypeText: returnTypeText),
-            isAsync: isAsync
+            isAsync: isAsync,
+            isThrows: isThrows
         )
     }
 

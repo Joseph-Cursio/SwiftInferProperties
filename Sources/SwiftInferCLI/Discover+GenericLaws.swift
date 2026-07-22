@@ -72,9 +72,8 @@ extension SwiftInferCommand.Discover {
         return synthesized
     }
 
-    /// A seeded function earns the determinism law when it takes inputs, returns a value, and
-    /// runs without throwing. These are the shape requirements for *writing* the law; the lint
-    /// seed is what vouches for purity.
+    /// A seeded function earns the determinism law when it takes inputs and returns a value. The
+    /// lint seed is what vouches for purity; these are the shape requirements for *writing* the law.
     ///
     /// **Instance methods qualify.** They used to be refused here — "an instance method could read
     /// mutable `self`" — which was the same blanket refusal the producing linter made, in the same
@@ -86,6 +85,14 @@ extension SwiftInferCommand.Discover {
     ///
     /// The cost of the old gate was concrete: in an app almost all logic is instance methods, so
     /// every seed the linter handed over was discarded here, and the pipeline reported nothing.
+    ///
+    /// **Throwing functions qualify** — the identical mistake, un-fixed until the SwiftLintRuleStudio
+    /// road-test hit it: a seeded throwing pure function (`serialize(_:) throws -> String`) fell
+    /// through and earned *nothing*, a confident zero, while a non-throwing sibling got the floor.
+    /// A pure function is deterministic whether or not it throws. The emitted stub handles the throw
+    /// soundly by comparing `try? f(x)` on both sides (`LiftedTestEmitter.deterministic(isThrows:)`),
+    /// so an input in the throwing domain collapses to `nil == nil` and only a *value* difference —
+    /// the hidden nondeterminism this law exists to catch — can falsify it. No false positives.
     ///
     /// **Async relaxation (collections/async workplan Phase 4):** an `async`
     /// function qualifies only when it carries the clock-determinism claim
@@ -101,7 +108,6 @@ extension SwiftInferCommand.Discover {
             return false
         }
         guard summary.parameters.isEmpty == false else { return false }
-        guard summary.isThrows == false else { return false }
         if summary.isAsync {
             guard summary.isClockDeterministic else { return false }
         }
@@ -143,9 +149,14 @@ extension SwiftInferCommand.Discover {
                     + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
                 "The return type must be Equatable for the law to compile."
             ]
-        let caveats = accessRestriction.map { restriction in
+        let throwsCaveat = summary.isThrows
+            ? ["The function throws, so the law compares `try? f(x)` on both sides: an input in the "
+                + "throwing domain collapses to `nil == nil` (never a false alarm), and only a value "
+                + "difference on a non-throwing input falsifies it."]
+            : []
+        let caveats = (accessRestriction.map { restriction in
             ["No test can run this law as written: \(restriction.remedy)"] + whyMightBeWrong
-        } ?? whyMightBeWrong
+        } ?? whyMightBeWrong) + throwsCaveat
         return Suggestion(
             templateName: "determinism",
             evidence: [evidence],
@@ -176,7 +187,11 @@ extension SwiftInferCommand.Discover {
         let displayName = "\(summary.name)(\(labels))"
         let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
         let returnType = summary.returnTypeText ?? "Void"
-        let effectMarker = summary.isAsync ? " async" : ""
+        // Effect markers in Swift order (`async throws`); the accept path's
+        // `deterministicStub` reads them to emit the awaited / `try?` stub form.
+        let asyncMarker = summary.isAsync ? " async" : ""
+        let throwsMarker = summary.isThrows ? " throws" : ""
+        let effectMarker = asyncMarker + throwsMarker
         return Evidence(
             displayName: displayName,
             signature: "(\(paramTypes))\(effectMarker) -> \(returnType)",

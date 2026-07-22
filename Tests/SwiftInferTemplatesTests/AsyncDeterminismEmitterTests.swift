@@ -37,4 +37,32 @@ struct AsyncDeterminismEmitterTests {
         // closure itself must stay await-free in the sync form.
         #expect(source.contains("property: { value in describe(value) == describe(value) }"))
     }
+
+    @Test
+    func throwingFormComparesTryOptionalOnBothSides() {
+        let source = LiftedTestEmitter.deterministic(
+            funcName: "serialize",
+            parameters: [.init(label: nil, generator: "Gen<Int>.int(in: -10_000 ... 10_000)")],
+            seed: Self.seed,
+            isThrows: true
+        )
+        // `try?` collapses a throwing input to nil on both sides — no false positive.
+        #expect(source.contains(
+            "property: { value in (try? serialize(value)) == (try? serialize(value)) }"
+        ))
+    }
+
+    @Test
+    func asyncThrowingFormCombinesTryAndAwait() {
+        let source = LiftedTestEmitter.deterministic(
+            funcName: "load",
+            parameters: [.init(label: nil, generator: "Gen<Int>.int()")],
+            seed: Self.seed,
+            isAsync: true,
+            isThrows: true
+        )
+        #expect(source.contains(
+            "property: { value in (try? await load(value)) == (try? await load(value)) }"
+        ))
+    }
 }
