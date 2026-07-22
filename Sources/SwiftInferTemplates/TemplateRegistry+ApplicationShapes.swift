@@ -1,3 +1,4 @@
+import PropertyLawCore
 import SwiftInferCore
 
 /// B3 — the collectors for the shapes **application code** actually has.
@@ -32,11 +33,33 @@ extension TemplateRegistry {
     /// machine.
     static func collectApplicationShapeSuggestions(
         summaries: [FunctionSummary],
+        shapesByName: [String: TypeShape],
         into collector: inout SuggestionCollector
     ) {
         collectPartitionSuggestions(summaries: summaries, into: &collector)
         collectSingleFunctionAppShapes(summaries: summaries, into: &collector)
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
+        collectSelectionSubsetSuggestions(summaries: summaries, shapesByName: shapesByName, into: &collector)
+    }
+
+    /// A `(…, Container) -> [T]` named like a selection, where the container is a
+    /// corpus type with a `[T]` member: it owes `Set(result) ⊆ Set(container.<member>)`.
+    /// Shapes-aware, so it is its own pass rather than part of the shapes-free
+    /// single-function registry — the gap that left `layerChain` on the
+    /// `f(x)==f(x)` tautology (see `docs/roadtest-swiftlintrulestudio.md`).
+    private static func collectSelectionSubsetSuggestions(
+        summaries: [FunctionSummary],
+        shapesByName: [String: TypeShape],
+        into collector: inout SuggestionCollector
+    ) {
+        for summary in summaries {
+            if let suggestion = SelectionSubsetTemplate.suggest(for: summary, shapesByName: shapesByName) {
+                collector.record(
+                    suggestion,
+                    generatorType: SelectionSubsetTemplate.containerType(for: summary, shapesByName: shapesByName)
+                )
+            }
+        }
     }
 
     /// The single-function application shapes — involution, reorder-partition,

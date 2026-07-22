@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 
 /// V1.18.A — read-only resolver context threaded into per-summary and
@@ -119,7 +120,15 @@ extension TemplateRegistry {
             into: &collector
         )
         collectCodableRoundTripSuggestions(summaries: summaries, typeDecls: typeDecls, into: &collector)
-        collectApplicationShapeSuggestions(summaries: summaries, into: &collector)
+        let appShapeShapes = Dictionary(
+            TypeShapeBuilder.shapes(from: typeDecls).map { ($0.name, $0) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        collectApplicationShapeSuggestions(
+            summaries: summaries,
+            shapesByName: appShapeShapes,
+            into: &collector
+        )
         collectLiftedSuggestions(
             lifted: liftedTransformations,
             identities: identities,
