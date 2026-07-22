@@ -40,6 +40,24 @@ extension TemplateRegistry {
         collectSingleFunctionAppShapes(summaries: summaries, into: &collector)
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
         collectSelectionSubsetSuggestions(summaries: summaries, shapesByName: shapesByName, into: &collector)
+        collectDiffDisjointnessSuggestions(summaries: summaries, shapesByName: shapesByName, into: &collector)
+    }
+
+    /// A diff-named function whose return type carries a complementary `[T]` pair
+    /// (`added`/`removed`): it owes `Set(result.added) ∩ Set(result.removed) = ∅`.
+    /// Shapes-aware (reads the return type's members), so it is its own pass —
+    /// the refutable law `generateDiff` owes instead of the `f(x)==f(x)` tautology
+    /// (see `docs/roadtest-swiftlintrulestudio.md`, cause 1).
+    private static func collectDiffDisjointnessSuggestions(
+        summaries: [FunctionSummary],
+        shapesByName: [String: TypeShape],
+        into collector: inout SuggestionCollector
+    ) {
+        for summary in summaries {
+            if let suggestion = DiffDisjointnessTemplate.suggest(for: summary, shapesByName: shapesByName) {
+                collector.record(suggestion, generatorType: summary.parameters.first?.typeText)
+            }
+        }
     }
 
     /// A `(…, Container) -> [T]` named like a selection, where the container is a
