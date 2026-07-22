@@ -29,7 +29,8 @@ public enum GeneratorSelection {
     public static func apply(
         to suggestions: [Suggestion],
         generatorTypeByIdentity: [SuggestionIdentity: String],
-        shapesByName: [String: TypeShape]
+        shapesByName: [String: TypeShape],
+        registeredGenerators: [String: RegisteredGenerator] = [:]
     ) -> [Suggestion] {
         if shapesByName.isEmpty || generatorTypeByIdentity.isEmpty {
             return suggestions
@@ -44,6 +45,13 @@ public enum GeneratorSelection {
         // the `discover` command's generated output — verify re-derives from the
         // persisted shape (WS-6 Slice 2 threads the resolver there separately).
         let resolver = GeneratorResolver(types: Array(shapesByName.values))
+        // Road-test #10 — a project-registered generator for an external type the
+        // resolver can't reach (Yams `Node`) is consulted *before* the corpus
+        // resolver, so a carrier gated at `.todo` solely by that member composes
+        // the rest of itself instead. Wrapping the resolve closure honours the
+        // user's verbatim expression + imports without a kit change (the corpus
+        // resolver only ever returns `Type.gen()` for its own `hasUserGen` shapes).
+        let resolve = registeredResolve(base: resolver.customTypeGenerator, registeredGenerators)
         return suggestions.map { suggestion in
             guard let typeName = generatorTypeByIdentity[suggestion.identity] else {
                 return suggestion
@@ -51,7 +59,7 @@ public enum GeneratorSelection {
             if let shape = shapesByName[typeName] {
                 let strategy = DerivationStrategist.strategy(
                     for: shape,
-                    resolve: resolver.customTypeGenerator
+                    resolve: resolve
                 )
                 return rebuild(
                     suggestion,
@@ -67,7 +75,7 @@ public enum GeneratorSelection {
             // `.notYetComputed` when even it can't — an external / unrecognized type.
             if DerivationStrategist.composedGenerator(
                 forTypeName: typeName,
-                resolve: resolver.customTypeGenerator
+                resolve: resolve
             ) != nil {
                 let metadata = GeneratorMetadata(
                     source: .derivedComposite,
@@ -77,6 +85,28 @@ public enum GeneratorSelection {
                 return rebuild(suggestion, withGenerator: metadata)
             }
             return suggestion
+        }
+    }
+
+    /// Wrap the corpus resolver so a project-registered generator
+    /// (`Vocabulary.registeredGenerators`) is consulted first, falling back to
+    /// the corpus resolver for everything else. Returns `base` unchanged when
+    /// no generators are registered (the common case — zero overhead).
+    private static func registeredResolve(
+        base: @escaping DerivationStrategist.CustomTypeResolver,
+        _ registeredGenerators: [String: RegisteredGenerator]
+    ) -> DerivationStrategist.CustomTypeResolver {
+        if registeredGenerators.isEmpty {
+            return base
+        }
+        return { name in
+            if let registered = registeredGenerators[name] {
+                return DerivationStrategist.ComposedGenerator(
+                    expression: registered.expression,
+                    requiredImports: Set(registered.imports)
+                )
+            }
+            return base(name)
         }
     }
 

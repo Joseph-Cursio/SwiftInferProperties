@@ -117,7 +117,8 @@ public enum TemplateRegistry {
         let withGenerators = GeneratorSelection.apply(
             to: outcome.kept,
             generatorTypeByIdentity: collector.generatorTypes,
-            shapesByName: shapesByName
+            shapesByName: shapesByName,
+            registeredGenerators: vocabulary.registeredGenerators
         )
         // M5.4 — Codable round-trip fallback runs after the strategist
         // pass. The TemplateEngine main path doesn't run the M4 mock

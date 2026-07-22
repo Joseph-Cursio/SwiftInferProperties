@@ -93,6 +93,34 @@ struct VocabularyTests {
         #expect(vocab.inverseElementVerbs == ["mirror"])
     }
 
+    @Test("registeredGenerators decodes as a type→{expression,imports} map; imports default to []")
+    func registeredGeneratorsDecode() throws {
+        let json = """
+        {
+          "registeredGenerators": {
+            "Node": { "expression": "Node.gen()", "imports": ["Yams"] },
+            "Bare": { "expression": "Bare.arbitrary" }
+          }
+        }
+        """
+        let vocab = try decode(json)
+        #expect(vocab.registeredGenerators["Node"]
+            == RegisteredGenerator(expression: "Node.gen()", imports: ["Yams"]))
+        // `imports` is missing-key-tolerant.
+        #expect(vocab.registeredGenerators["Bare"]
+            == RegisteredGenerator(expression: "Bare.arbitrary"))
+        #expect(vocab.registeredGenerators["Bare"]?.imports.isEmpty == true)
+    }
+
+    @Test("Vocabulary files predating registeredGenerators decode cleanly with an empty map")
+    func preRegisteredGeneratorsBackCompat() throws {
+        let json = """
+        { "inversePairs": [["encode", "decode"]] }
+        """
+        let vocab = try decode(json)
+        #expect(vocab.registeredGenerators.isEmpty)
+    }
+
     @Test("Pre-M8 vocabulary files (no inverseElementVerbs key) decode cleanly with empty default")
     func preM8SchemaDecodeBackCompat() throws {
         // Forward-compat probe — a v0.4 vocabulary.json on disk that
@@ -187,7 +215,8 @@ struct VocabularyTests {
             ],
             markerSets: [
                 MarkerSet(name: "Sizes", markers: ["small", "medium", "large"])
-            ]
+            ],
+            registeredGenerators: ["Node": RegisteredGenerator(expression: "Node.gen()", imports: ["Yams"])]
         )
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(Vocabulary.self, from: data)

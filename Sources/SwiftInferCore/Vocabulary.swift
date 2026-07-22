@@ -12,7 +12,8 @@
 ///   "commutativityVerbs": ["unionGraphs"],
 ///   "antiCommutativityVerbs": ["concatenateOrdered"],
 ///   "monotonicityVerbs": ["depth"],
-///   "inverseElementVerbs": ["mirror", "antipodal"]
+///   "inverseElementVerbs": ["mirror", "antipodal"],
+///   "registeredGenerators": { "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }
 /// }
 /// ```
 ///
@@ -88,6 +89,20 @@ public struct Vocabulary: Sendable, Equatable {
     /// override the type-shape filter.
     public let compositionVerbs: [String]
 
+    /// Project-supplied generators for types the strategist can't derive —
+    /// keyed by the bare type spelling as it appears in a carrier's member /
+    /// init-parameter list (e.g. `"Node"` for Yams). Generator derivation
+    /// dead-ends at `.todo` for a struct with a member of an external type it
+    /// can't reach (the SwiftLintRuleStudio road-test's `YAMLConfig` gated by
+    /// its Yams `Node` field); registering an expression here lets the
+    /// resolver compose the *rest* of the struct instead of gating the whole
+    /// carrier. The expression is spliced in verbatim as the member's leaf
+    /// generator, so it must be a valid `Gen<Type>` (the idiomatic
+    /// `Type.gen()` convention, or any expression the user supplies); the
+    /// registration is honoured for nested members and top-level composite
+    /// carriers alike. Missing-key-tolerant — defaults to `[:]`.
+    public let registeredGenerators: [String: RegisteredGenerator]
+
     public init(
         inversePairs: [InversePair] = [],
         idempotenceVerbs: [String] = [],
@@ -98,7 +113,8 @@ public struct Vocabulary: Sendable, Equatable {
         markerPairs: [MarkerPair] = [],
         markerSets: [MarkerSet] = [],
         dualStyleNamePairs: [DualStyleNamePair] = [],
-        compositionVerbs: [String] = []
+        compositionVerbs: [String] = [],
+        registeredGenerators: [String: RegisteredGenerator] = [:]
     ) {
         self.inversePairs = inversePairs
         self.idempotenceVerbs = idempotenceVerbs
@@ -110,6 +126,7 @@ public struct Vocabulary: Sendable, Equatable {
         self.markerSets = markerSets
         self.dualStyleNamePairs = dualStyleNamePairs
         self.compositionVerbs = compositionVerbs
+        self.registeredGenerators = registeredGenerators
     }
 
     /// The default vocabulary — every list empty. Templates fall back to
@@ -130,6 +147,7 @@ extension Vocabulary: Codable {
         case markerSets
         case dualStyleNamePairs
         case compositionVerbs
+        case registeredGenerators
     }
 
     public init(from decoder: any Decoder) throws {
@@ -148,7 +166,10 @@ extension Vocabulary: Codable {
             ) ?? [],
             compositionVerbs: try container.decodeIfPresent(
                 [String].self, forKey: .compositionVerbs
-            ) ?? []
+            ) ?? [],
+            registeredGenerators: try container.decodeIfPresent(
+                [String: RegisteredGenerator].self, forKey: .registeredGenerators
+            ) ?? [:]
         )
     }
 
@@ -164,6 +185,46 @@ extension Vocabulary: Codable {
         try container.encode(markerSets, forKey: .markerSets)
         try container.encode(dualStyleNamePairs, forKey: .dualStyleNamePairs)
         try container.encode(compositionVerbs, forKey: .compositionVerbs)
+        try container.encode(registeredGenerators, forKey: .registeredGenerators)
+    }
+}
+
+/// A project-supplied generator for a type the strategist can't derive
+/// (`Vocabulary.registeredGenerators`). `expression` is spliced in verbatim as
+/// the type's leaf generator (a `Gen<Type>` — idiomatically `Type.gen()`);
+/// `imports` names any modules the expression needs (`["Yams"]`), propagated
+/// up so the composed carrier generator carries them. Encoded as a JSON object
+/// `{ "expression": "...", "imports": [...] }`; `imports` defaults to `[]`.
+public struct RegisteredGenerator: Sendable, Equatable {
+
+    public let expression: String
+    public let imports: [String]
+
+    public init(expression: String, imports: [String] = []) {
+        self.expression = expression
+        self.imports = imports
+    }
+}
+
+extension RegisteredGenerator: Codable {
+
+    private enum CodingKeys: String, CodingKey {
+        case expression
+        case imports
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            expression: try container.decode(String.self, forKey: .expression),
+            imports: try container.decodeIfPresent([String].self, forKey: .imports) ?? []
+        )
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(expression, forKey: .expression)
+        try container.encode(imports, forKey: .imports)
     }
 }
 
