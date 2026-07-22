@@ -69,7 +69,16 @@ public enum Refutability {
         "predicate",     // totality: it must answer for every input its type admits
         "comparator",    // a strict weak ordering, or `sorted` may trap
         "partition",     // the parts tile the whole, exactly
-        "state-machine"  // `up ∘ down == id` — gated so the forward move NAMES what it did
+        "state-machine", // `up ∘ down == id` — gated so the forward move NAMES what it did
+        // Strong-role names — the NAME is the contract, so a correctly-named
+        // implementation cannot fail the law (unlike `monotonicity`/`idempotence`,
+        // where `get(key) -> key.count` is correct yet non-monotone). A `filter` /
+        // `select` / `layer` that returns a non-member, or a `diff` whose added and
+        // removed overlap, is either a bug or a lie about what the name promises —
+        // both worth a red test even below the confidence cut.
+        "filter-subset",     // result ⊆ the collection it selects from
+        "selection-subset",  // result ⊆ container.<collection>
+        "diff-disjointness"  // added ∩ removed = ∅
     ]
 
     /// Whether a correct implementation is *guaranteed* to satisfy this suggestion's law.

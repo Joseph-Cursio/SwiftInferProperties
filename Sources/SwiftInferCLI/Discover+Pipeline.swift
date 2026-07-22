@@ -287,7 +287,17 @@ extension SwiftInferCommand.Discover {
         // show, so it is excluded from `hiddenRefutable` as well: the final answer
         // guard must never resurrect it.
         let live = graded.filter { $0.score.tier != .suppressed }
-        let visible = live.filter { setup.includePossible || $0.score.tier.isVisibleByDefault }
+        // #8 — refutability, not the tier cut, decides visibility for a law the code
+        // OWES. A refutable, role-entailed law (`isWorthSurfacingBelowCut`) surfaces
+        // on a DEFAULT run even at `.possible`, the same principle the seeded path
+        // already applies via `keepRoleEntailedLaws`. This does NOT leak conjectures
+        // (`monotonicity`/`idempotence`/`round-trip`) — those are refutable but not
+        // role-entailed, so a correct-but-honestly-named function could fail them.
+        let visible = live.filter {
+            setup.includePossible
+                || $0.score.tier.isVisibleByDefault
+                || Refutability.isWorthSurfacingBelowCut($0)
+        }
         let visibleIdentities = Set(visible.map(\.identity))
 
         return VisibilityCut(

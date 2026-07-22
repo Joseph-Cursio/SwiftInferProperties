@@ -132,6 +132,27 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("Sampling:  not run; lifted test seed: 0x"))
     }
 
+    @Test("a role-entailed filter law surfaces on a DEFAULT run (#8)")
+    func roleEntailedFilterVisibleByDefault() throws {
+        // filter-subset scores Possible (35). Before #8 it was hidden unless
+        // --include-possible; now, being role-entailed, it surfaces by default.
+        let directory = try writeDPFixture(name: "FilterByDefault", contents: """
+        struct Analyzer {
+            func filterRules(_ rules: [String], keeping allowed: [String]) -> [String] {
+                rules.filter { allowed.contains($0) }
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            output: recording
+        )
+        #expect(recording.text.contains("Template: filter-subset"))
+    }
+
     @Test("Non-deterministic body suppresses an otherwise-strong candidate")
     func nonDeterministicBodyVetoes() throws {
         let directory = try writeDPFixture(name: "NonDeterministic", contents: """
