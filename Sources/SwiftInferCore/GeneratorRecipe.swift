@@ -154,6 +154,38 @@ public enum CollisionBias {
         )
     }
 
+    /// Arrays over the tiny alphabet, so **elements repeat across the array** — the
+    /// recurrence a dedup / merge / idempotent transform needs. `f(f(x)) == f(x)`
+    /// and "contains each element once" are both vacuous when every element is
+    /// distinct, which is what a wide alphabet produces on essentially every draw.
+    ///
+    /// Domain-aware refinement is the one manual step: a merge that dedups against a
+    /// FIXED set (e.g. a constant list of defaults) only collides when the draw
+    /// overlaps that set, so the rationale tells the reader to add those exact
+    /// values — because a reader who does not will watch the law pass for the wrong
+    /// reason.
+    public static func collidingStringArray(subject: String, typeName: String) -> GeneratorRecipe {
+        let elements = alphabet.map { "\"\($0)\"" }.joined(separator: ", ")
+        return GeneratorRecipe(
+            subject: subject,
+            typeName: typeName,
+            expression: """
+                // A THREE-symbol alphabet, so elements REPEAT across the array — the
+                // recurrence a dedup / merge / idempotent transform needs. If the
+                // operation dedups against a fixed set, add those exact values here
+                // too, or the collision that matters never occurs.
+                Gen<String?>.element(of: [\(elements)] as [String])
+                    .map { $0! }
+                    .array(of: 0...6)
+                """,
+            rationale: "Elements must REPEAT for a dedup / merge / idempotence law to be "
+                + "exercised — the property is vacuous when every element is distinct, which "
+                + "is what a wide alphabet produces. Three symbols make repeats ordinary. If "
+                + "the operation dedups against a fixed set, widen the alphabet to include "
+                + "those values; do not widen it otherwise."
+        )
+    }
+
     /// An index that is **allowed to be wrong** — negative, and past the end.
     ///
     /// The interesting values are the ones the code did not expect, and a generator over `0..<count`

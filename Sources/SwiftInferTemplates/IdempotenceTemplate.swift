@@ -100,7 +100,8 @@ public enum IdempotenceTemplate {
             // `static`/free function over a parameter it's the fix that lets
             // verify derive `Gen<T>` while still calling `Owner.f(_:)`.
             carrierType: { $0.returnTypeText },
-            caveats: { _ in Self.makeCaveats() }
+            caveats: { _ in Self.makeCaveats() },
+            generators: Self.makeGenerators(for:)
         )
     }
 
