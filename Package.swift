@@ -89,7 +89,13 @@ let package = Package(
         // to the kit's curated `Gen<T>` convenience generator (v3.10.0's
         // `FoundationGenerators` + the v3.11.0 `Gen<Decimal>.decimal()`), so a
         // carrier with those members auto-derives instead of gating.
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.11.0"),
+        // **v3.17.0+** — memberwise derivation composes beyond 10 members via
+        // nested `zip` (chunk into groups of ≤10, zip the groups, `.map` with
+        // `$0.group.position` access), raising the ceiling from 10 to 100. Pairs
+        // with the discover-side composite fallback so ordinary 11–14-member
+        // value types (a `Violation`, and its `[Violation]` carrier) derive
+        // instead of reading "not derived" (SwiftLintRuleStudio road-test Fix 2).
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "3.17.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "602.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         // Idea #4 — the shared effect-vocabulary leaf. Owns the `Effect` lattice
