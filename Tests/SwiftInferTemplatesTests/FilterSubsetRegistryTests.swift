@@ -5,9 +5,9 @@ import Testing
 /// Registry-level coverage for `filter-subset` — the template in isolation is
 /// pinned by `FilterSubsetTemplateTests`; these pin the parts that live *outside*
 /// the template and that a unit test on it cannot see:
-///   - the **wiring** (`collectFilterSubsetSuggestions` is actually called by
-///     `discover`) — delete the wiring and the isolated test still passes, but
-///     these fail;
+///   - the **wiring** (`filter-subset` is actually reached by `discover` via the
+///     `singleFunctionAppShapes` registry) — drop it from the registry and the
+///     isolated test still passes, but these fail;
 ///   - the **name gate through the whole pipeline** (a `map` shape yields nothing);
 ///   - the **templateFilter interaction** the road-test reasoned about by hand.
 @Suite("Filter-subset — registry wiring & templateFilter")

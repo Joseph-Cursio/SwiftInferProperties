@@ -35,77 +35,32 @@ extension TemplateRegistry {
         into collector: inout SuggestionCollector
     ) {
         collectPartitionSuggestions(summaries: summaries, into: &collector)
-        collectFunctionShapeSuggestions(summaries: summaries, into: &collector)
+        collectSingleFunctionAppShapes(summaries: summaries, into: &collector)
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
-        collectInvolutionSuggestions(summaries: summaries, into: &collector)
-        collectReorderPartitionSuggestions(summaries: summaries, into: &collector)
-        collectFilterSubsetSuggestions(summaries: summaries, into: &collector)
     }
 
-    /// A `[T], … -> [T]` named like a filter: it owes `Set(result) ⊆ Set(haystack)`.
-    /// Its own pass because it is a single-function shape the algebraic catalogue
-    /// never named — the gap that made a real app fall back to the determinism
-    /// tautology on `filterViolations` (see `docs/roadtest-swiftlintrulestudio.md`).
-    private static func collectFilterSubsetSuggestions(
+    /// The single-function application shapes — involution, reorder-partition,
+    /// filter-subset, and the `(T, T) -> Bool` trio (equivalence ▷ comparator ▷
+    /// predicate) — driven from `singleFunctionAppShapes`, the one list that both
+    /// wires them and is iterated by `ApplicationShapeRegistryTests`. Replaces four
+    /// hand-written passes whose `collector.record` branches drifted out of test
+    /// coverage one template at a time (see `docs/roadtest-swiftlintrulestudio.md`).
+    ///
+    /// Behaviour is preserved exactly: the same (summary, template) records with
+    /// the same `generatorType`, and the trio's "stronger law wins the shared
+    /// shape" is the `exclusionGroup` first-match-wins (equivalence before
+    /// comparator before predicate) that the old `else if` chain encoded.
+    private static func collectSingleFunctionAppShapes(
         summaries: [FunctionSummary],
         into collector: inout SuggestionCollector
     ) {
         for summary in summaries {
-            if let suggestion = FilterSubsetTemplate.suggest(for: summary) {
-                collector.record(suggestion, generatorType: FilterSubsetTemplate.haystackType(of: summary))
-            }
-        }
-    }
-
-    /// The *reorder* sense of "partition": a `mutating` method that rearranges its
-    /// elements around a predicate and returns the pivot. Disjoint from the tiling
-    /// `collectPartitionSuggestions` above — same word, a different law — so it is
-    /// its own pass rather than folded into `PartitionPairing`.
-    private static func collectReorderPartitionSuggestions(
-        summaries: [FunctionSummary],
-        into collector: inout SuggestionCollector
-    ) {
-        for summary in summaries {
-            if let suggestion = ReorderPartitionTemplate.suggest(for: summary) {
-                collector.record(suggestion, generatorType: summary.containingTypeName)
-            }
-        }
-    }
-
-    /// A unary `(T) -> T` named like an involution: it owes `f(f(x)) == x`. Kept
-    /// separate from the `(T, T) -> Bool` comparator/predicate loop because it is
-    /// a different shape, and separate from idempotence because it is a different
-    /// law over the same shape — the reason these names are vetoed from it.
-    private static func collectInvolutionSuggestions(
-        summaries: [FunctionSummary],
-        into collector: inout SuggestionCollector
-    ) {
-        for summary in summaries {
-            if let suggestion = InvolutionTemplate.suggest(for: summary) {
-                collector.record(suggestion, generatorType: summary.returnTypeText)
-            }
-        }
-    }
-
-    /// The comparator and the predicate: two roles that share a signature and are told apart by their
-    /// argument labels.
-    private static func collectFunctionShapeSuggestions(
-        summaries: [FunctionSummary],
-        into collector: inout SuggestionCollector
-    ) {
-        for summary in summaries {
-            if let suggestion = EquivalenceRelationTemplate.suggest(for: summary) {
-                // Checked first: a named equality (`equals(_:_:)` positional /
-                // `equals(to:)` labelled) would otherwise be mis-read as a comparator or a
-                // predicate. Its law (reflexivity/symmetry/transitivity) is the specific one.
-                collector.record(suggestion, generatorType: summary.parameters.first?.typeText)
-            } else if let suggestion = ComparatorTemplate.suggest(for: summary) {
-                collector.record(suggestion, generatorType: summary.parameters.first?.typeText)
-            } else if let suggestion = PredicateTemplate.suggest(for: summary) {
-                // `else if` on purpose: a comparator is `(T, T) -> Bool` and so is a binary
-                // predicate. The comparator's law is strictly stronger, so it wins the shape — and
-                // reporting both would be one function wearing two hats.
-                collector.record(suggestion, generatorType: summary.parameters.first?.typeText)
+            var firedGroups: Set<Int> = []
+            for template in singleFunctionAppShapes {
+                if let group = template.exclusionGroup, firedGroups.contains(group) { continue }
+                guard let suggestion = template.suggest(summary) else { continue }
+                collector.record(suggestion, generatorType: template.generatorType(summary))
+                if let group = template.exclusionGroup { firedGroups.insert(group) }
             }
         }
     }
