@@ -240,6 +240,11 @@ extension IdempotenceTemplate {
                 detail: "Type-symmetry signature: T -> T (T = \(returnType))"
             )
         }
+        // Optional-narrowing free / static form — `func mergedWith(_ x: T?) -> T`.
+        // (See IdempotenceTemplate+OptionalNarrowing.swift.)
+        if let optionalSignal = optionalNarrowingSignal(returnType: returnType, summary: summary) {
+            return optionalSignal
+        }
         // Instance: zero parameters, returning the containing type —
         // `func normalized() -> Doc` (`self -> Self`). B32 — mirrors
         // InvolutionTemplate's two-shape acceptance so instance idempotent
