@@ -144,6 +144,18 @@ six role-entailed `predicate` laws that SwiftProjectLint's pure-function rule
 *failed to seed* — "a shape the linter cannot see (a computed-property read, a
 call to `min`)." Part of the under-recommendation is upstream of `swift-infer`.
 
+> **Correction (2026-07-22, verified) — this was a phantom.** Root cause 5 was
+> misattributed. The `owedLawWarning` fired against the **hand-written** seed
+> manifest used for Run 2, which listed only the seven exploration kernels and
+> omitted `isVersion` et al. — it was *my manifest* that was incomplete, not the
+> linter. Running the linter directly settles it: `swiftprojectlint --format
+> pbt-seeds` over `SwiftLintRuleStudioCore` emits **85 seeds** (62 pure-function,
+> 23 extractable-kernel) and *does* seed `isVersion`, `looksLikePlaceholderYAML`,
+> and `isUnavailableForLinting`, while correctly excluding the state-reading
+> `columnIsNull` / `boolValue`. There is no under-seeding gap; the linter's
+> pure-function rule works. The lesson is the appendix's own: verify the claim
+> against the tool's actual output before fixing it.
+
 ## Prioritised toolchain fixes
 
 1. **Throws-tolerant round-trip pairing** (root cause 2) — smallest change,
@@ -173,9 +185,10 @@ to the diagnosis:
 | Subset/filter law family | 1 | ✅ `filter-subset` template (`748dd81`) — `filterViolations` owes a refutable `Set(result) ⊆ Set(haystack)` instead of `f(x)==f(x)` |
 | Throwing functions earn a law | 2 (re-diagnosed) | ✅ `9e1e066` — see correction below |
 | Generator derivation | 3 | ✅ discover-side composite fallback (`3bf23e0`) + upstream nested-`zip` >10 members (`SwiftPropertyLaws v3.17.0`; floor-bumped `830c344`) |
-| Widen monotonicity / selection-ancestry | 1 (`layerChain`) | ⬜ open — `layerChain` still gets the tautology |
-| Report the linter gap | 5 | ⬜ open — upstream in SwiftProjectLint's pure-function detection |
-| Don't let generator-readiness hide refutable laws | 4 | ⬜ open — the tier cut is unchanged |
+| Selection-ancestry template | 1 (`layerChain`) | ✅ `selection-subset` template (`288fdc4`) — `layerChain` owes `result ⊆ ConfigTree.configs` |
+| Diff characterization template | 1 (`generateDiff`) | ✅ `diff-disjointness` template (`f723744`) — `generateDiff` owes `added ∩ removed = ∅` |
+| Refutability decides visibility (the tier cut) | 4 | ✅ `52a16d7` — role-entailed refutable laws (incl. filter/selection/diff) surface on a default run, not just `--include-possible` |
+| Report the linter gap | 5 | ✗ withdrawn — verified a phantom: `swiftprojectlint --format pbt-seeds` emits 85 seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest (see the correction under root cause 5) |
 
 **Correction to root cause 2.** *"`throws` refutes purity at index time"* was
 wrong, and tracing the code showed why: the `round-trip` template already
@@ -201,10 +214,12 @@ silent until one exists.
 - `serialize` moved from *nothing* to the determinism floor, with a throws-aware
   caveat.
 
-**Still open, by design or scope:** `layerChain`'s selection/ancestry law (no
-template), SwiftProjectLint's pure-function seeding gap, the tier cut (root cause
-4), and — the honest boundary — `YAMLConfig`'s external Yams `Node` field, which
-no auto-derivation can reach (`.todo` is the right answer there).
+**Still open, by design or scope:** `parseParameters`' metamorphic laws
+(domain-specific — belong in the app's hand-written suite, not a template); the
+`serialize ↔ parse` round-trip (needs an app-side `parse(String) -> YAMLConfig`);
+and — the honest boundary — `YAMLConfig`'s external Yams `Node` field, which no
+auto-derivation can reach (`.todo` is the right answer there). *Withdrawn:* the
+"linter seeding gap" (root cause 5) was a phantom — see the correction above.
 
 ## Net
 
@@ -212,10 +227,13 @@ no auto-derivation can reach (`.todo` is the right answer there).
 - **Confirmed:** the low yield is structural, not access — every miss traces to a
   missing template, a determinism gate on `throws`, or an underivable generator,
   none to a permissions/scan problem.
-- **Fixes landed:** 3 of 6 prioritised — subset/filter template (`748dd81`),
-  throwing-function determinism (`9e1e066`), generator derivation (`3bf23e0` +
-  `SwiftPropertyLaws v3.17.0`). "not derived" fell 20 → 6; the residual is the
-  designed boundary. See [Fixes shipped](#fixes-shipped-reconciled-2026-07-22).
-- **Still open:** the selection/ancestry law for `layerChain`, the linter
-  seeding gap, and the tier cut — plus the app-side `parse(String) -> YAMLConfig`
-  extraction that would unlock the `serialize ↔ parse` round-trip.
+- **Fixes landed:** subset/filter template (`748dd81`), throwing-function
+  determinism (`9e1e066`), generator derivation (`3bf23e0` + `SwiftPropertyLaws
+  v3.17.0`), selection-subset (`288fdc4`), diff-disjointness (`f723744`), and
+  refutability-decides-visibility (`52a16d7`). "not derived" fell 20 → 6, and a
+  **default** `discover` now surfaces `filterViolations`/`layerChain`/`generateDiff`.
+  Root cause 5 (linter gap) was verified a phantom and withdrawn. See
+  [Fixes shipped](#fixes-shipped-reconciled-2026-07-22).
+- **Still open:** `parseParameters`' metamorphic laws (out-of-catalog, → the app's
+  hand-written suite) and the app-side `parse(String) -> YAMLConfig` extraction
+  that would unlock the `serialize ↔ parse` round-trip.
