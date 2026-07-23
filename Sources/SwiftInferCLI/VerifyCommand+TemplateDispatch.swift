@@ -30,6 +30,18 @@ extension SwiftInferCommand.Verify {
     /// kit-side cleanup target.
     static let v146HardcodedCarriers: Set<String> = ["Complex<Double>", "Double"]
 
+    /// Single source of truth for the templates `verify` supports, used both to validate an
+    /// incoming template and to populate the `unsupportedTemplate` error's `expected` list.
+    /// Previously this list was hand-copied at each throw site, and the copies drifted — the
+    /// `resolveFunctionCalls` error list had lost `codable-round-trip` even though that function
+    /// handles it. Deriving every error message from this one constant makes the drift impossible.
+    static let supportedTemplates: [String] = [
+        "round-trip", "codable-round-trip", "idempotence", "commutativity", "associativity",
+        "idempotence-lifted", "dual-style-consistency", "monotonicity",
+        "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
+        "measure-non-negativity"
+    ]
+
     /// V1.47.F — top-level dispatch. First normalizes the carrier via
     /// `GenericBindingResolver` (e.g. `"Base.Index"` → `"Int"`), then
     /// routes:
@@ -49,12 +61,6 @@ extension SwiftInferCommand.Verify {
         extraImports: [String] = [],
         allShapes: [String: IndexedTypeShape] = [:]
     ) throws -> VerifyStubBundle {
-        let supportedTemplates: [String] = [
-            "round-trip", "codable-round-trip", "idempotence", "commutativity", "associativity",
-            "idempotence-lifted", "dual-style-consistency", "monotonicity",
-            "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
-            "measure-non-negativity"
-        ]
         guard supportedTemplates.contains(entry.templateName) else {
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
@@ -296,12 +302,7 @@ extension SwiftInferCommand.Verify {
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
-                expected: [
-                    "round-trip", "idempotence", "commutativity", "associativity",
-                    "idempotence-lifted", "dual-style-consistency", "monotonicity",
-                    "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
-                    "measure-non-negativity"
-                ]
+                expected: supportedTemplates
             )
         }
     }
