@@ -1,0 +1,9 @@
+# SwiftProjectLint configuration for SwiftInferProperties.
+#
+# Exclude the test tree from analysis. This tool *analyzes* Swift source, so `Tests/Fixtures/`
+# holds sample input corpora (TCA reducers, algebraic-survey samples, …) it parses in tests, and
+# `Tests/` also holds unit-test helpers. Neither is the tool's shippable source. Duplication among
+# these is expected and not actionable — e.g. two fixture TCA features each own an `Action` enum
+# (the canonical per-feature pattern), and a fixture's `Confidence` mirrors a real model on purpose.
+excluded_paths:
+  - "Tests/"
