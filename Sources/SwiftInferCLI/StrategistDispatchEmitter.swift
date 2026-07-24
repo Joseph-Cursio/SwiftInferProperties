@@ -376,11 +376,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             }
             throw VerifyError.unsupportedTemplate(
                 template: inputs.template,
-                expected: [
-                    "round-trip", "idempotence", "commutativity", "associativity",
-                    "idempotence-lifted", "dual-style-consistency", "monotonicity",
-                    "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism"
-                ]
+                expected: TemplateName.strategistAlgebraicLaws.rawValues
             )
         }
     }

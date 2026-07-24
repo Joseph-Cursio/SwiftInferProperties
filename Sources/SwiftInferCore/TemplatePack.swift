@@ -57,39 +57,24 @@ public enum TemplatePack: String, CaseIterable, Sendable {
     /// evidence. Templates that surface canonical patterns for the
     /// pack's domain are included; templates that primarily noise the
     /// domain are excluded.
-    public var templateNames: Set<String> {
+    public var templateNames: Set<String> { Set(templates.rawValues) }
+
+    /// The pack's member templates as typed `TemplateName`s. The string form
+    /// (`templateNames`) derives from this, so the pack membership shares the one
+    /// vocabulary rather than re-spelling the name literals.
+    public var templates: [TemplateName] {
         switch self {
         case .numeric:
-            return [
-                "commutativity",
-                "associativity",
-                "identity-element",
-                "monotonicity"
-            ]
+            return [.commutativity, .associativity, .identityElement, .monotonicity]
 
         case .serialization:
-            return [
-                "round-trip",
-                "inverse-pair"
-            ]
+            return [.roundTrip, .inversePair]
 
         case .collections:
-            return [
-                "idempotence",
-                "monotonicity",
-                "dual-style-consistency",
-                "composition",
-                "invariant-preservation"
-            ]
+            return [.idempotence, .monotonicity, .dualStyleConsistency, .composition, .invariantPreservation]
 
         case .algebraic:
-            return [
-                "commutativity",
-                "associativity",
-                "identity-element",
-                "idempotence",
-                "composition"
-            ]
+            return [.commutativity, .associativity, .identityElement, .idempotence, .composition]
 
         case .concurrency:
             // Aspirational — no current templates target concurrency.

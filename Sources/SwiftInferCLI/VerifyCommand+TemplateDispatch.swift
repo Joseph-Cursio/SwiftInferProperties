@@ -35,12 +35,7 @@ extension SwiftInferCommand.Verify {
     /// Previously this list was hand-copied at each throw site, and the copies drifted — the
     /// `resolveFunctionCalls` error list had lost `codable-round-trip` even though that function
     /// handles it. Deriving every error message from this one constant makes the drift impossible.
-    static let supportedTemplates: [String] = [
-        "round-trip", "codable-round-trip", "idempotence", "commutativity", "associativity",
-        "idempotence-lifted", "dual-style-consistency", "monotonicity",
-        "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
-        "measure-non-negativity"
-    ]
+    static let supportedTemplates: [String] = TemplateName.verifiable.rawValues
 
     /// V1.47.F — top-level dispatch. First normalizes the carrier via
     /// `GenericBindingResolver` (e.g. `"Base.Index"` → `"Int"`), then
@@ -112,9 +107,7 @@ extension SwiftInferCommand.Verify {
     /// direct numeric-carrier dispatch (paired with `v146HardcodedCarriers`).
     /// The V1.50.B strategist→v1.46 fallback that also read this was removed in
     /// WS-3a (it only masked the strategist's real error).
-    private static let v146HardcodedTemplates: Set<String> = [
-        "round-trip", "idempotence", "commutativity", "associativity"
-    ]
+    private static let v146HardcodedTemplates: Set<String> = Set(TemplateName.v146Hardcoded.rawValues)
 
     /// Route 1 — existing v1.46 per-template dispatch.
     private static func v1_46HardcodedBundle(
@@ -137,7 +130,7 @@ extension SwiftInferCommand.Verify {
         default:
             throw VerifyError.unsupportedTemplate(
                 template: entry.templateName,
-                expected: ["round-trip", "idempotence", "commutativity", "associativity"]
+                expected: TemplateName.v146Hardcoded.rawValues
             )
         }
     }
@@ -202,9 +195,7 @@ extension SwiftInferCommand.Verify {
         detail: DefaultFailDetail,
         packageRoot: URL
     ) -> URL? {
-        let autoDerivable: Set<String> = [
-            "round-trip", "idempotence", "commutativity", "associativity", "monotonicity"
-        ]
+        let autoDerivable = Set(TemplateName.regressionAutoDerivable.rawValues)
         guard autoDerivable.contains(entry.templateName),
             let calls = try? resolveFunctionCalls(for: entry) else { return nil }
         // Prefer the minimal (shrunk) counterexample; fall back to the first
