@@ -54,6 +54,10 @@ public extension TemplateName {
     ]
 
     /// The four templates the v1.46 hardcoded per-carrier emitters support.
+    ///
+    /// (Coincidentally shares three algebraic names with the unrelated
+    /// `TemplateSignal` axiom-signal enum — see the note there; not drift.)
+    // swiftprojectlint:disable:next parallel-list-drift
     static let v146Hardcoded: [TemplateName] = [
         .roundTrip, .idempotence, .commutativity, .associativity
     ]

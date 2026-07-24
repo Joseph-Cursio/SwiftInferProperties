@@ -128,6 +128,12 @@ struct RefactorBridgeAccumulator {
 /// a witness record from M8.3's `InverseElementPairing`. The
 /// orchestrator threads it through `recordInverseElement(witness:)`
 /// rather than the suggestion-driven `record(signal:from:)` path.
+// These are structural-conformance axiom signals, not template names — a separate vocabulary
+// that coincidentally shares algebraic words (associativity/commutativity/…) with several
+// `TemplateName` subsets. It carries `inverseElement`, which has no template at all, and is
+// mapped from templates by `RefactorBridgeOrchestrator.templateSignal(of:)`, the deliberate
+// bridge between the two. Overlap with the template lists is expected, not drift.
+// swiftprojectlint:disable:next parallel-list-drift
 enum TemplateSignal {
     case associativity
     case identityElement

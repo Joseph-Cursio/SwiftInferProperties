@@ -65,6 +65,9 @@ public enum TemplatePack: String, CaseIterable, Sendable {
     public var templates: [TemplateName] {
         switch self {
         case .numeric:
+            // Coincidentally shares three algebraic names with the unrelated `TemplateSignal`
+            // axiom-signal enum — see the note there; not drift.
+            // swiftprojectlint:disable:next parallel-list-drift
             return [.commutativity, .associativity, .identityElement, .monotonicity]
 
         case .serialization:
