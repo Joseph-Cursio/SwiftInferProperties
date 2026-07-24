@@ -19,6 +19,9 @@ import Foundation
 ///   `swift build` execution (unsupported carrier / pair / template,
 ///   or a reclassified build failure). Not yet measurable; not a
 ///   property verdict.
+// Intentionally mirrors the CLI's `SurveyOutcome` (byte-identical raw values), kept as a
+// separate Core type per the note above and bridged by `VerifyEvidenceRecorder`. Not drift.
+// swiftprojectlint:disable:next parallel-enum-shape
 public enum VerifyEvidenceOutcome: String, Sendable, Equatable, Codable, CaseIterable {
     case measuredBothPass = "measured-bothPass"
     case measuredEdgeCaseAdvisory = "measured-edgeCaseAdvisory"

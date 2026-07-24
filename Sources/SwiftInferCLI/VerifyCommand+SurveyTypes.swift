@@ -9,6 +9,11 @@ extension SwiftInferCommand.Verify {
     /// V1.50.B classification — one of five outcomes per pick. Matches the
     /// v1.50 plan's five categories. Encoded as a string in the JSON output
     /// for human + machine readability.
+    // This CLI survey-output vocabulary intentionally mirrors Core's persistence enum
+    // `VerifyEvidenceOutcome` (byte-identical raw values). They're kept as two types across the
+    // CLI/Core module boundary and bridged by `VerifyEvidenceRecorder.evidenceOutcome(for:)`, a
+    // rawValue round-trip pinned by `VerifyEvidenceTests`. Not drift — a deliberate, tested seam.
+    // swiftprojectlint:disable:next parallel-enum-shape
     public enum SurveyOutcome: String, Codable, Sendable {
         case measuredBothPass = "measured-bothPass"
         case measuredEdgeCaseAdvisory = "measured-edgeCaseAdvisory"
