@@ -227,10 +227,16 @@ public enum PartitionPairing {
     ///
     /// Deliberately narrower than the full fixed-width integer set
     /// (`FixedWidthIntegerNames`): an index or count parameter is word-sized or
-    /// larger in practice, so `Int8`/`Int16` are not accepted. (`UInt32` is not
-    /// currently in the list either, while `Int32` is.)
+    /// larger in practice, so `Int8`/`Int16` are not accepted.
+    ///
+    /// `UInt32` was added when the two copies of this list were merged: it had
+    /// been absent while its signed counterpart `Int32` was present, and that
+    /// asymmetry was an oversight rather than a curation — a `(UInt32) -> Part`
+    /// tiler is exactly as plausible an index as an `(Int32) -> Part` one, and
+    /// was being silently skipped by both the pairing pass and the generator.
     static func isInteger(_ text: String) -> Bool {
-        ["Int", "Int64", "Int32", "UInt", "UInt64"].contains(text.trimmingCharacters(in: .whitespaces))
+        ["Int", "Int32", "Int64", "UInt", "UInt32", "UInt64"]
+            .contains(text.trimmingCharacters(in: .whitespaces))
     }
 
     private static func isFraction(_ text: String) -> Bool {
