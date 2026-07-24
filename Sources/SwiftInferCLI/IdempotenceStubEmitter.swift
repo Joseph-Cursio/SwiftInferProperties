@@ -102,11 +102,6 @@ extension IdempotenceStubEmitter {
         + "// Pass 2 (edge):    Gen<Complex<Double>>.edgeCaseBiased() from\n"
         + "//                   PropertyLawComplex v2.1.0+. Skipped on default fail."
 
-    private static func importsForComplexDouble(_ extra: [String]) -> String {
-        let base = ["ComplexModule", "Foundation", "PropertyBased", "PropertyLawComplex", "RealModule"]
-        return mergedImports(base: base, extra: extra)
-    }
-
     private static func complexDoubleDefaultPass(functionCall: String) -> String {
         """
         // --- Pass 1: default (inline finite-domain) ---

@@ -78,6 +78,18 @@ extension SeededStubEmitter {
         return lines.joined(separator: "\n")
     }
 
+    /// The import set every `Complex<Double>` stub needs, merged with any
+    /// per-stub `extra` imports.
+    ///
+    /// Hoisted here from the associativity / commutativity / idempotence /
+    /// round-trip emitters, which each carried a byte-identical private copy of
+    /// this function *and* its base list. Four copies of one list is four chances
+    /// for a new dependency to be added to three of them.
+    static func importsForComplexDouble(_ extra: [String]) -> String {
+        let base = ["ComplexModule", "Foundation", "PropertyBased", "PropertyLawComplex", "RealModule"]
+        return mergedImports(base: base, extra: extra)
+    }
+
     static func hex(_ word: UInt64) -> String {
         String(word, radix: 16, uppercase: true)
     }

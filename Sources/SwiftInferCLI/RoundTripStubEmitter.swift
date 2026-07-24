@@ -168,11 +168,6 @@ extension RoundTripStubEmitter {
         + "// Pass 2 (edge):    Gen<Complex<Double>>.edgeCaseBiased() from\n"
         + "//                   PropertyLawComplex v2.1.0+. Skipped on default fail."
 
-    private static func importsForComplexDouble(_ extra: [String]) -> String {
-        let base = ["ComplexModule", "Foundation", "PropertyBased", "PropertyLawComplex", "RealModule"]
-        return mergedImports(base: base, extra: extra)
-    }
-
     /// V1.55.A — narrow per-function default-pass domain for the
     /// round-trip Complex generator. Returns a `(reMin, reMax, imMin, imMax)`
     /// quadruple as Double literals to interpolate into the stub.
