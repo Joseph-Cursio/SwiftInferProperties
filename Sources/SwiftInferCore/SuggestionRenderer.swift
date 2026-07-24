@@ -189,17 +189,26 @@ public enum SuggestionRenderer {
         return prefix + padding + countStr + " (\(tierBreakdown))"
     }
 
-    /// Strong / Likely / Possible in tier order; empty tiers dropped.
+    /// Every tier except `.suppressed`, in tier order; empty tiers dropped.
+    ///
     /// `.suppressed` is omitted by design — those suggestions don't
     /// reach the renderer from the CLI's `discover --include-possible`
     /// path, and surfacing them in the stats line would conflict with
     /// the §4.2 "never shown" rule for suppressed.
+    ///
+    /// Stated as "all tiers minus the one deliberate exclusion" rather than as a
+    /// hand-kept inclusion list, so a tier added later shows up here instead of
+    /// being silently dropped from the breakdown. Output is unchanged: the list
+    /// was `[.strong, .likely, .possible, .advisory]`, and the only tier this
+    /// adds — `.verified` — cannot currently occur in `score.tier` (`Tier(score:)`
+    /// never returns it; the verify promotion is applied at render time to a local
+    /// `effectiveTier`), so its count is always zero and empty tiers are dropped.
     private static func tierBreakdown(_ suggestions: [Suggestion]) -> String {
         var counts: [Tier: Int] = [:]
         for suggestion in suggestions {
             counts[suggestion.score.tier, default: 0] += 1
         }
-        let parts: [String] = [Tier.strong, .likely, .possible, .advisory].compactMap { tier in
+        let parts: [String] = Tier.allCases.sorted().filter { $0 != .suppressed }.compactMap { tier in
             guard let value = counts[tier], value > 0 else { return nil }
             return "\(value) \(tier.label)"
         }
