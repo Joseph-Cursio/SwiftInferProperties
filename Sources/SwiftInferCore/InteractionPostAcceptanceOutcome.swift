@@ -1,29 +1,15 @@
 import Foundation
 
-/// V2.0 accept-check follow-up — the four-state post-acceptance
-/// verdict for an accepted interaction-invariant suggestion.
-/// Mirrors v1's `PostAcceptanceOutcomeKind`; semantics are the
-/// same but the trigger is `verify-interaction` re-runs rather than
-/// `verify`.
+/// V2.0 accept-check follow-up — the four-state post-acceptance verdict for an accepted
+/// interaction-invariant suggestion.
 ///
-/// - `stillPasses` — re-verify returned `.measuredBothPass`. No
-///   regression on the accepted invariant.
-/// - `nowFails` — re-verify returned `.measuredDefaultFails`. The
-///   accepted invariant is now disproven (reducer evolved in an
-///   invariant-violating way — the signal this metric is after).
-/// - `obsolete` — the accepted suggestion's identity hash no longer
-///   surfaces in the current `discover-interaction` output
-///   (reducer renamed / removed / evolved past the family-witness
-///   shape). Informative; not a failure.
-/// - `error` — re-verify could not produce a verdict (build
-///   failure, unsupported shape/carrier, `.architecturalCoveragePending`,
-///   etc.). Not measurable on this run.
-public enum InteractionPostAcceptanceOutcomeKind: String, Sendable, Equatable, Codable, CaseIterable {
-    case stillPasses = "still-passes"
-    case nowFails = "now-fails"
-    case obsolete
-    case error
-}
+/// This is v1's `PostAcceptanceOutcomeKind` verbatim: the four states (`stillPasses` /
+/// `nowFails` / `obsolete` / `error`) and their raw values are identical, so the interaction
+/// pipeline reuses the one vocabulary rather than maintaining a parallel copy that could drift.
+/// Only the trigger differs (`verify-interaction` re-runs vs `verify`). The v1/v2 *records* stay
+/// separate types; if the two schemas ever need to diverge on the verdict set, split this back
+/// into its own enum — as `Decision` / `InteractionDecision` deliberately are.
+public typealias InteractionPostAcceptanceOutcomeKind = PostAcceptanceOutcomeKind
 
 /// V2.0 accept-check follow-up — one persisted post-acceptance
 /// outcome, keyed by suggestion identity. Mirrors v1's
