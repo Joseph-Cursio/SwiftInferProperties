@@ -213,21 +213,13 @@ public enum InteractionMetricsRenderer {
     /// cons). Aligns the metrics table with the cycle-N findings
     /// `per-family distribution` table for at-a-glance comparison.
     ///
-    /// This explicit array is what decouples the metrics table from
-    /// `InteractionInvariantFamily`'s `case`-declaration order. It is
-    /// `internal` (not `private`) only so `InteractionMetricsRendererTests`
-    /// can assert it stays exhaustive — an explicit-array display order is
-    /// not compiler-checked for completeness.
-    static let familyDisplayOrder: [InteractionInvariantFamily] = [
-        .idempotence,
-        .biconditional,
-        .cardinality,
-        .referentialIntegrity,
-        .conservation,
-        .determinism,
-        .unknownActionIsNoOp,
-        .outputDeterminism
-    ]
+    /// Metrics-table display order, decoupled from `InteractionInvariantFamily`'s
+    /// `case`-declaration order. Derived by sorting `allCases` on `metricsDisplayRank` — an
+    /// exhaustive `switch`, so the compiler now forces a rank for any new family and the table
+    /// can never silently drop one. (Previously a hand-maintained parallel array whose
+    /// completeness was only runtime-checked by `InteractionMetricsRendererTests`.)
+    static let familyDisplayOrder: [InteractionInvariantFamily] =
+        InteractionInvariantFamily.allCases.sorted { $0.metricsDisplayRank < $1.metricsDisplayRank }
 
     private static func familyDisplayName(_ family: InteractionInvariantFamily) -> String {
         switch family {
@@ -252,5 +244,23 @@ public enum InteractionMetricsRenderer {
             }
         }
         return false
+    }
+}
+
+private extension InteractionInvariantFamily {
+    /// Position in the metrics table (see `InteractionMetricsRenderer.familyDisplayOrder`).
+    /// Exhaustive `switch` — adding a family fails the build here until it's given a slot, which
+    /// is exactly the drift guard the old explicit-array + runtime test only approximated.
+    var metricsDisplayRank: Int {
+        switch self {
+        case .idempotence: return 0
+        case .biconditional: return 1
+        case .cardinality: return 2
+        case .referentialIntegrity: return 3
+        case .conservation: return 4
+        case .determinism: return 5
+        case .unknownActionIsNoOp: return 6
+        case .outputDeterminism: return 7
+        }
     }
 }
