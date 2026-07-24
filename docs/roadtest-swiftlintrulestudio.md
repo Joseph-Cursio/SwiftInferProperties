@@ -31,6 +31,14 @@ lack of a derivable generator.
 > if you read nothing else here: the fix shipped, and measuring it refuted the
 > premise that motivated it. See
 > [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline).
+>
+> **Fourth pass, same day.** The app owner closed candidate §3 (`generateDiff`),
+> taking the loop to three kernels and `swift test --filter PropertyLaw` to 16
+> tests in 5 suites. Along the way the `#10` registered-generator row went the
+> way of Finding A: registering `Node` for real changes `discover` by nothing at
+> all, because the carrier it was supposed to unblock is never derived to begin
+> with. It had been verified on a `YAMLConfig`-shaped probe. See
+> [Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig).
 
 ## Setup (honesty)
 
@@ -200,7 +208,7 @@ to the diagnosis:
 | Diff characterization template | 1 (`generateDiff`) | ✅ `diff-disjointness` template (`f723744`) — `generateDiff` owes `added ∩ removed = ∅` |
 | Refutability decides visibility (the tier cut) | 4 | ✅ `52a16d7` — role-entailed refutable laws (incl. filter/selection/diff) surface on a default run, not just `--include-possible` |
 | Stop the spurious `CustomRuleConflict` round-trip pairing (the "noise" finding) | — | ✅ #10 — `FunctionPairing` admits a synthetic init-decode half only when the encode name embeds the init's argument-label stem (the same predicate `RoundTripTemplate` scores +40 on), so `CustomRuleConflict(ruleIdentifier:)` no longer pairs with the unrelated `id()` / `message()` getters |
-| Registered-generator hook for the external `Node` boundary | 3 (residual) | ✅ #10 — `Vocabulary.registeredGenerators` supplies a generator for an underivable external member (`{ "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }`); `discover` on a `YAMLConfig`-shaped struct moves from `Generator: .todo` to a derived generator, composing the rest of the struct rather than gating the whole carrier |
+| Registered-generator hook for the external `Node` boundary | 3 (residual) | ⚠️ #10 shipped, **unverified on the real subject**. `Vocabulary.registeredGenerators` supplies a generator for an underivable external member (`{ "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }`), and `discover` on a `YAMLConfig`-*shaped* struct moves from `Generator: .todo` to a derived generator. On the actual `YAMLConfigurationEngine.YAMLConfig` it changes **nothing** — see [Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig) |
 | Report the linter gap | 5 | ⚠️ withdrawn, then **partly reinstated**. The original phantom stands (`swiftprojectlint --format pbt-seeds` emits 85 — now 87 — seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest). But re-run against the linter's *own* manifest the warning still fires on five subjects — see [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline) |
 
 **Correction to root cause 2.** *"`throws` refutes purity at index time"* was
@@ -381,6 +389,78 @@ would have hidden all three — the confident zero arriving by the route
 `PBTSeedsFormatter`'s doc comment warns about, through the door it was written to
 close.
 
+### Finding C — the registered-generator hook does not reach the real `YAMLConfig`
+
+> **Added later the same day**, on a fourth pass driven by the app owner rather
+> than the toolchain: *close candidate §3 (`generateDiff`) in the app's own PBT
+> doc, using the `#10` registration hook to unblock the generator.* The suite got
+> written and it passes. The hook did nothing, and that is the finding.
+
+`#10` above claims the `Vocabulary.registeredGenerators` hook closes the external
+`Node` boundary: *"`discover` on a `YAMLConfig`-shaped struct moves from
+`Generator: .todo` to a derived generator once `Node`'s generator is
+registered."* The app registered it for real —
+`.swiftinfer/vocabulary.json` naming `{ "Node": { "expression": "Node.gen()",
+"imports": ["Yams"] } }`, with a matching `Node.gen()` written in the test
+target. Measured three ways against `SwiftLintRuleStudioCore` at
+`swiftprojectlint 23c0133` / `swift-infer 1ea657c`:
+
+| Run | Suggestions | `Generator: .todo` |
+|---|---|---|
+| Registration absent | 14 | 7 |
+| Registration present (conventional path) | 14 | 7 |
+| Registration passed explicitly via `--vocabulary` | 14 | 7 |
+
+Identical, and `generateDiff` stays `Generator: .todo` in all three.
+
+**Why it cannot bite.** `swift-infer scaffold --target SwiftLintRuleStudioCore`
+emits 21 stubs, and **neither `YAMLConfig` nor `ConfigDiff` is among them**. Both
+appear only as unresolved `<#Generator<YAMLConfigurationEngine.YAMLConfig>#>` /
+`<#Generator<YAMLConfigurationEngine.ConfigDiff>#>` placeholders *inside other
+types' generators* (`ConfigEntry`, `ConfigImportPreview`, `DiscoveredConfig`, …).
+The carrier is never derived at all, so a missing member generator was never the
+binding constraint — the same shape as Finding A, one layer out: **a refuter that
+fires first hides the ones behind it.**
+
+A correlation worth chasing, offered as a lead and not a root cause: all 21
+scaffolded types are emitted with *unqualified* names, and the two that fail are
+exactly the two referenced *qualified* — both are nested inside
+`YAMLConfigurationEngine`. But nesting alone does not explain it, because
+`FilterQuery` is also nested (`private struct` inside the `ViolationStorageActor`
+queries extension) and *is* scaffolded — as bare `extension FilterQuery`, a name
+that would not compile. So the scaffolder does reach some nested types and
+mis-names them, while missing these two entirely. Unresolved.
+
+**What this costs the changelog.** `#10`'s `Node` row was verified against a
+*"`YAMLConfig`-shaped struct"* — a top-level probe built to match the real type's
+members. It passes there and fails here, and the difference is a property of the
+carrier the probe did not reproduce. That is the same methodological error the
+07-24 pass was written to catch, arriving through the door it built: **a probe is
+not the subject.** The `Node` row should read *built and unverified on real
+subjects*, the label §C's docstring-mode experiment earned.
+
+**The app's half closed anyway, and by hand.** `generateDiff` went proposal →
+hand-written suite → passing without any generator help: the app states the full
+characterization (set algebra over rule keys, modified domain, sortedness,
+`hasChanges` agreement, self-diff, swap symmetry) rather than stopping at the
+proposed `added ∩ removed = ∅`, and verified it *refutable* by mutating `removed`
+to `proposed \ current` — the swift-collections `symmetricDifference` bug shape —
+which fails with a shrunk one-key counterexample. Their own note is the honest
+part: the self-diff law **survives** that mutant, since with `a == b` both
+subtractions are empty either way. `swift test --filter PropertyLaw` is now **16
+tests in 5 suites**, green; three kernels have closed the loop, not two.
+
+**One suggestion retired itself, correctly.** The count moved 15 → 14 between the
+runs above, and the vocabulary had nothing to do with it: the dropped entry is
+the `consumer-producer-chain` advisory reading *"every observed call to
+`generateDiff(_:)` received `getConfig(_:)` output as its argument — author a
+property that exercises `generateDiff` against arbitrary `YAMLConfig`s if the
+broader domain is also intended."* The app wrote exactly that property, TestLifter
+saw it, and the advisory withdrew. That is the one thing in this section that
+worked end to end as designed, and it is worth more than the `.todo` count: the
+advisory named a real gap in words the reader could act on, and stopped naming it
+when the gap closed.
+
 ### Linter side, same two days
 
 489 → 491 issues on `SwiftLintRuleStudioCore`. The entire delta is two hits of
@@ -391,8 +471,13 @@ fires **zero** times on this package.
 
 ## Net
 
-- **Runs:** 3 passes — `discover` unseeded + seeded (fully categorised), then a
-  07-24 re-measurement against the 07-22 binaries.
+- **Runs:** 4 passes — `discover` unseeded + seeded (fully categorised), a 07-24
+  re-measurement against the 07-22 binaries, then a fourth against
+  `swiftprojectlint 23c0133` / `swift-infer 1ea657c` driven by the app owner
+  closing candidate §3. The `throws` producer fix reproduces its predicted
+  yield exactly: the seed manifest measures **90** (67 pure-function + 23
+  extractable-kernel), with `decodeRuleText`, `collectRows`, and `resolveFileURL`
+  the three admitted, and `serialize` still absent.
 - **Confirmed:** the low yield is structural, not access — every miss traces to a
   missing template, a determinism gate on `throws`, or an underivable generator,
   none to a permissions/scan problem.
@@ -402,9 +487,17 @@ fires **zero** times on this package.
   refutability-decides-visibility (`52a16d7`). "not derived" fell 20 → **5**, and a
   **default** `discover` now surfaces `filterViolations`/`layerChain`/`generateDiff`.
   See [Fixes shipped](#fixes-shipped-reconciled-2026-07-22).
-- **The loop closed on two kernels.** `filterViolations` and `layerChain` went
-  proposal → hand-written suite → passing (`swift test --filter PropertyLaw`: 13
-  tests, 4 suites, green). That, not the suggestion count, is the result.
+- **The loop closed on three kernels.** `filterViolations`, `layerChain`, and now
+  `generateDiff` went proposal → hand-written suite → passing (`swift test
+  --filter PropertyLaw`: **16 tests, 5 suites**, green — was 13 in 4). That, not
+  the suggestion count, is the result. In each case the app wrote a law *stronger*
+  than the proposal: the tool named disjointness, the suite states the set algebra.
+- **`#10`'s `Node` row does not survive contact with the real subject.** The
+  registration was made for real and measured three ways; `discover` is
+  bit-identical with it present, absent, or passed explicitly, because neither
+  `YAMLConfig` nor `ConfigDiff` is ever scaffolded in the first place. It was
+  verified on a `YAMLConfig`-*shaped* probe, and a probe is not the subject. See
+  [Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig).
 - **Two closures re-opened 07-24**, both found by running the pipeline end to end
   instead of checking each fix alone. The `throws` seam — the linter and
   `swift-infer` disagreeing about a property the shared oracle is supposed to make
