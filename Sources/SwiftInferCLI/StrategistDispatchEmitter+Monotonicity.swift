@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 
 // V1.48.A / V1.69 — monotonicity Pass 1 composers for the
 // strategist-routed emitter. Extracted from
@@ -41,11 +42,14 @@ extension StrategistDispatchEmitter {
     /// `min`/`max` — the Comparable scalar types. A domain outside this set is
     /// treated as Comparable only when its indexed shape declares the
     /// conformance (see `isComparableMonotonicityDomain`).
-    static let comparableMonotonicityDomains: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
-        "Double", "Float", "String", "Bool", "Character"
-    ]
+    ///
+    /// Stated as the shrinkable numeric scalars plus the three Comparable
+    /// non-numeric scalars, which is exactly how it relates to
+    /// `shrinkableMonotonicityCarriers`: same set, minus the types that have no
+    /// `shrink(towards: 0)`. Previously both were spelled out longhand and had to
+    /// be kept in step by hand.
+    static let comparableMonotonicityDomains: Set<String> =
+        FixedWidthIntegerNames.withBinaryFloats.union(["String", "Bool", "Character"])
 
     /// Whether the value-monotonicity domain is orderable by `min`/`max`: a
     /// known Comparable scalar, or a type whose indexed shape lists `Comparable`
@@ -139,11 +143,10 @@ extension StrategistDispatchEmitter {
     /// v1.141 — carrier type-names whose monotonicity value can be shrunk via
     /// `shrink(towards: 0)` (fixed-width integers + binary floats). Other
     /// value-monotonicity carriers (`String`, `Bool`) degrade gracefully.
-    static let shrinkableMonotonicityCarriers: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
-        "Double", "Float"
-    ]
+    /// Derived as the fixed-width integers plus the binary floats, so this list
+    /// cannot drift out of step with `shrinkableScalarCarriers` (the integers) —
+    /// the two differ by exactly `Double`/`Float`, and now say so structurally.
+    static let shrinkableMonotonicityCarriers: Set<String> = FixedWidthIntegerNames.withBinaryFloats
 
     /// v1.141 shrink phase for value monotonicity over a shrinkable scalar
     /// carrier: shrink each of the ordered pair toward 0, re-`min`/`max`-ing in

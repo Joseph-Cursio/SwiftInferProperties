@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 
 // v1.141 — shared shrink-phase emitters for the strategist-routed verify
 // stubs. The strategist handles Int / fixed-width-integer carriers (Route 2 of
@@ -18,10 +19,11 @@ extension StrategistDispatchEmitter {
 
     /// Carrier type-names whose values can be shrunk via `shrink(towards: 0)`.
     /// All other strategist carriers degrade gracefully (no shrink phase).
-    static let shrinkableScalarCarriers: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
-    ]
+    ///
+    /// Derived from `FixedWidthIntegerNames` — the ten integer names are shared
+    /// with the homomorphism codomain list and the monotonicity carriers rather
+    /// than copied here.
+    static let shrinkableScalarCarriers: Set<String> = FixedWidthIntegerNames.names
 
     /// Single-input shrink phase (round-trip, idempotence).
     static func singleShrinkPhase(carrier: String, oracle: String) -> String {

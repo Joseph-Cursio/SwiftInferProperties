@@ -48,11 +48,11 @@ public enum HomomorphismTemplate {
     /// Integer codomains only. A measure returns a whole quantity, and integer
     /// `+` is exact — unlike `Double`/`Float`, where non-associative rounding
     /// breaks the law under `==`.
-    public static let integerCodomains: Set<String> = [
-        "Int", "UInt",
-        "Int8", "Int16", "Int32", "Int64",
-        "UInt8", "UInt16", "UInt32", "UInt64"
-    ]
+    ///
+    /// Membership is derived from `FixedWidthIntegerNames` (shared with the
+    /// strategist's shrinkable-carrier lists) so the ten names live in one place;
+    /// the *reason* this template wants them is the exactness note above.
+    public static let integerCodomains: Set<String> = FixedWidthIntegerNames.names
 
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
