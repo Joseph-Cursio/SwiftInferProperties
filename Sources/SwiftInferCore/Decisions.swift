@@ -27,6 +27,12 @@ import Foundation
 /// throws on unknown). The `Decisions.schemaVersion` field exists
 /// exactly for this — v2 writers stamp `2`, v1 readers see the higher
 /// number and warn.
+// Deliberately parallel to v2's `InteractionDecision` (same four verdicts) but a *distinct*
+// persistence vocabulary: this v1 enum uses the synthesized `acceptedAsConformance` rawValue,
+// whereas `InteractionDecision` pins `"accepted-as-conformance"`. The two JSON schemas
+// (`decisions.json` vs `interaction-decisions.json`) must diverge on the wire, so these can't
+// share a raw-valued type — see the schema-version note above.
+// swiftprojectlint:disable:next parallel-enum-shape
 public enum Decision: String, Sendable, Equatable, Codable, CaseIterable {
     case accepted
     case acceptedAsConformance

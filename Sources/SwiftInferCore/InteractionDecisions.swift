@@ -21,6 +21,11 @@ import Foundation
 /// - `skipped` — user chose `s`; the invariant re-surfaces in future
 ///   `discover-interaction` runs but `drift-interaction` doesn't
 ///   warn on it (acknowledged but undecided).
+// Deliberately parallel to v1's `Decision` (same four verdicts) but a *distinct* persistence
+// vocabulary: this v2 enum pins the `"accepted-as-conformance"` rawValue whereas `Decision`
+// uses the synthesized form, so `interaction-decisions.json` and `decisions.json` diverge on
+// the wire and the two can't share a raw-valued type. See `Decision`'s schema-version note.
+// swiftprojectlint:disable:next parallel-enum-shape
 public enum InteractionDecision: String, Sendable, Equatable, Codable, CaseIterable {
     case accepted
     case acceptedAsConformance = "accepted-as-conformance"
