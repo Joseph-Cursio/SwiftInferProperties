@@ -171,11 +171,16 @@ public enum ViewModelActionSequenceStubEmitter {
     /// that falsify membership invariants. Non-integer scalars are unaffected
     /// (float overflow saturates to `inf`, no trap; `String`/`Bool` don't
     /// accumulate) so they keep `generatorExpression`.
+    /// The fixed-width integer raw types, derived from the canonical
+    /// `FixedWidthIntegerNames` list through `RawType`'s rawValue — which *is* the
+    /// Swift type name (`case int = "Int"`). Deriving rather than re-listing the
+    /// ten cases keeps them in one place and picks up any new fixed-width integer
+    /// `RawType` added upstream in `PropertyLawCore` automatically.
+    private static let integerRawTypes: Set<RawType> = Set(
+        RawType.allCases.filter { FixedWidthIntegerNames.names.contains($0.rawValue) }
+    )
+
     private static func payloadGenerator(for raw: RawType, typeText: String) -> String {
-        let integerRawTypes: Set<RawType> = [
-            .int, .int8, .int16, .int32, .int64,
-            .uint, .uint8, .uint16, .uint32, .uint64
-        ]
         guard integerRawTypes.contains(raw) else { return raw.generatorExpression }
         return "Gen<\(typeText)>.boundedForArithmetic()"
     }
