@@ -62,9 +62,13 @@ extension SwiftInferCommand {
                 FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
             }
 
-            let tiers: Set<String> = includePossible
-                ? ["Verified", "Strong", "Likely", "Possible"]
-                : ["Verified", "Strong", "Likely"]
+            // Derived from `Tier` rather than spelled out: these strings are matched
+            // against the index's stored tier, which is written as `Tier.label`, so a
+            // literal list here is a second copy of `label`'s output with no compiler
+            // check. `--include-possible` lowers the floor one tier.
+            let tiers = Set(
+                Tier.atLeastAsProminentAs(includePossible ? .possible : .likely).map(\.label)
+            )
             let groups = InsightsBuilder.groups(
                 in: load.index,
                 minTypes: max(2, minTypes),

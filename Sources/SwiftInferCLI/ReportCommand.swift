@@ -42,7 +42,9 @@ extension SwiftInferCommand {
             let insights = InsightsBuilder.groups(
                 in: indexLoad.index,
                 minTypes: 2,
-                includeTiers: ["Verified", "Strong", "Likely"]
+                // Same default floor as `insights` — derived from `Tier` so the two
+                // surfaces can't disagree about which tiers count as high-confidence.
+                includeTiers: Set(Tier.atLeastAsProminentAs(.likely).map(\.label))
             )
             print(
                 ReportRenderer.render(

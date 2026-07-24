@@ -132,6 +132,20 @@ public extension Tier {
         allCases.sorted { $0.reportDisplayRank < $1.reportDisplayRank }
     }
 
+    /// The tiers at least as prominent as `floor`, in severity order.
+    ///
+    /// This is what a surface includes when its confidence threshold is lowered:
+    /// `insights` and `report` include down to `.likely` by default, and
+    /// `--include-possible` moves the floor to `.possible`. Expressed against
+    /// `Comparable` (which orders by `severityRank`, `verified` minimum) so the
+    /// membership follows from the tier ordering rather than from a hand-kept
+    /// list of names — the call sites previously spelled out
+    /// `["Verified", "Strong", "Likely"]` as string literals that had to match
+    /// `label` exactly, in two places, with no compiler check.
+    static func atLeastAsProminentAs(_ floor: Tier) -> [Tier] {
+        allCases.filter { $0 <= floor }.sorted()
+    }
+
     private var reportDisplayRank: Int {
         switch self {
         case .verified: return 0
