@@ -246,6 +246,10 @@ public struct GeneratorMetadata: Sendable, Equatable {
     }
 
     /// Confidence in the selected generator. `nil` until selection runs.
+    // The identically-named `Confidence` in `Tests/Fixtures/algebraic-survey-corpus/` is sample
+    // input this tool *parses*, not a second production model — it's `Int`-raw-valued and mirrors
+    // these case names by coincidence. Not real duplication.
+    // swiftprojectlint:disable:next parallel-enum-shape
     public enum Confidence: String, Sendable, Equatable {
         case high
         case medium
