@@ -57,10 +57,11 @@ public enum PartitionTemplate {
     /// existed. Three cold readers read it and wrote the generator by hand; none of them was wrong to,
     /// and all of them should have been spared it.
     static func makeGenerators(for shape: PartitionShape) -> [GeneratorRecipe] {
-        let index = shape.tiler.parameters.first { parameter in
-            ["Int", "Int64", "Int32", "UInt", "UInt64"]
-                .contains(parameter.typeText.trimmingCharacters(in: .whitespaces))
-        }
+        // Shares `PartitionPairing.isInteger` — the same index-parameter predicate
+        // the pairing pass recognises the shape with. Inlining a second copy of
+        // the list here meant the generator could stop finding an index that
+        // pairing had already accepted (or vice versa).
+        let index = shape.tiler.parameters.first { PartitionPairing.isInteger($0.typeText) }
         guard let index else { return [] }
         return [CollisionBias.outOfRangeIndex(subject: index.internalName)]
     }

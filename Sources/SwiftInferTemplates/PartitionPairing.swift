@@ -219,7 +219,17 @@ public enum PartitionPairing {
         return bare == "Range<Int>" || bare == "ClosedRange<Int>"
     }
 
-    private static func isInteger(_ text: String) -> Bool {
+    /// The integer type names accepted as a partition **index / count** parameter.
+    ///
+    /// Internal rather than private because `PartitionTemplate.makeGenerators`
+    /// needs exactly this predicate to find the tiler's index parameter, and
+    /// previously inlined a second copy of the list.
+    ///
+    /// Deliberately narrower than the full fixed-width integer set
+    /// (`FixedWidthIntegerNames`): an index or count parameter is word-sized or
+    /// larger in practice, so `Int8`/`Int16` are not accepted. (`UInt32` is not
+    /// currently in the list either, while `Int32` is.)
+    static func isInteger(_ text: String) -> Bool {
         ["Int", "Int64", "Int32", "UInt", "UInt64"].contains(text.trimmingCharacters(in: .whitespaces))
     }
 
