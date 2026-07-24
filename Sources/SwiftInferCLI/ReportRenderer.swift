@@ -7,7 +7,8 @@ import SwiftInferCore
 /// into a single status view. Pure; the command does the loading.
 enum ReportRenderer {
 
-    private static let tierOrder = ["Verified", "Strong", "Likely", "Possible", "Advisory", "Suppressed"]
+    // Derived from `Tier` (order + labels) so the breakdown can't drift from the enum.
+    private static let tierOrder = Tier.reportDisplayOrder.map(\.label)
 
     static func render(
         index: IndexStore.Index,

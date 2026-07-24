@@ -118,3 +118,28 @@ public enum Tier: String, Sendable, Equatable, Comparable, CaseIterable, Codable
         lhs.severityRank < rhs.severityRank
     }
 }
+
+public extension Tier {
+    /// Canonical order for the `swift-infer report` tier breakdown:
+    /// verified → strong → likely → possible → advisory → suppressed.
+    ///
+    /// Deliberately *not* `allCases.sorted()` — `severityRank` orders `suppressed` before
+    /// `advisory`, whereas the report shows the two low tiers advisory-first. Derived by sorting
+    /// `allCases` on `reportDisplayRank` (an exhaustive `switch`), so a new tier can never
+    /// silently drop out of the breakdown, and the display labels come from `label` rather than
+    /// a hand-kept parallel string list. `ReportRenderer` renders this via `.map(\.label)`.
+    static var reportDisplayOrder: [Tier] {
+        allCases.sorted { $0.reportDisplayRank < $1.reportDisplayRank }
+    }
+
+    private var reportDisplayRank: Int {
+        switch self {
+        case .verified: return 0
+        case .strong: return 1
+        case .likely: return 2
+        case .possible: return 3
+        case .advisory: return 4
+        case .suppressed: return 5
+        }
+    }
+}
