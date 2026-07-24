@@ -20,6 +20,17 @@ lack of a derivable generator.
 > see [Fixes shipped](#fixes-shipped-reconciled-2026-07-22), which also carries a
 > correction to root cause 2. The diagnosis below is left as the record of what
 > was found.
+>
+> **Re-measured 2026-07-24.** The 07-22 numbers reproduce exactly — but running
+> the linter and the inference engine *as a pipeline*, rather than checking each
+> fix on its own, showed two of those closures claiming more than they deliver.
+> The `throws` seam is now fixed (the leaf separates transparency from totality);
+> the owed-law warning still fires on five subjects when the seed manifest is the
+> linter's own. Read
+> [Finding A, corrected](#finding-a-corrected--throws-was-never-what-blocked-serialize)
+> if you read nothing else here: the fix shipped, and measuring it refuted the
+> premise that motivated it. See
+> [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline).
 
 ## Setup (honesty)
 
@@ -183,14 +194,14 @@ to the diagnosis:
 | Fix | Root cause | Status |
 |---|---|---|
 | Subset/filter law family | 1 | ✅ `filter-subset` template (`748dd81`) — `filterViolations` owes a refutable `Set(result) ⊆ Set(haystack)` instead of `f(x)==f(x)` |
-| Throwing functions earn a law | 2 (re-diagnosed) | ✅ `9e1e066` — see correction below |
+| Throwing functions earn a law | 2 (re-diagnosed twice) | ✅ `9e1e066` on the consumer side, and the producer side closed 2026-07-24: the leaf now separates transparency from totality (`PurityVerdict.pureButPartial`) and the linter seeds throwing pure functions. **Does not unblock `serialize`** — see [Finding A, corrected](#finding-a-corrected--throws-was-never-what-blocked-serialize) |
 | Generator derivation | 3 | ✅ discover-side composite fallback (`3bf23e0`) + upstream nested-`zip` >10 members (`SwiftPropertyLaws v3.17.0`; floor-bumped `830c344`) |
 | Selection-ancestry template | 1 (`layerChain`) | ✅ `selection-subset` template (`288fdc4`) — `layerChain` owes `result ⊆ ConfigTree.configs` |
 | Diff characterization template | 1 (`generateDiff`) | ✅ `diff-disjointness` template (`f723744`) — `generateDiff` owes `added ∩ removed = ∅` |
 | Refutability decides visibility (the tier cut) | 4 | ✅ `52a16d7` — role-entailed refutable laws (incl. filter/selection/diff) surface on a default run, not just `--include-possible` |
 | Stop the spurious `CustomRuleConflict` round-trip pairing (the "noise" finding) | — | ✅ #10 — `FunctionPairing` admits a synthetic init-decode half only when the encode name embeds the init's argument-label stem (the same predicate `RoundTripTemplate` scores +40 on), so `CustomRuleConflict(ruleIdentifier:)` no longer pairs with the unrelated `id()` / `message()` getters |
 | Registered-generator hook for the external `Node` boundary | 3 (residual) | ✅ #10 — `Vocabulary.registeredGenerators` supplies a generator for an underivable external member (`{ "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }`); `discover` on a `YAMLConfig`-shaped struct moves from `Generator: .todo` to a derived generator, composing the rest of the struct rather than gating the whole carrier |
-| Report the linter gap | 5 | ✗ withdrawn — verified a phantom: `swiftprojectlint --format pbt-seeds` emits 85 seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest (see the correction under root cause 5) |
+| Report the linter gap | 5 | ⚠️ withdrawn, then **partly reinstated**. The original phantom stands (`swiftprojectlint --format pbt-seeds` emits 85 — now 87 — seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest). But re-run against the linter's *own* manifest the warning still fires on five subjects — see [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline) |
 
 **Correction to root cause 2.** *"`throws` refutes purity at index time"* was
 wrong, and tracing the code showed why: the `round-trip` template already
@@ -225,22 +236,192 @@ hard `.todo` wall but a *registration*: `Node`'s generator is now something the
 project can supply rather than something the tool must derive. *Withdrawn:* the
 "linter seeding gap" (root cause 5) was a phantom — see the correction above.
 
+## Re-measured 2026-07-24 — two closures that do not survive the real pipeline
+
+Third pass, driven by a different question again: *how much did the two days
+after the reconcile move?* Answer: **nothing, on this subject** — and the
+measurement that establishes that also caught two rows of the changelog above
+claiming more than they can deliver end to end.
+
+**Method.** Built `swift-infer` at the 07-22 tip (`bfc0988`, the reconcile
+commit) and `swiftprojectlint` at `e4a7a86` in throwaway worktrees, and ran both
+against HEAD. Unseeded `discover`, seeded `discover`, and the seed manifest are
+**byte-identical** across the two days (`diff -q` clean on all three). The
+07-23/07-24 commits — list-derivation refactors, false-positive suppressions,
+the new duplication-rule family — move nothing here. The 07-22 numbers *do*
+reproduce, which is the useful half of a null result:
+
+| Claim | Reproduced today |
+|---|---|
+| Default run surfaces the three new families | ✅ 15 of 29 suggestions (was ~4 of 30) |
+| `filterViolations` → `filter-subset` | ✅ score 35, generator `.derivedComposite` |
+| `layerChain` → `selection-subset` | ✅ `result ⊆ ConfigTree.configs` |
+| `generateDiff` → `diff-disjointness` | ✅ `added ∩ removed = ∅` |
+| `CustomRuleConflict` noise gone | ✅ `round-trip` 3 → 0, `inverse-pair` 1 → 0 |
+| *"not derived"* 20 → 6 | ✅ measures **5** today (the doc's 6 predates two 07-22 commits) |
+| Seed manifest 85 | ✅ measures **87** (64 pure-function + 23 extractable-kernel) |
+
+And the app closed its half: `swift test --filter PropertyLaw` on
+`SwiftLintRuleStudioCore` runs **13 tests in 4 suites, all green**, including
+*"filterViolations is a subset, membership-exact, and idempotent"* and
+*"layerChain selects tree ancestors of the target, ordered by depth"*. Two of the
+four tautology kernels went proposal → written → passing. That is the loop
+working as advertised, and it is the strongest thing this road test has to show.
+
+Neither finding below is a regression — both were equally true on 07-22. They are
+what the reconcile missed by measuring each fix in isolation instead of running
+the pipeline end to end.
+
+### Finding A — the two ends of the loop disagreed about `throws`
+
+> **Fixed and re-diagnosed 2026-07-24.** The disagreement below was real and is
+> now closed. Its stated *consequence* — that closing it would unblock
+> `serialize` — was wrong, and finding out why is the more useful half. See
+> [Finding A, corrected](#finding-a-corrected--throws-was-never-what-blocked-serialize).
+
+The changelog credits `9e1e066` with moving `serialize` from *nothing* to the
+determinism floor. The synthesis does work: hand-seed a one-entry manifest naming
+`serialize` and `discover` reports `synthesized 1 generic determinism law(s)`.
+
+But **`swiftprojectlint --format pbt-seeds` never emitted `serialize`.** The
+linter's purity oracle refuted `throws`, so the symbol was absent from all 87
+seeds — `YAMLConfigurationEngine+Serialization.swift` contributed
+`indentBlockSequences`, `warningOnlyInt`, and `topLevelRuleValue`, and nothing
+else. `PBTSeedsFormatter.swift` said so in its own doc comment, in passing:
+*"`uploadRemainingChunks` is `private async throws`, which refutes purity."*
+
+So the two ends of the loop openly disagreed. `swift-infer` says a throwing pure
+function earns a determinism law; the linter said `throws` refutes purity and
+declined to name it. `qualifiesForDeterminism`'s un-gating was reachable only by
+a hand-written manifest, and Appendix C's claim that the shared `PurityInferrer`
+means the linter and the inference engine *"can never disagree about what is
+pure"* did not hold at that seam.
+
+**How it was settled.** The leaf was conflating two different properties.
+`Effect.pure` is a conjunction — referentially transparent **and** total — and
+`throws` refutes only the second clause. `SwiftEffectInference` now answers with
+`PurityVerdict { pure, pureButPartial, refuted }`; `isPure` / `inferredEffect`
+are defined as `verdict == .pure`, so no existing consumer's answer moved, and
+`PropertyTestCandidacy` is the one caller that opts into the partial tier.
+
+### Finding A, corrected — `throws` was never what blocked `serialize`
+
+Shipping the fix and *measuring* it refuted the premise twice over. Both
+refutations came from running the tool, not from reading it — the same lesson
+root cause 5 taught, arriving by a new route.
+
+**First: `throws` was silently doing a second job.** Admitting throwing
+candidates took the manifest from 87 seeds to **98**, and about ten of the eleven
+new ones were I/O. The worst was `runSwiftLint(executable:workingDirectory:lintFile:)`
+— it builds a `Process`, wires up a `Pipe`, and calls `try process.run()` — judged
+pure. That is the lattice-bottom mistake `PurityInferrer`'s own soundness note
+forbids, and the cause is that **nearly all real Swift I/O throws**, so gating on
+`throws` had been masking every impurity marker the set does not name: `Process`,
+`Pipe`, `FileHandle`, `String(contentsOf:)`, `Data(contentsOf:)`, the SQLite
+surface. Remove the gate and they all walk in at once.
+
+The distinction that survives is *where the error comes from*. A function that
+raises **its own** error (`guard let v = Int(text) else { throw ParseError.bad }`)
+is partial and pure. A function that `try`s into a callee is doubt about the
+callee, and doubt refutes. With that second gate the subject moves 87 → **90**:
+`decodeRuleText`, `collectRows` (a pure loop over injected effect closures — a
+genuinely good find), and `resolveFileURL`.
+
+**Second, and the actual correction: `serialize` is still not seeded, and this
+work could never have reached it.** Two independent blockers, both defensible:
+
+1. Its throwing is *entirely propagated* — `try orderedTopLevelPairs(for:)` and
+   `try Yams.serialize(node:)`. The new gate correctly refuses it.
+2. Independently, it calls other methods on `self`, and `SelfAccessAnalyzer`
+   refuses what it cannot resolve. A probe settles that this is a separate cause
+   rather than the same one twice: a method that calls a sibling method on `self`
+   and **does not throw at all** is refused identically.
+
+So the seam disagreement was real, is fixed, and is worth three seeds — but it
+was never the binding constraint on `serialize`. The original reasoning inferred
+"the linter refuses `throws`, therefore `throws` is why `serialize` is missing"
+from a doc comment and the leaf's gate ordering, without testing whether removing
+that gate was *sufficient*. It was not. A refuter that fires first hides every
+refuter behind it, and reading the code cannot tell you how many are queued up —
+only running it can.
+
+**What would reach `serialize`** is relaxing the self-method-call gate, which is
+a different and much riskier change: that gate is what keeps `unresolvedOrMutable`
+sound on application code, where almost all logic is instance methods. Left open
+deliberately. The `serialize ↔ parse` round trip still additionally needs an
+app-side `parse(String) -> YAMLConfig`, which does not exist.
+
+### Finding B — the owed-law warning still fires against the linter's own manifest
+
+Root cause 5 was withdrawn on the strength of the right check (the linter *does*
+seed `isVersion`, `looksLikePlaceholderYAML`, `isUnavailableForLinting`), but the
+withdrawal was never re-tested the way the pipeline actually runs: feed
+`discover --seeds` the linter's own 87-seed manifest rather than a hand-written
+one. Do that, and the `owedLawWarning` still names five subjects:
+
+- `layerChain`, `filterViolations`, `generateDiff` — seeded, but only as
+  `extractable-kernel`. `PBTSeedKind.isAnalysable` is `false` for that kind, so
+  the focus cannot see them: the linter is pointing at an unnamed kernel *inside*
+  each function while the template has a law owed by the function itself.
+- `columnIsNull(at:)` and `boolValue(for:)` — not seeded at all. The correction
+  above reads their absence as the linter *correctly* excluding state-reading
+  functions; `swift-infer` reads them as role-owed `predicate` laws the manifest
+  should have named. That disagreement is unresolved, not settled.
+
+The honest reading is narrower than the original root cause 5 and wider than its
+withdrawal: there is no *under-seeding* gap (87 seeds is thorough), but there is
+a **kind-granularity** gap. A function can owe a law at its own boundary and
+still be seeded only as a location to refactor, and the focus filter cannot tell
+the difference.
+
+This also promotes `52a16d7` (refutability decides visibility) from a tier-cut
+convenience to a **load-bearing** fix: it is the only reason `filterViolations`,
+`layerChain`, and `generateDiff` survive a seeded run at all. The manifest alone
+would have hidden all three — the confident zero arriving by the route
+`PBTSeedsFormatter`'s doc comment warns about, through the door it was written to
+close.
+
+### Linter side, same two days
+
+489 → 491 issues on `SwiftLintRuleStudioCore`. The entire delta is two hits of
+the new *SwiftProjectLint Suppression* rule, reporting the two suppression
+comments the app added on 07-23. The new duplication family — Parallel List
+Drift, Duplicate Enum Mapping, Parallel Enum Shape, Duplicate Struct Shape —
+fires **zero** times on this package.
+
 ## Net
 
-- **Runs:** 2 (`discover` unseeded + seeded), fully categorised.
+- **Runs:** 3 passes — `discover` unseeded + seeded (fully categorised), then a
+  07-24 re-measurement against the 07-22 binaries.
 - **Confirmed:** the low yield is structural, not access — every miss traces to a
   missing template, a determinism gate on `throws`, or an underivable generator,
   none to a permissions/scan problem.
 - **Fixes landed:** subset/filter template (`748dd81`), throwing-function
   determinism (`9e1e066`), generator derivation (`3bf23e0` + `SwiftPropertyLaws
   v3.17.0`), selection-subset (`288fdc4`), diff-disjointness (`f723744`), and
-  refutability-decides-visibility (`52a16d7`). "not derived" fell 20 → 6, and a
+  refutability-decides-visibility (`52a16d7`). "not derived" fell 20 → **5**, and a
   **default** `discover` now surfaces `filterViolations`/`layerChain`/`generateDiff`.
-  Root cause 5 (linter gap) was verified a phantom and withdrawn. See
-  [Fixes shipped](#fixes-shipped-reconciled-2026-07-22).
+  See [Fixes shipped](#fixes-shipped-reconciled-2026-07-22).
+- **The loop closed on two kernels.** `filterViolations` and `layerChain` went
+  proposal → hand-written suite → passing (`swift test --filter PropertyLaw`: 13
+  tests, 4 suites, green). That, not the suggestion count, is the result.
+- **Two closures re-opened 07-24**, both found by running the pipeline end to end
+  instead of checking each fix alone. The `throws` seam — the linter and
+  `swift-infer` disagreeing about a property the shared oracle is supposed to make
+  them agree on — is **now fixed**, worth 3 seeds. The owed-law warning still
+  fires on five subjects against the linter's own manifest: a **kind-granularity**
+  gap, not the under-seeding gap root cause 5 alleged. See
+  [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline).
+- **The `throws` fix refuted its own premise**, which is the most useful thing
+  this pass produced. `serialize` is still not seeded — its throwing is propagated,
+  and independently it calls methods on `self` that cannot be resolved. `throws`
+  was a refuter that fired *first* and hid the ones behind it; only running the
+  fixed tool showed that removing it was not sufficient. Reading the code had said
+  otherwise, twice.
 - **Still open:** `parseParameters`' metamorphic laws (out-of-catalog, → the app's
-  hand-written suite) and the app-side `parse(String) -> YAMLConfig` extraction
-  that would unlock the `serialize ↔ parse` round-trip.
+  hand-written suite); the app-side `parse(String) -> YAMLConfig` extraction that
+  would unlock the `serialize ↔ parse` round-trip; and — deliberately — the
+  self-method-call gate that is the remaining blocker on `serialize`.
 - **#10 closed** the two smaller items: the `CustomRuleConflict` round-trip noise
   (`FunctionPairing` label-stem admission gate) and the external-`Node`
   generator boundary (`Vocabulary.registeredGenerators` hook — `discover` moves
