@@ -108,7 +108,7 @@ public enum ViewModelInteractionAnalyzer {
     private static func referentialIntegrity(
         _ candidate: ViewModelCandidate
     ) -> [ViewModelInteractionCandidate] {
-        let collections = candidate.stateFields.filter { isCollection($0.typeText) }
+        let collections = candidate.stateFields.filter { ViewModelNameHeuristics.isCollection($0.typeText) }
         let sources = collections
             .map(\.name)
             .filter { !isSelectionName($0) }
@@ -129,10 +129,10 @@ public enum ViewModelInteractionAnalyzer {
     // MARK: - Conservation (count ↔ collection size)
 
     private static func conservation(_ candidate: ViewModelCandidate) -> [ViewModelInteractionCandidate] {
-        let collections = candidate.stateFields.filter { isCollection($0.typeText) }.map(\.name)
+        let collections = candidate.stateFields.filter { ViewModelNameHeuristics.isCollection($0.typeText) }.map(\.name)
         guard !collections.isEmpty else { return [] }
         return candidate.stateFields
-            .filter { $0.name.lowercased().contains("count") && stripOptional($0.typeText) == "Int" }
+            .filter { $0.name.lowercased().contains("count") && ViewModelNameHeuristics.stripOptional($0.typeText) == "Int" }
             .map { counter in
                 ViewModelInteractionCandidate(
                     family: .conservation,
@@ -148,7 +148,7 @@ public enum ViewModelInteractionAnalyzer {
 
     private static func cardinality(_ candidate: ViewModelCandidate) -> [ViewModelInteractionCandidate] {
         let presentation = candidate.stateFields
-            .filter { isOptional($0.typeText) && isPresentationName($0.name) }
+            .filter { ViewModelNameHeuristics.isOptional($0.typeText) && ViewModelNameHeuristics.isPresentationName($0.name) }
             .map(\.name)
         guard presentation.count >= 2 else { return [] }
         return [
@@ -165,10 +165,10 @@ public enum ViewModelInteractionAnalyzer {
     // MARK: - Biconditional (Bool flag ⟺ Optional, shared stem)
 
     private static func biconditional(_ candidate: ViewModelCandidate) -> [ViewModelInteractionCandidate] {
-        let optionals = candidate.stateFields.filter { isOptional($0.typeText) }
+        let optionals = candidate.stateFields.filter { ViewModelNameHeuristics.isOptional($0.typeText) }
         var out: [ViewModelInteractionCandidate] = []
-        for flag in candidate.stateFields where isBool(flag.typeText) {
-            let stem = booleanStem(flag.name)
+        for flag in candidate.stateFields where ViewModelNameHeuristics.isBool(flag.typeText) {
+            let stem = ViewModelNameHeuristics.booleanStem(flag.name)
             guard stem.count >= 3,
                   let match = optionals.first(where: { $0.name.lowercased().contains(stem) }) else {
                 continue
@@ -188,43 +188,10 @@ public enum ViewModelInteractionAnalyzer {
 
     // MARK: - Field-shape helpers
 
-    static func isOptional(_ type: String) -> Bool { type.hasSuffix("?") }
-
-    static func isBool(_ type: String) -> Bool { stripOptional(type) == "Bool" }
-
-    static func isCollection(_ type: String) -> Bool {
-        let base = stripOptional(type)
-        return base.hasPrefix("[")
-            || base.contains("Set<") || base.contains("Array<")
-            || base.contains("Dictionary<") || base.contains("IdentifiedArray")
-    }
-
+    // Shared shape heuristics (isOptional / isBool / isCollection /
+    // isPresentationName / booleanStem / stripOptional) live in Core's
+    // `ViewModelNameHeuristics`. Only `isSelectionName` is specific to this pass.
     static func isSelectionName(_ name: String) -> Bool {
         name.lowercased().hasPrefix("selected")
-    }
-
-    static func isPresentationName(_ name: String) -> Bool {
-        let lowered = name.lowercased()
-        return ["sheet", "alert", "popover", "route", "destination", "presented", "cover", "dialog"]
-            .contains { lowered.contains($0) }
-    }
-
-    /// Strip a Bool's `is`/`has`/`show`/`should` prefix to its stem
-    /// (`isLoading` → `loading`), lowercased; empty if nothing left.
-    static func booleanStem(_ name: String) -> String {
-        let lowered = name.lowercased()
-        for prefix in ["isshowing", "is", "has", "show", "should", "did", "will"]
-        where lowered.hasPrefix(prefix) && lowered.count > prefix.count {
-            return String(lowered.dropFirst(prefix.count))
-        }
-        return lowered
-    }
-
-    private static func stripOptional(_ type: String) -> String {
-        var trimmed = type.trimmingCharacters(in: .whitespaces)
-        while trimmed.hasSuffix("?") || trimmed.hasSuffix("!") {
-            trimmed = String(trimmed.dropLast())
-        }
-        return trimmed.trimmingCharacters(in: .whitespaces)
     }
 }
