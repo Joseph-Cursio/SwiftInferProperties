@@ -177,6 +177,9 @@ public enum VerifyResultRenderer {
         case "idempotence-lifted": return RenderShape(kind: .idempotenceLifted)
         case "dual-style-consistency": return RenderShape(kind: .dualStyleConsistency)
         case "monotonicity": return RenderShape(kind: .monotonicity)
+        case "involution": return RenderShape(kind: .involution)
+        // round-trip and codable-round-trip share the round-trip phrasing; any
+        // other verifiable template not named above also falls here.
         default: return RenderShape(kind: .roundTrip)
         }
     }
@@ -249,6 +252,7 @@ private struct RenderShape {
     enum Kind {
         case roundTrip, idempotence, commutativity, associativity
         case idempotenceLifted, dualStyleConsistency, monotonicity
+        case involution
     }
 
     let kind: Kind
@@ -277,6 +281,9 @@ private struct RenderShape {
 
         case .monotonicity:
             return "monotonicity on \(context.forwardName) over \(context.carrierType)"
+
+        case .involution:
+            return "involution on \(context.forwardName) over \(context.carrierType)"
         }
     }
 
@@ -300,6 +307,9 @@ private struct RenderShape {
 
         case .monotonicity:
             return "\(context.forwardName)(a) "
+
+        case .involution:
+            return "\(context.forwardName)(input) "
         }
     }
 
@@ -325,6 +335,9 @@ private struct RenderShape {
 
         case .monotonicity:
             return "\(context.forwardName)(b)"
+
+        case .involution:
+            return "\(context.forwardName)(\(context.forwardName)(input))"
         }
     }
 
@@ -350,6 +363,9 @@ private struct RenderShape {
 
         case .monotonicity:
             return "f(a) ≤ f(b) when a ≤ b"
+
+        case .involution:
+            return "input"
         }
     }
 }
