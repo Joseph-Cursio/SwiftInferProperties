@@ -73,6 +73,11 @@ public enum CommutativityTemplate {
     /// `==` compares element order (`OrderedSet` / `Array` / …), because the
     /// operation preserves insertion order. `orderSensitiveCarrierVetoSignal`
     /// suppresses a commutativity suggestion for these verbs on such carriers.
+    // Overlaps `SetAlgebraShape.binaryOps` but is a different list on purpose: this one is
+    // the *commutative* set verbs, so `subtracting` is correctly absent (a-b != b-a), and it
+    // includes the informal `intersect` spelling that user code uses but stdlib SetAlgebra
+    // doesn't declare. Both differences are semantic, not drift.
+    // swiftprojectlint:disable:next parallel-list-drift
     public static let setCombinationVerbs: Set<String> = [
         "union",
         "intersection",

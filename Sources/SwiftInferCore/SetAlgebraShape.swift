@@ -44,6 +44,10 @@ public enum SetAlgebraShape {
     /// SetAlgebra intersection.swift` × `OrderedSet+Partial SetAlgebra
     /// subtracting.swift` × `OrderedSet+UnorderedView.swift`. V1.14.1
     /// closes that pattern.
+    // Overlaps `CommutativityTemplate.setCombinationVerbs` but models stdlib SetAlgebra's
+    // binary ops, so it keeps the non-commutative `subtracting` and omits the non-stdlib
+    // `intersect`. See that constant's note.
+    // swiftprojectlint:disable:next parallel-list-drift
     public static let binaryOps: Set<String> = [
         "union",
         "intersection",
