@@ -209,7 +209,7 @@ to the diagnosis:
 | Refutability decides visibility (the tier cut) | 4 | ✅ `52a16d7` — role-entailed refutable laws (incl. filter/selection/diff) surface on a default run, not just `--include-possible` |
 | Stop the spurious `CustomRuleConflict` round-trip pairing (the "noise" finding) | — | ✅ #10 — `FunctionPairing` admits a synthetic init-decode half only when the encode name embeds the init's argument-label stem (the same predicate `RoundTripTemplate` scores +40 on), so `CustomRuleConflict(ruleIdentifier:)` no longer pairs with the unrelated `id()` / `message()` getters |
 | Registered-generator hook for the external `Node` boundary | 3 (residual) | ⚠️ #10 shipped, **unverified on the real subject**. `Vocabulary.registeredGenerators` supplies a generator for an underivable external member (`{ "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }`), and `discover` on a `YAMLConfig`-*shaped* struct moves from `Generator: .todo` to a derived generator. On the actual `YAMLConfigurationEngine.YAMLConfig` it changes **nothing** — see [Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig) |
-| Report the linter gap | 5 | ⚠️ withdrawn, then **partly reinstated**. The original phantom stands (`swiftprojectlint --format pbt-seeds` emits 85 — now 87 — seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest). But re-run against the linter's *own* manifest the warning still fires on five subjects — see [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline) |
+| Report the linter gap | 5 | ⚠️ withdrawn, then **partly reinstated**. The original phantom stands (`swiftprojectlint --format pbt-seeds` emits 85 — now **90** — seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest). But re-run against the linter's *own* manifest the warning still fires on five subjects — see [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline) |
 
 **Correction to root cause 2.** *"`throws` refutes purity at index time"* was
 wrong, and tracing the code showed why: the `round-trip` template already
@@ -239,10 +239,13 @@ silent until one exists.
 (domain-specific — belong in the app's hand-written suite, not a template); and
 the `serialize ↔ parse` round-trip (needs an app-side `parse(String) ->
 YAMLConfig`). *Closed by #10:* the `CustomRuleConflict` round-trip noise (a
-pairing tightening) and the `YAMLConfig` external-`Node` boundary — no longer a
-hard `.todo` wall but a *registration*: `Node`'s generator is now something the
-project can supply rather than something the tool must derive. *Withdrawn:* the
-"linter seeding gap" (root cause 5) was a phantom — see the correction above.
+pairing tightening). *Not closed, contrary to what this section originally
+claimed:* the `YAMLConfig` external-`Node` boundary. `#10` turns it from a hard
+`.todo` wall into a *registration* on a `YAMLConfig`-**shaped** probe, but on the
+real `YAMLConfigurationEngine.YAMLConfig` the registration changes nothing — see
+[Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig).
+*Withdrawn:* the "linter seeding gap" (root cause 5) was a phantom — see the
+correction above.
 
 ## Re-measured 2026-07-24 — two closures that do not survive the real pipeline
 
@@ -364,8 +367,8 @@ app-side `parse(String) -> YAMLConfig`, which does not exist.
 Root cause 5 was withdrawn on the strength of the right check (the linter *does*
 seed `isVersion`, `looksLikePlaceholderYAML`, `isUnavailableForLinting`), but the
 withdrawal was never re-tested the way the pipeline actually runs: feed
-`discover --seeds` the linter's own 87-seed manifest rather than a hand-written
-one. Do that, and the `owedLawWarning` still names five subjects:
+`discover --seeds` the linter's own manifest rather than a hand-written one. Do
+that, and the `owedLawWarning` still names five subjects:
 
 - `layerChain`, `filterViolations`, `generateDiff` — seeded, but only as
   `extractable-kernel`. `PBTSeedKind.isAnalysable` is `false` for that kind, so
@@ -376,8 +379,18 @@ one. Do that, and the `owedLawWarning` still names five subjects:
   functions; `swift-infer` reads them as role-owed `predicate` laws the manifest
   should have named. That disagreement is unresolved, not settled.
 
+> **Re-checked against the 90-seed manifest.** This finding was first measured on
+> the 87-seed manifest, before the `throws` producer fix admitted three more pure
+> functions. Re-run at `swiftprojectlint 23c0133` / `swift-infer 7ac71fd` against
+> the 90-seed manifest it emits today, the warning names **the same five subjects,
+> for the same reasons**: `layerChain` / `filterViolations` / `generateDiff` are
+> still seeded `extractable-kernel` only, and `columnIsNull` / `boolValue` are
+> still not seeded at all. The three newly admitted seeds (`decodeRuleText`,
+> `collectRows`, `resolveFileURL`) are disjoint from the five. The kind-granularity
+> gap is not an artifact of the older manifest.
+
 The honest reading is narrower than the original root cause 5 and wider than its
-withdrawal: there is no *under-seeding* gap (87 seeds is thorough), but there is
+withdrawal: there is no *under-seeding* gap (90 seeds is thorough), but there is
 a **kind-granularity** gap. A function can owe a law at its own boundary and
 still be seeded only as a location to refactor, and the focus filter cannot tell
 the difference.
@@ -414,11 +427,16 @@ target. Measured three ways against `SwiftLintRuleStudioCore` at
 Identical, and `generateDiff` stays `Generator: .todo` in all three.
 
 **Why it cannot bite.** `swift-infer scaffold --target SwiftLintRuleStudioCore`
-emits 21 stubs, and **neither `YAMLConfig` nor `ConfigDiff` is among them**. Both
-appear only as unresolved `<#Generator<YAMLConfigurationEngine.YAMLConfig>#>` /
+emits 21 stubs, and **neither `YAMLConfig` nor `ConfigDiff` is among them**. That
+absence is on its own ambiguous — `Scaffold+Pipeline.swift:105` emits a stub only
+for a type whose strategy is `.todo`, and `:108` silently skips any type whose
+`ScaffoldEmitter.stub` returns nil, so a name can be missing because it derived
+*fully* or because the emitter bailed. What settles it is where the two names do
+appear: only as unresolved `<#Generator<YAMLConfigurationEngine.YAMLConfig>#>` /
 `<#Generator<YAMLConfigurationEngine.ConfigDiff>#>` placeholders *inside other
 types' generators* (`ConfigEntry`, `ConfigImportPreview`, `DiscoveredConfig`, …).
-The carrier is never derived at all, so a missing member generator was never the
+An unresolved placeholder is not what a fully-derived type leaves behind, so the
+carrier is never derived at all, and a missing member generator was never the
 binding constraint — the same shape as Finding A, one layer out: **a refuter that
 fires first hides the ones behind it.**
 
@@ -450,8 +468,10 @@ part: the self-diff law **survives** that mutant, since with `a == b` both
 subtractions are empty either way. `swift test --filter PropertyLaw` is now **16
 tests in 5 suites**, green; three kernels have closed the loop, not two.
 
-**One suggestion retired itself, correctly.** The count moved 15 → 14 between the
-runs above, and the vocabulary had nothing to do with it: the dropped entry is
+**One suggestion retired itself, correctly.** The default-tier count moved 15 →
+14 — not between the three runs above, which report 14 apiece, but against the
+third pass's reproduction table, which measured *"15 of 29 suggestions"*. The
+vocabulary had nothing to do with it: the dropped entry is
 the `consumer-producer-chain` advisory reading *"every observed call to
 `generateDiff(_:)` received `getConfig(_:)` output as its argument — author a
 property that exercises `generateDiff` against arbitrary `YAMLConfig`s if the
@@ -502,8 +522,9 @@ fires **zero** times on this package.
   instead of checking each fix alone. The `throws` seam — the linter and
   `swift-infer` disagreeing about a property the shared oracle is supposed to make
   them agree on — is **now fixed**, worth 3 seeds. The owed-law warning still
-  fires on five subjects against the linter's own manifest: a **kind-granularity**
-  gap, not the under-seeding gap root cause 5 alleged. See
+  fires on the same five subjects against the linter's own manifest — re-checked
+  against the 90-seed manifest, not just the 87-seed one it was first measured on:
+  a **kind-granularity** gap, not the under-seeding gap root cause 5 alleged. See
   [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline).
 - **The `throws` fix refuted its own premise**, which is the most useful thing
   this pass produced. `serialize` is still not seeded — its throwing is propagated,
@@ -515,7 +536,8 @@ fires **zero** times on this package.
   hand-written suite); the app-side `parse(String) -> YAMLConfig` extraction that
   would unlock the `serialize ↔ parse` round-trip; and — deliberately — the
   self-method-call gate that is the remaining blocker on `serialize`.
-- **#10 closed** the two smaller items: the `CustomRuleConflict` round-trip noise
-  (`FunctionPairing` label-stem admission gate) and the external-`Node`
-  generator boundary (`Vocabulary.registeredGenerators` hook — `discover` moves
-  `YAMLConfig` off `.todo` once `Node`'s generator is registered).
+- **#10 closed one** of the two smaller items: the `CustomRuleConflict` round-trip
+  noise (`FunctionPairing` label-stem admission gate). Its second item — the
+  external-`Node` generator boundary (`Vocabulary.registeredGenerators` hook) —
+  is **not** closed: the hook works on a `YAMLConfig`-shaped probe and does
+  nothing on the real one, per the bullet above and Finding C.
