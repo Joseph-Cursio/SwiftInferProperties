@@ -24,11 +24,23 @@
 /// deriving from this list and state why, rather than editing a private copy.
 public enum FixedWidthIntegerNames {
 
+    /// The five signed fixed-width integer types. Some callers want only these —
+    /// a law about negative representability (`MeasureTemplate`), or a generator
+    /// whose edge values include `-1` (`LiftedTestEmitter`) — so the signed and
+    /// unsigned halves are the primitives and `names` is their union, rather than
+    /// the halves being re-listed wherever one is needed.
+    public static let signed: Set<String> = ["Int", "Int8", "Int16", "Int32", "Int64"]
+
+    /// The five unsigned fixed-width integer types.
+    public static let unsigned: Set<String> = ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"]
+
     /// The ten fixed-width integer types in the standard library.
-    public static let names: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
-    ]
+    public static let names: Set<String> = signed.union(unsigned)
+
+    /// The `Swift.`-qualified spellings (`Swift.Int`, …). Source that names types
+    /// module-qualified is matched against these; several recognisers accept both
+    /// spellings and had each written the qualified ten out a second time.
+    public static let swiftQualified: Set<String> = Set(names.map { "Swift." + $0 })
 
     /// The two binary floating-point types, for lists that admit floats alongside
     /// the integers (`shrink(towards: 0)` is well-defined on both).

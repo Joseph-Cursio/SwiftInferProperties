@@ -42,14 +42,12 @@ public enum CompositionTemplate {
     /// for matched-unit `Measurement` values, which the textual gate
     /// can't enforce. Project extension via `Vocabulary.compositionVerbs`
     /// affects naming only, not the type-shape gate.
-    public static let curatedAdditiveTypes: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+    public static let curatedAdditiveTypes: Set<String> = FixedWidthIntegerNames.names.union([
         "Float", "Float16", "Float32", "Float64", "Float80",
         "Double", "CGFloat",
         "Decimal",
         "Duration"
-    ]
+    ])
 
     /// Curated additive-action verb list per the v1.19 plan open decision
     /// #4. Bias is toward algebraic-additive intent (`increment`,

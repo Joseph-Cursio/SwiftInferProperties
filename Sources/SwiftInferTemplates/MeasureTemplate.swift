@@ -39,9 +39,7 @@ public enum MeasureTemplate {
 
     /// Signed integer codomains — where a negative is representable, so the law
     /// can be violated. `UInt`-family returns are excluded (the type guarantees it).
-    public static let signedIntegerCodomains: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64"
-    ]
+    public static let signedIntegerCodomains: Set<String> = FixedWidthIntegerNames.signed
 
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)

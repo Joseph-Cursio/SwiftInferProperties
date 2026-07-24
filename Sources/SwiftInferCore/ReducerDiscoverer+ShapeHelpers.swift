@@ -198,20 +198,23 @@ extension ReducerDiscoverer {
         scalarTypeNames.contains(typeName)
     }
 
-    private static let scalarTypeNames: Set<String> = [
-        "Int", "UInt",
-        "Int8", "Int16", "Int32", "Int64",
-        "UInt8", "UInt16", "UInt32", "UInt64",
-        "Bool",
-        "Double", "Float", "Float80",
-        "String", "Character",
-        "Swift.Int", "Swift.UInt",
-        "Swift.Int8", "Swift.Int16", "Swift.Int32", "Swift.Int64",
-        "Swift.UInt8", "Swift.UInt16", "Swift.UInt32", "Swift.UInt64",
-        "Swift.Bool",
-        "Swift.Double", "Swift.Float",
-        "Swift.String", "Swift.Character"
-    ]
+    /// The integer names (bare and `Swift.`-qualified) come from
+    /// `FixedWidthIntegerNames`; only the non-integer scalars are listed here.
+    ///
+    /// Note the non-integer halves are deliberately left asymmetric, exactly as
+    /// before: `Float80` is recognised bare but has no `Swift.Float80` entry.
+    /// That asymmetry predates this change and is preserved rather than silently
+    /// widened — adding it would change which State shapes count as scalar.
+    private static let scalarTypeNames: Set<String> = FixedWidthIntegerNames.names
+        .union(FixedWidthIntegerNames.swiftQualified)
+        .union([
+            "Bool",
+            "Double", "Float", "Float80",
+            "String", "Character",
+            "Swift.Bool",
+            "Swift.Double", "Swift.Float",
+            "Swift.String", "Swift.Character"
+        ])
 
     // MARK: - Cycle 109 — nested State/Action qualification (Blocker A)
 

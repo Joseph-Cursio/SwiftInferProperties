@@ -56,8 +56,7 @@ public enum ViewModelDefaultValue {
             return "[:]"
         }
         switch trimmed {
-        case "Int", "Int8", "Int16", "Int32", "Int64",
-             "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
+        case let name where FixedWidthIntegerNames.names.contains(name):
             return "0"
 
         case "Double", "Float", "CGFloat":

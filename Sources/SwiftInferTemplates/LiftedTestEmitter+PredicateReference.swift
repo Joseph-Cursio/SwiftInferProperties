@@ -142,11 +142,14 @@ extension LiftedTestEmitter {
             edges = "0.0, -1.0, 1.0"
             uniform = fallback
 
-        case "Int", "Int8", "Int16", "Int32", "Int64":
+        // Signed and unsigned stay separate arms: the edge values differ (`-1` is
+        // only representable on the signed half), which is exactly why
+        // `FixedWidthIntegerNames` exposes the two halves rather than only the union.
+        case let name where FixedWidthIntegerNames.signed.contains(name):
             edges = "0, -1, 1"
             uniform = "Gen<\(typeText)>.boundedForArithmetic()"
 
-        case "UInt", "UInt8", "UInt16", "UInt32", "UInt64":
+        case let name where FixedWidthIntegerNames.unsigned.contains(name):
             edges = "0, 1"
             uniform = "Gen<\(typeText)>.boundedForArithmetic()"
 

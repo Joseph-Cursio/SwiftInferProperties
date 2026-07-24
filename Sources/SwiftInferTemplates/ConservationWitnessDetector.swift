@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
 
@@ -146,15 +147,11 @@ enum ConservationWitnessExtractor {
     /// precision types are *not* count-shaped per PRD §5.2.
     static func typeLooksLikeIntegerCount(_ type: String) -> Bool {
         let trimmed = type.trimmingCharacters(in: .whitespaces)
-        let recognized: Set<String> = [
-            "Int", "UInt",
-            "Int8", "Int16", "Int32", "Int64",
-            "UInt8", "UInt16", "UInt32", "UInt64",
-            "Swift.Int", "Swift.UInt",
-            "Swift.Int8", "Swift.Int16", "Swift.Int32", "Swift.Int64",
-            "Swift.UInt8", "Swift.UInt16", "Swift.UInt32", "Swift.UInt64"
-        ]
-        return recognized.contains(trimmed)
+        // Both spellings of the same ten types; the `Swift.`-qualified half was a
+        // hand-written mirror of the bare half, which is a transformation rather
+        // than a curation — `swiftQualified` derives it.
+        return FixedWidthIntegerNames.names.contains(trimmed)
+            || FixedWidthIntegerNames.swiftQualified.contains(trimmed)
     }
 
     /// Returns the element type if `type` is an array literal `[T]`,

@@ -164,10 +164,7 @@ public struct CarrierKindResolver: Sendable {
     /// rule operates on — types whose stdlib definition guarantees value
     /// semantics. Vocabulary extension lands at v1.21+ (open decision #6
     /// in the v1.18 plan).
-    static let curatedValueTypes: Set<String> = [
-        // Integer
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+    static let curatedValueTypes: Set<String> = FixedWidthIntegerNames.names.union([
         // Boolean / Floating
         "Bool",
         "Double", "Float", "Float16", "Float32", "Float64", "Float80",
@@ -192,7 +189,7 @@ public struct CarrierKindResolver: Sendable {
         // Misc
         "AnyHashable", "ObjectIdentifier", "PartialKeyPath", "KeyPath",
         "WritableKeyPath", "ReferenceWritableKeyPath"
-    ]
+    ])
 
     /// Strip a single generic-parameter list from a textual type name.
     /// Mirrors `ProtocolCoverageMap.strippingGenericParameters` so the two

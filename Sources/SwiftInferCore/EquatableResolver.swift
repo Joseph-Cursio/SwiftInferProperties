@@ -43,15 +43,13 @@ public struct EquatableResolver: Sendable {
     /// demoting it out of `RoundTripTemplate` into the weaker inverse-pair tier.
     /// It's as common a round-trip carrier as `String`/`URL` (encrypt/decrypt,
     /// serialize/deserialize, compress/decompress).
-    static let curatedEquatableStdlib: Set<String> = [
-        "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+    static let curatedEquatableStdlib: Set<String> = FixedWidthIntegerNames.names.union([
         "Bool",
         "Float", "Double",
         "String",
         "UUID", "Date", "URL",
         "Data"
-    ]
+    ])
 
     /// Protocols whose presence in an inheritance clause implies
     /// `Equatable` conformance — `Hashable` and `Comparable` both refine
