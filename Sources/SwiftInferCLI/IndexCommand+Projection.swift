@@ -79,7 +79,7 @@ extension SwiftInferCommand.Index {
             location: suggestion.reducerLocation,
             moduleName: suggestion.moduleName,
             score: suggestion.score,
-            tier: humanReadableTier(suggestion.tier),
+            tier: suggestion.tier.label,
             decision: decisionRecord?.decision.rawValue,
             decisionAt: decisionRecord.map { isoTimestamp(from: $0.timestamp) },
             firstSeenAt: now,
@@ -125,7 +125,7 @@ extension SwiftInferCommand.Index {
             templateName: suggestion.templateName,
             typeName: carrierType(for: suggestion),
             score: suggestion.score.total,
-            tier: humanReadableTier(suggestion.score.tier),
+            tier: suggestion.score.tier.label,
             primaryFunctionName: primaryName,
             location: location,
             decision: decisionString,
@@ -191,14 +191,4 @@ extension SwiftInferCommand.Index {
         suggestion.carrier
     }
 
-    static func humanReadableTier(_ tier: Tier) -> String {
-        switch tier {
-        case .verified:   return "Verified"
-        case .strong:     return "Strong"
-        case .likely:     return "Likely"
-        case .possible:   return "Possible"
-        case .suppressed: return "Suppressed"
-        case .advisory:   return "Advisory"
-        }
-    }
 }
