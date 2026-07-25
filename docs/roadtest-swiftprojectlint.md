@@ -123,6 +123,52 @@ compose rather than double-reporting, without either knowing about the other —
 which is a small piece of evidence that the role-entailment axis is carrying
 real weight rather than being a visibility flag with a principled name.
 
+## Also shipped — proxy-construction recipes (fix 4)
+
+The largest single finding by count: **60% of suggestions printed `Generator: not
+derived (no strategy matched this type)`**, and **~92% of those carriers were
+SwiftSyntax nodes** (`FunctionDeclSyntax`, `ClosureExprSyntax`, `Syntax`, …). The
+subject is a static analyser; its kernels take AST nodes.
+
+`DerivationStrategist` synthesises a `Gen<T>` by *assembling* `T` from its parts.
+It has nothing to say about a type whose only legitimate construction path is a
+function from another representation — so it dead-ended. To a reader, "no
+strategy matched this type" reads as *this law cannot be run*, and for a parsed
+carrier that is simply false: the subject's own hand-written property suites
+generate **source text**, parse it, and run the law over the tree. The knowledge
+was in the room and did not reach the work.
+
+`ProxyConstruction` adds a final tier below the composite strategy. A carrier
+that is parser-constructed now renders
+
+    Generator: not synthesisable — a construction recipe is given below
+
+with a runnable recipe attached: a source-fragment `Gen`, `Parser.parse`, and a
+`descendants(of:)` walk, plus the one helper the reader pastes once. The new
+`GeneratorMetadata.Source.proxyRecipe` case exists to keep those two claims
+apart — *not derived* and *cannot be tested* are different things, and
+conflating them is what cost the subject 60% of its suggestions.
+
+**Measured on the subject: 28 dead carriers → 3.** The residue is honest and
+explainable: `FunctionSignature` and `[LintIssue]` are declared in packages
+outside the scanned scope (a scoping limit, not this tier's job), and
+`some SyntaxProtocol` is declined deliberately — there is no single concrete
+node to parse out, so a recipe would be guessing.
+
+**The gate is a `…Syntax` suffix rule, not a curated list.** SwiftSyntax declares
+hundreds of node types and adds more each release; a list would go stale and fail
+*silently*, reverting exactly the carriers this serves. The trade-off — a user
+type merely ending in `Syntax` is caught — is pinned by a test so it is visible
+rather than discovered.
+
+**Verified by using it.** The claim on `GeneratorRecipe.expression` is "runnable
+Swift, paste-able into a property test", and a recipe that does not compile is
+advice, not a generator. So the emitted recipe was pasted into the subject and
+filled in: `SyntaxPredicateTotalityTests` (5 tests, green) checks totality and a
+refinement law over `SyntaxHelpers`' syntax predicates. That is the loop closing
+— the tool proposed the law, could not previously supply inputs, and now hands
+over the recipe that produces them.
+
 ## Findings not yet acted on
 
 Ranked in the subject repo's write-up; the ones that land in *this* package:
