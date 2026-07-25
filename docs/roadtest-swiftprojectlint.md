@@ -169,6 +169,48 @@ refinement law over `SyntaxHelpers`' syntax predicates. That is the loop closing
 — the tool proposed the law, could not previously supply inputs, and now hands
 over the recipe that produces them.
 
+## Also shipped — `override-precedence`, and a hypothesis that was a tautology
+
+The subject's `resolveRules` reached `discover` and got `f(x) == f(x)`. The
+follow-on was first recorded as a hypothesis to *measure*:
+`Set(result) ⊆ Set(E.allCases)`, a selection out of a `CaseIterable` domain.
+
+**That hypothesis was itself a tautology.** Every value of a payload-free
+`CaseIterable` enum *is* one of its cases, so the subset holds by the type system
+for any implementation that compiles. Building it would have shipped a fifth
+`f(x) == f(x)` dressed as a law. It was caught only because the law was written
+down before the code — which is the whole argument of the thing this tool serves.
+
+The real law was already in the tool's own output. The docstring surface prints
+*"given optional CLI **overrides**"* for `resolveRules`, and the shape is
+structurally legible besides: `cliRuleIdentifiers` has the return type **exactly**
+(`[RuleIdentifier]?` → `[RuleIdentifier]?`), an unusual signature whose common
+reason is an override.
+
+`OverridePrecedenceTemplate` ships that: `param != nil` implies
+`result == param`. It is refutable where it matters — the precedence lives in an
+early return, and early returns migrate; move one below the rest of the
+computation and the explicit value silently stops winning, with nothing failing
+to compile.
+
+**Overfitting check, run because a template built for one function on its own
+benchmark is what this exercise exists to distrust:**
+
+| Codebase | Firings |
+|---|---|
+| SwiftProjectLint (~37k lines) | 1 — `resolveRules`, the motivating case |
+| **SwiftInferProperties** (~40k lines) | 1 — `resolveVocabularyPath(cliOverride:…)`, **independent true positive** |
+
+The second is this repo's own CLI > config > default resolver — same idiom,
+never tuned for, law holds. Two firings, two true positives, no false positives.
+
+Kept **below the confidence cut** deliberately: a function may legitimately take
+an optional value of its own return type and *merge* rather than replace, which
+is correct code this law rejects. Name-conjecture, not role-entailed.
+
+Scored effect on the subject: `--include-possible` reach 4 → **5** of 10 (K6
+joins), `determinism` on the Config package 16 → 15.
+
 ## Findings not yet acted on
 
 Ranked in the subject repo's write-up; the ones that land in *this* package:
