@@ -56,18 +56,46 @@ hands over a sentence and says "encode THAT"; a human writes the property.
 A capability worth +6 candidates on the one measurement we have should not be
 opt-in. That is the whole argument, and it does not extend further.
 
+## Also shipped — the `CaseIterable` mapping family (fix 2)
+
+Two templates, wired as a shapes-aware pass:
+
+- **`caseiterable-key-injectivity`** — a key-named mapping out of a `CaseIterable`
+  enum into a scalar owes `Set(allCases.map(\.key)).count == allCases.count`.
+- **`caseiterable-case-coverage`** — a classifier into another enum that carries a
+  sink case (`other`, `unknown`, …) owes that the cases landing in the sink equal
+  a written-down exception list.
+
+Both are **name-conjectured and Possible-tier**, deliberately, and the reason is
+the whole design: *a mapping out of an enum is usually many-to-one.* The subject's
+own `category` maps 197 rules onto 11 categories — correct code that a naive
+injectivity proposal would fail. So the two laws split on what the mapping is
+*for*, read off the name and the codomain, and a test asserts they are mutually
+exclusive.
+
+The sink is **found, not assumed**: the template reads the codomain enum's own
+case list and stays silent when there is no sink case to be false against.
+
+Measured on the subject: **exactly 2 firings across ~37k lines**, both on the
+candidates that motivated it (`suppressionKey` → injectivity, `category` →
+coverage), zero false positives, and no cross-firing. The generator side was free
+as predicted — `discover` resolves `.derivedCaseIterable` for these carriers with
+no additional work.
+
+Both caveat sets say the same load-bearing thing: **check it exhaustively, not by
+sampling.** For a 197-case domain a `propertyCheck` has to be lucky to draw the
+one colliding pair, and it reports success when it misses. This is the rare shape
+where a loop strictly dominates a generator, and the emitted advice is the whole
+product.
+
+The scored effect, stated without rewriting the frozen result below: a **default
+`discover` run on the same subject now reaches 4 of 10** rather than 2 — K2 and
+K10 join K8 and K9. The historical 2 stands as what was measured on the day.
+
 ## Findings not yet acted on
 
 Ranked in the subject repo's write-up; the ones that land in *this* package:
 
-2. **No `CaseIterable` type-level law family.** Two keyed candidates are
-   `RuleIdentifier -> X` mappings over a 197-case enum whose laws are about the
-   *mapping across all cases* (injectivity; no case falling into a sink), not
-   about a function's inputs. One of them guards a **runtime trap**:
-   `Dictionary(uniqueKeysWithValues:)` over the key mapping crashes on the first
-   collision. Generator side is free — the engine already derives from
-   `CaseIterable`. Also: for a finite case list the emitted check should be an
-   **exhaustive loop**, not 100 sampled trials.
 3. **`extractable-kernel` seeds are not analysable**, so `discover --seeds`
    cannot focus on them. Three keyed candidates die exactly here. This is
    Finding B's kind-granularity gap, reproduced on a fresh subject. Caveat before
