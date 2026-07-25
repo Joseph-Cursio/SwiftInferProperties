@@ -88,9 +88,40 @@ one colliding pair, and it reports success when it misses. This is the rare shap
 where a loop strictly dominates a generator, and the emitted advice is the whole
 product.
 
-The scored effect, stated without rewriting the frozen result below: a **default
-`discover` run on the same subject now reaches 4 of 10** rather than 2 — K2 and
-K10 join K8 and K9. The historical 2 stands as what was measured on the day.
+Only the injectivity half is admitted to `Refutability.roleEntailedTemplates`.
+A member called `…Key` / `…Identifier` / `…Slug` claims to *identify* the case,
+so a collision is a bug or a lie about the name — the same standard
+`filter-subset` was admitted under, and the reason the noun list was narrowed
+(`name` is out: two cases sharing a *label* is ordinary code). Coverage is
+deliberately left below the cut, because routing cases to a sink can be entirely
+correct and a law that cries wolf is worse than none.
+
+Scored effect, without rewriting the frozen result:
+
+| Configuration | On the day | Now |
+|---|---|---|
+| `discover` default (templates only) | 1 (K8) | **2** (K2, K8) |
+| `discover --include-possible` | 2 (K8, K9) | **4** (K2, K8, K9, K10) |
+| `discover` default, all surfaces | — | **9** (everything but K7) |
+
+> **Correction.** The subject repo's write-up first gave the default run as
+> 2/10. That was the `--include-possible` figure: K9's proposal is
+> `idempotence`, which is Possible-tier and *not* role-entailed, so it is hidden
+> on a default run. Caught while verifying this fix. Corrected there, with the
+> two runs now on separate rows.
+
+Fix 2 did not widen reach — the union across surfaces is unchanged at 9. It
+moved two candidates into the catalog proper and promoted one above the default
+tier cut. Robustness, not reach, and worth less than the headline sounds.
+
+One unplanned interaction, in the good direction: once
+`caseiterable-key-injectivity` became role-entailed, `suppressionKey` **dropped
+out of the docstring advisory** (5 functions → 4). `DocstringAdvisor`'s fourth
+rule already says that a self-contained role-entailed law serves the function
+and that repeating the docstring would only cost trust. So the two surfaces
+compose rather than double-reporting, without either knowing about the other —
+which is a small piece of evidence that the role-entailment axis is carrying
+real weight rather than being a visibility flag with a principled name.
 
 ## Findings not yet acted on
 
