@@ -37,6 +37,17 @@ extension TemplateRegistry {
     /// The registry. Order matters only within an `exclusionGroup` (first wins).
     static let singleFunctionAppShapes: [SingleFunctionAppShape] = [
         SingleFunctionAppShape(
+            name: "override-precedence",
+            suggest: OverridePrecedenceTemplate.suggest(for:),
+            generatorType: { OverridePrecedenceTemplate.overrideParameter(of: $0)?.typeText },
+            exclusionGroup: nil,
+            referenceFixture: appShapeFixture(
+                "resolve",
+                params: [.init(label: "override", internalName: "override", typeText: "[Rule]?", isInout: false)],
+                returns: "[Rule]?"
+            )
+        ),
+        SingleFunctionAppShape(
             name: "involution",
             suggest: InvolutionTemplate.suggest(for:),
             generatorType: { $0.returnTypeText },
