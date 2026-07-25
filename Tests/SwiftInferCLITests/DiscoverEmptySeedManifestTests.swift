@@ -102,7 +102,7 @@ struct DiscoverEmptySeedManifestTests {
             includePossible: false,
             seedManifest: SeedManifest(seeds: [
                 SeedManifest.Seed(
-                    file: "Upload.swift", line: 73, symbol: "uploadRemainingChunks",
+                    file: "Source.swift", line: 73, symbol: "uploadRemainingChunks",
                     kind: .extractableKernel
                 )
             ]),

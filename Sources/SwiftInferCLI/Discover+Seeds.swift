@@ -48,7 +48,11 @@ extension SwiftInferCommand.Discover {
         }
 
         // Say what a human must do before any tool can help. These seeds never focus — see below.
-        reportRefactorPending(in: seedManifest, diagnostics: diagnostics)
+        reportRefactorPending(
+            in: seedManifest,
+            scannedFiles: Set(pipeline.summaries.map(\.location.file)),
+            diagnostics: diagnostics
+        )
 
         let focusing = seedManifest.analysableSeeds
         let analysableManifest = SeedManifest(version: seedManifest.version, seeds: focusing)
@@ -338,53 +342,5 @@ extension SwiftInferCommand.Discover {
             + "must be done by hand first — not a function this tool can analyse — so \(shown) "
             + "Extract the kernels listed above into named functions and re-run the linter; they "
             + "will come back as ordinary seeds, and their laws with them."
-    }
-
-    /// Announce the seeds that name pure logic with **no name yet**.
-    ///
-    /// This is the whole reason `kind` exists. A kernel cannot be focused on — its symbol is the
-    /// impure method the logic is trapped inside, so narrowing to it would make this tool refuse the
-    /// function and report `kept 0` for code that demonstrably has property-testable logic in it.
-    /// Silently skipping them would be no better: the reader would see a smaller number and no
-    /// reason for it.
-    ///
-    /// So they are neither focused on nor dropped. They are *named*, with the one instruction that
-    /// unblocks them.
-    private static func reportRefactorPending(
-        in seedManifest: SeedManifest,
-        diagnostics: any DiagnosticOutput
-    ) {
-        let pending = seedManifest.refactorPendingSeeds
-        guard !pending.isEmpty else { return }
-
-        let kernels = pending.filter { $0.kind == .extractableKernel }
-        let unknown = pending.filter { seed in
-            if case .unrecognised = seed.kind { return true }
-            return false
-        }
-
-        if !kernels.isEmpty {
-            diagnostics.writeDiagnostic(
-                "\(kernels.count) extractable kernel(s) — pure logic with no name yet, so there is "
-                    + "nothing here to index, call, or generate inputs for. No law can be proposed "
-                    + "until a human draws the boundary:"
-            )
-            for seed in kernels {
-                diagnostics.writeDiagnostic(
-                    "  \(seed.file):\(seed.line): inside `\(seed.symbol)` — extract it into a "
-                        + "named value type, then re-run the linter to seed it properly."
-                )
-            }
-        }
-
-        for seed in unknown {
-            diagnostics.writeDiagnostic(
-                "warning: seed `\(seed.symbol)` (\(seed.file):\(seed.line)) has kind "
-                    + "'\(seed.kind.rawValue)', which this build does not recognise. It was NOT "
-                    + "focused on: narrowing to a symbol whose meaning is unknown is how a tool "
-                    + "ends up reporting a confident zero. Upgrade swift-infer, or re-run without "
-                    + "--seeds."
-            )
-        }
     }
 }
