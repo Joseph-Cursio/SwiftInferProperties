@@ -39,6 +39,13 @@ lack of a derivable generator.
 > all, because the carrier it was supposed to unblock is never derived to begin
 > with. It had been verified on a `YAMLConfig`-shaped probe. See
 > [Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig).
+>
+> **Fifth pass, 07-24.** The self-method-call gate — the item Finding A left open
+> as "what would reach `serialize`" — was built and closed, soundly and
+> cross-file, worth 4 seeds. `serialize` is **still** not seeded: a propagated
+> `try`, into **Yams**, refutes it a third time, and no whole-program pass reaches
+> a dependency. Three passes have each named the remaining blocker and been wrong.
+> See [Finding D](#finding-d--the-self-method-call-gate-is-closed-and-serialize-is-still-out-of-reach).
 
 ## Setup (honesty)
 
@@ -356,6 +363,13 @@ that gate was *sufficient*. It was not. A refuter that fires first hides every
 refuter behind it, and reading the code cannot tell you how many are queued up —
 only running it can.
 
+> **Closed 2026-07-24, and it did not reach `serialize` either.** The
+> self-method-call gate (blocker 2) is now shut — soundly, cross-file — and
+> `serialize` is *still* unseeded, because a third refuter sits behind the two
+> named here. See
+> [Finding D](#finding-d--the-self-method-call-gate-is-closed-and-serialize-is-still-out-of-reach).
+> This paragraph's proposal is what got built; its prediction was wrong.
+
 **What would reach `serialize`** is relaxing the self-method-call gate, which is
 a different and much riskier change: that gate is what keeps `unresolvedOrMutable`
 sound on application code, where almost all logic is instance methods. Left open
@@ -481,6 +495,86 @@ worked end to end as designed, and it is worth more than the `.todo` count: the
 advisory named a real gap in words the reader could act on, and stopped naming it
 when the gap closed.
 
+### Finding D — the self-method-call gate is closed, and `serialize` is still out of reach
+
+> **Added 2026-07-24**, on a fifth pass driven by the owner: *close the
+> self-method-call gate on `serialize`.* The gate is closed. `serialize` is still
+> not seeded, and the third refuter behind it is one this document had not seen.
+
+**What was measured first.** Four probes against the real analyzer, before
+touching anything, because the previous two findings were both cases of reasoning
+from the code instead of running it:
+
+| Construct | Seeded? |
+|---|---|
+| Free function calling an unknown callee | ✅ yes |
+| Instance method calling a **same-file** sibling | ❌ no |
+| Instance method calling a **cross-file** sibling | ❌ no |
+| Implicit `catch` binding (`error.localizedDescription`) | ❌ no |
+
+Two things fall out. The first row is the asymmetry that justifies the change: an
+instance method was refused for a construct a free function is seeded for without
+its callee ever being checked. The second is that `serialize` had **three**
+refuters, not the two Finding A named — the untyped `catch` binds `error` where
+no pattern collector can see it, and `$0` shorthand parameters were being read as
+possible instance state, which alone refuted every method containing a
+`filter { … $0 … }`.
+
+**What shipped** (`swiftprojectlint` `69c6ee0`, `feeea0f`). A project-wide
+`CleanInstanceMethodCatalog`: per type, the methods that are themselves functions
+of their inputs, resolved to a **fixpoint** in `ProjectLinter`'s pre-scan and
+injected like `knownEquatableTypes`. Membership is earned — every declaration of
+the name must be non-`mutating`, pass the purity oracle, and be clean itself — so
+refusal propagates to callers and mutable state cannot be laundered through a
+level of indirection. A name the pre-scan never cleared is still refused, so the
+"every doubt resolves to `.unresolvedOrMutable`" posture holds outside the
+catalog. It is built project-wide rather than per-file because the case that
+motivated it has caller and callee in **different files** (`…+Serialization.swift`
+and `…+Comments.swift`), so a single-file answer would have closed the easy half
+and left the motivating case open.
+
+Measured on `SwiftLintRuleStudioCore`: the seed manifest goes **90 → 94**, nothing
+removed, and **`reinsertComments` is now seeded** — the cross-file sibling that
+`serialize` calls.
+
+**And `serialize` is still not seeded.** The third refuter is the *propagated
+`try`*, measured rather than inferred:
+
+| Body | Verdict |
+|---|---|
+| `throws`, no `try` in body | `pureButPartial` |
+| `throws` **with `try f()` in body** | `refuted` |
+
+`serialize` is `try orderedTopLevelPairs(…)` / `try Yams.serialize(…)`, so it is
+refuted there — and so are `collectTopLevelKeyValues`, `ruleNode`, and
+`disabledRulesNode`, which is why none of them enters the catalog either.
+
+**This gate is correct, and it is the one thing here not to touch.** Finding A
+already recorded why, one layer up: `throws` had been doing double duty as an
+impurity refuter, and removing it re-admitted `Process` / `Pipe` / `FileHandle` /
+`String(contentsOf:)` / SQLite in one go, with a subprocess-spawning
+`runSwiftLint(…)` judged pure. The leaf's own note names the right escape hatch
+and it is the shape the catalog already takes — *"`EffectSymbolTable` is where a
+caller with the whole program in hand can do better."*
+
+**But a whole-program pass would not reach `serialize` either**, and this is the
+point worth keeping. Its two `try`s split: `try orderedTopLevelPairs(for: config)`
+is internal and resolvable, `try Yams.serialize(node: node)` is **third-party**.
+`collectTopLevelKeyValues` splits the same way — `try disabledRulesNode` and
+`try ruleNode` internal, `try Node(included)` Yams again. A whole-*project* view
+does not cover a dependency, so the doubt stands on exactly the calls that decide
+it. Clearing them would take curated trust in named external throwing callees —
+which is the mechanism the leaf's note argues against, and the one that let the
+subprocess spawner through.
+
+**So `serialize` is out of reach, not one fix away.** Three passes have now each
+named "the remaining blocker" and been wrong: `throws` (Finding A), the
+self-method-call gate (this one), and now a propagated `try` into a dependency.
+The pattern is no longer a surprise, it is the finding — *a refuter that fires
+first hides every refuter behind it*, and the only way to learn how many are
+queued is to remove one and re-run. Each removal was still worth it on its own
+terms (3 seeds, then 4); none was worth it for the reason predicted.
+
 ### Linter side, same two days
 
 489 → 491 issues on `SwiftLintRuleStudioCore`. The entire delta is two hits of
@@ -532,10 +626,21 @@ fires **zero** times on this package.
   was a refuter that fired *first* and hid the ones behind it; only running the
   fixed tool showed that removing it was not sufficient. Reading the code had said
   otherwise, twice.
+- **The self-method-call gate is closed** (`swiftprojectlint` `69c6ee0`,
+  `feeea0f`) — a project-wide, fixpoint-resolved catalog of sibling methods that
+  are functions of their inputs, plus two implicit bindings (`$0`, the untyped
+  `catch`) that were refuting alongside it. Manifest **90 → 94**, nothing removed.
+  **It did not reach `serialize`**, which is refuted a third time by a propagated
+  `try` — and a `try` into **Yams**, so no whole-program pass reaches it either.
+  Three passes have now each named "the remaining blocker" and been wrong; that
+  repetition is the finding. See
+  [Finding D](#finding-d--the-self-method-call-gate-is-closed-and-serialize-is-still-out-of-reach).
 - **Still open:** `parseParameters`' metamorphic laws (out-of-catalog, → the app's
   hand-written suite); the app-side `parse(String) -> YAMLConfig` extraction that
-  would unlock the `serialize ↔ parse` round-trip; and — deliberately — the
-  self-method-call gate that is the remaining blocker on `serialize`.
+  would unlock the `serialize ↔ parse` round-trip; and `serialize` itself, which
+  is now understood as **out of reach** rather than one fix away — clearing it
+  would take curated trust in named third-party throwing callees, the mechanism
+  the leaf's soundness note argues against.
 - **#10 closed one** of the two smaller items: the `CustomRuleConflict` round-trip
   noise (`FunctionPairing` label-stem admission gate). Its second item — the
   external-`Node` generator boundary (`Vocabulary.registeredGenerators` hook) —
