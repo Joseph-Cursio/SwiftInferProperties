@@ -216,7 +216,7 @@ to the diagnosis:
 | Refutability decides visibility (the tier cut) | 4 | ✅ `52a16d7` — role-entailed refutable laws (incl. filter/selection/diff) surface on a default run, not just `--include-possible` |
 | Stop the spurious `CustomRuleConflict` round-trip pairing (the "noise" finding) | — | ✅ #10 — `FunctionPairing` admits a synthetic init-decode half only when the encode name embeds the init's argument-label stem (the same predicate `RoundTripTemplate` scores +40 on), so `CustomRuleConflict(ruleIdentifier:)` no longer pairs with the unrelated `id()` / `message()` getters |
 | Registered-generator hook for the external `Node` boundary | 3 (residual) | ⚠️ #10 shipped, **unverified on the real subject**. `Vocabulary.registeredGenerators` supplies a generator for an underivable external member (`{ "Node": { "expression": "Node.gen()", "imports": ["Yams"] } }`), and `discover` on a `YAMLConfig`-*shaped* struct moves from `Generator: .todo` to a derived generator. On the actual `YAMLConfigurationEngine.YAMLConfig` it changes **nothing** — see [Finding C](#finding-c--the-registered-generator-hook-does-not-reach-the-real-yamlconfig) |
-| Report the linter gap | 5 | ⚠️ withdrawn, then **partly reinstated**. The original phantom stands (`swiftprojectlint --format pbt-seeds` emits 85 — now **90** — seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest). But re-run against the linter's *own* manifest the warning still fires on five subjects — see [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline) |
+| Report the linter gap | 5 | ⚠️ withdrawn, then **partly reinstated**. The original phantom stands (`swiftprojectlint --format pbt-seeds` emits 85 — now **95** — seeds and *does* seed the pure predicates; the warning came from an incomplete hand-written manifest). But re-run against the linter's *own* manifest the warning still fires on five subjects — see [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline) |
 
 **Correction to root cause 2.** *"`throws` refutes purity at index time"* was
 wrong, and tracing the code showed why: the `round-trip` template already
@@ -393,18 +393,22 @@ that, and the `owedLawWarning` still names five subjects:
   functions; `swift-infer` reads them as role-owed `predicate` laws the manifest
   should have named. That disagreement is unresolved, not settled.
 
-> **Re-checked against the 90-seed manifest.** This finding was first measured on
-> the 87-seed manifest, before the `throws` producer fix admitted three more pure
-> functions. Re-run at `swiftprojectlint 23c0133` / `swift-infer 7ac71fd` against
-> the 90-seed manifest it emits today, the warning names **the same five subjects,
-> for the same reasons**: `layerChain` / `filterViolations` / `generateDiff` are
-> still seeded `extractable-kernel` only, and `columnIsNull` / `boolValue` are
-> still not seeded at all. The three newly admitted seeds (`decodeRuleText`,
-> `collectRows`, `resolveFileURL`) are disjoint from the five. The kind-granularity
-> gap is not an artifact of the older manifest.
+> **Re-checked twice, against a growing manifest, and it does not move.** First
+> measured on the 87-seed manifest; re-run at 90 seeds after the `throws` producer
+> fix; re-run again at **95** seeds (subject `9801dff`, `swiftprojectlint feeea0f`,
+> `swift-infer 7ac71fd`) after Finding D. Every time the warning names **the same
+> five subjects, for the same reasons**: `layerChain` / `filterViolations` /
+> `generateDiff` are still seeded `extractable-kernel` only, and `columnIsNull` /
+> `boolValue` are still not seeded at all. Both rounds of newly admitted seeds —
+> `decodeRuleText` / `collectRows` / `resolveFileURL`, then `reinsertComments` /
+> `calculateCategoryBalance` / `calculatePathConfiguration` /
+> `shouldSkipWorkspaceScan` — are disjoint from the five. **Eight more seeds have
+> not touched the gap**, which is the strongest evidence yet that it is
+> kind-granularity and not under-seeding: adding seeds does not help when the
+> problem is the *kind* a subject is seeded under.
 
 The honest reading is narrower than the original root cause 5 and wider than its
-withdrawal: there is no *under-seeding* gap (90 seeds is thorough), but there is
+withdrawal: there is no *under-seeding* gap (95 seeds is thorough), but there is
 a **kind-granularity** gap. A function can owe a law at its own boundary and
 still be seeded only as a location to refactor, and the focus filter cannot tell
 the difference.
@@ -533,9 +537,20 @@ motivated it has caller and callee in **different files** (`…+Serialization.sw
 and `…+Comments.swift`), so a single-file answer would have closed the easy half
 and left the motivating case open.
 
-Measured on `SwiftLintRuleStudioCore`: the seed manifest goes **90 → 94**, nothing
-removed, and **`reinsertComments` is now seeded** — the cross-file sibling that
-`serialize` calls.
+Measured on `SwiftLintRuleStudioCore` at subject `9801dff`, holding the subject
+fixed and swapping only the linter: **91 → 95** seeds (67 → 71 pure-function,
+extractable-kernel unchanged at 24), nothing removed, and **`reinsertComments` is
+now seeded** — the cross-file sibling that `serialize` calls. The four admitted
+are `reinsertComments`, `calculateCategoryBalance`, `calculatePathConfiguration`,
+`shouldSkipWorkspaceScan`.
+
+> **Pin the subject when quoting a count.** This was first measured as 90 → 94 at
+> subject `3d58747`; re-running it days later gave 97, and the difference was the
+> app owner editing `YAMLConfigurationEngine` in an uncommitted working tree, not
+> anything in the linter. The *delta* is stable at +4 across both subject
+> revisions — it is the base that moves. Every seed count in this document is
+> therefore quoted against a named subject SHA, measured from a clean export
+> rather than a live checkout.
 
 **And `serialize` is still not seeded.** The third refuter is the *propagated
 `try`*, measured rather than inferred:
@@ -589,9 +604,11 @@ fires **zero** times on this package.
   re-measurement against the 07-22 binaries, then a fourth against
   `swiftprojectlint 23c0133` / `swift-infer 1ea657c` driven by the app owner
   closing candidate §3. The `throws` producer fix reproduces its predicted
-  yield exactly: the seed manifest measures **90** (67 pure-function + 23
-  extractable-kernel), with `decodeRuleText`, `collectRows`, and `resolveFileURL`
-  the three admitted, and `serialize` still absent.
+  yield exactly: the seed manifest measured **90** (67 pure-function + 23
+  extractable-kernel) at subject `3d58747`, with `decodeRuleText`, `collectRows`,
+  and `resolveFileURL` the three admitted, and `serialize` still absent. (At
+  subject `9801dff` with the Finding D linter it measures **95**; see the pinning
+  note there.)
 - **Confirmed:** the low yield is structural, not access — every miss traces to a
   missing template, a determinism gate on `throws`, or an underivable generator,
   none to a permissions/scan problem.
@@ -617,7 +634,8 @@ fires **zero** times on this package.
   `swift-infer` disagreeing about a property the shared oracle is supposed to make
   them agree on — is **now fixed**, worth 3 seeds. The owed-law warning still
   fires on the same five subjects against the linter's own manifest — re-checked
-  against the 90-seed manifest, not just the 87-seed one it was first measured on:
+  at 90 and again at 95 seeds, not just the 87-seed manifest it was first measured
+  on, and all eight of the seeds added since are disjoint from the five. So it is
   a **kind-granularity** gap, not the under-seeding gap root cause 5 alleged. See
   [Re-measured 2026-07-24](#re-measured-2026-07-24--two-closures-that-do-not-survive-the-real-pipeline).
 - **The `throws` fix refuted its own premise**, which is the most useful thing
@@ -629,7 +647,8 @@ fires **zero** times on this package.
 - **The self-method-call gate is closed** (`swiftprojectlint` `69c6ee0`,
   `feeea0f`) — a project-wide, fixpoint-resolved catalog of sibling methods that
   are functions of their inputs, plus two implicit bindings (`$0`, the untyped
-  `catch`) that were refuting alongside it. Manifest **90 → 94**, nothing removed.
+  `catch`) that were refuting alongside it. Manifest **91 → 95** at subject
+  `9801dff` (linter `23c0133` → `feeea0f`), nothing removed.
   **It did not reach `serialize`**, which is refuted a third time by a propagated
   `try` — and a `try` into **Yams**, so no whole-program pass reaches it either.
   Three passes have now each named "the remaining blocker" and been wrong; that
