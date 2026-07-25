@@ -47,11 +47,18 @@ public enum CaseIterableMappingTemplate {
     /// describing it — which is what makes distinctness owed.
     ///
     /// Suffix-matched rather than prefix-matched: these read as the head noun of
-    /// a compound (`suppressionKey`, `ruleIdentifier`, `fileName`), where the
+    /// a compound (`suppressionKey`, `ruleIdentifier`, `errorCode`), where the
     /// filter/selection verbs of `FilterSubsetTemplate` lead.
+    ///
+    /// **Deliberately strict, and `name` is deliberately absent.** This list is
+    /// what admits the template to `Refutability.roleEntailedTemplates`, so every
+    /// entry has to clear the bar that a *correctly* named implementation cannot
+    /// fail the law. `displayName` does not clear it — two cases legitimately
+    /// sharing a human-readable label is ordinary code, not a bug — and neither
+    /// do `tag` / `abbreviation`. An identifier that collides is either a bug or
+    /// a lie about what the name promises; a label that collides is neither.
     public static let curatedKeyNouns: [String] = [
-        "key", "identifier", "id", "slug", "token", "code",
-        "symbol", "name", "tag", "abbreviation", "acronym"
+        "key", "identifier", "id", "slug", "token", "code", "symbol"
     ]
 
     /// Scalar codomains a key can plausibly live in. A key mapping into a struct

@@ -86,13 +86,27 @@ struct CaseIterableMappingTemplateTests {
 
     @Test(
         "every curated key noun is recognised as a suffix",
-        arguments: ["suppressionKey", "ruleIdentifier", "fileName", "shortCode", "typeTag"]
+        arguments: ["suppressionKey", "ruleIdentifier", "wireId", "urlSlug", "errorCode", "glyphSymbol"]
     )
     func curatedKeyNounsFire(name: String) {
         let suggestion = CaseIterableMappingTemplate.suggest(
             for: mapping(name, returns: "String"), shapesByName: shapes
         )
         #expect(suggestion?.templateName == "caseiterable-key-injectivity")
+    }
+
+    /// `name`-shaped members are excluded on purpose. Two cases sharing a
+    /// human-readable label is ordinary code, and this template is admitted to
+    /// `roleEntailedTemplates` — where a law that can cry wolf does not belong.
+    @Test(
+        "label-shaped nouns are NOT treated as identifiers",
+        arguments: ["displayName", "shortName", "categoryTag", "abbreviation"]
+    )
+    func labelNounsDecline(name: String) {
+        let suggestion = CaseIterableMappingTemplate.suggest(
+            for: mapping(name, returns: "String"), shapesByName: shapes
+        )
+        #expect(suggestion == nil)
     }
 
     // MARK: - Key injectivity declines
@@ -220,6 +234,46 @@ struct CaseIterableMappingTemplateTests {
             shapesByName: shapesWithSink
         )
         #expect(suggestion == nil)
+    }
+
+    // MARK: - Role entailment
+
+    /// The deliberate asymmetry between the two laws, pinned because nothing
+    /// else guards it and getting it wrong is the failure `Refutability` is
+    /// written against.
+    ///
+    /// **Injectivity is role-entailed**: a member claiming to *identify* a case
+    /// cannot correctly return the same value for two of them, so the law
+    /// surfaces on a default run even at `Possible` tier.
+    ///
+    /// **Coverage is not**: routing some cases to a sink can be entirely correct
+    /// — this project's own `.unknown` and `.fileParsingError` sentinels do — so
+    /// a correct implementation can fail it. It stays below the cut. Admitting
+    /// it would hand readers a test that goes red for no reason, which
+    /// `Refutability` argues is worse than proposing nothing at all.
+    @Test("only the injectivity half is role-entailed")
+    func roleEntailmentSplitIsDeliberate() throws {
+        let key = try #require(
+            CaseIterableMappingTemplate.suggest(
+                for: mapping("suppressionKey", returns: "String"), shapesByName: shapes
+            )
+        )
+        let coverage = try #require(
+            CaseIterableMappingTemplate.coverageSuggestion(
+                for: mapping("category", returns: "PatternCategory"), shapesByName: shapes
+            )
+        )
+
+        // Both can catch a bug…
+        #expect(Refutability.isRefutable(key))
+        #expect(Refutability.isRefutable(coverage))
+
+        // …but only one cannot cry wolf on correct code.
+        #expect(Refutability.isRoleEntailed(key))
+        #expect(Refutability.isRoleEntailed(coverage) == false)
+
+        #expect(Refutability.isWorthSurfacingBelowCut(key))
+        #expect(Refutability.isWorthSurfacingBelowCut(coverage) == false)
     }
 
     // MARK: - Mutual exclusion

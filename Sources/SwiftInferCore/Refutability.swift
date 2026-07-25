@@ -78,7 +78,19 @@ public enum Refutability {
         // both worth a red test even below the confidence cut.
         "filter-subset",     // result ⊆ the collection it selects from
         "selection-subset",  // result ⊆ container.<collection>
-        "diff-disjointness"  // added ∩ removed = ∅
+        "diff-disjointness", // added ∩ removed = ∅
+        // Same strong-role-name standard: a member called `…Key` / `…Identifier`
+        // / `…Slug` on a `CaseIterable` enum claims to IDENTIFY the case, so two
+        // cases sharing a value is either a bug or a lie about the name. The
+        // template's noun list is kept strict for exactly this reason — `name`
+        // is excluded, because two cases sharing a *label* is ordinary code.
+        //
+        // Its sibling `caseiterable-case-coverage` is deliberately NOT here:
+        // routing some cases to a sink can be entirely correct (this project's
+        // own `.unknown` / `.fileParsingError` sentinels do), so a correct
+        // implementation CAN fail it. It stays below the cut, which is the
+        // distinction this set exists to draw.
+        "caseiterable-key-injectivity"
     ]
 
     /// Whether a correct implementation is *guaranteed* to satisfy this suggestion's law.
