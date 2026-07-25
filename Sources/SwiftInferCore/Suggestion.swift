@@ -242,6 +242,14 @@ public struct GeneratorMetadata: Sendable, Equatable {
         case registered
         case todo
         case inferredFromTests
+
+        /// No `Gen` is synthesisable, but the carrier has a known construction
+        /// path from another representation and a runnable recipe is attached —
+        /// see `ProxyConstruction`. Distinct from `.notYetComputed` because the
+        /// reader is not stuck: "not derived" and "cannot be tested" are
+        /// different claims, and conflating them cost the road-test subject 60%
+        /// of its suggestions.
+        case proxyRecipe
         case notYetComputed
     }
 

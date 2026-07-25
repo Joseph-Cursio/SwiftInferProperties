@@ -84,8 +84,41 @@ public enum GeneratorSelection {
                 )
                 return rebuild(suggestion, withGenerator: metadata)
             }
+            // Last tier before giving up: the carrier cannot be *assembled*, but it
+            // may have a known construction path from another representation — a
+            // SwiftSyntax node is parsed out of source text. `.notYetComputed`
+            // renders as "no strategy matched this type", which reads to a reader as
+            // "this law cannot be run"; for a parser-constructed carrier that is
+            // simply false, and it accounted for 60% of the road-test subject's
+            // suggestions. Attach the recipe instead of dead-ending.
+            return withProxyRecipe(suggestion, typeName: typeName)
+        }
+    }
+
+    /// Attach a proxy-construction recipe when the carrier has one, leaving the
+    /// suggestion untouched otherwise.
+    ///
+    /// The recipe is *appended* to any the template already supplied rather than
+    /// replacing them: a template's own recipe answers "what must collide for this
+    /// law to fail", which is a different question from "how do I obtain a value of
+    /// this type at all", and a reader needs both.
+    static func withProxyRecipe(_ suggestion: Suggestion, typeName: String) -> Suggestion {
+        // `node` rather than the carrier name: `subject` labels the value the
+        // generator feeds, and the emitted recipe binds each parsed node as `node`.
+        // Passing the carrier printed `// StructDeclSyntax: StructDeclSyntax`.
+        guard let recipe = ProxyConstruction.recipe(subject: "node", typeName: typeName) else {
             return suggestion
         }
+        var updated = rebuild(
+            suggestion,
+            withGenerator: GeneratorMetadata(
+                source: .proxyRecipe,
+                confidence: .medium,
+                sampling: suggestion.generator.sampling
+            )
+        )
+        updated.generatorRecipes.append(recipe)
+        return updated
     }
 
     /// Wrap the corpus resolver so a project-registered generator

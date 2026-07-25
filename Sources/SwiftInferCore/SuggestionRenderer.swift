@@ -239,6 +239,9 @@ public enum SuggestionRenderer {
 
     private static func renderGeneratorLine(_ meta: GeneratorMetadata) -> String {
         switch meta.source {
+        case .proxyRecipe:
+            return "Generator: not synthesisable — a construction recipe is given below"
+
         case .notYetComputed:
             return "Generator: not derived (no strategy matched this type)"
 
