@@ -41,6 +41,42 @@ extension TemplateRegistry {
         collectStateMachineSuggestions(summaries: summaries, into: &collector)
         collectSelectionSubsetSuggestions(summaries: summaries, shapesByName: shapesByName, into: &collector)
         collectDiffDisjointnessSuggestions(summaries: summaries, shapesByName: shapesByName, into: &collector)
+        collectCaseIterableMappingSuggestions(
+            summaries: summaries, shapesByName: shapesByName, into: &collector
+        )
+    }
+
+    /// Mappings out of a `CaseIterable` enum — a zero-argument member whose domain
+    /// is the whole case list. Shapes-aware because the gate is a fact about the
+    /// *enclosing type* (is it a `CaseIterable` enum?) and, for the coverage law,
+    /// about the *codomain* (does it carry a sink case?) — neither of which a
+    /// `FunctionSummary` knows on its own.
+    ///
+    /// These are the two laws the SwiftProjectLint road test found unnamed: the
+    /// candidates' laws quantify over `allCases`, not over a function's inputs, so
+    /// no signature-pattern template could see them and the pipeline fell back to
+    /// `f(x) == f(x)`. See `docs/roadtest-swiftprojectlint.md`.
+    ///
+    /// The two are mutually exclusive by construction — a key mapping returns a
+    /// scalar, a classifier returns another enum — so both are offered and at most
+    /// one fires per summary.
+    private static func collectCaseIterableMappingSuggestions(
+        summaries: [FunctionSummary],
+        shapesByName: [String: TypeShape],
+        into collector: inout SuggestionCollector
+    ) {
+        for summary in summaries {
+            if let suggestion = CaseIterableMappingTemplate.suggest(
+                for: summary, shapesByName: shapesByName
+            ) {
+                collector.record(suggestion, generatorType: summary.containingTypeName)
+            }
+            if let suggestion = CaseIterableMappingTemplate.coverageSuggestion(
+                for: summary, shapesByName: shapesByName
+            ) {
+                collector.record(suggestion, generatorType: summary.containingTypeName)
+            }
+        }
     }
 
     /// A diff-named function whose return type carries a complementary `[T]` pair
