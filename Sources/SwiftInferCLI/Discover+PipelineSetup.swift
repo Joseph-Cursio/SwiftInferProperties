@@ -9,6 +9,7 @@ extension SwiftInferCommand.Discover {
     static func resolvePipelineSetup(
         directory: URL,
         includePossible: Bool?,
+        docstringAdvice: Bool?,
         overrides: ExplicitOverrides,
         diagnostics: any DiagnosticOutput
     ) -> PipelineSetup {
@@ -21,6 +22,10 @@ extension SwiftInferCommand.Discover {
         }
         let effectiveIncludePossible =
             includePossible ?? configResult.config.includePossible
+        // Same CLI > config > default precedence as `includePossible`; the default
+        // is `true` (see `Config.docstringAdvice`).
+        let effectiveDocstringAdvice =
+            docstringAdvice ?? configResult.config.docstringAdvice
         let effectiveVocabularyPath = resolveVocabularyPath(
             cliOverride: overrides.vocabularyPath,
             configValue: configResult.config.vocabularyPath,
@@ -50,6 +55,7 @@ extension SwiftInferCommand.Discover {
         return PipelineSetup(
             directory: directory,
             includePossible: effectiveIncludePossible,
+            docstringAdvice: effectiveDocstringAdvice,
             vocabulary: vocabResult.vocabulary,
             testDirectory: testDirectory,
             packageRoot: configResult.packageRoot,

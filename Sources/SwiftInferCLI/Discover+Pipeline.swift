@@ -75,6 +75,11 @@ extension SwiftInferCommand.Discover {
         /// a seed names one.
         public let restrictedFunctions: [RestrictedFunction]
 
+        /// Effective `--docstring-advice` setting, resolved CLI > config > default (on).
+        /// Surfaced here because the advisory is rendered by `Discover.run`, after the
+        /// pipeline has already loaded the config — this saves a second `ConfigLoader.load`.
+        public let docstringAdvice: Bool
+
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
@@ -85,7 +90,8 @@ extension SwiftInferCommand.Discover {
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
-            restrictedFunctions: [RestrictedFunction] = []
+            restrictedFunctions: [RestrictedFunction] = [],
+            docstringAdvice: Bool
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
@@ -97,12 +103,14 @@ extension SwiftInferCommand.Discover {
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries
             self.restrictedFunctions = restrictedFunctions
+            self.docstringAdvice = docstringAdvice
         }
     }
 
     public static func collectVisibleSuggestions(
         directory: URL,
         includePossible: Bool? = nil,
+        docstringAdvice: Bool? = nil,
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,
@@ -118,6 +126,7 @@ extension SwiftInferCommand.Discover {
         let setup = resolvePipelineSetup(
             directory: directory,
             includePossible: includePossible,
+            docstringAdvice: docstringAdvice,
             overrides: ExplicitOverrides(
                 vocabularyPath: explicitVocabularyPath,
                 configPath: explicitConfigPath,
@@ -165,7 +174,8 @@ extension SwiftInferCommand.Discover {
             typeShapesByName: hints.typeShapesByName,
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
-            restrictedFunctions: artifacts.restrictedFunctions
+            restrictedFunctions: artifacts.restrictedFunctions,
+            docstringAdvice: setup.docstringAdvice
         )
     }
 
@@ -329,6 +339,8 @@ extension SwiftInferCommand.Discover {
     struct PipelineSetup {
         let directory: URL
         let includePossible: Bool
+        /// Effective docstring-advice setting; see `Config.docstringAdvice`.
+        let docstringAdvice: Bool
         let vocabulary: Vocabulary
         let testDirectory: URL
         let packageRoot: URL?

@@ -84,7 +84,7 @@ extension SwiftInferCommand.Discover {
         packsOverride: String? = nil,
         statsOnly: Bool = false,
         effectAnnotations: Bool = false,
-        docstringAdvice: Bool = false,
+        docstringAdvice: Bool? = nil,
         dryRun: Bool = false,
         interactive: Bool = false,
         updateBaseline: Bool = false,
@@ -97,6 +97,7 @@ extension SwiftInferCommand.Discover {
         let pipeline = try collectVisibleSuggestions(
             directory: directory,
             includePossible: includePossible,
+            docstringAdvice: docstringAdvice,
             explicitVocabularyPath: explicitVocabularyPath,
             explicitConfigPath: explicitConfigPath,
             explicitTestDirectory: explicitTestDirectory,
@@ -138,11 +139,27 @@ extension SwiftInferCommand.Discover {
             evidenceByIdentity: evidenceByIdentity,
             effectAnnotations: effectAnnotations
                 ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
-            docstringAdvice: docstringAdvice
-                ? Self.docstringAdvice(
-                    summaries: pipeline.summaries, suggestions: visible, seedManifest: seedManifest
-                ) : [],
+            docstringAdvice: docstringAdviceIfEnabled(
+                pipeline: pipeline, visible: visible, seedManifest: seedManifest
+            ),
             output: output
+        )
+    }
+
+    /// The docstring advisory, or nothing when it is switched off.
+    ///
+    /// The effective setting rides on `PipelineResult` rather than being re-read
+    /// here, because the pipeline has already loaded the config — this keeps the
+    /// CLI > config > default precedence in one place (`resolvePipelineSetup`)
+    /// and saves a second `ConfigLoader.load`.
+    private static func docstringAdviceIfEnabled(
+        pipeline: PipelineResult,
+        visible: [Suggestion],
+        seedManifest: SeedManifest?
+    ) -> [DocstringAdviceItem] {
+        guard pipeline.docstringAdvice else { return [] }
+        return docstringAdvice(
+            summaries: pipeline.summaries, suggestions: visible, seedManifest: seedManifest
         )
     }
 

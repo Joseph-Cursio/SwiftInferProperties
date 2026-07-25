@@ -6,9 +6,15 @@ import Testing
 /// End-to-end wiring for `discover --docstring-advice`.
 ///
 /// The decision logic is unit-tested in `DocstringAdvisorTests` (Core); these
-/// tests exercise the CLI path: the flag gates the block, the block is off by
-/// default (output stays byte-identical), and the two shapes reach the reader
-/// with the right function attached.
+/// tests exercise the CLI path: the block is emitted **by default**, the
+/// `--no-docstring-advice` / config opt-out suppresses it, and the two shapes
+/// reach the reader with the right function attached.
+///
+/// The default flipped on the SwiftProjectLint road test (2026-07-24), which
+/// measured *reach* rather than the reader lift the original A/B measured: a
+/// default run surfaced 2 of 10 hand-keyed kernels with a refutable law, and
+/// this advisory surfaced 8. See `Config.docstringAdvice` for the full framing,
+/// including what that number does and does not claim.
 @Suite("Discover — reference definitions from docstrings")
 struct DiscoverDocstringAdviceTests {
 
@@ -33,9 +39,9 @@ struct DiscoverDocstringAdviceTests {
         ])
     }
 
-    @Test("without the flag, no docstring block is emitted")
-    func offByDefault() throws {
-        let directory = try writeDPFixture(name: "DocAdviceOff", contents: Self.source)
+    @Test("with no flag at all, the docstring block IS emitted")
+    func onByDefault() throws {
+        let directory = try writeDPFixture(name: "DocAdviceDefault", contents: Self.source)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
@@ -44,7 +50,59 @@ struct DiscoverDocstringAdviceTests {
             seedManifest: manifest(),
             output: recording
         )
-        #expect(!recording.text.contains("Reference definitions from docstrings"))
+        #expect(recording.text.contains("Reference definitions from docstrings"))
+        #expect(recording.text.contains("isValidName"))
+    }
+
+    @Test("--no-docstring-advice suppresses the block")
+    func explicitOptOutSuppressesTheBlock() throws {
+        let directory = try writeDPFixture(name: "DocAdviceOff", contents: Self.source)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            docstringAdvice: false,
+            seedManifest: manifest(),
+            output: recording
+        )
+        #expect(recording.text.contains("Reference definitions from docstrings") == false)
+    }
+
+    /// Precedence is CLI > config > default, the same shape `includePossible`
+    /// uses. A project that finds the advisory noisy turns it off once in
+    /// `.swiftinfer/config.toml`; a reader who wants it back for one run passes
+    /// the flag and wins.
+    @Test("config can turn the block off, and an explicit flag overrides config")
+    func configOptOutIsOverriddenByTheFlag() throws {
+        let directory = try writeDPFixture(name: "DocAdviceConfig", contents: Self.source)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let configPath = directory.appendingPathComponent("off-config.toml")
+        try "[discover]\ndocstringAdvice = false\n".write(
+            to: configPath, atomically: true, encoding: .utf8
+        )
+
+        let viaConfig = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            explicitConfigPath: configPath,
+            seedManifest: manifest(),
+            output: viaConfig
+        )
+        #expect(viaConfig.text.contains("Reference definitions from docstrings") == false)
+
+        let flagWins = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            explicitConfigPath: configPath,
+            docstringAdvice: true,
+            seedManifest: manifest(),
+            output: flagWins
+        )
+        #expect(flagWins.text.contains("Reference definitions from docstrings"))
     }
 
     @Test("a predicate law's owed reference definition is filled by the docstring")

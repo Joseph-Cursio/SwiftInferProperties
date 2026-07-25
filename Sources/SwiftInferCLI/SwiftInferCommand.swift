@@ -157,17 +157,21 @@ extension SwiftInferCommand {
 
         @Flag(
             name: .long,
+            inversion: .prefixedNo,
             help: """
             Append a "Reference definitions from docstrings" advisory section. For \
             a documented function whose doc states a checkable contract, it pairs \
             that sentence with the law it defines — the reference definition a \
             `predicate` law openly owes, the spec a lifted example test needs, or \
             the only refutable contract on a function the templates could offer \
-            nothing owed for. Off by default; the advice is separate from \
-            property-test suggestions and never enters accept / verify.
+            nothing owed for. **On by default**: on the SwiftProjectLint road test \
+            it surfaced 8 of 10 hand-keyed kernels where the templates surfaced 2. \
+            Pass --no-docstring-advice to suppress it, or set \
+            [discover].docstringAdvice in .swiftinfer/config.toml. The advice is \
+            separate from property-test suggestions and never enters accept / verify.
             """
         )
-        public var docstringAdvice: Bool = false
+        public var docstringAdvice: Bool?
 
         @Flag(
             name: .long,

@@ -127,52 +127,70 @@ public enum ConfigLoader {
     ) -> Result {
         let discover = tree["discover"] ?? [:]
         var warnings: [String] = []
-        var includePossible = Config.defaults.includePossible
-        var vocabularyPath = Config.defaults.vocabularyPath
-        var packs = Config.defaults.packs
-
-        if let value = discover["includePossible"] {
-            switch value {
-            case .boolean(let bool):
-                includePossible = bool
-
-            case .string:
-                warnings.append(
-                    "config at \(path.path): expected boolean for [discover].includePossible, ignoring"
-                )
-            }
-        }
-        if let value = discover["vocabularyPath"] {
-            switch value {
-            case .string(let str):
-                vocabularyPath = str
-
-            case .boolean:
-                warnings.append(
-                    "config at \(path.path): expected string for [discover].vocabularyPath, ignoring"
-                )
-            }
-        }
-        // V1.32.C — Domain Template Packs. Comma-separated string form
-        // (the MinimalTOMLParser doesn't support arrays in v1).
-        if let value = discover["packs"] {
-            switch value {
-            case .string(let str):
-                packs = str
-
-            case .boolean:
-                warnings.append(
-                    "config at \(path.path): expected string for [discover].packs, ignoring"
-                )
-            }
-        }
+        let reader = KeyReader(discover: discover, path: path)
 
         let config = Config(
-            includePossible: includePossible,
-            vocabularyPath: vocabularyPath,
-            packs: packs
+            includePossible: reader.boolean(
+                "includePossible", default: Config.defaults.includePossible, into: &warnings
+            ),
+            vocabularyPath: reader.string(
+                "vocabularyPath", default: Config.defaults.vocabularyPath, into: &warnings
+            ),
+            // V1.32.C — Domain Template Packs. Comma-separated string form
+            // (the MinimalTOMLParser doesn't support arrays in v1).
+            packs: reader.string("packs", default: Config.defaults.packs, into: &warnings),
+            // On by default; a project that finds the advisory noisy turns it off
+            // here rather than remembering `--no-docstring-advice` on every run.
+            docstringAdvice: reader.boolean(
+                "docstringAdvice", default: Config.defaults.docstringAdvice, into: &warnings
+            )
         )
         return Result(config: config, warnings: warnings, packageRoot: packageRoot)
+    }
+
+    /// Typed reads of one `[discover]` key, with the warn-and-keep-the-default
+    /// behaviour every key shares.
+    ///
+    /// Extracted from `decode` because that function grew a branch per key —
+    /// four keys of copy-pasted `switch` put it over the complexity and
+    /// body-length caps. Each new key is now one line there rather than nine.
+    private struct KeyReader {
+        let discover: [String: TOMLValue]
+        let path: URL
+
+        func boolean(_ key: String, default fallback: Bool, into warnings: inout [String]) -> Bool {
+            switch discover[key] {
+            case .boolean(let bool):
+                return bool
+
+            case .string:
+                warnings.append(typeWarning(key, expected: "boolean"))
+                return fallback
+
+            case nil:
+                return fallback
+            }
+        }
+
+        func string(
+            _ key: String, default fallback: String?, into warnings: inout [String]
+        ) -> String? {
+            switch discover[key] {
+            case .string(let str):
+                return str
+
+            case .boolean:
+                warnings.append(typeWarning(key, expected: "string"))
+                return fallback
+
+            case nil:
+                return fallback
+            }
+        }
+
+        private func typeWarning(_ key: String, expected: String) -> String {
+            "config at \(path.path): expected \(expected) for [discover].\(key), ignoring"
+        }
     }
 
     // MARK: - Walk-up

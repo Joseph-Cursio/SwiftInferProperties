@@ -47,18 +47,42 @@ public struct Config: Sendable, Equatable {
     /// non-breaking upgrade (the array form would be additive).
     public let packs: String?
 
+    /// Default for the `discover --docstring-advice` flag. **On by default.**
+    ///
+    /// The advisory pairs a documented function's contract sentence with the law
+    /// that sentence defines. It shipped off-by-default and labelled
+    /// *built-and-unverified*, because the experiment that measured it — six
+    /// readers, three treated — came back flat on **reader lift**, with a control
+    /// arm that turned out to be contaminated (the baseline tool already told
+    /// every reader to state the reference definition).
+    ///
+    /// The default flipped on a *different* measurement: **reach** against a
+    /// frozen answer key, in the SwiftProjectLint road test (2026-07-24). Of ten
+    /// hand-keyed law-bearing kernels, a default `discover` run surfaced **2**
+    /// with a refutable law and this advisory surfaced **8** — every candidate
+    /// the templates missed for want of a matching law family. A capability that
+    /// quadruples reach should not be behind a flag nobody passes.
+    ///
+    /// Read that claim narrowly, because the two experiments measure different
+    /// things and only one of them has been re-run: reach is *candidates
+    /// surfaced*, not *bugs found* and not *readers helped*. The advisory hands
+    /// over a sentence and says "encode THAT" — a human still writes the
+    /// property. The flat A/B result stands unrefuted on its own metric.
+    public let docstringAdvice: Bool
+
     public init(
         includePossible: Bool = false,
         vocabularyPath: String? = nil,
-        packs: String? = nil
+        packs: String? = nil,
+        docstringAdvice: Bool = true
     ) {
         self.includePossible = includePossible
         self.vocabularyPath = vocabularyPath
         self.packs = packs
+        self.docstringAdvice = docstringAdvice
     }
 
     /// PRD-defined defaults: Possible tier hidden, no vocabulary
-    /// override, all packs enabled. Used when no
-    /// `.swiftinfer/config.toml` is present.
+    /// override, all packs enabled, docstring advice **on**.
     public static let defaults = Self()
 }
