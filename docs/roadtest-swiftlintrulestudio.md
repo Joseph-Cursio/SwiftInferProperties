@@ -590,6 +590,60 @@ first hides every refuter behind it*, and the only way to learn how many are
 queued is to remove one and re-run. Each removal was still worth it on its own
 terms (3 seeds, then 4); none was worth it for the reason predicted.
 
+### Sizing — the whole-project `try` resolver, measured and declined
+
+Finding D leaves one option open: the leaf refuses a propagated `try` for want of a
+cross-file view, and names `EffectSymbolTable` as where "a caller with the whole
+program in hand can do better". That caller would be the linter. Before building
+it, it was **sized** — the same discipline the previous three findings had to
+learn the hard way.
+
+**Method.** For every refuted function, strip the `try` keywords and re-run the
+verdict: if it flips to `.pureButPartial`, the `try` gate was the *only* refuter.
+Then classify each `try` callee as project-internal or external, and finally apply
+the requirement a real resolver carries — every callee must itself be clean,
+resolved to a fixpoint. That last step is what separates *resolvable by name* from
+*would actually flip*.
+
+| Codebase | functions | refuted | only by the `try` gate | callees all internal | **would flip** |
+|---|---|---|---|---|---|
+| `SwiftLintRuleStudioCore` (subject) | 482 | 231 | 43 | 11 | **1** |
+| `SwiftProjectLint` (the linter) | 1459 | 41 | 0 | 0 | **0** |
+| `SwiftInferProperties` | 2141 | 252 | 124 | 85 | **34** |
+
+**It collapses in the middle columns.** Of the subject's 43 try-gated functions,
+32 have at least one *external* `try` callee; requiring the rest to be recursively
+clean takes 11 down to **one function, `execute`**. The linter yields zero — its
+refuted functions are refuted by markers, not propagation.
+
+The external callees are the same names in every column, and they are the reason:
+`Node` (Yams) ×7, `database.prepare` ×6, `database.execute` ×3, `container.encode`
+×4, `String(contentsOf…)` ×3, `content.write` ×3, `fileManager.removeItem` ×2. On
+`SwiftInferProperties` `container.encode` ×35 dominates — `Codable` conformances,
+which are not law-bearing kernels anyway. **Propagated `try` in real Swift
+overwhelmingly terminates in a dependency or in I/O**, which is the observation the
+leaf's gate was built on in the first place.
+
+**Cost, for contrast.** (1) A leaf API change: `verdict(for:)` refutes on `try`
+before a caller can intervene, so the linter cannot ask *"was `try` the only
+refuter?"* — that needs an additive `SwiftEffectInference` change exposing the
+refutation reason, plus pin bumps in both consumers. (2) Real type-qualified callee
+resolution; bare-name matching is far too loose for production, where `serialize`
+alone collides across types. (3) The failure mode is the one the gate exists to
+prevent — get resolution wrong and `process.run` / `database.execute` /
+`fileManager.removeItem` walk back in, the subprocess-spawner mistake Finding A
+already recorded once.
+
+**Declined.** One seed on the subject that motivated the question, zero on the
+linter, and the 34 elsewhere are `encode`/`parse` internals. That is a poor return
+for a leaf release plus a resolver whose bugs are unsound in the direction this
+project treats as forbidden.
+
+*Caveats, in both directions:* the flip count is optimistic because name-based
+resolution over-resolves, and pessimistic because the probe drops any function
+containing `try!` and strips `try` textually. Treat 1 / 0 / 34 as the right order
+of magnitude, not exact figures.
+
 ### Linter side, same two days
 
 489 → 491 issues on `SwiftLintRuleStudioCore`. The entire delta is two hits of
@@ -654,6 +708,11 @@ fires **zero** times on this package.
   Three passes have now each named "the remaining blocker" and been wrong; that
   repetition is the finding. See
   [Finding D](#finding-d--the-self-method-call-gate-is-closed-and-serialize-is-still-out-of-reach).
+  The one option it left open — a whole-project `try` resolver — was **sized and
+  declined**: it would clear **one** function on this subject and zero on the
+  linter, because propagated `try` almost always terminates in a dependency or in
+  I/O. See
+  [Sizing](#sizing--the-whole-project-try-resolver-measured-and-declined).
 - **Still open:** `parseParameters`' metamorphic laws (out-of-catalog, → the app's
   hand-written suite); the app-side `parse(String) -> YAMLConfig` extraction that
   would unlock the `serialize ↔ parse` round-trip; and `serialize` itself, which
