@@ -78,15 +78,8 @@ extension SwiftInferCommand.Discover {
                     + "nothing here to index, call, or generate inputs for. No law can be proposed "
                     + "until a human draws the boundary:"
             )
-            for seed in kernels {
-                // The role is the whole product of carrying it. A kernel can never be analysed —
-                // there is no name to call — so "a comparator, which owes a strict weak ordering"
-                // is the only thing separating this line from a bare location.
-                let law = seed.role?.lawSentence.map { " It is \($0)." } ?? ""
-                diagnostics.writeDiagnostic(
-                    "  \(seed.file):\(seed.line): inside `\(seed.symbol)` — extract it into a "
-                        + "named value type, then re-run the linter to seed it properly.\(law)"
-                )
+            for seed in prioritised(kernels) {
+                diagnostics.writeDiagnostic(listing(seed))
             }
         }
 
@@ -99,5 +92,42 @@ extension SwiftInferCommand.Discover {
                     + "--seeds."
             )
         }
+    }
+
+    /// Kernels whose role **entails** a law come first.
+    ///
+    /// Extraction is work, and this listing is the only place the tool can say which of it pays. A
+    /// `comparator` or a `predicate` owes a law that a correct implementation cannot fail, so
+    /// extracting one has a guaranteed payoff. A `transform` might yield nothing but a shape.
+    /// Ordering by that turns a flat list of chores into a ranked one.
+    ///
+    /// Stable within each group — the two filters preserve input order — so the block stays
+    /// byte-comparable between runs, which the scoping tests rely on.
+    static func prioritised(_ kernels: [SeedManifest.Seed]) -> [SeedManifest.Seed] {
+        kernels.filter { $0.role?.entailedTemplateName != nil }
+            + kernels.filter { $0.role?.entailedTemplateName == nil }
+    }
+
+    /// One kernel line: where it is, what it is, and what extracting it buys.
+    ///
+    /// The role is the whole product of carrying it. A kernel can never be analysed — there is no
+    /// name to call — so "a comparator, which owes a strict weak ordering" is the only thing
+    /// separating this line from a bare location.
+    ///
+    /// For an entailed role the line goes further and names the template, because that is a promise
+    /// the tool can keep: `ComparatorTemplate`, `PredicateTemplate` and `PartitionTemplate` all
+    /// exist, and "entailed" is precisely the claim that a correct implementation cannot fail the
+    /// law they propose. Saying it for a conjectured role would be selling a maybe as a guarantee.
+    static func listing(_ seed: SeedManifest.Seed) -> String {
+        var line = "  \(seed.file):\(seed.line): inside `\(seed.symbol)` — extract it into a "
+            + "named value type, then re-run the linter to seed it properly."
+        if let law = seed.role?.lawSentence {
+            line += " It is \(law)."
+        }
+        if let template = seed.role?.entailedTemplateName {
+            line += " Extracting it PAYS: `discover` will then propose the `\(template)` law, "
+                + "which a correct implementation cannot fail."
+        }
+        return line
     }
 }
