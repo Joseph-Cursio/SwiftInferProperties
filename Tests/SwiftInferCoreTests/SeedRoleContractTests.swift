@@ -102,6 +102,33 @@ struct SeedRoleContractTests {
 
     // MARK: - Backward compatibility
 
+    /// The producer's fourth kind, added when it turned out the linter was marking 316 of 468
+    /// seeds analysable while naming functions no test could call. An older build of this tool
+    /// would read it as `.unrecognised` — not analysable, and said out loud — which is the correct
+    /// degradation, but this build should name it properly.
+    @Test("the restricted-function kind decodes and is not analysable")
+    func restrictedFunctionKindIsUnderstood() throws {
+        let json = Data("""
+        {"file":"A.swift","line":1,"symbol":"hidden","kind":"restricted-function","role":"predicate"}
+        """.utf8)
+        let seed = try JSONDecoder().decode(SeedManifest.Seed.self, from: json)
+        #expect(seed.kind == .restrictedFunction)
+        #expect(seed.kind.isAnalysable == false)
+        #expect(seed.kind.rawValue == "restricted-function")
+        // The role still arrives — an access level is the obstacle, not the classification.
+        #expect(seed.role == .predicate)
+    }
+
+    @Test("restricted seeds are refactor-pending, not analysable")
+    func restrictedSeedsArePending() {
+        let manifest = SeedManifest(seeds: [
+            SeedManifest.Seed(file: "A.swift", line: 1, symbol: "open", kind: .pureFunction),
+            SeedManifest.Seed(file: "A.swift", line: 9, symbol: "hidden", kind: .restrictedFunction)
+        ])
+        #expect(manifest.analysableSeeds.map(\.symbol) == ["open"])
+        #expect(manifest.refactorPendingSeeds.map(\.symbol) == ["hidden"])
+    }
+
     @Test("a manifest with no role field still decodes")
     func absentRoleIsNil() throws {
         let json = Data("""

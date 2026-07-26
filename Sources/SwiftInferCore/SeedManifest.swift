@@ -130,6 +130,20 @@ public enum SeedKind: Sendable, Equatable {
     /// Pure logic trapped inside an impure method. Real, valuable, **not yet callable**.
     case extractableKernel
 
+    /// A pure, total, **named** function that no test can reach: `private` or `fileprivate`, or
+    /// nested inside a type that is.
+    ///
+    /// This tool already knew about these — `RestrictedFunction` sets them aside, on the grounds
+    /// that `@testable import` raises `internal` and stops there. What it could not know was that
+    /// the linter was *seeding them as analysable*: 316 of 468 supposedly actionable seeds named a
+    /// function no test could call. The two tools had been disagreeing silently, and only noticed
+    /// once both sides stated their beliefs in a comparable vocabulary.
+    ///
+    /// Refactor-pending rather than dropped, and for the reason `RestrictedFunction` already
+    /// argues: a private helper is often the *best* property target. The obstacle is an access
+    /// level, which is a decision only a human makes.
+    case restrictedFunction
+
     /// A kind emitted by a newer producer than this build knows.
     ///
     /// **Treated as not-analysable, deliberately.** The two ways to be wrong here are not
@@ -144,7 +158,7 @@ public enum SeedKind: Sendable, Equatable {
         case .pureFunction, .idempotency:
             return true
 
-        case .extractableKernel, .unrecognised:
+        case .extractableKernel, .restrictedFunction, .unrecognised:
             return false
         }
     }
@@ -159,6 +173,9 @@ public enum SeedKind: Sendable, Equatable {
 
         case .extractableKernel:
             return "extractable-kernel"
+
+        case .restrictedFunction:
+            return "restricted-function"
 
         case .unrecognised(let raw):
             return raw
@@ -178,6 +195,9 @@ extension SeedKind: Codable {
 
         case "extractable-kernel":
             self = .extractableKernel
+
+        case "restricted-function":
+            self = .restrictedFunction
 
         default:
             self = .unrecognised(raw)

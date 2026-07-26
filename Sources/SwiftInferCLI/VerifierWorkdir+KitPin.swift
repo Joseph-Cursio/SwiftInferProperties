@@ -21,11 +21,12 @@ extension VerifierWorkdir {
     ///
     /// This constant replaced four hand-written literals (`2.1.0` on the
     /// algebraic path, `2.2.0` on the three interaction paths) that had drifted
-    /// a whole major version behind the repo's `from: "3.17.0"`. The self-dogfood
+    /// a whole major version behind the repo's requirement at the time,
+    /// `from: "3.17.0"`. The self-dogfood
     /// road test found it the only way it could be found — by running a survey
     /// against a corpus that is itself a SwiftPropertyLaws consumer. See
     /// `docs/roadtest-self-dogfood.md` §9.
-    static let swiftPropertyLawsRequirement = "3.17.0"
+    static let swiftPropertyLawsRequirement = "3.18.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "
