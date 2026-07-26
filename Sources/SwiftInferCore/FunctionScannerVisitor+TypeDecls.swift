@@ -68,7 +68,14 @@ extension FunctionScannerVisitor {
             hasUserInit: hasUserInit,
             enumCaseNames: enumCaseNames,
             initializers: initializers,
-            enumCases: enumCases
+            enumCases: enumCases,
+            // `typeStack` holds the enclosing types and is pushed *after* this
+            // call, so it is exactly the prefix for the decl being built. An
+            // extension at file scope sees an empty stack and keeps whatever
+            // spelling the source used (`extension Foo.Bar` is already
+            // qualified); Swift forbids nested extensions, so there is no case
+            // where an extension picks up a spurious prefix.
+            qualifiedName: (typeStack + [name]).joined(separator: ".")
         )
     }
 }

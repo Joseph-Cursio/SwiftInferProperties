@@ -104,6 +104,28 @@ public struct TypeDecl: Sendable, Equatable {
     /// names-only for the M14 exhaustiveness detector.
     public let enumCases: [EnumCase]
 
+    /// The declaration's name **prefixed by its enclosing types**, dot-joined —
+    /// `IndexedTypeShape.Kind` for a `Kind` nested inside `IndexedTypeShape`,
+    /// and identical to `name` for a top-level type.
+    ///
+    /// **Why this exists.** `name` alone is not a key. This repo declares eight
+    /// distinct types called `Kind`, seven called `Visitor`, and six called
+    /// `CodingKeys`, and `TypeShapeBuilder` used to group decls by `name` — so
+    /// those eight `Kind`s merged into a single group whose primary was whichever
+    /// file happened to be scanned first, and a member typed `Kind` on one type
+    /// could be generated from an unrelated type's nested enum. The generated
+    /// stub then either failed to compile (the name isn't in scope from the
+    /// verifier) or, worse, compiled against the wrong type.
+    ///
+    /// Measured on this repo before the change: 218 shape entries, 13 of which
+    /// carried more than one source declaration. See
+    /// `docs/roadtest-self-dogfood.md` §11.1.
+    ///
+    /// `name` is deliberately kept bare — `containingTypeName` matching, template
+    /// vocabularies, and identity hashes all key on the simple name, and
+    /// re-pointing those is a separate change. This field is additive.
+    public let qualifiedName: String
+
     public init(
         name: String,
         kind: Kind,
@@ -114,8 +136,12 @@ public struct TypeDecl: Sendable, Equatable {
         hasUserInit: Bool = false,
         enumCaseNames: [String] = [],
         initializers: [InitializerSignature] = [],
-        enumCases: [EnumCase] = []
+        enumCases: [EnumCase] = [],
+        qualifiedName: String? = nil
     ) {
+        // Defaulted to `name` so the many hand-built test fixtures — and any
+        // caller that has no enclosing-type context — keep working unchanged.
+        self.qualifiedName = qualifiedName ?? name
         self.name = name
         self.kind = kind
         self.inheritedTypes = inheritedTypes
