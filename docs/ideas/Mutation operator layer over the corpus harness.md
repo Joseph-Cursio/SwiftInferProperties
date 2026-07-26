@@ -55,6 +55,52 @@ Rows 1–2 mean `run-mutants.sh` stays pristine as the CI gate; discovery is a
 separate runner. Everything else — reversibility, patch format, manifest shape —
 is reused verbatim.
 
+## Where the curated corpus's guarantees come from (and what discovery can't inherit)
+
+It is tempting to say a mechanical layer that reuses the runner *inherits* the
+curated corpus's two best properties — near-zero equivalent-mutant noise and
+determinism control. It does not. **Both properties live in the hand-authoring,
+not in the runner plumbing**, so tracing their source also draws the boundary of
+what transfers.
+
+**Near-zero equivalent-mutant noise** (an equivalent mutant changes source but not
+behavior, so *nothing* can kill it — it survives forever as a false alarm) comes
+from two structural facts about curation:
+
+1. Each mutant is authored to break a *specific guarantee* — `second = first`
+   defeats the run-it-twice invariant that is the whole detection mechanism — so
+   it is behavior-changing by intent. Mechanical operators mutate wherever the
+   grammar allows, and most such sites are semantically inert.
+2. `expected: killed` + "verified killed" *is* an equivalence filter: an
+   equivalent mutant is by definition one that cannot be killed, so confirming the
+   named killer goes red before admission proves non-equivalence. The corpus
+   cannot *contain* an un-killable entry, because passing that gate is the
+   precondition for entry.
+
+**Determinism control** — a "survived" verdict that is really a flaky miss —
+is suppressed by the curation, not the mechanics:
+
+1. `--filter` to one named killer, not a whole-suite needle-hunt; attribution is
+   by construction.
+2. The killers are **robust negative controls, not needles**: `Counter.next()` is
+   non-idempotent on *every* input; `array(of: 1...8)` is deliberately non-empty
+   so the retry *always* doubles effects. The discriminator fires across the whole
+   input space, so a random generator has no rare input to miss.
+3. `withKnownIssue` inverts polarity — a blinded detector's *silence* becomes a
+   red test rather than a quiet pass (this is what kills the first two mutants).
+4. One killer (`fromEntity`) is a fixed-input example with no randomness at all.
+
+**What a mechanical sweep actually inherits** is the narrow, real part: the
+reversible apply/build/run/revert mechanics — clean tree, `git apply`/`checkout`,
+one mutant at a time, no schemata state to leak. It does **not** inherit the two
+guarantees, and this is why the design re-earns them elsewhere: equivalents are
+inevitable, so discovery adds triage + `ignore.json` (§ delta table, row 3); and
+with no known killer it must run the whole suite, so determinism is re-established
+with seed-pinning + the unseeded survivor re-run (§ *Determinism and cost*). The
+guarantees are the payoff of curation — which is exactly why the curated corpus
+stays the cheap regression gate and the sweep stays a noisier, discovery-only tool
+that *feeds* it.
+
 ## Design
 
 ### Directory layout (additive only)
