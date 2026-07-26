@@ -20,18 +20,24 @@ struct SeedFocusTests {
 
     // MARK: - `kind` — a seed is not always a symbol to analyse
 
-    @Test("a v1 manifest has no kind, and every seed in one was analysable")
-    func legacyManifestDefaultsToAnalysable() throws {
+    /// This used to assert the opposite — that a seed with no `kind` defaults to `.pureFunction`,
+    /// so a v1 manifest still decoded. No v1 manifest can exist any more: the producer's version is
+    /// a constant 2, and manifests are generated on demand rather than archived.
+    ///
+    /// The tolerance had to go rather than merely being unused, because it was a SILENT default on
+    /// the one field whose misreading the v1 -> v2 bump was created to prevent. A producer that
+    /// dropped `kind` through a bug would have every seed read as analysable, and discovery would
+    /// narrow onto uncallable kernels and report a confident zero.
+    @Test("a seed with no kind is rejected rather than assumed analysable")
+    func missingKindIsRejected() {
         let json = """
-        { "version": 1, "seeds": [
+        { "version": 2, "seeds": [
             { "file": "Math.swift", "line": 3, "symbol": "add", "rule": "Pure Function Property-Test Candidate" }
         ] }
         """
-        let manifest = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
-
-        #expect(manifest.seeds.first?.kind == .pureFunction)
-        #expect(manifest.analysableSeeds.count == 1)
-        #expect(manifest.refactorPendingSeeds.isEmpty)
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
+        }
     }
 
     @Test("an extractable kernel is reported, never focused on")
@@ -94,12 +100,13 @@ struct SeedFocusTests {
     @Test("SeedManifest decodes the producer's pbt-seeds shape")
     func decodesProducerShape() throws {
         let json = """
-        { "version": 1, "seeds": [
-            { "file": "Math.swift", "line": 3, "symbol": "add", "rule": "Pure Function Property-Test Candidate" }
+        { "version": 2, "seeds": [
+            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function",
+              "rule": "Pure Function Property-Test Candidate" }
         ] }
         """
         let manifest = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
-        #expect(manifest.version == 1)
+        #expect(manifest.version == 2)
         #expect(manifest.seeds.count == 1)
         #expect(manifest.seeds.first?.symbol == "add")
         #expect(manifest.seeds.first?.rule == "Pure Function Property-Test Candidate")
@@ -107,7 +114,11 @@ struct SeedFocusTests {
 
     @Test("SeedManifest tolerates a missing rule field")
     func toleratesMissingRule() throws {
-        let json = #"{ "version": 1, "seeds": [ { "file": "A.swift", "line": 1, "symbol": "f" } ] }"#
+        let json = #"""
+        { "version": 2, "seeds": [
+            { "file": "A.swift", "line": 1, "symbol": "f", "kind": "pure-function" }
+        ] }
+        """#
         let manifest = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
         #expect(manifest.seeds.first?.rule == nil)
         #expect(manifest.seeds.first?.symbol == "f")

@@ -11,12 +11,14 @@ import Foundation
 ///
 /// The schema mirrors the producer's:
 /// ```json
-/// { "version": 1, "seeds": [ { "file": "Math.swift", "line": 3,
-///                              "symbol": "add", "rule": "Pure Function …" } ] }
+/// { "version": 2, "seeds": [ { "file": "Math.swift", "line": 3, "symbol": "add",
+///                              "rule": "Pure Function …", "kind": "pure-function",
+///                              "role": "predicate" } ] }
 /// ```
-/// `rule` is decoded leniently (optional) so a producer that drops or renames
-/// it doesn't break consumption; `file`/`line`/`symbol` are the load-bearing
-/// fields.
+/// `rule` and `role` are decoded leniently (optional) so a producer that drops or
+/// renames them doesn't break consumption. `file`/`line`/`symbol`/`kind` are
+/// required: the first three locate the seed, and `kind` decides whether this tool
+/// may narrow discovery onto it — a question with no safe default.
 public struct SeedManifest: Codable, Sendable, Equatable {
 
     /// The schema version this build understands. A manifest with a different
@@ -74,15 +76,29 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             self.role = role
         }
 
-        /// A v1 manifest has no `kind`. Every seed in one was a function to analyse, so that is what
-        /// a missing `kind` means.
+        /// `kind` is **required**, and that is a deliberate reversal.
+        ///
+        /// It used to default to `.pureFunction` so a v1 manifest — written before `kind` existed —
+        /// still decoded. No v1 manifest can exist any more: the producer's version is a constant
+        /// 2, and manifests are generated on demand rather than archived (SwiftProjectLint
+        /// gitignores its own). The tolerance outlived the thing it tolerated.
+        ///
+        /// Keeping it was worse than useless, because it is a **silent** default on the one field
+        /// whose misreading the v1 → v2 bump was created to prevent. A producer that ever drops or
+        /// misspells `kind` through a bug would have every seed read as `.pureFunction` —
+        /// *analysable* — and discovery would narrow onto uncallable kernels and report a confident
+        /// zero. That is the exact failure described in `SeedKind`, arriving through the hatch
+        /// installed to stop it. Required turns it into a loud parse error naming the file.
+        ///
+        /// The version *number* check is untouched and still earns its keep: it is forward
+        /// compatibility, for a future v3 producer meeting this build.
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.file = try container.decode(String.self, forKey: .file)
             self.line = try container.decode(Int.self, forKey: .line)
             self.symbol = try container.decode(String.self, forKey: .symbol)
             self.rule = try container.decodeIfPresent(String.self, forKey: .rule)
-            self.kind = try container.decodeIfPresent(SeedKind.self, forKey: .kind) ?? .pureFunction
+            self.kind = try container.decode(SeedKind.self, forKey: .kind)
             // Unlike `kind`, absence needs no semantic default: a seed with no role is a seed whose
             // producer classifies nothing, and "unknown" is the honest reading.
             self.role = try container.decodeIfPresent(SeedRole.self, forKey: .role)

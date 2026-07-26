@@ -110,13 +110,17 @@ struct SeedRoleContractTests {
         #expect(try JSONDecoder().decode(SeedManifest.Seed.self, from: json).role == nil)
     }
 
-    @Test("a role on a v1 manifest with no kind does not disturb the kind default")
-    func roleDoesNotAffectKindDefaulting() throws {
+    /// `role` is optional and `kind` is not, and the asymmetry is the point. An absent role is
+    /// honestly unknown — no consumer acts on it. An absent kind would have to be GUESSED, and the
+    /// guess decides whether this tool narrows discovery onto the seed, so there is no safe
+    /// default. A seed carrying a role but no kind is still rejected.
+    @Test("a role does not excuse a missing kind")
+    func roleDoesNotExcuseMissingKind() {
         let json = Data("""
         {"file":"A.swift","line":1,"symbol":"f","role":"comparator"}
         """.utf8)
-        let seed = try JSONDecoder().decode(SeedManifest.Seed.self, from: json)
-        #expect(seed.kind == .pureFunction)
-        #expect(seed.role == .comparator)
+        #expect(throws: DecodingError.self) {
+            try JSONDecoder().decode(SeedManifest.Seed.self, from: json)
+        }
     }
 }

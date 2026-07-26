@@ -256,12 +256,13 @@ struct DiscoverPipelineSeedsTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let path = directory.appendingPathComponent("seeds.json")
         try Data("""
-        { "version": 1, "seeds": [
-            { "file": "Math.swift", "line": 3, "symbol": "add", "rule": "Pure Function Property-Test Candidate" }
+        { "version": 2, "seeds": [
+            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function",
+              "rule": "Pure Function Property-Test Candidate" }
         ] }
         """.utf8).write(to: path)
         let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
-        #expect(manifest.version == 1)
+        #expect(manifest.version == 2)
         #expect(manifest.seeds.count == 1)
         #expect(manifest.seeds.first?.symbol == "add")
         #expect(manifest.seeds.first?.file == "Math.swift")
