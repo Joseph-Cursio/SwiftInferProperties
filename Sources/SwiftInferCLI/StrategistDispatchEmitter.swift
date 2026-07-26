@@ -320,18 +320,6 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
 
     // MARK: - Stub composition
 
-    /// Header comment block — names the strategist source, the chosen
-    /// strategy summary, and the template under test.
-    private static func headerSection(inputs: Inputs, recipe: GeneratorRecipe) -> String {
-        """
-        // V1.47.E — strategist-routed verify stub.
-        // Template: \(inputs.template)
-        // Carrier:  \(inputs.carrier) (bound to \(recipe.carrierTypeName))
-        // Generator expression: \(recipe.expression)
-        // Single-pass — integral/string carriers have no NaN/Inf semantic.
-        """
-    }
-
     /// Pass 1 emit — template-aware. Routes to the right per-template
     /// composer (1/2/3 values per trial).
     private static func defaultPassSection(

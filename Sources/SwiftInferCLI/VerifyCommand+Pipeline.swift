@@ -121,11 +121,17 @@ extension SwiftInferCommand.Verify {
     /// V1.64.B — persist the outcome to `.swiftinfer/verify-evidence.json` so
     /// `discover` can annotate this suggestion later. Best-effort: a
     /// persistence failure warns on stderr but never fails the verify gesture.
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the
+    /// stamp — SwiftProjectLint's Non-Injected Nondeterminism rule. The stamp is
+    /// persisted at whole-second `.iso8601` resolution, and two records tying on
+    /// it are exactly what makes the log `merge` folds non-commutative (see
+    /// `MergeAlgebraPropertyTests`).
     private static func persistEvidence(
         parsed: VerifyOutcome,
         entry: SemanticIndexEntry,
         packageRoot: URL,
-        regressionPath: URL?
+        regressionPath: URL?,
+        now: Date = Date()
     ) {
         let (evidenceOutcome, evidenceDetail) = VerifyEvidenceRecorder.evidence(for: parsed)
         // V1.142 — capture the counterexample / shrunk minimal / replay seed
@@ -145,7 +151,7 @@ extension SwiftInferCommand.Verify {
                 template: entry.templateName,
                 outcome: evidenceOutcome,
                 detail: evidenceDetail,
-                capturedAt: Date(),
+                capturedAt: now,
                 swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
                 counterexample: counterexample,
                 shrunkCounterexample: shrunkCounterexample,
@@ -163,10 +169,13 @@ extension SwiftInferCommand.Verify {
     /// corpus (`.swiftinfer/verify-corpus.json`) so it's re-checked on every
     /// run as a permanent regression guard. Best-effort; only default-fails
     /// record. (Single-suggestion path; survey-mode batching is a follow-on.)
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the
+    /// stamp — SwiftProjectLint's Non-Injected Nondeterminism rule.
     private static func persistCorpus(
         parsed: VerifyOutcome,
         entry: SemanticIndexEntry,
-        packageRoot: URL
+        packageRoot: URL,
+        now: Date = Date()
     ) {
         guard case let .defaultFails(detail) = parsed else { return }
         let record = VerifyCorpusEntry(
@@ -175,7 +184,7 @@ extension SwiftInferCommand.Verify {
             counterexample: detail.input,
             shrunkCounterexample: detail.shrink?.minimal,
             seed: seedString(for: entry.identityHash),
-            capturedAt: Date(),
+            capturedAt: now,
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
         )
         for warning in VerifyCorpusStore.record(record, packageRoot: packageRoot) {
@@ -214,9 +223,13 @@ extension SwiftInferCommand.Verify {
     private static func resolveEntry(
         suggestionPrefix: String,
         indexPathOverride: String?,
-        packageRoot: URL
+        packageRoot: URL,
+        clockNow: Date = Date()
     ) throws -> (entry: SemanticIndexEntry, allShapes: [String: IndexedTypeShape]) {
-        let now = ISO8601DateFormatter().string(from: Date())
+        // Injected via `now` so a test can pin it (SwiftProjectLint's
+        // Non-Injected Nondeterminism rule). Only feeds `IndexStore.load`'s
+        // `.empty(at:)` staleness fallback, so any stable value works.
+        let now = ISO8601DateFormatter().string(from: clockNow)
         let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
         try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)
         let resolved = try VerifyHarness.resolveIndex(

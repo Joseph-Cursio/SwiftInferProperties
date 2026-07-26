@@ -187,19 +187,29 @@ struct VerifierWorkdirTests {
 
     // MARK: - V2.0 M3.E.2 — interaction mode
 
+    // These two once asserted the kit requirement as the string literals
+    // `2.1.0` and `2.2.0`. That is the same drift the emitter had, one layer
+    // out: the literals kept the tests green while the repo's own requirement
+    // moved to `3.17.0`, so the guard confirmed the bug instead of catching it.
+    // They now assert against `VerifierWorkdir.swiftPropertyLawsRequirement`,
+    // which `VerifierWorkdirKitPinTests` separately ties to `Package.swift`.
+    private static var kitRequirement: String {
+        "SwiftPropertyLaws.git\", from: \"\(VerifierWorkdir.swiftPropertyLawsRequirement)\""
+    }
+
     @Test("default mode is .algebraic — v1.42 callers don't break")
     func defaultModeIsAlgebraic() {
         let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil)
         // The .algebraic shape includes numerics + collections; .interaction omits them.
         #expect(rendered.contains("swift-numerics"))
         #expect(rendered.contains("swift-collections"))
-        #expect(rendered.contains("SwiftPropertyLaws.git\", from: \"2.1.0\""))
+        #expect(rendered.contains(Self.kitRequirement))
     }
 
-    @Test(".interaction mode declares v2.2.0 kit + PropertyLawKit; omits numerics / collections")
+    @Test(".interaction mode declares the kit + PropertyLawKit; omits numerics / collections")
     func interactionModeDeps() {
         let rendered = VerifierWorkdir.renderPackageSwift(userPackage: nil, mode: .interaction)
-        #expect(rendered.contains("SwiftPropertyLaws.git\", from: \"2.2.0\""))
+        #expect(rendered.contains(Self.kitRequirement))
         #expect(rendered.contains("swift-property-based"))
         #expect(!rendered.contains("swift-numerics"))
         #expect(!rendered.contains("swift-collections"))

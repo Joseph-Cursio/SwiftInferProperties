@@ -91,9 +91,13 @@ extension SwiftInferCommand.Verify {
 
     static func loadIndex(
         indexPathOverride: String?,
-        packageRoot: URL
+        packageRoot: URL,
+        clockNow: Date = Date()
     ) throws -> IndexStore.Index {
-        let now = ISO8601DateFormatter().string(from: Date())
+        // Injected via `now` so a test can pin it (SwiftProjectLint's
+        // Non-Injected Nondeterminism rule). Only feeds `IndexStore.load`'s
+        // `.empty(at:)` staleness fallback, so any stable value works.
+        let now = ISO8601DateFormatter().string(from: clockNow)
         let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
         // V1.42.C.5 — reindex the conventional index on demand if stale/missing.
         try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)

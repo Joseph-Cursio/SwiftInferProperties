@@ -13,9 +13,15 @@ import SwiftInferCore
 /// `VerifyEvidenceOutcome` (reducer verify already produces the latter).
 public enum ViewModelVerifyEvidence {
 
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the
+    /// stamp — SwiftProjectLint's Non-Injected Nondeterminism rule. The stamp is
+    /// persisted at whole-second `.iso8601` resolution, and two records tying on
+    /// it are exactly what makes the log `merge` folds non-commutative (see
+    /// `MergeAlgebraPropertyTests`).
     public static func evidence(
         for suggestion: InteractionInvariantSuggestion,
-        outcome: VerifyOutcome
+        outcome: VerifyOutcome,
+        now: Date = Date()
     ) -> VerifyEvidence {
         let mapped: VerifyEvidenceOutcome
         switch outcome {
@@ -36,7 +42,7 @@ public enum ViewModelVerifyEvidence {
             template: suggestion.family.rawValue,
             outcome: mapped,
             detail: "MVVM view-model verify",
-            capturedAt: Date(),
+            capturedAt: now,
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
             // Full action-space coverage: the verifier drives the whole
             // generatable alphabet, so the cycle-135 gated-family overrule

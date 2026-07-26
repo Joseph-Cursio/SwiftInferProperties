@@ -225,8 +225,8 @@ extension SwiftInferCommand {
         /// Current time as an ISO8601 string — only feeds
         /// `IndexStore.load`'s `.empty(at:)` fallback (the metrics path
         /// never persists the loaded index), so any stable value works.
-        private static func nowTimestamp() -> String {
-            ISO8601DateFormatter().string(from: Date())
+        private static func nowTimestamp(_ now: Date = Date()) -> String {
+            ISO8601DateFormatter().string(from: now)
         }
     }
 }

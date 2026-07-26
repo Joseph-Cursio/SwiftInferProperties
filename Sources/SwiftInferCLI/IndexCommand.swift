@@ -321,8 +321,8 @@ extension SwiftInferCommand {
             )
         }
 
-        private static func isoTimestampNow() -> String {
-            isoTimestamp(from: Date())
+        private static func isoTimestampNow(_ now: Date = Date()) -> String {
+            isoTimestamp(from: now)
         }
 
         static func isoTimestamp(from date: Date) -> String {

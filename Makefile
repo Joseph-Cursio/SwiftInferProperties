@@ -29,7 +29,7 @@ BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests
 # MVVM-carrier verify suites (dependency-free builds — light; one batch is fine).
 BATCH5 := ViewModelVerifyCorpusMeasuredTests|ViewModelRefintVerifyCorpusMeasuredTests|ViewModelKeyedRefintVerifyMeasuredTests|VMStateInvariantVerifyMeasuredTests|ViewModelFakedDepVerifyMeasuredTests|ViewModelPackageVerifyMeasuredTests|ViewModelVerifyEvidenceJoinMeasuredTests
 # Composition-action payload measured suites (slices 2/3/4 — TCA corpus builds).
-BATCH6 := CompositionPayloadCorpusMeasuredTests|IdentifiedActionCorpusMeasuredTests|BindingActionCorpusMeasuredTests
+BATCH6 := CompositionPayloadCorpusMeasuredTests|IdentifiedActionCorpusMeasuredTests|BindingActionCorpusMeasuredTests|TraceMiningMeasuredTests
 # TCA/redux determinism / real-examples / unknown-action / multi-module corpora,
 # plus the generator-recipe compile guard (a single light kit-only build).
 BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests|TCAExamplesMeasuredTests|UnknownActionCorpusMeasuredTests|MultiModuleVerifyMeasuredTests|GeneratorRecipeCompileMeasuredTests|AlgebraicLawsVerifyMeasuredTests|VerifyEmitterMatrixMeasuredTests
@@ -79,6 +79,11 @@ batch6: ## Subprocess batch 6 — composition-action payload measured (slices 2/
 batch7: ## Subprocess batch 7 — TCA determinism / real-examples / unknown-action
 	$(SWIFT_TEST) --filter '$(BATCH7)'
 
-clean-temp: ## Remove leftover verifier/corpus/measured build dirs (from killed runs)
+clean-temp: ## Remove leftover verifier/corpus/measured build dirs (from killed runs + verify surveys)
 	find "$${TMPDIR:-/tmp}" -maxdepth 1 \( -name '*verify-pipeline-integration*' -o -name '*verify-interaction*' -o -name '*-corpus*' -o -name '*-survey-corpus*' -o -name '*measured*' -o -name 'tca-*' -o -name 'vm-*' -o -name 'TemporaryDirectory.*' -o -name '*.lock' \) -exec rm -rf {} + 2>/dev/null || true
+# `verify --all-from-index` does NOT use $TMPDIR — it synthesizes one workdir per
+# suggestion under <packageRoot>/.swiftinfer/verify-workdir/, each with its own
+# .build/. A survey of the repo's own 85-entry index left 3.4 GB there. Gitignored,
+# so `git status` shows nothing but the directory name and it accumulates silently.
+	rm -rf .swiftinfer/verify-workdir
 	@df -h "$${TMPDIR:-/tmp}" | tail -1

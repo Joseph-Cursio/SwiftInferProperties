@@ -12,8 +12,19 @@ extension SwiftInferCommand.Verify {
     /// One batch timestamp — the survey is one logical measurement run. Both
     /// writes are best-effort; warnings surface on stderr. Internal (not
     /// private) so `runParallelSurvey` calls it across the file boundary.
-    static func persistSurveyBatch(_ collected: [SurveyRecord], packageRoot: URL) {
-        let capturedAt = Date()
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the
+    /// stamp. Flagged by SwiftProjectLint's Non-Injected Nondeterminism rule:
+    /// "`Date()` makes this code unpredictable, so a property-based test can't
+    /// pin the value or reproduce a failure." That is not hypothetical here —
+    /// these stamps are persisted at whole-second `.iso8601` resolution, and
+    /// two records that tie on the stamp are exactly what makes the log
+    /// `merge` folds non-commutative (see `MergeAlgebraPropertyTests`).
+    static func persistSurveyBatch(
+        _ collected: [SurveyRecord],
+        packageRoot: URL,
+        now: Date = Date()
+    ) {
+        let capturedAt = now
         let batch = collected.map { record in
             VerifyEvidence(
                 identityHash: VerifyEvidenceRecorder.normalizedIdentityHash(record.identityHash),

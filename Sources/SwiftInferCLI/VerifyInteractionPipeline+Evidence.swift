@@ -57,16 +57,24 @@ extension VerifyInteractionPipeline {
 
     /// Shared record builder — single source of truth for the persisted
     /// shape so the single + batch paths write identically.
-    private static func makeEvidence(
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the
+    /// stamp. Flagged by SwiftProjectLint's Non-Injected Nondeterminism rule:
+    /// "`Date()` makes this code unpredictable, so a property-based test can't
+    /// pin the value or reproduce a failure." That is not hypothetical here —
+    /// these stamps are persisted at whole-second `.iso8601` resolution, and
+    /// two records that tie on the stamp are exactly what makes the log
+    /// `merge` folds non-commutative (see `MergeAlgebraPropertyTests`).
+    static func makeEvidence(
         invariant: InteractionInvariantSuggestion,
-        result: InteractionVerifyOutcomeParser.Result
+        result: InteractionVerifyOutcomeParser.Result,
+        now: Date = Date()
     ) -> VerifyEvidence {
         VerifyEvidence(
             identityHash: invariant.identity.normalized,
             template: invariant.family.rawValue,
             outcome: result.outcome,
             detail: result.detail,
-            capturedAt: Date(),
+            capturedAt: now,
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
             excludedActionCount: result.excludedActionCount
         )

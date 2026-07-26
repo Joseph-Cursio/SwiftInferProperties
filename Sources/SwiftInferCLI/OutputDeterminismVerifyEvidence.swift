@@ -10,9 +10,15 @@ import SwiftInferCore
 /// a `defaultFails`. The convention-role analog of `ViewModelVerifyEvidence`.
 public enum OutputDeterminismVerifyEvidence {
 
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the
+    /// stamp — SwiftProjectLint's Non-Injected Nondeterminism rule. The stamp is
+    /// persisted at whole-second `.iso8601` resolution, and two records tying on
+    /// it are exactly what makes the log `merge` folds non-commutative (see
+    /// `MergeAlgebraPropertyTests`).
     public static func evidence(
         for suggestion: InteractionInvariantSuggestion,
-        outcome: VerifyOutcome
+        outcome: VerifyOutcome,
+        now: Date = Date()
     ) -> VerifyEvidence {
         let mapped: VerifyEvidenceOutcome
         switch outcome {
@@ -33,7 +39,7 @@ public enum OutputDeterminismVerifyEvidence {
             template: suggestion.family.rawValue,
             outcome: mapped,
             detail: "output-determinism verify (recording fake)",
-            capturedAt: Date(),
+            capturedAt: now,
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
             // The verifier drives the whole no-arg action alphabet; no gated
             // family applies to outputDeterminism, so coverage is full.

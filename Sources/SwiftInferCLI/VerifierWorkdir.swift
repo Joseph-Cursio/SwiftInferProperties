@@ -226,10 +226,12 @@ public enum VerifierWorkdir {
 
     /// Build the comma-joined `dependencies:` array. Mode-dependent:
     /// `.algebraic` (v1.42 default) declares swift-numerics +
-    /// swift-collections + swift-property-based + SwiftPropertyLaws@2.1.0.
+    /// swift-collections + swift-property-based + SwiftPropertyLaws.
     /// `.interaction` (V2.0 M3.E.2) declares swift-property-based +
-    /// SwiftPropertyLaws@2.2.0 only — numerics / collections aren't
-    /// imported by M3.B's emitted stub. Comma placement follows
+    /// SwiftPropertyLaws only — numerics / collections aren't
+    /// imported by M3.B's emitted stub. Every mode takes its kit
+    /// requirement from `swiftPropertyLawsRequirement`; see that constant
+    /// for why it may not be spelled out per-mode. Comma placement follows
     /// SwiftPM's accepted style — trailing comma after the last entry
     /// is legal but we omit it here for tidiness.
     private static func renderDependenciesBlock(
@@ -246,7 +248,7 @@ public enum VerifierWorkdir {
                 // OC recipes in `StrategistDispatchEmitter.curatedOCRecipe`.
                 ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
-                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.1.0\")"
+                swiftPropertyLawsDependencyLine
             ]
 
         case .interaction:
@@ -258,7 +260,7 @@ public enum VerifierWorkdir {
             // the kit's own dep graph.
             entries = [
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
-                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")"
+                swiftPropertyLawsDependencyLine
             ]
 
         case .interactionTCA:
@@ -268,7 +270,7 @@ public enum VerifierWorkdir {
             // and runtime the co-compiled reducer needs.
             entries = [
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
-                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")",
+                swiftPropertyLawsDependencyLine,
                 ".package(url: "
                     + "\"https://github.com/pointfreeco/swift-composable-architecture.git\", "
                     + "from: \"1.15.0\")"
@@ -279,7 +281,7 @@ public enum VerifierWorkdir {
             // revision (the tags don't build under the current toolchain).
             entries = [
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
-                ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", from: \"2.2.0\")",
+                swiftPropertyLawsDependencyLine,
                 ".package(url: \"https://github.com/spotify/Mobius.swift.git\", "
                     + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")"
             ]

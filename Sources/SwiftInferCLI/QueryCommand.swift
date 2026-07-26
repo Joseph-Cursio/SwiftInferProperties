@@ -182,11 +182,15 @@ extension SwiftInferCommand {
             directoryOverride: String?,
             explicitIndexPath: String?,
             filters: QueryFilters,
-            limit: Int?
+            limit: Int?,
+            now: Date = Date()
         ) -> QueryOutcome {
             let directory = URL(fileURLWithPath: directoryOverride ?? ".")
             let explicitPath = explicitIndexPath.map { URL(fileURLWithPath: $0) }
-            let now = SwiftInferCommand.Index.isoTimestamp(from: Date())
+        // Injected via `now` so a test can pin it (SwiftProjectLint's
+        // Non-Injected Nondeterminism rule). Only feeds `IndexStore.load`'s
+        // `.empty(at:)` staleness fallback, so any stable value works.
+            let now = SwiftInferCommand.Index.isoTimestamp(from: now)
             let resolvedPath = explicitPath ?? Self.resolveIndexPath(startingFrom: directory)
             guard let resolvedPath else {
                 return QueryOutcome(
