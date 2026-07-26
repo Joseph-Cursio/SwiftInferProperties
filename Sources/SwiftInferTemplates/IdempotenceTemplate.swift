@@ -189,7 +189,7 @@ public enum IdempotenceTemplate {
     static func makeCaveats() -> [String] {
         [
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+                + "This tool does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
     }
@@ -391,7 +391,7 @@ extension IdempotenceTemplate {
         }
         let caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+                + "This tool does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)

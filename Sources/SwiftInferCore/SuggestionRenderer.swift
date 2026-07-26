@@ -42,10 +42,11 @@ public enum SuggestionRenderer {
         }
         lines.append("")
         lines.append("Why this might be wrong:")
-        if suggestion.explainability.whyMightBeWrong.isEmpty {
+        let caveats = suggestion.explainability.whyMightBeWrong + conjectureCaveat(for: suggestion)
+        if caveats.isEmpty {
             lines.append("  ✓ no known caveats for this template")
         } else {
-            for line in suggestion.explainability.whyMightBeWrong {
+            for line in caveats {
                 lines.append("  ⚠ \(line)")
             }
         }
@@ -235,6 +236,34 @@ public enum SuggestionRenderer {
             }
         }
         return lines
+    }
+
+    /// The "this law is a guess" caveat, for a law that is refutable but **not role-entailed**.
+    ///
+    /// Emitted centrally rather than written into each template, for two reasons. It is the same
+    /// sentence every time — fifteen hand-maintained copies would drift — and the tool already
+    /// knows the answer: `Refutability.roleEntailedTemplates` is exactly the set of laws a correct
+    /// implementation cannot fail, so its complement is exactly the set that owes this warning.
+    ///
+    /// It also makes suppressing a vacuous type caveat safe. An empty caveat list renders as
+    /// "✓ no known caveats for this template", which reads as reassurance; for a conjectured law
+    /// that is the wrong thing to say, and this guarantees such a law never renders empty.
+    ///
+    /// A **tautology** (`determinism`) gets nothing: it is not a conjecture, it is a law no
+    /// implementation can fail, and calling it a guess would misdescribe it in the other direction.
+    private static func conjectureCaveat(for suggestion: Suggestion) -> [String] {
+        guard Refutability.isRefutable(suggestion),
+              Refutability.isRoleEntailed(suggestion) == false else {
+            return []
+        }
+        return [
+            "THIS LAW IS A CONJECTURE — read off the shape and the name, not entailed by either, "
+                + "so a CORRECT implementation can fail it. A `T -> T` need not be idempotent (a "
+                + "one-shot suffix strip applied twice removes two suffixes); a `(T, T) -> T` need "
+                + "not commute (subtraction, division, concatenation). Confirm the claim is meant "
+                + "to hold before encoding it — and if it is not, that is a finding about the "
+                + "function, not a reason to skip the property."
+        ]
     }
 
     private static func renderGeneratorLine(_ meta: GeneratorMetadata) -> String {

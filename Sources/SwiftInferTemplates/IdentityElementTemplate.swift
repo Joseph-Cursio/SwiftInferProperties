@@ -361,7 +361,7 @@ extension IdentityElementTemplate {
         }
         let caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+                + "This tool does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
             "The identity property is two-sided: f(t, e) == t AND f(e, t) == t. "
                 + "A one-sided identity (e.g. left-identity only) will pass the type pattern but "

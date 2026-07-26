@@ -107,7 +107,12 @@ Why this might be wrong:
 of the inner function; a generator that produces values outside that set \
 will surface false-positive failures (Appendix B.4).
   ⚠ T must conform to Equatable for the emitted property to compile. \
-SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+This tool does not verify protocol conformance — confirm before applying.
+  ⚠ THIS LAW IS A CONJECTURE — read off the shape and the name, not entailed by either, so a CORRECT \
+implementation can fail it. A `T -> T` need not be idempotent (a one-shot suffix strip applied twice \
+removes two suffixes); a `(T, T) -> T` need not commute (subtraction, division, concatenation). \
+Confirm the claim is meant to hold before encoding it — and if it is not, that is a finding about \
+the function, not a reason to skip the property.
 
 Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
@@ -142,7 +147,12 @@ Why this might be wrong:
 of the inner function; a generator that produces values outside that set \
 will surface false-positive failures (Appendix B.4).
   ⚠ T must conform to Equatable for the emitted property to compile. \
-SwiftInfer M1 does not verify protocol conformance — confirm before applying.
+This tool does not verify protocol conformance — confirm before applying.
+  ⚠ THIS LAW IS A CONJECTURE — read off the shape and the name, not entailed by either, so a CORRECT \
+implementation can fail it. A `T -> T` need not be idempotent (a one-shot suffix strip applied twice \
+removes two suffixes); a `(T, T) -> T` need not commute (subtraction, division, concatenation). \
+Confirm the claim is meant to hold before encoding it — and if it is not, that is a finding about \
+the function, not a reason to skip the property.
 
 Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)

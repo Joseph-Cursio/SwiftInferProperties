@@ -143,7 +143,7 @@ public enum SelectionSubsetTemplate {
                 + "[\(match.elementType)]` that TRANSFORMS the members has the same shape and is a "
                 + "false positive — the law holds only because the NAME asserts selection.",
             "The element type must be Equatable (or Hashable) for the membership check to compile; "
-                + "SwiftInfer M1 does not verify conformance — confirm before applying."
+                + "this tool does not verify conformance — confirm before applying."
         ]
     }
 }

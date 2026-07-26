@@ -128,7 +128,7 @@ public enum DiffDisjointnessTemplate {
                 + "not the values needed to reconstruct one side from the other. Disjointness is what it "
                 + "owes by virtue of being a diff; the round-trip `apply(diff(a,b), a) == b` would need an "
                 + "`apply` that does not exist (and richer diff values).",
-            "The element type must be Hashable for `Set` / `isDisjoint`; SwiftInfer M1 does not verify "
+            "The element type must be Hashable for `Set` / `isDisjoint`; this tool does not verify "
                 + "conformance — confirm before applying."
         ]
     }

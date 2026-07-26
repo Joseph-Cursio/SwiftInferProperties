@@ -136,7 +136,7 @@ public enum FilterSubsetTemplate {
                 + "law holds only because the NAME asserts selection. Confirm the function selects "
                 + "rather than transforms.",
             "The element type must be Equatable (or Hashable) for the membership check to compile. "
-                + "SwiftInfer M1 does not verify conformance — confirm before applying.",
+                + "This tool does not verify conformance — confirm before applying.",
             "Bias the generator so elements COLLIDE (a small alphabet, repeated values): a filter that "
                 + "mishandles equal-but-distinct elements fails only where the input repeats."
         ]

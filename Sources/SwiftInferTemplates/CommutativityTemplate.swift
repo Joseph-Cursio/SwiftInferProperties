@@ -218,7 +218,7 @@ public enum CommutativityTemplate {
     static func makeCaveats(for summary: FunctionSummary) -> [String] {
         var caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+                + "This tool does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
         if let fpCaveat = floatingPointAdvisory(for: summary) {
@@ -347,7 +347,7 @@ extension CommutativityTemplate {
         }
         var caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying.",
+                + "This tool does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
         if let fpCaveat = floatingPointAdvisory(for: summary) {

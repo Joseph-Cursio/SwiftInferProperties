@@ -165,7 +165,7 @@ extension SwiftInferCommand.Discover {
             liftedArtifacts: liftedArtifacts
         )
         return PipelineResult(
-            suggestions: cut.visible,
+            suggestions: withResolvedConformanceCaveats(cut.visible, typeDecls: artifacts.typeDecls),
             packageRoot: setup.packageRoot,
             tierHiddenRefutableLaws: cut.hiddenRefutable,
             inverseElementPairs: artifacts.inverseElementPairs,
@@ -176,6 +176,27 @@ extension SwiftInferCommand.Discover {
             summaries: artifacts.summaries,
             restrictedFunctions: artifacts.restrictedFunctions,
             docstringAdvice: setup.docstringAdvice
+        )
+    }
+
+    /// Drop the "T must conform to Equatable" caveat wherever the corpus PROVES the carrier
+    /// conforms. Fifteen templates emit it, and it is right for a type the scan never saw declare a
+    /// conformance — but noise when the suggestion has already resolved the carrier to `String` in
+    /// its own signal line, or to a project type whose declaration says `: Hashable`.
+    ///
+    /// Applied here rather than inside the templates because `EquatableResolver` needs the corpus,
+    /// which a static `Constraint` does not have — and here rather than in
+    /// `LiftedSuggestionPipeline`, which is the LIFTED path only and early-returns on a corpus with
+    /// no test-lifted artifacts. That mistake cost a debugging round: the filter was wired
+    /// somewhere every ordinary suggestion bypasses.
+    private static func withResolvedConformanceCaveats(
+        _ suggestions: [Suggestion],
+        typeDecls: [TypeDecl]
+    ) -> [Suggestion] {
+        ConformanceCaveatFilter.apply(
+            to: suggestions,
+            resolver: EquatableResolver(typeDecls: typeDecls),
+            carrierTypeByIdentity: [:]
         )
     }
 

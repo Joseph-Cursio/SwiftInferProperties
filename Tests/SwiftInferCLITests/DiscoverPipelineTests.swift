@@ -2,7 +2,7 @@ import Foundation
 @testable import SwiftInferCLI
 import Testing
 
-@Suite("Discover pipeline — basic discovery + skip markers")
+@Suite("Discover pipeline — basic discovery")
 struct DiscoverPipelineTests {
 
     @Test("Empty target directory renders the zero-suggestions sentinel")
@@ -125,7 +125,14 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("✓ Curated idempotence verb match: 'normalize' (+40)"))
         #expect(recording.text.contains("✓ Self-composition detected in body"))
         #expect(recording.text.contains("✓ Value-semantic carrier (Sanitizer)"))
-        #expect(recording.text.contains("⚠ T must conform to Equatable"))
+        // The carrier resolved to `String` two lines up, in this very block. Warning that it
+        // "must conform to Equatable" after saying `T = String` is the tool contradicting its own
+        // output, so `ConformanceCaveatFilter` drops it — and this is the end-to-end proof, on a
+        // real pipeline run rather than a hand-built Suggestion.
+        #expect(recording.text.contains("⚠ T must conform to Equatable") == false)
+        // Suppressing it must not leave the block reassuring. A conjectured law always keeps a
+        // caveat, so what the reader loses is the vacuous line, not the warning.
+        #expect(recording.text.contains("⚠ THIS LAW IS A CONJECTURE"))
         // The `String` carrier is not a corpus type but is trivially generatable —
         // the composite fallback derives it rather than reporting "not derived".
         #expect(recording.text.contains("Generator: .derivedComposite, confidence: .high"))
@@ -201,74 +208,6 @@ struct DiscoverPipelineTests {
         #expect(recording.text.contains("decode(_:)"))
         #expect(recording.text.contains("✓ Curated inverse name pair: encode/decode (+40)"))
         #expect(recording.text.contains("⚠ Throws on either side"))
-    }
-
-    @Test("Skip marker in source suppresses the matching suggestion")
-    func skipMarkerSuppressesSuggestion() throws {
-        // Identity for: idempotence|Sanitizer.normalize(_:)|(String)->String
-        let directory = try writeDPFixture(name: "SkipMarker", contents: """
-        // swiftinfer: skip 0xA1C9DEC1AEA2791C
-        struct Sanitizer {
-            func normalize(_ value: String) -> String {
-                return normalize(normalize(value))
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            output: recording
-        )
-        #expect(recording.text == "0 suggestions.")
-    }
-
-    @Test("Skip marker for an unrelated hash leaves the suggestion in place")
-    func skipMarkerUnrelatedHashIgnored() throws {
-        let directory = try writeDPFixture(name: "SkipUnrelated", contents: """
-        // swiftinfer: skip 0xDEADBEEF12345678
-        struct Sanitizer {
-            func normalize(_ value: String) -> String {
-                return normalize(normalize(value))
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            output: recording
-        )
-        #expect(recording.text.contains("Template: idempotence"))
-        // 30 type + 40 curated + 20 self-comp + 5 value-semantic = 95.
-        #expect(recording.text.contains("Score:    95 (Strong)"))
-    }
-
-    @Test("Round-trip skip marker suppresses the pair regardless of orientation")
-    func skipMarkerRoundTrip() throws {
-        // Identity for: round-trip|Codec.decode(_:)|(Data)->MyType|Codec.encode(_:)|(MyType)->Data
-        let directory = try writeDPFixture(name: "SkipRoundTrip", contents: """
-        // swiftinfer: skip 0x4C3618BEBBE59391
-        struct MyType {}
-        struct Codec {
-            func encode(_ value: MyType) -> Data {
-                return Data()
-            }
-            func decode(_ data: Data) -> MyType {
-                return MyType()
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            output: recording
-        )
-        #expect(!recording.text.contains("Template: round-trip"))
     }
 
     @Test("Non-deterministic body in either round-trip half suppresses the pair")

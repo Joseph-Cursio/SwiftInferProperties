@@ -40,6 +40,11 @@ Why suggested:
 
 Why this might be wrong:
   ⚠ T must conform to Equatable for the emitted property to compile.
+  ⚠ THIS LAW IS A CONJECTURE — read off the shape and the name, not entailed by either, so a CORRECT \
+implementation can fail it. A `T -> T` need not be idempotent (a one-shot suffix strip applied twice \
+removes two suffixes); a `(T, T) -> T` need not commute (subtraction, division, concatenation). \
+Confirm the claim is meant to hold before encoding it — and if it is not, that is a finding about \
+the function, not a reason to skip the property.
 
 Generator: not derived (no strategy matched this type)
 Sampling:  not run; lifted test seed: \(seedHex)
@@ -49,10 +54,16 @@ Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
         #expect(SuggestionRenderer.render(suggestion) == expected)
     }
 
+    /// The template here must be **role-entailed**. `idempotence` no longer reaches this branch and
+    /// cannot be made to: the renderer appends the conjecture caveat to every refutable law a
+    /// correct implementation could fail, so a conjectured law never renders an empty caveat list.
+    /// That is the point of the caveat — "✓ no known caveats" reads as reassurance, and offering it
+    /// for a guessed law would be the wrong thing to say. `predicate` is entailed by its role, owes
+    /// no conjecture warning, and so still exercises the empty branch this test exists for.
     @Test("Empty caveats render the explicit no-known-caveats line")
     func emptyCaveatsRenderExplicitLine() {
         let suggestion = Suggestion(
-            templateName: "idempotence",
+            templateName: "predicate",
             evidence: [],
             score: Score(signals: [
                 Signal(kind: .typeSymmetrySignature, weight: 30, detail: "T -> T"),

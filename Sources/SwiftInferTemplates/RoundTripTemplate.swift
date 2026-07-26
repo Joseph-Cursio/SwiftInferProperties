@@ -167,7 +167,7 @@ public enum RoundTripTemplate {
                 + "of the inner function; a generator that produces values outside that "
                 + "set will surface false-positive failures (Appendix B.4).",
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying."
+                + "This tool does not verify protocol conformance — confirm before applying."
         ]
         if pair.forward.isInitializer || pair.reverse.isInitializer {
             caveats.append(
@@ -379,7 +379,7 @@ extension RoundTripTemplate {
                 + "of the inner function; a generator that produces values outside that "
                 + "set will surface false-positive failures (Appendix B.4).",
             "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer M1 does not verify protocol conformance — confirm before applying."
+                + "This tool does not verify protocol conformance — confirm before applying."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
