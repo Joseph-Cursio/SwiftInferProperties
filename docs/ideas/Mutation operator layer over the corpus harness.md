@@ -166,6 +166,42 @@ A mechanical survivor that is a real gap **graduates**: it gets a hand-written
 killer and becomes a fast `--filter` guard forever after. Mechanical breadth
 once; curated cheapness thereafter — the two halves in their lanes.
 
+## Corpus lifecycle — grows, governed, prunes
+
+The corpus is **living tooling, not a benchmark** — and it sits opposite the road
+test's *answer key* on the one axis that matters. The answer key is **frozen**: it
+must never be edited in response to tool output (the "grades its own homework"
+trap — `docs/roadtest-self-dogfood.md`). The corpus is the reverse: it is *meant*
+to grow with new information, and that asymmetry is the whole point. Conflating the
+two is the most likely misreading of this design.
+
+**How it grows** (in order of designedness):
+
+1. **Promotion** — the graduate path above is the primary engine: a confirmed
+   mechanical survivor becomes a standing `--filter` guard.
+2. **Field defects** — a real bug found in the wild becomes a mutant encoding its
+   shape, so the shape can never silently return (this is how the three *surviving*
+   mutants in the appendix arose — each closed by fixing the *test*).
+3. **New API surface** — a new assertion or annotation brings mutants for the ways
+   it can go wrong.
+4. **Toolchain changes** drive *re-runs*, not growth directly — but a bump that
+   exposes a new blind spot yields a new mutant.
+
+**Governed by shape-diversity, not count.** The manifest's `shape` field
+(`retry-value`, `retry-effect`, `key-derivation`) and the README's "diverse across
+shapes" are the governor: a mutant earns its place by representing a *distinct*
+failure mode, because every entry costs a per-mutant build on each run. Growth is
+a ratchet of learned bug shapes, not accretion.
+
+**It prunes, too.** "Living" cuts both ways: when the code moves and a mutant's
+target site disappears, it goes stale — the runner surfaces that as an
+`apply-failed` FAIL — and should be updated or removed, not left to rot.
+
+The mental model: the corpus is **institutional memory of "defects we've seen and
+the exact tests that catch them,"** so no suite can regress into blindness on a
+shape it once caught. That is why it belongs *with* the code and grows with it,
+while the answer key stays sealed in the past on purpose.
+
 ## Determinism and cost (the honest notes)
 
 - **Determinism.** The scoped suite includes randomized property tests, so run the
