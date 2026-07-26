@@ -79,9 +79,13 @@ extension SwiftInferCommand.Discover {
                     + "until a human draws the boundary:"
             )
             for seed in kernels {
+                // The role is the whole product of carrying it. A kernel can never be analysed —
+                // there is no name to call — so "a comparator, which owes a strict weak ordering"
+                // is the only thing separating this line from a bare location.
+                let law = seed.role?.lawSentence.map { " It is \($0)." } ?? ""
                 diagnostics.writeDiagnostic(
                     "  \(seed.file):\(seed.line): inside `\(seed.symbol)` — extract it into a "
-                        + "named value type, then re-run the linter to seed it properly."
+                        + "named value type, then re-run the linter to seed it properly.\(law)"
                 )
             }
         }

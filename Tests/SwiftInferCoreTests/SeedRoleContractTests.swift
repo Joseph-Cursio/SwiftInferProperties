@@ -1,0 +1,122 @@
+import Foundation
+@testable import SwiftInferCore
+import Testing
+
+/// The cross-repository contract for `role` in the seed manifest.
+///
+/// SwiftProjectLint produces the field and this tool consumes it, from two repositories that are
+/// versioned independently and pin a shared dependency at *different* revisions. There is no
+/// compiler between them, so a mismatch is silent by default — and the failure mode is not a crash
+/// but a wrong law proposed against correct code, which is the one outcome `Refutability` exists to
+/// prevent.
+///
+/// These tests are the substitute for that compiler. They pin three things:
+///
+/// 1. **Every role the producer can emit decodes here** — one case per
+///    `PureClosureCandidateVisitor.Kind` plus the two kernel shapes.
+/// 2. **The entailment claim agrees with `Refutability`** — the producer's
+///    `PBTSeedRole.impliesEntailedLaw` asserts that `comparator`, `predicate` and `partition` are
+///    laws a correct implementation cannot fail. If this tool ever demotes one, that assertion
+///    becomes a lie. It should break here.
+/// 3. **An unknown role degrades safely** — never entailed, and never silently swallowed.
+@Suite("Seed manifest — the role contract with the linter")
+struct SeedRoleContractTests {
+
+    /// Exactly what SwiftProjectLint's `PBTSeedRole` can emit today. Adding a case there without
+    /// adding it here is the drift this suite exists to catch: the new role would arrive as
+    /// `.unrecognised` and be silently dropped from every listing.
+    private static let producerVocabulary: [String] = [
+        // PureClosureCandidateVisitor.Kind — one per case.
+        "comparator", "predicate", "transform", "reducer",
+        // ExtractablePureKernelVisitor — the two kernel shapes.
+        "partition", "normalizer"
+    ]
+
+    private func decodeRole(_ raw: String) throws -> SeedRole {
+        let json = Data("""
+        {"file":"A.swift","line":1,"symbol":"f","kind":"extractable-kernel","role":"\(raw)"}
+        """.utf8)
+        return try #require(JSONDecoder().decode(SeedManifest.Seed.self, from: json).role)
+    }
+
+    // MARK: - 1. Every producer role decodes
+
+    @Test("every role the linter can emit round-trips", arguments: producerVocabulary)
+    func producerRolesDecode(raw: String) throws {
+        let role = try decodeRole(raw)
+        #expect(role.rawValue == raw)
+        if case .unrecognised = role {
+            Issue.record("`\(raw)` is in the linter's vocabulary but this build does not know it")
+        }
+    }
+
+    @Test("every known role can state its law", arguments: producerVocabulary)
+    func producerRolesHaveALawSentence(raw: String) throws {
+        // The listing sentence is the entire payoff of carrying the role on a kernel seed, which
+        // can never be analysed. A role that decodes but says nothing is the field arriving and
+        // still being useless.
+        #expect(try decodeRole(raw).lawSentence != nil)
+    }
+
+    // MARK: - 2. The entailment claim matches Refutability
+
+    /// The load-bearing test. `entailedTemplateName` is this tool's half of a claim the producer
+    /// also makes; the two are only consistent if every template named here is one `Refutability`
+    /// actually treats as role-entailed.
+    @Test("a role's entailed template is one Refutability agrees is entailed", arguments: producerVocabulary)
+    func entailedTemplatesAreReallyEntailed(raw: String) throws {
+        guard let template = try decodeRole(raw).entailedTemplateName else { return }
+        // If this fails, SwiftProjectLint's `PBTSeedRole.impliesEntailedLaw` is now lying: it
+        // advertises `\(raw)` as a law correct code cannot fail, and this tool no longer agrees.
+        #expect(Refutability.roleEntailedTemplates.contains(template))
+    }
+
+    @Test("exactly the three entailed roles claim a template")
+    func onlyEntailedRolesClaimATemplate() throws {
+        var claiming: Set<String> = []
+        for raw in Self.producerVocabulary
+        where try decodeRole(raw).entailedTemplateName != nil {
+            claiming.insert(raw)
+        }
+        // Mirrors PBTSeedRole.impliesEntailedLaw. A conjectured law must NOT be advertised as
+        // entailed: proposing one that correct code fails costs more trust than proposing nothing.
+        #expect(claiming == ["comparator", "predicate", "partition"])
+    }
+
+    // MARK: - 3. Unknown roles degrade safely
+
+    @Test("a role from a newer linter is carried, not dropped")
+    func unknownRoleIsCarried() throws {
+        let role = try decodeRole("bifunctor")
+        #expect(role == .unrecognised("bifunctor"))
+        #expect(role.rawValue == "bifunctor", "the raw spelling must survive so it can be reported")
+    }
+
+    @Test("an unknown role is never treated as entailed")
+    func unknownRoleIsNeverEntailed() throws {
+        // The asymmetry from `SeedKind.unrecognised`, applied to roles. Guessing "entailed" for a
+        // role this build cannot interpret would propose a law nobody verified.
+        #expect(try decodeRole("bifunctor").entailedTemplateName == nil)
+        #expect(try decodeRole("bifunctor").lawSentence == nil)
+    }
+
+    // MARK: - Backward compatibility
+
+    @Test("a manifest with no role field still decodes")
+    func absentRoleIsNil() throws {
+        let json = Data("""
+        {"file":"A.swift","line":1,"symbol":"f","kind":"pure-function"}
+        """.utf8)
+        #expect(try JSONDecoder().decode(SeedManifest.Seed.self, from: json).role == nil)
+    }
+
+    @Test("a role on a v1 manifest with no kind does not disturb the kind default")
+    func roleDoesNotAffectKindDefaulting() throws {
+        let json = Data("""
+        {"file":"A.swift","line":1,"symbol":"f","role":"comparator"}
+        """.utf8)
+        let seed = try JSONDecoder().decode(SeedManifest.Seed.self, from: json)
+        #expect(seed.kind == .pureFunction)
+        #expect(seed.role == .comparator)
+    }
+}

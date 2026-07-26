@@ -54,18 +54,24 @@ public struct SeedManifest: Codable, Sendable, Equatable {
         public let rule: String?
         public let kind: SeedKind
 
+        /// What the logic **is**, when the linter classified it. `nil` from any producer that does
+        /// not emit roles — which is every producer before this field existed.
+        public let role: SeedRole?
+
         public init(
             file: String,
             line: Int,
             symbol: String,
             rule: String? = nil,
-            kind: SeedKind = .pureFunction
+            kind: SeedKind = .pureFunction,
+            role: SeedRole? = nil
         ) {
             self.file = file
             self.line = line
             self.symbol = symbol
             self.rule = rule
             self.kind = kind
+            self.role = role
         }
 
         /// A v1 manifest has no `kind`. Every seed in one was a function to analyse, so that is what
@@ -77,6 +83,9 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             self.symbol = try container.decode(String.self, forKey: .symbol)
             self.rule = try container.decodeIfPresent(String.self, forKey: .rule)
             self.kind = try container.decodeIfPresent(SeedKind.self, forKey: .kind) ?? .pureFunction
+            // Unlike `kind`, absence needs no semantic default: a seed with no role is a seed whose
+            // producer classifies nothing, and "unknown" is the honest reading.
+            self.role = try container.decodeIfPresent(SeedRole.self, forKey: .role)
         }
     }
 }
