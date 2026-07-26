@@ -155,10 +155,11 @@ and which suites stayed green.
 ### The payoff — discovery feeds the regression gate
 
 ```
-discover → survivor → adjudicate ─┬─ real gap  → write a killer test, move the
-                                  │              entry into the CURATED manifest
-                                  │              as expected: killed
-                                  ├─ equivalent → fingerprint into ignore.json
+discover → survivor → adjudicate ─┬─ real gap    → write a killer test, move the
+                                  │                entry into the CURATED manifest
+                                  │                as expected: killed
+                                  ├─ gen-unreachable → fix the generator, re-run
+                                  ├─ equivalent   → fingerprint into ignore.json
                                   └─ out-of-scope → drop
 ```
 
@@ -166,12 +167,41 @@ A mechanical survivor that is a real gap **graduates**: it gets a hand-written
 killer and becomes a fast `--filter` guard forever after. Mechanical breadth
 once; curated cheapness thereafter — the two halves in their lanes.
 
+**The `gen-unreachable` branch is not optional, and this repo already proves it.**
+A survivor can be killable *in principle* — a killer may even already exist — yet
+survive because the suite's **generator cannot reach the witness**. The
+self-dogfood road test (`docs/roadtest-self-dogfood.md`) documents both halves of
+this:
+
+- §9.1, "a confident green on a law that is false": `Decisions.merge` commutativity
+  verified `measured-bothPass` over 100 trials though it is false, because the
+  derived generator drew `identityHash` from ~62⁸ and `timestamp` from ~2⁶⁴, so
+  the tie branch carrying the failure was unreachable — "refutable in principle
+  and unrefutable in practice." Any law whose failure needs two generated values
+  to **collide** (tie-breaks, cache keys, dedup, injectivity) has this shape.
+- §7, a mutation near-miss from *sampling*: `40..<75` → `41..<75` was caught by
+  only one of three tests, because a uniform draw hit `40` ~22% of the time — it
+  "would have reported that mutant as survived four runs in five" until the domain
+  was walked exhaustively.
+
+The hazard is **misrouting**. Filing a `gen-unreachable` survivor as *equivalent*
+permanently ignores a real, reachable-in-principle bug the generator merely masks
+— the worst outcome. Filing it as a *real gap* and writing another killer is
+pointless: the killer is not the missing piece, the generator's **distribution**
+is. The remedy is its own — collision-bias the generator, or walk a small domain
+exhaustively (§7) — then re-run. This is the same domain-relativity the seeded
+sweep warns about (§ *Determinism and cost*), surfaced at triage time.
+
 ## Corpus lifecycle — grows, governed, prunes
 
 The corpus is **living tooling, not a benchmark** — and it sits opposite the road
-test's *answer key* on the one axis that matters. The answer key is **frozen**: it
-must never be edited in response to tool output (the "grades its own homework"
-trap — `docs/roadtest-self-dogfood.md`). The corpus is the reverse: it is *meant*
+test's frozen yardstick on the one axis that matters. That yardstick is **frozen**:
+it must never be edited in response to tool output (the "grades its own homework"
+trap). Its form varies — a pre-written *answer key* (MacCloud) or a *prediction
+logged before the first run* (`docs/roadtest-self-dogfood.md` §1, hard-frozen at
+"nothing above this line is edited in response to" the results below) — but the
+invariant is the same: **the yardstick must predate and ignore the tool output.**
+The corpus is the reverse: it is *meant*
 to grow with new information, and that asymmetry is the whole point. Conflating the
 two is the most likely misreading of this design.
 
