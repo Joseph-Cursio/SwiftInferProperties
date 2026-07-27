@@ -95,6 +95,11 @@ struct EmittedDeterminismLawSoundnessTests {
             seed: seed,
             sample: { rng in Int.random(in: -10_000 ... 10_000, using: &rng) },
             property: { value in
+                // Identical operands are the point: the emitted law *is*
+                // `f(x) == f(x)`, and this harness checks that the emitted
+                // shape holds. Rewriting it to a single call would test
+                // nothing.
+                // swiftlint:disable:next identical_operands
                 (try? transform(value)) == (try? transform(value))
             }
         )
@@ -107,7 +112,7 @@ struct EmittedDeterminismLawSoundnessTests {
         // false-positive — the whole point of the throwing form.
         let corpus: [(name: String, transform: @Sendable (Int) throws -> Int)] = [
             ("throwsOnNegative", { value in if value < 0 { throw SampleError() }; return value &* 2 }),
-            ("throwsOnEven", { value in if value % 2 == 0 { throw SampleError() }; return value &+ 7 }),
+            ("throwsOnEven", { value in if value.isMultiple(of: 2) { throw SampleError() }; return value &+ 7 }),
             ("alwaysThrows", { _ in throw SampleError() })
         ]
         for entry in corpus {

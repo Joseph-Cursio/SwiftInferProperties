@@ -1199,3 +1199,60 @@ idempotence emitter for array carriers, not collision work.
 Guarded by 9 tests (`CollisionPassTests`) and 5 mutants, all killed: sweep removed from either
 template, drawing two values instead of one, failing to advance the RNG state, and reverting to the
 low-bit mask.
+
+## §15 Experiment — is a metamorphic law family worth building?
+
+§3 measured the out-of-catalog problem exactly: **715 seeds in `SwiftInferCLI`
+produced two default-tier picks.** The catalogue names value-semantic shapes
+(`(T) -> T`, `(T, T) -> T`, round-trip pairs) and a scanner is
+`SourceFileSyntax -> [Finding]`, which matches none of them.
+
+The family that fits parser-adjacent code is *metamorphic*: not "f(x) equals
+this value" but "f(x) and f(W(x)) are related, for a semantics-preserving
+rewrite W". The cheapest W is **trivia**, because it is supposedly not
+semantics, so no judgement about Swift is needed to know the rewrite is safe.
+
+Run as an experiment before any machinery — five subjects, hand-written, in
+`Tests/SwiftInferCoreTests/TriviaInsensitivityExperimentTests.swift`. If a
+scanner failed, the direction was proven for an afternoon's work. If all passed,
+that was learned far more cheaply than by building the template kind first.
+
+### §15.1 Result
+
+**All three structural scanners are trivia-insensitive** over 120 files / 322
+function summaries / 232 type shapes / 10 rule visitors. No defect found.
+
+That is the smaller half. The larger half is what the law cost to *state*, and
+every item below is a cost a template kind pays on every carrier:
+
+| # | Obstacle | Consequence for a template kind |
+|---|---|---|
+| 1 | **Type text is a source spelling.** `[String: Int]` and `[String:  Int]` name one type and differ as strings. | Needs whitespace normalisation per field. Without it the law "fails" on 12 files — every one a space inside a type spelling, not one a scanner defect. |
+| 2 | **Locations are coordinates into the text.** `RuleVisitorCandidate` carries `"File.swift:214"`; reformatting moves line 214. | Positional fields must be projected away per output type. A template cannot tell a coordinate from a fact about the code. |
+| 3 | **Trivia is not non-semantic in Swift.** Inside `"""…"""` the newlines are the string's *value*. | The *rewrite* needs a carve-out. Without it the inflater silently changed what two files meant — and both scanner laws passed anyway, because neither looks inside a literal. A passing law over an unsound rewrite. |
+
+Obstacle 3 was found only by the token-stream guard — an assertion that the
+rewrite changes nothing but trivia. It is the direct descendant of §13.3: the
+mechanism was watched producing a red before its green was believed.
+
+And two scanners are trivia-sensitive **on purpose** — `FunctionSummary.docComment`
+reads prose, `SkipMarkerScanner` reads `// swiftinfer: skip <hash>` as an
+instruction. A blanket "scanner output is invariant under trivia rewriting"
+entry would be flatly wrong for both.
+
+### §15.2 Verdict
+
+The honest catalogue entry is not *"scanner output is trivia-insensitive"* but
+*"trivia-insensitive **modulo a per-output-type projection**"* — and that
+projection is hand-written curation, three of them for three scanners here.
+
+**The direction is real; it is not free.** This is the same shape as §12's
+central finding one level up: there, a derived generator was tuned for coverage
+of the *type* and silently mistuned for coverage of the *law*. Here, a rewrite
+is sound for the *language* and unsound for the *literal*, and a projection is
+right for the *type shape* and wrong for the *candidate with a line number*.
+Both times the gap sits between a generic mechanism and a specific claim, and
+both times it is invisible from a green result.
+
+Not built. The experiment cost an afternoon and returns a cost estimate rather
+than a feature, which is what it was for.

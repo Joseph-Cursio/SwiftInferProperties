@@ -289,6 +289,6 @@ struct ResolvedSpellingPropertyTests {
     func degenerateInputsAreNoOps() {
         #expect(TypeShapeBuilder.resolvedSpelling("Kind", enclosing: "Outer", universe: []) == "Kind")
         #expect(TypeShapeBuilder.resolvedSpelling("Kind", enclosing: "", universe: Self.universe) == "Kind")
-        #expect(TypeShapeBuilder.resolvedSpelling("", enclosing: "Outer", universe: Self.universe) == "")
+        #expect(TypeShapeBuilder.resolvedSpelling("", enclosing: "Outer", universe: Self.universe).isEmpty)
     }
 }
