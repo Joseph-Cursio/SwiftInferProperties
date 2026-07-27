@@ -294,6 +294,8 @@ extension StrategistDispatchEmitter {
             }
         }
 
+        \(CollisionPass.binarySweep(functionCall: functionCall, carrier: recipe.carrierTypeName))
+
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
         """
@@ -333,6 +335,8 @@ extension StrategistDispatchEmitter {
                 exit(1)
             }
         }
+
+        \(CollisionPass.ternarySweep(functionCall: functionCall, carrier: recipe.carrierTypeName))
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")

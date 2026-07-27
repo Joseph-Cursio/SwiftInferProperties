@@ -717,7 +717,7 @@ improved the tool's *reach* and its *honesty about failure*. None of it has impr
 
 ## §11.2.4 Still open
 
-1. **The confident green (§9.1).** Unchanged and still the item that matters.
+1. ~~The confident green (§9.1)~~ — **fixed, see §13.**
 2. ~~The kit's `.rawRepresentable` recipe generates a non-terminating filter~~ — **fixed kit-side in
    v3.19.0, and unreachable through the index. See §11.3.**
 3. **`build` is still unbounded.** Only the run is capped; a wedged `swift build` would still hang a
@@ -947,3 +947,92 @@ the non-law, returned a confident green — because the generator it derives is 
 and nothing checks that it covers the *law*. Both halves of that sentence are the finding. Neither
 was reachable by reading.
 
+
+---
+
+# §13 Fixing the confident green
+
+§9.1's finding — `verify` reporting `measured-bothPass` on a law that is false — was the one item
+every subsequent section left untouched, and the only one that was about *correctness* rather than
+reach. It is now closed.
+
+## §13.1 The result
+
+| Template | Before | After |
+|---|---|---|
+| `commutativity` ×4 | `measured-bothPass` (**wrong**) | **`measured-defaultFails`** |
+| `associativity` ×4 | `measured-bothPass` | `measured-bothPass` (**control**) |
+
+The second row is the load-bearing one. Associativity on these folds is genuinely *true*, so a fix
+that refuted it would have traded a false green for a false red — worse, under a project whose stated
+posture is high precision (PRD §3.5). The counterexample the sweep reports is the real one: two
+`Decisions` logs holding records that share `identityHash` and `timestamp` and differ elsewhere,
+exactly the tie `MergeAlgebraPropertyTests` pins by hand.
+
+`make batch4` green 7/7 — the frozen corpus sees no new failures.
+
+## §13.2 The mechanism, and why it is at the RNG
+
+The obvious fix — rewrite the recipe so key-like leaves draw from a small pool — needs structural
+surgery on an expression this layer only holds as a **string**, plus a heuristic for which leaves are
+"key-like". Both are guesswork, and the second is the same kind of name-based guessing this project
+elsewhere refuses.
+
+Every leaf generator instead draws from the same `RandomNumberGenerator`. **Narrowing the RNG narrows
+every field at once** — string lengths, characters, dates, enum indices, array counts — with no recipe
+parsing, no heuristics, and no knowledge of the carrier's shape. It works on a type nobody has seen.
+
+It cannot produce a false positive, which is what makes it safe to run by default: the narrowed values
+still come out of the *same generators*, so every operand is a legitimate value of the carrier. A
+counterexample found there is a genuine refutation.
+
+It is **not** a completeness claim. It raises the probability of reaching a collision-dependent branch
+from ~zero to high. A law that survives both sweeps is still only "no counterexample in the generated
+domain" — the honest reading §9.4 asked for, now with a much larger domain.
+
+## §13.3 It was wrong twice, and both wrong versions were green
+
+**Masking is not a small domain.** The first version narrowed with `next() & 0x3`. That collapses
+every *derived* value toward zero, so `.array(of: 0...8)` produced a count of `0` on every draw and
+both operands came out **empty** — and commutativity on two empty logs is trivially true. The sweep
+ran, reported a clean pass, and reached nothing.
+
+It was caught by probing the generated stub — printing the record counts it was actually producing —
+not by reading it. The corrected design draws from a pool of well-spread constants: a small *number*
+of possibilities, but varied values, so lengths and dates stay realistic while collisions stay common.
+The pool size rotates across trials (`2, 3, 4, 6, 8`) because a single size is either so small that
+both operands are identical or so large that collisions vanish.
+
+**Then a stale binary made the fix look like a failure.** An earlier `cd` into a verifier workdir
+persisted across commands, so a `swift build -c release` ran in the wrong package and the survey
+executed the previous emitter. The redesign appeared not to work, and the next step would have been to
+abandon it.
+
+That is the fourth time in this road test that a green result meant nothing until the mechanism was
+watched producing a red one — after the lossy-encoder control (§11.3.4), the backwards initializer
+delegation, and the broken staging pattern (§11.3.5). It is the same claim the document makes about
+`measured-bothPass`, and it keeps applying to the work of fixing it.
+
+## §13.4 Guards
+
+`CollisionPassTests` (7) pins the properties that make the sweep non-degenerate rather than merely
+present: the RNG draws from the spread pool and never masks, the pool size rotates, the state advances
+between trials, the sweep precedes the `PASS` print, and a collision failure reports through the
+ordinary `VERIFY_DEFAULT_*` markers because it is the ordinary verdict.
+
+Four mutants, all killed — including one that initially **survived** because the guard checked for the
+literal string `& mask` rather than the operation, so a mutant masking by a different variable name
+slipped straight through. The assertion had to be about what the code *does*, not how it is spelled.
+
+## §13.5 Still open
+
+1. **§2's seed-manifest numbers are stale.** `SwiftProjectLint` is 26 commits ahead of the pinned
+   `6176101`, including `Stop seeding functions no test can call` and `Emit what the code IS in the
+   seed manifest` — both change the manifest those figures came from. Re-running would change §2 and
+   possibly §3's prediction scoring; per the freeze rule the original numbers stay as recorded and a
+   re-run belongs in a new section.
+2. **The sweep covers binary and ternary laws only.** Idempotence, round-trip and the interaction
+   families draw one value per trial, so collisions between operands do not arise — but a
+   collision-dependent failure *within* a single generated value (two records inside one log) is still
+   unreachable, and that is a real gap.
+3. **`swift build` in the verifier is still unbounded** (§11.2.4 item 3).

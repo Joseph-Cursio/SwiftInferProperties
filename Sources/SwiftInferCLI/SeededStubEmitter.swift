@@ -48,14 +48,19 @@ extension SeededStubEmitter {
         return """
         \(importsBlock)
         \(preambleBlock)
-        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: (
+        let seedTuple: (UInt64, UInt64, UInt64, UInt64) = (
             0x\(hex(seed.stateA)),
             0x\(hex(seed.stateB)),
             0x\(hex(seed.stateC)),
             0x\(hex(seed.stateD))
-        ))
+        )
+        var rng: any SeededRandomNumberGenerator = Xoshiro(seed: seedTuple)
 
         let trials = \(trials)
+
+        \(CollisionPass.rngDeclaration)
+
+        \(CollisionPass.baseDeclaration)
         """
     }
 
