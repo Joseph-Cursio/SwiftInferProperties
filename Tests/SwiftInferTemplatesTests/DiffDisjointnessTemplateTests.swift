@@ -36,7 +36,8 @@ struct DiffDisjointnessTemplateTests {
     }
 
     private var configDiffShapes: [String: TypeShape] {
-        ["ConfigDiff": TypeShape(
+        [
+            "ConfigDiff": TypeShape(
             name: "ConfigDiff",
             kind: .struct,
             inheritedTypes: [],
@@ -47,7 +48,8 @@ struct DiffDisjointnessTemplateTests {
                 StoredMember(name: "modifiedRules", typeName: "[String]")
             ],
             hasUserInit: false
-        )]
+            )
+        ]
     }
 
     // MARK: - Fires
@@ -83,10 +85,12 @@ struct DiffDisjointnessTemplateTests {
 
     @Test("a return type with no complementary pair does not fire")
     func noComplementaryPairRejected() {
-        let shapes = ["Plain": TypeShape(
+        let shapes = [
+            "Plain": TypeShape(
             name: "Plain", kind: .struct, inheritedTypes: [], hasUserGen: false,
             storedMembers: [StoredMember(name: "items", typeName: "[String]")], hasUserInit: false
-        )]
+            )
+        ]
         let function = summary("diffThings", params: [param(nil, "X")], returns: "Plain")
         #expect(DiffDisjointnessTemplate.suggest(for: function, shapesByName: shapes) == nil)
     }

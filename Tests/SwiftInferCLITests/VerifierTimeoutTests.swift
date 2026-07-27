@@ -30,7 +30,7 @@ struct VerifierTimeoutTests {
     /// A run that exceeds its deadline is killed and reported — not waited on.
     /// Bounded at ~1s so the test is fast; the production ceiling is 300s.
     @Test("a run past its deadline is killed and surfaces as timed-out")
-    func hungRunTimesOut() throws {
+    func hungRunTimesOut() {
         let started = Date()
         var thrown: (any Error)?
         do {

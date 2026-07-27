@@ -190,5 +190,4 @@ extension SwiftInferCommand.Index {
     private static func carrierType(for suggestion: Suggestion) -> String? {
         suggestion.carrier
     }
-
 }

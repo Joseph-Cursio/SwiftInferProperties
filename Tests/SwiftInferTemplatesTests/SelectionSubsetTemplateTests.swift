@@ -39,14 +39,16 @@ struct SelectionSubsetTemplateTests {
 
     /// A `ConfigTree`-like container with a `[DiscoveredConfig]` member.
     private var configTreeShapes: [String: TypeShape] {
-        ["ConfigTree": TypeShape(
+        [
+            "ConfigTree": TypeShape(
             name: "ConfigTree",
             kind: .struct,
             inheritedTypes: [],
             hasUserGen: false,
             storedMembers: [StoredMember(name: "configs", typeName: "[DiscoveredConfig]")],
             hasUserInit: false
-        )]
+            )
+        ]
     }
 
     // MARK: - Fires

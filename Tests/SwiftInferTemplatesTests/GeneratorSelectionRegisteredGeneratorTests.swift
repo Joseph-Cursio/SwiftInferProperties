@@ -79,10 +79,12 @@ struct GeneratorSelectionRegisteredTests {
     /// A non-empty corpus so the `shapesByName.isEmpty` early return doesn't
     /// fire, while the carrier under test is NOT a corpus type.
     private func dummyCorpus() -> [String: TypeShape] {
-        ["Widget": TypeShape(
+        [
+            "Widget": TypeShape(
             name: "Widget", kind: .struct, inheritedTypes: [],
             hasUserGen: false, storedMembers: [], hasUserInit: false
-        )]
+            )
+        ]
     }
 
     private func makePlaceholderSuggestion(typeText: String) -> Suggestion {

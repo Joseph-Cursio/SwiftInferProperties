@@ -44,14 +44,14 @@ struct FilterSubsetTemplateTests {
     @Test("a multi-arg filter (filterViolations) owes subset, at Possible")
     func multiArgFilterFires() throws {
         // filterViolations([Violation], [URL], URL) -> [Violation]
-        let fn = filterFn(
+        let summary = filterFn(
             "filterViolations",
             params: [param(nil, "[Violation]"), param("batch", "[URL]"), param("workspacePath", "URL")],
             returns: "[Violation]"
         )
-        #expect(FilterSubsetTemplate.isFilter(fn))
+        #expect(FilterSubsetTemplate.isFilter(summary))
 
-        let suggestion = try #require(FilterSubsetTemplate.suggest(for: fn))
+        let suggestion = try #require(FilterSubsetTemplate.suggest(for: summary))
         #expect(suggestion.templateName == "filter-subset")
         #expect(suggestion.score.tier == .possible)
         let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: "\n")
@@ -60,15 +60,15 @@ struct FilterSubsetTemplateTests {
 
     @Test("a single-arg selector (select) fires")
     func singleArgSelectFires() {
-        let fn = filterFn("selectRules", params: [param(nil, "[Rule]")], returns: "[Rule]")
-        #expect(FilterSubsetTemplate.isFilter(fn))
+        let summary = filterFn("selectRules", params: [param(nil, "[Rule]")], returns: "[Rule]")
+        #expect(FilterSubsetTemplate.isFilter(summary))
     }
 
     @Test("the Array<T> element form fires, not just the [T] bracket form")
     func arrayGenericFormFires() {
         // `arrayElement` handles `Array<Rule>` as well as `[Rule]` — this pins that branch.
-        let fn = filterFn("keepRules", params: [param(nil, "Array<Rule>")], returns: "Array<Rule>")
-        #expect(FilterSubsetTemplate.isFilter(fn))
+        let summary = filterFn("keepRules", params: [param(nil, "Array<Rule>")], returns: "Array<Rule>")
+        #expect(FilterSubsetTemplate.isFilter(summary))
     }
 
     // MARK: - Does not fire
@@ -76,33 +76,33 @@ struct FilterSubsetTemplateTests {
     @Test("a map-shaped [Int] -> [Int] with a non-filter name does NOT fire")
     func mapShapeRejected() {
         // `double` returns [Int] and takes [Int], but is not a filter — subset is false for it.
-        let fn = filterFn("double", params: [param(nil, "[Int]")], returns: "[Int]")
-        #expect(FilterSubsetTemplate.isFilter(fn) == false)
-        #expect(FilterSubsetTemplate.suggest(for: fn) == nil)
+        let summary = filterFn("double", params: [param(nil, "[Int]")], returns: "[Int]")
+        #expect(FilterSubsetTemplate.isFilter(summary) == false)
+        #expect(FilterSubsetTemplate.suggest(for: summary) == nil)
     }
 
     @Test("a filter name whose return element matches no parameter does NOT fire")
     func returnElementMismatchRejected() {
         // filterNames([Rule]) -> [String]: no [String] parameter to be a subset of.
-        let fn = filterFn("filterNames", params: [param(nil, "[Rule]")], returns: "[String]")
-        #expect(FilterSubsetTemplate.isFilter(fn) == false)
+        let summary = filterFn("filterNames", params: [param(nil, "[Rule]")], returns: "[String]")
+        #expect(FilterSubsetTemplate.isFilter(summary) == false)
     }
 
     @Test("a non-collection return does NOT fire")
     func scalarReturnRejected() {
-        let fn = filterFn("filterCount", params: [param(nil, "[Rule]")], returns: "Int")
-        #expect(FilterSubsetTemplate.isFilter(fn) == false)
+        let summary = filterFn("filterCount", params: [param(nil, "[Rule]")], returns: "Int")
+        #expect(FilterSubsetTemplate.isFilter(summary) == false)
     }
 
     @Test("a mutating filter does NOT fire")
     func mutatingRejected() {
-        let fn = filterFn("filterInPlace", params: [param(nil, "[Rule]")], returns: "[Rule]", mutating: true)
-        #expect(FilterSubsetTemplate.isFilter(fn) == false)
+        let summary = filterFn("filterInPlace", params: [param(nil, "[Rule]")], returns: "[Rule]", mutating: true)
+        #expect(FilterSubsetTemplate.isFilter(summary) == false)
     }
 
     @Test("an async filter does NOT fire")
     func asyncRejected() {
-        let fn = filterFn("filterRemotely", params: [param(nil, "[Rule]")], returns: "[Rule]", async: true)
-        #expect(FilterSubsetTemplate.isFilter(fn) == false)
+        let summary = filterFn("filterRemotely", params: [param(nil, "[Rule]")], returns: "[Rule]", async: true)
+        #expect(FilterSubsetTemplate.isFilter(summary) == false)
     }
 }

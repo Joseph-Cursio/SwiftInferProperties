@@ -1,5 +1,5 @@
-import SwiftInferCore
 @testable import SwiftInferCLI
+import SwiftInferCore
 import Testing
 
 /// A seeded *throwing* pure function used to fall through `qualifiesForDeterminism`
@@ -13,7 +13,7 @@ import Testing
 struct ThrowingDeterminismSynthesisTests {
 
     private struct SilentDiagnostics: DiagnosticOutput {
-        func writeDiagnostic(_ text: String) { /* no-op */ }
+        func writeDiagnostic(_: String) { /* no-op */ }
     }
 
     private static let loc = SourceLocation(file: "Config.swift", line: 1, column: 1)

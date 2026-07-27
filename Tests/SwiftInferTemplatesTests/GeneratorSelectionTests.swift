@@ -137,14 +137,16 @@ struct GeneratorSelectionTests {
     /// A non-empty corpus so the `shapesByName.isEmpty` early return doesn't fire,
     /// while the carrier under test is NOT a corpus type.
     private func dummyCorpus() -> [String: TypeShape] {
-        ["Widget": TypeShape(
+        [
+            "Widget": TypeShape(
             name: "Widget", kind: .struct, inheritedTypes: [],
             hasUserGen: false, storedMembers: [], hasUserInit: false
-        )]
+            )
+        ]
     }
 
     @Test("apply derives a stdlib collection carrier ([String]) as .derivedComposite")
-    func apply_derivesStdlibCollectionCarrier() throws {
+    func apply_derivesStdlibCollectionCarrier() {
         // A `deindent([String]) -> [String]` / `mergedWith([String]?)`-style carrier:
         // a stdlib composite the corpus doesn't declare. Was skipped to
         // notYetComputed; the composite parser derives it directly.
@@ -158,7 +160,7 @@ struct GeneratorSelectionTests {
     }
 
     @Test("apply derives a bare String carrier as .derivedComposite")
-    func apply_derivesStringCarrier() throws {
+    func apply_derivesStringCarrier() {
         // `isVersion(String, String) -> Bool` — String is trivially generatable.
         let suggestion = makePlaceholderSuggestion(typeText: "String")
         let result = GeneratorSelection.apply(
@@ -170,7 +172,7 @@ struct GeneratorSelectionTests {
     }
 
     @Test("apply leaves a non-corpus custom carrier (external Node) at notYetComputed")
-    func apply_leavesExternalCustomCarrierNotDerived() throws {
+    func apply_leavesExternalCustomCarrierNotDerived() {
         // A type the corpus doesn't declare and the composite parser can't
         // recognize (an external Yams `Node`): stays not-derived — the fallback
         // never over-claims. This is the designed `.todo`/gen() boundary.
@@ -220,6 +222,11 @@ struct GeneratorSelectionTests {
         #expect(lifted.generator.source == .derivedMemberwise)
         #expect(lifted.generator.confidence == .medium)
     }
+}
+
+/// Continued in an extension: `type_body_length` counts the primary
+/// declaration only, and these are the same suite either way.
+extension GeneratorSelectionTests {
 
     @Test
     func apply_populatesRegisteredForStaticGenStruct() throws {

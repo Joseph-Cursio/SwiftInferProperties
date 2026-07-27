@@ -178,6 +178,7 @@ public enum VerifyResultRenderer {
         case "dual-style-consistency": return RenderShape(kind: .dualStyleConsistency)
         case "monotonicity": return RenderShape(kind: .monotonicity)
         case "involution": return RenderShape(kind: .involution)
+
         // round-trip and codable-round-trip share the round-trip phrasing; any
         // other verifiable template not named above also falls here.
         default: return RenderShape(kind: .roundTrip)

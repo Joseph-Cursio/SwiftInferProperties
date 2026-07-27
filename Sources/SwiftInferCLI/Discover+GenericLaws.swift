@@ -150,9 +150,11 @@ extension SwiftInferCommand.Discover {
                 "The return type must be Equatable for the law to compile."
             ]
         let throwsCaveat = summary.isThrows
-            ? ["The function throws, so the law compares `try? f(x)` on both sides: an input in the "
+            ? [
+                "The function throws, so the law compares `try? f(x)` on both sides: an input in the "
                 + "throwing domain collapses to `nil == nil` (never a false alarm), and only a value "
-                + "difference on a non-throwing input falsifies it."]
+                + "difference on a non-throwing input falsifies it."
+            ]
             : []
         let caveats = (accessRestriction.map { restriction in
             ["No test can run this law as written: \(restriction.remedy)"] + whyMightBeWrong

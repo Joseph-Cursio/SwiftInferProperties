@@ -54,12 +54,23 @@ public enum DiffDisjointnessTemplate {
               let pair = disjointPair(in: shape) else {
             return nil
         }
-        return Match(diffType: shape.name, memberA: pair.0, memberB: pair.1, elementType: pair.2)
+        return Match(
+            diffType: shape.name,
+            memberA: pair.memberA,
+            memberB: pair.memberB,
+            elementType: pair.element
+        )
     }
 
-    /// The complementary `[T]` member pair `(memberA, memberB, element)` in
-    /// `shape`, or nil.
-    static func disjointPair(in shape: TypeShape) -> (String, String, String)? {
+    /// A complementary `[T]` member pair and the element type they share.
+    struct DisjointPair: Equatable {
+        let memberA: String
+        let memberB: String
+        let element: String
+    }
+
+    /// The complementary `[T]` member pair in `shape`, or nil.
+    static func disjointPair(in shape: TypeShape) -> DisjointPair? {
         let arrayMembers: [(name: String, element: String)] = shape.storedMembers.compactMap { member in
             FilterSubsetTemplate.arrayElement(of: member.typeName).map { (member.name, $0) }
         }
@@ -70,7 +81,7 @@ public enum DiffDisjointnessTemplate {
                   left.name != right.name else {
                 continue
             }
-            return (left.name, right.name, left.element)
+            return DisjointPair(memberA: left.name, memberB: right.name, element: left.element)
         }
         return nil
     }

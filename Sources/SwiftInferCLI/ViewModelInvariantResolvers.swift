@@ -13,7 +13,10 @@ import SwiftInferCore
 public enum ViewModelCardinalityResolver {
     public static func resolve(_ candidate: ViewModelCandidate) -> String? {
         let routes = candidate.stateFields
-            .filter { ViewModelNameHeuristics.isOptional($0.typeText) && ViewModelNameHeuristics.isPresentationName($0.name) }
+            .filter {
+                ViewModelNameHeuristics.isOptional($0.typeText)
+                    && ViewModelNameHeuristics.isPresentationName($0.name)
+            }
             .map(\.name)
         guard routes.count >= 2 else { return nil }
         let terms = routes.map { "(probe.\($0) != nil)" }.joined(separator: ", ")
@@ -41,7 +44,9 @@ public enum ViewModelBiconditionalResolver {
 /// Conservation — a `*count*` Int field tracks a sibling collection's size.
 public enum ViewModelConservationResolver {
     public static func resolve(_ candidate: ViewModelCandidate) -> String? {
-        guard let collection = candidate.stateFields.first(where: { ViewModelNameHeuristics.isCollection($0.typeText) }),
+        guard let collection = candidate.stateFields.first(where: {
+            ViewModelNameHeuristics.isCollection($0.typeText)
+        }),
               let counter = candidate.stateFields.first(where: {
                   $0.name.lowercased().contains("count") && ViewModelNameHeuristics.stripOptional($0.typeText) == "Int"
               }) else {

@@ -132,7 +132,10 @@ public enum ViewModelInteractionAnalyzer {
         let collections = candidate.stateFields.filter { ViewModelNameHeuristics.isCollection($0.typeText) }.map(\.name)
         guard !collections.isEmpty else { return [] }
         return candidate.stateFields
-            .filter { $0.name.lowercased().contains("count") && ViewModelNameHeuristics.stripOptional($0.typeText) == "Int" }
+            .filter {
+                $0.name.lowercased().contains("count")
+                    && ViewModelNameHeuristics.stripOptional($0.typeText) == "Int"
+            }
             .map { counter in
                 ViewModelInteractionCandidate(
                     family: .conservation,
@@ -148,7 +151,10 @@ public enum ViewModelInteractionAnalyzer {
 
     private static func cardinality(_ candidate: ViewModelCandidate) -> [ViewModelInteractionCandidate] {
         let presentation = candidate.stateFields
-            .filter { ViewModelNameHeuristics.isOptional($0.typeText) && ViewModelNameHeuristics.isPresentationName($0.name) }
+            .filter {
+                ViewModelNameHeuristics.isOptional($0.typeText)
+                    && ViewModelNameHeuristics.isPresentationName($0.name)
+            }
             .map(\.name)
         guard presentation.count >= 2 else { return [] }
         return [

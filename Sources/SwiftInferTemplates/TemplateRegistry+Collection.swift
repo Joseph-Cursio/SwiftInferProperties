@@ -119,16 +119,7 @@ extension TemplateRegistry {
             context: context,
             into: &collector
         )
-        collectCodableRoundTripSuggestions(summaries: summaries, typeDecls: typeDecls, into: &collector)
-        let appShapeShapes = Dictionary(
-            TypeShapeBuilder.shapes(from: typeDecls).map { ($0.name, $0) },
-            uniquingKeysWith: { first, _ in first }
-        )
-        collectApplicationShapeSuggestions(
-            summaries: summaries,
-            shapesByName: appShapeShapes,
-            into: &collector
-        )
+        collectShapeSuggestions(summaries: summaries, typeDecls: typeDecls, into: &collector)
         collectLiftedSuggestions(
             lifted: liftedTransformations,
             identities: identities,
@@ -137,7 +128,6 @@ extension TemplateRegistry {
         )
         return collector
     }
-
     /// IdentityElement template fan-out — kept as a helper so
     /// `collectSuggestions` stays under the SwiftLint function-body
     /// budget as new template fan-outs accumulate (V1.18.C dual-style,
