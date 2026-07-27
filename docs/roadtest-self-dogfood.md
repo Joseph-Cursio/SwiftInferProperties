@@ -874,8 +874,68 @@ Three ways to close that, none taken here:
    the index entries have `let` properties, so it is a real change.
 3. **Generate the converters.** A macro removes the class outright.
 
-Option 1 is the one worth doing if this bites a fourth time: it converts the entire class from a test
-that must be remembered into a build that cannot succeed.
+## §11.3.5 Option 1, taken: the converter half is now a compile error
+
+The defaults are load-bearing in tests (93 construction sites) and barely used in `Sources` (1–2 per
+type), so removing them outright was not on. Instead each type gained an **exhaustive** initializer —
+every parameter required, marked by `EveryColumn.required` — and:
+
+**the exhaustive initializer is the designated one.** It assigns the stored properties; the ergonomic
+defaulted initializer delegates *to it*; every converter calls it.
+
+That direction is the entire mechanism, and getting it backwards is easy — the first version of this
+change had exhaustive delegating to ergonomic, under which a field added only to the ergonomic
+initializer breaks nothing and the guard does literally nothing. Adding a stored property now fails at
+the exhaustive initializer:
+
+```
+Sources/SwiftInferCore/SemanticIndexEntry.swift:338:5: error: return from
+initializer without initializing all stored properties
+```
+
+…and once a parameter is added there, every converter fails until the author answers the question the
+default was silently answering: on a refresh, does this column come from the existing record or the
+fresh one?
+
+Verified by staging the realistic mistake on each type — add the property, add it to the ergonomic
+initializer with a default, touch nothing else:
+
+| Type | Result |
+|---|---|
+| `IndexedTypeShape` | caught at compile time |
+| `SemanticIndexEntry` | caught at compile time |
+| `InteractionIndexEntry` | caught at compile time |
+
+`ExhaustiveInitializerAgreementTests` (3) pins the structural precondition — the exhaustive
+initializer exists, agrees with its ergonomic sibling, and the ergonomic defaults equal what the
+exhaustive one takes explicitly. If the delegation were ever flipped back, the build-time guard would
+stop working while every other test still passed, which is exactly what happened during development.
+
+### Two false negatives, and what they cost
+
+Both came from checking the check, and both would have shipped a wrong conclusion:
+
+1. **The backwards delegation** surfaced only because `InteractionIndexEntry` came back `NOT CAUGHT`.
+   Without staging the mistake, three types would have carried a guard that did nothing.
+2. **`SemanticIndexEntry` also reported `NOT CAUGHT`, and that one was the *staging* being wrong** —
+   the property is declared `public var`, not `public let`, so the pattern matched nothing and no
+   field was ever added. One step from reporting a working guard as broken.
+
+That is three times in this road test that verifying the verifier changed the answer: the control
+fixture in §11.3.4, and both of these. The pattern is worth naming — **a check that reports "no
+problem" carries no information until you have watched it report a problem** — and it is the same
+claim the whole document makes about `measured-bothPass`.
+
+### The ladder, complete
+
+| Layer | Catches | When |
+|---|---|---|
+| Compile error (`EveryColumn`) | a field dropped by a **converter** | build |
+| `FieldCoverageReflectionTests` | a field dropped by **`encode(to:)`** | test, automatic for new fields |
+| Parity suites | the specific columns and merge semantics | test, field-by-field |
+
+The first two need no maintenance when a field is added. That was the goal: turn a class of bug that
+presented three times as an unrelated-looking *limitation* into something the build refuses.
 
 ---
 

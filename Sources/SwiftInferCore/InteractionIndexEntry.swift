@@ -124,6 +124,57 @@ public struct InteractionIndexEntry: Codable, Sendable, Equatable {
         firstSeenAt: String,
         lastSeenAt: String
     ) {
+        // Delegates to the exhaustive initializer — see `EveryColumn`.
+        self.init(
+            everyColumn: .required,
+            identityHash: identityHash,
+            family: family,
+            reducerQualifiedName: reducerQualifiedName,
+            stateTypeName: stateTypeName,
+            actionTypeName: actionTypeName,
+            predicate: predicate,
+            location: location,
+            moduleName: moduleName,
+            score: score,
+            tier: tier,
+            decision: decision,
+            decisionAt: decisionAt,
+            firstSeenAt: firstSeenAt,
+            lastSeenAt: lastSeenAt
+        )
+    }
+
+    /// Returns a copy of `self` with the upsert-mutable columns (`location`,
+    /// `moduleName`, `score`, `tier`, `decision`, `decisionAt`,
+    /// `lastSeenAt`) replaced from `other`, while preserving `firstSeenAt`
+    /// and the identity columns from `self`. Used by
+    /// `IndexStore.upsertInteraction`.
+    ///
+    /// `identityHash`, `family`, `reducerQualifiedName`, `stateTypeName`,
+    /// `actionTypeName`, and `predicate` are immutable across upserts — the
+    /// PRD §7.5 identity hash is a function of `family` /
+    /// `reducerQualifiedName` / `predicate`, so they cannot change without
+    /// also changing the hash (which would key a different row).
+    /// Uses the **exhaustive** initializer deliberately — see `EveryColumn`.
+    /// Exhaustive initializer — **every parameter is required, deliberately.**
+    /// See `EveryColumn`.
+    public init(
+        everyColumn _: EveryColumn,
+        identityHash: String,
+        family: String,
+        reducerQualifiedName: String,
+        stateTypeName: String,
+        actionTypeName: String,
+        predicate: String,
+        location: String,
+        moduleName: String?,
+        score: Int,
+        tier: String,
+        decision: String?,
+        decisionAt: String?,
+        firstSeenAt: String,
+        lastSeenAt: String
+    ) {
         self.identityHash = identityHash
         self.family = family
         self.reducerQualifiedName = reducerQualifiedName
@@ -140,19 +191,9 @@ public struct InteractionIndexEntry: Codable, Sendable, Equatable {
         self.lastSeenAt = lastSeenAt
     }
 
-    /// Returns a copy of `self` with the upsert-mutable columns (`location`,
-    /// `moduleName`, `score`, `tier`, `decision`, `decisionAt`,
-    /// `lastSeenAt`) replaced from `other`, while preserving `firstSeenAt`
-    /// and the identity columns from `self`. Used by
-    /// `IndexStore.upsertInteraction`.
-    ///
-    /// `identityHash`, `family`, `reducerQualifiedName`, `stateTypeName`,
-    /// `actionTypeName`, and `predicate` are immutable across upserts — the
-    /// PRD §7.5 identity hash is a function of `family` /
-    /// `reducerQualifiedName` / `predicate`, so they cannot change without
-    /// also changing the hash (which would key a different row).
     public func updated(from other: Self) -> Self {
         Self(
+            everyColumn: .required,
             identityHash: identityHash,
             family: family,
             reducerQualifiedName: reducerQualifiedName,

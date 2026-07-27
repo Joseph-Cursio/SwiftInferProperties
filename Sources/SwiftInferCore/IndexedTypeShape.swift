@@ -129,6 +129,42 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         initializers: [InitializerSignature] = [],
         enumCases: [EnumCase] = []
     ) {
+        // Delegates to the exhaustive initializer, which is the designated
+        // one — see `EveryColumn`. That direction is load-bearing: because the
+        // exhaustive init is what assigns the stored properties, adding a
+        // property forces a parameter onto it, which in turn breaks every
+        // converter that calls it.
+        self.init(
+            everyColumn: .required,
+            name: name,
+            kind: kind,
+            inheritedTypes: inheritedTypes,
+            hasUserGen: hasUserGen,
+            storedMembers: storedMembers,
+            hasUserInit: hasUserInit,
+            initializers: initializers,
+            enumCases: enumCases
+        )
+    }
+
+    /// Exhaustive initializer — **every parameter is required, deliberately.**
+    ///
+    /// `init(from kitShape:)` uses this, so a column added to the mirror and
+    /// forgotten in the converter is a compile error. That is the guard the
+    /// `enumCases` omission needed and did not have: the field was absent for
+    /// the type's whole life, nothing failed, and it surfaced three layers
+    /// downstream as a hung verifier. See `EveryColumn`.
+    public init(
+        everyColumn _: EveryColumn,
+        name: String,
+        kind: Kind,
+        inheritedTypes: [String],
+        hasUserGen: Bool,
+        storedMembers: [StoredMember],
+        hasUserInit: Bool,
+        initializers: [InitializerSignature],
+        enumCases: [EnumCase]
+    ) {
         self.name = name
         self.kind = kind
         self.inheritedTypes = inheritedTypes
@@ -183,6 +219,7 @@ extension IndexedTypeShape {
     /// kind + stored-member structs.
     public init(from kitShape: TypeShape) {
         self.init(
+            everyColumn: .required,
             name: kitShape.name,
             kind: Kind(kitKind: kitShape.kind),
             inheritedTypes: kitShape.inheritedTypes,

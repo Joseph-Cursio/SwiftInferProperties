@@ -167,25 +167,32 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         returnsSelfType: Bool = false,
         isComputedProperty: Bool = false
     ) {
-        self.identityHash = identityHash
-        self.templateName = templateName
-        self.typeName = typeName
-        self.score = score
-        self.tier = tier
-        self.primaryFunctionName = primaryFunctionName
-        self.location = location
-        self.decision = decision
-        self.decisionAt = decisionAt
-        self.firstSeenAt = firstSeenAt
-        self.lastSeenAt = lastSeenAt
-        self.typeShape = typeShape
-        self.secondaryFunctionName = secondaryFunctionName
-        self.carrierTypeName = carrierTypeName
-        self.isInstanceMethod = isInstanceMethod
-        self.isMutatingMethod = isMutatingMethod
-        self.isNullary = isNullary
-        self.returnsSelfType = returnsSelfType
-        self.isComputedProperty = isComputedProperty
+        // Delegates to the exhaustive initializer, which is the designated one
+        // — see `EveryColumn`. The direction matters: the exhaustive init is
+        // what assigns the stored properties, so adding a property forces a
+        // parameter onto it, which breaks every converter that calls it.
+        self.init(
+            everyColumn: .required,
+            identityHash: identityHash,
+            templateName: templateName,
+            typeName: typeName,
+            score: score,
+            tier: tier,
+            primaryFunctionName: primaryFunctionName,
+            location: location,
+            decision: decision,
+            decisionAt: decisionAt,
+            firstSeenAt: firstSeenAt,
+            lastSeenAt: lastSeenAt,
+            typeShape: typeShape,
+            secondaryFunctionName: secondaryFunctionName,
+            carrierTypeName: carrierTypeName,
+            isInstanceMethod: isInstanceMethod,
+            isMutatingMethod: isMutatingMethod,
+            isNullary: isNullary,
+            returnsSelfType: returnsSelfType,
+            isComputedProperty: isComputedProperty
+        )
     }
 
     // MARK: - Codable
@@ -279,8 +286,58 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// without also changing the hash). `typeShape` is upsert-mutable
     /// because the type's structural shape can evolve (e.g., a user
     /// adds a stored property between two indexer runs).
+    /// Uses the **exhaustive** initializer deliberately — see `EveryColumn`. A
+    /// column added to this type and forgotten here is then a compile error
+    /// rather than a silent revert-to-default on the next re-index.
+    /// Exhaustive initializer — **every parameter is required, deliberately.**
+    /// Converters (`updated(from:)`) use this so that adding a column and
+    /// forgetting it is a compile error. See `EveryColumn`.
+    public init(
+        everyColumn _: EveryColumn,
+        identityHash: String,
+        templateName: String,
+        typeName: String?,
+        score: Int,
+        tier: String,
+        primaryFunctionName: String,
+        location: String,
+        decision: String?,
+        decisionAt: String?,
+        firstSeenAt: String,
+        lastSeenAt: String,
+        typeShape: IndexedTypeShape?,
+        secondaryFunctionName: String?,
+        carrierTypeName: String?,
+        isInstanceMethod: Bool,
+        isMutatingMethod: Bool,
+        isNullary: Bool,
+        returnsSelfType: Bool,
+        isComputedProperty: Bool
+    ) {
+        self.identityHash = identityHash
+        self.templateName = templateName
+        self.typeName = typeName
+        self.score = score
+        self.tier = tier
+        self.primaryFunctionName = primaryFunctionName
+        self.location = location
+        self.decision = decision
+        self.decisionAt = decisionAt
+        self.firstSeenAt = firstSeenAt
+        self.lastSeenAt = lastSeenAt
+        self.typeShape = typeShape
+        self.secondaryFunctionName = secondaryFunctionName
+        self.carrierTypeName = carrierTypeName
+        self.isInstanceMethod = isInstanceMethod
+        self.isMutatingMethod = isMutatingMethod
+        self.isNullary = isNullary
+        self.returnsSelfType = returnsSelfType
+        self.isComputedProperty = isComputedProperty
+    }
+
     public func updated(from other: Self) -> Self {
         Self(
+            everyColumn: .required,
             identityHash: identityHash,
             templateName: templateName,
             typeName: typeName,

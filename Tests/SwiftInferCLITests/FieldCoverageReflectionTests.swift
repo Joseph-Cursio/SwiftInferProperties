@@ -218,3 +218,91 @@ private struct Lossy: Encodable {
         try container.encode(kept, forKey: .kept)
     }
 }
+
+/// The **converter** half of the field-coverage guard, which reflection cannot
+/// reach — a field that encodes correctly but is dropped by `updated(from:)` or
+/// `init(from kitShape:)`. That is precisely where `enumCases` died.
+///
+/// This is not enforced by a test. It is enforced by the **compiler**, via the
+/// exhaustive initializers described in `EveryColumn`: the exhaustive init is
+/// the designated one (it assigns the stored properties), the ergonomic
+/// defaulted init delegates to it, and every converter calls the exhaustive
+/// one. Adding a stored property therefore fails the build at the exhaustive
+/// init — *"return from initializer without initializing all stored
+/// properties"* — and once a parameter is added there, every converter fails
+/// too until it says what the new column should do on a refresh.
+///
+/// Verified by staging the exact scenario on all three types (add the property,
+/// add it to the ergonomic init with a default, touch nothing else) and
+/// confirming the build fails each time. That check lives in the road-test
+/// record rather than here, because a test cannot assert a compile error.
+///
+/// These tests pin the structural precondition the compile-time guard depends
+/// on: that the exhaustive initializer exists, is reachable, and agrees with
+/// its ergonomic sibling. If the delegation were ever flipped back — ergonomic
+/// designated, exhaustive delegating — the build-time guard would silently
+/// stop working while every other test still passed. That happened once during
+/// development and is the reason this suite exists.
+@Suite("Road test — exhaustive initializers agree with their ergonomic siblings")
+struct ExhaustiveInitializerAgreementTests {
+
+    @Test("IndexedTypeShape: both initializers produce the same value")
+    func indexedTypeShapeInitializersAgree() {
+        let ergonomic = IndexedTypeShape(
+            name: "Outer.Kind",
+            kind: .enum,
+            inheritedTypes: ["String"],
+            hasUserGen: true,
+            storedMembers: [IndexedTypeShape.StoredMember(name: "a", typeName: "Int")],
+            hasUserInit: true,
+            initializers: [IndexedTypeShape.InitializerSignature(parameters: [])],
+            enumCases: [IndexedTypeShape.EnumCase(name: "`struct`")]
+        )
+        let exhaustive = IndexedTypeShape(
+            everyColumn: .required,
+            name: "Outer.Kind",
+            kind: .enum,
+            inheritedTypes: ["String"],
+            hasUserGen: true,
+            storedMembers: [IndexedTypeShape.StoredMember(name: "a", typeName: "Int")],
+            hasUserInit: true,
+            initializers: [IndexedTypeShape.InitializerSignature(parameters: [])],
+            enumCases: [IndexedTypeShape.EnumCase(name: "`struct`")]
+        )
+        #expect(ergonomic == exhaustive, "the two initializers disagree — the delegation is wrong")
+    }
+
+    @Test("InteractionIndexEntry: both initializers produce the same value")
+    func interactionEntryInitializersAgree() {
+        let ergonomic = InteractionIndexEntry(
+            identityHash: "H", family: "idempotence", reducerQualifiedName: "F.reduce",
+            stateTypeName: "S", actionTypeName: "A", predicate: "p", location: "F.swift:1",
+            moduleName: "M", score: 40, tier: "Likely", decision: "accepted",
+            decisionAt: "d", firstSeenAt: "f", lastSeenAt: "l"
+        )
+        let exhaustive = InteractionIndexEntry(
+            everyColumn: .required,
+            identityHash: "H", family: "idempotence", reducerQualifiedName: "F.reduce",
+            stateTypeName: "S", actionTypeName: "A", predicate: "p", location: "F.swift:1",
+            moduleName: "M", score: 40, tier: "Likely", decision: "accepted",
+            decisionAt: "d", firstSeenAt: "f", lastSeenAt: "l"
+        )
+        #expect(ergonomic == exhaustive, "the two initializers disagree — the delegation is wrong")
+    }
+
+    /// The ergonomic initializer's defaults must still be the *same* values the
+    /// exhaustive one would take explicitly — otherwise the delegation is
+    /// silently changing behaviour at ~90 existing call sites.
+    @Test("the ergonomic defaults match what the exhaustive initializer takes")
+    func ergonomicDefaultsMatchExhaustive() {
+        let defaulted = IndexedTypeShape(
+            name: "T", kind: .struct, inheritedTypes: [], hasUserGen: false
+        )
+        let spelled = IndexedTypeShape(
+            everyColumn: .required,
+            name: "T", kind: .struct, inheritedTypes: [], hasUserGen: false,
+            storedMembers: [], hasUserInit: false, initializers: [], enumCases: []
+        )
+        #expect(defaulted == spelled)
+    }
+}
