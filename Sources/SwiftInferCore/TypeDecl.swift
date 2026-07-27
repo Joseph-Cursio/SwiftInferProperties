@@ -22,14 +22,14 @@ import PropertyLawCore
 /// constraint-engine concern (PRD §20.2) and out of scope here.
 public struct TypeDecl: Sendable, Equatable {
 
-    /// Surface-syntactic kind of the source declaration. Mirrors
-    /// `PropertyLawCore.TypeShape.Kind` for `struct` / `class` / `enum` /
-    /// `actor`, and adds `.extension` so extension conformances stay
-    /// distinguishable from primary declarations during resolver merging.
     // Intentionally a superset of `IndexedTypeShape.Kind` — both mirror
     // `PropertyLawCore.TypeShape.Kind`, and this one adds `.extension` for the reason given
     // above. The extra case is the point, not a divergence to reconcile.
     // swiftprojectlint:disable:next parallel-list-drift
+    /// Surface-syntactic kind of the source declaration. Mirrors
+    /// `PropertyLawCore.TypeShape.Kind` for `struct` / `class` / `enum` /
+    /// `actor`, and adds `.extension` so extension conformances stay
+    /// distinguishable from primary declarations during resolver merging.
     public enum Kind: String, Sendable, Equatable {
         case `struct`
         case `class`

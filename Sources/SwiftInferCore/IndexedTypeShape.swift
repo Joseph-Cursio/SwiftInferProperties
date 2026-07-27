@@ -23,11 +23,11 @@ import PropertyLawCore
 /// element-wise map.
 public struct IndexedTypeShape: Codable, Sendable, Equatable {
 
-    /// Kind discriminator mirroring `TypeShape.Kind`. `String`-backed so
-    /// the JSON encoding stays human-readable.
     // Nominal type kinds only. `TypeDecl.Kind` mirrors the same upstream shape and adds
     // `.extension`; an extension is not a type, so it has no place in an indexed *type* shape.
     // swiftprojectlint:disable:next parallel-list-drift
+    /// Kind discriminator mirroring `TypeShape.Kind`. `String`-backed so
+    /// the JSON encoding stays human-readable.
     public enum Kind: String, Codable, Sendable, Equatable {
         case `struct`
         case `class`

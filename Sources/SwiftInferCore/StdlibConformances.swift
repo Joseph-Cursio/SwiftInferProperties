@@ -90,6 +90,9 @@ extension ProtocolCoverageMap {
         ]
     ]
 
+    // Deliberately differs from `unsignedIntegerBase` — see that constant's note: signedness
+    // is the whole point of the split, so the two can never be the same set.
+    // swiftprojectlint:disable:next parallel-list-drift
     /// V1.7.1 — shared conformance set for signed integer types.
     /// `BinaryInteger` / `FixedWidthInteger` / `SignedInteger` are
     /// included for documentation even though only their parent
@@ -97,21 +100,18 @@ extension ProtocolCoverageMap {
     /// `SignedNumeric` / `Comparable` / `Hashable` / `Codable` /
     /// `Equatable`) currently appear in `protocolCoverage`'s key
     /// set.
-    // Deliberately differs from `unsignedIntegerBase` — see that constant's note: signedness
-    // is the whole point of the split, so the two can never be the same set.
-    // swiftprojectlint:disable:next parallel-list-drift
     private static let signedIntegerBase: Set<String> = [
         "Equatable", "Comparable", "Hashable", "Codable",
         "AdditiveArithmetic", "Numeric", "SignedNumeric",
         "BinaryInteger", "FixedWidthInteger", "SignedInteger"
     ]
 
-    /// V1.7.1 — shared conformance set for unsigned integer types.
-    /// Differs from `signedIntegerBase` only in `UnsignedInteger`
-    /// vs `SignedInteger` and the absence of `SignedNumeric`.
     // The documented difference above (`UnsignedInteger` vs `SignedInteger`, no
     // `SignedNumeric`) is the reason this constant exists; near-identity is expected.
     // swiftprojectlint:disable:next parallel-list-drift
+    /// V1.7.1 — shared conformance set for unsigned integer types.
+    /// Differs from `signedIntegerBase` only in `UnsignedInteger`
+    /// vs `SignedInteger` and the absence of `SignedNumeric`.
     private static let unsignedIntegerBase: Set<String> = [
         "Equatable", "Comparable", "Hashable", "Codable",
         "AdditiveArithmetic", "Numeric",

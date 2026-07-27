@@ -13,22 +13,6 @@ identifier_name:
   excluded:
     - id
   max_length: 50
-# `orphaned_doc_comment` is off because it is in direct, unresolvable conflict
-# with SwiftProjectLint's inline suppressions, which this repo uses in 14 places.
-#
-# The repo's convention is: doc comment, then a plain `//` note (an aside for a
-# maintainer, or a `swiftprojectlint:disable:next` directive), then the
-# declaration. SwiftLint calls the `///` orphaned because a `//` line intervenes.
-# Reordering to satisfy it is not an option: `disable:next` suppresses *exactly*
-# `line + 1` (`InlineSuppressionFilter.appendSingleLineRange(line: directive.line + 1)`)
-# with no comment skipping, so moving the doc comment below the directive
-# silently disables 14 suppressions — which is what happened when this was first
-# "fixed" mechanically, and it was invisible until the filter was read.
-#
-# The trailing `disable:this` form does not help either: the parser requires the
-# line to *start* with the comment prefix, so it never sees a trailing directive.
-disabled_rules:
-  - orphaned_doc_comment
 opt_in_rules:
   - required_enum_case
   - strong_iboutlet

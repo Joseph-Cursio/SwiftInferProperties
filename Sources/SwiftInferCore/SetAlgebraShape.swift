@@ -15,6 +15,10 @@
 /// for static lets, `CaseIterable`-style closed-set discoverability).
 public enum SetAlgebraShape {
 
+    // Overlaps `CommutativityTemplate.setCombinationVerbs` but models stdlib SetAlgebra's
+    // binary ops, so it keeps the non-commutative `subtracting` and omits the non-stdlib
+    // `intersect`. See that constant's note.
+    // swiftprojectlint:disable:next parallel-list-drift
     /// 4-element curated set of `(Self) -> Self`-returning binary-op
     /// method names from Swift's `SetAlgebra` protocol surface. Used
     /// by `InversePairTemplate.setAlgebraShapeVeto(for:)` to suppress
@@ -44,10 +48,6 @@ public enum SetAlgebraShape {
     /// SetAlgebra intersection.swift` × `OrderedSet+Partial SetAlgebra
     /// subtracting.swift` × `OrderedSet+UnorderedView.swift`. V1.14.1
     /// closes that pattern.
-    // Overlaps `CommutativityTemplate.setCombinationVerbs` but models stdlib SetAlgebra's
-    // binary ops, so it keeps the non-commutative `subtracting` and omits the non-stdlib
-    // `intersect`. See that constant's note.
-    // swiftprojectlint:disable:next parallel-list-drift
     public static let binaryOps: Set<String> = [
         "union",
         "intersection",

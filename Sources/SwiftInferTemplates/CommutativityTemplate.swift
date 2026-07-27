@@ -68,16 +68,16 @@ public enum CommutativityTemplate {
         "prepending"
     ]
 
-    /// B29 — set-combination verbs whose commutativity is a *semilattice* law:
-    /// true under set equality, but FALSE on an order-sensitive carrier whose
-    /// `==` compares element order (`OrderedSet` / `Array` / …), because the
-    /// operation preserves insertion order. `orderSensitiveCarrierVetoSignal`
-    /// suppresses a commutativity suggestion for these verbs on such carriers.
     // Overlaps `SetAlgebraShape.binaryOps` but is a different list on purpose: this one is
     // the *commutative* set verbs, so `subtracting` is correctly absent (a-b != b-a), and it
     // includes the informal `intersect` spelling that user code uses but stdlib SetAlgebra
     // doesn't declare. Both differences are semantic, not drift.
     // swiftprojectlint:disable:next parallel-list-drift
+    /// B29 — set-combination verbs whose commutativity is a *semilattice* law:
+    /// true under set equality, but FALSE on an order-sensitive carrier whose
+    /// `==` compares element order (`OrderedSet` / `Array` / …), because the
+    /// operation preserves insertion order. `orderSensitiveCarrierVetoSignal`
+    /// suppresses a commutativity suggestion for these verbs on such carriers.
     public static let setCombinationVerbs: Set<String> = [
         "union",
         "intersection",
