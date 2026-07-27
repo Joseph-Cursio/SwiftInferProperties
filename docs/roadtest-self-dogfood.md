@@ -1031,10 +1031,7 @@ slipped straight through. The assertion had to be about what the code *does*, no
    seed manifest` — both change the manifest those figures came from. Re-running would change §2 and
    possibly §3's prediction scoring; per the freeze rule the original numbers stay as recorded and a
    re-run belongs in a new section.
-2. **The sweep covers binary and ternary laws only.** Idempotence, round-trip and the interaction
-   families draw one value per trial, so collisions between operands do not arise — but a
-   collision-dependent failure *within* a single generated value (two records inside one log) is still
-   unreachable, and that is a real gap.
+2. ~~The sweep covers binary and ternary laws only~~ — **closed, see §13.6.**
 3. **`swift build` in the verifier is still unbounded** (§11.2.4 item 3).
 
 ---
@@ -1165,3 +1162,40 @@ whose entire purpose is to make a *timing* behaviour testable, and whose tests h
 subprocesses and sleep real seconds precisely because of it. The loop caught it; I did not. That is
 the argument for running the linter every time rather than once, and it is the same shape as
 §12 itself: the tool said it first, in the stage that is easy to skip.
+
+
+## §13.6 The single-value case
+
+The binary sweep makes two *operands* collide. It says nothing about elements colliding **inside one
+generated value** — two records in one `Decisions` log sharing an `identityHash`, two entries sharing
+a key. That is the same class one level down, and it is where the original finding actually lived:
+`merge`'s tie is reachable because a *log* can hold colliding records, not merely because two logs can.
+
+The mechanism needed no new idea. A collection generator draws its elements from the same RNG, so
+narrowing the RNG makes the elements of one collection collide with each other exactly as it makes two
+independent draws collide. `CollisionPass.unarySweep` is wired into `idempotence` and
+`codable-round-trip`.
+
+**It found nothing, and that is the honest result.** All eight `codable-round-trip` picks still pass;
+idempotence is 6 `measured-bothPass` and 12 `architectural-coverage-pending`. The round trip genuinely
+holds with colliding elements. The class is now *reachable* — the capability is real — but on this
+corpus there was no collision-dependent unary law to catch. A null result from a mechanism that
+demonstrably works elsewhere is worth more than a mechanism that was never pointed at anything.
+
+Two things it did surface, neither a property failure:
+
+**A bug I introduced.** The emitted body was `if \(functionCall)(…) != …`, and `functionCall` can be a
+closure literal — so `if { … }(x) != …` parses as `if` with a trailing closure: *"missing condition in
+'if' statement"*. The default pass binds locals first for exactly this reason; the sweep now does too.
+Following the existing shape would have avoided it.
+
+**A pre-existing trap it unmasked.** `SeedFocus` idempotence over `[Suggestion]` exits with SIGTRAP.
+Verified as *not mine* by excising the sweep entirely and watching it still trap — the syntax bug above
+had been masking it as `build-failed`. Diagnosing it took two attempts: the first used `print`, which
+is block-buffered when redirected and loses everything on a trap, so the crash appeared to be earlier
+than it was. Unbuffered stderr showed the truth. Left open — it is an existing defect in the
+idempotence emitter for array carriers, not collision work.
+
+Guarded by 9 tests (`CollisionPassTests`) and 5 mutants, all killed: sweep removed from either
+template, drawing two values instead of one, failing to advance the RNG state, and reverting to the
+low-bit mask.

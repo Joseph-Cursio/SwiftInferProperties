@@ -201,6 +201,48 @@ enum CollisionPass {
         """
     }
 
+    /// Emit the collision sweep for a **unary** law — one generated value per
+    /// trial, with `body` asserting whatever that law claims about it.
+    ///
+    /// **Why a unary law needs this too.** The binary sweep makes two *operands*
+    /// collide. It says nothing about elements colliding *inside a single
+    /// generated value* — two records in one `Decisions` log sharing an
+    /// `identityHash`, two entries in a dictionary-backed carrier sharing a key.
+    /// That is the same class of failure, one level down, and it is where the
+    /// original finding actually lived: `merge`'s tie is reachable because a
+    /// *log* can hold colliding records, not merely because two logs can.
+    ///
+    /// The mechanism is unchanged and needs no new idea. A collection generator
+    /// draws its elements from the same RNG, so narrowing the RNG makes the
+    /// elements of one collection collide with each other exactly as it makes
+    /// two independent draws collide. The same soundness argument carries: the
+    /// values are ordinary values of the carrier, so any counterexample is real.
+    ///
+    /// `body` receives the bound variable name so each template can spell its
+    /// own check — `idempotence` applies the function twice, the round trips
+    /// encode and decode.
+    static func unarySweep(carrier: String, valueName: String = "collisionValue", body: String) -> String {
+        """
+        // --- Pass 1b: collision sweep (narrowed entropy) ---
+        //
+        // Narrowing the RNG makes the elements *within* one generated
+        // \(carrier) collide — duplicate keys, repeated identifiers, equal
+        // timestamps — which a realistic domain makes vanishingly unlikely and
+        // which is exactly where collection-shaped laws fail. Values remain
+        // ordinary values of \(carrier), so a failure here is a real refutation.
+        let collisionPoolSizes: [Int] = \(poolSizes)
+        for trial in 0 ..< trials {
+            var narrowed = NarrowedRNG(
+                inner: collisionBase,
+                poolSize: collisionPoolSizes[trial % collisionPoolSizes.count]
+            )
+            let \(valueName) = defaultGenerator.run(using: &narrowed)
+            collisionBase = narrowed.inner
+        \(body)
+        }
+        """
+    }
+
     /// The mutable Xoshiro the sweep threads through its trials, declared
     /// alongside the stub's main `rng` so the collision draws continue the same
     /// deterministic stream rather than restarting it.

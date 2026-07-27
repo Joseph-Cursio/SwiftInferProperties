@@ -143,15 +143,43 @@ struct CollisionPassTests {
         #expect(tail.contains("VERIFY_DEFAULT_INPUT:"))
     }
 
-    /// Templates that are not binary laws are untouched — the sweep is only
-    /// meaningful where two or three operands are drawn and compared.
-    @Test("non-binary templates get no collision sweep")
-    func nonBinaryTemplatesAreUntouched() {
-        for template in ["idempotence", "round-trip"] {
-            let stub = try? Self.emit(template: template)
-            if let stub {
-                #expect(!stub.contains("Pass 1b: collision sweep"), "\(template) grew a sweep")
-            }
+    // MARK: - The unary sweep
+    //
+    // The binary sweep makes two *operands* collide. It says nothing about
+    // elements colliding *inside a single generated value* — two records in one
+    // log sharing an identity, two entries sharing a key. That is the same class
+    // one level down, and it is where the original finding actually lived:
+    // `merge`'s tie is reachable because a *log* can hold colliding records, not
+    // merely because two logs can.
+
+    @Test("unary laws also get a collision sweep")
+    func unaryLawsGetTheSweep() throws {
+        for template in ["idempotence", "codable-round-trip"] {
+            let stub = try Self.emit(template: template)
+            #expect(stub.contains("Pass 1b: collision sweep"), "\(template) has no sweep")
+            #expect(stub.contains("let collisionValue = defaultGenerator.run(using: &narrowed)"))
+            #expect(stub.contains("VERIFY_DEFAULT_PASS_KIND: collision"))
         }
+    }
+
+    /// The unary sweep draws **one** value per trial, not two. Drawing a pair
+    /// here would silently turn an idempotence check into something else.
+    @Test("the unary sweep draws exactly one value per trial")
+    func unarySweepDrawsOneValue() throws {
+        let stub = try Self.emit(template: "codable-round-trip")
+        let sweep = try #require(stub.range(of: "Pass 1b"))
+        let tail = String(stub[sweep.lowerBound...])
+        #expect(tail.components(separatedBy: "defaultGenerator.run(using: &narrowed)").count - 1 == 1)
+    }
+
+    /// It shares the binary sweep's machinery rather than reimplementing it —
+    /// same pool, same rotation, same state threading. A divergent copy would
+    /// be the place a future degeneracy hides.
+    @Test("the unary sweep reuses the binary sweep's narrowing")
+    func unarySweepSharesTheMachinery() throws {
+        let stub = try Self.emit(template: "idempotence")
+        #expect(stub.contains("collisionPoolSizes[trial % collisionPoolSizes.count]"))
+        #expect(stub.contains("collisionBase = narrowed.inner"))
+        #expect(!stub.contains("inner.next() &"))
     }
 }

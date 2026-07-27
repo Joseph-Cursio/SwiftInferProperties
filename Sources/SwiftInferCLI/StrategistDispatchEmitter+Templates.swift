@@ -65,45 +65,25 @@ extension StrategistDispatchEmitter {
     /// `JSONEncoder` / `JSONDecoder` (the concrete coder named in the template's
     /// caveat). A codec that throws for a generated value is a round-trip failure
     /// too. `Foundation` is already in every strategist recipe's imports.
-    static func composeCodableRoundTripPass(
-        recipe: GeneratorRecipe
-    ) -> String {
-        let carrier = recipe.carrierTypeName
-        return """
-        // --- Pass 1: default (strategist-derived generator) ---
-
-        let defaultGenerator: Generator<\(carrier), some SendableSequenceType> =
-            \(recipe.expression)
-        let roundTripEncoder = JSONEncoder()
-        let roundTripDecoder = JSONDecoder()
-
-        for trial in 0 ..< trials {
-            let value = defaultGenerator.run(using: &rng)
-            do {
-                let encoded = try roundTripEncoder.encode(value)
-                let decoded = try roundTripDecoder.decode(\(carrier).self, from: encoded)
-                if decoded != value {
+    /// The collision sweep's per-trial body for idempotence, hoisted out of the
+    /// composer so it stays under the body-length cap. Binds locals before
+    /// comparing: `functionCall` can be a closure literal, and
+    /// `if { … }(x) != …` parses as a trailing closure.
+    private static func idempotenceCollisionBody(functionCall: String) -> String {
+        """
+                let collisionOnce = \(functionCall)(collisionValue)
+                let collisionTwice = \(functionCall)(collisionOnce)
+                if collisionTwice != collisionOnce {
                     print("VERIFY_DEFAULT_RESULT: FAIL")
+                    print("VERIFY_DEFAULT_PASS_KIND: collision")
                     print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                    print("VERIFY_DEFAULT_INPUT: \\(value)")
-                    print("VERIFY_DEFAULT_DECODED: \\(decoded)")
+                    print("VERIFY_DEFAULT_INPUT: \\(collisionValue)")
+                    print("VERIFY_DEFAULT_FORWARD: \\(collisionTwice)")
+                    print("VERIFY_DEFAULT_INVERSE: \\(collisionOnce)")
                     exit(1)
                 }
-            } catch {
-                print("VERIFY_DEFAULT_RESULT: FAIL")
-                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                print("VERIFY_DEFAULT_INPUT: \\(value)")
-                print("VERIFY_DEFAULT_DETAIL: codec threw: \\(error)")
-                exit(1)
-            }
-        }
-
-        print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
         """
     }
-
-    // MARK: - Idempotence (1 value per trial; f(f(x)) == f(x))
 
     static func composeIdempotencePass(
         inputs: Inputs,
@@ -156,6 +136,11 @@ extension StrategistDispatchEmitter {
                 exit(1)
             }
         }
+
+        \(CollisionPass.unarySweep(
+            carrier: recipe.carrierTypeName,
+            body: idempotenceCollisionBody(functionCall: functionCall)
+        ))
 
         print("VERIFY_DEFAULT_RESULT: PASS")
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
