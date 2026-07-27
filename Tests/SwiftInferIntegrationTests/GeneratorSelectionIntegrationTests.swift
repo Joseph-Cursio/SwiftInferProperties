@@ -63,7 +63,15 @@ struct GeneratorSelectionIntegrationTests {
         #expect(rendered == expected)
     }
 
-    @Test("derivedRawRepresentable — enum: Int")
+    /// A raw-valued enum whose cases are visible now derives by **enumerating
+    /// them** (`.derivedEnumCases`) rather than by filtering random raw values.
+    ///
+    /// This golden asserted `.derivedRawRepresentable` until SwiftPropertyLaws
+    /// v3.19.0. That recipe emits `.compactMap { StatusCode(rawValue: $0) }` over
+    /// `Gen<Int>.int()` — the full `Int` range filtered for the two values that
+    /// name a case — which does not terminate in practice. See
+    /// `docs/roadtest-self-dogfood.md` §11.2.1.
+    @Test("derivedEnumCases — raw enum with visible cases enumerates them")
     func derivedRawRepresentableGolden() throws {
         let directory = try writeFixture(named: "GenSelectRawRep", file: "Source.swift", contents: """
         enum StatusCode: Int {
@@ -79,7 +87,7 @@ struct GeneratorSelectionIntegrationTests {
         let suggestion = try discoverIdempotenceSuggestion(in: directory)
         let rendered = SuggestionRenderer.render(suggestion)
         let expected = expectedRender(
-            generatorLine: "Generator: .derivedRawRepresentable, confidence: .high",
+            generatorLine: "Generator: .derivedEnumCases, confidence: .medium",
             type: "StatusCode",
             carrier: "Helpers",
             suggestion: suggestion

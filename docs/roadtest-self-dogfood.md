@@ -529,11 +529,10 @@ the resolver an un-collapsed array. That is a *fix in the wrong repo*, and nothi
 either side would have shown it: the kit's guard has tests that pass, the consumer has an index that
 looks complete, and only running the pipeline end to end exposes that they never meet.
 
-**The consumer-side fix is unmade and now precisely specified:** key `typeShapes` by qualified name
+**The consumer-side fix is now made — see §11.2.** Key `typeShapes` by qualified name
 (`IndexedTypeShape.Kind`), which needs no emitter change on either side — every emitter interpolates
 the name verbatim, so `Foo.Kind(…)` already comes out right (`qualifiedNamesDisambiguateAndEmitCorrectly`
-in the kit pins this). It would make `SemanticIndexEntry` derivable and stop 12 other names from
-silently shadowing each other.
+in the kit pins this).
 
 ### The ledger, restated
 
@@ -625,6 +624,159 @@ deliberate and probably a justified suppression rather than a fix.
 An earlier pass of this section reported the linter's JSON `locations` array as empty. That was my
 parsing — the keys are `filePath` / `lineNumber`, not `file` / `line`. The JSON output is correct; no
 linter defect there.
+
+---
+
+# §11.2 Fixing the collapse, and the hang it uncovered
+
+The consumer-side fix from §11.1 shipped: `TypeDecl.qualifiedName`, `TypeShapeBuilder` grouping by it,
+and `resolvedSpelling` resolving member spellings innermost-scope-outward (source writes `kind: Kind`
+inside `IndexedTypeShape`, so qualifying the shape *names* without the *references* would have traded
+a wrong answer for no answer).
+
+**The collapse was worse than §11.1 reported.** It is not only the `[String: IndexedTypeShape]`
+dictionary — `TypeShapeBuilder.shapes` grouped `TypeDecl`s by bare name and took
+`group.first(where: { $0.kind != .extension })` as the primary. So the eight `Kind`s were *merged into
+one group* whose primary was whichever file was scanned first, and same-file extension merging could
+graft one type's conformances onto another's namesake.
+
+Measured effect: **218 → 230 shape entries** (the 12-entry gain is the count of types the collapse was
+destroying), 35 of them qualified, bare `Kind` gone, and suggestions 85 → 93 because carriers that used
+to dead-end now derive. `make batch4` green 7/7 in 368s — the frozen corpus is undisturbed.
+
+## §11.2.1 The fix worked, and exposed a hang
+
+`SemanticIndexEntry` now compiles and **runs**. It does not terminate.
+
+The strategist picks `.rawRepresentable(.string)` for `IndexedTypeShape.Kind` — a `String`-raw enum
+that is *not* `CaseIterable` — and that recipe emits:
+
+```swift
+Gen<Character>.letterOrNumber.string(of: 0...8).compactMap { IndexedTypeShape.Kind(rawValue: $0) }
+```
+
+Random alphanumeric strings, filtered for ones that happen to spell `struct` / `class` / `enum` /
+`actor`. The odds are effectively zero, so `compactMap` retries forever. Two such binaries were found
+spinning at 99.9% CPU for 46 and 71 minutes while the survey reported nothing at all.
+
+**This is a nastier class than the two codegen defects of §9.2, and fixing those is what exposed it.**
+A stub that fails to build is loud, and lands as `measured-error`. A stub that compiles, runs, and
+hangs produces no verdict, no error and no output — the survey simply stops, and the operator
+concludes it is slow. It was diagnosed only by noticing that no build process was running while the
+wall clock advanced.
+
+## §11.2.2 The bound
+
+`VerifierSubprocess.runVerifierBinary` now takes a 300s ceiling (the slowest legitimate run in this
+repo is well under a minute). Three details earn their place:
+
+- **SIGTERM then SIGKILL.** A generator stuck in a tight retry loop ignores SIGTERM; terminate-only
+  would leave the process alive and the CPU pegged after the survey moved on, which is how two of them
+  accumulated an hour.
+- **Pipes drained concurrently.** The previous code read both pipes *after* `waitUntilExit`, which
+  deadlocks whenever a child outfills the 64 KB buffer — a hang indistinguishable from the one above,
+  and one the timeout would then mis-report as a non-terminating property.
+- **Classified as `measured-error`, not `architectural-coverage-pending`.** A timed-out run is a
+  defect in what we generated, not a coverage boundary. Filing it under "pending" would read as *out
+  of scope, nothing to fix* — which is precisely how the §9.2 codegen bugs stayed invisible.
+
+`VerifierTimeoutTests` (6 tests) pins all three against real subprocesses, because every interesting
+part is real-process behaviour. The pipe test's load-bearing assertion is that *partial stdout
+survives* — had the reader deadlocked, the diagnostic would be empty.
+
+## §11.2.3 The survey, measured
+
+| Template | Outcome |
+|---|---|
+| `codable-round-trip` ×8 | 5 × `measured-bothPass`, 2 × `unsupported-carrier`, **1 × `timed-out`** |
+| `commutativity` ×4 | 4 × `measured-bothPass` |
+| `associativity` ×4 | 4 × `measured-bothPass` |
+| `comparator` ×1 | `unsupported-template` |
+
+`SemanticIndexEntry` reports `measured-error: timed-out: the verifier ran longer than 300s and was
+killed` — a verdict, in bounded time, naming the cause. That is the whole value of the bound: the
+answer is still "we could not check this," but it arrives in five minutes with a diagnosis instead of
+never.
+
+Two new candidates appeared (`SeedRole`, from upstream work merged mid-session) and both report
+`unsupported-carrier` — honest boundaries.
+
+### The ledger, restated again
+
+| | Count |
+|---|---|
+| Candidates surveyed | 17 |
+| Real verdicts | **13** |
+| Honest non-verdicts (`unsupported-*`) | 3 |
+| Diagnosed failures (`timed-out`) | **1** — was an unbounded hang |
+| Verdicts that are **wrong** | **4** — the commutativity `bothPass`es, §9.1 |
+
+The headline has not moved and should not be allowed to: four of thirteen verdicts are wrong, for the
+generator reason in §9.1, which nothing in §9.2, §11.2 or §12 touches. Everything shipped since has
+improved the tool's *reach* and its *honesty about failure*. None of it has improved its *correctness*.
+
+## §11.2.4 Still open
+
+1. **The confident green (§9.1).** Unchanged and still the item that matters.
+2. ~~The kit's `.rawRepresentable` recipe generates a non-terminating filter~~ — **fixed kit-side in
+   v3.19.0, and unreachable through the index. See §11.3.**
+3. **`build` is still unbounded.** Only the run is capped; a wedged `swift build` would still hang a
+   survey.
+
+---
+
+# §11.3 The same shape, a third time
+
+SwiftPropertyLaws v3.19.0 fixes the hang at source: `.enumCases` now takes precedence over
+`.rawRepresentable`, so a raw-valued enum whose cases are known is *enumerated*
+(`Gen.oneOf(Gen.always(T.a), …)`) rather than filtered. Mutation-tested, suite green at 720, and the
+test that asserted the old precedence was inverted — the third green test in this arc that was green
+because it pinned the bug.
+
+**Re-running the survey against v3.19.0: `SemanticIndexEntry` still times out.**
+
+The reason is visible in the index:
+
+```json
+"IndexedTypeShape.Kind": {
+  "kind": "enum",
+  "inheritedTypes": ["String", "Codable", "Sendable", "Equatable"],
+  "storedMembers": [], "initializers": [], "hasUserGen": false
+}
+```
+
+No `enumCases`. `IndexedTypeShape` — the consumer's persisted mirror of the kit's `TypeShape` — **has
+no such field at all**. The case list exists in `TypeDecl`, is carried by `TypeShape`, and is dropped
+on the way into `.swiftinfer/index.json`. So `enumCasesStrategy` returns `nil`, the raw fallback
+fires exactly as designed, and the fix cannot engage.
+
+## This is now a pattern, and the repetition is the finding
+
+Three times in this road test a kit-side defect has been correctly fixed and found unreachable,
+because the consumer had already discarded what the fix needed:
+
+| # | Kit fix | Why it could not fire |
+|---|---|---|
+| 1 | `GeneratorResolver` refuses an ambiguous bare name (v3.18.0) | `IndexStore.typeShapes` is keyed on the bare name, so the ambiguity was collapsed before the kit saw it (§11.1) |
+| 2 | `.caseIterable` emits a compilable expression (v3.18.0) | *did* fire — the one that worked |
+| 3 | `.enumCases` beats `.rawRepresentable` (v3.19.0) | `IndexedTypeShape` carries no `enumCases`, so there is nothing to enumerate |
+
+Two of three. The shared mechanism is that **the kit reasons over a projection the consumer
+controls**, and every field the projection omits silently disables whichever kit tier depends on it —
+with no error at either end. The kit's tests pass. The consumer's index looks complete. Only running
+the pipeline end to end shows the tier is dead.
+
+It also rhymes with the road test's own earlier lesson, recorded before any of this: *three passes
+each named "the remaining blocker" for `serialize` and each was wrong* (`docs/roadtest-swiftlintrulestudio.md`).
+A refuter that fires first hides every refuter behind it, and reading the code cannot tell you how
+many are queued up. That was said about purity gates; it turns out to describe cross-repo projections
+just as well.
+
+**The consumer-side fix is small and specified:** add `enumCases` to `IndexedTypeShape`, populate it
+in the `TypeShape` → `IndexedTypeShape` projection, and decode it `decodeIfPresent` so existing index
+files keep working. Unmade — and deliberately not started without checking, because the honest
+lesson here is that the fourth attempt should begin by asking what *else* the projection drops, rather
+than by fixing the one field this survey happened to need.
 
 ---
 

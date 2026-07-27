@@ -217,6 +217,15 @@ extension SwiftInferCommand.Verify {
             emitSurveyRegression(parsed, entry: entry, packageRoot: packageRoot, enabled: config.emitRegression)
             return surveyRecord(from: parsed, context: context)
         } catch let error as VerifyError {
+            // A timed-out run is a *defect in what we generated*, not a coverage
+            // boundary — the stub compiled and ran and simply never finished. It
+            // must not be filed under architectural-coverage-pending, which reads
+            // as "out of scope, nothing to fix." Conflating the two is how the
+            // §9.2 codegen bugs stayed invisible; see
+            // `VerifierSubprocess.defaultRunTimeout`.
+            if case let .runnerCrashed(reason) = error, reason.hasPrefix("timed-out:") {
+                return surveyErrorRecord(context, .measuredError, reason)
+            }
             // .unsupportedCarrier / .unsupportedPair / .unsupportedTemplate map
             // to architectural-coverage-pending — the architecture is
             // feature-complete for these errors' fix paths (cycle-46 framing),

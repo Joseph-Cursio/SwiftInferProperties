@@ -70,9 +70,31 @@ public enum VerifierSubprocess {
     /// `dyld: Library not loaded: @rpath/libTesting.dylib`; this
     /// env-var injection closes that gap at run-time without
     /// requiring workdir-synthesis changes.
+    /// Wall-clock ceiling for a single verifier run.
+    ///
+    /// **A generated property can hang, and until now that wedged the survey.**
+    /// The strategist's `.rawRepresentable` recipe for a `String`-raw enum emits
+    /// `Gen<Character>.letterOrNumber.string(of: 0...8).compactMap { T(rawValue: $0) }`
+    /// — random strings filtered for ones that happen to be a valid raw value.
+    /// For any real enum the odds are effectively zero, so `compactMap` retries
+    /// forever. Two such binaries spun at 100% CPU for over an hour during the
+    /// self-dogfood road test while the survey reported nothing at all.
+    ///
+    /// This class of failure is nastier than the compile errors beside it. A
+    /// stub that fails to build is loud and lands as `measured-error`; a stub
+    /// that compiles, runs, and never terminates produces no verdict, no error,
+    /// and no output — the survey simply stops. A bounded wait converts it into
+    /// an honest `measured-error: timed-out`.
+    ///
+    /// 300s is deliberately generous: the slowest legitimate run measured in
+    /// this repo (a full TCA corpus verify) is well under a minute, so anything
+    /// past five minutes is a hang rather than a slow property.
+    public static let defaultRunTimeout: TimeInterval = 300
+
     public static func runVerifierBinary(
         workdir: URL,
-        extraEnvironment: [String: String] = [:]
+        extraEnvironment: [String: String] = [:],
+        timeout: TimeInterval? = defaultRunTimeout
     ) throws -> Output {
         let binaryPath = workdir
             .appendingPathComponent(".build")
@@ -96,7 +118,8 @@ public enum VerifierSubprocess {
             executable: binaryPath,
             arguments: [],
             workingDirectory: workdir,
-            environment: env
+            environment: env,
+            timeout: timeout
         )
     }
 
@@ -225,11 +248,45 @@ public enum VerifierSubprocess {
 
     // MARK: - Process helper
 
+    /// Thread-safe accumulator for a drained pipe.
+    private final class DataBox: @unchecked Sendable {
+        private let lock = NSLock()
+        private var storage = Data()
+
+        func append(_ data: Data) {
+            lock.lock(); defer { lock.unlock() }
+            storage.append(data)
+        }
+
+        var value: Data {
+            lock.lock(); defer { lock.unlock() }
+            return storage
+        }
+    }
+
+    /// Test seam for `VerifierTimeoutTests`. The timeout's interesting behaviour
+    /// is all real-process behaviour — SIGTERM escalation, pipe-buffer
+    /// backpressure — so the tests drive actual subprocesses rather than a fake.
+    static func runProcessForTesting(
+        executable: URL,
+        arguments: [String],
+        workingDirectory: URL,
+        timeout: TimeInterval?
+    ) throws -> Output {
+        try runProcess(
+            executable: executable,
+            arguments: arguments,
+            workingDirectory: workingDirectory,
+            timeout: timeout
+        )
+    }
+
     private static func runProcess(
         executable: URL,
         arguments: [String],
         workingDirectory: URL,
-        environment: [String: String]? = nil
+        environment: [String: String]? = nil,
+        timeout: TimeInterval? = nil
     ) throws -> Output {
         let process = Process()
         process.executableURL = executable
@@ -242,14 +299,72 @@ public enum VerifierSubprocess {
         let stderrPipe = Pipe()
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
+
+        // Drain both pipes on background queues rather than after
+        // `waitUntilExit`. Reading only after the wait deadlocks whenever the
+        // child outfills a 64 KB pipe buffer — the child blocks writing, we
+        // block waiting — and that deadlock is indistinguishable from the hang
+        // this timeout exists to catch. Draining concurrently also means a
+        // timed-out run still returns whatever the child managed to print.
+        let stdoutBox = DataBox()
+        let stderrBox = DataBox()
+        let drained = DispatchGroup()
+        for (handle, box) in [
+            (stdoutPipe.fileHandleForReading, stdoutBox),
+            (stderrPipe.fileHandleForReading, stderrBox)
+        ] {
+            DispatchQueue.global(qos: .userInitiated).async(group: drained) {
+                box.append(handle.readDataToEndOfFile())
+            }
+        }
+
         try process.run()
-        process.waitUntilExit()
-        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-        return Output(
-            exitCode: process.terminationStatus,
-            stdout: String(data: stdoutData, encoding: .utf8) ?? "",
-            stderr: String(data: stderrData, encoding: .utf8) ?? ""
-        )
+        let timedOut = waitForExit(process, timeout: timeout)
+        // Bounded: both handles hit EOF once the child is gone.
+        _ = drained.wait(timeout: .now() + 30)
+
+        let stdout = String(data: stdoutBox.value, encoding: .utf8) ?? ""
+        let stderr = String(data: stderrBox.value, encoding: .utf8) ?? ""
+        if timedOut {
+            throw VerifyError.runnerCrashed(
+                reason: "timed-out: the verifier ran longer than "
+                    + "\(Int(timeout ?? 0))s and was killed. The generated property did not "
+                    + "terminate — most often a filtering generator "
+                    + "(`.compactMap { T(rawValue:) }` over random strings) that can "
+                    + "essentially never produce a value."
+                    + (stdout.isEmpty ? "" : " Partial stdout: \(stdout.prefix(400))")
+            )
+        }
+        return Output(exitCode: process.terminationStatus, stdout: stdout, stderr: stderr)
+    }
+
+    /// Wait for `process`, returning `true` if the deadline passed first (in
+    /// which case the process has been killed). A `nil` timeout waits forever,
+    /// preserving the previous behaviour for callers that want it.
+    private static func waitForExit(_ process: Process, timeout: TimeInterval?) -> Bool {
+        guard let timeout else {
+            process.waitUntilExit()
+            return false
+        }
+        let deadline = Date().addingTimeInterval(timeout)
+        while process.isRunning, Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        guard process.isRunning else {
+            process.waitUntilExit()
+            return false
+        }
+        // SIGTERM first so a well-behaved child can flush; SIGKILL if it won't
+        // go. A hung generator loop ignores SIGTERM, so the escalation matters.
+        process.terminate()
+        let graceDeadline = Date().addingTimeInterval(2)
+        while process.isRunning, Date() < graceDeadline {
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        if process.isRunning {
+            kill(process.processIdentifier, SIGKILL)
+            process.waitUntilExit()
+        }
+        return true
     }
 }

@@ -152,7 +152,11 @@ struct DiscoverPipelineGeneratorTests {
         #expect(recording.text.contains("Generator: .derivedCaseIterable, confidence: .high"))
     }
 
-    @Test("CLI surfaces .derivedRawRepresentable generator line for raw-value enum property")
+    /// A raw-valued enum with visible cases enumerates them rather than
+    /// filtering random raw values — see the sibling golden in
+    /// `GeneratorSelectionIntegrationTests` and `docs/roadtest-self-dogfood.md`
+    /// §11.2.1 for why the old recipe could not terminate.
+    @Test("CLI surfaces .derivedEnumCases generator line for raw-value enum property")
     func cliRendersDerivedRawRepresentableGenerator() throws {
         let directory = try writeDPFixture(name: "GenSelectRawRepCLI", contents: """
         enum StatusCode: Int {
@@ -170,7 +174,7 @@ struct DiscoverPipelineGeneratorTests {
             directory: directory,
             output: recording
         )
-        #expect(recording.text.contains("Generator: .derivedRawRepresentable, confidence: .high"))
+        #expect(recording.text.contains("Generator: .derivedEnumCases, confidence: .medium"))
     }
 
     @Test("CLI surfaces .registered generator line for static gen() property")
