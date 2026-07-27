@@ -812,10 +812,70 @@ Four mutants, all killed, including the two that matter: dropping `enumCases` on
 (reproducing the original bug verbatim) and the subtler one where the field survives conversion but is
 never encoded.
 
-**The `TypeShape` mirror is now covered; the other projections are not.** The honest read is that this
-guard closes one instance of a class, and the class is "any place this repo re-shapes something the kit
-reasons over." `IndexStore`, `SemanticIndexEntry`, and the interaction-surface mirrors are the same
-shape of risk and have no equivalent parity law.
+## §11.3.3 Extending the guard — and finding it was the wrong shape
+
+`IndexProjectionParityPropertyTests` (11 tests) extends parity to the rest of the persisted index:
+`updated(from:)` on both entry types, `Codable` round trips with every column populated, the `Index`
+container, and `upsert`'s documented behaviour (preserve `firstSeenAt`, keep history, sort by identity,
+merge shapes, leave the sibling surface alone).
+
+Two mechanisms carry the risk, and neither announces itself. **`updated(from:)` rebuilds field-by-field
+through an initializer whose optionals and `Bool`s all have defaults**, so omitting a field compiles
+and silently reverts it on the next re-index. This repo already learned that once — the archived note
+on `InteractionInvariantSuggestion.with(…)` says it outright: *"a single site that still rebuilds
+field-by-field still drops any field it forgets, silently, because the initialiser's parameters have
+defaults. Mutating a copy cannot."* Both index entries still rebuild. And **hand-written `Codable`**
+loses a field with no error at either end.
+
+**Then the obvious problem with all of it.** Every guard written so far — including
+`IndexedTypeShapeParityPropertyTests` — is *field-by-field*. It catches the fields someone thought to
+name, and this bug is by definition the field nobody thought about. `enumCases` was absent for the
+entire life of the type and no test failed, because no test knew to look for a field that did not
+exist. **A field-by-field guard is a list of the things we already remembered.**
+
+## §11.3.4 The guard that does not need updating
+
+`FieldCoverageReflectionTests` asks the *type itself* what fields it has and compares that against
+what survives encoding:
+
+```swift
+let stored  = Set(Mirror(reflecting: value).children.compactMap(\.label))
+let encoded = Set(encodedTopLevelKeys(of: value))
+#expect(stored.subtracting(encoded).isEmpty)
+```
+
+Staged against the exact future scenario — add a stored property, add it to the initializer, forget it
+in `CodingKeys` — it reports:
+
+```
+`IndexedTypeShape` has stored property `newColumn` that never reaches the encoded
+form — add it to `encode(to:)` and `CodingKeys`.
+```
+
+**Nobody wrote a test for `newColumn`.** Set that against how the same class presented the first three
+times: a hung verifier, an `unsupported-carrier`, and an `architectural-coverage-pending` — every one
+of them several layers downstream of the cause, and every one of them reading as a *limitation*.
+
+Five types covered, plus a control fixture with a deliberately lossy encoder, because a coverage check
+that cannot fail is worse than none. That control earned itself immediately: the first mutation
+attempt came back **silent**, and the reason was that it broke the build rather than staging the bug —
+a false negative that would have made the whole suite look validated.
+
+### What reflection does not reach, and three options that would
+
+`Mirror` sees the encode side. It cannot see a field that encodes correctly but is dropped by a
+*converter* (`updated(from:)`, `init(from kitShape:)`) — which is precisely where `enumCases` died.
+Three ways to close that, none taken here:
+
+1. **Delete the defaults.** Give converters a no-defaults initializer and a forgotten field becomes a
+   *compile error* — strictly better than any test. Costs one extra initializer per type.
+2. **Mutate a copy instead of rebuilding.** A forgotten field then keeps the old value rather than
+   reverting to a default. This repo already did exactly this for `InteractionInvariantSuggestion`;
+   the index entries have `let` properties, so it is a real change.
+3. **Generate the converters.** A macro removes the class outright.
+
+Option 1 is the one worth doing if this bites a fourth time: it converts the entire class from a test
+that must be remembered into a build that cannot succeed.
 
 ---
 
