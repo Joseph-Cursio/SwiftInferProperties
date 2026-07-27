@@ -701,7 +701,7 @@ never.
 Two new candidates appeared (`SeedRole`, from upstream work merged mid-session) and both report
 `unsupported-carrier` — honest boundaries.
 
-### The ledger, restated again
+### The ledger at the time (superseded by §11.3.1)
 
 | | Count |
 |---|---|
@@ -759,7 +759,7 @@ because the consumer had already discarded what the fix needed:
 |---|---|---|
 | 1 | `GeneratorResolver` refuses an ambiguous bare name (v3.18.0) | `IndexStore.typeShapes` is keyed on the bare name, so the ambiguity was collapsed before the kit saw it (§11.1) |
 | 2 | `.caseIterable` emits a compilable expression (v3.18.0) | *did* fire — the one that worked |
-| 3 | `.enumCases` beats `.rawRepresentable` (v3.19.0) | `IndexedTypeShape` carries no `enumCases`, so there is nothing to enumerate |
+| 3 | `.enumCases` beats `.rawRepresentable` (v3.19.0) | `IndexedTypeShape` carried no `enumCases`, so there was nothing to enumerate — **closed in §11.3.1** |
 
 Two of three. The shared mechanism is that **the kit reasons over a projection the consumer
 controls**, and every field the projection omits silently disables whichever kit tier depends on it —
@@ -772,11 +772,50 @@ A refuter that fires first hides every refuter behind it, and reading the code c
 many are queued up. That was said about purity gates; it turns out to describe cross-repo projections
 just as well.
 
-**The consumer-side fix is small and specified:** add `enumCases` to `IndexedTypeShape`, populate it
-in the `TypeShape` → `IndexedTypeShape` projection, and decode it `decodeIfPresent` so existing index
-files keep working. Unmade — and deliberately not started without checking, because the honest
-lesson here is that the fourth attempt should begin by asking what *else* the projection drops, rather
-than by fixing the one field this survey happened to need.
+## §11.3.1 The fix, and what it actually closed
+
+`enumCases` added to `IndexedTypeShape` — a mirror `EnumCase` type, populated in both directions of
+the `TypeShape` projection, `decodeIfPresent` so existing index files decode to `[]` unchanged (no
+schema bump). 50 shapes now carry cases; `IndexedTypeShape.Kind` arrives as
+`["`struct`", "`class`", "`enum`", "`actor`"]`, keyword escapes intact — which matters, because they
+are interpolated straight into `Kind.`struct`` in the emitted generator and stripping them yields
+`Kind.struct`, which does not parse.
+
+**The survey went from 5 verdicts to 8 of 8 `measured-bothPass`.**
+
+| Carrier | Before | After |
+|---|---|---|
+| `SemanticIndexEntry` | `timed-out` (300s) | `measured-bothPass` |
+| `SeedKind` | `unsupported-carrier` | `measured-bothPass` |
+| `SeedRole` | `unsupported-carrier` | `measured-bothPass` |
+| the other five | `measured-bothPass` | unchanged |
+
+The part worth noting is the two `unsupported-carrier` rows. Those had been filed as *honest
+boundaries* — the one outcome class this write-up has repeatedly treated as trustworthy. They were
+the same bug wearing a different label: enums whose cases were dropped, reported as "we don't support
+this carrier" rather than "we discarded the data that would have supported it." One missing JSON field
+was producing three different failure modes, two of which read as by-design.
+
+That is the sharpest version of §11.3's lesson. A lossy projection does not announce itself as a
+defect; it announces itself as a *limitation*, and a limitation is something a reader files away
+rather than investigates.
+
+## §11.3.2 The guard
+
+`IndexedTypeShapeParityPropertyTests` — 6 tests, 3 randomized round-trip laws over generated shapes.
+The mirror must preserve the kit shape, preserve it through JSON, and — the law that would have caught
+the original omission — **must not change which strategy the kit derives**. A field added to
+`TypeShape` and forgotten in the mirror surfaces there as a different derivation tier, which is exactly
+what happened when `.enumCases` silently became `.rawRepresentable`.
+
+Four mutants, all killed, including the two that matter: dropping `enumCases` on the way in
+(reproducing the original bug verbatim) and the subtler one where the field survives conversion but is
+never encoded.
+
+**The `TypeShape` mirror is now covered; the other projections are not.** The honest read is that this
+guard closes one instance of a class, and the class is "any place this repo re-shapes something the kit
+reasons over." `IndexStore`, `SemanticIndexEntry`, and the interaction-surface mirrors are the same
+shape of risk and have no equivalent parity law.
 
 ---
 

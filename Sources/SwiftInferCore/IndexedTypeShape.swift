@@ -75,6 +75,36 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         }
     }
 
+    /// Mirror of `PropertyLawCore.EnumCase` — a case name plus its associated
+    /// values, which reuse `InitializerParameter` (label + type spelling) on
+    /// both sides.
+    ///
+    /// **Why this field was missing, and what it cost.** `IndexedTypeShape`
+    /// claims field-for-field parity with the kit's `TypeShape`, and every other
+    /// field has held that. `enumCases` did not: it exists on `TypeDecl`, is
+    /// carried by `TypeShape`, and was dropped on the way into
+    /// `.swiftinfer/index.json`. So at verify time the strategist saw an enum
+    /// with no cases, `enumCasesStrategy` returned `nil`, and derivation fell
+    /// through to `.rawRepresentable` — which emits a *filter* over random raw
+    /// values (`.compactMap { T(rawValue: $0) }`) that for a `String`-raw enum
+    /// essentially never produces a value and does not terminate.
+    ///
+    /// That is how a missing JSON field became a hung verifier: two binaries
+    /// spinning at 99.9% CPU for the better part of an hour, with the survey
+    /// reporting nothing at all. SwiftPropertyLaws v3.19.0 fixed the precedence
+    /// kit-side, and the fix could not fire here because there was nothing to
+    /// enumerate. See `docs/roadtest-self-dogfood.md` §11.3 — the third time a
+    /// correct kit-side fix was disabled by a lossy projection on this side.
+    public struct EnumCase: Codable, Sendable, Equatable {
+        public let name: String
+        public let associatedValues: [InitializerParameter]
+
+        public init(name: String, associatedValues: [InitializerParameter] = []) {
+            self.name = name
+            self.associatedValues = associatedValues
+        }
+    }
+
     public let name: String
     public let kind: Kind
     public let inheritedTypes: [String]
@@ -85,6 +115,9 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
     /// `TypeShape.initializers`; enables the Tier 6 `initializerBased` strategy
     /// at verify time for structs whose user `init` suppresses the memberwise one.
     public let initializers: [InitializerSignature]
+    /// Enum cases from the type's primary body. Mirrors `TypeShape.enumCases`;
+    /// enables the Tier 4 `enumCases` strategy at verify time. See `EnumCase`.
+    public let enumCases: [EnumCase]
 
     public init(
         name: String,
@@ -93,7 +126,8 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         hasUserGen: Bool,
         storedMembers: [StoredMember] = [],
         hasUserInit: Bool = false,
-        initializers: [InitializerSignature] = []
+        initializers: [InitializerSignature] = [],
+        enumCases: [EnumCase] = []
     ) {
         self.name = name
         self.kind = kind
@@ -102,6 +136,7 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         self.storedMembers = storedMembers
         self.hasUserInit = hasUserInit
         self.initializers = initializers
+        self.enumCases = enumCases
     }
 
     // MARK: - Codable
@@ -118,6 +153,7 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         case storedMembers
         case hasUserInit
         case initializers
+        case enumCases
     }
 
     public init(from decoder: Decoder) throws {
@@ -132,6 +168,10 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
             .decodeIfPresent(Bool.self, forKey: .hasUserInit) ?? false
         self.initializers = try container
             .decodeIfPresent([InitializerSignature].self, forKey: .initializers) ?? []
+        // Additive: an index written before this field existed decodes to `[]`,
+        // which is exactly the pre-change behaviour. No schema bump needed.
+        self.enumCases = try container
+            .decodeIfPresent([EnumCase].self, forKey: .enumCases) ?? []
     }
 }
 
@@ -159,6 +199,14 @@ extension IndexedTypeShape {
                     isFailable: sig.isFailable,
                     isThrowing: sig.isThrowing
                 )
+            },
+            enumCases: kitShape.enumCases.map { enumCase in
+                EnumCase(
+                    name: enumCase.name,
+                    associatedValues: enumCase.associatedValues.map {
+                        InitializerParameter(label: $0.label, typeName: $0.typeName)
+                    }
+                )
             }
         )
     }
@@ -182,6 +230,14 @@ extension IndexedTypeShape {
                     },
                     isFailable: sig.isFailable,
                     isThrowing: sig.isThrowing
+                )
+            },
+            enumCases: enumCases.map { enumCase in
+                PropertyLawCore.EnumCase(
+                    name: enumCase.name,
+                    associatedValues: enumCase.associatedValues.map {
+                        PropertyLawCore.InitializerParameter(label: $0.label, typeName: $0.typeName)
+                    }
                 )
             }
         )
