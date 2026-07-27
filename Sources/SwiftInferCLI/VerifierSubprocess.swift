@@ -341,30 +341,40 @@ public enum VerifierSubprocess {
     /// Wait for `process`, returning `true` if the deadline passed first (in
     /// which case the process has been killed). A `nil` timeout waits forever,
     /// preserving the previous behaviour for callers that want it.
+    ///
+    /// **Event-driven, not a poll loop.** The first version of this read
+    /// `Date()` in a `while` condition and slept 50ms per iteration. That is
+    /// two defects at once, and SwiftProjectLint flagged both within hours —
+    /// four `Non-Injected Nondeterminism` hits and two `Thread Sleep` hits, in
+    /// code whose entire purpose is to make a *timing* behaviour testable
+    /// (`docs/roadtest-self-dogfood.md` §14.4). `Process.terminationHandler`
+    /// plus a semaphore waits on the actual event and takes its deadline from a
+    /// monotonic source, so nothing reads the wall clock and nothing spins.
     private static func waitForExit(_ process: Process, timeout: TimeInterval?) -> Bool {
         guard let timeout else {
             process.waitUntilExit()
             return false
         }
-        let deadline = Date().addingTimeInterval(timeout)
-        while process.isRunning, Date() < deadline {
-            Thread.sleep(forTimeInterval: 0.05)
-        }
-        guard process.isRunning else {
+        // `terminationHandler` fires once the child is reaped. Signalling a
+        // semaphore from it turns "has it exited yet?" from a question we ask
+        // repeatedly into one the OS answers once.
+        let exited = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in exited.signal() }
+        // A child that exited between `run()` and the handler being installed
+        // would never signal, so check once explicitly.
+        if !process.isRunning { exited.signal() }
+
+        if exited.wait(timeout: .now() + timeout) == .success {
             process.waitUntilExit()
             return false
         }
         // SIGTERM first so a well-behaved child can flush; SIGKILL if it won't
         // go. A hung generator loop ignores SIGTERM, so the escalation matters.
         process.terminate()
-        let graceDeadline = Date().addingTimeInterval(2)
-        while process.isRunning, Date() < graceDeadline {
-            Thread.sleep(forTimeInterval: 0.05)
-        }
-        if process.isRunning {
+        if exited.wait(timeout: .now() + 2) != .success {
             kill(process.processIdentifier, SIGKILL)
-            process.waitUntilExit()
         }
+        process.waitUntilExit()
         return true
     }
 }

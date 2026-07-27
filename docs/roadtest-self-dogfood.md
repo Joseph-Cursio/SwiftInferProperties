@@ -1036,3 +1036,132 @@ slipped straight through. The assertion had to be about what the code *does*, no
    collision-dependent failure *within* a single generated value (two records inside one log) is still
    unreachable, and that is a real gap.
 3. **`swift build` in the verifier is still unbounded** (§11.2.4 item 3).
+
+---
+
+# §14 Re-running the loop against the current linter
+
+§2's figures are pinned to `SwiftProjectLint @ 6176101`. The linter is now **28 commits** ahead, and
+several of those commits change the seed manifest directly — `Stop seeding functions no test can
+call`, `Emit what the code IS in the seed manifest`, `Require kind when decoding a seed manifest`,
+`Seed computed properties, which the manifest could not see at all`, `Tell a private candidate what to
+do, and stop withholding it`.
+
+Per the freeze rule §2 is **not edited**. This is a fresh measurement against
+`SwiftProjectLint @ 4e54aa3`, recorded alongside the original rather than replacing it.
+
+## §14.1 Prediction, logged before the re-run
+
+1. **Total seeds fall.** Two commits explicitly *remove* seeds (`Stop seeding functions no test can
+   call`, and the restricted-seed work), against one that adds them (computed properties). I predict
+   a net decrease from 1,657, and that the `pure-function` count drops most.
+2. **A new seed kind or field appears.** `Emit what the code IS` and the `role` field imply the
+   manifest carries more than `{file, line, symbol, kind}` now.
+3. **`discover`'s default-tier count is unchanged at 21.** Nothing in the linter feeds `discover`
+   unless `--seeds` is passed, and §2's run did not pass it. If this moves, my model of the coupling
+   is wrong.
+4. **The `Non-Injected Nondeterminism` count is 6, not 18** — twelve were fixed in §12, and nothing
+   since should have reintroduced them.
+
+*(Results appended below as measured.)*
+
+## §14.2 Result — measured against `SwiftProjectLint @ 4e54aa3`
+
+### Seeds
+
+| Kind | §2 (`6176101`) | now (`4e54aa3`) | Δ |
+|---|---|---|---|
+| `pure-function` | 1,457 | 926 | **−531** |
+| `restricted-function` | — | **633** | *new kind* |
+| `extractable-kernel` | 200 | 217 | +17 |
+| **Total** | **1,657** | **1,776** | **+119** |
+
+### Linter findings
+
+| Rule | §12 | now | |
+|---|---|---|---|
+| Pure Function Property-Test Candidate | 1,458 | 1,559 | |
+| Pure Closure Property-Test Candidate | 199 | 208 | |
+| Extractable Pure Kernel | 1 | **9** | the path-derivation shape |
+| Non-Injected Nondeterminism | 6 *(after §12's fix)* | **10** | see below |
+| Thread Sleep | — | **2** | *new rule* |
+| **Total issues** | 2,313 | 2,441 | |
+
+### `discover`
+
+| Target | §2 default tier | now |
+|---|---|---|
+| SwiftInferCore | 16 | 22 |
+| SwiftInferTemplates | 3 | 5 |
+| SwiftInferCLI | 2 | 5 |
+| SwiftInferTestLifter | 0 | 2 |
+| **Total** | **21** | **34** |
+
+## §14.3 Scoring the re-run predictions
+
+| # | Prediction | Outcome |
+|---|---|---|
+| 1 | Total seeds fall | **Wrong on direction** — 1,657 → 1,776. The `pure-function` half was right (−531). |
+| 2 | A new seed *field* appears | **Wrong in kind** — the record keys are unchanged. A new *`kind`* appeared instead. |
+| 3 | `discover` default tier unchanged at 21 | **Wrong** — 34. The *reasoning* held; the arithmetic did not. See below. |
+| 4 | `Non-Injected Nondeterminism` is 6 | **Wrong** — 10. |
+
+Four for four wrong, which is worth more than four for four right would have been.
+
+**Prediction 1 — the seeds did not fall, they got *sorted*.** `Stop seeding functions no test can call`
+does not delete those seeds; it reclassifies 531 of them into a new `restricted-function` kind. That
+is a strictly better manifest: it separates "pure and reachable from a test" from "pure but nothing
+can call it," which the old single `pure-function` bucket conflated. I predicted a *deletion* because
+the commit subject says "stop seeding" — reading a changelog is not reading a diff.
+
+**The consumer already handles it.** `SeedKind.restrictedFunction` is a first-class case in
+`SeedManifest.swift`, with `isAnalysable == false` — so the 633 are correctly excluded from
+`--seeds` focus rather than silently narrowed. Had it *not* been handled, `SeedKind.unrecognised`
+would have caught it and also reported `isAnalysable == false`: the forward-compatibility case
+`PersistenceRoundTripPropertyTests` pins, doing its job on a kind that genuinely did not exist when
+that test was written.
+
+**Prediction 3 — right reasoning, wrong number.** The claim was that the linter cannot move
+`discover`'s count without `--seeds`, and that holds. What moved the number is that *this repo's own
+source changed* — the upstream work merged mid-session plus the files added by §11–§13 — so
+`idempotence` and `invariant-preservation` now fire where they did not before. I predicted a
+comparison against a moving baseline and forgot that I was the one moving it.
+
+**Prediction 4 — the new linter sees more than the old one.** §12 left 6 sites. Four of the extra
+four are in `VerifierSubprocess.swift`, which did not exist in that form when §12 ran.
+
+## §14.4 The linter caught code written in this session
+
+The four new `Non-Injected Nondeterminism` hits and both `Thread Sleep` hits land on
+`VerifierSubprocess.waitForExit` — the timeout added in §11.2, hours old:
+
+```swift
+let deadline = Date().addingTimeInterval(timeout)
+while process.isRunning, Date() < deadline {
+    Thread.sleep(forTimeInterval: 0.05)
+}
+```
+
+The criticism is correct, and it is the same criticism §12 was about. The deadline reads the wall
+clock directly and the poll busy-waits, so the timeout cannot be tested deterministically — which is
+exactly why `VerifierTimeoutTests` had to spawn *real* subprocesses and wait *real* seconds. That
+suite takes ~3.5s of pure sleeping, and its assertions are bounds (`elapsed < 20`) rather than
+equalities, because there is no injected clock to pin.
+
+**Fixed.** `waitForExit` now waits on `Process.terminationHandler` signalling a
+`DispatchSemaphore`, with the deadline expressed as `.now() + timeout` — event-driven, no wall-clock
+read, no spin. (One subtlety the rewrite has to handle: a child that exits between `run()` and the
+handler being installed would never signal, so `isRunning` is checked once explicitly.)
+
+| | before | after |
+|---|---|---|
+| `Non-Injected Nondeterminism` | 10 | **6** — exactly §12's residue |
+| `Thread Sleep` | 2 | **0** |
+| `VerifierTimeoutTests` | 5.1s | 3.5s |
+
+**The finding is not the fix, it is that §12's lesson did not stick.** I fixed twelve `Date()` sites,
+wrote up the mechanism at length, and then introduced four more within the same session — in code
+whose entire purpose is to make a *timing* behaviour testable, and whose tests had to spawn real
+subprocesses and sleep real seconds precisely because of it. The loop caught it; I did not. That is
+the argument for running the linter every time rather than once, and it is the same shape as
+§12 itself: the tool said it first, in the stage that is easy to skip.
