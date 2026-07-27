@@ -139,9 +139,18 @@ public enum SeedKind: Sendable, Equatable {
     /// function no test could call. The two tools had been disagreeing silently, and only noticed
     /// once both sides stated their beliefs in a comparable vocabulary.
     ///
-    /// Refactor-pending rather than dropped, and for the reason `RestrictedFunction` already
-    /// argues: a private helper is often the *best* property target. The obstacle is an access
-    /// level, which is a decision only a human makes.
+    /// **Analysable — the kind is a label, not a gate.**
+    ///
+    /// It first shipped grouped with `extractableKernel` as not-analysable, which conflated two
+    /// different obstacles. A kernel has no symbol: nothing to call, no signature, no law to
+    /// propose. A restricted function has both, and lacks only *verifiability* from another module.
+    /// `isAnalysable` asks whether analysis may be narrowed to this symbol, and for a private
+    /// function the answer is yes.
+    ///
+    /// Getting that wrong was not academic: `analysableSeeds` is the set `synthesizeGenericLaws`
+    /// keys on, so marking these unanalysable silently switched off the rescue this file's
+    /// `SeededPrivateFunctionTests` exists to guarantee — for every seed the producing linter
+    /// emits. Access level belongs in the advice, never in the gate.
     case restrictedFunction
 
     /// A kind emitted by a newer producer than this build knows.
@@ -155,10 +164,10 @@ public enum SeedKind: Sendable, Equatable {
 
     public var isAnalysable: Bool {
         switch self {
-        case .pureFunction, .idempotency:
+        case .pureFunction, .idempotency, .restrictedFunction:
             return true
 
-        case .extractableKernel, .restrictedFunction, .unrecognised:
+        case .extractableKernel, .unrecognised:
             return false
         }
     }

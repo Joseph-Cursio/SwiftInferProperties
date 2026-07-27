@@ -47,20 +47,54 @@ extension SwiftInferCommand.Discover {
             )
         }
 
+        // Files this run actually READ — which is not the same as files with an analysable summary.
+        //
+        // `summaries` excludes access-restricted functions, so a file whose only candidates are
+        // `private` contributes nothing to it. Scoping on summaries alone therefore scoped OUT the
+        // very seeds `SeededPrivateFunctionTests` exists to honour: a seed naming a private function
+        // is a REQUEST, and the rescue path can only fire if the seed survives to be focused on.
+        // `restrictedFunctions` puts those files back.
+        let scannedFiles = Set(
+            pipeline.summaries.map(\.location.file)
+                + pipeline.restrictedFunctions.map(\.summary.location.file)
+        )
+
         // Say what a human must do before any tool can help. These seeds never focus — see below.
         reportRefactorPending(
             in: seedManifest,
-            scannedFiles: Set(pipeline.summaries.map(\.location.file)),
+            scannedFiles: scannedFiles,
             diagnostics: diagnostics
         )
 
-        let focusing = seedManifest.analysableSeeds
+        // **Scoped to what was actually scanned**, on the same terms as the kernel listing above.
+        //
+        // A manifest is written for a whole project; a `discover` run covers one target. Feeding
+        // the unscoped set here reported "focused on 145 analysable seed(s)" for a target holding
+        // six of them, which made a healthy run read as a catastrophic one — `kept 4 of 6` against
+        // an announced 145.
+        //
+        // It also removed a guard the join needs rather than merely miscounting. `SeedFocus` matches
+        // on `(file basename, bare symbol)`, and `inScope` exists because that key collides across
+        // targets — this project has several `Support/` twins. An out-of-target seed offered to the
+        // join can therefore match an in-target suggestion for the wrong reason. Measured on
+        // SwiftProjectLint the collision set is currently EMPTY (145 seeds, 134 keys, no key
+        // spanning two files), so nothing was mismatched today; the scoping is what keeps that true
+        // as either side grows.
+        let focusing = seedManifest.analysableSeeds.filter {
+            inScope($0, scannedFiles: scannedFiles)
+        }
         let analysableManifest = SeedManifest(version: seedManifest.version, seeds: focusing)
 
         // No *analysable* seed is not a request to see nothing. There are two ways to arrive here
         // and the reader needs to be told which, because the remedy differs.
         if focusing.isEmpty {
-            diagnostics.writeDiagnostic(noFocusWarning(for: seedManifest, pipeline: pipeline))
+            diagnostics.writeDiagnostic(
+                noFocusWarning(
+                    for: seedManifest,
+                    pipeline: pipeline,
+                    outOfScopeAnalysableCount: seedManifest.analysableSeeds.count
+                )
+            )
             let unfocused = pipeline.suggestions + synthesizeGenericLaws(
                 for: analysableManifest,
                 summaries: pipeline.summaries,
@@ -326,10 +360,21 @@ extension SwiftInferCommand.Discover {
     /// steps, and a single message for both would send half of its readers the wrong way.
     private static func noFocusWarning(
         for seedManifest: SeedManifest,
-        pipeline: PipelineResult
+        pipeline: PipelineResult,
+        outOfScopeAnalysableCount: Int = 0
     ) -> String {
         let shown = "no focus was applied and all \(pipeline.suggestions.count) suggestion(s) "
             + "are shown."
+
+        // A third way to have nothing to focus on, and it arrived with scoping the focus set: the
+        // manifest holds analysable seeds and none of them name a file this run scanned. Saying
+        // "they must be done by hand" here would be false — they are ordinary seeds, just in
+        // another target — and saying "the manifest is empty" would be false too.
+        if outOfScopeAnalysableCount > 0 {
+            return "warning: none of the \(outOfScopeAnalysableCount) analysable seed(s) name a "
+                + "file under the scanned sources, so \(shown) They belong to other targets; "
+                + "re-run `discover` there to focus on them."
+        }
 
         guard !seedManifest.seeds.isEmpty else {
             return "warning: the seeds manifest is empty, so \(shown) An empty manifest usually "

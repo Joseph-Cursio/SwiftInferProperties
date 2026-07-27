@@ -83,8 +83,6 @@ extension SwiftInferCommand.Discover {
             }
         }
 
-        reportRestricted(pending, scannedFiles: scannedFiles, diagnostics: diagnostics)
-
         for seed in unknown {
             diagnostics.writeDiagnostic(
                 "warning: seed `\(seed.symbol)` (\(seed.file):\(seed.line)) has kind "
@@ -93,40 +91,6 @@ extension SwiftInferCommand.Discover {
                     + "ends up reporting a confident zero. Upgrade swift-infer, or re-run without "
                     + "--seeds."
             )
-        }
-    }
-
-    /// Named, pure, and unreachable: `private` or `fileprivate`.
-    ///
-    /// A separate block from the kernel listing because the obstacle is different and so is the
-    /// fix. A kernel has no name — someone must draw a boundary. These have a perfectly good name
-    /// and a perfectly good signature; the only thing standing between them and a property test is
-    /// an access-level keyword. Merging the two lists would hand the reader one instruction for two
-    /// different problems.
-    ///
-    /// Scoped like the kernel listing, and for the same reason: it names work in a specific file.
-    static func reportRestricted(
-        _ pending: [SeedManifest.Seed],
-        scannedFiles: Set<String>,
-        diagnostics: any DiagnosticOutput
-    ) {
-        let restricted = pending
-            .filter { $0.kind == .restrictedFunction }
-            .filter { inScope($0, scannedFiles: scannedFiles) }
-        guard !restricted.isEmpty else { return }
-
-        diagnostics.writeDiagnostic(
-            "\(restricted.count) restricted function(s) — pure, total and named, but `private` or "
-                + "`fileprivate`, so no test can call them. `@testable import` reaches `internal` "
-                + "and no further. Widen the access level, or lift the logic somewhere reachable:"
-        )
-        for seed in prioritised(restricted) {
-            var line = "  \(seed.file):\(seed.line): `\(seed.symbol)` — make it `internal` to "
-                + "property-test it."
-            if let law = seed.role?.lawSentence {
-                line += " It is \(law)."
-            }
-            diagnostics.writeDiagnostic(line)
         }
     }
 

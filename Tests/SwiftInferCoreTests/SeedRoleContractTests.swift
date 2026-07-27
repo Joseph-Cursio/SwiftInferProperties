@@ -106,27 +106,35 @@ struct SeedRoleContractTests {
     /// seeds analysable while naming functions no test could call. An older build of this tool
     /// would read it as `.unrecognised` — not analysable, and said out loud — which is the correct
     /// degradation, but this build should name it properly.
-    @Test("the restricted-function kind decodes and is not analysable")
+    @Test("the restricted-function kind decodes and IS analysable")
     func restrictedFunctionKindIsUnderstood() throws {
         let json = Data("""
         {"file":"A.swift","line":1,"symbol":"hidden","kind":"restricted-function","role":"predicate"}
         """.utf8)
         let seed = try JSONDecoder().decode(SeedManifest.Seed.self, from: json)
         #expect(seed.kind == .restrictedFunction)
-        #expect(seed.kind.isAnalysable == false)
+        // This asserted `false` when the case first shipped, grouping it with `extractableKernel`.
+        // That conflated two obstacles: a kernel has no symbol at all, while a restricted function
+        // has a name and a signature and lacks only VERIFIABILITY from another module. Since
+        // `analysableSeeds` is what `synthesizeGenericLaws` keys on, the false silently disabled
+        // the seeded-private rescue in `SeededPrivateFunctionTests`.
+        #expect(seed.kind.isAnalysable)
         #expect(seed.kind.rawValue == "restricted-function")
         // The role still arrives — an access level is the obstacle, not the classification.
         #expect(seed.role == .predicate)
     }
 
-    @Test("restricted seeds are refactor-pending, not analysable")
-    func restrictedSeedsArePending() {
+    @Test("restricted seeds are analysable; only kernels are refactor-pending")
+    func onlyKernelsArePending() {
+        // Access level decides what must happen before a law can be VERIFIED. Purity, shape and
+        // role decide whether a law is worth proposing. Only the second question gates analysis.
         let manifest = SeedManifest(seeds: [
             SeedManifest.Seed(file: "A.swift", line: 1, symbol: "open", kind: .pureFunction),
-            SeedManifest.Seed(file: "A.swift", line: 9, symbol: "hidden", kind: .restrictedFunction)
+            SeedManifest.Seed(file: "A.swift", line: 9, symbol: "hidden", kind: .restrictedFunction),
+            SeedManifest.Seed(file: "A.swift", line: 20, symbol: "trapped", kind: .extractableKernel)
         ])
-        #expect(manifest.analysableSeeds.map(\.symbol) == ["open"])
-        #expect(manifest.refactorPendingSeeds.map(\.symbol) == ["hidden"])
+        #expect(manifest.analysableSeeds.map(\.symbol) == ["open", "hidden"])
+        #expect(manifest.refactorPendingSeeds.map(\.symbol) == ["trapped"])
     }
 
     @Test("a manifest with no role field still decodes")
