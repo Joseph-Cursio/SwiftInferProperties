@@ -378,6 +378,54 @@ protocol rather than any conforming type. That is swift-syntax's exact shape,
 and it is why the fidelity law is still unreachable there. Pinned by
 `ParsePrintInverseNameTests.protocolExtensionPrinterStillCannotPair`.
 
+#### Fixed — and the survey's headline miss is closed
+
+`FunctionPairing` now admits a **protocol-mediated printer half**: the concrete
+codomain may *conform to* the printer's declaring protocol rather than equal
+it. Same admissibility idea as §5's erased self-form — the two halves compose
+because the conformance says they do.
+
+**Measured on real swift-syntax** (SwiftParser + SwiftSyntax + SwiftBasicFormat
+in one scan, so `SourceFileSyntax: SyntaxProtocol` resolves):
+
+```
+Template: round-trip    Score: 45 (Likely)
+  ✓ parse(source:) (String) -> SourceFileSyntax — ParseSourceFile.swift:22
+  ✓ description() () -> String — SyntaxProtocol.swift:531
+  ✓ Type-symmetry signature: String -> SourceFileSyntax ↔ SourceFileSyntax -> String (+30)
+  ✓ Curated inverse name pair: parse/description (+40)
+  ✓ Cross-type round-trip pair: forward in Parser, reverse in SyntaxProtocol (-25)
+```
+
+That is `Parser.parse(source).description == source` — the law asserted at
+`Tests/SwiftParserTest/Parser+EntryTests.swift:22`, and **the miss this survey
+opened with**. It took three fixes composing: §3a supplied the `parse`/
+`description` name pair (+40, without which the residue is 5 and suppressed),
+§3b's work established the pattern, and §3c formed the pair.
+
+**Measured cost: +1 row, corpus-wide.** Every single-module corpus is
+byte-identical; the combined swift-syntax scan went 932 → 933, and the diff is
+exactly the two halves of that one pair. Nothing was removed anywhere.
+
+The gate that bought this is `isPrinterHalf` — nullary, instance, `-> String`,
+named `description` or `debugDescription`. Relaxing "codomain conforms to the
+other half's domain" *in general* would pair every `X -> Concrete` against
+every `Protocol -> X` in the corpus, which is the combinatorial flood §3b's
+counter exists to stop. Scoped to the two `CustomStringConvertible` names it
+admits one extra shape and no more.
+
+**A caveat shipped with it, because the law is not universally true.** It holds
+for swift-syntax because that printer is full-fidelity; it is **false for any
+lossy parser**, and false for correct code. Every printer-half pair now
+discloses which of the three readings is meant — `parse(print(x)) == x` over
+values (cheap, nearly always true), `print(parse(s)) == s` over source text
+(the interesting one, full-fidelity only), or the normal-form law
+`print(parse(print(parse(s)))) == print(parse(s))` for the lossy case. That
+last is §3d's retract, still unbuilt as a template but now at least *named* at
+the point of use. The caveat reaches 11 suggestions on the combined scan —
+the new pair plus ten pre-existing concrete-printer pairs carrying the same
+ambiguity unremarked.
+
 ### 3d. The deeper gap: no notion of *which direction*, and no law for lossy parsers
 
 Even fixed, the catalog would still be modelling this wrong. A parse/print pair
@@ -733,7 +781,11 @@ that contains three real parsers and a writer.
    tightenings (a decorator is not an erasure; a conformance is not an
    erasure). *(§4)*
 6. Veto `@resultBuilder` `buildX` methods from type-symmetry pairing. *(§8)*
-7. Pair against `CustomStringConvertible.description` as a printer half. *(§3c)*
+7. ~~Pair against `CustomStringConvertible.description` as a printer half.~~
+   **Shipped — and it closes the survey's headline miss.**
+   `Parser.parse(source).description == source` is now proposed on real
+   swift-syntax at 45/Likely, with a caveat naming which of the three
+   directions is meant. Cost: +1 row corpus-wide. *(§3c)*
 
 **Holes (new templates / new discovery):**
 

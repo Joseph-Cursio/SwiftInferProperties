@@ -162,6 +162,20 @@ public enum RoundTripTemplate {
                     + "(`decode(encode(x)) == .some(x)`)."
             )
         }
+        if FunctionPairing.isPrinterHalf(pair.forward) || FunctionPairing.isPrinterHalf(pair.reverse) {
+            caveats.append(
+                "THE PRINTER HALF MAKES THIS A CLAIM ABOUT THE TEXT DOMAIN, and which "
+                    + "direction you mean decides whether it is true. `parse(print(x)) == x` "
+                    + "over VALUES holds for essentially any parser and is the cheap "
+                    + "direction. `print(parse(s)) == s` over SOURCE TEXT is the "
+                    + "interesting one, and it holds ONLY if the printer is full-fidelity — "
+                    + "if parsing discards anything (comments, whitespace, the original "
+                    + "spelling of a literal) it is false, and false for correct code. For a "
+                    + "lossy printer the law you actually want is the normal-form one: "
+                    + "`print(parse(print(parse(s)))) == print(parse(s))`, i.e. `print ∘ parse` "
+                    + "is idempotent. State which of the three you mean before encoding it."
+            )
+        }
         if persistenceInverseVerbs.contains(pair.forward.name),
            persistenceInverseVerbs.contains(pair.reverse.name) {
             caveats.append(

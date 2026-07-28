@@ -51,16 +51,41 @@ public enum FunctionPairing {
     ///     `forward.param[0] == reverse.return`.
     /// Pairs are returned exactly once, oriented by `(file, line)` so the
     /// list is deterministic.
-    public static func candidates(in summaries: [FunctionSummary]) -> [FunctionPair] {
+    /// `conformances` is the corpus-wide `name -> inherited types` index. It is
+    /// consulted only by the protocol-printer relaxation below; the strict type
+    /// filter needs nothing. Defaults to empty so existing call sites and the
+    /// pairing test suites compile unchanged.
+    public static func candidates(
+        in summaries: [FunctionSummary],
+        conformances: [String: Set<String>] = [:]
+    ) -> [FunctionPair] {
         let pairable = summaries.filter(isPairable)
         var pairs: [FunctionPair] = []
         for (lhsIndex, lhs) in pairable.enumerated() {
             for rhs in pairable.dropFirst(lhsIndex + 1)
-                where hasInverseTypeShape(lhs, rhs) && initializerPairAdmissible(lhs, rhs) {
+                where hasInverseTypeShape(lhs, rhs, conformances: conformances)
+                    && initializerPairAdmissible(lhs, rhs) {
                 pairs.append(orientedPair(lhs, rhs))
             }
         }
         return pairs.sorted(by: lessThan)
+    }
+
+    /// A **printer half**: a nullary instance member returning `String` under
+    /// one of the two names `CustomStringConvertible` defines.
+    ///
+    /// This is the gate that keeps the protocol relaxation from multiplying.
+    /// Relaxing the type filter to "codomain *conforms to* the other half's
+    /// domain" in general would pair every `X -> Concrete` against every
+    /// `Protocol -> X` the corpus declares — a combinatorial flood of the kind
+    /// the cross-type counter exists to stop. Scoped to printers it admits one
+    /// extra shape: the idiomatic Swift printer, declared once on a protocol.
+    static func isPrinterHalf(_ summary: FunctionSummary) -> Bool {
+        summary.parameters.isEmpty
+            && !summary.isStatic
+            && !summary.isMutating
+            && summary.returnTypeText == "String"
+            && (summary.name == "description" || summary.name == "debugDescription")
     }
 
     /// A synthetic init-derived decode half (`isInitializer`, produced only by
@@ -149,7 +174,8 @@ public enum FunctionPairing {
 
     private static func hasInverseTypeShape(
         _ lhs: FunctionSummary,
-        _ rhs: FunctionSummary
+        _ rhs: FunctionSummary,
+        conformances: [String: Set<String>] = [:]
     ) -> Bool {
         guard let lhsDomain = transformationDomain(lhs),
               let rhsDomain = transformationDomain(rhs),
@@ -157,7 +183,52 @@ public enum FunctionPairing {
               let rhsReturn = rhs.returnTypeText else {
             return false
         }
-        return lhsReturn == rhsDomain && lhsDomain == rhsReturn
+        if lhsReturn == rhsDomain, lhsDomain == rhsReturn {
+            return true
+        }
+        // Protocol-mediated printer half — `docs/parsing-catalog-gap.md` §3c.
+        //
+        // swift-syntax's printer is declared ONCE, on an extension of the
+        // protocol:
+        //
+        //     extension SyntaxProtocol { public var description: String }
+        //     public static func parse(source: String) -> SourceFileSyntax
+        //
+        // The scanner records the printer's domain as `SyntaxProtocol`, which
+        // never meets `String -> SourceFileSyntax` under the strict test, so
+        // the pair never formed and the fidelity law
+        // `parse(source).description == source` was unreachable at any tier —
+        // even after §3a curated the name pair and §3b relieved the cross-type
+        // counter. This is the last of the three §3 blockers.
+        //
+        // The relaxation is exactly: the concrete codomain may CONFORM to the
+        // printer's declaring protocol, rather than equalling it. Same
+        // admissibility idea as the erased self-form (§5) — the two halves
+        // compose because the conformance says they do.
+        if lhsDomain == rhsReturn,
+           isPrinterHalf(rhs),
+           conforms(lhsReturn, to: rhsDomain, conformances) {
+            return true
+        }
+        if lhsReturn == rhsDomain,
+           isPrinterHalf(lhs),
+           conforms(rhsReturn, to: lhsDomain, conformances) {
+            return true
+        }
+        return false
+    }
+
+    /// Whether `type` is recorded as conforming to `protocolName` in the
+    /// scanned corpus. Unresolvable means `false` — silence rather than a
+    /// guessed pair, the same conservative direction the erased self-form and
+    /// `ProtocolCoverageMap` take.
+    private static func conforms(
+        _ type: String,
+        to protocolName: String,
+        _ conformances: [String: Set<String>]
+    ) -> Bool {
+        guard type != protocolName else { return false }
+        return conformances[type]?.contains(protocolName) ?? false
     }
 
     private static func orientedPair(

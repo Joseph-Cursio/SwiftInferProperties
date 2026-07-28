@@ -98,7 +98,8 @@ extension TemplateRegistry {
         // per-summary pass above, so no other template sees them); the
         // round-trip scorer treats an init-derived half via `isInitializer`.
         for pair in FunctionPairing.candidates(
-            in: summaries + InitializerDecodeSynthesizer.summaries(from: typeDecls)
+            in: summaries + InitializerDecodeSynthesizer.summaries(from: typeDecls),
+            conformances: inheritedTypesByName
         ) {
             collectPerPairSuggestions(
                 pair: pair,
