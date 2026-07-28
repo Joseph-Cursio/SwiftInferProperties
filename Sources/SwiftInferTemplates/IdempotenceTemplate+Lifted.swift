@@ -213,11 +213,23 @@ extension IdempotenceTemplate {
         // V1.21.A — IteratorProtocol carrier veto. Cycle-17 finding
         // closure: 4/4 Iterator-shape lifted-idempotence picks reject
         // because Iterator.next()/advance() advance state per call.
+        //
+        // Chained (`else if`) with the stream-consumption veto below rather
+        // than stacked: that veto is the same argument without the
+        // conformance gate, so a carrier satisfying both would otherwise
+        // render two veto bullets saying the same thing.
         if let iteratorVeto = iteratorProtocolCarrierVeto(
             for: lifted,
             inheritedTypesByName: inheritedTypesByName
         ) {
             signals.append(iteratorVeto)
+        } else if let streamVeto = streamConsumptionVeto(forLifted: lifted) {
+            // Stream-consumption veto. `docs/parsing-catalog-gap.md` §2:
+            // 53/53 reject on SwiftParser's Lexer.Cursor / Parser.Lookahead /
+            // TokenConsumer lifted-idempotence picks, none of which conform
+            // to IteratorProtocol. Generalizes V1.21.A from "conforms to
+            // IteratorProtocol" to "is a position in a stream".
+            signals.append(streamVeto)
         }
         // V1.24.B — explicit non-idempotent mutator-name veto. Cycle-20
         // finding closure: 4/4 reject on OC reverse()/removeFirst()/
