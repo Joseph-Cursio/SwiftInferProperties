@@ -172,7 +172,11 @@ struct VerifyResultParserTests {
         )
         let outcome = VerifyResultParser.parse(raw)
         if case let .error(reason) = outcome {
-            #expect(reason.contains("134"))
+            // 134 = 128 + 6 (SIGABRT). The reason names the signal, states
+            // the law was not evaluated, and carries whatever the stub
+            // flushed before dying.
+            #expect(reason.contains("signal 6"))
+            #expect(reason.contains("neither confirmed nor refuted"))
             #expect(reason.contains("VERIFIER CRASHED"))
         } else {
             Issue.record("expected .error; got \(outcome)")

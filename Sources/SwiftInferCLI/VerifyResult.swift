@@ -210,7 +210,57 @@ public enum VerifyResultParser {
             )
         }
 
-        return .error(reason: parseErrorReason(from: output))
+        // A signal-terminated run gets the trap diagnosis; anything else the
+        // generic parse-error detail.
+        return .error(reason: trapReason(from: output) ?? parseErrorReason(from: output))
+    }
+
+    /// Signal-terminated exit codes. `Process.terminationStatus` reports the
+    /// bare signal number for an uncaught signal; a shell reports `128 + n`.
+    /// Both spellings reach here depending on how the run was launched.
+    private static let crashSignals: Set<Int32> = [4, 5, 6, 8, 11]
+
+    /// A crash diagnosis, or nil if the run did not die on a signal.
+    ///
+    /// **A trapped run is not a refutation.** The law was never evaluated: the
+    /// generated input drove the code into a trap before any comparison
+    /// happened. Reporting it as `.defaultFails` would fabricate a
+    /// counterexample, and reporting it as a bare exit code — which is what
+    /// happened before, alongside two empty streams — invites the reading "the
+    /// tool is broken."
+    ///
+    /// Measured cause on the `SeedFocus` entry: `Score.init` sums `Signal.weight`
+    /// with `.reduce(0, +)` while the strategist derives `Gen<Int>.int()` for
+    /// that field, so two drawn weights overflow. `Int` is the type of `weight`;
+    /// nothing in the type says eight of them must sum inside an `Int`. That is
+    /// the road test's recurring finding in a third costume — a generator tuned
+    /// for the *type* and mistuned for the code's *domain*.
+    private static func trapReason(from output: VerifierSubprocess.Output) -> String? {
+        let code = output.exitCode
+        guard crashSignals.contains(code) || crashSignals.contains(code - 128) else { return nil }
+        let signal = crashSignals.contains(code) ? code : code - 128
+
+        var reason = "the verifier trapped (signal \(signal)) — the law was "
+            + "neither confirmed nor refuted. A generated input drove the code "
+            + "into a runtime trap before the property was compared, so this is "
+            + "evidence about the generator's domain, not about the law. The "
+            + "usual cause is a derived generator wider than the code assumes — "
+            + "an unbounded Int drawn for a field the code sums or multiplies."
+
+        let runtimeMessage = output.stderr
+            .split(separator: "\n")
+            .first { $0.contains("Swift runtime failure") || $0.contains("Fatal error") }
+        if let runtimeMessage {
+            reason += " Runtime said: \(runtimeMessage.trimmingCharacters(in: .whitespaces))."
+        }
+        // Whatever the stub flushed before trapping is the closest thing to a
+        // counterexample there is. It survives only because the stub sets
+        // stdout unbuffered — `print` is block-buffered into a pipe.
+        let flushed = pipeJoinedTail(of: output.stdout)
+        if !flushed.isEmpty {
+            reason += " Flushed before the trap: \(flushed)"
+        }
+        return reason
     }
 
     /// V1.52.B — build the `.error` detail string from the raw

@@ -48,6 +48,13 @@ extension SeededStubEmitter {
         return """
         \(importsBlock)
         \(preambleBlock)
+        // Unbuffered stdout. `print` is block-buffered when its output is a
+        // pipe — which is exactly how the verifier is run — so a trap discards
+        // every marker printed before it, and the run comes back with an
+        // opaque signal and two empty streams. Diagnosing one such trap cost
+        // two attempts for precisely this reason.
+        setvbuf(stdout, nil, _IONBF, 0)
+
         let seedTuple: (UInt64, UInt64, UInt64, UInt64) = (
             0x\(hex(seed.stateA)),
             0x\(hex(seed.stateB)),

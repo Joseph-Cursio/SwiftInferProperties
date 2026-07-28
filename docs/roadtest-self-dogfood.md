@@ -1033,6 +1033,7 @@ slipped straight through. The assertion had to be about what the code *does*, no
    re-run belongs in a new section.
 2. ~~The sweep covers binary and ternary laws only~~ — **closed, see §13.6.**
 3. **`swift build` in the verifier is still unbounded** (§11.2.4 item 3).
+4. ~~The `SeedFocus` idempotence SIGTRAP~~ — **closed, see §16.**
 
 ---
 
@@ -1256,3 +1257,85 @@ both times it is invisible from a green result.
 
 Not built. The experiment cost an afternoon and returns a cost estimate rather
 than a feature, which is what it was for.
+
+---
+
+# §16 The SeedFocus trap, diagnosed
+
+The `[Suggestion]` idempotence entry (`0xC54D…`, `SeedFocus.seedIndependent(in:)`)
+had produced three readings across three investigations — a SIGTRAP, a masked
+build failure, then a closure-inference error — and each looked like a different
+kind of problem. Three separate defects were stacked, and the second is why the
+first and third took so long to see.
+
+## §16.1 What was actually wrong
+
+**1. An immediately-applied closure literal cannot infer its parameter.**
+`functionCalls` is sometimes a bare reference and sometimes a closure literal —
+the form a labelled call takes. The emitter applied it inline,
+`{ SeedFocus.seedIndependent(in: $0) }(value)`, leaving `$0` nothing to infer
+from; on a large derived generator the compiler gives up. Now bound once with an
+explicit type. The existing emitter test *pinned the broken form*, so it had to
+change — a test that pins the bug is worse than no test.
+
+**2. `swift build` writes compile errors to stdout, and both failure paths read
+only stderr.** Measured on this workdir: exit 1, **235 `error:` lines on stdout,
+zero bytes on stderr.** Every build failure therefore printed `Last 20 lines of
+stderr:` followed by nothing, and survey mode printed `build-failed: exit=1` —
+the exit code being the least informative part of a build failure, since it is
+always 1. The evidence naming defect 1 was captured and then discarded at the
+last step, and "(no stderr captured)" reads as *the compiler said nothing*.
+
+**3. The trap itself.** With both fixed and the corpus module wired in by hand,
+the stub builds and the original SIGTRAP reproduces. Under lldb:
+
+```
+stop reason = Swift runtime failure: arithmetic overflow
+frame #1: … implicit closure #3 in Score.init() at Score.swift
+```
+
+`Score.init(signals:)` sums `Signal.weight` with `.reduce(0, +)`. The strategist
+derives `Gen<Int>.int()` for that field — the full 64-bit range — so two drawn
+weights overflow. **The law was never evaluated.** `seedIndependent` is neither
+confirmed nor refuted.
+
+## §16.2 Why this is the same finding again
+
+`Int` is the type of `weight`. Nothing in the type says that eight of them must
+sum inside an `Int` — that is a fact about `Score.init`, not about `Signal`. So
+this is §12's finding in a third costume: a derived generator is tuned for
+coverage of the **type** and silently mistuned for the **law** (§12, the
+confident green), for the **collision** (§13), and here for the **domain**.
+
+There is no general fix. Narrowing `Gen<Int>.int()` globally would mask real
+overflow defects and is exactly the "pile on filters" move `CLAUDE.md` warns
+against. What *can* be fixed is that the trap was illegible.
+
+## §16.3 What shipped
+
+- A trapped run is classified as a crash, never a refutation — the law was not
+  evaluated, so a counterexample would be fabricated. Guarded in both
+  directions: signal exits must not refute, and an ordinary exit-1 failure must
+  still refute.
+- The reason names the signal, states the law was neither confirmed nor
+  refuted, points at the generator's domain as the usual cause, quotes the
+  runtime's own message when it survives, and carries whatever the stub flushed.
+- Stubs set `setvbuf(stdout, nil, _IONBF, 0)`. `print` is block-buffered into a
+  pipe, which is how the verifier is run, so a trap discarded every marker
+  before it — the reason diagnosing this cost two attempts.
+- `BuildDiagnostics` takes whichever stream carries `error:` lines rather than
+  swapping one for the other, and prefers located `file:line: error:` lines
+  over a positional tail: a 235-line log ends in `error: fatalError` and
+  `Build failed`, neither of which names a cause.
+
+**Measured honestly:** `setvbuf` recovered nothing *for this entry*, because the
+trap fires on the first generator draw, before any marker is printed. It is
+correct for traps that happen later and was kept on that basis, not because it
+helped here.
+
+**Still open:** the single-suggestion verify path does not wire the corpus
+module, so a carrier internal to the package under test cannot resolve —
+`--corpus-module` is documented for `--all-from-index` only. The end-to-end CLI
+run for this entry therefore stops at `cannot find type 'Suggestion' in scope`
+(now legible, which is the point). The trap classification above is verified by
+unit tests and by the hand-wired workdir, not by that CLI path.

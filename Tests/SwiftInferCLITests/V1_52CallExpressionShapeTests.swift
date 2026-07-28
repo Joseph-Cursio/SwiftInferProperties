@@ -198,8 +198,11 @@ struct V152StderrCaptureTests {
             Issue.record("expected .error outcome")
             return
         }
-        #expect(reason.contains("exited with code 6"))
-        #expect(reason.contains("stderr (last 5 lines, pipe-joined):"))
+        // Exit 6 is SIGABRT, so this now routes through the trap diagnosis:
+        // a signal-terminated run is not a refutation, and the runtime's own
+        // message is quoted rather than a positional stderr tail.
+        #expect(reason.contains("signal 6"))
+        #expect(reason.contains("neither confirmed nor refuted"))
         #expect(reason.contains("Fatal error: NaN encountered in normalization"))
     }
 
@@ -225,7 +228,10 @@ struct V152StderrCaptureTests {
     func parseErrorTruncatesLongStderrLine() {
         // 250-char single-line stderr; expect a 200-char prefix + …
         let longLine = String(repeating: "X", count: 250)
-        let raw = Self.output(exitCode: 6, stderr: longLine)
+        // Exit 2 rather than a signal number: this test is about
+        // `parseErrorReason`'s truncation, and a signal routes to the trap
+        // diagnosis instead, which quotes only located runtime messages.
+        let raw = Self.output(exitCode: 2, stderr: longLine)
         guard case let .error(reason) = VerifyResultParser.parse(raw) else {
             Issue.record("expected .error outcome")
             return
