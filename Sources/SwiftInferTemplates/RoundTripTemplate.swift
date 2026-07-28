@@ -273,38 +273,6 @@ extension RoundTripTemplate {
         )
     }
 
-    /// V1.4.3b — fires when forward and reverse functions belong to
-    /// distinct containing types. Drops Score 30 → 5 (Suppressed).
-    /// Three exemptions: both containers nil (free-function pair), same
-    /// container (cross-extension on the same type), or shared
-    /// `@Discoverable(group:)` annotation (user's explicit grouping
-    /// overrides the structural rule). Empirical motivation: V1.4.2
-    /// cycle-1 baseline showed 673 round-trip Possible-tier hits on
-    /// `swift-algorithms` from cross-type `Index` member mismatches.
-    private static func crossTypeRoundTripCounterSignal(
-        for pair: FunctionPair
-    ) -> Signal? {
-        let forwardContainer = pair.forward.containingTypeName
-        let reverseContainer = pair.reverse.containingTypeName
-        guard forwardContainer != reverseContainer else { return nil }
-        // Exemption 3: shared @Discoverable(group:) overrides the structural
-        // cross-type rule (+35 already captures the positive evidence).
-        if let forwardGroup = pair.forward.discoverableGroup,
-           let reverseGroup = pair.reverse.discoverableGroup,
-           forwardGroup == reverseGroup {
-            return nil
-        }
-        let forwardLabel = forwardContainer ?? "<top-level>"
-        let reverseLabel = reverseContainer ?? "<top-level>"
-        return Signal(
-            kind: .crossTypeRoundTripPair,
-            weight: -25,
-            detail: "Cross-type round-trip pair: forward in \(forwardLabel), "
-                + "reverse in \(reverseLabel) — property cannot type-check "
-                + "across distinct containing types (cycle-1 calibration)"
-        )
-    }
-
     private static func nonDeterministicVeto(for pair: FunctionPair) -> Signal? {
         let forwardCalls = pair.forward.bodySignals.nonDeterministicAPIsDetected
         let reverseCalls = pair.reverse.bodySignals.nonDeterministicAPIsDetected

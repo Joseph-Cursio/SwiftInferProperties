@@ -123,13 +123,16 @@ struct CrossTypeRoundTripTests {
     func mismatchedDiscoverableGroupDoesNotExempt() {
         // Different groups — the user did not opt in to pairing these.
         // The cross-type rule should still fire.
+        // Neutral carrier names on purpose: `Encoder`/`Decoder` would be
+        // exempted by the codec-carrier rule (exemption 4) before this
+        // assertion could speak, and this test is about exemption 3.
         let forward = Self.unary(
             name: "transform", domain: "Doc", codomain: "Data",
-            containingTypeName: "Encoder", discoverableGroup: "codec"
+            containingTypeName: "Alpha", discoverableGroup: "codec"
         )
         let reverse = Self.unary(
             name: "untransform", domain: "Data", codomain: "Doc",
-            containingTypeName: "Decoder", discoverableGroup: "queue"
+            containingTypeName: "Beta", discoverableGroup: "queue"
         )
         let pair = FunctionPair(forward: forward, reverse: reverse)
         let suggestion = RoundTripTemplate.suggest(for: pair)
@@ -140,13 +143,14 @@ struct CrossTypeRoundTripTests {
     func oneSidedDiscoverableGroupDoesNotExempt() {
         // Asymmetric tagging — the user only tagged one half. Ambiguous
         // intent; the rule still fires (conservative posture per PRD §3.5).
+        // Neutral carrier names, same reason as the test above.
         let forward = Self.unary(
             name: "transform", domain: "Doc", codomain: "Data",
-            containingTypeName: "Encoder", discoverableGroup: "codec"
+            containingTypeName: "Alpha", discoverableGroup: "codec"
         )
         let reverse = Self.unary(
             name: "untransform", domain: "Data", codomain: "Doc",
-            containingTypeName: "Decoder", discoverableGroup: nil
+            containingTypeName: "Beta", discoverableGroup: nil
         )
         let pair = FunctionPair(forward: forward, reverse: reverse)
         let suggestion = RoundTripTemplate.suggest(for: pair)

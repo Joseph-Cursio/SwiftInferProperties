@@ -294,7 +294,72 @@ The −25 is a *code-generation* concern (where does the emitted test live), not
 > which clears the cut — so `Reader.parse` × `Printer.print` is now visible
 > where it used to be suppressed outright at 5. That is a side effect, not a
 > substitute: a cross-type pair whose names are *not* in the list is still
-> suppressed. §3b stays open.
+> suppressed.
+
+#### Fixed — exemption 4, the codec-carrier carve-out
+
+**The counter was re-measured before being touched, and it earns its keep.**
+Neutralised to 0 across the reference corpora it lets through **1,380
+cross-type pairs**: 1,310 with the degenerate `T -> T` shape (`index(after:)`
+on one collection against `index(before:)` on another — every `Index -> Index`
+function pairs with every other by type text alone), and most of the remaining
+70 accidents like `ByteBufferAllocator.buffer(capacity: Int) -> ByteBuffer`
+against `ByteBuffer.readerIndex: Int`. Deleting or weakening it wholesale was
+never an option.
+
+So the fix is a carve-out, not a re-weighting. `CodecCarrierPairing` asks
+whether the two carriers name **mutually inverse roles** —
+`Loader`/`Writer`, `Encoder`/`Decoder`, `Parser`/`Printer`, `Packer`/`Unpacker`
+— by taking the last camelCase token of each carrier's last dotted component
+and looking the pair up. When they do, the counter returns `nil`: its stated
+reason ("property cannot type-check across distinct containing types") is a
+codegen concern, and for a codec split it is exactly backwards — the round trip
+is *designed* to span the two types.
+
+**Two more obvious discriminators were measured and both failed:**
+
+- *Shared stem* — `LintConfiguration`Loader and `LintConfiguration`Writer share
+  one, so it looks decisive. It is a disaster: the top noise carriers are
+  `BigString` × `BigString.UTF8View`, `BigSubstring` × `BigSubstring.UTF16View`,
+  `BigString._Chunk` × `BigString` — 64 pairs on the worst single combination,
+  **all sharing a stem**. A stem test re-admits the entire flood.
+- *Domain ≠ codomain* — "a real transformation, not an `Index -> Index`
+  coincidence". Admits 70 pairs, of which two are codecs.
+
+Both are pinned as negative cases in `CodecCarrierPairingTests`, using carrier
+names taken verbatim from the measurement, so the reasoning stays visible
+rather than having to be rediscovered.
+
+**Measured: +2, and they are the right 2.**
+
+| corpus | before | after |
+|---|---:|---:|
+| SwiftProjectLint `Config` (`--include-possible`) | 6 | **8** |
+| everything else (11 corpora) | — | **unchanged** |
+
+The two new rows are `LintConfigurationLoader.load(from:)` ×
+`LintConfigurationWriter.render(_:)` and its `load(projectRoot:)` sibling — the
+genuine config round-trip this section opened with. Zero of the 1,380 noise
+pairs came back.
+
+They land at 35 (`Possible`), so they are visible under `--include-possible`
+but not on a default run: `load`/`render` is not a curated *name* pair, so the
++40 of §3a does not apply. Getting them to `Strong` is a naming question, and
+the clean answer is not more pairs but **verb classes** — {parse, load, read,
+decode, deserialize} × {print, render, format, write, save, unparse} — which is
+a redesign of §3a rather than part of this fix.
+
+**One behaviour change worth flagging.** Exemption 4 overlaps exemption 3 and
+wins where they disagree: an `Encoder`/`Decoder` pair with *mismatched*
+`@Discoverable(group:)` is now exempt, where before the mismatch kept the
+counter firing. That is the intended precedence — the annotation is one source
+of evidence, not the only one — and it is pinned by
+`codecCarriersExemptEvenWithMismatchedDiscoverableGroups`. Two existing tests
+in `CrossTypeRoundTripTests` used `Encoder`/`Decoder` as incidental scaffolding
+while testing exemption 3's own boundary; they were moved to neutral carrier
+names so they still test what they were written to test.
+
+§3b is now closed for codec-shaped carriers and open for everything else.
 
 ### 3c. The print half is declared on a protocol extension
 
@@ -530,8 +595,11 @@ that contains three real parsers and a writer.
    Latent — verified on synthetic shapes, zero delta on every measured corpus.
    Partly relieves §3b for curated names; does **not** reach the swift-syntax
    fidelity law, which §3c still blocks. *(§3a)*
-3. Re-scope the cross-type −25 so it does not suppress `Loader`/`Writer`-style
-   pairs, which is where serializer round-trips actually live. *(§3b)*
+3. ~~Re-scope the cross-type −25 so it does not suppress `Loader`/`Writer`-style
+   pairs.~~ **Shipped** as a carve-out, not a re-weighting — the counter was
+   re-measured first and suppresses 1,380 pairs, nearly all noise. +2 true
+   positives, 0 of the 1,380 re-admitted. Closed for codec-shaped carriers;
+   open for everything else. *(§3b)*
 4. Make the `format`-prefix veto fire only when param type ≠ return type, as its
    own comment describes. *(§4)*
 5. Admit type-erasing returns (`Self -> Syntax`, `Self -> any P`) to the `T -> T`

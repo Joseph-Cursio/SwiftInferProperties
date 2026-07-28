@@ -38,7 +38,7 @@ Suites green at ~3,805 tests. **Flake note:** the long measured/calibration suit
 | Per-cycle change story | `git log` (the per-cycle findings docs were folded into the archive above) |
 | Road tests (third-party subjects) | `docs/roadtest-*.md` — SwiftProjectLint (the first *scored* one, frozen answer key), SwiftLintRuleStudio (out-of-catalog diagnosis + two retracted closures), MacCloud server / macOS client |
 | **Self-dogfood** (the tools pointed at this repo) | `docs/roadtest-self-dogfood.md` — the `merge` commutativity refutation, the Finding-G gate suite, and the mutation corpus behind them |
-| Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey; 7 defects (2 shipped)  + 5 holes, incl. the missing retract law and differential/oracle family |
+| Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey; 7 defects (3 shipped) + 5 holes, incl. the missing retract law and differential/oracle family |
 | Command docs | `docs/report-command.md`, `insights-command.md`, `docc-generation.md`, `prove-then-show.md`, `known-properties.md`, `stdlib-anchor.md`, `interaction-semantic-index.md` |
 | End-user docs | `docs/user/{tutorial,guide,reference}.md` |
 | Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md`, `docs/rule-visitor-carrier-scoping.md` |
