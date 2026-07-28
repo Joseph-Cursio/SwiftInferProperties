@@ -15,23 +15,6 @@ import SwiftInferCore
 /// veto (Appendix B.3 + B.4).
 public enum RoundTripTemplate {
 
-    /// Curated inverse-name pairs per PRD §5.2. Project-vocabulary
-    /// extension (§4.5's `inversePairs` from `vocabulary.json`) lands at
-    /// M2; M1.4 ships the curated list, exact-match in either order.
-    public static let curatedInversePairs: [(String, String)] = [
-        ("encode", "decode"),
-        ("serialize", "deserialize"),
-        ("compress", "decompress"),
-        ("encrypt", "decrypt"),
-        ("parse", "format"),
-        ("push", "pop"),
-        ("insert", "remove"),
-        ("open", "close"),
-        ("marshal", "unmarshal"),
-        ("pack", "unpack"),
-        ("lock", "unlock")
-    ]
-
     /// `vocabulary` extends the curated list with project-defined inverse
     /// pairs (PRD §4.5). `inheritedTypesByName` feeds the V1.5.2
     /// protocol-coverage veto: `: Codable` conformance covers
@@ -177,6 +160,21 @@ public enum RoundTripTemplate {
                     + "not every string is a valid encoding. For a FAILABLE `init?`, unwrap first: "
                     + "the decode of a freshly-encoded value must succeed and equal the original "
                     + "(`decode(encode(x)) == .some(x)`)."
+            )
+        }
+        if persistenceInverseVerbs.contains(pair.forward.name),
+           persistenceInverseVerbs.contains(pair.reverse.name) {
+            caveats.append(
+                "THE ROUND TRIP RUNS THROUGH A STORE, so the law is conditional on that "
+                    + "store and is NOT a property of these two functions alone. Against a "
+                    + "real filesystem or database it can fail for reasons that have nothing "
+                    + "to do with the code under test — a path that does not exist, "
+                    + "permissions, a concurrent writer, an encoding the reader disagrees "
+                    + "with — and each of those is a false failure. Inject a deterministic "
+                    + "in-memory store and run the law against that; then `read(write(x)) == x` "
+                    + "is refutable about the thing you meant to test. If the store cannot be "
+                    + "injected, that is a finding about the design, not a reason to skip the "
+                    + "property."
             )
         }
         return caveats

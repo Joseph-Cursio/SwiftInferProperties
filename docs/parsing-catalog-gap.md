@@ -239,6 +239,34 @@ below the cut. This is the `intersect`/`intersection` stale-stem failure from
 Appendix C, reproduced: the dictionary is missing the word, so the tool never
 checks it, and the silence reads as a clean bill of health.
 
+#### Fixed — the text↔structure block
+
+`curatedInversePairs` now carries `parse`/`print`, `parse`/`unparse`,
+`parse`/`render`, `parse`/`description`, `tokenize`/`join`, `read`/`write` and
+`load`/`save`, grouped by *why* each group is a round trip
+(`RoundTripTemplate+InverseNames.swift`; the file was split out when the
+addition pushed the template past the 400-line cap). `InversePairTemplate`
+reads the same list at its own weight, so the widening lands on both.
+
+`read`/`write` and `load`/`save` are the same shape but their round trip runs
+through a **store**, so they carry a caveat saying the law is conditional on
+that store and false against a live filesystem for reasons unrelated to the
+code under test. Surfacing them without that note would hand a reader a
+`Strong` claim that real I/O routinely breaks.
+
+**Measured effect on the corpora: zero, in both directions.** Default-tier
+counts are byte-identical before and after on swift-collections, swift-nio,
+swift-argument-parser, swift-async-algorithms, all four measured swift-syntax
+modules, and all six SwiftProjectLint packages. No over-reach — the generic
+verbs `read`/`write`/`join` produced no flood, because the type filter still
+gates every pair. And no gain either: the widening adds a name *signal* to
+pairs the type filter already produced; it does not create pairs, and none of
+these corpora has a same-type parse/print-shaped pair to promote.
+
+So the fix is real but **latent** — verified on synthetic shapes (`parse`/`print`
+35 → 70/75, `parse`/`format`'s score), not on a live subject. That is worth
+saying plainly rather than letting a green diff imply reach it did not buy.
+
 ### 3b. The cross-type penalty kills the pair precisely where parsing puts it
 
 `RoundTripTemplate` applies **−25** for a pair whose halves live in different
@@ -261,13 +289,29 @@ helpers (§7).
 The −25 is a *code-generation* concern (where does the emitted test live), not a
 *truth* concern. It is currently applied as if it were the latter.
 
-### 3c. The print half is usually not a function
+> **Partly relieved by the §3a fix, and only for curated names.** With
+> `parse`/`print` curated, the cross-type arithmetic becomes 30 + 40 − 25 = 45,
+> which clears the cut — so `Reader.parse` × `Printer.print` is now visible
+> where it used to be suppressed outright at 5. That is a side effect, not a
+> substitute: a cross-type pair whose names are *not* in the list is still
+> suppressed. §3b stays open.
+
+### 3c. The print half is declared on a protocol extension
 
 `SourceFileSyntax`'s printer is `var description: String` on an `extension
-SyntaxProtocol` — `Self -> String`, declared once, generically. `FunctionPairing`
-matches on type *text*, so `SyntaxProtocol -> String` never pairs with
-`String -> SourceFileSyntax`. Any `CustomStringConvertible`-based printer has
-this shape, and `CustomStringConvertible` is the idiomatic Swift printer.
+SyntaxProtocol` — declared once, generically. `FunctionPairing` matches on type
+*text*, so the scanner records the domain as `SyntaxProtocol`, and
+`SyntaxProtocol -> String` never meets `String -> SourceFileSyntax`.
+
+**Corrected after measurement.** This section first said "the print half is
+usually not a function", blaming computed properties. That is wrong, and a
+probe falsified it: the scanner *does* surface computed properties, and a
+`var description: String` on the **concrete** type pairs fine with `parse` —
+50/Likely once the §3a names landed. The blocker is narrower and more specific:
+a printer declared on a **protocol extension**, whose domain type-text is the
+protocol rather than any conforming type. That is swift-syntax's exact shape,
+and it is why the fidelity law is still unreachable there. Pinned by
+`ParsePrintInverseNameTests.protocolExtensionPrinterStillCannotPair`.
 
 ### 3d. The deeper gap: no notion of *which direction*, and no law for lossy parsers
 
@@ -480,9 +524,12 @@ that contains three real parsers and a writer.
    carriers and consume/advance/skip/lex verbs, ungated by `IteratorProtocol`.~~
    **Shipped.** 53 false `Likely` claims on `SwiftParser` → 1 (the recorded
    accumulator residue). *(§2)*
-2. Widen `curatedInversePairs`: `parse`/`print`, `parse`/`unparse`,
+2. ~~Widen `curatedInversePairs`: `parse`/`print`, `parse`/`unparse`,
    `parse`/`description`, `parse`/`render`, `tokenize`/`join`, `read`/`write`,
-   `load`/`save`. *(§3a)*
+   `load`/`save`.~~ **Shipped**, with a store caveat on the persistence pairs.
+   Latent — verified on synthetic shapes, zero delta on every measured corpus.
+   Partly relieves §3b for curated names; does **not** reach the swift-syntax
+   fidelity law, which §3c still blocks. *(§3a)*
 3. Re-scope the cross-type −25 so it does not suppress `Loader`/`Writer`-style
    pairs, which is where serializer round-trips actually live. *(§3b)*
 4. Make the `format`-prefix veto fire only when param type ≠ return type, as its
