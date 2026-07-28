@@ -115,7 +115,14 @@ struct IdempotenceShapeDisambiguationTests {
         )
         let veto = try #require(signal)
         #expect(veto.isVeto)
-        #expect(veto.detail.contains("formatter"))
+        // §4 split the bundled "formatter" arm in two, because it carried two
+        // different arguments. `_description` keeps its UNCONDITIONAL veto —
+        // the structural-wrapping argument is type-independent, and this case
+        // (`String -> String`) is precisely where a type gate would have
+        // wrongly released it. The assertion now names that argument instead
+        // of the old shared word.
+        #expect(veto.detail.contains("_description"))
+        #expect(veto.detail.contains("structural"))
     }
 
     @Test("'format(_:)' on enum fires veto (cycle-17/20 #18 case)")

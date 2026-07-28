@@ -425,6 +425,48 @@ idempotence is the canonical law a source formatter owes. The fix is to make the
 veto do what its own comment says: only fire when the parameter type differs
 from the return type.
 
+#### Fixed — the arm was carrying two arguments, not one
+
+The veto bundled `_description*` and `format*` into one branch and applied the
+**union of their triggers with neither of their conditions**. Split in two:
+
+- **`_description*` — unconditional, no type gate.** Its argument is
+  *structural wrapping*: `_description(type:)` prepends a type wrapper, so
+  applying it twice prepends twice. That is a claim about what the function
+  does to a value, so it holds at `String -> String` as much as anywhere — and
+  `_description(type: String) -> String` is real code in swift-collections, so
+  a uniform type gate would have wrongly released a genuine veto.
+- **`format*` — gated on `param != return`**, which is what the type argument
+  actually requires.
+
+Measured on identical `String -> String` shapes: `format` went from suppressed
+to **75 Strong**, `formatSource` from suppressed to 35, `normalize` unchanged at
+75. The catalog had been crediting `format` +40 from `curatedVerbs` and then
+vetoing it on the same name.
+
+**Where the gate leaves `format*`, stated plainly.** Only two arms of
+`typeSymmetrySignal` admit a parameter at all — the exact-equal form and the
+optional-narrowing form (`func mergedWith(_ x: T?) -> T`) — so once gated,
+`format*` fires on `(T?) -> T` and nothing else. On that one shape the original
+*type* rationale is false as well: `format(format(x))` type-checks, because `T`
+promotes back to `T?`, which is exactly why the optional-narrowing arm admits
+the shape. The arm therefore now states the weaker claim that is true — a
+function collapsing "absent" into a concrete value is *defaulting*, and the
+second application asks a different question — and labels it a conjecture
+rather than a type error. Deleting the arm outright is a defensible follow-on;
+it is kept because narrowing a veto is a precision change and the measurement
+shows keeping it costs nothing.
+
+**Measured effect on the corpora: zero**, on all fifteen. Verified as genuine
+absence rather than a broken fix: grepping every corpus for `format*` /
+`_description*` declarations turns up six, and all six have `param != return`
+(`format(completions: [String]) -> String`, `formatDimension(Double) -> String`,
+`formatImports(in: String) -> SourceFileSyntax`, …), so none was ever admitted
+by the shape gate. No corpus in the set has a same-type `format(T) -> T`. The
+one that does reach the veto — swift-collections' `_description(type:)` — is
+confirmed **still suppressed**, which is the evidence that the split preserved
+what it needed to. Latent, like §3a.
+
 Independently, `swift-syntax`'s real formatter misses on a **second** count:
 
 ```swift
@@ -600,8 +642,11 @@ that contains three real parsers and a writer.
    re-measured first and suppresses 1,380 pairs, nearly all noise. +2 true
    positives, 0 of the 1,380 re-admitted. Closed for codec-shaped carriers;
    open for everything else. *(§3b)*
-4. Make the `format`-prefix veto fire only when param type ≠ return type, as its
-   own comment describes. *(§4)*
+4. ~~Make the `format`-prefix veto fire only when param type ≠ return type.~~
+   **Shipped** — the arm was carrying two arguments, so it split: `_description`
+   keeps its unconditional veto (structural wrapping is type-independent),
+   `format` takes the gate. `format(String) -> String` suppressed → 75 Strong.
+   Latent: zero corpus delta, verified as genuine absence. *(§4)*
 5. Admit type-erasing returns (`Self -> Syntax`, `Self -> any P`) to the `T -> T`
    templates as a lower-confidence variant. *(§4)*
 6. Veto `@resultBuilder` `buildX` methods from type-symmetry pairing. *(§8)*
