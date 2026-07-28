@@ -175,7 +175,16 @@ extension IdempotenceTemplate {
         // Removing this arm outright is a defensible follow-on. It is left in
         // place because narrowing a veto is a precision change, and the
         // measurement below shows it costs nothing to keep.
-        if name.hasPrefix("format"), param.typeText != returnType {
+        // **A DEFAULTED parameter is not the operand**, so comparing it to the
+        // return type is not the type argument at all — it is comparing a
+        // configuration knob against a result. `SyntaxProtocol.formatted(using
+        // format: BasicFormat = BasicFormat()) -> Syntax` is a transform *of
+        // self*, and `BasicFormat != Syntax` says nothing about whether
+        // `x.formatted().formatted()` type-checks (it does — see
+        // `IdempotenceTemplate+ErasedSelfForm.swift`). Without this clause the
+        // §4 gate vetoes precisely the case §5 exists to admit, which is how
+        // it was found.
+        if name.hasPrefix("format"), !param.hasDefault, param.typeText != returnType {
             return Signal(
                 kind: .protocolCoveredProperty,
                 weight: Signal.vetoWeight,

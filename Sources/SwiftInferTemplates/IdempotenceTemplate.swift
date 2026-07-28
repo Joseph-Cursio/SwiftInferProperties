@@ -79,7 +79,10 @@ public enum IdempotenceTemplate {
         Constraint<FunctionSummary>(
             templateName: "idempotence",
             appliesTo: { summary in
-                Self.typeSymmetrySignal(for: summary) != nil
+                Self.typeSymmetrySignal(
+                    for: summary,
+                    inheritedTypesByName: inheritedTypesByName
+                ) != nil
             },
             signals: { summary in
                 Self.accumulatedSignals(
@@ -93,14 +96,23 @@ public enum IdempotenceTemplate {
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
             // V1.149 — the generator carrier is the parameter type `T`, not
-            // the owning type. `typeSymmetrySignal` only fires when
-            // `param.typeText == returnTypeText`, so `returnTypeText` is `T`
-            // and is always present here. For a method defined on `T`
-            // (`extension Int`) this equals `carrier` and is a no-op; for a
-            // `static`/free function over a parameter it's the fix that lets
-            // verify derive `Gen<T>` while still calling `Owner.f(_:)`.
+            // the owning type. Every arm of `typeSymmetrySignal` returns a
+            // signal whose operand type IS `returnTypeText`: the concrete
+            // forms because `param.typeText == returnTypeText`, the
+            // optional-narrowing form because `T? -> T` is generated at `T`,
+            // and the erased self-form because the law is stated over the
+            // erased return. So `returnTypeText` is the generator carrier in
+            // all four cases and is always present here. For a method defined
+            // on `T` (`extension Int`) this equals `carrier` and is a no-op;
+            // for a `static`/free function over a parameter it's the fix that
+            // lets verify derive `Gen<T>` while still calling `Owner.f(_:)`.
             carrierType: { $0.returnTypeText },
-            caveats: { _ in Self.makeCaveats() },
+            caveats: { summary in
+                Self.makeCaveats(
+                    for: summary,
+                    inheritedTypesByName: inheritedTypesByName
+                )
+            },
             generators: Self.makeGenerators(for:)
         )
     }
@@ -114,7 +126,10 @@ public enum IdempotenceTemplate {
         inheritedTypesByName: [String: Set<String>],
         carrierKindResolver: CarrierKindResolver?
     ) -> [Signal] {
-        guard let typeSymmetry = typeSymmetrySignal(for: summary) else {
+        guard let typeSymmetry = typeSymmetrySignal(
+            for: summary,
+            inheritedTypesByName: inheritedTypesByName
+        ) else {
             return []
         }
         var signals: [Signal] = [typeSymmetry]
@@ -186,12 +201,28 @@ public enum IdempotenceTemplate {
     }
 
     /// V1.39.B — caveat list (2 constant entries).
-    static func makeCaveats() -> [String] {
-        [
+    static func makeCaveats(
+        for summary: FunctionSummary? = nil,
+        inheritedTypesByName: [String: Set<String>] = [:]
+    ) -> [String] {
+        var caveats = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "This tool does not verify protocol conformance — confirm before applying.",
             "If T is a class with a custom ==, the property is over value equality as T.== defines it."
         ]
+        // The erased self-form owes a caveat the concrete forms do not: the
+        // claim is checked on the erasure, so it cannot see a distinction the
+        // erased type drops.
+        if let summary,
+           let carrier = summary.containingTypeName,
+           let returnType = summary.returnTypeText,
+           erasedSelfFormSignal(
+               for: summary,
+               inheritedTypesByName: inheritedTypesByName
+           ) != nil {
+            caveats.append(erasedSelfFormCaveat(carrier: carrier, returnType: returnType))
+        }
+        return caveats
     }
 
     /// Canonical hash input per PRD §7.5: `template ID | canonical
@@ -221,54 +252,6 @@ public enum IdempotenceTemplate {
 extension IdempotenceTemplate {
 
     // MARK: - Signals
-
-    private static func typeSymmetrySignal(for summary: FunctionSummary) -> Signal? {
-        guard !summary.isMutating,
-              let returnType = summary.returnTypeText,
-              returnType != "Void",
-              returnType != "()" else {
-            return nil
-        }
-        // Free / static: exactly one non-`inout` parameter whose type is the
-        // return type — `func normalize(_ x: T) -> T`.
-        if summary.parameters.count == 1,
-           let param = summary.parameters.first,
-           !param.isInout,
-           returnType == param.typeText {
-            return Signal(
-                kind: .typeSymmetrySignature,
-                weight: 30,
-                detail: "Type-symmetry signature: T -> T (T = \(returnType))"
-            )
-        }
-        // Optional-narrowing free / static form — `func mergedWith(_ x: T?) -> T`.
-        // (See IdempotenceTemplate+OptionalNarrowing.swift.)
-        if let optionalSignal = optionalNarrowingSignal(returnType: returnType, summary: summary) {
-            return optionalSignal
-        }
-        // Instance: zero parameters, returning the containing type —
-        // `func normalized() -> Doc` (`self -> Self`). B32 — mirrors
-        // InvolutionTemplate's two-shape acceptance so instance idempotent
-        // transforms surface, not only the free `f(x)` form. `self` is the
-        // operand; `Array`-materialised wrapper returns remain out of scope.
-        //
-        // The return may be written as the literal `Self` (`var canonicalizedTransform:
-        // Self`, `func normalized() -> Self`) — canonicalize it to the container, the
-        // same way DualStylePairing / SetAlgebraShape / the binary-op type-symmetry
-        // signal already do. Return-position only, and only on the NULLARY self-form,
-        // so the binary `merge(_ other: Self)` x-curried-idempotence hazard is untouched.
-        if summary.parameters.isEmpty,
-           let container = summary.containingTypeName,
-           container == returnType || returnType == "Self" {
-            let resolved = returnType == "Self" ? container : returnType
-            return Signal(
-                kind: .typeSymmetrySignature,
-                weight: 30,
-                detail: "Type-symmetry signature: self -> Self (Self = \(resolved))"
-            )
-        }
-        return nil
-    }
 
     static func nameSignal(
         for summary: FunctionSummary,

@@ -150,7 +150,8 @@ extension FunctionScannerVisitor {
             label: label,
             internalName: internalName,
             typeText: typeText,
-            isInout: isInout
+            isInout: isInout,
+            hasDefault: syntax.defaultValue != nil
         )
     }
 

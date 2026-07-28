@@ -481,6 +481,83 @@ blind spot for every `T -> T` template, and AST libraries erase constantly. A
 probe confirms: `Doc.formatted() -> Doc` fires Strong, `Doc2.formatted() ->
 AnyDoc` fires nothing.
 
+> **Correction — there were two blockers here, not one.** Probing for the §5
+> fix found that `formatted(using:)` is rejected on a *second* independent
+> count: the self-form arm requires `parameters.isEmpty`, and `using format:`
+> is a defaulted configuration knob, not an operand. Fixing only the erased
+> return would have left the case exactly as unreachable. Both are closed
+> below.
+
+#### Fixed — the erased self-form, and the first live hit of the survey
+
+`IdempotenceTemplate+ErasedSelfForm.swift` adds a fourth `typeSymmetrySignal`
+arm, tried **last** so it can never shadow a concrete match. `Parameter` gained
+`hasDefault` (scanner-populated) to tell an operand from a knob.
+
+The law is well-formed for a checkable reason — `public struct Syntax:
+SyntaxProtocol`, so `tree.formatted().formatted()` compiles. Weight **25**
+rather than 30, per "lower-confidence variant"; with `formatted`'s curated +40
+that lands at 70, `Likely`, visible on a default run without claiming `Strong`.
+It carries a caveat the concrete forms do not: the law is checked on the
+*erasure*, so a distinction the erased type drops is invisible to it.
+
+**Measured on real swift-syntax** (SwiftSyntax + SwiftBasicFormat scanned
+together, so the conformance resolves):
+
+```
+Score: 70 (Likely)
+  ✓ formatted(using:) (BasicFormat) -> Syntax — SyntaxProtocol+Formatted.swift:21
+  ✓ Type-symmetry signature: self -> Syntax on SyntaxProtocol (erased self-form …) (+25)
+  ✓ Curated idempotence verb match: 'formatted' (+40)
+```
+
+That is **the first live hit of this survey** — the first fix that puts a real,
+named law on the motivating subject rather than removing false ones (§2) or
+landing latent (§3a, §4).
+
+**Two tightenings, both forced by measurement.** The first cut admitted 11 new
+rows across the corpora; nine were false, and each failure taught the rule:
+
+- **A decorator is not an erasure.** `AsyncSequence.adjacentPairs() ->
+  AsyncAdjacentPairsSequence<Self>` conforms to its carrier, so the conformance
+  test admitted it — but applying it twice gives
+  `AsyncAdjacentPairsSequence<AsyncAdjacentPairsSequence<S>>`, a *different*
+  type, so `f(f(x)) == f(x)` does not type-check. Six of these
+  (`adjacentPairs`, `compacted`, `joined`, `removeDuplicates`, `splitLines`,
+  `splitUTF8Lines`). An erasure absorbs itself; a decorator nests — so the
+  return must be **non-generic**.
+- **A conformance is not an erasure.** `String` conforms to
+  swift-argument-parser's `ExpressibleByArgument`, so
+  `defaultValueDescription() -> String` passed every test — but `String` is not
+  that protocol's erased form, it merely satisfies it, and a description of a
+  description is not a fixed point. So the return must also be *named* as the
+  erasure, by the two Swift conventions for it: `Syntax`/`SyntaxProtocol` and
+  `AnyShape`/`Shape`.
+
+**Final ledger: exactly 2 firings across all fifteen corpora, both true.**
+
+| firing | tier | |
+|---|---|---|
+| `SyntaxProtocol.formatted(using:) -> Syntax` | 70 Likely | the target law |
+| `SyntaxProtocol.root() -> Syntax` | 30 Possible | `node.root.root == node.root` — true, and unlooked-for |
+
+Every other corpus is byte-identical to baseline.
+
+**One interaction, found by the failure.** `formatted` carries the `format`
+prefix, and its config parameter (`BasicFormat`) differs from its return
+(`Syntax`) — so §4's freshly-added type gate vetoed precisely the case §5
+exists to admit. The resolution is principled rather than an exception: that
+gate's type argument is about the **operand**, and a defaulted parameter is not
+one, so the veto now skips defaulted parameters. All of §4's own cases use
+required parameters and are unaffected.
+
+**Scope limit, stated rather than discovered.** The conformance lookup reads
+the scanned corpus. `Syntax` is declared in `SwiftSyntax` while `formatted`
+lives in `SwiftBasicFormat`, so scanning `SwiftBasicFormat` alone resolves
+nothing and this arm stays silent — measured: 0 firings. Scanning both together
+resolves it. Same cross-module limit `ProxyConstruction` and `EquatableResolver`
+carry, and it fails in the conservative direction.
+
 ---
 
 ## 5. Finding 4 — three of the five interaction families are the right shape and are locked to reducers
@@ -647,8 +724,14 @@ that contains three real parsers and a writer.
    keeps its unconditional veto (structural wrapping is type-independent),
    `format` takes the gate. `format(String) -> String` suppressed → 75 Strong.
    Latent: zero corpus delta, verified as genuine absence. *(§4)*
-5. Admit type-erasing returns (`Self -> Syntax`, `Self -> any P`) to the `T -> T`
-   templates as a lower-confidence variant. *(§4)*
+5. ~~Admit type-erasing returns (`Self -> Syntax`, `Self -> any P`) to the
+   `T -> T` templates as a lower-confidence variant.~~ **Shipped**, and it
+   needed a second gate the survey had missed (defaulted config parameters).
+   **The survey's first live hit**: `SyntaxProtocol.formatted(using:)` now
+   proposes formatter idempotence at 70/Likely on real swift-syntax. Two
+   firings across all corpora, both true, after two measurement-forced
+   tightenings (a decorator is not an erasure; a conformance is not an
+   erasure). *(§4)*
 6. Veto `@resultBuilder` `buildX` methods from type-symmetry pairing. *(§8)*
 7. Pair against `CustomStringConvertible.description` as a printer half. *(§3c)*
 
