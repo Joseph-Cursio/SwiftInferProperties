@@ -260,7 +260,7 @@ extension SwiftInferCommand.Verify {
         guard buildOutput.exitCode == 0 else {
             throw VerifyError.buildFailed(
                 exitCode: buildOutput.exitCode,
-                stderr: buildOutput.stderr
+                stderr: BuildDiagnostics.summary(from: buildOutput)
             )
         }
         return try VerifierSubprocess.runVerifierBinary(workdir: workdir)

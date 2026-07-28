@@ -69,22 +69,6 @@ extension StrategistDispatchEmitter {
     /// composer so it stays under the body-length cap. Binds locals before
     /// comparing: `functionCall` can be a closure literal, and
     /// `if { … }(x) != …` parses as a trailing closure.
-    private static func idempotenceCollisionBody(functionCall: String) -> String {
-        """
-                let collisionOnce = \(functionCall)(collisionValue)
-                let collisionTwice = \(functionCall)(collisionOnce)
-                if collisionTwice != collisionOnce {
-                    print("VERIFY_DEFAULT_RESULT: FAIL")
-                    print("VERIFY_DEFAULT_PASS_KIND: collision")
-                    print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                    print("VERIFY_DEFAULT_INPUT: \\(collisionValue)")
-                    print("VERIFY_DEFAULT_FORWARD: \\(collisionTwice)")
-                    print("VERIFY_DEFAULT_INVERSE: \\(collisionOnce)")
-                    exit(1)
-                }
-        """
-    }
-
     static func composeIdempotencePass(
         inputs: Inputs,
         recipe: GeneratorRecipe
@@ -112,20 +96,40 @@ extension StrategistDispatchEmitter {
                 recipe: recipe
             )
         }
-        let oracle = "\(functionCall)(\(functionCall)(candidate)) != \(functionCall)(candidate)"
+        return composeDirectIdempotencePass(functionCall: functionCall, recipe: recipe)
+    }
+
+    /// The plain `f(f(x)) == f(x)` shape — everything that is not a mutating or
+    /// self-returning instance method. Split out to keep
+    /// `composeIdempotencePass`'s dispatch inside the function-body budget.
+    private static func composeDirectIdempotencePass(
+        functionCall: String,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let oracle = "applyOnce(applyOnce(candidate)) != applyOnce(candidate)"
         let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
             ? singleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
             : ""
+        let carrier = recipe.carrierTypeName
         return """
         // --- Pass 1: default (strategist-derived generator) ---
 
-        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+        let defaultGenerator: Generator<\(carrier), some SendableSequenceType> =
             \(recipe.expression)
+
+        // Bound once, with an explicit type, and called by name everywhere
+        // below. `functionCalls` may be a closure literal — the form a labelled
+        // call takes — and applying one inline (`{ … }(value)`) leaves `$0` with
+        // nothing to infer from: "cannot infer type of closure parameter '$0'".
+        // On a large derived generator the compiler gives up and the run comes
+        // back `measured-error: build-failed`. The annotation is the fix; a bare
+        // function reference coerces to it unchanged.
+        let applyOnce: (\(carrier)) -> \(carrier) = \(functionCall)
 
         for trial in 0 ..< trials {
             let value = defaultGenerator.run(using: &rng)
-            let onceResult = \(functionCall)(value)
-            let twiceResult = \(functionCall)(onceResult)
+            let onceResult = applyOnce(value)
+            let twiceResult = applyOnce(onceResult)
             if onceResult != twiceResult {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
@@ -139,7 +143,7 @@ extension StrategistDispatchEmitter {
 
         \(CollisionPass.unarySweep(
             carrier: recipe.carrierTypeName,
-            body: idempotenceCollisionBody(functionCall: functionCall)
+            body: idempotenceCollisionBody()
         ))
 
         print("VERIFY_DEFAULT_RESULT: PASS")

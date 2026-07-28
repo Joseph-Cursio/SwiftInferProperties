@@ -260,8 +260,14 @@ struct StrategistDispatchEmitterEmitTests {
                 functionCalls: ["{ (x: Int) in x * x }"]
             )
         )
-        #expect(source.contains("let onceResult = { (x: Int) in x * x }(value)"))
-        #expect(source.contains("let twiceResult = { (x: Int) in x * x }(onceResult)"))
+        // The function is bound once with an explicit type and called by name.
+        // This test used to pin the inline form — `{ … }(value)` — which is the
+        // defect itself: an immediately-applied closure literal has nothing to
+        // infer `$0` from, and on a large derived generator the compiler gives
+        // up and verify reports `build-failed`. See `AppliedClosureLiteralTests`.
+        #expect(source.contains("let applyOnce: (Int) -> Int = { (x: Int) in x * x }"))
+        #expect(source.contains("let onceResult = applyOnce(value)"))
+        #expect(source.contains("let twiceResult = applyOnce(onceResult)"))
         #expect(source.contains("onceResult != twiceResult"))
     }
 

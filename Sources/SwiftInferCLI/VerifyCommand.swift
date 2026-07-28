@@ -295,12 +295,13 @@ public enum VerifyError: Error, CustomStringConvertible {
                 + "Supported carriers: \(expectedList). Wider carrier support lands in v1.44 "
                 + "once the kit-side generators for additional carriers ship."
 
-        case let .buildFailed(exitCode, stderr):
-            let snippet = stderr.isEmpty
-                ? "(no stderr captured)"
-                : stderr.split(separator: "\n").suffix(20).joined(separator: "\n")
+        case let .buildFailed(exitCode, diagnostics):
+            // `diagnostics` is already the extracted cause — see
+            // `BuildDiagnostics`, and note that `swift build` puts compile
+            // errors on *stdout*, which is why this used to print nothing.
+            let snippet = diagnostics.isEmpty ? "(none captured)" : diagnostics
             return "swift-infer verify: `swift build` in the verifier workdir failed with "
-                + "exit code \(exitCode). Last 20 lines of stderr:\n\(snippet)"
+                + "exit code \(exitCode). Compiler diagnosis:\n\(snippet)"
 
         case let .runnerCrashed(reason):
             return "swift-infer verify: verifier subprocess could not run: \(reason)"

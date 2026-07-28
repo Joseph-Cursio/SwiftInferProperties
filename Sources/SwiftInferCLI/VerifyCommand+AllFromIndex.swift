@@ -283,7 +283,7 @@ extension SwiftInferCommand.Verify {
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
             outcome: .measuredError,
-            outcomeDetail: "build-failed: exit=\(buildOutput.exitCode)"
+            outcomeDetail: BuildDiagnostics.surveyDetail(from: buildOutput)
         )
     }
 
