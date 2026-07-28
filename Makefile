@@ -5,6 +5,15 @@
 # swift-syntax). Running them all at once spikes temp-disk usage and contends
 # with the PRD §13 perf-budget tests, so `make test` runs the fast suite plus
 # seven sequential subprocess batches. See CLAUDE.md "Build & test".
+#
+# The §13 perf suites are ALSO isolated, for the same reason from the other
+# side. They assert wall-clock and peak-RSS budgets, so running them next to
+# ~4,300 other tests measures the MACHINE, not the code: observed 3.65s against
+# a 2s budget and 1008 MB against an 800 MB one in a loaded run, with all five
+# passing in 6.1s and 167 MB immediately afterwards in isolation. A budget test
+# that shares a box with a full test suite is not a budget test, and its flakes
+# cost more than they catch — every one has to be re-run by hand to find out it
+# was noise. They now run alone, in their own serial target.
 
 SWIFT_TEST := swift test
 
@@ -18,6 +27,14 @@ SWIFT_TEST := swift test
 # orphaned this way until BATCH5 was added; the TCA-corpus + composition-payload
 # suites (BATCH6/BATCH7) were orphaned until those batches were added.
 SUBPROCESS_RE := MeasuredTests|MeasuredExecutionTests|VerifyPipeline
+
+# The five PRD §13 budget suites, all in Tests/SwiftInferPerformanceTests/ and
+# all named `*PerformanceTests` (DriftIncremental, InteractiveFirstPrompt,
+# MemoryCeiling, TestLifter, and the bare `PerformanceTests`). Same contract as
+# SUBPROCESS_RE: skipped by the fast path, so a suite matched here MUST be run
+# by the `perf` target below or it is never run at all. A new perf suite is
+# auto-covered by both only if it keeps the `*PerformanceTests` suffix.
+PERF_RE := PerformanceTests
 
 # Subprocess batches — sized to bound peak temp-disk + build contention. Note
 # the batch FILTERS are substrings, so `BATCH3 := VerifyPipeline` matches every
@@ -38,12 +55,12 @@ BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests
 # under `make -j`.
 .NOTPARALLEL:
 .DEFAULT_GOAL := help
-.PHONY: help test test-fast lint batch1 batch2 batch3 batch4 batch5 batch6 batch7 clean-temp
+.PHONY: help test test-fast lint perf batch1 batch2 batch3 batch4 batch5 batch6 batch7 clean-temp
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort | awk -F'\t' '{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-test: lint test-fast batch1 batch2 batch3 batch4 batch5 batch6 batch7 ## Lint + fast suite + the seven subprocess batches, in sequence (fail-fast)
+test: lint test-fast perf batch1 batch2 batch3 batch4 batch5 batch6 batch7 ## Lint + fast suite + §13 perf + the seven subprocess batches, in sequence (fail-fast)
 
 # `lint` gates `test-fast` (the command cycle commits run) so a SwiftLint
 # regression fails the same way a test failure does. `--strict` upgrades
@@ -51,12 +68,15 @@ test: lint test-fast batch1 batch2 batch3 batch4 batch5 batch6 batch7 ## Lint + 
 # warnings repeatedly slipped through cycle commits because `swift test` doesn't
 # run SwiftLint (e.g. file_length/type_body_length from added tests). Make is
 # .NOTPARALLEL and dedupes shared prerequisites, so lint runs once before tests.
-test-fast: lint ## SwiftLint + every non-subprocess test (~6s, 3200 tests)
-	$(SWIFT_TEST) --skip '$(SUBPROCESS_RE)'
+test-fast: lint ## SwiftLint + every non-subprocess, non-perf test (~6s)
+	$(SWIFT_TEST) --skip '$(SUBPROCESS_RE)|$(PERF_RE)'
 
 lint: ## SwiftLint, failing on any warning (--strict)
 	@command -v swiftlint >/dev/null 2>&1 || { echo "Error: swiftlint not installed (brew install swiftlint)." >&2; exit 1; }
 	swiftlint lint --quiet --strict
+
+perf: ## PRD §13 wall-clock + peak-RSS budgets, alone and serial (see header)
+	$(SWIFT_TEST) --filter '$(PERF_RE)' --no-parallel
 
 batch1: ## Subprocess batch 1 — TCA carrier + verify-ready corpus (heaviest)
 	$(SWIFT_TEST) --filter '$(BATCH1)'
