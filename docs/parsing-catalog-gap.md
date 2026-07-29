@@ -1450,6 +1450,81 @@ that contains three real parsers and a writer.
     across ~1,840 files, not "the entire domain" — shipped for integrity, since
     Strong + `.todo` is a promise the tool cannot keep. *(§7)*
 
+### Probe — higher-order generation, the last unbuilt claim
+
+Recursive generation was written up here as a missing engine capability and
+turned out to be neither missing nor blocking. Higher-order generation had the
+same provenance — reasoned about, never built — and it is the headline claim of
+Appendix C's QuickCheck ledger, so it was probed before it hardened.
+
+**Result: the ledger entry survives, but it is mis-stated.** The omission is not
+*generating* functions. It is *shrinking and displaying* them.
+
+**Generation works today, with no new combinator.** A pure function is a seed
+plus a hash, and a plain `map` closes over the seed — `flatMap`, which the
+backend does not have, is not needed:
+
+```swift
+Gen<Int>.int(in: 0...65_535).map { seed in
+    let f: @Sendable (Int, Int) -> Bool = { a, b in
+        var h = Hasher(); h.combine(seed); h.combine(a); h.combine(b)
+        return h.finalize() % 2 == 0
+    }
+    return f
+}.eraseToAny()
+```
+
+That compiles, runs, and produces genuinely distinct functions. So `Gen<(A) -> B>`
+is expressible on shipped `swift-property-based` 1.2.0.
+
+**The proposed dual is real, and quantifies over garbage.** Appendix C names the
+missing dual of the comparator work: *for all* generated comparators, `sort` is a
+faithful permutation. Measured over 500 generated `(Int, Int) -> Bool`:
+
+| | |
+|---|---:|
+| generated comparators that are strict weak orderings | **0 / 500** |
+
+Not a low rate — **zero**. An arbitrary boolean function of two arguments is
+essentially never irreflexive, asymmetric *and* transitive. That does not sink
+the law, because "a sort must not drop or duplicate elements" holds even under a
+garbage comparator, and the probe confirmed it refutes a real
+treat-incomparable-as-duplicate bug ( `[5,3,9,1,7,2]` → `[5,3,9]` ). But it does
+sink any law needing a *valid* ordering — "the output is sorted" is
+unstatable against arbitrary comparators, because sort owes nothing there.
+
+The fix is to generate validity by construction: compare by a generated **key**
+function, inheriting the ordering laws from `<` on the key. Measured
+**500 / 500** valid, and the stronger law becomes statable.
+
+**What is genuinely absent is the report.** Force a failure and compare:
+
+```
+Failure occured with input (Function).   (shrunk down from (Function) after 1 iteration)
+Failure occured with input 0.            (shrunk down from 76 after 1 iteration)
+```
+
+The first is a function-valued generator; the second quantifies over the **seed**
+and derives the function inside the body. The seed form is displayable,
+replayable, and shrinks. The function form tells you only that some function
+failed.
+
+**And the seed workaround does not fully close it.** A smaller seed is not a
+*simpler* function — `hash(0, x)` is no more comprehensible than `hash(76, x)`,
+so shrinking is nominal: it minimises an `Int` that happens to index a function,
+not the function itself. QuickCheck's `Fun` shrinks toward a smaller *table* —
+fewer distinguished input points — and prints that table, which is what makes a
+failing function readable. That is the capability, and it is genuinely not here.
+
+**So the corrected ledger entry** is not "the stack cannot generate functions"
+but: *the stack can generate functions and cannot shrink or show them, so a
+function-valued counterexample is unactionable; quantify over a seed instead and
+recover replay, but not minimisation.*
+
+Nothing built. The catalog proposes laws over the code it reads, and a
+generated-comparator law is a law the **user** writes about their own sort — it
+has no discovery surface here. Recorded so the ledger claim is accurate.
+
 **Honesty note.** The subject choice is uneven. `swift-syntax` is a genuine
 parser and the right subject. `SwiftProjectLint` is *not* a parser — it consumes
 `swift-syntax` — and its only first-party parsing is config/suppression-directive
