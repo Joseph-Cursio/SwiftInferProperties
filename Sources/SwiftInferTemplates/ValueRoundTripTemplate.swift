@@ -35,6 +35,29 @@ import SwiftInferCore
 /// something new. A correct implementation of a differently-intended function would fail this, so
 /// it stays a conjecture and sits below the confidence cut, like `filter-subset` before the
 /// role-entailment work and like `idempotence` still.
+///
+/// ## Reach, measured after registering — and it does NOT include the motivating bug
+///
+/// Stated here because it is the opposite of what the story above implies. On
+/// `SwiftProjectLintRules` the template fires **once**, and not on `extractStringValue`:
+///
+/// | function | access | fires |
+/// |---|---|---|
+/// | `extractPropertyWrapper(from: VariableDeclSyntax) -> PropertyWrapper?` | internal | **yes** |
+/// | `extractStringValue(from: StringLiteralExprSyntax) -> String?` ×2 | `private` | no |
+/// | `extractStringValue(_: StringLiteralExprSyntax) -> String` | `private`, non-optional | no |
+///
+/// Isolated on a two-file fixture differing only in one keyword: the same declaration scores
+/// 1 suggestion as `func` and **0** as `private func`. A plain `discover` run produces no summary
+/// for a `private` declaration, so no template sees it — and seeding does not recover *this* law
+/// either: `--seeds` focuses suggestions that already exist and synthesizes only the generic
+/// determinism law, so a seeded private reader reports `kept 0 of 26`.
+///
+/// So the shape this template was built from is, today, out of its own reach. That is a statement
+/// about the access-level boundary rather than about this template — every name-gated shape template
+/// has it — and it is deliberately *not* patched around here: `SeedKind.restrictedFunction` argues
+/// "access level belongs in the advice, never in the gate", which if applied to analysis is a
+/// pipeline change affecting every template, not a per-template fix. Recorded, not attempted.
 public enum ValueRoundTripTemplate {
 
     /// Verbs that assert "recover the value this thing denotes".
@@ -99,6 +122,23 @@ public enum ValueRoundTripTemplate {
 
     static func isRepresentation(_ type: String) -> Bool {
         representationSuffixes.contains { type.hasSuffix($0) }
+    }
+
+    /// The type the generator must produce — the **value**, not the representation.
+    ///
+    /// The law is `read(write(v)) == v`, quantified over values, so `v` is what gets
+    /// generated and the representation is derived from it by the `write` the reader
+    /// supplies. Generating the representation instead would be a different (and
+    /// weaker) property: most arbitrary representations denote nothing, so the
+    /// reader returns `nil` and the comparison never happens.
+    ///
+    /// `nil` when the summary is not a value reader, so the registry's
+    /// `generatorType` is never a guess about an unmatched shape.
+    public static func valueType(of summary: FunctionSummary) -> String? {
+        guard isValueReader(summary),
+              let returnType = summary.returnTypeText?.trimmingCharacters(in: .whitespaces)
+        else { return nil }
+        return String(returnType.dropLast())
     }
 
     static func hasReaderVerb(_ name: String) -> Bool {

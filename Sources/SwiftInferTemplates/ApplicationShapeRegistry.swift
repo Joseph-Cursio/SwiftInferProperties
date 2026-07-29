@@ -87,6 +87,32 @@ extension TemplateRegistry {
             )
         ),
         SingleFunctionAppShape(
+            name: "value-round-trip",
+            suggest: ValueRoundTripTemplate.suggest(for:),
+            generatorType: { ValueRoundTripTemplate.valueType(of: $0) },
+            // Independent, on the same grounds as `input-totality` directly below: a
+            // reader owes the round-trip AND whatever else its shape says. A
+            // `parse(String) -> Widget?` legitimately carries both, and they are
+            // refuted by different inputs — totality by hostile bytes, the round-trip
+            // by a value whose written form differs from the value.
+            exclusionGroup: nil,
+            referenceFixture: appShapeFixture(
+                // The motivating shape, from the SwiftProjectLint security visitors:
+                // read a value out of the syntax node that denotes it.
+                "extractStringValue",
+                params: [
+                    .init(
+                        label: "from",
+                        internalName: "literal",
+                        typeText: "StringLiteralExprSyntax",
+                        isInout: false
+                    )
+                ],
+                returns: "String?",
+                on: "SecurityVisitor"
+            )
+        ),
+        SingleFunctionAppShape(
             name: "equivalence-relation",
             suggest: EquivalenceRelationTemplate.suggest(for:),
             generatorType: { $0.parameters.first?.typeText },
