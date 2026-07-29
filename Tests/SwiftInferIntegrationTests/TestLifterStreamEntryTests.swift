@@ -17,7 +17,7 @@ struct TestLifterStreamEntryTests {
 
     // MARK: - Stream entry: lifted suggestions surface when no production-side match exists
 
-    @Test("Round-trip lifted with no production-side match enters the stream with +50 testBodyPattern signal")
+    @Test("Round-trip lifted with no production-side match enters the stream with +80 testBodyPattern signal")
     func roundTripStreamEntryWithoutProductionMatch() throws {
         let directory = try makeFixtureDirectory(name: "RoundTripStreamEntry")
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -35,7 +35,7 @@ struct TestLifterStreamEntryTests {
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         // Promoted lifted Suggestion carries +50 `.testBodyPattern` per PRD §4.1.
-        #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 50 })
+        #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
         // Origin is populated from the originating test method.
         let origin = try #require(lifted.liftedOrigin)
         #expect(origin.testMethodName == "testRoundTrip")
@@ -62,7 +62,7 @@ struct TestLifterStreamEntryTests {
             diagnostics: SilentDiagnostics()
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
-        #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 50 })
+        #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
         #expect(lifted.evidence[0].signature == "(?) -> ?")
         let origin = try #require(lifted.liftedOrigin)
         #expect(origin.testMethodName == "testRebalanceIsIdempotent")
@@ -80,7 +80,7 @@ struct TestLifterStreamEntryTests {
             diagnostics: SilentDiagnostics()
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
-        #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 50 })
+        #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
         let origin = try #require(lifted.liftedOrigin)
         #expect(origin.testMethodName == "testCombineIsCommutative")
     }

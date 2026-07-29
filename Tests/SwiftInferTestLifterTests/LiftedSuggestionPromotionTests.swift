@@ -112,7 +112,7 @@ struct LiftedSuggestionPromotionTests {
 
     // MARK: - Score / signal shape
 
-    @Test("Promoted suggestion carries exactly one +50 testBodyPattern signal")
+    @Test("Promoted suggestion carries exactly one +80 testBodyPattern signal")
     func promotedSuggestionScoreShape() {
         let detection = DetectedIdempotence(
             calleeName: "normalize",
@@ -126,12 +126,18 @@ struct LiftedSuggestionPromotionTests {
         #expect(suggestion.score.signals.count == 1)
         let signal = suggestion.score.signals[0]
         #expect(signal.kind == .testBodyPattern)
-        #expect(signal.weight == 50)
+        // 80, not 50: a lifted law was ASSERTED by a human, and the signature
+        // side tops out at 75 (30 shape + 40 curated verb + 5 carrier). At 50 a
+        // name-derived conjecture outranked an executed law by a full tier —
+        // measured, and backwards. 80 makes the assertion sort first rather
+        // than merely tie.
+        #expect(signal.weight == 80)
         // PRD §4.1 +50 row — lifted-only suggestion lands at ~Likely
         // tier (M3 plan open decision #5 default `(a)` — natural ~50
         // landing, no synthesized structural base).
-        #expect(suggestion.score.total == 50)
-        #expect(suggestion.score.tier == .likely)
+        #expect(suggestion.score.total == 80)
+        // Strong on the single signal — the lifted path scores exactly one.
+        #expect(suggestion.score.tier == .strong)
         #expect(!suggestion.score.isVetoed)
     }
 

@@ -10,7 +10,7 @@ import SwiftInferCore
 ///
 /// **Promotion produces a `Suggestion`** whose `templateName` matches
 /// the lifted record, `evidence` carries per-callee synthetic Evidence,
-/// `score` adds one `+50 testBodyPattern` signal (PRD §4.1), `generator`
+/// `score` adds one `+80 testBodyPattern` signal (PRD §4.1), `generator`
 /// defaults to `.m1Placeholder` (later overwritten by GeneratorSelection
 /// or kept as `.todo` per PRD §16 #4), `identity` uses
 /// `lifted|<template>|<sortedCalleeNames>` to namespace away from
@@ -47,15 +47,45 @@ public extension LiftedSuggestion {
         let typeT = typeName ?? "?"
         let typeU = returnType ?? typeName ?? "?"
         let evidence = makeEvidence(typeT: typeT, typeU: typeU)
+        // **A HUMAN ALREADY ASSERTED THIS LAW.** Weight 75 — enough to reach
+        // `.strong` alone — because a lifted law is evidence of a different
+        // KIND from anything the signature side produces, and the tier is the
+        // trust bar a reader reads.
+        //
+        // Measured inversion this replaces. On one probe:
+        //
+        //     normalize(normalize(d)) == normalize(d)   75 Strong   ← a GUESS
+        //         (read off the curated verb `normalize`; PRD §4.1's own
+        //          counterexample is a one-shot suffix strip, which is
+        //          correct code that fails this)
+        //     mySort(x) == x.sorted()                   50 Likely   ← ASSERTED
+        //         (a human wrote it, decided it holds for all inputs, and ran
+        //          it 10,000 times)
+        //
+        // A name-derived conjecture outranking an executed, human-authored law
+        // by a full tier is backwards. The ceiling on the signature side is 75
+        // (30 type-symmetry + 40 curated verb + 5 value-semantic carrier), and
+        // the lifted path scores exactly ONE signal — so 75 would merely TIE,
+        // leaving `query`'s score-descending order arbitrary between a guess
+        // and an assertion. 80 makes the assertion sort first, which is the
+        // actual behaviour wanted.
+        //
+        // Deliberately unqualified by test quality: the lift detects the shape,
+        // not how thorough the test is. A one-example test still means a human
+        // decided the law holds — which a curated verb never does.
+        //
+        // Not a visibility change: `.likely` (>= 40) was already shown by
+        // default. What changes is the CONFIDENCE LABEL, which is the point —
+        // `docc` gates on tier, `query` sorts by it, and a reader trusts it.
         let signal = Signal(
             kind: .testBodyPattern,
-            weight: 50,
+            weight: 80,
             detail: "Lifted from test body — \(detailLabel())"
         )
         // M11.2 / M13.3 / M16.2 — corpus-wide advisory findings surface
         // with `.advisory` tier per PRD §7.8 (documentation, not a
         // runnable property). All other patterns flow through the
-        // standard score-to-tier mapping with +50 testBodyPattern.
+        // standard score-to-tier mapping with +80 testBodyPattern.
         let score: Score
         switch pattern {
         case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:

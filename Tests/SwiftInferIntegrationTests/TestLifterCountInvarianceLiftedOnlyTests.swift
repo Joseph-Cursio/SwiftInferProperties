@@ -44,10 +44,10 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
         )
         // The promoted suggestion carries a lifted origin (M3.0
         // promotion adapter sets `liftedOrigin` from the originating
-        // test method) and the +50 testBodyPattern signal that lifted
+        // test method) and the +80 testBodyPattern signal that lifted
         // suggestions ship with per the M3.0 score shape.
         #expect(liftedOnly.liftedOrigin != nil)
-        #expect(liftedOnly.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 50 })
+        #expect(liftedOnly.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
         // No +20 cross-validation signal — the lifted suggestion enters
         // alone (suppression is a no-op when there's no TemplateEngine
         // counterpart to merge against).
