@@ -148,22 +148,60 @@ struct DifferentialTemplateTests {
         #expect(!incremental.elidesPrecondition)
     }
 
-    @Test("a precondition-eliding variant says the trap is not a refutation")
-    func preconditionCaveatText() throws {
-        // Unexercised on the measured corpora — every real `unchecked*` pair is
-        // a `mutating`/`Void` method on an unsafe handle type, correctly out of
-        // scope. Pinned here so the caveat is exercised somewhere and does not
-        // rot, and so the boundary is visible.
+    /// This used to assert that a precondition-eliding pair SHIPPED, carrying a
+    /// caveat saying the trap is not a refutation. It is now vetoed instead, and
+    /// the corpus is what changed the verdict.
+    ///
+    /// The old test's own comment recorded that the shape was "unexercised on the
+    /// measured corpora" — every real `unchecked*` pair was `mutating`/`Void` on
+    /// an unsafe-handle carrier, so other gates caught them. `stdlib/public/core`
+    /// exercises it: same shape, but returning a value on a resolvable carrier,
+    /// so nothing incidental fires and **57 Likely-tier claims** land on the
+    /// default surface — 32 `loadUnaligned`/`unsafeLoadUnaligned`, 24
+    /// `load`/`unsafeLoad`, 1 `bitCast`/`unsafeBitCast`, and not one of them the
+    /// law this family exists for.
+    ///
+    /// A caveat is the wrong instrument for a law that cannot be executed. See
+    /// `Signal.Kind.preconditionElidingVariant`.
+    @Test("a precondition-eliding variant is vetoed, not caveated")
+    func preconditionElidingIsVetoed() throws {
         let pairs = VariantPairing.candidates(in: [
             fn("append", params: [("x", "Element")], returns: "Buffer", carrier: "Buf"),
             fn("uncheckedAppend", params: [("x", "Element")], returns: "Buffer", carrier: "Buf")
         ])
         let pair = try #require(pairs.first)
-        let suggestion = try #require(DifferentialTemplate.suggest(for: pair))
-        #expect(
-            suggestion.explainability.whyMightBeWrong
-                .contains { $0.contains("TRAP IS NOT A REFUTATION") }
-        )
+        // The pair still FORMS — the veto is a scoring verdict, not a pairing one,
+        // so `metrics` can count what it suppressed.
+        #expect(DifferentialTemplate.suggest(for: pair) == nil)
+
+        let signals = DifferentialTemplate.signals(for: pair)
+        #expect(signals.count == 1, "the veto must be the sole signal, not one of three")
+        let veto = try #require(signals.first)
+        #expect(veto.kind == .preconditionElidingVariant)
+        #expect(veto.isVeto)
+        #expect(Score(signals: signals).tier == .suppressed)
+        // The detail has to say WHY it cannot be run, not merely that it was dropped.
+        #expect(veto.detail.contains("cannot be RUN"))
+        #expect(veto.detail.contains("trap is not a refutation"))
+    }
+
+    /// The `unsafe` prefix is the form that actually fired on stdlib, so it gets
+    /// its own case rather than riding on `unchecked`'s.
+    @Test("the unsafe prefix is vetoed on a value-returning stdlib-shaped pair")
+    func unsafePrefixIsVetoed() throws {
+        let pairs = VariantPairing.candidates(in: [
+            fn("load", params: [("fromByteOffset", "Int")], returns: "T", carrier: "MutableRawSpan"),
+            fn(
+                "unsafeLoad",
+                params: [("fromByteOffset", "Int")],
+                returns: "T",
+                carrier: "MutableRawSpan"
+            )
+        ])
+        let pair = try #require(pairs.first)
+        #expect(pair.naming.marker == "unsafe")
+        #expect(pair.naming.elidesPrecondition)
+        #expect(DifferentialTemplate.suggest(for: pair) == nil)
     }
 
     @Test("every pair is warned about the guard-and-delegate shape")

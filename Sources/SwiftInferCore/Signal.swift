@@ -292,6 +292,37 @@ public struct Signal: Sendable, Equatable {
         /// `OrderSensitiveCarrierNames` denylist stands in for structural
         /// order-sensitivity detection pre-SemanticIndex.
         case orderSensitiveCarrier
+        /// Fires on a `differential-equivalence` pair whose variant only
+        /// **elides a precondition** (`load`/`unsafeLoad`,
+        /// `append`/`uncheckedAppend`) rather than being a second
+        /// implementation of the same computation.
+        ///
+        /// Vetoed on **unrefutability**, not falsity. The law is true — that is
+        /// the contract — but nothing can execute it: where the precondition
+        /// holds the two agree trivially, because the reference is normally the
+        /// checked wrapper around the variant or both bottom out in the same
+        /// builtin; where it does not, the variant traps or is UB, and a trap is
+        /// not a refutation. So no generator can reject any plausible
+        /// implementation, which is what "score refutability, not suggestion
+        /// count" forbids shipping.
+        ///
+        /// Measured, and the reason this is a veto rather than a penalty: the
+        /// subclass has produced **zero** true positives on every corpus tried.
+        /// 9 `unchecked*` pairs on swift-collections were rejected only
+        /// incidentally (`mutating`/`Void` on unsafe-handle carriers), and
+        /// `stdlib/public/core` — where the same shape returns a value on a
+        /// resolvable carrier, so the incidental gates do not fire — produced
+        /// **57 Likely-tier claims, all of this class** (32 ×
+        /// `loadUnaligned`/`unsafeLoadUnaligned`, 24 × `load`/`unsafeLoad`,
+        /// 1 × `bitCast`/`unsafeBitCast`) and none of the law the family exists
+        /// for. The incidental gates were hiding a wrong marker class, which is
+        /// the "a refuter that fires first hides every refuter behind it"
+        /// hazard read from the other side.
+        ///
+        /// Scored-then-filtered rather than dropped at the pairing stage, on the
+        /// `protocolCoveredProperty` precedent, so `metrics` can still answer
+        /// "how many pairs did this veto suppress?".
+        case preconditionElidingVariant
     }
 
     /// Sentinel weight that marks a veto. Score arithmetic never sums this

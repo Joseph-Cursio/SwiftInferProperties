@@ -1016,6 +1016,61 @@ false for correct code. Only the `Void`-return gate rejected it, by luck rather
 than design. Every emitted suggestion now carries that hazard by name, because
 the same shape with non-`Void` returns would sail through.
 
+#### The `unsafe`/`unchecked` subclass was wrong, and the luck ran out on stdlib
+
+The row above says the nine `unchecked*` pairs were rejected for *incidental*
+reasons — `mutating`, `Void`, unsafe-handle carriers — and the test pinning the
+precondition-eliding caveat recorded in its own comment that the shape was
+**unexercised on every measured corpus**. Both were warnings that nobody had
+seen this subclass actually fire.
+
+`stdlib/public/core` fires it. Same shape, but returning a value on a resolvable
+carrier, so none of the incidental gates apply:
+
+| pair | firings | tier |
+|---|---:|---|
+| `loadUnaligned` / `unsafeLoadUnaligned` | 32 | Likely (55) |
+| `load` / `unsafeLoad` | 24 | Likely (55) |
+| `bitCast` / `unsafeBitCast` | 1 | Likely (55) |
+| **total** | **57** | all of them this subclass |
+
+Fifty-seven Likely-tier claims on the default surface, and **not one** is the law
+this family exists for. That is the whole differential output on the corpus.
+
+**Vetoed, on unrefutability rather than falsity.** The law is true — it is the
+contract `unsafeX` documents. It simply cannot be executed. Where the
+precondition holds the two agree trivially, because the reference is normally the
+checked wrapper around the variant or both bottom out in one builtin; where it
+does not, the variant traps or is undefined, and *a trap is not a refutation*. So
+no generator rejects any plausible implementation, which is precisely what "score
+refutability, not suggestion count" forbids shipping. A caveat was the wrong
+instrument: it told the reader the law was conditional while still handing them a
+Likely-tier suggestion.
+
+`Signal.Kind.preconditionElidingVariant`, fired as the *sole* signal so the
+calibration record shows one unambiguous reason rather than a veto buried under
+two positive signals it overrides. Scored-then-filtered on the
+`protocolCoveredProperty` precedent, so `metrics` can still count what it
+suppressed.
+
+Measured, with only this change reverted for the baseline:
+
+| corpus | before | after |
+|---|---|---|
+| `stdlib/public/core` | 366 suggestions / 15 templates, differential **57** | 309 / 14, differential **0** |
+| `swift-syntax/SwiftParser` | 53 / 5, differential **1** | 53 / 5, differential **1** |
+
+Every other template row is byte-identical on both corpora. The one true positive
+the family was built for — `parse` / `parseIncrementally` — is untouched.
+
+**The method note, and it is the sharper half.** Two independent signals said
+this subclass was unvalidated: the rejections were incidental, and the test
+comment said so out loud. Neither prompted a search for a corpus that *would*
+exercise it. A gate that rejects for the wrong reason reads exactly like a gate
+that works — the same hazard as "a refuter that fires first hides every refuter
+behind it", seen from the other side. When a rejection table lists incidental
+causes, that is a to-do, not a result.
+
 Four other caveats ship with it: the law runs in **one direction** (a
 counterexample blames the variant); it is a conjecture from naming, not an
 entailment; a precondition-eliding variant's trap is **not a refutation**; and —

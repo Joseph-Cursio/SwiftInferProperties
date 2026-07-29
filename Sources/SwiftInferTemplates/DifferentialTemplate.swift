@@ -63,6 +63,10 @@ public enum DifferentialTemplate {
     }
 
     static func signals(for pair: VariantPair) -> [Signal] {
+        // Checked before any positive signal: a precondition-eliding variant is
+        // not a second implementation, and its law cannot be executed either way
+        // round. See `Signal.Kind.preconditionElidingVariant` for the measurement.
+        if let veto = preconditionElidingVeto(for: pair) { return [veto] }
         var signals: [Signal] = [
             Signal(
                 kind: .exactNameMatch,
@@ -108,6 +112,29 @@ public enum DifferentialTemplate {
             )
         }
         return signals
+    }
+
+    /// The veto for variants that only drop a precondition — `load`/`unsafeLoad`,
+    /// `append`/`uncheckedAppend`.
+    ///
+    /// Returned as the *sole* signal so the suppression reason is unambiguous in
+    /// the calibration record: a reader asking why this pair vanished sees one
+    /// line naming the marker, not a veto buried under two positive signals it
+    /// overrides.
+    static func preconditionElidingVeto(for pair: VariantPair) -> Signal? {
+        guard pair.naming.elidesPrecondition else { return nil }
+        return Signal(
+            kind: .preconditionElidingVariant,
+            weight: Signal.vetoWeight,
+            detail: "`\(pair.naming.variant)` is `\(pair.naming.reference)` with the "
+                + "`\(pair.naming.marker)` precondition dropped, not a second implementation of "
+                + "it — so the differential law cannot be RUN, in either direction. Where the "
+                + "precondition holds the two agree trivially (the reference is normally the "
+                + "checked wrapper around the variant); where it does not, the variant traps or "
+                + "is undefined, and a trap is not a refutation. Measured: this marker class has "
+                + "produced zero true positives on every corpus tried, and 57 false Likely claims "
+                + "on stdlib/public/core alone"
+        )
     }
 
     static func caveats(for pair: VariantPair) -> [String] {
