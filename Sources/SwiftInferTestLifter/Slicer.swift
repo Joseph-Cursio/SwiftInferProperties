@@ -24,8 +24,51 @@ import SwiftSyntax
 /// encoded = encoder.encode(x)` is in the slice).
 public enum Slicer {
 
+    /// A test body that is **one repetition loop** is sliced as its loop body.
+    ///
+    /// This is the hand-rolled property test:
+    ///
+    /// ```swift
+    /// func testSortMatchesReferenceOnRandomArrays() {
+    ///     for _ in 0..<10_000 {
+    ///         let input = (0..<50).map { _ in Int.random(in: -1000...1000) }
+    ///         XCTAssertEqual(mySort(input), input.sorted())
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// The loop IS the quantifier. A human decided the assertion holds for all
+    /// inputs, drew 10,000 of them, and wrote the law executably — evidence
+    /// strictly better than any signature heuristic. Every detector was blind
+    /// to it for a purely mechanical reason: `AssertionAnchor` scans top-level
+    /// statements, and here the only top-level statement is the `for`.
+    ///
+    /// Measured on the differential detector: the same assertion scores a
+    /// finding when flat and nothing when wrapped, with no other difference.
+    ///
+    /// **Deliberately narrow.** Only when the body's statements reduce to a
+    /// single `for`/`while`/`repeat`, so a loop that is genuinely setup
+    /// (populating a fixture before a later assertion) is untouched — there,
+    /// the top-level assertion is still the right anchor and the existing
+    /// backward slice still reaches the loop as setup. Applied once, not
+    /// recursively: a doubly-nested loop is a table-driven test, not a
+    /// quantifier, and its inner body usually depends on the outer binding.
+    static func unwrappingRepetition(_ items: [CodeBlockItemSyntax]) -> [CodeBlockItemSyntax] {
+        guard items.count == 1, let only = items.first else { return items }
+        if let forStatement = only.item.as(ForStmtSyntax.self) {
+            return Array(forStatement.body.statements)
+        }
+        if let whileStatement = only.item.as(WhileStmtSyntax.self) {
+            return Array(whileStatement.body.statements)
+        }
+        if let repeatStatement = only.item.as(RepeatStmtSyntax.self) {
+            return Array(repeatStatement.body.statements)
+        }
+        return items
+    }
+
     public static func slice(_ body: CodeBlockSyntax) -> SlicedTestBody {
-        let items = Array(body.statements)
+        let items = unwrappingRepetition(Array(body.statements))
         guard let anchored = AssertionAnchor.locate(in: items) else {
             return .emptySlice(setup: items)
         }

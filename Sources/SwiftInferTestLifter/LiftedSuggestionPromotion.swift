@@ -62,7 +62,8 @@ public extension LiftedSuggestion {
             score = Score(advisorySignals: [signal])
 
         case .roundTrip, .idempotence, .commutativity,
-                .monotonicity, .countInvariance, .reduceEquivalence:
+                .monotonicity, .countInvariance, .reduceEquivalence,
+                .referenceEquivalence:
             score = Score(signals: [signal])
         }
         return Suggestion(
@@ -90,6 +91,15 @@ public extension LiftedSuggestion {
         switch pattern {
         case .roundTrip(let detection):
             return roundTripEvidence(detection: detection, typeT: typeT, typeU: typeU)
+
+        case .referenceEquivalence(let detection):
+            // Evidence names the SUBJECT: the law runs in one direction and a
+            // counterexample is the subject's bug, not the reference's.
+            return [
+                unaryEvidence(
+                    callee: detection.subjectCallee, typeT: typeT, location: detection.location
+                )
+            ]
 
         case .idempotence(let detection):
             return [unaryEvidence(callee: detection.calleeName, typeT: typeT, location: detection.assertionLocation)]
@@ -208,6 +218,9 @@ public extension LiftedSuggestion {
         switch pattern {
         case .roundTrip(let detection):
             return "\(detection.backwardCallee)(\(detection.forwardCallee)(x)) == x"
+
+        case .referenceEquivalence(let detection):
+            return "\(detection.subjectCallee)(x) == \(detection.referenceCallee)(x)"
 
         case .idempotence(let detection):
             return "\(detection.calleeName)(\(detection.calleeName)(x)) == \(detection.calleeName)(x)"

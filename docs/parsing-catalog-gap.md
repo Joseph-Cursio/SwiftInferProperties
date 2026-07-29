@@ -717,10 +717,73 @@ lives**. swift-syntax already has this as an example test with one recorded
 transition. What makes it a property is generating that transition, biased
 toward the states the fast path treats specially.
 
-Still open from §6: the **test-side** route. TestLifter cannot see
-`mySort(x) == x.sorted()` in a hand-rolled random test, and now that a template
-claims the shape, a detector has something to map to — which is exactly the
-dependency the TestLifter finding predicted.
+### The test-side route — built, and it needed a slicer fix too
+
+`AssertReferenceEquivalenceDetector` is TestLifter's seventh positive detector
+and the first that reaches a law the catalog could **not** already state from
+signatures. It promotes into `differential-equivalence`, which is precisely why
+the template had to come first: a lifted record needs somewhere to land.
+
+**The shape, and how it is told apart from the other six.** All the
+equality-shaped detectors look at `assertEqual(A, B)`; what separates them is
+the relation between the sides:
+
+| detector | shape |
+|---|---|
+| round-trip | one side is the **bare input** — `g(f(x)) == x` |
+| double-apply | **same callee** both sides — `f(f(x)) == f(x)` |
+| symmetry | same callee, **swapped arguments** |
+| **reference equivalence** | **different callees**, shared input, neither side bare |
+
+The shared input is load-bearing: `f(a) == g(b)` with no identifier in common
+is a fixture assertion, not a law.
+
+**Direction is resolved structurally where possible.** If one side is a method
+on the shared input (`input.sorted()`) and the other takes it as an argument
+(`mySort(input)`), the latter is the subject — the library's answer is the
+oracle, yours is the implementation. When both sides have the same form the
+record says the direction is a guess, and the rendered line says so too, because
+a counterexample gets attributed to the subject.
+
+**A second, mechanical blocker turned up mid-build.** The detector worked inline
+and through bindings but scored nothing on the shape the whole exercise is
+about:
+
+```swift
+func testSortIsCorrectOnRandomArrays() {
+    for _ in 0..<10_000 {
+        let input = (0..<50).map { _ in Int.random(in: -1000...1000) }
+        XCTAssertEqual(mySort(input), input.sorted())
+    }
+}
+```
+
+`AssertionAnchor` scans **top-level** statements, and here the only top-level
+statement is the `for`. Isolated by measurement — the identical assertion
+scored a finding flat and nothing wrapped, with no other difference. So
+`Slicer` now unwraps a body that is *one* repetition loop: the loop **is** the
+quantifier. Deliberately narrow — only when the body reduces to a single
+`for`/`while`/`repeat`, so a loop that merely builds a fixture before a later
+assertion is untouched, and not recursively, because a doubly-nested loop is a
+table-driven test rather than a quantifier.
+
+That change touches all seven detectors; the full suite is green, which is the
+regression check that mattered.
+
+**Measured:** the quote's exact shape now yields
+`differential-equivalence` at **50/Likely**, naming `mySort` as the subject and
+`sorted` as the reference.
+
+What this closes is the finding that mattered most from the TestLifter probe —
+every prior detector was keyed to a template the catalog already had, so the
+lifter corroborated what it knew and discarded what it did not, including cases
+where a human had already done the hard part. (One correction to that finding:
+lifted records **do** originate suggestions via `LiftedSuggestionPromotion`'s
+`+50 testBodyPattern` signal — the gap was detector coverage, not the
+mechanism.)
+
+Still unreached: **libFuzzer harnesses**. `LLVMFuzzerTestOneInput` is a totality
+property with a curated corpus already attached, and no scanner looks at one.
 
 ---
 

@@ -145,6 +145,15 @@ public enum LiftedSuggestionRecovery {
                 setupAnnotations: setupAnnotations
             )
 
+        case .referenceEquivalence(let detection):
+            // The subject is the corpus function; the reference is often a
+            // stdlib call with no summary to recover from.
+            let summary = summariesByName[detection.subjectCallee]
+            return (
+                summary?.containingTypeName,
+                summary?.returnTypeText ?? setupAnnotations[detection.sharedInput]
+            )
+
         case .idempotence(let detection):
             return recoverIdempotence(
                 detection: detection,

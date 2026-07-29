@@ -221,6 +221,14 @@ extension TestLifter {
         for detection in AssertReduceEquivalenceDetector.detect(in: slice) {
             lifted.append(LiftedSuggestion.reduceEquivalence(from: detection, origin: origin))
         }
+        // Differential / oracle — the test-side route. The other detectors
+        // all corroborate a law the catalog could already state from
+        // signatures; this one reaches a law that only exists because a human
+        // wrote it down in a test, which is strictly better evidence than any
+        // naming heuristic.
+        for detection in AssertReferenceEquivalenceDetector.detect(in: slice) {
+            lifted.append(LiftedSuggestion.referenceEquivalence(from: detection, origin: origin))
+        }
         // M7 — seventh-detector pass. Asymmetric-assertion detector
         // surfaces negative-form mirrors of the six positive patterns;
         // each detection becomes a LiftedCounterSignal keyed on the

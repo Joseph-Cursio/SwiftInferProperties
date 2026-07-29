@@ -175,6 +175,26 @@ public struct LiftedSuggestion: Sendable, Equatable {
     /// calleeNames: [opCalleeName])` — single-callee on the reducer
     /// operation, mirroring the production-side `AssociativityTemplate`'s
     /// one-Evidence shape.
+    /// Builds a LiftedSuggestion from a `DetectedReferenceEquivalence`. Both
+    /// callee names go into the cross-validation key so a source-side
+    /// `DifferentialTemplate` firing on the same pair corroborates rather than
+    /// duplicating.
+    public static func referenceEquivalence(
+        from detection: DetectedReferenceEquivalence,
+        origin: LiftedOrigin? = nil
+    ) -> Self {
+        let key = CrossValidationKey(
+            templateName: "differential-equivalence",
+            calleeNames: [detection.subjectCallee, detection.referenceCallee]
+        )
+        return Self(
+            templateName: "differential-equivalence",
+            crossValidationKey: key,
+            pattern: .referenceEquivalence(detection),
+            origin: origin
+        )
+    }
+
     public static func reduceEquivalence(
         from detection: DetectedReduceEquivalence,
         origin: LiftedOrigin? = nil
@@ -297,6 +317,13 @@ public enum DetectedPattern: Sendable, Equatable {
     /// is synthetic so cross-validation suppression naturally lets it
     /// through (M16 plan §"M16 ships" item 3).
     case consumerProducerChain(DomainHint)
+    /// A test asserting the subject agrees with a **reference computation** —
+    /// the test-side half of the differential / oracle family. Promotes into
+    /// the `differential-equivalence` template, which is the dependency that
+    /// made this detector possible: a lifted record needs a template to
+    /// promote into, and until that template existed the shape had nowhere to
+    /// land. See `AssertReferenceEquivalenceDetector`.
+    case referenceEquivalence(DetectedReferenceEquivalence)
 }
 
 /// PRD §7.3 Assert-Ordering-Preserved → monotonicity. Carries the single

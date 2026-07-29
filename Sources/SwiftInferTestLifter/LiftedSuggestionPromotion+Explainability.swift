@@ -14,44 +14,7 @@ extension LiftedSuggestion {
         if case .consumerProducerChain(let hint) = pattern {
             return consumerProducerChainExplainability(hint: hint)
         }
-        let assertionLine: String
-        switch pattern {
-        case .roundTrip(let detection):
-            assertionLine = "Test body asserts \(detection.backwardCallee)"
-                + "(\(detection.forwardCallee)(\(detection.inputBindingName)))"
-                + " == \(detection.inputBindingName)"
-
-        case .idempotence(let detection):
-            assertionLine = "Test body asserts \(detection.calleeName)"
-                + "(\(detection.calleeName)(\(detection.inputBindingName)))"
-                + " == \(detection.calleeName)(\(detection.inputBindingName))"
-
-        case .commutativity(let detection):
-            assertionLine = "Test body asserts \(detection.calleeName)"
-                + "(\(detection.leftArgName), \(detection.rightArgName))"
-                + " == \(detection.calleeName)(\(detection.rightArgName), \(detection.leftArgName))"
-
-        case .monotonicity(let detection):
-            assertionLine = "Test body asserts \(detection.leftArgName)"
-                + " < \(detection.rightArgName) implies "
-                + "\(detection.calleeName)(\(detection.leftArgName))"
-                + " <= \(detection.calleeName)(\(detection.rightArgName))"
-
-        case .countInvariance(let detection):
-            assertionLine = "Test body asserts \(detection.calleeName)"
-                + "(\(detection.inputBindingName)).count"
-                + " == \(detection.inputBindingName).count"
-
-        case .reduceEquivalence(let detection):
-            assertionLine = "Test body asserts \(detection.collectionBindingName)"
-                + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
-                + " == \(detection.collectionBindingName).reversed()"
-                + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
-
-        case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
-            // Handled by the early-return above.
-            assertionLine = ""
-        }
+        let assertionLine = assertionLineText()
         let location = assertionLocation()
         let provenance = "Lifted from \(location.file):\(location.line)"
         return ExplainabilityBlock(
@@ -112,6 +75,9 @@ extension LiftedSuggestion {
         case .reduceEquivalence(let detection):
             return detection.assertionLocation
 
+        case .referenceEquivalence(let detection):
+            return detection.location
+
         case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
             // M11.2 / M13.3 / M16.2 — corpus-level finding; no single
             // assertion location.
@@ -151,6 +117,59 @@ extension LiftedSuggestion {
             + " not a runnable property. Author per-class properties manually using"
             + " the suggested filter generators."
         return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: [advisoryCaveat])
+    }
+
+    /// The "Test body asserts …" line, per pattern. Split from
+    /// `explainability()` to stay under the complexity and length caps.
+    private func assertionLineText() -> String {
+        switch pattern {
+        case .roundTrip(let detection):
+            return "Test body asserts \(detection.backwardCallee)"
+                + "(\(detection.forwardCallee)(\(detection.inputBindingName)))"
+                + " == \(detection.inputBindingName)"
+
+        case .referenceEquivalence(let detection):
+            return "Test body checks `\(detection.subjectCallee)"
+                + "(\(detection.sharedInput))` against the reference computation "
+                + "`\(detection.referenceCallee)(\(detection.sharedInput))`"
+                + (detection.directionIsCertain
+                    ? " — the reference is a method on the input, so `"
+                        + detection.subjectCallee + "` is the implementation under test"
+                    : " — WHICH SIDE IS THE REFERENCE IS A GUESS from source order; "
+                        + "confirm before treating a counterexample as `"
+                        + detection.subjectCallee + "`'s bug")
+
+        case .idempotence(let detection):
+            return "Test body asserts \(detection.calleeName)"
+                + "(\(detection.calleeName)(\(detection.inputBindingName)))"
+                + " == \(detection.calleeName)(\(detection.inputBindingName))"
+
+        case .commutativity(let detection):
+            return "Test body asserts \(detection.calleeName)"
+                + "(\(detection.leftArgName), \(detection.rightArgName))"
+                + " == \(detection.calleeName)(\(detection.rightArgName), \(detection.leftArgName))"
+
+        case .monotonicity(let detection):
+            return "Test body asserts \(detection.leftArgName)"
+                + " < \(detection.rightArgName) implies "
+                + "\(detection.calleeName)(\(detection.leftArgName))"
+                + " <= \(detection.calleeName)(\(detection.rightArgName))"
+
+        case .countInvariance(let detection):
+            return "Test body asserts \(detection.calleeName)"
+                + "(\(detection.inputBindingName)).count"
+                + " == \(detection.inputBindingName).count"
+
+        case .reduceEquivalence(let detection):
+            return "Test body asserts \(detection.collectionBindingName)"
+                + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
+                + " == \(detection.collectionBindingName).reversed()"
+                + ".reduce(\(detection.seedSource), \(detection.opCalleeName))"
+
+        case .equivalenceClass, .nClassEquivalenceClass, .consumerProducerChain:
+            // Handled by the early-return above.
+            return ""
+        }
     }
 }
 
