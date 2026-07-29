@@ -1437,10 +1437,18 @@ that contains three real parsers and a writer.
     law for the 53 functions §2 currently mislabels. *(§2)*
 11. ~~**Tree-carrier interaction discovery.**~~ **Probed and NOT built** — the
     premise fails twice over. See §5's "measured, and rejected" note. *(§5)*
-12. **Recursive, size-controlled generation** — without it, laws 8/10/11 and the
-    two already firing at Strong on `Expr`/`Node` are all `.todo`. This is a
+12. ~~**Recursive, size-controlled generation** — without it, laws 8/10/11 and
+    the two already firing at Strong on `Expr`/`Node` are all `.todo`. This is a
     generator-engine gap, not a catalog gap, and belongs in Appendix C's
-    QuickCheck ledger next to higher-order generation. *(§7)*
+    QuickCheck ledger next to higher-order generation.~~ **Built — and the
+    diagnosis in this row was wrong on both counts.** Not an engine gap: the
+    shipped backend expresses recursion with `Gen.frequency` + `zip` +
+    `eraseToAny()` and a depth-parameterised `func`, no new combinator. Not a
+    ledger entry either, so Appendix C keeps *one* omission rather than two.
+    The wall was `GeneratorResolver` refusing cycles; it now emits a
+    depth-budgeted helper (SwiftPropertyLaws v3.21.0). Reach is **2 types**
+    across ~1,840 files, not "the entire domain" — shipped for integrity, since
+    Strong + `.todo` is a promise the tool cannot keep. *(§7)*
 
 **Honesty note.** The subject choice is uneven. `swift-syntax` is a genuine
 parser and the right subject. `SwiftProjectLint` is *not* a parser — it consumes
