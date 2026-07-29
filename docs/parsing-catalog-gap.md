@@ -1597,6 +1597,99 @@ Defects, by contrast, went 7 for 7. **Observed problems are worth more than
 reasoned ones**, and this document is now the evidence for that claim rather
 than an assertion of it.
 
+### Road test — the corpus as a measuring instrument, and a stack-depth trap
+
+The swift.org road test established that the *laws* in these suites are real and
+the *generators* are weak. The remaining question was what the corpus says about
+the **catalog**: which of the 34 templates have demonstrated demand, and which
+never appear. Pointing the tools at swift.org's real trees answered that, and
+turned up a testing trap on the way.
+
+#### The 12-vs-1 split
+
+`swift-infer discover --stats-only` over real third-party trees:
+
+| corpus | templates firing | suggestions |
+|---|---:|---:|
+| swift-foundation / FoundationEssentials | **12** | 262 |
+| swift-syntax / SwiftParser | 5 | 53 |
+| swift-syntax / SwiftSyntaxBuilder | 0 | 0 |
+
+Against **1** template — `differential-equivalence`, 6 firings — from lifting the
+*test bodies* of the same repositories, with zero across eight swift-syntax test
+subdirectories.
+
+That is a sharp, quantified version of a claim this project already held
+qualitatively: **TestLifter corroborates; it does not discover.** The
+source-inference surface reaches twelve templates where test-lifting reaches
+one. The value of lifting is that a human already committed to the law — better
+evidence per suggestion — not that it finds more of them.
+
+It also answers the "which templates are under-appreciated" question in the
+uncomfortable direction. The shapes people hand-roll are overwhelmingly
+round-trip and example-based: across ~4,285 equality assertions in these suites,
+**~59% compare against a literal**. Nobody hand-rolls conservation,
+referential-integrity, or homomorphism tests — which means the corpus cannot
+distinguish "template nobody needs" from "template nobody thought of", and a
+catalog pruned to observed hand-rolled demand would be pruned to round-trip.
+
+*Caveat on method.* A structural classifier written for this measurement proved
+unreliable — it read `result == Decimal(12340)` as a round-trip — so only the
+literal/non-literal split above is quoted from it. Every per-template number
+comes from the tools' own adjudicated detectors.
+
+#### The stack-depth trap
+
+`TestLifter.discover` over `swift-syntax/Tests/SwiftParserTest` died with
+`SIGBUS`. The crash report names it exactly:
+
+```
+EXC_BAD_ACCESS / SIGBUS · "Could not determine thread index for stack guard region"
+211 frames · all swift-syntax recursive descent
+```
+
+A stack overflow hitting the guard page — and **not** a tool defect. The same
+corpus through the CLI succeeds:
+
+```
+swift-infer discover --sources …/SwiftParser --test-dir …/SwiftParserTest
+→ 53 suggestions across 5 templates.   exit 0
+```
+
+The arithmetic closes: the deepest file (`DirectiveTests.swift`) reaches bracket
+depth **19**, and SwiftParser burns ~10 frames per nesting level
+(`parseExpression → parseSequenceExpression → parseUnaryExpression →
+parsePostfixExpression → parsePostfixExpressionSuffix →
+parseArgumentListElements`), giving ~190 against 211 observed.
+
+So the stack is not deep — **the stack is small.** swift-testing runs tests on
+cooperative-pool threads with roughly a 512 KB stack; the CLI parses on the main
+thread with 8 MB. Depth-19 Swift source is entirely ordinary and fits easily in
+8 MB.
+
+Every confusing symptom follows from that and from nothing else. It was not a
+poisoned file — `DirectiveTests.swift` scanned alone is fine, and it only dies
+in sequence because it is the last one, i.e. the one that tips a thread already
+low on headroom. It was not volume — the crash came 196 KB in. And
+"cumulative within a process", the reading taken at the time, was thread-stack
+headroom misread as accumulation.
+
+**The durable warning:** a test that runs a swift-syntax parse over deeply
+nested third-party source can `SIGBUS`, and `SIGBUS` **kills the whole test
+process**, not one test. It surfaces as unrelated infrastructure failure. No
+shipped suite does this today — the measured suites scan their own fixtures —
+so this is a trap for the next corpus-scanning test rather than a live bug. If
+one is written, run the scan through a `Thread` with an explicit
+`stackSize`, or drive it out-of-process through the CLI.
+
+**And a correction worth recording as method.** This was first reported as "the
+tool crashes on the single most important corpus it could be pointed at". That
+was wrong, and wrong in the direction that makes a finding sound larger than it
+is. The check that settled it — *run the same input through the shipping
+binary* — took one command and should have come before the report, not after.
+Same lesson as the swift.org defects, from the other side: a failure observed
+inside a harness is evidence about the harness until the product is tried.
+
 **Honesty note.** The subject choice is uneven. `swift-syntax` is a genuine
 parser and the right subject. `SwiftProjectLint` is *not* a parser — it consumes
 `swift-syntax` — and its only first-party parsing is config/suppression-directive
