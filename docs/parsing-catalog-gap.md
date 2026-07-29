@@ -1192,11 +1192,86 @@ struct Node { var name: String; var kids: [Node] }
 `simplify(Expr) -> Expr` → proposed Likely, `Generator: .todo`.
 `normalize(Node) -> Node` → proposed **Strong**, `Generator: .todo`.
 
-Every hand-written parser's AST is one of these two shapes, and neither ends in
-`Syntax`, so `ProxyConstruction` does not reach them either. The law is proposed
-at the highest confidence tier and is unrunnable. Recursive generation with a
-size/depth budget (`Gen.recursive`-style, halving the budget at each level) is a
-standard generator-engine feature and its absence blocks the entire domain.
+The law is proposed at the highest confidence tier and is unrunnable — the
+worst combination available, because a Strong suggestion is the one a reader is
+least likely to re-check.
+
+> ### CORRECTION — this section was wrong twice, and both halves were fixed by building it
+>
+> The original text continued: *"Recursive generation with a size/depth budget
+> (`Gen.recursive`-style, halving the budget at each level) is a standard
+> generator-engine feature and its absence blocks the entire domain."* Neither
+> clause survived contact with a probe.
+>
+> **It is not an engine gap.** Recursion is expressible on the *shipped*
+> `swift-property-based` 1.2.0 with no new combinator:
+>
+> ```swift
+> func genExpr(_ budget: Int) -> Generator<Expr, AnySequence<Any>> {
+>     let leaf = Gen<Int>.int(in: -50...50).map(Expr.lit).eraseToAny()
+>     guard budget > 0 else { return leaf }
+>     let sub = genExpr(budget - 1)                       // budget = termination
+>     return Gen<Expr>.frequency(
+>         (1.0, leaf),
+>         (1.0, zip(sub, sub).map(Expr.add).eraseToAny()),
+>         (1.0, sub.map(Expr.neg).eraseToAny())
+>     ).eraseToAny()                                      // makes the type nameable
+> }
+> ```
+>
+> Built against the exact `Expr` above, it compiles, runs, and — against a
+> mutant that strips one level of double negation without recursing — **refutes
+> with the minimal counterexample**, `.neg(.neg(.neg(.neg(.lit(0)))))`, shrunk
+> from `.lit(-9)` in one iteration. `Gen.frequency`, `zip`, `map` and
+> `eraseToAny()` were all already there.
+>
+> The real wall was a deliberate refusal, three lines of it:
+> `GeneratorResolver.swift` returned `nil` on cycle detection, which pinned the
+> type at `.todo`. A refusal in the *emitter*, not a hole in the *engine*.
+>
+> **It does not block "the entire domain" either.** A brace-matched scan of
+> ~1,840 source files across swift-foundation, swift-syntax,
+> swift-argument-parser / swift-nio and SwiftProjectLint found **two** genuinely
+> recursive data types:
+>
+> | type | shape |
+> |---|---|
+> | `DirectoryNode.children: [DirectoryNode]` | recursive tree |
+> | `CommandInfoV0.subcommands: [CommandInfoV0]?` | recursive tree |
+> | ~~`Tree.parent: Tree?`~~ | `weak` back-pointer — a cycle, not a tree |
+> | ~~`__JSONEncoder.ownerEncoder`~~ | private encoder impl, back-pointer |
+>
+> The claim that "every hand-written parser's AST is one of these two shapes" is
+> false for the flagship case: **swift-syntax's `Syntax` is arena-backed**
+> (`SyntaxDataArena` + `SyntaxDataReference`), not a recursive enum. Zero
+> self-referential `indirect enum`s in any corpus.
+>
+> Two earlier passes of that scan returned 283 and 96, both inflated by the same
+> sibling-member attribution bug (a fixed-size window running past the closing
+> brace into the next declaration) that broke the tree-carrier scanner three
+> times on the same day. Fourth occurrence of one bug; the counts only became
+> adjudicable once the scan matched braces.
+>
+> **Shipped anyway, for integrity rather than reach.** `Strong` + `.todo` is a
+> promise the tool cannot keep, and two types is still two more than zero. The
+> kit now emits a depth-budgeted helper `func` (`RecursiveGeneratorEmitter`,
+> SwiftPropertyLaws) for recursion sitting under a collection or optional
+> wrapper — which is the shape **both** measured types have.
+>
+> One trap dictated the design and is worth carrying forward: `Gen.array(of:)`
+> evaluates its element generator **eagerly**. A budget check written inside the
+> expression (`.array(of: budget > 0 ? 0...8 : 0...0)`) still *constructs*
+> `helper(budget - 1)` in order to pass it, which constructs `helper(budget - 2)`,
+> past zero, forever — infinite recursion at generator-*construction* time,
+> before a value is drawn. It presents as a **hang**, not an error. The base case
+> has to be a real early return with its recursion points collapsed to `[]` /
+> `nil`, which is why the *wrapper* is what supplies the terminal and why a bare
+> `indirect enum` payload (no wrapper) is still refused.
+>
+> The lesson matches the one the swift.org road test produced the same day:
+> reasoning about a hole predicted an engine gap and a whole blocked domain;
+> a two-hour probe found neither. **Holes get reasoned about; defects get
+> observed.** This is the fourth reasoned hole to shrink on contact.
 
 **(b) The proxy corpus is a fixture, not a generator.**
 `ProxyConstruction.sourceFragments` is **12 hardcoded strings** consumed by
@@ -1213,10 +1288,24 @@ pretty-print it, feed the text back in, compare. That requires (a). Nothing in
 the stack supplies it, and it is the reason the fidelity law of §3 would still
 be unrunnable even if it were proposed.
 
-Appendix C's QuickCheck ledger names one capability-class omission —
-higher-order generation. On this evidence there is a **second**: recursive /
-size-controlled generation. QuickCheck ships it (`sized`, `frequency` +
-recursion); the Swift stack does not. That belongs in the ledger next to `Fun`.
+~~Appendix C's QuickCheck ledger names one capability-class omission — higher-order
+generation. On this evidence there is a **second**: recursive / size-controlled
+generation. QuickCheck ships it (`sized`, `frequency` + recursion); the Swift
+stack does not. That belongs in the ledger next to `Fun`.~~
+
+**RETRACTED — the ledger keeps one omission, not two.** The correction in (a)
+above is what withdraws this: `swift-property-based` ships `frequency`, and a
+plain depth-parameterised Swift `func` supplies what QuickCheck's `sized` does,
+so there is no missing *capability* — only a resolver that declined to use it,
+now fixed. QuickCheck's `sized` is more ergonomic and threads the budget
+implicitly; that is an ergonomics gap, and ergonomics gaps do not belong in a
+capability ledger next to `Fun`, which names something the stack genuinely
+cannot express.
+
+**Higher-order generation remains the one real entry**, and is now the only
+unprobed item on this list — worth holding to a higher standard of evidence
+than this section met, given it is the last claim here that has been reasoned
+about rather than built.
 
 ---
 

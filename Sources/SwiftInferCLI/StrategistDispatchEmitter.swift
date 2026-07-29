@@ -125,9 +125,8 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         }
     }
 
-    /// Emit a strategist-routed verify stub. Resolves the strategy,
-    /// composes the generator expression, and wraps it in the
-    /// template-specific stub shape.
+    /// Emit a strategist-routed verify stub: resolve the strategy, compose the
+    /// generator expression, wrap it in the template-specific stub shape.
     public static func emit(_ inputs: Inputs) throws -> String {
         // WS-6 Slice 2 — build the whole-module resolver once per emit when the
         // index carried the shape universe. Nil (empty universe) → the strategist
@@ -135,11 +134,12 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         let resolver = inputs.allShapes.isEmpty
             ? nil
             : GeneratorResolver(types: inputs.allShapes.values.map { $0.toKitShape() })
-        let recipe = try resolveRecipe(
+        var recipe = try resolveRecipe(
             carrier: inputs.carrier,
             typeShape: inputs.typeShape,
             resolve: resolver?.customTypeGenerator ?? { _ in nil }
         )
+        recipe = withRecursiveHelpers(recipe, resolver: resolver, carrier: inputs.carrier)
         let trials = inputs.trialBudget.count
         let header = headerSection(inputs: inputs, recipe: recipe)
         let importsBlock = mergedImports(base: recipe.imports, extra: inputs.extraImports)
@@ -151,7 +151,13 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         )
         let defaultPass = try defaultPassSection(inputs: inputs, recipe: recipe)
         let edgeSentinel = edgeSentinelSection()
-        return [header, setup, defaultPass, edgeSentinel].joined(separator: "\n\n")
+        // A recursive carrier's helper must sit above the check that calls it.
+        // Empty otherwise, so non-recursive output is byte-identical to before.
+        let declarations = recipe.declarations.isEmpty
+            ? []
+            : [recipe.declarations.joined(separator: "\n\n")]
+        return ([header, setup] + declarations + [defaultPass, edgeSentinel])
+            .joined(separator: "\n\n")
     }
 
     // MARK: - Strategy resolution
@@ -163,6 +169,9 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         let expression: String
         let carrierTypeName: String
         let imports: [String]
+        /// Helper `func`s `expression` calls, emitted above the check.
+        /// Recursive carriers only — see `StrategistDispatchEmitter+Recursion`.
+        var declarations: [String] = []
     }
 
     /// Decide which strategy applies, build the recipe. Lookup order:
@@ -298,16 +307,24 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             )
 
         case let .memberwiseArbitrary(members):
-            return try memberwiseRecipe(members: members, carrier: carrier)
+            return liftingRecursion(
+                try memberwiseRecipe(members: members, carrier: carrier),
+                carrier: carrier
+            )
 
         case .initializerBased, .enumCases:
             // Tier 6 (user-init) and Tier 4 (enum payloads), v3.0.0. Render via
             // PropertyLawCore's canonical emitter rather than re-implement the
             // init-lift / `Gen.oneOf` shapes here.
-            return GeneratorRecipe(
-                expression: GeneratorExpressionEmitter.expression(typeName: carrier, strategy: strategy),
-                carrierTypeName: carrier,
-                imports: ["Foundation", "PropertyBased"]
+            return liftingRecursion(
+                GeneratorRecipe(
+                    expression: GeneratorExpressionEmitter.expression(
+                        typeName: carrier, strategy: strategy
+                    ),
+                    carrierTypeName: carrier,
+                    imports: ["Foundation", "PropertyBased"]
+                ),
+                carrier: carrier
             )
 
         case let .todo(reason):
