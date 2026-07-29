@@ -782,8 +782,87 @@ lifted records **do** originate suggestions via `LiftedSuggestionPromotion`'s
 `+50 testBodyPattern` signal — the gap was detector coverage, not the
 mechanism.)
 
-Still unreached: **libFuzzer harnesses**. `LLVMFuzzerTestOneInput` is a totality
-property with a curated corpus already attached, and no scanner looks at one.
+### libFuzzer harnesses — measured, and deliberately NOT built
+
+The obvious next step was a detector for `LLVMFuzzerTestOneInput`. Measured
+first, and the premise does not hold for a Swift source analyser:
+
+| | |
+|---|---|
+| Swift `LLVMFuzzerTestOneInput` definitions, all repos in reach | **2** |
+| …that call a library function | **0** |
+| The fuzzers the observation named (demangler, reflection) | **C++** |
+
+The two Swift ones are `validation-test/Sanitizers/fuzzer.swift`, which
+*deliberately crashes* to prove the fuzzer runtime works, and
+`test/Driver/fuzzer.swift`, an empty body testing driver flags. Neither has a
+subject to attribute totality to. `utils/sourcekit_fuzzer/sourcekit_fuzzer.swift`
+is a driver script with no harness at all. A detector would have fired twice, on
+noise, in the entire Swift monorepo — and reached none of the valuable fuzzers,
+because they are in a language the tool cannot read.
+
+Recorded here rather than built, because "we shipped a detector" would have
+read as coverage.
+
+### Built instead — `InputTotalityTemplate`
+
+The *law* a fuzz harness asserts needs no harness. A function handed arbitrary
+bytes owes **totality** — a value or a thrown error for every input, never a
+trap — whether or not anyone wired a fuzzer to it. And those are plentiful
+where harnesses are not.
+
+Scored **role-entailed rather than conjectured**: nothing about "interpret these
+bytes" admits "unless the bytes are strange". The same argument
+`ProxyConstruction` already makes for syntax predicates.
+
+**Two admission routes, and three traps that measurement found.**
+
+- **Byte-typed parameter** (`Data`, `[UInt8]`, `UnsafeRawBufferPointer`, …) —
+  content by construction; nobody passes a filename as `[UInt8]`.
+- **Text parameter plus an interpretation verb** (`parse`, `decode`, `lex`,
+  `tokenize`, …) — a bare `String` is far more often a *name* than a payload,
+  so the verb carries the claim.
+
+The traps, each caught by looking at real firings rather than reasoning:
+
+1. **`read` and `load` are not interpretation verbs.** They take *locations* as
+   often as content — `readlink(_ path: String)`, `load(projectRoot:)`.
+   Excluded.
+2. **A location-shaped argument label vetoes the function outright.** This is
+   the discriminator between two functions of identical type shape in one
+   package: SwiftProjectLint's `load(projectRoot: String) -> LintConfiguration`
+   versus `parse(fileContent: String) -> [SuppressionDirective]`.
+3. **Egress verbs.** The byte route needs no verb, which admitted the wrong
+   *direction of travel*: swift-nio's `write(pointer:)` and
+   `sendmsg(pointer:destinationPtr:…)` are syscall wrappers whose buffer is
+   data being **transmitted**. Those were four of the first eighteen firings —
+   and every false one. A type filter cannot tell ingress from egress; only the
+   verb can.
+
+**Measured: 18 firings → 14 after the egress veto**, and they sit exactly where
+hostile input arrives:
+
+| corpus | firings | |
+|---|---:|---|
+| swift-syntax (Parser+Syntax+Format) | 9 | `parse(source:)` ×2, `parseIncrementally` ×4, `parseTrivia` ×2, `internSourceBuffer` |
+| swift-nio | 2 | `_readCInt(data:)` — a kernel control message — and `buffer(data:)` |
+| swift-async-algorithms | 1 | `parse(_:theme:location:)`, a test-DSL parser |
+| SwiftProjectLint Config | 1 | `parse(fileContent:)` |
+| collections, argument-parser, Rules, Visitors, SyntaxBuilder | **0** | no flood |
+
+The one weak firing is `internSourceBuffer` — an arena interner rather than an
+interpreter. Defensible (it should be total for any buffer) but not a parser;
+recorded rather than filtered, since filtering it would also lose `buffer(data:)`
+and `_readCInt`.
+
+**Three caveats ship with it**, because this law behaves unlike the others:
+throwing is **not** a violation (it is the correct answer to invalid input); a
+violation **crashes the test process** rather than shrinking to a tidy
+counterexample, which is what a trap is and why fuzzers exist; and **a generator
+of realistic input will never find one** — the counterexamples live in the empty
+value, invalid UTF-8, lone surrogates, unbalanced delimiters and pathological
+nesting, and have to be generated on purpose. That last is the collision-generator
+lesson from CLAUDE.md in a different costume.
 
 ---
 

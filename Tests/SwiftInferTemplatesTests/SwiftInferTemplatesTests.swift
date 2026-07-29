@@ -212,13 +212,19 @@ struct TemplateRegistryDiscoveryTests {
         let suggestions = TemplateRegistry.discover(in: [earlyNormalize, encode, decode])
         // round-trip and inverse-pair both anchor at encode (line 10) —
         // M8.1's InversePairTemplate fires alongside RoundTripTemplate
-        // when T is `.unknown`. idempotence anchors at `normalize`
-        // (line 50) — which no longer also yields monotonicity (String
-        // dropped from the codomain set). Within identical (file, line),
-        // template-name ordering is alphabetical.
+        // when T is `.unknown`. input-totality anchors at `decode`
+        // (line 20): `decode(_ d: Data) -> MyType` is a byte-carrier
+        // parameter under an interpretation verb, so it owes totality —
+        // a correct new firing, and it lands between the two line
+        // anchors, which is what this test is actually about.
+        // idempotence anchors at `normalize` (line 50) — which no longer
+        // also yields monotonicity (String dropped from the codomain
+        // set). Within identical (file, line), template-name ordering is
+        // alphabetical.
         #expect(suggestions.map(\.templateName) == [
             "inverse-pair",
             "round-trip",
+            "input-totality",
             "idempotence"
         ])
     }

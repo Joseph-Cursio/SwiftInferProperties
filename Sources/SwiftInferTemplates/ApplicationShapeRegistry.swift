@@ -101,6 +101,22 @@ extension TemplateRegistry {
             )
         ),
         SingleFunctionAppShape(
+            name: "input-totality",
+            suggest: InputTotalityTemplate.suggest(for:),
+            generatorType: { InputTotalityTemplate.hostileParameter(of: $0)?.typeText },
+            // Independent: a parser owes totality AND whatever else its shape
+            // says. `Parser.parse` legitimately carries both this and the
+            // round-trip law, and they are different claims.
+            exclusionGroup: nil,
+            referenceFixture: appShapeFixture(
+                "parse",
+                params: [
+                    .init(label: "source", internalName: "source", typeText: "String", isInout: false)
+                ],
+                returns: "Widget"
+            )
+        ),
+        SingleFunctionAppShape(
             name: "comparator",
             suggest: ComparatorTemplate.suggest(for:),
             generatorType: { $0.parameters.first?.typeText },
