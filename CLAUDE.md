@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code (claude.ai/code) working in this repository. **This file is a pointer-only index.** Per-cycle narratives live in `git log`, `docs/calibration-cycle-N-findings.md`, and the road-test / design docs listed below. The pre-2026-07-26 changelog-style CLAUDE.md is archived verbatim at `docs/archive/claude-md-narrative-history.md` — read it only when you need the story behind a specific shipped decision.
+Guidance for Claude Code (claude.ai/code) working in this repository. **This file is a pointer-only index.** Per-cycle narratives live in `git log`, in `docs/archive/claude-md-narrative-history.md`, and in the road-test / design docs listed below. (This line used to send readers to `docs/calibration-cycle-N-findings.md`; those files no longer exist — they were folded into that archive, as the table below already said.) The pre-2026-07-26 changelog-style CLAUDE.md is archived verbatim there too — read it only when you need the story behind a specific shipped decision.
 
 ## What this repo is
 
@@ -39,11 +39,22 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 | Road tests (third-party subjects) | `docs/roadtest-*.md` — SwiftProjectLint (the first *scored* one, frozen answer key), SwiftLintRuleStudio (out-of-catalog diagnosis + two retracted closures), MacCloud server / macOS client |
 | **Self-dogfood** (the tools pointed at this repo) | `docs/roadtest-self-dogfood.md` — the `merge` commutativity refutation, the Finding-G gate suite, and the mutation corpus behind them |
 | Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey. **Ledger closed:** 7/7 defects shipped, holes 8/9/12 built (retract, differential/oracle, recursive generation), 10/11 probed and rejected. Still live *after* the ledger: the measured generator weaknesses (the `0 ..< T.max` idiom, edge values never drawn under a quantifier), "which templates are under-appreciated" as an open question, the `unsafe`/`unchecked` veto, and the SIGBUS stack-depth trap for the next corpus-scanning test |
+| Historical **backtests** — does the catalog fire on code written before it? | `docs/backtest-apple-libraries.md` (Apple / Swift libraries, 2026-07-18) · `docs/backtest-codable-roundtrip-pressuretest.md` — the pressure test whose recommendation became the shipped `codable-round-trip` template |
+| **Five-repo adoption loop** — is the toolchain usable end to end? | `docs/PBT_TOOLCHAIN_FIX_PLAN.md` (2.7k lines) — scored against `MacCloud_client_iOS` @ `f3dbb6f` vs the `pbt-road-test-reference` answer key. **Caveat: it opens by naming a companion `PBT_ROAD_TEST.md` that does not exist in this repo** |
+| Live follow-up trackers — what shipped, what is still open | `docs/tca-determinism-followups.md` — items 1/3/4 built, item 2 at 4 of 5 slices, only slice 3c (child recursion) deferred |
+| Design records for **shipped** work | `docs/docstring-corroboration.md` (→ `DocstringPropertyCorroborator`) · `stateful-role-discoverer-design.md` (→ `StatefulRole`) · `tca-identified-action-slice3-design.md` (→ slice 3b) · `observable-carrier-m1prime-verify-milestone.md` |
+| Investigations with a recorded **decision not to build** | `docs/bridge2-materialisation-spike.md` (fork B, 2026-07-18 — no code change) · `docs/rule-visitor-carrier-scoping.md` (recognition only; the determinism invariant is deliberately **not** emitted, and `RuleVisitorDiscoverer.swift:28` cites this decision — do not "fix" it by adding one) |
 | Command docs | `docs/report-command.md`, `insights-command.md`, `docc-generation.md`, `prove-then-show.md`, `known-properties.md`, `stdlib-anchor.md`, `interaction-semantic-index.md` |
 | End-user docs | `docs/user/{tutorial,guide,reference}.md` |
-| Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md`, `docs/rule-visitor-carrier-scoping.md` |
-| Unbuilt proposals / design spikes | `docs/ideas/`, `docs/*-scope.md`, `docs/*-build-plan.md` |
+| Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md` |
+| Superseded cycle plans | `docs/v1.141 Calibration Plan.md` — the repo is v1.146; kept for the shrinking / replay-corpus rationale, not as a plan |
+| Unbuilt proposals / design spikes | `docs/ideas/`, `docs/*-scope.md`, `docs/*-build-plan.md`, and `docs/production-assertion-discovery-signal.md` (an open scope with a cost estimate and no decision — the `*-scope.md` glob misses it by filename) |
 | PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |
+
+Every `docs/*.md` is reachable from a row above; that was swept on 2026-07-29 and
+found eleven files no row reached. If you add a doc, add its row — an unreachable
+doc is one nobody opens, and two of the eleven turned out to hold **standing
+constraints on live code**.
 
 ## Design decisions baked in (follow rather than re-litigate)
 
