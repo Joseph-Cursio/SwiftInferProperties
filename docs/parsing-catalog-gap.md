@@ -1433,8 +1433,10 @@ that contains three real parsers and a writer.
    65/Likely — the law swift-syntax states in its own test utilities and
    writes as an example harness. One firing across 22 corpora; the eleven
    other marker pairs are all correctly rejected. *(§6)*
-10. **Monotone progress** — a cursor advances or stops, never retreats; the true
-    law for the 53 functions §2 currently mislabels. *(§2)*
+10. ~~**Monotone progress** — a cursor advances or stops, never retreats; the
+    true law for the 53 functions §2 currently mislabels.~~ **Probed and NOT
+    built.** The law is true and role-entailed; every route to *running* it is
+    closed by construction. See "Probe — monotone progress" below. *(§2)*
 11. ~~**Tree-carrier interaction discovery.**~~ **Probed and NOT built** — the
     premise fails twice over. See §5's "measured, and rejected" note. *(§5)*
 12. ~~**Recursive, size-controlled generation** — without it, laws 8/10/11 and
@@ -1524,6 +1526,76 @@ recover replay, but not minimisation.*
 Nothing built. The catalog proposes laws over the code it reads, and a
 generated-comparator law is a law the **user** writes about their own sort — it
 has no discovery surface here. Recorded so the ledger claim is accurate.
+
+### Probe — monotone progress, and why a true law is still not worth shipping
+
+Row 10 proposed the law the 53 mislabelled `SwiftParser` functions actually owe:
+a cursor advances or stops, **never retreats**. It is true, it is role-entailed
+(a retreating cursor is a bug, and `StreamConsumption.restoringVerbs` already
+exempts `reset`/`rewind`/`backtrack`), and the carrier-identification half was
+already shipped this morning as part of defect #1. It looked like the cheapest
+remaining hole in the document.
+
+It is not buildable, and the reason is structural rather than incidental.
+
+**Gate 1 — the position is not public.** Across every stream carrier found with
+an observable position, **0 of 7** expose it:
+
+| carrier | type | member | visibility |
+|---|---|---|---|
+| `Lexer.Cursor` | internal | `input` | internal |
+| `Parser.Lookahead` | internal | `lexemes` | internal |
+| `Parser` | **public** | `lexemes` | internal |
+| `SyntaxCollectionIterator` | **public** | `index` | **private** |
+| `BufferedReader` | **public** | `offset` | **private** |
+| `SingleValueDecoder` | internal | `currentIndex` | internal |
+| `ArrayIterator` | internal | `currentOffset` | internal |
+
+`@testable import` reaches the internal ones. It does not reach `private`, and
+two of the three *public* types hide their position privately — which is
+correct design, and fatal here.
+
+**Gate 2 — the carrier cannot be generated, by construction.** All 7 block on
+their first non-primitive member: `UnsafeBufferPointer<UInt8>`,
+`Lexer.LexemeSequence`, `SyntaxDataArena`, `Handle`,
+`[CodingUserInfoKey: Any]`, `XMLPlistMap`, `InvalidComponentSet`.
+
+This is **not** the recursive-type situation, where the wall turned out to be a
+resolver declining to emit something the engine could express. A cursor is
+*defined* by its reference to external buffer state. A randomly assembled
+`Lexer.Cursor` pointing at random bytes is not a valid cursor; producing a valid
+one means running the lexer, which is the thing under test. No generator
+improvement reaches this — it is what a cursor **is**.
+
+**Gate 3 — the construction route is closed too.** The escape would be to
+generate the *input* and build the carrier through a real entry point, the
+`ProxyConstruction` shape of §7. But `Cursor.init(input:previous:experimentalFeatures:)`
+is internal *and* takes an `UnsafeBufferPointer`, and while
+`Lexer.lexing(from byteSequence: some Collection<UInt8>)` does accept a
+generatable type, `Lexer` is internal.
+
+**So building it ships a Strong-tier law with `Generator: .todo`** — which is
+precisely the defect that SwiftPropertyLaws v3.21.0 shipped the same day to
+eliminate for recursive types. Introducing it deliberately hours later, as a
+permanent category rather than a bug, would contradict the rule outright.
+
+**What it costs to decline.** Since defect #1 landed, the tool says *nothing*
+about those 53 functions: 53 false claims became silence, and the true law
+exists and is unstated. That is a real loss and it is the honest price. It is
+still the better trade — a suggestion that cannot be run is a suggestion the
+reader must adjudicate entirely by hand, and the catalog's stated bar is
+conservative inference, not maximal coverage.
+
+**The pattern this completes.** Four holes in this document were reasoned about
+rather than observed. Three collapsed on contact — libFuzzer (2 harnesses, both
+compiler fixtures), tree-carrier interaction discovery (premise fails twice),
+recursive generation (engine already had it, reach is 2 types) — and this one
+survives as *true but unreachable*, which is a fourth way for a reasoned hole to
+fail. Not one of the four came out the size it was written up as.
+
+Defects, by contrast, went 7 for 7. **Observed problems are worth more than
+reasoned ones**, and this document is now the evidence for that claim rather
+than an assertion of it.
 
 **Honesty note.** The subject choice is uneven. `swift-syntax` is a genuine
 parser and the right subject. `SwiftProjectLint` is *not* a parser — it consumes
