@@ -839,6 +839,97 @@ what I intended; only real code says whether what I intended is the shape that
 exists. The catalog's own rule — *score refutability, not suggestion count* —
 has a sibling: **validate against found code, not authored code.**
 
+### The generators are the weak half — measured
+
+The road test above establishes that the *laws* in these suites are real. The
+obvious follow-on question is whether the **generators** feeding them are, and
+the answer is no — in a specific, fixable way. This matters because it decides
+what the toolchain is actually *for* on this corpus.
+
+**The explicit generator.** `swift/test/stdlib/sort_integers.swift` rolls its
+own:
+
+```swift
+var N = 1
+for _ in 0..<size { N = N * 19 % 1024; … arr.append(N) }
+```
+
+That is a multiplicative LCG mod 2^10. Its reachable state is bounded by
+λ(1024) = 256, so:
+
+| property | value |
+|---|---|
+| distinct values reachable, ever | **256** |
+| range | 1…1019 — **all odd**, never negative, never zero |
+| `randomize(1900)` | 2,524 elements, 489 distinct — **19% unique** |
+
+For a sorting test that is a precise blindness profile: no `Int.min`/`Int.max`
+(where comparator-overflow bugs live), no negatives, no evens. But note the
+collision rate — 19% unique means heavy duplication, which by this repo's own
+collision lesson (CLAUDE.md, `Decisions.merge`) is accidentally the *right*
+tuning for stability and tie-break laws and the wrong one for range coverage.
+The generator is not so much bad as **untuned and unaware of which way it is
+tuned**, which is the failure mode a derived generator exists to remove.
+
+**The idiom-level miss, and it is systematic.** Every `.random(in:)` range in
+the test files:
+
+```
+8 ×  .random(in: 0 ..< UInt16.max)        ← excludes UInt16.max
+1 ×  .random(in: Int8.min ..< Int8.max)   ← excludes Int8.max
+2 ×  .random(in: .min ... .max) / (.min ..< .max)   ← the only two that don't
+…    the rest are interior: 10..<100, 1..<42, 0..<1000, 0.0 ..< 1.0
+```
+
+Someone reaching for "the whole range" writes `0 ..< UInt16.max` and gets
+everything **except the one value most likely to break the code** — eight times.
+This is not carelessness. It is the half-open interval being the wrong default
+for this one job, and no reviewer catches it because the line reads correctly.
+
+**Edge cases are tested — just never under the quantifier.** Splitting the test
+files into function bodies (crude regex split, so treat as approximate):
+
+| | count |
+|---|---:|
+| test functions using `.random(` | 7 |
+| …that also name an edge value | 4 |
+| test functions naming an edge value with **no** randomness | **40** |
+
+`.nan` appears 50 times, `.infinity` 28. The edge cases are covered
+*thoroughly* — by hand-picked examples, in different functions from the random
+loops. The two populations barely meet. Nobody drew NaN from a generator; they
+wrote a test named for NaN.
+
+**What this makes the toolchain for on this corpus.** The division of labour
+falls out favourably:
+
+- The human supplied **the law** — the judgment part, the part no tool does
+  reliably. A hand-rolled property test is someone who already decided the
+  invariant holds universally and committed to it executably. That is why
+  `testBodyPattern` carries weight 80 rather than the 50 it launched with:
+  measured evidence beats a naming heuristic.
+- The **generator** is the mechanical part, and it is the part measured weak
+  above.
+
+So conversion is close to pure gain: keep the law verbatim, replace the
+generator with one that weights NaN/±∞/±0/subnormals/`.max` into the *same*
+distribution the loop draws from, and pick up shrinking and seed reproducibility
+for free. Today a `UUIDTests` failure at iteration 7,432 hands you nothing.
+
+**The bias to name before leaning on this.** The corpus is the set of laws
+people *already thought of*, and its shape shows it: `roundtrip` appears 723×
+across `swift` and 329× across `swift-foundation`, because round-trip is the one
+property shape every developer recognises. Nobody hand-rolls a conservation or
+referential-integrity test. The corpus is therefore a ceiling on **human
+property vocabulary**, not on the catalog — which makes lifting and
+source-inference complementary rather than redundant: lifting confirms what
+people know, inference proposes what they do not.
+
+It also makes the corpus a measuring instrument pointed *back* at the catalog.
+Templates that show up hand-rolled everywhere have proven demand. Templates that
+never appear hand-rolled are either useless or under-appreciated, and the corpus
+alone cannot say which. That is the open question.
+
 ### What the defects/holes split turns out to be worth
 
 Two of the three holes probed so far have not survived contact: libFuzzer
