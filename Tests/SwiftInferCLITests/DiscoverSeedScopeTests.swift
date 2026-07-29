@@ -13,16 +13,16 @@ struct DiscoverSeedScopeTests {
 
     // MARK: - The focus set is scoped to what was scanned
 
-    /// A manifest is written for a whole project; a `discover` run covers one target.
+    /// A manifest is written for a whole project; a `discover` run covers one target, so
+    /// "focused on 145 analysable seed(s)" for a target holding one made a healthy run read as a
+    /// catastrophic one.
     ///
-    /// The focus set used to be the WHOLE manifest, which is the same defect
-    /// `reportRefactorPending` had fixed one line earlier. It announced "focused on 145 analysable
-    /// seed(s)" for a target holding six of them — a healthy run reading as a catastrophic one.
-    ///
-    /// It also removed a guard the join needs: `SeedFocus` matches on `(file basename, bare
-    /// symbol)`, a key `inScope` exists because it collides across targets, so an out-of-target
-    /// seed offered to the join can match an in-target suggestion for the wrong reason.
-    @Test("seeds naming files this run never scanned are not counted as focused-on")
+    /// Only the COUNT is scoped. Scoping the focus SET was tried and reverted: `PipelineResult`
+    /// carries no list of files actually read, so "in scope" has to be approximated from analysis
+    /// outputs, and every approximation loses a category — access-restricted functions produce no
+    /// summary, and a file with no analysable subject at all is indistinguishable from a file in
+    /// another target. Both losses broke real behaviour elsewhere in this suite.
+    @Test("the focus count says how many seeds are under the scanned sources")
     func focusSetExcludesUnscannedSeeds() throws {
         let directory = try writeDPFixture(name: "SeedsScoped", contents: """
         struct Sanitizer {
@@ -55,8 +55,8 @@ struct DiscoverSeedScopeTests {
             diagnostics: diagnostics
         )
 
-        // One of the three seeds is in scope. The count must say one, not three.
-        #expect(diagnostics.joined.contains("focused on 1 analysable seed(s)"))
-        #expect(diagnostics.joined.contains("focused on 3 analysable seed(s)") == false)
+        // All three are focused on; one is under the scanned sources, and the line says so.
+        #expect(diagnostics.joined.contains("focused on 3 analysable seed(s)"))
+        #expect(diagnostics.joined.contains("(1 under the scanned sources)"))
     }
 }

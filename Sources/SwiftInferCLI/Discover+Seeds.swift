@@ -66,35 +66,30 @@ extension SwiftInferCommand.Discover {
             diagnostics: diagnostics
         )
 
-        // **Scoped to what was actually scanned**, on the same terms as the kernel listing above.
+        // Focus on EVERY analysable seed, and report how many are in scope.
         //
-        // A manifest is written for a whole project; a `discover` run covers one target. Feeding
-        // the unscoped set here reported "focused on 145 analysable seed(s)" for a target holding
-        // six of them, which made a healthy run read as a catastrophic one — `kept 4 of 6` against
-        // an announced 145.
+        // Scoping the focus set itself was tried and reverted. `PipelineResult` carries no list of
+        // files actually read — only analysis outputs — so "in scope" has to be approximated from
+        // `summaries`, and every approximation loses a category. First it lost access-restricted
+        // functions (a file whose only candidates are `private` produces no summary, so the seeds
+        // `SeededPrivateFunctionTests` exists for were scoped out). Then it lost files with no
+        // analysable subject at all, collapsing "this seed matches nothing here" into "this seed
+        // belongs elsewhere" and short-circuiting the seed-independent-law path in
+        // `DiscoverEmptySeedManifestTests`.
         //
-        // It also removed a guard the join needs rather than merely miscounting. `SeedFocus` matches
-        // on `(file basename, bare symbol)`, and `inScope` exists because that key collides across
-        // targets — this project has several `Support/` twins. An out-of-target seed offered to the
-        // join can therefore match an in-target suggestion for the wrong reason. Measured on
-        // SwiftProjectLint the collision set is currently EMPTY (145 seeds, 134 keys, no key
-        // spanning two files), so nothing was mismatched today; the scoping is what keeps that true
-        // as either side grows.
-        let focusing = seedManifest.analysableSeeds.filter {
-            inScope($0, scannedFiles: scannedFiles)
-        }
+        // Those two are indistinguishable from the outside without a real scanned-files channel,
+        // and inventing one is a pipeline change, not a reporting fix. So the filtering is left
+        // exactly as it was and only the COUNT is scoped — which is what was actually wrong:
+        // announcing "focused on 145 analysable seed(s)" for a target holding six made a healthy
+        // run read as a catastrophic one.
+        let focusing = seedManifest.analysableSeeds
+        let inScopeCount = focusing.filter { inScope($0, scannedFiles: scannedFiles) }.count
         let analysableManifest = SeedManifest(version: seedManifest.version, seeds: focusing)
 
         // No *analysable* seed is not a request to see nothing. There are two ways to arrive here
         // and the reader needs to be told which, because the remedy differs.
         if focusing.isEmpty {
-            diagnostics.writeDiagnostic(
-                noFocusWarning(
-                    for: seedManifest,
-                    pipeline: pipeline,
-                    outOfScopeAnalysableCount: seedManifest.analysableSeeds.count
-                )
-            )
+            diagnostics.writeDiagnostic(noFocusWarning(for: seedManifest, pipeline: pipeline))
             let unfocused = pipeline.suggestions + synthesizeGenericLaws(
                 for: analysableManifest,
                 summaries: pipeline.summaries,
@@ -110,6 +105,7 @@ extension SwiftInferCommand.Discover {
 
         return focusOnAnalysableSeeds(
             focusing: focusing,
+            inScopeCount: inScopeCount,
             analysableManifest: analysableManifest,
             pendingKernelCount: seedManifest.refactorPendingSeeds.count,
             pipeline: pipeline,
@@ -360,21 +356,10 @@ extension SwiftInferCommand.Discover {
     /// steps, and a single message for both would send half of its readers the wrong way.
     private static func noFocusWarning(
         for seedManifest: SeedManifest,
-        pipeline: PipelineResult,
-        outOfScopeAnalysableCount: Int = 0
+        pipeline: PipelineResult
     ) -> String {
         let shown = "no focus was applied and all \(pipeline.suggestions.count) suggestion(s) "
             + "are shown."
-
-        // A third way to have nothing to focus on, and it arrived with scoping the focus set: the
-        // manifest holds analysable seeds and none of them name a file this run scanned. Saying
-        // "they must be done by hand" here would be false — they are ordinary seeds, just in
-        // another target — and saying "the manifest is empty" would be false too.
-        if outOfScopeAnalysableCount > 0 {
-            return "warning: none of the \(outOfScopeAnalysableCount) analysable seed(s) name a "
-                + "file under the scanned sources, so \(shown) They belong to other targets; "
-                + "re-run `discover` there to focus on them."
-        }
 
         guard !seedManifest.seeds.isEmpty else {
             return "warning: the seeds manifest is empty, so \(shown) An empty manifest usually "

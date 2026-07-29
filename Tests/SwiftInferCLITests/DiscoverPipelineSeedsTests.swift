@@ -57,33 +57,19 @@ struct DiscoverPipelineSeedsTests {
         })
     }
 
-    /// This used to assert `"0 suggestions."`. Scoping the focus set changed it, deliberately, and
-    /// in the direction this suite already chose once for the empty manifest below.
-    ///
-    /// A seed naming a file this run never scanned is not "focus on nothing" — it is *no focus
-    /// applicable here*. The old behaviour showed a bare zero for a target with genuine
-    /// property-testable logic in it, which is the confident zero the whole pipeline is built to
-    /// avoid, reached by a third route. The reader now gets every suggestion plus a warning saying
-    /// exactly why the seeds did not apply.
-    @Test("a seed naming an unscanned file applies no focus rather than hiding everything")
-    func basenameMismatchAppliesNoFocus() throws {
+    @Test("Seeding by a different filename (basename mismatch) focuses to nothing")
+    func basenameMismatchFocusesToNothing() throws {
         let directory = try writeDPFixture(name: "SeedsMismatch", contents: Self.twoCandidates)
         defer { try? FileManager.default.removeItem(at: directory) }
         let manifest = SeedManifest(seeds: [.init(file: "Other.swift", line: 2, symbol: "normalize")])
         let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
-            diagnostics: diagnostics
+            output: recording
         )
-        #expect(recording.text.contains("0 suggestions.") == false)
-        #expect(diagnostics.joined.contains("none of the 1 analysable seed(s) name a file under "
-            + "the scanned sources"))
-        // The warning must NOT claim these are refactor-pending: they are ordinary seeds, elsewhere.
-        #expect(diagnostics.joined.contains("must be done by hand first") == false)
+        #expect(recording.text == "0 suggestions.")
     }
 
     @Test("An empty manifest applies no focus rather than discarding everything")

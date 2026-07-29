@@ -9,12 +9,26 @@ import SwiftInferCore
 /// destroy the run.
 extension SwiftInferCommand.Discover {
 
+    /// The parenthetical that scopes an announced seed count —
+    /// " (6 under the scanned sources)", or nothing when the manifest is entirely in scope.
+    ///
+    /// The count is what was actually wrong: a whole-project manifest against a single `--sources`
+    /// target announced "focused on 145 analysable seed(s)" for a target holding six, so `kept 4`
+    /// read as a catastrophic yield instead of a healthy one. The FILTERING is deliberately
+    /// unscoped — see `Discover+Seeds` for why approximating "scanned" from analysis outputs loses
+    /// categories of file.
+    static func scopeNote(_ inScope: Int?, of total: Int) -> String {
+        guard let inScope, inScope != total else { return "" }
+        return " (\(inScope) under the scanned sources)"
+    }
+
     /// At least one analysable seed: honour the focus, but never discard a law
     /// the code OWES (`keepRoleEntailedLaws`) or a real law the tier cut merely
     /// hid (`promoteTierHiddenLaws`), and always broaden with the generic
     /// determinism fallback so `--seeds` surfaces something.
     static func focusOnAnalysableSeeds(
         focusing: [SeedManifest.Seed],
+        inScopeCount: Int? = nil,
         analysableManifest: SeedManifest,
         pendingKernelCount: Int = 0,
         pipeline: PipelineResult,
@@ -29,8 +43,12 @@ extension SwiftInferCommand.Discover {
         let matched = focused.count - exempt.count
 
         diagnostics.writeDiagnostic(
-            "focused on \(focusing.count) analysable seed(s): kept \(matched) "
-                + "of \(pipeline.suggestions.count - exempt.count) seedable suggestion(s)"
+            "focused on \(focusing.count) analysable seed(s)"
+                // Only said when it differs. A manifest written for one target has every seed in
+                // scope, and a parenthetical repeating the number it sits next to is noise.
+                + (scopeNote(inScopeCount, of: focusing.count))
+                + ": kept \(matched) of \(pipeline.suggestions.count - exempt.count) "
+                + "seedable suggestion(s)"
         )
 
         if !exempt.isEmpty {
