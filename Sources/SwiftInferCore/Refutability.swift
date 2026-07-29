@@ -90,7 +90,21 @@ public enum Refutability {
         // own `.unknown` / `.fileParsingError` sentinels do), so a correct
         // implementation CAN fail it. It stays below the cut, which is the
         // distinction this set exists to draw.
-        "caseiterable-key-injectivity"
+        "caseiterable-key-injectivity",
+        // `input-totality`: a function that interprets arbitrary bytes must
+        // answer for all of them. Nothing about "interpret this input" admits
+        // "unless the input is strange", so a correct implementation cannot
+        // trap — the same argument `predicate` is here for, over a wider
+        // domain than `Bool`.
+        "input-totality",
+        // `normal-form`: `print(parse(print(parse(s)))) == print(parse(s))`.
+        // A correct parse/print pair cannot fail this, because failing means
+        // the printer emits text its OWN parser reads back differently — which
+        // is a defect regardless of how lossy the printer is meant to be. This
+        // is the law that stays true when the fidelity claim
+        // `print(parse(s)) == s` is legitimately false, which is exactly why
+        // it needs to be visible below the cut.
+        "normal-form"
     ]
 
     /// Whether a correct implementation is *guaranteed* to satisfy this suggestion's law.

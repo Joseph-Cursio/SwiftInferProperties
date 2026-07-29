@@ -221,8 +221,14 @@ struct TemplateRegistryDiscoveryTests {
         // also yields monotonicity (String dropped from the codomain
         // set). Within identical (file, line), template-name ordering is
         // alphabetical.
+        // `normal-form` joins at line 10 as well: encode/decode is a real
+        // parse-print pair, so it owes the retract law regardless of whether
+        // the codec is lossless. Alphabetical within the line anchor —
+        // inverse-pair < normal-form < round-trip — which is the ordering this
+        // test exists to pin.
         #expect(suggestions.map(\.templateName) == [
             "inverse-pair",
+            "normal-form",
             "round-trip",
             "input-totality",
             "idempotence"

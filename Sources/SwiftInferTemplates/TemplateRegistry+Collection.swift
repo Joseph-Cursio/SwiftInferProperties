@@ -335,6 +335,13 @@ extension TemplateRegistry {
                 generatorType: generatorType(for: pair)
             )
         }
+        // Normal-form / retract — coexists with round-trip deliberately:
+        // round-trip carries the CONJECTURE (`print(parse(s)) == s`, false for
+        // a lossy printer) and this carries the ENTAILMENT that holds either
+        // way. See `NormalFormTemplate`.
+        if let suggestion = NormalFormTemplate.suggest(for: pair) {
+            collector.record(suggestion, generatorType: generatorType(for: pair))
+        }
         if let suggestion = InversePairTemplate.suggest(
             for: pair,
             vocabulary: context.vocabulary,

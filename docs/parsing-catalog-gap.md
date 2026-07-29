@@ -421,10 +421,57 @@ discloses which of the three readings is meant — `parse(print(x)) == x` over
 values (cheap, nearly always true), `print(parse(s)) == s` over source text
 (the interesting one, full-fidelity only), or the normal-form law
 `print(parse(print(parse(s)))) == print(parse(s))` for the lossy case. That
-last is §3d's retract, still unbuilt as a template but now at least *named* at
-the point of use. The caveat reaches 11 suggestions on the combined scan —
-the new pair plus ten pre-existing concrete-printer pairs carrying the same
-ambiguity unremarked.
+last is §3d's retract — **now built** as `normal-form` (below), so the caveat
+points at a template rather than standing in for one. The caveat reaches 11
+suggestions on the combined scan — the new pair plus ten pre-existing
+concrete-printer pairs carrying the same ambiguity unremarked.
+
+### Built — `NormalFormTemplate`, and round-trip keeps the conjecture
+
+A parse-print pair admits three laws with **different truth conditions**, and
+until now the distinction lived only in caveat prose — caveat text doing a
+template's job. So `round-trip` keeps the **conjecture** and `normal-form`
+states the **entailment**. They coexist on purpose: the reader sees the strong
+claim to check, and the one that holds either way.
+
+`normal-form` is registered role-entailed (`Refutability.roleEntailedTemplates`)
+— a correct pair cannot fail it, because failing means the printer emits text
+its *own* parser reads back differently, which is a defect however lossy the
+printer is meant to be. `input-totality` was added to that set at the same
+time: it was documented as role-entailed when built and never marked, so it had
+been carrying a "THIS LAW IS A CONJECTURE" caveat contradicting its own
+rationale.
+
+**The gate, and the mistake it corrects.** The first cut gated on **type shape
+alone** — `text -> structure` against `structure -> text`. That fired **47
+times** and the great majority were false, because plenty of functions have
+those types and parse nothing:
+
+| false firing | why |
+|---|---|
+| `ByteBufferAllocator.buffer(string:)` × `ByteBuffer.description` | a constructor, and that `description` is a debug dump (`ByteBuffer { readerIndex: 0, … }`) |
+| `LintConfigurationLoader.load(projectRoot:)` × `render(_:)` | `load` takes a **path**, not content |
+| `CleanExit.message(_:)` × four unrelated `description()` | a wrapper, paired across types |
+| `generateHelp(screenWidth: Int) -> String` × `editDistance(to: String) -> Int` | pure type coincidence |
+
+This is the fourth time in this survey that gating on type shape without name
+evidence produced a flood, and it is worth stating plainly rather than quietly
+fixing: **the pattern is the finding.** Adding the evidence the catalog already
+had — an interpretation verb on the parse half, no location-shaped label,
+`debugDescription` excluded as a developer dump — took 47 → **1**:
+`Parser.parse(source:) × SyntaxProtocol.description()`, which now carries this
+law alongside the fidelity claim §3c reached. Zero elsewhere.
+
+One firing is thin, and it is the honest number: this law only *arises* where a
+real parse-print pair exists, and the corpora contain exactly one.
+
+Five caveats ship, the load-bearing one first: **if your printer is
+full-fidelity, state the stronger law instead** — `print(parse(s)) == s` catches
+everything this does and more, and this is the fallback for a printer that
+normalises. The rest: the law is over the text `parse` accepts; it rests on
+`parse(print(t)) == t` for trees `parse` produces; both halves must be
+deterministic; and **generating parseable text is the hard part** — better to
+generate the structure and print it, which is parseable by construction.
 
 ### 3d. The deeper gap: no notion of *which direction*, and no law for lossy parsers
 
@@ -1027,8 +1074,10 @@ that contains three real parsers and a writer.
 
 **Holes (new templates / new discovery):**
 
-8. **Normal-form retract** — `print ∘ parse` is idempotent. The law every lossy
-   parser owes, expressible today by nothing in the catalog. *(§3d)*
+8. ~~**Normal-form retract** — `print ∘ parse` is idempotent.~~ **Built** as
+   `normal-form`, registered role-entailed and coexisting with `round-trip`,
+   which keeps the conjecture. 47 firings on type shape alone → 1 once name
+   evidence was required. *(§3d)*
 9. ~~**Differential / oracle equivalence** — `fast(previous, edit) ==
    slow(rebuilt)`.~~ **Built.** `DifferentialTemplate` + `VariantPairing` +
    `VariantMarkers`. Fires on `Parser.parse` × `Parser.parseIncrementally` at

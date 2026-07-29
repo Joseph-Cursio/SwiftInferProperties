@@ -35,12 +35,21 @@ struct DiscoverPipelineStatsTests {
         // Header line + per-template lines, no per-suggestion blocks.
         // V1.18.A — value-semantic carrier signal pushes the round-trip
         // pair from 70 → 75 (Strong) and lifts inverse-pair from 35 → 40
-        // (Likely, becomes visible by default), so the corpus surfaces
+        // (Likely, becomes visible by default), so the corpus surfaced
         // 3 suggestions across 3 templates instead of 2/2.
-        #expect(recording.text.hasPrefix("3 suggestions across 3 templates."))
+        //
+        // Now 5/5: this fixture is a genuine codec, so two later templates
+        // correctly fire on it too. `input-totality` on
+        // `decode(_ data: Data) -> MyType` — a byte carrier under an
+        // interpretation verb — and `normal-form` on the encode/decode pair,
+        // whose retract law `encode(decode(encode(decode(d))))` holds whether
+        // or not the codec is lossless.
+        #expect(recording.text.hasPrefix("5 suggestions across 5 templates."))
         #expect(recording.text.contains("idempotence"))
         #expect(recording.text.contains("inverse-pair"))
         #expect(recording.text.contains("round-trip"))
+        #expect(recording.text.contains("input-totality"))
+        #expect(recording.text.contains("normal-form"))
         #expect(recording.text.contains("Strong"))
         #expect(recording.text.contains("Likely"))
         // No explainability-block markers should appear in stats mode.
