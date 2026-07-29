@@ -108,6 +108,7 @@ extension TemplateRegistry {
                 into: &collector
             )
         }
+        collectDifferential(summaries, typeDecls, into: &collector)
         collectIdentityElementSuggestions(
             summaries: summaries,
             identities: identities,

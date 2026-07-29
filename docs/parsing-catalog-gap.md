@@ -668,6 +668,60 @@ fast(previous: R, edit: E) -> R    ∧    slow(input: I) -> R    ⟹   fast(slow
 un-proposed. Of everything in this document, this is the template I would build
 first — it generalizes furthest beyond the domain that surfaced it.
 
+### Built — `DifferentialTemplate`
+
+`VariantMarkers` (vocabulary) → `VariantPairing` (the pass) →
+`DifferentialTemplate` (scoring and caveats). Fires on the motivating case at
+**65/Likely**, resolving the projection correctly:
+
+```
+Template: differential-equivalence    Score: 65 (Likely)
+  ✓ parse(source:) (String) -> SourceFileSyntax
+  ✓ parseIncrementally(source:parseTransition:) (String, IncrementalParseTransition?) -> IncrementalParseResult
+  ✓ Variant-implementation name pair: `parse` is the reference … marked `Incrementally` (+35)
+  ✓ `parseIncrementally` accepts everything `parse` does … plus the extra state (+20)
+  ✓ `parseIncrementally` returns a wrapper whose `tree` is exactly `parse`'s result (+10)
+```
+
+**Named first, shaped second**, and that order is the safety story. A
+shape-first pass ("two functions with compatible signatures") is the same flood
+§3b's counter exists to stop — type symmetry alone produced 1,380 candidates.
+The marker is the evidence; the signature check only confirms the two can be
+compared.
+
+**Reach was measured before building, and it is thin.** Across ~5,900 distinct
+function names in seven corpora the marker vocabulary matches **12 pairs**
+(0.2%), and the template fires on **1**. That denominator is stated rather than
+buried, because "it fires once" needs its eleven rejections accounted for —
+and all eleven are correct:
+
+| rejected | why |
+|---|---|
+| 9 × `unchecked*` (swift-collections) | `mutating`, `Void`-returning, on unsafe-handle carriers (`_UnsafeDequeHandle`) the carrier resolver correctly refuses. A lifted-shadow path would buy **zero** here — checked before deciding not to build it. |
+| `_ensureFreeCapacity` / `…Slow` | the reference **guards and delegates to** the variant — a cold branch, not a second implementation |
+| `_addHTTPClientHandlers` / `…Fallback` | side-effecting pipeline mutation, `Void` |
+
+**The delegation case taught the sharpest caveat.** `_ensureFreeCapacity`
+returns early when capacity already suffices and otherwise calls
+`_ensureFreeCapacitySlow`, which reallocates unconditionally — so the two
+*deliberately* differ on every input the guard catches, and the law would be
+false for correct code. Only the `Void`-return gate rejected it, by luck rather
+than design. Every emitted suggestion now carries that hazard by name, because
+the same shape with non-`Void` returns would sail through.
+
+Four other caveats ship with it: the law runs in **one direction** (a
+counterexample blames the variant); it is a conjecture from naming, not an
+entailment; a precondition-eliding variant's trap is **not a refutation**; and —
+the one that matters most here — **the extra argument is where the property
+lives**. swift-syntax already has this as an example test with one recorded
+transition. What makes it a property is generating that transition, biased
+toward the states the fast path treats specially.
+
+Still open from §6: the **test-side** route. TestLifter cannot see
+`mySort(x) == x.sorted()` in a hand-rolled random test, and now that a template
+claims the shape, a detector has something to map to — which is exactly the
+dependency the TestLifter finding predicted.
+
 ---
 
 ## 7. Finding 6 — the generator wall, and why `ProxyConstruction` only solves half of it
@@ -833,9 +887,12 @@ that contains three real parsers and a writer.
 
 8. **Normal-form retract** — `print ∘ parse` is idempotent. The law every lossy
    parser owes, expressible today by nothing in the catalog. *(§3d)*
-9. **Differential / oracle equivalence** — `fast(previous, edit) ==
-   slow(rebuilt)`. Generalizes far past parsing; the highest-value single
-   addition on this evidence. *(§6)*
+9. ~~**Differential / oracle equivalence** — `fast(previous, edit) ==
+   slow(rebuilt)`.~~ **Built.** `DifferentialTemplate` + `VariantPairing` +
+   `VariantMarkers`. Fires on `Parser.parse` × `Parser.parseIncrementally` at
+   65/Likely — the law swift-syntax states in its own test utilities and
+   writes as an example harness. One firing across 22 corpora; the eleven
+   other marker pairs are all correctly rejected. *(§6)*
 10. **Monotone progress** — a cursor advances or stops, never retreats; the true
     law for the 53 functions §2 currently mislabels. *(§2)*
 11. **Tree-carrier interaction discovery** — unlock conservation, cardinality
