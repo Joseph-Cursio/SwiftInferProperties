@@ -741,6 +741,44 @@ inverse-related pair imaginable.
 `@resultBuilder` is an attribute the scanner can see, and the `buildX` method
 names are a closed, compiler-defined set. A veto here is cheap and exact.
 
+#### Fixed — and the attribute half of that sentence was wrong
+
+`ResultBuilderMethods` curates the compiler's own list (SE-0289 plus SE-0348's
+`buildPartialBlock`), matched **exactly** — never by a `build` prefix, since
+`buildRequest` / `buildURL` / `buildIndex` are ordinary functions that may own
+real laws. `FunctionPairing.isPairable` rejects them outright, and
+`IdempotenceTemplate` gets a matching veto.
+
+**The attribute gate would not have worked**, which is worth recording because
+the sentence above proposed it first. swift-syntax declares
+
+```swift
+public protocol ListBuilder { … }        // no @resultBuilder anywhere
+```
+
+— the attribute goes on the *conforming* types elsewhere, while the methods and
+their default implementations live on the bare protocol. An attribute gate
+reaches **none** of the 21 rows. The names are the better gate anyway, because
+they are not a heuristic: the compiler calls exactly this list, and a type that
+spells one of them means the builder method or means nothing.
+
+**Scope widened past the triage line, deliberately.** Row 6 said "veto from
+type-symmetry *pairing*", which covers the 8 round-trip + 8 inverse-pair rows.
+But the same file also produced **5 idempotence** rows on the same methods, and
+those are worse than false — they are *unrefutable*.
+`buildEither(first component: Component) -> Component { component }` is the
+identity, so `f(f(x)) == f(x)` holds by construction and no implementation
+could fail it. That is the `f(x) == f(x)` shape PRD §3.5 and Appendix C's
+"score refutability, not suggestion count" exist to keep out. Vetoing the pair
+while keeping the idempotence on the same method would have been an arbitrary
+half-measure.
+
+**Measured: SwiftSyntaxBuilder 23 → 2, and the 2 are the right 2** —
+`Indenter.visit(_:)` and `ensuringTrailingComma()`, the only non-builder
+subjects in the module. Every other corpus byte-identical; the lone `+1` on
+this repo's own `SwiftInferCore` is the tool scanning the new file's own
+`isBuilderMethod` predicate, the same self-scan artifact §2 produced.
+
 In `SwiftProjectLintConfig` the same mechanism produces
 `extractSwiftBasename(from:)` ↔ `realPath(_:)` as a round-trip — two unrelated
 path helpers — which is, notably, the **only** round-trip proposed in a package
@@ -780,7 +818,11 @@ that contains three real parsers and a writer.
    firings across all corpora, both true, after two measurement-forced
    tightenings (a decorator is not an erasure; a conformance is not an
    erasure). *(§4)*
-6. Veto `@resultBuilder` `buildX` methods from type-symmetry pairing. *(§8)*
+6. ~~Veto `@resultBuilder` `buildX` methods from type-symmetry pairing.~~
+   **Shipped**, scope widened to idempotence as well — the same methods
+   produced 5 *unrefutable* identity laws. SwiftSyntaxBuilder 23 → 2. The
+   attribute gate this row proposed would have caught none of them;
+   `ListBuilder` carries no `@resultBuilder`. *(§8)*
 7. ~~Pair against `CustomStringConvertible.description` as a printer half.~~
    **Shipped — and it closes the survey's headline miss.**
    `Parser.parse(source).description == source` is now proposed on real

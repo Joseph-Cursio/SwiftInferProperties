@@ -183,6 +183,9 @@ public enum IdempotenceTemplate {
         if let shapeVeto = shapeDisambiguationVeto(for: summary) {
             signals.append(shapeVeto)
         }
+        if let builderVeto = resultBuilderVeto(for: summary) {
+            signals.append(builderVeto)
+        }
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: summary.containingTypeName
         ) {

@@ -155,6 +155,15 @@ public enum FunctionPairing {
     }
 
     private static func isPairable(_ summary: FunctionSummary) -> Bool {
+        // Result-builder plumbing never pairs. Every `buildX` has the shape
+        // `(Component) -> Component`, so one builder becomes a clique under
+        // type symmetry — 16 of SwiftSyntaxBuilder's 23 suggestions came from
+        // one file this way, including `buildEither(first:)` proposed as the
+        // inverse of `buildEither(second:)`, which are the two arms of an
+        // `if`/`else`. See `ResultBuilderMethods`.
+        guard !ResultBuilderMethods.isBuilderMethod(summary.name) else {
+            return false
+        }
         guard !summary.isMutating,
               let returnType = summary.returnTypeText,
               returnType != "Void",
