@@ -46,25 +46,68 @@ public enum Slicer {
     /// Measured on the differential detector: the same assertion scores a
     /// finding when flat and nothing when wrapped, with no other difference.
     ///
-    /// **Deliberately narrow.** Only when the body's statements reduce to a
-    /// single `for`/`while`/`repeat`, so a loop that is genuinely setup
-    /// (populating a fixture before a later assertion) is untouched — there,
-    /// the top-level assertion is still the right anchor and the existing
-    /// backward slice still reaches the loop as setup. Applied once, not
-    /// recursively: a doubly-nested loop is a table-driven test, not a
-    /// quantifier, and its inner body usually depends on the outer binding.
+    /// **The loop must be LAST, and everything before it must be a binding.**
+    ///
+    /// The first cut of this required the loop to be the body's *only*
+    /// statement. Measured against the real swift-foundation test suite, that
+    /// fired on **zero** of the ten random-driven tests there — because a real
+    /// property-style test sets up its generator or fixture first:
+    ///
+    /// ```swift
+    /// @Test func randomVersionAndVariant() {
+    ///     var generator = SystemRandomNumberGenerator()   // ← setup
+    ///     for _ in 0..<10000 {
+    ///         let uuid = UUID.random(using: &generator)
+    ///         #expect(uuid.versionNumber == 0b0100)
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// The synthetic probe the first cut was validated against had a bare loop,
+    /// so it confirmed a shape that does not occur in the wild. Leading
+    /// bindings are now carried through and land in the slice's setup region,
+    /// which is exactly what that region is for — the backward slice already
+    /// pulls in whichever of them the assertion depends on.
+    ///
+    /// Still deliberately narrow in three ways. The loop must be the LAST
+    /// statement, so a loop that merely builds a fixture before a later
+    /// assertion is untouched — there the top-level assertion is the right
+    /// anchor. Everything before it must be a `let`/`var` binding, so a body
+    /// that *does* work (calls, mutations, its own assertions) before looping
+    /// is not reinterpreted as a quantifier over just the tail. And it is
+    /// applied once, not recursively: a doubly-nested loop is a table-driven
+    /// test rather than a quantifier, and its inner body usually depends on the
+    /// outer binding.
     static func unwrappingRepetition(_ items: [CodeBlockItemSyntax]) -> [CodeBlockItemSyntax] {
-        guard items.count == 1, let only = items.first else { return items }
-        if let forStatement = only.item.as(ForStmtSyntax.self) {
+        guard let last = items.last, let loopBody = repetitionBody(of: last) else {
+            return items
+        }
+        let leading = items.dropLast()
+        guard leading.allSatisfy(isBinding) else { return items }
+        return Array(leading) + loopBody
+    }
+
+    /// The body of a `for`/`while`/`repeat`, or `nil` when this is not one.
+    private static func repetitionBody(
+        of item: CodeBlockItemSyntax
+    ) -> [CodeBlockItemSyntax]? {
+        if let forStatement = item.item.as(ForStmtSyntax.self) {
             return Array(forStatement.body.statements)
         }
-        if let whileStatement = only.item.as(WhileStmtSyntax.self) {
+        if let whileStatement = item.item.as(WhileStmtSyntax.self) {
             return Array(whileStatement.body.statements)
         }
-        if let repeatStatement = only.item.as(RepeatStmtSyntax.self) {
+        if let repeatStatement = item.item.as(RepeatStmtSyntax.self) {
             return Array(repeatStatement.body.statements)
         }
-        return items
+        return nil
+    }
+
+    /// A plain `let`/`var` declaration — the only thing allowed to precede the
+    /// loop, because setup is all the tail-quantifier reading can tolerate.
+    private static func isBinding(_ item: CodeBlockItemSyntax) -> Bool {
+        guard case .decl(let decl) = item.item else { return false }
+        return decl.is(VariableDeclSyntax.self)
     }
 
     public static func slice(_ body: CodeBlockSyntax) -> SlicedTestBody {

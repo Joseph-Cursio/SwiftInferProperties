@@ -760,6 +760,85 @@ SwiftProjectLint's Config package. Five test expectations pinned the old weight
 and were updated — the calibration number changed deliberately, so the
 assertions that recorded it had to follow.
 
+### Road test — the swift.org suites the observation was about
+
+Everything above about hand-rolled property tests was validated on **synthetic
+fixtures**. Pointing the finished tool at the real corpora
+(`swift-foundation`'s FoundationEssentials: 239 source files, 51 test files)
+found two defects in the same day's work, and confirmed the observation's
+premise.
+
+**The premise holds.** `roundtrip` appears 723 times across `swift`'s Swift
+sources and 329 across `swift-foundation` — property-shaped testing, written
+without a framework. The tool lifts **51 suggestions** from those test bodies.
+
+**Defect 1 — the slicer unwrap fired on ZERO real tests.** It required the
+repetition loop to be the body's *only* statement. In the real suite:
+
+| shape | count |
+|---|---:|
+| lone-loop body (unwrap fired) | **0** |
+| setup line(s) then the loop (unwrap missed) | **10** |
+
+Real property-style tests set up a generator or fixture first:
+
+```swift
+@Test func randomVersionAndVariant() {
+    var generator = SystemRandomNumberGenerator()   // ← setup statement
+    for _ in 0..<10000 {
+        let uuid = UUID.random(using: &generator)
+        #expect(uuid.versionNumber == 0b0100)
+    }
+}
+```
+
+The synthetic probe had a bare loop, so it confirmed a shape that does not
+occur in the wild. Widened to *loop-last, bindings-before* — leading bindings
+flow into the slice's setup region, which is what that region is for. Result:
+51 lifted suggestions and a **new true differential firing** that had been
+invisible.
+
+**Defect 2 — the one real differential firing was FALSE.** Before the widening,
+`differential-equivalence` fired exactly once on Foundation:
+
+```swift
+#expect(originalAttributes.merging(overlapping, mergePolicy: .keepCurrent)
+        == originalAttributes.testDouble(4.3))
+```
+
+Both sides are methods on the same receiver, so the shared-input test passes and
+the orientation rule read `testDouble` as the oracle. It is not: `testDouble` is
+an AttributedString **attribute key**, and the right-hand side is the expected
+container being *built*. The literal `4.3` is the tell — a reference computation
+consumes the shared input (`contains(c)`) or nothing (`input.sorted()`); a
+constructed expectation carries literals. A literal argument on the reference
+side now rejects the pair.
+
+**After both fixes, one differential firing on Foundation, and it is true:**
+`isAllowedCodeUnit(c)` against `allowedSet.contains(c)` — a fast lookup checked
+against a reference set, which is exactly the law this family exists for.
+
+**A third form remains out of reach, and it is not a defect.**
+`swift/test/stdlib/sort_integers.swift` is a **lit + FileCheck** test:
+
+```swift
+let sort_verifier: ([Int]) -> Void = { … if y[i] > y[i+1] { print("Error: \(y)") } }
+permute(7, sort_verifier)          // EXHAUSTIVE, not random
+//CHECK-NOT: Error!
+```
+
+There is no assertion function to anchor on — the property is expressed as
+print-on-failure plus a FileCheck directive — and it quantifies *exhaustively
+over permutations*, which is stronger than random sampling rather than weaker.
+Reaching it would mean teaching `AssertionAnchor` about a second, non-assertion
+verification idiom. Recorded, not attempted.
+
+**The lesson, which is the same one twice.** Both defects came from validating
+against fixtures I wrote myself. A synthetic probe confirms that the code does
+what I intended; only real code says whether what I intended is the shape that
+exists. The catalog's own rule — *score refutability, not suggestion count* —
+has a sibling: **validate against found code, not authored code.**
+
 ### What the defects/holes split turns out to be worth
 
 Two of the three holes probed so far have not survived contact: libFuzzer

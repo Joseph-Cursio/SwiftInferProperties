@@ -66,6 +66,23 @@ public enum AssertReferenceEquivalenceDetector {
             return []
         }
         let (subject, reference) = orient(left, right)
+        // **A LITERAL ARGUMENT ON THE REFERENCE SIDE MEANS IT IS AN EXPECTED
+        // VALUE, NOT AN ORACLE.** Measured on swift-foundation:
+        //
+        //     #expect(originalAttributes.merging(overlapping, mergePolicy: .keepCurrent)
+        //             == originalAttributes.testDouble(4.3))
+        //
+        // Both sides are methods on the same receiver, so the shared-input test
+        // passes and the orientation rule reads `testDouble` as the oracle. It
+        // is not: `testDouble` is an AttributedString ATTRIBUTE KEY, and the
+        // right-hand side is the expected container being BUILT. The `4.3` is
+        // the tell — a reference computation consumes the shared input
+        // (`contains(c)`) or nothing (`input.sorted()`); a constructed
+        // expectation carries literals.
+        //
+        // This was the detector's only firing on real Foundation before the
+        // slicer widening, and it was false.
+        guard !reference.hasLiteralArgument else { return [] }
         return [
             DetectedReferenceEquivalence(
                 subjectCallee: subject.callee,
@@ -87,6 +104,9 @@ public enum AssertReferenceEquivalenceDetector {
         let takesInputAsArgument: Bool
         /// `input.sorted()` — the input is the receiver.
         let isMethodOnInput: Bool
+        /// A literal argument (`testDouble(4.3)`) — the mark of a CONSTRUCTED
+        /// EXPECTED VALUE rather than a computation over the shared input.
+        let hasLiteralArgument: Bool
     }
 
     private static func equalityOperands(
@@ -131,10 +151,17 @@ public enum AssertReferenceEquivalenceDetector {
         guard let callee = call.calledExpression.trailingIdentifierName else { return nil }
         var inputs: Set<String> = []
         var takesInputAsArgument = false
+        var hasLiteralArgument = false
         for argument in call.arguments {
             if let name = argument.expression.as(DeclReferenceExprSyntax.self)?.baseName.text {
                 inputs.insert(name)
                 takesInputAsArgument = true
+            }
+            if argument.expression.is(IntegerLiteralExprSyntax.self)
+                || argument.expression.is(FloatLiteralExprSyntax.self)
+                || argument.expression.is(StringLiteralExprSyntax.self)
+                || argument.expression.is(BooleanLiteralExprSyntax.self) {
+                hasLiteralArgument = true
             }
         }
         // `input.sorted()` — the receiver is the operand's real input.
@@ -149,7 +176,8 @@ public enum AssertReferenceEquivalenceDetector {
             callee: callee,
             inputs: inputs,
             takesInputAsArgument: takesInputAsArgument,
-            isMethodOnInput: isMethodOnInput
+            isMethodOnInput: isMethodOnInput,
+            hasLiteralArgument: hasLiteralArgument
         )
     }
 

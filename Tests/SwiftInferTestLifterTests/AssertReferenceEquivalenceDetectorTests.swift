@@ -157,6 +157,87 @@ struct AssertReferenceEquivalenceDetectorTests {
         #expect(!detection.directionIsCertain)
     }
 
+    @Test("a CONSTRUCTED EXPECTED VALUE is not an oracle — swift-foundation")
+    func constructedExpectationRejected() {
+        // Measured on the real swift-foundation suite, where this was the
+        // detector's ONLY firing and it was false:
+        //
+        //     #expect(originalAttributes.merging(overlapping, mergePolicy: .keepCurrent)
+        //             == originalAttributes.testDouble(4.3))
+        //
+        // Both sides are methods on the same receiver, so the shared-input test
+        // passes. But `testDouble` is an AttributedString ATTRIBUTE KEY and the
+        // right-hand side is the expected container being BUILT. The literal
+        // `4.3` is the tell.
+        #expect(Self.detect(in: """
+        import Testing
+        struct T {
+            @Test func merge() {
+                let originalAttributes = container()
+                #expect(originalAttributes.merging(overlapping) == originalAttributes.testDouble(4.3))
+            }
+        }
+        """).isEmpty)
+    }
+
+    @Test("a reference that consumes the shared input still counts — swift-foundation")
+    func genuineReferenceSurvives() throws {
+        // The true positive from the same suite: a fast lookup checked against
+        // a reference set. Both sides consume `c`; neither carries a literal.
+        let detections = Self.detect(in: """
+        import Testing
+        struct T {
+            @Test func allowed() {
+                let c = codeUnit
+                #expect(isAllowedCodeUnit(c) == allowedSet.contains(c))
+            }
+        }
+        """)
+        #expect(try #require(detections.first).subjectCallee == "isAllowedCodeUnit")
+    }
+
+    @Test("setup line THEN a loop is unwrapped — the shape real tests actually have")
+    func setupThenLoopIsUnwrapped() throws {
+        // The first cut required the loop to be the body's ONLY statement, and
+        // fired on ZERO of the ten random-driven tests in swift-foundation.
+        // Real property-style tests set up a generator first — this is
+        // UUIDTests.randomVersionAndVariant's shape.
+        let detections = Self.detect(in: """
+        import Testing
+        struct T {
+            @Test func sortMatchesReference() {
+                var generator = SystemRandomNumberGenerator()
+                for _ in 0..<10000 {
+                    let input = randomArray(using: &generator)
+                    #expect(mySort(input) == input.sorted())
+                }
+            }
+        }
+        """)
+        #expect(try #require(detections.first).subjectCallee == "mySort")
+    }
+
+    @Test("a body that DOES WORK before looping is not reinterpreted")
+    func nonBindingPrefixBlocksUnwrap() {
+        // Only leading bindings are tolerated. A body that calls, mutates, or
+        // asserts before looping is not a quantifier over just its tail.
+        let slice = SlicerTestHelper.sliceFirstBody(in: """
+        import XCTest
+        final class T: XCTestCase {
+            func testMixed() {
+                XCTAssertEqual(setUpThing(), 1)
+                for _ in 0..<10 {
+                    let input = [3, 1, 2]
+                    XCTAssertEqual(mySort(input), input.sorted())
+                }
+            }
+        }
+        """)
+        // The top-level assertion stays the anchor, so the loop's inner
+        // comparison is never surfaced.
+        #expect(AssertReferenceEquivalenceDetector.detect(in: slice).isEmpty)
+    }
+
     // MARK: - The slicer change, scoped
 
     @Test("a loop is unwrapped only when it is the WHOLE body")
