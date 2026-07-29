@@ -26,7 +26,7 @@ Sibling checkouts expected at `../SwiftPropertyLaws` and `../SwiftEffectInferenc
 
 Consumers over the SemanticIndex, split by audience and trust bar: `query` (author, all tiers, raw rows) · `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**). Async is admitted only via the `@ClockDeterministic` claim — bare `async` keeps a clean rejection that says how to make the claim.
 
-Suites green at ~3,805 tests. **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing.
+Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing.
 
 ## Where to look
 
@@ -38,7 +38,7 @@ Suites green at ~3,805 tests. **Flake note:** the long measured/calibration suit
 | Per-cycle change story | `git log` (the per-cycle findings docs were folded into the archive above) |
 | Road tests (third-party subjects) | `docs/roadtest-*.md` — SwiftProjectLint (the first *scored* one, frozen answer key), SwiftLintRuleStudio (out-of-catalog diagnosis + two retracted closures), MacCloud server / macOS client |
 | **Self-dogfood** (the tools pointed at this repo) | `docs/roadtest-self-dogfood.md` — the `merge` commutativity refutation, the Finding-G gate suite, and the mutation corpus behind them |
-| Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey; **all 7 defects shipped**, first hole (differential/oracle) built; 4 holes left incl. the retract law |
+| Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey; **all 7 defects shipped**, first two holes built (differential/oracle, retract); 3 left |
 | Command docs | `docs/report-command.md`, `insights-command.md`, `docc-generation.md`, `prove-then-show.md`, `known-properties.md`, `stdlib-anchor.md`, `interaction-semantic-index.md` |
 | End-user docs | `docs/user/{tutorial,guide,reference}.md` |
 | Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md`, `docs/rule-visitor-carrier-scoping.md` |
@@ -63,7 +63,7 @@ Suites green at ~3,805 tests. **Flake note:** the long measured/calibration suit
 
 ## Build & test
 
-- `swift package clean && swift test` on session start (per global `~/CLAUDE.md`).
+- `swift package clean && swift test` on session start.
 - **Use the Makefile** — `make test-fast` (regex-skip fast path, ~6s) · `make test` (fast suite + sequential subprocess batches, fail-fast) · `make batch1`…`batch7` · `make clean-temp` · `make help`. Prefer `make test` over a bare `swift test`: the batches bound peak temp-disk and avoid §13 perf-budget contention flakes. A killed-mid-run subprocess suite skips its cleanup `defer` and can leak tens of GB of TCA build workdirs to `$TMPDIR` — that's what `make clean-temp` is for. It also sweeps `.swiftinfer/verify-workdir/`, where `verify --all-from-index` puts one full SwiftPM workdir *per suggestion* (a survey of this repo's own 85-entry index left **3.4 GB** there; it's gitignored, so it accumulates silently).
 - Fast path is `swift test --skip 'MeasuredTests|MeasuredExecutionTests|VerifyPipeline'`. `--skip` takes a **regex against the test ID**, so that one alternation covers every `.tags(.subprocess)` suite and is self-maintaining. **Don't enumerate suite names** — the old per-name list silently missed four `VerifyPipeline*` suites and the "fast" command ran for ~90 min. A new subprocess suite is auto-covered only if named `*MeasuredTests` or `VerifyPipeline*`; otherwise widen the regex.
 - **A new `*MeasuredTests` suite must also be added to a Makefile BATCH by hand**, or `make test` silently skips it.
