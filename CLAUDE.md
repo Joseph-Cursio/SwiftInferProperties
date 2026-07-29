@@ -38,7 +38,7 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 | Per-cycle change story | `git log` (the per-cycle findings docs were folded into the archive above) |
 | Road tests (third-party subjects) | `docs/roadtest-*.md` — SwiftProjectLint (the first *scored* one, frozen answer key), SwiftLintRuleStudio (out-of-catalog diagnosis + two retracted closures), MacCloud server / macOS client |
 | **Self-dogfood** (the tools pointed at this repo) | `docs/roadtest-self-dogfood.md` — the `merge` commutativity refutation, the Finding-G gate suite, and the mutation corpus behind them |
-| Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey; **all 7 defects shipped**, first two holes built (differential/oracle, retract); 3 left |
+| Where the catalog stops on **parsers** | `docs/parsing-catalog-gap.md` — the swift-syntax survey. **Ledger closed:** 7/7 defects shipped, holes 8/9/12 built (retract, differential/oracle, recursive generation), 10/11 probed and rejected. Still live *after* the ledger: the measured generator weaknesses (the `0 ..< T.max` idiom, edge values never drawn under a quantifier), "which templates are under-appreciated" as an open question, the `unsafe`/`unchecked` veto, and the SIGBUS stack-depth trap for the next corpus-scanning test |
 | Command docs | `docs/report-command.md`, `insights-command.md`, `docc-generation.md`, `prove-then-show.md`, `known-properties.md`, `stdlib-anchor.md`, `interaction-semantic-index.md` |
 | End-user docs | `docs/user/{tutorial,guide,reference}.md` |
 | Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md`, `docs/rule-visitor-carrier-scoping.md` |
