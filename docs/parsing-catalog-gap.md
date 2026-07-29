@@ -683,6 +683,96 @@ and biconditional fire on ASTs, JSON documents, file hierarchies, layout trees,
 and scene graphs. The witness detectors would need a recursion-aware variant;
 the scoring, rendering, and verify paths would not change.
 
+#### Measured, and rejected — the premise fails three times over
+
+**1. The motivating example does not exist in the subject.** The table above
+proposes `node.totalLength == node.children.map(\.totalLength).sum()` for
+swift-syntax. `Syntax` has **no `[Syntax]` children member**: children come from
+`func children(viewMode:) -> SyntaxChildren`, a computed sequence over opaque
+raw storage. That shape was inferred from how ASTs usually look, and never
+checked against the code.
+
+**2. Nothing else in reach has the shape either.** A brace-matched scan for
+non-static child collections across ten corpora — it took three attempts, the
+first two producing artifacts from sibling members and `static let` singletons,
+which is its own caution about surveys of this kind:
+
+| corpus | true tree carriers | usable law |
+|---|---:|---|
+| swift-syntax, swift-collections, async-algorithms, SPL Models/Visitors, this repo | 0 | — |
+| swift-nio | 1 | indirect enum, no witness members |
+| swift-argument-parser | 2 | one false witness (`CommandInfoV0`), one tautology |
+| SwiftProjectLint Config | 1 | `DirectoryNode.depth` relates to its *parent*, not `children.count` |
+| SwiftProjectLint Rules | 1 | scanner artifact |
+
+**5 carriers, 0 refutable laws.** The single plausible witness —
+swift-argument-parser's `Tree` — is:
+
+```swift
+weak var parent: Tree?
+var children: [Tree]
+var isRoot: Bool { parent == nil }     // the "invariant" IS the implementation
+```
+
+`isRoot == (parent == nil)` holds by definition. That is the `f(x) == f(x)`
+shape PRD §3.5 and Appendix C exist to exclude.
+
+**3. And the machinery would not have transferred.** The paragraph above claims
+"the scoring, rendering, and verify paths would not change". Wrong:
+`ReducerCandidate` is action-centric (`actionTypeName`, `actionCases`,
+`carrierKind`, `isAsync`), and downstream `ActionSequenceStubEmitter` emits
+`for action in actions { … }` harnesses. A tree carrier has no actions, so this
+was never "unlock the discoverers" — it would be a fresh template on the v1
+surface. A fresh build, for zero firings.
+
+### A guess outranked an assertion — measured, and fixed
+
+Probed after the tree-carrier rejection, on the suspicion that today's
+test-lifted work had exposed a ranking inversion. It had:
+
+| law | where it came from | score |
+|---|---|---|
+| `normalize(normalize(d)) == normalize(d)` | a **guess** off the curated verb `normalize` | **75 Strong** |
+| `mySort(x) == x.sorted()` | **asserted by a human**, executed 10,000× | **50 Likely** |
+
+A name-derived conjecture outranking an executed, human-authored law by a full
+tier is backwards — and the conjecture is the weaker claim by construction: PRD
+§4.1's own counterexample for idempotence is a one-shot suffix strip, correct
+code that fails the law. The lifted one had a person decide it holds for all
+inputs and then run it.
+
+Not a visibility problem — `.likely` (≥ 40) is already shown by default. The
+**tier is the trust bar**: `docc` gates on it, `query` sorts by it, and a reader
+believes it. It was pointing the wrong way.
+
+`testBodyPattern` goes 50 → **80**. The signature side tops out at 75 (30
+type-symmetry + 40 curated verb + 5 value-semantic carrier), and the lifted path
+scores exactly one signal — so 75 would merely tie, leaving `query`'s
+score-descending order arbitrary between a guess and an assertion. 80 makes the
+assertion sort first.
+
+Deliberately unqualified by test quality: the lift detects the *shape*, not how
+thorough the test is. A one-example test still means a human decided the law
+holds, which a curated verb never does.
+
+Blast radius: ~23 lifted suggestions across this repo's three main targets, 0 on
+SwiftProjectLint's Config package. Five test expectations pinned the old weight
+and were updated — the calibration number changed deliberately, so the
+assertions that recorded it had to follow.
+
+### What the defects/holes split turns out to be worth
+
+Two of the three holes probed so far have not survived contact: libFuzzer
+harnesses (premise false for a Swift source analyser — the real fuzzers are
+C++) and this one. The differential/oracle family did survive, and it was the
+one with **two independently observed witnesses** rather than a reasoned shape.
+
+That tracks a real difference in how the two lists were built. Every one of the
+seven **defects** was a firing observed in tool output, and all seven closed.
+The **holes** were reasoned from reading, and read just as plausibly. Weight the
+remaining ones accordingly: prefer a hole with an observed witness over one with
+a compelling argument.
+
 ---
 
 ## 6. Finding 5 — no differential / oracle-equivalence family
@@ -1086,9 +1176,8 @@ that contains three real parsers and a writer.
    other marker pairs are all correctly rejected. *(§6)*
 10. **Monotone progress** — a cursor advances or stops, never retreats; the true
     law for the 53 functions §2 currently mislabels. *(§2)*
-11. **Tree-carrier interaction discovery** — unlock conservation, cardinality
-    and biconditional (which are already carrier-agnostic as templates) for
-    recursive types. *(§5)*
+11. ~~**Tree-carrier interaction discovery.**~~ **Probed and NOT built** — the
+    premise fails twice over. See §5's "measured, and rejected" note. *(§5)*
 12. **Recursive, size-controlled generation** — without it, laws 8/10/11 and the
     two already firing at Strong on `Expr`/`Node` are all `.todo`. This is a
     generator-engine gap, not a catalog gap, and belongs in Appendix C's
