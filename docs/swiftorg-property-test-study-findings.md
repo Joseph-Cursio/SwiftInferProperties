@@ -4,8 +4,9 @@ Companion to `swiftorg-property-test-study-scope.md`, which is the plan. This is
 record. **Every number here carries the corpus SHA it was measured at**; a count without
 one is not a measurement (scope §3).
 
-**Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on the `check-battery` population.
-Q3/Q4 not started.**
+**Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on the `check-battery` population;
+Q2 + Q5 also answered on the `loops` population (§1.25, exhaustive not sampled). Q3/Q4 not
+started.**
 
 ---
 
@@ -591,6 +592,124 @@ We propose nothing here, and it is worth being precise about why that is only ha
 Reaching this case needs projection-aware round-trip — closer to `normal-form` than to
 `round-trip` — so the honest verdict is "a gap, and naively closing it would ship a false
 law".
+
+### 1.25 `loops` ANSWERED — and it disagrees with `check-battery` completely
+
+**36 scoped sites, adjudicated exhaustively rather than sampled** — small enough to read all
+of them, which removes the stopping-rule objection raised against Q1's sampled passes. Key
+frozen at `fixtures/swiftorg-study/loops-answer-key.json` before any `discover` run; the law
+lives in the loop *body* here, so there was no mechanical extraction available even in
+principle and every row is hand-read.
+
+Three of 36 are not laws, and saying so is part of the count: `RangeSet:34` **is** the
+generator (`buildRandomRangeSet`), `objc-array-slice:16` builds a 1000-element array as setup
+for a crash regression, and `InlineArray:219` is a counting check. 33 remain.
+
+#### The headline: 33% covered, against `check-battery`'s 100%
+
+| verdict | sites |
+|---|---:|
+| `gap-with-witness` | **18** |
+| `gap-in-reach` (template exists, cannot reach the code) | 4 |
+| `declined` (kit runs it) | 5 |
+| `ours-covers` | 3 |
+| `borderline-covers` | 2 |
+| `partial-declined` | 1 |
+
+**11 of 33 covered — 33%. `check-battery` was 198 of 198.** The two populations are not
+measuring the same thing and averaging them would destroy the finding. `check-battery` sites
+invoke *conformance axioms* (`checkEquatable`, `checkCollection`) — the kit's home turf, where
+standing aside is the correct division of labour. `loops` sites state *bespoke domain laws*
+about one type's semantics, and that is where a catalog either has the shape or does not.
+
+#### Five model laws, which we independently concluded were the right thing to propose
+
+`RangeSet` states five laws of the form `rangeSet.op(other) == opViaSet(set1, set2)` — union,
+intersection, symmetricDifference, isDisjoint, isSubset — each checking the type against
+`Set<Int>` as reference semantics. A sixth (`RangeSet:74`) checks bulk construction against a
+fold of `insert(contentsOf:)`.
+
+This is exactly the shape `fixtures/equatable-signal/README.md` arrived at from the opposite
+direction: *"Propose the model law, not the Equatable laws, for projections"* — the conclusion
+drawn from three real projection bugs (`OrderedSet` order, `BitArray` padding, `Deque` head
+rotation) that pass 4/4 Equatable laws and die at trial ≤3 against a model. **We have no
+model-law template.** `homomorphism` is narrowly additive-measure-over-concatenation;
+`differential-equivalence` pairs *named* variants (`fast`/`reference`) and the reference here
+is written in the test. Two independent lines of evidence now point at the same missing
+template, which is the strongest build signal the study has produced.
+
+#### `discover` and the tests aim at different properties of the same functions
+
+Unscored, per the guardrail. On `RangeSet` / `Duration` / `Diffing`, `discover` proposes **33**
+laws where the tests state ~18, and **the overlap is approximately zero**:
+
+| what `discover` proposes | what the tests state |
+|---|---|
+| `dual-style-consistency` ×4 (`formUnion`↔`union`, Strong 75) | model laws vs `Set<Int>` |
+| `idempotence` ×4, `inverse-pair` ×7 (Possible) | membership biconditional |
+| `monotonicity` ×8 on `Duration.seconds/milliseconds/…` | unit decomposition of `.components` |
+| `predicate` ×6, `measure-non-negativity` ×1 | representation invariant |
+
+This is not a recall failure. Both sets are legitimate; they are simply *different laws about
+the same functions*, and a reconciliation that scored one against the other would report a
+miss where none exists. Worth noting the catalog does **not** propose commutativity or
+associativity for `union`/`intersection`, which are true — method-form binary operations
+(`self.op(other)`) are not paired by those templates.
+
+One suggestion looked like a false positive and is not: `idempotence` on `symmetricDifference`
+(where `a △ a = ∅`, not `a`). The rendered block carries *"THIS LAW IS A CONJECTURE — read off
+the shape and the name, not entailed by either, so a CORRECT implementation can fail it"*, at
+Possible (35), hidden without `--include-possible`. That is the explainability contract
+working, not a precision defect.
+
+#### `f(x) == f(x)` is refutable here, which qualifies a stated design principle
+
+Eleven of the 33 sites are *repetition without generation*: call the same accessor 3–10 times
+on a fixed value and assert the answer does not change. Five assert **referential** stability
+(`unsafeBitCast(… as AnyObject, to: UInt.self)` — the same address each time), four assert an
+**absorbing state** (an exhausted iterator keeps returning `nil`; `countByEnumerating` keeps
+returning 0), two guard against **over-release** of a bridged `NSError`.
+
+The design note says *"`f(x) == f(x)` passes 'did discovery return > 0' and cannot fail."*
+That holds **for a pure function**, and the stdlib writes this test precisely where purity is
+in doubt — across ObjC bridging, ARC, and CoW, repeated observation is not free, and these
+tests exist because it has broken. The principle is right about what to *score*; it should not
+be read as "the shape is never worth testing." The absorbing-state variant has no template at
+all.
+
+#### The most textbook property in the population is unreachable, for a precise reason
+
+`Diffing:708` states `a.applying(b.difference(from: a)) == b` plus `applied.applying(d.inverse())
+== a` — diff/patch round-trip with an involution, keyed `ours-covers` on the catalog question.
+`discover` proposes **nothing** on `Diffing.swift`. The halves live on **different protocol
+extensions**: `applying(_:)` is in `extension RangeReplaceableCollection` (`Diffing.swift:59`),
+`difference(from:)` in `extension BidirectionalCollection` (`:126`). Pairing requires a common
+carrier and there is none — and `applying` returns `Self?`, so even co-located the type
+symmetry would not close. Recording protocol decls (2026-07-30) was necessary for this and is
+not sufficient.
+
+`PrintFloat.swift.gyb:795` and `:908` are a **second independent witness** for the blocker
+Q2/`roundtrip` already found: `initializerPairAdmissible`'s `guard label != "init"` rejects
+the float parse/print pair. Two populations, same gate.
+
+#### Q5 on this population — the opposite result from `check-battery`
+
+`check-battery` named six IEEE-754 specials 252 times and generated them **0** times. `loops`
+is the reverse: three of its generators reach for edges *deliberately*.
+
+| site | edge strategy |
+|---|---|
+| `Duration` ×4 | `Int64.random(in: 0 ... 0x7fff_ffff_ffff_fc00)` — the largest `Int64` exactly representable as `Double`, i.e. the top of the range chosen for exactness |
+| `Character:296` | `randomGraphemeCluster(1, 9)`, commented *"making the maximum length 9 scalars tests both sides of the limit"* — spans the 63-bit small-representation boundary |
+| `PrintFloat` ×2 | walks `nextUp`/`nextDown` ten steps from a seed, testing each float's *neighbours* |
+
+The `RangeSet` generators are the interior kind Q5 flagged (`Int.random(in: -100...100)`, no
+`Int.min`/`Int.max`), so the population is split rather than uniformly good. But the three
+above are real edge discipline, hand-written, and they are what a derived generator does not
+produce — the generator weakness Q5 recorded is a weakness against *these* authors' practice,
+not a universal.
+
+---
 
 ### 1.3 `lit-checknot` — resolved by scoping, §0.3(c) closed
 
