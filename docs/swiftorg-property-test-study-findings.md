@@ -389,10 +389,51 @@ round-trip laws here are on gyb-only types, and Q5's entire edge-value finding (
 `.infinity`, subnormals, `.ulp`) is about floats. The blind spot is small in bytes and
 central in subject.
 
-This is a **reach** limitation with nothing to do with the catalog — the templates would
-very likely fire on the generated output. It is also the most actionable item the study has
-produced, because it is fixable: run `gyb` into a temp tree and scan that, or teach the
-scanner to skip template directives. Recorded here; not attempted.
+**FIXED for the study, and the result retracts the paragraph this used to be.**
+`scripts/swiftorg_expand_gyb.py` expands the templates into a temp tree (all 11 in
+`stdlib/public/core`, gyb needs `-DCMAKE_SIZEOF_VOID_P=8`), so `discover` can be run against
+a superset and the gyb contribution isolated by diff.
+
+**Deliberately study tooling, not a product feature.** Of the six swift.org corpora checked,
+**only `swift` uses gyb at all** — 291 files there, **zero** in swift-collections,
+swift-numerics, swift-algorithms, swift-syntax and swift-foundation. It is a stdlib build
+tool, not an ecosystem pattern, so teaching `FunctionScanner` to expand it would be
+speculative surface for one corpus.
+
+**What it revealed is not what "most actionable item" implied.**
+
+| | before | after |
+|---|---:|---:|
+| suggestions | 740 | **3,364** |
+| `dual-style-consistency` | 22 | **1,247** (1,225 new, all `Likely` — default-visible) |
+| `inverse-pair` | 128 | 1,091 |
+| `round-trip` | 19 | 25 |
+
+**1,225 of the 1,227 `dual-style-consistency` rows are a single function name** — `replace`,
+in `SIMDMaskConcreteOperations.swift`, generated once per SIMD mask type × width. That is
+*one* law replicated by a code generator, not 1,225 findings. Expanding gyb does not reveal
+new laws so much as **the same laws multiplied across generated types**, and a template
+family that put 1,225 default-visible rows on one law would be the Daikon trap arriving
+through a new door.
+
+So the volume is worthless and the *targeted* result is the valuable one:
+
+**The float parse/print law is a CATALOG gap, not a reach gap.** With the templates expanded,
+both halves are visible — `description` / `debugDescription` (8 declarations in
+`FloatingPointTypes.swift`) and, crucially, a **non-generic** `public init?(_ text: String)`
+at `FloatingPointParsing.swift:169`. `discover` still proposes nothing: **zero** suggestions
+cite the parse file, against 129 citing the types file.
+
+That kills the generic-initializer hypothesis recorded above — the non-generic overload
+exists and is equally unreached. The live candidate is now the initializer-label-stem gate,
+which requires the init's argument label to stem the encode name; `init?(_ text: String)` is
+**unlabelled**, so no stem can match.
+
+**The real value of the fix is epistemic, not numeric**: it converted an unmeasurable reach
+question ("we cannot see those sources") into a measurable catalog question ("we see them and
+still do not pair them"). Calling it "the most actionable item the study has produced" was an
+overstatement — the third of the session, and again in the direction of making a finding sound
+larger than it was.
 
 #### The `Character` case, which is more interesting than a gap
 
