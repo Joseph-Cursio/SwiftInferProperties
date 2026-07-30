@@ -119,8 +119,9 @@ def main() -> int:
     parser.add_argument(
         "--roots", nargs="*", default=[],
         help="subdirectories to restrict to (default: whole repo). For `swift`, Q1 "
-             "established that this MUST be the stdlib test dirs: an unscoped count is "
-             "91%% compiler-test noise (loops 95%%, lit-checknot 100%%). See "
+             "established that this MUST be the stdlib test dirs: 91%% of an unscoped "
+             "count is OUT-OF-POPULATION (loops 95%%, lit-checknot 100%%) — real compiler "
+             "tests sharing our syntax, not spurious matches. See "
              "docs/swiftorg-property-test-study-findings.md 1.1.",
     )
     parser.add_argument("--out", default="-")

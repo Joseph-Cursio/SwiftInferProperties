@@ -125,12 +125,31 @@ The general rule, which applies to every population: **the compiler test suite d
 stdlib test suite and its idioms collide with property-test idioms.** Any population defined
 by a Swift-level idiom alone is dominated by compiler-behaviour tests.
 
-| population | naive (whole tree) | scoped (`test/stdlib` + `validation-test/stdlib`) | noise |
+| population | naive (whole tree) | scoped (`test/stdlib` + `validation-test/stdlib`) | out-of-population |
 |---|---:|---:|---:|
 | `check-battery` | 246 | **218** | 12% |
 | `roundtrip` | 833 | **205** | 76% |
 | `loops` | 698 | **36** | **95%** |
 | `lit-checknot` | 3,386 | **17** | **100%** |
+
+**"Out-of-population", not "noise", and the distinction is load-bearing.** Three different
+things get discarded here and they want three different fixes:
+
+| kind | example | remedy |
+|---|---|---|
+| **out of population** | `test/SILOptimizer`'s `for _ in 0..<1024` — a real loop in a real test, but a compiler-behaviour test | a **scope** rule |
+| **wrong construct, same name** | `checkEquatable(true, a, b)` — a genuinely different overload | an **overload** split |
+| **spurious match** | 2 comments mentioning `checkSequence()` | a better **regex** |
+
+Only the third is noise in the ordinary sense; it is 2 sites of 5,163. The other two are
+*precise matches on things the query should not have asked for*.
+
+Two things the word "noise" would have implied, both false. It implies **randomness**: these
+are highly structured — 537 in one directory, 521 sharing one trip count — and that structure
+is what made them diagnosable. And it implies **the corpus is mostly junk**: it is not.
+`test/SILOptimizer` is a large and legitimate body of tests. The 91% is a fact about *our
+query*, not about swift.org's test suite, and reporting it as "noise" would read as a claim
+about them when it is a claim about us.
 
 #### Finding 2 — `checkEquatable` has two overloads and only one is a battery
 
@@ -158,14 +177,15 @@ Split across the naive population: **213 axiom-battery (86%), 31 example-asserti
 | round-trip tests | ~205 | scoped; overload split not yet applied |
 | quantifier loops | ~36 | scoped; 23 in files that also generate |
 | lit exhaustive verifiers | ~17 | scoped; the `sort_integers` family |
-| **total, order of magnitude** | **~450** | against a naive 5,163 — **91% noise** |
+| **total, order of magnitude** | **~450** | against a naive 5,163 — **91% out-of-population**, overwhelmingly compiler tests rather than spurious matches |
 
 Rough by design (scope §Q1): what had to be precise is the definition and the error rate.
 
-**Measured classifier error rate: ~13%** on `check-battery` (31 example + 2 comment of 246),
-and **95%** for an unscoped `loops` count. The error is not a property of the regex — it is
-a property of *scope*, which is why the definition is a scope rule first and a syntax rule
-second.
+**Measured classifier error rate: ~13%** on `check-battery` (31 example-overload + 2 comment
+of 246), and **95%** for an unscoped `loops` count. Note what that decomposes into: 12% is an
+overload split and 0.8% is a spurious match. The error is almost never the regex — it is
+*scope* and *overload*, which is why the definition is a scope rule first, a construct rule
+second, and a syntax rule barely at all.
 
 ### 1.2 `roundtrip` — not started (overload/adjudication pass pending)
 
