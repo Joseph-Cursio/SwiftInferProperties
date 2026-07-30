@@ -1,8 +1,9 @@
 # Scope: stop gating *analysis* on access level — score it instead
 
-**Status: queued, not started.** Prerequisite is the measurement in §5, which sets
-the one calibration number this design needs. Do not build the scoring change
-before running it.
+**Status: measurement done (§4a), scoring change not started, and it is now BLOCKED on
+a `comparator` precision fix.** Un-gating before that lands puts 8 known-false `Likely`
+claims on this repo's own default surface. §5 is kept as the method, but its "run this
+first" has been run — read §4a before planning anything.
 
 ## 1. The position this replaces, and why it is provisional
 
@@ -71,21 +72,67 @@ be removed by this change, not preserved alongside it.
 
 ## 4. What the current gate is actually worth — measured
 
-Share of `private` / `fileprivate` funcs, to size what the gate suppresses:
+**These numbers are a correction.** The first version of this table reported 3% and 5%
+for the first two rows and concluded the gate was "load-bearing in one of four
+corpora." That was wrong: the count matched `private func` **adjacently**, and this
+codebase writes `private static func` 767 times out of 853. Recounted with the
+modifiers admitted:
 
 | corpus | private | all funcs | share |
 |---|---:|---:|---:|
-| SwiftInferProperties/Sources | 79 | 2,460 | 3% |
-| swift-syntax/SwiftParser | 28 | 592 | 5% |
-| MacCloud macOS client (app) | 46 | 348 | 13% |
-| SwiftProjectLintRules | 514 | 1,133 | 45% |
+| SwiftInferProperties/Sources | 853 | 2,459 | **35%** |
+| SwiftProjectLintRules | 532 | 1,132 | **47%** |
+| swift-syntax/SwiftParser | 92 | 590 | **16%** |
+| MacCloud macOS client (app) | 51 | 345 | **15%** |
+| swift-foundation/FoundationEssentials | 507 | 4,032 | **13%** |
 
-So the gate is load-bearing in **one of four** corpora. Note this does not match the
-story `SeededPrivateFunctionTests` tells ("libraries skew to trivial glue, apps
-invert it"): the app is 13% and the outlier is a rule-visitor codebase. That
-docstring has already retracted its own statistical framing — *"privateness is a
-proxy for the wrong thing and no threshold fixes that"* — which is the same
-conclusion this scope reaches from the other direction.
+So the gate is **not** a negligible filter that matters in one place. It suppresses
+13–47% of every function population measured. The "unsolicited noise" framing has to
+answer for that much of a codebase, and the "we might be hiding real laws" concern is
+correspondingly larger than first stated.
+
+It also does not match the story `SeededPrivateFunctionTests` tells ("libraries skew
+to trivial glue, apps invert it"): the app is the *second lowest* row. That docstring
+has already retracted its own statistical framing — *"privateness is a proxy for the
+wrong thing and no threshold fixes that"* — which is the conclusion this scope reaches
+from the other direction.
+
+## 4a. The measurement ran — and it moved the plan
+
+Ran §5's method on this repo (853 private functions seeded, `--include-possible`).
+
+**Volume.** 293 suggestions → ~1,167 template suggestions, but default-visible only
+**24 → ~66**; the rest land in `.possible`. The 567 `determinism` rows a seeded run
+also produces are an artifact of seeding, not of un-gating — that law is
+seed-justified and needs a manifest either way. So volume alone does not justify the
+gate.
+
+**Precision, on the slice that matters.** All 19 default-visible `comparator` laws the
+gate currently hides, classified by reading the code:
+
+| verdict | count | examples |
+|---|---:|---|
+| genuinely owed | **11** | `lessThan(Suggestion, Suggestion)` (compares location, then template name — a real sort predicate; a non-strict-weak-ordering can trap `sorted(by:)`), `locationLessThan`, `sortCandidates` |
+| **false** | **8** | `sameType(_:_:)` is `lhs.trimmed == rhs.trimmed` — symmetric, so a **correct** implementation fails asymmetry. `areComplementary(_:_:)` has a docstring that literally says *"Order-insensitive"*. Also `matches`, `curatedActiveToPastParticiple`, `curatedActiveToPresentParticiple`, `curatedFormPrefixToBare`, `isCanonicalInversePair`, `initializerPairAdmissible` |
+
+58% precision, and the 8 are the worst category the catalog names: *"a tool that
+proposes a false law is worse than one that proposes nothing."*
+
+**So the gate has been masking a template precision bug, not preventing noise.**
+`comparator`'s docs claim its positional-operand requirement separates a comparator
+from a binary predicate — but `sameType(_:_:)`, `matches(_:_:)` and
+`areComplementary(_:_:)` are all fully positional *and* symmetric. The heuristic does
+not hold on private helpers, because this codebase uses `(_:_:)` for both roles.
+
+**Sequencing therefore inverts from §5's assumption: tighten `comparator` first, then
+remove the gate.** Un-gating today would put 8 false `Likely` claims on the default
+surface of the repo we dogfood. The fix has a ready shape — a **symmetry
+counter-signal**: `areComplementary` announces itself in prose and
+`DocstringPropertyCorroborator` already exists, while `sameType` announces itself
+structurally as a single `==` return. Either kills most of the 8.
+
+**Not examined.** `round-trip` goes 53 → 438, the largest single delta, and no sample
+was read. Do not assume it behaves like `comparator`; measure it before un-gating.
 
 ## 5. Prerequisite measurement — run this FIRST
 
