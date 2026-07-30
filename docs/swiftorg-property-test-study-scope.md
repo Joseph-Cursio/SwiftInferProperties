@@ -123,7 +123,37 @@ experiment. It needs a **blinding protocol** or it is worthless.
 2. Freeze the output.
 3. *Then* compare against the frozen key.
 
-**Leakage to control for, and each is a real channel:**
+**The headline number is the as-shipped success rate, WITH every channel enabled.**
+
+The channels below were first written up here as "leakage to control for", as though they
+were contamination to subtract. That framing is wrong, and stripping them out would produce
+a number that answers an academic question instead of the product one. If `discover` finds a
+law because the docstring says "idempotent", **the tool found the law** — the reader gets it,
+and prose is a legitimate evidence channel we deliberately built.
+
+So report both, and in this order:
+
+1. **As-shipped recall** — fraction of the frozen key that `discover` reaches with everything
+   on. This is what a user experiences and it is the headline.
+2. **Additive decomposition** of that same number by channel — what tells us what to build.
+
+The second is a decomposition *of* the first, not a competing figure. Neither subsumes the
+other and reporting only one is how this gets misread.
+
+**Channels overlap, so "buckets" is the wrong data model.** A law can be reached by shape
+*and* name *and* docstring at once. Record a channel **set** per key entry, then report:
+
+| measure | definition | answers |
+|---|---|---|
+| **as-shipped recall** | reached by any channel | what does the tool do today |
+| **unique contribution** | reached by *only* channel X | what would break if X were deleted |
+| **marginal contribution** | reached, but would fall below the tier cut without X's weight | what is X actually worth |
+
+Marginal contribution is computable **without new flags**: every signal and its weight is in
+the rendered explainability, so subtract X's weight from the score and re-apply
+`Tier(score:)`. No instrumentation, and it cannot drift from the shipped arithmetic.
+
+**The channels:**
 
 - **Docstrings.** `DocstringPropertyCorroborator` reads prose. If a source docstring says
   "idempotent", the source did tell us — that is legitimate inference, but it must be
@@ -131,10 +161,48 @@ experiment. It needs a **blinding protocol** or it is worthless.
   thing Q3 is asking about. Report three buckets: shape-only, name-only, docstring-assisted.
 - **Curated vocabulary.** A law found because `encode`/`decode` is in `curatedInversePairs`
   is found by *our* prior knowledge, not by the source. Also its own bucket.
-- **Protocol conformance.** `checkEquatable` fires on `Equatable` types, and conformance is
-  in the source. A law that is *role-entailed by conformance* is a trivially available
-  answer and must not be counted as inference. (Measured separately already: conformance
-  does not predict refutability — see `fixtures/equatable-signal/README.md`.)
+- **Protocol conformance.** `checkEquatable` fires on `Equatable` types, and conformance is in
+  the source, so a law *role-entailed by conformance* is trivially available and belongs in
+  its own channel. (Measured separately already: conformance does not predict refutability —
+  `fixtures/equatable-signal/README.md`.) But see Q3d: on this corpus conformance mostly does
+  not *add* recall, it **removes** it, deliberately.
+
+#### Q3d — a third outcome that is not a miss: declined as another tool's job
+
+`ProtocolCoverageMap` treats a law covered by a conformance as **redundant, full veto** —
+*"the kit's `check<Protocol>PropertyLaws` is authoritative … re-reporting another tool's
+finding teaches people the tools disagree."* And independently, both templates that could
+state the `check*` batteries' laws **exclude operators by design**:
+`EquivalenceRelationTemplate` (*"`==` is `Equatable`'s and the kit already runs its law"*) and
+`ComparatorTemplate` (*"`==` is `Equatable`'s, `<` is `Comparable`'s"*).
+
+The `check*` batteries test exactly those operators. So on that population `discover` will
+propose **nothing**, and that is neither cause (a) nor (b) from Q3a:
+
+| | |
+|---|---|
+| **(c) declined** | we understand the shape perfectly and decline it because PropertyLawKit runs the law |
+
+**From a toolchain perspective (c) is a success, not a miss** — the law *is* executed, by
+`checkEquatablePropertyLaws` rather than by a generated stub. Which means the study needs
+success measured at two levels, and must not report the narrower one as "our recall":
+
+| level | question | expected on `check*` |
+|---|---|---|
+| **toolchain coverage** | is this law runnable by anything we ship — a `discover` stub **or** a kit conformance check? | **high** |
+| **discover recall** | does `discover` itself propose it? | **near zero, by design** |
+
+Level 1 is the number that matters to a user. Level 2 is the number that matters to the
+catalog. A study reporting only level 2 would conclude the tool fails on the corpus's largest
+uniform population, when in fact the toolchain covers it and the catalog is deliberately
+staying out of the way.
+
+**Correcting my own registered prediction, rather than editing it away.** Q3b below predicts
+"`check*` batteries → recall should be HIGH, and trivially so, because those laws are
+role-entailed by conformance." That is **wrong**, and wrong in the interesting direction:
+role-entailment by conformance is precisely why `discover` *declines* them. The prediction is
+kept as written in Q3b with this pointer, because a pre-registered prediction that gets
+quietly corrected was never pre-registered.
 
 **Deliverable.** A recall figure with those buckets separated, and the residual — the laws a
 human wrote down that no channel of ours reaches. That residual is the real gap list.
@@ -177,6 +245,13 @@ The prediction worth registering is **not uniform**, and the non-uniformity is t
   here is *not* evidence for the thesis, which is precisely why Q3 buckets conformance
   separately. Already measured adjacent to this: conformance does not predict refutability
   (`fixtures/equatable-signal/README.md`).
+
+  > **Retracted before the study ran — see Q3d.** This is wrong. Role-entailment by
+  > conformance is exactly why `discover` **declines** these, and both candidate templates
+  > exclude operators by design. Expect near-zero `discover` recall here with high *toolchain*
+  > coverage. Left standing rather than edited, because a pre-registered prediction that gets
+  > quietly corrected was never pre-registered. Predicting the sign wrong on the largest
+  > uniform population, from reading the code, is itself a result worth keeping visible.
 - **hand-rolled repetition loops → recall should be LOW, and meaningfully so.** No
   conformance to lean on, no curated name necessarily present. This is where the interesting
   residual lives, and where a low number is a real result.
