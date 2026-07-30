@@ -115,6 +115,100 @@ with the seed and SHA recorded in each table header, so any row can be traced ba
 
 ---
 
+## 1.5 Q5 — generators (2026-07-30, `swift` @ `408632e5`)
+
+Run first because it is independent of Q1's definition (scope §7) and its deliverable is a
+**spec we would build from**, not another measurement.
+
+### Idiom census — exhaustive, as the scope requires
+
+| idiom | sites | files |
+|---|---:|---:|
+| `.random(in:)` half-open `..<` | 105 | 53 |
+| `.random(in:)` closed `...` | 63 | 32 |
+| `SystemRandomNumberGenerator` | 23 | 10 |
+| `arc4random` | 19 | 8 |
+| `.randomElement()` | 20 | 14 |
+| `.shuffled()` | 11 | 9 |
+| hand-rolled LCG (`x = x * k % m`) | 1 | 1 |
+
+### Range blindness — the general result is broader than the one we had
+
+| classification | sites | share |
+|---|---:|---:|
+| **interior** — no `.min`/`.max` anywhere in the range | **165** | **85%** |
+| spans `.min ... .max` (full domain) | 17 | 9% |
+| other | 10 | 5% |
+
+Most common interior ranges: `0..<100` (14), `1..<100` (13), `1...10` (7), `0..<10` (6).
+
+**85% of generated values are drawn from a hand-picked interior window.** That is a much
+broader finding than the half-open-excludes-`.max` idiom we had been citing, and it does not
+depend on it.
+
+### A correction to §2's cited finding
+
+The scope doc's §2 says *"`.random(in: 0 ..< T.max)` 8× (excludes `.max`)"*, attributed to
+"the corpus". At this pin, `swift` has **zero** such sites. The 8 are real but live in
+**`swift-foundation`**, and all eight are consecutive lines in a single function
+(`Tests/FoundationEssentialsTests/DecimalTests.swift:59-66`). swift-foundation has 13
+half-open-to-`.max` sites in total.
+
+So the idiom is real, narrow, and **one file's habit** — not a corpus-wide pattern. It was
+being generalised past its evidence, including by me earlier in this study.
+
+### The deliverable — edge values named by hand, never drawn
+
+`swift`, `test/` + `validation-test/`. "Blocks" is a crude regex split on `func`, so the
+denominators are inflated; the *ratio* is computed within one split and is what matters.
+
+| edge value | blocks naming it | …that also generate | drawn |
+|---|---:|---:|---:|
+| `.nan` | 72 | **0** | **0%** |
+| `.infinity` | 70 | **0** | **0%** |
+| `.signalingNaN` | 49 | **0** | **0%** |
+| `-0.0` / `negativeZero` | 26 | **0** | **0%** |
+| subnormals (`leastNonzero/NormalMagnitude`) | 22 | **0** | **0%** |
+| `.ulp` / `.ulpOfOne` | 13 | **0** | **0%** |
+| `.max` | 145 | 15 | 10% |
+| `.min` | 86 | 10 | 11% |
+| `.zero` | 139 | 5 | 3% |
+
+**Six IEEE-754 special values are named 252 times and never once appear in a function that
+also generates a value.** Not rarely — never. Verified directly rather than inferred from the
+split: `.nan` is never an argument to any generator anywhere in the corpus.
+
+The one file where `.nan` and randomness co-occur, `test/stdlib/ParseFloat32.swift`, is the
+pattern rather than the exception — `expectRoundTrip(Float32.nan)` and `expectParse("nan",
+Float32.nan)` are hand-written example calls, in different functions from the random loops.
+Edge cases covered *thoroughly*, by hand, and never under the quantifier.
+
+### What this is a spec for
+
+Ranked priority for what a derived generator must weight in, by how often the corpus names
+the value by hand while never drawing it:
+
+1. `.nan` (72) · 2. `.infinity` (70) · 3. `.signalingNaN` (49) · 4. `-0.0` (26) ·
+5. subnormals (22) · 6. `.ulp` (13)
+
+This is the ordering our edge-biased generators currently lack an empirical basis for. Note
+`.signalingNaN` at #3 — higher than `-0.0` — which is not the order anyone would guess.
+
+### Caveats
+
+- **Co-occurrence is not generation.** A 0% means the value never even appears in a block
+  that generates, which is the strong form. A *non*-zero percentage (`.max` at 10%) does not
+  establish that the generator produces the extreme — only that both appear nearby.
+- **Crude function split**, same caveat the earlier survey attached to this analysis.
+- **swift-foundation shows a weaker pattern** (20–50% co-occurrence) on a much smaller
+  sample: 767 blocks, 19 with randomness. Not comparable; recorded, not concluded from.
+
+### A fourth classifier-hazard instance
+
+Checking the `.nan` result, a grep for `nan` matched **`nanoseconds:`** — `Task.sleep(nanoseconds:
+.random(in: 0..<50000))` read as "nan drawn from a generator". Caught only because the claim
+was surprising enough to verify. Four instances now (§0.4), all in one sitting.
+
 ## 2. Pass 2 — census
 
 **Not started.** Gated on Pass 1 producing a definition and a classifier error rate

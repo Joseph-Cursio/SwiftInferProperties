@@ -27,7 +27,7 @@ to conflate: whether a property *holds*, and whether our tool can *find* it.
 | `roundtrip` appears 723× in `swift`, 329× in `swift-foundation`; TestLifter lifts 51 suggestions from the latter's test bodies | `parsing-catalog-gap.md` §"Road test — the swift.org suites" |
 | **12-vs-1 split**: source inference fires 12 templates / 262 suggestions on FoundationEssentials; lifting the *test bodies* of the same repos fires **1** | same, §"Road test — the corpus as a measuring instrument" |
 | ~59% of ~4,285 equality assertions compare against a **literal** | same |
-| Generators are the weak half: `.random(in: 0 ..< T.max)` 8× (excludes `.max`); the `sort_integers` LCG reaches **256** distinct values, all odd, never negative; `.nan` 50× / `.infinity` 28× but **40** test functions name an edge value with *no* randomness against **4** that do both | same, §"The generators are the weak half" |
+| Generators are the weak half: the `sort_integers` LCG reaches **256** distinct values, all odd, never negative; edge values named by hand but not drawn under a quantifier | same, §"The generators are the weak half" — **but see findings §1.5: the `0 ..< T.max` 8× is `swift-foundation` only, one function, and the general result is broader (85% of ranges are interior)** |
 | `TestSuiteParser` recognises **zero** of it: `validation-test/stdlib` has 3,440 `TestSuite.test("…") { }` closures, 6,033 `expectEqual`-family calls, **0** `XCTestCase`, **0** `@Test` | measured 2026-07-29, this session |
 | `StdlibUnittest` ships an axiom battery — `checkEquatable` asserts reflexivity/symmetry/transitivity, `checkComparable` antisymmetry/transitivity — at **263** call sites, 164 of them in `validation-test/stdlib` | same |
 | Those batteries quantify over **hand-picked instance lists**: median 2.5 elements, 22 of 28 resolved sites ≤ 4 | same |
@@ -452,6 +452,13 @@ interesting.
 before/after on what the generator now covers.
 
 ### Q5 — Do the property-style tests use weak generators?
+
+**ANSWERED — see `swiftorg-property-test-study-findings.md` §1.5.** Yes, and the headline is
+sharper than expected: six IEEE-754 special values are named 252 times across `swift` and
+appear in a generating function **zero** times. The priority ranking that falls out is the
+empirical basis our edge-biased generators lack. Two corrections landed with it — the
+`0 ..< T.max` idiom is one swift-foundation function rather than a corpus pattern, and the
+general blindness (85% of ranges interior) is broader than that idiom.
 
 Partly answered (§2) and worth completing, because it is where the toolchain's division of
 labour is clearest.
