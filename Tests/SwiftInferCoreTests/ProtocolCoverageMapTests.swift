@@ -221,7 +221,10 @@ struct ProtocolCoverageMapTests {
 
     // MARK: - Catalog integrity
 
-    @Test("Curated table contains exactly the 13 documented stdlib + kit protocol keys")
+    /// 13 → 14 on 2026-07-30: `Strideable` joined after `KitCoverageDriftTests` found the
+    /// toolchain reporting `Strideable.distanceRoundTrip` twice — the kit runs it, and
+    /// `round-trip` independently proposed `distance(to:)` × `advanced(by:)`.
+    @Test("Curated table contains exactly the 14 documented stdlib + kit protocol keys")
     func tableKeyCount() {
         let expected: Set<String> = [
             // stdlib equality / ordering / hashing
@@ -233,18 +236,23 @@ struct ProtocolCoverageMapTests {
             // stdlib codable
             "Codable",
             // kit algebraic protocols
-            "Semigroup", "Monoid", "CommutativeMonoid", "Group", "Semilattice"
+            "Semigroup", "Monoid", "CommutativeMonoid", "Group", "Semilattice",
+            // stdlib striding
+            "Strideable"
         ]
         #expect(Set(ProtocolCoverageMap.protocolCoverage.keys) == expected)
-        #expect(ProtocolCoverageMap.protocolCoverage.count == 13)
+        #expect(ProtocolCoverageMap.protocolCoverage.count == 14)
     }
 
-    @Test("KnownProperty has the documented 22 cases")
+    @Test("KnownProperty has the documented 23 cases")
     func knownPropertyCount() {
         // Pinning the count guards against silent enum drift; future
         // template arms should add cases consciously and update this
         // assertion + the test suite.
-        #expect(KnownProperty.allCases.count == 22)
+        //
+        // 22 → 23 on 2026-07-30: `.strideableDistanceRoundTrip`. This guard worked exactly as
+        // intended — the addition was deliberate and had to come here and say so.
+        #expect(KnownProperty.allCases.count == 23)
     }
 
     @Test("Every covered property name is a valid KnownProperty case")

@@ -61,6 +61,7 @@ public enum ProtocolCoverageMap {
         // — stdlib equality / ordering / hashing —
         "Equatable": equatableBase,
         "Comparable": equatableBase.union([.comparableTotalOrder]),
+        "Strideable": [.strideableDistanceRoundTrip],
         "Hashable": equatableBase.union([.hashableConsistency]),
 
         // — stdlib arithmetic chain —
@@ -326,6 +327,17 @@ public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
     case comparableTotalOrder
     /// `a == b ⇒ a.hashValue == b.hashValue`
     case hashableConsistency
+
+    // — Strideable —
+    /// `x.advanced(by: x.distance(to: y)) == y`, run by the kit as
+    /// `"Strideable.distanceRoundTrip"` (`StrideableLaws.swift:72`).
+    ///
+    /// Added 2026-07-30 after `KitCoverageDriftTests` found the toolchain reporting this law
+    /// twice: the kit runs it for any `Strideable` conformer, and `round-trip` independently
+    /// proposed `distance(to:)` × `advanced(by:)` on `BinaryInteger` — which refines
+    /// `Strideable` (`Integers.swift:533`), under a `//===--- Strideable conformance ---===//`
+    /// banner. Re-reporting another tool's finding teaches people the tools disagree.
+    case strideableDistanceRoundTrip
 
     // — Codable —
     /// `decode(encode(x)) == x`

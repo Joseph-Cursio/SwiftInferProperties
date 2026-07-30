@@ -19,8 +19,21 @@ import Testing
 ///    reported twice, which is exactly what `protocolCoveredProperty` exists to prevent —
 ///    *"re-reporting another tool's finding teaches people the tools disagree."*
 ///
-/// The first two were harmless. The third is not, and it was found by building this test
-/// rather than by using the tool — which is the argument for the test.
+/// The first two were harmless. The third was not, and it was found by building this test
+/// rather than by using the tool — which is the argument for the test. **`Strideable` was
+/// fixed** the same day: `KnownProperty.strideableDistanceRoundTrip` + a `"Strideable"`
+/// coverage entry + a **pair-scoped** veto in `RoundTripTemplate` (gated on the pair being
+/// named `distance`/`advanced`, not merely on the carrier conforming — `BinaryInteger`
+/// refines `Strideable`, so a carrier-only check would veto every round-trip on any integer).
+///
+/// **One residual, from an unrelated defect.** The veto is verified to fire for a *concrete*
+/// `Strideable` carrier and correctly not to fire without the conformance. It still does not
+/// fire on `stdlib/public/core`, because the carrier there is the **protocol**
+/// `BinaryInteger` and `FunctionScanner.swift:362` skips protocol declarations outright
+/// (*"Protocol decls — skip body entirely"*). Their inheritance clause is therefore never
+/// recorded, so `ProtocolCoverageMap` cannot see that any protocol refines any other.
+/// Fixing that is a scanner change with a far wider blast radius than this veto, and is
+/// deliberately not bundled here.
 ///
 /// **What it asserts:** every kit law suite has a recorded `Disposition`. It does not require
 /// coverage — plenty of suites legitimately have none — it requires a *decision*. A new kit
@@ -66,11 +79,9 @@ struct KitCoverageDriftTests {
         "Heap": .notAConformance,
         "Ring": .notAConformance,
 
-        // — LIVE DEFECT —
-        "Strideable": .uncoveredDoubleReports(
-            "The kit runs Strideable.distanceRoundTrip; `round-trip` independently proposes "
-                + "`distance(to:)` x `advanced(by:)` on stdlib/public/core. Same law, twice."
-        ),
+        // Fixed 2026-07-30 — was the study's one live double-report. See the suite doc for
+        // the residual: the veto cannot reach PROTOCOL carriers, for an unrelated reason.
+        "Strideable": .covered,
 
         // — uncovered, no template proposes these laws today —
         "Sequence": .uncoveredNoSymptom("96 swift.org witnesses; no collection template"),
@@ -174,17 +185,17 @@ struct KitCoverageDriftTests {
         }
     }
 
-    /// Pins the live defect so it cannot be quietly forgotten, and so closing it turns this
-    /// test red — which is the signal to delete the entry.
-    @Test("the known double-report is still exactly one, and still Strideable")
-    func liveDefectIsPinned() {
+    /// No suite may sit in `.uncoveredDoubleReports`. `Strideable` did, and was fixed; a new
+    /// one appearing here means the toolchain has started reporting some law twice.
+    @Test("no kit suite is being double-reported")
+    func noLiveDoubleReports() {
         let live = Self.dispositions.compactMap { name, disposition -> String? in
             if case .uncoveredDoubleReports = disposition { return name }
             return nil
         }
-        let drifted = "The set of known double-reports changed to \(live). If Strideable was "
-            + "fixed, remove it from `dispositions` and update the suite doc; if a new one "
-            + "appeared, it is a live defect and wants its own fix."
-        #expect(live == ["Strideable"], Comment(rawValue: drifted))
+        let drifted = "Double-reported law suite(s): \(live). The toolchain proposes a law "
+            + "PropertyLawKit already runs — add a ProtocolCoverageMap entry and a "
+            + "pair-scoped veto, as Strideable got on 2026-07-30."
+        #expect(live.isEmpty, Comment(rawValue: drifted))
     }
 }

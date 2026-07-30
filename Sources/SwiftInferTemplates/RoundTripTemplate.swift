@@ -340,6 +340,11 @@ extension RoundTripTemplate {
         for pair: FunctionPair,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
+        if let strideable = strideableCoverageVeto(
+            for: pair, inheritedTypesByName: inheritedTypesByName
+        ) {
+            return strideable
+        }
         guard let typeText = codableRoundTrippedType(for: pair) else {
             return nil
         }
