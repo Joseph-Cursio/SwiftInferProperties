@@ -48,6 +48,7 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 | Command docs | `docs/report-command.md`, `insights-command.md`, `docc-generation.md`, `prove-then-show.md`, `known-properties.md`, `stdlib-anchor.md`, `interaction-semantic-index.md` |
 | End-user docs | `docs/user/{tutorial,guide,reference}.md` |
 | Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md` |
+| **swift.org property-style-test study** | plan: `docs/swiftorg-property-test-study-scope.md` · record: `docs/swiftorg-property-test-study-findings.md` · sampler: `scripts/swiftorg_sample.py` (seeded + stratified, so "sampled not cherry-picked" is checkable). Corpus pinned at `swift` `408632e5`, and **every number carries its SHA** |
 | Superseded cycle plans | `docs/v1.141 Calibration Plan.md` — the repo is v1.146; kept for the shrinking / replay-corpus rationale, not as a plan |
 | Unbuilt proposals / design spikes | `docs/ideas/`, `docs/*-scope.md`, `docs/*-build-plan.md`, and `docs/production-assertion-discovery-signal.md` (an open scope with a cost estimate and no decision — the `*-scope.md` glob misses it by filename) |
 | PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |
@@ -55,7 +56,11 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 Every `docs/*.md` is reachable from a row above; that was swept on 2026-07-29 and
 found eleven files no row reached. If you add a doc, add its row — an unreachable
 doc is one nobody opens, and two of the eleven turned out to hold **standing
-constraints on live code**.
+constraints on live code**. (It earned itself immediately: the study findings doc added
+2026-07-30 would have been the twelfth.)
+
+`scripts/` is study tooling, not product code — nothing in the shipped targets imports it,
+and `make test` does not run it.
 
 ## Design decisions baked in (follow rather than re-litigate)
 

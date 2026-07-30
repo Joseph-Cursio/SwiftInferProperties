@@ -44,7 +44,7 @@ hand-rolled *algebraic* law checking. The generalisation may not survive.
 
 | repo | local path | SHA to pin |
 |---|---|---|
-| `swift` | `~/GitHub_projects/swift` | **must be re-pinned** — the working copy is on a local PR branch (`3db7bd6e154`), not upstream `main` |
+| `swift` | `~/GitHub_projects/swift` | **`408632e59834c1a5ee4166ff61dd2c8b0585a1c5`** (2026-07-30) — re-pinned off the local PR branch, which was 1,894 commits behind AND edited a corpus file |
 | `swift-foundation` | `~/GitHub_projects/swift-foundation` | `96d4094` (2026-07-16) |
 | `swift-syntax` | `~/GitHub_projects/swift-syntax` | `1b5cd99f` (2026-07-17) |
 
@@ -195,13 +195,20 @@ match `StdlibUnittest`'s shape, §2's conclusion needs rewriting before Q2 is bu
 **The hard part is the definition, not the counting**, and the study should say so before
 producing any total. Candidate populations, with rough sizes at the SHAs above:
 
-| population | size | shape |
-|---|---:|---|
-| `StdlibUnittest` `check*` axiom batteries | **263** | named law suites over an instance list |
-| repetition loops (`for _ in 0..<N`) | **694** | hand-rolled quantifier |
-| `roundtrip`-named tests / helpers | **827** mentions | the one property shape everyone recognises |
-| `lit` + FileCheck exhaustive verifiers | 9 files | print-on-failure, `CHECK-NOT` |
-| differential / oracle harnesses | unknown | `fast` vs `reference` |
+| population | size | `.gyb` share | shape |
+|---|---:|---:|---|
+| `check-battery` | **246** | **112 (46%)** | named law suites over an instance list |
+| `loops` | **698** | 4 | hand-rolled quantifier |
+| `roundtrip` | **833** | 24 | the one property shape everyone recognises |
+| `lit-checknot` | 3,386 | 1 | print-on-failure — but see below, mostly diagnostics |
+| differential / oracle harnesses | unknown | — | `fast` vs `reference` |
+
+Measured at the pinned SHA by `scripts/swiftorg_sample.py`; see
+`swiftorg-property-test-study-findings.md` §0 for how each number moved from the first,
+looser pass. Two now have to be decided rather than counted: **46% of `check-battery` sites
+are `.gyb` templates** that expand to N instantiations at build time, and **`lit-checknot`
+is overwhelmingly compiler diagnostics** rather than the property idiom `sort_integers.swift`
+uses — as measured it would dominate every total while contributing almost nothing.
 
 These overlap, and none of them *is* the answer. A `for _ in 0..<10` loop over three
 literals is not a property test; `checkEquatable` over a 2-element list arguably is one with
