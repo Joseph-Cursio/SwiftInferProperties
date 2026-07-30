@@ -4,7 +4,7 @@ Companion to `swiftorg-property-test-study-scope.md`, which is the plan. This is
 record. **Every number here carries the corpus SHA it was measured at**; a count without
 one is not a measurement (scope §3).
 
-**Status: setup complete, Pass 1 not started.**
+**Status: Q5 answered (§1.5). Q1 answered (§1.1). Q2/Q3/Q4 not started.**
 
 ---
 
@@ -105,13 +105,74 @@ with the seed and SHA recorded in each table header, so any row can be traced ba
 - **`declined`** — we understand it and stand aside because PropertyLawKit runs it
   (operator conformances). Counts toward *toolchain coverage*, not *discover recall*.
 
-### 1.1 `check-battery` — not started
+### 1.1 Q1 ANSWERED — the definition, and it is a scope plus an overload split
 
-### 1.2 `loops` — not started
+Two adjudication passes settled it, and both came from reading sites rather than counting
+them.
 
-### 1.3 `roundtrip` — not started
+#### Finding 1 — the population must be SCOPED to the stdlib test directories
 
-### 1.4 `lit-checknot` — deferred pending §0.3(c)
+The `loops` sample was 30 of 30 compiler-diagnostic tests:
+`moveonly_addresschecker_diagnostics.swift`, `noimplicitcopy.swift`,
+`transfernonsendable_inout_sending_params.swift`. There, `for _ in 0..<1024 { }` exercises
+the borrow checker and `for _ in 0..<1 { }` runs **once** — neither is a quantifier.
+
+Distribution confirms it: **537 of 698 loop sites are in `test/SILOptimizer`**, and 521 of
+all trip counts are the single `0..<1024` idiom. Only `validation-test/stdlib` (20 sites, 17
+in files that also generate) and `test/stdlib` (16 / 6) hold the real population.
+
+The general rule, which applies to every population: **the compiler test suite dwarfs the
+stdlib test suite and its idioms collide with property-test idioms.** Any population defined
+by a Swift-level idiom alone is dominated by compiler-behaviour tests.
+
+| population | naive (whole tree) | scoped (`test/stdlib` + `validation-test/stdlib`) | noise |
+|---|---:|---:|---:|
+| `check-battery` | 246 | **218** | 12% |
+| `roundtrip` | 833 | **205** | 76% |
+| `loops` | 698 | **36** | **95%** |
+| `lit-checknot` | 3,386 | **17** | **100%** |
+
+#### Finding 2 — `checkEquatable` has two overloads and only one is a battery
+
+Sample site #27 is `checkEquatable(true, Set<Int>(), Set<Int>())`. That is not the axiom
+battery — `StdlibUnittest` ships a *second* overload,
+`checkEquatable<T: Equatable>(_ expectedEqual: Bool, _ lhs: T, _ rhs: T)`, which asserts one
+fact about two named values. An example test wearing a battery's name.
+
+Split across the naive population: **213 axiom-battery (86%), 31 example-assertion (12%),
+2 comments (1%)**.
+
+#### The definition
+
+> A **property-style test** is a site that executes a *universally quantified* law over a
+> domain it supplies. The domain may be degenerate — a 2-element instance list is a property
+> test with a broken generator, and Q5 measures exactly that. What excludes a site is
+> asserting a *fact about named values* (the example overload), or not quantifying at all
+> (a loop that runs once, a diagnostic `CHECK-NOT`).
+
+#### Q1's answer, at `swift` @ `408632e5`
+
+| population | property-style sites | basis |
+|---|---:|---|
+| axiom batteries | **~190** | 218 scoped, less the ~12% example-overload share |
+| round-trip tests | ~205 | scoped; overload split not yet applied |
+| quantifier loops | ~36 | scoped; 23 in files that also generate |
+| lit exhaustive verifiers | ~17 | scoped; the `sort_integers` family |
+| **total, order of magnitude** | **~450** | against a naive 5,163 — **91% noise** |
+
+Rough by design (scope §Q1): what had to be precise is the definition and the error rate.
+
+**Measured classifier error rate: ~13%** on `check-battery` (31 example + 2 comment of 246),
+and **95%** for an unscoped `loops` count. The error is not a property of the regex — it is
+a property of *scope*, which is why the definition is a scope rule first and a syntax rule
+second.
+
+### 1.2 `roundtrip` — not started (overload/adjudication pass pending)
+
+### 1.3 `lit-checknot` — resolved by scoping, §0.3(c) closed
+
+3,386 → 17 under the correct scope. The population is real but tiny, and it is the
+`sort_integers` family — the one that produced `swiftlang/swift#91083`.
 
 ---
 

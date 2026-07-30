@@ -118,7 +118,10 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=20260730)
     parser.add_argument(
         "--roots", nargs="*", default=[],
-        help="subdirectories to restrict to (default: whole repo)",
+        help="subdirectories to restrict to (default: whole repo). For `swift`, Q1 "
+             "established that this MUST be the stdlib test dirs: an unscoped count is "
+             "91%% compiler-test noise (loops 95%%, lit-checknot 100%%). See "
+             "docs/swiftorg-property-test-study-findings.md 1.1.",
     )
     parser.add_argument("--out", default="-")
     args = parser.parse_args()
