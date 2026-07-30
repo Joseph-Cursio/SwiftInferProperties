@@ -1,0 +1,373 @@
+{
+ "population": "loops",
+ "definition": "for\\s+_\\s+in\\s+0\\s*\\.\\.<\\s*\\d+ , scoped to test/stdlib + validation-test/stdlib",
+ "corpus": "swiftlang/swift",
+ "corpus_sha": "408632e59834c1a5ee4166ff61dd2c8b0585a1c5",
+ "frozen": "2026-07-30",
+ "exhaustive": true,
+ "sampled": false,
+ "guardrail": "Hand-adjudicated by reading every site BEFORE any discover run against these sources. A tool may not grade its own homework.",
+ "total_sites": 36,
+ "rows": [
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:34",
+   "ext": "swift",
+   "property_style": "no",
+   "law": "\u2014",
+   "template": "\u2014",
+   "verdict": "n/a",
+   "generator": "Int.random(in:-100...100), Double.random(in:0..<1)",
+   "notes": "The generator itself (buildRandomRangeSet), not an assertion site. Counted in the population by the regex; excluded from the law tally."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:74",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "RangeSet(ranges) == fold of insert(contentsOf:) over the same ranges",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "Int.random(in:) x 20 ranges",
+   "notes": "Bulk construction equals incremental construction. differential-equivalence pairs NAMED variants (fast/reference); here the reference is a fold written in the test, so no source-only pairing exists."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:95",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "i in parent.indices[set] <=> set.contains(i); i in indices.removingSubranges(set) => !set.contains(i)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "buildRandomRangeSet",
+   "notes": "Membership biconditional between a subscript-selection and contains(). selection-subset/filter-subset state one direction at most."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:206",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "representation invariant: no empty range; adjacent ranges strictly ordered and disjoint",
+   "template": "invariant-preservation (annotation-gated)",
+   "verdict": "gap-in-reach",
+   "generator": "buildRandomRangeSet",
+   "notes": "We HAVE the template and it cannot fire: it is annotation-only by design (@CheckProperty(.preservesInvariant)), and stdlib carries no annotation. Coverage exists, reach does not."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:259",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "set1.union(set2) == unionViaSet(set1,set2)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "buildRandomRangeSet x2",
+   "notes": "MODEL LAW against Set<Int> as the reference semantics."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:295",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "set1.intersection(set2) == intersectionViaSet(...)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "buildRandomRangeSet x2",
+   "notes": "MODEL LAW."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:333",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "set1.symmetricDifference(set2) == symmetricDifferenceViaSet(...)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "buildRandomRangeSet x2",
+   "notes": "MODEL LAW."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:361",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "set1.isDisjoint(set2) == isDisjointViaSet(...)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "buildRandomRangeSet x2",
+   "notes": "MODEL LAW, boolean-valued."
+  },
+  {
+   "site": "validation-test/stdlib/RangeSet.swift:394",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "set1.isSubset(of:set2) == isSubsetViaSet(...)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "buildRandomRangeSet x2",
+   "notes": "MODEL LAW, boolean-valued."
+  },
+  {
+   "site": "test/stdlib/Duration.swift:16",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "Duration.seconds(d).components == (Int64(d), 0)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "Int64.random(in: 0...0x7fff_ffff_ffff_fc00) -> Double",
+   "notes": "Scaled round-trip: project(construct(x)) == decompose(x). round-trip needs type symmetry (Double->Duration vs Duration->(Int64,Int64)) and does not pair these."
+  },
+  {
+   "site": "test/stdlib/Duration.swift:43",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "Duration.milliseconds(d).components == (d/1000, d%1000 * 1e15)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "as above",
+   "notes": "Same shape at a different scale."
+  },
+  {
+   "site": "test/stdlib/Duration.swift:52",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "Duration.microseconds(d).components == (d/1e6, d%1e6 * 1e12)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "as above",
+   "notes": "Same shape at a different scale."
+  },
+  {
+   "site": "test/stdlib/Duration.swift:284",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "Duration.nanoseconds(d).components == (d/1e9, d%1e9 * 1e9)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "as above",
+   "notes": "Same shape at a different scale."
+  },
+  {
+   "site": "validation-test/stdlib/Random.swift:148",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "randomElement() is always a member; over 1000 draws every element appears",
+   "template": "predicate (membership half only)",
+   "verdict": "gap-with-witness",
+   "generator": "fixed 5-element instance list",
+   "notes": "Two laws in one site. Membership is predicate-shaped; SURJECTIVITY over N draws is distributional and no template states it."
+  },
+  {
+   "site": "validation-test/stdlib/Random.swift:158",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "[].randomElement() == nil",
+   "template": "input-totality",
+   "verdict": "ours-covers",
+   "generator": "empty fixed collection",
+   "notes": "The empty-input edge; input-totality is exactly this."
+  },
+  {
+   "site": "validation-test/stdlib/Random.swift:171",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "alphabet.elementsEqual(shuffled().sorted()) \u2014 shuffle preserves the multiset",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "fixed 26-element instance list",
+   "notes": "A permutation invariant. normal-form is parse-print specific and does not apply."
+  },
+  {
+   "site": "validation-test/stdlib/Random.swift:213",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "same LCRNG seed => identical draw sequence",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "LCRNG(seed:1234567890), 2 passes",
+   "notes": "Seeded determinism. Adjacent to the @ClockDeterministic claim but that admits async; this is RNG reproducibility."
+  },
+  {
+   "site": "test/stdlib/Character.swift:296",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "Character round-trips through its scalar representation",
+   "template": "round-trip",
+   "verdict": "ours-covers",
+   "generator": "randomGraphemeCluster(1,9)",
+   "notes": "Generator deliberately spans the 63-bit small-representation boundary."
+  },
+  {
+   "site": "test/stdlib/Diffing.swift:708",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "a.applying(b.difference(from:a)) == b; applied.applying(d.inverse()) == a",
+   "template": "inverse-pair + involution",
+   "verdict": "ours-covers",
+   "generator": "makeArray() x2",
+   "notes": "The textbook diff/patch inverse pair, plus inverse() as an involution."
+  },
+  {
+   "site": "test/stdlib/ErrorBridged.swift:886",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "repeated .description on a bridged NSError yields the same value (no over-release)",
+   "template": "idempotence (observational)",
+   "verdict": "borderline-covers",
+   "generator": "none - fixed value, repetition only",
+   "notes": "REFUTABLE f(x)==f(x): see notes.md. Under ObjC bridging repeated observation is not trivially stable."
+  },
+  {
+   "site": "test/stdlib/ErrorBridged.swift:895",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "as above, for a large struct payload",
+   "template": "idempotence (observational)",
+   "verdict": "borderline-covers",
+   "generator": "none - fixed value",
+   "notes": "Same law, second layout."
+  },
+  {
+   "site": "test/stdlib/InlineArray.swift:219",
+   "ext": "swift",
+   "property_style": "borderline",
+   "law": "calling a stored closure 10x applies its effect 10x",
+   "template": "none",
+   "verdict": "not-a-property",
+   "generator": "none - fixed count",
+   "notes": "Tests that InlineArray stores a closure callably. A counting check, not a quantified law."
+  },
+  {
+   "site": "test/stdlib/PrintFloat.swift.gyb:795",
+   "ext": "gyb",
+   "property_style": "yes",
+   "law": "description is accurate for d and its 10 nextUp/nextDown neighbours",
+   "template": "round-trip (parse/print)",
+   "verdict": "gap-in-reach",
+   "generator": "nextUp/nextDown walk from a seed value",
+   "notes": "The float parse/print round-trip, blocked by initializerPairAdmissible's `guard label != \"init\"` - the SAME blocker Q2/roundtrip found. Second witness."
+  },
+  {
+   "site": "test/stdlib/PrintFloat.swift.gyb:908",
+   "ext": "gyb",
+   "property_style": "yes",
+   "law": "as above, Float80",
+   "template": "round-trip (parse/print)",
+   "verdict": "gap-in-reach",
+   "generator": "nextUp/nextDown walk",
+   "notes": "Same blocker, wider type."
+  },
+  {
+   "site": "test/stdlib/Strideable.swift:236",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "after exhaustion, next() returns nil indefinitely (absorbing state)",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "none - fixed stride",
+   "notes": "Absorbing-state idempotence on an iterator. state-machine is scoped to view-model move carriers."
+  },
+  {
+   "site": "test/stdlib/objc-array-slice.swift:16",
+   "ext": "swift",
+   "property_style": "no",
+   "law": "\u2014",
+   "template": "\u2014",
+   "verdict": "n/a",
+   "generator": "none - fixed count of 1000",
+   "notes": "Builds a 1000-element NSMutableArray as SETUP for a crash regression. The loop is construction, not assertion."
+  },
+  {
+   "site": "test/stdlib/Inputs/DictionaryKeyValueTypesObjC.swift:551",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "countByEnumerating returns 0 repeatedly once exhausted, state preserved",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "none - fixed count",
+   "notes": "Absorbing state again, on the ObjC fast-enumeration protocol."
+  },
+  {
+   "site": "test/stdlib/Inputs/DictionaryKeyValueTypesObjC.swift:598",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "as above",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "none - fixed count",
+   "notes": "Same law."
+  },
+  {
+   "site": "test/stdlib/Inputs/DictionaryKeyValueTypesObjC.swift:809",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "as above",
+   "template": "none",
+   "verdict": "gap-with-witness",
+   "generator": "none - fixed count",
+   "notes": "Same law."
+  },
+  {
+   "site": "validation-test/stdlib/ArraysObjc.swift.gyb:814",
+   "ext": "gyb",
+   "property_style": "yes",
+   "law": "repeated object(at:) returns the IDENTICAL object (same address)",
+   "template": "StableIdentity (kit)",
+   "verdict": "declined",
+   "generator": "none - fixed 3-element array",
+   "notes": "Referential stability. The kit runs checkStableIdentityPropertyLaws; discover has StableIdentityDiscoverer."
+  },
+  {
+   "site": "validation-test/stdlib/ArraysObjc.swift.gyb:833",
+   "ext": "gyb",
+   "property_style": "yes",
+   "law": "repeated objectEnumerator yields the same values AND identities",
+   "template": "StableIdentity (kit)",
+   "verdict": "declined",
+   "generator": "none - fixed array",
+   "notes": "Identity stability across a re-enumeration."
+  },
+  {
+   "site": "validation-test/stdlib/Dictionary.swift:3685",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "repeated object(forKey:) returns the identical object",
+   "template": "StableIdentity (kit)",
+   "verdict": "declined",
+   "generator": "none - fixed dictionary",
+   "notes": "As ArraysObjc:814."
+  },
+  {
+   "site": "validation-test/stdlib/Dictionary.swift:3704",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "repeated keyEnumerator yields the same pairs and identities",
+   "template": "StableIdentity (kit)",
+   "verdict": "declined",
+   "generator": "none - fixed dictionary",
+   "notes": "As ArraysObjc:833."
+  },
+  {
+   "site": "validation-test/stdlib/Dictionary.swift:5269",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "mutating through d.values[i] does not invalidate index i",
+   "template": "invariant-preservation (annotation-gated)",
+   "verdict": "gap-in-reach",
+   "generator": "none - 100 fixed mutations",
+   "notes": "Index-validity invariant across mutation. Same annotation gate as RangeSet:206."
+  },
+  {
+   "site": "validation-test/stdlib/Set.swift:2327",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "repeated member() returns the identical object",
+   "template": "StableIdentity (kit)",
+   "verdict": "declined",
+   "generator": "none - fixed set",
+   "notes": "As ArraysObjc:814."
+  },
+  {
+   "site": "validation-test/stdlib/String.swift:1199",
+   "ext": "swift",
+   "property_style": "yes",
+   "law": "after 20 appends a copy compares equal (value semantics) and nativeCapacity <= 40",
+   "template": "ValueSemantic (kit) for the copy half; none for the capacity bound",
+   "verdict": "partial-declined",
+   "generator": "none - 20 fixed appends",
+   "notes": "Two laws. Copy-independence is the kit's ValueSemantic. The capacity growth BOUND has no template and is the interesting half."
+  }
+ ]
+}
