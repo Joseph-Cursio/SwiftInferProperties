@@ -1,10 +1,10 @@
 import Foundation
 
 // The container-carrier laws (Optional / Dictionary / Stack / Queue) plus the
-// shared `law` / `caveat` builders, split out of `StandardLibraryProperties.swift`
+// shared `law` / `caveat` builders, split out of `CuratedStdlibCatalog.swift`
 // to keep each file under the `file_length` cap. No behavior change — `all`
 // (in the primary file) aggregates these groups exactly as before.
-extension StandardLibraryProperties {
+extension CuratedStdlibCatalog {
 
     // Optional — the functor laws (identity + composition) and the monad
     // right-identity. Universally true; `Int?` is Equatable so `--verify` runs

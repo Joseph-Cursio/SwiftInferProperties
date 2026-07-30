@@ -28,7 +28,7 @@ enum StdlibAnchor {
         let type = catalogType(carrier)
         var whySuggested: [String] = []
         var whyMightBeWrong: [String] = []
-        for entry in StandardLibraryProperties.all
+        for entry in CuratedStdlibCatalog.all
         where entry.template == templateName && entry.type == type {
             switch entry.kind {
             case .law:

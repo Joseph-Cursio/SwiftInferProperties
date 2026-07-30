@@ -4,7 +4,7 @@ import Foundation
 /// lazy transformations, stated against the array model. `uniqued` is idempotent;
 /// `chunks` then flatten is the identity; `min(count:)` agrees with the sorted
 /// prefix. Carry `imports: ["Algorithms"]` → the package verify path.
-extension StandardLibraryProperties {
+extension CuratedStdlibCatalog {
 
     static let algorithmsLaws: [KnownProperty] = [
         law(

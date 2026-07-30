@@ -241,7 +241,7 @@ a collection-contract law, so there is nothing to suppress. Missing entries also
 they cause *less* vetoing, never wrong vetoing.
 
 The claim that `known-properties` / `stdlib-anchor` "under-report what the toolchain covers"
-does not hold. `StandardLibraryProperties` describes itself as *"a curated catalog of
+does not hold. `CuratedStdlibCatalog` describes itself as *"a curated catalog of
 known-true **algebraic** properties on standard-library types"*, over carriers *"exactly the
 ones the generator can construct"*, each tagged with the kit protocol it **witnesses**. It is
 a curated algebraic catalog for live verification, not a coverage inventory of the kit — it

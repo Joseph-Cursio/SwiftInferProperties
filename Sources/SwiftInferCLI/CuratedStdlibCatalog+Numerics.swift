@@ -10,7 +10,7 @@ import Foundation
 /// These carry `imports: ["ComplexModule"]`, so `--verify` builds them against
 /// the real swift-numerics release (`KnownPropertiesPackageVerify`) rather than
 /// the stdlib interpreter.
-extension StandardLibraryProperties {
+extension CuratedStdlibCatalog {
 
     static let numericsLaws: [KnownProperty] = [
         law(

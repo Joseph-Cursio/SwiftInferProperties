@@ -40,7 +40,7 @@ Why this might be wrong:
 
 ## How it works
 
-- Catalog entries (`StandardLibraryProperties`) carry a `template` tag (the
+- Catalog entries (`CuratedStdlibCatalog`) carry a `template` tag (the
   `discover` family they correspond to) so a candidate's `templateName` +
   carrier can be matched to laws (analogs) and caveats (traps).
 - The operand type of a `(T, T) -> T` pick lives in the evidence **signature**

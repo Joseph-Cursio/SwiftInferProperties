@@ -44,7 +44,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() throws {
-            var properties = StandardLibraryProperties.all
+            var properties = CuratedStdlibCatalog.all
             if let target {
                 let used = Self.usedTypes(forTarget: target, directory: directory)
                 properties = properties.filter { used.contains($0.type) }
@@ -92,7 +92,7 @@ extension SwiftInferCommand {
                 return []
             }
             let sources = files.compactMap { try? String(contentsOf: $0, encoding: .utf8) }
-            let candidates = Set(StandardLibraryProperties.all.map(\.type))
+            let candidates = Set(CuratedStdlibCatalog.all.map(\.type))
             return StdlibTypeUsage.typesUsed(in: sources, among: candidates)
         }
 

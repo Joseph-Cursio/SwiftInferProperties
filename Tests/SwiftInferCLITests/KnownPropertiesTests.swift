@@ -10,7 +10,7 @@ struct KnownPropertiesTests {
 
     @Test("V1.145 — every law carries a checkBody; every caveat has no checkBody but a note")
     func catalogStructure() {
-        for property in StandardLibraryProperties.all {
+        for property in CuratedStdlibCatalog.all {
             switch property.kind {
             case .law:
                 #expect(property.checkBody != nil, "law missing checkBody: \(property.displayName)")
@@ -20,14 +20,14 @@ struct KnownPropertiesTests {
                 #expect(property.note != nil, "caveat should carry a note: \(property.displayName)")
             }
         }
-        #expect(!StandardLibraryProperties.laws.isEmpty)
-        #expect(!StandardLibraryProperties.caveats.isEmpty)
+        #expect(!CuratedStdlibCatalog.laws.isEmpty)
+        #expect(!CuratedStdlibCatalog.caveats.isEmpty)
     }
 
     @Test("V1.145 — laws are tagged with the kit protocol they witness")
     func witnessTags() {
         func witness(_ type: String, _ statement: String) -> String?? {
-            StandardLibraryProperties.laws.first {
+            CuratedStdlibCatalog.laws.first {
                 $0.type == type && $0.statement == statement
             }?.witnesses
         }
@@ -38,7 +38,7 @@ struct KnownPropertiesTests {
         #expect(witness("Set", "a.union(b) == b.union(a)") == "Semilattice")
         #expect(witness("String", "(a + b) + c == a + (b + c)") == "Monoid")
         // Double witnesses NO protocol (commutative + identity, but not associative).
-        for law in StandardLibraryProperties.laws where law.type == "Double" {
+        for law in CuratedStdlibCatalog.laws where law.type == "Double" {
             #expect(law.witnesses == nil, "Double is not a Monoid (not associative): \(law.statement)")
         }
         // Unary idempotence / involution are not algebraic protocols → no tag.
@@ -48,7 +48,7 @@ struct KnownPropertiesTests {
 
     @Test("V1.145 — the known counter-signals are present as caveats")
     func caveatsCoverKnownTraps() {
-        let caveatTypes = Set(StandardLibraryProperties.caveats.map(\.type))
+        let caveatTypes = Set(CuratedStdlibCatalog.caveats.map(\.type))
         // Double non-associativity + String/Array non-commutativity are the
         // engine's canonical counter-signals — they must be documented, not
         // asserted true.
@@ -63,13 +63,13 @@ struct KnownPropertiesTests {
     func roleDerivedFromTemplate() {
         // The invariant the field exists to hold: an entry anchors iff it has a
         // template `discover` can match — never drifting from that fact.
-        for property in StandardLibraryProperties.all {
+        for property in CuratedStdlibCatalog.all {
             let expected: KnownPropertyRole = property.template != nil ? .anchor : .reference
             #expect(property.role == expected, "role/template out of sync: \(property.displayName)")
         }
 
         func role(_ type: String, _ statement: String) -> KnownPropertyRole? {
-            StandardLibraryProperties.all.first { $0.type == type && $0.statement == statement }?.role
+            CuratedStdlibCatalog.all.first { $0.type == type && $0.statement == statement }?.role
         }
         // Anchors: a proven-analog law and a trap caveat both feed StdlibAnchor.
         #expect(role("Set", "a.union(b) == b.union(a)") == .anchor)
@@ -94,19 +94,19 @@ struct KnownPropertiesTests {
 
     @Test("common data types — Optional / Dictionary carry verifiable functor laws")
     func commonDataTypesCovered() {
-        let lawTypes = Set(StandardLibraryProperties.laws.map(\.type))
+        let lawTypes = Set(CuratedStdlibCatalog.laws.map(\.type))
         // The two most-common Swift containers after Array/Set are now covered.
         #expect(lawTypes.contains("Optional"))
         #expect(lawTypes.contains("Dictionary"))
 
         func statements(_ type: String) -> Set<String> {
-            Set(StandardLibraryProperties.laws.filter { $0.type == type }.map(\.statement))
+            Set(CuratedStdlibCatalog.laws.filter { $0.type == type }.map(\.statement))
         }
         #expect(statements("Optional").contains("o.map { $0 } == o"))
         #expect(statements("Dictionary").contains("d.mapValues { $0 } == d"))
         // Every new law is executable — it must carry a checkBody, or `--verify`
         // silently skips it (a law you cannot run is not a property test).
-        for law in StandardLibraryProperties.laws where law.type == "Optional" || law.type == "Dictionary" {
+        for law in CuratedStdlibCatalog.laws where law.type == "Optional" || law.type == "Dictionary" {
             #expect(law.checkBody != nil, "unrunnable law: \(law.displayName)")
         }
     }
@@ -115,7 +115,7 @@ struct KnownPropertiesTests {
 
     @Test("V1.145 — renderList groups by type and includes a caveats section")
     func renderListGroups() {
-        let out = KnownPropertiesRenderer.renderList(StandardLibraryProperties.all)
+        let out = KnownPropertiesRenderer.renderList(CuratedStdlibCatalog.all)
         #expect(out.contains("Int"))
         #expect(out.contains("Set"))
         #expect(out.contains("a.union(b) == b.union(a)"))
@@ -125,12 +125,12 @@ struct KnownPropertiesTests {
 
     @Test("V1.145 — renderList with verify results marks ✓/✗ and shows a tally")
     func renderListVerified() {
-        let laws = StandardLibraryProperties.laws
+        let laws = CuratedStdlibCatalog.laws
         var results: [String: Bool] = [:]
         for law in laws { results[law.displayName] = true }
         // Flip one to failing to exercise the ✗ path.
         results[laws[0].displayName] = false
-        let out = KnownPropertiesRenderer.renderList(StandardLibraryProperties.all, verifyResults: results)
+        let out = KnownPropertiesRenderer.renderList(CuratedStdlibCatalog.all, verifyResults: results)
         #expect(out.contains("✓ "))
         #expect(out.contains("✗ "))
         #expect(out.contains("Verified \(laws.count - 1)/\(laws.count) laws held"))
@@ -140,13 +140,13 @@ struct KnownPropertiesTests {
 
     @Test("V1.145 — renderVerifyProgram emits the RNG preamble + one check per law")
     func verifyProgramShape() {
-        let program = KnownPropertiesRenderer.renderVerifyProgram(StandardLibraryProperties.laws)
+        let program = KnownPropertiesRenderer.renderVerifyProgram(CuratedStdlibCatalog.laws)
         #expect(program.contains("struct SeededRNG"))
         #expect(program.contains("func randInt()"))
         #expect(program.contains("func check("))
         // One check(...) call per law.
         let checkCount = program.components(separatedBy: "check(\"").count - 1
-        #expect(checkCount == StandardLibraryProperties.laws.count)
+        #expect(checkCount == CuratedStdlibCatalog.laws.count)
         // A representative law body is inlined verbatim.
         #expect(program.contains("a.union(b) == b.union(a)"))
     }
@@ -164,7 +164,7 @@ struct KnownPropertiesTests {
     func escapedQuotesInProgram() {
         // The `a + "" == a` law's name contains quotes; the generated program
         // must escape them so it compiles.
-        let program = KnownPropertiesRenderer.renderVerifyProgram(StandardLibraryProperties.laws)
+        let program = KnownPropertiesRenderer.renderVerifyProgram(CuratedStdlibCatalog.laws)
         #expect(program.contains(#"check("String: a + \"\" == a")"#))
     }
 }

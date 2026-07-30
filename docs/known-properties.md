@@ -117,7 +117,7 @@ the left decides the result, so `a && f()` and `f() && a` differ in what runs).
 
 ## Files / tests
 
-- `StandardLibraryProperties.swift` (the catalog + model) + per-library
+- `CuratedStdlibCatalog.swift` (the catalog + model) + per-library
   extensions (`+Numerics` / `+Collections` / `+Algorithms` / `+Foundation` /
   `+Containers`); `KnownPropertiesRenderer.swift` (pure: list render +
   verify-program generation + output parsing); `KnownPropertiesCommand.swift`

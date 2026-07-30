@@ -2184,7 +2184,7 @@ month-ago calibration. It did, and the evidence is in the code that cites the (n
   algebra (B26b). False *positives* — textually-identical-but-distinct `Index` types spuriously match
   (the 673). Both are the one textual model; the calibration patched the second while blind to the
   first.
-- **The unreachable algebra was hand-curated to compensate.** `StandardLibraryProperties.swift` (V1.145)
+- **The unreachable algebra was hand-curated to compensate.** `CuratedStdlibCatalog.swift` (V1.145)
   is a hand-written "known-true" catalog that includes exactly `OrderedSet.union`'s laws (*"idempotent
   under union, `x.union(x) == x`"*, *"NOT order-commutative"*). The authors knew these and shipped them
   as a built-in **because discovery can't reach a `Self`-typed `union`** — the knowledge was worth
@@ -2371,7 +2371,7 @@ concrete claims. **Verify, not reason — and it overturned the tidy hypothesis.
 | numerics / ComplexModule | 28 (`+ - * / ==`, `exp`/`log`/`pow`/`sqrt`, transcendentals) | **12 determinism, 8 round-trip (Possible), 0 algebra** | Complex operators seed but surface no commutativity/associativity (float-backed) — hand-curated int/double laws still needed |
 | algorithms / Algorithms | 72 (12 distinct, all `Collection` plumbing) | 40 determinism tautologies, 1 predicate, **round-trip 0** | lazy-wrapper gap persists; the 673-FP class is currently suppressed to 0 |
 
-**The hypothesis going in** (from reasoning) was "B28 makes the hand-curated `StandardLibraryProperties`
+**The hypothesis going in** (from reasoning) was "B28 makes the hand-curated `CuratedStdlibCatalog`
 set algebra redundant — discovery earns it now." **Running it refuted that.** What discovery actually
 produces for `OrderedSet.union` is **two true laws and one false one**:
 
@@ -2384,7 +2384,7 @@ produces for `OrderedSet.union` is **two true laws and one false one**:
   be wrong" says nothing about ordering. The curated verb list is calibrated for stdlib `Set` (a genuine
   semilattice); the textual model cannot tell order-preserving `OrderedSet` from `Set`, so the reach
   gates — which made `OrderedSet.union` discoverable in the first place — reopened **exactly the caveat
-  B26d found hand-encoded** (`StandardLibraryProperties`: "NOT order-commutative").
+  B26d found hand-encoded** (`CuratedStdlibCatalog`: "NOT order-commutative").
 
 So the re-run's real result is the opposite of "redundant scaffolding": the hand-curated **caveat is now
 *more* load-bearing**, because discovery actively contradicts it. And the one concrete, warranted
@@ -2394,7 +2394,7 @@ calibration change is **new, not a retirement**:
 > When the carrier's `==` is order-sensitive (`OrderedSet`, `Array`, `OrderedDictionary`), withhold
 > commutativity — or drop it below `Likely` with an explicit ordering caveat. Absent SemanticIndex the
 > tool can't detect order-sensitivity structurally, so a carrier denylist mirroring the existing
-> `StandardLibraryProperties` caveats is the pre-SemanticIndex approximation — the same pattern as the
+> `CuratedStdlibCatalog` caveats is the pre-SemanticIndex approximation — the same pattern as the
 > round-trip rule (B26d).
 
 **What did *not* move — so no weight re-derivation is warranted.** (1) The numerics algebra never
@@ -2421,7 +2421,7 @@ a false law, since `OrderedSet.==` is `_elements` array equality (order-sensitiv
 `ContiguousArray`, `ArraySlice`) *and* the op is a set-combination verb
 (`union`/`intersection`/`intersect`/`symmetricDifference`), emit a full veto (`Signal.vetoWeight` →
 `.suppressed`). Veto, not counter-weight, because the law is *wrong*, not low-confidence — the honest
-"union is not order-commutative" fact already lives in the `StandardLibraryProperties` caveat channel
+"union is not order-commutative" fact already lives in the `CuratedStdlibCatalog` caveat channel
 (`kind: .caveat`). The denylist is the pre-SemanticIndex stand-in for detecting an order-sensitive `==`
 structurally, mirroring `FloatingPointStorageNames`.
 

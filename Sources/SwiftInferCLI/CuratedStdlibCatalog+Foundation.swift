@@ -4,7 +4,7 @@ import Foundation
 /// base64 round-trip) and `IndexSet` (a `SetAlgebra` of non-negative indices).
 /// Foundation is available to the `swift` interpreter, so these carry NO
 /// `imports` and run on the fast path alongside the standard-library laws.
-extension StandardLibraryProperties {
+extension CuratedStdlibCatalog {
 
     static let foundationLaws: [KnownProperty] = [
         law(

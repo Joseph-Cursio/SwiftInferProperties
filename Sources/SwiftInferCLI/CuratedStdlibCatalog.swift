@@ -6,6 +6,19 @@ import Foundation
 /// (universal, versioned) — deliberately NOT written into any project's
 /// `.swiftinfer/`, which stays the user's own discovered corpus.
 ///
+/// **This is ours, not Apple's.** It was named `StandardLibraryProperties` and renamed
+/// because that read like an upstream Swift type: nothing by that name exists anywhere in
+/// swift.org's stdlib or tests. The catalog is *about* the standard library, hand-curated by
+/// this project — `Curated` says who wrote it, `Stdlib` says what it covers, and `Catalog`
+/// says it holds entries of mixed kind (laws AND caveats) rather than a single law set.
+///
+/// The distinction is load-bearing rather than cosmetic. A reader who assumes this mirrors
+/// something upstream will also assume it is *complete* — and it is deliberately not. It is
+/// an editorial selection over the handful of carriers the generator can construct, which is
+/// exactly the mistake made once already: a claim that a gap in `ProtocolCoverageMap` made
+/// this surface "under-report what the toolchain covers". It was never mirroring the kit's
+/// coverage, so it cannot under-report it.
+///
 /// These are the one class of property that is both *known-true by contract*
 /// and *verifiable* (their carriers — `Int`, `Double`, `Bool`, `String`,
 /// `[T]`, `Set`, `Optional`, `Dictionary` — are exactly the ones the generator
@@ -75,7 +88,7 @@ public struct KnownProperty: Sendable, Equatable {
     public var needsPackage: Bool { !imports.isEmpty }
 }
 
-public enum StandardLibraryProperties {
+public enum CuratedStdlibCatalog {
 
     public static let laws: [KnownProperty] = all.filter { $0.kind == .law }
     public static let caveats: [KnownProperty] = all.filter { $0.kind == .caveat }

@@ -8,7 +8,7 @@ import Foundation
 /// All carry the module they need in `imports`, so `--verify` builds them
 /// against the real swift-collections release. Non-negative masking (`& 63`) is
 /// used where a type needs non-negative elements (`BitSet`).
-extension StandardLibraryProperties {
+extension CuratedStdlibCatalog {
 
     // MARK: - Deque (DequeModule)
 

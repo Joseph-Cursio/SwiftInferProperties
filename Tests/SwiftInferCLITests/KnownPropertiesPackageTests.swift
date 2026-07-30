@@ -34,7 +34,7 @@ struct KnownPropertiesPackageTests {
 
     @Test("every external law's imported modules are all mapped")
     func everyImportedModuleIsMapped() {
-        for law in StandardLibraryProperties.all where law.needsPackage {
+        for law in CuratedStdlibCatalog.all where law.needsPackage {
             for module in law.imports {
                 #expect(
                     KnownPropertiesPackages.byModule[module] != nil,
@@ -46,22 +46,22 @@ struct KnownPropertiesPackageTests {
 
     @Test("needsPackage partitions stdlib from external laws")
     func needsPackagePartitions() {
-        let complex = StandardLibraryProperties.all.first { $0.type == "Complex" }
-        let intLaw = StandardLibraryProperties.all.first { $0.type == "Int" }
+        let complex = CuratedStdlibCatalog.all.first { $0.type == "Complex" }
+        let intLaw = CuratedStdlibCatalog.all.first { $0.type == "Int" }
         #expect(complex?.needsPackage == true)
         #expect(intLaw?.needsPackage == false)
     }
 
     @Test("Foundation laws run on the fast path (no imports)")
     func foundationLawsAreStdlibPath() {
-        let dataLaws = StandardLibraryProperties.all.filter { $0.type == "Data" }
+        let dataLaws = CuratedStdlibCatalog.all.filter { $0.type == "Data" }
         #expect(!dataLaws.isEmpty)
         #expect(dataLaws.allSatisfy { !$0.needsPackage })
     }
 
     @Test("rendering with imports prepends the module import lines")
     func renderPrependsImports() {
-        let laws = StandardLibraryProperties.all.filter { $0.type == "Complex" }
+        let laws = CuratedStdlibCatalog.all.filter { $0.type == "Complex" }
         let program = KnownPropertiesRenderer.renderVerifyProgram(laws, imports: ["ComplexModule"])
         #expect(program.contains("import ComplexModule"))
         #expect(program.contains("import Foundation"))
