@@ -22,16 +22,7 @@ public enum ComparatorTemplate {
         Constraint<FunctionSummary>(
             templateName: "comparator",
             appliesTo: Self.isComparator,
-            signals: { summary in
-                [
-                    Signal(
-                        kind: .comparatorSignature,
-                        weight: 40,
-                        detail: "`\(summary.name)` is `(T, T) -> Bool` with both operands positional "
-                            + "— the shape `sorted(by:)` takes, and it owes a strict weak ordering"
-                    )
-                ]
-            },
+            signals: Self.signals(for:),
             evidence: { [$0.inferenceEvidence] },
             identity: { summary in
                 SuggestionIdentity(
@@ -43,6 +34,55 @@ public enum ComparatorTemplate {
             caveats: { _ in Self.makeCaveats() },
             generators: Self.makeGenerators(for:)
         )
+    }
+
+    /// Name stems that say a relation **orders** its operands rather than merely relating them.
+    ///
+    /// Substring-matched on the lowercased name, so `locationLessThan` and `sortCandidates` both
+    /// qualify. Deliberately generous: a missing stem *suppresses* a candidate, so an
+    /// over-inclusive list preserves today's behaviour while an under-inclusive one silently
+    /// deletes a real law. Erring toward admitting is the cheaper error here — the reverse of
+    /// the usual posture, because this list gates a counter-signal rather than a claim.
+    static let orderingNameStems: [String] = [
+        "lessthan", "greaterthan", "precede", "follow", "before", "after",
+        "orderedbefore", "orderedascending", "ascending", "descending",
+        "compare", "sort", "rank", "outrank", "earlier", "later", "priorit"
+    ]
+
+    /// Whether the name carries ordering evidence. `sortCandidates` → yes (`sort`);
+    /// `areComplementary`, `sameType`, `matches` → no.
+    static func hasOrderingName(_ name: String) -> Bool {
+        let lowered = name.lowercased()
+        return orderingNameStems.contains { lowered.contains($0) }
+    }
+
+    /// Shape signal, plus the counter-signal when nothing but shape matched.
+    ///
+    /// See `Signal.Kind.unsupportedComparatorShape` for the measurement: 11 of 22 candidates on
+    /// this repo were false, including all three already visible at `Likely`.
+    static func signals(for summary: FunctionSummary) -> [Signal] {
+        var signals = [
+            Signal(
+                kind: .comparatorSignature,
+                weight: 40,
+                detail: "`\(summary.name)` is `(T, T) -> Bool` with both operands positional "
+                    + "— the shape `sorted(by:)` takes, and it owes a strict weak ordering"
+            )
+        ]
+        if !hasOrderingName(summary.name) {
+            signals.append(
+                Signal(
+                    kind: .unsupportedComparatorShape,
+                    weight: -25,
+                    detail: "`\(summary.name)` does not NAME an ordering. `(T, T) -> Bool` is also "
+                        + "the shape of a symmetric relation (`sameType`, `areComplementary`) and "
+                        + "of a role-carrying pair test (`matches(_ name:, _ stem:)`), and a "
+                        + "correct implementation of either FAILS asymmetry — so the shape alone "
+                        + "cannot claim a strict weak ordering"
+                )
+            )
+        }
+        return signals
     }
 
     /// `(T, T) -> Bool`, same operand type, **both positional**, and not an operator.
