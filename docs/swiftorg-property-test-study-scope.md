@@ -50,6 +50,144 @@ hand-rolled *algebraic* law checking. The generalisation may not survive.
 
 Record the SHA with every number. A count without one is not a measurement.
 
+**These three are the study's scope, and that is a starting point rather than a boundary.**
+§3a is the expansion, deliberately sequenced after pass 1 rather than folded in now.
+
+## 3a. Expansion — ranked, and not before pass 1
+
+Fourteen further swift.org / Apple repos are checked out locally (eight cloned 2026-07-30
+for this survey). Measured at the SHAs below — `check*` call sites, `for _ in 0..<N` loops,
+`XCTestCase` + `@Test` (what `TestSuiteParser` can currently see), and adjudicated
+round-trip mentions:
+
+| repo | SHA | `check*` | loops | recognisable | round-trip |
+|---|---|---:|---:|---:|---:|
+| **swift-collections** | `899809d3` | **196** | 4 | 19 | 0 |
+| **swift-nio** | `590dd7b4` | 118 | **119** | 431 | 20 |
+| **swift-protobuf** | `309bd28f` | 3 | 3 | 95 | **118** |
+| **swift-atomics** | `0442cb5` | **76** | 0 | 33 | 0 |
+| **swift-certificates** | `449dbbe` | 0 | 3 | 30 | **71** |
+| **swift-markdown** | `27b7fc1` | **60** | 0 | 48 | **35** |
+| swift-asn1 | `a9a5efd` | 0 | 0 | 4 | 27 |
+| swift-numerics | `899af71` | 11 | 3 | 16 | 2 |
+| swift-format | `d2bd4b3` | 18 | 2 | 114 | 0 |
+| swift-algorithms | `ff223da` | 8 | 0 | 29 | 0 |
+| swift-system | `6a63f08` | 2 | 3 | 26 | 0 |
+| swift-testing | `e57b6fb0` | 15 | 4 | 1107 | 8 |
+| swift-async-algorithms | `3da39bb` | 1 | 1 | 125 | 6 |
+| swift-http-types | `5b99e00` | 0 | 0 | 3 | 0 |
+
+**Two columns were dropped after adjudication, and the reason is Q1's hazard arriving inside
+this table's own construction.** A first pass also counted `associat*` and `idempot*` as
+property vocabulary and produced numbers that looked decisive:
+
+| apparent signal | what it actually was |
+|---|---|
+| swift-collections "associativity" ×92 | 54 `associated`, 25 `associatedtype` — **zero** are the law |
+| swift-protobuf "idempotence" ×315 | 214 `idempotencyLevel`, 68 `_p` variants — protobuf's `idempotency_level` **method option**, domain vocabulary from the `.proto` spec |
+
+Both would have ranked repos wrongly and confidently. This is the same failure the earlier
+survey's classifier had (*"it read `result == Decimal(12340)` as a round-trip"*), reproduced
+here in the space of one command — which is the argument for Q1's "hand-adjudicate first"
+rule, now with a second witness. The round-trip column above survived the same check
+(swift-markdown's 35 are bare `roundtrip` plus `RoundTripTests` / `roundTripBlockquote`).
+
+**The ranking criterion is not size — it is whether a repo adds a new POPULATION or more
+sites of an existing one.** More sites tightens an error bar. A new population can falsify a
+conclusion. They are not comparable, and counting sites would rank these wrongly.
+
+### Tier 1 — `swift-collections`, and it is not close
+
+196 `check*` sites in `_CollectionsTestSupport` is a **second axiom battery, independent of
+`StdlibUnittest`**. That makes it the only repo here that can answer a question the pinned
+three cannot: *is the battery idiom a property of Swift library testing, or one team's
+habit?* Two independent teams converging on `checkEquatable`-shaped law suites is a much
+stronger claim than 263 sites of one team's, and it directly tests §2's suspect conclusion
+about human property vocabulary.
+
+It is also **recognisable to TestLifter today** (6 `XCTestCase`, 13 `@Test`), which the
+pinned corpus is not — see the re-ordering note below.
+
+### Tier 2 — a round-trip corpus we do not have: `swift-markdown`, `swift-certificates`, `swift-protobuf`
+
+Three repos whose *whole domain* is the round-trip law, at 118 / 71 / 35 adjudicated
+mentions and all recognisable to TestLifter today (95 / 30 / 48).
+
+This matters more than the counts suggest, because round-trip is the template we just
+measured as **~100% false on this repo and precise on Foundation** — the difference being
+that Foundation's are genuine `A -> B` / `B -> A` pairs and ours were endomorphisms. A
+serializer, a DER encoder, and a markdown printer are three independent corpora of *real*
+opposite-typed round-trips, which is exactly the population that would either confirm the
+`endomorphismRoundTripPair` counter-signal or expose it as over-broad. We have one
+confirming corpus; three more would settle it.
+
+`swift-markdown` doubles as a **parser** subject, which puts it directly against
+`parsing-catalog-gap.md`'s findings — its `parse`/`format` pair is the shape §3c of that
+survey said we could not reach until `CustomStringConvertible.description` pairing shipped.
+
+### Tier 2 — `swift-nio`
+
+Large (118 `check*`, 119 loops) and the most recognisable non-framework repo (431). Its
+value is **domain breadth**, not depth: networking laws are not stdlib algebra, so it tests
+whether the catalog generalises past value types. Expect a different failure mode from Tier
+1 — gaps rather than declines.
+
+### Needs adjudication before tiering — `swift-atomics`
+
+76 `check*` sites, no loops, no round-trip vocabulary. That combination does not match any
+population defined so far, and the name suggests a generated conformance matrix rather than
+an axiom battery. **Adjudicate 10 sites before deciding**, and if it is a new idiom, it is a
+new population and outranks Tier 2.
+
+### Tier 3 — `swift-numerics`, `swift-algorithms`
+
+Small populations (11 and 8), but these are the classic algebraic corpora and **this
+project's own findings already cite them 27 and 34 times** — the cycle-8 ComplexModule
+survey, the `_ensureFreeCapacity` delegation case, the access-default calibration. Their
+value is **consistency checking against claims we already made**, not new discovery. Cheap,
+and the place a contradiction with our own record would surface.
+
+### Excluded — and one of the exclusions is itself a finding
+
+`swift-testing` (1,107 recognisable) is a testing *framework* testing itself; its properties
+are about assertion machinery, not a domain the catalog models. High volume, low relevance —
+the kind of population that inflates a denominator. `swift-async-algorithms`,
+`swift-http-types`, `swift-system` and `swift-asn1` have no meaningful population.
+
+**`swift-format` is excluded, and that is the interesting one.** A formatter's law *is*
+idempotence — `format(format(x)) == format(x)` — and this repo's own parsing survey spent a
+whole finding on formatter idempotence, splitting the `format`-prefix veto to admit it. Yet
+swift-format mentions idempotence **3 times** across 114 recognisable tests, and has no
+round-trip vocabulary at all.
+
+Either it verifies the law structurally without naming it, or **it does not test its own
+central property** — and the second is a Q2 "their precision" candidate of exactly the kind
+that produced `swiftlang/swift#91083`. Cheap to check, and worth checking before excluding it
+for good: it is a one-repo answer to "does the catalog know a law its author forgot?", which
+is the strongest form this project's thesis can take.
+
+### This re-orders Q4, and that is the useful part
+
+Q4 is blocked on `TestSuiteParser` not recognising `TestSuite.test("…") { }` closures —
+`validation-test/stdlib` scores **0** `XCTestCase` and **0** `@Test`. But the expansion repos
+are the opposite: swift-nio 288 `@Test`, swift-collections 13, swift-testing 1,071.
+
+**So Q4 can be attempted on Tier 1/2 *before* the parser work lands**, on the recognisable
+subset, and the parser extension can be prioritised by what that attempt actually needs
+rather than by what the pinned corpus implies. That inverts the dependency in §7 for the
+expansion, and it is the cheapest route to a Q4 result.
+
+### Sequencing, and why not now
+
+**Do not expand before pass 1 concludes on the pinned three.** Pass 1's output is a
+definition, a classifier, and its error rate; expanding first means scaling an unvalidated
+method across six more repos and re-adjudicating when the definition moves. The classifier is
+the thing that makes a census affordable, and it does not exist yet.
+
+The one exception worth taking early: **run the Tier-1 population count** (a `check*` census
+on `swift-collections`) as soon as pass 1 has a definition, because if that battery does not
+match `StdlibUnittest`'s shape, §2's conclusion needs rewriting before Q2 is built on it.
+
 ## 4. The five questions
 
 ### Q1 — How many property-style tests are there?
