@@ -268,7 +268,80 @@ as designed. Whether the catalog reaches anything the corpus writes by hand is a
 about the OTHER populations — `roundtrip` (205 scoped sites) and `loops` (36) — and remains
 open.
 
-### 1.2 `roundtrip` — not started (overload/adjudication pass pending)
+### 1.2 `roundtrip` — adjudicated (30 of 205 scoped, seed 20260730, `swift` @ `408632e5`)
+
+#### The structural finding: the law is stated ONCE, the domain is hand-enumerated
+
+`ParseFloat16.swift:18` states a genuine round-trip:
+
+```swift
+fileprivate func expectRoundTrip(_ value: Float16, …) {
+  let text = value.debugDescription
+  let roundTrip = Float16(Substring(text))
+  expectEqual(roundTrip.bitPattern, value.bitPattern)   // parse(print(v)) == v
+}
+```
+
+Comparing **bit patterns**, which is the correct comparison for floats — it separates `-0.0`
+from `0.0` and preserves NaN payloads. A careful, universally quantified law.
+
+Every call site is one hand-picked instance: `expectRoundTrip(Float64.infinity)`,
+`expectRoundTrip(-Float64.infinity)`, `expectRoundTrip(Float32(bitPattern: 0xffffffff))`.
+
+**This is Q5's finding from the other side.** `expectRoundTrip(-Float64.infinity)` *is* one of
+the 70 `.infinity` mentions Q5 counted as "named by hand, never drawn". The law is excellent;
+the domain is a hand-written list. Same shape as the `check-battery` instance lists (median
+2.5 elements) — one law, enumerated inputs — arrived at from two independent directions.
+
+#### Sample composition — the population is word-matched and shows it
+
+| category | count | property-style? |
+|---|---:|---|
+| helper **invocation** (one instance of a law) | 14 | law yes, quantification no |
+| **law definition** (`func expectRoundTrip`) | 3 | **yes — this is where the law lives** |
+| local variable named `roundTrip` | 3 | no |
+| comment / `CHECK-LABEL` | 3 | no |
+| test-name string (`.test("String roundtrip")`) | 2 | no |
+| other (assertions inside helpers, a gyb data row) | 5 | mixed |
+
+**Only 3 of 30 are law statements.** 8 of 30 are not code that asserts anything. The
+`check-battery` population is defined by *a call to a known function*; this one by *a word*,
+and the error rate reflects it — the counting unit has to be the **helper definition**, not
+the mention.
+
+Extrapolated: ~205 scoped sites contain on the order of **20 distinct round-trip laws**,
+invoked ~100 times with hand-picked values.
+
+#### Q2 reconciliation — and unlike `check-battery`, we DO fire here
+
+`discover` over `stdlib/public/core` proposes **19 round-trips**, and they are real:
+
+| proposed pair | law |
+|---|---|
+| `_bridgeObject(fromTagged:)` × `_bridgeObject(toTagged:)` | tagged-pointer encode/decode |
+| `_offset(_offset:)` × `_offset(of:)` | index ↔ offset |
+| `distance(to:)` × `advanced(by:)` | **`Strideable`** — `advanced(by: distance(to: x)) == x` |
+| `bitPattern(bitPattern:)` Int128 ↔ UInt128 | bit-pattern reinterpretation |
+| `_dictionaryUpCast` × `_dictionaryDownCast`, `_setUpCast` × `_setDownCast` | cast round-trips |
+
+**Overlap with what the corpus asserts: still zero, but for a different and more tractable
+reason than `check-battery`.** There the catalog was silent by design; here both sides are
+active and simply pointed at different pairs.
+
+Two causes, and the first is a measurement error to fix before concluding anything:
+
+1. **Wrong sources for the Codable sites.** `test/stdlib/CodableTests.swift` round-trips
+   *Foundation* types (`Locale`, `Measurement`, `TimeZone`, `IndexPath`) whose sources are not
+   in `stdlib/public/core`. Reconciling those requires `discover` over `swift-foundation`,
+   where `codable-round-trip` fires **76** times. Not yet matched by type.
+2. **The float parse/print pair is not reached.** `Float16.debugDescription` is a computed
+   property and the parse half is `init?<S: StringProtocol>(_ text: S)` — a **failable
+   generic initializer**. Pairing `Float16 -> String` against `S -> Float16?` needs `S`
+   resolved to `String`. Worth confirming as the cause before treating it as a gap.
+
+**Open, not concluded.** Unlike `check-battery`, this population does not have a clean
+verdict yet: it needs a type-level match against the right source tree per site. Recorded as
+the next step rather than guessed at.
 
 ### 1.3 `lit-checknot` — resolved by scoping, §0.3(c) closed
 
