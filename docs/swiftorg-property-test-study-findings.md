@@ -632,11 +632,74 @@ fold of `insert(contentsOf:)`.
 This is exactly the shape `fixtures/equatable-signal/README.md` arrived at from the opposite
 direction: *"Propose the model law, not the Equatable laws, for projections"* — the conclusion
 drawn from three real projection bugs (`OrderedSet` order, `BitArray` padding, `Deque` head
-rotation) that pass 4/4 Equatable laws and die at trial ≤3 against a model. **We have no
-model-law template.** `homomorphism` is narrowly additive-measure-over-concatenation;
-`differential-equivalence` pairs *named* variants (`fast`/`reference`) and the reference here
-is written in the test. Two independent lines of evidence now point at the same missing
-template, which is the strongest build signal the study has produced.
+rotation) that pass 4/4 Equatable laws and die at trial ≤3 against a model. `homomorphism` is
+narrowly additive-measure-over-concatenation; `differential-equivalence` pairs *named* variants
+(`fast`/`reference`) and the reference here is written in the test. Two independent lines of
+evidence pointing at the same missing template was the strongest build signal the study
+produced.
+
+##### BUILT — `model-law`, and the abstraction function is not the one we expected
+
+Shipped 2026-07-30. The design question was *what is the model*, and the obvious answer failed
+immediately: `RangeSet` conforms to `Equatable, Hashable, Sendable, CustomStringConvertible`
+— **not** `SetAlgebra`, **not** `Sequence`. There is no free abstraction function from a
+conformance, and the tests supply theirs (`unionViaSet`) inside the test file where no
+source-only analysis can see it.
+
+What `RangeSet` does have is `contains(_:) -> Bool`. **A set is its characteristic function**,
+so the law needs no conversion at all:
+
+```
+(a.union(b)).contains(x) == (a.contains(x) || b.contains(x))
+```
+
+Stated in the type's own API — no conformance, no annotation, which is why this reaches code
+`invariant-preservation` (annotation-only) cannot. Measured on `stdlib/public/core`: **6 rows,
+739 → 745.** `RangeSet` ×4 at **Strong 80** — the four operations the study found tested by
+hand — and `Set` ×2 at Likely 70 (no cluster bonus; its `union` takes a generic `Sequence`, so
+only `subtracting` and `intersection` present the `(T) -> T` shape).
+
+**It is not a kit double-report, and that was checked before building rather than after.**
+`checkSetAlgebraPropertyLaws` ships **15** laws — commutativity, idempotence, distributivity,
+De Morgan, absorption, the symmetric-difference identities — every one relating the operations
+*to each other*, and the suite mentions `contains` **zero** times. It proves the lattice
+algebra and never ties it to membership. The membership law entails all 15 modulo
+extensionality, so it is strictly stronger: a range-backed union that fails to merge the seam
+`[1,3) ∪ [3,5)` into `[1,5)` is commutative, idempotent, absorptive and De Morgan-compliant,
+passes all 15, and answers `contains(3)` wrongly.
+
+**The first measured run produced three false positives at Strong, and they were worth more
+than the six true rows.** `OptionSet` fired on `union`/`intersection`/`symmetricDifference`,
+because `OptionSet.contains(_ member: Self) -> Bool` (`OptionSet.swift:216`) is a **subset
+test**, not membership. Read as membership the law is not merely unproven but *false*:
+`x ⊆ (a ∪ b) ⟺ x ⊆ a ∨ x ⊆ b` fails at `x = {1,2}`, `a = {1}`, `b = {2}`. The gate is now
+that the predicate's parameter must not be the carrier — a characteristic function maps
+*elements* to `Bool`, whereas `(Self) -> Bool` is a relation between two sets and says nothing
+pointwise. Reading the template could not have found this; running it on a corpus did, which
+is the same lesson the `Strideable` veto taught earlier the same day from the opposite side.
+
+**The law's real hazard is vacuity, and it ships stated twice.** This is collision-dependent
+in exactly the sense CLAUDE.md records: draw `x` from a wide domain and it misses both
+operands, `contains` is false on both sides, and every trial passes having checked nothing.
+The caveat says so and `GeneratorRecipe.rationale` repeats it at the point of use — that field
+exists because *"a reader who does not understand why the alphabet is small will widen it back
+on the first cleanup pass, and the law will go quiet without anyone noticing."*
+
+Sweep: swift-syntax and swift-foundation produced **zero** rows (neither has a carrier pairing
+a curated set operation with an element-typed `contains`), and this repo's own `+2` is
+self-dogfood on the two new files, not the template firing.
+
+**It closes ONE of the two evidence lines, and the other is still open.** The five swift.org
+`RangeSet` witnesses are now covered. The `Equatable`-signal line is not: its recommendation
+names the model as *"the type's canonical `Sequence` / `Collection` view"*, and the three bugs
+behind it — `OrderedSet` order, `BitArray` padding, `Deque` head rotation — are **order and
+representation** bugs. A membership law is order-insensitive by construction and cannot see
+any of them; `Array(a) == Array(b)` can. That is a second family (`a == b ⟺ Array(a) ==
+Array(b)`, gated on `Sequence` conformance) and it is deliberately not built here, because it
+has a false-positive problem the membership family does not: `Set` is a `Sequence` whose
+iteration order is unspecified, so it fails the law spuriously. Resolving that needs an
+ordered-carrier discriminator, which is its own measurement. Recorded rather than attempted —
+claiming both lines closed on the strength of one would misreport the state.
 
 #### `discover` and the tests aim at different properties of the same functions
 

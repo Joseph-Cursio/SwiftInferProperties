@@ -21,5 +21,6 @@ extension TemplateRegistry {
             shapesByName: shapesByName,
             into: &collector
         )
+        collectModelLawSuggestions(summaries: summaries, into: &collector)
     }
 }

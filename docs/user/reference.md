@@ -153,6 +153,7 @@ Each template fires under specific shape conditions and contributes signals to a
 | `identity-element` | `f(x, e) == x` for some `e` | `(T, T) -> T` plus a constant named `empty`, `zero`, `identity`, `none`, `default` |
 | `monotonicity` | `a <= b ==> f(a) <= f(b)` | Single-param `(T) -> U` where `U` is Comparable (`Int`, `Double`, `Float`, `String`, `Date`, `Duration`); curated verbs (length, count, size, priority, score, depth, height, weight) or `Count`/`Size` suffix |
 | `invariant-preservation` | `inv(f(x)) == inv(x)` | `@CheckProperty(.preservesInvariant(\.path))` annotation (+80, the only signal — annotation-driven only) |
+| `model-law` | `(a.union(b)).contains(x) == (a.contains(x) \|\| b.contains(x))` | A curated set operation (`union`, `intersection`, `symmetricDifference`, `subtracting`) of shape `(T) -> T`, **plus** a positional `contains(_:) -> Bool` over an *element* on the same carrier (+40 name, +30 shape, +10 when ≥3 operations co-occur). A `contains(_ member: Self)` is a subset test, not membership, and is rejected |
 | `count-invariance` | `f(xs).count == xs.count` | TestLifter-only — fires from `assert(f(x).count == x.count)` test bodies |
 | `reduce-equivalence` | `xs.reduce(seed, op) == xs.alternativeReduce(seed, op)` | TestLifter-only — fires from `assert(xs.reduce(...) == xs.reversed().reduce(...))` shapes |
 

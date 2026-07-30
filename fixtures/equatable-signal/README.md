@@ -134,6 +134,20 @@ Three rules, in the order the two corpora established them:
 > majority of conformances in that package, and the Equatable laws are
 > structurally unable to say anything about any of them.
 >
+> **Status of #2 (2026-07-30): PARTIALLY BUILT.** A `model-law` template shipped, but
+> against a *membership* view rather than a `Sequence` view: `(a.union(b)).contains(x) ==
+> (a.contains(x) || b.contains(x))`, keyed on a curated set operation plus an element-typed
+> `contains`. It was driven by the swift.org `loops` study, where `RangeSet` states five such
+> laws by hand (`docs/swiftorg-property-test-study-findings.md` §1.25), and it measures 6 rows
+> on `stdlib/public/core`.
+>
+> **It does not close this recommendation.** The three bugs above are ORDER and REPRESENTATION
+> bugs; a membership law is order-insensitive by construction and cannot see any of them. The
+> `Sequence`-view family this item actually asks for is still unbuilt, and the reason is
+> recorded rather than forgotten: `Set` is a `Sequence` with unspecified iteration order and
+> would fail `a == b ⟺ Array(a) == Array(b)` spuriously, so the family needs an
+> ordered-carrier discriminator first. That is a measurement, not a coding task.
+>
 > **3.** Treat `Equatable` conformance itself as a *precondition* that unlocks
 > other templates — which is what `StdlibConformances` /
 > `ProtocolCoverageMap` already do — never as a suggestion of its own.
