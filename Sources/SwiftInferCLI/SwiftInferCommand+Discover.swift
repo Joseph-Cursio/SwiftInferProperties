@@ -94,6 +94,9 @@ extension SwiftInferCommand.Discover {
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
     ) throws {
         let evidenceByIdentity = loadVerifyEvidenceMap(directory: directory, diagnostics: diagnostics)
+        // The manifest reaches the pipeline as well as the focus below, because a seed naming an
+        // access-restricted function must rescue it into template ANALYSIS — which happens inside
+        // the pipeline — and not merely survive the focus applied to the pipeline's result.
         let pipeline = try collectVisibleSuggestions(
             directory: directory,
             includePossible: includePossible,
@@ -103,6 +106,7 @@ extension SwiftInferCommand.Discover {
             explicitTestDirectory: explicitTestDirectory,
             packsOverride: packsOverride,
             verifyEvidenceByIdentity: evidenceByIdentity,
+            seedManifest: seedManifest,
             diagnostics: diagnostics
         )
         let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)
@@ -115,11 +119,8 @@ extension SwiftInferCommand.Discover {
                 visible: visible,
                 pipeline: pipeline,
                 directory: directory,
-                triageIO: DiscoverInteractiveIO(
-                    prompt: promptInput,
-                    output: output,
-                    diagnostics: diagnostics,
-                    dryRun: dryRun
+                triageIO: interactiveIO(
+                    prompt: promptInput, output: output, dryRun: dryRun, diagnostics: diagnostics
                 ),
                 evidenceByIdentity: evidenceByIdentity
             )
@@ -160,6 +161,26 @@ extension SwiftInferCommand.Discover {
         guard pipeline.docstringAdvice else { return [] }
         return docstringAdvice(
             summaries: pipeline.summaries, suggestions: visible, seedManifest: seedManifest
+        )
+    }
+
+    /// Gather `run`'s four loose IO arguments into the struct that already exists for them.
+    ///
+    /// Extracted because threading the seed manifest into the pipeline put `Discover.run` one
+    /// line over the 50-line body cap. A wrapper taking all eight arguments was tried first and
+    /// tripped `function_parameter_count` — which was the rule making the right point: the thing
+    /// worth naming here is the IO bundle, not another pass-through.
+    private static func interactiveIO(
+        prompt: any PromptInput,
+        output: any DiscoverOutput,
+        dryRun: Bool,
+        diagnostics: any DiagnosticOutput
+    ) -> DiscoverInteractiveIO {
+        DiscoverInteractiveIO(
+            prompt: prompt,
+            output: output,
+            diagnostics: diagnostics,
+            dryRun: dryRun
         )
     }
 

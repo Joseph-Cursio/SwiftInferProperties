@@ -116,6 +116,7 @@ extension SwiftInferCommand.Discover {
         explicitTestDirectory: URL? = nil,
         packsOverride: String? = nil,
         verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
+        seedManifest: SeedManifest? = nil,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         // A run over an empty corpus must not be mistaken for a run that found nothing in your
@@ -148,7 +149,8 @@ extension SwiftInferCommand.Discover {
             diagnostic: { diagnostics.writeDiagnostic($0) },
             crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys,
             counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys,
-            templateFilter: setup.templateFilter
+            templateFilter: setup.templateFilter,
+            rescuedRestrictedSymbols: rescuableRestrictedKeys(from: seedManifest)
         )
         // TestLifter M3.2 — promote LiftedSuggestions, share TemplateEngine's
         // GeneratorSelection pass, suppress duplicates already covered by
@@ -160,51 +162,22 @@ extension SwiftInferCommand.Discover {
             verifyEvidenceByIdentity: verifyEvidenceByIdentity,
             diagnostics: diagnostics
         )
-        let hints = buildHintsAndShapes(
+        return makePipelineResult(
+            setup: setup,
             artifacts: artifacts,
-            liftedArtifacts: liftedArtifacts
-        )
-        return PipelineResult(
-            suggestions: withResolvedConformanceCaveats(cut.visible, typeDecls: artifacts.typeDecls),
-            packageRoot: setup.packageRoot,
-            tierHiddenRefutableLaws: cut.hiddenRefutable,
-            inverseElementPairs: artifacts.inverseElementPairs,
-            equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
-            consumerProducerChainHintsByIdentity: hints.chainHints,
-            typeShapesByName: hints.typeShapesByName,
-            mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
-            summaries: artifacts.summaries,
-            restrictedFunctions: artifacts.restrictedFunctions,
-            docstringAdvice: setup.docstringAdvice
+            liftedArtifacts: liftedArtifacts,
+            cut: cut,
+            hints: buildHintsAndShapes(artifacts: artifacts, liftedArtifacts: liftedArtifacts)
         )
     }
 
-    /// Drop the "T must conform to Equatable" caveat wherever the corpus PROVES the carrier
-    /// conforms. Fifteen templates emit it, and it is right for a type the scan never saw declare a
-    /// conformance — but noise when the suggestion has already resolved the carrier to `String` in
-    /// its own signal line, or to a project type whose declaration says `: Hashable`.
-    ///
-    /// Applied here rather than inside the templates because `EquatableResolver` needs the corpus,
-    /// which a static `Constraint` does not have — and here rather than in
-    /// `LiftedSuggestionPipeline`, which is the LIFTED path only and early-returns on a corpus with
-    /// no test-lifted artifacts. That mistake cost a debugging round: the filter was wired
-    /// somewhere every ordinary suggestion bypasses.
-    private static func withResolvedConformanceCaveats(
-        _ suggestions: [Suggestion],
-        typeDecls: [TypeDecl]
-    ) -> [Suggestion] {
-        ConformanceCaveatFilter.apply(
-            to: suggestions,
-            resolver: EquatableResolver(typeDecls: typeDecls),
-            carrierTypeByIdentity: [:]
-        )
-    }
-
+    // Internal rather than `private`: `makePipelineResult` moved to
+    // `Discover+PipelineAssembly.swift` and calls this.
     /// Mock-synthesize a generator for every distinct type the tests
     /// construct (≥ the synthesizer's site-count threshold) — broader than
     /// the per-suggestion `mockGenerator`, which only covers types that also
     /// surfaced a property suggestion.
-    private static func synthesizeMockGenerators(
+    static func synthesizeMockGenerators(
         from record: ConstructionRecord
     ) -> [String: MockGenerator] {
         var result: [String: MockGenerator] = [:]
@@ -216,11 +189,13 @@ extension SwiftInferCommand.Discover {
         return result
     }
 
+    // Internal rather than `private`: `makePipelineResult` moved to
+    // `Discover+PipelineAssembly.swift` and names this in its signature.
     /// V1.89 lint pass — bundle for the derived per-identity maps
     /// that `collectVisibleSuggestions` folds into `PipelineResult`.
     /// Returned by `buildHintsAndShapes` as a struct rather than a
     /// 3-tuple to satisfy SwiftLint's `large_tuple` rule.
-    private struct HintsAndShapes {
+    struct HintsAndShapes {
         let equivalenceClassHints: [SuggestionIdentity: EquivalenceClassHintKind]
         let chainHints: [SuggestionIdentity: DomainHint]
         let typeShapesByName: [String: PropertyLawCore.TypeShape]
@@ -237,7 +212,7 @@ extension SwiftInferCommand.Discover {
     /// - V1.47.C type-shape map keyed by bare type name — feeds
     ///   `IndexCommand.populate` so verify can call `DerivationStrategist`
     ///   without re-parsing user sources.
-    private static func buildHintsAndShapes(
+    static func buildHintsAndShapes(
         artifacts: TemplateRegistry.DiscoverArtifacts,
         liftedArtifacts: TestLifter.Artifacts
     ) -> HintsAndShapes {

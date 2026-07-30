@@ -156,8 +156,11 @@ extension SwiftInferCommand.Discover {
                 + "difference on a non-throwing input falsifies it."
             ]
             : []
+        // Same opening as `withAccessRestrictionCaveats`, verbatim and deliberately: a reader
+        // grepping their output for the remedy should not have to know whether the law they are
+        // looking at came from a template or from this fallback.
         let caveats = (accessRestriction.map { restriction in
-            ["No test can run this law as written: \(restriction.remedy)"] + whyMightBeWrong
+            ["NO TEST CAN RUN THIS LAW AS WRITTEN: \(restriction.remedy)"] + whyMightBeWrong
         } ?? whyMightBeWrong) + throwsCaveat
         return Suggestion(
             templateName: "determinism",
@@ -218,7 +221,11 @@ extension SwiftInferCommand.Discover {
     /// `(file basename, symbol)` join key — robust to relative-vs-absolute path
     /// spellings between the linter and the scanner. Internal (see
     /// `functionBaseName`) so the docstring-advice pass keys identically.
+    ///
+    /// Delegates to `SymbolJoinKey` rather than spelling the formula, because
+    /// `SwiftInferTemplates` now keys restricted-function rescue on the same rule and
+    /// the two sides must agree exactly.
     static func genericLawKey(file: String, symbol: String) -> String {
-        "\(URL(fileURLWithPath: file).lastPathComponent)::\(symbol)"
+        SymbolJoinKey.make(file: file, symbol: symbol)
     }
 }

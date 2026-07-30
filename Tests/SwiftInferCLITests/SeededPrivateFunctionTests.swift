@@ -61,8 +61,19 @@ struct SeededPrivateFunctionTests {
         #expect(recording.text.contains("isValidFolderName") == false)
     }
 
-    @Test("a seeded private function earns its law")
-    func seededPrivateFunctionIsRescued() throws {
+    /// This used to assert `Template: determinism`, and that was the bug rather than the contract.
+    ///
+    /// The rescue reached only `synthesizeGenericLaws`, so a seeded private function was handed
+    /// `f(x) == f(x)` — the one law that cannot fail — while every refutable law its shape and name
+    /// entailed was withheld, because restricted functions never entered the template pipeline at
+    /// all. That inverts "score refutability, not suggestion count" exactly: the reader got the
+    /// tautology and lost the real law.
+    ///
+    /// `isValidFolderName(_ String) -> Bool` is a **predicate**, which is role-entailed — a correct
+    /// implementation cannot fail totality. That is the law worth stating, and it is now the one
+    /// emitted. `determinism` remains the fallback for a rescued function no template matches.
+    @Test("a seeded private function earns its REAL law, not the determinism fallback")
+    func seededPrivateFunctionEarnsItsTemplateLaw() throws {
         let directory = try writeDPFixture(name: "PrivateSeeded", contents: Self.privateHelper)
         defer { try? FileManager.default.removeItem(at: directory) }
 
@@ -79,8 +90,41 @@ struct SeededPrivateFunctionTests {
             diagnostics: diagnostics
         )
 
-        #expect(recording.text.contains("Template: determinism"))
+        #expect(recording.text.contains("Template: predicate"))
         #expect(recording.text.contains("isValidFolderName"))
+        // The tautology must not ALSO appear — a real law plus `f(x) == f(x)` about the same
+        // function is the substitution `guardFinalAnswer` exists to prevent, arriving by a new route.
+        #expect(recording.text.contains("Template: determinism") == false)
+        #expect(diagnostics.joined.contains("rescued 1 seeded access-restricted function(s)"))
+    }
+
+    /// A rescued function that NO template matches still gets the floor law, so the rescue never
+    /// regresses to silence. `(Int, Int) -> Int` named `combine` matches no template gate here —
+    /// `associativity` and `commutativity` need a curated name or reduce-fold corroboration — so
+    /// this is the determinism path the test above deliberately no longer covers.
+    @Test("a rescued function no template matches still earns the determinism floor")
+    func rescuedFunctionKeepsTheDeterminismFloor() throws {
+        let source = """
+        struct Math {
+            private func combine(_ lhs: Int, _ rhs: Int) -> Int { lhs - rhs }
+        }
+        """
+        let directory = try writeDPFixture(name: "PrivateFloor", contents: source)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 2, symbol: "combine")])
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        #expect(recording.text.contains("combine"))
+        #expect(recording.text.contains("NO TEST CAN RUN THIS LAW AS WRITTEN"))
     }
 
     @Test("the rescued law leads with the refactor that would let it run")
@@ -102,9 +146,21 @@ struct SeededPrivateFunctionTests {
         )
 
         // Stating the law without saying it cannot be run would be a different kind of lie.
-        #expect(recording.text.contains("No test can run this law as written"))
+        //
+        // Two assertions here changed with the template rescue, and neither weakened. The remedy is
+        // now spelled in caps by BOTH the template path and the determinism fallback (they used to
+        // differ in case, so a reader grepping for it found one and not the other). And the
+        // stderr note this used to require came from `synthesizeGenericLaws`, which no longer runs
+        // for a function a template covered — the remedy moved onto the actual law's caveat, which
+        // is where it belongs and is strictly better placement than a detached diagnostic line.
+        #expect(recording.text.contains("NO TEST CAN RUN THIS LAW AS WRITTEN"))
         #expect(recording.text.contains("Widen it to `internal`"))
-        #expect(diagnostics.joined.contains("not reachable from a test as written"))
+        #expect(diagnostics.joined.contains("rescued 1 seeded access-restricted function(s)"))
+        // The remedy must LEAD: it is the first caveat, not the fourth.
+        let caveatBlock = recording.text.components(separatedBy: "Why this might be wrong:")
+        let firstCaveat = try #require(caveatBlock.dropFirst().first)
+            .split(separator: "⚠").dropFirst().first
+        #expect(try #require(firstCaveat).contains("NO TEST CAN RUN THIS LAW AS WRITTEN"))
     }
 
     @Test("an unseeded private function is still absent even when another is seeded")

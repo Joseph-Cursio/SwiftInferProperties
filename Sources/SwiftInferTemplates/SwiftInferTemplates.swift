@@ -252,18 +252,46 @@ public enum TemplateRegistry {
     /// one pass over the corpus. Mirrors `discover(in:)`'s semantics
     /// for suggestions and additionally returns `InverseElementPair`
     /// records the CLI threads into the M8.4.a orchestrator.
+    /// - Parameter rescuedRestrictedSymbols: `SymbolJoinKey`s naming access-restricted
+    ///   functions a **seed** has asked for. Those functions join the set the templates
+    ///   analyse; everything else the scan set aside stays aside.
+    ///
+    ///   This is the "a seed overrides it" half of *access level gates verification, not
+    ///   analysis*. The default stays: an **unseeded** `private` function is still hidden,
+    ///   which is a policy about unsolicited noise rather than a judgement about
+    ///   testworthiness. What was missing is that a seeded one used to be rescued into the
+    ///   generic `determinism` law ONLY, never into the template that names its actual law
+    ///   — so the rescue handed back `f(x) == f(x)`, the one law that cannot fail, while
+    ///   withholding every refutable one. That inverts "score refutability, not suggestion
+    ///   count" precisely.
+    ///
+    ///   Merged into the input of `discover` rather than into `summaries`, deliberately.
+    ///   The pair-based templates need a rescued private half to be able to find its
+    ///   public other half, which requires it in the analysed set; but `summaries` also
+    ///   feeds `EffectAnnotationAdvice`, and quietly emitting pure-effect advice for
+    ///   private functions is a different change that nobody asked for.
     public static func discoverArtifacts(
         in directory: URL,
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
-        templateFilter: Set<String>? = nil
+        templateFilter: Set<String>? = nil,
+        rescuedRestrictedSymbols: Set<String> = []
     ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
+        let rescued = corpus.restricted.filter {
+            rescuedRestrictedSymbols.contains(SymbolJoinKey.make(for: $0.summary))
+        }
+        if !rescued.isEmpty {
+            diagnostic(
+                "rescued \(rescued.count) seeded access-restricted function(s) into template "
+                    + "analysis: " + rescued.map(\.summary.name).sorted().joined(separator: ", ")
+            )
+        }
         let suggestions = discover(
-            in: corpus.summaries,
+            in: corpus.summaries + rescued.map(\.summary),
             identities: corpus.identities,
             typeDecls: corpus.typeDecls,
             vocabulary: vocabulary,
