@@ -163,5 +163,27 @@
    "test_site": "test/stdlib/ErrorBridged.swift:895",
    "reason": "as above, large-struct payload"
   }
- ]
+ ],
+ "result": {
+  "run": "2026-07-30, blinded with --test-dir pointed at an empty directory",
+  "blinding_verified": "0 cross-validation signals in both corpora",
+  "as_shipped_recall_frozen_denominator": "9/13 = 69%",
+  "as_shipped_recall_corrected_denominator": "9/12 = 75%",
+  "denominator_correction": "loops-random-totality removed: the key attributed the law to input-totality, whose role is the never-trap parser law. Post-hoc, so BOTH numbers are reported.",
+  "misses": [
+   "loops-diffing-inverse",
+   "loops-rangeset-invariant",
+   "loops-dictionary-indexvalidity"
+  ],
+  "misses_all_predicted": true,
+  "channel_decomposition": {
+   "hits_all_one_template": "codable-round-trip, 9 of 9",
+   "hits_all_one_signal": "'declares a custom Codable conformance (hand-written)', +50, on all 9",
+   "score_and_tier": "50 (Likely) on all 9",
+   "unique_contribution_conformance": "9/9 = 100%",
+   "unique_contribution_shape_name_docstring": "0",
+   "marginal": "removing the +50 conformance signal takes every hit 50 -> 0 = Suppressed"
+  },
+  "caveat": "A is 12 entries but NOT 12 independent observations: 9 are instances of ONE law family (Codable round-trip). Effectively one hit family plus three distinct misses."
+ }
 }

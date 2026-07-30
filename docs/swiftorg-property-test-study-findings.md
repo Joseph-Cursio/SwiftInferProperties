@@ -4,9 +4,9 @@ Companion to `swiftorg-property-test-study-scope.md`, which is the plan. This is
 record. **Every number here carries the corpus SHA it was measured at**; a count without
 one is not a measurement (scope §3).
 
-**Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on the `check-battery` population;
-Q2 + Q5 also answered on the `loops` population (§1.25, exhaustive not sampled). Q3/Q4 not
-started.**
+**Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on `check-battery`; Q2 + Q5 also
+answered on `loops` (§1.25, exhaustive not sampled). **Q3 answered (§1.4) — 75% recall on
+denominator A, carried entirely by one signal.** Q4 not started.**
 
 ---
 
@@ -802,6 +802,91 @@ The `RangeSet` generators are the interior kind Q5 flagged (`Int.random(in: -100
 above are real edge discipline, hand-written, and they are what a derived generator does not
 produce — the generator weakness Q5 recorded is a weakness against *these* authors' practice,
 not a universal.
+
+---
+
+### 1.4 Q3 ANSWERED — 75% recall, carried entirely by one signal
+
+Blinded per the protocol: `discover` run with `--test-dir` pointed at an empty directory, key
+frozen at `fixtures/swiftorg-study/q3-reach-key.json` **before** the run, with three misses
+**predicted in writing** so none could be rationalised afterwards.
+
+**Blinding was not a formality.** `swift-foundation` went **1,265 → 1,259** once blinded, and
+the six lost suggestions were *all* `differential-equivalence` — that template's entire output
+on that corpus was test-derived and does not survive source-only. `stdlib/public/core` was
+already blind (0 cross-validation signals), so earlier stdlib numbers stand.
+
+#### The headline
+
+| denominator | recall |
+|---|---|
+| **A as frozen** (13 entries) | **9 / 13 = 69%** |
+| **A corrected** (12 entries) | **9 / 12 = 75%** |
+
+Both are reported because the correction is **post-hoc**. `loops-random-totality` was keyed to
+`input-totality`, and that attribution is wrong on grounds independent of the result:
+`InputTotalityTemplate`'s own doc defines its role as *"a function handed arbitrary bytes must
+return or throw for every one of them — it must never trap"* — the fuzz law for **parsers**,
+which fires exactly twice on core (`decodeCString`, `_tryFromUTF8`). `[].randomElement() == nil`
+is an empty-input edge law that no template states. Attributed by name-similarity
+("totality") rather than by role. Silently swapping the denominator after seeing the score is
+precisely what freezing a key exists to prevent, so it is not swapped — it is disclosed.
+
+**Every miss was predicted, 3 for 3**, and all three are *reachability*, not scoring:
+
+| miss | cause |
+|---|---|
+| `Diffing:708` — diff/patch inverse | halves on **different protocol extensions** (`RangeReplaceableCollection` / `BidirectionalCollection`); pairing needs a common carrier |
+| `RangeSet:206` — representation invariant | `invariant-preservation` is **annotation-only** |
+| `Dictionary:5269` — index validity | same annotation gate |
+
+#### The finding that matters more than the percentage
+
+**All 9 hits are one template, at one score, on one signal.**
+
+| | |
+|---|---|
+| template | `codable-round-trip`, 9 of 9 |
+| signal | *"declares a custom `Codable` conformance (hand-written)"*, **+50**, on all 9 |
+| score / tier | **50 (Likely)** on all 9 |
+| unique contribution — conformance | **9 / 9 = 100%** |
+| unique contribution — shape, name, docstring | **0** |
+| marginal | remove the +50 and every hit goes **50 → 0 = Suppressed** |
+
+The decomposition the protocol asked for is **degenerate**. There is no redundancy to measure:
+no shape corroboration, no curated-vocabulary hit, no docstring corroboration contributed
+anything. Delete the conformance channel and measured recall on this denominator goes to
+**zero** — not "below the tier cut", to zero.
+
+That is uncomfortable for the project's own framing. This is a **type-directed inference**
+tool, and on the denominator where it succeeds, the success comes from *reading a conformance
+declaration* — the one channel `fixtures/equatable-signal/README.md` already measured and found
+**does not predict refutability**. The tool is right that these types round-trip; it is right
+for the cheapest available reason.
+
+#### What A cannot support
+
+**12 entries are not 12 independent observations.** Nine are instances of a single law family
+(Codable round-trip on nine Foundation-ish types), so the effective sample is closer to *one
+hit family plus three distinct misses*. A 75% figure carries far less weight than its
+denominator suggests, and it should not be quoted without this sentence attached.
+
+#### B alongside — the coverage context
+
+Denominator B (all non-`declined` law-bearing `loops` entries) is **28**, of which **18** are
+`gap-with-witness` — laws no template can state, misses before `discover` runs. The ceiling
+under B is therefore ≤ 10/28 ≈ 36%, and the measured hits on `loops` specifically are **0**:
+every `loops` entry in A missed. B restates §1.25's 33% coverage figure in recall units, which
+is why A was chosen as the headline.
+
+#### The answer to the question Q3 was built to settle
+
+*Is the limiting factor threshold height, or the discriminator?* **Neither, on this evidence.**
+The misses are not near a cut — they are structurally unreachable (two annotation gates, one
+cross-carrier pairing). The hits are not near a cut either — they sit at 50 with a single +50
+signal holding them up. **Nothing in this measurement is threshold-sensitive.** Tuning
+`tier(forScore:)` in either direction would change nothing, which retires threshold work as a
+lever and leaves reach and catalog breadth as the only two that move the number.
 
 ---
 

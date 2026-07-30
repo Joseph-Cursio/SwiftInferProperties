@@ -154,10 +154,10 @@
    "ext": "swift",
    "property_style": "yes",
    "law": "[].randomElement() == nil",
-   "template": "input-totality",
-   "verdict": "ours-covers",
+   "template": "none",
+   "verdict": "gap-with-witness",
    "generator": "empty fixed collection",
-   "notes": "The empty-input edge; input-totality is exactly this."
+   "notes": "CORRECTED 2026-07-30 (post-hoc, during Q3 \u2014 see corrections block). Was `ours-covers` via input-totality. WRONG TEMPLATE: input-totality's role is 'a function handed arbitrary bytes must return or throw for every one of them - it must never trap', the fuzz law for PARSERS. It fires twice on stdlib/public/core, on decodeCString and _tryFromUTF8. `[].randomElement() == nil` is an empty-input EDGE law and no template states it. Attributed by name-similarity ('totality') rather than by role."
   },
   {
    "site": "validation-test/stdlib/Random.swift:171",
@@ -389,6 +389,16 @@
    "was": "ours-covers",
    "now": "partial-declined",
    "why": "Third site in one day resolved by LosslessStringConvertible, and the third mis-verdict about it \u2014 this one contradicted the roundtrip section, which had called the same law gap-with-witness. The kit runs one DIRECTION of the retraction pair; the test states the other, domain-restricted one. Direction and domain were both being elided."
+  },
+  {
+   "date": "2026-07-30",
+   "sites": [
+    "validation-test/stdlib/Random.swift:158"
+   ],
+   "was": "ours-covers",
+   "now": "gap-with-witness",
+   "post_hoc": true,
+   "why": "Found while running Q3, i.e. AFTER seeing it score as a miss. Recorded as post-hoc and reported alongside the frozen number rather than silently swapped. The justification is independent of the Q3 outcome: InputTotalityTemplate's own doc defines its role as the never-trap law for parsers handed arbitrary bytes."
   }
  ]
 }
