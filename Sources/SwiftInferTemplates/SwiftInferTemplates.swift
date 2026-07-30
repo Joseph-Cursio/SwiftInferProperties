@@ -252,6 +252,25 @@ public enum TemplateRegistry {
     /// one pass over the corpus. Mirrors `discover(in:)`'s semantics
     /// for suggestions and additionally returns `InverseElementPair`
     /// records the CLI threads into the M8.4.a orchestrator.
+    /// Names for the rescue diagnostic, **capped**, with the remainder counted.
+    ///
+    /// Shipped uncapped and that was a defect: measuring the gate meant seeding every
+    /// `private` function in this repo, and the line came back with **853 names on it**.
+    /// A diagnostic nobody can read is not a diagnostic — and this is stderr, so it lands
+    /// in the middle of a run rather than somewhere a reader can scroll past it.
+    ///
+    /// Twelve because the line stays under a terminal width at typical Swift name lengths
+    /// while still being a useful sample. Deduplicated first: the join key is
+    /// `(basename, symbol)`, so a helper repeated across files (this corpus has `parse`
+    /// nine times and `findPackageRoot` nine times) would otherwise spend the whole cap on
+    /// one name.
+    static func namesForDiagnostic(_ rescued: [RestrictedFunction], cap: Int = 12) -> String {
+        let names = Set(rescued.map(\.summary.name)).sorted()
+        guard names.count > cap else { return names.joined(separator: ", ") }
+        return names.prefix(cap).joined(separator: ", ")
+            + " … and \(names.count - cap) more distinct name(s)"
+    }
+
     /// - Parameter rescuedRestrictedSymbols: `SymbolJoinKey`s naming access-restricted
     ///   functions a **seed** has asked for. Those functions join the set the templates
     ///   analyse; everything else the scan set aside stays aside.
@@ -287,7 +306,7 @@ public enum TemplateRegistry {
         if !rescued.isEmpty {
             diagnostic(
                 "rescued \(rescued.count) seeded access-restricted function(s) into template "
-                    + "analysis: " + rescued.map(\.summary.name).sorted().joined(separator: ", ")
+                    + "analysis: " + Self.namesForDiagnostic(rescued)
             )
         }
         let suggestions = discover(
