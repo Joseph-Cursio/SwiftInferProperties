@@ -12,7 +12,7 @@ import Foundation
 /// the stdlib interpreter.
 extension CuratedStdlibCatalog {
 
-    static let numericsLaws: [KnownProperty] = [
+    static let numericsLaws: [CuratedEntry] = [
         law(
             "Complex", "commutative under + (finite inputs)", "a + b == b + a",
             "let a = Complex(randDouble(), randDouble()), b = Complex(randDouble(), randDouble()); "

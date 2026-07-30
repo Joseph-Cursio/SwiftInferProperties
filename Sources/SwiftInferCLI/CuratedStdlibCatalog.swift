@@ -42,7 +42,7 @@ import Foundation
 /// an identity but is NOT associative, so it witnesses no protocol (it is not
 /// a `Monoid`); unary idempotence / involutions aren't algebraic protocols
 /// either, so they tag none.
-public enum KnownPropertyKind: String, Sendable, Equatable {
+public enum CuratedEntryKind: String, Sendable, Equatable {
     case law      // known-true; carries a `checkBody` so `--verify` can run it
     case caveat   // a plausible-looking NON-property; documented, never asserted true
 }
@@ -58,19 +58,38 @@ public enum KnownPropertyKind: String, Sendable, Equatable {
 /// no template names its shape (functor / stack / queue / involution laws). The
 /// role is DERIVED from `template`, so it cannot drift: the day a shape gets a
 /// template, its entries stop being reference and start anchoring.
-public enum KnownPropertyRole: String, Sendable, Equatable {
+public enum CuratedEntryRole: String, Sendable, Equatable {
     case anchor      // feeds StdlibAnchor — a proven analog (law) or a trap (caveat)
     case reference   // documentation + self-check only; `discover` never consults it
 }
 
-public struct KnownProperty: Sendable, Equatable {
+/// One entry in `CuratedStdlibCatalog` — a law or a caveat, with everything needed to
+/// render it, anchor a `discover` candidate against it, and (for laws) run it under
+/// `--verify`.
+///
+/// **Renamed from `KnownProperty`, which collided with `SwiftInferCore.KnownProperty`.**
+/// They are different kinds of type with different jobs, and the shared name is what made
+/// the architecture easy to misread:
+///
+/// - `SwiftInferCore.KnownProperty` is a **`String` enum of law identifiers**
+///   (`.equatableReflexive`), which `ProtocolCoverageMap` uses to veto a template when a
+///   conformance already means the kit covers that law.
+/// - `CuratedEntry` (this type) is a **struct holding one curated catalog row** about a
+///   standard-library type.
+///
+/// Nothing ever had to write `SwiftInferCore.KnownProperty` to disambiguate, because
+/// `SwiftInferCLI` never needs the enum — so the collision never broke a build and stayed
+/// latent. `Entry` is also the more honest noun: this holds `type`, `statement`, `kind`,
+/// `role`, `witnesses`, `template`, `note`, `checkBody` and `imports`, which is a row in a
+/// catalog rather than a property.
+public struct CuratedEntry: Sendable, Equatable {
     public let type: String
     public let structure: String
     public let statement: String
-    public let kind: KnownPropertyKind
+    public let kind: CuratedEntryKind
     /// Whether `discover` consults this entry (`.anchor`) or it is pure
     /// documentation (`.reference`). Derived from `template` by the builders.
-    public let role: KnownPropertyRole
+    public let role: CuratedEntryRole
     /// The SwiftPropertyLaws **law suite** this entry witnesses — an algebraic protocol
     /// (`"CommutativeMonoid"`, `"Semilattice"`) or a conformance suite
     /// (`"Collection"` → `checkCollectionPropertyLaws`). `nil` when no kit suite covers
@@ -110,11 +129,11 @@ public struct KnownProperty: Sendable, Equatable {
 
 public enum CuratedStdlibCatalog {
 
-    public static let laws: [KnownProperty] = all.filter { $0.kind == .law }
-    public static let caveats: [KnownProperty] = all.filter { $0.kind == .caveat }
+    public static let laws: [CuratedEntry] = all.filter { $0.kind == .law }
+    public static let caveats: [CuratedEntry] = all.filter { $0.kind == .caveat }
 
     // Int — additive commutative monoid + max semilattice
-    private static let intLaws: [KnownProperty] = [
+    private static let intLaws: [CuratedEntry] = [
         law(
             "Int", "commutative monoid under +", "a + b == b + a",
             "let a = randInt(), b = randInt(); return a + b == b + a",
@@ -166,7 +185,7 @@ public enum CuratedStdlibCatalog {
     // inputs, and is NOT associative even for finite values → witnesses NO
     // protocol (it is not a Monoid). Listed explicitly so its special-case
     // status is visible rather than read as an oversight.
-    private static let doubleLaws: [KnownProperty] = [
+    private static let doubleLaws: [CuratedEntry] = [
         law(
             "Double", "commutative under + (finite inputs)", "a + b == b + a",
             "let a = randDouble(), b = randDouble(); return a + b == b + a",
@@ -187,7 +206,7 @@ public enum CuratedStdlibCatalog {
     ]
 
     // Bool — && / || are bounded semilattices (over boolean values)
-    private static let boolLaws: [KnownProperty] = [
+    private static let boolLaws: [CuratedEntry] = [
         law(
             "Bool", "semilattice under &&", "(a && b) == (b && a)",
             "let a = randBool(), b = randBool(); return (a && b) == (b && a)",
@@ -207,7 +226,7 @@ public enum CuratedStdlibCatalog {
 
     // String — free monoid under concatenation (NOT commutative), plus
     // uppercasing idempotence and the reverse involution.
-    private static let stringLaws: [KnownProperty] = [
+    private static let stringLaws: [CuratedEntry] = [
         law(
             "String", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
             "let a = randStr(), b = randStr(), c = randStr(); return (a + b) + c == a + (b + c)",
@@ -231,7 +250,7 @@ public enum CuratedStdlibCatalog {
     ]
 
     // Array — free monoid + reverse involution + sort idempotence
-    private static let arrayLaws: [KnownProperty] = [
+    private static let arrayLaws: [CuratedEntry] = [
         law(
             "Array", "reverse is an involution", "a.reversed().reversed() == a",
             "let a = randArr(); return Array(a.reversed().reversed()) == a",
@@ -255,7 +274,7 @@ public enum CuratedStdlibCatalog {
     ]
 
     // Set — bounded semilattice under union / intersection
-    private static let setLaws: [KnownProperty] = [
+    private static let setLaws: [CuratedEntry] = [
         law(
             "Set", "semilattice under union", "a.union(b) == b.union(a)",
             "let a = randSet(), b = randSet(); return a.union(b) == b.union(a)",
@@ -320,7 +339,7 @@ public enum CuratedStdlibCatalog {
         )
     ]
 
-    public static let all: [KnownProperty] =
+    public static let all: [CuratedEntry] =
         intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws
             + optionalLaws + dictionaryLaws + stackLaws + queueLaws
             + numericsLaws + collectionsLaws + algorithmsLaws + foundationLaws + caveatEntries

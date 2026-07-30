@@ -13,7 +13,7 @@ extension CuratedStdlibCatalog {
     // Caveats — plausible-looking NON-properties (never asserted true)
     // Internal rather than `private`: it moved out of `CuratedStdlibCatalog.swift` and its
     // one consumer (the `all` aggregate) stayed behind.
-    static let caveatEntries: [KnownProperty] = [
+    static let caveatEntries: [CuratedEntry] = [
         caveat(
             "String", "+ is NOT commutative",
             "`a + b != b + a` in general — concatenation is ordered.",

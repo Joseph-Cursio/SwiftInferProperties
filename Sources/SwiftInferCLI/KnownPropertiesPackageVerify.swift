@@ -13,7 +13,7 @@ enum KnownPropertiesPackageVerify {
 
     /// Build + run the package program for `laws` (all of which carry `imports`),
     /// returning the `PASS`/`FAIL` verdict map keyed by `displayName`.
-    static func run(laws: [KnownProperty]) throws -> [String: Bool] {
+    static func run(laws: [CuratedEntry]) throws -> [String: Bool] {
         let modules = Set(laws.flatMap(\.imports))
         let resolved = try KnownPropertiesPackages.resolve(modules: modules)
         let root = try synthesizePackage(laws: laws, modules: modules, resolved: resolved)
@@ -25,7 +25,7 @@ enum KnownPropertiesPackageVerify {
     /// dependencies + an executable target linking their products, and
     /// `main.swift` = the rendered verify program with the module imports.
     private static func synthesizePackage(
-        laws: [KnownProperty],
+        laws: [CuratedEntry],
         modules: Set<String>,
         resolved: (packages: [KnownPropertiesPackages.Dependency], products: [(String, String)])
     ) throws -> URL {

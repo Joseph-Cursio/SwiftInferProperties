@@ -12,7 +12,7 @@ extension CuratedStdlibCatalog {
 
     // MARK: - Deque (DequeModule)
 
-    private static let dequeLaws: [KnownProperty] = [
+    private static let dequeLaws: [CuratedEntry] = [
         law(
             "Deque", "reverse is an involution", "Array(d.reversed().reversed()) == Array(d)",
             "let d = Deque(randArr()); return Array(d.reversed().reversed()) == Array(d)",
@@ -34,7 +34,7 @@ extension CuratedStdlibCatalog {
 
     // MARK: - OrderedSet / OrderedDictionary (OrderedCollections)
 
-    private static let orderedLaws: [KnownProperty] = [
+    private static let orderedLaws: [CuratedEntry] = [
         law(
             "OrderedSet", "idempotent under union", "x.union(x) == x",
             "let x = OrderedSet(randArr()); return x.union(x) == x",
@@ -66,7 +66,7 @@ extension CuratedStdlibCatalog {
 
     // MARK: - BitSet (BitCollections) — full SetAlgebra
 
-    private static let bitSetLaws: [KnownProperty] = [
+    private static let bitSetLaws: [CuratedEntry] = [
         law(
             "BitSet", "commutative under union", "a.union(b) == b.union(a)",
             "let a = BitSet(randArr().map { $0 & 63 }), b = BitSet(randArr().map { $0 & 63 }); "
@@ -94,7 +94,7 @@ extension CuratedStdlibCatalog {
 
     // MARK: - TreeSet / TreeDictionary (HashTreeCollections) — persistent CHAMP
 
-    private static let treeLaws: [KnownProperty] = [
+    private static let treeLaws: [CuratedEntry] = [
         law(
             "TreeSet", "commutative under union", "a.union(b) == b.union(a)",
             "let a = TreeSet(randArr()), b = TreeSet(randArr()); return a.union(b) == b.union(a)",
@@ -118,7 +118,7 @@ extension CuratedStdlibCatalog {
 
     // MARK: - Heap (HeapModule) — model-based (no protocol row applies)
 
-    private static let heapLaws: [KnownProperty] = [
+    private static let heapLaws: [CuratedEntry] = [
         law(
             "Heap", "popMin drains in sorted order (model-based)", "draining popMin() == unordered.sorted()",
             "let arr = randArr(); var heap = Heap(arr); var out = [Int](); "
@@ -135,6 +135,6 @@ extension CuratedStdlibCatalog {
         )
     ]
 
-    static let collectionsLaws: [KnownProperty] =
+    static let collectionsLaws: [CuratedEntry] =
         dequeLaws + orderedLaws + bitSetLaws + treeLaws + heapLaws
 }

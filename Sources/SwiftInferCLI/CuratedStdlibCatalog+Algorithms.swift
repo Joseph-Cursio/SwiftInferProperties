@@ -6,7 +6,7 @@ import Foundation
 /// prefix. Carry `imports: ["Algorithms"]` → the package verify path.
 extension CuratedStdlibCatalog {
 
-    static let algorithmsLaws: [KnownProperty] = [
+    static let algorithmsLaws: [CuratedEntry] = [
         law(
             "Algorithms.uniqued", "idempotent under uniqued",
             "Array(a.uniqued().uniqued()) == Array(a.uniqued())",

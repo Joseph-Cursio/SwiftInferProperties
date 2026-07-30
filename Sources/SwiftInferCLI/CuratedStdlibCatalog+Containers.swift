@@ -11,7 +11,7 @@ extension CuratedStdlibCatalog {
     // them directly. None witnesses a kit ALGEBRAIC protocol (functor/monad
     // laws aren't Semigroup/Monoid/…), so all tag none — and none anchors
     // (no `functor` template exists), so all are `.reference`.
-    static let optionalLaws: [KnownProperty] = [
+    static let optionalLaws: [CuratedEntry] = [
         law(
             "Optional", "functor identity", "o.map { $0 } == o",
             "let o = randOpt(); return o.map { $0 } == o"
@@ -30,7 +30,7 @@ extension CuratedStdlibCatalog {
     // Dictionary — the mapValues functor laws, filter idempotence, and the
     // merge-with-self identity. `merging` is NOT commutative on key collisions
     // (see caveats).
-    static let dictionaryLaws: [KnownProperty] = [
+    static let dictionaryLaws: [CuratedEntry] = [
         law(
             "Dictionary", "mapValues functor identity", "d.mapValues { $0 } == d",
             "let d = randDict(); return d.mapValues { $0 } == d"
@@ -58,7 +58,7 @@ extension CuratedStdlibCatalog {
     // Not a stdlib type; these document the contract a user's own `Stack` owes,
     // verified against the canonical Array realization so the stdlib anchor has a
     // ground truth to match a discovered `push`/`pop` pair against.
-    static let stackLaws: [KnownProperty] = [
+    static let stackLaws: [CuratedEntry] = [
         law(
             "Stack", "LIFO via append/removeLast", "push x then pop ⇒ x, and the stack is restored",
             "let a = randArr(); var s = a; let x = randInt(); "
@@ -74,7 +74,7 @@ extension CuratedStdlibCatalog {
     // Queue — the FIFO contract, realized on `Array` (`append` / `removeFirst`).
     // Same framing as Stack: the contract a user's `Queue` owes, anchored to the
     // Array realization.
-    static let queueLaws: [KnownProperty] = [
+    static let queueLaws: [CuratedEntry] = [
         law(
             "Queue", "FIFO via append/removeFirst", "enqueue adds at the back; the front dequeues first",
             "let a = randArr(); var q = a; let x = randInt(); q.append(x); "
@@ -98,8 +98,8 @@ extension CuratedStdlibCatalog {
         template: String? = nil,
         note: String? = nil,
         imports: [String] = []
-    ) -> KnownProperty {
-        KnownProperty(
+    ) -> CuratedEntry {
+        CuratedEntry(
             type: type, structure: structure, statement: statement,
             kind: .law, role: template != nil ? .anchor : .reference,
             witnesses: witnesses, template: template, note: note, checkBody: checkBody,
@@ -112,8 +112,8 @@ extension CuratedStdlibCatalog {
         _ statement: String,
         _ note: String,
         template: String? = nil
-    ) -> KnownProperty {
-        KnownProperty(
+    ) -> CuratedEntry {
+        CuratedEntry(
             type: type, structure: statement, statement: statement,
             kind: .caveat, role: template != nil ? .anchor : .reference,
             witnesses: nil, template: template, note: note, checkBody: nil,

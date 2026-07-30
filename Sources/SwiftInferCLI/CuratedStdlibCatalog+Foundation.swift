@@ -6,7 +6,7 @@ import Foundation
 /// `imports` and run on the fast path alongside the standard-library laws.
 extension CuratedStdlibCatalog {
 
-    static let foundationLaws: [KnownProperty] = [
+    static let foundationLaws: [CuratedEntry] = [
         law(
             "Data", "base64 round-trip", "Data(base64Encoded: d.base64EncodedString()) == d",
             "let d = Data(randArr().map { UInt8($0 & 255) }); "

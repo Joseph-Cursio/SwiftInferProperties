@@ -64,11 +64,11 @@ struct KnownPropertiesTests {
         // The invariant the field exists to hold: an entry anchors iff it has a
         // template `discover` can match — never drifting from that fact.
         for property in CuratedStdlibCatalog.all {
-            let expected: KnownPropertyRole = property.template != nil ? .anchor : .reference
+            let expected: CuratedEntryRole = property.template != nil ? .anchor : .reference
             #expect(property.role == expected, "role/template out of sync: \(property.displayName)")
         }
 
-        func role(_ type: String, _ statement: String) -> KnownPropertyRole? {
+        func role(_ type: String, _ statement: String) -> CuratedEntryRole? {
             CuratedStdlibCatalog.all.first { $0.type == type && $0.statement == statement }?.role
         }
         // Anchors: a proven-analog law and a trap caveat both feed StdlibAnchor.

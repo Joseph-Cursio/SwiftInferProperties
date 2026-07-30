@@ -10,7 +10,7 @@ enum KnownPropertiesRenderer {
     /// `verifyResults` is non-nil, annotate each law with its measured
     /// PASS/FAIL (from a `--verify` run).
     static func renderList(
-        _ properties: [KnownProperty],
+        _ properties: [CuratedEntry],
         verifyResults: [String: Bool]? = nil
     ) -> String {
         let laws = properties.filter { $0.kind == .law }
@@ -57,7 +57,7 @@ enum KnownPropertiesRenderer {
         return lines.joined(separator: "\n") + "\n"
     }
 
-    private static func orderedTypes(_ laws: [KnownProperty]) -> [String] {
+    private static func orderedTypes(_ laws: [CuratedEntry]) -> [String] {
         var seen = Set<String>()
         return laws.map(\.type).filter { seen.insert($0).inserted }
     }
@@ -70,7 +70,7 @@ enum KnownPropertiesRenderer {
     /// `imports` it prepends those module imports and is compiled as a temp
     /// package's `main.swift` (the package path) so external Apple-library laws
     /// build against the real releases.
-    static func renderVerifyProgram(_ laws: [KnownProperty], imports: [String] = []) -> String {
+    static func renderVerifyProgram(_ laws: [CuratedEntry], imports: [String] = []) -> String {
         var lines: [String] = []
         for module in imports.sorted() {
             lines.append("import \(module)")

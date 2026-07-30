@@ -271,6 +271,13 @@ public enum ProtocolCoverageMap {
 /// splitting them into separate files adds an import hop without
 /// adding clarity. Mirrors `FloatingPointStorageNames`'s self-contained
 /// posture.
+/// A law IDENTIFIER — the unit `ProtocolCoverageMap` reasons about when deciding whether a
+/// conformance means PropertyLawKit already covers what a template would propose.
+///
+/// Not to be confused with `SwiftInferCLI.CuratedEntry`, which until 2026-07-30 was also
+/// called `KnownProperty`. That one is a struct holding a curated catalog row about a stdlib
+/// type; this one is an enum of identifiers. Renaming it was the fix; this note is so the
+/// name does not drift back.
 public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
 
     // — Additive (stdlib AdditiveArithmetic / Numeric / SignedNumeric)
