@@ -1,10 +1,21 @@
 import Foundation
 
-/// V1.145 — a curated catalog of **known-true** algebraic properties on
-/// standard-library types, plus the famous **caveats** (properties that
-/// look plausible but do NOT hold). Shipped built-in with the engine
-/// (universal, versioned) — deliberately NOT written into any project's
-/// `.swiftinfer/`, which stays the user's own discovered corpus.
+/// V1.145 — a curated catalog of **known-true** properties on standard-library
+/// types, plus the famous **caveats** (properties that look plausible but do NOT
+/// hold). Shipped built-in with the engine (universal, versioned) — deliberately
+/// NOT written into any project's `.swiftinfer/`, which stays the user's own
+/// discovered corpus.
+///
+/// **Not restricted to algebraic properties**, and the restriction that used to be
+/// stated here was narrower than this file's own inclusion rule two paragraphs down.
+/// That rule is *known-true by contract* **and** *verifiable on a constructible
+/// carrier* — it says nothing about algebra, and four of the eight carriers it names
+/// are collections. `Sequence` and `Collection` contracts satisfy both halves
+/// exactly, and PropertyLawKit ships `checkSequencePropertyLaws` /
+/// `checkCollectionPropertyLaws` to run them.
+///
+/// The word survived because the *tagging* model was algebraic (see `witnesses`),
+/// not because the scope was. Scope and tag are now separated.
 ///
 /// **This is ours, not Apple's.** It was named `StandardLibraryProperties` and renamed
 /// because that read like an upstream Swift type: nothing by that name exists anywhere in
@@ -60,9 +71,18 @@ public struct KnownProperty: Sendable, Equatable {
     /// Whether `discover` consults this entry (`.anchor`) or it is pure
     /// documentation (`.reference`). Derived from `template` by the builders.
     public let role: KnownPropertyRole
-    /// The SwiftPropertyLaws kit protocol this law witnesses (e.g.
-    /// `"CommutativeMonoid"`), or `nil` when the structure conforms to no
-    /// kit protocol (see the type doc for the Double / unary cases).
+    /// The SwiftPropertyLaws **law suite** this entry witnesses — an algebraic protocol
+    /// (`"CommutativeMonoid"`, `"Semilattice"`) or a conformance suite
+    /// (`"Collection"` → `checkCollectionPropertyLaws`). `nil` when no kit suite covers
+    /// it (see the type doc for the `Double` / unary cases).
+    ///
+    /// Widened from "algebraic protocol" to "law suite", because the narrower reading was
+    /// what kept the whole catalog algebraic. The kit runs 44 suites; only a handful are
+    /// algebraic structures, and a `Collection` law witnesses `Collection` just as
+    /// legitimately as `Set.union` witnesses `Semilattice`. The field's job was always
+    /// "which upstream suite already proves this", not "which algebra does it form" — the
+    /// doc even strained against itself, noting that "unary idempotence / involutions
+    /// aren't algebraic protocols either, so they tag none".
     public let witnesses: String?
     /// The `discover` template family this entry corresponds to (e.g.
     /// `"commutativity"`), so the stdlib anchor can match a discovered
@@ -297,41 +317,6 @@ public enum CuratedStdlibCatalog {
             "a.symmetricDifference(b).symmetricDifference(b) == a",
             "let a = randSet(), b = randSet(); "
                 + "return a.symmetricDifference(b).symmetricDifference(b) == a"
-        )
-    ]
-
-    // Caveats — plausible-looking NON-properties (never asserted true)
-    private static let caveatEntries: [KnownProperty] = [
-        caveat(
-            "String", "+ is NOT commutative",
-            "`a + b != b + a` in general — concatenation is ordered.",
-            template: "commutativity"
-        ),
-        caveat(
-            "Array", "+ is NOT commutative",
-            "`a + b != b + a` in general — concatenation is ordered.",
-            template: "commutativity"
-        ),
-        caveat(
-            "Double", "+ is NOT associative",
-            "IEEE-754 rounding: `(a + b) + c != a + (b + c)` for some values.",
-            template: "associativity"
-        ),
-        caveat(
-            "Set", "subtracting is NOT commutative",
-            "`a.subtracting(b) != b.subtracting(a)` in general.",
-            template: "commutativity"
-        ),
-        caveat(
-            "Dictionary", "merging is NOT commutative on key collisions",
-            "`d1.merging(d2) { a, _ in a } != d2.merging(d1) { a, _ in a }` when a key is in "
-                + "both with different values — the uniquing closure's `first` argument differs.",
-            template: "commutativity"
-        ),
-        caveat(
-            "Bool", "&& / || short-circuit — laws hold for VALUES, not evaluation",
-            "Swift does not evaluate the right operand when the left decides the result, "
-                + "so with side effects `a && f()` and `f() && a` differ in what runs."
         )
     ]
 
