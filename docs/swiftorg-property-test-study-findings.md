@@ -425,9 +425,64 @@ at `FloatingPointParsing.swift:169`. `discover` still proposes nothing: **zero**
 cite the parse file, against 129 citing the types file.
 
 That kills the generic-initializer hypothesis recorded above — the non-generic overload
-exists and is equally unreached. The live candidate is now the initializer-label-stem gate,
-which requires the init's argument label to stem the encode name; `init?(_ text: String)` is
-**unlabelled**, so no stem can match.
+exists and is equally unreached.
+
+#### Diagnosed: the gate excludes the protocol's own required spelling
+
+`FunctionPairing.initializerPairAdmissible` is a **hard admission gate**, not a score:
+
+```swift
+guard label != "init", label.count >= 3 else { return false }
+```
+
+An unlabelled init synthesizes to the bare name `"init"`, so the guard fails and **the pair
+never forms** — which is why *zero* suggestions cite the parse file rather than some scoring
+below the cut.
+
+The gate is defensible in general: without it every single-parameter init would pair with
+every same-typed function, and its own doc says it exists so naming stays "a signal, not a
+pre-filter". But `LosslessStringConvertible` declares, in `OutputStream.swift:185`:
+
+```swift
+public protocol LosslessStringConvertible: CustomStringConvertible {
+  init?(_ description: String)          // UNLABELLED, by protocol definition
+}
+```
+
+So the gate structurally excludes **every conformance to the one standard-library protocol
+whose entire contract is a round-trip law**. `extension ${Self}: LosslessStringConvertible`
+at `FloatingPointParsing.swift.gyb:59` is exactly that conformance, on exactly the types
+this corpus property-tests most.
+
+#### Three layers, three different states — and only the middle one is a "miss"
+
+| layer | state |
+|---|---|
+| **PropertyLawKit** | **covers it** — `checkLosslessStringConvertiblePropertyLaws` ships |
+| **`discover`** | **cannot reach it** — the admission gate rejects the protocol's spelling |
+| **`ProtocolCoverageMap`** | **cannot record it** — has no `LosslessStringConvertible` entry, so the decline is inexpressible |
+
+**No behavioural symptom.** Adding the protocol to the coverage map would change nothing
+today: the veto only fires on a proposed suggestion, and the pair never forms. The symptom is
+epistemic — we cannot currently distinguish *"we decline this because the kit runs it"* from
+*"we miss this"*, which is precisely the confusion that produced two wrong verdicts earlier
+in this study.
+
+#### A second witness for the coverage-map gap
+
+§1.15 recorded `ProtocolCoverageMap` (22 properties) as incomplete against the kit (44 law
+suites), missing the `Sequence`/`Collection` family, and downgraded it to latent for want of
+a symptom. `LosslessStringConvertible` is a second absence of the same kind.
+
+Two witnesses make it a pattern rather than an oversight: **the coverage map is a hand-kept
+subset of the kit, with no mechanism keeping the two in step.** Still no behavioural symptom,
+so still not urgent — but the fix is now clearer than "add some cases": it wants a check that
+every kit `check…PropertyLaws` suite has a coverage entry or a recorded reason for not having
+one.
+
+**Verdict for this law: `declined` in substance, by accident in mechanism.** The toolchain
+runs it; `discover` stands aside for a reason unrelated to the division of labour, and cannot
+say so.
 
 **The real value of the fix is epistemic, not numeric**: it converted an unmeasurable reach
 question ("we cannot see those sources") into a measurable catalog question ("we see them and
