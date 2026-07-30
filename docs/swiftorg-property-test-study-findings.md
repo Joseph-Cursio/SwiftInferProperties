@@ -339,9 +339,80 @@ Two causes, and the first is a measurement error to fix before concluding anythi
    generic initializer**. Pairing `Float16 -> String` against `S -> Float16?` needs `S`
    resolved to `String`. Worth confirming as the cause before treating it as a gap.
 
-**Open, not concluded.** Unlike `check-battery`, this population does not have a clean
-verdict yet: it needs a type-level match against the right source tree per site. Recorded as
-the next step rather than guessed at.
+#### Reconciliation COMPLETE — and the first `ours-covers` in the study
+
+Redone per-law against the tree that actually defines each carrier. The ~10 law definitions
+resolve into four groups:
+
+| law (definitions) | carrier | verdict |
+|---|---|---|
+| Codable round-trip through JSON / Plist (3) | Foundation types | **`ours-covers`** |
+| `Float16/32/64` parse/print (3) | concrete float types | **unreachable — source is `.gyb`** |
+| SIMD round-trip (1–2) | `SIMD4<Double>` etc. | **unreachable — source is `.gyb`** |
+| `Character` ↔ `String` (1) | `Character` | `gap-with-witness`, with a caveat |
+| `BridgeIdAsAny` dynamic-cast (1) | runtime | out of scope — no source-level pair |
+| `getRoundtripBridged*` (3) | — | not laws; value-producing helpers |
+
+**`ours-covers`, at last — 9 types.** The corpus round-trips them through `Codable`, and
+`discover` independently proposes `codable-round-trip` on each one's `encode(to:)`:
+
+`Calendar` · `DateComponents` · `IndexPath` · `Locale` · `Range` · `TimeZone` · `URL` ·
+`URLComponents` · `UUID`
+
+*Method, with its limitation stated:* matched by source-file basename against the type the
+corpus names, then each of the 9 confirmed to be an `encode(to:)` suggestion in the file
+named for that type. Basename-to-type is a heuristic; it was checked, not assumed.
+
+**The earlier "zero overlap" was mine, not the tool's.** It came from reconciling
+Foundation-typed sites against `stdlib/public/core`. Flagged at the time as a measurement
+error rather than a finding, and this is the correction.
+
+#### The finding that matters more: a `.gyb` blind spot
+
+`Float16`, `Float32`, `Float64` and the `SIMD` types are declared **only** in `.gyb`
+templates — verified, no `.swift` declaration exists for any of them. A `.gyb` file is not
+valid Swift, so `FunctionScanner` cannot parse it and `discover` never sees those types at
+all.
+
+| `stdlib/public/core` | files | lines |
+|---|---:|---:|
+| `.swift` | 227 | 127,894 |
+| **`.gyb`** | **11** | **7,220** |
+| gyb share | 5% | 5% |
+
+Five percent by volume — but a *concentrated* five percent: `FloatingPointTypes`,
+`IntegerTypes`, `SIMDVectorTypes`, `FloatingPointParsing`, `AtomicInt`. Every concrete
+numeric and SIMD type in Swift.
+
+**Those are exactly the carriers this corpus writes property tests about.** Six of the ten
+round-trip laws here are on gyb-only types, and Q5's entire edge-value finding (`.nan`,
+`.infinity`, subnormals, `.ulp`) is about floats. The blind spot is small in bytes and
+central in subject.
+
+This is a **reach** limitation with nothing to do with the catalog — the templates would
+very likely fire on the generated output. It is also the most actionable item the study has
+produced, because it is fixable: run `gyb` into a temp tree and scan that, or teach the
+scanner to skip template directives. Recorded here; not attempted.
+
+#### The `Character` case, which is more interesting than a gap
+
+```swift
+func checkRoundTripThroughCharacter(_ s: String) {
+  let c = Character(s); let s2 = String(c)
+  expectEqual(Array(s.unicodeScalars), Array(s2.unicodeScalars))
+}
+```
+
+Two *initializers* across two types, compared on a **projection** (`unicodeScalars`) rather
+than by equality. And the projection is load-bearing: `String(Character(s)) == s` is **false**
+for some inputs, because a multi-scalar grapheme can normalise. The corpus states the weaker,
+correct law deliberately.
+
+We propose nothing here, and it is worth being precise about why that is only half a gap: our
+`round-trip` template states `g(f(x)) == x`, which for this pair would be the **false** law.
+Reaching this case needs projection-aware round-trip — closer to `normal-form` than to
+`round-trip` — so the honest verdict is "a gap, and naively closing it would ship a false
+law".
 
 ### 1.3 `lit-checknot` — resolved by scoping, §0.3(c) closed
 
