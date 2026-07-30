@@ -488,7 +488,9 @@ people the tools disagree."*
 
 So the gap is no longer latent. Full disposition of the 44 suites: **13 covered, 10 not a
 conformance** (kit-invented law shapes like `ValueSemantic` and `InteractionInvariant`, with
-nothing to key a veto on), **20 uncovered with no symptom**, and **1 live double-report**.
+nothing to key a veto on), **20 uncovered with no symptom**, and **1 live double-report**
+(since fixed — see below; the map now models 14 protocols and the suite pins zero live
+double-reports).
 
 The test asserts a *decision* rather than coverage — a new kit suite lands unclassified and
 fails, which is the drift nothing could previously detect. Verified it can fail by removing a
@@ -498,6 +500,71 @@ closing the defect turns the suite red as the signal to delete it.
 **Verdict for this law: `declined` in substance, by accident in mechanism.** The toolchain
 runs it; `discover` stands aside for a reason unrelated to the division of labour, and cannot
 say so.
+
+##### Closing it took two fixes, and the second one was the real finding
+
+The obvious fix — a `Strideable` coverage entry plus a **pair-scoped** veto in
+`RoundTripTemplate` — was verified to fire on a concrete `Strideable` carrier, and **moved
+`stdlib/public/core` not at all.** The veto was correct and simply never consulted, because
+the carrier there is the *protocol* `BinaryInteger` and the scanner skipped protocol
+declarations outright. Their inheritance clause was never recorded, so `ProtocolCoverageMap`
+could not learn that **any** protocol refines any other: not a `Strideable`-shaped gap but a
+whole mechanism disabled for a whole class of carrier.
+
+Recording protocol decls for their inheritance clause (body still skipped — requirements have
+no implementations) closed it. The double-report went away, 740 → 739 suggestions, the single
+removed row being exactly `distance(to:)` × `advanced(by:)` at `Integers.swift:1843/1882`.
+
+The **43 other rows that changed** are the more useful result. Each had carried
+
+> ⚠ T must conform to Equatable for the emitted property to compile. This tool does not
+> verify protocol conformance — confirm before applying.
+
+and each dropped it, across the carriers `SIMD`, `FloatingPoint`, `StringProtocol` and
+`SetAlgebra`. All four genuinely refine `Equatable` — the first three via `Hashable`,
+`SetAlgebra` directly — so the tool had been asking a reviewer to hand-confirm something it
+was standing on the evidence for. Zero rows *gained* the caveat. The test that had pinned the
+old behaviour justified it as *"protocol bodies contribute no `Equatable` evidence about
+concrete types"*, which is the belief the measurement falsified.
+
+**The transferable point:** a correct veto that nothing ever calls is indistinguishable from a
+missing veto from the outside, and reading the veto cannot tell them apart — only running it
+on a corpus can. This is the *"refuter that fires first hides every refuter behind it"* rule
+one level up: here the thing in front was not another refuter but the absence of an input.
+
+###### Cross-corpus: the effect is real but confined, and that is a fact about the stdlib
+
+| corpus | suggestions before → after | `Equatable` caveats before → after |
+|---|---|---|
+| `swift/stdlib/public/core` | 740 → **739** | 169 → **126** |
+| `swift-syntax` | 1,115 → 1,115 | 417 → 417 |
+| `swift-foundation` | 1,265 → 1,265 | 695 → 695 |
+| this repo | 249 → 249 | 18 → 18 |
+
+The change is *active* on all four — protocol decls are recorded everywhere — there is simply
+no evidence to act on outside the stdlib. swift-syntax declares **80** protocols with an
+inheritance clause and exactly **1** that directly refines `Equatable`/`Hashable`/`Comparable`;
+swift-foundation, 37 and 5. The stdlib is the outlier because **its protocols are its
+carriers**: the numeric and SIMD API lives in `extension FloatingPoint` / `extension SIMD`,
+so the carrier of a suggestion is routinely a protocol name. Elsewhere the API hangs off
+concrete types and the question never arises.
+
+###### One guard had to come with it
+
+Recording protocol decls exposed them to `CarrierKindResolver` for the first time, and a
+protocol record carries **no stored members** — so it fell straight through to
+`classifyMembers([])`, whose documented default is *"empty stored properties → value-semantic
+by default."* For an `AnyObject`-constrained protocol that is not a heuristic but a false
+statement, and `.valueSemantic` is a **+5 signal** asserting *"algebraic property is
+well-defined under aliasing"* — precisely what a reference type breaks. A class-bound check
+(`AnyObject`, and the legacy `class` spelling) now runs before the member aggregation.
+
+Deliberately narrow: an *unconstrained* protocol still classifies value-semantic, which is
+also unsound — a class may adopt it — but that is the resolver's pre-existing answer for every
+protocol carrier reached via an extension record, and it is why `FloatingPoint` and
+`BinaryInteger` already classified value-semantic before this change and the corpus carrier
+classification did not move. Tightening it is a separate decision that wants its own
+measurement, not a rider on a scanner fix. `CarrierKindProtocolBoundTests` pins both halves.
 
 **The real value of the fix is epistemic, not numeric**: it converted an unmeasurable reach
 question ("we cannot see those sources") into a measurable catalog question ("we see them and

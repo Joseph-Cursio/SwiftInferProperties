@@ -36,6 +36,15 @@ public struct TypeDecl: Sendable, Equatable {
         case `enum`
         case `actor`
         case `extension`
+        /// A protocol declaration. Recorded for its **inheritance clause only** — the body is
+        /// still skipped, because requirements have no implementations to summarise.
+        ///
+        /// Added 2026-07-30. Protocols were skipped outright, so a protocol's refinements were
+        /// invisible: `ProtocolCoverageMap` could not see that `BinaryInteger` refines
+        /// `Strideable` (`Integers.swift:533`), and therefore **no coverage veto could ever
+        /// fire on a protocol-extension carrier**. Measured before the fix: 6 typeDecls named
+        /// `BinaryInteger`, every one with `inheritedTypes == []`.
+        case `protocol`
     }
 
     /// For primary decls, the type's identifier as written. For

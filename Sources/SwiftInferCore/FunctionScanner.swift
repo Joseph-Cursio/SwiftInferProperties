@@ -358,9 +358,34 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         enclosingTypeNonPublic.removeLast()
     }
 
-    /// Protocol decls — skip body entirely (requirements have no body).
-    override func visit(_: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        .skipChildren
+    /// Protocol decls — **record the declaration, skip the body**.
+    ///
+    /// The body skip is unchanged and still correct: requirements have no implementations,
+    /// so there is nothing to summarise, and Swift forbids nesting a concrete type inside a
+    /// protocol, so `.skipChildren` cannot lose one.
+    ///
+    /// What changed (2026-07-30) is that the decl itself is now recorded, for its
+    /// **inheritance clause**. Skipping the node outright meant a protocol's refinements were
+    /// never seen by anything: `ProtocolCoverageMap` could not learn that `BinaryInteger`
+    /// refines `Strideable` (`Integers.swift:533`), so **no coverage veto could fire on any
+    /// protocol-extension carrier** — a whole mechanism disabled for a whole class of carrier,
+    /// not a `Strideable`-specific gap. Measured before: 6 typeDecls named `BinaryInteger` on
+    /// `stdlib/public/core`, every one with `inheritedTypes == []`.
+    ///
+    /// A protocol record is inert everywhere else by construction. It carries no stored
+    /// members, no initialisers and no enum cases, and
+    /// `TypeShape.Kind.init?(swiftInferKind:)` maps `.protocol` to `nil`, so protocols never
+    /// reach the strategist or become generator targets — the same treatment `.extension`
+    /// already gets.
+    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        typeDecls.append(makeTypeDecl(
+            name: node.name.text,
+            kind: .protocol,
+            inheritanceClause: node.inheritanceClause,
+            keywordToken: node.protocolKeyword,
+            memberBlock: node.memberBlock
+        ))
+        return .skipChildren
     }
 
     /// Cycle 151 (Lever D) — true if a type/extension carries an explicit

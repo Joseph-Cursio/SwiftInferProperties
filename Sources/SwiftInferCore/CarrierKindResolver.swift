@@ -114,11 +114,36 @@ public struct CarrierKindResolver: Sendable {
         if kinds.contains(.class) || kinds.contains(.actor) {
             return .referenceType
         }
+        // A **class-bound** protocol is a reference type, and must be caught before the
+        // member aggregation below — a protocol record carries no stored members, so it
+        // would otherwise fall through to `classifyMembers([])` and be called
+        // value-semantic, which for `AnyObject`-constrained existentials is simply false.
+        //
+        // This guard exists because protocol decls became visible to this resolver on
+        // 2026-07-30. Before that a protocol name reached here only via its *extension*
+        // records — which is why `FloatingPoint` and `BinaryInteger` already classified as
+        // value-semantic on `stdlib/public/core`, and why that corpus does not move.
+        //
+        // Deliberately narrow: only `AnyObject`/`class` bounds flip. An unconstrained
+        // protocol can still be adopted by a class, so `.valueSemantic` is not *sound* for
+        // it either — but that is the resolver's pre-existing posture for every protocol
+        // carrier reached through an extension record, and tightening it is a separate,
+        // measurable decision rather than a rider on a scanner fix.
+        if decls.contains(where: { $0.kind == .protocol && Self.isClassBound($0) }) {
+            return .referenceType
+        }
         // Aggregate stored members across all decls. Swift forbids stored
         // properties in extensions of types declared elsewhere, but the
         // scanner records primary + extension uniformly — flat aggregation
         // is safe.
         return classifyMembers(decls.flatMap(\.storedMembers), depth: depth)
+    }
+
+    /// `true` when a protocol decl constrains its conformers to be classes, so any
+    /// existential of it is a reference. Both spellings count: the modern `: AnyObject` and
+    /// the legacy `: class`, which the scanner records verbatim from the inheritance clause.
+    private static func isClassBound(_ decl: TypeDecl) -> Bool {
+        decl.inheritedTypes.contains { $0 == "AnyObject" || $0 == "class" }
     }
 
     private func classifyMembers(_ allStoredMembers: [StoredMember], depth: Int) -> CarrierKind {

@@ -130,20 +130,62 @@ struct TypeDeclScannerBasicsTests {
         #expect(names == ["Outer", "Inner", "Tag"])
     }
 
-    // MARK: Protocol decls — skipped
+    // MARK: Protocol decls — recorded, but body still skipped
 
+    /// Inverted 2026-07-30. This test used to assert `corpus.typeDecls.isEmpty`, on the
+    /// reasoning that protocols *"contribute no `Equatable` evidence about concrete types."*
+    /// Measurement falsified that: recording protocol decls withdrew **43** `⚠ T must conform
+    /// to Equatable … this tool does not verify protocol conformance` caveats on
+    /// `stdlib/public/core`, across the carriers `SIMD`, `FloatingPoint`, `StringProtocol`
+    /// and `SetAlgebra` — every one of which really does refine `Equatable` (the first three
+    /// via `Hashable`, `SetAlgebra` directly). The evidence was there; nothing was reading it.
     @Test
-    func protocolDeclsAreNotEmittedAsTypeDecls() {
-        // Protocol bodies are intentionally skipped by the scanner — they
-        // contribute no `Equatable` evidence about concrete types and the
-        // existing visitor short-circuits with `.skipChildren`.
+    func protocolDeclsAreRecordedForTheirInheritanceClause() throws {
         let source = """
-        protocol Named {
+        protocol Named: Hashable, CustomStringConvertible {
             var name: String { get }
         }
         """
         let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
-        #expect(corpus.typeDecls.isEmpty)
+        let decl = try #require(corpus.typeDecls.first { $0.name == "Named" })
+        #expect(decl.kind == .protocol)
+        #expect(decl.inheritedTypes == ["Hashable", "CustomStringConvertible"])
+    }
+
+    /// The body skip is unchanged, and this is the half that keeps the change inert: a
+    /// protocol record must stay a *name and an inheritance clause*. Requirements have no
+    /// implementations, so nothing here may become a `FunctionSummary` to propose laws about,
+    /// and a `{ get }` requirement must not be mistaken for a stored member.
+    @Test
+    func protocolBodiesAreStillSkipped() throws {
+        let source = """
+        protocol Codec: Equatable {
+            init()
+            var name: String { get set }
+            func encode(_ value: Int) -> String
+            func decode(_ text: String) -> Int
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        #expect(corpus.summaries.isEmpty, "protocol requirements have no bodies to summarise")
+        #expect(corpus.restricted.isEmpty, "nor are they set-aside restricted functions")
+        let decl = try #require(corpus.typeDecls.first { $0.name == "Codec" })
+        #expect(decl.storedMembers.isEmpty, "`var name: String { get set }` is a requirement")
+        #expect(decl.enumCaseNames.isEmpty)
+        #expect(decl.initializers.isEmpty, "`init()` is a requirement, not a derivable init")
+    }
+
+    /// A protocol nested-name guard: recording the decl must not push it onto the type stack,
+    /// or a subsequent sibling would be qualified as though it were nested inside the protocol.
+    @Test
+    func aProtocolDoesNotBecomeAQualifyingScope() throws {
+        let source = """
+        protocol Marker {}
+        struct Widget { let size: Int }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let widget = try #require(corpus.typeDecls.first { $0.name == "Widget" })
+        #expect(widget.qualifiedName == "Widget")
     }
 
     // MARK: Location

@@ -213,16 +213,21 @@ public enum TypeShapeBuilder {
 
 private extension TypeShape.Kind {
 
-    /// Map SwiftInfer's `TypeDecl.Kind` (which adds `.extension`) onto
-    /// the strategist's `TypeShape.Kind`. Returns `nil` for `.extension`
-    /// — extension-only records have no primary kind and are skipped.
+    /// Map SwiftInfer's `TypeDecl.Kind` (which adds `.extension` and `.protocol`) onto
+    /// the strategist's `TypeShape.Kind`. Returns `nil` for both of those — neither is a
+    /// primary kind, so records of that kind are skipped.
+    ///
+    /// The `.protocol` arm is the load-bearing half of the 2026-07-30 scanner change.
+    /// Protocol decls are now recorded (for their inheritance clause), and returning `nil`
+    /// here is what keeps them from leaking into the rest of the pipeline: a protocol is not
+    /// a concrete type, has no values to generate, and must never become a strategist target.
     init?(swiftInferKind kind: TypeDecl.Kind) {
         switch kind {
         case .struct: self = .struct
         case .class: self = .class
         case .enum: self = .enum
         case .actor: self = .actor
-        case .extension: return nil
+        case .extension, .protocol: return nil
         }
     }
 }

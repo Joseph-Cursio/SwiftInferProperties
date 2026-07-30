@@ -26,14 +26,19 @@ import Testing
 /// named `distance`/`advanced`, not merely on the carrier conforming — `BinaryInteger`
 /// refines `Strideable`, so a carrier-only check would veto every round-trip on any integer).
 ///
-/// **One residual, from an unrelated defect.** The veto is verified to fire for a *concrete*
-/// `Strideable` carrier and correctly not to fire without the conformance. It still does not
-/// fire on `stdlib/public/core`, because the carrier there is the **protocol**
-/// `BinaryInteger` and `FunctionScanner.swift:362` skips protocol declarations outright
-/// (*"Protocol decls — skip body entirely"*). Their inheritance clause is therefore never
-/// recorded, so `ProtocolCoverageMap` cannot see that any protocol refines any other.
-/// Fixing that is a scanner change with a far wider blast radius than this veto, and is
-/// deliberately not bundled here.
+/// **The residual, and what it turned out to be hiding.** The veto was verified to fire for a
+/// *concrete* `Strideable` carrier, yet `stdlib/public/core` did not move — because the
+/// carrier there is the **protocol** `BinaryInteger`, and the scanner skipped protocol
+/// declarations outright, so `ProtocolCoverageMap` could not see that any protocol refines
+/// any other. Closed 2026-07-30 by recording protocol decls for their inheritance clause.
+///
+/// The double-report went away (740 → 739 suggestions, the removed row being exactly
+/// `distance(to:)` × `advanced(by:)`), but the larger finding was the **43** `⚠ T must conform
+/// to Equatable … this tool does not verify protocol conformance` caveats that also
+/// disappeared, on `SIMD` / `FloatingPoint` / `StringProtocol` / `SetAlgebra`. Those carriers
+/// always did refine `Equatable`; the evidence sat unread behind the same skip. A veto that is
+/// correct but never consulted is indistinguishable from a missing veto until something
+/// measures it — which is the argument for this suite, restated.
 ///
 /// **What it asserts:** every kit law suite has a recorded `Disposition`. It does not require
 /// coverage — plenty of suites legitimately have none — it requires a *decision*. A new kit
@@ -79,8 +84,8 @@ struct KitCoverageDriftTests {
         "Heap": .notAConformance,
         "Ring": .notAConformance,
 
-        // Fixed 2026-07-30 — was the study's one live double-report. See the suite doc for
-        // the residual: the veto cannot reach PROTOCOL carriers, for an unrelated reason.
+        // Fixed 2026-07-30 — was the study's one live double-report, and fully closed once
+        // the scanner learned to record protocol inheritance. See the suite doc.
         "Strideable": .covered,
 
         // — uncovered, no template proposes these laws today —

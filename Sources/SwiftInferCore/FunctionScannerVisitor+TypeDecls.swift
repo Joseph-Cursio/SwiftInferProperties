@@ -43,7 +43,8 @@ extension FunctionScannerVisitor {
             enumCaseNames = MemberBlockInspector.enumCaseNames(in: memberBlock)
             enumCases = MemberBlockInspector.enumCases(in: memberBlock)
 
-        case .struct, .class, .actor:
+        // `.protocol` joins these: a protocol cannot declare `case` members either.
+        case .struct, .class, .actor, .protocol:
             enumCaseNames = []
             enumCases = []
         }

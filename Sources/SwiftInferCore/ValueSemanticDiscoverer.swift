@@ -124,9 +124,19 @@ public enum ValueSemanticDiscoverer {
 
     /// Fold primary (non-extension) decls into a name → kind lookup for
     /// corpus-reference resolution.
+    ///
+    /// `.protocol` is excluded alongside `.extension`, deliberately. Protocol decls became
+    /// visible to the scanner on 2026-07-30 (recorded for their inheritance clause), and this
+    /// exclusion keeps that change from leaking here: the sole reader asks `kind == .class ||
+    /// kind == .actor`, so a protocol record could only ever *overwrite* a same-named class
+    /// and flip a reference-type answer to `false`.
+    ///
+    /// Whether an existential-typed member (`var delegate: SomeClassBoundProtocol`) should
+    /// count as a corpus reference is a real question, and a separate one — answering it here
+    /// would be a new detection riding in on a scanner fix.
     private static func foldKinds(_ typeDecls: [TypeDecl]) -> [String: TypeDecl.Kind] {
         var kindByName: [String: TypeDecl.Kind] = [:]
-        for decl in typeDecls where decl.kind != .extension {
+        for decl in typeDecls where decl.kind != .extension && decl.kind != .protocol {
             kindByName[decl.name] = decl.kind
         }
         return kindByName

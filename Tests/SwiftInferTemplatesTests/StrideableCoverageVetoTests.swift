@@ -88,22 +88,46 @@ struct StrideableCoverageVetoTests {
         )
     }
 
-    /// The residual, pinned so it is not mistaken for fixed.
+    /// The residual, **closed 2026-07-30** — this test is the inversion its predecessor asked
+    /// for (*"If this starts vetoing, the scanner learned protocol inheritance — invert this
+    /// test"*).
     ///
-    /// On `stdlib/public/core` the pair's carrier is the **protocol** `BinaryInteger`, and
-    /// `FunctionScanner.swift:362` skips protocol declarations outright — so their inheritance
-    /// clause is never recorded and `ProtocolCoverageMap` cannot see that `BinaryInteger`
-    /// refines `Strideable`. The veto below is correct and simply never consulted there.
-    /// Fixing that is a scanner change with a much wider blast radius.
-    @Test("a protocol carrier is still unreachable — the scanner records no protocol inheritance")
-    func protocolCarrierResidual() {
-        // Empty index = what the scanner actually produces for `BinaryInteger` today
-        // (measured: 6 typeDecls named BinaryInteger, every one with `inheritedTypes == []`).
+    /// The veto was correct from the day it was written and simply never consulted on
+    /// `stdlib/public/core`, because the carrier there is the **protocol** `BinaryInteger` and
+    /// the scanner skipped protocol declarations outright — so `ProtocolCoverageMap` could not
+    /// see that `BinaryInteger` refines `Strideable` (`Integers.swift:533`). The scanner now
+    /// records protocol decls for their inheritance clause, and the double-report is gone:
+    /// `stdlib/public/core` went 740 → 739 suggestions, the single removed row being exactly
+    /// `distance(to:)` × `advanced(by:)` at `Integers.swift:1843/1882`.
+    @Test("a protocol carrier is now reachable — the scanner records protocol inheritance")
+    func protocolCarrierIsVetoed() {
         #expect(
             RoundTripTemplate.suggest(
-                for: stridePair(on: "BinaryInteger"), inheritedTypesByName: [:]
-            ) != nil,
-            "If this starts vetoing, the scanner learned protocol inheritance — invert this test"
+                for: stridePair(on: "BinaryInteger"),
+                inheritedTypesByName: ["BinaryInteger": ["Strideable", "Numeric", "Hashable"]]
+            ) == nil
+        )
+    }
+
+    /// The end-to-end version of the above: the index comes from the *scanner* rather than
+    /// being hand-written, so this fails if protocol recording regresses even when the veto
+    /// itself is intact. That split is the whole lesson of this defect — a correct veto that
+    /// nothing ever calls looks identical to a missing veto from the outside.
+    @Test("scanner → coverage map → veto, end to end on a refining protocol")
+    func scannerSuppliedInheritanceReachesTheVeto() {
+        let source = """
+        protocol Tickable: Strideable {}
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Tick.swift")
+        var index: [String: Set<String>] = [:]
+        for decl in corpus.typeDecls {
+            index[decl.name, default: []].formUnion(decl.inheritedTypes)
+        }
+        #expect(index["Tickable"] == ["Strideable"])
+        #expect(
+            RoundTripTemplate.suggest(
+                for: stridePair(on: "Tickable"), inheritedTypesByName: index
+            ) == nil
         )
     }
 }
