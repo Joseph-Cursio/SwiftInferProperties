@@ -91,9 +91,23 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         // NB the commutativity set-verb fix (intersection / symmetricDifference)
         // is corpus-orthogonal — this corpus has no such functions — verified by
         // identical survey discovery with and without it.
-        #expect(records.count == 19)
+        // 19 → 18, and defaultFails 6 → 5. The dropped record is the one the comment below
+        // calls "the spurious `atLeastMedium`/`bumpUp` endomorphism pairing", and
+        // `ConfidenceUnary.swift` diagnoses it precisely: "the round-trip template pairs
+        // same-signature unary functions COMBINATORIALLY as forward/inverse candidates …
+        // there's no true inverse pair here."
+        //
+        // `endomorphismRoundTripPair` now suppresses it at DISCOVERY, so verify never sees
+        // it. This baseline was pinning the symptom of a known defect — propose a false law,
+        // build a workdir, run 100 trials, record `measuredDefaultFails` — and a refuted
+        // false positive is still a false positive that cost a verify cycle.
+        //
+        // bothPass stays 13, which is the part worth noticing: `Move.encode`/`Move.decode` is
+        // a curated inverse-name pair and survived untouched. That is the counter-signal's
+        // name exemption confirmed on a MEASURED corpus rather than on a fixture.
+        #expect(records.count == 18)
         #expect(records.filter { $0.outcome == .measuredBothPass }.count == 13)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 6)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
         // The catalogue-work true positives.
         #expect(hasRecord(records, "involution", .measuredBothPass))
         #expect(hasRecord(records, "binary-idempotence", .measuredBothPass))
@@ -103,11 +117,14 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         #expect(hasRecord(records, "commutativity", .measuredBothPass))
         #expect(hasRecord(records, "associativity", .measuredBothPass))
         #expect(hasRecord(records, "idempotence", .measuredBothPass))
-        // The first verifying round-trip in the project — the `Move.encode`/
-        // `Move.decode` bijection bothPasses, alongside the spurious
-        // `atLeastMedium`/`bumpUp` endomorphism pairing that defaultFails.
+        // The first verifying round-trip in the project — the `Move.encode`/`Move.decode`
+        // bijection bothPasses.
         #expect(hasRecord(records, "round-trip", .measuredBothPass))
-        #expect(hasRecord(records, "round-trip", .measuredDefaultFails))
+        // And the spurious `atLeastMedium`/`bumpUp` endomorphism pairing is now ABSENT rather
+        // than present-and-refuted. Asserted as an absence rather than deleted, so the
+        // improvement is pinned: if the endomorphism counter regresses, this fails here
+        // instead of quietly costing a verify cycle again.
+        #expect(!hasRecord(records, "round-trip", .measuredDefaultFails))
         // monotonicity: `score` (strictly increasing) bothPasses; `priority`
         // (curated name, non-monotone) is disproven by execution.
         #expect(hasRecord(records, "monotonicity", .measuredBothPass))

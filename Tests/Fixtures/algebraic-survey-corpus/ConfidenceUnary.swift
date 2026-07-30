@@ -2,12 +2,24 @@
 // `(Confidence) -> Confidence` ops where `f(f(x)) == f(x)`. Same `.caseIterable`
 // carrier (`Confidence`) as the binary ops, so generation is unchanged.
 //
-// Note on round-trip: the round-trip template pairs same-signature unary
+// Note on round-trip — HISTORICAL, and the diagnosis in it was right.
+//
+// This comment used to read: "the round-trip template pairs same-signature unary
 // functions combinatorially as forward/inverse candidates, so adding unary ops
 // surfaces a spurious round-trip pick (`atLeastMedium` paired with `bumpUp`) —
 // there's no true inverse pair here, and execution disproves it
-// (measured-defaultFails). A clean true-positive round-trip needs a dedicated
-// mutual-inverse pair on its own carrier; left out to keep the corpus tight.
+// (measured-defaultFails)."
+//
+// That named the defect exactly, and worked around it by documenting the false
+// positive as expected. It is now FIXED at discovery rather than tolerated:
+// `Signal.Kind.endomorphismRoundTripPair` suppresses `T -> T` × `T -> T` pairs
+// with no inverse-name evidence, so the pairing no longer surfaces and verify
+// no longer spends a workdir refuting it. `AlgebraicSurveyCorpusMeasuredTests`
+// asserts its ABSENCE.
+//
+// Kept rather than deleted because the corpus deliberately still contains the
+// shape — two same-signature unary ops that are not inverses — which is what
+// makes it a live regression guard for that counter-signal.
 
 extension Confidence {
     /// Clamp up to at least `.medium` — idempotent (`atLeastMedium ∘

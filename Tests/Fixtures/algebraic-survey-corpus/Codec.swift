@@ -1,10 +1,13 @@
 // Widens the algebraic corpus to the ROUND-TRIP family — the FIRST
 // verifying round-trip true positive in the project. cycle27-surface's
 // round-trip picks were all filtered false positives, and the unary
-// `atLeastMedium`/`bumpUp` pairing in `ConfidenceUnary.swift` is a
+// `atLeastMedium`/`bumpUp` pairing in `ConfidenceUnary.swift` used to be a
 // deliberate spurious pick (an endomorphism pair the template
-// over-generates → measured-defaultFails). This pair is a genuine
-// bijection → measured-bothPass.
+// over-generated → measured-defaultFails); it is now suppressed at
+// discovery by `endomorphismRoundTripPair`. This pair is a genuine
+// bijection → measured-bothPass, and it survives that counter-signal on its
+// CURATED `encode`/`decode` name — which is what the exemption is for, and
+// what the survey's unchanged 13 bothPass records confirm.
 //
 // Design notes — why this shape, NOT a rotation/involution pair on a
 // single enum:
