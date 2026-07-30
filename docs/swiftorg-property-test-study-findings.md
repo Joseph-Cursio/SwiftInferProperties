@@ -4,7 +4,8 @@ Companion to `swiftorg-property-test-study-scope.md`, which is the plan. This is
 record. **Every number here carries the corpus SHA it was measured at**; a count without
 one is not a measurement (scope §3).
 
-**Status: Q5 answered (§1.5). Q1 answered (§1.1). Q2/Q3/Q4 not started.**
+**Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on the `check-battery` population.
+Q3/Q4 not started.**
 
 ---
 
@@ -186,6 +187,67 @@ of 246), and **95%** for an unscoped `loops` count. Note what that decomposes in
 overload split and 0.8% is a spurious match. The error is almost never the regex — it is
 *scope* and *overload*, which is why the definition is a scope rule first, a construct rule
 second, and a syntax rule barely at all.
+
+### 1.15 Q2 — reconciliation against the frozen key (`swift` @ `408632e5`)
+
+Key frozen and committed in `a969ee9` **before** `discover` ran; 198 sites, 11 laws.
+
+| verdict | sites | share |
+|---|---:|---:|
+| **`declined`** — we understand it and stand aside | 102 | 51% |
+| **`gap-with-witness`** — no template, and here are the witnesses | **96** | **48%** |
+| `ours-covers` | 0 | 0% |
+| `their-bug` | 0 found in this population | — |
+
+**Zero `ours-covers`, and that is not the failure it looks like.** The population splits
+cleanly in two, and neither half is a recall miss in the ordinary sense.
+
+#### The 102 declined — by design, and confirmed at the source
+
+`checkEquatable` / `checkHashable` / `checkComparable` test **operators**, and both
+candidate templates exclude operators explicitly: `EquivalenceRelationTemplate` (*"`==` is
+`Equatable`'s and the kit already runs its law"*) and `ComparatorTemplate` (*"`==` is
+`Equatable`'s, `<` is `Comparable`'s"*).
+
+More than that — the laws *are* modelled, as `KnownProperty.equatableReflexive`,
+`.equatableSymmetric`, `.equatableTransitive`, `.hashableConsistency`,
+`.comparableTotalOrder`. But `KnownProperty` is consumed **only** by `ProtocolCoverageMap`
+(the `protocolCoveredProperty` **veto**) and the `known-properties` surface. **No template
+emits any of them.** The catalog knows these laws exist and deliberately routes them to
+PropertyLawKit.
+
+So Q3d's prediction holds exactly, and now with a number: on this population, *toolchain
+coverage* is high and *`discover` recall* is **zero by construction**.
+
+#### The 96 gaps — a coherent family we do not model at all
+
+| law | assertions | in `KnownProperty`? | template? |
+|---|---:|---|---|
+| `sequence.iterationContract` | 50 | **no** | **none** |
+| `collection.indexContract` | 46 | **no** | **none** |
+| `collection.bidirectional` | 25 | **no** | **none** |
+| `collection.randomAccess` | 13 | **no** | **none** |
+
+Not declined, not suppressed — **absent**. The `Sequence`/`Collection` conformance contract
+is a law family the catalog has no vocabulary for, and swift.org asserts it 96 times in the
+scoped corpus alone.
+
+This is the strongest kind of gap the survey's own rule recognises: *"prefer a hole with an
+observed witness over one with a compelling argument."* 96 witnesses, in one corpus, from
+the team that wrote the protocol.
+
+#### What Q2 says about §2's suspect conclusion
+
+The scope doc flagged that *"nobody hand-rolls conservation or referential-integrity, so a
+catalog pruned to observed demand would be pruned to round-trip"* might not survive contact
+with `validation-test/stdlib`. **It does not survive.** The corpus hand-rolls algebraic and
+conformance law suites 198 times in the scoped set. What it does *not* hand-roll is anything
+our catalog uniquely offers — which is a different and less comfortable finding: the overlap
+between "laws humans write by hand" and "laws we propose" is, on this population, **empty**.
+
+Both halves of that emptiness are defensible individually (operators belong to the kit;
+collection contracts are unmodelled). Together they say the catalog and this corpus are
+aimed at disjoint targets, and that is the thing worth taking to Q3.
 
 ### 1.2 `roundtrip` — not started (overload/adjudication pass pending)
 
