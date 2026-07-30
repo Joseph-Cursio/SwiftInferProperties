@@ -192,62 +192,66 @@ second, and a syntax rule barely at all.
 
 Key frozen and committed in `a969ee9` **before** `discover` ran; 198 sites, 11 laws.
 
+> **CORRECTED.** The first version of this section verdicted 96 sites as
+> `gap-with-witness` on the grounds that no template and no `KnownProperty` case models the
+> `Sequence`/`Collection` contracts. That check was incomplete: it never asked whether
+> **PropertyLawKit** runs them. It does — `checkSequencePropertyLaws`,
+> `checkCollectionPropertyLaws`, `checkBidirectionalCollectionPropertyLaws`,
+> `checkRandomAccessCollectionPropertyLaws` all ship. All 96 are `declined`. The error was
+> checking one layer of a two-layer toolchain and reporting the result as a toolchain gap.
+
 | verdict | sites | share |
 |---|---:|---:|
-| **`declined`** — we understand it and stand aside | 102 | 51% |
-| **`gap-with-witness`** — no template, and here are the witnesses | **96** | **48%** |
+| **`declined`** — the toolchain runs it; `discover` stands aside | **198** | **100%** |
+| `gap-with-witness` | 0 | 0% |
 | `ours-covers` | 0 | 0% |
-| `their-bug` | 0 found in this population | — |
 
-**Zero `ours-covers`, and that is not the failure it looks like.** The population splits
-cleanly in two, and neither half is a recall miss in the ordinary sense.
+#### The two-layer answer
 
-#### The 102 declined — by design, and confirmed at the source
+| layer | covers this population? |
+|---|---|
+| **PropertyLawKit** (44 law suites) | **all 198 sites** — Equatable, Hashable, Comparable, Sequence, Collection, Bidirectional, RandomAccess all have `check…PropertyLaws` |
+| **`discover` template catalog** | **none of it**, by design |
 
-`checkEquatable` / `checkHashable` / `checkComparable` test **operators**, and both
-candidate templates exclude operators explicitly: `EquivalenceRelationTemplate` (*"`==` is
-`Equatable`'s and the kit already runs its law"*) and `ComparatorTemplate` (*"`==` is
-`Equatable`'s, `<` is `Comparable`'s"*).
+So on the corpus's largest uniform population: **toolchain coverage 100%, `discover` recall
+0%**, and the zero is correct rather than a miss. Q3d predicted exactly this shape; the
+number is now measured.
 
-More than that — the laws *are* modelled, as `KnownProperty.equatableReflexive`,
-`.equatableSymmetric`, `.equatableTransitive`, `.hashableConsistency`,
-`.comparableTotalOrder`. But `KnownProperty` is consumed **only** by `ProtocolCoverageMap`
-(the `protocolCoveredProperty` **veto**) and the `known-properties` surface. **No template
-emits any of them.** The catalog knows these laws exist and deliberately routes them to
-PropertyLawKit.
+#### Where the templates and the kit actually meet
 
-So Q3d's prediction holds exactly, and now with a number: on this population, *toolchain
-coverage* is high and *`discover` recall* is **zero by construction**.
+The catalog is not disjoint from the kit — 15 of 22 `KnownProperty` cases have a template:
 
-#### The 96 gaps — a coherent family we do not model at all
+| has a template | no template |
+|---|---|
+| additive assoc/commut/identity/inverse · multiplicative assoc/commut/identity · set union assoc/commut/identity · set intersection idempotent · monoid identity · group inverse · semilattice idempotence · codable round-trip | **equatable reflexive/symmetric/transitive · comparable total order · hashable consistency** · distributivity · multiplicative inverse |
 
-| law | assertions | in `KnownProperty`? | template? |
-|---|---:|---|---|
-| `sequence.iterationContract` | 50 | **no** | **none** |
-| `collection.indexContract` | 46 | **no** | **none** |
-| `collection.bidirectional` | 25 | **no** | **none** |
-| `collection.randomAccess` | 13 | **no** | **none** |
+The seven without a template are almost exactly the **operator-conformance** laws — which is
+the deliberate split, stated in both templates: *"`==` is `Equatable`'s and the kit already
+runs its law"*.
 
-Not declined, not suppressed — **absent**. The `Sequence`/`Collection` conformance contract
-is a law family the catalog has no vocabulary for, and swift.org asserts it 96 times in the
-scoped corpus alone.
+#### The real finding: `ProtocolCoverageMap` is incomplete relative to the kit
 
-This is the strongest kind of gap the survey's own rule recognises: *"prefer a hole with an
-observed witness over one with a compelling argument."* 96 witnesses, in one corpus, from
-the team that wrote the protocol.
+The kit runs **44** law suites. `KnownProperty` models **22** properties, and has **no case
+at all** for the Sequence/Collection family. So the coverage veto cannot reason about laws
+the kit demonstrably runs.
 
-#### What Q2 says about §2's suspect conclusion
+Harmless today — no template proposes a collection law, so there is nothing for the veto to
+suppress. It stops being harmless the moment one does, and it means the `known-properties`
+and `stdlib-anchor` surfaces under-report what the toolchain already covers. That is an
+actionable gap **in the coverage map**, not in the catalog.
 
-The scope doc flagged that *"nobody hand-rolls conservation or referential-integrity, so a
-catalog pruned to observed demand would be pruned to round-trip"* might not survive contact
-with `validation-test/stdlib`. **It does not survive.** The corpus hand-rolls algebraic and
-conformance law suites 198 times in the scoped set. What it does *not* hand-roll is anything
-our catalog uniquely offers — which is a different and less comfortable finding: the overlap
-between "laws humans write by hand" and "laws we propose" is, on this population, **empty**.
+#### What this does to §2's suspect conclusion
 
-Both halves of that emptiness are defensible individually (operators belong to the kit;
-collection contracts are unmodelled). Together they say the catalog and this corpus are
-aimed at disjoint targets, and that is the thing worth taking to Q3.
+§2 said *"nobody hand-rolls conservation or referential-integrity, so a catalog pruned to
+observed demand would be pruned to round-trip."* Still dead — the corpus hand-rolls law
+suites 198 times in the scoped set.
+
+But the replacement is **not** the "disjoint targets" claim the first version of this section
+made. The correct statement is narrower and less dramatic: *on this population* the
+toolchain covers everything and the division of labour between kit and catalog is working
+as designed. Whether the catalog reaches anything the corpus writes by hand is a question
+about the OTHER populations — `roundtrip` (205 scoped sites) and `loops` (36) — and remains
+open.
 
 ### 1.2 `roundtrip` — not started (overload/adjudication pass pending)
 
