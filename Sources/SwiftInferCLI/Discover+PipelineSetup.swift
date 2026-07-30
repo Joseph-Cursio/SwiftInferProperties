@@ -10,6 +10,7 @@ extension SwiftInferCommand.Discover {
         directory: URL,
         includePossible: Bool?,
         docstringAdvice: Bool?,
+        requireCorroboration: Bool = false,
         overrides: ExplicitOverrides,
         diagnostics: any DiagnosticOutput
     ) -> PipelineSetup {
@@ -59,7 +60,8 @@ extension SwiftInferCommand.Discover {
             vocabulary: vocabResult.vocabulary,
             testDirectory: testDirectory,
             packageRoot: configResult.packageRoot,
-            templateFilter: templateFilter
+            templateFilter: templateFilter,
+            requireCorroboration: requireCorroboration
         )
     }
 

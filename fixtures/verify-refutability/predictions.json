@@ -1,0 +1,82 @@
+{
+ "experiment": "Which law shapes can a derived generator actually refute?",
+ "design": "Every stub in fixtures/verify-refutability is deliberately WRONG. Therefore any measured-bothPass is a FALSE NEGATIVE of the verifier, not a debatable result. No judgement call is needed to read the outcome.",
+ "hypothesis": "CLAUDE.md: a property whose failure needs two generated values to COLLIDE is invisible to a generator drawing from a realistic domain. So: BROAD refuted, COLLISION survives, EDGE refuted iff the edge pass earns its keep.",
+ "frozen": "2026-07-30, before any verify run",
+ "scoring": {
+  "REFUTED": "verify reports defaultFails (or edgeCaseAdvisory naming the violation)",
+  "SURVIVES": "verify reports bothPass"
+ },
+ "predictions": [
+  {
+   "function": "normalizeTag",
+   "violation_kind": "BROAD",
+   "law": "idempotence",
+   "predicted": "REFUTED",
+   "rationale": "appends on every call; fails for every input"
+  },
+  {
+   "function": "combineOffsets",
+   "violation_kind": "BROAD",
+   "law": "commutativity",
+   "predicted": "REFUTED",
+   "rationale": "subtraction; fails for every a != b"
+  },
+  {
+   "function": "encodeTicket/decodeTicket",
+   "violation_kind": "BROAD",
+   "law": "round-trip",
+   "predicted": "REFUTED",
+   "rationale": "decode drops a character; fails for every non-empty"
+  },
+  {
+   "function": "weightOfPayload",
+   "violation_kind": "BROAD",
+   "law": "monotonicity",
+   "predicted": "REFUTED",
+   "rationale": "measure decreases with input size"
+  },
+  {
+   "function": "mergeSnapshots",
+   "violation_kind": "COLLISION",
+   "law": "commutativity",
+   "predicted": "SURVIVES",
+   "rationale": "tie-break only observable when two timestamps are EQUAL; the Decisions.merge shape, already measured as bothPass at 100 trials"
+  },
+  {
+   "function": "deduplicateByBucket",
+   "violation_kind": "COLLISION",
+   "law": "idempotence",
+   "predicted": "SURVIVES",
+   "rationale": "needs two generated values in the same bucket (value % 8)"
+  },
+  {
+   "function": "unionIntervals",
+   "violation_kind": "COLLISION",
+   "law": "model-law",
+   "predicted": "SURVIVES",
+   "rationale": "needs two generated intervals to be exactly adjacent"
+  },
+  {
+   "function": "addSaturating",
+   "violation_kind": "EDGE",
+   "law": "identity-element",
+   "predicted": "REFUTED",
+   "rationale": "wrong only at Int.max; the verifier runs a dedicated edge pass and Int.max is the canonical integer edge"
+  },
+  {
+   "function": "trimWhitespace",
+   "violation_kind": "EDGE",
+   "law": "idempotence",
+   "predicted": "REFUTED",
+   "rationale": "wrong only on the empty string; empty is the canonical String edge"
+  },
+  {
+   "function": "scoreOf",
+   "violation_kind": "EDGE",
+   "law": "monotonicity",
+   "predicted": "REFUTED",
+   "rationale": "wrong only at 0; zero is a canonical integer edge"
+  }
+ ]
+}

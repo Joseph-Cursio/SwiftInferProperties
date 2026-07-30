@@ -61,6 +61,7 @@ extension SwiftInferCommand.Discover {
             interactive: interactive,
             updateBaseline: updateBaseline,
             seedManifest: seedManifest,
+            requireCorroboration: requireCorroboration,
             output: PrintOutput(),
             diagnostics: PrintDiagnosticOutput()
         )
@@ -89,6 +90,7 @@ extension SwiftInferCommand.Discover {
         interactive: Bool = false,
         updateBaseline: Bool = false,
         seedManifest: SeedManifest? = nil,
+        requireCorroboration: Bool = false,
         promptInput: any PromptInput = StdinPromptInput(),
         output: any DiscoverOutput,
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
@@ -107,6 +109,7 @@ extension SwiftInferCommand.Discover {
             packsOverride: packsOverride,
             verifyEvidenceByIdentity: evidenceByIdentity,
             seedManifest: seedManifest,
+            requireCorroboration: requireCorroboration,
             diagnostics: diagnostics
         )
         let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)

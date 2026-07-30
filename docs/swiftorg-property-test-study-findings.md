@@ -814,7 +814,9 @@ frozen at `fixtures/swiftorg-study/q3-reach-key.json` **before** the run, with t
 **Blinding was not a formality.** `swift-foundation` went **1,265 → 1,259** once blinded, and
 the six lost suggestions were *all* `differential-equivalence` — that template's entire output
 on that corpus was test-derived and does not survive source-only. `stdlib/public/core` was
-already blind (0 cross-validation signals), so earlier stdlib numbers stand.
+already blind (0 cross-validation signals), so earlier stdlib numbers stand. **swift-syntax was
+also checked and is clean**: 1,115 both ways, zero cross-validation signals, so its output is
+entirely source-derived.
 
 #### The headline
 
@@ -884,9 +886,64 @@ is why A was chosen as the headline.
 *Is the limiting factor threshold height, or the discriminator?* **Neither, on this evidence.**
 The misses are not near a cut — they are structurally unreachable (two annotation gates, one
 cross-carrier pairing). The hits are not near a cut either — they sit at 50 with a single +50
-signal holding them up. **Nothing in this measurement is threshold-sensitive.** Tuning
-`tier(forScore:)` in either direction would change nothing, which retires threshold work as a
-lever and leaves reach and catalog breadth as the only two that move the number.
+signal holding them up.
+
+##### CORRECTION — "nothing is threshold-sensitive" was too strong
+
+That sentence was true of the 12-entry denominator and **false corpus-wide**, and the
+generalisation was mine rather than the data's. Measured blinded across three corpora:
+
+| corpus | suggestions at exactly score 20 (the Possible floor) |
+|---|---:|
+| swift-syntax | **738 of 1,115 — 66% of all output** |
+| `stdlib/public/core` | 138 of 745 |
+
+Move the Possible cut from 20 to 21 and two-thirds of swift-syntax's output disappears.
+Thresholds are *extremely* sensitive — at the **floor**, which is not where I looked. I checked
+the Likely and Strong cuts and generalised from them.
+
+**The insensitivity in the middle is real, and it is structural.** Scores land on a sparse
+lattice — `{20, 25, 30, 35, 40, 45, 50, 65, 70, 75, 80, 85}`, with nothing at all between 50
+and 65 on either corpus — because the weights are few and coarse and most suggestions carry
+**one** signal:
+
+| signals per suggestion | swift-syntax | core |
+|---|---:|---:|
+| 1 | **820 (74%)** | 363 (49%) |
+| 2 | 283 | 278 |
+| 3+ | 12 | 104 |
+
+When a suggestion has one signal, **its score *is* that signal's weight**, and the number
+carries no information beyond which signal fired. Tuning a cut in the middle does nothing
+because there is nothing in the middle. That is a property of the scoring structure, not of the
+sample — so the right statement is: *threshold work is a lever at the floor and nowhere else.*
+
+##### The prototype that makes the trade measurable — `--require-corroboration`
+
+`CorroborationRule` withholds default visibility from any suggestion resting on a single
+positive signal. Opt-in, and deliberately **not** a change to `Tier.init(forScore:)` — the tier
+arithmetic is not adjusted to reach a target; carve-outs live in the consumers. The
+role-entailed escape hatch (`isWorthSurfacingBelowCut`) is not gated by it, because "the code
+owes this law" is a different justification from "one signal fired."
+
+Measured, blinded:
+
+| corpus | default | with the rule | cost |
+|---|---:|---:|---:|
+| swift-syntax | 586 | **586** | **free** |
+| `stdlib/public/core` | 315 | 264 | −16% |
+| swift-foundation | 347 | 259 | −25% |
+| **Q3 recall (denominator A)** | **9 / 12** | **0 / 12** | **−100%** |
+
+That last row is the finding. The rule demotes **exactly** the family Q3's recall was made of,
+and it costs nothing at all on the corpus with no Codable-shaped surface. So the design question
+is now a single sharp one, with numbers attached: **is a lone "declares a custom `Codable`
+conformance" worth a Likely?** If yes, the rule is wrong. If no — and `equatable-signal` already
+measured that conformance does not predict refutability — the rule is the fix, and Q3's 75%
+was measuring the wrong thing.
+
+**Not enabled by default.** It is shipped as a flag precisely so the judgement is made against
+these numbers rather than argued from the posture.
 
 ---
 

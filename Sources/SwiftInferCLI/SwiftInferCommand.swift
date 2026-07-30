@@ -99,6 +99,21 @@ extension SwiftInferCommand {
         )
         public var includePossible: Bool?
 
+        @Flag(
+            name: .long,
+            help: """
+            PROTOTYPE. Withhold default visibility from any suggestion whose score rests \
+            on a SINGLE positive signal. Q3 measured that all 9 laws discover reached \
+            rested on one +50 conformance signal, and that 74% of swift-syntax \
+            suggestions carry exactly one signal — so for most output the score carries \
+            no information beyond which signal fired. Opt-in and measurable: it does NOT \
+            change the tier arithmetic. Cost, blinded: swift-syntax 586 -> 586 (free), \
+            stdlib 315 -> 264, swift-foundation 347 -> 259, and Q3 recall 9/12 -> 0/12. \
+            See CorroborationRule.
+            """
+        )
+        public var requireCorroboration: Bool = false
+
         @Option(
             name: .long,
             help: """

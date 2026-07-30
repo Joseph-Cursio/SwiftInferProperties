@@ -117,6 +117,7 @@ extension SwiftInferCommand.Discover {
         packsOverride: String? = nil,
         verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
         seedManifest: SeedManifest? = nil,
+        requireCorroboration: Bool = false,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         // A run over an empty corpus must not be mistaken for a run that found nothing in your
@@ -128,6 +129,7 @@ extension SwiftInferCommand.Discover {
             directory: directory,
             includePossible: includePossible,
             docstringAdvice: docstringAdvice,
+            requireCorroboration: requireCorroboration,
             overrides: ExplicitOverrides(
                 vocabularyPath: explicitVocabularyPath,
                 configPath: explicitConfigPath,
@@ -299,9 +301,14 @@ extension SwiftInferCommand.Discover {
         // already applies via `keepRoleEntailedLaws`. This does NOT leak conjectures
         // (`monotonicity`/`idempotence`/`round-trip`) — those are refutable but not
         // role-entailed, so a correct-but-honestly-named function could fail them.
+        // PROTOTYPE — `--require-corroboration` withdraws default visibility from a
+        // single-signal suggestion. The role-entailed escape hatch below is deliberately NOT
+        // gated by it: `isWorthSurfacingBelowCut` surfaces a law the code OWES, which is a
+        // different justification from "one signal fired" and does not need a second channel.
         let visible = live.filter {
             setup.includePossible
-                || $0.score.tier.isVisibleByDefault
+                || ($0.score.tier.isVisibleByDefault
+                    && (!setup.requireCorroboration || CorroborationRule.isCorroborated($0.score)))
                 || Refutability.isWorthSurfacingBelowCut($0)
         }
         let visibleIdentities = Set(visible.map(\.identity))
@@ -345,6 +352,11 @@ extension SwiftInferCommand.Discover {
         /// registry behavior). Non-nil = post-discover filter to the
         /// supplied set of `templateName` values.
         let templateFilter: Set<String>?
+        /// PROTOTYPE (2026-07-30) — `--require-corroboration`. When true, a suggestion whose
+        /// score rests on a single positive signal loses its default visibility. Opt-in, and
+        /// deliberately NOT a change to `Tier.init(forScore:)`. See `CorroborationRule` for
+        /// the Q3 measurement that motivated it and the trade it makes.
+        let requireCorroboration: Bool
     }
 
     /// M13.3 — vocabulary-driven marker-table extension. User-supplied
