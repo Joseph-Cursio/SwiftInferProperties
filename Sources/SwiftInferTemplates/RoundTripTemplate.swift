@@ -329,32 +329,6 @@ extension RoundTripTemplate {
         )
     }
 
-    /// V1.5.2 / V1.8.1 shape-gated coverage veto. Fires when the pair
-    /// has an actual Codable encoder/decoder shape AND the carrier
-    /// type conforms to `Codable` — kit's `checkCodablePropertyLaws`
-    /// already verifies the JSON round-trip. The shape gate prevents
-    /// over-suppression of user-defined `(Int) -> Int` inverse pairs
-    /// on Codable carriers. Shape helpers live in
-    /// `RoundTripCodableShapeGate.swift`.
-    private static func protocolCoverageVeto(
-        for pair: FunctionPair,
-        inheritedTypesByName: [String: Set<String>]
-    ) -> Signal? {
-        if let strideable = strideableCoverageVeto(
-            for: pair, inheritedTypesByName: inheritedTypesByName
-        ) {
-            return strideable
-        }
-        guard let typeText = codableRoundTrippedType(for: pair) else {
-            return nil
-        }
-        return ProtocolCoverageMap.coverageVetoSignal(
-            forTypeText: typeText,
-            inheritedTypesByName: inheritedTypesByName,
-            candidateProperties: [.codableRoundTrip]
-        )
-    }
-
     private static func describeAffectedSide(pair: FunctionPair) -> String {
         let forwardHas = pair.forward.bodySignals.hasNonDeterministicCall
         let reverseHas = pair.reverse.bodySignals.hasNonDeterministicCall

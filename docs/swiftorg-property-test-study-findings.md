@@ -461,13 +461,20 @@ this corpus property-tests most.
 |---|---|
 | **PropertyLawKit** | **covers it** — `checkLosslessStringConvertiblePropertyLaws` ships |
 | **`discover`** | **cannot reach it** — the admission gate rejects the protocol's spelling |
-| **`ProtocolCoverageMap`** | **cannot record it** — has no `LosslessStringConvertible` entry, so the decline is inexpressible |
+| **`ProtocolCoverageMap`** | **now records it** — `.losslessStringRoundTrip`, added 2026-07-30 |
 
-**No behavioural symptom.** Adding the protocol to the coverage map would change nothing
-today: the veto only fires on a proposed suggestion, and the pair never forms. The symptom is
-epistemic — we cannot currently distinguish *"we decline this because the kit runs it"* from
-*"we miss this"*, which is precisely the confusion that produced two wrong verdicts earlier
-in this study.
+**No behavioural symptom, and the entry was still worth adding.** The veto only fires on a
+proposed suggestion and the pair never forms, so nothing moved. The symptom is epistemic — we
+could not distinguish *"we decline this because the kit runs it"* from *"we miss this"*, which
+is precisely the confusion that produced two wrong verdicts earlier in this study.
+
+**It went on to produce a third, and this section is the one that was right.** The `loops`
+adjudication (§1.25) later filed `PrintFloat.swift.gyb:795/908` as `gap-in-reach` against this
+same gate and called it a *"second independent witness"* for a blocker to relax — contradicting
+the table above, which had already established that the kit covers the law. Relaxing the gate
+would have recreated the `Strideable` double-report. The coverage entry and a pair-scoped veto
+now exist, so the decline is explicit and a future relaxation meets a guard rather than the
+defect.
 
 #### A second witness for the coverage-map gap
 
@@ -751,9 +758,33 @@ carrier and there is none — and `applying` returns `Self?`, so even co-located
 symmetry would not close. Recording protocol decls (2026-07-30) was necessary for this and is
 not sufficient.
 
-`PrintFloat.swift.gyb:795` and `:908` are a **second independent witness** for the blocker
-Q2/`roundtrip` already found: `initializerPairAdmissible`'s `guard label != "init"` rejects
-the float parse/print pair. Two populations, same gate.
+`PrintFloat.swift.gyb:795` and `:908` were first recorded here as a **second independent
+witness** for the blocker Q2/`roundtrip` found — `initializerPairAdmissible`'s `guard label !=
+"init"` rejecting the float parse/print pair — with "relax the gate" as the implied fix.
+
+**The verdict here was wrong, and §1.2 above had already said so.** That section's own table
+lists PropertyLawKit as *covering* this law and asks only for a coverage-map entry to record
+the decline; this adjudication then contradicted it and filed the gate as a defect to fix. The
+kit does run the law: `checkLosslessStringConvertiblePropertyLaws` ships
+`"LosslessStringConvertible.roundTrip"`, `Value(String(describing: x)) == x`
+(`LosslessStringConvertibleLaws.swift:40`). Relaxing the gate would have made `discover`
+propose a law another tool in the toolchain already states — the **exact `Strideable`
+double-report** found and fixed the same day, approached from the other side. The gate is not
+arbitrary either: pairing evidence for `round-trip` is name-stem overlap
+(`base64EncodedString` ⊃ `base64Encoded`), and an unlabelled `init?(_ description: String)`
+synthesizes to the bare name `"init"`, which has no stem to match. **Declining is correct.**
+
+Recorded as `partial-declined`, and the correction exposed a better gap than it removed.
+`expectAccurateDescription` checks *two* things in order — round-trip accuracy, then
+**shortness** (*"it makes no sense to check shortness if the result is inaccurate"*). The kit
+covers the first. *"The printed form is the shortest string that round-trips"* is a real,
+refutable law that no template states, and it is the half worth building for.
+
+`ProtocolCoverageMap` now carries a `LosslessStringConvertible` entry and `RoundTripTemplate` a
+pair-scoped veto, so the decline is **explicit** rather than an accident of a name-stem gate —
+the same "declined in substance, by accident in mechanism" phrasing this study already applied
+to `Strideable`. The veto guards a door that is currently locked, deliberately: it is placed
+while the reasoning is on the record, so a future relaxation meets it instead of the defect.
 
 #### Q5 on this population — the opposite result from `check-battery`
 

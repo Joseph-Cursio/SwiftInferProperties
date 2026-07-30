@@ -224,7 +224,7 @@ struct ProtocolCoverageMapTests {
     /// 13 → 14 on 2026-07-30: `Strideable` joined after `KitCoverageDriftTests` found the
     /// toolchain reporting `Strideable.distanceRoundTrip` twice — the kit runs it, and
     /// `round-trip` independently proposed `distance(to:)` × `advanced(by:)`.
-    @Test("Curated table contains exactly the 14 documented stdlib + kit protocol keys")
+    @Test("Curated table contains exactly the 15 documented stdlib + kit protocol keys")
     func tableKeyCount() {
         let expected: Set<String> = [
             // stdlib equality / ordering / hashing
@@ -238,13 +238,15 @@ struct ProtocolCoverageMapTests {
             // kit algebraic protocols
             "Semigroup", "Monoid", "CommutativeMonoid", "Group", "Semilattice",
             // stdlib striding
-            "Strideable"
+            "Strideable",
+            // stdlib string conversion
+            "LosslessStringConvertible"
         ]
         #expect(Set(ProtocolCoverageMap.protocolCoverage.keys) == expected)
-        #expect(ProtocolCoverageMap.protocolCoverage.count == 14)
+        #expect(ProtocolCoverageMap.protocolCoverage.count == 15)
     }
 
-    @Test("KnownProperty has the documented 23 cases")
+    @Test("KnownProperty has the documented 24 cases")
     func knownPropertyCount() {
         // Pinning the count guards against silent enum drift; future
         // template arms should add cases consciously and update this
@@ -252,7 +254,12 @@ struct ProtocolCoverageMapTests {
         //
         // 22 → 23 on 2026-07-30: `.strideableDistanceRoundTrip`. This guard worked exactly as
         // intended — the addition was deliberate and had to come here and say so.
-        #expect(KnownProperty.allCases.count == 23)
+        //
+        // 23 → 24 the same day: `.losslessStringRoundTrip`, which records a DECLINE rather
+        // than fixing a double-report. The study had twice filed the reach gate in front of
+        // that law as a defect to fix; the kit runs the law, so relaxing the gate would have
+        // created one.
+        #expect(KnownProperty.allCases.count == 24)
     }
 
     @Test("Every covered property name is a valid KnownProperty case")

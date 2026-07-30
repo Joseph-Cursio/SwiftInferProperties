@@ -183,11 +183,11 @@
    "site": "test/stdlib/Character.swift:296",
    "ext": "swift",
    "property_style": "yes",
-   "law": "Character round-trips through its scalar representation",
-   "template": "round-trip",
-   "verdict": "ours-covers",
+   "law": "String(Character(s)) == s for s a SINGLE grapheme cluster \u2014 the String-side half of the Character retraction pair, plus scalar/representation checks",
+   "template": "LosslessStringConvertible (kit) for the Character-side half; none for the String-side retraction",
+   "verdict": "partial-declined",
    "generator": "randomGraphemeCluster(1,9)",
-   "notes": "Generator deliberately spans the 63-bit small-representation boundary."
+   "notes": "CORRECTED 2026-07-30, was `ours-covers` via round-trip \u2014 and it also contradicted the roundtrip section, which had verdicted the same law `gap-with-witness`. BOTH were imprecise. `extension Character: LosslessStringConvertible` (Character.swift:195), so the kit runs the CHARACTER-side direction Character(String(describing:c)) == c, total. The test states the STRING-side direction String(Character(s)) == s, which is only true on single grapheme clusters and which nothing runs. Our own NormalFormTemplate doc already draws this distinction \u2014 'a parse-print pair admits three laws, and they do NOT have the same truth conditions' \u2014 the adjudication simply failed to apply it. discover proposes ZERO suggestions citing Character.swift, so it is also a reach miss for the uncovered half."
   },
   {
    "site": "test/stdlib/Diffing.swift:708",
@@ -233,21 +233,21 @@
    "site": "test/stdlib/PrintFloat.swift.gyb:795",
    "ext": "gyb",
    "property_style": "yes",
-   "law": "description is accurate for d and its 10 nextUp/nextDown neighbours",
-   "template": "round-trip (parse/print)",
-   "verdict": "gap-in-reach",
+   "law": "description round-trips (Value(String(describing:x)) == x) AND is the SHORTEST string that does so, for d and its 10 nextUp/nextDown neighbours",
+   "template": "LosslessStringConvertible (kit) for the round-trip half; none for shortness",
+   "verdict": "partial-declined",
    "generator": "nextUp/nextDown walk from a seed value",
-   "notes": "The float parse/print round-trip, blocked by initializerPairAdmissible's `guard label != \"init\"` - the SAME blocker Q2/roundtrip found. Second witness."
+   "notes": "CORRECTED 2026-07-30, was `gap-in-reach` blaming initializerPairAdmissible's `guard label != \"init\"`. The kit RUNS the round-trip half as \"LosslessStringConvertible.roundTrip\", so relaxing that gate would have created a double-report, not closed a gap. `expectAccurateDescription` checks round-trip THEN shortness (\"it makes no sense to check shortness if the result is inaccurate\") \u2014 the shortness half is the real gap and no template states it."
   },
   {
    "site": "test/stdlib/PrintFloat.swift.gyb:908",
    "ext": "gyb",
    "property_style": "yes",
-   "law": "as above, Float80",
-   "template": "round-trip (parse/print)",
-   "verdict": "gap-in-reach",
+   "law": "description round-trips (Value(String(describing:x)) == x) AND is the SHORTEST string that does so, for d and its 10 nextUp/nextDown neighbours",
+   "template": "LosslessStringConvertible (kit) for the round-trip half; none for shortness",
+   "verdict": "partial-declined",
    "generator": "nextUp/nextDown walk",
-   "notes": "Same blocker, wider type."
+   "notes": "CORRECTED 2026-07-30, was `gap-in-reach` blaming initializerPairAdmissible's `guard label != \"init\"`. The kit RUNS the round-trip half as \"LosslessStringConvertible.roundTrip\", so relaxing that gate would have created a double-report, not closed a gap. `expectAccurateDescription` checks round-trip THEN shortness (\"it makes no sense to check shortness if the result is inaccurate\") \u2014 the shortness half is the real gap and no template states it."
   },
   {
    "site": "test/stdlib/Strideable.swift:236",
@@ -368,6 +368,27 @@
    "verdict": "partial-declined",
    "generator": "none - 20 fixed appends",
    "notes": "Two laws. Copy-independence is the kit's ValueSemantic. The capacity growth BOUND has no template and is the interesting half."
+  }
+ ],
+ "corrections": [
+  {
+   "date": "2026-07-30",
+   "sites": [
+    "test/stdlib/PrintFloat.swift.gyb:795",
+    "test/stdlib/PrintFloat.swift.gyb:908"
+   ],
+   "was": "gap-in-reach",
+   "now": "partial-declined",
+   "why": "Both were filed against the init-label gate as a blocker to relax. PropertyLawKit already runs the law behind that gate, so relaxing it would have recreated the Strideable double-report fixed the same day. The genuine gap is the SHORTNESS half, which the kit does not cover."
+  },
+  {
+   "date": "2026-07-30",
+   "sites": [
+    "test/stdlib/Character.swift:296"
+   ],
+   "was": "ours-covers",
+   "now": "partial-declined",
+   "why": "Third site in one day resolved by LosslessStringConvertible, and the third mis-verdict about it \u2014 this one contradicted the roundtrip section, which had called the same law gap-with-witness. The kit runs one DIRECTION of the retraction pair; the test states the other, domain-restricted one. Direction and domain were both being elided."
   }
  ]
 }

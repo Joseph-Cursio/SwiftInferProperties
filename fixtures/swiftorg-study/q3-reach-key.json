@@ -1,0 +1,167 @@
+{
+ "question": "Q3 - can we tell from the source alone, without the test?",
+ "denominator": "A (reach): laws a template exists for. Headline. B (end-to-end) reported alongside.",
+ "frozen": "2026-07-30",
+ "blinding": "discover run with --test-dir pointed at an empty directory",
+ "corpora": {
+  "swift": "408632e59834c1a5ee4166ff61dd2c8b0585a1c5",
+  "swift-foundation": "96d4094"
+ },
+ "guardrail": "Key frozen BEFORE the blinded run. Predicted misses are recorded here so a miss cannot be rationalised after the fact, and a HIT on a predicted miss is the interesting outcome.",
+ "denominator_size": 13,
+ "entries": [
+  {
+   "id": "loops-random-totality",
+   "test_site": "validation-test/stdlib/Random.swift:158",
+   "law": "[].randomElement() == nil",
+   "expected_template": "input-totality",
+   "corpus": "swift/stdlib/public/core",
+   "source": "Collection.swift:954",
+   "symbol": "Collection.randomElement()",
+   "match_criterion": "a suggestion with templateName 'input-totality' citing Collection.swift and naming randomElement",
+   "notes": ""
+  },
+  {
+   "id": "loops-diffing-inverse",
+   "test_site": "test/stdlib/Diffing.swift:708",
+   "law": "a.applying(b.difference(from: a)) == b, and applying(d.inverse()) undoes it",
+   "expected_template": "inverse-pair / round-trip",
+   "corpus": "swift/stdlib/public/core",
+   "source": "Diffing.swift:146 (difference) x Diffing.swift:71 (applying)",
+   "symbol": "BidirectionalCollection.difference(from:) x RangeReplaceableCollection.applying(_:)",
+   "match_criterion": "a suggestion with templateName 'inverse-pair' or 'round-trip' citing Diffing.swift on both halves",
+   "notes": "PREDICTED MISS, already measured: the halves sit on DIFFERENT protocol extensions and pairing needs a common carrier; applying returns Self?"
+  },
+  {
+   "id": "loops-rangeset-invariant",
+   "test_site": "validation-test/stdlib/RangeSet.swift:206",
+   "law": "representation invariant: no empty range; adjacent ranges strictly ordered and disjoint",
+   "expected_template": "invariant-preservation",
+   "corpus": "swift/stdlib/public/core",
+   "source": "RangeSet.swift:135/146",
+   "symbol": "RangeSet.insert(contentsOf:) / remove(contentsOf:)",
+   "match_criterion": "a suggestion with templateName 'invariant-preservation' citing RangeSet.swift",
+   "notes": "PREDICTED MISS: the template is annotation-only (@CheckProperty(.preservesInvariant)) and stdlib carries no annotation"
+  },
+  {
+   "id": "loops-dictionary-indexvalidity",
+   "test_site": "validation-test/stdlib/Dictionary.swift:5269",
+   "law": "mutating through d.values[i] does not invalidate index i",
+   "expected_template": "invariant-preservation",
+   "corpus": "swift/stdlib/public/core",
+   "source": "Dictionary.swift:1420",
+   "symbol": "Dictionary.values",
+   "match_criterion": "a suggestion with templateName 'invariant-preservation' citing Dictionary.swift",
+   "notes": "PREDICTED MISS: same annotation gate"
+  },
+  {
+   "id": "roundtrip-codable-calendar",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "Calendar round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/Calendar/Calendar.swift",
+   "symbol": "Calendar.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing Calendar.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-datecomponents",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "DateComponents round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/Calendar/DateComponents.swift",
+   "symbol": "DateComponents.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing DateComponents.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-indexpath",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "IndexPath round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/IndexPath.swift",
+   "symbol": "IndexPath.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing IndexPath.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-locale",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "Locale round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/Locale/Locale.swift",
+   "symbol": "Locale.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing Locale.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-timezone",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "TimeZone round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/TimeZone/TimeZone.swift",
+   "symbol": "TimeZone.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing TimeZone.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-url",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "URL round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/URL/URL.swift",
+   "symbol": "URL.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing URL.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-urlcomponents",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "URLComponents round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/URL/URLComponents.swift",
+   "symbol": "URLComponents.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing URLComponents.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-uuid",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "UUID round-trips through Codable (JSON / Plist)",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift-foundation",
+   "source": "FoundationEssentials/UUID.swift",
+   "symbol": "UUID.encode(to:)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing UUID.swift",
+   "notes": ""
+  },
+  {
+   "id": "roundtrip-codable-range",
+   "test_site": "test/stdlib/CodableTests.swift (per-type)",
+   "law": "Range round-trips through Codable",
+   "expected_template": "codable-round-trip",
+   "corpus": "swift/stdlib/public/core",
+   "source": "Range.swift:467",
+   "symbol": "Range.encode(to:) (Encodable where Bound: Encodable)",
+   "match_criterion": "a suggestion with templateName 'codable-round-trip' citing Range.swift",
+   "notes": ""
+  }
+ ],
+ "excluded": [
+  {
+   "test_site": "test/stdlib/ErrorBridged.swift:886",
+   "reason": "SOURCE ABSENT FROM EVERY PINNED CORPUS. The law is about a bridged NSError's `description` staying stable under repeated calls; that source is the Darwin/Foundation overlay, and the pinned `swift` checkout has no stdlib/public/Darwin directory. Scoring it would measure corpus selection, not the tool."
+  },
+  {
+   "test_site": "test/stdlib/ErrorBridged.swift:895",
+   "reason": "as above, large-struct payload"
+  }
+ ]
+}

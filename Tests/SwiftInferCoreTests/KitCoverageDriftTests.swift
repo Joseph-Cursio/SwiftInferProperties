@@ -98,10 +98,11 @@ struct KitCoverageDriftTests {
         "IteratorProtocol": .uncoveredNoSymptom("as Sequence"),
         "AsyncSequence": .uncoveredNoSymptom("async is admitted only via @ClockDeterministic"),
         "TimedAsyncSequence": .uncoveredNoSymptom("as AsyncSequence"),
-        "LosslessStringConvertible": .uncoveredNoSymptom(
-            "the round-trip law is unreachable anyway — initializerPairAdmissible rejects the "
-                + "protocol's own unlabelled `init?(_ description: String)`"
-        ),
+        // Covered 2026-07-30. Was `.uncoveredNoSymptom` on the reasoning that the law is
+        // "unreachable anyway" — true, but it framed the reach gate as the problem. The study
+        // then twice filed that gate as a defect to fix, and relaxing it would have proposed a
+        // law the kit already runs. Declining is CORRECT; the entry makes it explicit.
+        "LosslessStringConvertible": .covered,
         "StringProtocol": .uncoveredNoSymptom("no template keys on it"),
         "CaseIterable": .uncoveredNoSymptom("caseiterable-* templates emit their own laws"),
         "Identifiable": .uncoveredNoSymptom("no template keys on it"),

@@ -62,6 +62,7 @@ public enum ProtocolCoverageMap {
         "Equatable": equatableBase,
         "Comparable": equatableBase.union([.comparableTotalOrder]),
         "Strideable": [.strideableDistanceRoundTrip],
+        "LosslessStringConvertible": [.losslessStringRoundTrip],
         "Hashable": equatableBase.union([.hashableConsistency]),
 
         // — stdlib arithmetic chain —
@@ -338,6 +339,24 @@ public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
     /// `Strideable` (`Integers.swift:533`), under a `//===--- Strideable conformance ---===//`
     /// banner. Re-reporting another tool's finding teaches people the tools disagree.
     case strideableDistanceRoundTrip
+
+    // — LosslessStringConvertible —
+    /// `Value(String(describing: x)) == x`, run by the kit as
+    /// `"LosslessStringConvertible.roundTrip"` (`LosslessStringConvertibleLaws.swift:40`).
+    ///
+    /// Added 2026-07-30, and it **corrects a verdict rather than fixing a defect.** The
+    /// swift.org study twice recorded the float parse/print round-trip as blocked by
+    /// `initializerPairAdmissible`'s `guard label != "init"` — once in the `roundtrip`
+    /// population, once at `PrintFloat.swift.gyb:795/908` — and filed both as reach gaps with
+    /// "relax the gate" as the implied fix.
+    ///
+    /// Relaxing it would have produced a **double-report**: the kit already runs this law for
+    /// any conformer. The gate is not arbitrary either — pairing evidence for `round-trip` is
+    /// name-stem overlap (`base64EncodedString` ⊃ `base64Encoded`), and an unlabelled
+    /// `init?(_ description: String)` synthesizes to the bare name `"init"`, which has no stem
+    /// to match. Declining is correct; the entry makes it *explicit* so a future relaxation
+    /// meets a veto instead of recreating the `Strideable` defect.
+    case losslessStringRoundTrip
 
     // — Codable —
     /// `decode(encode(x)) == x`
