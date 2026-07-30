@@ -1,9 +1,9 @@
 # Scope: stop gating *analysis* on access level — score it instead
 
-**Status: measurement done (§4a), scoring change not started, and it is now BLOCKED on
-a `comparator` precision fix.** Un-gating before that lands puts 8 known-false `Likely`
-claims on this repo's own default surface. §5 is kept as the method, but its "run this
-first" has been run — read §4a before planning anything.
+**Status: measurement done (§4a). The `comparator` blocker is CLEARED (`c9324d8`, §4b).
+The scoring change is still not started, and one prerequisite remains: `round-trip` is
+unmeasured (§4c).** §5 is kept as the method, but its "run this first" has been run —
+read §4a–§4c before planning anything.
 
 ## 1. The position this replaces, and why it is provisional
 
@@ -124,15 +124,74 @@ from a binary predicate — but `sameType(_:_:)`, `matches(_:_:)` and
 `areComplementary(_:_:)` are all fully positional *and* symmetric. The heuristic does
 not hold on private helpers, because this codebase uses `(_:_:)` for both roles.
 
-**Sequencing therefore inverts from §5's assumption: tighten `comparator` first, then
-remove the gate.** Un-gating today would put 8 false `Likely` claims on the default
-surface of the repo we dogfood. The fix has a ready shape — a **symmetry
-counter-signal**: `areComplementary` announces itself in prose and
-`DocstringPropertyCorroborator` already exists, while `sameType` announces itself
-structurally as a single `==` return. Either kills most of the 8.
+*(Read §4b before acting on the paragraph above: "masking" turned out to be half
+wrong — three of the false claims were already visible. And the fix that shipped was
+not the symmetry counter-signal sketched here but an ordering-**name** requirement,
+which separated all 22 candidates cleanly where a symmetry test would have reached
+only the four symmetric ones.)*
 
-**Not examined.** `round-trip` goes 53 → 438, the largest single delta, and no sample
-was read. Do not assume it behaves like `comparator`; measure it before un-gating.
+**Sequencing therefore inverts from §5's assumption: tighten `comparator` first, then
+remove the gate.** — done, `c9324d8`. Un-gating before it would have put 8 false
+`Likely` claims on the default surface of the repo we dogfood, on top of the 3 already
+there.
+
+## 4b. The `comparator` blocker — cleared, and it was not what this scope thought
+
+Shipped as `c9324d8`. A `-25` counter-signal (`unsupportedComparatorShape`) when the
+name carries no ordering stem: 40 → 15, below the `.possible` floor of 20, so a
+shape-only candidate is suppressed rather than quietly downgraded. Follows the
+`unsupportedAlgebraicShape` idiom.
+
+| corpus | comparator before → after | |
+|---|---|---|
+| this repo, visible surface | 3 → **0** | all three were false |
+| this repo, private seeded | 19 → **11** | exactly the 11 §4a classified true |
+| swift-syntax/SwiftParser | 1 → **0** | `at(_ spec1:, _ spec2:)` — false |
+| FoundationEssentials | unchanged | |
+| SwiftProjectLintRules | unchanged | |
+
+**12 false positives removed, 11 true kept, 0 true lost.**
+
+**§4a called this "the gate masking a template precision bug", and that was half
+wrong.** Three of the false comparators — `areComplementary`,
+`isCanonicalInversePair`, `initializerPairAdmissible` — are `internal` or `public`, so
+they had been on the default surface at `Likely` the entire time. The gate was hiding
+eight *more* of the same defect, not the defect itself. Comparator's precision on this
+repo's **visible** surface was 0 of 3.
+
+The lesson generalises past comparator and is the reason §4c is not optional: **a
+template's false-positive rate is not a fact about the access-level gate**, and
+measuring the gate is what happened to expose it. Any template whose reach grows when
+the gate lifts deserves the same 30-sample read before it grows.
+
+Two things it deliberately did not fix, both pinned by tests rather than left implicit:
+
+- **A suppressed candidate earns NO law, not a weaker one.** `PredicateTemplate`
+  excludes anything matching `isComparator`, and that gate reads the *shape*, which
+  still matches — the measurement proved it, `predicate` held at 114 and 197 while
+  comparator fell by 3 and 8. Whether these should become predicates is real
+  (`sameType` does owe totality) but widens the largest template on every corpus at
+  once, so it is its own calibration decision.
+- **Role-carrying positional operands remain a hole.** The template's docs claim the
+  label test catches them, citing `isImmediateChild(_ path:, of parentPath:)` — which
+  works only because it has a *label*. `_ x: T, _ y: T` has none, and four of the
+  eleven false positives were that shape. The ordering-name rule catches them today by
+  luck; `sortsBefore(_ item:, _ pivot:)` would pass both gates and still be no
+  ordering. `roleCarryingOperandsAreStillAHole` pins it.
+
+## 4c. `round-trip` — the remaining prerequisite, NOT measured
+
+`round-trip` goes **53 → 438** when private functions are admitted, the largest single
+delta of any template and 8×. No sample has been read.
+
+Do not assume it behaves like `comparator` — and after §4b, do not assume it behaves
+*well*: the one template that got measured turned out to be 50% false on the same
+population, and half its false claims were already shipping. 385 new `round-trip`
+suggestions is a bigger surface than all 22 comparator candidates combined.
+
+Method: §5, unchanged — sample ~30 of the delta, classify real-law / glue / wrong, read
+the code rather than the name. Most are `.possible`, so the default-surface risk is
+smaller than comparator's was; the volume risk is much larger.
 
 ## 5. Prerequisite measurement — run this FIRST
 
@@ -166,3 +225,21 @@ happen.
 - `metrics` can report the count of access-restricted candidates. It cannot today.
 - `.swiftinfer/verify-workdir/` growth after `index` is measured and stated, not
   discovered later.
+- **Every template whose reach grows has had a 30-sample read first.** Added after
+  §4b: the one template that got measured was 50% false on this population, and half
+  its false claims were already shipping. "Its reach grows and we did not look" is not
+  a state this change may ship in.
+
+## 7. Ledger
+
+| item | status |
+|---|---|
+| §5 measurement on this repo | **done** (§4a) — 853 private functions seeded |
+| private-share recount across 5 corpora | **done** (§4) — corrected from 3%/5% to 35%/16% |
+| `comparator` precision fix | **done**, `c9324d8` (§4b) — 12 false removed, 0 true lost |
+| `round-trip` 53 → 438 sample read | **NOT DONE** (§4c) — the remaining prerequisite |
+| the scoring change itself (§2) | not started |
+| remove the rescue's `discover`-input workaround (§3) | not started, do it *with* §2 |
+| `predicate` admitting comparator-shaped binaries | open question, own calibration (§4b) |
+| operand-interchangeability test on internal names | open hole, pinned by test (§4b) |
+
