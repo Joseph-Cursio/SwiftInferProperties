@@ -53,6 +53,11 @@ fixtures/cycle27-surface/Package.resolved
 # and any incidental one at the repo root from a dev `swift-infer verify` run.
 **/.swiftinfer/verify-workdir/
 
+# Python bytecode cache from the swift.org study scripts (scripts/ is study
+# tooling, not product code — the .py sources are tracked, the cache is not).
+__pycache__/
+*.pyc
+
 # Calibration triage decision files — regenerable per-cycle scratch produced
 # by `discover-interaction --interactive` / the cycle re-triage. The durable
 # record is the cycle-N findings doc worksheet + calibration-cycle-N-data/.
