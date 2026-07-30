@@ -182,12 +182,46 @@ public enum DocstringPropertyCorroborator {
     ) -> Corroboration? {
         guard let raw = docComment else { return nil }
         let text = raw.lowercased()
+        // A doc ABOUT a property is not a doc CLAIMING it — see `mentionsPropertyAsSubject`.
+        guard !mentionsPropertyAsSubject(text) else { return nil }
         for phrase in vocabulary(for: property) {
             guard let range = text.range(of: phrase) else { continue }
             if isNegated(phraseStart: range.lowerBound, in: text) { continue }
             return Corroboration(matchedPhrase: phrase)
         }
         return nil
+    }
+
+    /// Words that mark a docstring as being **about generating or checking** a property
+    /// rather than **asserting** the documented function has it.
+    ///
+    /// The negation gate already handled *"this is not idempotent"*. This handles the other
+    /// way prose lies to a substring matcher: *"emits the round-trip stub"*. Both are the
+    /// same class of error — the phrase is present and means the opposite of a claim.
+    static let subjectMatterMarkers: [String] = [
+        "stub", "emit", "emits", "renders", "renderer", "generator", "generates",
+        "harness", "scaffold", "test body", "property test", "test stub",
+        "law suite", "verifier", "template"
+    ]
+
+    /// `true` when the docstring reads as being about a property rather than claiming one.
+    ///
+    /// **Measured, on this repo, which is the worst case for it.** SwiftInferProperties
+    /// generates property tests, so "round-trip" appears throughout its prose as *subject
+    /// matter*: 327 of 438 `round-trip` suggestions on the private-function population were
+    /// corroborated at +15 by docstrings like `codableRoundTripGenerator`'s — which
+    /// describes emitting a round-trip test, not being one. 147 matched `'round-trip'`,
+    /// 91 `'roundtrip'`, 89 `'round trip'`.
+    ///
+    /// **This is deliberately blunt, and the bluntness is the safe direction.** It rejects
+    /// the whole docstring rather than reasoning about which sentence the phrase sits in, so
+    /// a genuinely-idempotent function whose docs happen to mention a "template" loses its
+    /// +15. That costs a tier on a candidate the shape already matched — recoverable. The
+    /// error it prevents costs a false law, which the catalog rates worse than proposing
+    /// nothing. Corroboration is by construction never the reason a law surfaces, so
+    /// withholding it can only lower confidence, never hide a candidate.
+    static func mentionsPropertyAsSubject(_ loweredText: String) -> Bool {
+        subjectMatterMarkers.contains { loweredText.contains($0) }
     }
 
     /// `true` when a negator token appears in the window of `text` immediately

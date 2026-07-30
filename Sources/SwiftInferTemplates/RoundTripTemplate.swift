@@ -87,14 +87,34 @@ public enum RoundTripTemplate {
         vocabulary: Vocabulary
     ) -> [Signal] {
         var signals: [Signal] = []
-        if let name = nameSignal(for: pair, vocabulary: vocabulary) {
-            signals.append(name)
+        let name = nameSignal(for: pair, vocabulary: vocabulary)
+        let docstring = docstringCorroborationSignal(for: pair)
+        let discoverable = discoverableSignal(for: pair)
+        for signal in [name, docstring, discoverable] {
+            if let signal { signals.append(signal) }
         }
-        if let docstring = docstringCorroborationSignal(for: pair) {
-            signals.append(docstring)
-        }
-        if let discoverable = discoverableSignal(for: pair) {
-            signals.append(discoverable)
+        // Shape-only endomorphism pairs: `T -> T` × `T -> T` with NOTHING but the shape. See
+        // `Signal.Kind.endomorphismRoundTripPair` — 432 of 438 on this repo, and every one
+        // sampled was false.
+        //
+        // "Nothing but the shape" is the whole gate, and it took two test failures to get
+        // right. The first version checked only `nameSignal`, and
+        // `RoundTripTemplateMathForwardVetoTests` caught a true positive it destroyed:
+        // `exp(Complex) -> Complex` × `log(Complex) -> Complex` is a real same-type
+        // round-trip recorded in `MathForwardFunctions.canonicalInversePairs` — a *different*
+        // curated list from `curatedInversePairs`. Then the composition tests caught a
+        // second: a `@discoverable` group is an EXPLICIT user declaration that two functions
+        // are a round-trip pair, which is stronger evidence than any curated name.
+        //
+        // So FOUR channels can vouch for an endomorphism pair, and the counter respects all
+        // of them. This is the `unsupportedAlgebraicShape` posture: the counter is not "same
+        // type is suspicious", it is "same type AND no one has said otherwise". Two of the
+        // four were added because a test caught a true positive being deleted, which is the
+        // argument for keeping every one of those tests.
+        let corroborated = name != nil || docstring != nil || discoverable != nil
+            || hasCanonicalInverseNames(pair)
+        if !corroborated, let endo = endomorphismCounterSignal(for: pair) {
+            signals.append(endo)
         }
         if let crossType = crossTypeRoundTripCounterSignal(for: pair) {
             signals.append(crossType)
@@ -224,6 +244,13 @@ extension RoundTripTemplate {
             weight: 30,
             detail: "Type-symmetry signature: \(domain) -> \(codomain) ↔ \(codomain) -> \(domain)"
         )
+    }
+
+    /// The second curated inverse-name channel — `exp`/`log`, `sin`/`asin`, … — which
+    /// `nameSignal` does not consult because it exists for a different job (the
+    /// math-forward veto carve-out). Both channels count as name evidence here.
+    private static func hasCanonicalInverseNames(_ pair: FunctionPair) -> Bool {
+        MathForwardFunctions.isCanonicalInversePair(pair.forward.name, pair.reverse.name)
     }
 
     private static func nameSignal(

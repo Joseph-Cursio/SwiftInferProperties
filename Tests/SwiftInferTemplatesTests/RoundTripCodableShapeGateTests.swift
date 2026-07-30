@@ -12,7 +12,7 @@ import Testing
 struct RoundTripCodableShapeGateTests {
 
     @Test("V1.8.1 — `(T) -> T` user-inverse pair on Codable T does NOT veto (cycle-4 fix)")
-    func userInversePairOnCodableTypeNoLongerVetoed() throws {
+    func userInversePairOnCodableTypeNoLongerVetoed() {
         // The cycle-4 false-positive case. Cycle-3+4 OrderedCollections had
         // 22 round-trip suggestions like `minimumCapacity(forScale:) ↔
         // scale(forCapacity:)` on `(Int) -> Int` — these are user-defined
@@ -25,11 +25,28 @@ struct RoundTripCodableShapeGateTests {
             forwardParam: "Int",
             forwardReturn: "Int"
         )
-        let suggestion = try #require(RoundTripTemplate.suggest(
+        //
+        // Asserted on the SIGNALS rather than on a surfaced suggestion, and the change is
+        // deliberate. This pair no longer surfaces — the endomorphism counter-signal suppresses
+        // bare `(Int) -> Int` × `(Int) -> Int` with nothing vouching for it — but that is a
+        // *different* verdict from the Codable veto, and this test owns only the veto. Checking
+        // `suggest(...) != nil` conflated "the veto did not fire" with "something surfaced",
+        // which is exactly the conflation that let the assertion pass for the wrong reason.
+        //
+        // And the suppression agrees with a decision this project already made: cycle-11 added
+        // `forScale`/`forCapacity` to `DomainMarkerLabels.curated` to penalise the *labelled*
+        // form of this very pair — "shapes that pass typeSymmetry but cross domains
+        // semantically." Capacity and scale are different quantities. The comment above calls
+        // them "inverse pairs by intent"; cycle-11 measured them and disagreed.
+        let signals = RoundTripTemplate.accumulatedSignals(
             for: pair,
-            inheritedTypesByName: makeInheritedIndex("Int", conformances: ["Codable", "Numeric"])
-        ))
-        #expect(!suggestion.score.signals.contains { $0.kind == .protocolCoveredProperty })
+            vocabulary: .empty,
+            inheritedTypesByName: makeInheritedIndex("Int", conformances: ["Codable", "Numeric"]),
+            carrierKindResolver: nil
+        )
+        #expect(!signals.contains { $0.kind == .protocolCoveredProperty })
+        // Pin the reason it is suppressed, so a future change to either counter is visible here.
+        #expect(signals.contains { $0.kind == .endomorphismRoundTripPair })
     }
 
     @Test("V1.8.1 — `(T) -> Data` ↔ `(Data) -> T` Codable shape with T Codable still vetoes")

@@ -150,22 +150,29 @@ struct ProtocolCoverageDiscoverIntegrationTests {
 
     // MARK: - V1.8.1 round-trip shape-gated veto end-to-end
 
-    @Test("V1.8.1 — (Int) -> Int user-inverse pair on Codable Int now surfaces")
+    @Test("V1.8.1 — a NAMED (Int) -> Int inverse pair on Codable Int still surfaces")
     func discoverSurfacesIntInversePairAfterShapeGate() {
-        // The cycle-4 false-positive case in end-to-end form. Two
-        // Int-typed user-inverse functions with paired naming should
-        // now produce a round-trip Possible-tier suggestion (where
-        // pre-V1.8.1 they were suppressed by V1.7.1's bake-in fanning
-        // V1.5.2's unconditional Codable veto).
-        let minimumCapacity = makeUnaryOp(name: "minimumCapacity", from: "Int", to: "Int")
-        let scaleForCapacity = makeUnaryOp(name: "scale", from: "Int", to: "Int")
-        let suggestions = TemplateRegistry.discover(
-            in: [minimumCapacity, scaleForCapacity],
-            typeDecls: []
-        )
-        // The pair should surface as a round-trip suggestion (Possible
-        // tier — Score 30 from type-symmetry alone, no curated name
-        // bonus).
+        // The end-to-end form of the V1.8.1 shape gate: the Codable veto requires a
+        // codec-shaped pair (`T -> Data` / `T -> String`), so an `Int -> Int` pair must
+        // reach the surface without it firing, even though `Int` is Codable.
+        //
+        // The fixture changed from `minimumCapacity` × `scale` to a CURATED name pair, and
+        // the change is a correction rather than a workaround. That pair is shape-only —
+        // this test's own comment used to say so, "Score 30 from type-symmetry alone, no
+        // curated name bonus" — and shape-only `T -> T` × `T -> T` is now suppressed by
+        // `endomorphismRoundTripPair`, measured at 432 of 438 false on this repo. Two
+        // endomorphisms do not oppose.
+        //
+        // Cycle-11 had already reached the same verdict from the other direction: it added
+        // `forScale`/`forCapacity` to `DomainMarkerLabels.curated` to penalise the labelled
+        // form of this exact pair, as "shapes that pass typeSymmetry but cross domains
+        // semantically." Capacity and scale are different quantities.
+        //
+        // So the vehicle is replaced with one that has name evidence, which is what keeps
+        // the test measuring the Codable shape gate instead of the endomorphism counter.
+        let encode = makeUnaryOp(name: "encode", from: "Int", to: "Int")
+        let decode = makeUnaryOp(name: "decode", from: "Int", to: "Int")
+        let suggestions = TemplateRegistry.discover(in: [encode, decode], typeDecls: [])
         #expect(suggestions.contains { $0.templateName == "round-trip" })
     }
 

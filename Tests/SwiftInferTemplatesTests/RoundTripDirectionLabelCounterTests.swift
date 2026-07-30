@@ -254,8 +254,21 @@ struct RoundTripDirectionLabelCounterTests {
             forwardParam: "Token",
             forwardReturn: "Token"
         )
-        let suggestion = RoundTripTemplate.suggest(for: pair)
-        #expect(suggestion?.score.total == 30, "Mismatched case shouldn't trigger the counter")
+        // Asserted on the SIGNAL rather than the total. This suite owns the direction-label
+        // counter's case-sensitivity, and `Token -> Token ↔ Token -> Token` was only ever a
+        // convenient vehicle for it — a vehicle the endomorphism counter-signal now (correctly)
+        // suppresses on its own. Checking `total == 30` measured the vehicle; checking that
+        // `.directionLabel` is absent measures the rule.
+        let signals = RoundTripTemplate.accumulatedSignals(
+            for: pair,
+            vocabulary: .empty,
+            inheritedTypesByName: [:],
+            carrierKindResolver: nil
+        )
+        #expect(
+            !signals.contains { $0.kind == .directionLabel },
+            "Mismatched case shouldn't trigger the counter"
+        )
     }
 
     @Test("V1.12.1 — counter weight is exactly -15 (mirrors v1.10 idempotence)")

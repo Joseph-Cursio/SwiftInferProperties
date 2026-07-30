@@ -127,49 +127,76 @@ extension Signal {
         /// any real corroboration keeps the counter from firing at all.
         case unsupportedAlgebraicShape
         /// Fires on a `comparator` candidate that matched on the `(T, T) -> Bool`
-        /// **shape alone**, with no ordering name to corroborate that this
-        /// particular relation is meant to *order* its operands.
+        /// **shape alone**, with no ordering name to corroborate that this relation is
+        /// meant to *order* its operands.
         ///
-        /// The shape is necessary and nowhere near sufficient, and the sibling
-        /// `equivalence-relation` template — which makes the *weaker* claim — was
-        /// already name-gated for exactly this reason. `comparator` asserting a
-        /// strict weak ordering from shape alone was the inconsistency.
+        /// The inconsistency this fixes was visible in the catalog: the sibling
+        /// `equivalence-relation` template, which makes the *weaker* claim, was already
+        /// name-gated. `comparator` asserted a strict weak ordering from shape alone.
         ///
-        /// Measured on this repo, which is why the weight is what it is. Of 22
-        /// candidates matching the shape, **11 were false**, and the three already on
-        /// the default surface (`areComplementary`, `isCanonicalInversePair`,
-        /// `initializerPairAdmissible` — all internal or public) were false at
-        /// `Likely`. They fail in two ways, neither visible to a shape test:
+        /// Measured on this repo: of 22 shape matches, **11 were false** — and the three
+        /// already on the default surface (`areComplementary`, `isCanonicalInversePair`,
+        /// `initializerPairAdmissible`, all internal or public) were false at `Likely`, so
+        /// this was shipping rather than latent. Two failure modes, neither visible to a
+        /// shape test:
         ///
-        /// - **symmetric relations.** `sameType(_ lhs:, _ rhs:)` is
-        ///   `lhs.trimmed == rhs.trimmed`; `isCanonicalInversePair` explicitly tests
-        ///   both orientations; `areComplementary`'s own docstring says
-        ///   *"Order-insensitive"*. A **correct** implementation fails asymmetry,
-        ///   which is the worst category the catalog names.
-        /// - **role-carrying operands.** `curatedActiveToPresentParticiple(_ active:,
-        ///   _ ing:)` and `matches(_ name:, _ stem:)` are positional but their
-        ///   operands are not interchangeable. The template's label test claims to
-        ///   catch this and does not — `_ x: T, _ y: T` has no labels and distinct
-        ///   roles. That hole is real and is *not* closed by this signal.
+        /// - **symmetric relations** — `sameType(_ lhs:, _ rhs:)` is
+        ///   `lhs.trimmed == rhs.trimmed`; `areComplementary`'s docstring says
+        ///   *"Order-insensitive"*. A **correct** implementation fails asymmetry.
+        /// - **role-carrying operands** — `matches(_ name:, _ stem:)` is positional but not
+        ///   interchangeable. The label test claims to catch this and does not; `_ x: T,
+        ///   _ y: T` has no labels. That hole is **not** closed by this signal.
         ///
-        /// Weight `-25` drops 40 → 15, below the `.possible` floor of 20, so a
-        /// shape-only candidate is suppressed rather than downgraded. Any ordering name
-        /// keeps this from firing at all.
+        /// Weight `-25` drops 40 → 15, below the `.possible` floor, so a shape-only
+        /// candidate is suppressed rather than downgraded. Any ordering name prevents it.
         ///
-        /// **A suppressed candidate currently earns NO law, not a weaker one.** The
-        /// first version of this note claimed it falls through to `predicate`; it does
-        /// not, and the measurement said so — `predicate` stayed at 114 and 197 while
-        /// `comparator` dropped by 3 and 8. `PredicateTemplate.isPredicate` excludes
-        /// anything matching `ComparatorTemplate.isComparator`, and that gate is about
-        /// the *shape*, which still matches; only the score is suppressed.
-        ///
-        /// Whether these should become predicates is a real open question and
-        /// deliberately not settled here: `sameType(String, String) -> Bool` does owe
-        /// totality, so dropping it loses a weak-but-genuine law. Admitting them would
-        /// widen `predicate` — already the largest template on every corpus — across
-        /// all of them at once, which is its own calibration decision rather than a
-        /// side effect of fixing a false claim.
+        /// **A suppressed candidate earns NO law, not a weaker one** —
+        /// `PredicateTemplate.isPredicate` excludes anything matching `isComparator`, and
+        /// that gate reads the shape, which still matches. Whether these should become
+        /// predicates is a separate calibration decision.
         case unsupportedComparatorShape
+        /// Fires on a `round-trip` pair where **both halves are endomorphisms** —
+        /// `T -> T` paired with `T -> T` — and no inverse *name* corroborates them.
+        ///
+        /// Two endomorphisms are not an inverse pair. A round-trip needs opposite
+        /// directions, `A -> B` against `B -> A`; same-type-both-sides is just two
+        /// functions over one type, and the `g(f(x)) == x` law is false for almost
+        /// every such couple. The bare type-symmetry signal cannot tell them apart,
+        /// which makes it combinatorial: every `(String) -> String` helper in a corpus
+        /// pairs with every other.
+        ///
+        /// Measured as an outcome, per corpus, with a systematic sample read at each
+        /// step:
+        ///
+        /// | corpus | round-trip before → after |
+        /// |---|---|
+        /// | SwiftInferProperties, private seeded | 438 → **92** |
+        /// | SwiftInferProperties, baseline | 53 → **1** |
+        /// | FoundationEssentials | 142 → **53**, keeping all 5 Strong + 5 Likely |
+        ///
+        /// Every same-type pair sampled was false, on **both** corpora —
+        /// `sanitizeForFileName` × `stripGenericParameters` here;
+        /// `index(afterUnicodeScalar:)` × `index(afterRun:)` (both *after*) and
+        /// `deletingLastPathComponent()` × `deletingPathExtension()` (both *deleting*) on
+        /// Foundation, 14 of 14 in the dropped sample. Every surviving Foundation
+        /// Strong/Likely claim was real:
+        /// `Date(timeIntervalSinceReferenceDate: t).timeIntervalSinceReferenceDate == t`
+        /// and `Locale(identifier: s).identifier == s`, where canonicalisation is exactly
+        /// the bug the law would find. So this raises precision on the corpus where
+        /// round-trip already worked, not only on the one where it did not.
+        ///
+        /// *Method note.* A first pass tabulated same-type-vs-opposite-type shares by
+        /// regex over rendered signatures and got them wrong, reading `() -> TimeInterval`
+        /// as opposite-typed. A zero-parameter instance method's domain is its
+        /// **receiver** — `FunctionPairing.transformationDomain`, which this signal uses
+        /// and that script did not. The counts above are outcomes of the shipped code
+        /// instead, which cannot drift from it.
+        ///
+        /// **Name evidence overrides it.** A base64 `encode: String -> String` /
+        /// `decode: String -> String` IS a same-type round-trip, and the curated
+        /// inverse-name pair earns +40 on its own — so this fires only when *nothing
+        /// but the shape* matched, mirroring `unsupportedAlgebraicShape`.
+        case endomorphismRoundTripPair
         /// V1.4.3 — fires on candidates whose parameter type is a curated
         /// IEEE 754 floating-point-storage type (Float / Double / Float16 /
         /// Float32 / Float64 / Float80 / CGFloat / Complex / Decimal). Emitted
