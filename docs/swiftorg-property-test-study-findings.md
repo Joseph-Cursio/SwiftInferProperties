@@ -475,10 +475,25 @@ suites), missing the `Sequence`/`Collection` family, and downgraded it to latent
 a symptom. `LosslessStringConvertible` is a second absence of the same kind.
 
 Two witnesses make it a pattern rather than an oversight: **the coverage map is a hand-kept
-subset of the kit, with no mechanism keeping the two in step.** Still no behavioural symptom,
-so still not urgent — but the fix is now clearer than "add some cases": it wants a check that
-every kit `check…PropertyLaws` suite has a coverage entry or a recorded reason for not having
-one.
+subset of the kit, with no mechanism keeping the two in step.**
+
+**That mechanism now exists — `KitCoverageDriftTests` — and building it found a THIRD
+witness that is not epistemic.** Classifying all 44 kit suites turned up `Strideable`:
+the kit runs `"Strideable.distanceRoundTrip"`,
+`first.advanced(by: first.distance(to: second)) == second` (`StrideableLaws.swift:72`), and
+`discover` independently proposes `distance(to:)` × `advanced(by:)` as a `round-trip` on
+`stdlib/public/core`. **The same law, reported twice** — exactly what
+`protocolCoveredProperty` exists to prevent: *"re-reporting another tool's finding teaches
+people the tools disagree."*
+
+So the gap is no longer latent. Full disposition of the 44 suites: **13 covered, 10 not a
+conformance** (kit-invented law shapes like `ValueSemantic` and `InteractionInvariant`, with
+nothing to key a veto on), **20 uncovered with no symptom**, and **1 live double-report**.
+
+The test asserts a *decision* rather than coverage — a new kit suite lands unclassified and
+fails, which is the drift nothing could previously detect. Verified it can fail by removing a
+disposition and watching it go red. The `Strideable` entry is pinned by its own assertion, so
+closing the defect turns the suite red as the signal to delete it.
 
 **Verdict for this law: `declined` in substance, by accident in mechanism.** The toolchain
 runs it; `discover` stands aside for a reason unrelated to the division of labour, and cannot
