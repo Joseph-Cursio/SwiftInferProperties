@@ -1,0 +1,2310 @@
+{
+  "frozen": "BEFORE any discover run \u2014 see scope Q2",
+  "corpus": "swift",
+  "corpus_sha": "408632e59834c1a5ee4166ff61dd2c8b0585a1c5",
+  "roots": [
+    "test/stdlib",
+    "validation-test/stdlib"
+  ],
+  "site_count": 198,
+  "distinct_laws": 11,
+  "law_counts": {
+    "equatable.reflexive": 81,
+    "equatable.symmetric": 81,
+    "equatable.transitive": 81,
+    "hashable.consistency": 78,
+    "sequence.iterationContract": 50,
+    "collection.indexContract": 46,
+    "collection.bidirectional": 25,
+    "comparable.antisymmetric": 14,
+    "comparable.transitive": 14,
+    "comparable.strictWeakOrdering": 14,
+    "collection.randomAccess": 13
+  },
+  "excluded": {
+    "example_overload": 25,
+    "comment": 2,
+    "unrecognised_check_name": 812
+  },
+  "entries": [
+    {
+      "file": "test/stdlib/BridgeIdAsAny.swift.gyb",
+      "line": 350,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "boxedXs"
+    },
+    {
+      "file": "test/stdlib/Character.swift",
+      "line": 176,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "characters"
+    },
+    {
+      "file": "test/stdlib/CollectionOfOne.swift",
+      "line": 29,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "collections"
+    },
+    {
+      "file": "test/stdlib/DictionaryKeys.swift",
+      "line": 28,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "keys"
+    },
+    {
+      "file": "test/stdlib/FloatingPoint.swift.gyb",
+      "line": 752,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/FloatingPoint.swift.gyb",
+      "line": 760,
+      "ext": "gyb",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "test/stdlib/FloatingPoint.swift.gyb",
+      "line": 1391,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "values"
+    },
+    {
+      "file": "test/stdlib/Integers.swift.gyb",
+      "line": 305,
+      "ext": "gyb",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "[127"
+    },
+    {
+      "file": "test/stdlib/Integers.swift.gyb",
+      "line": 306,
+      "ext": "gyb",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "[-128"
+    },
+    {
+      "file": "test/stdlib/Integers.swift.gyb",
+      "line": 307,
+      "ext": "gyb",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "[127"
+    },
+    {
+      "file": "test/stdlib/Integers.swift.gyb",
+      "line": 308,
+      "ext": "gyb",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "[-32768"
+    },
+    {
+      "file": "test/stdlib/NSError.swift",
+      "line": 57,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[CocoaError.Code.fileNoSuchFile"
+    },
+    {
+      "file": "test/stdlib/NSError.swift",
+      "line": 58,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[URLError.Code.unknown"
+    },
+    {
+      "file": "test/stdlib/Optional.swift",
+      "line": 79,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[o1"
+    },
+    {
+      "file": "test/stdlib/Optional.swift",
+      "line": 85,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[oo1"
+    },
+    {
+      "file": "test/stdlib/Result.swift",
+      "line": 192,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "confusables"
+    },
+    {
+      "file": "test/stdlib/Result.swift",
+      "line": 199,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[result1"
+    },
+    {
+      "file": "test/stdlib/Result.swift",
+      "line": 207,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "confusables"
+    },
+    {
+      "file": "test/stdlib/Runtime.swift.gyb",
+      "line": 640,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 156,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 164,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 175,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 183,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 201,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 232,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "test/stdlib/StringAPI.swift",
+      "line": 240,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "test/stdlib/Unicode.swift",
+      "line": 57,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "instances"
+    },
+    {
+      "file": "test/stdlib/UnsafePointer.swift.gyb",
+      "line": 145,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "ptrs"
+    },
+    {
+      "file": "test/stdlib/UnsafePointer.swift.gyb",
+      "line": 461,
+      "ext": "gyb",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "instances.map { $0.1 }"
+    },
+    {
+      "file": "test/stdlib/Inputs/CommonArrayTests.gyb",
+      "line": 93,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "test/stdlib/Inputs/CommonArrayTests.gyb",
+      "line": 101,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 79,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 81,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 98,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 109,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 128,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 130,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 179,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 292,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 294,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 332,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 334,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 549,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 552,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "anyHashables"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 609,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 618,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "anyHashables"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 634,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "anyHashables"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 657,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 668,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 680,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 690,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 748,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "xs"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 749,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 769,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 773,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 837,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 867,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 906,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 936,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 960,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 985,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1015,
+      "ext": "gyb",
+      "battery": "checkHashableGroups",
+      "laws": [
+        "hashable.consistency"
+      ],
+      "subject_hint": "groups"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1043,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "nsErrors"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1044,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1069,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1119,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1124,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1155,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "nsErrors"
+    },
+    {
+      "file": "validation-test/stdlib/AnyHashable.swift.gyb",
+      "line": 1156,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Arrays.swift.gyb",
+      "line": 396,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a1"
+    },
+    {
+      "file": "validation-test/stdlib/Arrays.swift.gyb",
+      "line": 405,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a2"
+    },
+    {
+      "file": "validation-test/stdlib/Arrays.swift.gyb",
+      "line": 435,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a3"
+    },
+    {
+      "file": "validation-test/stdlib/ArraysObjc.swift.gyb",
+      "line": 1726,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "source.map { TestObjCValueTy($0"
+    },
+    {
+      "file": "validation-test/stdlib/ArraysObjc.swift.gyb",
+      "line": 1736,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "source.map { TestObjCValueTy($0"
+    },
+    {
+      "file": "validation-test/stdlib/ArraysObjc.swift.gyb",
+      "line": 1748,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "source.map { TestBridgedValueTy($0"
+    },
+    {
+      "file": "validation-test/stdlib/CollectionCompatibility.swift",
+      "line": 74,
+      "ext": "swift",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": "c"
+    },
+    {
+      "file": "validation-test/stdlib/CollectionCompatibility.swift",
+      "line": 103,
+      "ext": "swift",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": "c"
+    },
+    {
+      "file": "validation-test/stdlib/CollectionCompatibility.swift",
+      "line": 104,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "c"
+    },
+    {
+      "file": "validation-test/stdlib/CollectionType.swift.gyb",
+      "line": 411,
+      "ext": "gyb",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/CollectionType.swift.gyb",
+      "line": 484,
+      "ext": "gyb",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Concatenate.swift",
+      "line": 36,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Concatenate.swift",
+      "line": 44,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Concatenate.swift",
+      "line": 48,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 16,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "["
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 38,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "["
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 153,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "instances"
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 155,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "instances"
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 229,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "["
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 296,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "["
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 363,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "["
+    },
+    {
+      "file": "validation-test/stdlib/CoreGraphics-execute.swift",
+      "line": 597,
+      "ext": "swift",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "["
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 13,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 16,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[1"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 19,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[5]"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 20,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "1...31"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 21,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "1...32"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 22,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "1...33"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 32,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "(0..<65535"
+    },
+    {
+      "file": "validation-test/stdlib/Data.swift",
+      "line": 49,
+      "ext": "swift",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "array"
+    },
+    {
+      "file": "validation-test/stdlib/Dictionary.swift",
+      "line": 1452,
+      "ext": "swift",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Dictionary.swift",
+      "line": 1524,
+      "ext": "swift",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Dictionary.swift",
+      "line": 5226,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "d1"
+    },
+    {
+      "file": "validation-test/stdlib/Dictionary.swift",
+      "line": 5236,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "d2"
+    },
+    {
+      "file": "validation-test/stdlib/Dictionary.swift",
+      "line": 5246,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "remix"
+    },
+    {
+      "file": "validation-test/stdlib/Dictionary.swift",
+      "line": 5261,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "variants"
+    },
+    {
+      "file": "validation-test/stdlib/ExistentialCollection.swift.gyb",
+      "line": 99,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/ExistentialCollection.swift.gyb",
+      "line": 107,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "data"
+    },
+    {
+      "file": "validation-test/stdlib/ExistentialCollection.swift.gyb",
+      "line": 117,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/ExistentialCollection.swift.gyb",
+      "line": 126,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "data"
+    },
+    {
+      "file": "validation-test/stdlib/FixedPoint.swift.gyb",
+      "line": 405,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[false"
+    },
+    {
+      "file": "validation-test/stdlib/HashableIndices.swift",
+      "line": 10,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a.indices"
+    },
+    {
+      "file": "validation-test/stdlib/HashableIndices.swift",
+      "line": 15,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a.indices"
+    },
+    {
+      "file": "validation-test/stdlib/HashableIndices.swift",
+      "line": 20,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a.indices"
+    },
+    {
+      "file": "validation-test/stdlib/HashableIndices.swift",
+      "line": 25,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a.indices"
+    },
+    {
+      "file": "validation-test/stdlib/HashableIndices.swift",
+      "line": 30,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a.indices"
+    },
+    {
+      "file": "validation-test/stdlib/HashableIndices.swift",
+      "line": 35,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "a.indices"
+    },
+    {
+      "file": "validation-test/stdlib/Join.swift.gyb",
+      "line": 287,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "test.expected"
+    },
+    {
+      "file": "validation-test/stdlib/Join.swift.gyb",
+      "line": 298,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "test.expected"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 70,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 117,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 188,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 189,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 226,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 240,
+      "ext": "gyb",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "instances"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 646,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 776,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 946,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 957,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 994,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "0...11"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 1011,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "\"raboof\""
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 1055,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "evens"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 1064,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "odds"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 1076,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "evens"
+    },
+    {
+      "file": "validation-test/stdlib/Lazy.swift.gyb",
+      "line": 1228,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/NSStringBridging.swift.gyb",
+      "line": 34,
+      "ext": "gyb",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[ah1"
+    },
+    {
+      "file": "validation-test/stdlib/ObjectiveC.swift",
+      "line": 38,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Range.swift.gyb",
+      "line": 453,
+      "ext": "gyb",
+      "battery": "checkEquatable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive"
+      ],
+      "subject_hint": "instances"
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 202,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "data"
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 211,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "data"
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 223,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "data"
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 232,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "data"
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 267,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 293,
+      "ext": "gyb",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 318,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 343,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 795,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 815,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/SequenceType.swift.gyb",
+      "line": 1081,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Set.swift",
+      "line": 3616,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[s1"
+    },
+    {
+      "file": "validation-test/stdlib/Set.swift",
+      "line": 3622,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "[ss1"
+    },
+    {
+      "file": "validation-test/stdlib/Set.swift",
+      "line": 3632,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "remix"
+    },
+    {
+      "file": "validation-test/stdlib/Set.swift",
+      "line": 3643,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "variants"
+    },
+    {
+      "file": "validation-test/stdlib/SetAnyHashableExtensions.swift",
+      "line": 273,
+      "ext": "swift",
+      "battery": "checkHashable",
+      "laws": [
+        "equatable.reflexive",
+        "equatable.symmetric",
+        "equatable.transitive",
+        "hashable.consistency"
+      ],
+      "subject_hint": "input"
+    },
+    {
+      "file": "validation-test/stdlib/Slice.swift.gyb",
+      "line": 83,
+      "ext": "gyb",
+      "battery": "checkCollection",
+      "laws": [
+        "collection.indexContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Stride.swift",
+      "line": 10,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "Array(0...4"
+    },
+    {
+      "file": "validation-test/stdlib/Stride.swift",
+      "line": 11,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "Array(1...5"
+    },
+    {
+      "file": "validation-test/stdlib/Stride.swift",
+      "line": 14,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "stride(from: 0"
+    },
+    {
+      "file": "validation-test/stdlib/Stride.swift",
+      "line": 20,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "Array(0...5"
+    },
+    {
+      "file": "validation-test/stdlib/Stride.swift",
+      "line": 21,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "Array(0...5"
+    },
+    {
+      "file": "validation-test/stdlib/Stride.swift",
+      "line": 24,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "stride(from: 0"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 725,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "str.indices"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 726,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "str.unicodeScalars.indices"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 727,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "str.utf16.indices"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 728,
+      "ext": "swift",
+      "battery": "checkComparable",
+      "laws": [
+        "comparable.antisymmetric",
+        "comparable.transitive",
+        "comparable.strictWeakOrdering"
+      ],
+      "subject_hint": "str.utf8.indices"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 785,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "test.utf8"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 792,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "test.utf16"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 799,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 836,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 837,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str.utf16"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 838,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str.utf8"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 839,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str.unicodeScalars"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 846,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 847,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str.utf16"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 848,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str.utf8"
+    },
+    {
+      "file": "validation-test/stdlib/StringViews.swift",
+      "line": 849,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "str.unicodeScalars"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 17,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[1"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 20,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[1"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 26,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "1..<6"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 43,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[1"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 47,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[]"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 55,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[1"
+    },
+    {
+      "file": "validation-test/stdlib/UnfoldSequence.swift",
+      "line": 76,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": "[1"
+    },
+    {
+      "file": "validation-test/stdlib/Unicode.swift.gyb",
+      "line": 1621,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Unicode.swift.gyb",
+      "line": 1862,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Unicode.swift.gyb",
+      "line": 1872,
+      "ext": "gyb",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/UnsafeBufferPointer.swift.gyb",
+      "line": 240,
+      "ext": "gyb",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Collection/FlattenCollection.swift.gyb",
+      "line": 82,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyFilterCollection.swift.gyb",
+      "line": 70,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyFilterCollection.swift.gyb",
+      "line": 89,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyFilterCollection.swift.gyb",
+      "line": 115,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyMapBidirectionalCollection.swift",
+      "line": 60,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyMapBidirectionalCollection.swift",
+      "line": 67,
+      "ext": "swift",
+      "battery": "checkBidirectionalCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.bidirectional"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyMapRandomAccessCollection.swift",
+      "line": 60,
+      "ext": "swift",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": "expected"
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyMapRandomAccessCollection.swift",
+      "line": 67,
+      "ext": "swift",
+      "battery": "checkRandomAccessCollection",
+      "laws": [
+        "collection.indexContract",
+        "collection.randomAccess"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyMapSequence.swift",
+      "line": 57,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/LazyMapSequence.swift",
+      "line": 64,
+      "ext": "swift",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/Inputs/LazyMapTemplate.swift.gyb",
+      "line": 75,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    },
+    {
+      "file": "validation-test/stdlib/Collection/Inputs/LazyMapTemplate.swift.gyb",
+      "line": 92,
+      "ext": "gyb",
+      "battery": "checkSequence",
+      "laws": [
+        "sequence.iterationContract"
+      ],
+      "subject_hint": ""
+    }
+  ]
+}

@@ -48,7 +48,7 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 | Command docs | `docs/report-command.md`, `insights-command.md`, `docc-generation.md`, `prove-then-show.md`, `known-properties.md`, `stdlib-anchor.md`, `interaction-semantic-index.md` |
 | End-user docs | `docs/user/{tutorial,guide,reference}.md` |
 | Dogfood findings (own + sibling repos) | `docs/dogfood-new-templates-findings.md` |
-| **swift.org property-style-test study** | plan: `docs/swiftorg-property-test-study-scope.md` · record: `docs/swiftorg-property-test-study-findings.md` · sampler: `scripts/swiftorg_sample.py` (seeded + stratified, so "sampled not cherry-picked" is checkable). Corpus pinned at `swift` `408632e5`, and **every number carries its SHA** |
+| **swift.org property-style-test study** | plan: `docs/swiftorg-property-test-study-scope.md` · record: `docs/swiftorg-property-test-study-findings.md` · sampler: `scripts/swiftorg_sample.py` (seeded + stratified, so "sampled not cherry-picked" is checkable) · **frozen Q2 answer key**: `fixtures/swiftorg-study/q2-answer-key.json` + `scripts/swiftorg_answer_key.py`, committed BEFORE any `discover` run so the tool cannot grade its own homework. Corpus pinned at `swift` `408632e5`, and **every number carries its SHA** |
 | Superseded cycle plans | `docs/v1.141 Calibration Plan.md` — the repo is v1.146; kept for the shrinking / replay-corpus rationale, not as a plan |
 | Unbuilt proposals / design spikes | `docs/ideas/`, `docs/*-scope.md`, `docs/*-build-plan.md`, and `docs/production-assertion-discovery-signal.md` (an open scope with a cost estimate and no decision — the `*-scope.md` glob misses it by filename) |
 | PropertyLawKit / PropertyLawMacro source of truth | The SwiftPropertyLaws repo, not this one |
