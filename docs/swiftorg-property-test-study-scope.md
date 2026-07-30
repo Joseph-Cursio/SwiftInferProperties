@@ -1,7 +1,9 @@
 # Scope: a systematic study of swift.org's property-style tests
 
-**Status: planned, not started.** Five questions, ordered by dependency in §7. Read §2
-first — a substantial amount is already measured, and the study must not re-derive it.
+**Status: planned, not started.** Five questions, ordered by dependency in §7, run in **two
+passes** (§6): a sampled calibration pass, then a census on whichever populations the first
+pass shows are worth one. Read §2 first — a substantial amount is already measured, and the
+study must not re-derive it.
 
 The corpus is Apache-2.0. Any fixture vendored into this repo carries its attribution and
 its upstream path; nothing is copied without both.
@@ -75,7 +77,15 @@ definition and report the automated total **with its sample-measured error rate*
 earlier survey "proved unreliable — it read `result == Decimal(12340)` as a round-trip", and
 only its literal/non-literal split was quotable. Automate second.
 
-**Deliverable.** A definition, a count, an error bar, and a per-population breakdown.
+**A rough estimate is fine, deliberately.** Nothing downstream needs a precise total — it
+sizes pass 2 and weights Q5's idiom table, and both tolerate ±20% comfortably. What must be
+precise is the **definition** and the classifier's **error rate**, because those propagate:
+a reconciliation rate computed over a population you cannot define is not a number.
+
+So: order-of-magnitude on "how many", tight on "of what".
+
+**Deliverable.** A definition, a rough count with a sample-measured error rate, and a
+per-population breakdown.
 
 ### Q2 — Does each reconcile to a template we have?
 
@@ -128,6 +138,70 @@ experiment. It needs a **blinding protocol** or it is worthless.
 
 **Deliverable.** A recall figure with those buckets separated, and the residual — the laws a
 human wrote down that no channel of ours reaches. That residual is the real gap list.
+
+#### Q3a — "low recall" has two causes, and conflating them wastes the study
+
+The expectation going in is that recall is **low, because the catalog is deliberately
+conservative** (PRD §3.5, high precision / low recall). That is probably right, and it is
+also the least useful form the answer could take, because two very different things produce
+it:
+
+| cause | what it means | remedy |
+|---|---|---|
+| **(a) suppressed** — a template matched and a threshold, counter-signal, or veto held it back | we *can* state the law and chose not to | calibration: a weight, a tier, a carve-out |
+| **(b) unreached** — no template names that shape at all | we cannot state the law | catalog: a new template, or new discovery |
+
+**Count them separately or the number means nothing.** "Recall is 20%" is actionable only
+once split — if the missing 80% is mostly (a), the catalog is fine and the thresholds are
+mistuned; if mostly (b), no amount of tuning helps.
+
+**And (a) is currently hard to measure, which is itself a finding.** A suppressed candidate
+does not appear in `discover` output at all — measured this session on `comparator`, where
+suppressing 11 shape-only claims left those functions with *no* row rather than a low-scored
+one. So counting (a) needs laws to stay in the record, which is exactly what
+`access-level-analysis-gate-scope.md` §2 argues for on independent grounds
+(*"`metrics` can answer 'how many laws is access level hiding?' — that question is
+unanswerable today"*). Two studies wanting the same capability is an argument for building
+it before either.
+
+#### Q3b — pre-register the prediction, and split it by population
+
+Write the expected number down *before* running, with a SHA, the way Q2 freezes its key.
+An unfalsifiable "I expect it to be low" cannot be wrong; a band per population can.
+
+The prediction worth registering is **not uniform**, and the non-uniformity is the point:
+
+- **`check*` batteries → recall should be HIGH, and trivially so.** Those laws are
+  role-entailed by protocol conformance — `Equatable` obliges reflexivity, symmetry,
+  transitivity — and we ship `equivalence-relation` plus `ProtocolCoverageMap`. A high number
+  here is *not* evidence for the thesis, which is precisely why Q3 buckets conformance
+  separately. Already measured adjacent to this: conformance does not predict refutability
+  (`fixtures/equatable-signal/README.md`).
+- **hand-rolled repetition loops → recall should be LOW, and meaningfully so.** No
+  conformance to lean on, no curated name necessarily present. This is where the interesting
+  residual lives, and where a low number is a real result.
+
+A single blended figure would average these two into something uninterpretable.
+
+#### Q3c — before concluding "too conservative", check for a wrong discriminator
+
+"Too conservative" implies the fix is to relax — lower a threshold, widen a gate. The
+catalog forbids that as a reflex: *"Avoid the Daikon trap. Too many suggestions → raise
+thresholds, don't pile on filters"*, and its converse deserves the same suspicion.
+
+This session produced the counter-example, on this same corpus. `comparator` was missing true
+laws **and** emitting false ones — 11 of 22 false, three already shipping at `Likely`. The
+problem was not threshold height; it was gating on **shape** where the discriminating
+evidence was the **name**. Relaxing the threshold would have made both numbers worse.
+
+So the test to apply to Q3's misses, before any tuning:
+
+> Do the misses share a *discriminator* — some evidence channel present in the true cases and
+> absent in the false ones — or are they scattered across the score range?
+
+Scattered means conservatism. Clustered means we are reading the wrong signal, and the fix
+raises precision and recall together. Check clustering first; it is the cheaper answer and
+the better one.
 
 ### Q4 — Transform each property-style test into an actual property test
 
@@ -198,18 +272,53 @@ weight in, which is a spec we currently do not have.
 - **Score refutability, not count.** A law no plausible implementation would fail is not a
   finding, on either side of the reconciliation.
 
-## 6. Scope bounds and a stopping rule
+## 6. Two passes, with different stopping rules
 
-Unbounded, this study is larger than the tool. Bounds:
+**A sample gives you a rate, not a population — and the output that changes what we build is
+a gap list, where the tail is the valuable part.** The rare shape nobody thought of is
+exactly what sampling truncates. So sampling is a *calibration* pass, not the study.
 
-- **Q1–Q3 sample-based**, 30 per population, stratified, sampled not cherry-picked.
-- **Q4 bounded to one population** — the `check*` batteries, because they are the most
-  uniform and the least served by anything we ship.
-- **Q5 exhaustive** on generator *idioms* (a small closed set), sample-based on sites.
+This mirrors a rule the repo already applies to unknown-size discovery: *"keep going until K
+consecutive rounds return nothing new — simple counters miss the tail."*
 
-**Stop when** Q2's reconciliation table is complete for the sampled set and Q3's residual
-list has stopped growing across two consecutive samples. The residual list is the output
-that changes what we build; everything else is evidence for it.
+### Pass 1 — calibrate (sampled)
+
+30 per population, stratified, sampled not cherry-picked. Purpose is not the answer; it is
+the four things that make pass 2 possible and affordable:
+
+1. a **definition** of property-style, from what the sample actually shows (Q1)
+2. an **error rate** for the automated classifier, measured against hand adjudication
+3. a **reconciliation rate** per population, which sizes pass 2 and says which populations
+   are worth an exhaustive pass at all
+4. a **first residual list**, which is what tells you whether the study is worth continuing
+
+**Stops** on sample completion. Cheap, and its result may legitimately be "population N is
+uniform, exhaustive adds nothing" — that is a finding, and it is the only honest way to
+*earn* skipping a census.
+
+### Pass 2 — census (exhaustive on the populations pass 1 says matter)
+
+Every site in the chosen populations adjudicated. Feasible precisely because pass 1 produced
+the classifier and measured its error rate; without that, a census is 1,700+ hand
+adjudications and will not happen.
+
+**Stops** on two conditions, both required:
+
+- **census complete** — every site in the chosen populations has a verdict; and
+- **residual dry** — two consecutive population-slices add no new *kind* of gap. A slice
+  that adds the twentieth instance of a known gap is not new; one that adds the first
+  instance of an unseen shape is.
+
+Q1's total may stay a rough estimate throughout (§Q1). Nothing downstream needs it precise —
+it sizes the work and nothing else.
+
+### Bounds that survive both passes
+
+- **Q4 stays bounded to one population** — the `check*` batteries, most uniform and least
+  served by anything we ship. Q4 is a product deliverable, not a measurement; a census of
+  conversions is not a coherent goal.
+- **Q5 exhaustive on generator *idioms*** (a small closed set) from the start, sample-based
+  on sites. The idiom set is what feeds the generator spec; site counts only weight it.
 
 ## 7. Ordering — what actually depends on what
 
@@ -219,6 +328,9 @@ Q1 (define + count)
                                       └─▶ Q5 (generator classification)     ← independent, cheap
 Q4 prerequisite: TestSuiteParser + AssertionAnchor extensions
  └─▶ Q4 (transform)                                                         ← needs Q2's key
+
+Shared prerequisite for Q3a: suppressed laws must stay countable
+ (also wanted by access-level-analysis-gate-scope.md §2 — build once, two studies use it)
 ```
 
 Q5 does not depend on Q2 and can run in parallel. Q4's *prerequisite* is independent of
