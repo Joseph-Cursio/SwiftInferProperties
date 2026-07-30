@@ -235,10 +235,25 @@ The kit runs **44** law suites. `KnownProperty` models **22** properties, and ha
 at all** for the Sequence/Collection family. So the coverage veto cannot reason about laws
 the kit demonstrably runs.
 
-Harmless today — no template proposes a collection law, so there is nothing for the veto to
-suppress. It stops being harmless the moment one does, and it means the `known-properties`
-and `stdlib-anchor` surfaces under-report what the toolchain already covers. That is an
-actionable gap **in the coverage map**, not in the catalog.
+**Latent, not actionable — and the second half of that sentence was wrong when first
+written.** The veto only fires when a template *proposes* something, and no template proposes
+a collection-contract law, so there is nothing to suppress. Missing entries also fail safe:
+they cause *less* vetoing, never wrong vetoing.
+
+The claim that `known-properties` / `stdlib-anchor` "under-report what the toolchain covers"
+does not hold. `StandardLibraryProperties` describes itself as *"a curated catalog of
+known-true **algebraic** properties on standard-library types"*, over carriers *"exactly the
+ones the generator can construct"*, each tagged with the kit protocol it **witnesses**. It is
+a curated algebraic catalog for live verification, not a coverage inventory of the kit — it
+was never claiming to report what this gap would add.
+
+So: **no user-visible symptom today.** Recorded as known-latent. Fixing it now would mean
+adding `KnownProperty` cases nothing consumes, on the argument that something might later.
+It becomes real the moment a collection-contract template exists — which Q2's own gap list
+would be the reason to build.
+
+*(Second overstatement in this section, after the 96-gaps error, and both went the same way:
+inferring the architecture instead of reading it.)*
 
 #### What this does to §2's suspect conclusion
 
