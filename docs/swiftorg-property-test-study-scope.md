@@ -500,8 +500,14 @@ interesting.
 > **exhaustively at `Int8`** (2¹⁶) and **sampled at `Int64`** via a hand-rolled `WyRand`
 > with a fixed seed — in a `TestSuite.test` closure with `expectEqual`. Start there.
 >
-> `sort_integers` still paid: reading it surfaced a defect (findings §3.1) that the
-> `ReorderPartitionTemplate` had already named.
+> `sort_integers` still paid, though not as a defect: reading it surfaced an **incomplete
+> law** the `ReorderPartitionTemplate` had already named (findings §4) — neither verifier
+> checks that its output is a permutation of its input. Not reported, because the property
+> is covered by the rest of the suite. (An efficiency argument was also raised and then
+> **withdrawn on measurement** — the whole test runs in under 10 ms either way; see §4.2.)
+> **This is the toolchain's founding case**: two properties are jointly necessary for
+> `sorted()` and only one was written down. That demonstration does not depend on the
+> omission being a bug. Plus the oracle-independence lesson in findings §4.4.
 >
 > **Not yet measured:** whether `checkComparable` shares the blindness (antisymmetry and
 > transitivity also survive a projection, so probably — but probably is not measured). And a
