@@ -58,7 +58,12 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             preamble: inputs.preamble
         )
         let defaultPass = try defaultPassSection(inputs: inputs, recipe: recipe)
-        let edgeSentinel = edgeSentinelSection()
+        // Pass 2. Compose the SAME law with a boundary-only recipe, then
+        // relabel it as the edge pass — see `+EdgePass` for why the boundary
+        // values cannot simply be mixed into Pass 1's generator. Falls back to
+        // the zero-trial sentinel for carriers with no curated boundary set;
+        // the renderer then says no edge pass ran rather than claiming one did.
+        let edgeSentinel = try edgePassSection(inputs: inputs, recipe: recipe)
         // A recursive carrier's helper must sit above the check that calls it.
         // Empty otherwise, so non-recursive output is byte-identical to before.
         let declarations = recipe.declarations.isEmpty
@@ -247,7 +252,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
 
     /// Pass 1 emit — template-aware. Routes to the right per-template
     /// composer (1/2/3 values per trial).
-    private static func defaultPassSection(
+    static func defaultPassSection(
         inputs: Inputs,
         recipe: GeneratorRecipe
     ) throws -> String {
@@ -296,7 +301,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
 
     /// V1.44.B/C zero-edge sentinel. Strategist-routed carriers are
     /// integral or `String` — no NaN/Inf semantic, no edge pass needed.
-    private static func edgeSentinelSection() -> String {
+    static func edgeSentinelSection() -> String {
         """
         // --- Pass 2: edge-case-biased — n/a for strategist-routed carrier ---
         print("VERIFY_EDGE_RESULT: PASS")

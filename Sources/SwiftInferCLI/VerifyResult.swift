@@ -161,23 +161,7 @@ public enum VerifyResultParser {
         let edgeFail = lines.contains { $0.hasPrefix("VERIFY_EDGE_RESULT: FAIL") }
 
         if defaultFail, output.exitCode == 1 {
-            let trial = Int(value(forMarker: "VERIFY_DEFAULT_TRIAL:", in: lines) ?? "") ?? -1
-            let input = value(forMarker: "VERIFY_DEFAULT_INPUT:", in: lines) ?? "(missing)"
-            let forwardResult = value(forMarker: "VERIFY_DEFAULT_FORWARD:", in: lines) ?? "(missing)"
-            let inverseResult = value(forMarker: "VERIFY_DEFAULT_INVERSE:", in: lines) ?? "(missing)"
-            // v1.141: shrink markers are optional — emitters that don't yet
-            // ship a shrink phase (or carriers with no shrinker) simply omit
-            // them, leaving `shrunk == nil` / `shrinkSteps == 0`.
-            let shrunk = value(forMarker: "VERIFY_DEFAULT_SHRUNK:", in: lines)
-            let shrinkSteps = Int(value(forMarker: "VERIFY_SHRINK_STEPS:", in: lines) ?? "") ?? 0
-            return .defaultFails(
-                trial: trial,
-                input: input,
-                forwardResult: forwardResult,
-                inverseResult: inverseResult,
-                shrunk: shrunk,
-                shrinkSteps: shrinkSteps
-            )
+            return defaultFailure(from: lines)
         }
 
         if defaultPass, edgeFail, output.exitCode == 1 {
@@ -210,9 +194,58 @@ public enum VerifyResultParser {
             )
         }
 
+        if let survived = verdictSurvivingTrappedEdgePass(
+            defaultPass: defaultPass, edgePass: edgePass, output: output, lines: lines
+        ) {
+            return survived
+        }
+
         // A signal-terminated run gets the trap diagnosis; anything else the
         // generic parse-error detail.
         return .error(reason: trapReason(from: output) ?? parseErrorReason(from: output))
+    }
+
+    /// The `.defaultFails` decode. Extracted so `parse` stays inside the
+    /// 50-line body cap once the trapped-edge-pass rule joined it.
+    private static func defaultFailure(from lines: [String]) -> VerifyOutcome {
+
+            let trial = Int(value(forMarker: "VERIFY_DEFAULT_TRIAL:", in: lines) ?? "") ?? -1
+            let input = value(forMarker: "VERIFY_DEFAULT_INPUT:", in: lines) ?? "(missing)"
+            let forwardResult = value(forMarker: "VERIFY_DEFAULT_FORWARD:", in: lines) ?? "(missing)"
+            let inverseResult = value(forMarker: "VERIFY_DEFAULT_INVERSE:", in: lines) ?? "(missing)"
+            // v1.141: shrink markers are optional — emitters that don't yet
+            // ship a shrink phase (or carriers with no shrinker) simply omit
+            // them, leaving `shrunk == nil` / `shrinkSteps == 0`.
+            let shrunk = value(forMarker: "VERIFY_DEFAULT_SHRUNK:", in: lines)
+            let shrinkSteps = Int(value(forMarker: "VERIFY_SHRINK_STEPS:", in: lines) ?? "") ?? 0
+            return .defaultFails(
+                trial: trial,
+                input: input,
+                forwardResult: forwardResult,
+                inverseResult: inverseResult,
+                shrunk: shrunk,
+                shrinkSteps: shrinkSteps
+            )
+    }
+
+    /// Pass 1 completed and printed PASS, then the run died before Pass 2
+    /// reported. Because stdout is unbuffered in the stub, a marker that was
+    /// printed survives the trap — so this is *not* an unevaluated law. Pass 1
+    /// returned a verdict over the ordinary domain; only the advisory boundary
+    /// sweep was lost.
+    ///
+    /// Reporting `.error` would discard a verdict the run actually produced.
+    /// `x + 1` is the canonical case: monotone everywhere, traps at `Int.max`,
+    /// which Pass 2 draws deliberately.
+    private static func verdictSurvivingTrappedEdgePass(
+        defaultPass: Bool,
+        edgePass: Bool,
+        output: VerifierSubprocess.Output,
+        lines: [String]
+    ) -> VerifyOutcome? {
+        guard defaultPass, !edgePass, trapReason(from: output) != nil else { return nil }
+        let defaultTrials = Int(value(forMarker: "VERIFY_DEFAULT_TRIALS:", in: lines) ?? "") ?? 0
+        return .bothPass(defaultTrials: defaultTrials, edgeTrials: 0, edgeSampled: 0)
     }
 
     /// Signal-terminated exit codes. `Process.terminationStatus` reports the

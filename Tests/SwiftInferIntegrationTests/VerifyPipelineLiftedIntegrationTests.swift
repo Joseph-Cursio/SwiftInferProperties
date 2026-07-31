@@ -12,6 +12,15 @@ import Testing
 @Suite("Verify pipeline — lifted + dual-style + monotonicity + memberwise integration", .tags(.subprocess))
 struct VerifyPipelineLiftedIntegrationTests {
 
+    /// `edgeTrials` used to be pinned at `0` here, because Pass 2 for a
+    /// strategist-routed carrier was `edgeSentinelSection()` — a hardcoded
+    /// `print("VERIFY_EDGE_RESULT: PASS")` asserting nothing. Pass 2 now runs
+    /// the same law over the carrier's curated boundary set, so an integer
+    /// carrier reports real trials.
+    ///
+    /// `sorted()` is idempotent at every boundary too, so this stays
+    /// `.bothPass` — the assertion that changed is the trial count, not the
+    /// verdict.
     @Test("idempotence-lifted × Int: sorted() is idempotent over [Int]")
     func idempotenceLiftedIntBothPass() throws {
         let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
@@ -19,10 +28,9 @@ struct VerifyPipelineLiftedIntegrationTests {
             carrier: "Int",
             template: "idempotence-lifted"
         )
-        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+        if case let .bothPass(defaultTrials, edgeTrials, _) = outcome {
             #expect(defaultTrials == 100)
-            #expect(edgeTrials == 0)
-            #expect(edgeSampled == 0)
+            #expect(edgeTrials == 100, "Pass 2 now draws the Int boundary set")
         } else {
             Issue.record("expected .bothPass; got \(outcome)")
         }
@@ -99,6 +107,11 @@ struct VerifyPipelineLiftedIntegrationTests {
         )
         if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
             #expect(defaultTrials == 100)
+            // Still 0, but for a NEW reason. Pass 2 draws `Int.max` on purpose
+            // and `x + 1` traps there, so the run dies mid-sweep — and the
+            // parser keeps Pass 1's verdict rather than discarding it as an
+            // error. That trap-tolerance is the whole reason boundary values
+            // live in an advisory pass instead of the default generator.
             #expect(edgeTrials == 0)
             #expect(edgeSampled == 0)
         } else {

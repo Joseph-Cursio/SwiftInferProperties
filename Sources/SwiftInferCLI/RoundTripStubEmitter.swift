@@ -21,7 +21,7 @@ import Foundation
 ///     + `VERIFY_EDGE_SAMPLED: 0`. The V1.43.C parser still produces
 ///     `.bothPass(defaultTrials: N, edgeTrials: 0, edgeSampled: 0)`;
 ///     the renderer detects the zero-edge-pass shape and reports
-///     "(integer carrier — edge pass not applicable)" in V1.44.D.
+///     the V1.153 "no edge pass ran for this carrier" line.
 ///
 /// **Output shape.** Same `VERIFY_DEFAULT_*` / `VERIFY_EDGE_*` marker
 /// contract as V1.43.B so `VerifyResultParser` consumes all three

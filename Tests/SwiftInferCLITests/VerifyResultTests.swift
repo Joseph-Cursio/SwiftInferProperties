@@ -22,6 +22,39 @@ struct VerifyResultParserTests {
         VerifierSubprocess.Output(exitCode: exitCode, stdout: stdout, stderr: stderr)
     }
 
+    // MARK: - Pass 2 trapped after Pass 1 gave a verdict
+
+    /// Pass 2 draws the carrier's boundary values deliberately, so it can drive
+    /// code into a trap that the ordinary domain never reaches — `x + 1` at
+    /// `Int.max` is the canonical case. Pass 1 has already printed its verdict
+    /// by then, and stdout is unbuffered in the stub, so that marker survives.
+    ///
+    /// Reporting `.error` here would DISCARD a verdict the run actually
+    /// produced. Only the advisory sweep was lost.
+    @Test("Pass 1 passed then the run trapped → keep the verdict, not an error")
+    func trappedEdgePassKeepsTheDefaultVerdict() {
+        let raw = Self.output(
+            exitCode: 5,
+            stdout: [
+                "VERIFY_DEFAULT_RESULT: PASS",
+                "VERIFY_DEFAULT_TRIALS: 100"
+            ].joined(separator: "\n")
+        )
+        #expect(VerifyResultParser.parse(raw) == .bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0))
+    }
+
+    /// A trap with no Pass 1 verdict is still an error — the law was never
+    /// evaluated, and inventing a verdict from a run that produced none is the
+    /// failure mode `trapReason` exists to prevent.
+    @Test("a trap with no Pass 1 verdict is still an error")
+    func trapBeforeAnyVerdictIsStillAnError() {
+        let raw = Self.output(exitCode: 5, stdout: "")
+        guard case .error = VerifyResultParser.parse(raw) else {
+            Issue.record("expected .error for a trap with no default verdict")
+            return
+        }
+    }
+
     // MARK: - bothPass
 
     @Test("parser recognizes both-pass markers + exit 0 → .bothPass(...)")

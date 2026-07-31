@@ -240,14 +240,18 @@ struct VerifyResultRendererTests {
 
     // MARK: - V1.44.D integer-carrier sentinel rendering
 
-    @Test("Int + bothPass with edgeTrials=0 renders 'edge pass not applicable'")
+    /// V1.153 — the wording changed because it was misleading. `edgeTrials == 0`
+    /// means the pass did NOT run; the old text ("edge pass not applicable")
+    /// read as "this carrier has no edge cases", which is false — `Int.min` is
+    /// as much an edge case as `NaN`.
+    @Test("Int + bothPass with edgeTrials=0 says the edge pass did not run")
     func rendersIntCarrierBothPassSentinel() {
         let rendered = VerifyResultRenderer.render(
             .bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0),
             context: Self.intContext
         )
         #expect(rendered.contains("✓ verify holds (strong)"))
-        #expect(rendered.contains("(integer carrier — edge pass not applicable)"))
+        #expect(rendered.contains("no edge pass ran for this carrier"))
         // The "curated edge cases sampled" phrasing must NOT appear.
         #expect(!rendered.contains("curated edge cases sampled"))
     }

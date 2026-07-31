@@ -53,7 +53,7 @@ public enum VerifyResultRenderer {
     /// Render the outcome as a multi-line user-facing string. V1.44.D
     /// adapts the phrasing per template (`round-trip` vs `idempotence`)
     /// and per carrier (FP edge-pass-sampled count vs the integer
-    /// "edge pass not applicable" sentinel).
+    /// "no edge pass ran" line).
     public static func render(_ outcome: VerifyOutcome, context: Context) -> String {
         switch outcome {
         case let .bothPass(defaultTrials, edgeTrials, edgeSampled):
@@ -185,19 +185,31 @@ public enum VerifyResultRenderer {
         }
     }
 
-    /// Edge-coverage line for `.bothPass`. The integer carrier emits a
-    /// zero-edge sentinel (`edgeTrials == 0` per V1.44.B/C); the
-    /// renderer detects it and reports the n/a phrasing instead of the
-    /// curated-cases-sampled count. FP carriers map to their curated
+    /// Edge-coverage line for `.bothPass`. FP carriers map to their curated
     /// list size — 12 entries for `Complex<Double>`, `DoubleEdgeCaseStub`'s
     /// real-axis set for `Double`.
+    ///
+    /// **`edgeTrials == 0` means the pass did not run, and the line must say
+    /// so.** Strategist-routed carriers emit `edgeSentinelSection()` — a
+    /// hardcoded `PASS` printing zero trials — so a `bothPass` on such a
+    /// carrier is carried entirely by the default pass. The previous wording,
+    /// *"(integer carrier — edge pass not applicable)"*, read as *this carrier
+    /// has no edge cases*, when the truth is *we did not check them*. `Int.min`
+    /// is as much an edge case as `NaN`; `fixtures/verify-refutability` has a
+    /// stub wrong only there that this pass reported as holding.
+    ///
+    /// Since V1.153 the integer and `String` boundary values are mixed into the
+    /// *default* generator, so they are reachable in the pass that did run —
+    /// but that is generator bias, not a second pass, and the line should not
+    /// claim coverage it cannot count.
     private static func edgeCoverageLine(
         edgeTrials: Int,
         edgeSampled: Int,
         context: Context
     ) -> String {
         if edgeTrials == 0 {
-            return "    (integer carrier — edge pass not applicable)"
+            return "    (no edge pass ran for this carrier — "
+                + "boundary values are mixed into the default generator instead)"
         }
         let curatedCount = curatedEdgeCaseCount(for: context.carrierType)
         return "    (\(edgeSampled) / \(curatedCount) curated edge cases sampled)"
