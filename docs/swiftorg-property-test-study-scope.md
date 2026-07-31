@@ -487,10 +487,21 @@ interesting.
 > the **model law** (`left == right ⟺ model(left) == model(right)`), which is a Q2/Q3
 > finding rather than a Q4 transformation.
 >
-> **Convert the weak-generator population instead.** The `sort_integers` LCG — 256 distinct
-> values, all odd, never negative — checks a sortedness law that is *not* structurally
-> blind. There the domain genuinely is the limiting factor, so replacing it changes what the
-> test can catch. That is where the before/after is real.
+> **Convert the weak-generator population instead** — but not via `sort_integers`, and the
+> reason is a second correction. That file is `lit`+FileCheck (`print` + `CHECK-NOT`), so it
+> has no assertion function and **TestLifter cannot anchor on it at all**; §2 already said so.
+> Its sortedness law is also run *exhaustively* — `permute(7, sort_verifier)` is all 5,040
+> permutations — alongside the LCG arm, and §2 says exhaustive is "stronger than random, not
+> weaker". Converting that arm would be a downgrade. The LCG fact is real; it feeds the
+> large-size arm only, and citing it without checking which arm was the error.
+>
+> A genuine candidate has the law forced to sample and an anchor the lifter can see:
+> `validation-test/stdlib/IntegerDivision.swift` runs the same division identity
+> **exhaustively at `Int8`** (2¹⁶) and **sampled at `Int64`** via a hand-rolled `WyRand`
+> with a fixed seed — in a `TestSuite.test` closure with `expectEqual`. Start there.
+>
+> `sort_integers` still paid: reading it surfaced a defect (findings §3.1) that the
+> `ReorderPartitionTemplate` had already named.
 >
 > **Not yet measured:** whether `checkComparable` shares the blindness (antisymmetry and
 > transitivity also survive a projection, so probably — but probably is not measured). And a

@@ -1161,4 +1161,100 @@ which cannot violate reflexivity, symmetry or transitivity. That population's ve
 |---|---|---|
 | `test/stdlib/sort_integers.swift` — sortedness check could not fail (`CHECK-NOT: Error!` vs printed `Error: `) | `swift` | **`swiftlang/swift#91083`** — approved by `tbkka`, **merged 2026-07-30** |
 
+| `test/stdlib/sort_integers.swift` — **both verifiers check only half their law**: neither confirms the output is a *permutation* of the input | `swift` | **recorded, not submitted** (2026-07-31) — see below |
+
 Found opportunistically before this study began. Q2 predicts more; each gets a row.
+
+### 3.1 The permutation gap — what the issue actually is
+
+The test checks that sorting produces something **in order**:
+
+```swift
+var y = $0.sorted()
+for i in 0..<y.count - 1 {
+  if (y[i] > y[i+1]) { print("Error: \(y)"); return }
+}
+```
+
+Each element is ≤ the next. That is true of a correct sort — and it is *also* true
+of several badly wrong ones, because **"in order" says nothing about which
+elements are present**. Two implementations that pass:
+
+| wrong `sorted()` | still in order? | caught? |
+|---|---|---|
+| replaces every element with the smallest — `[1,1,1,1,1,1]` | yes | **no** |
+| drops half the elements — `[1,2,3]` from a 6-element input | yes | **no** |
+
+Measured, not argued: both were compiled and run against the verifier copied
+verbatim from the file. Both printed `PASSES`.
+
+The missing half is that the output must contain **the same elements** as the
+input — a *permutation*. Sortedness plus permutation pins the result; sortedness
+alone does not.
+
+`partition_verifier` has the identical hole. It checks that everything before the
+returned index fails the predicate and everything after satisfies it, and never
+checks the elements survived. A partition returning input multiset `[1,2,3,4,6,8]`
+as `[1,1,1,4,4,4]` is correctly *grouped* and passes.
+
+**Our catalogue names this exact invariant before anyone looked at the file.**
+`ReorderPartitionTemplate` states it in capitals: *"IT IS A PERMUTATION — this is
+the load-bearing invariant. The multiset of elements is [preserved]."*
+
+### 3.2 Why it is recorded rather than submitted
+
+The bug class is real but unlikely to bite: `sorted()` is the standard library's
+own, so a regression that silently loses elements would probably surface
+elsewhere first. The file also carries a `FIXME(prext)` suggesting the partition
+half is semi-abandoned. Submitting is defensible — `#91083` was accepted on the
+same argument, "this check cannot fail for the bug it targets" — but it is
+maintainer time for a test that has never failed, and the author would have to
+defend it.
+
+The patch, verified to leave output byte-identical on a correct standard library:
+
+```swift
+// Element-count multiset, built without calling `sorted()` or `partition(by:)`.
+func _elementCounts(_ a: [Int]) -> [Int: Int] {
+  var counts: [Int: Int] = [:]
+  for x in a { counts[x, default: 0] += 1 }
+  return counts
+}
+
+// …then, at the end of each verifier:
+if y.count != $0.count || _elementCounts(y) != _elementCounts($0) {
+  print("Error: \(y) is not a permutation of \($0)")
+  return
+}
+```
+
+### 3.3 The near-miss, which is the more useful finding
+
+**The first version of this fix was itself a check that could not fail**, and it
+was nearly recorded as the patch:
+
+```swift
+if y.sorted() != $0.sorted() { … }   // WRONG
+```
+
+`y` is `$0.sorted()`. So this computes the oracle for `sorted()` **using
+`sorted()`** — the very function under test. A sort that drops elements drops
+them on both sides of the comparison, and the check passes. An oracle for a
+reordering operation must not be built from that operation.
+
+**Worse, the probe written to validate the fix reported success.** It varied a
+`sortFn` *parameter* while `.sorted()` inside the verifier remained the real
+standard library — so the substitution the probe made was not the substitution
+the real test needs. In the actual file the subject **is** `Array.sorted()`, and
+stdlib cannot be swapped out, so the probe was structurally incapable of
+detecting the flaw it was built to detect.
+
+It was caught by re-reading the patch in its real shape, not by evidence.
+
+This is the same failure the whole study is about — a check that cannot fail —
+reproduced *while fixing an instance of it*, and it generalises past this file:
+
+> **A test's oracle must be independent of the thing under test.** This is the
+> testing-side form of the repo's standing rule that a tool may not grade its own
+> homework — and the corollary is that a probe which substitutes something other
+> than the real subject proves nothing about the real subject.
