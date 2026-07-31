@@ -6,7 +6,8 @@ one is not a measurement (scope §3).
 
 **Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on `check-battery`; Q2 + Q5 also
 answered on `loops` (§1.25, exhaustive not sampled). **Q3 answered (§1.4) — 75% recall on
-denominator A, carried entirely by one signal.** Q4 not started.**
+denominator A, carried entirely by one signal.** Q4 not started — but its prerequisite is
+**done** (§1.6) and its target + population are now decided (§1.6, scope §Q4/§8).**
 
 ---
 
@@ -1131,8 +1132,21 @@ Q4 itself — and, per §1.4, the corroboration question. Q3 measured that all n
 The test-derived channel is that second channel, and against this corpus it was
 returning zero.
 
-**Still required before converting anything** (scope §8): decide Q4's target — upstream
-PR, local fixture corpus, or neither — *before* the second suite is converted.
+**The target decision is made** (scope §8, resolved 2026-07-31): **local gated fixture**,
+pinned at the corpus SHA; upstream stays open for *defects* found while converting, closed
+for the conversions themselves. The Swift repo vendors no property-based testing library and
+`StdlibUnittest`'s whole randomness surface is `LinearCongruentialGenerator` — the generator
+this study measured as weak — so an upstream conversion could only add a dependency
+(a proposal, not a PR) or be written with the broken generator.
+
+**And which population changed.** Scope §Q4 predicted the `check*` batteries were "strictly
+more valuable" to convert. Measured false: `checkEquatablePropertyLaws` already asserts the
+same four laws `StdlibUnittest.checkEquatable` does, and `fixtures/equatable-signal/README.md`
+already measured those four as **structurally blind** to projection bugs (arm 7 drops a whole
+word and passes 4/4). Converting them enlarges the domain of a law that cannot fail. Some
+sites are vacuous outright — `test/stdlib/Result.swift:192` checks a *synthesized* `==`,
+which cannot violate reflexivity, symmetry or transitivity. That population's verdict is
+`declined`; convert the **weak-generator** population instead.
 
 ## 2. Pass 2 — census
 
