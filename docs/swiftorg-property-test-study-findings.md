@@ -1161,11 +1161,21 @@ which cannot violate reflexivity, symmetry or transitivity. That population's ve
 |---|---|---|
 | `test/stdlib/sort_integers.swift` — sortedness check could not fail (`CHECK-NOT: Error!` vs printed `Error: `) | `swift` | **`swiftlang/swift#91083`** — approved by `tbkka`, **merged 2026-07-30** |
 
-| `test/stdlib/sort_integers.swift` — **both verifiers check only half their law**: neither confirms the output is a *permutation* of the input | `swift` | **recorded, not submitted** (2026-07-31) — see below |
-
 Found opportunistically before this study began. Q2 predicts more; each gets a row.
 
-### 3.1 The permutation gap — what the issue actually is
+**One row was retracted from this table on 2026-07-31** — the `sort_integers` permutation
+observation. It is not a defect; see §4. The bar for this table is `#91083`'s: a check that
+cannot fail **and** has no other coverage.
+
+---
+
+## 4. An incomplete law that is probably deliberate — `sort_integers`
+
+**Retracted as a defect, kept as an observation.** This was first written up under
+"Upstream defects found" and headed "what the issue actually is". That framing was
+wrong, and the correction came from the repo owner rather than from measurement.
+
+### 4.1 What the test does and does not check
 
 The test checks that sorting produces something **in order**:
 
@@ -1176,42 +1186,80 @@ for i in 0..<y.count - 1 {
 }
 ```
 
-Each element is ≤ the next. That is true of a correct sort — and it is *also* true
-of several badly wrong ones, because **"in order" says nothing about which
-elements are present**. Two implementations that pass:
+It never checks that the output contains the **same elements** as the input. The two
+are different claims and only the pair pins the result — the intuition being that **a
+function returning `[]` passes**, since an empty list is trivially in order.
 
-| wrong `sorted()` | still in order? | caught? |
+Compiled and run against the verifier copied verbatim, both of these pass:
+
+| wrong `sorted()` | in order? | caught? |
 |---|---|---|
-| replaces every element with the smallest — `[1,1,1,1,1,1]` | yes | **no** |
-| drops half the elements — `[1,2,3]` from a 6-element input | yes | **no** |
+| replaces every element with the smallest | yes | no |
+| drops half the elements | yes | no |
 
-Measured, not argued: both were compiled and run against the verifier copied
-verbatim from the file. Both printed `PASSES`.
+`partition_verifier` has the same shape: input multiset `[1,2,3,4,6,8]` returned as
+`[1,1,1,4,4,4]` is correctly *grouped* and passes.
 
-The missing half is that the output must contain **the same elements** as the
-input — a *permutation*. Sortedness plus permutation pins the result; sortedness
-alone does not.
+Our `ReorderPartitionTemplate` names the missing invariant in capitals — *"IT IS A
+PERMUTATION — this is the load-bearing invariant"* — which is why this was found at
+all.
 
-`partition_verifier` has the identical hole. It checks that everything before the
-returned index fails the predicate and everything after satisfies it, and never
-checks the elements survived. A partition returning input multiset `[1,2,3,4,6,8]`
-as `[1,1,1,4,4,4]` is correctly *grouped* and passes.
+### 4.2 Why it is almost certainly deliberate, and not reported
 
-**Our catalogue names this exact invariant before anyone looked at the file.**
-`ReorderPartitionTemplate` states it in capitals: *"IT IS A PERMUTATION — this is
-the load-bearing invariant. The multiset of elements is [preserved]."*
+Two arguments, both stronger than the original write-up allowed.
 
-### 3.2 Why it is recorded rather than submitted
+**~~It costs 14×.~~ Efficiency is NOT the reason — this argument was raised, measured,
+and withdrawn within the hour.** A microbenchmark over 5,040 arrays of 7 elements
+showed the multiset check at 4.2 ms against the sort's 0.3 ms, and "14×" was reported
+as if it settled the matter. It does not: **the whole test binary runs in under 10 ms
+either way** (5 runs each, original and patched), inside a CI build measured in hours.
+A ratio on a 0.3 ms base is not a cost argument, and quoting one instead of the
+absolute number is exactly the kind of dramatic-sounding framing this study is
+supposed to catch. Recorded rather than deleted because the error is instructive:
+**14× of nothing is nothing.**
 
-The bug class is real but unlikely to bite: `sorted()` is the standard library's
-own, so a regression that silently loses elements would probably surface
-elsewhere first. The file also carries a `FIXME(prext)` suggesting the partition
-half is semi-abandoned. Submitting is defensible — `#91083` was accepted on the
-same argument, "this check cannot fail for the bug it targets" — but it is
-maintainer time for a test that has never failed, and the author would have to
-defend it.
+**The property is covered elsewhere — and this argument alone carries the
+retraction.** `sorted()` is exercised by essentially every
+other test in the suite; a sort that dropped elements would break thousands of them.
+So the permutation law *is* checked — just not here. **That is the same reasoning as
+the study's `declined` verdict** ("we understand it and stand aside because something
+else runs it"), applied to the test ecosystem rather than to PropertyLawKit. The
+original write-up applied that reasoning to the kit an hour earlier and failed to
+apply it here.
 
-The patch, verified to leave output byte-identical on a correct standard library:
+No PR was opened and no question was asked upstream.
+
+### 4.2a What this example is actually for
+
+The retraction is about whether to *report* it. The finding itself is larger than that,
+and it is the toolchain's founding case:
+
+> To ensure sort works properly, **two properties need to hold, but only one was
+> explicitly stated.**
+
+Sortedness and permutation are jointly necessary — neither alone pins the result.
+A human wrote one down. `ReorderPartitionTemplate` names the other, and named it
+before anyone opened this file. That is the product thesis demonstrated on the most
+canonical example in property-based testing, and it does not depend on the omission
+being a bug, being worth fixing, or being reported.
+
+The framing error was treating "is this a reportable defect?" as the question. It was
+never the question.
+
+### 4.3 What survives as a finding
+
+Not "the Swift project has a bug". Two things:
+
+1. **The catalogue named a real incompleteness before anyone read the file.** That is
+   evidence about `ReorderPartitionTemplate`'s precision, which is what the study is
+   for — independent of whether the omission is worth fixing.
+2. **"Incomplete" and "defective" are different verdicts, and the study already has
+   vocabulary for the difference.** Reaching for the defect table first, when
+   `declined` was right there, is the same over-claim the study's §0.4 classifier
+   hazard keeps producing in other costumes.
+
+The verified patch, should anyone want it later — output byte-identical on a correct
+standard library:
 
 ```swift
 // Element-count multiset, built without calling `sorted()` or `partition(by:)`.
@@ -1228,10 +1276,11 @@ if y.count != $0.count || _elementCounts(y) != _elementCounts($0) {
 }
 ```
 
-### 3.3 The near-miss, which is the more useful finding
+### 4.4 The near-miss, which is the finding that survives intact
 
-**The first version of this fix was itself a check that could not fail**, and it
-was nearly recorded as the patch:
+This one is about my own error, not the Swift project's, so the retraction above
+leaves it untouched. **The first version of the fix was itself a check that could
+not fail**, and it was nearly recorded as the patch:
 
 ```swift
 if y.sorted() != $0.sorted() { … }   // WRONG
