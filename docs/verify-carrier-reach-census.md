@@ -151,13 +151,85 @@ that isn't yields a build failure naming the missing conformance — which is a
 better answer than the silent demotion, and the same "forward progress to the
 next gap layer" this census got from rebinding `Self`.
 
-**So the concrete next measurement is a one-line split**: of the 22
-`inverse-pair` entries, how many were demoted by `.unknown` rather than
-`.notEquatable`? That number is the size of the lever, and it is cheap to get.
-`EquatableResolver.curatedEquatableStdlib` already carries a road-test scar
-showing the failure mode is real — `Data` classified `.unknown` and demoted a
-flagship encrypt/decrypt round-trip until it was added to the curated set by
-hand.
+**Measured 2026-07-30 — and the answer inverts the recommendation. Do not
+build this lever.**
+
+The split is **22 `.unknown`, 0 `.notEquatable`**. Every owning type classifies
+`.equatable` on its own name. So the lever looked real: 22 round-trips demoted
+by a resolver that merely couldn't tell.
+
+It is not real, and the reason is worth more than the lever would have been.
+
+### 14 of the 22 are cross-type false pairings
+
+The forward parameter type for 14 of them is the literal text `Self`.
+`FunctionPairing.hasInverseTypeShape` compares type *text*:
+
+```swift
+if lhsReturn == rhsDomain, lhsDomain == rhsReturn { return true }
+```
+
+`Decisions.merge` is `(Self) -> Self`. So is `InteractionDecisions.merge`. So is
+`VerifyEvidenceLog.merge`, `SemanticIndexEntry.updated(from:)`, and three more.
+Every one of them string-matches every other one, so the pairing engine builds
+the **complete graph** over six unrelated types — C(6,2) = 15 pairs, 14 of which
+surfaced:
+
+```
+CROSS  Decisions.merge(_:)            <->  InteractionDecisions.merge(_:)
+CROSS  Decisions.merge(_:)            <->  InteractionIndexEntry.updated(from:)
+CROSS  Decisions.merge(_:)            <->  VerifyEvidence.merge(_:)
+…14 total, 0 same-type
+```
+
+`Decisions.merge` is not the inverse of `InteractionDecisions.merge`. Nothing
+here is an inverse of anything; a merge has no inverse at all.
+
+**The `.unknown` verdict is the only thing holding these at Possible tier.**
+"Fixing" `EquatableResolver` to resolve `Self` — in isolation — would promote 14
+false round-trip claims to a stronger tier. That is the opposite of the intended
+effect, and it is precisely the Daikon trap the PRD warns about.
+
+### This exact pathology already has a precedent in the same file
+
+`FunctionPairing.isPairable` vetoes result-builder methods, with this comment:
+
+> *one builder becomes a clique under type symmetry — 16 of SwiftSyntaxBuilder's
+> 23 suggestions came from one file this way, including `buildEither(first:)`
+> proposed as the inverse of `buildEither(second:)`*
+
+Same failure mode, different trigger: a textually-symmetric type spelling
+generating a clique. It was closed there with a name-based veto.
+
+### The actual fix is upstream, and it is the third face of one bug
+
+Resolve `Self` to `summary.containingTypeName` in `transformationDomain` and in
+the return type **before** the comparison. `Decisions.merge` becomes
+`Decisions -> Decisions`, `InteractionDecisions.merge` becomes
+`InteractionDecisions -> InteractionDecisions`, and they stop matching. All 14
+disappear as suggestions rather than getting promoted.
+
+Unresolved `Self` has now produced three distinct defects:
+
+1. **carrier declines** — `unsupported-carrier: Self` (fixed above).
+2. **cross-type false pairings** — 14 suggestions on this corpus (open).
+3. **`.unknown` Equatable verdicts** — which currently *mask* defect 2.
+
+Fixing 3 without 2 makes the tool worse. The order is 2, then 3.
+
+### The other 8 are a different, smaller question
+
+`[String]` (×5), `[Suggestion]`, `URL?` (×2) — all `.unknown` by explicit design
+("conditional-conformance reasoning is intentionally out of scope"), while every
+element/wrapped type classifies `.equatable`. A one-level structural rule
+(`[T]`/`T?` is Equatable iff `T` is) would close all 8. These are same-shape
+pairings rather than the `Self` clique, so they are worth a look on their own —
+but 8 entries on one corpus is a much smaller prize than 22 looked like.
+
+`EquatableResolver.curatedEquatableStdlib` carries a road-test scar showing the
+`.unknown` demotion is a real failure mode in general — `Data` classified
+`.unknown` and demoted a flagship encrypt/decrypt round-trip until it was added
+to the curated set by hand. That remains true. It just isn't what these 22 are.
 
 `predicate`, by contrast, is 117 entries of docstring-derived contracts with no
 generic law shape behind them. Bigger bucket, much weaker claim to being
