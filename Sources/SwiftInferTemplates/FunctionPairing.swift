@@ -1,3 +1,4 @@
+import Foundation
 import SwiftInferCore
 
 /// Two functions a cross-function template can score together —
@@ -181,15 +182,56 @@ public enum FunctionPairing {
         return true
     }
 
+    /// Rewrite the `Self` spelling in a type text to the declaring type's name.
+    ///
+    /// **Why the type filter cannot compare `Self` as written.** The comparison
+    /// below is textual, and `Self` is the one spelling whose meaning depends on
+    /// where it was written. `Decisions.merge` is `(Self) -> Self`; so is
+    /// `InteractionDecisions.merge`, `VerifyEvidenceLog.merge`, and
+    /// `SemanticIndexEntry.updated(from:)`. Compared as text, every one of them
+    /// is an inverse of every other, so the pairing builds the **complete graph**
+    /// over every unrelated type that happens to declare a `Self -> Self`
+    /// method. Measured on this repo's own corpus: 6 such types, C(6,2) = 15
+    /// possible pairs, **14 surfaced, 0 of them same-type** — including
+    /// `Decisions.merge` proposed as the inverse of `InteractionDecisions.merge`.
+    /// A merge has no inverse at all.
+    ///
+    /// This is the same pathology `isPairable` already vetoes for result-builder
+    /// methods ("one builder becomes a clique under type symmetry") — a
+    /// textually-symmetric type spelling generating a clique. Different trigger,
+    /// so it needs its own fix rather than another name veto: resolve the
+    /// spelling before comparing, and the clique never forms.
+    ///
+    /// Applied to whole-word occurrences, so nested spellings resolve too
+    /// (`[Self]` → `[Decisions]`, `Self?` → `Decisions?`, `Set<Self>` →
+    /// `Set<Decisions>`), and `MySelf` / `SelfDescribing` are left alone.
+    ///
+    /// **Inside a protocol extension `Self` denotes the conforming type, not the
+    /// protocol** — so rewriting to the protocol's own name is an
+    /// approximation. It is the *conservative* one: two functions in the same
+    /// protocol extension still match each other, and functions in different
+    /// protocols stop matching, which is the whole point. Nothing that paired
+    /// correctly before stops pairing.
+    static func resolvingSelf(_ typeText: String, declaredIn summary: FunctionSummary) -> String {
+        guard let owner = summary.containingTypeName, typeText.contains("Self") else {
+            return typeText
+        }
+        return typeText.replacingOccurrences(
+            of: "\\bSelf\\b",
+            with: owner,
+            options: .regularExpression
+        )
+    }
+
     private static func hasInverseTypeShape(
         _ lhs: FunctionSummary,
         _ rhs: FunctionSummary,
         conformances: [String: Set<String>] = [:]
     ) -> Bool {
-        guard let lhsDomain = transformationDomain(lhs),
-              let rhsDomain = transformationDomain(rhs),
-              let lhsReturn = lhs.returnTypeText,
-              let rhsReturn = rhs.returnTypeText else {
+        guard let lhsDomain = transformationDomain(lhs).map({ resolvingSelf($0, declaredIn: lhs) }),
+              let rhsDomain = transformationDomain(rhs).map({ resolvingSelf($0, declaredIn: rhs) }),
+              let lhsReturn = lhs.returnTypeText.map({ resolvingSelf($0, declaredIn: lhs) }),
+              let rhsReturn = rhs.returnTypeText.map({ resolvingSelf($0, declaredIn: rhs) }) else {
             return false
         }
         if lhsReturn == rhsDomain, lhsDomain == rhsReturn {

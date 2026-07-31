@@ -151,8 +151,8 @@ that isn't yields a build failure naming the missing conformance — which is a
 better answer than the silent demotion, and the same "forward progress to the
 next gap layer" this census got from rebinding `Self`.
 
-**Measured 2026-07-30 — and the answer inverts the recommendation. Do not
-build this lever.**
+**Measured 2026-07-30 — and the answer inverted the recommendation. The lever
+was never built; what the measurement found instead was a bug, now fixed.**
 
 The split is **22 `.unknown`, 0 `.notEquatable`**. Every owning type classifies
 `.equatable` on its own name. So the lever looked real: 22 round-trips demoted
@@ -212,10 +212,45 @@ disappear as suggestions rather than getting promoted.
 Unresolved `Self` has now produced three distinct defects:
 
 1. **carrier declines** — `unsupported-carrier: Self` (fixed above).
-2. **cross-type false pairings** — 14 suggestions on this corpus (open).
-3. **`.unknown` Equatable verdicts** — which currently *mask* defect 2.
+2. **cross-type false pairings** — 14 suggestions on this corpus (**fixed**, see
+   below).
+3. **`.unknown` Equatable verdicts** — which *masked* defect 2.
 
-Fixing 3 without 2 makes the tool worse. The order is 2, then 3.
+Fixing 3 without 2 would have made the tool worse. The order was 2, then 3.
+
+### Defect 2 is fixed
+
+`FunctionPairing.resolvingSelf(_:declaredIn:)` rewrites whole-word `Self` to the
+declaring type's name before the type filter compares. `Decisions.merge` becomes
+`Decisions -> Decisions`, `InteractionDecisions.merge` becomes
+`InteractionDecisions -> InteractionDecisions`, and they stop matching.
+
+Measured on `SwiftInferCore`, per template, before vs after:
+
+| | before | after |
+|---|---|---|
+| `inverse-pair` | 14 | **0** |
+| every other template | — | **unchanged** |
+| total suggestions | 107 | 93 |
+
+Exactly the 14, and `round-trip` stayed at 1 — nothing was promoted, which is
+correct: these were never pairs. A fresh index drops 104 → 90 entries.
+
+The nested spellings resolve too (`[Self]`, `Self?`, `Set<Self>`), and a genuine
+same-type `Self`-spelled pair still pairs — both sides resolve to the same owner.
+Inside a *protocol* extension `Self` denotes the conforming type rather than the
+protocol, so rewriting to the protocol's own name is an approximation; it is the
+conservative one, since same-protocol functions still match each other and
+different protocols stop matching.
+
+**Nothing in the 4,515-test suite failed on this change** — the cross-type clique
+was entirely untested, which is why it survived. The new suite
+(`FunctionPairingSelfResolutionTests`) pins the clique case at N=6 specifically,
+so a fix that only separates two types would fail.
+
+This also moves the census's own headline: with the 14 gone, `SwiftInferCore`'s
+template-decline rate falls from 63% (66/104) to **58% (52/90)**. The
+constraint is still template reach, and it is still mostly `predicate`.
 
 ### The other 8 are a different, smaller question
 
