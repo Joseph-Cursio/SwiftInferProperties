@@ -6,8 +6,9 @@ one is not a measurement (scope §3).
 
 **Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on `check-battery`; Q2 + Q5 also
 answered on `loops` (§1.25, exhaustive not sampled). **Q3 answered (§1.4) — 75% recall on
-denominator A, carried entirely by one signal.** Q4 not started — but its prerequisite is
-**done** (§1.6) and its target + population are now decided (§1.6, scope §Q4/§8).**
+denominator A, carried entirely by one signal.** Q4 has its prerequisite **done** (§1.6),
+its target + population decided (§1.6, scope §Q4/§8), and a **first artifact** in the fork
+(§4.3a) — but not yet its stated deliverable, a before/after on generator coverage.**
 
 ---
 
@@ -1258,11 +1259,23 @@ Not "the Swift project has a bug". Two things:
    `declined` was right there, is the same over-claim the study's §0.4 classifier
    hazard keeps producing in other costumes.
 
-The verified patch, should anyone want it later — output byte-identical on a correct
-standard library:
+### 4.3a The artifact — Q4's first conversion (2026-07-31)
+
+The completed laws were applied **in the fork**, which is the §8 target for conversions
+(upstream stays for defects only).
+
+| | |
+|---|---|
+| repo | `Joseph-Cursio/swift` |
+| branch | `complete-sort-permutation-laws` |
+| commit | `14c0fb86348` |
+| branched from | the pinned corpus SHA `408632e5983` |
+| diff | +22 lines, `test/stdlib/sort_integers.swift` |
 
 ```swift
 // Element-count multiset, built without calling `sorted()` or `partition(by:)`.
+// The oracle for a reordering operation must not be computed with that same
+// operation, or a bug that loses elements hides itself on both sides.
 func _elementCounts(_ a: [Int]) -> [Int: Int] {
   var counts: [Int: Int] = [:]
   for x in a { counts[x, default: 0] += 1 }
@@ -1275,6 +1288,33 @@ if y.count != $0.count || _elementCounts(y) != _elementCounts($0) {
   return
 }
 ```
+
+**Verified four ways**, because "it compiles" is not evidence that a check can fail:
+
+1. Compiles against the local toolchain.
+2. **Output byte-identical** to the pristine original on a correct standard library, so
+   the `CHECK` / `CHECK-NOT` contract is untouched.
+3. **The predicate is correct as written in the file** — extracted verbatim and run over
+   five cases, not merely as retyped into a probe. The load-bearing one is that a
+   *reordered* array is a permutation and correctly does **not** fire; getting that
+   backwards would turn every passing run red.
+4. Whole test still runs in well under 10 ms (see §4.2 — the cost argument was withdrawn).
+
+**Corpus integrity.** §0.1 records that the study once measured against a tree we had
+modified. So the fix lives only on the branch and the fork: `~/GitHub_projects/swift` was
+returned to `main` @ `408632e5983` with `sort_integers.swift` byte-identical to the pin and
+a clean working tree, verified after pushing. Every number in this document still carries a
+valid SHA.
+
+**What the artifact demonstrates** — and it is not "we fixed Swift". Two properties were
+jointly necessary, a human wrote one down, and `ReorderPartitionTemplate` named the other
+before anyone opened the file. The patch is the evidence; §4.2a is the point.
+
+**What it is not.** It is not yet a *before/after on generator coverage*, which is Q4's
+stated deliverable. Nothing here replaced a generator — the law was completed, not
+requantified. `sort_integers` cannot supply that number: it is `lit`+FileCheck (no anchor
+for TestLifter) and its sortedness law already runs exhaustively. The generator before/after
+has to come from `IntegerDivision.swift`'s `Int64` arm (scope §Q4).
 
 ### 4.4 The near-miss, which is the finding that survives intact
 
