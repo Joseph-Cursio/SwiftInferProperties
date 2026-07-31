@@ -232,7 +232,7 @@ struct StrategistDispatchEmitterEmitTests {
         )
     }
 
-    @Test("round-trip emits forward+inverse calls + VERIFY markers + zero-edge sentinel")
+    @Test("round-trip emits forward+inverse calls + VERIFY markers + boundary Pass 2")
     func roundTripEmitShape() throws {
         let source = try StrategistDispatchEmitter.emit(
             Self.inputs(
@@ -249,7 +249,11 @@ struct StrategistDispatchEmitterEmitTests {
         #expect(source.contains("{ (x: Int) in x + 1 }(value)"))
         #expect(source.contains("{ (x: Int) in x - 1 }(forwardResult)"))
         #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
-        #expect(source.contains("VERIFY_EDGE_TRIALS: 0"))
+        // V1.153 — Pass 2 is a real boundary sweep for an integer carrier, so
+        // the zero-trial sentinel is gone. It survives only for carriers with
+        // no curated boundary set (see `EdgePassTests`).
+        #expect(source.contains("VERIFY_EDGE_RESULT"))
+        #expect(!source.contains("VERIFY_EDGE_TRIALS: 0"))
     }
 
     @Test("idempotence emits f(f(x)) shape")

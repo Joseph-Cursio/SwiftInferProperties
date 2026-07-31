@@ -137,5 +137,22 @@
    }
   ],
   "conclusion": "Verification cannot substitute for precision TODAY, and the binding constraint is REACH rather than generator quality. 86% of proposed laws were never measured. Of the 14% that ran: the collision-dependent violation passed 100 trials while being false, and the edge-dependent one passed with the edge pass reporting zero trials."
+ },
+ "edge_bias_experiment_2026_07_31": {
+  "question": "The EDGE-class prediction (REFUTED) was scored WRONG because verify returned bothPass with edgeTrials=0. Was that a generator-tuning problem or a verifier defect?",
+  "what_was_found": "A verifier defect. `edgeSentinelSection()` emits a hardcoded `print(\"VERIFY_EDGE_RESULT: PASS\")` with zero trials for EVERY strategist-routed carrier, justified as 'integral or String \u2014 no NaN/Inf semantic, no edge pass needed'. That conflates floating-point edge cases with edge cases. Separately, `Gen<Int>.int()` spans `.min ... .max`, so Int.min is drawn with probability ~2^-58 over 100 trials.",
+  "what_was_tried": "Mix the curated boundary values (min/max/0/-1/1) into the DEFAULT generator at 3:2 weight, mirroring what V1.150 already does for String.",
+  "it_worked_on_the_target": {
+   "mergedBound(_:) commutativity": "measured-bothPass -> measured-defaultFails at trial 6, shrunk to (0, Int.min)",
+   "surviving bothPass in 44": "1 \u2014 canonicalizedOffset(), the COLLISION stub, which this fix correctly does not target",
+   "hypothesis_status": "BROAD refuted / EDGE refuted / COLLISION survives \u2014 complete"
+  },
+  "AND IT WAS REVERTED": {
+   "why": "It breaks integer verification generally. `x + 1` traps at Int.max; at uniform draw that is ~100/2^64 and effectively never, at 40% weight it is certain. Three VerifyPipelineLifted integration tests went from bothPass to `measured-error: the verifier trapped (signal 5)`.",
+   "the_dependency_is_documented": "Tests/SwiftInferIntegrationTests/VerifyPipelineLiftedIntegrationTests.swift:86-92 states it outright: '`x + 1` overflow-traps only at `x == Int.max` \u2014 probability ~100/2^64 over 100 trials, effectively zero. Operations like `x * 2` would overflow ~50% of trials and crash.' Integer verification RESTS on boundary values being unreachable.",
+   "my_wrong_claim": "The reverted docstring argued the change 'changes the frequency, not the possibility'. True literally, wrong practically \u2014 frequency is the whole mechanism the existing design depends on."
+  },
+  "the_correct_design": "Boundary values belong in a SEPARATE pass whose failure is advisory, not a verdict \u2014 the mechanism `VerifyOutcome.edgeCaseAdvisory` already provides, and which the FP path already uses for NaN/Infinity for exactly this reason (NaN breaks real laws too). A trap in an advisory pass does not invalidate the default-pass verdict. Cost: each template composer emits its law body once, so a real second pass means emitting it twice.",
+  "what_shipped_instead": "Only the renderer fix. `edgeTrials == 0` now says the edge pass did not run, instead of '(integer carrier \u2014 edge pass not applicable)', which read as 'this carrier has no edge cases'."
  }
 }

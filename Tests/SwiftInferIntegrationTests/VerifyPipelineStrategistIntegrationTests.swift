@@ -18,10 +18,12 @@ struct VerifyPipelineStrategistIntegrationTests {
             carrier: "Int",
             template: "idempotence"
         )
-        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+        if case let .bothPass(defaultTrials, edgeTrials, _) = outcome {
             #expect(defaultTrials == 100)
-            #expect(edgeTrials == 0)
-            #expect(edgeSampled == 0)
+            // V1.153 — Pass 2 is a real boundary sweep now, not the zero-trial
+            // sentinel. Identity holds at every boundary, so the verdict is
+            // unchanged; only the trial count moved.
+            #expect(edgeTrials == 100)
         } else {
             Issue.record("expected .bothPass; got \(outcome)")
         }
@@ -38,10 +40,12 @@ struct VerifyPipelineStrategistIntegrationTests {
             carrier: "String",
             template: "idempotence"
         )
-        if case let .bothPass(defaultTrials, edgeTrials, edgeSampled) = outcome {
+        if case let .bothPass(defaultTrials, edgeTrials, _) = outcome {
             #expect(defaultTrials == 100)
-            #expect(edgeTrials == 0)
-            #expect(edgeSampled == 0)
+            // V1.153 — Pass 2 is a real boundary sweep now, not the zero-trial
+            // sentinel. Identity holds at every boundary, so the verdict is
+            // unchanged; only the trial count moved.
+            #expect(edgeTrials == 100)
         } else {
             Issue.record("expected .bothPass; got \(outcome)")
         }

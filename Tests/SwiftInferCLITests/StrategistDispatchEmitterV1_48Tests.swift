@@ -58,14 +58,18 @@ struct StrategistDispatchEmitterV148Tests {
         #expect(source.contains("onceResult != twiceResult"))
     }
 
-    @Test("idempotence-lifted single-pass + zero-edge sentinel")
+    @Test("idempotence-lifted single-pass + real boundary Pass 2")
     func idempotenceLiftedZeroEdgeSentinel() throws {
         let source = try StrategistDispatchEmitter.emit(
             Self.inputs(template: "idempotence-lifted")
         )
         #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
         #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
-        #expect(source.contains("VERIFY_EDGE_TRIALS: 0"))
+        // V1.153 — Pass 2 is a real boundary sweep for an integer carrier, so
+        // the zero-trial sentinel is gone. It survives only for carriers with
+        // no curated boundary set (see `EdgePassTests`).
+        #expect(source.contains("VERIFY_EDGE_RESULT"))
+        #expect(!source.contains("VERIFY_EDGE_TRIALS: 0"))
     }
 
     // MARK: - Dual-style-consistency (V1.48.A.2)
@@ -113,7 +117,7 @@ struct StrategistDispatchEmitterV148Tests {
         }
     }
 
-    @Test("dual-style-consistency emits the standard markers + single-pass")
+    @Test("dual-style-consistency emits the standard markers + boundary Pass 2")
     func dualStyleConsistencyMarkers() throws {
         let source = try StrategistDispatchEmitter.emit(
             Self.inputs(
@@ -124,7 +128,11 @@ struct StrategistDispatchEmitterV148Tests {
         #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))
         #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
         #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
-        #expect(source.contains("VERIFY_EDGE_TRIALS: 0"))
+        // V1.153 — Pass 2 is a real boundary sweep for an integer carrier, so
+        // the zero-trial sentinel is gone. It survives only for carriers with
+        // no curated boundary set (see `EdgePassTests`).
+        #expect(source.contains("VERIFY_EDGE_RESULT"))
+        #expect(!source.contains("VERIFY_EDGE_TRIALS: 0"))
     }
 
     // MARK: - Monotonicity (V1.48.A.3)
@@ -147,7 +155,7 @@ struct StrategistDispatchEmitterV148Tests {
         #expect(source.contains("resultA > resultB"))
     }
 
-    @Test("monotonicity emits the standard markers + single-pass")
+    @Test("monotonicity emits the standard markers + boundary Pass 2")
     func monotonicityMarkers() throws {
         let source = try StrategistDispatchEmitter.emit(
             Self.inputs(template: "monotonicity")
@@ -155,7 +163,11 @@ struct StrategistDispatchEmitterV148Tests {
         #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))
         #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
         #expect(source.contains("VERIFY_EDGE_RESULT: PASS"))
-        #expect(source.contains("VERIFY_EDGE_TRIALS: 0"))
+        // V1.153 — Pass 2 is a real boundary sweep for an integer carrier, so
+        // the zero-trial sentinel is gone. It survives only for carriers with
+        // no curated boundary set (see `EdgePassTests`).
+        #expect(source.contains("VERIFY_EDGE_RESULT"))
+        #expect(!source.contains("VERIFY_EDGE_TRIALS: 0"))
     }
 
     // MARK: - Dispatch coverage

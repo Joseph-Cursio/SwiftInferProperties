@@ -56,8 +56,8 @@ struct VerifyResultRendererAssociativityTests {
         )
         #expect(rendered.contains("✓ verify holds (strong)"))
         #expect(rendered.contains("associativity on Int.distance over Int"))
-        // Int carrier sentinel — edge pass not applicable.
-        #expect(rendered.contains("(integer carrier — edge pass not applicable)"))
+        // Int carrier — no edge pass ran (V1.153 wording).
+        #expect(rendered.contains("no edge pass ran for this carrier"))
     }
 
     @Test("associativity + bothPass renders curated-edge-cases-sampled line for Complex")

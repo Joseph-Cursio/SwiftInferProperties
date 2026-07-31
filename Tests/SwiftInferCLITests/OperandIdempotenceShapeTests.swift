@@ -123,11 +123,18 @@ struct OperandIdempotenceShapeTests {
     /// The operand is drawn once and reused. Redrawing it would check
     /// `a.f(b).f(c) == a.f(b)` — not idempotence, and false for any `f` that
     /// does anything at all, so the law would fire on correct code.
+    ///
+    /// Counted **per pass**: since V1.153 the emitted stub carries two passes
+    /// (default + the boundary sweep), each a copy of this same law, so the
+    /// whole-source count is two draws × two passes. The invariant under test
+    /// is the per-trial one.
     @Test("the operand is held fixed across both applications")
     func operandIsNotRedrawn() throws {
         let source = try Self.emitOperandShape(functionCall: "{ $0.merge($1) }")
+        let passes = source.components(separatedBy: "let defaultGenerator").count - 1
         let draws = source.components(separatedBy: "defaultGenerator.run(using: &rng)").count - 1
-        #expect(draws == 2, "exactly one receiver draw and one operand draw per trial")
+        #expect(passes == 2, "default pass + boundary pass")
+        #expect(draws == 2 * passes, "exactly one receiver draw and one operand draw per trial, per pass")
         #expect(!source.contains("applyOperand(onceResult, defaultGenerator"))
     }
 

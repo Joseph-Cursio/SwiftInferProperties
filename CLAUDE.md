@@ -34,6 +34,7 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 |---|---|
 | Product scope, milestones, success criteria | `docs/SwiftInferProperties PRD v1.0.md` (canonical) + ` v2.0.md` |
 | Measured-verify design (the whole v2 interaction story) | `docs/measured-verify-architecture.md` — **read first** |
+| **The verify edge pass** (why `bothPass` used to under-claim) | `docs/verify-edge-pass.md` — Pass 2 was a hardcoded `print("PASS")` with zero trials for every strategist-routed carrier. Boundary values **cannot** go in the pass that produces the verdict (`x + 1` traps at `Int.max`, and the repo depends on that being unreachable) — they belong in an **advisory** pass. Includes the reverted generator-bias attempt and why it failed |
 | **Why does `verify` decline so much?** | `docs/verify-carrier-reach-census.md` — the answer is **not** carrier support. Carrier is ~4% of declines and `String` was always supported; `supportedCarriers` gates Route 1 only. **Template reach is 65%**, half of it `predicate`. Also: the census's OK bucket is an upper bound (a stub still has to compile), and a census that forgets to thread `allShapes` invents a carrier problem two-thirds of which is the harness |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` |
 | Per-cycle change story | `git log` (the per-cycle findings docs were folded into the archive above) |

@@ -120,7 +120,7 @@ extension IdempotenceStubEmitter {
 // zero-edge-sentinel pattern as `RoundTripStubEmitter+NonComplex.swift`'s
 // `composeIntSource` so VerifyResultParser produces `.bothPass` with
 // `edgeTrials: 0, edgeSampled: 0`; the V1.44.D renderer surfaces
-// "(integer carrier — edge pass not applicable)".
+// the V1.153 "no edge pass ran for this carrier" line.
 extension IdempotenceStubEmitter {
 
     static func composeIntSource(_ inputs: Inputs) -> String {
