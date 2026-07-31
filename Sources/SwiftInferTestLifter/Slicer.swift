@@ -309,10 +309,19 @@ enum AssertionAnchor {
         return nil
     }
 
-    /// XCTest assertion-callee → kind dispatch table. Centralizing the
+    /// Assertion-callee → kind dispatch table. Centralizing the
     /// mapping in a static dictionary keeps `xctAssertKind` under
     /// SwiftLint's cyclomatic-complexity cap as the kind list grows
     /// (M5.1 added two; M7.0 adds three more).
+    ///
+    /// **`Kind` discriminates assertion SHAPE, not harness.** The case names
+    /// carry an `xctAssert` prefix for historical reasons, but what every
+    /// downstream detector switches on is the shape — "two expressions asserted
+    /// equal", "one expression asserted true". `StdlibUnittest`'s `expect*`
+    /// family has exactly those shapes, so it maps onto the existing cases
+    /// rather than adding parallel ones. That is what makes the whole detector
+    /// suite (round-trip, symmetry, idempotence, count-change, …) work on the
+    /// swift.org corpus without touching any of them.
     private static let xctAssertKindByCallee: [String: AssertionInvocation.Kind] = [
         "XCTAssertEqual": .xctAssertEqual,
         "XCTAssertTrue": .xctAssertTrue,
@@ -323,7 +332,35 @@ enum AssertionAnchor {
         "XCTAssertNotEqual": .xctAssertNotEqual,
         "XCTAssertGreaterThan": .xctAssertGreaterThan,
         "XCTAssertGreaterThanOrEqual": .xctAssertGreaterThanOrEqual,
-        "XCTAssertFalse": .xctAssertFalse
+        "XCTAssertFalse": .xctAssertFalse,
+        // `StdlibUnittest` — the swift.org stdlib test harness. Counts are
+        // call sites across `test/stdlib` + `validation-test/stdlib` at
+        // `swift` @ `408632e5`, and they are why this table entry exists:
+        // every one of these was invisible to the lifter.
+        "expectEqual": .xctAssertEqual,                       // 8,665
+        "expectTrue": .xctAssertTrue,                         // 2,342
+        "expectFalse": .xctAssertFalse,                       // 1,016
+        "expectNotNil": .xctAssertNotNil,                     //   341
+        "expectEqualSequence": .xctAssertEqual,               //   269
+        "expectNotEqual": .xctAssertNotEqual,                 //   235
+        "expectGE": .xctAssertGreaterThanOrEqual,             //    56
+        "expectGT": .xctAssertGreaterThan,                    //    21
+        "expectLE": .xctAssertLessThanOrEqual,                //    14
+        "expectLT": .xctAssertLessThan                        //    14
+        //
+        // DELIBERATELY ABSENT, and the first one is the awkward case:
+        //
+        //   `expectNil` (809 sites) — there is no `.xctAssertNil` kind, only
+        //   `.xctAssertNotNil`. Mapping it there would invert the assertion's
+        //   polarity, which is worse than not seeing it: a detector reading
+        //   "asserted non-nil" from `expectNil(x)` would infer the opposite
+        //   law. Adding the kind is the correct fix and it is a `Kind` change
+        //   with switch sites to update, so it is its own piece of work.
+        //
+        //   `expectCrashLater` (810), `expectParse` (441), `expectType` (227),
+        //   `expectPrinted` (191) — not equality or ordering assertions at all.
+        //   They anchor process death, parse success, static typing and
+        //   rendering; none of those is a shape any current detector reads.
     ]
 
     private static func xctAssertKind(of call: FunctionCallExprSyntax) -> AssertionInvocation.Kind? {

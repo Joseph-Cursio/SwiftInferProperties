@@ -24,6 +24,19 @@ public struct TestMethodSummary {
         /// any nesting depth — file scope, inside a `@Suite` class /
         /// struct / actor, or inside a non-`@Suite` enclosing type.
         case swiftTesting
+        /// A `StdlibUnittest` test *closure* — `SomeTestSuite.test("name") { … }`
+        /// or its chained form `…test("name").skip(…).code { … }`.
+        ///
+        /// Not a declaration at all, which is why the two rules above miss it:
+        /// there is no `func` and no attribute, just a call taking a trailing
+        /// closure. This is the swift.org stdlib harness, and at
+        /// `swift` @ `408632e5` it accounts for **5,092 `.test(` call sites**
+        /// across `test/stdlib` + `validation-test/stdlib` — a corpus the
+        /// lifter previously read as containing zero tests.
+        ///
+        /// `className` carries the receiver (`SetTestSuite`), `methodName` the
+        /// string-literal label.
+        case stdlibUnittest
     }
 
     public let harness: Harness

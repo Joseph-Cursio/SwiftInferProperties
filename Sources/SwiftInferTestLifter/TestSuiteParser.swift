@@ -16,10 +16,20 @@ import SwiftSyntax
 /// - **Swift Testing:** any function carrying the `@Test` attribute,
 ///   regardless of where it's declared. Works at file scope, inside
 ///   `@Suite` classes / structs, and inside arbitrary nesting.
+/// - **StdlibUnittest:** a call with a trailing closure whose callee chain
+///   contains `.test(<string literal>)` — `Suite.test("name") { … }` and the
+///   chained `…test("name").xfail(…).code { … }`. This one is call-shaped
+///   rather than declaration-shaped; see
+///   `TestSuiteParser+StdlibUnittest.swift` for why neither rule above can
+///   reach it.
 ///
 /// **Skipped:**
 /// - Protocol requirements (no body to slice).
 /// - Nested function decls (rare in test bodies; would conflate slices).
+///   **This also bounds StdlibUnittest recognition**: a `.test("…") { }` call
+///   written *inside* a `func` body is not reached, because function bodies
+///   are not descended into. The corpus writes them as top-level code, so the
+///   measured cost is small — but it is a real limit, not an absence of one.
 /// - `@Test`-annotated computed properties (Swift Testing allows them
 ///   in some shapes; M1 only handles function decls).
 public enum TestSuiteParser {
@@ -144,6 +154,19 @@ final class TestSuiteParserVisitor: SyntaxVisitor {
         // Don't recurse into the body — nested function decls inside a
         // test body are skipped per the M1.1 contract.
         return .skipChildren
+    }
+
+    /// `StdlibUnittest`'s test *closures* — see
+    /// `TestSuiteParser+StdlibUnittest.swift` for why they need a call-shaped
+    /// rule rather than a declaration-shaped one.
+    ///
+    /// Children are still visited: the corpus nests `.test("…") { }` inside
+    /// `for` loops and helper closures, and skipping would lose those. A
+    /// recognized closure's own body cannot contain a second `.test(…)` call
+    /// in practice, so re-entry does not double-count.
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        considerStdlibUnittestCall(node)
+        return .visitChildren
     }
 
     private func considerFunction(_ node: FunctionDeclSyntax) {
