@@ -1048,6 +1048,80 @@ Checking the `.nan` result, a grep for `nan` matched **`nanoseconds:`** — `Tas
 .random(in: 0..<50000))` read as "nan drawn from a generator". Caught only because the claim
 was surprising enough to verify. Four instances now (§0.4), all in one sitting.
 
+## 1.6 Q4's prerequisite — BUILT (2026-07-31, `swift` @ `408632e5`)
+
+Q4 was blocked on the most concrete deliverable in the study: `TestLifter` could not
+see this corpus at all. `TestSuiteParser` recognised two shapes, both
+*declaration*-shaped — an `XCTestCase` method named `test…`, and a function carrying
+`@Test`. `StdlibUnittest` has neither. A test is a **call taking a trailing closure**,
+and the assertion table held ten `XCTAssert*` names plus `#expect`, so the entire
+`expect*` family was invisible.
+
+### What it measures now
+
+Over `test/stdlib` + `validation-test/stdlib`, 558 files:
+
+| | before | after |
+|---|---|---|
+| tests recognised | **0** | **4,171** |
+| tests slicing to an assertion anchor | 0 | **2,263** (54%) |
+
+Anchor kinds: `xctAssertEqual` 1,931 · `xctAssertTrue` 179 · `xctAssertFalse` 101 ·
+`xctAssertNotEqual` 33 · `xctAssertNotNil` 13 · the four ordering kinds 6.
+
+### Two decisions worth recording
+
+**The rule is structural, not name-based.** Recognition cannot key on the receiver:
+the corpus spells it `suite`, `tests`, `SetTestSuite`, `DictionaryTestSuite`,
+`ArrayTestSuite`, `StringTests`, `mirrors`, `FloatingPoint`, `OptionSetTests`, … across
+5,092 call sites with no common prefix. Nor on the trailing closure's immediate
+callee — the chained form `…test("x").xfail(…).code { }` puts `.test` several links
+down the base chain. The rule is: *a call with a trailing closure whose callee chain
+contains a `.test(<string literal>)` call.*
+
+**`expect*` maps onto the EXISTING assertion kinds rather than adding new ones.**
+`AssertionInvocation.Kind` discriminates assertion *shape* — "two expressions claimed
+equal", "one expression claimed true" — and the `xctAssert` case-name prefix is
+historical. Mapping is what makes every downstream detector (round-trip, symmetry,
+idempotence, count-change, reduce-equivalence) read this corpus without being touched.
+
+### The gap, and it is named
+
+4,171 recognised against 5,038 textual `.test("` occurrences — **867 unaccounted for
+(17%)**, from two causes, both witnessed:
+
+- **`.test(…) { }` inside a `func` body.** Function bodies are never descended into
+  (the M1.1 nested-decl contract), so these are missed.
+  `test/stdlib/Observation/Observable.swift` puts 20 of them inside
+  `static func main() async`.
+- **No trailing closure at all.** `test/stdlib/StaticBigInt.swift` writes
+  `testSuite.test("Name", testCase.testMethod)` — the body lives in a separate method,
+  so there is nothing inline to slice.
+
+Both are limits, not bugs, and both are pinned by tests so they cannot silently change.
+
+### One deliberate omission, and it is the awkward one
+
+**`expectNil` (809 sites) is NOT mapped.** There is no `.xctAssertNil` kind, only
+`.xctAssertNotNil`. Mapping it there would invert the assertion's polarity — a
+detector would read "asserted non-nil" from `expectNil(x)` and infer the opposite law.
+That is strictly worse than not seeing it. Adding the kind is the correct fix and is a
+`Kind` change with switch sites to update, so it is its own piece of work.
+
+Also unmapped, and not equality/ordering assertions at all: `expectCrashLater` (810),
+`expectParse` (441), `expectType` (227), `expectPrinted` (191).
+
+### What this unblocks
+
+Q4 itself — and, per §1.4, the corroboration question. Q3 measured that all nine laws
+`discover` reached rested on a **single** `+50` conformance signal, which is why
+`--require-corroboration` took recall from 9/12 to 0/12: there was no second channel.
+The test-derived channel is that second channel, and against this corpus it was
+returning zero.
+
+**Still required before converting anything** (scope §8): decide Q4's target — upstream
+PR, local fixture corpus, or neither — *before* the second suite is converted.
+
 ## 2. Pass 2 — census
 
 **Not started.** Gated on Pass 1 producing a definition and a classifier error rate
