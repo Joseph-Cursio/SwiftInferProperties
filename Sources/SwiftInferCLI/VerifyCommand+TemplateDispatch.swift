@@ -148,7 +148,12 @@ extension SwiftInferCommand.Verify {
         // V1.149 — generator carrier is `carrierTypeName` (param `T`), distinct
         // from `typeName` (the call-site owner `resolveFunctionCalls` already
         // used); `?? typeName` keeps pre-v1.149 entries bit-identical.
-        let boundCarrier = GenericBindingResolver.bound(entry.carrierTypeName ?? entry.typeName ?? "(none)")
+        // The `selfType:` overload rebinds a bare `Self` carrier to the owning
+        // type; `Self.Index` / `Self.Element` keep their curated bindings.
+        let boundCarrier = GenericBindingResolver.bound(
+            entry.carrierTypeName ?? entry.typeName ?? "(none)",
+            selfType: entry.typeName
+        )
         // Homomorphism quantifies over arrays `[T]`; its composer draws arrays by
         // wrapping an ELEMENT generator, so the generator carrier is the element
         // type — strip the array brackets (`[Int]` → `Int`).
@@ -170,7 +175,8 @@ extension SwiftInferCommand.Verify {
             isMutatingMethod: entry.isMutatingMethod,
             isNullary: entry.isNullary,
             returnsSelfType: entry.returnsSelfType,
-            isComputedProperty: entry.isComputedProperty
+            isComputedProperty: entry.isComputedProperty,
+            parameterCount: argumentLabels(from: entry.primaryFunctionName).count
         )
         let source = try StrategistDispatchEmitter.emit(inputs)
         let context = VerifyResultRenderer.Context(
@@ -215,120 +221,6 @@ extension SwiftInferCommand.Verify {
                 packageRoot: packageRoot
             ) else { return nil }
         return path
-    }
-
-    /// Pair / single-function resolution layer shared across templates
-    /// when the strategist path emits. Round-trip resolves the curated
-    /// forward+inverse pair; idempotence / commutativity / associativity
-    /// resolve the single function call.
-    struct ResolvedCalls {
-        let expressions: [String]
-        let rendererForwardName: String
-        let rendererInverseName: String
-    }
-
-    /// Build call expressions for the strategist path, inlining the
-    /// resolvers' call-construction logic to sidestep their v1.46
-    /// `supportedCarriers` validation (which would reject `String` /
-    /// `Bool` / enum / `.userGen` carriers that the strategist emits
-    /// fine). Round-trip still looks up the curated pair list to
-    /// discover the inverse half — strategist routing doesn't change
-    /// that piece of the design.
-    private static func resolveFunctionCalls(for entry: SemanticIndexEntry) throws -> ResolvedCalls {
-        let carrier = entry.typeName ?? "(none)"
-        let typeQualifier = RoundTripPairResolver.bareTypeName(from: carrier)
-        let funcName = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
-        switch entry.templateName {
-        case "round-trip":
-            return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
-
-        case "codable-round-trip":
-            return try resolveCodableRoundTripCalls(entry: entry, carrier: carrier)
-
-        case "idempotence":
-            // Static/free shape; idempotence's own composer emits the receiver
-            // form for mutating / self-returning instance methods.
-            return singleCallResolved(
-                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
-            )
-
-        case "commutativity", "associativity":
-            // Binary instance ops emit the receiver shape here.
-            return singleCallResolved(
-                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: true
-            )
-
-        case "idempotence-lifted", "monotonicity":
-            return liftedOrMonotonicityCalls(entry: entry, typeQualifier: typeQualifier, funcName: funcName)
-
-        case "binary-idempotence":
-            // A binary operator — receiver shape so an INSTANCE op emits
-            // `x.union(x)` (via the closure trampoline); a free/static op falls
-            // back to `union(x, x)` (receiverCallExpression's non-instance path).
-            return singleCallResolved(
-                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: true
-            )
-
-        case "involution", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity":
-            // Single-function laws. Involution's self-returning instance form and
-            // measure's 0-param instance form both emit the receiver shape from
-            // `inputs` flags in the composer; the free/static call resolves the
-            // same way idempotence's non-receiver shape does.
-            return singleCallResolved(
-                entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
-            )
-
-        case "dual-style-consistency":
-            // V1.48.B — pair of expressions: [nonMutCall, mutMethodName].
-            // Resolver fires its own validation (carrier-agnostic;
-            // curated pair list check). Renderer surfaces both halves
-            // as forward / inverse names.
-            let pair = try DualStyleConsistencyPairResolver.resolve(entry)
-            return ResolvedCalls(
-                expressions: [pair.nonMutCall, pair.mutMethodName],
-                rendererForwardName: pair.nonMutCall,
-                rendererInverseName: pair.mutMethodName
-            )
-
-        default:
-            throw VerifyError.unsupportedTemplate(
-                template: entry.templateName,
-                expected: supportedTemplates
-            )
-        }
-    }
-
-    /// V1.89 lint pass — extracted from `resolveFunctionCalls` so the
-    /// switch body stays under SwiftLint's 50-line cap. Mirrors
-    /// `RoundTripPairResolver.resolve`'s curated-first /
-    /// `secondaryFunctionName`-fallback chain; skips the carrier check
-    /// because the strategist owns carrier validation at this layer.
-    private static func resolveRoundTripCalls(
-        entry: SemanticIndexEntry,
-        typeQualifier: String
-    ) throws -> ResolvedCalls {
-        let forwardBare = entry.primaryFunctionName
-        let inverseBare: String
-        if let pair = RoundTripPairResolver.curated.first(where: { $0.forwardName == forwardBare }) {
-            inverseBare = pair.inverseName
-        } else if let secondary = entry.secondaryFunctionName {
-            inverseBare = secondary
-        } else {
-            throw VerifyError.unsupportedPair(
-                forward: forwardBare,
-                supported: RoundTripPairResolver.curated.map(\.forwardName)
-            )
-        }
-        // Each half renders static/free by default; a half that IS the entry's
-        // signalled instance method emits the receiver shape (self-inverse
-        // instance-method round-trips like `value.negated().negated() == value`).
-        let forwardCall = roundTripHalfCall(entry: entry, typeQualifier: typeQualifier, bareName: forwardBare)
-        let inverseCall = roundTripHalfCall(entry: entry, typeQualifier: typeQualifier, bareName: inverseBare)
-        return ResolvedCalls(
-            expressions: [forwardCall, inverseCall],
-            rendererForwardName: forwardCall,
-            rendererInverseName: inverseCall
-        )
     }
 
     private static func roundTripStubBundle(

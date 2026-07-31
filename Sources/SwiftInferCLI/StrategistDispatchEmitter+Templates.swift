@@ -96,158 +96,18 @@ extension StrategistDispatchEmitter {
                 recipe: recipe
             )
         }
+        // Self-returning instance method taking one operand → idempotence IN
+        // THE OPERAND: `a.merge(b).merge(b) == a.merge(b)`. Mirrors
+        // `Verify.takesOperandIdempotenceShape`, which is what routed a
+        // label-carrying receiver closure here instead of a static reference.
+        if inputs.isInstanceMethod, !inputs.isMutatingMethod,
+            !inputs.isNullary, inputs.returnsSelfType, inputs.parameterCount == 1 {
+            return composeOperandIdempotencePass(
+                functionCall: functionCall,
+                recipe: recipe
+            )
+        }
         return composeDirectIdempotencePass(functionCall: functionCall, recipe: recipe)
-    }
-
-    /// The plain `f(f(x)) == f(x)` shape — everything that is not a mutating or
-    /// self-returning instance method. Split out to keep
-    /// `composeIdempotencePass`'s dispatch inside the function-body budget.
-    private static func composeDirectIdempotencePass(
-        functionCall: String,
-        recipe: GeneratorRecipe
-    ) -> String {
-        let oracle = "applyOnce(applyOnce(candidate)) != applyOnce(candidate)"
-        let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
-            ? singleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
-            : ""
-        let carrier = recipe.carrierTypeName
-        return """
-        // --- Pass 1: default (strategist-derived generator) ---
-
-        let defaultGenerator: Generator<\(carrier), some SendableSequenceType> =
-            \(recipe.expression)
-
-        // Bound once, with an explicit type, and called by name everywhere
-        // below. `functionCalls` may be a closure literal — the form a labelled
-        // call takes — and applying one inline (`{ … }(value)`) leaves `$0` with
-        // nothing to infer from: "cannot infer type of closure parameter '$0'".
-        // On a large derived generator the compiler gives up and the run comes
-        // back `measured-error: build-failed`. The annotation is the fix; a bare
-        // function reference coerces to it unchanged.
-        let applyOnce: (\(carrier)) -> \(carrier) = \(functionCall)
-
-        for trial in 0 ..< trials {
-            let value = defaultGenerator.run(using: &rng)
-            let onceResult = applyOnce(value)
-            let twiceResult = applyOnce(onceResult)
-            if onceResult != twiceResult {
-                print("VERIFY_DEFAULT_RESULT: FAIL")
-                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                print("VERIFY_DEFAULT_INPUT: \\(value)")
-                print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
-                print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
-        \(shrink)
-                exit(1)
-            }
-        }
-
-        \(CollisionPass.unarySweep(
-            carrier: recipe.carrierTypeName,
-            body: idempotenceCollisionBody()
-        ))
-
-        print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
-        """
-    }
-
-    /// V1.60.A — set of carrier type-names that trigger the
-    /// mutating-instance-method emit shape. Each carrier in this set
-    /// has its idempotence test emitted as `var copy = value;
-    /// copy.method()` rather than `Type.method(value)`. Synced with
-    /// `StrategistDispatchEmitter.curatedOCRecipe`'s curated carriers.
-    /// V1.62.A — added `OrderedSet<Int>.UnorderedView` (8 cycle-27
-    /// dual-style picks).
-    static let mutatingInstanceCarriers: Set<String> = [
-        "OrderedSet<Int>",
-        "OrderedSet<Int>.UnorderedView",
-        // V1.63.A — OD.Elements (key-value-pair view) is a
-        // MutableCollection with `sort()` etc. Gate it for V1.60.A's
-        // mutating-instance idempotence emission.
-        "OrderedDictionary<Int, Int>.Elements",
-        // Cycle 149 (Lever C-1) — the bare dictionary; `merge` (dual-style
-        // mutating side) and `sort()` (idempotence) are mutating instance
-        // methods, so they need the `var copy; copy.method()` shape.
-        "OrderedDictionary<Int, Int>"
-    ]
-
-    /// V1.60.A — emit the mutating-instance-method idempotence shape.
-    /// Splits `functionCall` (e.g. `"OrderedSet.sort"`) on `.` and
-    /// takes the trailing component as the method name. Operator-named
-    /// functions (`(+)`-style) aren't expected in this code path —
-    /// mutating instance methods don't have operator spellings — but
-    /// would fall through to the static shape if encountered.
-    private static func composeMutatingIdempotencePass(
-        functionCall: String,
-        recipe: GeneratorRecipe
-    ) -> String {
-        let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
-        return """
-        // --- Pass 1: default (strategist-derived generator) ---
-        // V1.60.A — mutating-instance-method shape: apply `\(methodName)`
-        // once on `onceCopy` and twice on `twiceCopy`; assert equal.
-
-        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
-            \(recipe.expression)
-
-        for trial in 0 ..< trials {
-            let value = defaultGenerator.run(using: &rng)
-            var onceCopy = value
-            onceCopy.\(methodName)()
-            var twiceCopy = value
-            twiceCopy.\(methodName)()
-            twiceCopy.\(methodName)()
-            if onceCopy != twiceCopy {
-                print("VERIFY_DEFAULT_RESULT: FAIL")
-                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                print("VERIFY_DEFAULT_INPUT: \\(value)")
-                print("VERIFY_DEFAULT_FORWARD: \\(onceCopy)")
-                print("VERIFY_DEFAULT_INVERSE: \\(twiceCopy)")
-                exit(1)
-            }
-        }
-
-        print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
-        """
-    }
-
-    /// Emit the non-mutating self-returning instance-method idempotence
-    /// shape: chain the method on the receiver — `value.method().method()`
-    /// must equal `value.method()`. The method name is extracted from
-    /// `functionCall` the same way as the mutating shape. Only reached for
-    /// nullary instance methods whose return type is the carrier itself
-    /// (`inputs.returnsSelfType`), so the second `.method()` type-checks.
-    private static func composeSelfReturningIdempotencePass(
-        functionCall: String,
-        recipe: GeneratorRecipe
-    ) -> String {
-        let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
-        return """
-        // --- Pass 1: default (strategist-derived generator) ---
-        // self-returning instance-method shape: `value.\(methodName)()`
-        // chained — applying `\(methodName)` twice equals applying it once.
-
-        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
-            \(recipe.expression)
-
-        for trial in 0 ..< trials {
-            let value = defaultGenerator.run(using: &rng)
-            let onceResult = value.\(methodName)()
-            let twiceResult = onceResult.\(methodName)()
-            if onceResult != twiceResult {
-                print("VERIFY_DEFAULT_RESULT: FAIL")
-                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
-                print("VERIFY_DEFAULT_INPUT: \\(value)")
-                print("VERIFY_DEFAULT_FORWARD: \\(onceResult)")
-                print("VERIFY_DEFAULT_INVERSE: \\(twiceResult)")
-                exit(1)
-            }
-        }
-
-        print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
-        """
     }
 
     // MARK: - Commutativity (2 values per trial; f(a, b) == f(b, a))

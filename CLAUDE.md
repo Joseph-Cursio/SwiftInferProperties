@@ -34,6 +34,7 @@ Suites green at ~4,400 tests. **Flake note:** the long measured/calibration suit
 |---|---|
 | Product scope, milestones, success criteria | `docs/SwiftInferProperties PRD v1.0.md` (canonical) + ` v2.0.md` |
 | Measured-verify design (the whole v2 interaction story) | `docs/measured-verify-architecture.md` — **read first** |
+| **Why does `verify` decline so much?** | `docs/verify-carrier-reach-census.md` — the answer is **not** carrier support. Carrier is ~4% of declines and `String` was always supported; `supportedCarriers` gates Route 1 only. **Template reach is 65%**, half of it `predicate`. Also: the census's OK bucket is an upper bound (a stub still has to compile), and a census that forgets to thread `allShapes` invents a carrier problem two-thirds of which is the harness |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` |
 | Per-cycle change story | `git log` (the per-cycle findings docs were folded into the archive above) |
 | Road tests (third-party subjects) | `docs/roadtest-*.md` — SwiftProjectLint (the first *scored* one, frozen answer key), SwiftLintRuleStudio (out-of-catalog diagnosis + two retracted closures), MacCloud server / macOS client |

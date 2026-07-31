@@ -126,4 +126,32 @@ public enum GenericBindingResolver {
     public static func bound(_ carrier: String) -> String {
         resolve(carrier) ?? carrier
     }
+
+    /// The carrier spelled `Self` — the one binding that **cannot** be curated,
+    /// because its value is the owning type of the entry rather than a fixed
+    /// name. `Self.Index` / `Self.Element` are in `curatedBindings` above; bare
+    /// `Self` was not, and so never resolved at all.
+    ///
+    /// A method returning `Self` (`func merged(with:) -> Self`) records
+    /// `carrierTypeName == "Self"`, which reaches the strategist as a literal
+    /// type name, matches no `RawType` and no indexed shape, and is declined as
+    /// `unsupported-carrier`. The carrier reach census over this repo's own
+    /// 104-entry index measured that as **6 of the 7 remaining carrier
+    /// declines** — every one an `idempotence` pick whose owner (`Decisions`,
+    /// `SemanticIndexEntry`, `VerifyEvidenceLog`, …) already derives a generator
+    /// perfectly well under its own name for other templates.
+    ///
+    /// **Scope, deliberately narrow.** Only the bare spelling is rebound. `Self`
+    /// is the owner's name for a struct / enum / final class, which is what
+    /// these entries are; inside a *protocol* extension it denotes the
+    /// conforming type instead, and rebinding to the protocol's own name would
+    /// be wrong. That case is already excluded upstream — `TypeShapeBuilder`
+    /// returns nil for `.protocol`, so such a carrier has no indexed shape and
+    /// still declines with its truthful reason.
+    public static func bound(_ carrier: String, selfType: String?) -> String {
+        if carrier == "Self", let selfType, selfType != "(none)" {
+            return bound(selfType)
+        }
+        return bound(carrier)
+    }
 }
