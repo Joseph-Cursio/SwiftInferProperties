@@ -82,7 +82,7 @@ extension EquivalenceClassMarkerExtractor {
             return matchPredicateAndCaseInEqualityExpression(first)
 
         case .xctAssertTrue, .xctAssert, .xctAssertFalse,
-                .xctAssertNotNil, .xctAssertLessThan,
+                .xctAssertNotNil, .xctAssertNil, .xctAssertLessThan,
                 .xctAssertLessThanOrEqual, .xctAssertNotEqual,
                 .xctAssertGreaterThan, .xctAssertGreaterThanOrEqual:
             return nil

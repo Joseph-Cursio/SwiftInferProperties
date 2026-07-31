@@ -327,6 +327,7 @@ enum AssertionAnchor {
         "XCTAssertTrue": .xctAssertTrue,
         "XCTAssert": .xctAssert,
         "XCTAssertNotNil": .xctAssertNotNil,
+        "XCTAssertNil": .xctAssertNil,
         "XCTAssertLessThan": .xctAssertLessThan,
         "XCTAssertLessThanOrEqual": .xctAssertLessThanOrEqual,
         "XCTAssertNotEqual": .xctAssertNotEqual,
@@ -341,6 +342,7 @@ enum AssertionAnchor {
         "expectTrue": .xctAssertTrue,                         // 2,342
         "expectFalse": .xctAssertFalse,                       // 1,016
         "expectNotNil": .xctAssertNotNil,                     //   341
+        "expectNil": .xctAssertNil,                           //   809
         "expectEqualSequence": .xctAssertEqual,               //   269
         "expectNotEqual": .xctAssertNotEqual,                 //   235
         "expectGE": .xctAssertGreaterThanOrEqual,             //    56
@@ -348,19 +350,16 @@ enum AssertionAnchor {
         "expectLE": .xctAssertLessThanOrEqual,                //    14
         "expectLT": .xctAssertLessThan                        //    14
         //
-        // DELIBERATELY ABSENT, and the first one is the awkward case:
+        // `expectNil` was deliberately absent until `.xctAssertNil` existed:
+        // mapping it onto `.xctAssertNotNil` would have INVERTED the
+        // assertion, so a detector would read "asserted non-nil" from
+        // `expectNil(x)` and infer the opposite law. The kind now exists, so
+        // the 809 sites map at their true polarity.
         //
-        //   `expectNil` (809 sites) — there is no `.xctAssertNil` kind, only
-        //   `.xctAssertNotNil`. Mapping it there would invert the assertion's
-        //   polarity, which is worse than not seeing it: a detector reading
-        //   "asserted non-nil" from `expectNil(x)` would infer the opposite
-        //   law. Adding the kind is the correct fix and it is a `Kind` change
-        //   with switch sites to update, so it is its own piece of work.
-        //
+        // STILL ABSENT, and not equality or ordering assertions at all:
         //   `expectCrashLater` (810), `expectParse` (441), `expectType` (227),
-        //   `expectPrinted` (191) — not equality or ordering assertions at all.
-        //   They anchor process death, parse success, static typing and
-        //   rendering; none of those is a shape any current detector reads.
+        //   `expectPrinted` (191). They anchor process death, parse success,
+        //   static typing and rendering; none is a shape any detector reads.
     ]
 
     private static func xctAssertKind(of call: FunctionCallExprSyntax) -> AssertionInvocation.Kind? {
