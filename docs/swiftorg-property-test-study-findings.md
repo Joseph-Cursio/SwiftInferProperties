@@ -8,7 +8,8 @@ one is not a measurement (scope §3).
 answered on `loops` (§1.25, exhaustive not sampled). **Q3 answered (§1.4) — 75% recall on
 denominator A, carried entirely by one signal.** Q4 has its prerequisite **done** (§1.6),
 its target + population decided (§1.6, scope §Q4/§8), and a **first artifact** in the fork
-(§4.3a) — but not yet its stated deliverable, a before/after on generator coverage.**
+(§4.3a) — but not yet its stated deliverable, a before/after on generator coverage. **§5
+argues the deliverable itself may be the wrong one.**
 
 ---
 
@@ -1347,3 +1348,67 @@ reproduced *while fixing an instance of it*, and it generalises past this file:
 > testing-side form of the repo's standing rule that a tool may not grade its own
 > homework — and the corollary is that a probe which substitutes something other
 > than the real subject proves nothing about the real subject.
+
+---
+
+## 5. Q4 closing note — what the corpus is actually for (2026-07-31)
+
+Recorded at the end of the session that unblocked Q4, because the reframe is
+obvious on the day and gone in three weeks.
+
+### 5.1 The claim
+
+Scope §Q4 says *"the human supplied the law — the judgment part — and the
+generator is the mechanical part that is measured weak."* That is right and too
+narrow. **It is not only the generator that is mechanical. The completeness of
+the law set is too.**
+
+Stated as a division of labour:
+
+> **Humans mark where properties live. The tool completes the set and
+> requantifies it.**
+
+A property-style test is a **high-precision signal that a property exists at
+that location**, and a **low-quality signal of what the full property set is**.
+That asymmetry is the useful part, because existence is the hard judgement and
+completeness is the mechanical one.
+
+`sort_integers` is the whole claim in one file:
+
+| layer | who supplied it | quality |
+|---|---|---|
+| "sorting has a law worth testing here" | the human | **correct** — and not derivable from shape alone |
+| the law as written | the human | **half** — ordered, not permuted (§4.1) |
+| the missing half | `ReorderPartitionTemplate` | named before anyone read the file |
+| the quantification | the human | exhaustive on one arm, an LCG on another (§2) |
+
+### 5.2 Two qualifications, or the claim overreaches
+
+**It is a precision signal, not a recall one.** A test marks a property where
+someone bothered to write one; absence of a test is not evidence of absence of a
+law. That is exactly what Q3 measures from the other direction, and why Q3's 75%
+matters independently of anything here.
+
+**Some tests are regression markers, not law perceptions.** A test can exist
+because a bug was fixed there, with nobody having thought "there is an invariant
+here". Those still mark interesting locations, but for a different reason, and
+**this study has not separated the two populations.** `sort_integers` is itself
+ambiguous: `permute` / `randomize` reads like someone thinking in domains, while
+the `FIXME(prext)` suggests accretion. Splitting them is unmeasured work.
+
+### 5.3 What it implies for the product
+
+If tests mark locations, then `TestLifter`'s job is not primarily *lifting tests
+into properties*. It is **using tests as a search index for where to point the
+catalogue** — the corpus tells you where a human already judged a law to exist,
+and the catalogue tells you what the complete set at that location is.
+
+That is a different product from the one scope §Q4 describes, and on today's
+evidence a better one: the transformation half was measured *declined* for the
+`check*` batteries (§Q4 correction) and structurally impossible for
+`sort_integers` (§4.3a), while the location-marking half paid out on the first
+file anyone read.
+
+**Not yet tested.** Whether that reframe survives contact with the
+weak-generator population — `IntegerDivision.swift`'s `Int64` arm is where it
+gets its first real trial, and it is still the recommended next move.

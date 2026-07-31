@@ -445,6 +445,13 @@ attempting any transformation, or the work is manual and unrepeatable.
 
 **Then the transformation is close to pure gain, and §2 says why**: the human supplied the
 law — the judgment part — and the generator is the mechanical part that is measured weak.
+
+> **Findings §5 argues this is right and too narrow.** Not only the *generator* is
+> mechanical — the **completeness of the law set** is too. Humans mark where properties
+> live; the tool completes the set and requantifies it. On that reading the corpus's value
+> is as a **search index for where to point the catalogue**, not as a source of tests to
+> convert — which would make Q4's stated deliverable the wrong one. Recorded at the end of
+> the session that unblocked Q4, untested against the weak-generator population.
 Keep the law verbatim, replace the generator, and pick up shrinking and seed reproducibility
 for free. Today a `UUIDTests` failure at iteration 7,432 hands you nothing.
 
