@@ -292,9 +292,13 @@ from `RoundTripTemplate`.
 to the curated set by hand. The rewrite closes the container-shaped half of that
 class of miss; a bare stdlib name still has to be curated by hand.
 
-`predicate`, by contrast, is 117 entries of docstring-derived contracts with no
-generic law shape behind them. Bigger bucket, much weaker claim to being
-mechanically verifiable.
+`predicate`, by contrast, is the **wrong example to hang this on**, and
+`docs/predicate-display-order.md` corrects it. It is shape-derived — any
+`Bool`-returning function — not "docstring-derived contracts" as this doc
+originally said, and the law it proposes is *totality*. Verify declining that is
+not a reach gap: there is no further law to measure, and `PredicateTemplate`
+says so itself ("the one role in this catalogue that carries **no free law**").
+The 65% headline stands; `predicate`'s share of it is not a deficit.
 
 ## Reproducing
 
