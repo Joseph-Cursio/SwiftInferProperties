@@ -74,7 +74,7 @@ public enum AssertCountChangeDetector {
             }
             return collapsedFromEqualityExpression(firstArg, location: assertion.location)
 
-        case .xctAssertTrue, .xctAssert, .xctAssertNotNil,
+        case .xctAssertTrue, .xctAssert, .xctAssertNotNil, .xctAssertNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
                 .xctAssertGreaterThanOrEqual, .xctAssertFalse,

@@ -53,15 +53,15 @@ struct StdlibUnittestAssertionTableTests {
         #expect(kind(of: "expectNotNil(value)") == .xctAssertNotNil)
     }
 
-    /// **`expectNil` is deliberately unmapped**, and it is the third-most-common
-    /// name in the corpus (809 sites). There is no `.xctAssertNil` kind, only
-    /// `.xctAssertNotNil` — mapping it there would invert the assertion's
-    /// polarity, so a detector would read "asserted non-nil" from
-    /// `expectNil(x)` and infer the opposite law. Silence is the safe answer
-    /// until the kind exists.
-    @Test("expectNil is NOT mapped — no kind exists with the right polarity")
-    func nilIsUnmapped() {
-        #expect(kind(of: "expectNil(value)") == nil)
+    /// `expectNil` (809 sites) was unmapped until `.xctAssertNil` existed —
+    /// mapping it onto `.xctAssertNotNil` would have inverted the assertion, so
+    /// a detector would read "asserted non-nil" from `expectNil(x)` and infer
+    /// the opposite law. Silence was the safe answer; the kind is the correct
+    /// one. See `NilAssertionKindTests` for the polarity guard.
+    @Test("expectNil maps at its true polarity")
+    func nilMapsAtTruePolarity() {
+        #expect(kind(of: "expectNil(value)") == .xctAssertNil)
+        #expect(kind(of: "expectNil(value)") != kind(of: "expectNotNil(value)"))
     }
 
     /// These anchor process death, parse success, static typing and rendering.

@@ -1100,13 +1100,25 @@ idempotence, count-change, reduce-equivalence) read this corpus without being to
 
 Both are limits, not bugs, and both are pinned by tests so they cannot silently change.
 
-### One deliberate omission, and it is the awkward one
+### The one deliberate omission — now closed
 
-**`expectNil` (809 sites) is NOT mapped.** There is no `.xctAssertNil` kind, only
-`.xctAssertNotNil`. Mapping it there would invert the assertion's polarity — a
+`expectNil` (809 sites) was **not** mapped at first: there was no `.xctAssertNil` kind,
+only `.xctAssertNotNil`, and mapping it there would invert the assertion's polarity — a
 detector would read "asserted non-nil" from `expectNil(x)` and infer the opposite law.
-That is strictly worse than not seeing it. Adding the kind is the correct fix and is a
-`Kind` change with switch sites to update, so it is its own piece of work.
+Dropping was the safe choice; adding the kind was the correct one, and it landed
+2026-07-31.
+
+**It was not merely additive.** The slicer anchors on the *terminal* assertion, so while
+`expectNil` was unrecognised a body ending in one anchored on an **earlier** assertion —
+pointing at the wrong conclusion. Recognising it both adds anchors and corrects those.
+
+| | before | after |
+|---|---|---|
+| bodies slicing to an anchor | 2,263 | **2,677** |
+| `xctAssertNil` anchors | 0 | **452** (2nd-largest kind) |
+
+The small dips elsewhere (`xctAssertEqual` 1,931 → 1,906, `xctAssertTrue` 179 → 173) are
+those corrected anchors, not lost ones.
 
 Also unmapped, and not equality/ordering assertions at all: `expectCrashLater` (810),
 `expectParse` (441), `expectType` (227), `expectPrinted` (191).

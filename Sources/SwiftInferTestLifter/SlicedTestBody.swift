@@ -105,6 +105,17 @@ public struct AssertionInvocation {
         case xctAssertTrue
         case xctAssert
         case xctAssertNotNil
+        /// Asserts the single argument IS `nil` — the negative polarity of
+        /// `.xctAssertNotNil`.
+        ///
+        /// Added because the swift.org corpus spells it 809 times
+        /// (`StdlibUnittest.expectNil`), and until this case existed the only
+        /// options were to drop those sites or map them onto
+        /// `.xctAssertNotNil` — which would **invert** the assertion, so a
+        /// detector would read "asserted non-nil" from `expectNil(x)` and infer
+        /// the opposite law. Dropping was the safe choice; this is the correct
+        /// one.
+        case xctAssertNil
         case xctAssertLessThan
         case xctAssertLessThanOrEqual
         // M7.0 — negative-form assertion kinds for the

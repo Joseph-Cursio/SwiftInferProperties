@@ -143,7 +143,7 @@ public enum EquivalenceClassMarkerExtractor {
             guard let first = assertion.arguments.first else { return nil }
             return interpretBooleanArgument(first, baseAssertedTrue: true)
 
-        case .xctAssertEqual, .xctAssertNotNil,
+        case .xctAssertEqual, .xctAssertNotNil, .xctAssertNil,
                 .xctAssertLessThan, .xctAssertLessThanOrEqual,
                 .xctAssertNotEqual, .xctAssertGreaterThan,
                 .xctAssertGreaterThanOrEqual:
