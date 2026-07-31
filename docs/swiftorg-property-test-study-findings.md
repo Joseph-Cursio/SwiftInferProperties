@@ -1059,6 +1059,6 @@ was surprising enough to verify. Four instances now (§0.4), all in one sitting.
 
 | defect | corpus | status |
 |---|---|---|
-| `test/stdlib/sort_integers.swift` — sortedness check could not fail (`CHECK-NOT: Error!` vs printed `Error: `) | `swift` | **`swiftlang/swift#91083`**, approved by `tbkka`, unmerged |
+| `test/stdlib/sort_integers.swift` — sortedness check could not fail (`CHECK-NOT: Error!` vs printed `Error: `) | `swift` | **`swiftlang/swift#91083`** — approved by `tbkka`, **merged 2026-07-30** |
 
 Found opportunistically before this study began. Q2 predicts more; each gets a row.
