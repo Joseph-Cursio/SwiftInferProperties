@@ -252,19 +252,45 @@ This also moves the census's own headline: with the 14 gone, `SwiftInferCore`'s
 template-decline rate falls from 63% (66/104) to **58% (52/90)**. The
 constraint is still template reach, and it is still mostly `predicate`.
 
-### The other 8 are a different, smaller question
+### The other 8 — also fixed, and smaller than they looked
 
-`[String]` (×5), `[Suggestion]`, `URL?` (×2) — all `.unknown` by explicit design
+`[String]`, `[Suggestion]`, `URL?` — all `.unknown` by explicit design
 ("conditional-conformance reasoning is intentionally out of scope"), while every
-element/wrapped type classifies `.equatable`. A one-level structural rule
-(`[T]`/`T?` is Equatable iff `T` is) would close all 8. These are same-shape
-pairings rather than the `Self` clique, so they are worth a look on their own —
-but 8 entries on one corpus is a much smaller prize than 22 looked like.
+element/wrapped type classifies `.equatable`.
+
+**The count was inflated by the index being cumulative.** Once defect 2 was
+fixed and `discover` re-run, the live population was **3**, not 8 — the index
+retains entries from earlier runs, so reading a population off it overstates.
+Read populations off `discover`, not off `.swiftinfer/index.json`.
+
+`EquatableResolver` now gives `Array` and `Optional` their payload's verdict.
+This is a rewrite rather than a judgement: both conform to `Equatable` under
+exactly one condition — their single payload does. `Set` and `Dictionary` stay
+`.unknown` because their conformances rest on *different* constraints (`Set`
+needs `Element: Hashable`, `Dictionary` needs `Value: Equatable`), and tuples
+are not nominal types and cannot conform at all. `.notEquatable` forwards too,
+so `[Any]` and `((Int) -> Int)?` refute rather than merely going unknown.
+
+Measured: `inverse-pair` on `SwiftInferCLI` **3 → 0**, `SwiftInferCore`
+**unchanged**, and — the part that had to be checked — **nothing promoted at any
+tier**. The three were type-legitimate but semantically empty
+(`importsForComplexDouble([String]) -> String` paired against
+`argumentLabels(String) -> [String]`), and `RoundTripTemplate`'s naming gates
+decline them. So the rule removed three false suggestions and added none.
+
+**The risk this had to clear was the opposite of defect 2's.** There, a resolver
+fix in isolation would have *promoted* false claims. Here the danger was a
+silent recall loss: if the gate defers a pair and `RoundTripTemplate` does not
+claim it, the suggestion vanishes instead of strengthening.
+`InversePairContainerHandoffTests` pins the handoff — a genuine `[String]`
+encode/decode pair must return `nil` from `InversePairTemplate` *and* non-`nil`
+from `RoundTripTemplate`.
 
 `EquatableResolver.curatedEquatableStdlib` carries a road-test scar showing the
 `.unknown` demotion is a real failure mode in general — `Data` classified
 `.unknown` and demoted a flagship encrypt/decrypt round-trip until it was added
-to the curated set by hand. That remains true. It just isn't what these 22 are.
+to the curated set by hand. The rewrite closes the container-shaped half of that
+class of miss; a bare stdlib name still has to be curated by hand.
 
 `predicate`, by contrast, is 117 entries of docstring-derived contracts with no
 generic law shape behind them. Bigger bucket, much weaker claim to being

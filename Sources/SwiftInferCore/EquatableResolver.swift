@@ -17,14 +17,19 @@ public enum EquatableEvidence: Sendable, Equatable {
 /// `: Hashable` / `: Comparable` types lift to `.equatable` without a
 /// second AST walk.
 ///
-/// Conditional-conformance reasoning (`Array<T>: Equatable where T:
-/// Equatable`, `Optional<Wrapped>`, tuples, …) is intentionally out of
-/// scope — that's a v1.1 constraint-engine concern (PRD §20.2). Generic /
-/// optional / tuple types therefore classify as `.unknown` even when
-/// their elements are Equatable. The exception is the curated
-/// non-Equatable shape list (function types, `Any`, `AnyObject`, opaque
-/// `some` / existential `any` prefixes), which veto regardless of nesting
-/// because their textual signature cannot host value equality.
+/// General conditional-conformance reasoning stays out of scope — that's a v1.1
+/// constraint-engine concern (PRD §20.2). Two shapes are handled anyway, because
+/// for them the "condition" is a rewrite rather than a judgement: `Array<T>` and
+/// `Optional<T>` are `Equatable` exactly when `T` is, so the container simply
+/// inherits its payload's verdict. `Set`, `Dictionary` and tuples are still
+/// `.unknown` — their conformances rest on different constraints (see
+/// `singlePayloadElement`).
+///
+/// The curated non-Equatable shape list (function types, `Any`, `AnyObject`,
+/// opaque `some` / existential `any` prefixes) vetoes regardless of nesting,
+/// because its textual signature cannot host value equality — and it is
+/// consulted before the payload rewrite, so `[Any]` refutes rather than
+/// unwrapping to a bare `Any`.
 ///
 /// Per M3 plan open decision #2: extension `TypeDecl`s carry only the
 /// conformances the extension adds, and the resolver merges multiple
@@ -81,7 +86,8 @@ public struct EquatableResolver: Sendable {
     /// 1. Curated non-Equatable shape match → `.notEquatable`.
     /// 2. Curated stdlib match → `.equatable`.
     /// 3. Corpus-derived match → `.equatable`.
-    /// 4. Otherwise → `.unknown`.
+    /// 4. Single-payload container (`[T]` / `T?`) → classify `T`.
+    /// 5. Otherwise → `.unknown`.
     public func classify(typeText: String) -> EquatableEvidence {
         let trimmed = typeText.trimmingCharacters(in: .whitespacesAndNewlines)
         if Self.isProvablyNonEquatable(trimmed) {
@@ -93,7 +99,62 @@ public struct EquatableResolver: Sendable {
         if corpusEquatable.contains(trimmed) {
             return .equatable
         }
+        // `Array` and `Optional` conform to `Equatable` exactly when their
+        // payload does, so the container's verdict IS the payload's verdict —
+        // including `.notEquatable`, which is why `[Any]` and `((Int) -> Int)?`
+        // come back refuted rather than merely unknown.
+        if let payload = Self.singlePayloadElement(of: trimmed) {
+            return classify(typeText: payload)
+        }
         return .unknown
+    }
+
+    /// The payload of a single-element container spelling, or `nil` when
+    /// `trimmed` is not one.
+    ///
+    /// **Why only `Array` and `Optional`.** Both are `Equatable` under exactly
+    /// one condition — their single payload is — so the rule is a rewrite, not
+    /// a judgement. `Set` and `Dictionary` are deliberately excluded: their
+    /// conditional conformances rest on *different* constraints (`Set` needs
+    /// `Element: Hashable`, `Dictionary` needs `Value: Equatable` with the key
+    /// already `Hashable`), and tuples are not nominal types and cannot conform
+    /// at all. Folding those in would need the constraint engine PRD §20.2
+    /// defers, not this rewrite.
+    ///
+    /// Recursion falls out for free — `[String?]` strips to `String?` strips to
+    /// `String` — and terminates because every step shortens the text.
+    static func singlePayloadElement(of trimmed: String) -> String? {
+        // `T?` / `T!`. Both spellings are `Optional` underneath.
+        if trimmed.count > 1, trimmed.hasSuffix("?") || trimmed.hasSuffix("!") {
+            return String(trimmed.dropLast())
+        }
+        // `[T]`, but not `[Key: Value]`.
+        if trimmed.hasPrefix("["), trimmed.hasSuffix("]") {
+            let inner = String(trimmed.dropFirst().dropLast())
+            return hasTopLevelColon(inner) ? nil : inner
+        }
+        // The long-form spellings of the same two types.
+        for prefix in ["Array<", "Optional<"] where trimmed.hasPrefix(prefix) && trimmed.hasSuffix(">") {
+            return String(trimmed.dropFirst(prefix.count).dropLast())
+        }
+        return nil
+    }
+
+    /// Whether `text` contains a `:` outside any bracket nesting — the marker
+    /// that separates a dictionary's key from its value. Depth-tracked so
+    /// `[[String: Int]]` is still recognised as an array of dictionaries
+    /// rather than mistaken for a dictionary itself.
+    private static func hasTopLevelColon(_ text: String) -> Bool {
+        var depth = 0
+        for character in text {
+            switch character {
+            case "<", "[", "(": depth += 1
+            case ">", "]", ")": depth -= 1
+            case ":" where depth == 0: return true
+            default: break
+            }
+        }
+        return false
     }
 
     /// Textual detector for the curated non-Equatable shapes. Generics

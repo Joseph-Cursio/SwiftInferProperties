@@ -171,21 +171,89 @@ struct EquatableResolverTests {
         #expect(resolver.classify(typeText: "Mystery") == .unknown)
     }
 
+    // MARK: Array / Optional payload rewrite
+
+    /// `Array` and `Optional` conform to `Equatable` under exactly one
+    /// condition — their single payload does — so the container inherits the
+    /// payload's verdict. This is a rewrite, not the general conditional-
+    /// conformance reasoning PRD §20.2 still defers.
+    ///
+    /// This test previously asserted `.unknown` for all four, with a comment
+    /// conceding "Array<Int> IS Equatable". That concession had a measured
+    /// cost: `[String]` and `URL?` carriers were demoted out of
+    /// `RoundTripTemplate` into the weaker inverse-pair tier — the same failure
+    /// mode that put `Data` in `curatedEquatableStdlib` by hand.
     @Test
-    func genericContainerOfEquatableScalarStaysUnknown() {
-        // Open decision: conditional conformance reasoning is v1.1.
-        // Array<Int> IS Equatable, but the textual resolver doesn't
-        // unfold conditional conformances.
+    func arrayAndOptionalInheritTheirPayloadVerdict() {
         let resolver = makeResolver()
-        #expect(resolver.classify(typeText: "Array<Int>") == .unknown)
-        #expect(resolver.classify(typeText: "[Int]") == .unknown)
-        #expect(resolver.classify(typeText: "Optional<Int>") == .unknown)
-        #expect(resolver.classify(typeText: "Int?") == .unknown)
+        #expect(resolver.classify(typeText: "Array<Int>") == .equatable)
+        #expect(resolver.classify(typeText: "[Int]") == .equatable)
+        #expect(resolver.classify(typeText: "Optional<Int>") == .equatable)
+        #expect(resolver.classify(typeText: "Int?") == .equatable)
+        #expect(resolver.classify(typeText: "Int!") == .equatable)
+    }
+
+    /// An unknown payload leaves the container unknown — the rewrite forwards
+    /// the verdict, it does not manufacture one.
+    @Test
+    func containerOfUnknownPayloadStaysUnknown() {
+        let resolver = makeResolver()
+        #expect(resolver.classify(typeText: "[Mystery]") == .unknown)
+        #expect(resolver.classify(typeText: "Mystery?") == .unknown)
+    }
+
+    /// `.notEquatable` forwards too, and the curated non-Equatable detector is
+    /// consulted *before* the rewrite — so `[Any]` refutes rather than
+    /// unwrapping to a bare `Any` and then refuting for a different reason.
+    @Test
+    func containerOfNonEquatablePayloadRefutes() {
+        let resolver = makeResolver()
+        #expect(resolver.classify(typeText: "[Any]") == .notEquatable)
+        #expect(resolver.classify(typeText: "[(Int) -> Int]") == .notEquatable)
+        #expect(resolver.classify(typeText: "AnyObject?") == .notEquatable)
+    }
+
+    /// Nesting falls out of the rewrite because each step shortens the text.
+    @Test
+    func nestedContainersUnwrapRepeatedly() {
+        let resolver = makeResolver()
+        #expect(resolver.classify(typeText: "[String?]") == .equatable)
+        #expect(resolver.classify(typeText: "[[Int]]") == .equatable)
+        #expect(resolver.classify(typeText: "[Int]?") == .equatable)
+    }
+
+    /// A corpus-declared `Equatable` type lifts its containers too — this is
+    /// what makes `[Suggestion]` classify, not just the curated stdlib names.
+    @Test
+    func corpusEquatableTypeLiftsItsContainers() {
+        let resolver = makeResolver([decl("Blob", inherits: ["Equatable"])])
+        #expect(resolver.classify(typeText: "Blob") == .equatable)
+        #expect(resolver.classify(typeText: "[Blob]") == .equatable)
+        #expect(resolver.classify(typeText: "Blob?") == .equatable)
+    }
+
+    /// `Set` and `Dictionary` are deliberately excluded: their conformances
+    /// rest on different constraints (`Set` needs `Element: Hashable`,
+    /// `Dictionary` needs `Value: Equatable`), so they are not a rewrite.
+    @Test
+    func setAndDictionaryStayUnknown() {
+        let resolver = makeResolver()
+        #expect(resolver.classify(typeText: "Set<Int>") == .unknown)
+        #expect(resolver.classify(typeText: "[String: Int]") == .unknown)
+        #expect(resolver.classify(typeText: "Dictionary<String, Int>") == .unknown)
+    }
+
+    /// A dictionary nested inside an array must not make the array read as a
+    /// dictionary — the colon test tracks bracket depth for exactly this.
+    @Test
+    func arrayOfDictionariesIsNotMistakenForADictionary() {
+        #expect(EquatableResolver.singlePayloadElement(of: "[[String: Int]]") == "[String: Int]")
+        #expect(EquatableResolver.singlePayloadElement(of: "[String: Int]") == nil)
     }
 
     @Test
     func tupleOfEquatableStaysUnknown() {
-        // Tuple Equatable is conditional; out of M3 scope.
+        // Tuples are not nominal types and cannot conform at all.
         let resolver = makeResolver()
         #expect(resolver.classify(typeText: "(Int, String)") == .unknown)
     }
