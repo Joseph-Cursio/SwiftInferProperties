@@ -17,5 +17,10 @@ import PackageDescription
 let package = Package(
     name: "VerifyRefutability",
     platforms: [.macOS(.v14)],
+    // A library product is REQUIRED: without one the verifier's generated workdir cannot
+    // depend on this package, and every entry reports `measured-error: build-failed` with
+    // "cannot find type X in scope" — which reads as a verifier limitation rather than a
+    // missing manifest line. Cost me one full 34-entry survey.
+    products: [.library(name: "VerifyRefutability", targets: ["VerifyRefutability"])],
     targets: [.target(name: "VerifyRefutability")]
 )

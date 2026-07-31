@@ -78,5 +78,64 @@
    "predicted": "REFUTED",
    "rationale": "wrong only at 0; zero is a canonical integer edge"
   }
- ]
+ ],
+ "result": {
+  "run": "2026-07-30, fixtures/verify-refutability, verify --all-from-index --corpus-module VerifyRefutability",
+  "entries": 44,
+  "measured": 6,
+  "never_ran": 38,
+  "coverage_rate": "6/44 = 14% of proposed laws produced ANY verdict",
+  "never_ran_reasons": {
+   "unsupported-carrier": 16,
+   "build-failed": 12,
+   "unsupported-template": 4,
+   "instance-method-shape-not-supported": 4,
+   "parse-error": 1,
+   "monotonicity-domain-not-comparable": 1
+  },
+  "scored_predictions": [
+   {
+    "stub": "normalizedScore()",
+    "class": "BROAD",
+    "law": "idempotence",
+    "predicted": "REFUTED",
+    "actual": "measured-defaultFails trial=0",
+    "correct": true
+   },
+   {
+    "stub": "canonicalizedOffset()",
+    "class": "COLLISION",
+    "law": "idempotence",
+    "predicted": "SURVIVES",
+    "actual": "measured-bothPass, 100 trials",
+    "correct": true,
+    "note": "HYPOTHESIS CONFIRMED on a purpose-built case: wrong only at multiples of 997, never drawn."
+   },
+   {
+    "stub": "mergedBound(_:)",
+    "class": "EDGE",
+    "law": "commutativity",
+    "predicted": "REFUTED",
+    "actual": "measured-bothPass, defaultTrials=100 edgeTrials=0 edgeSampled=0",
+    "correct": false,
+    "note": "PREDICTION WRONG, and the reason is worse than the miss: the edge pass reported ZERO trials, so Int.min was never tried."
+   }
+  ],
+  "unpredicted": [
+   {
+    "stub": "IntervalSet.union commutativity",
+    "actual": "defaultFails trial=0",
+    "note": "my union is BROADLY non-commutative (asymmetric drop), so this is a BROAD row, consistent with BROAD->refuted."
+   },
+   {
+    "stub": "IntervalSet.union associativity",
+    "actual": "defaultFails trial=12"
+   },
+   {
+    "stub": "IntervalSet.union binary-idempotence",
+    "actual": "defaultFails trial=1"
+   }
+  ],
+  "conclusion": "Verification cannot substitute for precision TODAY, and the binding constraint is REACH rather than generator quality. 86% of proposed laws were never measured. Of the 14% that ran: the collision-dependent violation passed 100 trials while being false, and the edge-dependent one passed with the edge pass reporting zero trials."
+ }
 }

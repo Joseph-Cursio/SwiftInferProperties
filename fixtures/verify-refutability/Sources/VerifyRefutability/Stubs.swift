@@ -144,3 +144,46 @@ public func trimWhitespace(_ text: String) -> String {
 public func scoreOf(_ value: Int) -> Int {
     value == 0 ? 2 : value
 }
+
+// MARK: - Int-carrier METHODS — the only shape the verifier can actually measure
+//
+// Two failed rounds taught the shape, and both failures were mine:
+//
+// 1. Free functions have **no carrier**. The emitter still renders a receiver, producing
+//    `let applyOnce: (Int) -> Int = (none).normalizeScore` — uncompilable, reported as
+//    `measured-error: build-failed` rather than `unsupported-carrier`. (That mismatch is a
+//    real verifier defect: a shape it cannot support should be declined, not mis-emitted.)
+// 2. Every stub emitter declares `supportedCarriers = ["Complex<Double>", "Double", "Int"]`,
+//    so a law on `String`, an array, or a user's own struct is never measured at all.
+//
+// Hence: methods in an `extension Int`. This is the ONLY shape in which the experiment's real
+// question — which violation kinds does the generator catch? — can even be asked.
+
+public extension Int {
+
+    /// BROAD / idempotence. Increments every call, so `f(f(x)) != f(x)` for every input.
+    func normalizedScore() -> Int { self + 1 }
+
+    /// BROAD / commutativity. Subtraction; fails for every `a != b`.
+    func combinedTally(_ other: Int) -> Int { self - other }
+
+    /// COLLISION / commutativity. Correct unless the operands agree modulo 100, where it
+    /// returns the receiver — so the law breaks only when `a % 100 == b % 100` and `a != b`.
+    /// Roughly a 1-in-100 coincidence over a wide domain: the regime CLAUDE.md says a derived
+    /// generator misses.
+    func combinedBucket(_ other: Int) -> Int {
+        (self % 100 == other % 100) ? self : self &+ other
+    }
+
+    /// COLLISION / idempotence. Correct unless the value is a multiple of 997, where a second
+    /// application moves it again.
+    func canonicalizedOffset() -> Int {
+        self % 997 == 0 ? self &+ 1 : self
+    }
+
+    /// EDGE / commutativity. Correct except when exactly one operand is `Int.min`, where it
+    /// returns the receiver instead of the sum.
+    func mergedBound(_ other: Int) -> Int {
+        (self == Int.min || other == Int.min) ? self : self &+ other
+    }
+}

@@ -62,3 +62,8 @@ __pycache__/
 # by `discover-interaction --interactive` / the cycle re-triage. The durable
 # record is the cycle-N findings doc worksheet + calibration-cycle-N-data/.
 **/.swiftinfer/interaction-decisions.json
+
+# The verify-refutability experiment's generated artifacts. `index.json` is regenerable with
+# `swift-infer index --target VerifyRefutability`, and the measured RESULTS are recorded in
+# `predictions.json` alongside the frozen predictions — which is the file that matters.
+fixtures/verify-refutability/.swiftinfer/
