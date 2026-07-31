@@ -437,6 +437,12 @@ invisible. Zero lifted, measured.
 form and `AssertionAnchor` the `expect*` family. Both are additive. Do that before
 attempting any transformation, or the work is manual and unrepeatable.
 
+> **DONE, 2026-07-31** (`swift` @ `408632e5`). The lifter now recognises **4,171** tests
+> where it saw 0, of which **2,677** slice to an assertion anchor. The `expect*` family maps
+> onto the existing assertion kinds, and `expectNil` (809 sites) got a new
+> `.xctAssertNil` kind rather than being folded onto `.xctAssertNotNil`, which would have
+> inverted its polarity. Q4 is unblocked.
+
 **Then the transformation is close to pure gain, and §2 says why**: the human supplied the
 law — the judgment part — and the generator is the mechanical part that is measured weak.
 Keep the law verbatim, replace the generator, and pick up shrinking and seed reproducibility
@@ -448,8 +454,51 @@ generator, which is strictly more work and strictly more valuable — those axio
 currently checked over a domain small enough to be exhaustive and too small to be
 interesting.
 
-**Deliverable.** The two parser extensions; then N converted suites, each with a
-before/after on what the generator now covers.
+> ### CORRECTION — the paragraph above is measured false (2026-07-31)
+>
+> The `check*` batteries are the population **least** worth converting, not the most. Three
+> facts, in increasing severity:
+>
+> **1. PropertyLawKit already covers the laws, 4 for 4.** `StdlibUnittest.checkEquatable`
+> asserts reflexivity, symmetry, transitivity and negation-consistency;
+> `checkEquatablePropertyLaws` asserts exactly those four. StdlibUnittest's fifth assertion
+> — that the test's own `oracle` agrees with `==` — is a test-of-the-test with no kit
+> analogue, and needs none. So there is no law to invent; the conversion is a generator
+> swap.
+>
+> **2. And the laws are structurally blind, which we had already measured.**
+> `fixtures/equatable-signal/README.md` arm 7 (`LowWordOnlyPair`, high word **dropped
+> entirely**) passes **4/4**; arm 4 passes 4/4 and the README says "the law goes blind". A
+> *projection* of the stored fields is still an equivalence relation, so it satisfies all
+> four laws however wrong it is — and that doc concludes projections are "where the recall
+> is". **Turning 4 hand-picked instances into 10,000 generated ones does not make a blind
+> law see.**
+>
+> **3. Some sites are vacuous outright.** `test/stdlib/Result.swift:192` checks
+> `Result<Err, Err>` where `Err` is a two-case enum with *synthesized* `Equatable` and
+> `Result` declares no custom `==`. A compiler-synthesized `==` cannot violate reflexivity,
+> symmetry or transitivity. The site checks laws true by construction; converting it yields
+> laws true by construction over a larger domain.
+>
+> **So the battery population's Q4 verdict is `declined`** — the §Q3d value, "we understand
+> it and stand aside because PropertyLawKit runs it" — and for a sharper reason than usual:
+> not merely that another tool runs the law, but that we have *measured* the law cannot fail
+> for the bug class that occurs. Where a projection is suspected, the thing to propose is
+> the **model law** (`left == right ⟺ model(left) == model(right)`), which is a Q2/Q3
+> finding rather than a Q4 transformation.
+>
+> **Convert the weak-generator population instead.** The `sort_integers` LCG — 256 distinct
+> values, all odd, never negative — checks a sortedness law that is *not* structurally
+> blind. There the domain genuinely is the limiting factor, so replacing it changes what the
+> test can catch. That is where the before/after is real.
+>
+> **Not yet measured:** whether `checkComparable` shares the blindness (antisymmetry and
+> transitivity also survive a projection, so probably — but probably is not measured). And a
+> battery site over a *hand-written* `==` is not vacuous the way the synthesized `Result`
+> one is; fact 2 still applies to it, fact 3 does not.
+
+**Deliverable.** The two parser extensions (**done**); then N converted suites from the
+**weak-generator** population, each with a before/after on what the generator now covers.
 
 ### Q5 — Do the property-style tests use weak generators?
 
@@ -553,8 +602,10 @@ it sizes the work and nothing else.
 Q1 (define + count)
  └─▶ Q2 (reconcile; freeze key)      ─┬─▶ Q3 (blinded source-only recall)   ← highest value
                                       └─▶ Q5 (generator classification)     ← independent, cheap
-Q4 prerequisite: TestSuiteParser + AssertionAnchor extensions
+Q4 prerequisite: TestSuiteParser + AssertionAnchor extensions               ← DONE 2026-07-31
  └─▶ Q4 (transform)                                                         ← needs Q2's key
+     · check* batteries → DECLINED (kit covers the laws; laws measured blind)
+     · weak-generator population → the one worth converting
 
 Shared prerequisite for Q3a: suppressed laws must stay countable
  (also wanted by access-level-analysis-gate-scope.md §2 — build once, two studies use it)
@@ -562,7 +613,7 @@ Shared prerequisite for Q3a: suppressed laws must stay countable
 
 Q5 does not depend on Q2 and can run in parallel. Q4's *prerequisite* is independent of
 everything and is the cheapest thing here with a shipped artefact at the end — a reasonable
-first move if the study needs to show value early.
+first move if the study needs to show value early. **It was, and it is done**: see §Q4.
 
 ## 8. Risks
 
@@ -577,3 +628,13 @@ first move if the study needs to show value early.
 - **Q4 could become a fork.** Converting upstream tests is only useful if it is upstreamable
   or reproducible; a pile of local rewrites is a maintenance liability. Decide the target
   (upstream PR / local fixture corpus / neither) *before* converting the second suite.
+  > **Resolved 2026-07-31 — upstream is closed for conversions, open for defects.** The
+  > Swift repo vendors no property-based testing library, and `StdlibUnittest`'s entire
+  > randomness surface is one type: `LinearCongruentialGenerator` — the very generator this
+  > study measured as weak. So an upstream conversion would either add a PBT dependency to
+  > stdlib tests (a proposal, not a PR) or be expressed with the broken generator
+  > (self-defeating). **Defects found while converting still go upstream**; that channel is
+  > proven — `swiftlang/swift#91083` merged. Target for the conversions themselves: a
+  > **local gated fixture** pinned at the corpus SHA, on the `fixtures/cycle27-surface/`
+  > precedent. The gate is what separates a fixture from the "pile of local rewrites" this
+  > risk names.
