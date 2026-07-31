@@ -311,6 +311,7 @@ extension SwiftInferCommand.Discover {
                     && (!setup.requireCorroboration || CorroborationRule.isCorroborated($0.score)))
                 || Refutability.isWorthSurfacingBelowCut($0)
         }
+        .sorted(by: Self.strongestFirst)
         let visibleIdentities = Set(visible.map(\.identity))
 
         return VisibilityCut(

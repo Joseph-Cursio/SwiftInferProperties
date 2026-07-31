@@ -31,16 +31,26 @@ public enum PredicateTemplate {
         Constraint<FunctionSummary>(
             templateName: "predicate",
             appliesTo: Self.isPredicate,
-            // Weight 20 — the lowest in the catalogue, and deliberately below the default tier, so a
-            // predicate suggestion is HIDDEN unless the reader asks for `--include-possible`.
+            // Weight 20 — the lowest in the catalogue, and below the default tier.
             //
             // This is not modesty, it is arithmetic. Every `Bool`-returning function in a codebase is
             // a predicate by shape — `isEnabled()`, `canEdit()`, `hasPermission()` — and the law this
-            // template can state over them is the weakest one it has. Surfaced by default, it would
-            // bury the partition and comparator findings under a list of everything that returns a
-            // `Bool`, and a category that fires on everything is a category people switch off. The
-            // Possible tier is exactly the right home: available when you go looking, silent when you
-            // are not.
+            // template can state over them is the weakest one it has. Surfaced *first*, it would bury
+            // the partition and comparator findings under a list of everything that returns a `Bool`,
+            // and a category that fires on everything is a category people switch off.
+            //
+            // **This comment used to claim the suggestion is HIDDEN without `--include-possible`.
+            // That stopped being true and nobody updated it.** `3e38e34` ruled that a law the code
+            // OWES is never hidden — earned from a real regression where a reader complied with the
+            // linter and the sharpest law in the run vanished — and added `predicate` to
+            // `Refutability.roleEntailedTemplates`. Totality is owed, so the below-cut rescue
+            // surfaces it by default, and the stale comment hid that from anyone reading here.
+            //
+            // Both decisions are right, and the conflict was never between them — it was ordering.
+            // Measured before the fix: `SwiftInferTemplates` rendered 56 score-20 predicates before
+            // the first score-80 finding. `Discover.strongestFirst` now sorts the default surface by
+            // score descending, so an owed law stays visible and stays *below* the laws the reader
+            // came for. Nothing is hidden and nothing is buried.
             signals: { summary in
                 [
                     Signal(
