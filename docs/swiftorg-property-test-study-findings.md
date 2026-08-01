@@ -1171,7 +1171,7 @@ which cannot violate reflexivity, symmetry or transitivity. That population's ve
 | defect | corpus | status |
 |---|---|---|
 | `test/stdlib/sort_integers.swift` — sortedness check could not fail (`CHECK-NOT: Error!` vs printed `Error: `) | `swift` | **`swiftlang/swift#91083`** — approved by `tbkka`, **merged 2026-07-30** |
-| `SortedDictionary.Keys.==` and `.Values.==` — inverted comparison, `if e1 == e2 { return false }` where `!=` was meant. **Reflexivity is false and disjoint views compare equal.** | `swift-collections` @ `899809d3` | found 2026-07-31, **not reported** — see §3.1 |
+| `SortedDictionary.Keys.==` and `.Values.==` — inverted comparison, `if e1 == e2 { return false }` where `!=` was meant. **Reflexivity is false and disjoint views compare equal.** | `swift-collections` @ `899809d3`, still present on `main` @ `ff27e367` | **`apple/swift-collections#696`** — filed 2026-08-01, open. See §3.1 |
 
 ### 3.1 The `SortedDictionary` views, and why the caveat is load-bearing
 
@@ -1206,6 +1206,14 @@ projection views are wrong.
 **And it has no coverage**: `Tests/SortedCollectionsTests/` has no equality test
 for either view, which is the §3 bar (*"a check that cannot fail **and** has no
 other coverage"*) reached from the other side — here there is no check at all.
+
+**Filed as `apple/swift-collections#696`, 2026-08-01**, after four checks that the
+report itself would otherwise have failed: the bug is still on `main` at
+`ff27e367` (the local checkout was 74 commits behind), no existing issue covers
+it, the reproduction was run against `main` in a throwaway worktree rather than
+against the study's pin, and the one-character fix was **applied and re-run**
+rather than merely proposed. The worktree was removed and the pinned corpus
+verified byte-identical afterwards, per §0.1.
 
 **The caveat that keeps this honest.** `SortedCollections` is gated behind the
 `UnstableSortedCollections` trait, which is **commented out of the default trait
