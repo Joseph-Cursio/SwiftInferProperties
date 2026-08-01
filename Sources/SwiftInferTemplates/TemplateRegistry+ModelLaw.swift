@@ -22,6 +22,7 @@ extension TemplateRegistry {
         into collector: inout SuggestionCollector
     ) {
         collectMembershipModelLaws(summaries, into: &collector)
+        collectMemberHomomorphisms(summaries, inheritedTypesByName, into: &collector)
         collectFunctorIdentityLaws(summaries, inheritedTypesByName, into: &collector)
         collectEndedAccessLaws(summaries, into: &collector)
         collectScaledUnitLaws(summaries, into: &collector)
@@ -40,6 +41,24 @@ extension TemplateRegistry {
     ) {
         for shape in ModelLawPairing.candidates(in: summaries) {
             if let suggestion = ModelLawTemplate.suggest(for: shape) {
+                collector.record(suggestion, generatorType: shape.typeName)
+            }
+        }
+    }
+
+    /// The member form of the additive-measure homomorphism. Lives here rather than in
+    /// the per-summary loop because it needs TWO members on one carrier — which is
+    /// exactly why the original free-function gate reached nothing.
+    private static func collectMemberHomomorphisms(
+        _ summaries: [FunctionSummary],
+        _ inheritedTypesByName: [String: Set<String>],
+        into collector: inout SuggestionCollector
+    ) {
+        let shapes = HomomorphismMemberPairing.candidates(
+            in: summaries, inheritedTypesByName: inheritedTypesByName
+        )
+        for shape in shapes {
+            if let suggestion = HomomorphismTemplate.suggestMemberForm(for: shape) {
                 collector.record(suggestion, generatorType: shape.typeName)
             }
         }
