@@ -146,7 +146,20 @@ extension SwiftInferCommand {
         /// `validate()` after decoding and before `run()`.
         public func validate() throws {
             guard !target.isEmpty else {
-                throw ValidationError("at least one --target is required.")
+                throw ValidationError(
+                    "at least one --target is required.\n\n"
+                        + "There is deliberately no --sources escape hatch here, and the reason "
+                        + "is not an oversight: this command SYNTHESIZES a verifier that does "
+                        + "`import <module>` and builds it against your package. An Xcode project "
+                        + "exposes no importable SwiftPM module, so --sources could reach the "
+                        + "sources and would then fail at link time — a worse answer than this "
+                        + "one, because it fails later and says less.\n\n"
+                        + "For an Xcode project: `discover-interaction --sources <dir>` does the "
+                        + "static half (it gained --sources for exactly this case), and its "
+                        + "findings stay at Possible rather than being promoted by measured "
+                        + "execution. Extracting the reducer or view model into a SwiftPM target "
+                        + "is what makes the measured path reachable."
+                )
             }
         }
 

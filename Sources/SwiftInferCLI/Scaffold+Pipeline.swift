@@ -32,7 +32,18 @@ extension SwiftInferCommand {
         )
 
         @Option(name: .long, help: "Name of the SwiftPM target to scan (Sources/<target>/).")
-        public var target: String
+        public var target: String?
+
+        @Option(
+            name: .long,
+            help: """
+            Path to a source directory to scan directly, bypassing the \
+            Sources/<target>/ convention. The Xcode escape hatch: an app has \
+            no SwiftPM target, so point this at the folder your .swift files \
+            live in. Mutually exclusive with --target; pass exactly one.
+            """
+        )
+        public var sources: String?
 
         @Option(name: .long, help: "Override the test directory TestLifter scans.")
         public var testDir: String?
@@ -46,7 +57,7 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let directory = try TargetDirectory.resolve(target)
+            let directory = try TargetDirectory.resolveScan(target: target, sources: sources)
             let outcome = try Self.scaffold(
                 directory: directory,
                 testDirectory: testDir.map { URL(fileURLWithPath: $0) },
