@@ -229,6 +229,49 @@ through **both** law families.
 **3 of 3 semantic bugs are invisible to all four Equatable laws. 3 of 3 are
 caught by the model law, at trial ≤ 3.**
 
+### The law the SHIPPED TEMPLATE emits, run against the same mutants (2026-07-31)
+
+The table above uses a **hand-written** model — `\.elements`, `\.logicalBits`,
+`\.logicalOrder`, properties on the storage struct. `SequenceViewModelLawTemplate`
+cannot write those: with no semantic resolution and no annotation to read, its
+abstraction function is the one the type already publishes, its own `Sequence`
+conformance. So it emits `(a == b) == a.elementsEqual(b)`, and whether *that*
+catches the same three bugs is a separate question — the one that decides whether
+the template earns its tier.
+
+| mutant | hand-written model | **emitted law** |
+|---|---|---|
+| order-insensitive `OrderedSet` | fails, trial 3 | **fails, trial 3** |
+| raw-storage `BitArray` (the shipped body) | fails, trial 2 | **fails, trial 2** |
+| unrotated `Deque` | fails, trial 1 | **fails, trial 1** |
+| all three faithful controls | pass, 5,000 trials | **pass, 5,000 trials** |
+
+**Identical, arm for arm.** The template's abstraction function is exactly as
+strong here as the one written by hand, which is the result that justifies
+proposing it from source alone.
+
+*Oracle independence, since the fixture is about checks that cannot fail:* the
+mutants are given a **correct** `Sequence` conformance. That is not a
+convenience — it is what the real types do. `Deque`'s collection conformance
+walks the ring buffer correctly whatever `==` does. A mutant whose iteration were
+broken the same way as its `==` would make the law blind, and that would be a
+fixture defect rather than a finding.
+
+### And the discriminator's justification, run rather than argued
+
+`OrderedCarrierDiscriminator` exists to keep this law off `Set`. Measured on a
+correct `Set`, building each pair through different table capacities:
+
+> **4,042 of 5,000 pairs violate the emitted law — 81%.**
+
+So without the gate the template would not merely be imprecise, it would propose
+a law that a *correct* standard-library type fails four times in five. That is
+the arm to point at when asking whether the discriminator earns its complexity.
+
+It is also the fixture's one deliberately non-deterministic arm — the count moved
+to 4,136 on the next run, because Swift randomises the hash seed per process,
+which is the property being demonstrated.
+
 The reason is structural, not statistical, and it is why more trials will never
 help: each mutant is *still an equivalence relation*. `Set(a) == Set(b)`,
 `(count, words)` equality, `(count, slots)` equality — every one is reflexive,
