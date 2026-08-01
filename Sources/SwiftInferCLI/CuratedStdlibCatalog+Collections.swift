@@ -21,14 +21,14 @@ extension CuratedStdlibCatalog {
         law(
             "Deque", "count is additive over concatenation", "(a + b).count == a.count + b.count",
             "let a = Deque(randArr()), b = Deque(randArr()); return (a + b).count == a.count + b.count",
-            imports: ["DequeModule"]
+            template: "homomorphism", imports: ["DequeModule"]
         ),
         law(
             "Deque", "prepend/removeFirst round-trip (double-ended symmetry)",
             "prepend(x) then removeFirst() yields x and restores the deque",
             "let arr = randArr(); var d = Deque(arr); let x = randInt(); d.prepend(x); "
                 + "let head = d.removeFirst(); return head == x && Array(d) == arr",
-            imports: ["DequeModule"]
+            template: "ended-access-round-trip", imports: ["DequeModule"]
         )
     ]
 
@@ -38,7 +38,7 @@ extension CuratedStdlibCatalog {
         law(
             "OrderedSet", "idempotent under union", "x.union(x) == x",
             "let x = OrderedSet(randArr()); return x.union(x) == x",
-            imports: ["OrderedCollections"]
+            template: "binary-idempotence", imports: ["OrderedCollections"]
         ),
         law(
             "OrderedSet", "commutative under membership (NOT under order)",
@@ -60,7 +60,7 @@ extension CuratedStdlibCatalog {
             "OrderedDictionary", "mapValues functor identity", "d.mapValues { $0 } == d",
             "var d = OrderedDictionary<Int, Int>(); for (key, value) in randDict() { d[key] = value }; "
                 + "return d.mapValues { $0 } == d",
-            imports: ["OrderedCollections"]
+            template: "functor-identity", imports: ["OrderedCollections"]
         )
     ]
 
@@ -77,12 +77,12 @@ extension CuratedStdlibCatalog {
             "BitSet", "commutative under intersection", "a.intersection(b) == b.intersection(a)",
             "let a = BitSet(randArr().map { $0 & 63 }), b = BitSet(randArr().map { $0 & 63 }); "
                 + "return a.intersection(b) == b.intersection(a)",
-            witnesses: "Semilattice", imports: ["BitCollections"]
+            witnesses: "Semilattice", template: "commutativity", imports: ["BitCollections"]
         ),
         law(
             "BitSet", "idempotent under union", "a.union(a) == a",
             "let a = BitSet(randArr().map { $0 & 63 }); return a.union(a) == a",
-            witnesses: "Semilattice", imports: ["BitCollections"]
+            witnesses: "Semilattice", template: "binary-idempotence", imports: ["BitCollections"]
         ),
         law(
             "BitSet", "absorption", "a.union(a.intersection(b)) == a",
@@ -112,7 +112,7 @@ extension CuratedStdlibCatalog {
             "TreeDictionary", "mapValues functor identity", "d.mapValues { $0 } == d",
             "var d = TreeDictionary<Int, Int>(); for (key, value) in randDict() { d[key] = value }; "
                 + "return d.mapValues { $0 } == d",
-            imports: ["HashTreeCollections"]
+            template: "functor-identity", imports: ["HashTreeCollections"]
         )
     ]
 

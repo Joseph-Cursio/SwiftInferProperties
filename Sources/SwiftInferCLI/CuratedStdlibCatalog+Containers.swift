@@ -9,12 +9,21 @@ extension CuratedStdlibCatalog {
     // Optional — the functor laws (identity + composition) and the monad
     // right-identity. Universally true; `Int?` is Equatable so `--verify` runs
     // them directly. None witnesses a kit ALGEBRAIC protocol (functor/monad
-    // laws aren't Semigroup/Monoid/…), so all tag none — and none anchors
-    // (no `functor` template exists), so all are `.reference`.
+    // laws aren't Semigroup/Monoid/…), so all tag none.
+    //
+    // The identity law now ANCHORS — `functor-identity` shipped 2026-08-01 and
+    // this comment used to say "no `functor` template exists". Composition does
+    // not, and the near-miss is worth naming: `composition` is a DIFFERENT law
+    // (two sequential mutating additive-monoid actions equal one combined call),
+    // so tagging it here would attach a proven analog to an unrelated candidate.
+    // Functor composition needs two GENERATED FUNCTIONS, which is a generator
+    // capability rather than a template shape — see `FunctorIdentityTemplate`'s
+    // "IDENTITY IS THE WEAKER HALF" caveat.
     static let optionalLaws: [CuratedEntry] = [
         law(
             "Optional", "functor identity", "o.map { $0 } == o",
-            "let o = randOpt(); return o.map { $0 } == o"
+            "let o = randOpt(); return o.map { $0 } == o",
+            template: "functor-identity"
         ),
         law(
             "Optional", "functor composition",
@@ -33,7 +42,8 @@ extension CuratedStdlibCatalog {
     static let dictionaryLaws: [CuratedEntry] = [
         law(
             "Dictionary", "mapValues functor identity", "d.mapValues { $0 } == d",
-            "let d = randDict(); return d.mapValues { $0 } == d"
+            "let d = randDict(); return d.mapValues { $0 } == d",
+            template: "functor-identity"
         ),
         law(
             "Dictionary", "mapValues functor composition",
@@ -45,12 +55,14 @@ extension CuratedStdlibCatalog {
             "Dictionary", "idempotent under filter",
             "d.filter(p).filter(p) == d.filter(p)",
             "let d = randDict(); "
-                + "return d.filter { $0.value > 0 }.filter { $0.value > 0 } == d.filter { $0.value > 0 }"
+                + "return d.filter { $0.value > 0 }.filter { $0.value > 0 } == d.filter { $0.value > 0 }",
+            template: "idempotence"
         ),
         law(
             "Dictionary", "merge-with-self identity (keep first)",
             "d.merging(d) { a, _ in a } == d",
-            "let d = randDict(); return d.merging(d, uniquingKeysWith: { a, _ in a }) == d"
+            "let d = randDict(); return d.merging(d, uniquingKeysWith: { a, _ in a }) == d",
+            template: "binary-idempotence"
         )
     ]
 
@@ -58,16 +70,24 @@ extension CuratedStdlibCatalog {
     // Not a stdlib type; these document the contract a user's own `Stack` owes,
     // verified against the canonical Array realization so the stdlib anchor has a
     // ground truth to match a discovered `push`/`pop` pair against.
+    //
+    // That last clause was ASPIRATIONAL until 2026-08-01: the rows carried no
+    // `template`, so `StdlibAnchor` — which keys on `entry.template ==
+    // candidate.templateName` — could never match the `push`/`pop` pair they
+    // exist to anchor. `ended-access-round-trip` is the template that names
+    // them, and it shipped without these rows being tagged.
     static let stackLaws: [CuratedEntry] = [
         law(
             "Stack", "LIFO via append/removeLast", "push x then pop ⇒ x, and the stack is restored",
             "let a = randArr(); var s = a; let x = randInt(); "
-                + "s.append(x); let top = s.removeLast(); return top == x && s == a"
+                + "s.append(x); let top = s.removeLast(); return top == x && s == a",
+            template: "ended-access-round-trip"
         ),
         law(
             "Stack", "LIFO via append/removeLast", "the last pushed is the first popped",
             "var s = randArr(); let x = randInt(), y = randInt(); s.append(x); s.append(y); "
-                + "return s.removeLast() == y && s.removeLast() == x"
+                + "return s.removeLast() == y && s.removeLast() == x",
+            template: "ended-access-round-trip"
         )
     ]
 
@@ -78,12 +98,14 @@ extension CuratedStdlibCatalog {
         law(
             "Queue", "FIFO via append/removeFirst", "enqueue adds at the back; the front dequeues first",
             "let a = randArr(); var q = a; let x = randInt(); q.append(x); "
-                + "let front = q.removeFirst(); return front == (a.isEmpty ? x : a.first!)"
+                + "let front = q.removeFirst(); return front == (a.isEmpty ? x : a.first!)",
+            template: "ended-access-round-trip"
         ),
         law(
             "Queue", "FIFO via append/removeFirst", "the first enqueued is the first dequeued",
             "var q = [Int](); let x = randInt(), y = randInt(); q.append(x); q.append(y); "
-                + "return q.removeFirst() == x && q.removeFirst() == y"
+                + "return q.removeFirst() == x && q.removeFirst() == y",
+            template: "ended-access-round-trip"
         )
     ]
 

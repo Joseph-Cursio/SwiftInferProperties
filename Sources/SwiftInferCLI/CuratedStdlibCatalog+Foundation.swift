@@ -17,7 +17,8 @@ extension CuratedStdlibCatalog {
             "Data", "count is additive over append", "append(y) grows count by y.count",
             "let xbytes = randArr().map { UInt8($0 & 255) }, ybytes = randArr().map { UInt8($0 & 255) }; "
                 + "var d = Data(xbytes); d.append(contentsOf: ybytes); "
-                + "return d.count == xbytes.count + ybytes.count"
+                + "return d.count == xbytes.count + ybytes.count",
+            template: "homomorphism"
         ),
         law(
             "IndexSet", "commutative under union", "a.union(b) == b.union(a)",
@@ -28,7 +29,7 @@ extension CuratedStdlibCatalog {
         law(
             "IndexSet", "idempotent under union", "a.union(a) == a",
             "let a = IndexSet(randArr().map { abs($0) }); return a.union(a) == a",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "binary-idempotence"
         )
     ]
 }

@@ -32,7 +32,7 @@ extension CuratedStdlibCatalog {
         law(
             "Complex", "additive identity", "a + .zero == a",
             "let a = Complex(randDouble(), randDouble()); return a + .zero == a",
-            imports: ["ComplexModule"]
+            template: "identity-element", imports: ["ComplexModule"]
         ),
         law(
             "Complex", "conjugate is an involution", "z.conjugate.conjugate == z",

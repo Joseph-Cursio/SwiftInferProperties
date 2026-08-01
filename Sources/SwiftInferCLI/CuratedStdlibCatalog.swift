@@ -147,17 +147,17 @@ public enum CuratedStdlibCatalog {
         law(
             "Int", "additive identity", "a + 0 == a",
             "let a = randInt(); return a + 0 == a",
-            witnesses: "CommutativeMonoid"
+            witnesses: "CommutativeMonoid", template: "identity-element"
         ),
         law(
             "Int", "semilattice under max", "max(a, b) == max(b, a)",
             "let a = randInt(), b = randInt(); return max(a, b) == max(b, a)",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "commutativity"
         ),
         law(
             "Int", "semilattice under max", "max(max(a, b), c) == max(a, max(b, c))",
             "let a = randInt(), b = randInt(), c = randInt(); return max(max(a, b), c) == max(a, max(b, c))",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "associativity"
         ),
         law(
             "Int", "idempotent under max", "max(a, a) == a",
@@ -166,7 +166,8 @@ public enum CuratedStdlibCatalog {
         ),
         law(
             "Int", "idempotent unary function", "abs(abs(a)) == abs(a)",
-            "let a = randInt(); return abs(abs(a)) == abs(a)"
+            "let a = randInt(); return abs(abs(a)) == abs(a)",
+            template: "idempotence"
         ),
         law(
             "Int", "abs is multiplicative (a homomorphism under ×)",
@@ -189,19 +190,23 @@ public enum CuratedStdlibCatalog {
         law(
             "Double", "commutative under + (finite inputs)", "a + b == b + a",
             "let a = randDouble(), b = randDouble(); return a + b == b + a",
+            template: "commutativity",
             note: "Finite inputs only. NOT a Monoid — `+` is not associative (see caveats)."
         ),
         law(
             "Double", "commutative under * (finite inputs)", "a * b == b * a",
-            "let a = randDouble(), b = randDouble(); return a * b == b * a"
+            "let a = randDouble(), b = randDouble(); return a * b == b * a",
+            template: "commutativity"
         ),
         law(
             "Double", "additive identity (finite inputs)", "a + 0.0 == a",
-            "let a = randDouble(); return a + 0.0 == a"
+            "let a = randDouble(); return a + 0.0 == a",
+            template: "identity-element"
         ),
         law(
             "Double", "multiplicative identity (finite inputs)", "a * 1.0 == a",
-            "let a = randDouble(); return a * 1.0 == a"
+            "let a = randDouble(); return a * 1.0 == a",
+            template: "identity-element"
         )
     ]
 
@@ -210,12 +215,12 @@ public enum CuratedStdlibCatalog {
         law(
             "Bool", "semilattice under &&", "(a && b) == (b && a)",
             "let a = randBool(), b = randBool(); return (a && b) == (b && a)",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "commutativity"
         ),
         law(
             "Bool", "semilattice under ||", "((a || b) || c) == (a || (b || c))",
             "let a = randBool(), b = randBool(), c = randBool(); return ((a || b) || c) == (a || (b || c))",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "associativity"
         ),
         law(
             "Bool", "idempotent under &&", "(a && a) == a",
@@ -235,11 +240,12 @@ public enum CuratedStdlibCatalog {
         law(
             "String", "concatenation identity", "a + \"\" == a",
             "let a = randStr(); return a + \"\" == a",
-            witnesses: "Monoid"
+            witnesses: "Monoid", template: "identity-element"
         ),
         law(
             "String", "idempotent under uppercasing", "s.uppercased().uppercased() == s.uppercased()",
-            "let s = randStr(); return s.uppercased().uppercased() == s.uppercased()"
+            "let s = randStr(); return s.uppercased().uppercased() == s.uppercased()",
+            template: "idempotence"
         ),
         law(
             "String", "reverse is an involution",
@@ -258,7 +264,8 @@ public enum CuratedStdlibCatalog {
         ),
         law(
             "Array", "idempotent under sort", "a.sorted().sorted() == a.sorted()",
-            "let a = randArr(); return a.sorted().sorted() == a.sorted()"
+            "let a = randArr(); return a.sorted().sorted() == a.sorted()",
+            template: "idempotence"
         ),
         law(
             "Array", "monoid under + (NOT commutative)", "(a + b) + c == a + (b + c)",
@@ -283,7 +290,7 @@ public enum CuratedStdlibCatalog {
         law(
             "Set", "semilattice under union", "a.union(b).union(c) == a.union(b.union(c))",
             "let a = randSet(), b = randSet(), c = randSet(); return a.union(b).union(c) == a.union(b.union(c))",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "associativity"
         ),
         law(
             "Set", "idempotent under union", "a.union(a) == a",
@@ -293,7 +300,7 @@ public enum CuratedStdlibCatalog {
         law(
             "Set", "semilattice under intersection", "a.intersection(b) == b.intersection(a)",
             "let a = randSet(), b = randSet(); return a.intersection(b) == b.intersection(a)",
-            witnesses: "Semilattice"
+            witnesses: "Semilattice", template: "commutativity"
         ),
         // Collections/async workplan Phase 1 M4 — stdlib analogs of the
         // kit's SetAlgebra Boolean-algebra completion (SwiftPropertyLaws

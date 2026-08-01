@@ -75,8 +75,10 @@ struct KnownPropertiesTests {
         #expect(role("Set", "a.union(b) == b.union(a)") == .anchor)
         #expect(role("Set", "subtracting is NOT commutative") == .anchor)   // a caveat, but enforced
         // Reference: true + self-verified, but no template names its shape.
-        #expect(role("Optional", "o.map { $0 } == o") == .reference)
-        #expect(role("Int", "abs(abs(a)) == abs(a)") == .reference)
+        // Functor COMPOSITION stays reference after the 2026-08-01 sweep — it needs two
+        // generated functions, which is a generator capability rather than a template.
+        #expect(role("Optional", "o.map(f).map(g) == o.map { g(f($0)) }") == .reference)
+        #expect(role("Set", "a.union(a.intersection(b)) == a") == .reference)
         // The InvolutionTemplate promoted the reverse-involution rows from
         // reference to anchor: they now name a template `discover` emits.
         #expect(role("Array", "a.reversed().reversed() == a") == .anchor)
@@ -90,6 +92,24 @@ struct KnownPropertiesTests {
         // multiplicative form anchors the abs/signum rows.
         #expect(role("Array", "(a + b).count == a.count + b.count") == .anchor)
         #expect(role("Int", "abs(a * b) == abs(a) * abs(b)") == .anchor)
+        // The 2026-08-01 sweep — 34 rows promoted at once, because the tagging had
+        // fallen behind the templates rather than because 34 templates shipped.
+        // `functor-identity` reached the four mapValues/map identity rows:
+        #expect(role("Optional", "o.map { $0 } == o") == .anchor)
+        #expect(role("Dictionary", "d.mapValues { $0 } == d") == .anchor)
+        // `idempotence` reached the unary rows it always named:
+        #expect(role("Int", "abs(abs(a)) == abs(a)") == .anchor)
+        #expect(role("Array", "a.sorted().sorted() == a.sorted()") == .anchor)
+        // `identity-element` reached `f(t, e) == t`:
+        #expect(role("Int", "a + 0 == a") == .anchor)
+        #expect(role("String", "a + \"\" == a") == .anchor)
+        // `ended-access-round-trip` reached the Stack/Queue rows, which say in their
+        // own comment that they exist to anchor a discovered push/pop pair:
+        #expect(role("Stack", "push x then pop ⇒ x, and the stack is restored") == .anchor)
+        #expect(role("Queue", "the first enqueued is the first dequeued") == .anchor)
+        // The regression that motivated the sweep — Array's row was tagged and
+        // Deque's IDENTICAL law was not:
+        #expect(role("Deque", "(a + b).count == a.count + b.count") == .anchor)
     }
 
     @Test("common data types — Optional / Dictionary carry verifiable functor laws")

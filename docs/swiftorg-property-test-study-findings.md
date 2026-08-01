@@ -2567,3 +2567,77 @@ Five templates remain at zero: `diff-disjointness`, `involution`,
 `multiplicative-homomorphism`, `partition`, `selection-subset`. `involution` is known
 *not* to share `homomorphism`'s cause — it already handles a member form — so each
 wants its own diagnosis rather than a batch fix.
+
+## 11. The `[reference]` backlog was over-reported 3x — the tags had fallen behind the templates
+
+§9 called the 49 `[reference]` rows "the standing catalog backlog". That number was
+right when written and wrong by the time it was cited. On 2026-08-01 a re-tag took it
+to **15** (14 laws + 1 caveat), without adding a single template.
+
+**34 rows named a law a shipped template already stated.** The tags had simply never
+been updated.
+
+### 11.1 Why it was invisible
+
+`CuratedEntryRole`'s doc says the role "is DERIVED from `template`, so it cannot drift:
+the day a shape gets a template, its entries stop being reference and start anchoring."
+
+The derivation is real — `law()` computes `role` from `template`. But it guards the
+wrong join. **The role cannot drift from the tag; the tag drifts from the template
+catalog**, and nothing watched that. The mechanism built to prevent drift prevented the
+half that was never going to happen.
+
+The giveaway was sitting in the file the whole time: `Array`'s "count is additive over
+concatenation" carried `template: "homomorphism"`, and `Deque`'s **identical** law
+carried nothing. Two carriers, one law, one tag — which makes it an oversight rather
+than a policy.
+
+There is also no runtime registry to check a tag against. `TemplatePack.allTemplateNames`
+resolves to **10** names (packs are a `--packs` filter, and the set omits `involution`
+and `homomorphism`, both tagged for months); `TemplateName` has **17** cases against ~89
+template files. A test asserting "every tag names a real template" fails on correct tags
+under either oracle. That absence is a large part of why this went unseen.
+
+### 11.2 Cost, in both directions
+
+**Output.** `StdlibAnchor` keys on `entry.template == candidate.templateName`, so an
+untagged row is invisible to `discover`. Measured on a synthetic `Stack` with
+`append`/`removeLast`: **0 "Proven analog" lines before the re-tag, 2 after.** The
+`Stack` and `Queue` rows state in their own comment that they exist "so the stdlib
+anchor has a ground truth to match a discovered `push`/`pop` pair against" — and they
+could not, for want of a tag.
+
+**Planning.** The `.reference` count is the backlog metric. Reporting 49 when the true
+figure was 15 pointed work at rows already covered.
+
+### 11.3 The 14 that stay, and one that must
+
+Three groups. Most are "no template names this shape" — `Set` distributive lattice,
+absorption, relative De Morgan; `TreeSet` value semantics; `OrderedSet` order
+preservation.
+
+Two are **near-misses worth naming**, because both look taggable and are not:
+
+- **Functor composition** (`Optional`, `Dictionary`). A `composition` template exists,
+  and it states a *different* law — two sequential mutating additive-monoid actions
+  equal one combined call. Functor composition needs two **generated functions**, a
+  generator capability rather than a template shape.
+- **The two `Heap` model laws.** `ModelLawTemplate`'s abstraction function is
+  `contains`. `Heap` drains to a sorted **array** — an ordered model — and `Heap` is not
+  a `Sequence`, so `sequence-view-model-law` does not reach it either.
+
+And one row must **never** be tagged: `OrderedSet` "commutative under membership (NOT
+under order)". Tagging it `commutativity` would attach a proven-analog line to a
+commutativity candidate on `OrderedSet`, whose `union` is **not** commutative under
+`==` — it keeps the left operand's order. The row states the coarser membership
+equality only, and the anchor prints the statement without that distinction. A harmful
+tag, not a missing one — and the reason the sweep was done per-row rather than by
+pattern-match.
+
+### 11.4 The guard
+
+`CatalogTemplateTagDriftTests` pins the reference set **explicitly**: every `.reference`
+law must appear on an allowlist carrying the reason no template states it. A new
+untagged law fails; a newly tagged row fails until its allowlist entry is removed. The
+residual-set-by-default behaviour is what allowed 34 rows to accumulate silently.
+
