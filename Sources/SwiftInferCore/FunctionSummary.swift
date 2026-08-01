@@ -267,13 +267,25 @@ public struct BodySignals: Sendable, Equatable {
     /// alphabetically for deterministic output.
     public let reducerOpsWithIdentitySeed: [String]
 
+    /// What a `static func ==` body actually does, when this summary IS one.
+    /// `nil` for every other function — the classification is only computed for
+    /// `==`, so the scan cost is paid once per Equatable conformance rather than
+    /// once per function.
+    ///
+    /// `fixtures/equatable-signal` measured that conformance does not predict
+    /// refutability and the **body shape** does; this is that measurement made
+    /// available to templates.
+    public let equalityBodyShape: EqualityBodyShape?
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
         reducerOpsReferenced: [String] = [],
-        reducerOpsWithIdentitySeed: [String] = []
+        reducerOpsWithIdentitySeed: [String] = [],
+        equalityBodyShape: EqualityBodyShape? = nil
     ) {
+        self.equalityBodyShape = equalityBodyShape
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected
@@ -287,6 +299,7 @@ public struct BodySignals: Sendable, Equatable {
         hasSelfComposition: false,
         nonDeterministicAPIsDetected: [],
         reducerOpsReferenced: [],
-        reducerOpsWithIdentitySeed: []
+        reducerOpsWithIdentitySeed: [],
+        equalityBodyShape: nil
     )
 }

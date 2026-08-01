@@ -393,5 +393,8 @@ extension Signal {
         /// `protocolCoveredProperty` precedent, so `metrics` can still answer
         /// "how many pairs did this veto suppress?".
         case preconditionElidingVariant
+        /// A sequence-view law on a carrier whose `==` already IS that comparison, so it
+        /// restates its own result expression. Penalty not veto — see `EqualityBodyShape`.
+        case tautologicalEqualityBody
     }
 }

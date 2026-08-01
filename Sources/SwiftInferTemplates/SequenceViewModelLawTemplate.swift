@@ -93,15 +93,18 @@ public enum SequenceViewModelLawTemplate {
                     + "that a sequence of elements is enough to construct it, so nothing outside "
                     + "the elements contributes to its identity"
             ),
-            Signal(
-                kind: .exactNameMatch,
-                weight: 20,
-                detail: "Hand-written `==` at \(shape.equals.location.file):"
-                    + "\(shape.equals.location.line). A SYNTHESIZED `==` compares every stored "
-                    + "member and cannot be a projection; a hand-written one can, and a "
-                    + "projection is still an equivalence relation however wrong it is"
-            )
+            bodyShapeSignal(for: shape)
         ]
+        if case .sequenceComparison(let callee) = shape.bodyShape {
+            signals.append(Signal(
+                kind: .tautologicalEqualityBody,
+                weight: -45,
+                detail: "`\(shape.typeName).==` already IS this comparison (\(callee)), so the "
+                    + "law restates its result expression and can only fail on the guards in "
+                    + "front of it. Keep it as a regression guard; do not read a green run as "
+                    + "evidence that equality was checked"
+            ))
+        }
         if shape.declaresCustomHash {
             signals.append(Signal(
                 kind: .algebraicStructureCluster,
@@ -112,6 +115,47 @@ public enum SequenceViewModelLawTemplate {
             ))
         }
         return signals
+    }
+
+    /// The measured refutability predictor, replacing "declares a custom `==`".
+    ///
+    /// `fixtures/equatable-signal`'s conclusion is that conformance does not predict
+    /// refutability and the **body shape** does. Until `EqualityBodyClassifier`
+    /// existed this template used the mere existence of a hand-written `==` as a
+    /// proxy; now it can say which of the three shapes it found.
+    private static func bodyShapeSignal(
+        for shape: SequenceViewModelPairing.SequenceViewModelShape
+    ) -> Signal {
+        let location = "\(shape.equals.location.file):\(shape.equals.location.line)"
+        switch shape.bodyShape {
+        case .storedFieldProjection(let members):
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 20,
+                detail: "`==` at \(location) is a PROJECTION onto "
+                    + "\(members.joined(separator: ", ")) — the shape three real bugs were "
+                    + "found in. A projection stays an equivalence relation however wrong it "
+                    + "is, so the Equatable laws pass and only a model law can see the defect"
+            )
+
+        case .conversionComparison(let via):
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 20,
+                detail: "`==` at \(location) compares through `\(via)(…)`. Everything that "
+                    + "conversion discards is information equality has stopped "
+                    + "distinguishing — confirm that is deliberate before treating a failure "
+                    + "of this law as a bug"
+            )
+
+        case .sequenceComparison, .unclassified:
+            return Signal(
+                kind: .exactNameMatch,
+                weight: 20,
+                detail: "Hand-written `==` at \(location). A SYNTHESIZED `==` compares every "
+                    + "stored member and cannot be a projection; a hand-written one can"
+            )
+        }
     }
 
     static func makeWhySuggested(

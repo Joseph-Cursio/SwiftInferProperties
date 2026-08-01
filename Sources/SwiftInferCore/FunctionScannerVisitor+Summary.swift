@@ -195,7 +195,17 @@ extension FunctionScannerVisitor {
             hasSelfComposition: scanner.foundSelfComposition,
             nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),
             reducerOpsReferenced: scanner.reducerOps.sorted(),
-            reducerOpsWithIdentitySeed: scanner.reducerOpsWithIdentitySeed.sorted()
+            reducerOpsWithIdentitySeed: scanner.reducerOpsWithIdentitySeed.sorted(),
+            // Only for `==`. Classifying every body would pay a walk per function
+            // for a signal exactly one template family reads.
+            equalityBodyShape: node.name.text == "=="
+                ? EqualityBodyClassifier.classify(
+                    body: body,
+                    operands: node.signature.parameterClause.parameters.map {
+                        ($0.secondName ?? $0.firstName).text
+                    }
+                )
+                : nil
         )
     }
 }
