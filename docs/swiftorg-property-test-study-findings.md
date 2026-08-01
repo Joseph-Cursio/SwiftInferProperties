@@ -2462,3 +2462,65 @@ Six family fan-outs in `collectModelLawSuggestions` pushed it past its cyclomati
 Split one-helper-per-family rather than shaved: they share nothing but the name "model
 law" — membership keys on a `contains` predicate, sequence-view on conformances, the
 rest on curated verb tables.
+
+## 10. Catalog health census (2026-08-01)
+
+Prompted by finding that `HomomorphismTemplate` — a shipped template with a carefully
+argued doc and a full exclusion list — fires **zero times**. If one template can be
+dead without anyone noticing, the obvious question is how many others are.
+
+Run: `discover --include-possible` over eight corpora (`stdlib/public/core`,
+swift-collections, swift-foundation, swift-nio, swift-syntax, swift-package-manager,
+SwiftProjectLint, this repo) — roughly 55,000 scanned functions — counting rows per
+template against the 39 declared `templateName`s.
+
+### The distribution
+
+| rows | templates |
+|---:|---|
+| **0** | `diff-disjointness`, `homomorphism`, `involution`, `multiplicative-homomorphism`, `partition`, `selection-subset` |
+| 1–2 | `composition`, `caseiterable-case-coverage`, `caseiterable-key-injectivity`, `override-precedence`, `invariant-preservation`, `bulk-incremental-agreement` |
+| 3–23 | `comparator` (3) … `set-relation-model-law` / `binary-idempotence` (23) |
+| 48–1,598 | `commutativity` (48) … `idempotence` (**1,598**) |
+
+**6 of 39 templates (15%) never fire. 12 of 39 (31%) produce two rows or fewer.**
+
+And the head is heavy: `idempotence` + `predicate` + `round-trip` = **2,724 of 4,102
+rows, 66% of all output**. That is the quantitative form of the observation that the
+tool "says the generic thing when it has nothing specific to say".
+
+### Zero is indistinguishable from conservative, which is why this went unnoticed
+
+A dead template and a correctly-silent one produce identical output. The catalog's
+whole posture is high precision / low recall, so silence is the expected state and
+nobody investigates it. `homomorphism` has been reaching nothing since it was written.
+
+**This is the §7's four-kinds-of-silence problem applied to our own catalog.** The
+study built that taxonomy for laws the tool misses in a *corpus*; the same blindness
+applies to templates that miss *everything*.
+
+### One cause is diagnosed; the other five are not the same story
+
+`HomomorphismTemplate`'s gate is
+`summary.parameters.count == 1 && isArrayShaped(param.typeText)` — a **free function**
+`[T] -> Int`. Nobody writes `func count(_ xs: [T]) -> Int` in Swift; they write
+`var count: Int`. The template was built for a shape the language does not use.
+
+The member form has population: `Array`, `BitArray`, `RigidArray`, `IndexPath`,
+`SyntaxCollection`, `BigString.UnicodeScalarView` — with `String` and `BigString`
+excluded on the template's own existing reasoning (grapheme count is not additive
+across a combining-character boundary).
+
+**`InvolutionTemplate` does NOT share that cause** — it already handles a member form
+(`containingTypeName` at line 104). So the six zeros are not one bug repeated, and
+each needs its own diagnosis before anyone "fixes" them as a batch.
+
+### What this suggests for process
+
+A **catalog health census belongs in CI**, or at least in the road-test routine. It
+costs one `discover` run per corpus and answers a question no existing mode does:
+`metrics` aggregates *decisions* about surfaced rows, and `--stats-only` reports one
+corpus. Neither can see a template that reaches nothing everywhere.
+
+The census also reframes "add a template" as a decision with an ongoing cost: 15% of
+what has been added so far is inert, and the inertness was invisible.
