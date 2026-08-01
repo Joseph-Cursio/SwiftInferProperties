@@ -17,7 +17,7 @@ extension CuratedStdlibCatalog {
             "Algorithms.chunks", "chunk then flatten is the identity",
             "Array(a.chunks(ofCount: 3).joined()) == a",
             "let a = randArr(); return Array(a.chunks(ofCount: 3).joined()) == a",
-            imports: ["Algorithms"]
+            template: "round-trip", imports: ["Algorithms"]
         ),
         law(
             "Algorithms.min", "min(count:) agrees with the sorted prefix",
