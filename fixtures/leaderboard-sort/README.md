@@ -84,6 +84,52 @@ That is the closest thing to a frozen key here, and the honest caveat is that it
 **2 of 11 fully found, 2 partial.** Recall on the laws this code actually owes is roughly
 **20%**, against a suggestion count of 13.
 
+### A third category the first version of this list missed: covered elsewhere
+
+`PlayerScore` is `Equatable` and `Hashable`, which **does** imply laws — reflexivity,
+symmetry, transitivity, and `a == b ⟹ a.hashValue == b.hashValue`. `discover` proposes none
+of them, and that is correct rather than a miss: `ProtocolCoverageMap` maps `Equatable` to
+`{equatableReflexive, equatableSymmetric, equatableTransitive}` and `Hashable` to those plus
+`hashableConsistency`, and vetoes any template that would restate a law PropertyLawKit
+already runs.
+
+So the scorecard needs three buckets, not two — **found**, **missed**, and **covered
+elsewhere**. Omitting the third made the tool look blind to laws it is deliberately, and
+correctly, silent about.
+
+## 3a. …and those laws are the weak ones
+
+The interesting part is what happens once they are covered. `EquatableLawsTests` runs all
+four against `ProjectedPlayerScore` — the projecting-`==` type — and **all four pass**:
+
+| law | verdict |
+|---|---|
+| reflexive | passes |
+| symmetric | passes |
+| transitive | passes |
+| **hash consistency** | **REFUTED** |
+
+A projection is a perfectly good equivalence relation. That is the trap: the three Equatable
+laws are satisfied *because* it is one, and they cannot see what it forgot. This is
+`fixtures/equatable-signal`'s finding — conformance does not predict refutability, the shape
+of the `==` body does; three real swift-collections bugs pass 4 of 4 — reproduced in one
+file.
+
+**Hash consistency is the law that catches it.** Swift synthesizes `hash(into:)` from *all*
+stored properties even when `==` is hand-written, so a projecting `==` violates
+`a == b ⟹ a.hashValue == b.hashValue` the moment the ignored field differs. And the
+consequence is not theoretical:
+
+```swift
+let set: Set<ProjectedPlayerScore> = [ann, bob]   // ann == bob
+#expect(set.count == 2)                            // a Set holding two equal elements
+```
+
+Which sharpens the standing advice. It was *"propose the model law, not the Equatable laws,
+for projections."* The `Hashable` half is not in that indictment — **it is the one
+conformance-derived law that does catch a projection bug**, and it is free wherever the type
+is `Hashable`. The model law is still needed for the `Equatable`-only case.
+
 The diagnosis is not one gap but three, and only one of them is "add a template": five rows
 are **not templated**, three are **not paired** (the shape needs two members considered
 together, which is what pairings are for and what `homomorphism` needed to wake up), and one
