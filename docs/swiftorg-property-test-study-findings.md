@@ -6,10 +6,12 @@ one is not a measurement (scope §3).
 
 **Status: Q1 (§1.1), Q2 (§1.15) and Q5 (§1.5) answered on `check-battery`; Q2 + Q5 also
 answered on `loops` (§1.25, exhaustive not sampled). **Q3 answered (§1.4) — 75% recall on
-denominator A, carried entirely by one signal.** Q4 has its prerequisite **done** (§1.6),
-its target + population decided (§1.6, scope §Q4/§8), and a **first artifact** in the fork
-(§4.3a) — but not yet its stated deliverable, a before/after on generator coverage. **§5
-argues the deliverable itself may be the wrong one.**
+denominator A, carried entirely by one signal.** **Q4 answered (§6)** on the weak-generator
+population: its stated deliverable — a before/after on generator coverage — is measured at
+**2/8 → 8/8 mutants killed, gained 6 lost 0**, with a gated artifact at
+`fixtures/integer-division-generator/`. §5 argued that deliverable might be the wrong one;
+§6.7 records that it **lost this round** — on this file the tool's contribution was the
+requantification, not the law completion.
 
 ---
 
@@ -1412,3 +1414,246 @@ file anyone read.
 **Not yet tested.** Whether that reframe survives contact with the
 weak-generator population — `IntegerDivision.swift`'s `Int64` arm is where it
 gets its first real trial, and it is still the recommended next move.
+
+> **TESTED — see §6. The reframe LOST on this file, and the deliverable it
+> questions won.** Q4's stated deliverable is now measured (2/8 → 8/8 mutants
+> killed, gained 6 lost 0, artifact in `fixtures/integer-division-generator/`).
+> The location-marking half found nothing to add here: the law as written is
+> already complete, and `discover` proposes nothing on the marked API at all.
+
+---
+
+## 6. Q4 ANSWERED on the weak-generator population (2026-07-31)
+
+`swift` @ `408632e5`. The trial §5 asked for, on the file scope §Q4 named.
+Both halves were run: the **transformation** half (replace the generator) and
+the **location-marking** half (does the catalogue complete the law set at the
+place the human marked). They came out opposite ways, and the one §5 bet
+against is the one that paid.
+
+### 6.1 The transformation half — measured, and it is a strict gain
+
+Artifact: `fixtures/integer-division-generator/` — a gated local fixture per
+scope §8, ~0.3s, no network dependencies. Full table in its README; the
+headline:
+
+| | original | converted |
+|---|---:|---:|
+| edge classes reached (of 17) | **0** | **17** |
+| mutant dividers killed (of 8) | **2** | **8** |
+| sign quadrants covered | 4 | 4 |
+| law failures against the real stdlib | 0 | 0 |
+
+Gained 6, lost 0, at the same 65,536 trials and with the law **verbatim**.
+
+**Score refutability, not coverage — so the 8/8 is the number, not the 17/17.**
+A coverage table only says boundary values are present now. Both domains were
+therefore run against eight mutant dividers, six boundary and **two interior
+controls**. The controls are the point: spending a quarter of the trial budget
+on edges cost no interior detection, which a coverage table cannot show and a
+6–0 table without controls would have quietly assumed.
+
+*Limitation, on the record:* the mutants are hand-written, so this scores the
+domain against **plausible** defects rather than the observed defect
+distribution of real dividers. Each carries a `standsFor` naming its defect
+class so a reader can judge that independently.
+
+**No defect found.** The standard library answers correctly on all 65,536
+converted trials, boundary cases included. This is a finding about the test's
+reach, not about `dividingFullWidth`.
+
+### 6.2 The corpus's generator is stratified for sign and blind to magnitude
+
+"Weak generator" invites the wrong picture, and this file corrects it. The
+original's `bhi << 56 | random(0 ..< 2^56)` is **stratification by top byte** —
+it covers the four sign quadrants at exactly 16,384 trials each, which uniform
+sampling would only approximate. Someone thought about it.
+
+What it structurally cannot produce is a small magnitude:
+
+| over the 65,536 trials | |
+|---|---|
+| distinct divisors | **256** |
+| smallest \|divisor\| | **2^53.3** |
+| smallest \|remainder\| | **2^43.4** |
+| divisors below 2^50 | **0 of 256** |
+
+The bottom 53 binades are not under-sampled, they are **unreachable** — a
+divisor below 2^50 needs the top byte in `{0, -1}` *and* 56 random bits to land
+low, ~2^-40 per draw against 256 draws.
+
+**This sharpens Q5's headline rather than repeating it.** §1.5 measured 85% of
+corpus ranges as "interior", meaning a hand-picked window like `0..<100`. This
+is a different and worse mechanism reaching the same place: the window here is
+not hand-picked at all, it falls out of a stratification scheme that is *good*
+at the axis it was designed for. A reviewer scanning for `random(in: 0..<100)`
+would pass straight over it.
+
+### 6.3 The location-marking half — the catalogue adds nothing here
+
+§5's claim is that a property-style test is a high-precision signal that a
+property exists *at that location*, and the tool's job is to complete the set.
+Applied here, both steps fail.
+
+**The law set is already complete.** The `Int8` arm checks three things
+(`|r| < |b|`, `r`'s sign matches the dividend's, `a == b*q + r`); the `Int64`
+arm checks quotient and remainder against the constructed values by equality,
+which **entails** all three, because the `r` being compared against was
+constructed to satisfy them. There is no `sort_integers`-shaped missing half.
+
+**And `discover` proposes nothing at all on the marked API.** Run over
+`stdlib/public/core/Integers.swift`: 23 suggestions, all `Possible` (≤35), on
+`min`/`max`/`magnitude`/`signum`/`abs`/`distance`/`advanced` — and **zero**
+citing `dividingFullWidth` or `multipliedFullWidth`. Wiring `--test-dir` to the
+corpus test changes nothing: 23 → 23.
+
+### 6.4 The reach gap behind it, isolated — and two wrong hypotheses first
+
+The pair is real and is exactly the round-trip family: for a fixed divisor,
+`quotient ↦ multipliedFullWidth(by:)` and `dividend ↦ dividingFullWidth(_:)`
+are inverse. Why does nothing fire?
+
+**Hypothesis 1, tuples: WRONG.** Free functions with tuple parameters and
+returns pair fine — `(Widget) -> (high: Int64, low: UInt64)` against
+`((high: Int64, low: UInt64)) -> Widget` fires both `round-trip` and
+`inverse-pair`, labelled or bare, and identically to the same shape written
+with a named struct.
+
+**Hypothesis 2, the method form or the `by:` label: WRONG.** A method
+`mul(by:) -> (high: Widget, low: UInt64)` pairs with a method
+`div(_: (high: Widget, low: UInt64)) -> Widget` at both templates.
+
+**The isolated cause is the *2-tuple return*.** In one controlled file, three
+`mul` variants paired with every `div` variant returning `Widget` — and the one
+returning `(quotient: Widget, remainder: Widget)` paired with **nothing**. That
+is `dividingFullWidth`'s real signature.
+
+So the round-trip here is not `g(f(x)) == x`. It is
+
+```
+divide(multiply(by: q)) == (quotient: q, remainder: 0)
+```
+
+— a **projected** round-trip against a product-typed return, where one
+component is the round-trip and the other is a constant.
+
+**Which is the same shape as the `Character` case (§1.2), with the opposite
+verdict.** There the projection was lossy — `String(Character(s)) == s` is
+false under normalisation — so the honest verdict was *"a gap, and naively
+closing it would ship a false law."* Here both components are exactly true. A
+projected-round-trip template would ship a **false** law on `Character` and a
+**true** one on `dividingFullWidth`; the discriminator is whether the discarded
+component is constrained, not whether a projection is involved. Recorded as a
+gap-with-witness, deliberately not built — it needs that discriminator first.
+
+**And the catalogue's law would have been the case the human never generates.**
+`divide(multiply(q)) == (q, 0)` *is* the `remainder == 0` slice — measured at
+**zero** trials in the original domain (§6.1). The two halves converge from
+opposite directions and neither reaches it: the human quantified over a domain
+that excludes exact division, and the tool cannot state the law that is exactly
+that case.
+
+### 6.5 TestLifter sees the tests and anchors none of them
+
+All 6 arms are recognised (§1.6's work), and all 6 slice to `assertion: nil`.
+Isolated by controlled probe: the `Slicer` unwraps **one** level of trailing
+loop, not two, and every arm is `for bhi { for qhi { … } }`.
+
+That limit is **documented and deliberate** (`Slicer.swift:78`): *"applied once,
+not recursively: a doubly-nested loop is a table-driven test rather than a
+quantifier."* IntegerDivision is a counter-witness — a doubly-nested loop that
+is a genuine two-variable quantifier.
+
+**And relaxing it is not worth it, which is why this is recorded rather than
+built.** Measured over the whole corpus (4,171 recognised / 2,677 anchored, both
+reproducing §1.6 exactly):
+
+| of the 1,494 unanchored | |
+|---|---:|
+| blocked by the nested-loop limit | **25** |
+| …of which a second unwrap would reach an assertion | **20** |
+
+**20 of 1,494 — 1.3%.** The documented decision is right at corpus scale and
+this file is in a 20-test minority. Chasing it would have been tuning the wrong
+lever, which is the *"refuter that fires first hides every refuter behind it"*
+rule one level up: the first blocker found was real, deliberate, and almost
+worthless.
+
+### 6.6 Where the unanchored population actually goes — and two more of my own errors
+
+Classified syntactically by the terminal statement, since that is what the
+slicer anchors on:
+
+| bucket | count |
+|---|---:|
+| plain non-assert call is terminal | **698** |
+| trailing `do`/`catch` | 205 |
+| trailing closure call | 138 |
+| trailing expression, other | 130 |
+| trailing loop (unwrapped once, still no anchor) | 101 |
+| trailing statement / declaration, other | 89 |
+| unmapped `expect*` is terminal | ~90 |
+| **mapped assertion is terminal yet unanchored** | **0** |
+
+The last row is the important one: **there is no slicer defect here.** Every
+unanchored test is unanchored because its terminal statement is not a mapped
+assertion.
+
+**Error 1 — a 315-case bucket that did not exist.** A first pass classified by
+*text* (`contains("expectEqual(")` on the last statement) and produced "315
+tests where a mapped assert is last yet no anchor", which reads as a defect.
+Dumping the actual samples showed the assertion sits inside a trailing
+`autoreleasepool { }` / `withAUMP { }` closure or a `do`/`catch`. Fifth instance
+of §0.4's classifier hazard in this study, this one mine, and caught only by
+looking at the rows instead of the totals.
+
+**Error 2 — a "biggest lever" worth exactly zero.** 413 of the 698 terminal
+plain calls are `_blackHole`, StdlibUnittest's optimizer barrier. That looked
+like a one-line fix worth 28% of the unanchored population: skip trailing
+semantic no-ops before anchoring. Measured before recommending: **+0**. Two
+reasons, and both matter more than the fix would have. `Slicer` already takes
+the *last assertion in source order* rather than requiring the last statement to
+be one, so a trailing no-op never blocked anything. And **399 of the 445 bodies
+with a trailing no-op are preceded by `expectCrashLater()`** — they are trap
+tests, with no equality assertion by design. That population is correctly
+unanchorable: its property is "this input is outside the domain", which is the
+precondition half, not the equality half.
+
+Three hypotheses of mine falsified in one session (tuples, the nested-loop
+limit as *the* blocker, the no-op lever), all in the direction of making a
+finding sound larger or more fixable than it was. Same direction as the three
+§1.2 records.
+
+### 6.7 What this does to §5
+
+**§5's reframe lost this round, and the deliverable it questioned won.** Stated
+plainly because §5 was written with the opposite expectation:
+
+| half | `sort_integers` (§4/§5) | `IntegerDivision` `Int64` (here) |
+|---|---|---|
+| tool completes the law set | **won** — named the missing permutation law | **nothing to add** — the law is already complete |
+| tool requantifies the domain | impossible (exhaustive; no anchor) | **won** — 2/8 → 8/8 |
+
+So the two files are each other's mirror, and the honest conclusion is that
+**neither half generalises yet.** §5's *"the transformation half was measured
+declined for one population and structurally impossible for the site we tried"*
+is now false as a general claim: it was measured a strict gain on the population
+scope §Q4 actually recommended. The division of labour §5 proposes — humans mark
+where properties live, the tool completes the set — is not wrong so much as
+**one of two mechanisms**, and this file is the witness that the other one is
+real.
+
+What survives §5 intact is the weaker and probably more durable form: a
+property-style test is a high-precision signal that a property exists at that
+location. Both files agree on that. What they disagree about is what the tool
+then contributes there — and on this evidence it depends on whether the human
+wrote the law completely, which is not knowable from the location alone.
+
+### 6.8 Still open
+
+- **The projected-round-trip discriminator** (§6.4). The witness exists on both
+  sides now — one true (`dividingFullWidth`), one false (`Character`). Building
+  it needs the rule for when the discarded component is constrained.
+- Unchanged from the last session: whether `checkComparable` shares the
+  `Equatable` blindness, and whether 88% `predicate` volume matters now that it
+  sorts last.
