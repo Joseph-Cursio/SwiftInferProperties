@@ -2629,6 +2629,10 @@ swiftprojectlint . --format text --categories testability   # the extract-this-k
 
 # swift-infer runs STRAIGHT against the .xcodeproj tree — no SwiftPM shim (C1 / --sources, shipped).
 swift-infer discover --sources MacCloud_client_iOS --seeds seeds.json --include-possible
+
+# The INTERACTION surface — the one built for view models. Added 2026-08-01; see "The second
+# surface" below for why it was missing for eight cold walks and what it finds.
+swift-infer discover-interaction --sources MacCloud_client_iOS --include-possible
 ```
 
 **This protocol now runs exactly as written — it used to be aspirational.** Three workflow cleanups
@@ -2648,6 +2652,91 @@ landed after walk 9 made it real, each one a friction every cold reader hit:
   law is over an impure kernel, so of course they miss. The message now reads *"kept 0 … EXPECTED
   before you extract … extract those kernels and re-run,"* and keeps the "the tools disagree" reading
   only for the genuine post-extraction case.
+
+### Re-walk record — 2026-08-01
+
+The first walk of the protocol *as written*, including the new interaction step. Every number
+carries its SHA, because two of the three tools moved since the scorecard above was measured and a
+count without a SHA cannot be compared to one.
+
+| | |
+|---|---|
+| fixture | `MacCloud_client_iOS` @ **`f3dbb6f`** — materialised read-only with `git archive` into a scratch dir, so the checkout was never moved |
+| SwiftProjectLint | **`6c88715`** |
+| SwiftInferProperties | **`df59ce5`** |
+
+| step | result |
+|---|---|
+| phase 1 — `--format pbt-seeds` | **17 seeds**: 7 extractable-kernel, 6 pure-function, 4 restricted-function |
+| phase 2 — seeded `discover` | **8 suggestions**: 5 determinism, 1 state-machine, 1 predicate, 1 input-totality. `kept 1 of 3 seedable`, plus 1 rescued that no manifest could name |
+| phase 2 — bare `discover` | **3 suggestions** |
+| **interaction step** | **4 findings**, all `MacCloudViewModel`, all `Possible` — **UNSCORED** |
+
+**Row 4a, re-measured: 3 of 8 could ever fail.** The five `determinism` laws are `f(x) == f(x)`,
+which no implementation can be rejected by; `state-machine`, `predicate` and `input-totality` are
+refutable. This is the score that matters and it is the one to watch — not the suggestion count.
+
+**Do not read 17 seeds against the scorecard's 9, or 8 suggestions against its 7.** Those were
+measured at earlier tool SHAs. The comparison is only meaningful re-run at a pinned pair, which is
+why this table carries all three.
+
+**A friction the walk found, and it is the same shape as C1.** The protocol block says
+`swiftprojectlint . --format pbt-seeds`. The built binary is **`CLI`** — there is no
+`swiftprojectlint` on `PATH` or in `.build/release/`. Line 817 of this document uses `CLI .`, so
+the document contradicts itself, and a cold reader following the top block gets
+`command not found` before the loop starts. This is precisely the failure C1 named — *"the
+`--sources` in this very protocol named a flag that did not exist"* — recurring on the binary
+name. **A protocol that has not been executed end to end drifts from the tools it describes**,
+and the only fix that holds is walking it rather than reading it.
+
+### The second surface — `discover-interaction` (added 2026-08-01)
+
+**This protocol ran one of swift-infer's two surfaces for its entire history.** The tool has an
+algebraic surface (`discover`) and an interaction surface (`discover-interaction`: idempotence,
+cardinality, biconditional, referential-integrity, conservation over reducer and SwiftUI MVVM
+carriers). Against a SwiftUI app, the second one is the one built for the code. Measured on this
+document before the addition: **2,702 lines, 0 occurrences of "interaction", 0 of "MVVM", 0 of
+"@Observable", 7 invocations of `swift-infer discover` and none of anything else.**
+
+**It is NOT a third fixture state, and must not be read as one.** The phases below are states of
+the *fixture* — untouched, then after the reader performs the extraction. This is a second *axis*:
+a different surface, run against the **untouched** fixture, because view-model state invariants
+need no extraction to be statable. Phase 1 and this step run on the same tree.
+
+**Why it was missing is the uncomfortable part, and it is this document's own doing.** C1 (above)
+diagnosed the `Sources/<target>/` wall correctly — "the eight cold walks each needed a hand-built
+SwiftPM shim" — and shipped `--sources` **for `discover` only**. The identical wall stood in front
+of `discover-interaction`, `discover-reducers`, `scaffold`, `verify-value-semantics` and
+`verify-interaction`. It was invisible because this protocol never ran them. C1 fixed the
+instance under test, not the class; the class was fixed 2026-08-01 (see `CLAUDE.md`'s
+`--sources` row).
+
+**What it finds on the pristine fixture** (`f3dbb6f`, materialised read-only via `git archive` so
+the working tree is untouched) — 4 suggestions, all on `MacCloudViewModel`, all `Possible`:
+
+| family | subject |
+|---|---|
+| cardinality | at most one presentation route active at a time — the mutually-exclusive `showingCreateFolderSheet` / `showingLoginSheet` / `showingUploadSheet` |
+| referential-integrity | `selectedFiles` should reference an element of `files`, or be empty |
+| idempotence | `selectAllFiles` applied twice equals once |
+| idempotence | `showError` applied twice equals once |
+
+**All four are recorded UNSCORED, per the standing rule that a tool may not grade its own
+homework.** The answer key froze four property suites — `FileListingPropertyTests`,
+`ChunkPlanPropertyTests`, `ChunkUploadIdempotencyTests`, `FileResponseCodableLawTests` — every one
+of them over a pure kernel or a Codable DTO, and **none over view-model state**. The four subjects
+above do appear in the key's *example-based* tests (`MacCloudViewModelOperationsTests`,
+`MacCloud_client_iOSTests`), which is the distinction that matters: the key asserts specific
+transitions on them, it states no law over them. So these are findings the key missed, not findings
+the key contains, and they stay out of the score until a human rules on them.
+
+**The ceiling this surface hits, stated so it is not rediscovered.** All four sit at `Possible`,
+and on an Xcode project they can never leave it: promotion to `verified` requires measured
+execution, `verify-interaction` synthesizes a harness that does `import <module>`, and an Xcode
+app exposes no importable SwiftPM module. That command deliberately has no `--sources` for exactly
+this reason. Extracting the view model into a SwiftPM target is what makes the measured path
+reachable — which is the same "extract the kernel" move phase 2 already asks for, now with a
+second reason behind it.
 
 **The re-run is two-phase, and the protocol above hides it.** B2 found the gap. A *template* matches a
 *shape*, and the shape a partition law needs — a type with a size, a part size, a count and an
@@ -2677,6 +2766,9 @@ Score against `pbt-road-test-reference`:
 | 6 | a comparator law is proposed for the folders-first sort | **no** — nobody is asked to extract it, B6b | yes |
 | 7 | effect annotations override inference | no | yes |
 | 8 | the law kit is usable on app DTOs (after `nonisolated`) | no | yes, and documented |
+| 9a | **the interaction surface runs against the `.xcodeproj` without a shim** | **yes** — `discover-interaction --sources <dir>`, 2026-08-01. Was **no** for the eight cold walks, and unmeasured because the protocol never ran it | yes |
+| 9b | interaction invariants proposed on the untouched fixture | **4** — 1 cardinality, 1 referential-integrity, 2 idempotence, all on `MacCloudViewModel`, all `Possible`. **UNSCORED** — outside the frozen key (see "The second surface") | — (unscored until a human rules) |
+| 9c | any interaction invariant promoted to `verified` | **no, and not reachable** — promotion needs measured execution; the harness does `import <module>` and an Xcode app has none. Ceiling, not a defect | n/a for an `.xcodeproj` fixture |
 | 9 | **would a reader following the loop reach all 3 bugs?** | **3/3 — MET (walk 9):** all 3 readers reach all 3 (grandchild, empty-file, resume-counter), once B19 stopped the reader clamping the shipped generator. Upper bound: same fixture, eight walks — a second unseen fixture is what would retire the caveat (B8, B20) | **3/3** ✅ |
 
 Row 9 is the only one that really matters. Rows 1–8 are how you get there.
