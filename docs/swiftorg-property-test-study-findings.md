@@ -2524,3 +2524,46 @@ corpus. Neither can see a template that reaches nothing everywhere.
 
 The census also reframes "add a template" as a decision with an ongoing cost: 15% of
 what has been added so far is inert, and the inertness was invisible.
+
+### 10.1 `homomorphism` revived — 0 → 4
+
+The member form ships as `HomomorphismTemplate+MemberForm.swift`, under the **same**
+`templateName: "homomorphism"` — it is the same law family, and the census should show
+one template going 0 → N rather than a sibling appearing beside a dead one.
+
+```
+(a + b).count == a.count + b.count
+```
+
+| carrier | corpus |
+|---|---|
+| `Array` | stdlib |
+| `BitArray`, `RigidArray` | swift-collections |
+| `IndexPath` | swift-foundation |
+
+**The exclusions carry over verbatim and both were confirmed by the repo owner.**
+`String` and `BigString` are out because `count` is grapheme count and `"e" + "◌́"` is
+one grapheme, not two — the free-function doc had already reasoned this and it applies
+unchanged. Set-like carriers are out because `|A ∪ B| <= |A| + |B|`, vetoed twice over
+(a `SetAlgebra` conformance, and `formUnion` never counting as a free join).
+
+**One over-exclusion is pinned as a known cost.** The grapheme test is textual, so
+`BigString.UnicodeScalarView` — whose count *is* additive, because scalars do not
+combine — is caught too. A missed law rather than a false one, which is the direction
+PRD §3.5 asks for. Its test arm says so, and says that the arm going red means someone
+made the rule structural, which would be an improvement rather than a regression.
+
+### 10.2 What the revival says about the census
+
+The fix was two hours of work and the diagnosis was one line of the existing gate. The
+expensive part was **noticing** — and nothing in the toolchain was looking.
+
+That is the argument for running the census periodically rather than once. `metrics`
+aggregates decisions about rows that surfaced; `--stats-only` covers one corpus.
+Neither can see a template that reaches nothing everywhere, and 15% of the catalog was
+in that state.
+
+Five templates remain at zero: `diff-disjointness`, `involution`,
+`multiplicative-homomorphism`, `partition`, `selection-subset`. `involution` is known
+*not* to share `homomorphism`'s cause — it already handles a member form — so each
+wants its own diagnosis rather than a batch fix.
