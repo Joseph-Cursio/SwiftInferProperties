@@ -28,6 +28,66 @@ A function's trip: the linter **seeds** it → `discover` matches a **template**
 resolves a **carrier**, derives a **generator recipe**, composes a **stub**, and runs two
 **passes** → the **outcome** may **promote** the tier to `verified`.
 
+### The 24 `swift-infer` modes, by stage
+
+Abstracts are the shipped `--help` text, condensed. `discover` is the default subcommand.
+Everything touching interaction invariants is the v2.0 reducer/MVVM surface and is listed
+separately because it runs on a different carrier population.
+
+**Find candidates**
+
+| mode | what it does |
+|---|---|
+| `discover` | Scan a target for inferred property candidates. The entry point; everything else consumes its output. |
+| `discover-reducers` | List functions matching the three canonical reducer signatures. Foundation for the interaction surface. |
+| `discover-interaction` | Surface candidate interaction invariants on reducer-shaped functions. Ships at `Possible` pending calibration. |
+| `known-properties` | List (and optionally verify) known algebraic properties on stdlib types — a provable seed of ground truth. |
+
+**Persist and query**
+
+| mode | what it does |
+|---|---|
+| `index` | Build/update the SemanticIndex at `.swiftinfer/index.json`, joining discover output with recorded decisions. |
+| `query` | Query that index — filter by template, type, tier, decision or score; sorted by score descending. |
+| `metrics` | Aggregate `.swiftinfer/decisions.json` into acceptance / rejection / suppression rates. |
+| `metrics-interaction` | The same, per invariant family, over `.swiftinfer/interaction-decisions.json`. |
+
+**Run the law**
+
+| mode | what it does |
+|---|---|
+| `verify` | Compile and run a candidate property test. Opt-in — nothing in `discover`/`drift`/`accept` changes. |
+| `verify-value-semantics` | Verify value-semantics candidates and report confirmed leaks (copy-mutate-compare). Spawns real builds. |
+| `verify-interaction` | Build and run a verifier against a discovered reducer, checking it does not trap under random action sequences. |
+| `prove-then-show` | Verify *every* pick including `Possible` and show what survives: Proven / Disproven / Unverifiable. The test-then-surface inversion of the hide-`Possible` default. |
+| `accept-check` | Re-run verify for each accepted suggestion and report which still hold — regression detection. |
+| `accept-check-interaction` | The interaction analog of `accept-check`. |
+
+**Record a decision**
+
+| mode | what it does |
+|---|---|
+| `accept-interaction` | Record a decision against an interaction-invariant identity. Minimal recorder; the triage UI is separate. |
+| `accept-bridge` | Record a decision against a `BridgeSuggestion` identity — the scripted analog of `--interactive-bridges`. |
+| `drift` | Diff current suggestions against a baseline; warn on new `Strong`-tier candidates. |
+| `drift-interaction` | The same against an interaction baseline, non-fatally. |
+
+**Read and act on what is known**
+
+| mode | what it does |
+|---|---|
+| `report` | One-glance overview of what the tool knows about a project — index + verify evidence + insights. Read-only. |
+| `insights` | Cross-type design suggestions from the index (types sharing a monoid/semigroup shape). Read-only, author-facing. |
+| `docc` | Generate DocC docs for **verified** properties only. Inferred-but-unverified properties are never documented. |
+| `suggest-refactors` | Carrier-aware refactor suggestions from the index. Read-only; never modifies source. |
+| `scaffold` | Emit best-effort `gen()` stubs with `<#...#>` placeholders for types that cannot be fully auto-derived. |
+| `convert-counterexample` | Turn a property-test counterexample into a focused regression test. |
+
+**Three things the table does not say, and they matter.** Only `discover` accepts
+`--seeds`. Only `docc` is gated on *verified* rather than inferred. And the whole
+`verify` column is **opt-in** — no discovery path ever compiles or runs anything, which
+is why `discover` on a hostile corpus is safe.
+
 ---
 
 ## Discovery
@@ -62,10 +122,23 @@ floor will mislead — and it is the [Daikon trap](#daikon-trap) arriving, measu
 
 ### Seed / seed manifest
 `{file, line, symbol}` records emitted by SwiftProjectLint's `--format pbt-seeds`, naming
-functions worth pointing `discover` at. Consumed via `discover --seeds`. Kinds include
-`pure-function`, `extractable-kernel`, `restricted-function`.
+functions worth pointing `discover` at. Kinds include `pure-function`,
+`extractable-kernel`, `restricted-function`.
 
-**A seed is not a suggestion.** 1,657 seeds have produced 21 default-tier picks on this repo.
+**Producer → consumer.** SwiftProjectLint writes them; `swift-infer discover --seeds`
+reads them, and it is the **only** consumer — `scaffold`, `verify`, `index`, `report` and
+`insights` do not accept the flag. That one hop is the whole lint → infer link in the
+five-package toolchain.
+
+**What a seed does to a run.** It *focuses*, it does not extend: discovery still scans the
+entire target, and then the surfaced suggestions are narrowed to functions named in the
+manifest. Two consequences worth knowing — a seeded pure function that **no template
+matched** still earns the generic determinism law `f(x) == f(x)`, synthesized downstream
+of the tier cut; and an empty manifest focuses to zero suggestions rather than to all of
+them. A missing or malformed file is an error, not a silent fallback.
+
+**A seed is not a suggestion.** 1,657 seeds have produced 21 default-tier picks on this
+repo.
 
 ### Template
 A named law shape that discovery can recognize from code — `idempotence`, `commutativity`,

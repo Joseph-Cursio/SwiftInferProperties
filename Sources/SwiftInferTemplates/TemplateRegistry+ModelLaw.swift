@@ -16,6 +16,11 @@ extension TemplateRegistry {
         inheritedTypesByName: [String: Set<String>],
         into collector: inout SuggestionCollector
     ) {
+        for shape in ScaledUnitPairing.candidates(in: summaries) {
+            if let suggestion = ScaledUnitConsistencyTemplate.suggest(for: shape) {
+                collector.record(suggestion, generatorType: shape.typeName)
+            }
+        }
         for shape in BulkIncrementalPairing.candidates(in: summaries, typeDecls: typeDecls) {
             if let suggestion = BulkIncrementalTemplate.suggest(for: shape) {
                 collector.record(suggestion, generatorType: shape.typeName)

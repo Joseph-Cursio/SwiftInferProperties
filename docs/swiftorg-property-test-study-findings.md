@@ -1967,7 +1967,7 @@ post-hoc during Q3). Adjudicated into families, they are not 19 problems:
 | model law, set **operations** | 3 | closed by `ModelLawTemplate` |
 | model law, set **relations** | 2 | **closed here** |
 | absorbing state (exhausted iterator returns nil forever) | 4 | **declined §8.5** |
-| scaled decomposition (`Duration.seconds(d).components`) | 4 | open — 4 rows, one carrier |
+| scaled decomposition (`Duration.seconds(d).components`) | 4 | **shipped §8.8** |
 | randomness (surjectivity, seeded determinism, shuffle-preserves-multiset) | 4 | open — mostly purity-gated |
 | bulk-vs-incremental construction | 1 | **closed §8.6** |
 | selection/membership biconditional | 1 | open |
@@ -2182,7 +2182,7 @@ Seven families, all assessed:
 | model law, set relations | 2 | **shipped** §8 |
 | bulk-vs-incremental | 1 | **shipped** §8.6 |
 | absorbing state | 4 | **declined** §8.5 — kit covers it, then no population |
-| scaled decomposition | 4 | open |
+| scaled decomposition | 4 | **shipped** §8.8 |
 | randomness | 4 | open — purity-gated, a policy question |
 | selection biconditional | 1 | open |
 
@@ -2192,3 +2192,77 @@ attempt meets a guard instead of the `Strideable` defect.
 
 And the four gates earned their keep — they killed two shapes in §7.1 and one
 family here, each before any code was written except a probe.
+
+## 8.8 Scaled-unit consistency (2026-08-01)
+
+Rows 8–11. I predicted this would die on population — *"4 rows, one carrier"* — and
+that prediction was wrong.
+
+### The shape recurs
+
+| corpus | carrier | units |
+|---|---|---|
+| `stdlib/public/core` | `Duration` | seconds, milliseconds, microseconds, nanoseconds |
+| swift-nio | `TimeAmount` | hours … nanoseconds (6) |
+| swift-nio | `ByteCount` | bytes, kilobytes, megabytes, gigabytes |
+
+Three carriers, not one.
+
+### The law was restated to make it statable
+
+The witnesses check `Duration.milliseconds(v).components` against
+`(v / 1000, v % 1000 * 1e15)`. That form needs **two** carrier-specific facts: the
+scale factor *and* the internal decomposition. `Duration` splits into seconds and
+attoseconds and nothing else does, so reproducing it would have been a one-carrier
+template.
+
+Stating the law between two **constructors** needs only the ratio:
+
+```
+Duration.seconds(n) == Duration.milliseconds(n * 1_000)
+```
+
+It says nothing about how the carrier stores the value and reaches the same defect —
+a wrong conversion constant.
+
+### The discriminator: time units are definitional, byte units are a convention
+
+SI *time* prefixes cannot be reinterpreted — `milli` is 1/1000 of a second, the same
+standing `union` means "in either".
+
+**Byte prefixes can.** `kilobytes` means 1000 in some types and 1024 in others, and
+both are defensible; swift-nio's `ByteCount` uses `1000 * count`. A template
+asserting either ratio would be flatly wrong for half the ecosystem, so the byte
+family is excluded — which costs one of the three carriers found.
+
+`days` and `weeks` are excluded for the same class of reason: a calendar type may
+make a day something other than 86,400 seconds.
+
+### Measured: 8 rows, all Strong, zero false positives
+
+| corpus | rows |
+|---|---:|
+| `stdlib/public/core` | 3 — `Duration` |
+| swift-nio | 5 — `TimeAmount` |
+| swift-foundation, swift-collections | 0 |
+
+**Adjacent pairs only.** A six-unit family would otherwise be fifteen rows saying
+much the same thing, and the distant ratios are the dangerous ones — hours to
+nanoseconds is 3.6e12, so the multiplication overflows for almost any drawn input
+and the law would report a domain limit rather than a defect.
+
+That overflow bound is the caveat that matters: the right-hand side multiplies, so
+an unbounded generator produces false counterexamples. The recipe says to bound `n`
+so the product is representable *and to keep the boundary of that bounded range*,
+because the largest surviving `n` is exactly where a conversion off-by-one shows.
+
+### The prediction that was wrong, and why it was wrong
+
+I sized this family from the answer key alone — four rows, all on `Duration`,
+therefore one carrier. The rows are one carrier because the *witness file* is one
+carrier: swift.org's test suite tests `Duration`, so of course all four sites are
+`Duration`.
+
+**The gap list counts test sites, not carriers.** A family's population has to be
+measured against the corpus, never inferred from how many rows the adjudication
+produced — that number is a fact about what someone chose to write a test for.
