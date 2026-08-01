@@ -95,6 +95,18 @@ public enum SequenceViewModelLawTemplate {
             ),
             bodyShapeSignal(for: shape)
         ]
+        if case .conversionComparison(let via) = shape.bodyShape {
+            signals.append(Signal(
+                kind: .orderSensitiveCarrier,
+                weight: Signal.vetoWeight,
+                detail: "`\(shape.typeName).==` compares through `\(via)(…)`, and that "
+                    + "conversion is not sequence-preserving — everything it discards "
+                    + "(order, duplicates) is information equality has stopped "
+                    + "distinguishing. So `==` is COARSER than the sequence view and the "
+                    + "law is false: two values equal under `\(via)` need not be "
+                    + "`elementsEqual`"
+            ))
+        }
         if case .sequenceComparison(let callee) = shape.bodyShape {
             signals.append(Signal(
                 kind: .tautologicalEqualityBody,
@@ -139,13 +151,12 @@ public enum SequenceViewModelLawTemplate {
             )
 
         case .conversionComparison(let via):
+            // Scored for the record, then vetoed above — the `protocolCoveredProperty`
+            // posture, so `metrics` can still answer "how many did this suppress?"
             return Signal(
                 kind: .exactNameMatch,
                 weight: 20,
-                detail: "`==` at \(location) compares through `\(via)(…)`. Everything that "
-                    + "conversion discards is information equality has stopped "
-                    + "distinguishing — confirm that is deliberate before treating a failure "
-                    + "of this law as a bug"
+                detail: "`==` at \(location) compares through `\(via)(…)` — see the veto"
             )
 
         case .sequenceComparison, .unclassified:

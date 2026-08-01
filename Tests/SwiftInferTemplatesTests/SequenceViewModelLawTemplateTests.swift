@@ -153,6 +153,41 @@ struct SequenceViewModelLawTemplateTests {
         #expect(details.contains("PROJECTION onto _count, _storage"))
     }
 
+    /// **Found by running the `known-properties` traps against this template**, which is
+    /// the check that should have come before the corpus sweep rather than after.
+    ///
+    /// The catalog ships a trap reading *"Set: iteration order is not a property — do not
+    /// round-trip through Array"*. A carrier built to that shape — `RandomAccessCollection`
+    /// + `ExpressibleByArrayLiteral`, so every conformance the discriminator keys on, but
+    /// with `==` implemented as `Set(left.slots) == Set(right.slots)` — fired at **Strong
+    /// 80**, and the law is flatly false for it: two values equal under `Set` need not be
+    /// `elementsEqual`.
+    ///
+    /// The hole was already documented on `OrderedCarrierDiscriminator` as "a hash carrier
+    /// that IS array-literal-expressible, which nothing in these corpora happens to be",
+    /// and the body shape was already classified `conversionComparison` — the template
+    /// simply scored it +20, the same as a safe projection. A conversion that is not
+    /// sequence-preserving discards order or duplicates, which is exactly a statement that
+    /// `==` is COARSER than the sequence view.
+    @Test("A conversion comparison is VETOED — `==` coarser than the sequence view")
+    func conversionComparisonIsVetoed() {
+        let equals = equalsOperator(
+            on: "HashBag",
+            bodyShape: .conversionComparison(via: "Set")
+        )
+        let shapes = SequenceViewModelPairing.candidates(
+            in: [equals, hashFunction(on: "HashBag")],
+            inheritedTypesByName: [
+                "HashBag": ["RandomAccessCollection", "ExpressibleByArrayLiteral", "Equatable"]
+            ]
+        )
+        #expect(shapes.count == 1, "the shape still forms — it is vetoed, not unpaired")
+        #expect(SequenceViewModelLawTemplate.suggest(for: shapes[0]) == nil)
+
+        let signals = shapes[0].bodyShape
+        #expect(signals == .conversionComparison(via: "Set"))
+    }
+
     // MARK: - It stays silent where the law is false
 
     /// The reason the family was not built before the discriminator existed. Proposing this on
