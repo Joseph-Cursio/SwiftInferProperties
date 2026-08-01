@@ -11,7 +11,46 @@ implementation of the function is *rejected* by it. `f(x) == f(x)` scores zero.
 
 ---
 
+> ## ⚠ MEASUREMENTS WITHDRAWN — 2026-08-01
+>
+> **Do not cite a number from this document.** The diagnoses stand; the measurements do not.
+> They fail in two different ways, and the distinction is the point.
+>
+> **(a) RETRACTED — instrument error.** Every `measured-bothPass` verdict below was produced
+> by a verifier whose Pass 2 was a hardcoded `print("VERIFY_EDGE_RESULT: PASS")` with
+> `VERIFY_EDGE_TRIALS: 0` — nothing asserted, on every strategist-routed carrier (i.e. everything
+> outside `Complex<Double>` / `Double`). See `docs/verify-edge-pass.md`, which measured **23 of 23
+> `measured-bothPass` verdicts in one full gate run** going through it. `bothPass` in this document
+> means *Pass 1 passed and Pass 2 was free*, which is not what the word claims.
+> Affected: **§9.1, §9.3, §9.4, §11.1, §11.2.3, §13.1**.
+>
+> **(b) STALE — superseded by 59 commits.** Hand-counts and `discover` output that were correct
+> when taken and no longer describe the repo or the tool. Affected: **§0, §2, §3, §14.2, §14.3**.
+>
+> **What this costs the headline.** §9.1's diagnosis — the alphabets are too wide, so the tie branch
+> carrying the failure is unreachable — was measured directly (narrow only the two alphabets, the
+> same stub fails at trial 5) and **still holds**. §13's fix for it shipped and is guarded by
+> `CollisionPassTests`. What does *not* hold is the `bothPass` label the finding was built on: it was
+> over-claiming for a **second, independent** reason this document never knew about. The finding's
+> *lesson* is therefore under-determined between two causes, and CLAUDE.md's standing
+> `measured-bothPass` design rule has been amended to say so.
+>
+> **What survives unaffected.** The diagnosis sections, which is why this file was not deleted —
+> 19 live source and test sites cite them as their only recorded rationale:
+> **§9.2** (three emitter defects → `StrategistDispatchEmitter+Header`, `VerifierWorkdir+KitPin`) ·
+> **§11.1/§11.3/§11.3.2/§11.3.4** (type-shape reflection → `TypeDecl`, `IndexedTypeShape`,
+> `EveryColumn`) · **§11.2/§11.2.1** (the hang and its bound → `VerifierTimeoutTests`) ·
+> **§12** (the collision sweep → `CollisionPassTests`) · **§13.4** (`swift build` writes errors to
+> stdout → `BuildDiagnostics`) · **§14.4** (`Process.terminationHandler` → `VerifierSubprocess`) ·
+> **§15** (the metamorphic cost estimate — a design verdict, never a measurement) ·
+> **§16** (the SeedFocus trap). A defect is fixed or it is not; that is checkable, not perishable.
+
+---
+
 ## §0 The starting number (measured before any tool ran)
+
+> **STALE (b).** Hand-counts via grep against `89d1a21`. Correct when taken; the repo has moved
+> ~59 commits since. Re-count before citing.
 
 | | |
 |---|---|
@@ -61,6 +100,13 @@ Prediction 4 is the one I expect to be least comfortable, and it is logged for t
 *(Results below this line are appended as measured. Nothing above it is edited in response to them.)*
 
 ## §2 What the loop returned
+
+> **STALE (b).** Both tables below are `discover` output from `89d1a21` against
+> `SwiftProjectLint @ 6176101`. The catalog has since gained the two model-law families,
+> `EqualityBodyShape`, `OrderedCarrierDiscriminator`, and the `Discover.strongestFirst` ordering,
+> and the linter has re-sorted its seed kinds (§14.2 already caught the first of these). The counts
+> are not wrong — they are no longer about this tool. **The §3 scoring below inherits this**, so
+> "Prediction 1 was wrong, 21 not 15" is a claim about a tool that no longer exists.
 
 **Step 1 — `SwiftProjectLint @ 6176101 --format pbt-seeds`:** 1,657 seeds (1,457 `pure-function`,
 200 `extractable-kernel`), across SwiftInferCLI 715 / Templates 506 / Core 276 / TestLifter 157 /
@@ -256,6 +302,14 @@ which. They disagreed twice, and both disagreements were the tool's.
 candidates from §2. Then `verify --all-from-index --corpus-module SwiftInferCore`, per template.
 
 ## §9.1 The headline: a confident **green** on a law that is false
+
+> **RETRACTED (a) — the verdict, not the diagnosis.** `Decisions` is a strategist-routed carrier, so
+> the `bothPass` reported here is `Pass 1 (100 real trials, missed the collision)` **+**
+> `Pass 2 (hardcoded PASS, zero trials)`. This document attributed the whole miss to generator
+> alphabet width. That cause is real and was confirmed by direct experiment below — but it was never
+> the only one, and this section could not have known that. Read the alphabet analysis; do not read
+> "`measured-bothPass`, 100 trials" as a characterisation of what the verifier did.
+> See `docs/verify-edge-pass.md`.
 
 `Decisions.merge` commutativity — the law §F1 disproves — is reported by the tool as
 **`measured-bothPass`, 100 trials**.
@@ -478,6 +532,14 @@ re-run, so the result can disagree.
 
 ## §11.1 Result
 
+> **RETRACTED (a) — the verdict table; the kit-resolution and type-shape findings stand.**
+> Every `measured-bothPass` in the table below carries a free Pass 2. Note what that does to
+> **prediction 2**, the *control*: "associativity builds and passes" was the row proving the §9.2
+> fixes had not traded a false green for a false red, and a control whose second pass asserts
+> nothing cannot carry that weight. The `build-failed` → *builds at all* transition is unaffected —
+> a build either succeeded or it did not. `TypeDecl` cites this section for the type-shape
+> reflection finding, which is orthogonal to the verdicts.
+
 Kit v3.18.0 resolved through the real dependency graph (`swift package update` → 3.18.0; the
 generated verifier's own manifest declares `from: "3.17.0"`, which resolves it too — no local
 override anywhere). `make batch4` green first, 7/7 suites in 415s, including
@@ -685,6 +747,11 @@ part is real-process behaviour. The pipe test's load-bearing assertion is that *
 survives* — had the reader deadlocked, the diagnostic would be empty.
 
 ## §11.2.3 The survey, measured
+
+> **RETRACTED (a) — the `measured-bothPass` rows.** The non-pass outcomes survive and are the
+> reason this section is cited: `timed-out` on `SemanticIndexEntry` (the bound working as designed),
+> `unsupported-carrier`, `unsupported-template`. Those are verdicts the broken Pass 2 could not
+> manufacture — it could only ever add a PASS.
 
 | Template | Outcome |
 |---|---|
@@ -958,6 +1025,14 @@ reach. It is now closed.
 
 ## §13.1 The result
 
+> **PARTIALLY RETRACTED (a).** The `commutativity ×4 → measured-defaultFails` row **stands** — a
+> refutation is a refutation, and the collision sweep that produced it shipped and is guarded by
+> `CollisionPassTests`. The `associativity ×4 → measured-bothPass` **control row does not**: its
+> Pass 2 was the hardcoded PASS. The argument it was making ("a fix that refuted associativity would
+> have traded a false green for a false red") is still *sound* — associativity on these folds is
+> genuinely true — but it was not *measured* to the standard this table claims. Re-run it against
+> the shipped edge pass before citing it as a control.
+
 | Template | Before | After |
 |---|---|---|
 | `commutativity` ×4 | `measured-bothPass` (**wrong**) | **`measured-defaultFails`** |
@@ -1064,6 +1139,13 @@ Per the freeze rule §2 is **not edited**. This is a fresh measurement against
 *(Results appended below as measured.)*
 
 ## §14.2 Result — measured against `SwiftProjectLint @ 4e54aa3`
+
+> **STALE (b).** Seed and linter counts against `4e54aa3`, and `discover` output from a catalog that
+> has since changed substantially. **§14.3 scores predictions against these numbers and inherits the
+> staleness.** The *method* finding this section exists for — that the seeds did not fall, they were
+> re-sorted into a new kind, and the prediction was wrong on direction — is a fact about what
+> happened and is unaffected. **§14.4 is a diagnosis** (`Process.terminationHandler`, cited by
+> `VerifierSubprocess.swift:350`) and is not covered by this notice.
 
 ### Seeds
 
