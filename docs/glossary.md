@@ -62,10 +62,23 @@ floor will mislead — and it is the [Daikon trap](#daikon-trap) arriving, measu
 
 ### Seed / seed manifest
 `{file, line, symbol}` records emitted by SwiftProjectLint's `--format pbt-seeds`, naming
-functions worth pointing `discover` at. Consumed via `discover --seeds`. Kinds include
-`pure-function`, `extractable-kernel`, `restricted-function`.
+functions worth pointing `discover` at. Kinds include `pure-function`,
+`extractable-kernel`, `restricted-function`.
 
-**A seed is not a suggestion.** 1,657 seeds have produced 21 default-tier picks on this repo.
+**Producer → consumer.** SwiftProjectLint writes them; `swift-infer discover --seeds`
+reads them, and it is the **only** consumer — `scaffold`, `verify`, `index`, `report` and
+`insights` do not accept the flag. That one hop is the whole lint → infer link in the
+five-package toolchain.
+
+**What a seed does to a run.** It *focuses*, it does not extend: discovery still scans the
+entire target, and then the surfaced suggestions are narrowed to functions named in the
+manifest. Two consequences worth knowing — a seeded pure function that **no template
+matched** still earns the generic determinism law `f(x) == f(x)`, synthesized downstream
+of the tier cut; and an empty manifest focuses to zero suggestions rather than to all of
+them. A missing or malformed file is an error, not a silent fallback.
+
+**A seed is not a suggestion.** 1,657 seeds have produced 21 default-tier picks on this
+repo.
 
 ### Template
 A named law shape that discovery can recognize from code — `idempotence`, `commutativity`,
