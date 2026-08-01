@@ -1969,7 +1969,7 @@ post-hoc during Q3). Adjudicated into families, they are not 19 problems:
 | absorbing state (exhausted iterator returns nil forever) | 4 | **declined §8.5** |
 | scaled decomposition (`Duration.seconds(d).components`) | 4 | open — 4 rows, one carrier |
 | randomness (surjectivity, seeded determinism, shuffle-preserves-multiset) | 4 | open — mostly purity-gated |
-| bulk-vs-incremental construction | 1 | open — general shape, unmeasured |
+| bulk-vs-incremental construction | 1 | **closed §8.6** |
 | selection/membership biconditional | 1 | open |
 
 ### 8.1 The correction that made this findable
@@ -2104,3 +2104,91 @@ is one grep of the kit. Population took a corpus sweep; statability took buildin
 prototype. **Check the gates in ascending order of what they cost to check** — this
 family would have been declined in two minutes rather than an hour if the kit grep
 had come first.
+
+## 8.6 Bulk-vs-incremental — built, and thin on purpose (2026-08-01)
+
+The last of the seven families. Row 1 —
+`validation-test/stdlib/RangeSet.swift:74`, over 1,000 random inputs:
+
+```swift
+let set = RangeSet(ranges)
+var comparison = RangeSet<Int>()
+for r in ranges { comparison.insert(contentsOf: r) }
+expectEqual(set, comparison)
+```
+
+`BulkIncrementalTemplate` states `T(elements) == elements.reduce(into: T()) { $0.insert($1) }`.
+
+### The gates, checked cheapest-first this time
+
+The §8.5 lesson applied. One grep of the kit came first and it passed —
+`checkRangeReplaceableCollectionPropertyLaws` runs `emptyInitIsEmpty`,
+`removeAllMakesEmpty`, `removeAtInsertRoundTrip`, `replaceSubrangeAppliesEdit`, and
+no `reduce`-based fold law exists anywhere in the kit. Had that failed, the
+population sweep would not have been worth running.
+
+### The discriminator is the whole template
+
+**The inserter's parameter must be the bulk init's ELEMENT type.** `RangeSet`
+declares *both* `insert(_ value: Bound)` and `insert(contentsOf: Range<Bound>)`,
+and its bulk init takes `[Range<Bound>]`. Pairing the wrong one states a flatly
+false law. Measured on the shipped pipeline: it picks `insert(contentsOf:)`.
+
+Without that rule this family is unstatable, which is what "general shape,
+unmeasured" was hiding.
+
+### Population: 2, and the survey that said 3 was wrong
+
+| corpus | rows |
+|---|---:|
+| `stdlib/public/core` | 1 — `RangeSet`, the witness |
+| swift-foundation | 1 — `IndexPath` |
+| swift-collections, swift-syntax, swift-nio | 0 |
+
+The sizing sweep said three carriers. `OrderedSet.UnorderedView` matched only
+through its variadic `init(arrayLiteral elements: Element...)`, which the scanner
+records as `[Element]`; its real bulk init is
+`init(_ elements: some Sequence<Element>)`. Pairing against an
+`ExpressibleByArrayLiteral` requirement is a much weaker basis than pairing against
+a declared bulk entry point, so the pipeline is right to decline it and the survey
+was over-counting.
+
+**Two rows is below both templates shipped today** (sequence-view 7,
+set-relation 23). It ships anyway because both rows are real, the discriminator is
+demonstrably correct on the carrier that could have produced a false law, and the
+repo's posture is high precision over recall.
+
+### Why it is an undercount, and what was deliberately not done
+
+The element match is textual: it resolves `[Range<Bound>]` and `Array<Element>`
+and gives up on `init<S: Sequence>(_ elements: S) where S.Element == Element` —
+the idiomatic spelling, and the one `RangeReplaceableCollection` mandates.
+
+The obvious widening is to key on `RangeReplaceableCollection` conformance
+instead, which would name dozens of carriers. **Deliberately not done**: that
+protocol *default-implements* the bulk init as `self.init();
+self.append(contentsOf: elements)`, so for every conformer that does not override
+it the law is true by construction — the unrefutable-by-construction shape
+`preconditionElidingVariant` was vetoed for. Widening it needs an
+"overrides the default" discriminator, which is its own measurement.
+
+## 8.7 The gap list, closed
+
+Seven families, all assessed:
+
+| family | rows | outcome |
+|---|---:|---|
+| model law, set operations | 3 | shipped (earlier) |
+| model law, set relations | 2 | **shipped** §8 |
+| bulk-vs-incremental | 1 | **shipped** §8.6 |
+| absorbing state | 4 | **declined** §8.5 — kit covers it, then no population |
+| scaled decomposition | 4 | open |
+| randomness | 4 | open — purity-gated, a policy question |
+| selection biconditional | 1 | open |
+
+**Three shipped, one declined, three open.** The declined one is worth as much as
+the shipped ones: it is now an explicit `ProtocolCoverageMap` entry, so the next
+attempt meets a guard instead of the `Strideable` defect.
+
+And the four gates earned their keep — they killed two shapes in §7.1 and one
+family here, each before any code was written except a probe.

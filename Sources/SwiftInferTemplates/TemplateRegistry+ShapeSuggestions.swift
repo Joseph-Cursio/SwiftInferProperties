@@ -24,6 +24,7 @@ extension TemplateRegistry {
         )
         collectModelLawSuggestions(
             summaries: summaries,
+            typeDecls: typeDecls,
             inheritedTypesByName: context.inheritedTypesByName,
             into: &collector
         )

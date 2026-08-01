@@ -12,9 +12,15 @@ extension TemplateRegistry {
     /// also keeps `TemplateRegistry+ApplicationShapes.swift` under the file-length cap.
     static func collectModelLawSuggestions(
         summaries: [FunctionSummary],
+        typeDecls: [TypeDecl],
         inheritedTypesByName: [String: Set<String>],
         into collector: inout SuggestionCollector
     ) {
+        for shape in BulkIncrementalPairing.candidates(in: summaries, typeDecls: typeDecls) {
+            if let suggestion = BulkIncrementalTemplate.suggest(for: shape) {
+                collector.record(suggestion, generatorType: shape.typeName)
+            }
+        }
         for shape in ModelLawPairing.candidates(in: summaries) {
             if let suggestion = ModelLawTemplate.suggest(for: shape) {
                 collector.record(suggestion, generatorType: shape.typeName)
