@@ -181,7 +181,9 @@ public enum CommutativityTemplate {
         // order-sensitive carrier it is genuinely false (`a.union(b)` and
         // `b.union(a)` differ in order under the carrier's `==`). Veto rather
         // than counter-weight: it is wrong, not low-confidence.
-        if let orderVeto = orderSensitiveCarrierVetoSignal(for: summary) {
+        if let orderVeto = orderSensitiveCarrierVetoSignal(
+            for: summary, inheritedTypesByName: inheritedTypesByName
+        ) {
             signals.append(orderVeto)
         }
         // B24 — a shape-only candidate with neither a commutative name nor an
@@ -247,29 +249,59 @@ extension CommutativityTemplate {
     /// order-sensitive carrier. `union` / `intersection` are commutative as a
     /// *set* semilattice, but `OrderedSet` / `Array` / … compare element order
     /// in `==`, so `a.union(b) == b.union(a)` is false there (it holds only
-    /// under an order-insensitive comparison such as `isEqualSet`). The carrier
-    /// (`containingTypeName`) is matched against the curated
-    /// `OrderSensitiveCarrierNames` denylist — the pre-SemanticIndex stand-in
-    /// for detecting an order-sensitive `==` structurally. Associativity and
-    /// idempotence are NOT vetoed: both hold on these carriers (order-preserving
-    /// append is associative; `x ∪ x == x`).
+    /// under an order-insensitive comparison such as `isEqualSet`).
+    ///
+    /// **Structural first, denylist second.** `OrderedCarrierDiscriminator` answers
+    /// "is order part of this carrier's value?" from its conformances, so the veto now
+    /// fires on *any* order-sensitive carrier rather than on six hardcoded names — a
+    /// user's own `RandomAccessCollection` with an order-preserving `union` is caught
+    /// where it previously was not. That is what `OrderSensitiveCarrierNames`' own doc
+    /// said it was standing in for: "structural order-sensitivity detection
+    /// pre-SemanticIndex".
+    ///
+    /// It reads `isOrderSensitive` rather than the full `verdict`, because the two
+    /// consumers ask different questions — see that method. Using the full verdict here
+    /// would drop `String` / `Substring` / `Data` / `Slice`, all of them carriers where
+    /// an order-preserving `union` is genuinely non-commutative.
+    ///
+    /// **The denylist is kept as a union, not replaced.** Measured across
+    /// swift-collections, `stdlib/public/core`, swift-foundation, swift-syntax and
+    /// swift-nio, the two rules agree on **every** carrier that declares one of these
+    /// verbs — zero disagreements. But the agreement is thinner than it looks: five of
+    /// the six denylist names never appear at all, because `Array` / `Deque` /
+    /// `OrderedDictionary` declare no set operations, so `OrderedSet` is the only entry
+    /// the denylist actively fires on. The residue that keeps the denylist alive is
+    /// `OrderedDictionary`, which conforms to `Sequence` and nothing that marks position
+    /// as value-determined, so the structural rule abstains on it. Dropping the denylist
+    /// would be safe on everything measured and unsafe on a shape nobody has written yet.
+    ///
+    /// Associativity and idempotence are NOT vetoed: both hold on these carriers
+    /// (order-preserving append is associative; `x ∪ x == x`).
     private static func orderSensitiveCarrierVetoSignal(
-        for summary: FunctionSummary
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
         guard setCombinationVerbs.contains(summary.name),
-              let carrier = summary.containingTypeName,
-              OrderSensitiveCarrierNames.contains(carrier) else {
+              let carrier = summary.containingTypeName else {
             return nil
         }
         let stripped = OrderSensitiveCarrierNames.strippingGenericParameters(carrier)
+        let structural = OrderedCarrierDiscriminator.isOrderSensitive(
+            forConformances: inheritedTypesByName[stripped] ?? []
+        )
+        let listed = OrderSensitiveCarrierNames.contains(carrier)
+        guard structural || listed else { return nil }
+        let basis = structural
+            ? "its conformances make position value-determined"
+            : "it is on the curated order-sensitive carrier list"
         return Signal(
             kind: .orderSensitiveCarrier,
             weight: Signal.vetoWeight,
-            detail: "Order-sensitive carrier: \(stripped).== compares element order, so "
-                + "'\(summary.name)' is NOT commutative under it — a.\(summary.name)(b) and "
-                + "b.\(summary.name)(a) hold the same members in a different order. The "
-                + "semilattice commutativity law holds only under an order-insensitive "
-                + "comparison such as isEqualSet"
+            detail: "Order-sensitive carrier: \(stripped).== compares element order — "
+                + "\(basis) — so '\(summary.name)' is NOT commutative under it. "
+                + "a.\(summary.name)(b) and b.\(summary.name)(a) hold the same members in a "
+                + "different order. The semilattice commutativity law holds only under an "
+                + "order-insensitive comparison such as isEqualSet"
         )
     }
 
