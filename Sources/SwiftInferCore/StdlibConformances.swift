@@ -85,9 +85,72 @@ extension ProtocolCoverageMap {
         "Bool": [
             "Equatable", "Hashable", "Codable"
         ],
-        "String": [
+        "String": stringCollectionBase.union([
             "Equatable", "Comparable", "Hashable", "Codable"
+        ]),
+        "Substring": stringCollectionBase.union([
+            "Equatable", "Comparable", "Hashable"
+        ]),
+
+        // Collection family. UNCONDITIONAL conformances only — see
+        // `arrayCollectionBase`.
+        "Array": arrayCollectionBase,
+        "ContiguousArray": arrayCollectionBase,
+        "ArraySlice": arrayCollectionBase,
+        "Set": [
+            "Sequence", "Collection", "SetAlgebra", "ExpressibleByArrayLiteral"
+        ],
+        "Dictionary": [
+            "Sequence", "Collection", "ExpressibleByDictionaryLiteral"
         ]
+    ]
+
+    /// The **unconditional** conformances of `Array` / `ContiguousArray` / `ArraySlice`.
+    ///
+    /// **Why collections were missing until 2026-08-01, and why this is the shape of the
+    /// fix.** The bake-in was added in V1.7.1 to close a *numeric* finding — its own doc
+    /// says "stdlib-typed (`Int` / `Double` / etc.) carriers" — and collections were never
+    /// in scope. Nobody revisited it as the conformance index acquired consumers, and by
+    /// the time `OrderedCarrierDiscriminator` started reading it there were twelve.
+    ///
+    /// The symptom that surfaced it: the discriminator asks whether a carrier's order is
+    /// part of its value, and answers from conformances. In a **library** corpus `Array`'s
+    /// conformances are declared in the tree being scanned, so it works. In an
+    /// **application** corpus they are not, so the discriminator abstained on `Array` and
+    /// only the curated `OrderSensitiveCarrierNames` denylist stood between a user-written
+    /// `extension Array { func union }` and a false commutativity law.
+    ///
+    /// **Deliberately no `Equatable` / `Hashable` / `Codable`.** Those are *conditional* on
+    /// this family (`Array<T>: Equatable where T: Equatable`), and this table's own note
+    /// already rules conditional conformance out of scope: "the textual scan can't tell
+    /// whether a generic argument satisfies a constraint without semantic resolution."
+    /// Adding them would contradict a recorded decision *and* silently drop the `Equatable`
+    /// caveat from every `Array`-carried suggestion on the strength of a guess. Every
+    /// protocol below is unconditional, so no such judgement is being made.
+    ///
+    /// `Range` / `ClosedRange` are absent for the same reason: their `Collection`
+    /// conformance is conditional on `Bound: Strideable`.
+    private static let arrayCollectionBase: Set<String> = [
+        "Sequence",
+        "Collection",
+        "BidirectionalCollection",
+        "RandomAccessCollection",
+        "MutableCollection",
+        "RangeReplaceableCollection",
+        "ExpressibleByArrayLiteral"
+    ]
+
+    /// `String` / `Substring`'s unconditional collection refinements. Both are
+    /// `BidirectionalCollection` but **not** `RandomAccessCollection` (grapheme breaking
+    /// makes index offsetting linear) and not `ExpressibleByArrayLiteral`, which is why
+    /// the sequence-view model law continues to abstain on them while the commutativity
+    /// veto now reaches them.
+    private static let stringCollectionBase: Set<String> = [
+        "Sequence",
+        "Collection",
+        "BidirectionalCollection",
+        "RangeReplaceableCollection",
+        "StringProtocol"
     ]
 
     // Deliberately differs from `unsignedIntegerBase` — see that constant's note: signedness
