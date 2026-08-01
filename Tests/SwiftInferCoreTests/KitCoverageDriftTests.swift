@@ -95,7 +95,11 @@ struct KitCoverageDriftTests {
         "RandomAccessCollection": .uncoveredNoSymptom("as Sequence"),
         "MutableCollection": .uncoveredNoSymptom("as Sequence"),
         "RangeReplaceableCollection": .uncoveredNoSymptom("as Sequence"),
-        "IteratorProtocol": .uncoveredNoSymptom("as Sequence"),
+        // Reclassified 2026-08-01. It was `.uncoveredNoSymptom("as Sequence")`, and the
+        // symptom arrived: the swift.org `loops` study adjudicated
+        // `Strideable.swift:236` as `gap-with-witness` for exactly the law
+        // `"IteratorProtocol.terminationStability"` already runs.
+        "IteratorProtocol": .covered,
         "AsyncSequence": .uncoveredNoSymptom("async is admitted only via @ClockDeterministic"),
         "TimedAsyncSequence": .uncoveredNoSymptom("as AsyncSequence"),
         // Covered 2026-07-30. Was `.uncoveredNoSymptom` on the reasoning that the law is

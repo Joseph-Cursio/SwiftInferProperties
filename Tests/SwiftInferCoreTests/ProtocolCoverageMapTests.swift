@@ -224,7 +224,7 @@ struct ProtocolCoverageMapTests {
     /// 13 → 14 on 2026-07-30: `Strideable` joined after `KitCoverageDriftTests` found the
     /// toolchain reporting `Strideable.distanceRoundTrip` twice — the kit runs it, and
     /// `round-trip` independently proposed `distance(to:)` × `advanced(by:)`.
-    @Test("Curated table contains exactly the 15 documented stdlib + kit protocol keys")
+    @Test("Curated table contains exactly the 17 documented stdlib + kit protocol keys")
     func tableKeyCount() {
         let expected: Set<String> = [
             // stdlib equality / ordering / hashing
@@ -239,14 +239,18 @@ struct ProtocolCoverageMapTests {
             "Semigroup", "Monoid", "CommutativeMonoid", "Group", "Semilattice",
             // stdlib striding
             "Strideable",
+            // Both reach the same kit suite: SequenceLaws chains the IteratorProtocol
+            // laws, so a carrier named as either is covered.
+            "IteratorProtocol",
+            "Sequence",
             // stdlib string conversion
             "LosslessStringConvertible"
         ]
         #expect(Set(ProtocolCoverageMap.protocolCoverage.keys) == expected)
-        #expect(ProtocolCoverageMap.protocolCoverage.count == 15)
+        #expect(ProtocolCoverageMap.protocolCoverage.count == 17)
     }
 
-    @Test("KnownProperty has the documented 24 cases")
+    @Test("KnownProperty has the documented 25 cases")
     func knownPropertyCount() {
         // Pinning the count guards against silent enum drift; future
         // template arms should add cases consciously and update this
@@ -259,7 +263,9 @@ struct ProtocolCoverageMapTests {
         // than fixing a double-report. The study had twice filed the reach gate in front of
         // that law as a defect to fix; the kit runs the law, so relaxing the gate would have
         // created one.
-        #expect(KnownProperty.allCases.count == 24)
+        // 25 as of 2026-08-01 — `iteratorTerminationStability` was added to make a
+        // decline explicit that the swift.org study had already mis-adjudicated as a gap.
+        #expect(KnownProperty.allCases.count == 25)
     }
 
     @Test("Every covered property name is a valid KnownProperty case")

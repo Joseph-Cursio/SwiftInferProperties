@@ -1966,7 +1966,7 @@ post-hoc during Q3). Adjudicated into families, they are not 19 problems:
 |---|---:|---|
 | model law, set **operations** | 3 | closed by `ModelLawTemplate` |
 | model law, set **relations** | 2 | **closed here** |
-| absorbing state (exhausted iterator returns nil forever) | 4 | open — mutating carrier |
+| absorbing state (exhausted iterator returns nil forever) | 4 | **declined §8.5** |
 | scaled decomposition (`Duration.seconds(d).components`) | 4 | open — 4 rows, one carrier |
 | randomness (surjectivity, seeded determinism, shuffle-preserves-multiset) | 4 | open — mostly purity-gated |
 | bulk-vs-incremental construction | 1 | open — general shape, unmeasured |
@@ -2038,3 +2038,69 @@ all four *before* building, which is the only reason it was worth starting:
    each other and mention `isSubset` / `isDisjoint` / `isSuperset` **zero** times.
 4. **Statability** — pointwise as an implication, with the missing direction named
    in the caveat rather than discovered by a reader.
+
+### 8.5 The absorbing-state family — DECLINED, twice over
+
+Four rows, the largest open family, and the one with witnesses on two independent
+carriers. It fails on two different gates, and neither was visible before checking.
+
+**Row 16 — `test/stdlib/Strideable.swift:236` — the kit already runs it.**
+
+```swift
+var i = stride.makeIterator()
+for _ in 0..<nonNilResults { expectNotNil(i.next()) }
+for _ in 0..<10 { expectNil(i.next()) }
+```
+
+`checkIteratorProtocolPropertyLaws` ships `"IteratorProtocol.terminationStability"`,
+and its body is that law verbatim — pull to exhaustion, then assert two further
+`next()` calls are `nil`. Building from this witness would have recreated the
+**`Strideable` double-report**, the defect this study found and fixed on 2026-07-30.
+
+**Rows 17–19 — `countByEnumerating` — no population.** These are genuinely
+uncovered: `NSFastEnumeration`, not `IteratorProtocol`, so the kit says nothing.
+They are declined on gate 1 instead:
+
+| corpus | files mentioning `countByEnumerating` |
+|---|---:|
+| `swiftlang/swift` | 13 |
+| swift-collections, swift-foundation, swift-nio, swift-syntax, SwiftProjectLint | **0** |
+
+An ObjC bridging shadow protocol, not an ecosystem pattern. A template would serve
+one corpus's test inputs.
+
+#### What shipped instead, and why it is not nothing
+
+`ProtocolCoverageMap` now carries `.iteratorTerminationStability`, keyed on both
+`IteratorProtocol` and `Sequence` (the kit's `SequenceLaws` chains the iterator
+suite, so a carrier reached under either name is covered). `KitCoverageDriftTests`
+reclassifies `IteratorProtocol` from `.uncoveredNoSymptom("as Sequence")` to
+`.covered`.
+
+That reclassification is the point. §1.15 recorded twenty kit suites as
+"uncovered with no symptom" and downgraded them to latent for want of one. **The
+symptom arrived, and it was this adjudication**: a hand-read of a stdlib test filed
+a law the kit runs as `gap-with-witness`, which is the precise confusion
+`protocolCoveredProperty` exists to prevent — *"we could not distinguish 'we decline
+this because the kit runs it' from 'we miss this'."*
+
+Changes no output today, because no template proposes the law. The same latent
+state `.losslessStringRoundTrip` was added in, and for the same reason: a future
+attempt now meets a guard instead of the defect.
+
+#### The tally, and what it says about the gate order
+
+Four families assessed today, three declined:
+
+| shape | died on |
+|---|---|
+| product-typed round-trip (§7.1) | population |
+| parser residues (§7.1) | population |
+| **absorbing state** | **non-duplication**, then population |
+| set relations (§8) | — shipped |
+
+Non-duplication is the gate that fired latest and cost least, because checking it
+is one grep of the kit. Population took a corpus sweep; statability took building a
+prototype. **Check the gates in ascending order of what they cost to check** — this
+family would have been declined in two minutes rather than an hour if the kit grep
+had come first.
