@@ -29,7 +29,152 @@ Template: idempotence      Score: 85 (Strong)
   ✓ Curated idempotence verb match: 'sorted' (+40)
 ```
 
-## 2. The strongest law is not proposed
+## 2. The measured mutant × law matrix
+
+Generated from the code by `MatrixReportTests`, and every cell is an assertion — the table
+cannot drift. `oracle` is "agrees with the reference implementation".
+
+| mutant | idempotence | ordering | permutation | oracle |
+|---|---|---|---|---|
+| `dropsLastWhenOddCount` | passes | passes | **kills** | **kills** |
+| `duplicatesFirst` | **kills** | passes | **kills** | **kills** |
+| `ascendingInsteadOfDescending` | passes | **kills** | passes | **kills** |
+| `unstableTieHandling` | passes | passes | passes | passes |
+| `sortsByNameNotScore` | passes | **kills** | passes | **kills** |
+| `returnsInputUnchanged` | passes | **kills** | passes | **kills** |
+| `leavesLastElementUnsorted` | **kills** | **kills** | **kills** | **kills** |
+
+Three things the table says that prose would not:
+
+**Ordering and permutation are complements.** Each catches mutants the other passes, and
+`dropsLastWhenOddCount` is the sharp case — a shorter sorted list is still sorted, so only
+permutation and the oracle see it.
+
+**Idempotence rejects 2 of 7** — the weakest of the four. Most mutants are stable under
+re-application, so applying them twice equals applying them once.
+
+**One row is all-passes, and it is correct.** `unstableTieHandling` fails nothing under arm
+B, because a total order leaves no ties to mishandle — under this comparator it is not a
+defect. The identical mutant is refuted at trial 0 under arm A. Whether something IS a bug
+depends on the comparator, not on the sort.
+
+## 3. Perfect world vs actual: what the code owes
+
+The laws a competent reader would state for this code, against what `discover` proposed.
+
+**Most of this list was named in the design discussion before any code was written** —
+permutation, comparator SWO, the uniqueness invariant, cache coherence, the bounded measure.
+That is the closest thing to a frozen key here, and the honest caveat is that it is not a
+*committed* one: rows marked ☆ were added after seeing the output and should be discounted.
+
+| # | law the code owes | proposed? | why not |
+|---|---|---|---|
+| 1 | `sorted()` output is a **permutation** of the input | **no** | not templated — `partition` is dead |
+| 2 | output is **ordered** by the comparator | **no** | not templated |
+| 3 | `sorted()` is **idempotent** | **yes** — Strong (85) | — |
+| 4 | the comparator is a **strict weak ordering** | **partial** — 1 of 4 | name-gated (§5) |
+| 5 | `sorted().count == count` (conservation) | **no** | not templated |
+| 6 | `namesAreUnique` holds for every board | **no** | scanned, not templated — a *nullary* `Bool` is an invariant, not a `predicate` |
+| 7 | `score` lies in `0...300` | **half** — lower bound only | no upper-bound template |
+| 8 | after `add`, `sorted()` reflects the new entry | **no** | not paired — needs a mutation + observation pair |
+| 9 | `add` grows `count` by exactly 1 | **no** | not paired |
+| 10 | the free function agrees with the member ☆ | **no** | not paired |
+| 11 | `sorted().map(\.score)` is non-increasing ☆ | **no** | not templated |
+
+**2 of 11 fully found, 2 partial.** Recall on the laws this code actually owes is roughly
+**20%**, against a suggestion count of 13.
+
+The diagnosis is not one gap but three, and only one of them is "add a template": five rows
+are **not templated**, three are **not paired** (the shape needs two members considered
+together, which is what pairings are for and what `homomorphism` needed to wake up), and one
+is a **near-miss on subject shape** (row 6 — the tool scans the property and has no law for
+a nullary `Bool`).
+
+**The near-miss on row 1 is the sharpest.** `filter-subset` WAS proposed on `selectionSorted`
+— "result ⊆ the collection it selects from". That is a strictly weaker permutation law: it
+catches an output containing a foreign element, and misses both `dropsLastWhenOddCount` and
+`duplicatesFirst`. So the tool is not blind to the shape; **it proposes the weak version of
+the law it is standing next to.**
+
+## 4. What should have been rejected
+
+The other half of the scorecard. 13 suggestions, classified by what a reader would do with
+them:
+
+| class | count | which |
+|---|---|---|
+| **true and useful** | 4 | `idempotence` on `Leaderboard.sorted` (85), on both free-function controls, `comparator` on `byScoreDescending` |
+| **true but weak** | 2 | `filter-subset` on `selectionSorted` (the weak permutation), `measure-non-negativity` on `count` (an `Array`-backed count is never negative) |
+| **true but wrong subject** | 6 | `predicate` on `differential`, `differentialUnderScoreProjection`, `isStrictWeakOrdering`, `idempotence`, `isPermutation`, `isOrdered` |
+| **FALSE** | 1 | `idempotence` on `Generators.next` — Likely (45) |
+
+**Only one is actually false**, and precision in the strict sense is 12/13. That is the
+tool's real strength and it should not be understated.
+
+But **6 of 13 — 46% — are totality laws about this fixture's own law helpers**, not about
+the code under test. They are true (a `-> Bool` function does owe totality) and useless: no
+one wants a property test on their property test's oracle. The tool cannot tell a subject
+from an apparatus, and on any repo with a test-shaped helper layer that is a large, quiet
+fraction of the output.
+
+So the honest headline is not precision but **yield: 4 of 13 suggestions are worth a
+reader's time, and they cover 2 of the 11 laws the code owes.**
+
+## 5. Score vs truth — the calibration is inverted in the middle band
+
+The same 13, ranked by score, against what a reader would do with each:
+
+| rank | score | tier | subject | verdict |
+|---|---|---|---|---|
+| 1 | 85 | Strong | `Leaderboard.sorted` idempotence | **useful** |
+| 2 | 45 | Likely | `Generators.next` idempotence | **FALSE** |
+| 3 | 40 | Likely | `byScoreDescending` comparator | **useful** |
+| 4 | 35 | Possible | `selectionSorted` filter-subset | weak |
+| 5 | 35 | Possible | `count` measure-non-negativity | trivial |
+| 6 | 30 | Possible | `sortedByScoreThenName` idempotence | **useful** |
+| 7 | 30 | Possible | `sortedByScore` idempotence | **useful** |
+| 8–13 | 20 | Possible | `predicate` × 6 on law helpers | wrong subject |
+
+**The only false law in the run is the second-highest-scored thing in it.** It outranks the
+comparator law, and both correct free-function laws sit *below* a trivial non-negativity
+claim and a weak subset claim.
+
+Two conclusions, and they point in opposite directions:
+
+**The score-20 floor is real signal.** All six wrong-subject suggestions sit at exactly 20,
+and nothing useful does. Separating "floor" from "candidate" is something the score does
+well, and this reproduces the repo's own observation that 738 of 1,115 swift-syntax
+suggestions sit at that floor.
+
+**Inside the candidate band (30–45) the score carries no information, and here it is
+actively inverted.** Ranked 2, 4, 5 are false/weak/trivial; ranked 3, 6, 7 are useful. A
+reader working top-down hits the false one second.
+
+### The mechanism, and why `--require-corroboration` would not catch it
+
+The false law scored 45 from **three shape signals and no semantic one**:
+
+```
++30  type-symmetry signature (Generators) -> Generators
++10  lifted from a no-param mutating method
+ +5  value-semantic carrier
+```
+
+The correct comparator law scored 40 from a *name* signal — the strongest evidence available
+for that template. So **three weak structural signals outscored one strong semantic one**,
+30 + 10 + 5 = 45 > 40, and the arithmetic is the whole defect.
+
+`--require-corroboration` exists for the neighbouring problem — it withholds default
+visibility from a suggestion resting on a *single* positive signal. It would not fire here:
+this suggestion has three. **Corroboration counts signals, not signal kinds**, and three
+readings of "this is shaped like `T -> T`" are one observation counted thrice, not three
+independent ones.
+
+That is a concrete, testable proposal the fixture produced: corroboration should require
+signals of *distinct kinds*, and a shape-only stack should not reach `Likely` without a name
+or a body signal agreeing.
+
+## 6. The strongest law is not proposed
 
 **`sorted(xs)` is a permutation of `xs`** — multiset equality. It is the only law here that
 catches a sort **dropping or duplicating** an element, and the tests prove neither of the
@@ -57,7 +202,7 @@ as a law to propose.
 Idempotence, meanwhile, is the weak one of the three — most mutants are stable under
 re-application, so applying them twice equals applying them once. It rejects **≤3 of 7**.
 
-## 3. The re-tag pays off, measured
+## 7. The re-tag pays off, measured
 
 `[PlayerScore]` normalises to `Array` in `StdlibAnchor.catalogType`, and PR #31 tagged the
 catalog's `Array | idempotent under sort` row `idempotence`. Before/after, by restoring the
@@ -72,7 +217,7 @@ AFTER  PR#31: 2
 
 Independent confirmation on a different carrier from the `Stack` case used in PR #32.
 
-## 4. Two defects the fixture found
+## 8. Two defects the fixture found
 
 **A `comparator` law is proposed for 1 of 4 comparators — and not for either deliberate
 defect.** `ComparatorTemplate.orderingNameStems` gates on the *name*: `byScoreDescending`
@@ -97,7 +242,7 @@ and misses it, because it keys on `IteratorProtocol` conformance and on type-nam
 and this is a struct called `Generators` with no conformance. **The signal is the method
 name `next`, not the type.** Same for `advance`, `step`, `tick`.
 
-## 5. Two design claims of mine that were wrong
+## 9. Two design claims of mine that were wrong
 
 Recorded because both were wrong in the same direction — I reasoned about the experiment
 instead of running it.
@@ -123,7 +268,7 @@ It becomes a precondition the moment equality stops seeing the whole value — w
 while presenting a different leaderboard to a reader. That is the `storedFieldProjection`
 blindness `fixtures/equatable-signal` measured, reached from the sort side.
 
-## 6. The generator is the experiment
+## 10. The generator is the experiment
 
 Bowling is a rare **positive** control for the collision rule, because the real domain is
 narrow enough that ties arise unaided — with 5 players from `0...300`, P(tie) ≈ 6.5% per
@@ -140,7 +285,7 @@ unstable, and the suite is green — because the generator was chosen for the *t
 than for the *law*. The forced-tie arm is what makes the green interpretable; without it,
 "no counterexample" and "no counterexample reachable" look identical.
 
-## 7. Two arms, one line apart
+## 11. Two arms, one line apart
 
 | arm | comparator | order | `differential` |
 |---|---|---|---|
@@ -159,7 +304,7 @@ implementations that agree on every input and a differential law that cannot fai
 reading exactly like a passing one. Selection sort is naturally unstable, which makes the
 disagreement real.
 
-## 8. Scope
+## 12. Scope
 
 Member form throughout, free functions as the control — the free-vs-member split is the most
 reliable way to make the tool go silent for structural rather than semantic reasons, which is
