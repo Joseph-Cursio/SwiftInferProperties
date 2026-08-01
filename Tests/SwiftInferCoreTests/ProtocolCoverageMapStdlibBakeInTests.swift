@@ -12,7 +12,7 @@ struct ProtocolCoverageMapStdlibBakeInTests {
 
     // MARK: - Table coverage
 
-    @Test("Stdlib bake-in contains exactly 14 documented type keys")
+    @Test("Stdlib bake-in contains exactly 20 documented type keys")
     func bakeInKeyCount() {
         let expected: Set<String> = [
             // Signed integer family
@@ -22,10 +22,15 @@ struct ProtocolCoverageMapStdlibBakeInTests {
             // Floating-point family
             "Float", "Double",
             // Other primitives
-            "Bool", "String"
+            "Bool", "String",
+            // Collection family, added 2026-08-01 — unconditional conformances only.
+            // V1.7.1 scoped this table to a numeric finding and never revisited it;
+            // by the time `OrderedCarrierDiscriminator` began reading the conformance
+            // index there were twelve consumers and the table still held only scalars.
+            "Substring", "Array", "ContiguousArray", "ArraySlice", "Set", "Dictionary"
         ]
         #expect(Set(ProtocolCoverageMap.stdlibConformances.keys) == expected)
-        #expect(ProtocolCoverageMap.stdlibConformances.count == 14)
+        #expect(ProtocolCoverageMap.stdlibConformances.count == 20)
     }
 
     @Test("Int carries Numeric / AdditiveArithmetic / SignedNumeric / Comparable / Hashable / Codable / Equatable")
@@ -84,10 +89,15 @@ struct ProtocolCoverageMapStdlibBakeInTests {
         #expect(!conformances.contains("AdditiveArithmetic"))
     }
 
+    /// String also carries its unconditional collection refinements as of 2026-08-01,
+    /// so this asserts containment rather than set equality — `StdlibCollectionBakeInTests`
+    /// pins the collection half.
     @Test("String carries Equatable / Comparable / Hashable / Codable")
     func stringConformances() {
         let conformances = ProtocolCoverageMap.stdlibConformances["String"] ?? []
-        #expect(conformances == ["Equatable", "Comparable", "Hashable", "Codable"])
+        for expected in ["Equatable", "Comparable", "Hashable", "Codable"] {
+            #expect(conformances.contains(expected))
+        }
         // String is not Numeric
         #expect(!conformances.contains("Numeric"))
         #expect(!conformances.contains("AdditiveArithmetic"))
@@ -101,15 +111,32 @@ struct ProtocolCoverageMapStdlibBakeInTests {
         #expect(ProtocolCoverageMap.stdlibConformances["Float16"] == nil)
     }
 
-    @Test("Generic / conditional-conformance types are deliberately excluded")
-    func genericTypesExcluded() {
-        // V1.7 plan §"Out of scope" — Optional<T> / Array<T> / Set<T>
-        // / Dictionary<K,V> / tuples are conditional on element types
-        // and a v1.1 constraint-engine concern.
-        #expect(ProtocolCoverageMap.stdlibConformances["Array"] == nil)
+    /// **This decision was REFINED on 2026-08-01, not overturned.**
+    ///
+    /// It read: *"Optional<T> / Array<T> / Set<T> / Dictionary<K,V> / tuples are
+    /// conditional on element types"*. That rationale is true of `Array: Equatable` and
+    /// **false** of `Array: RandomAccessCollection`, which is unconditional — but at V1.7
+    /// the only consumer was the coverage veto, which keys on *value* protocols, so
+    /// "exclude the type" and "exclude its conditional conformances" were the same
+    /// decision and there was no reason to separate them.
+    ///
+    /// `OrderedCarrierDiscriminator` is a consumer that needs exactly the unconditional
+    /// structural half, so the two are now separated: the collection family is present
+    /// with its unconditional refinements only, and `StdlibCollectionBakeInTests` pins
+    /// that no conditional conformance came with it.
+    ///
+    /// `Optional` stays excluded outright — every conformance it has is conditional on
+    /// `Wrapped`, so there is no unconditional half to admit.
+    @Test("Conditional-conformance types stay excluded; Optional entirely")
+    func conditionalConformanceTypesExcluded() {
         #expect(ProtocolCoverageMap.stdlibConformances["Optional"] == nil)
-        #expect(ProtocolCoverageMap.stdlibConformances["Set"] == nil)
-        #expect(ProtocolCoverageMap.stdlibConformances["Dictionary"] == nil)
+        // The collection family is present, but only structurally — the element-conditional
+        // conformances are still absent, which is the half the original decision was about.
+        for name in ["Array", "Set", "Dictionary"] {
+            let conformances = ProtocolCoverageMap.stdlibConformances[name] ?? []
+            #expect(!conformances.contains("Equatable"), "\(name) must not claim Equatable")
+            #expect(!conformances.contains("Hashable"), "\(name) must not claim Hashable")
+        }
     }
 
     // MARK: - inheritedTypesIndex(from:) integration
@@ -117,12 +144,14 @@ struct ProtocolCoverageMapStdlibBakeInTests {
     @Test("inheritedTypesIndex seeds with stdlib bake-in even on empty corpus")
     func emptyCorpusYieldsStdlibIndex() {
         let merged = ProtocolCoverageMap.inheritedTypesIndex(from: [])
-        // All 14 stdlib keys should appear without a single TypeDecl
+        // All 20 stdlib keys should appear without a single TypeDecl: 14 scalars from
+        // V1.7.1, plus the 6-strong collection family added 2026-08-01.
         #expect(merged["Int"]?.contains("Numeric") == true)
         #expect(merged["Double"]?.contains("BinaryFloatingPoint") == true)
         #expect(merged["Bool"]?.contains("Hashable") == true)
         #expect(merged["String"]?.contains("Comparable") == true)
-        #expect(merged.count == 14)
+        #expect(merged["Array"]?.contains("RandomAccessCollection") == true)
+        #expect(merged.count == 20)
     }
 
     @Test("Corpus extension on a stdlib type unions with (does not replace) the curated set")
