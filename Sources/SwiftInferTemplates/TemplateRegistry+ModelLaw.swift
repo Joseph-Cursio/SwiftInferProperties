@@ -20,6 +20,11 @@ extension TemplateRegistry {
                 collector.record(suggestion, generatorType: shape.typeName)
             }
         }
+        for shape in SetRelationModelPairing.candidates(in: summaries) {
+            if let suggestion = SetRelationModelLawTemplate.suggest(for: shape) {
+                collector.record(suggestion, generatorType: shape.typeName)
+            }
+        }
         collectSequenceViewModelLawSuggestions(
             summaries: summaries,
             inheritedTypesByName: inheritedTypesByName,

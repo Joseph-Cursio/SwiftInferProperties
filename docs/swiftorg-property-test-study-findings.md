@@ -701,6 +701,12 @@ Sweep: swift-syntax and swift-foundation produced **zero** rows (neither has a c
 a curated set operation with an element-typed `contains`), and this repo's own `+2` is
 self-dogfood on the two new files, not the template firing.
 
+> **CORRECTION 2026-08-01 — it closed THREE of the five `RangeSet` witnesses, not
+> five.** The sentence below says "the five swift.org `RangeSet` witnesses are now
+> covered". Measured: `union` / `intersection` / `symmetricDifference` fire;
+> `isDisjoint` and `isSubset` are **boolean-valued** and were never in
+> `SetOperation`. They are now covered by `SetRelationModelLawTemplate` (§8).
+
 **It closes ONE of the two evidence lines, and the other is still open.** The five swift.org
 `RangeSet` witnesses are now covered. The `Equatable`-signal line is not: its recommendation
 names the model as *"the type's canonical `Sequence` / `Collection` view"*, and the three bugs
@@ -1948,3 +1954,87 @@ while an order-preserving `union` on it is still non-commutative.
 rule abstains on it. Dropping the list would be safe on everything measured and
 unsafe on a shape nobody has written — the same posture as §7.3's redundant gate,
 and pinned by its own test arm so the residue is visible rather than assumed.
+
+---
+
+## 8. Working the gap list — the boolean-valued model law (2026-08-01)
+
+§1.25 left **19** `gap-with-witness` rows (the table says 18; row 13 was moved in
+post-hoc during Q3). Adjudicated into families, they are not 19 problems:
+
+| family | rows | state |
+|---|---:|---|
+| model law, set **operations** | 3 | closed by `ModelLawTemplate` |
+| model law, set **relations** | 2 | **closed here** |
+| absorbing state (exhausted iterator returns nil forever) | 4 | open — mutating carrier |
+| scaled decomposition (`Duration.seconds(d).components`) | 4 | open — 4 rows, one carrier |
+| randomness (surjectivity, seeded determinism, shuffle-preserves-multiset) | 4 | open — mostly purity-gated |
+| bulk-vs-incremental construction | 1 | open — general shape, unmeasured |
+| selection/membership biconditional | 1 | open |
+
+### 8.1 The correction that made this findable
+
+§1.25 recorded *"the five swift.org `RangeSet` witnesses are now covered."* Measured:
+**three**. `isDisjoint` and `isSubset` return `Bool` about a *pair*, and
+`ModelLawPairing.SetOperation` only ever held `union` / `intersection` /
+`symmetricDifference` / `subtracting`.
+
+The claim was written the day the sibling template shipped, from the same cluster,
+and nobody checked the two that did not fit its shape.
+
+### 8.2 What ships
+
+`SetRelationModelLawTemplate` — the relation held to the carrier's own membership:
+
+```
+if a.isDisjoint(with: b) { expect(!(a.contains(x) && b.contains(x))) }
+```
+
+A relation cannot be an equation, because its answer is one `Bool` about the whole
+pair. What *is* statable pointwise is an **implication** — and only one direction.
+
+**The direction it cannot check, stated rather than buried.** A wrongly-`true`
+answer dies as soon as `x` lands in the overlap. A wrongly-`false` answer cannot be
+refuted pointwise at all: that needs an existential, which no single trial
+establishes. The direction it does check is the one interval- and bitset-backed
+implementations actually fail — a missed overlap at a seam.
+
+**Measured, four corpora: 23 rows, zero false positives.**
+
+| corpus | rows | carriers |
+|---|---:|---|
+| swift-collections | 17 | `BitSet`, `BitSet.Counted`, `OrderedSet`, `OrderedSet.UnorderedView`, `SortedSet`, `TreeSet` |
+| `stdlib/public/core` | 6 | `RangeSet`, `Set` |
+| swift-foundation | 0 | — |
+| swift-syntax | 0 | — |
+
+Both witnesses fire at Strong. `OptionSet` is absent, because the template reuses
+`ModelLawPairing.membershipPredicate` verbatim — including the element-typed gate
+that stopped three `OptionSet` false positives at Strong on the sibling's first
+measured run.
+
+### 8.3 Two things declined
+
+**The strict variants.** `isStrictSubset` differs from `isSubset` only in requiring
+properness, and properness is an existential — pointwise the two produce an
+*identical* law. Emitting them would add rows that cannot test the thing their name
+is about, which is what "score refutability, not suggestion count" forbids. That is
+5 relations found per carrier reduced to 3 proposed.
+
+**Strong by default was not.** It scores 70 (Likely) for a lone relation and 80
+with the three-relation cluster bonus — one tier below the sibling's baseline on
+purpose, because the equation form is a biconditional refutable from either side
+and this one checks a single implication.
+
+### 8.4 The four gates, as applied
+
+The two shapes declined in §7.1 died on gates 1 and 4. This one was checked against
+all four *before* building, which is the only reason it was worth starting:
+
+1. **Population** — 38 relations across 8 carriers, measured first.
+2. **Refutability** — a false `true` at a seam is the bug class the sibling template
+   was built for.
+3. **Non-duplication** — `checkSetAlgebraPropertyLaws`' 15 laws relate operations to
+   each other and mention `isSubset` / `isDisjoint` / `isSuperset` **zero** times.
+4. **Statability** — pointwise as an implication, with the missing direction named
+   in the caveat rather than discovered by a reader.
