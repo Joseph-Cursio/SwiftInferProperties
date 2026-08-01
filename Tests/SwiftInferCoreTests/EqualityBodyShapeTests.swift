@@ -81,6 +81,45 @@ struct EqualityBodyShapeTests {
         #expect(result == .sequenceComparison(callee: "inlined pairwise scan"))
     }
 
+    /// `SortedSet+Equatable.swift:27` — the fourth spelling, and the one the first
+    /// tightening lost. `zip` is lockstep by definition, so this is the least
+    /// ambiguous pairwise traversal of the four; it was dropped because it uses
+    /// neither subscripts nor `makeIterator`, and the tightening was validated by
+    /// checking that the false positives had gone rather than by checking what else
+    /// went with them.
+    @Test("SortedSet's body — a zip traversal")
+    func zipTraversalShape() {
+        let result = shape("""
+        {
+            if left.count != right.count { return false }
+            for (k1, k2) in zip(left, right) {
+                if k1 != k2 { return false }
+            }
+            return true
+        }
+        """)
+        #expect(result == .sequenceComparison(callee: "zip traversal"))
+    }
+
+    /// `Dictionary.swift:1511`, whose own comment reads "Perform unordered comparison
+    /// of keys". A membership scan stays excluded even with `zip` admitted — the two
+    /// rules must not leak into each other.
+    @Test("Dictionary.Keys' unordered comparison is still not a sequence comparison")
+    func unorderedKeysComparisonStaysExcluded() {
+        let result = shape("""
+        {
+            if left.count != right.count { return false }
+            for key in left {
+                if !right.contains(key) { return false }
+            }
+            return true
+        }
+        """)
+        #expect(result != .sequenceComparison(callee: "zip traversal"))
+        #expect(result != .sequenceComparison(callee: "inlined element loop"))
+        #expect(result != .sequenceComparison(callee: "inlined pairwise scan"))
+    }
+
     // MARK: - The refutable case
 
     /// `BitArray+Equatable.swift:27`. The guard's field counts: equality genuinely
