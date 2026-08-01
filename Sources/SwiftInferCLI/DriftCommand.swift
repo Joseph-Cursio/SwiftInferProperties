@@ -105,7 +105,7 @@ extension SwiftInferCommand {
                 directory: directory,
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
-                verifyEvidenceByIdentity: evidenceByIdentity,
+                evidence: DiscoverEvidenceInputs(verifyByIdentity: evidenceByIdentity),
                 diagnostics: diagnostics
             )
             let packageRoot = pipeline.packageRoot ?? directory

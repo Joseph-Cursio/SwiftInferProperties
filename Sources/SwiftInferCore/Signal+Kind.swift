@@ -278,6 +278,10 @@ extension Signal {
         /// the cycle-61/62 "defaultFails does not demote" decision on
         /// exactly this ground (see `docs/calibration-cycle-63-findings.md`).
         case verifyDisproven
+        /// The kit measured this carrier's `==` to be broken, so any law
+        /// stated with it cannot be checked. See `docs/signal-kind-rationales.md`
+        /// — the rationale is long and the file is at its cap.
+        case kitEqualityOracleRefuted
         /// V1.5.1 — fires when the candidate's primary type already
         /// conforms to a protocol whose published laws cover the
         /// `KnownProperty` the template would emit (looked up via

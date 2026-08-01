@@ -115,7 +115,7 @@ extension SwiftInferCommand.Discover {
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,
         packsOverride: String? = nil,
-        verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
+        evidence: DiscoverEvidenceInputs = .unrun,
         seedManifest: SeedManifest? = nil,
         requireCorroboration: Bool = false,
         diagnostics: any DiagnosticOutput
@@ -161,7 +161,7 @@ extension SwiftInferCommand.Discover {
             artifacts: artifacts,
             liftedArtifacts: liftedArtifacts,
             setup: setup,
-            verifyEvidenceByIdentity: verifyEvidenceByIdentity,
+            evidence: evidence,
             diagnostics: diagnostics
         )
         return makePipelineResult(
@@ -248,7 +248,7 @@ extension SwiftInferCommand.Discover {
         artifacts: TemplateRegistry.DiscoverArtifacts,
         liftedArtifacts: TestLifter.Artifacts,
         setup: PipelineSetup,
-        verifyEvidenceByIdentity: [String: VerifyEvidence],
+        evidence: DiscoverEvidenceInputs,
         diagnostics: any DiagnosticOutput
     ) -> VisibilityCut {
         let promotedLifted = LiftedSuggestionPipeline.promote(
@@ -281,10 +281,21 @@ extension SwiftInferCommand.Discover {
         // applied this after the cut, in the CLI layer, where it could
         // only re-grade already-visible picks. An empty map (every
         // caller but `discover`) leaves `combined` untouched.
-        let graded = VerifyEvidenceScoring.applied(
+        let verifyGraded = VerifyEvidenceScoring.applied(
             to: combined,
-            evidenceByIdentity: verifyEvidenceByIdentity
+            evidenceByIdentity: evidence.verifyByIdentity
         )
+        // Then PropertyLawKit's verdicts. Order is deliberate — the kit's demotion applies
+        // to whatever verify concluded, because a pick verify lifted to `bothPass` is still
+        // unusable if the `==` it was compared with has been measured broken. An empty log
+        // (the normal state) leaves this untouched. See `KitEvidenceScoring`.
+        let graded = KitEvidenceScoring.applied(to: verifyGraded, evidence: evidence.kit)
+        // Before the cut, not from the caller's post-cut set: the demotion is what removes
+        // these from view, so reporting on survivors would guarantee silence in exactly the
+        // case worth reporting. The suggestion loses visibility; the diagnosis must not.
+        for line in KitEvidenceScoring.diagnostics(for: graded, evidence: evidence.kit) {
+            diagnostics.writeDiagnostic("warning: \(line)")
+        }
         // `.suppressed` is never shown — not even with `--include-possible`
         // (`Tier.suppressed` doc; `renderStats` assumes it). V1.67 makes this
         // explicit: verify-disproven picks land here as `.suppressed`, and the

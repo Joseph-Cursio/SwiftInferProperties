@@ -129,3 +129,46 @@ hazard read from the other side.
 Scored-then-filtered rather than dropped at the pairing stage, on the
 `protocolCoveredProperty` precedent, so `metrics` can still answer
 "how many pairs did this veto suppress?".
+
+## `kitEqualityOracleRefuted`
+
+**Fires when PropertyLawKit has *measured* the carrier's `==` to be broken, and the
+suggestion's law is stated with it.**
+
+Almost every property `discover` proposes is an `==` between two expressions —
+`f(f(x)) == f(x)`, `a • b == b • a`, `decode(encode(x)) == x`. All of them use the carrier's
+`==` as the oracle. When the kit has executed the Equatable/Hashable laws and one of them
+**failed at `Strict` tier**, those proposals are not so much wrong as **unusable**: they
+will be checked with a comparison that does not work, and a green run means nothing.
+
+**Why this signal exists at all.** Before it, the toolchain was one-way — `discover`
+proposed, a human wrote tests, the kit ran them, and nothing came back. The kit's verdicts
+are the only *executed* evidence anywhere in the pipeline and they influenced no later
+inference. That is the same quarantine as two other findings from 2026-08-01: the curated
+catalog contributes zero to scoring, and `ProtocolCoverageMap` vetoes a template on the
+*assumption* the kit covers a law without checking whether the kit ever ran.
+
+**Why it demotes rather than vetoes.** The law may be perfectly true and worth stating; what
+is broken is the ability to check it. The useful output is a diagnosis with a prerequisite —
+*fix `==`, then these become checkable* — not silence. `ProtocolCoverageMap`'s full veto is
+the wrong precedent: it fires on **coverage**, this fires on **refutation**, and a reader
+whose equality is broken needs to be told, not to be shown an empty run.
+
+**Three exclusions, each measured rather than argued.**
+
+- **`Heuristic`-tier failures do not fire it.** `fixtures/toolchain-coverage` measured a
+  *correct* type failing `Hashable.distribution` purely because the generator had been
+  narrowed to hunt a collision bug — the projection bug needs collisions to be visible and
+  the distribution law needs their absence, and one generator cannot serve both. Demoting on
+  that basis would punish a reader for aiming their generator well.
+- **`.expectedViolation` does not fire it.** The author used the kit's own
+  `.intentionalViolation` suppression to say the failure is the documented design.
+- **`Comparable.totalOrder` is not in the trigger set.** A broken `<` invalidates *ordering*
+  laws, not equality-shaped ones. Conflating them would suppress far more than the evidence
+  supports.
+
+The witness is `fixtures/toolchain-coverage`: a projecting `==` beside a synthesized
+`hash(into:)`, rejected by the kit at `Strict` in 17 trials, while all four Equatable laws
+pass — because a projection *is* an equivalence relation. A tool that kept proposing
+`==`-shaped laws for that type after the kit said so would be ignoring the best evidence it
+has.
