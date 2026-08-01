@@ -2401,3 +2401,64 @@ It was in the product the whole time. That is the fifth instance today of knowle
 sitting in the repo unconnected to the question being asked, and the cheapest one to
 have avoided: `known-properties` is a shipped command with a documented `[reference]`
 tag.
+
+### 9.3 Functor identity — the second family from the reference list
+
+Six `[reference]` rows: `Optional`'s map identity / composition / flatMap right
+identity, and `mapValues` functor identity on `Dictionary`, `OrderedDictionary` and
+`TreeDictionary`.
+
+`FunctorIdentityTemplate` states `c.map { $0 } == c`.
+
+#### One rule doing two jobs
+
+**The return type must be the carrier.** That single requirement is both gates:
+
+*Correctness.* `Set.map` returns `[T]`, not `Set<T>` — `s.map { $0 } == s` does not
+typecheck. `Dictionary.map` is the same, which is exactly why the catalog states the
+law over `mapValues`.
+
+*Kit overlap.* `checkTransformationPropertyLaws` ships `Transformation.mapFusion` —
+`sample.map(f).map(g) == sample.map { g(f($0)) }` — over **any `Sequence`**. So a bare
+`map` on a sequence carrier is the kit's job. `mapValues` is not `Sequence.map`, so a
+dictionary carrier is new surface *even though `Dictionary` is a `Sequence`*.
+
+That distinction is the difference between 5 usable rows and 8.
+
+#### The name fallback, forced by a measured admission
+
+`LazyMapSequence.map` **is** `Sequence.map` and a double-report — but its `Sequence`
+conformance lives in a conditional extension the scanner does not record, so a
+conformance-only rule **admitted it**. Adding the `IdempotenceTemplate+IteratorVeto`
+pattern — textual conformance primary, name suffix secondary — took the count from 9
+to 8 and removed the only double-report.
+
+That is the second time today the conformance index has been wrong in the
+*permissive* direction. `stdlibConformances` was missing collections (§8.8-adjacent);
+here a conditional extension is invisible. **The index is reliable when it answers and
+unreliable when it does not**, so a rule keyed on it needs a decline-on-silence branch.
+
+#### Measured: 8 rows, no double-reports
+
+| corpus | rows | carriers |
+|---|---:|---|
+| `stdlib/public/core` | 4 | `Result` (×2, `map` + `mapError`), `Dictionary.mapValues` |
+| swift-collections | 3 | `OrderedDictionary`, `SortedDictionary`, `TreeDictionary` |
+| swift-nio | 2 | `EventLoopFuture`, `IOResult` |
+
+Re-checked against the 9 traps: no trap carrier fires.
+
+#### Identity, not composition, and the caveat says why
+
+Composition is the stronger law — it catches a map correct at the identity function
+and wrong on everything else. It is not proposed because it needs **two generated
+functions** rather than a value, which is a generator capability rather than a
+template shape. The caveat says so and tells a reader writing one law by hand to
+write that one.
+
+### 9.4 Registry housekeeping
+
+Six family fan-outs in `collectModelLawSuggestions` pushed it past its cyclomatic cap.
+Split one-helper-per-family rather than shaved: they share nothing but the name "model
+law" — membership keys on a `contains` predicate, sequence-view on conformances, the
+rest on curated verb tables.
