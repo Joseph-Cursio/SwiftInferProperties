@@ -452,6 +452,14 @@ law — the judgment part — and the generator is the mechanical part that is m
 > is as a **search index for where to point the catalogue**, not as a source of tests to
 > convert — which would make Q4's stated deliverable the wrong one. Recorded at the end of
 > the session that unblocked Q4, untested against the weak-generator population.
+>
+> > **TESTED 2026-07-31 — findings §6, and the sentence above was right as written.**
+> > On `IntegerDivision.swift`'s `Int64` arm the generator swap is a strict gain
+> > (**2/8 → 8/8** mutants killed, gained 6 lost 0, law verbatim) while the law-completion
+> > half found **nothing to add** — the law as written is already complete and `discover`
+> > proposes nothing on `dividingFullWidth` at all. So the two halves are each other's
+> > mirror across `sort_integers` and this file, and neither generalises yet. §5's reframe
+> > is **one of two mechanisms**, not a replacement for this deliverable.
 Keep the law verbatim, replace the generator, and pick up shrinking and seed reproducibility
 for free. Today a `UUIDTests` failure at iteration 7,432 hands you nothing.
 
@@ -523,6 +531,12 @@ interesting.
 
 **Deliverable.** The two parser extensions (**done**); then N converted suites from the
 **weak-generator** population, each with a before/after on what the generator now covers.
+
+> **First conversion DONE 2026-07-31** — `IntegerDivision.swift`'s `Int64` arm, gated at
+> `fixtures/integer-division-generator/`. The before/after is reported in **refutation**
+> units rather than coverage counts (2/8 → 8/8 mutant dividers killed, two of them interior
+> controls showing the edge budget cost no interior detection); the coverage table is 0/17
+> → 17/17. Findings §6.
 
 ### Q5 — Do the property-style tests use weak generators?
 

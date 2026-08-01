@@ -45,6 +45,11 @@ fastlane/test_output
 fixtures/cycle27-surface/.build/
 fixtures/cycle27-surface/Package.resolved
 
+# The integer-division-generator fixture's build products. Unlike the fixtures
+# above it resolves nothing over the network (the standard library is its
+# subject), so there is no Package.resolved to ignore.
+fixtures/integer-division-generator/.build/
+
 # SwiftLint config backups left by the SwiftLintRuleStudio editor on save
 .swiftlint.yml.*.backup
 
