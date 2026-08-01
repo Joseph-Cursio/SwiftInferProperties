@@ -1171,6 +1171,58 @@ which cannot violate reflexivity, symmetry or transitivity. That population's ve
 | defect | corpus | status |
 |---|---|---|
 | `test/stdlib/sort_integers.swift` — sortedness check could not fail (`CHECK-NOT: Error!` vs printed `Error: `) | `swift` | **`swiftlang/swift#91083`** — approved by `tbkka`, **merged 2026-07-30** |
+| `SortedDictionary.Keys.==` and `.Values.==` — inverted comparison, `if e1 == e2 { return false }` where `!=` was meant. **Reflexivity is false and disjoint views compare equal.** | `swift-collections` @ `899809d3` | found 2026-07-31, **not reported** — see §3.1 |
+
+### 3.1 The `SortedDictionary` views, and why the caveat is load-bearing
+
+Found by chasing what §7.4's tightening dropped. Both files, verbatim:
+
+```swift
+if lhs.count != rhs.count { return false }
+for (e1, e2) in zip(lhs, rhs) {
+  if e1 == e2 {          // <-- `!=` was meant
+    return false
+  }
+}
+return true
+```
+
+**Confirmed by running it, not by reading it** — the repo's standing rule, and it
+paid: the behaviour is worse than the reflexivity violation the body suggests.
+
+| expression | result | should be |
+|---|---|---|
+| `keys == keys` | **false** | true |
+| `values == values` | **false** | true |
+| `[1,2,3].keys == [4,5,6].keys` | **true** | false |
+| `SortedSet == SortedSet` (control) | true | true |
+| `SortedDictionary == SortedDictionary` (control) | true | true |
+
+Not merely non-reflexive: two *disjoint* views of the same size compare **equal**.
+`SortedSet`, `SortedSet.SubSequence`, `SortedDictionary` and
+`SortedDictionary.SubSequence` all use `!=` and are correct — only the two
+projection views are wrong.
+
+**And it has no coverage**: `Tests/SortedCollectionsTests/` has no equality test
+for either view, which is the §3 bar (*"a check that cannot fail **and** has no
+other coverage"*) reached from the other side — here there is no check at all.
+
+**The caveat that keeps this honest.** `SortedCollections` is gated behind the
+`UnstableSortedCollections` trait, which is **commented out of the default trait
+set**, and the trait's own description reads *"early developer drafts, and they
+are not ready for use in production. We will make significant, source breaking API
+changes to these types before they ship."* So this is a real bug in **unreleased,
+opt-in** code, not a defect in shipping swift-collections. Recording it as the
+latter would be exactly the over-claim §4 retracted for `sort_integers`.
+
+**What it says about the toolchain, which is the reusable part.** This is *not* the
+projection-blindness class the study has been chasing — `checkEquatablePropertyLaws`
+would catch it on the first trial, because reflexivity is plainly false. So the
+finding is not "our model law found something the kit could not". It is that a
+public `==` shipped with **no law suite pointed at it at all**, and the thing that
+surfaced it was reading `==` bodies systematically rather than any property being
+proposed. That is the §5 location-marking claim arriving from an unexpected
+direction: the catalogue never fired here, and the *census* did.
 
 Found opportunistically before this study began. Q2 predicts more; each gets a row.
 
@@ -1809,6 +1861,27 @@ to **8**, all genuine.
 Two false starts, both caught by reading output rather than by reasoning — the
 same pattern as §6.6, and the argument for running a new signal over a corpus
 before trusting it.
+
+#### A third: the tightening threw out a real spelling with the false positives
+
+Chasing the types the tightening dropped found a **fourth spelling** —
+`SortedSet+Equatable.swift:27`:
+
+```swift
+for (k1, k2) in zip(lhs, rhs) { if k1 != k2 { return false } }
+return true
+```
+
+`zip` is lockstep *by definition*, so this is the least ambiguous pairwise
+traversal of the four. It was lost because it uses neither subscripts nor
+`makeIterator`, and the tightening was validated by checking that the false
+positives had gone — **not** by checking what else went with them. Adding it takes
+the classification 8 → 14 (six `Sorted*` entries), with the two membership scans
+and `Dictionary.Keys` correctly staying out.
+
+The transferable point is narrow and worth keeping: *"measure after each fix"*
+applies to what a fix **removes**, not only to what it was aimed at. A tightening
+validated against its own motivating example is validated against one row.
 
 #### One housekeeping note worth leaving
 

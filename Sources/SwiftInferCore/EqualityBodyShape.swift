@@ -167,6 +167,7 @@ public enum EqualityBodyClassifier {
         guard let loop = preceding.compactMap(loopBody(of:)).first(where: returnsFalse) else {
             return nil
         }
+        if preceding.contains(where: iteratesAZipOfBoth) { return "zip traversal" }
         // Both operands must take part, or this is a scan over one of them and says
         // nothing about the pair.
         guard operands.isEmpty || operands.allSatisfy({ name in
@@ -190,6 +191,32 @@ public enum EqualityBodyClassifier {
         if comparesTwoSubscripts(loop) { return "inlined element loop" }
         if drawsFromTwoIterators(preceding) { return "inlined pairwise scan" }
         return nil
+    }
+
+    /// Whether a statement is `for … in zip(a, b)`.
+    ///
+    /// **The fourth spelling, and the one that was missed.** `zip` is lockstep by
+    /// definition, so this is the least ambiguous pairwise traversal of the four —
+    /// and the tightening that removed the membership-scan false positives took it
+    /// out along with them, because it uses neither subscripts nor `makeIterator`:
+    ///
+    ///     // SortedSet+Equatable.swift:27
+    ///     for (k1, k2) in zip(lhs, rhs) { if k1 != k2 { return false } }
+    ///     return true
+    ///
+    /// Recorded because the loss was invisible from inside the classifier: the
+    /// tightening was validated by checking that the false positives had gone, not by
+    /// checking what else went with them. "Measure after each fix" applies to the
+    /// things a fix removes, not only to the ones it was aimed at.
+    private static func iteratesAZipOfBoth(_ item: CodeBlockItemSyntax) -> Bool {
+        guard case .stmt(let statement) = item.item,
+              let loop = statement.as(ForStmtSyntax.self),
+              let call = loop.sequence.as(FunctionCallExprSyntax.self),
+              let callee = call.calledExpression.as(DeclReferenceExprSyntax.self),
+              callee.baseName.text == "zip" else {
+            return false
+        }
+        return call.arguments.count == 2
     }
 
     /// Whether the statements draw from two independent iterators — the parallel-
