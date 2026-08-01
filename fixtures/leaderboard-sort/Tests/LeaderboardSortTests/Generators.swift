@@ -1,4 +1,5 @@
 import Foundation
+@testable import LeaderboardSort
 
 /// The generators — **the experiment, not a detail**.
 ///

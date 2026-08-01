@@ -77,6 +77,19 @@ extension SwiftInferCommand.Discover {
     ///
     /// V1.89 lint pass — extracted from `Discover.run` so the
     /// orchestrator body stays under SwiftLint's 50-line cap.
+    /// Both executed-evidence sources, loaded together. PropertyLawKit's verdicts are absent
+    /// in the normal case, which leaves inference's standing assumption intact — that `==` is
+    /// sound, because checking that is what the Equatable laws are for.
+    static func loadEvidence(
+        directory: URL,
+        diagnostics: any DiagnosticOutput
+    ) -> DiscoverEvidenceInputs {
+        DiscoverEvidenceInputs(
+            verifyByIdentity: loadVerifyEvidenceMap(directory: directory, diagnostics: diagnostics),
+            kit: KitEvidenceStore.load(startingFrom: directory)
+        )
+    }
+
     static func loadVerifyEvidenceMap(
         directory: URL,
         diagnostics: any DiagnosticOutput

@@ -1,6 +1,10 @@
 import Foundation
 
-/// The two implementations, plus the mutants.
+/// The two implementations under test.
+///
+/// The MUTANTS used to live here and now live in the test target (`Mutants.swift`) — they
+/// are apparatus, and putting apparatus in the scanned target is what made the first
+/// scorecard noise.
 ///
 /// ## Why selection sort, and not insertion sort
 ///
@@ -43,60 +47,6 @@ public enum Sorts {
         by areInIncreasingOrder: (PlayerScore, PlayerScore) -> Bool
     ) -> [PlayerScore] {
         input.sorted(by: areInIncreasingOrder)
-    }
-
-    // MARK: - Mutants
-
-    /// Every deliberate defect, so the test matrix can iterate them by name.
-    ///
-    /// `nonStrictComparator` and `disjunctiveComparator` are **comparator** mutants —
-    /// the implementation is the correct built-in and the defect is in the ordering
-    /// relation. They are separated because they fail differently: one traps, and the
-    /// tests must expect that rather than a wrong answer.
-    public enum Mutant: String, CaseIterable, Sendable {
-        case dropsLastWhenOddCount
-        case duplicatesFirst
-        case ascendingInsteadOfDescending
-        case unstableTieHandling
-        case sortsByNameNotScore
-        case returnsInputUnchanged
-        case leavesLastElementUnsorted
-
-        /// The mutated sort. Comparator mutants are not here — see `Comparators`.
-        public func apply(
-            _ input: [PlayerScore],
-            by areInIncreasingOrder: (PlayerScore, PlayerScore) -> Bool
-        ) -> [PlayerScore] {
-            switch self {
-            case .dropsLastWhenOddCount:
-                let sorted = Sorts.builtinSorted(input, by: areInIncreasingOrder)
-                return sorted.count % 2 == 1 ? Array(sorted.dropLast()) : sorted
-
-            case .duplicatesFirst:
-                let sorted = Sorts.builtinSorted(input, by: areInIncreasingOrder)
-                guard let first = sorted.first else { return sorted }
-                return [first] + sorted
-
-            case .ascendingInsteadOfDescending:
-                return Sorts.builtinSorted(input, by: { areInIncreasingOrder($1, $0) })
-
-            case .unstableTieHandling:
-                // Correct under a TOTAL order; differs from the stable built-in only
-                // where the comparator leaves ties — i.e. arm A only.
-                return Sorts.selectionSorted(input, by: areInIncreasingOrder)
-
-            case .sortsByNameNotScore:
-                return input.sorted { $0.name < $1.name }
-
-            case .returnsInputUnchanged:
-                return input
-
-            case .leavesLastElementUnsorted:
-                let sorted = Sorts.builtinSorted(input, by: areInIncreasingOrder)
-                guard sorted.count > 1 else { return sorted }
-                return Array(sorted.dropLast()) + [input[input.count - 1]]
-            }
-        }
     }
 }
 

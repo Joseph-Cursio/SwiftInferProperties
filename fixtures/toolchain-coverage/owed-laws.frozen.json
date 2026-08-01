@@ -1,0 +1,37 @@
+{
+  "_": "FROZEN BEFORE MEASUREMENT. Committed on its own so git history proves the order.",
+  "subject": "fixtures/leaderboard-sort/Sources/LeaderboardSort",
+  "question": "Of the laws this code owes, how many does the TOOLCHAIN cover — and what is discover's marginal contribution on top of the kit?",
+  "method": [
+    "The denominator is laws OWED, enumerated by hand from the source, not from any tool's output.",
+    "Three buckets: covered-by-kit, covered-by-discover, covered-by-nothing.",
+    "`predicted` is my guess, frozen here so it can be scored. It is NOT the answer key.",
+    "A law the kit covers but too WEAKLY to catch a realistic bug is recorded as kit-weak, not kit — the Equatable/projection case is the reason that distinction exists.",
+    "Anything found that this list missed is recorded UNSCORED (a tool may not grade its own homework, and neither may its author)."
+  ],
+  "laws": [
+    {"id": 1,  "subject": "PlayerScore",          "law": "== is reflexive",                              "predicted": "kit"},
+    {"id": 2,  "subject": "PlayerScore",          "law": "== is symmetric",                              "predicted": "kit"},
+    {"id": 3,  "subject": "PlayerScore",          "law": "== is transitive",                             "predicted": "kit"},
+    {"id": 4,  "subject": "PlayerScore",          "law": "a == b implies equal hashValue",               "predicted": "kit"},
+    {"id": 5,  "subject": "ProjectedPlayerScore", "law": "== is reflexive",                              "predicted": "kit-weak"},
+    {"id": 6,  "subject": "ProjectedPlayerScore", "law": "== is symmetric",                              "predicted": "kit-weak"},
+    {"id": 7,  "subject": "ProjectedPlayerScore", "law": "== is transitive",                             "predicted": "kit-weak"},
+    {"id": 8,  "subject": "ProjectedPlayerScore", "law": "a == b implies equal hashValue (KNOWN FALSE)", "predicted": "kit"},
+    {"id": 9,  "subject": "Leaderboard.sorted",   "law": "sorting twice equals sorting once",            "predicted": "discover"},
+    {"id": 10, "subject": "Leaderboard.sorted",   "law": "output is ordered by the comparator",          "predicted": "nothing"},
+    {"id": 11, "subject": "Leaderboard.sorted",   "law": "output is a permutation of the input",         "predicted": "nothing"},
+    {"id": 12, "subject": "Leaderboard.sorted",   "law": "sorted().count == count",                      "predicted": "nothing"},
+    {"id": 13, "subject": "Comparators",          "law": "byScoreThenName is a strict weak ordering",    "predicted": "nothing"},
+    {"id": 14, "subject": "Comparators",          "law": "byScoreDescending is a strict weak ordering",  "predicted": "discover"},
+    {"id": 15, "subject": "Leaderboard",          "law": "names are unique across entries",              "predicted": "nothing"},
+    {"id": 16, "subject": "Leaderboard.add",      "law": "add grows count by exactly 1",                 "predicted": "nothing"},
+    {"id": 17, "subject": "Leaderboard.add",      "law": "after add, sorted() reflects the new entry",   "predicted": "nothing"},
+    {"id": 18, "subject": "Leaderboard",          "law": "value semantics: mutating a copy spares the original", "predicted": "kit"},
+    {"id": 19, "subject": "PlayerScore.score",    "law": "score >= 0",                                   "predicted": "discover"},
+    {"id": 20, "subject": "PlayerScore.score",    "law": "score <= 300",                                 "predicted": "nothing"},
+    {"id": 21, "subject": "free vs member",       "law": "sortedByScore(b.all) agrees with b.sortedByScoreOnly()", "predicted": "nothing"},
+    {"id": 22, "subject": "Sorts",                "law": "selectionSorted agrees with builtinSorted under a total order", "predicted": "nothing"}
+  ],
+  "predicted_totals": {"kit": 6, "kit-weak": 3, "discover": 3, "nothing": 10, "total": 22}
+}

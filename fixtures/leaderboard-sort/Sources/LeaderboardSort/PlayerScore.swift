@@ -30,7 +30,16 @@ public struct PlayerScore: Equatable, Hashable, Sendable {
 ///
 /// It is a legitimate equivalence relation: reflexive, symmetric, transitive. That is
 /// exactly the problem — the laws cannot see what it forgot.
-public struct ProjectedPlayerScore: Equatable, Sendable {
+/// **Declared `Hashable` deliberately, with a hand-written `==` and a SYNTHESIZED
+/// `hash(into:)`.** Swift synthesizes the hash from *all* stored properties whenever they
+/// are `Hashable`, even when `==` is written by hand — so this type satisfies all four
+/// Equatable laws and violates the one that matters:
+///
+///     a == b  ⟹  a.hashValue == b.hashValue
+///
+/// Two players with equal scores are `==` and hash differently, which breaks `Set` and
+/// `Dictionary` outright. See `EquatableLawsTests`.
+public struct ProjectedPlayerScore: Equatable, Hashable, Sendable {
     public let name: String
     public let score: Int
 

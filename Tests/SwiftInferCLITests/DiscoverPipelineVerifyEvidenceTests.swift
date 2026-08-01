@@ -25,7 +25,7 @@ struct DiscoverPipelineVerifyEvidenceTests {
         try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
             includePossible: includePossible,
-            verifyEvidenceByIdentity: evidence,
+            evidence: DiscoverEvidenceInputs(verifyByIdentity: evidence),
             diagnostics: DPRecordingDiagnosticOutput()
         ).suggestions
     }

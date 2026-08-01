@@ -23,6 +23,11 @@ let package = Package(
     platforms: [
         .macOS(.v14)
     ],
+    products: [
+        // Exposed so `fixtures/toolchain-coverage` can run PropertyLawKit's suites against
+        // these types without duplicating them.
+        .library(name: "LeaderboardSort", targets: ["LeaderboardSort"])
+    ],
     targets: [
         .target(name: "LeaderboardSort"),
         .testTarget(

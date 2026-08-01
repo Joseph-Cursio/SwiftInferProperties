@@ -16,20 +16,87 @@ package's own tests against deliberate mutants.
 
 ---
 
-## 1. What `discover` proposes
+---
 
-13 suggestions: 6 `predicate`, 4 `idempotence`, 1 `comparator`, 1 `measure-non-negativity`,
-1 `filter-subset`. One Strong, two Likely, ten Possible.
+# ⚠ SECTIONS 1–5 OF THE FIRST VERSION ARE WITHDRAWN
 
-The Strong one is the member form working as intended:
+They scored `discover` and the numbers were noise, for two independent reasons. The
+diagnoses below them stand; the scorecards do not. Same posture as
+`docs/roadtest-self-dogfood.md`: withdraw the measurements, keep what was diagnosed.
+
+**1. I contaminated the corpus.** `Laws.swift`, `Generators.swift` and the mutants were in
+`Sources/` — the directory `discover` was then pointed at. **6 of 13 suggestions were the
+tool correctly analysing test apparatus I had put in the product target**, and the README
+read that as *"the tool cannot tell a subject from an apparatus."* Unfair: the apparatus was
+in the product. A corpus you assemble and then scan measures your assembly.
+
+**2. The denominator excluded PropertyLawKit.** "11 laws owed, 2 found, ~20% recall" scored
+`discover` **as if the kit did not exist**. It does, it has 44 law suites, and the end result
+a reader gets depends on it. The thought experiment that settles it: *if the kit were perfect
+and there were nothing left to infer, this scorecard would report 0% recall* — total success
+rendered as total failure. The question is never "what did `discover` find", it is "what does
+the toolchain cover, and what is `discover`'s marginal contribution on top of the kit."
+
+## The corrected run
+
+Apparatus moved to the test target, same command:
 
 ```
-Template: idempotence      Score: 85 (Strong)
-  ✓ Leaderboard.sorted() mutating () -> Void  // lifted to (Leaderboard) -> Leaderboard
-  ✓ Curated idempotence verb match: 'sorted' (+40)
+BEFORE (apparatus in Sources/): 13 suggestions
+AFTER  (apparatus in Tests/):    6
 ```
 
-## 2. The strongest law is not proposed
+| score | tier | template | subject | verdict |
+|---|---|---|---|---|
+| 85 | Strong | `idempotence` | `Leaderboard.sorted` | useful |
+| 40 | Likely | `comparator` | `byScoreDescending` | useful |
+| 35 | Possible | `filter-subset` | `selectionSorted` | weak (a strictly weaker permutation) |
+| 35 | Possible | `measure-non-negativity` | `count` | trivial |
+| 30 | Possible | `idempotence` | `sortedByScoreThenName` | useful (control) |
+| 30 | Possible | `idempotence` | `sortedByScore` | useful (control) |
+
+**6 suggestions, 4 useful, 2 weak, zero false.** That is a materially better result than the
+withdrawn version reported, and it is the tool's, not mine.
+
+### What specifically is withdrawn
+
+- *"6 of 13 are totality laws about the fixture's own law helpers"* — an artifact of where I
+  put the files.
+- *"yield is 4 of 13"* — it is 4 of 6.
+- *"the only false law in the run is its second-highest score"* — the false law was
+  `idempotence` on `Generators.next`, which is **apparatus**. It is gone from the clean run.
+- *"11 owed, 2 found, ~20% recall"* — wrong denominator (see 2 above).
+- The score-vs-truth inversion table, which rested on the contaminated ranking.
+
+### What stands, because it does not depend on either error
+
+- **The mutant × law matrix** (§7). It is about *laws*, not about the tool — ordering and
+  permutation are complements no matter who proposes them.
+- **The `Generators.next` template defect** (§9). A PRNG stepper reaching `Likely` on three
+  shape signals is a real, reproducible defect that would fire identically on product code;
+  `IteratorVeto` misses it because it keys on conformance and type-name suffix rather than on
+  the method name `next`. What is withdrawn is its use as a *field* finding, not the defect.
+- **The signal arithmetic** (§9): `+30` type-symmetry `+10` lifted `+5` value-semantics = 45
+  outranks a `+40` name signal, and `--require-corroboration` cannot see it because it counts
+  signals rather than signal *kinds*. Still true, still the sharpest actionable thing here.
+- **The comparator name gate** (§9): 1 of 4 comparators reached, neither deliberate SWO
+  violation among them.
+- **The anchor before/after** (§8): 0 → 2 `Proven analog` lines, independently confirming
+  PR #31.
+- **Everything about `Equatable`** (§3a): the four laws pass on a broken type and hash
+  consistency catches it. That section was always about the kit's laws, not `discover`'s.
+
+### What a non-noise version needs
+
+A toolchain-level scorecard, not a `discover`-level one: laws owed as the denominator, and
+three buckets — covered by the kit, covered by `discover`, covered by nothing. Building it
+means depending on SwiftPropertyLaws and running the suites against these types, which this
+fixture deliberately avoids (no external dependencies). That is a different, larger fixture
+and it is the honest next step.
+
+---
+
+## 6. The strongest law is not proposed
 
 **`sorted(xs)` is a permutation of `xs`** — multiset equality. It is the only law here that
 catches a sort **dropping or duplicating** an element, and the tests prove neither of the
@@ -57,7 +124,7 @@ as a law to propose.
 Idempotence, meanwhile, is the weak one of the three — most mutants are stable under
 re-application, so applying them twice equals applying them once. It rejects **≤3 of 7**.
 
-## 3. The re-tag pays off, measured
+## 7. The re-tag pays off, measured
 
 `[PlayerScore]` normalises to `Array` in `StdlibAnchor.catalogType`, and PR #31 tagged the
 catalog's `Array | idempotent under sort` row `idempotence`. Before/after, by restoring the
@@ -72,7 +139,7 @@ AFTER  PR#31: 2
 
 Independent confirmation on a different carrier from the `Stack` case used in PR #32.
 
-## 4. Two defects the fixture found
+## 8. Two defects the fixture found
 
 **A `comparator` law is proposed for 1 of 4 comparators — and not for either deliberate
 defect.** `ComparatorTemplate.orderingNameStems` gates on the *name*: `byScoreDescending`
@@ -97,7 +164,7 @@ and misses it, because it keys on `IteratorProtocol` conformance and on type-nam
 and this is a struct called `Generators` with no conformance. **The signal is the method
 name `next`, not the type.** Same for `advance`, `step`, `tick`.
 
-## 5. Two design claims of mine that were wrong
+## 9. Two design claims of mine that were wrong
 
 Recorded because both were wrong in the same direction — I reasoned about the experiment
 instead of running it.
@@ -123,7 +190,7 @@ It becomes a precondition the moment equality stops seeing the whole value — w
 while presenting a different leaderboard to a reader. That is the `storedFieldProjection`
 blindness `fixtures/equatable-signal` measured, reached from the sort side.
 
-## 6. The generator is the experiment
+## 10. The generator is the experiment
 
 Bowling is a rare **positive** control for the collision rule, because the real domain is
 narrow enough that ties arise unaided — with 5 players from `0...300`, P(tie) ≈ 6.5% per
@@ -140,7 +207,7 @@ unstable, and the suite is green — because the generator was chosen for the *t
 than for the *law*. The forced-tie arm is what makes the green interpretable; without it,
 "no counterexample" and "no counterexample reachable" look identical.
 
-## 7. Two arms, one line apart
+## 11. Two arms, one line apart
 
 | arm | comparator | order | `differential` |
 |---|---|---|---|
@@ -159,7 +226,7 @@ implementations that agree on every input and a differential law that cannot fai
 reading exactly like a passing one. Selection sort is naturally unstable, which makes the
 disagreement real.
 
-## 8. Scope
+## 12. Scope
 
 Member form throughout, free functions as the control — the free-vs-member split is the most
 reliable way to make the tool go silent for structural rather than semantic reasons, which is

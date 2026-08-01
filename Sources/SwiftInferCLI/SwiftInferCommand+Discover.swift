@@ -78,7 +78,7 @@ extension SwiftInferCommand.Discover {
         output: any DiscoverOutput,
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
     ) throws {
-        let evidenceByIdentity = loadVerifyEvidenceMap(directory: directory, diagnostics: diagnostics)
+        let evidence = loadEvidence(directory: directory, diagnostics: diagnostics)
         // The manifest reaches the pipeline as well as the focus below, because a seed naming an
         // access-restricted function must rescue it into template ANALYSIS — which happens inside
         // the pipeline — and not merely survive the focus applied to the pipeline's result.
@@ -90,7 +90,7 @@ extension SwiftInferCommand.Discover {
             explicitConfigPath: explicitConfigPath,
             explicitTestDirectory: explicitTestDirectory,
             packsOverride: packsOverride,
-            verifyEvidenceByIdentity: evidenceByIdentity,
+            evidence: evidence,
             seedManifest: seedManifest,
             requireCorroboration: requireCorroboration,
             diagnostics: diagnostics
@@ -108,7 +108,7 @@ extension SwiftInferCommand.Discover {
                 triageIO: interactiveIO(
                     prompt: promptInput, output: output, dryRun: dryRun, diagnostics: diagnostics
                 ),
-                evidenceByIdentity: evidenceByIdentity
+                evidenceByIdentity: evidence.verifyByIdentity
             )
             return
         }
@@ -123,7 +123,7 @@ extension SwiftInferCommand.Discover {
         renderAndWrite(
             visible: visible,
             statsOnly: statsOnly,
-            evidenceByIdentity: evidenceByIdentity,
+            evidenceByIdentity: evidence.verifyByIdentity,
             effectAnnotations: effectAnnotations
                 ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
             docstringAdvice: docstringAdviceIfEnabled(
