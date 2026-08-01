@@ -64,12 +64,33 @@ struct EquatableLawsTests {
         )
     }
 
-    /// And the consequence is not theoretical — it breaks the containers.
-    @Test("the container consequence: a Set holds two elements that are ==")
-    func setHoldsEqualElements() {
-        let set: Set<ProjectedPlayerScore> = [Self.ann, Self.bob]
+    /// **The container consequence is real and NONDETERMINISTIC — and I wrote the flaky
+    /// version of this test first.**
+    ///
+    /// The obvious assertion is `Set([ann, bob]).count == 2` — a `Set` holding two elements
+    /// that are `==`. Measured over six runs it gave 2, 2, 2, 2, **1**, 2.
+    ///
+    /// `Set` picks a bucket from `hashValue` and only calls `==` within a bucket. Different
+    /// buckets ⇒ both inserted (count 2, the corruption is visible). Same bucket ⇒ `==` says
+    /// equal ⇒ the second is dropped (count 1, the corruption is hidden). **Swift seeds
+    /// hashing per launch**, so which happens varies per process.
+    ///
+    /// That is the catalog's own trap — *"Set iteration order is not a property … Swift seeds
+    /// hashing per launch. A round-trip through an ordered carrier is a false law that passes
+    /// locally and fails in CI"* — met from a new direction: a test asserting the CONSEQUENCE
+    /// of a hash-inconsistency bug is itself hash-seed dependent.
+    ///
+    /// So the assertion below is the deterministic half. The container damage is described
+    /// rather than asserted, because asserting it is the bug it is about.
+    @Test("the container consequence is real, and asserting it directly would be flaky")
+    func containerConsequenceIsNondeterministic() {
         #expect(Self.ann == Self.bob)
-        #expect(set.count == 2, "a Set must not hold two equal elements — this one does")
+        #expect(Self.ann.hashValue != Self.bob.hashValue)
+
+        // Deterministic statement of the damage: the two are `==`, so a Set is entitled to
+        // hold either one or two of them, and which it does is not a property of the code.
+        let count = Set([Self.ann, Self.bob]).count
+        #expect(count == 1 || count == 2, "both outcomes are reachable across launches")
     }
 
     /// The correct type satisfies both, which is the control that makes the above meaningful.

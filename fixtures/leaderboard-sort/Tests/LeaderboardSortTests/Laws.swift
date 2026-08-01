@@ -1,4 +1,5 @@
 import Foundation
+@testable import LeaderboardSort
 
 /// The candidate laws, each stated so it can REJECT an implementation.
 ///
