@@ -2330,3 +2330,74 @@ takes minutes and only finds carriers that happen to exist.
 `HashBag` — the hole was real, documented, and unreachable by measurement.
 Adversarial construction is the only way to test a rule against the shape it was
 written to exclude.
+
+## 9. The `[reference]` list is the better backlog (2026-08-01)
+
+`known-properties` ships **71 known-true laws, 49 tagged `[reference]`** — *"true and
+self-verified under `--verify`, but invisible to `discover` because no template names
+its shape."*
+
+**That phrasing needs care, and my first summary got it wrong.** A reference law is
+**already usable**: `--verify` executes it, and it works as a portability self-check
+on the running toolchain. What is missing is not the law but the **transfer** — the
+ability to look at a *user's* container and say it owes the same law.
+
+So the measure of success for a template built from this list is *carriers reached
+outside the catalog*, not "is the law true". That was already settled.
+
+### 9.1 Stack / queue / deque — built
+
+Five reference rows. `Stack`: *"push x then pop ⇒ x, and the stack is restored"*.
+`Deque`: *"prepend(x) then removeFirst() yields x and restores the deque"*.
+
+`EndedAccessRoundTripTemplate` states:
+
+```
+var copy = c; copy.append(x); copy.removeLast() == x && copy == c
+```
+
+**Gate 1 split, and the split is the interesting part.** The kit ships
+`Deque.prependPopFirstRoundTrips` and `Deque.appendPopLastRoundTrips` — so the *Deque*
+row is a double-report. But those are stated over the **concrete** `Deque<Element>`,
+and the kit's own doc says why: *"no double-ended protocol exists to abstract over."*
+
+That is the division of labour in one sentence. **The kit needs a type; `discover`
+works from shape.** A user's own `RingBuffer` gets nothing from the kit and everything
+from the template. The caveat tells a `Deque` carrier to prefer the kit.
+
+**Two admission gates, and the second was found rather than designed.**
+
+*Ends must match* — back-add with front-remove is a FIFO queue, where the law is false
+for any non-empty container.
+
+*Both halves must NAME an end.* The population sweep surfaced
+`swift-nio`'s **`PriorityQueue: push/pop`**, where `push(x); pop() == x` is **false** —
+`pop` returns the extremum. A bare `pop` names no end and cannot be assumed to take
+one. Same shape as `OptionSet.contains` and `kilobytes`: a verb that looks
+definitional until a carrier reinterprets it. Requiring positional names cost nothing
+measured — `PriorityQueue` was the only bare pair in seven corpora.
+
+**Measured: 15 rows over 11 carriers**, the widest reach of anything built today.
+
+| corpus | rows | carriers |
+|---|---:|---|
+| swift-collections | 9 | `Deque`, `InputSpan`, `OrderedSet`, `RigidArray`, `RigidDeque`, `UniqueArray`, `UniqueDeque` |
+| `stdlib/public/core` | 4 | `OutputSpan`, `OutputRawSpan`, `RangeReplaceableCollection`, `UniqueArray` |
+| swift-nio | 2 | `CircularBuffer` |
+| swift-foundation | 0 | — |
+
+Ten of eleven carriers are outside the catalog — which is the number that matters.
+
+### 9.2 Why this list beats the study's gap list
+
+The swift.org gap list took a hand-adjudication pass over 36 sites to produce 19 rows,
+of which 3 families shipped and 1 was declined for being a kit double-report.
+
+The `[reference]` list is 49 rows that are **already known true and already
+executable**, which pre-answers gates 2 and 3 before any work starts. On this family
+the only open question was gate 1 — one grep — and the discriminator.
+
+It was in the product the whole time. That is the fifth instance today of knowledge
+sitting in the repo unconnected to the question being asked, and the cheapest one to
+have avoided: `known-properties` is a shipped command with a documented `[reference]`
+tag.

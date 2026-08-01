@@ -16,6 +16,11 @@ extension TemplateRegistry {
         inheritedTypesByName: [String: Set<String>],
         into collector: inout SuggestionCollector
     ) {
+        for shape in EndedAccessPairing.candidates(in: summaries) {
+            if let suggestion = EndedAccessRoundTripTemplate.suggest(for: shape) {
+                collector.record(suggestion, generatorType: shape.typeName)
+            }
+        }
         for shape in ScaledUnitPairing.candidates(in: summaries) {
             if let suggestion = ScaledUnitConsistencyTemplate.suggest(for: shape) {
                 collector.record(suggestion, generatorType: shape.typeName)
