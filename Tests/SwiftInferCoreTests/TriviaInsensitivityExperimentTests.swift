@@ -69,6 +69,40 @@ import Testing
 /// | `FunctionSummary.docComment` | **variant** | it reads comments; it *must* change |
 /// | `SkipMarkerScanner` | **split** | reformat: invariant. strip comments: empty. |
 ///
+/// **POPULATION, measured 2026-08-01 — and it does not change the verdict.**
+///
+/// The experiment above tested three scanners in one repo, so the obvious
+/// objection was that the family might simply be too rare to matter. It is not.
+/// Carriers of the shape `(syntax-ish) -> collection`, plus `SyntaxVisitor` /
+/// `SyntaxRewriter` subclasses:
+///
+/// | repo | syntax→collection | visitor subclasses |
+/// |---|---:|---:|
+/// | SwiftLint | 21 | **317** |
+/// | swift-syntax | 120 | 28 |
+/// | this repo | 35 | 23 |
+/// | SwiftProjectLint | 12 | 35 |
+/// | swift-format | 1 | 7 |
+///
+/// ~599 in total, an upper bound — the shape filter is crude and caught obvious
+/// non-collectors (`NSRegularExpression.matches`). Even discounted heavily it is
+/// two orders of magnitude above the shapes the swift.org study *declined* for
+/// want of population (27 product-typed returns; 106 parser residues across nine
+/// corpora — findings §7.1).
+///
+/// **So population was never the blocker, and that is the point worth carrying.**
+/// The three obstacles above are about whether the law can be *stated*, not
+/// whether there is anything to state it about. A coordinate and a fact look
+/// identical from outside the type. That is a *statability* gap, and it is a
+/// different failure mode from the four the study's taxonomy names (not scanned /
+/// not paired / not templated / suppressed) — here the shape is templatable in
+/// principle and the per-carrier projection is not inferable in practice.
+///
+/// Confirmed independently on the same day: `SwiftProjectLintVisitors` is **114
+/// functions, 114 of them inferred pure** — the tool's hardest gate fully
+/// satisfied on every one — and yields 21 suggestions of which 15 are
+/// `predicate`. Purity is not what is stopping this.
+///
 /// The last two are controls. A rewrite that leaves docstrings alone is not
 /// rewriting trivia, and the passes above would be vacuous — the same
 /// degenerate-green that made the first collision sweep report a clean pass
