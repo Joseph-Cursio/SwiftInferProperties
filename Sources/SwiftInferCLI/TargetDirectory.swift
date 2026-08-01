@@ -97,6 +97,75 @@ enum TargetDirectory {
         return directory
     }
 
+    /// One directory to scan, with the label the caller should use for it.
+    ///
+    /// Discovery works on **directories**; only the label needs to know where it came from. For
+    /// `--target Foo` the label is `Foo` (the module name, which multi-module tagging and pins
+    /// depend on); for `--sources path/to/dir` it is the directory's last path component, which is
+    /// the closest honest stand-in — an Xcode project has no module name to read.
+    struct ScanRoot: Equatable {
+        let label: String
+        let directory: URL
+    }
+
+    /// Resolves exactly one of `--target` / `--sources` to a directory.
+    ///
+    /// Both given is ambiguous; neither leaves nothing to scan. Both are loud errors rather than a
+    /// silent default — the same no-confident-zero discipline `resolve(_:)` enforces.
+    static func resolveScan(target: String?, sources: String?) throws -> URL {
+        switch (target, sources) {
+        case let (targetName?, nil):
+            return try resolve(targetName)
+
+        case let (nil, sourcesPath?):
+            return try resolveSources(sourcesPath)
+
+        case (nil, nil):
+            throw ValidationError(
+                "pass exactly one of --target <SwiftPM target> or --sources <directory>. For an "
+                    + "Xcode project — which has no `Sources/<target>/` layout — use --sources and "
+                    + "point it at the folder your `.swift` files live in."
+            )
+
+        case (.some, .some):
+            throw ValidationError(
+                "--target and --sources are mutually exclusive: --target applies the "
+                    + "`Sources/<target>/` convention, --sources scans a directory as given. Pass "
+                    + "one."
+            )
+        }
+    }
+
+    /// The repeatable form, for commands that survey several modules in one run.
+    ///
+    /// Mixing the two is allowed and useful: a workspace can hold a SwiftPM package *and* an app
+    /// target, and there is no reason a survey should have to choose. Order is targets then
+    /// sources, so a single-`--target` run is byte-identical to what it was before this existed.
+    static func resolveScanRoots(
+        targets: [String],
+        sources: [String],
+        relativeTo root: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    ) throws -> [ScanRoot] {
+        guard !targets.isEmpty || !sources.isEmpty else {
+            throw ValidationError(
+                "pass at least one of --target <SwiftPM target> or --sources <directory>. For an "
+                    + "Xcode project — which has no `Sources/<target>/` layout — use --sources and "
+                    + "point it at the folder your `.swift` files live in."
+            )
+        }
+        let fromTargets = try targets.map {
+            ScanRoot(label: $0, directory: try resolve($0, relativeTo: root))
+        }
+        let fromSources = try sources.map { path -> ScanRoot in
+            let directory = try resolveSources(path, relativeTo: root)
+            return ScanRoot(
+                label: directory.standardizedFileURL.lastPathComponent,
+                directory: directory
+            )
+        }
+        return fromTargets + fromSources
+    }
+
     /// Warns when the target holds no Swift files at all, so a run over an empty corpus cannot be
     /// mistaken for a run that found nothing in your code.
     ///

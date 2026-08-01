@@ -50,7 +50,19 @@ extension SwiftInferCommand {
             (`Bar.Counter.reduce`) disambiguates same-named reducers.
             """
         )
-        public var target: [String]
+        public var target: [String] = []
+
+        @Option(
+            name: .long,
+            help: """
+            Path to a source directory to scan directly, bypassing the \
+            Sources/<target>/ convention. The Xcode escape hatch: an app has \
+            no SwiftPM target, so point this at the folder your .swift files \
+            live in. Repeatable, and mixable with --target — a workspace can \
+            hold a package and an app, and a survey should not have to choose.
+            """
+        )
+        public var sources: [String] = []
 
         @Option(
             name: .long,
@@ -150,7 +162,9 @@ extension SwiftInferCommand {
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             try Self.run(
-                targets: target,
+                roots: TargetDirectory.resolveScanRoots(
+                    targets: target, sources: sources, relativeTo: workingDirectory
+                ),
                 pinRaw: reducer,
                 includePossible: includePossible,
                 updateBaseline: updateBaseline,
@@ -211,56 +225,6 @@ extension SwiftInferCommand {
         /// Multi-module variant of the full orchestrator (see the single-target
         /// wrapper above). The side-orchestrator's `target` label is the
         /// comma-joined target list.
-        public static func run(
-            targets: [String],
-            pinRaw: String? = nil,
-            includePossible: Bool = false,
-            updateBaseline: Bool = false,
-            interactive: Bool = false,
-            interactiveBridges: Bool = false,
-            dryRun: Bool = false,
-            workingDirectory: URL,
-            promptInput: any PromptInput = StdinPromptInput(),
-            output: any DiscoverOutput,
-            diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
-            firstSeenAt: Date = Date()
-        ) throws {
-            let suggestions = try collectSuggestions(
-                targets: targets,
-                pinRaw: pinRaw,
-                workingDirectory: workingDirectory,
-                firstSeenAt: firstSeenAt
-            )
-            let effectiveFlags = warnAndResolveFlagMutex(
-                interactive: interactive,
-                interactiveBridges: interactiveBridges,
-                updateBaseline: updateBaseline,
-                diagnostics: diagnostics
-            )
-            try dispatchSideOrchestrator(
-                suggestions: suggestions,
-                inputs: SideOrchestratorInputs(
-                    effectiveFlags: effectiveFlags,
-                    workingDirectory: workingDirectory,
-                    target: targets.joined(separator: ", "),
-                    promptInput: promptInput,
-                    output: output,
-                    diagnostics: diagnostics,
-                    dryRun: dryRun,
-                    firstSeenAt: firstSeenAt
-                )
-            )
-            let graded = gradedByVerifyEvidence(
-                suggestions,
-                workingDirectory: workingDirectory,
-                diagnostics: diagnostics
-            )
-            let rendered = InteractionSuggestionRenderer.render(
-                graded,
-                includePossible: includePossible
-            )
-            output.write(rendered)
-        }
 
         /// V2.0 M4.E — pure-ish pipeline entry. Tests drive it
         /// without going through the AsyncParsableCommand shell.

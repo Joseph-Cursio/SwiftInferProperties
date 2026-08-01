@@ -24,11 +24,35 @@ struct DiscoverInteractionCommandTests {
         #expect(names.contains("discover-interaction"))
     }
 
-    @Test("--target is required; absent --target is a parse error")
-    func targetIsRequired() {
+    /// **Changed 2026-08-01 when `--sources` landed.** `--target` used to be required at PARSE
+    /// time; it no longer can be, because `--sources` is the other valid way to name a scan root
+    /// and an Xcode project has no target to pass. The requirement moved from "this flag is
+    /// present" to "at least one root resolves", which is a real weakening of the parse contract
+    /// and is why this test says so rather than being deleted.
+    ///
+    /// Bare `--target` still parses to an empty array, so the check has to live somewhere — it is
+    /// `TargetDirectory.resolveScanRoots`, exercised in `XcodeSourcesReachTests`.
+    @Test("neither --target nor --sources parses, then fails at resolution")
+    func rootIsRequiredAtResolutionNotParse() throws {
+        let parsed = try Command.parse([])
+        #expect(parsed.target.isEmpty)
+        #expect(parsed.sources.isEmpty)
+
         #expect(throws: (any Error).self) {
-            _ = try Command.parse([])
+            try TargetDirectory.resolveScanRoots(targets: parsed.target, sources: parsed.sources)
         }
+    }
+
+    @Test("--sources parses, singly and repeatably")
+    func parsesSources() throws {
+        #expect(try Command.parse(["--sources", "App/Sources"]).sources == ["App/Sources"])
+        #expect(
+            try Command.parse(["--sources", "A", "--sources", "B"]).sources == ["A", "B"]
+        )
+        // Mixable — a workspace can hold a package and an app.
+        let mixed = try Command.parse(["--target", "Core", "--sources", "App"])
+        #expect(mixed.target == ["Core"])
+        #expect(mixed.sources == ["App"])
     }
 
     @Test("--reducer + --include-possible parse correctly")

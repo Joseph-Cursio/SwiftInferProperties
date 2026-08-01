@@ -42,18 +42,42 @@ extension SwiftInferCommand.DiscoverInteraction {
         workingDirectory: URL,
         firstSeenAt: Date = Date()
     ) throws -> [InteractionInvariantSuggestion] {
-        let tagModule = targets.count > 1
-        func directory(_ target: String) -> URL {
-            workingDirectory
-                .appendingPathComponent("Sources")
-                .appendingPathComponent(target)
-        }
-        // 1. Discover across all targets; tag by module in multi-target runs.
+        try collectSuggestions(
+            roots: targets.map { name in
+                TargetDirectory.ScanRoot(
+                    label: name,
+                    directory: workingDirectory
+                        .appendingPathComponent("Sources")
+                        .appendingPathComponent(name)
+                )
+            },
+            pinRaw: pinRaw,
+            firstSeenAt: firstSeenAt
+        )
+    }
+
+    /// The directory-level form. Everything below the CLI works on **directories**; only the
+    /// label needs to know whether it came from `--target` (a module name) or `--sources` (an
+    /// Xcode source folder, which has no module name to read).
+    ///
+    /// Splitting this out is what let `--sources` reach the interaction families at all. They
+    /// are the surface built for SwiftUI MVVM apps, and SwiftUI MVVM apps are overwhelmingly
+    /// Xcode projects — so until this existed, the one command aimed at app code was the one
+    /// that could not open it. Measured on `MacCloud_client_iOS`: the command exited with an
+    /// argument error, and the same 22 files staged into a `Sources/<target>/` shim produced 4
+    /// suggestions on an `@Observable` view model. The gate was never the problem.
+    static func collectSuggestions(
+        roots: [TargetDirectory.ScanRoot],
+        pinRaw: String? = nil,
+        firstSeenAt: Date = Date()
+    ) throws -> [InteractionInvariantSuggestion] {
+        let tagModule = roots.count > 1
+        // 1. Discover across all roots; tag by module in multi-root runs.
         var allCandidates: [ReducerCandidate] = []
-        for target in targets {
-            var found = try ReducerDiscoverer.discover(directory: directory(target))
+        for root in roots {
+            var found = try ReducerDiscoverer.discover(directory: root.directory)
             if tagModule {
-                for index in found.indices { found[index].moduleName = target }
+                for index in found.indices { found[index].moduleName = root.label }
             }
             allCandidates.append(contentsOf: found)
         }
@@ -64,14 +88,14 @@ extension SwiftInferCommand.DiscoverInteraction {
         // 4. Engine per module — witness detectors need the module's own
         // sources directory to resolve State/Action source.
         var reducerSuggestions: [InteractionInvariantSuggestion] = []
-        for target in targets {
+        for root in roots {
             let forModule = tagModule
-                ? deduped.filter { $0.moduleName == target }
+                ? deduped.filter { $0.moduleName == root.label }
                 : deduped
             guard !forModule.isEmpty else { continue }
             reducerSuggestions.append(contentsOf: try InteractionTemplateEngine.analyze(
                 candidates: forModule,
-                sourcesDirectory: directory(target),
+                sourcesDirectory: root.directory,
                 firstSeenAt: firstSeenAt
             ))
         }
@@ -79,15 +103,15 @@ extension SwiftInferCommand.DiscoverInteraction {
         // the no-pin path; `--reducer` is reducer-targeted), one fold per target.
         guard pinRaw == nil else { return reducerSuggestions }
         var merged = reducerSuggestions
-        for target in targets {
+        for root in roots {
             merged = try mergedWithViewModels(
                 merged,
-                directory: directory(target),
+                directory: root.directory,
                 firstSeenAt: firstSeenAt
             )
             merged = try mergedWithConventionRoles(
                 merged,
-                directory: directory(target),
+                directory: root.directory,
                 firstSeenAt: firstSeenAt
             )
         }

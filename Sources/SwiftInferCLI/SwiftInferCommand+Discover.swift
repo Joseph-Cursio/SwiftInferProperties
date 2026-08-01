@@ -17,28 +17,11 @@ extension SwiftInferCommand.Discover {
     /// as given (the Xcode escape hatch, C1). Passing both is ambiguous and passing neither leaves
     /// nothing to scan — both are loud errors rather than a silent default, the same
     /// no-confident-zero discipline the rest of this command holds to.
+    /// Now a thin forwarder — the body moved to `TargetDirectory.resolveScan(target:sources:)` so
+    /// the other scanning commands could stop being SwiftPM-only. It stays because callers and
+    /// tests name it, and because `Discover` is where the escape hatch was first argued for.
     public static func resolveScanDirectory(target: String?, sources: String?) throws -> URL {
-        switch (target, sources) {
-        case let (targetName?, nil):
-            return try TargetDirectory.resolve(targetName)
-
-        case let (nil, sourcesPath?):
-            return try TargetDirectory.resolveSources(sourcesPath)
-
-        case (nil, nil):
-            throw ValidationError(
-                "pass exactly one of --target <SwiftPM target> or --sources <directory>. For an "
-                    + "Xcode project — which has no `Sources/<target>/` layout — use --sources and "
-                    + "point it at the folder your `.swift` files live in."
-            )
-
-        case (.some, .some):
-            throw ValidationError(
-                "--target and --sources are mutually exclusive: --target applies the "
-                    + "`Sources/<target>/` convention, --sources scans a directory as given. Pass "
-                    + "one."
-            )
-        }
+        try TargetDirectory.resolveScan(target: target, sources: sources)
     }
 
     public func run() async throws {

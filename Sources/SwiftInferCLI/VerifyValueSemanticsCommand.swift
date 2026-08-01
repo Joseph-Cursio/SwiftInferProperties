@@ -25,7 +25,18 @@ extension SwiftInferCommand {
             relative to the working directory — mirrors `swift-infer discover --target`.
             """
         )
-        public var target: String
+        public var target: String?
+
+        @Option(
+            name: .long,
+            help: """
+            Path to a source directory to scan directly, bypassing the \
+            Sources/<target>/ convention. The Xcode escape hatch: an app has \
+            no SwiftPM target, so point this at the folder your .swift files \
+            live in. Mutually exclusive with --target; pass exactly one.
+            """
+        )
+        public var sources: String?
 
         @Flag(
             name: .long,
@@ -50,7 +61,26 @@ extension SwiftInferCommand {
         public init() { /* no-op */ }
 
         public func run() async throws {
-            let directory = try TargetDirectory.resolve(target)
+            let directory = try TargetDirectory.resolveScan(target: target, sources: sources)
+            // The module name labels the report and names the module the generated harness
+            // builds. `--sources` has no module to read, so it takes the directory's name.
+            let moduleName = target ?? directory.standardizedFileURL.lastPathComponent
+
+            // `--sources` implies there is no package here to build against — that is the
+            // whole reason the flag exists. The default path calls `verifyInPackage` against
+            // the working directory, which for an Xcode project fails inside SwiftPM with an
+            // error about a missing manifest: true, and no help at all. Say it here instead.
+            if sources != nil, !selfContained {
+                throw ValidationError(
+                    "--sources requires --self-contained. --sources is for a project with no "
+                        + "SwiftPM package (an Xcode app), and the default verify path builds "
+                        + "your package to reach `internal` types and real dependencies — there "
+                        + "is none to build. --self-contained copies the sources into a "
+                        + "standalone package instead, which works, but only reaches `public` "
+                        + "types with no external dependencies."
+                )
+            }
+
             let workParent = FileManager.default.temporaryDirectory
                 .appendingPathComponent("vs-verify-\(UUID().uuidString)")
             try FileManager.default.createDirectory(at: workParent, withIntermediateDirectories: true)
@@ -60,7 +90,7 @@ extension SwiftInferCommand {
             if selfContained {
                 results = try ValueSemanticVerifier.verify(
                     targetDirectory: directory,
-                    moduleName: target,
+                    moduleName: moduleName,
                     workParent: workParent
                 )
             } else {
@@ -68,11 +98,14 @@ extension SwiftInferCommand {
                 results = try ValueSemanticVerifier.verifyInPackage(
                     packagePath: packageRoot,
                     targetDirectory: directory,
-                    moduleName: target,
+                    moduleName: moduleName,
                     workParent: workParent
                 )
             }
-            print(ValueSemanticVerifyReport.render(results: results, moduleName: target), terminator: "")
+            print(
+                ValueSemanticVerifyReport.render(results: results, moduleName: moduleName),
+                terminator: ""
+            )
 
             if failOnLeak, ValueSemanticVerifyReport.leaksFound(in: results) {
                 throw ExitCode.failure
