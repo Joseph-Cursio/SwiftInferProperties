@@ -86,25 +86,57 @@ struct CommutativityOrderVetoTests {
         #expect(!signals.contains { $0.kind == .orderSensitiveCarrier })
     }
 
-    /// The residue that keeps the denylist alive. `OrderedDictionary` conforms to
-    /// `Sequence` and to nothing that marks position as value-determined, so the
-    /// structural rule abstains — and the curated list still catches it. Measured on
-    /// five corpora the two rules never disagree, but only because `OrderedDictionary`
-    /// declares no set operations; this pins the case for the day one appears.
-    @Test("OrderedDictionary is caught by the denylist where the structural rule abstains")
-    func denylistCoversTheStructuralResidue() {
+    /// **`OrderedDictionary` was removed from the denylist 2026-08-01**, so a
+    /// user-written order-preserving `union` on it is no longer vetoed.
+    ///
+    /// Pinned as a deliberate hole rather than left to be rediscovered as a bug. It is
+    /// the one carrier the structural rule can never cover even with perfect
+    /// conformance data — `Sequence` and nothing that marks position as
+    /// value-determined — so this arm going red means someone restored the entry, which
+    /// is a decision, not a regression.
+    @Test("OrderedDictionary is a KNOWN hole after the denylist entry was removed")
+    func orderedDictionaryIsAKnownHole() {
+        let conformances = ["OrderedDictionary": Set(["Sequence", "Equatable", "Hashable"])]
+        #expect(!OrderedCarrierDiscriminator.isOrderSensitive(
+            forConformances: conformances["OrderedDictionary"] ?? []
+        ), "structural cannot see this carrier — that is why it needed a list entry")
+        #expect(!OrderSensitiveCarrierNames.contains("OrderedDictionary"))
+
         let summary = makeCommutativitySummary(
             name: "union",
             paramTypes: ("OrderedDictionary", "OrderedDictionary"),
             returnType: "OrderedDictionary",
             containingType: "OrderedDictionary"
         )
-        let conformances = ["OrderedDictionary": Set(["Sequence", "Equatable", "Hashable"])]
-        #expect(!OrderedCarrierDiscriminator.isOrderSensitive(
-            forConformances: conformances["OrderedDictionary"] ?? []
-        ), "the structural rule abstains here — that is the point of the arm")
         let signals = CommutativityTemplate.accumulatedSignals(
             for: summary, vocabulary: .empty, inheritedTypesByName: conformances
+        )
+        #expect(!signals.contains { $0.kind == .orderSensitiveCarrier })
+    }
+
+    /// **The remaining entries are load-bearing, and this arm exists to stop them being
+    /// deleted as "redundant".**
+    ///
+    /// The structural rule needs a conformance record, and `ProtocolCoverageMap`'s
+    /// curated stdlib bake-in contains no collection refinements at all. So in any
+    /// corpus that does not itself contain the standard library — every application
+    /// corpus — `Array` has no recorded conformances and only the denylist can see it.
+    ///
+    /// The survey reporting the two rules agreeing everywhere was run over *library*
+    /// corpora, where the conformances are declared in the tree being scanned. That
+    /// agreement measured the easy case.
+    @Test("Array is vetoed by the denylist when no conformances are visible")
+    func arrayIsVetoedWithoutConformanceRecords() {
+        let summary = makeCommutativitySummary(
+            name: "union",
+            paramTypes: ("Array", "Array"),
+            returnType: "Array",
+            containingType: "Array"
+        )
+        // Empty index: exactly what an app corpus gives the structural rule.
+        #expect(!OrderedCarrierDiscriminator.isOrderSensitive(forConformances: []))
+        let signals = CommutativityTemplate.accumulatedSignals(
+            for: summary, vocabulary: .empty, inheritedTypesByName: [:]
         )
         let veto = signals.first { $0.kind == .orderSensitiveCarrier }
         #expect(veto?.isVeto == true)
