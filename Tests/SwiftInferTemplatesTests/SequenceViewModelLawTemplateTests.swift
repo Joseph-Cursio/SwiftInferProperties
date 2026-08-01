@@ -17,7 +17,8 @@ struct SequenceViewModelLawTemplateTests {
         on carrier: String,
         lhsType: String? = nil,
         rhsType: String? = nil,
-        returns: String? = "Bool"
+        returns: String? = "Bool",
+        bodyShape: EqualityBodyShape? = nil
     ) -> FunctionSummary {
         FunctionSummary(
             name: "==",
@@ -38,7 +39,12 @@ struct SequenceViewModelLawTemplateTests {
             isStatic: true,
             location: Self.loc,
             containingTypeName: carrier,
-            bodySignals: .empty
+            bodySignals: BodySignals(
+                hasNonDeterministicCall: false,
+                hasSelfComposition: false,
+                nonDeterministicAPIsDetected: [],
+                equalityBodyShape: bodyShape
+            )
         )
     }
 
@@ -94,6 +100,57 @@ struct SequenceViewModelLawTemplateTests {
         let suggestion = shapes.first.flatMap(SequenceViewModelLawTemplate.suggest(for:))
         #expect(suggestion?.score.total == 80)
         #expect(suggestion?.score.tier == .strong)
+    }
+
+    // MARK: - The body-shape signal (EqualityBodyClassifier)
+
+    /// Measured on the real corpora: 4 of the 7 firings have an `==` that already IS
+    /// the sequence comparison — `Deque` returns `elementsEqual`, `Array` and
+    /// `ContiguousArray` inline it over indices, `ArraySlice` over parallel iterators.
+    /// The law restates their result expression, so they leave the default surface and
+    /// stay available as regression guards under `--include-possible`.
+    @Test("A body that already IS the comparison drops the suggestion to Possible")
+    func vacuousBodyIsDemoted() {
+        let equals = equalsOperator(on: "OrderedSet", bodyShape: .sequenceComparison(callee: "elementsEqual"))
+        let shapes = SequenceViewModelPairing.candidates(
+            in: [equals, hashFunction(on: "OrderedSet")],
+            inheritedTypesByName: Self.orderedConformances
+        )
+        let suggestion = shapes.first.flatMap(SequenceViewModelLawTemplate.suggest(for:))
+        #expect(suggestion?.score.total == 35, "80 less the 45-point vacuity penalty")
+        #expect(suggestion?.score.tier == .possible)
+    }
+
+    /// The weight is set so the penalty dominates from EITHER configuration the
+    /// template can produce, rather than being tuned to one of them.
+    @Test("The penalty reaches Possible without the hash bonus too")
+    func vacuousBodyIsDemotedWithoutHashBonus() {
+        let equals = equalsOperator(on: "OrderedSet", bodyShape: .sequenceComparison(callee: "Array"))
+        let shapes = SequenceViewModelPairing.candidates(
+            in: [equals],
+            inheritedTypesByName: Self.orderedConformances
+        )
+        let suggestion = shapes.first.flatMap(SequenceViewModelLawTemplate.suggest(for:))
+        #expect(suggestion?.score.total == 25, "70 less the 45-point vacuity penalty")
+        #expect(suggestion?.score.tier == .possible)
+    }
+
+    /// A projection keeps full tier — it is the shape three real bugs were found in,
+    /// and the signal names the fields so a reader can check them.
+    @Test("A projection body keeps Strong, and the fields are named")
+    func projectionKeepsStrong() {
+        let equals = equalsOperator(
+            on: "OrderedSet",
+            bodyShape: .storedFieldProjection(members: ["_count", "_storage"])
+        )
+        let shapes = SequenceViewModelPairing.candidates(
+            in: [equals, hashFunction(on: "OrderedSet")],
+            inheritedTypesByName: Self.orderedConformances
+        )
+        let suggestion = shapes.first.flatMap(SequenceViewModelLawTemplate.suggest(for:))
+        #expect(suggestion?.score.tier == .strong)
+        let details = suggestion?.score.signals.map(\.detail).joined(separator: " ") ?? ""
+        #expect(details.contains("PROJECTION onto _count, _storage"))
     }
 
     // MARK: - It stays silent where the law is false

@@ -50,6 +50,14 @@ public enum SequenceViewModelPairing {
         /// rather than inheriting it — and a projection bug in `==` is normally mirrored there.
         public let declaresCustomHash: Bool
 
+        /// What the `==` body actually does, per `EqualityBodyClassifier`. The template
+        /// reads this to tell a refutable projection from a body that already states the
+        /// law — which is the difference between a suggestion worth putting on the default
+        /// surface and one worth keeping only as a regression guard.
+        public var bodyShape: EqualityBodyShape {
+            equals.bodySignals.equalityBodyShape ?? .unclassified
+        }
+
         public init(
             typeName: String,
             equals: FunctionSummary,
