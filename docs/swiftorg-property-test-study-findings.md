@@ -2266,3 +2266,67 @@ carrier: swift.org's test suite tests `Duration`, so of course all four sites ar
 **The gap list counts test sites, not carriers.** A family's population has to be
 measured against the corpus, never inferred from how many rows the adjudication
 produced — that number is a fact about what someone chose to write a test for.
+
+## 8.9 Running the known-properties traps against today's templates (2026-08-01)
+
+`swift-infer known-properties --verify` reports **71/71 laws held** and 9 caveats
+correctly failing. The catalog is live, not asserted — and the 9 caveats are a
+curated **false-positive test set**: laws known to be false, executable, with the
+counterexample explained.
+
+Pointed at the four templates shipped today, it found a real defect in one run.
+
+### The one that fired
+
+`sequence-view-model-law` proposed `(a == b) == a.elementsEqual(b)` at **Strong 80**
+on a carrier built to the trap *"Set: iteration order is not a property"*:
+
+```swift
+public struct HashBag: RandomAccessCollection, ExpressibleByArrayLiteral, Equatable {
+    public var slots: [Int]
+    public static func == (left: HashBag, right: HashBag) -> Bool {
+        Set(left.slots) == Set(right.slots)
+    }
+}
+```
+
+Every conformance the discriminator keys on, and the law is flatly false: two values
+equal under `Set` need not be `elementsEqual`.
+
+**Both halves of the fix were already in the codebase.** §7.3 documented the hole —
+*"a hash carrier that IS array-literal-expressible, which nothing in these corpora
+happens to be"* — and `EqualityBodyClassifier` already classified the body
+`conversionComparison(via: "Set")`. The template scored that **+20, the same as a
+safe projection**.
+
+Fixed by vetoing it: a conversion that is not sequence-preserving discards order or
+duplicates, which is exactly a statement that `==` is **coarser** than the sequence
+view. Scored-then-vetoed on the `protocolCoveredProperty` posture so `metrics` can
+still count it. Real corpora unchanged (3 / 3 / 1 / 2 rows).
+
+### The three that held
+
+| template | trap carrier | verdict |
+|---|---|---|
+| `set-relation-model-law` | `Tally` — trap 4, `subtracting` not commutative | **safe** — it states membership implications, not commutativity |
+| `bulk-incremental-agreement` | `Ledger` — trap 5, `merging` not commutative | **safe** — different law |
+| `scaled-unit-consistency` | `Span` — traps 1–2, `+` not commutative | **safe** — different law |
+
+Worth noting *why* they held: in each case the trap and the template state laws about
+the same carrier but different operations. A trap set is a filter on carriers, not a
+proof about laws, and reading a pass as "this template is sound" would over-claim.
+
+### The process finding, which is the reusable part
+
+**Run the traps before the corpus sweep, not after.** They are nine executable
+false-law witnesses that ship with the product. Applied at the start they would have
+caught this defect, and probably the `OptionSet.contains` and `Range` biconditional
+failures too — three of the four discriminators derived the hard way today.
+
+Cost: one synthetic file and one `discover` run. Compare with a corpus sweep, which
+takes minutes and only finds carriers that happen to exist.
+
+**And the traps reach where corpora cannot.** No real corpus contained a
+`HashBag` — the hole was real, documented, and unreachable by measurement.
+Adversarial construction is the only way to test a rule against the shape it was
+written to exclude.
