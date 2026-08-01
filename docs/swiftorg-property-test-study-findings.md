@@ -1757,6 +1757,66 @@ the law `f(x) == f(x)`. It still refutes every mutant, so it ships with the
 hazard in the caveat rather than a veto. Detecting that body shape needs a
 scanner signal that does not exist; that is the next measurement.
 
+### 7.4 That measurement, done — `EqualityBodyClassifier` (2026-07-31)
+
+`fixtures/equatable-signal`'s headline is that conformance does not predict
+refutability and *"the shape of the `==` body"* does. Nothing read the body until
+now; §7.3 shipped with a caveat asking the reader to go open it themselves.
+
+Three shapes, defined by the real bodies they were read off:
+
+| shape | body | meaning for the law |
+|---|---|---|
+| `sequenceComparison` | `Deque` returns `elementsEqual` | **vacuous** — restates the result expression |
+| `storedFieldProjection` | `BitArray`: `_count` guard + `_storage ==` | **refutable** — the shape 3 real bugs live in |
+| `conversionComparison` | `Set(a) == Set(b)` | the fixture's own mutant shape |
+
+**The result is the whole point of building it.** The default surface went from
+**7 Strong to 3**, and the 3 are exactly the refutable ones:
+
+| carrier | shape | tier |
+|---|---|---|
+| `BitArray`, `OrderedSet`, `IndexPath` | projection | **Strong 80** |
+| `Deque`, `Array`, `ContiguousArray`, `ArraySlice` | sequence comparison | Possible 35 |
+
+A penalty (−45) rather than a veto, weighted to reach `.possible` from either
+configuration the template produces. The law still refutes every mutant at trial
+≤3 and still guards the count check and fast path in front of the comparison, so
+it keeps its worth as a regression guard and loses its claim on the default
+surface.
+
+#### Both extensions to the classifier were forced by its own output
+
+The first version keyed on `elementsEqual` alone and classified `Array`,
+`ContiguousArray` and `ArraySlice` as `unclassified` — three of the seven carriers
+it exists to score. Reading them showed two further spellings of one idea:
+`Array` inlines the comparison over indices, `ArraySlice` over parallel iterators.
+
+Then the generalisation over-fired: `sequenceComparison` went 5 → **17**, and
+`OrderedSet.UnorderedView` was among them. Its body is
+
+```swift
+for item in left._base { if !right._base.contains(item) { return false } }
+return true
+```
+
+— result `true`, a loop returning `false`, both operands referenced. It satisfied
+every condition the rule checked while meaning the **reverse**: it iterates one
+operand and *searches* the other, which is deliberately order-INsensitive.
+Tightening to lockstep traversal (two subscripts, or two iterators) took it back
+to **8**, all genuine.
+
+Two false starts, both caught by reading output rather than by reasoning — the
+same pattern as §6.6, and the argument for running a new signal over a corpus
+before trusting it.
+
+#### One housekeeping note worth leaving
+
+`Signal+Kind.swift` is now at **exactly** its 400-line SwiftLint cap. An enum's
+cases cannot be split across files, so the next signal added there will not fit
+without moving prose out of the file first. Recorded because the failure mode is
+a lint error on someone else's unrelated change.
+
 **Adjacent, and deliberately not touched:** `OrderSensitiveCarrierNames` is a
 six-name curated denylist whose own doc says it stands in for *"structural
 order-sensitivity detection pre-SemanticIndex"*. This is that detection, and
