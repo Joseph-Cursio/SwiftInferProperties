@@ -13,8 +13,8 @@
    "site": "validation-test/stdlib/RangeSet.swift:34",
    "ext": "swift",
    "property_style": "no",
-   "law": "\u2014",
-   "template": "\u2014",
+   "law": "—",
+   "template": "—",
    "verdict": "n/a",
    "generator": "Int.random(in:-100...100), Double.random(in:0..<1)",
    "notes": "The generator itself (buildRandomRangeSet), not an assertion site. Counted in the population by the regex; excluded from the law tally."
@@ -157,13 +157,13 @@
    "template": "none",
    "verdict": "gap-with-witness",
    "generator": "empty fixed collection",
-   "notes": "CORRECTED 2026-07-30 (post-hoc, during Q3 \u2014 see corrections block). Was `ours-covers` via input-totality. WRONG TEMPLATE: input-totality's role is 'a function handed arbitrary bytes must return or throw for every one of them - it must never trap', the fuzz law for PARSERS. It fires twice on stdlib/public/core, on decodeCString and _tryFromUTF8. `[].randomElement() == nil` is an empty-input EDGE law and no template states it. Attributed by name-similarity ('totality') rather than by role."
+   "notes": "CORRECTED 2026-07-30 (post-hoc, during Q3 — see corrections block). Was `ours-covers` via input-totality. WRONG TEMPLATE: input-totality's role is 'a function handed arbitrary bytes must return or throw for every one of them - it must never trap', the fuzz law for PARSERS. It fires twice on stdlib/public/core, on decodeCString and _tryFromUTF8. `[].randomElement() == nil` is an empty-input EDGE law and no template states it. Attributed by name-similarity ('totality') rather than by role."
   },
   {
    "site": "validation-test/stdlib/Random.swift:171",
    "ext": "swift",
    "property_style": "yes",
-   "law": "alphabet.elementsEqual(shuffled().sorted()) \u2014 shuffle preserves the multiset",
+   "law": "alphabet.elementsEqual(shuffled().sorted()) — shuffle preserves the multiset",
    "template": "none",
    "verdict": "gap-with-witness",
    "generator": "fixed 26-element instance list",
@@ -183,11 +183,11 @@
    "site": "test/stdlib/Character.swift:296",
    "ext": "swift",
    "property_style": "yes",
-   "law": "String(Character(s)) == s for s a SINGLE grapheme cluster \u2014 the String-side half of the Character retraction pair, plus scalar/representation checks",
+   "law": "String(Character(s)) == s for s a SINGLE grapheme cluster — the String-side half of the Character retraction pair, plus scalar/representation checks",
    "template": "LosslessStringConvertible (kit) for the Character-side half; none for the String-side retraction",
    "verdict": "partial-declined",
    "generator": "randomGraphemeCluster(1,9)",
-   "notes": "CORRECTED 2026-07-30, was `ours-covers` via round-trip \u2014 and it also contradicted the roundtrip section, which had verdicted the same law `gap-with-witness`. BOTH were imprecise. `extension Character: LosslessStringConvertible` (Character.swift:195), so the kit runs the CHARACTER-side direction Character(String(describing:c)) == c, total. The test states the STRING-side direction String(Character(s)) == s, which is only true on single grapheme clusters and which nothing runs. Our own NormalFormTemplate doc already draws this distinction \u2014 'a parse-print pair admits three laws, and they do NOT have the same truth conditions' \u2014 the adjudication simply failed to apply it. discover proposes ZERO suggestions citing Character.swift, so it is also a reach miss for the uncovered half."
+   "notes": "CORRECTED 2026-07-30, was `ours-covers` via round-trip — and it also contradicted the roundtrip section, which had verdicted the same law `gap-with-witness`. BOTH were imprecise. `extension Character: LosslessStringConvertible` (Character.swift:195), so the kit runs the CHARACTER-side direction Character(String(describing:c)) == c, total. The test states the STRING-side direction String(Character(s)) == s, which is only true on single grapheme clusters and which nothing runs. Our own NormalFormTemplate doc already draws this distinction — 'a parse-print pair admits three laws, and they do NOT have the same truth conditions' — the adjudication simply failed to apply it. discover proposes ZERO suggestions citing Character.swift, so it is also a reach miss for the uncovered half."
   },
   {
    "site": "test/stdlib/Diffing.swift:708",
@@ -237,7 +237,7 @@
    "template": "LosslessStringConvertible (kit) for the round-trip half; none for shortness",
    "verdict": "partial-declined",
    "generator": "nextUp/nextDown walk from a seed value",
-   "notes": "CORRECTED 2026-07-30, was `gap-in-reach` blaming initializerPairAdmissible's `guard label != \"init\"`. The kit RUNS the round-trip half as \"LosslessStringConvertible.roundTrip\", so relaxing that gate would have created a double-report, not closed a gap. `expectAccurateDescription` checks round-trip THEN shortness (\"it makes no sense to check shortness if the result is inaccurate\") \u2014 the shortness half is the real gap and no template states it."
+   "notes": "CORRECTED 2026-07-30, was `gap-in-reach` blaming initializerPairAdmissible's `guard label != \"init\"`. The kit RUNS the round-trip half as \"LosslessStringConvertible.roundTrip\", so relaxing that gate would have created a double-report, not closed a gap. `expectAccurateDescription` checks round-trip THEN shortness (\"it makes no sense to check shortness if the result is inaccurate\") — the shortness half is the real gap and no template states it."
   },
   {
    "site": "test/stdlib/PrintFloat.swift.gyb:908",
@@ -247,7 +247,7 @@
    "template": "LosslessStringConvertible (kit) for the round-trip half; none for shortness",
    "verdict": "partial-declined",
    "generator": "nextUp/nextDown walk",
-   "notes": "CORRECTED 2026-07-30, was `gap-in-reach` blaming initializerPairAdmissible's `guard label != \"init\"`. The kit RUNS the round-trip half as \"LosslessStringConvertible.roundTrip\", so relaxing that gate would have created a double-report, not closed a gap. `expectAccurateDescription` checks round-trip THEN shortness (\"it makes no sense to check shortness if the result is inaccurate\") \u2014 the shortness half is the real gap and no template states it."
+   "notes": "CORRECTED 2026-07-30, was `gap-in-reach` blaming initializerPairAdmissible's `guard label != \"init\"`. The kit RUNS the round-trip half as \"LosslessStringConvertible.roundTrip\", so relaxing that gate would have created a double-report, not closed a gap. `expectAccurateDescription` checks round-trip THEN shortness (\"it makes no sense to check shortness if the result is inaccurate\") — the shortness half is the real gap and no template states it."
   },
   {
    "site": "test/stdlib/Strideable.swift:236",
@@ -263,8 +263,8 @@
    "site": "test/stdlib/objc-array-slice.swift:16",
    "ext": "swift",
    "property_style": "no",
-   "law": "\u2014",
-   "template": "\u2014",
+   "law": "—",
+   "template": "—",
    "verdict": "n/a",
    "generator": "none - fixed count of 1000",
    "notes": "Builds a 1000-element NSMutableArray as SETUP for a crash regression. The loop is construction, not assertion."
@@ -388,7 +388,7 @@
    ],
    "was": "ours-covers",
    "now": "partial-declined",
-   "why": "Third site in one day resolved by LosslessStringConvertible, and the third mis-verdict about it \u2014 this one contradicted the roundtrip section, which had called the same law gap-with-witness. The kit runs one DIRECTION of the retraction pair; the test states the other, domain-restricted one. Direction and domain were both being elided."
+   "why": "Third site in one day resolved by LosslessStringConvertible, and the third mis-verdict about it — this one contradicted the roundtrip section, which had called the same law gap-with-witness. The kit runs one DIRECTION of the retraction pair; the test states the other, domain-restricted one. Direction and domain were both being elided."
   },
   {
    "date": "2026-07-30",
@@ -399,6 +399,26 @@
    "now": "gap-with-witness",
    "post_hoc": true,
    "why": "Found while running Q3, i.e. AFTER seeing it score as a miss. Recorded as post-hoc and reported alongside the frozen number rather than silently swapped. The justification is independent of the Q3 outcome: InputTotalityTemplate's own doc defines its role as the never-trap law for parsers handed arbitrary bytes."
+  },
+  {
+   "date": "2026-08-01",
+   "sites": [
+    "test/stdlib/Strideable.swift:236"
+   ],
+   "was": "gap-with-witness",
+   "now": "declined",
+   "why": "PropertyLawKit already runs this law verbatim. `checkIteratorProtocolPropertyLaws` ships \"IteratorProtocol.terminationStability\", whose body pulls the iterator to exhaustion and then asserts two further next() calls are nil — which is exactly what strideIteratorTest's `for _ in 0..<10 { expectNil(i.next()) }` checks. Building an absorbing-state template from this witness would have recreated the Strideable double-report. ProtocolCoverageMap now carries `.iteratorTerminationStability` so the decline is explicit rather than an accident of nobody proposing the law, and KitCoverageDriftTests reclassifies IteratorProtocol from uncoveredNoSymptom to covered — the symptom had arrived, and it was this adjudication."
+  },
+  {
+   "date": "2026-08-01",
+   "sites": [
+    "test/stdlib/Inputs/DictionaryKeyValueTypesObjC.swift:551",
+    "test/stdlib/Inputs/DictionaryKeyValueTypesObjC.swift:598",
+    "test/stdlib/Inputs/DictionaryKeyValueTypesObjC.swift:809"
+   ],
+   "was": "gap-with-witness",
+   "now": "declined-no-population",
+   "why": "The law is real and the kit does not cover it — countByEnumerating(with:objects:count:) is NSFastEnumeration, not IteratorProtocol. It is declined on population instead: `countByEnumerating` appears in 13 files, ALL of them inside swiftlang/swift itself, and in ZERO files across swift-collections, swift-foundation, swift-nio, swift-syntax and SwiftProjectLint. It is an ObjC bridging shadow protocol, not an ecosystem pattern, so a template for it would serve one corpus's test inputs."
   }
  ]
 }

@@ -62,6 +62,10 @@ public enum ProtocolCoverageMap {
         "Equatable": equatableBase,
         "Comparable": equatableBase.union([.comparableTotalOrder]),
         "Strideable": [.strideableDistanceRoundTrip],
+        // Sequence inherits the IteratorProtocol suite (`SequenceLaws.swift:91`), so a
+        // carrier reached as either name is covered.
+        "IteratorProtocol": [.iteratorTerminationStability],
+        "Sequence": [.iteratorTerminationStability],
         "LosslessStringConvertible": [.losslessStringRoundTrip],
         "Hashable": equatableBase.union([.hashableConsistency]),
 
@@ -356,6 +360,25 @@ public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
     /// `init?(_ description: String)` synthesizes to the bare name `"init"`, which has no stem
     /// to match. Declining is correct; the entry makes it *explicit* so a future relaxation
     /// meets a veto instead of recreating the `Strideable` defect.
+    /// Once an iterator returns `nil`, every subsequent `next()` returns `nil` — the
+    /// **absorbing state** an exhausted iterator must stay in.
+    ///
+    /// Added 2026-08-01 to make a decline explicit that was previously an accident of
+    /// nobody proposing the law. The swift.org `loops` study adjudicated
+    /// `test/stdlib/Strideable.swift:236` — `for _ in 0..<10 { expectNil(i.next()) }` —
+    /// as `gap-with-witness`, i.e. a law we do not cover. We do:
+    /// `checkIteratorProtocolPropertyLaws` runs `"IteratorProtocol.terminationStability"`
+    /// and its body is that law verbatim, pulling to exhaustion and then asserting two
+    /// further `next()` calls are `nil`.
+    ///
+    /// The entry changes no output today, because no template proposes it — the same
+    /// latent state `losslessStringRoundTrip` was added in. The symptom it fixes is
+    /// epistemic and it had already produced one wrong verdict: without the entry there is
+    /// nothing distinguishing *"declined because the kit runs it"* from *"missed"*, and a
+    /// future attempt at an absorbing-state template would meet the `Strideable`
+    /// double-report defect rather than a guard.
+    case iteratorTerminationStability
+
     case losslessStringRoundTrip
 
     // — Codable —
