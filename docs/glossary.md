@@ -1,9 +1,12 @@
 # Glossary
 
 Vocabulary used across this repo's source, docs, and CLI output. Terms are grouped by the
-stage they belong to, because several of them mean different things at different stages —
-**"template" in `discover` and "template" in `verify` are not the same set**, and conflating
-them is how a reach estimate goes wrong (see [Reach](#reach)).
+stage they belong to and **alphabetical within each stage**, because several of them mean
+different things at different stages — **"template" in `discover` and "template" in `verify` are
+not the same set**, and conflating them is how a reach estimate goes wrong (see [Reach](#reach)).
+
+For the *sequence* rather than the lookup, read the pipeline sketch below; the sections
+themselves sort for finding a word, not for learning the order.
 
 Every definition here is keyed to code. Where a term's authority is a specific type or file,
 it is named — prefer reading that over trusting this file, which is a map and not the territory.
@@ -29,6 +32,41 @@ resolves a **carrier**, derives a **generator recipe**, composes a **stub**, and
 
 ## Discovery
 
+### Catalog
+The whole collection of templates, taken together. "A catalog gap" = no template names the
+shape in question. Distinguish from a **reach** gap (a template exists and doesn't fire) and a
+**statability** gap (the law is real but cannot be *written down* generically).
+
+### Corroboration
+Independent evidence that a proposed law is real — a docstring asserting it
+(`DocstringPropertyCorroborator`), or an existing test body doing so (`TestLifter`). It raises
+score; it does not by itself propose.
+
+**`TestLifter` only corroborates.** Its detectors are keyed to existing templates, so
+hand-rolled random-input property tests and libFuzzer harnesses are invisible to it.
+
+### Lifted
+A `mutating` method on a carrier, or a method reachable only through one, re-expressed as the
+value-semantic `(T) -> T` shape a template needs. `idempotence-lifted` is the template; the
+`+Lifted.swift` extensions are where lifting happens.
+
+### Score
+An integer assembled from weighted `Signal`s. Not calibrated in an absolute sense — the
+thresholds are documented as "v0.3 defaults, not load-bearing constants."
+
+**Known distribution problem:** scores land on a sparse lattice
+`{20,25,30,35,40,45,50,65,70,75,80,85}` with **nothing between 50 and 65**, and on swift-syntax
+**738 of 1,115 suggestions sit at exactly 20** — the `possible` floor. Moving that cut to 21
+deletes two-thirds of the output. Ranking anything by row count without accounting for the
+floor will mislead — and it is the [Daikon trap](#daikon-trap) arriving, measured.
+
+### Seed / seed manifest
+`{file, line, symbol}` records emitted by SwiftProjectLint's `--format pbt-seeds`, naming
+functions worth pointing `discover` at. Consumed via `discover --seeds`. Kinds include
+`pure-function`, `extractable-kernel`, `restricted-function`.
+
+**A seed is not a suggestion.** 1,657 seeds have produced 21 default-tier picks on this repo.
+
 ### Template
 A named law shape that discovery can recognize from code — `idempotence`, `commutativity`,
 `round-trip`, `predicate`. A template decides *whether it fires* and *what score it assigns*,
@@ -42,21 +80,6 @@ can't drift apart as string literals.
 verifiable set plus four extras; names like `predicate`, `input-totality`, and `filter-subset`
 are live in the index and absent from the enum. Counting templates by `TemplateName.allCases`
 undercounts. There are ~89 `*Template*.swift` files against 17 enum cases.
-
-### Catalog
-The whole collection of templates, taken together. "A catalog gap" = no template names the
-shape in question. Distinguish from a **reach** gap (a template exists and doesn't fire) and a
-**statability** gap (the law is real but cannot be *written down* generically).
-
-### Score
-An integer assembled from weighted `Signal`s. Not calibrated in an absolute sense — the
-thresholds are documented as "v0.3 defaults, not load-bearing constants."
-
-**Known distribution problem:** scores land on a sparse lattice
-`{20,25,30,35,40,45,50,65,70,75,80,85}` with **nothing between 50 and 65**, and on swift-syntax
-**738 of 1,115 suggestions sit at exactly 20** — the `possible` floor. Moving that cut to 21
-deletes two-thirds of the output. Ranking anything by row count without accounting for the
-floor will mislead.
 
 ### Tier
 Visibility band derived from score (`Sources/SwiftInferCore/Tier.swift`):
@@ -82,26 +105,6 @@ highest-yield catalog work in this repo — the stream-consumption veto took 53 
 claims on `SwiftParser` down to 1; the result-builder veto took SwiftSyntaxBuilder 23 → 2.
 Contrast with *additions*, which have moved single-digit row counts.
 
-### Seed / seed manifest
-`{file, line, symbol}` records emitted by SwiftProjectLint's `--format pbt-seeds`, naming
-functions worth pointing `discover` at. Consumed via `discover --seeds`. Kinds include
-`pure-function`, `extractable-kernel`, `restricted-function`.
-
-**A seed is not a suggestion.** 1,657 seeds have produced 21 default-tier picks on this repo.
-
-### Lifted
-A `mutating` method on a carrier, or a method reachable only through one, re-expressed as the
-value-semantic `(T) -> T` shape a template needs. `idempotence-lifted` is the template; the
-`+Lifted.swift` extensions are where lifting happens.
-
-### Corroboration
-Independent evidence that a proposed law is real — a docstring asserting it
-(`DocstringPropertyCorroborator`), or an existing test body doing so (`TestLifter`). It raises
-score; it does not by itself propose.
-
-**`TestLifter` only corroborates.** Its detectors are keyed to existing templates, so
-hand-rolled random-input property tests and libFuzzer harnesses are invisible to it.
-
 ---
 
 ## Refutability
@@ -118,6 +121,14 @@ Authority: `Refutability.isRefutable` (`Sources/SwiftInferCore/Refutability.swif
 classified refutable *by template name*, at proposal time. Whether a given law, against a given
 generator, could actually have failed is a different question and is not what this API answers.
 
+### Rescue
+`Refutability.preservingLastRefutable` — the invariant that no filter may take a run to zero
+refutable laws. Fires when the tier cut or the seed focus is about to leave a reader holding
+nothing that could ever fail.
+
+**A rescue is a bug report, not a feature.** Every firing means an upstream stage has a blind
+spot, and callers are required to say so loudly.
+
 ### Role-entailed
 A law a **correct** implementation cannot fail — it is owed *by virtue of the role*, not
 conjectured from a name. A comparator owes a strict weak ordering; a predicate owes totality.
@@ -131,14 +142,6 @@ A law true of every implementation that compiles. `determinism` (`f(x) == f(x)`)
 one, and it is what discovery emits for a seeded pure function no template matched — "I have
 nothing to offer here," dressed as a finding.
 
-### Rescue
-`Refutability.preservingLastRefutable` — the invariant that no filter may take a run to zero
-refutable laws. Fires when the tier cut or the seed focus is about to leave a reader holding
-nothing that could ever fail.
-
-**A rescue is a bug report, not a feature.** Every firing means an upstream stage has a blind
-spot, and callers are required to say so loudly.
-
 ---
 
 ## Verify
@@ -146,13 +149,6 @@ spot, and callers are required to say so loudly.
 ### Carrier
 The type a law is stated over — the `T` in `(T) -> T`. `Int`, `String`, `Decisions`, a reducer's
 `State`. `carrierTypeName` on a `SemanticIndexEntry`.
-
-### Strategist / generator recipe
-`DerivationStrategist` (in SwiftPropertyLaws, **not** this repo) synthesizes a
-`Gen<YourType>` per carrier. The result is a `GeneratorRecipe`, whose `expression` is the
-generator source as a **string**. This repo calls the strategist and never reimplements it.
-
-`.todo` marks where synthesis stopped and a human takes over.
 
 ### Composer
 A function that renders the stub source for one template —
@@ -193,40 +189,6 @@ The term exists because "supported" alone is ambiguous across three gates — `s
 (Route 1 only), the composer switch, and the strategist's ability to derive a generator — and
 attributing a decline to the wrong one is a documented way to build the wrong plan.
 
-### Stub
-The generated, compilable Swift package that actually runs a law. Built per suggestion in
-`.swiftinfer/verify-workdir/`. One full SwiftPM workdir *each* — a 85-entry survey left 3.4 GB
-behind, gitignored, accumulating silently. `make clean-temp` sweeps it.
-
-### Pass 1 / Pass 2 (the edge pass)
-Two runs of the same composed law. **Pass 1** uses the strategist's default generator and
-**produces the verdict**. **Pass 2** uses a boundary-only recipe and is **advisory** — it
-reports separately and cannot retract Pass 1.
-
-The asymmetry is deliberate and load-bearing: boundary values cannot go in the verdict pass,
-because `x + 1` traps at `Int.max` and the repo's existing tests depend on that being
-unreachable at ~2⁻⁵⁸ per trial. Mixing them in turned three integration tests into
-`signal 5` crashes. See `docs/verify-edge-pass.md`.
-
-**Historical trap:** before 2026-07-31 Pass 2 was a hardcoded `print("VERIFY_EDGE_RESULT: PASS")`
-with zero trials for every strategist-routed carrier. Any `measured-bothPass` recorded before
-that date means *Pass 1 passed and Pass 2 was free*.
-
-### Outcome
-`VerifyEvidenceOutcome` (`Sources/SwiftInferCore/VerifyEvidence.swift`):
-
-| outcome | meaning |
-|---|---|
-| `measured-bothPass` | no counterexample found in the generated domain |
-| `measured-defaultFails` | Pass 1 found a counterexample — a **refutation** |
-| `measured-edgeCaseAdvisory` | Pass 1 passed, the advisory boundary pass did not |
-| `measured-error` | ran, but produced no verdict (build failed, timed out, crashed) |
-
-**`measured-bothPass` does not mean "the property holds."** A derived generator is tuned for
-coverage of the *type* and is silently mistuned for coverage of the *law*. Any law whose failure
-needs two generated values to **collide** — merge tie-breaks, cache-key collisions, dedup, key
-injectivity — is invisible to a generator drawing from a realistic domain.
-
 ### Decline
 Verify returning no verdict because it could not build the attempt at all — as distinct from
 running and passing. The `VerifyError` cases (`Sources/SwiftInferCLI/VerifyCommand.swift`):
@@ -245,9 +207,50 @@ bottleneck and measures at ~4%. `supportedCarriers` — the constant that looks 
 governs only the v1.46 hardcoded Route 1; everything else derives from `RawType` or an indexed
 `TypeShape`. Reading that constant and believing it produced a wrong plan once already.
 
+### Outcome
+`VerifyEvidenceOutcome` (`Sources/SwiftInferCore/VerifyEvidence.swift`):
+
+| outcome | meaning |
+|---|---|
+| `measured-bothPass` | no counterexample found in the generated domain |
+| `measured-defaultFails` | Pass 1 found a counterexample — a **refutation** |
+| `measured-edgeCaseAdvisory` | Pass 1 passed, the advisory boundary pass did not |
+| `measured-error` | ran, but produced no verdict (build failed, timed out, crashed) |
+
+**`measured-bothPass` does not mean "the property holds."** A derived generator is tuned for
+coverage of the *type* and is silently mistuned for coverage of the *law*. Any law whose failure
+needs two generated values to **collide** — merge tie-breaks, cache-key collisions, dedup, key
+injectivity — is invisible to a generator drawing from a realistic domain.
+
+### Pass 1 / Pass 2 (the edge pass)
+Two runs of the same composed law. **Pass 1** uses the strategist's default generator and
+**produces the verdict**. **Pass 2** uses a boundary-only recipe and is **advisory** — it
+reports separately and cannot retract Pass 1.
+
+The asymmetry is deliberate and load-bearing: boundary values cannot go in the verdict pass,
+because `x + 1` traps at `Int.max` and the repo's existing tests depend on that being
+unreachable at ~2⁻⁵⁸ per trial. Mixing them in turned three integration tests into
+`signal 5` crashes. See `docs/verify-edge-pass.md`.
+
+**Historical trap:** before 2026-07-31 Pass 2 was a hardcoded `print("VERIFY_EDGE_RESULT: PASS")`
+with zero trials for every strategist-routed carrier. Any `measured-bothPass` recorded before
+that date means *Pass 1 passed and Pass 2 was free*.
+
 ### Promotion
 `strong` + `measured-bothPass` → `verified`. The only path to the top tier; score alone never
 gets there.
+
+### Strategist / generator recipe
+`DerivationStrategist` (in SwiftPropertyLaws, **not** this repo) synthesizes a
+`Gen<YourType>` per carrier. The result is a `GeneratorRecipe`, whose `expression` is the
+generator source as a **string**. This repo calls the strategist and never reimplements it.
+
+`.todo` marks where synthesis stopped and a human takes over.
+
+### Stub
+The generated, compilable Swift package that actually runs a law. Built per suggestion in
+`.swiftinfer/verify-workdir/`. One full SwiftPM workdir *each* — an 85-entry survey left 3.4 GB
+behind, gitignored, accumulating silently. `make clean-temp` sweeps it.
 
 ---
 
@@ -291,20 +294,68 @@ are 25 — **69% of the actionable gap in two composers**.
 
 ## Method
 
-### Road test
-Point the tools at a subject and score them. Requires a **frozen fixture** (the code before any
-property work, pinned to a commit, never merged back into) and a **frozen answer key** (written
-by hand, in advance, without consulting the tools).
-
-**A tool may not grade its own homework.** Anything the tools find that the key missed is
-recorded **unscored**, never folded in. A key edited in response to tool output stops being
-independent the instant it is edited.
-
 ### Backtest
 Point the *finished* tools at real, already-fixed defects in mature public libraries and ask
 whether the loop would have caught each one **before** its fix. Stronger than a road test: a
 public fix commit predates the tools and was written by someone who never heard of them, so it
 removes the last degree of freedom a self-built answer key leaves open.
+
+### Confident zero
+The tool reporting "nothing here" when there was something. The failure mode this project
+treats as worst, because a zero is believed and generates no follow-up. The first five-repo road
+test returned **0 of 3** planted bugs this way, and each defect behind it was pinned in place by
+a **passing test that asserted the buggy behavior**.
+
+The [Daikon trap](#daikon-trap) is its opposite number: too much output versus falsely no output.
+Both end with the tool unread.
+
+### Daikon trap
+The failure mode this project is designed against, named for
+[Daikon](https://plse.cs.washington.edu/daikon/) — the dynamic invariant detector that infers
+properties by instrumenting runs, and famously produces *hundreds of true-but-uninteresting
+invariants*. The output is not wrong. It is unreadable, so it goes unread, so the tool gets
+switched off.
+
+Authority: PRD §3.5 corollary 3. **Defaults must produce a number of suggestions a developer can
+read in one sitting** — and the prescribed remedy is specific:
+
+> if benchmark calibration shows we're producing more, the answer is to **raise thresholds, not
+> to add filters on top**.
+
+That clause is the whole rule. Piling filters on a flood keeps the flood and adds surface area
+where a filter can eat the one law that mattered — which is exactly what [Rescue](#rescue) exists
+to catch, and it has fired.
+
+Note the PRD also puts *"full runtime invariant inference (Daikon-style instrumentation)"* out of
+scope outright. So "Daikon" names both a rejected **technique** and a rejected **output shape**,
+and in this repo it is nearly always the second.
+
+**Spellings in the source.** *Daikon flood* (a template that would fire on every value of a
+shape — every endomorphism, every binary predicate, every `Codable` type), *Daikon gate* (the
+veto that stops one), *anti-Daikon posture*, *Daikon risk*. All the same idea; they read as
+different terms and aren't.
+
+**It generalizes past suggestion count.** From the metamorphic experiment: *"a metamorphic
+catalogue that produces hundreds of always-passing picks is the Daikon trap in a new costume."*
+A wall of green unrefutable passes is the same failure as a wall of uninteresting suggestions —
+see [Refutable](#refutable).
+
+**Live, measured, and unresolved.** On swift-syntax, **738 of 1,115 suggestions sit at exactly
+score 20**, the `possible` floor; on `SwiftInferTemplates` the default surface is 88%
+`predicate`. That is the trap arriving, and the PRD's remedy would work mechanically — moving
+the cut from 20 to 21 deletes two-thirds of the output.
+
+It has not been applied, for a documented reason pulling the other way: `3e38e34` established
+that **a law the code OWES is never hidden**, earned from a real incident where a reader complied
+with the linter and the sharpest law in the run vanished. The resolution so far is *ordering*
+rather than hiding (`Discover.strongestFirst`) — which addresses burial but not volume, and
+`predicate-display-order.md` lists "is the score-20 volume itself a problem, now that it sorts
+last?" as still open, with the honest note that **nobody has asked a reader**.
+
+### Latent
+A shipped change verified on synthetic shapes that produces **zero delta on every measured
+corpus**. Not a failure — a genuine absence, recorded as such so nobody mistakes "no effect
+observed" for "not implemented."
 
 ### Mutation corpus
 Hand-authored mutants (reversible patches) kept **standing** and re-run whenever the toolchain
@@ -315,10 +366,14 @@ The unit a generator should be scored in — `fixtures/integer-division-generato
 **2/8 → 8/8 mutants killed** alongside its coverage table, because coverage says boundary values
 are *present* and only the mutant table says the test *catches* things it could not before.
 
-### Latent
-A shipped change verified on synthetic shapes that produces **zero delta on every measured
-corpus**. Not a failure — a genuine absence, recorded as such so nobody mistakes "no effect
-observed" for "not implemented."
+### Road test
+Point the tools at a subject and score them. Requires a **frozen fixture** (the code before any
+property work, pinned to a commit, never merged back into) and a **frozen answer key** (written
+by hand, in advance, without consulting the tools).
+
+**A tool may not grade its own homework.** Anything the tools find that the key missed is
+recorded **unscored**, never folded in. A key edited in response to tool output stops being
+independent the instant it is edited.
 
 ### Statability gap
 A law that is real, has population, and still cannot be written down generically — a fourth
@@ -329,31 +384,24 @@ not the blocker. The blockers are that type text is a *source spelling*, that lo
 *coordinates reformatting moves* — **"a template cannot tell a coordinate from a fact"** — and
 that trivia is semantic inside `"""…"""`.
 
-### Confident zero
-The tool reporting "nothing here" when there was something. The failure mode this project
-treats as worst, because a zero is believed and generates no follow-up. The first five-repo road
-test returned **0 of 3** planted bugs this way, and each defect behind it was pinned in place by
-a **passing test that asserted the buggy behavior**.
-
 ---
 
 ## Neighbours
 
 Terms owned by sibling packages, listed because they appear in this repo's output.
 
+**`@ClockDeterministic`** — the claim that admits async code to verification. Bare `async` is
+rejected, with a message saying how to make the claim.
+
 **Effect lattice** — `pure < observational < idempotent < externallyIdempotent < nonIdempotent`,
 with a `lub` join. Defined in SwiftEffectInference.
-
-**Purity oracle** — `PurityInferrer`, the single authority both SwiftProjectLint's flagship rule
-and this repo's veto consult, so the two can never disagree about what is pure. Refutes
-`Date()`, `UUID()`, RNG reads.
-
-**Purity gates must not relax to reach a target.** Removing the `throws` gate once re-admitted
-`Process`/`Pipe`/`FileHandle`/SQLite at a stroke, with a subprocess-spawning function judged pure.
 
 **Interaction family** — the five reducer/MVVM invariant families (idempotence, cardinality,
 biconditional, referential-integrity, conservation). A separate vocabulary from `TemplateName`;
 see `InteractionInvariantFamily`.
 
-**`@ClockDeterministic`** — the claim that admits async code to verification. Bare `async` is
-rejected, with a message saying how to make the claim.
+**Purity oracle** — `PurityInferrer`, the single authority both SwiftProjectLint's flagship rule
+and this repo's veto consult, so the two can never disagree about what is pure. Refutes
+`Date()`, `UUID()`, RNG reads. **Purity gates must not relax to reach a target** — removing the
+`throws` gate once re-admitted `Process`/`Pipe`/`FileHandle`/SQLite at a stroke, with a
+subprocess-spawning function judged pure.
