@@ -713,6 +713,13 @@ iteration order is unspecified, so it fails the law spuriously. Resolving that n
 ordered-carrier discriminator, which is its own measurement. Recorded rather than attempted —
 claiming both lines closed on the strength of one would misreport the state.
 
+##### BOTH LINES NOW CLOSED — the discriminator was measured and the second family shipped (2026-07-31)
+
+`OrderedCarrierDiscriminator` + `SequenceViewModelLawTemplate`, stating
+`(a == b) == a.elementsEqual(b)`. See §7 for the measurement; the short version is **0 false
+positives against 20 types with documented order semantics, 7 firings**, including all three
+`Equatable`-signal witnesses at Strong.
+
 #### `discover` and the tests aim at different properties of the same functions
 
 Unscored, per the guardrail. On `RangeSet` / `Duration` / `Diffing`, `discover` proposes **33**
@@ -1654,6 +1661,105 @@ wrote the law completely, which is not knowable from the location alone.
 - **The projected-round-trip discriminator** (§6.4). The witness exists on both
   sides now — one true (`dividingFullWidth`), one false (`Character`). Building
   it needs the rule for when the discarded component is constrained.
+  > **Attempted and DECLINED on measurement, 2026-07-31 — see §7.1.** The
+  > product-typed-return shape has no population: 27 raw candidates on the
+  > stdlib, all endomorphism noise, and **0.19%** of functions across nine
+  > parsing corpora. The discriminator that *was* built is a different one — §7.
 - Unchanged from the last session: whether `checkComparable` shares the
   `Equatable` blindness, and whether 88% `predicate` volume matters now that it
   sorts last.
+
+---
+
+## 7. The ordered-carrier discriminator (2026-07-31)
+
+The question was "build the projected-round-trip discriminator". Three candidate
+shapes were measured before one was built, and the two that came from §6 both
+died. What shipped came from a passage in §1.15 instead.
+
+### 7.1 Two declined shapes, and why the corpus refused them
+
+**Product-typed returns — declined, no population.** §6.4 proposed a template for
+`g(f(a)).<component> == a` where `g` returns a tuple. Measured:
+
+| corpus | candidates | what they are |
+|---|---:|---|
+| `stdlib/public/core` | 27 | `byteSwapped` × `addingReportingOverflow`, `signum` × `quotientAndRemainder` — every one an endomorphism paired with an `A -> (A, …)`, the clique `endomorphismRoundTripPair` already exists to stop |
+| 9 parsing corpora, 54,929 summaries | **106 tuple returns (0.19%)** | labels are domain nouns — `year`, `month`, `serverChannel`, `similarity` |
+
+And **the motivating witness is not reachable anyway.** §6.4 isolated the blocker
+to a 2-tuple return on a synthetic file where both halves sat on one type. On the
+real stdlib `multipliedFullWidth` is on `FixedWidthInteger` and `dividingFullWidth`
+on `SignedInteger`/`UnsignedInteger` — **different carriers**, so `Self` resolves
+differently and the pair cannot form regardless. The tuple was the *second*
+blocker. Same wall as `Diffing.swift` in §1.25, and the same "measure after each
+fix" lesson.
+
+**Parser residues — declined, the shape is not Swift's.** The redirect to parsing
+was right about the domain and wrong about the shape: the parser-combinator
+`parse(input) -> (value: T, rest: Substring)` essentially does not exist here.
+`rest` appears **0** times across the nine corpora and `remainder` twice; Swift
+parsers carry a mutating cursor (`Parser.expect`, `JSON5Scanner`) instead. So
+there is no residue vocabulary for a discriminator to key on.
+
+### 7.2 What shipped instead, and what forced each rule
+
+§1.15's closing line — *"it becomes real the moment a collection-contract template
+exists"* — points at the one discriminator with **measured bug witnesses** behind
+it. `fixtures/equatable-signal` had recorded the sequence-view model law as
+deliberately unbuilt pending exactly this.
+
+`OrderedCarrierDiscriminator` decides whether a carrier's iteration order is part
+of its **value**, so `(a == b) == a.elementsEqual(b)` can be proposed for
+`OrderedSet` and not for `Set`. Scored against 20 types with documented order
+semantics:
+
+| rule | correct | false positives | safe abstains |
+|---|---:|---:|---:|
+| Bidirectional/RandomAccess, veto `SetAlgebra` | 16 | **1** | 3 |
+| drop `BidirectionalCollection` | 16 | **0** | 4 |
+| …and require `ExpressibleByArrayLiteral` | 9 | **0** | 11 |
+
+Each tightening was forced by a witness:
+
+- **`TreeDictionary`** — the measured false positive. `BidirectionalCollection`
+  with hash order and no `SetAlgebra` to veto it. Walking backwards is something
+  a hash-tree's chain does fine, so that conformance says nothing about order.
+- **`Range`** — ordered, but its value outlives its elements: `5..<5` and `7..<7`
+  are both empty and compare **unequal**, so `elementsEqual(b) ⟹ a == b` is
+  false. That direction catches two of the three bug witnesses and cannot be
+  dropped, so the carrier must be excluded instead.
+  `ExpressibleByArrayLiteral` is the type's own statement that a sequence of
+  elements suffices to build it — exactly what the law claims.
+
+Measured firing set: **7, zero false positives** — `OrderedSet`, `Deque`,
+`BitArray` (all three `equatable-signal` witnesses), `Array`, `ContiguousArray`,
+`ArraySlice`, `IndexPath`. Zero on swift-syntax.
+
+### 7.3 Three things recorded rather than tidied away
+
+**One of the two gates is redundant on every corpus measured.** Re-adding
+`BidirectionalCollection` produces a byte-identical firing set, because the
+element-determined gate already excludes every hash-ordered type present
+(`TreeSet` is `SetAlgebra`-vetoed, `TreeDictionary` is dictionary-literal). Kept
+anyway, and labelled as untested-but-sound rather than load-bearing — a rule kept
+for a reason that was *measured false* would be worse than one kept for a reason
+that is merely unexercised.
+
+**The tier bonus is nearly a constant.** The `hash(into:)` bonus was drafted to
+separate Likely from Strong; measured, **all seven firings carry it**, because
+`Hashable`'s contract ties the two together. Left alone rather than retuned —
+adjusting the arithmetic to hit a target tier is what this repo forbids.
+
+**The law's hazard is vacuity, not falsity.** A carrier whose `==` is already
+implemented as `elementsEqual` — `Deque`'s shipped body is close to that — makes
+the law `f(x) == f(x)`. It still refutes every mutant, so it ships with the
+hazard in the caveat rather than a veto. Detecting that body shape needs a
+scanner signal that does not exist; that is the next measurement.
+
+**Adjacent, and deliberately not touched:** `OrderSensitiveCarrierNames` is a
+six-name curated denylist whose own doc says it stands in for *"structural
+order-sensitivity detection pre-SemanticIndex"*. This is that detection, and
+`CommutativityTemplate`'s veto still uses the denylist. Same predicate, opposite
+polarity — commutativity vetoes *on* an ordered carrier, the model law *requires*
+one. Migrating that veto is its own change with its own measurement.

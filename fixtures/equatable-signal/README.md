@@ -148,6 +148,24 @@ Three rules, in the order the two corpora established them:
 > would fail `a == b ⟺ Array(a) == Array(b)` spuriously, so the family needs an
 > ordered-carrier discriminator first. That is a measurement, not a coding task.
 >
+> > **CLOSED 2026-07-31 — the measurement was done and the family shipped.**
+> > `OrderedCarrierDiscriminator` (SwiftInferCore) + `SequenceViewModelLawTemplate`, stating
+> > `(a == b) == a.elementsEqual(b)`. The discriminator was scored against 20 types with
+> > documented order semantics across swift-collections, `stdlib/public/core` and
+> > swift-foundation: **0 false positives, 7 firings**, and all three witnesses above —
+> > `OrderedSet`, `Deque`, `BitArray` — are among them, at Strong.
+> >
+> > Two rules, each forced by a witness rather than an argument. `BidirectionalCollection` is
+> > **not** an order signal (a hash-tree's chain walks backwards fine — `TreeDictionary` was
+> > the measured false positive). And ordered is not enough: the value must be **determined
+> > by** its elements, or `Range` takes a false law, since `5..<5` and `7..<7` are both empty
+> > and compare unequal. `ExpressibleByArrayLiteral` is the type's own statement of that.
+> >
+> > The law's own hazard is **vacuity**, not falsity — a carrier whose `==` already *is*
+> > `elementsEqual` makes it `f(x) == f(x)`. It is stated in the caveat rather than vetoed,
+> > because it still refutes every mutant above; detecting that body shape wants a scanner
+> > signal that does not exist yet.
+>
 > **3.** Treat `Equatable` conformance itself as a *precondition* that unlocks
 > other templates — which is what `StdlibConformances` /
 > `ProtocolCoverageMap` already do — never as a suggestion of its own.
