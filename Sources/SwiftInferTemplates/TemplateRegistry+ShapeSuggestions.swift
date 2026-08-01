@@ -11,6 +11,7 @@ extension TemplateRegistry {
     static func collectShapeSuggestions(
         summaries: [FunctionSummary],
         typeDecls: [TypeDecl],
+        context: CollectionResolverContext,
         into collector: inout SuggestionCollector
     ) {
         collectCodableRoundTripSuggestions(summaries: summaries, typeDecls: typeDecls, into: &collector)
@@ -21,6 +22,10 @@ extension TemplateRegistry {
             shapesByName: shapesByName,
             into: &collector
         )
-        collectModelLawSuggestions(summaries: summaries, into: &collector)
+        collectModelLawSuggestions(
+            summaries: summaries,
+            inheritedTypesByName: context.inheritedTypesByName,
+            into: &collector
+        )
     }
 }
