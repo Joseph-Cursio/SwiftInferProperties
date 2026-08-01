@@ -1898,9 +1898,53 @@ cases cannot be split across files, so the next signal added there will not fit
 without moving prose out of the file first. Recorded because the failure mode is
 a lint error on someone else's unrelated change.
 
-**Adjacent, and deliberately not touched:** `OrderSensitiveCarrierNames` is a
-six-name curated denylist whose own doc says it stands in for *"structural
+**Adjacent, and deliberately not touched at the time:** `OrderSensitiveCarrierNames`
+is a six-name curated denylist whose own doc says it stands in for *"structural
 order-sensitivity detection pre-SemanticIndex"*. This is that detection, and
-`CommutativityTemplate`'s veto still uses the denylist. Same predicate, opposite
+`CommutativityTemplate`'s veto used the denylist. Same predicate, opposite
 polarity — commutativity vetoes *on* an ordered carrier, the model law *requires*
-one. Migrating that veto is its own change with its own measurement.
+one.
+
+> **Migrated 2026-08-01 — see §7.5.**
+
+### 7.5 Migrating the commutativity veto onto the discriminator
+
+**The two consumers ask different questions, and that was the live hazard.** The
+model law states a biconditional, so it needs both halves of the rule — `Range` is
+ordered but its value outlives its elements. Commutativity asks only whether
+`a.union(b)` and `b.union(a)` can differ, which turns on order alone.
+
+Migrating to the full `verdict` would therefore have silently dropped `String`,
+`Substring`, `Data` and `Slice` — every one a carrier where an order-preserving
+`union` is genuinely non-commutative. So the discriminator now exposes
+`isOrderSensitive` separately and the veto reads that.
+
+**Measured before changing anything**, across swift-collections,
+`stdlib/public/core`, swift-foundation, swift-syntax and swift-nio: the denylist
+and the structural rule agree on **every** carrier declaring one of the four set
+verbs — zero disagreements, and suggestion counts unchanged after the migration
+(684 / 779 / 1,278 / 0).
+
+**The agreement is thinner than it looks, and that is the finding.** Five of the
+six denylist names never appear at all — `Array`, `ContiguousArray`, `ArraySlice`,
+`Deque` and `OrderedDictionary` declare no set operations — so `OrderedSet` is the
+only entry the denylist actively fires on. A six-name list doing one name's work.
+
+**What the migration actually buys** is therefore entirely on carriers nobody has
+written yet, demonstrated on synthetic ones:
+
+| carrier | conformances | before | after |
+|---|---|---|---|
+| `Timeline` | `RandomAccessCollection`, `ExpressibleByArrayLiteral` | suggestion shipped | **vetoed** |
+| `Ledger` | `RandomAccessCollection` only | suggestion shipped | **vetoed** |
+| `Bag` | none | shipped | shipped (control) |
+
+`Ledger` is the arm that justifies reading `isOrderSensitive` rather than the whole
+verdict: it is ordered but not element-determined, so the full verdict abstains
+while an order-preserving `union` on it is still non-commutative.
+
+**The denylist is kept as a union, not replaced.** `OrderedDictionary` conforms to
+`Sequence` and to nothing marking position as value-determined, so the structural
+rule abstains on it. Dropping the list would be safe on everything measured and
+unsafe on a shape nobody has written — the same posture as §7.3's redundant gate,
+and pinned by its own test arm so the residue is visible rather than assumed.

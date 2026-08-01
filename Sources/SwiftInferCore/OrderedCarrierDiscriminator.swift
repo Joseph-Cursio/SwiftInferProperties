@@ -107,6 +107,37 @@ public enum OrderedCarrierDiscriminator {
         case notElementDetermined
     }
 
+    /// Whether element **order is part of the carrier's value** — the first half of the
+    /// rule, without the element-determined gate.
+    ///
+    /// **The two consumers need different questions, and conflating them was a live
+    /// hazard.** `SequenceViewModelLawTemplate` states a biconditional
+    /// (`(a == b) == a.elementsEqual(b)`), so it needs *both* halves: `Range` is
+    /// order-sensitive but its value outlives its elements, and the right-to-left
+    /// direction is false there. `CommutativityTemplate` asks only whether
+    /// `a.union(b)` and `b.union(a)` can differ, which turns on order alone —
+    /// `ExpressibleByArrayLiteral` has nothing to say about it.
+    ///
+    /// Migrating the commutativity veto to the full `verdict` would therefore have
+    /// silently dropped `String`, `Substring`, `Data` and `Slice`, every one of them a
+    /// carrier where an order-preserving `union` is genuinely non-commutative.
+    ///
+    /// `false` for an abstention: unresolvable is silence, not a guessed veto.
+    public static func isOrderSensitive(forConformances conformances: Set<String>) -> Bool {
+        switch verdict(forConformances: conformances) {
+        case .elementDetermined:
+            return true
+
+        case .unordered:
+            return false
+
+        case .abstain(let reason):
+            // Ordered, and only the element-determined gate stopped it — which is not a
+            // question about order.
+            return reason == .notElementDetermined
+        }
+    }
+
     /// The verdict for a carrier with these conformance names.
     ///
     /// `conformances` is the corpus-wide inheritance-clause union for the carrier, generic
