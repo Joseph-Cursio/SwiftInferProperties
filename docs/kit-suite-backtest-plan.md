@@ -1,6 +1,10 @@
 # Plan — backtest `scaffold-kit-suites` against real, already-fixed swift.org bugs
 
-**Status: planned, not started. Written 2026-08-02 for execution in a fresh context.**
+**Status (2026-08-02): §3b measured, §3d added, Arm 1 RUN and it is a HIT.** Arms 2 and 3
+and the §4a decision are still open. Written for execution in a fresh context; the
+prerequisites section and the Arm 1 prediction are left as originally written, with results
+appended rather than folded in, because a pre-registered prediction that gets quietly
+corrected was never pre-registered.
 
 Read this file and `docs/backtest-apple-libraries.md` before touching anything. This plan is
 a *different question* asked with the *same method* as that 2026-07-18 backtest.
@@ -189,6 +193,82 @@ at all. The laws were not fitted to this witness.
 > to the kit, or drop the map entry and let `discover` propose it), the two have different
 > corpus deltas, and the choice changes what Arm 1's emitted suite covers. Decide before the
 > arm runs.
+
+> ## RUN 2026-08-02 — **HIT.** The refutation unit is complete.
+>
+> Same generated suite, same generator, one-file difference between the two runs.
+>
+> | | `876177db^` (`d6b1e6c7`, buggy) | `876177db` (fixed) |
+> |---|---|---|
+> | `SetAlgebra.symmetricDifferenceCommutativity` | **FAIL, trial 1** | pass |
+> | `SetAlgebra.symmetricDifferenceDefinition` | **FAIL, trial 1** | pass |
+> | the other 13 `SetAlgebra` laws | pass | pass |
+> | **summary** | **2 violations of 15** | **0 of 15** |
+>
+> ```
+> x = [7, 5, 4], y = [8, 0, 5]
+>   x.symmetricDifference(y) = [7, 4],  y.symmetricDifference(x) = [8, 0]
+>
+> x = [7, 1, 6], y = [8, 2, 0, 6]
+>   x.symmetricDifference(y) = [7, 1],  (x ∪ y) \ (x ∩ y) = [8, 7, 2, 0, 1]
+> ```
+>
+> **Method.** `PersistentCollections` + `_CollectionsUtilities` vendored verbatim from a
+> detached worktree at `d6b1e6c7`, because SwiftPropertyLaws pulls swift-collections in for
+> `PropertyLawCollections` and two copies of one package cannot share a graph. The second run
+> swaps **one file** — `PersistentSet+SetAlgebra symmetricDifference.swift`, whose three-line
+> body is the entire fix — and changes nothing else: same sources, same generator, same suite.
+>
+> ### What running it taught that reading it could not
+>
+> **1. The cross-file conformance fix was load-bearing for this arm.** The emission reported
+> `PersistentSet — 11 law(s), BLOCKED on a generator` and named `checkSetAlgebraPropertyLaws`.
+> Before that fix (same day, PR #48) `PersistentSet` declared `SetAlgebra` in a sibling
+> extension file and was invisible: the arm would have emitted nothing, and **nothing is
+> indistinguishable from reading B, "the tool is blind"** — the §1 problem, arriving from a
+> direction §1 did not anticipate.
+>
+> **2. §3b's `Sendable` prediction was right about the mechanism and wrong about the era.**
+> Zero `Sendable` errors on swift-collections HEAD. On the 2022 tree, `PersistentSet` predates
+> the annotation entirely and `checkSetAlgebraPropertyLaws` requires `Value: Sendable`. The
+> constraint bites on OLD code, which is exactly the population a backtest visits and a
+> HEAD survey never does. Neither run alone would have found this.
+>
+> **3. Two edits were needed to run the emitted call, and both are defects.**
+> `PersistentSet.self` → `PersistentSet<Int>.self` (the emitter writes the bare generic name,
+> which does not typecheck — the same defect as `Deque` in §3b), and the generator, which is
+> what BLOCKED means.
+>
+> ### Accommodations, all disclosed
+>
+> The 2022 tree does not build under Swift 6.3.3. Three changes, none touching
+> `symmetricDifference`:
+>
+> - **SE-0370 back-port removed** from `_CollectionsUtilities` — its
+>   `Slice.initialize(fromContentsOf:)` is ambiguous with the stdlib's, which has shipped
+>   SE-0370 since. Deleting the back-port restores the implementation it stood in for. Four
+>   modules from the SUT.
+> - **Swift 5 language mode** on the vendored targets. The upstream manifest is
+>   `swift-tools-version:5.3`, so v5 is the mode this code shipped under; Swift 6 strict
+>   concurrency rejects `_Node+Storage._emptySingleton`. Setting the mode is faithful, editing
+>   2022 sources to satisfy a 2026 checker would not be.
+> - **`PersistentSet: @unchecked Sendable`** — what HEAD annotates it as anyway, for the same
+>   CHAMP copy-on-write reason.
+>
+> ### The honest bound
+>
+> **The generator is hand-written, not derived.** The tool proposed the law, named the suite,
+> and told the user exactly what was missing; a human supplied the domain — deliberately
+> narrow (`0...8`, count `0...6`) so operands OVERLAP, since `symmetricDifference` on
+> near-disjoint sets approximates `union`, which *is* commutative. That is CLAUDE.md's
+> collision-alphabet rule applied by hand, and it is the difference between this arm and a
+> claim that the toolchain caught the bug unaided. **It did not.** What it did was reach the
+> carrier, name the law, name the suite, and state the one thing a human had to add — and then
+> the law failed at trial 1 and passed after the fix. That is the unit of value §5 asks for,
+> and it is smaller than "the loop found it".
+>
+> Harness in the session scratchpad, not committed. It should become a gated fixture on the
+> `fixtures/cycle27-surface/` precedent if Arm 2 reuses it.
 
 ### 4a. Open decision — should the emitter know about `PropertyLawCollections`?
 
