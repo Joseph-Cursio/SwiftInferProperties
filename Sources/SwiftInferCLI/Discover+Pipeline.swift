@@ -293,9 +293,9 @@ extension SwiftInferCommand.Discover {
         // Before the cut, not from the caller's post-cut set: the demotion is what removes
         // these from view, so reporting on survivors would guarantee silence in exactly the
         // case worth reporting. The suggestion loses visibility; the diagnosis must not.
-        for line in KitEvidenceScoring.diagnostics(for: graded, evidence: evidence.kit) {
-            diagnostics.writeDiagnostic("warning: \(line)")
-        }
+        emitEvidenceDiagnostics(
+            graded: graded, artifacts: artifacts, evidence: evidence, diagnostics: diagnostics
+        )
         // `.suppressed` is never shown — not even with `--include-possible`
         // (`Tier.suppressed` doc; `renderStats` assumes it). V1.67 makes this
         // explicit: verify-disproven picks land here as `.suppressed`, and the
