@@ -16,12 +16,21 @@ import SwiftInferTemplates
 /// silence in exactly the cases worth reporting.
 extension SwiftInferCommand.Discover {
 
+    /// Emits the two diagnostic lines and **returns** what the kit covers, so the caller can
+    /// pair it with the suggestion count on stdout.
+    ///
+    /// The return value is the fix for a real invisibility: this function's `note:` already
+    /// described the kit's coverage, and the 2026-08-01 eight-corpus census ran every
+    /// invocation with `2>/dev/null` and never saw it once — including the runs whose numbers
+    /// were written into the findings doc. Diagnostics stay on stderr; the *number* now also
+    /// travels to where the reader is already looking.
+    @discardableResult
     static func emitEvidenceDiagnostics(
         graded: [Suggestion],
         artifacts: TemplateRegistry.DiscoverArtifacts,
         evidence: DiscoverEvidenceInputs,
         diagnostics: any DiagnosticOutput
-    ) {
+    ) -> CoverageSummary {
         for line in KitEvidenceScoring.diagnostics(for: graded, evidence: evidence.kit) {
             diagnostics.writeDiagnostic("warning: \(line)")
         }
@@ -38,5 +47,6 @@ extension SwiftInferCommand.Discover {
         for line in ProtocolCoverageAudit.diagnostics(for: findings) {
             diagnostics.writeDiagnostic("note: \(line)")
         }
+        return CoverageSummary.summarize(findings)
     }
 }

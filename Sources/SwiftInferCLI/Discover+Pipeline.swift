@@ -12,101 +12,6 @@ import SwiftInferTestLifter
 /// dispatch + the M2 vocabulary-path precedence helper live.
 extension SwiftInferCommand.Discover {
 
-    /// Tier-filtered + config-aware suggestion collection. Shared
-    /// by `Discover.run` (renderer / interactive / update-baseline)
-    /// and `DriftCommand.run` (M6.5) so the two subcommands stay
-    /// in lockstep — anything `discover` would surface is what
-    /// `drift` diffs against the baseline.
-    public struct PipelineResult {
-        public let suggestions: [Suggestion]
-        public let packageRoot: URL?
-
-        /// Refutable laws the tier cut hid — see `VisibilityCut`. Consumed by the final-answer
-        /// guard in `focus(_:with:diagnostics:)`, which is the only stage that can see whether
-        /// hiding them left the reader with an honest empty or a confident pile of tautologies.
-        public let tierHiddenRefutableLaws: [Suggestion]
-
-        /// Inverse-element witness pairs (M8.3) — feeds M8.4.a's
-        /// `RefactorBridgeOrchestrator.proposals(from:inverseElementPairs:)`
-        /// to surface `Group` conformance proposals when the corpus
-        /// has a unary inverse function alongside a binary op +
-        /// identity element on the same type. Empty for the non-
-        /// interactive code paths (drift, render-only); the
-        /// orchestrator only consumes them in `--interactive` mode.
-        public let inverseElementPairs: [InverseElementPair]
-
-        /// M11.2 — equivalence-class hints keyed by the promoted
-        /// suggestion's identity. Threaded through to
-        /// `InteractiveTriage.Context.equivalenceClassHintsByIdentity`
-        /// so the accept-flow renderer (M11.2d) can reach the hint
-        /// without paying a per-suggestion storage cost on every
-        /// `Suggestion` instance (the §13 row 4 memory ceiling rule).
-        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind]
-
-        /// M16.3 — consumer-producer chain hints keyed by the promoted
-        /// suggestion's identity. Same §13-row-4 out-of-band carrier
-        /// posture as `equivalenceClassHintsByIdentity`; the M16.3
-        /// accept-flow renderer reads this map by identity to reach
-        /// the `DomainHint` for the writeout.
-        public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
-
-        /// V1.47.C — type declarations the discover pass saw, keyed by
-        /// bare type name (no generic argument list). `IndexCommand`
-        /// reads this to populate `SemanticIndexEntry.typeShape` so the
-        /// verify pipeline can call `DerivationStrategist.strategy(for:)`
-        /// without re-parsing the user's source. Empty for code paths
-        /// that don't need it (the renderer / interactive flows).
-        public let typeShapesByName: [String: PropertyLawCore.TypeShape]
-
-        /// Generators synthesized from how the tests construct each type
-        /// (mock-synthesis over the full construction record), keyed by type
-        /// name — for *any* test-constructed type, not only suggestion-bearing
-        /// ones. The scaffold pass uses these to fill holes structure can't.
-        public let mockGeneratorsByType: [String: MockGenerator]
-
-        /// Every function the discover pass scanned. Surfaced so the
-        /// `--seeds` path can synthesize generic laws (e.g. determinism) for a
-        /// seeded function that no signature-pattern template matched — the
-        /// seed (lint evidence of purity) is what justifies the law, so it
-        /// lives outside the template engine.
-        public let summaries: [FunctionSummary]
-
-        /// Functions the scan set aside as uncallable from an external test. Consulted only when
-        /// a seed names one.
-        public let restrictedFunctions: [RestrictedFunction]
-
-        /// Effective `--docstring-advice` setting, resolved CLI > config > default (on).
-        /// Surfaced here because the advisory is rendered by `Discover.run`, after the
-        /// pipeline has already loaded the config — this saves a second `ConfigLoader.load`.
-        public let docstringAdvice: Bool
-
-        public init(
-            suggestions: [Suggestion],
-            packageRoot: URL?,
-            tierHiddenRefutableLaws: [Suggestion] = [],
-            inverseElementPairs: [InverseElementPair] = [],
-            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
-            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
-            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
-            mockGeneratorsByType: [String: MockGenerator] = [:],
-            summaries: [FunctionSummary] = [],
-            restrictedFunctions: [RestrictedFunction] = [],
-            docstringAdvice: Bool
-        ) {
-            self.suggestions = suggestions
-            self.packageRoot = packageRoot
-            self.tierHiddenRefutableLaws = tierHiddenRefutableLaws
-            self.inverseElementPairs = inverseElementPairs
-            self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
-            self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
-            self.typeShapesByName = typeShapesByName
-            self.mockGeneratorsByType = mockGeneratorsByType
-            self.summaries = summaries
-            self.restrictedFunctions = restrictedFunctions
-            self.docstringAdvice = docstringAdvice
-        }
-    }
-
     public static func collectVisibleSuggestions(
         directory: URL,
         includePossible: Bool? = nil,
@@ -274,7 +179,12 @@ extension SwiftInferCommand.Discover {
         let filteredPromotedLifted = counterSignalKeys.isEmpty
             ? skipFiltered
             : skipFiltered.filter { !counterSignalKeys.contains($0.crossValidationKey) }
-        let combined = artifacts.suggestions + filteredPromotedLifted
+        // Collapse rows that are the same law about the same function before anything
+        // downstream counts them. `crossValidationKey` suppression above catches the
+        // TE-vs-lifted overlap; this catches copies whose identity is equal outright —
+        // five golden tests asserting one law rendered as five Strong findings. See
+        // `dedupedByIdentity`.
+        let combined = dedupedByIdentity(artifacts.suggestions + filteredPromotedLifted)
         // V1.67 — fold verify evidence into the grade *before* the
         // visibility cut, so a `bothPass` outcome can lift a pick past
         // the threshold (and a `defaultFails` veto drops it). V1.66.B
@@ -293,7 +203,7 @@ extension SwiftInferCommand.Discover {
         // Before the cut, not from the caller's post-cut set: the demotion is what removes
         // these from view, so reporting on survivors would guarantee silence in exactly the
         // case worth reporting. The suggestion loses visibility; the diagnosis must not.
-        emitEvidenceDiagnostics(
+        let coverage = emitEvidenceDiagnostics(
             graded: graded, artifacts: artifacts, evidence: evidence, diagnostics: diagnostics
         )
         // `.suppressed` is never shown — not even with `--include-possible`
@@ -329,7 +239,8 @@ extension SwiftInferCommand.Discover {
             visible: visible,
             hiddenRefutable: live.filter { candidate in
                 Refutability.isRefutable(candidate) && !visibleIdentities.contains(candidate.identity)
-            }
+            },
+            coverage: coverage
         )
     }
 
@@ -345,6 +256,9 @@ extension SwiftInferCommand.Discover {
     struct VisibilityCut {
         let visible: [Suggestion]
         let hiddenRefutable: [Suggestion]
+        /// Computed where the conformance index is already in hand, and carried out so the
+        /// renderer can pair it with the suggestion count. See `CoverageHeadline`.
+        let coverage: CoverageSummary
     }
 
     /// Bundle of resolved settings the discover pipeline pulls from

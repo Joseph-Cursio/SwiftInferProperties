@@ -90,7 +90,7 @@ struct DiscoverPipelineConfigTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
         #expect(diagnostics.lines.isEmpty)
     }
 
@@ -266,7 +266,7 @@ struct DiscoverPipelineConfigTests {
             diagnostics: diagnostics
         )
         // Defaults → Possible tier hidden → 0 suggestions.
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
         #expect(diagnostics.lines.count == 1)
         #expect(diagnostics.lines.first?.hasPrefix("warning: ") == true)
         #expect(diagnostics.lines.first?.contains("could not parse") == true)

@@ -73,7 +73,7 @@ struct DiscoverPipelineContradictionTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
         #expect(diagnostics.lines.count == 1)
         #expect(diagnostics.lines.first?.contains("commutativity") == true)
     }

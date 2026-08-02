@@ -78,11 +78,43 @@ public enum ProtocolCoverageAudit {
         public let coveringConformance: String
         public let standing: Standing
 
-        public init(typeName: String, coveringConformance: String, standing: Standing) {
+        /// **Every law the kit's suites check for this carrier**, unioned across *all* its
+        /// covering conformances — not just `coveringConformance`'s.
+        ///
+        /// The distinction is the whole point of counting laws rather than carriers. A type
+        /// that is `Hashable & Comparable` owes `equatableReflexive` / `Symmetric` /
+        /// `Transitive` **plus** `hashableConsistency` **plus** `comparableTotalOrder` — five
+        /// laws, from one carrier. `coveringConformance` names only the alphabetically first
+        /// match, so a count built on it would report that carrier as one unit of coverage and
+        /// lose four fifths of what the kit actually checks.
+        ///
+        /// The sets are pre-unioned with their parents' in `ProtocolCoverageMap` ("hand-baked
+        /// transitive coverage"), so unioning across a type's conformances cannot
+        /// double-count: `Set<KnownProperty>` collapses the shared `equatableBase` that
+        /// `Equatable`, `Hashable` and `Comparable` all carry.
+        public let coveredLaws: Set<KnownProperty>
+
+        public init(
+            typeName: String,
+            coveringConformance: String,
+            standing: Standing,
+            coveredLaws: Set<KnownProperty> = []
+        ) {
             self.typeName = typeName
             self.coveringConformance = coveringConformance
             self.standing = standing
+            self.coveredLaws = coveredLaws
         }
+    }
+
+    /// Total laws the kit's suites check across every audited carrier.
+    ///
+    /// Summed per carrier *after* each carrier's own union, so a `Hashable & Comparable` type
+    /// contributes 5 rather than 3. Deliberately **not** deduplicated across carriers:
+    /// `Equatable.reflexivity` on `Foo` and on `Bar` are two checks, two suites, two
+    /// opportunities to fail. This counts work, not distinct law names.
+    public static func lawTotal(for findings: [Finding]) -> Int {
+        findings.reduce(0) { $0 + $1.coveredLaws.count }
     }
 
     /// Every carrier whose conformances would trigger a coverage veto, with what the kit
@@ -109,6 +141,12 @@ public enum ProtocolCoverageAudit {
                   }) else {
                 return nil
             }
+            // Union across ALL covering conformances, not just `covering` — see `coveredLaws`.
+            let laws = conformances.reduce(into: Set<KnownProperty>()) { accumulated, name in
+                if let covered = ProtocolCoverageMap.protocolCoverage[name] {
+                    accumulated.formUnion(covered)
+                }
+            }
             let standing: Standing
             if !hasAnyEvidence {
                 standing = .assumed
@@ -120,7 +158,8 @@ public enum ProtocolCoverageAudit {
             return Finding(
                 typeName: typeName,
                 coveringConformance: covering,
-                standing: standing
+                standing: standing,
+                coveredLaws: laws
             )
         }
     }

@@ -44,7 +44,7 @@ struct DiscoverPipelineStatsTests {
         // interpretation verb — and `normal-form` on the encode/decode pair,
         // whose retract law `encode(decode(encode(decode(d))))` holds whether
         // or not the codec is lossless.
-        #expect(recording.text.hasPrefix("5 suggestions across 5 templates."))
+        #expect(recording.body.hasPrefix("5 suggestions across 5 templates."))
         #expect(recording.text.contains("idempotence"))
         #expect(recording.text.contains("inverse-pair"))
         #expect(recording.text.contains("round-trip"))
@@ -67,7 +67,7 @@ struct DiscoverPipelineStatsTests {
             statsOnly: true,
             output: recording
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
     }
 
     // MARK: - --dry-run mode (M5.5 → M6.4)

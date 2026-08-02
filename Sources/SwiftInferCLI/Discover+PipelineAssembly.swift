@@ -40,7 +40,8 @@ extension SwiftInferCommand.Discover {
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
             restrictedFunctions: artifacts.restrictedFunctions,
-            docstringAdvice: setup.docstringAdvice
+            docstringAdvice: setup.docstringAdvice,
+            coverage: cut.coverage
         )
     }
 }
