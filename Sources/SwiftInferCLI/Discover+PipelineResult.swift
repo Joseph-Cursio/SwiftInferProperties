@@ -66,6 +66,12 @@ extension SwiftInferCommand.Discover {
         /// `BitSet+X.swift` files, so the shape-derived map sees none of them.
         public let inheritedTypesByName: [String: Set<String>]
 
+        /// Generic parameters per type name, for callers that must NAME a carrier in emitted
+        /// source. `TypeShape` does not carry them and `TypeDecl.name` is the bare
+        /// identifier, so before 2026-08-02 a generic carrier was indistinguishable from a
+        /// concrete one at emission — which is why `scaffold-kit-suites` wrote `Deque.self`.
+        public let genericParametersByName: [String: [TypeDecl.GenericParameter]]
+
         /// Generators synthesized from how the tests construct each type
         /// (mock-synthesis over the full construction record), keyed by type
         /// name — for *any* test-constructed type, not only suggestion-bearing
@@ -106,6 +112,7 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             inheritedTypesByName: [String: Set<String>] = [:],
+            genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
             restrictedFunctions: [RestrictedFunction] = [],
@@ -125,6 +132,7 @@ extension SwiftInferCommand.Discover {
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.typeShapesByName = typeShapesByName
             self.inheritedTypesByName = inheritedTypesByName
+            self.genericParametersByName = genericParametersByName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries
             self.restrictedFunctions = restrictedFunctions

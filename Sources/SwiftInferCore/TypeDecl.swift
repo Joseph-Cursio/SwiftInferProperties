@@ -135,6 +135,30 @@ public struct TypeDecl: Sendable, Equatable {
     /// re-pointing those is a separate change. This field is additive.
     public let qualifiedName: String
 
+    /// The declaration's generic parameters, in order, with each one's inheritance
+    /// constraint if it wrote one — `Boxy<Element: Hashable>` gives
+    /// `[("Element", "Hashable")]`.
+    ///
+    /// **Captured 2026-08-02 because nothing captured it.** `name` is `node.name.text`, the
+    /// bare identifier, so a generic carrier was indistinguishable from a concrete one all
+    /// the way to emission. `scaffold-kit-suites` wrote `Deque.self` and `PersistentSet.self`
+    /// — neither typechecks — and no derived generator for a generic carrier could ever have
+    /// compiled. Empty for non-generic declarations, which is the overwhelming majority.
+    public let genericParameters: [GenericParameter]
+
+    /// One generic parameter and the constraint written on it, if any.
+    public struct GenericParameter: Sendable, Equatable {
+        public let name: String
+        /// The inheritance clause as written (`Hashable`, `Comparable`, …), or `nil` for an
+        /// unconstrained parameter. Textual, matching this file's posture elsewhere.
+        public let constraint: String?
+
+        public init(name: String, constraint: String?) {
+            self.name = name
+            self.constraint = constraint
+        }
+    }
+
     public init(
         name: String,
         kind: Kind,
@@ -146,12 +170,14 @@ public struct TypeDecl: Sendable, Equatable {
         enumCaseNames: [String] = [],
         initializers: [InitializerSignature] = [],
         enumCases: [EnumCase] = [],
-        qualifiedName: String? = nil
+        qualifiedName: String? = nil,
+        genericParameters: [GenericParameter] = []
     ) {
         // Defaulted to `name` so the many hand-built test fixtures — and any
         // caller that has no enclosing-type context — keep working unchanged.
         self.qualifiedName = qualifiedName ?? name
         self.name = name
+        self.genericParameters = genericParameters
         self.kind = kind
         self.inheritedTypes = inheritedTypes
         self.location = location

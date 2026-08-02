@@ -79,7 +79,10 @@ extension SwiftInferCommand {
                 kitEvidence: evidence.kit
             )
             let emission = KitSuiteEmitter.emit(
-                findings: findings, shapes: shapes, moduleName: moduleName
+                findings: findings,
+                shapes: shapes,
+                moduleName: moduleName,
+                genericParametersByName: pipeline.genericParametersByName
             )
 
             // The summary goes to stderr so `--output`-less runs can be piped into a file

@@ -13,7 +13,8 @@ extension FunctionScannerVisitor {
         kind: TypeDecl.Kind,
         inheritanceClause: InheritanceClauseSyntax?,
         keywordToken: TokenSyntax,
-        memberBlock: MemberBlockSyntax
+        memberBlock: MemberBlockSyntax,
+        genericParameterClause: GenericParameterClauseSyntax? = nil
     ) -> TypeDecl {
         let inheritedTypes = inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? []
         let position = keywordToken.positionAfterSkippingLeadingTrivia
@@ -59,6 +60,12 @@ extension FunctionScannerVisitor {
         let initializers = (kind == .struct || kind == .extension)
             ? MemberBlockInspector.initializers(in: memberBlock)
             : []
+        let genericParameters = genericParameterClause?.parameters.map {
+            TypeDecl.GenericParameter(
+                name: $0.name.text,
+                constraint: $0.inheritedType?.trimmedDescription
+            )
+        } ?? []
         return TypeDecl(
             name: name,
             kind: kind,
@@ -76,7 +83,8 @@ extension FunctionScannerVisitor {
             // spelling the source used (`extension Foo.Bar` is already
             // qualified); Swift forbids nested extensions, so there is no case
             // where an extension picks up a spurious prefix.
-            qualifiedName: (typeStack + [name]).joined(separator: ".")
+            qualifiedName: (typeStack + [name]).joined(separator: "."),
+            genericParameters: genericParameters
         )
     }
 }
