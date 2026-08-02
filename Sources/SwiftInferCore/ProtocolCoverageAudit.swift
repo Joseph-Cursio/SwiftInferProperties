@@ -30,6 +30,30 @@ import Foundation
 /// difference between "the kit covers this" and "we assumed the kit covers this and it does
 /// not exist." This makes that difference visible without changing a single grade.
 ///
+/// ## What this counts, and what it deliberately does NOT
+///
+/// **It counts carriers whose conformances the kit's suites cover. It does NOT count laws
+/// that were actually suppressed, and its first version claimed to.**
+///
+/// That claim was measured false immediately: this audit reported *"150 carrier(s) had laws
+/// suppressed"* on `SwiftInferCore`, where running `discover` with the veto disabled returns
+/// **exactly the same 96 suggestions** as with it enabled. Zero were suppressed. Across six
+/// corpora — this repo's three targets, `leaderboard-sort`, `SwiftPropertyLaws` and
+/// `SwiftEffectInference` — the veto suppresses **1 suggestion out of ~300**.
+///
+/// Knowing the true figure needs the veto to *record* when it fires, which needs the
+/// evidence threaded to the veto site through seven templates. Rather than ship a proxy
+/// dressed as a measurement, the wording states what is actually known: these carriers have
+/// conformances whose laws the kit's suites check, so **if the kit is not running, those
+/// laws are checked by nothing** — true regardless of whether `discover` would have
+/// proposed one.
+///
+/// The near-inertness is itself the more interesting finding, and it cuts against the
+/// argument originally given for auditing rather than un-vetoing: there is no flood to
+/// prevent. Un-vetoing would re-admit one law across six corpora. The veto is close to a
+/// no-op, which means the case for changing its behaviour is weak in *both* directions and
+/// the honest contribution here is the visibility, not the guard.
+///
 /// The three states are deliberately distinct, and `wasExercised` alone cannot separate the
 /// last two — `wasExercised(T)` is false both when the kit never ran and when it ran on
 /// other types but not `T`. The emptiness of the log is what tells them apart.
@@ -116,24 +140,24 @@ public enum ProtocolCoverageAudit {
             let named = contradicted.prefix(5).map(\.typeName).joined(separator: ", ")
             let more = contradicted.count > 5 ? " (+\(contradicted.count - 5) more)" : ""
             lines.append(
-                "\(contradicted.count) carrier(s) had laws SUPPRESSED because their "
-                    + "conformances mean PropertyLawKit covers them — but your kit evidence "
-                    + "does not mention them: \(named)\(more). The kit ran on other types and "
-                    + "not these, so those laws are currently checked by nothing. Either run "
-                    + "the matching check<Protocol>PropertyLaws suite on them, or treat the "
-                    + "suppression as unearned."
+                "\(contradicted.count) carrier(s) have conformances whose laws PropertyLawKit "
+                    + "checks — and your kit evidence does not mention them: \(named)\(more). "
+                    + "The kit ran on other types and not these, so those laws are currently "
+                    + "checked by nothing. Run the matching check<Protocol>PropertyLaws suite "
+                    + "on them. (This counts CARRIERS, not suppressed suggestions — see "
+                    + "`ProtocolCoverageAudit`; the veto itself is close to a no-op.)"
             )
         }
 
         let assumed = findings.filter { $0.standing == .assumed }
         if !assumed.isEmpty {
             lines.append(
-                "\(assumed.count) carrier(s) had laws suppressed on the assumption that "
-                    + "PropertyLawKit checks them, and there is no kit evidence to confirm "
-                    + "it. That is normal if you run the kit and have not exported results; "
-                    + "it is a real gap if you do not depend on SwiftPropertyLaws at all, "
-                    + "because then nothing is checking those laws. Export kit results to "
-                    + "`.swiftinfer/kit-evidence.json` to turn this line into a check."
+                "\(assumed.count) carrier(s) have conformances whose laws PropertyLawKit "
+                    + "checks, and there is no kit evidence saying it ran. Normal if you run "
+                    + "the kit and have not exported results; a real gap if you do not depend "
+                    + "on SwiftPropertyLaws at all, because then nothing checks those laws — "
+                    + "and every one of them has an explicit suite you could run. Export "
+                    + "results to `.swiftinfer/kit-evidence.json` to turn this into a check."
             )
         }
         return lines
