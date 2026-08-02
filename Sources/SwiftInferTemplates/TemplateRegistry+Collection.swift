@@ -254,37 +254,13 @@ extension TemplateRegistry {
         into collector: inout SuggestionCollector
     ) {
         let summaryGenType = generatorType(for: summary)
-        if let suggestion = IdempotenceTemplate.suggest(
-            for: summary,
-            vocabulary: context.vocabulary,
-            inheritedTypesByName: context.inheritedTypesByName,
-            carrierKindResolver: context.carrierKindResolver
-        ) {
-            collector.record(suggestion, generatorType: summaryGenType)
-        }
-        if let suggestion = CommutativityTemplate.suggest(
-            for: summary,
-            vocabulary: context.vocabulary,
-            inheritedTypesByName: context.inheritedTypesByName
-        ) {
-            collector.record(
-                suggestion,
-                contradictionTypes: commutativityTypes(for: summary),
-                generatorType: summaryGenType
-            )
-        }
-        if let suggestion = AssociativityTemplate.suggest(
-            for: summary,
-            vocabulary: context.vocabulary,
+        collectAlgebraicShapeSuggestions(
+            summary: summary,
             reducerOps: reducerOps,
-            inheritedTypesByName: context.inheritedTypesByName
-        ) {
-            collector.record(suggestion, generatorType: summaryGenType)
-        }
-        // The third semilattice leg: `op(x, x) == x` for a curated join/meet.
-        if let suggestion = BinaryIdempotenceTemplate.suggest(for: summary) {
-            collector.record(suggestion, generatorType: summaryGenType)
-        }
+            context: context,
+            generatorType: summaryGenType,
+            into: &collector
+        )
         if let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: context.vocabulary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }

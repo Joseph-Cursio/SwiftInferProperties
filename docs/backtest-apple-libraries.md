@@ -75,8 +75,31 @@ veto still guards `OrderedSet`/`Array`).
   `self \ other` formula) reports **`measured-defaultFails`, counterexample
   `(justA, justB)`**.
 
-So the tool now catches the real 2020 swift-collections bug before its fix — the
+So the tool now catches the real swift-collections bug before its fix — the
 first non-synthetic "caught a real library bug" demonstration.
+
+**Provenance, and the bound it puts on the claim (measured 2026-08-02).** This case
+was written up as a "2020" bug and that is wrong. The buggy formula was introduced in
+`590dfeb0` (2022-09-24, *"[PersistentSet] Implement (naive) union, symmetricDifference
+operations (untested)"*) and fixed in `876177db` (2022-09-28) — **four days on `main`,
+never in a tagged release** (the earliest tag containing the buggy commit, `1.1.0`,
+contains the fix too). The fix commit's own `test_symmetricDifference_exhaustive`
+walks every subset pair against stdlib `Set` as a model. So the honest bound is that a
+competent engineer writing an exhaustive model test reached it in four days unaided;
+what the tool adds is proposing the law from the *signature* rather than requiring
+somebody to decide this type deserved a model test. The hit stands — real bug, real
+public API, external answer key — the duration does not. Corrected in the book at
+Appendix C, Appendix F, §3.7.1 and `planning/workbook-exercise-toc.md`.
+
+**Reachability is structural here, unlike the kit's Pass 3 case.** The bug is in the
+public `@inlinable func symmetricDifference(_:)` itself — no `_Bitmap`/`_HashNode`
+dispatch layer that could route around it. Worth stating because SwiftPropertyLaws'
+`Validation/FINDINGS.md` Pass 3 checked out `35349601^` (a *different*
+`symmetricDifference` typo, TreeSet, 2025-12) and found `TreeSet<Int>` passing every
+law — because `_Bitmap.symmetricDifference` had no callers at that SHA. **A green run
+at `<fix>^` has three readings, not two: library correct, tool blind, or bug
+unreachable.** Probe reachability against the fix commit's own inputs before drawing
+any conclusion from an all-green backtest arm.
 
 ## Case 3 — swift-numerics `Augmented.sum` / twoSum (`f6e5563`): MISS (shape boundary)
 

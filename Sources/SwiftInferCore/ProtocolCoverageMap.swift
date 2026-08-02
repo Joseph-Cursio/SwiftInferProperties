@@ -49,11 +49,21 @@ public enum ProtocolCoverageMap {
     /// name. Values include parent-protocol properties (transitive
     /// coverage hand-baked).
     ///
-    /// **13 keys** — the v1.5 plan's enumerated stdlib + kit set:
-    /// `Equatable` / `Comparable` / `Hashable` / `AdditiveArithmetic` /
-    /// `Numeric` / `SignedNumeric` / `SetAlgebra` / `Codable` plus kit
-    /// `Semigroup` / `Monoid` / `CommutativeMonoid` / `Group` /
-    /// `Semilattice`. `Encodable` and `Decodable` are deliberately
+    /// **17 keys.** The v1.5 plan enumerated 13 — `Equatable` / `Comparable` /
+    /// `Hashable` / `AdditiveArithmetic` / `Numeric` / `SignedNumeric` /
+    /// `SetAlgebra` / `Codable` plus kit `Semigroup` / `Monoid` /
+    /// `CommutativeMonoid` / `Group` / `Semilattice` — and `Strideable`,
+    /// `IteratorProtocol`, `Sequence`, `LosslessStringConvertible` were added
+    /// 2026-07-30 / 2026-08-01 without updating this count. Corrected 2026-08-02.
+    ///
+    /// **Only `SetAlgebra` has been verified law-by-law against the kit.** The
+    /// other 16 keys assert the same kind of claim and nothing checks them;
+    /// `KitCoverageDriftTests` guards the KEY (does the kit ship a suite by this
+    /// name) and never the VALUE. Measured 2026-08-02: 13 of 56 `(key, law)`
+    /// claims were false, 12 of them the `equatableBase` union below — see
+    /// `docs/protocol-coverage-law-drift.md` §4.
+    ///
+    /// `Encodable` and `Decodable` are deliberately
     /// excluded — neither alone covers `codableRoundTrip` (round-trip
     /// requires both encode and decode), and listing them with empty
     /// sets would add textual-match noise without behavioural benefit.
@@ -79,10 +89,29 @@ public enum ProtocolCoverageMap {
 
         // — stdlib set algebra —
         // SetAlgebra: Equatable, ExpressibleByArrayLiteral
+        //
+        // Verified law-by-law against `SetAlgebraLaws.swift` on 2026-08-02 (kit `4a2dada`,
+        // fifteen laws). Two corrections landed from that sweep — see
+        // `docs/protocol-coverage-law-drift.md`:
+        //
+        //   1. `setUnionAssociative` was here and the kit ships NO associativity law for
+        //      sets, of any operand. `grep -rn "unionAssociat"` in SwiftPropertyLaws: zero
+        //      hits. The identifier is gone entirely rather than merely unmapped — its only
+        //      meaning was a false claim, and leaving it invites re-adding it here.
+        //   2. `intersectionCommutativity`, `symmetricDifferenceCommutativity` and
+        //      `unionIdempotence` ARE run by the kit and were unclaimed, so `discover`
+        //      double-reported all three (the `Strideable` defect, three more times).
+        //
+        // Still unclaimed, deliberately: the `symmetricDifference` self/empty/definition
+        // three, distributivity ×2, absorption ×2, De Morgan ×2, and `emptyIdentity`'s
+        // intersection twin. No template proposes any of them, so claiming coverage would
+        // assert something nothing exercises. Add the entry WITH the template, not before.
         "SetAlgebra": equatableBase.union([
-            .setUnionAssociative,
             .setUnionCommutative,
+            .setIntersectionCommutative,
+            .setSymmetricDifferenceCommutative,
             .setUnionEmptyIdentity,
+            .setUnionIdempotent,
             .setIntersectionIdempotent
         ]),
 
@@ -264,132 +293,4 @@ public enum ProtocolCoverageMap {
         }
         return nil
     }
-}
-
-/// Catalogue of property surfaces SwiftInfer's algebraic templates can
-/// emit. v1.5 introduces this enum so `ProtocolCoverageMap` has a
-/// closed vocabulary to map conformances against; future template arms
-/// add cases here as they ship (e.g. cycle-2-deferred
-/// `KitFloatingPointTemplate` will emit a transcendental-shape property).
-///
-/// Co-located with `ProtocolCoverageMap` per v1.5 plan open-decision #2
-/// default: the enum exists to be looked up against the table;
-/// splitting them into separate files adds an import hop without
-/// adding clarity. Mirrors `FloatingPointStorageNames`'s self-contained
-/// posture.
-/// A law IDENTIFIER — the unit `ProtocolCoverageMap` reasons about when deciding whether a
-/// conformance means PropertyLawKit already covers what a template would propose.
-///
-/// Not to be confused with `SwiftInferCLI.CuratedEntry`, which until 2026-07-30 was also
-/// called `KnownProperty`. That one is a struct holding a curated catalog row about a stdlib
-/// type; this one is an enum of identifiers. Renaming it was the fix; this note is so the
-/// name does not drift back.
-public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
-
-    // — Additive (stdlib AdditiveArithmetic / Numeric / SignedNumeric)
-    /// `(a + b) + c == a + (b + c)`
-    case additiveAssociative
-    /// `a + b == b + a`
-    case additiveCommutative
-    /// `a + .zero == a`
-    case additiveIdentityZero
-    /// `a + (-a) == .zero`
-    case additiveInverse
-
-    // — Multiplicative (stdlib Numeric / SignedNumeric) —
-    /// `(a * b) * c == a * (b * c)`
-    case multiplicativeAssociative
-    /// `a * b == b * a`
-    case multiplicativeCommutative
-    /// `a * 1 == a`
-    case multiplicativeIdentityOne
-    /// `a * a⁻¹ == 1` (not covered by Numeric — listed for symmetry
-    /// with `additiveInverse`; populated by future field-shaped arms.)
-    case multiplicativeInverse
-
-    // — Numeric distributivity —
-    /// `a * (b + c) == a * b + a * c`
-    case distributivity
-
-    // — Set algebra (stdlib SetAlgebra) —
-    /// `(a ∪ b) ∪ c == a ∪ (b ∪ c)`
-    case setUnionAssociative
-    /// `a ∪ b == b ∪ a`
-    case setUnionCommutative
-    /// `a ∪ ∅ == a`
-    case setUnionEmptyIdentity
-    /// `a ∩ a == a`
-    case setIntersectionIdempotent
-
-    // — Equatable / Comparable / Hashable —
-    /// `a == a`
-    case equatableReflexive
-    /// `a == b ⇒ b == a`
-    case equatableSymmetric
-    /// `a == b ∧ b == c ⇒ a == c`
-    case equatableTransitive
-    /// strict-weak-ordering laws on `<` (Swift Comparable)
-    case comparableTotalOrder
-    /// `a == b ⇒ a.hashValue == b.hashValue`
-    case hashableConsistency
-
-    // — Strideable —
-    /// `x.advanced(by: x.distance(to: y)) == y`, run by the kit as
-    /// `"Strideable.distanceRoundTrip"` (`StrideableLaws.swift:72`).
-    ///
-    /// Added 2026-07-30 after `KitCoverageDriftTests` found the toolchain reporting this law
-    /// twice: the kit runs it for any `Strideable` conformer, and `round-trip` independently
-    /// proposed `distance(to:)` × `advanced(by:)` on `BinaryInteger` — which refines
-    /// `Strideable` (`Integers.swift:533`), under a `//===--- Strideable conformance ---===//`
-    /// banner. Re-reporting another tool's finding teaches people the tools disagree.
-    case strideableDistanceRoundTrip
-
-    // — LosslessStringConvertible —
-    /// `Value(String(describing: x)) == x`, run by the kit as
-    /// `"LosslessStringConvertible.roundTrip"` (`LosslessStringConvertibleLaws.swift:40`).
-    ///
-    /// Added 2026-07-30, and it **corrects a verdict rather than fixing a defect.** The
-    /// swift.org study twice recorded the float parse/print round-trip as blocked by
-    /// `initializerPairAdmissible`'s `guard label != "init"` — once in the `roundtrip`
-    /// population, once at `PrintFloat.swift.gyb:795/908` — and filed both as reach gaps with
-    /// "relax the gate" as the implied fix.
-    ///
-    /// Relaxing it would have produced a **double-report**: the kit already runs this law for
-    /// any conformer. The gate is not arbitrary either — pairing evidence for `round-trip` is
-    /// name-stem overlap (`base64EncodedString` ⊃ `base64Encoded`), and an unlabelled
-    /// `init?(_ description: String)` synthesizes to the bare name `"init"`, which has no stem
-    /// to match. Declining is correct; the entry makes it *explicit* so a future relaxation
-    /// meets a veto instead of recreating the `Strideable` defect.
-    /// Once an iterator returns `nil`, every subsequent `next()` returns `nil` — the
-    /// **absorbing state** an exhausted iterator must stay in.
-    ///
-    /// Added 2026-08-01 to make a decline explicit that was previously an accident of
-    /// nobody proposing the law. The swift.org `loops` study adjudicated
-    /// `test/stdlib/Strideable.swift:236` — `for _ in 0..<10 { expectNil(i.next()) }` —
-    /// as `gap-with-witness`, i.e. a law we do not cover. We do:
-    /// `checkIteratorProtocolPropertyLaws` runs `"IteratorProtocol.terminationStability"`
-    /// and its body is that law verbatim, pulling to exhaustion and then asserting two
-    /// further `next()` calls are `nil`.
-    ///
-    /// The entry changes no output today, because no template proposes it — the same
-    /// latent state `losslessStringRoundTrip` was added in. The symptom it fixes is
-    /// epistemic and it had already produced one wrong verdict: without the entry there is
-    /// nothing distinguishing *"declined because the kit runs it"* from *"missed"*, and a
-    /// future attempt at an absorbing-state template would meet the `Strideable`
-    /// double-report defect rather than a guard.
-    case iteratorTerminationStability
-
-    case losslessStringRoundTrip
-
-    // — Codable —
-    /// `decode(encode(x)) == x`
-    case codableRoundTrip
-
-    // — Kit-shaped (PropertyLawKit Monoid / Group / Semilattice) —
-    /// kit `Monoid`'s identity law on `combine`
-    case monoidIdentity
-    /// kit `Group`'s inverse law on `combine`
-    case groupInverse
-    /// kit `Semilattice`'s idempotent-`combine` law (`x ⊕ x == x`)
-    case semilatticeIdempotence
 }

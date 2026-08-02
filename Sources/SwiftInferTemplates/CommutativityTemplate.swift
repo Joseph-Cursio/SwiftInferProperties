@@ -342,27 +342,6 @@ extension CommutativityTemplate {
         )
     }
 
-    /// V1.5.2 — op-class → KnownProperty candidate set for the
-    /// commutativity veto. `static internal` so AssociativityTemplate
-    /// can reuse the same op-class shape (commutativity / associativity
-    /// share the curated verb list per the AssociativityTemplate type
-    /// doc).
-    static func commutativityCoverageCandidates(forOp opName: String) -> [KnownProperty] {
-        switch opName {
-        case "+":
-            return [.additiveCommutative]
-
-        case "*":
-            return [.multiplicativeCommutative]
-
-        case "union", "formUnion":
-            return [.setUnionCommutative]
-
-        default:
-            return []
-        }
-    }
-
     // MARK: - Suggestion construction
 
     private static func makeExplainability(
