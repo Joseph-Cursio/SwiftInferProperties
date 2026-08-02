@@ -37,15 +37,23 @@ public enum BinaryIdempotenceTemplate {
         "meet"
     ]
 
-    public static func suggest(for summary: FunctionSummary) -> Suggestion? {
-        ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
+    public static func suggest(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>] = [:]
+    ) -> Suggestion? {
+        ConstraintRunner.suggest(
+            constraint: makeConstraint(inheritedTypesByName: inheritedTypesByName),
+            subject: summary
+        )
     }
 
-    public static func makeConstraint() -> Constraint<FunctionSummary> {
+    public static func makeConstraint(
+        inheritedTypesByName: [String: Set<String>] = [:]
+    ) -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "binary-idempotence",
             appliesTo: Self.isSemilatticeOp,
-            signals: Self.signals(for:),
+            signals: { Self.signals(for: $0, inheritedTypesByName: inheritedTypesByName) },
             evidence: { [$0.inferenceEvidence] },
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
@@ -62,12 +70,15 @@ public enum BinaryIdempotenceTemplate {
         curatedVerbs.contains(summary.name) && summary.binaryOperatorTypeSymmetrySignal != nil
     }
 
-    static func signals(for summary: FunctionSummary) -> [Signal] {
+    static func signals(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>] = [:]
+    ) -> [Signal] {
         guard let shape = summary.binaryOperatorTypeSymmetrySignal,
               curatedVerbs.contains(summary.name) else {
             return []
         }
-        return [
+        var signals = [
             shape,
             Signal(
                 kind: .exactNameMatch,
@@ -76,6 +87,39 @@ public enum BinaryIdempotenceTemplate {
                     + "itself is a no-op, so it owes `op(x, x) == x`"
             )
         ]
+        if let coverageVeto = protocolCoverageVeto(
+            for: summary,
+            inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(coverageVeto)
+        }
+        return signals
+    }
+
+    /// 2026-08-02 — this template had **no** protocol-coverage veto at all, and
+    /// `TemplateRegistry+Collection.swift` never passed it `inheritedTypesByName`.
+    /// So `union` / `intersection` on a `SetAlgebra` carrier were proposed
+    /// unconditionally while the kit runs `SetAlgebra.unionIdempotence` and
+    /// `SetAlgebra.intersectionIdempotence` — two double-reports, on both the
+    /// `Self` and the concrete parameter spelling. `IdempotenceTemplate` has had
+    /// this helper since V1.5.2; the binary sibling was simply never given one.
+    ///
+    /// `semilatticeIdempotence` is included for parity with `IdempotenceTemplate`:
+    /// a kit `Semilattice` conformer's `combine` owes `x ⊕ x == x`, which is the
+    /// same law under a different verb.
+    static func protocolCoverageVeto(
+        for summary: FunctionSummary,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        ProtocolCoverageMap.coverageVetoSignal(
+            forTypeText: summary.parameters.first?.typeText,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: [
+                .setUnionIdempotent,
+                .setIntersectionIdempotent,
+                .semilatticeIdempotence
+            ]
+        )
     }
 
     /// Reuses `IdempotenceTemplate.canonicalSignature`'s stable form, namespaced

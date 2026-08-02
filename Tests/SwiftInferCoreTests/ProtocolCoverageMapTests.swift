@@ -73,11 +73,18 @@ struct ProtocolCoverageMapTests {
         #expect(!ProtocolCoverageMap.covers("SignedNumeric", .multiplicativeInverse))
     }
 
+    /// Verified law-by-law against `SetAlgebraLaws.swift` on 2026-08-02 (kit `4a2dada`).
+    /// `setUnionAssociative` was removed: the kit ships no set-associativity law, so the
+    /// entry claimed coverage that does not exist. Three were added for laws the kit DOES
+    /// run and the map had not claimed, each of which `discover` was double-reporting.
+    /// `docs/protocol-coverage-law-drift.md`.
     @Test("SetAlgebra covers union/intersection laws plus inherited Equatable")
     func setAlgebraCoverage() {
-        #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionAssociative))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionCommutative))
+        #expect(ProtocolCoverageMap.covers("SetAlgebra", .setIntersectionCommutative))
+        #expect(ProtocolCoverageMap.covers("SetAlgebra", .setSymmetricDifferenceCommutative))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionEmptyIdentity))
+        #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionIdempotent))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setIntersectionIdempotent))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .equatableReflexive))
         // Sanity — SetAlgebra is not in the additive chain
@@ -250,7 +257,7 @@ struct ProtocolCoverageMapTests {
         #expect(ProtocolCoverageMap.protocolCoverage.count == 17)
     }
 
-    @Test("KnownProperty has the documented 25 cases")
+    @Test("KnownProperty has the documented 27 cases")
     func knownPropertyCount() {
         // Pinning the count guards against silent enum drift; future
         // template arms should add cases consciously and update this
@@ -265,7 +272,23 @@ struct ProtocolCoverageMapTests {
         // created one.
         // 25 as of 2026-08-01 — `iteratorTerminationStability` was added to make a
         // decline explicit that the swift.org study had already mis-adjudicated as a gap.
-        #expect(KnownProperty.allCases.count == 25)
+        //
+        // 25 → 27 on 2026-08-02, and this is the first movement that REMOVES a case.
+        // A law-by-law audit of `ProtocolCoverageMap` against the kit (kit `4a2dada`) found
+        // 13 of 56 `(key, law)` claims false — `docs/protocol-coverage-law-drift.md`:
+        //
+        //   −1  `setUnionAssociative`. The kit ships no set-associativity law, for `union`
+        //       or any other operand, so the veto suppressed a true refutable law citing a
+        //       function that does not run it. Deleted rather than merely unmapped: the
+        //       identifier's only meaning was the false claim.
+        //   +3  `setIntersectionCommutative`, `setSymmetricDifferenceCommutative`,
+        //       `setUnionIdempotent`. All three ARE run by the kit and were unclaimed, so
+        //       `discover` double-reported them — the `Strideable` defect, three more times.
+        //       Measured on a two-carrier probe before the fix.
+        //
+        // The guard did its job again: 25 → 27 is a net +2 hiding a −1, and a bare count
+        // would have read as two additions. Say which way each case moved.
+        #expect(KnownProperty.allCases.count == 27)
     }
 
     @Test("Every covered property name is a valid KnownProperty case")
