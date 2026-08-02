@@ -61,7 +61,8 @@ public enum KitSuiteEmitter {
     public static func emit(
         findings: [ProtocolCoverageAudit.Finding],
         shapes: [String: PropertyLawCore.TypeShape],
-        moduleName: String
+        moduleName: String,
+        genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:]
     ) -> Emission {
         // **The whole-module resolver, and leaving it out was the single biggest cost.**
         //
@@ -80,31 +81,19 @@ public enum KitSuiteEmitter {
             guard let shape = shapes[finding.typeName] else { continue }
             let suites = suiteConformances(for: finding)
             guard !suites.isEmpty else { continue }
-            let strategy = DerivationStrategist.strategy(for: shape, resolve: resolve)
-            let generator = boundingNumerics(
-                GeneratorExpressionEmitter.expression(
-                    typeName: finding.typeName, strategy: strategy
-                )
-            )
-            if let overrun = typeCheckerOverrun(generator) {
-                // Derives, but the composed expression is big enough to risk a compiler
-                // type-check timeout. Blocked rather than emitted — see `typeCheckerOverrun`.
-                blockedCarriers += 1
-                blockedLaws += finding.coveredLaws.count
-                blocked.append(blockedBlock(finding, suites: suites, reason: overrun))
-            } else if case .todo(let reason) = strategy {
-                blockedCarriers += 1
-                blockedLaws += finding.coveredLaws.count
-                blocked.append(blockedBlock(finding, suites: suites, reason: reason))
-            } else {
+            switch classify(
+                finding: finding, shape: shape, suites: suites, resolve: resolve,
+                genericParameters: genericParametersByName[finding.typeName] ?? []
+            ) {
+            case .live(let text):
                 liveCarriers += 1
                 liveLaws += finding.coveredLaws.count
-                live.append(
-                    liveBlock(
-                        finding, suites: suites, generator: generator,
-                        isCaseIterable: strategy == .caseIterable
-                    )
-                )
+                live.append(text)
+
+            case .blocked(let text):
+                blockedCarriers += 1
+                blockedLaws += finding.coveredLaws.count
+                blocked.append(text)
             }
         }
 
@@ -147,13 +136,75 @@ public enum KitSuiteEmitter {
         return kept.sorted()
     }
 
+    /// One carrier's verdict: an emitted suite, or a commented-out block with the reason.
+    enum CarrierBlock {
+        case live(String)
+        case blocked(String)
+    }
+
+    /// Decide a single carrier's fate. Extracted from `emit` on 2026-08-02, when the
+    /// concrete-instantiation gate pushed that function past the 50-line body cap.
+    ///
+    /// **The order of the gates is the point.** Naming the carrier comes first, because a
+    /// generic type that cannot be instantiated cannot produce a compiling call however good
+    /// its generator is. `Deque.self` was emitted behind a derivable generator that nothing
+    /// could reach, and the resulting compile error read as a generator problem.
+    static func classify(
+        finding: ProtocolCoverageAudit.Finding,
+        shape: PropertyLawCore.TypeShape,
+        suites: [String],
+        resolve: (String) -> DerivationStrategist.ComposedGenerator?,
+        genericParameters: [TypeDecl.GenericParameter]
+    ) -> CarrierBlock {
+        guard let carrierName = ConcreteInstantiation.rendered(
+            typeName: finding.typeName, genericParameters: genericParameters
+        ) else {
+            return .blocked(blockedBlock(
+                finding,
+                suites: suites,
+                reason: ConcreteInstantiation.declineReason(
+                    typeName: finding.typeName, genericParameters: genericParameters
+                ) ?? "",
+                carrierName: finding.typeName
+            ))
+        }
+        let strategy = DerivationStrategist.strategy(for: shape, resolve: resolve)
+        let generator = boundingNumerics(
+            GeneratorExpressionEmitter.expression(
+                typeName: finding.typeName, strategy: strategy
+            )
+        )
+        if let overrun = typeCheckerOverrun(generator) {
+            // Derives, but the composed expression is big enough to risk a compiler
+            // type-check timeout. Blocked rather than emitted — see `typeCheckerOverrun`.
+            return .blocked(blockedBlock(
+                finding, suites: suites, reason: overrun, carrierName: carrierName
+            ))
+        }
+        if case .todo(let reason) = strategy {
+            return .blocked(blockedBlock(
+                finding, suites: suites, reason: reason, carrierName: carrierName
+            ))
+        }
+        return .live(liveBlock(
+            finding, suites: suites, generator: generator,
+            isCaseIterable: strategy == .caseIterable, carrierName: carrierName
+        ))
+    }
+
     // MARK: - Blocks
 
+    /// `carrierName` is the name to WRITE — `Deque<Int>` where `finding.typeName` is
+    /// `Deque`. Kept separate from `typeName` on purpose: the display text, the test-function
+    /// name and the `KitEvidenceRecorder` key all want the bare identifier, and only the
+    /// two `.self` positions want the instantiation. Collapsing them would put angle brackets
+    /// in a Swift function name.
     static func liveBlock(
         _ finding: ProtocolCoverageAudit.Finding,
         suites: [String],
         generator: String,
-        isCaseIterable: Bool
+        isCaseIterable: Bool,
+        carrierName: String
     ) -> String {
         suites.map { conformance in
             """
@@ -162,7 +213,7 @@ public enum KitSuiteEmitter {
                 @Test("\(finding.typeName) — \(conformance) laws")
                 func \(functionName(finding.typeName, conformance))() async throws {
                     let results = try await check\(conformance)PropertyLaws(
-                        for: \(finding.typeName).self,
+                        for: \(carrierName).self,
                         using: \(generator)\(options(conformance, isCaseIterable: isCaseIterable))
                     )
                     // Strict-tier only, matching `EnforcementMode.default` — which the kit
@@ -186,11 +237,12 @@ public enum KitSuiteEmitter {
     static func blockedBlock(
         _ finding: ProtocolCoverageAudit.Finding,
         suites: [String],
-        reason: String
+        reason: String,
+        carrierName: String
     ) -> String {
         let calls = suites.map { conformance in
             "    //     _ = try await check\(conformance)PropertyLaws("
-                + "for: \(finding.typeName).self, using: \(finding.typeName).gen())"
+                + "for: \(carrierName).self, using: \(carrierName).gen())"
         }
         .joined(separator: "\n")
         return """

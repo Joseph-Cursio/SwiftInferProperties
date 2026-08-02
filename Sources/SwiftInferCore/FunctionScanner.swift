@@ -278,7 +278,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .class,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.classKeyword,
-            memberBlock: node.memberBlock
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
         enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
@@ -295,7 +295,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .struct,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.structKeyword,
-            memberBlock: node.memberBlock
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
         enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
@@ -312,7 +312,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .enum,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.enumKeyword,
-            memberBlock: node.memberBlock
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
         enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
@@ -329,7 +329,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .actor,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.actorKeyword,
-            memberBlock: node.memberBlock
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
         enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))

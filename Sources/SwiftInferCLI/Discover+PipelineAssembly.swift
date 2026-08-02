@@ -13,6 +13,20 @@ import SwiftInferTestLifter
 /// to end it moved behind one call.
 extension SwiftInferCommand.Discover {
 
+    /// Generic parameters keyed by the stripped type name, for callers that must NAME a
+    /// carrier in emitted source. Keyed the same way `inheritedTypesIndex` keys, so the two
+    /// look up together. Only generic decls are recorded; the map is empty for most corpora.
+    static func genericParametersIndex(
+        from typeDecls: [TypeDecl]
+    ) -> [String: [TypeDecl.GenericParameter]] {
+        var index: [String: [TypeDecl.GenericParameter]] = [:]
+        for decl in typeDecls where !decl.genericParameters.isEmpty {
+            let key = ProtocolCoverageMap.strippingGenericParameters(decl.name)
+            if index[key] == nil { index[key] = decl.genericParameters }
+        }
+        return index
+    }
+
     /// Build the result, applying the two corpus-dependent caveat passes on the way.
     ///
     /// Order matters and is not arbitrary: `withResolvedConformanceCaveats` *removes* lines
@@ -38,6 +52,7 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: hints.chainHints,
             typeShapesByName: hints.typeShapesByName,
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: artifacts.typeDecls),
+            genericParametersByName: genericParametersIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
             restrictedFunctions: artifacts.restrictedFunctions,
