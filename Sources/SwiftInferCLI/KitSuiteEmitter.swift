@@ -63,6 +63,15 @@ public enum KitSuiteEmitter {
         shapes: [String: PropertyLawCore.TypeShape],
         moduleName: String
     ) -> Emission {
+        // **The whole-module resolver, and leaving it out was the single biggest cost.**
+        //
+        // `DerivationStrategist.strategy(for:)` defaults `resolve` to `{ _ in nil }`, which
+        // means a member typed as another type IN THE SAME CORPUS does not resolve — the
+        // strategist can see `Money` but not that `Money.currency: Currency` is itself
+        // derivable. The first version of this emitter took that default and measured 51%
+        // derivable; `scaffold` had been passing a resolver since WS-6.
+        let resolver = GeneratorResolver(types: Array(shapes.values))
+        let resolve = resolver.customTypeGenerator
         var live: [String] = []
         var blocked: [String] = []
         var liveCarriers = 0, blockedCarriers = 0, liveLaws = 0, blockedLaws = 0
@@ -71,11 +80,19 @@ public enum KitSuiteEmitter {
             guard let shape = shapes[finding.typeName] else { continue }
             let suites = suiteConformances(for: finding)
             guard !suites.isEmpty else { continue }
-            let strategy = DerivationStrategist.strategy(for: shape)
-            let generator = GeneratorExpressionEmitter.expression(
-                typeName: finding.typeName, strategy: strategy
+            let strategy = DerivationStrategist.strategy(for: shape, resolve: resolve)
+            let generator = boundingNumerics(
+                GeneratorExpressionEmitter.expression(
+                    typeName: finding.typeName, strategy: strategy
+                )
             )
-            if case .todo(let reason) = strategy {
+            if let overrun = typeCheckerOverrun(generator) {
+                // Derives, but the composed expression is big enough to risk a compiler
+                // type-check timeout. Blocked rather than emitted — see `typeCheckerOverrun`.
+                blockedCarriers += 1
+                blockedLaws += finding.coveredLaws.count
+                blocked.append(blockedBlock(finding, suites: suites, reason: overrun))
+            } else if case .todo(let reason) = strategy {
                 blockedCarriers += 1
                 blockedLaws += finding.coveredLaws.count
                 blocked.append(blockedBlock(finding, suites: suites, reason: reason))
@@ -182,6 +199,55 @@ public enum KitSuiteEmitter {
             // \(reason)
         \(calls)
         """
+    }
+
+    /// **Bound the derived numeric leaves, because an aggregating carrier traps.**
+    ///
+    /// `GeneratorExpressionEmitter` emits `Gen<Int>.int()`, which draws the FULL `Int` range.
+    /// That is correct for a law about one value and fatal for a carrier that sums its
+    /// members: `Score.init(signals:)` does `.reduce(0, +)` over up to eight weights, so a
+    /// full-range draw overflows and the process dies with **SIGTRAP** — measured, as an
+    /// `exited with unexpected signal code 5` that killed the whole run rather than failing
+    /// one test.
+    ///
+    /// ±10_000 is not a new invention: it is the bound the verify path already draws from,
+    /// for the same reason, recorded in the multiplicative-homomorphism warning
+    /// (*"MIND OVERFLOW … the property must be checked over a BOUNDED domain (the verifier
+    /// draws from ±10_000)"*). Matching it keeps one answer to the question in the repo.
+    ///
+    /// **The trade is real and worth naming**: a bounded draw cannot find an overflow bug at
+    /// the numeric extremes. That is the same call the verifier already made — a law about
+    /// sign or measure logic is reachable in ±10_000; one about `Int.max` is not.
+    static func boundingNumerics(_ expression: String) -> String {
+        expression
+            .replacingOccurrences(of: "Gen<Int>.int()", with: "Gen<Int>.int(in: -10_000...10_000)")
+            .replacingOccurrences(of: "Gen<UInt64>.uint64()", with: "Gen<UInt64>.uint64(in: 0...10_000)")
+    }
+
+    /// **Nesting depth at which the emitted generator stops being worth it.**
+    ///
+    /// Passing the whole-module resolver took derivation from 51% to 78% of carriers, but
+    /// composed generators nest: a type whose members are themselves user types emits
+    /// `zip(zip(zip(...)))`, and Swift's type checker is superlinear in that nesting. Measured
+    /// on `SwiftInferCore`: expressions reached **8 nested `zip(`s and 1,935 characters**, and
+    /// the build failed with *"the compiler is unable to type-check this expression in
+    /// reasonable time"*.
+    ///
+    /// This repo has been bitten by exactly that before — a 12-arm `+` chain that compiled
+    /// locally and tripped CI's type-check timeout, silently failing every push for eight
+    /// commits (`bbd634c`). A generated file that compiles on the author's machine and not on
+    /// the reviewer's is worse than one that admits the limit up front.
+    static let maximumZipNesting = 4
+
+    /// Non-nil when the expression is too complex to emit as live code.
+    static func typeCheckerOverrun(_ expression: String) -> String? {
+        let nesting = expression.components(separatedBy: "zip(").count - 1
+        guard nesting > maximumZipNesting else { return nil }
+        return "Generator DERIVES, but the composed expression nests \(nesting) `zip`s "
+            + "(limit \(maximumZipNesting)) and risks a compiler type-check timeout. Emitted "
+            + "commented out rather than shipped as a build failure. Provide `static func "
+            + "gen() -> Generator<T, some SendableSequenceType>` to replace the composition "
+            + "with something the type checker can handle."
     }
 
     /// Skip `Hashable.distribution` for a `CaseIterable` enum, and nothing else.
