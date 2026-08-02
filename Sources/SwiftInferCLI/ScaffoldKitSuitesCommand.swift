@@ -75,7 +75,7 @@ extension SwiftInferCommand {
             )
             let shapes = pipeline.typeShapesByName
             let findings = ProtocolCoverageAudit.audit(
-                inheritedTypesByName: shapes.mapValues { Set($0.inheritedTypes) },
+                inheritedTypesByName: pipeline.inheritedTypesByName,
                 kitEvidence: evidence.kit
             )
             let emission = KitSuiteEmitter.emit(

@@ -76,11 +76,59 @@ Third-party types nest more deeply than ours, so derivation rate would be measur
 arbitrary constant. Bisect 4→8 on `SwiftInferCore` (and ideally on swift-collections) and set
 the real boundary. Record the number that failed.
 
-**3b. Measure `Sendable` / access-level compile failures.** `check<Protocol>PropertyLaws`
+**3b. Measure `Sendable` / access-level compile failures.** ~~`check<Protocol>PropertyLaws`
 requires `Value: Sendable`, which a `TypeShape` cannot always establish, and a carrier may be
 `private` or nested past `@testable`'s reach. On this repo it was 0 errors — **one data point,
 on the codebase the emitter was written against.** Expect this to be the dominant failure mode
-on third-party code. Measuring it is the point, not a prerequisite; just do not be surprised.
+on third-party code.~~
+
+> **DONE 2026-08-02, and the prediction was wrong in the interesting direction.** Five
+> swift-collections targets at `899809d3`, emitted per-target and compiled in a scratch
+> package (swift-collections by path, kit at the pinned 3.21.0). **Not one `Sendable` error
+> appeared.** Access level mattered, but inverted: the problem was not carriers being
+> *unreachable*, it was `@testable` making internal implementation details reachable and the
+> emitter picking those.
+>
+> **Zero of the eight public collection types were reached** — not `Deque`, `OrderedSet`,
+> `OrderedDictionary`, `TreeSet`, `TreeDictionary`, `BitSet`, `BitArray`, `Heap`; absent from
+> both the live and the blocked list. All 12 live carriers were internal HAMT/bitmap
+> scaffolding: `_Bitmap`, `_HashSlot`, `_DequeSlot`, `_HeapNode`, `_HashTable.Bucket`,
+> `BitSet.Index`.
+>
+> **Cause, and it is one wiring line.** `TypeShapeBuilder:172` merges the primary decl with
+> **same-file** extensions only; the command passed `shapes.mapValues { Set($0.inheritedTypes) }`.
+> swift-collections writes `public struct BitSet {` with a bare inheritance clause and puts
+> all eleven conformances in separate `BitSet+X.swift` files — the dominant Swift convention.
+> `ProtocolCoverageMap.inheritedTypesIndex(from:)` already merged cross-file records; nothing
+> routed it here. **Fixed**, guarded by `CrossFileConformanceReachTests`: 0 → **6 of 8**
+> public types reached, `Deque` becomes the first with a live suite, compile errors 28 → 13.
+>
+> **Three findings that outrank the compile rate:**
+>
+> 1. **The emitted file does not build against the toolchain it targets.** Every suite does
+>    `import SwiftInferKitEvidence` — a product of *this* repo. A consumer depending on
+>    swift-collections + PropertyLawKit gets a hard failure, and the header's "NOT GUARANTEED
+>    TO COMPILE" caveat names `Sendable` and access level, not a missing dependency.
+> 2. **The kit already ships the generators the emitter asks users to hand-write.**
+>    `PropertyLawCollections` has `Gen<Deque<Int>>`, `Gen<OrderedSet<Int>>`, `Gen<BitSet>`,
+>    `Gen<Heap<Int>>`, `Gen<TreeSet<Int>>`, `Gen<TreeDictionary<Int,Int>>`,
+>    `Gen<OrderedDictionary<Int,Int>>` — 7 of the 8 types the emitter reports as *"BLOCKED on
+>    a generator, provide `static func gen()`"*. The emitter does not know that product
+>    exists. This is the single largest lever on the blocked count and it is **not a bug fix,
+>    it is a design decision** (see §4a).
+> 3. **A derived generator can be silently vacuous.** For `Deque` the emitter derives
+>    `Gen<Int>.int(in: -10_000...10_000).map { Deque(minimumCapacity: $0) }` — every value is
+>    an *empty* deque differing only in reserved capacity, which is not part of the value. The
+>    Hashable and Sequence laws would pass over a constant. It does not ship only because it
+>    fails to compile (`generic parameter 'Element' could not be inferred`, the emitter writes
+>    `Deque.self` with no type argument). **The compile error is the only thing preventing a
+>    vacuously green suite** — that is a fragile place for the safety to live, and it is the
+>    `f(x) == f(x)` failure mode wearing a generator.
+>
+> Remaining 13 compile errors: the `Deque` generic argument; `checkIteratorProtocolPropertyLaws`
+> requiring `Sequence` while the emitter selects it for `IteratorProtocol` conformers
+> (`Deque.Iterator`, `_Bitmap.Iterator`); `_Bitmap.Element` being a tuple (the kit ships
+> `elementSameResult:` overloads for exactly this, unused); a missing `strideGenerator`.
 
 **3c. `--module` ergonomics.** `scaffold-kit-suites --sources` requires `--module`. A
 multi-target package (swift-collections has several) needs one invocation per target. Confirm
@@ -141,6 +189,30 @@ at all. The laws were not fitted to this witness.
 > to the kit, or drop the map entry and let `discover` propose it), the two have different
 > corpus deltas, and the choice changes what Arm 1's emitted suite covers. Decide before the
 > arm runs.
+
+### 4a. Open decision — should the emitter know about `PropertyLawCollections`?
+
+Surfaced by §3b and **not decided.** 7 of the 8 public swift-collections types the emitter
+reports as *"BLOCKED on a generator"* already have hand-written generators in the kit's
+opt-in `PropertyLawCollections` product. Emitting `Gen<Deque<Int>>.someRecipe()` instead of a
+derived `Deque(minimumCapacity:)` would take the blocked count down sharply AND fix finding 3
+(the vacuous generator) in the same move.
+
+Against it, and the reason this is a decision rather than a task:
+
+- It makes `scaffold-kit-suites` **carrier-name-aware** — a curated table of
+  `TreeSet -> PropertyLawCollections recipe`. That is the `curatedVerbs` posture applied to
+  types, and the repo's standing line is that *the kit needs a type, `discover` works from
+  shape* (`FunctionalIdentityTemplate` gate 1).
+- It adds a dependency the user may not want: `PropertyLawCollections` exists precisely to
+  keep swift-collections off the main `PropertyLawKit` line.
+- It only helps carriers the kit already curated, which is the opposite of the transfer
+  property the `[reference]` backlog is measured by — *success is carriers reached OUTSIDE
+  the catalog*.
+
+The honest middle is probably to **emit the recipe as a comment** on the blocked entry —
+"`PropertyLawCollections` ships `Gen<Deque<Int>>`; add that product and use it" — which costs
+no dependency and no name-keying in the live path. Decide before Arm 1.
 
 ### Arm 2 — the projection bugs. **Predicted MISS, and publish it.**
 

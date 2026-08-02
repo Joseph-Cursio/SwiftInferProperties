@@ -37,6 +37,7 @@ extension SwiftInferCommand.Discover {
             equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
             consumerProducerChainHintsByIdentity: hints.chainHints,
             typeShapesByName: hints.typeShapesByName,
+            inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
             restrictedFunctions: artifacts.restrictedFunctions,

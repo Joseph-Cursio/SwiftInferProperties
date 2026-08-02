@@ -57,6 +57,15 @@ extension SwiftInferCommand.Discover {
         /// that don't need it (the renderer / interactive flows).
         public let typeShapesByName: [String: PropertyLawCore.TypeShape]
 
+        /// Conformances keyed by type name, with **cross-file extension records merged**
+        /// (`ProtocolCoverageMap.inheritedTypesIndex`). Distinct from
+        /// `typeShapesByName[...].inheritedTypes`, which `TypeShapeBuilder` merges from the
+        /// primary decl and SAME-FILE extensions only. The difference is the whole ballgame
+        /// on idiomatic third-party code: swift-collections writes `public struct BitSet {}`
+        /// with a bare inheritance clause and declares all eleven conformances in separate
+        /// `BitSet+X.swift` files, so the shape-derived map sees none of them.
+        public let inheritedTypesByName: [String: Set<String>]
+
         /// Generators synthesized from how the tests construct each type
         /// (mock-synthesis over the full construction record), keyed by type
         /// name — for *any* test-constructed type, not only suggestion-bearing
@@ -96,6 +105,7 @@ extension SwiftInferCommand.Discover {
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
+            inheritedTypesByName: [String: Set<String>] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
             restrictedFunctions: [RestrictedFunction] = [],
@@ -114,6 +124,7 @@ extension SwiftInferCommand.Discover {
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.typeShapesByName = typeShapesByName
+            self.inheritedTypesByName = inheritedTypesByName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries
             self.restrictedFunctions = restrictedFunctions
