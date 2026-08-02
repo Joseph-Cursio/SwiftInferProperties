@@ -2587,9 +2587,21 @@ flags** (`discover --sources <path> --stats-only --include-possible`).
 Running both *now* is the whole point. The alternative — comparing today's run against
 a count written down last week — cannot tell a template gain from a corpus that moved,
 a config that changed, or a `.swiftinfer/` directory that acquired evidence between the
-two readings. That is not hypothetical here: this repo's own target read **96** in a
-prior session and **80** today with no scoring change in between, which is exactly the
-drift an A/B is immune to and a remembered number is not.
+two readings.
+
+**The concrete hazard turned out to be simpler and worse than any of those.** This
+paragraph originally cited `SwiftInferCore` reading **96** in a prior session and **80**
+today "with no scoring change in between" as measured drift. It was not drift. The 96
+was taken with `--include-possible` and the 80 without: `discover --target SwiftInferCore
+--stats-only` returns **80**, and the same command with `--include-possible` returns
+**96**, on one binary, one afternoon, one corpus. The gap was entirely mine.
+
+That is the more useful lesson, so it replaces the original claim rather than being
+dropped. A remembered count carries no record of the **flags** it was taken with, and
+tier visibility moves this tool's headline number by 20%. An A/B is immune not mainly
+because it controls for the corpus — corpora rarely move — but because writing the
+invocation once and running it twice makes the flags part of the measurement instead of
+part of the memory.
 
 | corpus | `bc1b5f8` | `4eb0a3b` | delta |
 |---|---:|---:|---:|
@@ -2636,6 +2648,51 @@ SwiftProjectLint and this repo have no stack/queue/deque carriers, no scaled-uni
 constructors, and no `map`-returning-Self containers. A template that fires on shapes
 absent from a corpus is correctly silent there — the §10 distinction between a dead
 template and a conservative one, now with the A/B that can tell them apart.
+
+### 10.4 How many property tests does the toolchain actually yield on THIS repo?
+
+A different question from §10.3's, and the one an adopter asks. Not "how many rows does
+`discover` emit" but "how many property-based tests do I end up with".
+
+Whole repo, one pass over `Sources/`, default visibility, **deduplicated by identity**:
+
+| tier | rendered | distinct |
+|---|---:|---:|
+| Strong | 7 | **3** |
+| Likely | 19 | **19** |
+| Possible | 139 | 139 |
+
+**22 laws worth writing** (3 Strong + 19 Likely) — `codable-round-trip` 8,
+`associativity` 6, `commutativity` 5, `differential-equivalence` 2,
+`invariant-preservation` 1. The persisted index of 2026-07-31 records 3 Strong + 20
+Likely, so the figure has been stable in the low twenties across a week of template work.
+That stability is consistent with §10.3: the four new families target container and
+unit-constructor shapes this repo does not have.
+
+The other 139 default rows are almost entirely `predicate` totality laws surviving below
+the cut under `3e38e34` (*a law the code OWES is never hidden*). Real, and not what
+anyone writes first — the `predicate-display-order` doc exists because of exactly this
+ratio.
+
+**Two defects, both found by asking for a per-target breakdown.**
+
+1. **A lifted row is emitted five times.** Identity `0x17DFFF16631D81B7`, a
+   `differential-equivalence` law lifted from a test body, renders 5× per run with
+   byte-identical output — same identity, same score, same explainability. The dedup gap
+   is 4 rows and it lands **entirely in the top tier**, inflating Strong from 3 to 7.
+   A duplicate is worse here than elsewhere: `Strong` is the tier a reader is told to
+   trust, and 4 of its 7 rows are one law wearing a hat.
+
+2. **Test-body lifting is not scoped to `--target`.** The same 4 lifted identities appear
+   under *every* target. `swift-infer` is a single file (`SwiftInferEntry.swift`) and
+   reports 8 Strong suggestions — identical, identity for identity, to
+   `SwiftInferMacro`'s. So **per-target counts are not additive**; summing the seven
+   targets gives ~203 against a true 174. Anyone building a dashboard by summing
+   `--stats-only` over targets will over-report, and the error is invisible because each
+   individual run looks reasonable.
+
+Both are counting bugs rather than inference bugs — the laws themselves are fine — which
+is why neither showed up in a year of reading `discover` output one corpus at a time.
 
 ## 11. The `[reference]` backlog was over-reported 3x — the tags had fallen behind the templates
 
