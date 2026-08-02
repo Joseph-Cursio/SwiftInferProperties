@@ -1,7 +1,7 @@
 import SwiftInferCore
 
 /// V1.8.1 — Codable encoder/decoder shape gate for
-/// `RoundTripTemplate.protocolCoverageVeto(...)`.
+/// `RoundTripTemplate.assumedKitCoverage(...)`.
 ///
 /// Hosts `codableRoundTrippedType(for:)` and `codableCodecFormats` as
 /// a `RoundTripTemplate` extension. Split out of `RoundTripTemplate.swift`
@@ -34,7 +34,7 @@ extension RoundTripTemplate {
     /// helper only needs to check whether `U` is in the curated codec
     /// set AND `T` is *not* (otherwise `(Data) -> Data` compression
     /// pairs would falsely match — see the `(Data) -> Data` test
-    /// case in `ProtocolCoverageVetoPairTests`).
+    /// case in `AssumedKitCoveragePairTests`).
     ///
     /// **Curated codec set rationale.** v1.8 includes `Data` and
     /// `String` only — the two formats Swift's `JSONEncoder` /

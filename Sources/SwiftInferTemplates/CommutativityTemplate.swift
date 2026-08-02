@@ -203,11 +203,11 @@ public enum CommutativityTemplate {
         if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: summary,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         return signals
     }
@@ -329,13 +329,13 @@ extension CommutativityTemplate {
     /// don't bind to a kit-published commutativity law (e.g. a
     /// user-named `combine` on Int isn't covered by Numeric's `+`/`*`
     /// commutativity laws), so they fall through unsuppressed.
-    private static func protocolCoverageVeto(
+    private static func assumedKitCoverage(
         for summary: FunctionSummary,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
         let candidates = commutativityCoverageCandidates(forOp: summary.name)
         guard !candidates.isEmpty else { return nil }
-        return ProtocolCoverageMap.coverageVetoSignal(
+        return ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: summary.parameters.first?.typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: candidates

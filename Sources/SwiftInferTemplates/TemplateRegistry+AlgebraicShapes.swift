@@ -3,7 +3,7 @@ import SwiftInferCore
 extension TemplateRegistry {
 
     /// The four templates that consult `ProtocolCoverageMap` via a
-    /// `protocolCoverageVeto(...)` helper, kept together because they are the group
+    /// `assumedKitCoverage(...)` helper, kept together because they are the group
     /// that must all receive `context.inheritedTypesByName`. Extracted from
     /// `collectPerSummarySuggestions` on 2026-08-02, when adding the fourth pushed
     /// that function past the 50-line body cap.

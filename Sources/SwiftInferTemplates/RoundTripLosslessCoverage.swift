@@ -38,7 +38,7 @@ extension RoundTripTemplate {
         guard names.count == 2,
               !names.isDisjoint(with: losslessParseNames),
               !names.isDisjoint(with: losslessPrintNames) else { return nil }
-        return ProtocolCoverageMap.coverageVetoSignal(
+        return ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: pair.forward.containingTypeName,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [.losslessStringRoundTrip]

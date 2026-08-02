@@ -29,7 +29,7 @@ extension IdempotenceTemplate {
     /// `nil` otherwise.
     ///
     /// Wired into `IdempotenceTemplate.suggest(for:)` alongside the
-    /// existing `setAlgebraShapeVeto`, `protocolCoverageVeto`,
+    /// existing `setAlgebraShapeVeto`, `assumedKitCoverage`,
     /// `nonDeterministicVeto` calls.
     static func mathForwardFunctionVeto(for summary: FunctionSummary) -> Signal? {
         guard MathForwardFunctions.curated.contains(summary.name) else {

@@ -186,12 +186,12 @@ struct ProtocolCoverageMapStdlibBakeInTests {
         #expect(merged["Int"]?.contains("AdditiveArithmetic") == true)
     }
 
-    // MARK: - coverageVetoSignal end-to-end
+    // MARK: - assumedCoverageSignal end-to-end
 
-    @Test("coverageVetoSignal fires for Int-typed additive op via the bake-in")
+    @Test("assumedCoverageSignal fires for Int-typed additive op via the bake-in")
     func coverageVetoFiresForIntAdditive() {
         let merged = ProtocolCoverageMap.inheritedTypesIndex(from: [])
-        let veto = ProtocolCoverageMap.coverageVetoSignal(
+        let veto = ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: "Int",
             inheritedTypesByName: merged,
             candidateProperties: [.additiveCommutative]
@@ -202,10 +202,10 @@ struct ProtocolCoverageMapStdlibBakeInTests {
                 || veto?.detail.contains("Numeric") == true)
     }
 
-    @Test("coverageVetoSignal fires for Double-typed multiplicative op via the bake-in")
+    @Test("assumedCoverageSignal fires for Double-typed multiplicative op via the bake-in")
     func coverageVetoFiresForDoubleMultiplicative() {
         let merged = ProtocolCoverageMap.inheritedTypesIndex(from: [])
-        let veto = ProtocolCoverageMap.coverageVetoSignal(
+        let veto = ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: "Double",
             inheritedTypesByName: merged,
             candidateProperties: [.multiplicativeCommutative]
@@ -214,10 +214,10 @@ struct ProtocolCoverageMapStdlibBakeInTests {
         #expect(veto?.detail.contains("Numeric") == true)
     }
 
-    @Test("coverageVetoSignal does NOT fire for Bool + additiveCommutative (Bool is not Numeric)")
+    @Test("assumedCoverageSignal does NOT fire for Bool + additiveCommutative (Bool is not Numeric)")
     func coverageVetoSkipsBoolForAdditive() {
         let merged = ProtocolCoverageMap.inheritedTypesIndex(from: [])
-        let veto = ProtocolCoverageMap.coverageVetoSignal(
+        let veto = ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: "Bool",
             inheritedTypesByName: merged,
             candidateProperties: [.additiveCommutative]
@@ -225,10 +225,10 @@ struct ProtocolCoverageMapStdlibBakeInTests {
         #expect(veto == nil)
     }
 
-    @Test("coverageVetoSignal fires for String-typed equatableReflexive via the bake-in")
+    @Test("assumedCoverageSignal fires for String-typed equatableReflexive via the bake-in")
     func coverageVetoFiresForStringEquatable() {
         let merged = ProtocolCoverageMap.inheritedTypesIndex(from: [])
-        let veto = ProtocolCoverageMap.coverageVetoSignal(
+        let veto = ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: "String",
             inheritedTypesByName: merged,
             candidateProperties: [.equatableReflexive]

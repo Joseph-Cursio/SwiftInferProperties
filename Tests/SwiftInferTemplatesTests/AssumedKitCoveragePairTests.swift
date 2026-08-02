@@ -5,9 +5,9 @@ import Testing
 // V1.5.2 — protocol-coverage veto tests for the three pair-shaped
 // algebraic templates (identity-element / inverse-pair / round-trip).
 // Single-summary templates (idempotence / commutativity / associativity)
-// + shared fixtures live in `ProtocolCoverageVetoTests.swift`;
+// + shared fixtures live in `AssumedKitCoverageTests.swift`;
 // discover() end-to-end integration in
-// `ProtocolCoverageVetoIntegrationTests.swift`.
+// `AssumedKitCoverageIntegrationTests.swift`.
 //
 // The identity-element suite is the cycle-2 headline — V1.5.2 closes
 // the cycle-1 "operator-aware identity-element pairing" gap that
@@ -15,8 +15,8 @@ import Testing
 
 // MARK: - Identity-element (cycle-2 headline tuning)
 
-@Suite("ProtocolCoverageVeto — identity-element op-class-aware (V1.5.2)")
-struct IdentityElementProtocolCoverageVetoTests {
+@Suite("AssumedKitCoverage — identity-element op-class-aware (V1.5.2)")
+struct IdentityElementAssumedKitCoverageTests {
 
     @Test("(.zero, \"+\") on : AdditiveArithmetic vetoes (cycle-1 noise closure)")
     func zeroPlusOnAdditiveArithmeticVetoes() {
@@ -197,8 +197,8 @@ struct IdentityElementProtocolCoverageVetoTests {
 
 // MARK: - Inverse-pair
 
-@Suite("ProtocolCoverageVeto — inverse-pair (V1.5.2)")
-struct InversePairProtocolCoverageVetoTests {
+@Suite("AssumedKitCoverage — inverse-pair (V1.5.2)")
+struct InversePairAssumedKitCoverageTests {
 
     @Test("Inverse-pair on : SignedNumeric vetoes (additiveInverse covered)")
     func signedNumericVetoesInversePair() {
@@ -268,8 +268,8 @@ struct InversePairProtocolCoverageVetoTests {
 
 // MARK: - Round-trip
 
-@Suite("ProtocolCoverageVeto — round-trip (V1.5.2)")
-struct RoundTripProtocolCoverageVetoTests {
+@Suite("AssumedKitCoverage — round-trip (V1.5.2)")
+struct RoundTripAssumedKitCoverageTests {
 
     @Test("Round-trip on : Codable forward type vetoes")
     func codableVetoesRoundTrip() {

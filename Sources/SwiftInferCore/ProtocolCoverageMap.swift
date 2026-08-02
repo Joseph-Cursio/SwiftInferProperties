@@ -1,21 +1,44 @@
 /// V1.5.1 — curated map from textual protocol-conformance names to the
 /// set of `KnownProperty` values whose published laws PropertyLawKit's
 /// `check<Protocol>PropertyLaws` family already covers. Used by
-/// V1.5.2's `protocolCoverageVeto(...)` helper across the five
+/// V1.5.2's `assumedKitCoverage(...)` helper across the five
 /// algebraic templates (idempotence / commutativity / associativity /
 /// inverse-pair / identity-element / round-trip) to suppress
 /// suggestions whose property is genuinely redundant given the
 /// candidate type's existing conformances.
 ///
-/// **Why this is a veto, not a counter-signal.** Cycle-1's
-/// `crossTypeRoundTripPair` used `-25` (a heavy counter-signal that
-/// drops Score 30 → 5 = Suppressed) because the underlying rule was
-/// approximate — textual `containingTypeName` matching is a
-/// pre-SemanticIndex stand-in for type resolution. Protocol coverage
-/// is authoritative when the textual conformance match holds: the
-/// kit's `check<Protocol>PropertyLaws` *does* verify the property the
-/// template would have emitted. v1.5 plan open-decision #3 default
-/// (a) full veto.
+/// **Why this DEFERS rather than counter-signals — known information removes
+/// the need to infer.** Cycle-1's `crossTypeRoundTripPair` used `-25` (a heavy
+/// counter-signal that drops Score 30 → 5 = Suppressed) because the underlying
+/// rule was approximate — textual `containingTypeName` matching is a
+/// pre-SemanticIndex stand-in for type resolution. This is a different kind of
+/// thing. A conformance is a *fact about the code*, and where the kit genuinely
+/// runs the law there is nothing left to infer: re-reporting another tool's
+/// finding teaches people the tools disagree. The suppression is full-strength
+/// because it expresses **deference**, not confidence that the suggestion is
+/// wrong. v1.5 plan open-decision #3 default (a).
+///
+/// **This is deliberately NOT called a veto, and the distinction is load-bearing.**
+/// The six other `*Veto` helpers in the templates — `predicateVeto`,
+/// `setAlgebraShapeVeto`, `producerVeto`, `nonDeterministicVeto`, the
+/// math-forward and iterator gates — all mean *this law is FALSE or unsafe
+/// here*. This one means *this law is TRUE and someone authoritative already
+/// runs it*. Those are opposite claims, and while one word covered both, a
+/// suppressed-because-redundant row and a deleted-law-nobody-checks row were
+/// indistinguishable in the vocabulary. That is not hypothetical: it is exactly
+/// how `setUnionAssociative` survived — see `docs/protocol-coverage-law-drift.md`,
+/// and `ProtocolCoverageAudit`'s standing line, *"a veto that prevents
+/// double-reporting looks exactly like nothing to report."*
+///
+/// **But the deference is only as good as the claim, and the claim is hearsay.**
+/// Each entry asserts that `check<Protocol>PropertyLaws` runs a specific law, in
+/// a package this one pins by version and whose source nothing here reads. Only
+/// `SetAlgebra` has been checked law-by-law (2026-08-02, kit v3.21.0); at that
+/// point **13 of 56 `(key, law)` pairs were false**. The other sixteen keys are
+/// still asserting on trust, and `KitCoverageDriftTests` guards the KEY — does
+/// the kit ship a suite by this name — never the VALUE. The name says `assumed`
+/// because that is the honest epistemic status, matching
+/// `ProtocolCoverageAudit`'s own `verified` / `assumed` / `contradicted` split.
 ///
 /// **Hand-baked transitive coverage.** Each entry's `Set<KnownProperty>`
 /// already includes its parents'. `Numeric`'s set contains everything
@@ -223,7 +246,7 @@ public enum ProtocolCoverageMap {
     ///
     /// Built once per `discover()` pass, threaded through
     /// `collectSuggestions(...)` to each algebraic template's
-    /// `protocolCoverageVeto(...)` helper.
+    /// `assumedKitCoverage(...)` helper.
     ///
     /// **V1.7.1 — curated stdlib bake-in.** The result is seeded with
     /// `stdlibConformances` so a `let x: Int` candidate resolves to
@@ -256,7 +279,7 @@ public enum ProtocolCoverageMap {
     /// V1.5.2 — strip a single generic-parameter list from a textual
     /// type name. Mirrors `FloatingPointStorageNames`'s same-named
     /// helper. Hosting it here lets `inheritedTypesIndex(from:)` and
-    /// the per-template `protocolCoverageVeto(...)` helpers share one
+    /// the per-template `assumedKitCoverage(...)` helpers share one
     /// stripping rule without a cross-module dependency.
     public static func strippingGenericParameters(_ name: String) -> String {
         guard let openAngle = name.firstIndex(of: "<") else { return name }
@@ -272,7 +295,7 @@ public enum ProtocolCoverageMap {
     /// The matched conformance name is interpolated into the
     /// explainability detail line so the user can audit which kit law
     /// is doing the covering.
-    public static func coverageVetoSignal(
+    public static func assumedCoverageSignal(
         forTypeText typeText: String?,
         inheritedTypesByName: [String: Set<String>],
         candidateProperties: [KnownProperty]

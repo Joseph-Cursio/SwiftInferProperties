@@ -257,11 +257,11 @@ extension InversePairTemplate {
     /// non-algebraic types (`parse/format`, `encode/decode` on a
     /// non-Codable carrier) fall through unsuppressed because no
     /// kit-published inverse law applies.
-    static func protocolCoverageVeto(
+    static func assumedKitCoverage(
         for pair: FunctionPair,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
-        ProtocolCoverageMap.coverageVetoSignal(
+        ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: pair.forward.parameters.first?.typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [.additiveInverse, .groupInverse]

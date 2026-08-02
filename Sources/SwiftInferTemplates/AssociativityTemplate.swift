@@ -150,11 +150,11 @@ public enum AssociativityTemplate {
         if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: summary,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         return signals
     }
@@ -292,13 +292,13 @@ extension AssociativityTemplate {
     /// multiplicative, `union`/`formUnion` → set-union. Mirrors
     /// CommutativityTemplate's helper but targets the `*Associative`
     /// properties.
-    private static func protocolCoverageVeto(
+    private static func assumedKitCoverage(
         for summary: FunctionSummary,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
         let candidates = associativityCoverageCandidates(forOp: summary.name)
         guard !candidates.isEmpty else { return nil }
-        return ProtocolCoverageMap.coverageVetoSignal(
+        return ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: summary.parameters.first?.typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: candidates

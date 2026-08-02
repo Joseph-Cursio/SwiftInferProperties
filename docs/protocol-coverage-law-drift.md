@@ -14,17 +14,30 @@ fifteen. Checking why the two disagreed turned up the drift below.
 
 `ProtocolCoverageMap.protocolCoverage` maps a textual conformance name to a
 `Set<KnownProperty>` — the laws PropertyLawKit is asserted to already run for that
-conformance. `protocolCoverageVeto` uses it to **fully suppress** a template's suggestion, and
+conformance. `assumedKitCoverage` uses it to **fully suppress** a template's suggestion, and
 renders the reason:
 
 > `Property already covered by conformance to 'X' — checked by PropertyLawKit's checkXPropertyLaws`
 
-The file's own justification for making it a veto rather than a counter-signal is that the
-claim is authoritative: *"the kit's `check<Protocol>PropertyLaws` **does** verify the property
-the template would have emitted."*
+**The mechanism is deference, not rejection, and the original naming obscured that.** Until
+2026-08-02 this was `protocolCoverageVeto` / `coverageVetoSignal`. But the six other `*Veto`
+helpers in the templates all mean *this law is FALSE or unsafe here*, while this one means
+*this law is TRUE and someone authoritative already runs it* — opposite claims under one word.
+While that held, a suppressed-because-redundant row and a deleted-law-nobody-checks row were
+indistinguishable in the vocabulary, which is a fair part of how §3 survived as long as it did:
+`ProtocolCoverageAudit` had already written *"a veto that prevents double-reporting looks
+exactly like nothing to report"* without anyone reading it as a naming problem. Renamed to
+`assumedKitCoverage` — `assumed` being the status `ProtocolCoverageAudit` itself assigns, in
+its `verified` / `assumed` / `contradicted` split.
 
-That sentence is a claim about **another repository's source**, restated by hand, and at law
-level it is false for 13 of 56 `(key, law)` pairs.
+The principle is sound: **known information removes the need to infer.** A conformance is a
+fact about the code, and where the kit genuinely runs the law there is nothing left to infer.
+
+**The problem is that the known information was not known.** Each entry is a claim about
+*another repository's source*, restated by hand, in a package this one pins by version and
+whose source nothing in the veto path reads. At law level it is false for **13 of 56
+`(key, law)` pairs** — and the guard built for exactly this passes green through every one
+(§5).
 
 ## 2. The sweep
 
@@ -70,7 +83,7 @@ associativity is not among them.** Yet:
 - `ProtocolCoverageMap.swift:83` lists `.setUnionAssociative` under `SetAlgebra`
 - `AssociativityTemplate.swift:317` emits it for `union` on a `SetAlgebra` carrier
 - `AssociativityTemplate.swift:56` justifies the veto with the words *"kit `checkSetAlgebraPropertyLaws`"*
-- `ProtocolCoverageVetoTests.swift:224` **asserts the suppression is correct behaviour**
+- `AssumedKitCoverageTests.swift:224` **asserts the suppression is correct behaviour**
 
 So a true, refutable law is suppressed from `discover` on the grounds that another tool runs
 it, that tool does not run it, and a green test ratifies the arrangement. This is
@@ -201,7 +214,7 @@ public struct ConcreteSet: SetAlgebra, Equatable, Hashable {  // the same thing,
 | associativity | **`SelfSet` only** | both | both |
 | binary-idempotence | both | both | — |
 
-**The coverage veto is spelling-dependent.** `coverageVetoSignal` keys on
+**The coverage deferral is spelling-dependent.** `assumedCoverageSignal` keys on
 `summary.parameters.first?.typeText`; for the `Self` idiom that text is the literal string
 `"Self"`, `inheritedTypesByName["Self"]` is nil, and the veto returns early.
 `FunctionScannerVisitor+Summary.swift:165` says so outright — *"Plain `Self` already works via

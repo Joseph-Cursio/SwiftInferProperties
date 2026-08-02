@@ -3,12 +3,12 @@ import SwiftInferCore
 import Testing
 
 // V1.5.2 — protocol-coverage veto end-to-end integration tests.
-// Per-template behavioural tests live in `ProtocolCoverageVetoTests.swift`
-// (single-summary) and `ProtocolCoverageVetoPairTests.swift`
+// Per-template behavioural tests live in `AssumedKitCoverageTests.swift`
+// (single-summary) and `AssumedKitCoveragePairTests.swift`
 // (pair-shaped). This file verifies the index-construction helper +
 // the threading through `TemplateRegistry.discover(...)`.
 
-@Suite("ProtocolCoverageVeto — discover() integration (V1.5.2)")
+@Suite("AssumedKitCoverage — discover() integration (V1.5.2)")
 struct ProtocolCoverageDiscoverIntegrationTests {
 
     @Test("inheritedTypesIndex(from:) folds primary + extension records cross-file")

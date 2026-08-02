@@ -3,7 +3,7 @@ import SwiftInferCore
 import Testing
 
 // V1.8.1 — round-trip Codable encoder/decoder shape gate.
-// Split out of `ProtocolCoverageVetoPairTests.swift` for the SwiftLint
+// Split out of `AssumedKitCoveragePairTests.swift` for the SwiftLint
 // 400-line file budget per the V1.7.1 split precedent.
 // Existing V1.5.2 round-trip Codable veto tests stay in the primary
 // file; this file owns only the V1.8.1 shape-gate surface.

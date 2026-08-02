@@ -64,7 +64,7 @@ extension IdempotenceTemplate {
     ///
     /// Wired into `IdempotenceTemplate.suggest(for:)` alongside the
     /// existing `setAlgebraShapeVeto`, `mathForwardFunctionVeto`,
-    /// `protocolCoverageVeto`, etc.
+    /// `assumedKitCoverage`, etc.
     static func shapeDisambiguationVeto(for summary: FunctionSummary) -> Signal? {
         // Common shape gate: single non-inout param, non-mutating,
         // non-Void return (the typeSymmetry shape gate from

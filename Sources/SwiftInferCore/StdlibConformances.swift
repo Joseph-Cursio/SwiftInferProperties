@@ -29,7 +29,7 @@ extension ProtocolCoverageMap {
     /// `inheritedTypesIndex(...)` only saw types the corpus declared;
     /// stdlib-typed `(Int, Int) -> Int` ops never reached the
     /// coverage veto because `Int` had no entry. With this bake-in,
-    /// `coverageVetoSignal(forTypeText: "Int", ...)` now finds the
+    /// `assumedCoverageSignal(forTypeText: "Int", ...)` now finds the
     /// `AdditiveArithmetic` / `Numeric` / `Comparable` / `Hashable`
     /// / `Codable` conformances and suppresses correctly.
     ///

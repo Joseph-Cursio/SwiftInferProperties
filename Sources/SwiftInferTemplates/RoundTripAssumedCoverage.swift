@@ -5,7 +5,7 @@ import SwiftInferCore
 ///
 /// Extracted from `RoundTripTemplate.swift` when adding the third arm pushed it past the
 /// 400-line cap. The seam is the right one rather than an arithmetic split: the per-protocol
-/// gates already live in their own files (`RoundTripStrideableVeto`, `RoundTripLosslessVeto`,
+/// gates already live in their own files (`RoundTripStrideableCoverage`, `RoundTripLosslessCoverage`,
 /// `RoundTripCodableShapeGate`), and this is the ordering that combines them.
 ///
 /// **Every arm is pair-scoped, and that is the standing rule here.** A carrier-only check
@@ -19,7 +19,7 @@ extension RoundTripTemplate {
     /// encoder/decoder shape AND the carrier type conforms to `Codable` — the kit's
     /// `checkCodablePropertyLaws` already verifies the JSON round-trip. The shape gate prevents
     /// over-suppression of user-defined `(Int) -> Int` inverse pairs on Codable carriers.
-    static func protocolCoverageVeto(
+    static func assumedKitCoverage(
         for pair: FunctionPair,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
@@ -30,7 +30,7 @@ extension RoundTripTemplate {
         }
         // Currently unreachable — `initializerPairAdmissible` rejects the pair upstream. Placed
         // so a future relaxation of that gate meets a veto instead of recreating the
-        // `Strideable` double-report. See `RoundTripLosslessVeto`.
+        // `Strideable` double-report. See `RoundTripLosslessCoverage`.
         if let lossless = losslessStringCoverageVeto(
             for: pair, inheritedTypesByName: inheritedTypesByName
         ) {
@@ -39,7 +39,7 @@ extension RoundTripTemplate {
         guard let typeText = codableRoundTrippedType(for: pair) else {
             return nil
         }
-        return ProtocolCoverageMap.coverageVetoSignal(
+        return ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [.codableRoundTrip]

@@ -24,7 +24,7 @@ extension RoundTripTemplate {
     ) -> Signal? {
         let names = Set([pair.forward.name, pair.reverse.name])
         guard names == ["distance", "advanced"] else { return nil }
-        return ProtocolCoverageMap.coverageVetoSignal(
+        return ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: pair.forward.containingTypeName,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [.strideableDistanceRoundTrip]
