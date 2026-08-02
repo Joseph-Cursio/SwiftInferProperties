@@ -100,6 +100,17 @@ struct ProtocolCoverageAuditTests {
         #expect(contradicted.count == 1)
         #expect(contradicted[0].contains("Money, Tag"))
         #expect(contradicted[0].contains("checked by nothing"))
+        // **The wording is load-bearing and the first version got it wrong.** It said "had
+        // laws SUPPRESSED", which was measured false at once: the audit reported 150
+        // carriers on SwiftInferCore while running `discover` with the veto disabled
+        // returned the SAME 96 suggestions — zero suppressed. Across six corpora the veto
+        // suppresses 1 of ~300. It counts CARRIERS whose conformances the kit covers, which
+        // is true and useful; claiming suppression was a proxy dressed as a measurement.
+        // The banned phrasing is the CLAIM, not the word: the line may (and does) mention
+        // suppression in a disclaimer saying it is not counting it.
+        #expect(contradicted[0].contains("had laws SUPPRESSED") == false)
+        #expect(contradicted[0].contains("carrier(s) have conformances"))
+        #expect(contradicted[0].contains("not suppressed suggestions"), "says what it counts")
 
         let assumed = ProtocolCoverageAudit.diagnostics(
             for: ProtocolCoverageAudit.audit(
@@ -109,6 +120,7 @@ struct ProtocolCoverageAuditTests {
         #expect(assumed.count == 1)
         #expect(assumed[0].contains("2 carrier(s)"))
         #expect(assumed[0].contains("Money") == false, "aggregate only — no per-type noise")
+        #expect(assumed[0].contains("had laws suppressed") == false, "see the note above")
     }
 
     @Test("verified says nothing — silence is correct when the premise holds")
