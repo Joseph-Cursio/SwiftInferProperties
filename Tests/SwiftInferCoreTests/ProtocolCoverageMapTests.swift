@@ -33,12 +33,16 @@ struct ProtocolCoverageMapTests {
         #expect(!ProtocolCoverageMap.covers("Hashable", .comparableTotalOrder))
     }
 
-    @Test("AdditiveArithmetic transitively covers Equatable plus additive triple")
+    /// **Renamed and inverted 2026-08-02.** Was "transitively covers Equatable". It does
+    /// not: `checkAdditiveArithmeticPropertyLaws` never calls `checkEquatablePropertyLaws`.
+    /// Only `ComparableLaws` and `HashableLaws` delegate. The map mirrored Swift's protocol
+    /// hierarchy where it had to mirror the kit's CALL graph.
+    @Test("AdditiveArithmetic covers the additive triple and NOT Equatable")
     func additiveArithmeticCoverage() {
         #expect(ProtocolCoverageMap.covers("AdditiveArithmetic", .additiveAssociative))
         #expect(ProtocolCoverageMap.covers("AdditiveArithmetic", .additiveCommutative))
         #expect(ProtocolCoverageMap.covers("AdditiveArithmetic", .additiveIdentityZero))
-        #expect(ProtocolCoverageMap.covers("AdditiveArithmetic", .equatableReflexive))
+        #expect(!ProtocolCoverageMap.covers("AdditiveArithmetic", .equatableReflexive))
         #expect(!ProtocolCoverageMap.covers("AdditiveArithmetic", .multiplicativeAssociative))
         #expect(!ProtocolCoverageMap.covers("AdditiveArithmetic", .additiveInverse))
         #expect(!ProtocolCoverageMap.covers("AdditiveArithmetic", .distributivity))
@@ -46,11 +50,12 @@ struct ProtocolCoverageMapTests {
 
     @Test("Numeric transitively covers AdditiveArithmetic plus multiplicative + distributivity")
     func numericCoverage() {
-        // Inherited from AdditiveArithmetic (the load-bearing transitive case)
+        // Inherited from AdditiveArithmetic — this transitivity IS real: NumericLaws calls
+        // `checkAdditiveArithmeticPropertyLaws`. Equatable's is not; see below.
         #expect(ProtocolCoverageMap.covers("Numeric", .additiveAssociative))
         #expect(ProtocolCoverageMap.covers("Numeric", .additiveCommutative))
         #expect(ProtocolCoverageMap.covers("Numeric", .additiveIdentityZero))
-        #expect(ProtocolCoverageMap.covers("Numeric", .equatableReflexive))
+        #expect(!ProtocolCoverageMap.covers("Numeric", .equatableReflexive))
         // Numeric-specific
         #expect(ProtocolCoverageMap.covers("Numeric", .multiplicativeAssociative))
         #expect(ProtocolCoverageMap.covers("Numeric", .multiplicativeCommutative))
@@ -66,7 +71,7 @@ struct ProtocolCoverageMapTests {
         // Inherited transitively (Numeric → AdditiveArithmetic → Equatable)
         #expect(ProtocolCoverageMap.covers("SignedNumeric", .multiplicativeIdentityOne))
         #expect(ProtocolCoverageMap.covers("SignedNumeric", .additiveIdentityZero))
-        #expect(ProtocolCoverageMap.covers("SignedNumeric", .equatableReflexive))
+        #expect(!ProtocolCoverageMap.covers("SignedNumeric", .equatableReflexive))
         // SignedNumeric-specific
         #expect(ProtocolCoverageMap.covers("SignedNumeric", .additiveInverse))
         // Still out of scope (multiplicative inverse needs Field-shaped arm)
@@ -78,7 +83,7 @@ struct ProtocolCoverageMapTests {
     /// entry claimed coverage that does not exist. Three were added for laws the kit DOES
     /// run and the map had not claimed, each of which `discover` was double-reporting.
     /// `docs/protocol-coverage-law-drift.md`.
-    @Test("SetAlgebra covers union/intersection laws plus inherited Equatable")
+    @Test("SetAlgebra covers union/intersection laws and NOT Equatable")
     func setAlgebraCoverage() {
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionCommutative))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setIntersectionCommutative))
@@ -86,7 +91,7 @@ struct ProtocolCoverageMapTests {
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionEmptyIdentity))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionIdempotent))
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setIntersectionIdempotent))
-        #expect(ProtocolCoverageMap.covers("SetAlgebra", .equatableReflexive))
+        #expect(!ProtocolCoverageMap.covers("SetAlgebra", .equatableReflexive))
         // Sanity — SetAlgebra is not in the additive chain
         #expect(!ProtocolCoverageMap.covers("SetAlgebra", .additiveAssociative))
         #expect(!ProtocolCoverageMap.covers("SetAlgebra", .codableRoundTrip))

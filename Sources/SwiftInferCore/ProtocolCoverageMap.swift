@@ -30,24 +30,33 @@
 /// and `ProtocolCoverageAudit`'s standing line, *"a veto that prevents
 /// double-reporting looks exactly like nothing to report."*
 ///
-/// **But the deference is only as good as the claim, and the claim is hearsay.**
-/// Each entry asserts that `check<Protocol>PropertyLaws` runs a specific law, in
-/// a package this one pins by version and whose source nothing here reads. Only
-/// `SetAlgebra` has been checked law-by-law (2026-08-02, kit v3.21.0); at that
-/// point **13 of 56 `(key, law)` pairs were false**. The other sixteen keys are
-/// still asserting on trust, and `KitCoverageDriftTests` guards the KEY — does
-/// the kit ship a suite by this name — never the VALUE. The name says `assumed`
-/// because that is the honest epistemic status, matching
-/// `ProtocolCoverageAudit`'s own `verified` / `assumed` / `contradicted` split.
+/// **The claim was hearsay, and is now checked.** Each entry asserts that
+/// `check<Protocol>PropertyLaws` runs a specific law, in a package this one pins
+/// by version and whose source nothing here reads. When that went unverified,
+/// **13 of 56 `(key, law)` pairs were false** (2026-08-02, kit v3.21.0).
+/// `KitCoverageDriftTests.coverageClaimsNameLawsTheKitRuns` now resolves every
+/// claim to a kit law identifier, parsed out of the resolved checkout and
+/// followed through `await check<Parent>PropertyLaws` delegation, so a claim the
+/// kit does not honour fails the suite naming the exact law. The name still says
+/// `assumed` — the guard checks the kit SHIPS the law, not that anyone RAN it,
+/// which is `ProtocolCoverageAudit`'s `verified` / `assumed` / `contradicted`
+/// question and remains open.
 ///
-/// **Hand-baked transitive coverage.** Each entry's `Set<KnownProperty>`
-/// already includes its parents'. `Numeric`'s set contains everything
-/// `AdditiveArithmetic`'s contains, plus the multiplicative properties.
-/// `SignedNumeric` contains `Numeric`'s plus `additiveInverse`. Computing
-/// transitivity at lookup time would require modelling Swift's protocol
-/// inheritance graph — a v1.1 constraint-engine concern (PRD §20.2) —
-/// so v1.5 takes the ~14 × 5 = ~70 lookup-table-entry cost in exchange
-/// for zero textual-conformance-walk logic.
+/// **Hand-baked transitive coverage, and it must follow the KIT's delegation,
+/// not Swift's inheritance graph.** `Numeric`'s set contains
+/// `AdditiveArithmetic`'s plus the multiplicative properties; `SignedNumeric`
+/// contains `Numeric`'s plus `additiveInverse`. Computing transitivity at lookup
+/// time would need Swift's protocol inheritance graph — a v1.1 constraint-engine
+/// concern (PRD §20.2) — so the lookup-table cost is taken instead.
+///
+/// **The two graphs are not the same, which is what went wrong.** Until
+/// 2026-08-02 the additive chain and `SetAlgebra` also carried `equatableBase`,
+/// because `AdditiveArithmetic: Equatable` in Swift. But a kit suite only runs a
+/// parent's laws if it CALLS the parent's entrypoint, and exactly two do —
+/// `ComparableLaws` and `HashableLaws`. `checkAdditiveArithmeticPropertyLaws` and
+/// `checkSetAlgebraPropertyLaws` do not, so four keys claimed the `Equatable`
+/// triple that nothing ran: 12 of the 13 false pairs. Mirror the kit's call
+/// graph, never the protocol hierarchy.
 ///
 /// **Textual-only matching, v1 limitation.** Like
 /// `EquatableResolver.knownEquatableConformance`, this is a string
@@ -79,12 +88,12 @@ public enum ProtocolCoverageMap {
     /// `IteratorProtocol`, `Sequence`, `LosslessStringConvertible` were added
     /// 2026-07-30 / 2026-08-01 without updating this count. Corrected 2026-08-02.
     ///
-    /// **Only `SetAlgebra` has been verified law-by-law against the kit.** The
-    /// other 16 keys assert the same kind of claim and nothing checks them;
-    /// `KitCoverageDriftTests` guards the KEY (does the kit ship a suite by this
-    /// name) and never the VALUE. Measured 2026-08-02: 13 of 56 `(key, law)`
-    /// claims were false, 12 of them the `equatableBase` union below — see
-    /// `docs/protocol-coverage-law-drift.md` §4.
+    /// **All 17 keys are now verified law-by-law against the kit**, by
+    /// `KitCoverageDriftTests.coverageClaimsNameLawsTheKitRuns`, which resolves each
+    /// `KnownProperty` to kit law identifiers and follows delegation. Before that
+    /// guard existed, 13 of 56 `(key, law)` claims were false — 12 the
+    /// `equatableBase` union on the additive chain and `SetAlgebra`, 1 the deleted
+    /// `setUnionAssociative`. See `docs/protocol-coverage-law-drift.md`.
     ///
     /// `Encodable` and `Decodable` are deliberately
     /// excluded — neither alone covers `codableRoundTrip` (round-trip
@@ -129,14 +138,16 @@ public enum ProtocolCoverageMap {
         // three, distributivity ×2, absorption ×2, De Morgan ×2, and `emptyIdentity`'s
         // intersection twin. No template proposes any of them, so claiming coverage would
         // assert something nothing exercises. Add the entry WITH the template, not before.
-        "SetAlgebra": equatableBase.union([
+        // No `equatableBase`: `checkSetAlgebraPropertyLaws` does not delegate to
+        // `checkEquatablePropertyLaws`. Removed 2026-08-02 with the additive chain's.
+        "SetAlgebra": [
             .setUnionCommutative,
             .setIntersectionCommutative,
             .setSymmetricDifferenceCommutative,
             .setUnionEmptyIdentity,
             .setUnionIdempotent,
             .setIntersectionIdempotent
-        ]),
+        ],
 
         // — stdlib codable —
         "Codable": [.codableRoundTrip],
@@ -174,11 +185,18 @@ public enum ProtocolCoverageMap {
         .equatableTransitive
     ]
 
-    private static let additiveArithmeticBase: Set<KnownProperty> = equatableBase.union([
+    /// **No `equatableBase` here, and that is the 2026-08-02 correction.** The table used to
+    /// hand-bake transitive coverage on the theory that a protocol's kit suite runs its
+    /// parent's laws. Measured: exactly two kit files delegate — `ComparableLaws` and
+    /// `HashableLaws` call `checkEquatablePropertyLaws`. `AdditiveArithmetic` and `SetAlgebra`
+    /// do not, and `Numeric` / `SignedNumeric` inherited the hole through this base. That was
+    /// 12 of the 13 false `(key, law)` claims. Now guarded law-by-law by
+    /// `KitCoverageDriftTests.coverageClaimsNameLawsTheKitRuns`.
+    private static let additiveArithmeticBase: Set<KnownProperty> = [
         .additiveAssociative,
         .additiveCommutative,
         .additiveIdentityZero
-    ])
+    ]
 
     private static let numericBase: Set<KnownProperty> = additiveArithmeticBase.union([
         .multiplicativeAssociative,
