@@ -102,7 +102,7 @@ identifier is gone from `KnownProperty` entirely rather than merely unmapped —
 meaning was the false claim — and `AssociativityTemplate` now returns no candidate for the
 set verbs, with the reason inline.
 
-## 4. Defect B — `equatableBase` on four keys: 12 false claims, latent today
+## 4. Defect B — `equatableBase` on four keys: 12 false claims (FIXED)
 
 The map hand-bakes transitive coverage: *"Each entry's `Set<KnownProperty>` already includes
 its parents'."* The premise is that a conformance's kit entrypoint runs its parent protocol's
@@ -130,7 +130,14 @@ grep -rln "await checkEquatablePropertyLaws" Sources/
 outside the map are a doc comment in `ProtocolCoverageAudit` and one in
 `CuratedStdlibCatalog`. So nothing is suppressed today and no output is wrong.
 
-It is a loaded trap for the next equivalence-relation-on-`==` arm. That author would add the
+**FIXED 2026-08-02.** `equatableBase` removed from `additiveArithmeticBase` (which
+`Numeric` and `SignedNumeric` inherit) and from `SetAlgebra`. `Comparable` and `Hashable`
+keep it — they genuinely delegate. **A/B: zero delta on all six corpora**, which is the
+expected shape for a latent claim and is the confirmation, not a disappointment. Four
+assertions in `ProtocolCoverageMapTests` pinned the wrong behaviour and were inverted; the
+`Comparable transitively covers Equatable` test still passes and is now the control.
+
+It was a loaded trap for the next equivalence-relation-on-`==` arm. That author would add the
 emission, watch it veto correctly on `Comparable` / `Hashable` carriers, conclude the
 mechanism works, and ship silent false suppression on every `Numeric` and `SetAlgebra` one.
 Same latency the `losslessStringRoundTrip` and `iteratorTerminationStability` entries were
@@ -176,24 +183,30 @@ checks a `Disposition` a human recorded by hand.
 **Not swept.** Whether any template currently proposes an unclaimed law is open, and it is the
 obvious follow-up.
 
-## 7. What the fix costs, and why it is not a one-liner
+## 7. The guard — BUILT 2026-08-02
 
 Extend `KitCoverageDriftTests` to law level: parse each suite's law-identifier string literals
 the same way it already parses entrypoint names, and assert every claimed `KnownProperty`
 resolves to one the kit runs.
 
-**The work is the mapping, and it is not 1:1.** `.distributivity` corresponds to two kit laws
+**The work was the mapping, and it is not 1:1.** `.distributivity` corresponds to two kit laws
 (`leftDistributivity` + `rightDistributivity`); `.comparableTotalOrder` covers four; several
 `KnownProperty` cases (`multiplicativeInverse`) exist in the enum and appear in no map value
-at all. So the guard needs an explicit `KnownProperty → [kit law identifier]` table — roughly
-30 rows, hand-written once, and then *itself* checked by the regex sweep so it cannot go
-stale. That table is the deliverable; both defects above fail loudly the moment it exists, and
-§6's under-claim direction becomes measurable instead of hand-recorded.
+at all. So the guard needed an explicit `KnownProperty → [kit law identifier]` table — 27 rows,
+hand-written once, and *itself* checked by the regex sweep (`mappedLawsExist`) so it cannot go
+stale. `.multiplicativeInverse` maps to `[]` deliberately: the enum carries it "for symmetry
+with `additiveInverse`" and no kit law implements it, so no map value may claim it and the
+empty list is the assertion that says so.
 
-**Delegation must be modelled, not assumed.** §4 is the whole argument: the map assumed
-protocol inheritance implies law inheritance, and the kit only honours that in 2 files of 17.
-The guard should read `await check<Parent>PropertyLaws` out of each entrypoint rather than
-re-deriving Swift's conformance graph.
+One parsing trap worth keeping: the identifier regex must **not** require a closing quote.
+`Codable`'s is `"Codable.roundTripFidelity[\(codec)]"` — interpolated — and a stricter
+pattern silently dropped it, which would have read as *"the kit ships no Codable law"*.
+
+**Delegation is modelled, not assumed** — `kitDelegations()` reads
+`await check<Parent>PropertyLaws` out of each entrypoint and `effectiveLaws(of:)` follows it
+transitively. §4 is the whole argument: the map assumed protocol inheritance implies law
+inheritance, and the kit honours that in 2 files of 17. Deriving the edges from Swift's
+conformance graph would have reproduced the bug inside its own guard.
 
 ## 8. A fifth defect, found by probe rather than by reading
 
@@ -275,15 +288,29 @@ repo's own frozen baselines are untouched.
 added — and `ProtocolCoverageMapTests` records which way each moved, because a bare +2 would
 have read as two additions.
 
+**§4 (the 12 `equatableBase` claims) and §7 (the law-level guard) are now also FIXED.**
+All 17 keys are verified law-by-law, and the map's contents can no longer drift from the kit
+without a named failure. The §4 fix measured zero corpus delta on six corpora, which is the
+expected shape for a latent claim.
+
 **Open, in dependency order:**
 
-1. **§4 — the 12 `equatableBase` false claims.** Latent; must be corrected before item 2.
-2. **§8 — `Self` resolution.** Makes the map live. Blocked on item 1 by design.
-3. **§7 — the law-level guard.** Needs the `KnownProperty → [kit law identifier]` table, and
-   a behavioural companion: §8 is a reachability defect that a contents-only guard passes
-   straight through. The `SelfSet`/`ConcreteSet` probe should be checked in as that companion.
-4. **§6 — the under-claim census** across the other 16 keys. `SetAlgebra` is the only key
-   verified law-by-law; the rest assert the same kind of claim unchecked.
+1. **§8 — `Self` resolution.** Was blocked on §4; that dependency is now discharged, so this
+   is next. It makes the map reachable on the idiom `SetAlgebra` is actually written in, and
+   the map is now correct enough for that to be safe.
+2. **A behavioural companion to §7.** The law-level guard checks the map's *contents*; §8 is
+   a *reachability* defect and a contents-only guard passes straight through it. The
+   `SelfSet`/`ConcreteSet` probe should be checked in as a fixture asserting the two
+   spellings produce identical output — it is the only thing that would have caught §8.
+3. **§6 — the under-claim direction.** Now measurable rather than hand-recorded: the guard
+   knows every law each suite runs, so "claimed ⊂ run" can be reported. `SetAlgebra` claims
+   6 of 15, `Strideable` 1 of 12. Each unclaimed law is a possible double-report.
+4. **The third catalog.** `known-properties` ships 71 executable stdlib laws and overlaps the
+   kit's 182 by roughly 40% — `Double` fully, `Set` 7 of 9 — with no guard between them. It
+   independently asserts `a.union(b).union(c) == a.union(b.union(c))` as known-true, which is
+   the exact law §3's false claim said the kit ran. The two catalogs together would have
+   caught that defect on the day it was written. `known-properties` is a third input to this
+   same join.
 
 Referenced from `docs/kit-suite-backtest-plan.md` §4 Arm 1, whose blocking decision this
 resolves — the arm's generated suite is unaffected either way, since `KitSuiteEmitter` emits
