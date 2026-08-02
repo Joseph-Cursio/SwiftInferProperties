@@ -48,6 +48,20 @@ let package = Package(
             name: "SwiftInferMacro",
             targets: ["SwiftInferMacro"]
         ),
+        // The write half of the kit feedback loop. Users import this in their TEST target,
+        // after a `check<Protocol>PropertyLaws` call, to persist the kit's verdicts where
+        // `discover` reads them (`.swiftinfer/kit-evidence.json`).
+        //
+        // A separate library rather than folding into `SwiftInferCore` because Core takes no
+        // `PropertyLawKit` dependency by design — `KitLawOutcome` spells outcome and tier as
+        // String-backed enums precisely to keep it kit-free — and the `swift-infer`
+        // executable must not pull the kit's transitive swift-testing footprint. Same
+        // reasoning as `SwiftInferMacro` above, which is already kit-dependent for the same
+        // "lives in a test target" reason.
+        .library(
+            name: "SwiftInferKitEvidence",
+            targets: ["SwiftInferKitEvidence"]
+        ),
         .executable(
             name: "swift-infer",
             targets: ["swift-infer"]
@@ -186,6 +200,16 @@ let package = Package(
                 .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
             ]
         ),
+        // The kit → inference cable. `KitEvidenceStore.write` shipped with zero callers, so
+        // `.swiftinfer/kit-evidence.json` could not be produced by anything and the kit
+        // feedback loop was one-way in practice while being described as two-way.
+        .target(
+            name: "SwiftInferKitEvidence",
+            dependencies: [
+                "SwiftInferCore",
+                .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
+            ]
+        ),
         // M5.2: compiler-plugin target hosting the macro implementation.
         // Plugin targets compile against swift-syntax and run during
         // macro expansion (a separate compiler subprocess). Mirrors the
@@ -272,6 +296,17 @@ let package = Package(
                 // product re-exports `PropertyLawKit`).
                 .product(name: "PropertyLawMacro", package: "SwiftPropertyLaws"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ]
+        ),
+        // Guards the write half of the kit loop. The load-bearing case is a round trip
+        // through a REAL kit run: unit-testing the translation alone passes just as happily
+        // while the recorded law names silently fail to match `equalityOracleLaws`.
+        .testTarget(
+            name: "SwiftInferKitEvidenceTests",
+            dependencies: [
+                "SwiftInferKitEvidence",
+                "SwiftInferCore",
+                .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
             ]
         ),
         .testTarget(

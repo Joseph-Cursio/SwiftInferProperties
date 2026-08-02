@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 /// Loads PropertyLawKit results from `.swiftinfer/kit-evidence.json`.
 ///
@@ -8,10 +7,18 @@ import SwiftInferCore
 /// exported kit results, and inference's default assumption (that `==` is sound, since the
 /// Equatable laws are what would say otherwise) is exactly what an empty log preserves.
 ///
-/// The file is produced by the user's own test run, not by this tool. A suite that already
-/// calls `checkHashablePropertyLaws` has `[CheckResult]` in hand; mapping it to this shape
-/// is a few lines, and deliberately left to the caller so `SwiftInferCLI` takes no
-/// dependency on the kit.
+/// ## Who writes it
+///
+/// The user's own test run, via `SwiftInferKitEvidence`'s `KitEvidenceRecorder` — a leaf
+/// library that depends on `PropertyLawKit` so this target does not have to.
+///
+/// **That recorder did not exist until 2026-08-02, and its absence made this whole feature
+/// unreachable.** `load` shipped wired into `discover`, `write` shipped with *zero callers*
+/// in Sources or Tests, no subcommand exported anything, and the kit has never heard of this
+/// format — so the file could only appear if a user hand-authored JSON matching
+/// `KitEvidenceLog`'s `Codable` shape, which nothing documented. Meanwhile the diagnostic
+/// told them to "export results", an action with no supported path. Half a feedback loop,
+/// described in its own commit message as closing one.
 public enum KitEvidenceStore {
 
     public static let conventionalRelativePath = ".swiftinfer/kit-evidence.json"
