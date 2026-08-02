@@ -69,7 +69,7 @@ struct DiscoverPipelineSeedsTests {
             seedManifest: manifest,
             output: recording
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
     }
 
     @Test("An empty manifest applies no focus rather than discarding everything")

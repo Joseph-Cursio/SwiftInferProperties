@@ -11,12 +11,20 @@ extension SwiftInferCommand.Discover {
     /// so the orchestrator body stays under SwiftLint's 50-line cap.
     /// V1.64.C annotation behavior unchanged: when `evidenceByIdentity`
     /// is empty, blocks render byte-identically to the pre-v1.64 output.
+    /// - Parameter coverage: what PropertyLawKit covers on this corpus. Rendered as the first
+    ///   line, **always**, including when it is zero. A `discover` count read on its own is
+    ///   close to meaningless — a perfect kit would leave nothing to discover, so `0
+    ///   suggestions.` alone is total success and total failure spelled identically. Defaulted
+    ///   only so the non-discover callers (drift, interactive) compile unchanged.
     static func renderAndWrite(
         visible: [Suggestion],
         statsOnly: Bool,
         evidenceByIdentity: [String: VerifyEvidence],
         effectAnnotations: [EffectAnnotationAdvice] = [],
         docstringAdvice: [DocstringAdviceItem] = [],
+        coverage: CoverageSummary = CoverageSummary(
+            lawCount: 0, carrierCount: 0, evidenceState: .noEvidence
+        ),
         output: any DiscoverOutput
     ) {
         // V1.147 — enrich each candidate's explainability with stdlib-anchor
@@ -49,7 +57,17 @@ extension SwiftInferCommand.Discover {
             }
         }
 
-        output.write(rendered)
+        // First line, before the count, on stdout. Prepended here in the CLI layer rather
+        // than inside `SuggestionRenderer` on purpose: the renderer's output is pinned
+        // byte-for-byte by golden tests (`GeneratorSelectionIntegrationTests`), and those
+        // goldens are about a *suggestion's* rendering, which this is not part of.
+        let headline = CoverageHeadline.line(
+            suggestionCount: visible.count,
+            lawCount: coverage.lawCount,
+            carrierCount: coverage.carrierCount,
+            evidenceState: coverage.evidenceState
+        )
+        output.write(headline + "\n\n" + rendered)
     }
 
     /// `--interactive` and `--update-baseline` are mutually exclusive; the early

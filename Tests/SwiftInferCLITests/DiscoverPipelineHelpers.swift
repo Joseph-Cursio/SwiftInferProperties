@@ -49,6 +49,24 @@ final class DPRecordingOutput: DiscoverOutput, @unchecked Sendable {
     func write(_ text: String) {
         self.text = text
     }
+
+    /// The rendered suggestions **without** the leading `Coverage:` headline.
+    ///
+    /// `discover` prepends one line pairing its own count with what PropertyLawKit covers,
+    /// because a discover count read alone is close to meaningless — a perfect kit would
+    /// leave nothing to discover, so `0 suggestions.` on its own is total success and total
+    /// failure spelled identically. See `CoverageHeadline`.
+    ///
+    /// Twelve pipeline tests assert on the suggestion body (`== "0 suggestions."`,
+    /// `hasPrefix("5 suggestions across 5 templates.")`) and are not about the headline, so
+    /// they read this. **Tests that care about the headline should assert on `text`** — and
+    /// at least one must, or the headline could be deleted with the suite still green.
+    var body: String {
+        guard text.hasPrefix("Coverage: "), let breakRange = text.range(of: "\n\n") else {
+            return text
+        }
+        return String(text[breakRange.upperBound...])
+    }
 }
 
 /// In-memory diagnostic sink used by the M2.1 vocabulary tests to

@@ -29,7 +29,7 @@ struct DiscoverPipelineSkipMarkerTests {
             includePossible: false,
             output: recording
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
     }
 
     @Test("Skip marker for an unrelated hash leaves the suggestion in place")

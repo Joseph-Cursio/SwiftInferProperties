@@ -15,7 +15,7 @@ struct DiscoverPipelineTests {
             includePossible: false,
             output: recording
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
     }
 
     @Test("Possible-tier suggestions are hidden by default")
@@ -36,7 +36,7 @@ struct DiscoverPipelineTests {
             includePossible: false,
             output: recording
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
     }
 
     @Test("--include-possible surfaces Possible-tier suggestions")
@@ -177,7 +177,7 @@ struct DiscoverPipelineTests {
             includePossible: true,
             output: recording
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
     }
 
     @Test("Round-trip pair surfaces with curated name match")
@@ -318,7 +318,7 @@ struct DiscoverPipelineVocabularyTests {
             diagnostics: diagnostics
         )
         // Vocabulary fell back to .empty.
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
         #expect(diagnostics.lines.count == 1)
         #expect(diagnostics.lines.first?.hasPrefix("warning: ") == true)
         #expect(diagnostics.lines.first?.contains("could not parse") == true)
@@ -342,7 +342,7 @@ struct DiscoverPipelineVocabularyTests {
             output: recording,
             diagnostics: diagnostics
         )
-        #expect(recording.text == "0 suggestions.")
+        #expect(recording.body == "0 suggestions.")
         #expect(diagnostics.lines.isEmpty)
     }
 }
