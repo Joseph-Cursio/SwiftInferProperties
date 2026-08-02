@@ -193,10 +193,12 @@ public enum ProtocolCoverageAudit {
             lines.append(
                 "\(assumed.count) carrier(s) have conformances whose laws PropertyLawKit "
                     + "checks, and there is no kit evidence saying it ran. Normal if you run "
-                    + "the kit and have not exported results; a real gap if you do not depend "
+                    + "the kit and have not recorded results; a real gap if you do not depend "
                     + "on SwiftPropertyLaws at all, because then nothing checks those laws — "
-                    + "and every one of them has an explicit suite you could run. Export "
-                    + "results to `.swiftinfer/kit-evidence.json` to turn this into a check."
+                    + "and every one of them has an explicit suite you could run. Add "
+                    + "`import SwiftInferKitEvidence` to your test target and call "
+                    + "`KitEvidenceRecorder.record(results, for:packageRoot:)` after a "
+                    + "`check<Protocol>PropertyLaws` call to turn this into a check."
             )
         }
         return lines

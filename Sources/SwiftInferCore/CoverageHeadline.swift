@@ -96,8 +96,9 @@ public enum CoverageHeadline {
 
             case .noEvidence:
                 return "no kit evidence, so it is unknown whether they ran. Every one has an "
-                    + "explicit suite you can run; export results to "
-                    + "`.swiftinfer/kit-evidence.json` to turn this into a check."
+                    + "explicit suite you can run; call "
+                    + "`KitEvidenceRecorder.record(results, for:packageRoot:)` "
+                    + "(import SwiftInferKitEvidence) after it to turn this into a check."
 
             case .ranButMissed(let carriers):
                 return "kit evidence exists but omits \(carriers) of them, so those laws are "
