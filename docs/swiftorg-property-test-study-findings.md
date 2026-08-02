@@ -2525,7 +2525,7 @@ corpus. Neither can see a template that reaches nothing everywhere.
 The census also reframes "add a template" as a decision with an ongoing cost: 15% of
 what has been added so far is inert, and the inertness was invisible.
 
-### 10.1 `homomorphism` revived — 0 → 4
+### 10.1 `homomorphism` revived — 0 → 5
 
 The member form ships as `HomomorphismTemplate+MemberForm.swift`, under the **same**
 `templateName: "homomorphism"` — it is the same law family, and the census should show
@@ -2540,6 +2540,14 @@ one template going 0 → N rather than a sibling appearing beside a dead one.
 | `Array` | stdlib |
 | `BitArray`, `RigidArray` | swift-collections |
 | `IndexPath` | swift-foundation |
+| `SyntaxCollection` | swift-syntax |
+
+**This table said 0 → 4 and omitted the swift-syntax row until §10.3 re-measured it.**
+The under-count is self-inflicted in an instructive way: §10's own population list —
+three paragraphs above — names `SyntaxCollection` among the member form's carriers. The
+prose predicted five and the table recorded four, so the error was never in the
+measurement, only in the transcription of it. A row count copied by hand from a run is
+not a measurement; §10.3 exists because re-running is cheap and re-reading is not.
 
 **The exclusions carry over verbatim and both were confirmed by the repo owner.**
 `String` and `BigString` are out because `count` is grapheme count and `"e" + "◌́"` is
@@ -2567,6 +2575,67 @@ Five templates remain at zero: `diff-disjointness`, `involution`,
 `multiplicative-homomorphism`, `partition`, `selection-subset`. `involution` is known
 *not* to share `homomorphism`'s cause — it already handles a member form — so each
 wants its own diagnosis rather than a batch fix.
+
+### 10.3 Did the template push actually gain laws? A controlled A/B (2026-08-01)
+
+§10.2 argued for running the census periodically. This is the first time it was run
+**as a before/after**, and the design matters more than the numbers: two binaries, one
+built at `bc1b5f8` (the commit before the 2026-07-31 → 08-01 template push) and one at
+`4eb0a3b`, both run **on the same afternoon over the same eight corpora with the same
+flags** (`discover --sources <path> --stats-only --include-possible`).
+
+Running both *now* is the whole point. The alternative — comparing today's run against
+a count written down last week — cannot tell a template gain from a corpus that moved,
+a config that changed, or a `.swiftinfer/` directory that acquired evidence between the
+two readings. That is not hypothetical here: this repo's own target read **96** in a
+prior session and **80** today with no scoring change in between, which is exactly the
+drift an A/B is immune to and a remembered number is not.
+
+| corpus | `bc1b5f8` | `4eb0a3b` | delta |
+|---|---:|---:|---:|
+| stdlib | 786 | 797 | **+11** |
+| swift-collections | 701 | 715 | **+14** |
+| swift-nio | 400 | 409 | **+9** |
+| swift-foundation | 1,283 | 1,284 | +1 |
+| swift-syntax | 1,121 | 1,122 | +1 |
+| swift-package-manager | 598 | 598 | 0 |
+| SwiftProjectLint | 3 | 3 | 0 |
+| this repo | 247 | 247 | 0 |
+
+**+36 rows, and the diff is pure addition — no template lost a single row.**
+
+Attributed by template, the gain is exactly the four families added in that window:
+
+| template | rows | where |
+|---|---:|---|
+| `ended-access-round-trip` | 15 | stdlib 4, collections 9, nio 2 |
+| `scaled-unit-consistency` | 8 | stdlib 3, nio 5 |
+| `functor-identity` | 8 | stdlib 3, collections 3, nio 2 |
+| `homomorphism` (member form) | 5 | stdlib, collections ×2, foundation, syntax |
+
+Two of those totals were already recorded — 15 and 8 — and reproduce exactly, which is
+the useful kind of boring. The third did not: §10.1's table said 4 where the measurement
+says **5**, corrected above.
+
+**The tier split is the part worth keeping.** 23 of the 36 are `Strong` — every
+`ended-access-round-trip` and `scaled-unit-consistency` row — and the remaining 13 are
+`Likely`. None landed at the score-20 `Possible` floor. Against the standing complaint
+that the catalog "says the generic thing when it has nothing specific to say" (66% of
+output is three templates, 738 of 1,115 swift-syntax rows sit at the floor), a push that
+adds only default-visible rows is the shape the Daikon trap entry asks for: the gain
+arrived by naming shapes, not by lowering a cut.
+
+**The #26 traps veto cost zero rows.** `sequence-view-model-law` and `model-law` are
+byte-identical across all eight corpora before and after. The veto was found by a
+synthetic trap file rather than by a corpus sweep, and this confirms the reason given at
+the time — no real corpus contains the `conversionComparison` shape. A precision fix
+with no measured recall cost, which is the outcome §3.5 wants and rarely gets to verify.
+
+**Three corpora gained nothing**, and that is not a defect: swift-package-manager,
+SwiftProjectLint and this repo have no stack/queue/deque carriers, no scaled-unit
+constructors, and no `map`-returning-Self containers. A template that fires on shapes
+absent from a corpus is correctly silent there — the §10 distinction between a dead
+template and a conservative one, now with the A/B that can tell them apart.
 
 ## 11. The `[reference]` backlog was over-reported 3x — the tags had fallen behind the templates
 
