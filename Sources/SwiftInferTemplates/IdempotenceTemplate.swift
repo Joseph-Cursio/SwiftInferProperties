@@ -194,11 +194,11 @@ public enum IdempotenceTemplate {
         if let veto = summary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: summary,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         return signals
     }
@@ -350,11 +350,11 @@ extension IdempotenceTemplate {
     /// `f(f(x))` on arbitrary types isn't covered — the veto fires
     /// only when the type's conformance set intersects the curated
     /// idempotence-bearing protocols.
-    static func protocolCoverageVeto(
+    static func assumedKitCoverage(
         for summary: FunctionSummary,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
-        ProtocolCoverageMap.coverageVetoSignal(
+        ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: summary.parameters.first?.typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [.setIntersectionIdempotent, .semilatticeIdempotence]

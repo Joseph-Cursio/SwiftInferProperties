@@ -87,11 +87,11 @@ public enum BinaryIdempotenceTemplate {
                     + "itself is a no-op, so it owes `op(x, x) == x`"
             )
         ]
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: summary,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         return signals
     }
@@ -107,11 +107,11 @@ public enum BinaryIdempotenceTemplate {
     /// `semilatticeIdempotence` is included for parity with `IdempotenceTemplate`:
     /// a kit `Semilattice` conformer's `combine` owes `x ⊕ x == x`, which is the
     /// same law under a different verb.
-    static func protocolCoverageVeto(
+    static func assumedKitCoverage(
         for summary: FunctionSummary,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
-        ProtocolCoverageMap.coverageVetoSignal(
+        ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: summary.parameters.first?.typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [

@@ -32,7 +32,7 @@ extension RoundTripTemplate {
     /// shape AND the pair is not a canonical inverse. `nil` otherwise.
     ///
     /// Wired into `RoundTripTemplate.suggest(for:)` alongside the existing
-    /// `setAlgebraShapeVeto`, `protocolCoverageVeto`, `nonDeterministicVeto`
+    /// `setAlgebraShapeVeto`, `assumedKitCoverage`, `nonDeterministicVeto`
     /// calls.
     static func mathForwardFunctionPairVeto(for pair: FunctionPair) -> Signal? {
         let forward = pair.forward

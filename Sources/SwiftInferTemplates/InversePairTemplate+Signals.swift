@@ -42,11 +42,11 @@ extension InversePairTemplate {
         if let veto = nonDeterministicVeto(for: pair) {
             signals.append(veto)
         }
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: pair,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         return signals
     }

@@ -190,11 +190,11 @@ extension IdempotenceTemplate {
         if let veto = lifted.originalSummary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: lifted.originalSummary,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         signals.append(contentsOf: liftedCarrierVetoes(
             for: lifted,

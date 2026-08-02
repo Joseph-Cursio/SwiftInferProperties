@@ -76,7 +76,7 @@ extension IdempotenceTemplate {
 
         // Primary path: textual conformance to `IteratorProtocol` via the
         // V1.5.2 corpus index. Strip generic parameters before lookup
-        // (matches `ProtocolCoverageMap.coverageVetoSignal` posture).
+        // (matches `ProtocolCoverageMap.assumedCoverageSignal` posture).
         let strippedCarrier = ProtocolCoverageMap.strippingGenericParameters(carrier)
         if let inherited = inheritedTypesByName[strippedCarrier],
            inherited.contains("IteratorProtocol") {

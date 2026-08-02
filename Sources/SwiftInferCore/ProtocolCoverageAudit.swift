@@ -8,7 +8,7 @@ import Foundation
 /// have emitted."*
 ///
 /// That is a claim about a **downstream package the project may not depend on**, and nothing
-/// checked it. `protocolCoverageVeto` takes only `(summary, inheritedTypesByName)`; no code
+/// checked it. `assumedKitCoverage` takes only `(summary, inheritedTypesByName)`; no code
 /// path reads `Package.swift` for SwiftPropertyLaws. So the veto is **unconditional while
 /// the coverage it assumes is conditional on adoption**, and the failure is silent in the
 /// worst way: the veto's job is to prevent double-reporting, so its success looks exactly

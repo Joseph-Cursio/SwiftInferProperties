@@ -154,11 +154,11 @@ public enum IdentityElementTemplate {
         if let familyVeto = algebraicFamilyMismatchVeto(for: pair) {
             signals.append(familyVeto)
         }
-        if let coverageVeto = protocolCoverageVeto(
+        if let assumedCoverage = assumedKitCoverage(
             for: pair,
             inheritedTypesByName: inheritedTypesByName
         ) {
-            signals.append(coverageVeto)
+            signals.append(assumedCoverage)
         }
         return signals
     }
@@ -258,7 +258,7 @@ extension IdentityElementTemplate {
     /// of curated identity constants × ops produced 16.7%-acceptance
     /// noise; v1.5 narrows by requiring the (constant, op) pair to map
     /// to a specific KnownProperty before checking conformance coverage.
-    private static func protocolCoverageVeto(
+    private static func assumedKitCoverage(
         for pair: IdentityElementPair,
         inheritedTypesByName: [String: Set<String>]
     ) -> Signal? {
@@ -268,7 +268,7 @@ extension IdentityElementTemplate {
         ) else {
             return nil
         }
-        return ProtocolCoverageMap.coverageVetoSignal(
+        return ProtocolCoverageMap.assumedCoverageSignal(
             forTypeText: pair.identity.typeText,
             inheritedTypesByName: inheritedTypesByName,
             candidateProperties: [candidate]

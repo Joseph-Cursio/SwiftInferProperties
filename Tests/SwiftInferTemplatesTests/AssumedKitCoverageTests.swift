@@ -5,8 +5,8 @@ import Testing
 // V1.5.2 — protocol-coverage veto tests for the three single-summary
 // algebraic templates (idempotence / commutativity / associativity).
 // Pair-shaped templates (identity-element / inverse-pair / round-trip)
-// live in `ProtocolCoverageVetoPairTests.swift`; discover() end-to-end
-// integration in `ProtocolCoverageVetoIntegrationTests.swift`.
+// live in `AssumedKitCoveragePairTests.swift`; discover() end-to-end
+// integration in `AssumedKitCoverageIntegrationTests.swift`.
 //
 // Each suite exercises positive-coverage suppression (kit law covers
 // the candidate property → veto fires) + negative-coverage cases (no
@@ -62,8 +62,8 @@ func makeInheritedIndex(_ name: String, conformances: [String]) -> [String: Set<
 
 // MARK: - Idempotence
 
-@Suite("ProtocolCoverageVeto — idempotence (V1.5.2)")
-struct IdempotenceProtocolCoverageVetoTests {
+@Suite("AssumedKitCoverage — idempotence (V1.5.2)")
+struct IdempotenceAssumedKitCoverageTests {
 
     @Test("Idempotence on : SetAlgebra type vetoes (covers setIntersectionIdempotent)")
     func setAlgebraVetoesIdempotence() {
@@ -115,8 +115,8 @@ struct IdempotenceProtocolCoverageVetoTests {
 
 // MARK: - Commutativity
 
-@Suite("ProtocolCoverageVeto — commutativity (V1.5.2)")
-struct CommutativityProtocolCoverageVetoTests {
+@Suite("AssumedKitCoverage — commutativity (V1.5.2)")
+struct CommutativityAssumedKitCoverageTests {
 
     @Test("\"+\" on : AdditiveArithmetic type vetoes")
     func plusOnAdditiveArithmeticVetoes() {
@@ -198,8 +198,8 @@ struct CommutativityProtocolCoverageVetoTests {
 
 // MARK: - Associativity
 
-@Suite("ProtocolCoverageVeto — associativity (V1.5.2)")
-struct AssociativityProtocolCoverageVetoTests {
+@Suite("AssumedKitCoverage — associativity (V1.5.2)")
+struct AssociativityAssumedKitCoverageTests {
 
     @Test("\"+\" on : AdditiveArithmetic vetoes (additiveAssociative)")
     func plusOnAdditiveArithmeticVetoes() {

@@ -57,7 +57,7 @@ extension TemplateRegistry {
     /// V1.5.2 — `inheritedTypesByName` is the corpus-wide name →
     /// inheritance-clause-union index built by
     /// `ProtocolCoverageMap.inheritedTypesIndex(from:)`; threaded into
-    /// the six algebraic templates whose `protocolCoverageVeto(...)`
+    /// the six algebraic templates whose `assumedKitCoverage(...)`
     /// helpers suppress suggestions whose property is already covered
     /// by the candidate type's existing conformance.
     static func collectSuggestions(

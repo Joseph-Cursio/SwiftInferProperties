@@ -134,7 +134,7 @@ at all. The laws were not fitted to this witness.
 > Reading the kit to write this section turned up that **`checkSetAlgebraPropertyLaws` does
 > not run union associativity** (no such law exists anywhere in the kit) while
 > `ProtocolCoverageMap` vetoes the suggestion as though it did, with
-> `ProtocolCoverageVetoTests:224` pinning the suppression as correct. The generated suite
+> `AssumedKitCoverageTests:224` pinning the suppression as correct. The generated suite
 > inherits the hole, because it just calls the kit. The full sweep — **13 false `(key, law)`
 > claims across 17 keys**, and why `KitCoverageDriftTests` passes green through all of them —
 > is in that doc. **What matters for this arm:** the `SetAlgebra` fix is a fork (add the law
