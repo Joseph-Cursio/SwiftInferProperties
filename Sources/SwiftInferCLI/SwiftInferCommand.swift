@@ -25,6 +25,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         subcommands: [
             Discover.self,
             Scaffold.self,
+            ScaffoldKitSuites.self,
             Drift.self,
             ConvertCounterexample.self,
             Metrics.self,

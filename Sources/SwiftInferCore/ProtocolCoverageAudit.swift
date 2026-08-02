@@ -94,16 +94,26 @@ public enum ProtocolCoverageAudit {
         /// `Equatable`, `Hashable` and `Comparable` all carry.
         public let coveredLaws: Set<KnownProperty>
 
+        /// **Every** conformance this carrier declares that the kit has a suite for — not
+        /// just `coveringConformance`, which names only the alphabetically first.
+        ///
+        /// Kept because emitting the suites needs the whole list: a `Hashable & Comparable`
+        /// type owes two calls, and picking one would silently drop the other. `coveredLaws`
+        /// unions the *laws* and so cannot answer "which `check…PropertyLaws` do I write".
+        public let declaredCoveringConformances: [String]
+
         public init(
             typeName: String,
             coveringConformance: String,
             standing: Standing,
-            coveredLaws: Set<KnownProperty> = []
+            coveredLaws: Set<KnownProperty> = [],
+            declaredCoveringConformances: [String] = []
         ) {
             self.typeName = typeName
             self.coveringConformance = coveringConformance
             self.standing = standing
             self.coveredLaws = coveredLaws
+            self.declaredCoveringConformances = declaredCoveringConformances
         }
     }
 
@@ -159,7 +169,10 @@ public enum ProtocolCoverageAudit {
                 typeName: typeName,
                 coveringConformance: covering,
                 standing: standing,
-                coveredLaws: laws
+                coveredLaws: laws,
+                declaredCoveringConformances: conformances
+                    .filter { ProtocolCoverageMap.protocolCoverage[$0] != nil }
+                    .sorted()
             )
         }
     }
