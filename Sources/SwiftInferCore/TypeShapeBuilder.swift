@@ -231,7 +231,13 @@ public enum TypeShapeBuilder {
                         )
                     },
                     isFailable: signature.isFailable,
-                    isThrowing: signature.isThrowing
+                    isThrowing: signature.isThrowing,
+                    // Rebuilding the signature here silently dropped this flag on first
+                    // attempt, and the symptom was the gate appearing not to work at all:
+                    // `_DequeSlot`, `_HeapNode` and `_HashTable.Bucket` kept deriving and
+                    // kept aborting. Any field added to `InitializerSignature` has to be
+                    // carried through this map.
+                    assertsPrecondition: signature.assertsPrecondition
                 )
             },
             enumCases: mergedEnumCases

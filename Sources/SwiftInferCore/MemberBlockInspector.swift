@@ -109,7 +109,9 @@ enum MemberBlockInspector {
             result.append(InitializerSignature(
                 parameters: parameters,
                 isFailable: initDecl.optionalMark != nil,
-                isThrowing: effects?.throwsClause != nil
+                isThrowing: effects?.throwsClause != nil,
+                assertsPrecondition: InitializerPreconditionDetector
+                    .statesPrecondition(initDecl)
             ))
         }
         return result
