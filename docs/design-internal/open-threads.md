@@ -26,7 +26,8 @@ conversation's residue does not evaporate.
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
 | 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
-| 11 | **Driver stage 0 builds another repository** (`swift build --product CLI` in SwiftProjectLint) | convenient, and it mutates a sibling's `.build`. Arguably it should only *locate* and fail telling you to build |
+| 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
+| 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
 
 ---
 
@@ -119,9 +120,16 @@ declares 3–5 as not-implemented on every run. What that changes and what it do
 1. **`.pbt/seeds.json` had never existed anywhere on this machine.** Both repos document that
    path — the formatter writes it, `discover --seeds` reads it — and the hop had no instance until
    2026-08-03. A documented handoff with zero instances is not a handoff.
-2. **The loop's entry point cannot be invoked.** SwiftProjectLint ships no installed binary and is
-   not on `PATH`; stage 0 has to compile it. That is not an inconvenience in the driver, it is the
-   first thing standing between a reader and the loop.
+2. **The loop's entry point could not be invoked** — SwiftProjectLint ships no installed binary
+   and is not on `PATH`, so "run the linter" meant knowing to type `swift run CLI` from the right
+   directory. **Fixed 2026-08-03** by `scripts/bin/swiftprojectlint` (add `scripts/bin` to `PATH`).
+
+   The reason it stayed broken is worth keeping, because it was a *good* instinct producing a bad
+   outcome: binaries were never installed because the code was always changing, and recompiling
+   was the safe choice. That is correct — **an installed binary is a remembered build**, the same
+   hazard the A/B rule exists to prevent. The wrappers keep that property (they build through
+   SwiftPM every invocation, so the binary is always the working tree) while removing the friction,
+   which was never the compile — it was the missing command.
 
 ### The measurements are all withdrawn; the diagnoses survive
 
