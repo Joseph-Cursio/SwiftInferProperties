@@ -84,6 +84,23 @@ extension SwiftInferCommand.Verify {
                 receiverShape: takesOperandIdempotenceShape(entry)
             )
 
+        case "predicate":
+            // Totality takes ONE call and applies it to one generated value, so the plain
+            // static/free reference is all it needs — no pairing, no receiver closure.
+            //
+            // **This case is the second gate, and shipping the composer without it was a
+            // no-op.** `TemplateName.verifiable` clears `dispatch`'s check; this switch is a
+            // separate enumeration of the same vocabulary, and its `default:` throws the very
+            // `unsupportedTemplate` the composer exists to stop. All 49 indexed `predicate`
+            // entries declined here — measured before this line existed, which is the only
+            // reason it was found.
+            return singleCallResolved(
+                entry: entry,
+                typeQualifier: typeQualifier,
+                funcName: funcName,
+                receiverShape: entry.isInstanceMethod
+            )
+
         case "commutativity", "associativity":
             // Binary instance ops emit the receiver shape here.
             return singleCallResolved(

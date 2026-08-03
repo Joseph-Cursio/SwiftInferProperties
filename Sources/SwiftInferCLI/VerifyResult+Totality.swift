@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 
 /// The trap branch: recovering a **totality** counterexample from a run that died.
 ///
@@ -23,6 +24,19 @@ extension VerifyResultParser {
     /// marker is emitted by exactly one composer, so its presence is the same fact — and a stub that
     /// does not hunt traps cannot accidentally claim one.
     ///
+    /// **And gated on the CARRIER, which is the narrower and more important condition.** A trap only
+    /// refutes totality when the generated value was one the type genuinely admits. On an `Int` it
+    /// was: the function was handed a number and `Int` has no invariants beyond being one. On a
+    /// memberwise-derived struct it usually was not — the generator assembles a value no code path
+    /// could construct, so the trap says the generator left the domain, which is exactly what
+    /// `trapReason` already says and why non-scalars fall through to it.
+    ///
+    /// This branch first shipped without the carrier gate and the first live run showed the cost:
+    /// `isWorthSurfacingBelowCut` reported a refutation on a `Suggestion` with
+    /// `score.total: 2524929203861660948` and a negative source column. A structurally impossible
+    /// value, reported as a finding. The carrier is printed by the stub rather than threaded in,
+    /// so this decoder still learns everything it knows from markers.
+    ///
     /// `inverseResult` carries the runtime's own message when it reached stderr, because "which
     /// trap" is the first thing a reader asks and the generic reason string would otherwise be the
     /// only place it appeared.
@@ -31,7 +45,9 @@ extension VerifyResultParser {
         lines: [String]
     ) -> VerifyOutcome? {
         guard trapReason(from: output) != nil,
-              let input = value(forMarker: "VERIFY_TRIAL_INPUT:", in: lines)
+              let input = value(forMarker: "VERIFY_TRIAL_INPUT:", in: lines),
+              let carrier = value(forMarker: "VERIFY_TRIAL_CARRIER:", in: lines),
+              FixedWidthIntegerNames.domainCompleteScalars.contains(carrier)
         else { return nil }
 
         let trial = Int(value(forMarker: "VERIFY_TRIAL_INDEX:", in: lines) ?? "") ?? -1
