@@ -4,11 +4,11 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-03** · `SwiftInferProperties@67f9ecf`. Entries here are *not* dated claims
+> **As of 2026-08-03** · `SwiftInferProperties@db72ba3`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@67f9ecfb3724f4336198eaf5c59ff02de46ef5db observer=SwiftInferProperties@67f9ecfb3724f4336198eaf5c59ff02de46ef5db -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@db72ba30e2c7240fc9ab6a4dff6f2ea5e1477bd2 observer=SwiftInferProperties@db72ba30e2c7240fc9ab6a4dff6f2ea5e1477bd2 -->
 
 ---
 
@@ -27,6 +27,7 @@ conversation's residue does not evaporate.
 | 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
+| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. Shape, tiering and build order in *Decisions* below. Start at access widening |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
 
 ---
@@ -60,6 +61,68 @@ project planning, always defensible, forever. Write the exit criteria while incl
 Candidates: composer reach past 38%, the 5 dead templates diagnosed, the instrument-error class
 closed (Pass 2 was the big one, fixed), `--sources` no longer gating app code out of measured
 verify.
+
+### Speculative refactoring — shape and build order (2026-08-03, designed not built)
+
+**The idea.** `swift-infer` copies the target, applies a refactor the linter suggested, derives a
+law from the *refactored* shape, verifies it, and surfaces the refactor **only if the law ran**.
+Output stops being advice and becomes a **patch + a law + a verdict**.
+
+This is `prove-then-show`'s inversion — *"the test-then-surface inversion of the hide-Possible
+default"* — applied to `suggest-refactors`' domain. Both commands already exist; what is missing is
+the copy, the mutation, and the join between them.
+
+**Why it is worth doing at all.** Today the linter says *"extract this kernel"* and the reader takes
+it on faith; `extractable-kernel` seeds explicitly do not focus discovery, and `swift-infer` reports
+"work a human must do before any tool can help" and stops. This lets it say instead: *extract this,
+and here are the laws you get.* The value is **refactors that actually get done**, not more
+suggestions.
+
+**Emit a diff, not advice.** If the output is prose, the verdict does not transfer — you verified
+*your* extraction and they will write a different one, and choosing the parameters is where the
+design work lives. If the output is the exact code that was compiled, the claim is precise and
+checkable: *paste this, and this law held over 100 trials.*
+
+**"A patch we know would work" means two different things.** Conflating them is how the kernel tier
+would over-claim:
+
+| tier | what makes the **patch** safe | what the property test proves |
+|---|---|---|
+| access widening | the compiler — a visibility change cannot alter behaviour | that the **law** holds |
+| kernel extraction | **nothing yet** — the extraction may not preserve behaviour | that the law holds **of that extraction** |
+
+A passing law on an extracted function says nothing about whether the extraction preserved the
+original. You can extract wrongly, get a clean law, and propose a patch that changes the program.
+
+**Build order, by how much the PATCH needs proving** — not by how valuable the law is:
+
+1. **Access widening.** Patch free, law proven, and **extraction ambiguity is zero**: same symbol,
+   same body, one keyword. A verdict on the copy is a verdict on their code. `restricted-function`
+   is 316 of 468 analysable seeds on SwiftProjectLint's own repo. **Start here** — it also builds the
+   copy-mutate-verify machinery the later tiers reuse.
+2. **Extract closure to a named function.** Nearly mechanical; the risk is captures and the signature.
+3. **Kernel extraction.** Needs a *second* property — that the original method and the refactored one
+   **agree**. That is differential/oracle testing, already in this repo's vocabulary
+   (`parsing-catalog-gap.md`, holes 8/9/12). Without it, "we know it would work" is not earned.
+4. **Primitive → domain type.** A redesign. No property makes that patch safe. Out.
+
+**The linter side needs one thing, and it is not a new seed kind.** `PBTSeedsFormatter.effectiveKind`
+already demotes to `restricted-function` on `TestReachability.unreachable`, so the seed ships today.
+What it collapses is *why*: that case covers `private`/`fileprivate` **and** "nested inside a type
+that is", and the remedies differ — for a nested member, widening the member is a **no-op**, and a
+generator that got it wrong would emit a patch that unblocks nothing and then fail verification for
+a reason unrelated to the law. Add a `reason`, not a kind.
+
+**Three costs to price first.** Build cost multiplies (every candidate is its own SwiftPM workdir;
+an 85-entry survey already leaves 3.4 GB) so it must be hard-gated and opt-in. A **disproven**
+speculative law is ambiguous in a way a real one is not — it indicts either the code or the
+extraction, and reusing `measured-defaultFails` would be dishonest, since that name means *the
+property is false of your program*. And the copy is a [border claim](glossary.md#border-claim):
+verify against a snapshot and report on the original, and a moved source silently invalidates the
+verdict — record the source hash the way `run.json` records tool SHAs.
+
+**The safety line survives, and reads better.** `swift-infer` still never modifies your tree; it
+mutates a copy and proposes a patch, which is what every refactoring tool does.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
