@@ -11,12 +11,12 @@ themselves sort for finding a word, not for learning the order.
 Every definition here is keyed to code. Where a term's authority is a specific type or file,
 it is named — prefer reading that over trusting this file, which is a map and not the territory.
 
-> **As of 2026-08-03** · `SwiftInferProperties@2722975`. The **definitions** here do not expire; the
+> **As of 2026-08-03** · `SwiftInferProperties@7e7a633`. The **definitions** here do not expire; the
 > **measurements embedded in them do** — the 738-of-1,115 score-20 figure, the 95-of-251 composer
 > share, the 156 `unsupported-template` table, the 1,657-seeds-to-21-picks ratio. Re-verify a number
 > before citing it; the vocabulary around it stands.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 observer=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@7e7a633e3e93073eef4623cbd6a305ebde6bc568 observer=SwiftInferProperties@7e7a633e3e93073eef4623cbd6a305ebde6bc568 -->
 
 
 ---
@@ -241,29 +241,71 @@ A function that renders the stub source for one template —
 **This is the set that determines verify's template reach**, and it is much smaller than the
 catalog — see [Reach](#reach).
 
+**A worked pair.** Template `commutativity` → `composeCommutativityPass`. Given a carrier and a
+generator expression, it renders the Pass 1 body:
+
+```swift
+let defaultGenerator: Generator<Int, some SendableSequenceType> = Gen<Int>.int(in: .min ... .max)
+
+for trial in 0 ..< trials {
+    let lhs = defaultGenerator.run(using: &rng)
+    let rhs = defaultGenerator.run(using: &rng)
+    if merge(lhs, rhs) != merge(rhs, lhs) {
+        print("VERIFY_DEFAULT_RESULT: FAIL")
+        print("VERIFY_DEFAULT_TRIAL: \(trial)")
+        print("VERIFY_DEFAULT_INPUT: (\(lhs), \(rhs))")
+        …
+    }
+}
+print("VERIFY_DEFAULT_RESULT: PASS")
+```
+
+Three things every composer has and the shape depends on: it **only interpolates**
+(`recipe.expression`, the carrier name, the call), it **prints markers rather than returning a
+verdict** — `VerifyResultParser` decodes those and nothing else — and its law **fails by
+comparison**, so the counterexample is an ordinary value it can print.
+
+**`predicate` → `composePredicatePass` is the exception, and it is the useful one to know.** Totality
+has nothing to compare: a predicate that *returns* has satisfied it. Its law fails by **trap**, which
+kills the process before any marker is printed — so it prints the input *before* the call and
+`VerifyResultParser`'s trap branch reconstructs the verdict from the last marker that survived. That
+in turn only works because the stub preamble sets `setvbuf(stdout, nil, _IONBF, 0)`. It is the one
+composer for which that preamble is load-bearing rather than a convenience.
+
 ### Composer-supported
 Said of a template that has a composer, and so of an index **entry** whose template has one —
 i.e. the law can be *executed*, whatever the result turns out to be. The complement is exactly
 the `unsupported-template` decline.
 
 The set is the `switch` in `StrategistDispatchEmitter.defaultPassSection`, plus the algebraic
-laws that dispatch through `algebraicLawPass` — thirteen templates, spelled once as
-`TemplateName.verifiable`:
+laws that dispatch through `algebraicLawPass`, plus `predicate` via `totalityLawPass` —
+**fourteen** templates, spelled once as `TemplateName.verifiable`:
 
 ```
 round-trip · codable-round-trip · idempotence · commutativity · associativity
 idempotence-lifted · dual-style-consistency · monotonicity · involution
 binary-idempotence · homomorphism · multiplicative-homomorphism · measure-non-negativity
+predicate
 ```
+
+`predicate` joined on 2026-08-03 and routes through its **own** helper, not the algebraic one —
+it is in `verifiable` and deliberately excluded from `strategistAlgebraicLaws`, because the
+`unsupportedTemplate` error names that set and would otherwise advertise a template it cannot
+compose.
 
 Three things it is **not**:
 
 - **Not a claim about the carrier.** A composer-supported template can still decline on
   `unsupported-carrier`, fail to compile, or trap. Composer support is necessary, not sufficient.
 - **Not the same as "in the catalog."** Discovery emits template names that have no composer at
-  all (`predicate`, `input-totality`, `inverse-pair`, …). Those are proposed, scored, tiered, and
-  rendered to a reader exactly like any other suggestion — and then cannot be run. Measured on
-  this repo's index: **95 of 251 entries composer-supported (38%)**.
+  all (`input-totality`, `inverse-pair`, `filter-subset`, …). Those are proposed, scored, tiered,
+  and rendered to a reader exactly like any other suggestion — and then cannot be run. Measured on
+  this repo's index (2026-08-01): **95 of 251 entries composer-supported (38%)**.
+
+  **That figure predates `predicate`'s composer and has not been re-measured.** `predicate` was
+  120 of the 156 unsupported entries in that same index, so the arithmetic consequence is ~215 of
+  251 (~86%) — *arithmetic on an old index, not a new run*, and recorded as such rather than
+  quietly restated as a measurement. Re-run before citing a number here.
 - **Not a quality signal.** It says a stub can be composed. Whether the law could have *failed*
   is [refutation reach](#reach), a different and later question.
 
@@ -361,7 +403,7 @@ and the 156 are not spread evenly:
 
 | template | n | note |
 |---|---:|---|
-| `predicate` | **120** | 77% of the whole bucket — and a declined totality claim is arguably not a reach gap |
+| `predicate` | **120** | 77% of the whole bucket — **closed 2026-08-03**, `composePredicatePass` ships. The largest single reach gap this repo had, and the row that made the "arguably not a reach gap" hedge in this table look like a reason not to fix it |
 | `inverse-pair` | 14 | |
 | `input-totality` | 11 | |
 | `value-round-trip` | 3 | |
@@ -371,6 +413,11 @@ and the 156 are not spread evenly:
 
 Net of `predicate`: **36 entries across 8 templates**, of which `inverse-pair` + `input-totality`
 are 25 — **69% of the actionable gap in two composers**.
+
+**Since `predicate` shipped, that residual IS the gap** — the table above describes an index taken
+2026-08-01, and the 120 row is now composer-supported. `inverse-pair` (14) and `input-totality`
+(11) are the next two, and the same argument that moved `predicate` applies: one composer each,
+no new machinery. Re-run the index before quoting any figure in this section.
 
 ---
 
