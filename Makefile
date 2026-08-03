@@ -99,6 +99,9 @@ batch6: ## Subprocess batch 6 — composition-action payload measured (slices 2/
 batch7: ## Subprocess batch 7 — TCA determinism / real-examples / unknown-action
 	$(SWIFT_TEST) --filter '$(BATCH7)'
 
+docs-drift: ## Report which docs/design-internal/ docs have a subject repo that has moved
+	@./scripts/docs_drift.sh
+
 clean-temp: ## Remove leftover verifier/corpus/measured build dirs (from killed runs + verify surveys)
 	find "$${TMPDIR:-/tmp}" -maxdepth 1 \( -name '*verify-pipeline-integration*' -o -name '*verify-interaction*' -o -name '*-corpus*' -o -name '*-survey-corpus*' -o -name '*measured*' -o -name 'tca-*' -o -name 'vm-*' -o -name 'TemporaryDirectory.*' -o -name '*.lock' \) -exec rm -rf {} + 2>/dev/null || true
 # `verify --all-from-index` does NOT use $TMPDIR — it synthesizes one workdir per
