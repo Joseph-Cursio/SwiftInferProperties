@@ -144,7 +144,41 @@ record() {
     esac
 }
 
-sha_of() { git -C "$1" rev-parse --short HEAD 2>/dev/null || printf 'unknown'; }
+# **A repository SHA describes the BINARY only if we just built the binary from it.**
+#
+# This is the driver's own border claim and it was live: `sha_of` reads `git rev-parse` on a
+# repository, `run.json` records the answer under `tools`, and nothing connected the two. It
+# was harmless only because stage 0 happened to rebuild — the moment a prebuilt or installed
+# binary is used, the manifest whose entire purpose is making runs comparable starts
+# confidently naming a revision that did not run.
+#
+# Neither binary can state its own build identity: `swift-infer --version` reports a semver
+# (`1.148.0`), which reads identically whether built today or months ago from another commit,
+# and the linter's CLI reports one too. Embedding a build SHA is the real fix and belongs in
+# those packages. Until then the driver EARNS the claim instead of asserting it: build
+# unconditionally (SwiftPM is incremental, so this is seconds when warm), and only then is the
+# tree's SHA a true statement about what ran.
+#
+# `+dirty` is not cosmetic. With uncommitted changes the SHA under-describes the binary, and a
+# run that cannot be reproduced from a commit must say so rather than look like one that can.
+sha_of() {
+    local sha dirty=""
+    sha=$(git -C "$1" rev-parse --short HEAD 2>/dev/null) || { printf 'unknown'; return; }
+    git -C "$1" diff --quiet HEAD 2>/dev/null || dirty="+dirty"
+    printf '%s%s' "$sha" "$dirty"
+}
+
+# Build a product and report whether the resulting binary is attributable to the tree's SHA.
+# Echoes "built" (the SHA is earned), "stale" (a binary exists but we could not rebuild it, so
+# its provenance is unknown) or "absent".
+build_product() {
+    local repo="$1" product="$2" binary="$3"
+    if ( cd "$repo" && swift build --product "$product" ) >/dev/null 2>&1; then
+        [ -x "$binary" ] && { printf 'built'; return; }
+    fi
+    [ -x "$binary" ] && { printf 'stale'; return; }
+    printf 'absent'
+}
 
 printf '\n  Toolchain run — lint → infer\n'
 printf '  target: %s\n' "$TARGET_REPO"
@@ -158,29 +192,35 @@ printf '  %s\n\n' "$(printf '─%.0s' {1..72})"
 # withdrawn because nobody could say which binary produced it. A run that cannot name its
 # tools cannot be compared with any other run, which makes it worthless as a baseline.
 INFER_BIN="$INFER_REPO/.build/debug/swift-infer"
-if [ ! -x "$INFER_BIN" ]; then
-    ( cd "$INFER_REPO" && swift build --product swift-infer ) >/dev/null 2>&1
-fi
-if [ -x "$INFER_BIN" ]; then
-    record 0 "locate swift-infer" ok "$(sha_of "$INFER_REPO") ($("$INFER_BIN" --version 2>/dev/null || echo 'no --version'))"
-else
-    record 0 "locate swift-infer" unavailable "could not build $INFER_REPO"
-fi
+INFER_SHA="$(sha_of "$INFER_REPO")"
+INFER_STATE="$(build_product "$INFER_REPO" swift-infer "$INFER_BIN")"
+case "$INFER_STATE" in
+    built) record 0 "locate swift-infer" ok "$INFER_SHA (debug, built this run)" ;;
+    stale) INFER_SHA="unattributable"
+           record 0 "locate swift-infer" failed "binary exists but would not rebuild — its provenance is UNKNOWN, so this run is not attributable" ;;
+    *)     INFER_SHA="unavailable"
+           record 0 "locate swift-infer" unavailable "could not build $INFER_REPO" ;;
+esac
 
+LINT_BIN="$LINT_REPO/.build/debug/CLI"
+LINT_SHA="unavailable"
 LINT_AVAILABLE=0
 if [ -d "$LINT_REPO" ]; then
     # The linter ships no installed binary and is run via `swift run CLI`. Building it is a
     # real cost on first use, and that cost IS part of the finding: the loop's entry point is
     # not something a reader can invoke today without compiling a package first.
-    if ( cd "$LINT_REPO" && swift build --product CLI ) >/dev/null 2>&1; then
-        LINT_BIN="$LINT_REPO/.build/debug/CLI"
-        [ -x "$LINT_BIN" ] && LINT_AVAILABLE=1
-    fi
-fi
-if [ "$LINT_AVAILABLE" -eq 1 ]; then
-    record 0 "locate swiftprojectlint" ok "$(sha_of "$LINT_REPO") (built from source; no installed binary exists)"
+    LINT_SHA="$(sha_of "$LINT_REPO")"
+    LINT_STATE="$(build_product "$LINT_REPO" CLI "$LINT_BIN")"
+    case "$LINT_STATE" in
+        built) LINT_AVAILABLE=1
+               record 0 "locate swiftprojectlint" ok "$LINT_SHA (debug, built this run; no installed binary exists)" ;;
+        stale) LINT_SHA="unattributable"
+               record 0 "locate swiftprojectlint" failed "binary exists but would not rebuild — provenance UNKNOWN" ;;
+        *)     LINT_SHA="unavailable"
+               record 0 "locate swiftprojectlint" unavailable "would not build at $LINT_REPO" ;;
+    esac
 else
-    record 0 "locate swiftprojectlint" unavailable "not found or would not build at $LINT_REPO"
+    record 0 "locate swiftprojectlint" unavailable "not found at $LINT_REPO"
 fi
 
 # ── Stage 1 ───────────────────────────────────────────────────────────────────────────────
@@ -253,9 +293,10 @@ cat > "$OUT_DIR/run.json" <<JSON
 {
   "target": "$TARGET_REPO",
   "tools": {
-    "swift-infer": "$(sha_of "$INFER_REPO")",
-    "swiftprojectlint": "$(sha_of "$LINT_REPO")"
+    "swift-infer": "$INFER_SHA",
+    "swiftprojectlint": "$LINT_SHA"
   },
+  "buildConfiguration": "debug",
   "options": {
     "spmTarget": "$SPM_TARGET",
     "sources": "$SOURCES_DIR",
