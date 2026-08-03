@@ -4,11 +4,11 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-03** · `SwiftInferProperties@201e3ea`. Entries here are *not* dated claims
+> **As of 2026-08-03** · `SwiftInferProperties@76d59e8`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@201e3eaa2b2ea0dfbed030a2fa1444453ee7e029 observer=SwiftInferProperties@201e3eaa2b2ea0dfbed030a2fa1444453ee7e029 -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@76d59e8c473fcf599c8540052498d7b90fb5224c observer=SwiftInferProperties@76d59e8c473fcf599c8540052498d7b90fb5224c -->
 
 ---
 
@@ -29,8 +29,8 @@ conversation's residue does not evaporate.
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
 | 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. A 20-function probe measured 20 → 8 proposed → 2 composer-supported, i.e. **≤+60 against a base of 100 — a 60% gain at the ceiling**. Ordering against 14 is **not settled**; see *Decisions* |
-| 14 | **Write a `predicate` composer** | **126 of the 156 non-runnable laws** on four targets are `predicate` — the largest blocked population, no new machinery needed. But the ≤+126 is a **ceiling by template name**, and whether a totality law over these is *refutable* or a wall of green is unmeasured. **Settle that first** (item 15) |
-| 15 | **Are `predicate`/totality laws refutable here, or a wall of green?** | the cheap check that decides 13-vs-14. Take a handful of the 126, hand-write the totality law, ask whether any plausible wrong implementation traps. Until then both levers are ranked by count, which this project rejects |
+| 14 | **Write a `predicate` composer** — unblocked | **126 of the 156 non-runnable laws** on four targets are `predicate` — the largest blocked population, no new machinery. ≤+126 remains a **ceiling by template name**, but item 15 removed the wall-of-green objection: the laws are refutable for a substantial fraction, and for 35 of them the law is a regression test on a guard that has none today |
+| 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
 
 ---
 
@@ -201,6 +201,39 @@ The probe cost about twenty minutes. Recorded because the habit is worth more th
 the record now has **two** corrections stacked on one measurement: the extrapolation was first read
 against the wrong denominator, and then the corrected reading was used to rank two options by a unit
 this project explicitly rejects. Neither error was in the measuring.
+
+#### Are `predicate` laws refutable, or a wall of green? — answered (2026-08-03)
+
+**Not a wall of green.** Two independent readings of the same 126:
+
+- **Measured, all 126:** **35 (27%)** already contain an explicit totality-shaped guard — 17 count
+  bounds, 12 `isEmpty` checks, 8 optional-`first` guards, 2 index-domain aware. An author had to
+  think about emptiness or bounds in a quarter of these functions.
+- **Judged, a 20-sample** (every 6th, sorted by `file:line`, frozen before reading): roughly **half**
+  operate on domains where a plausible implementation traps — string index walking, positional
+  collection access, force-unwrapped `first`. `looksLikeMobiusNext` is the clean case: total as
+  written, and `returnType.firstIndex(of: ",")!` is an entirely natural way to write it.
+
+**The concrete framing.** For those 35, the totality law is a **regression test on a guard that has
+none**. `isOptional`'s `type.count > 1` does no classifying work — it is there so the function is
+total — and deleting it turns nothing red today.
+
+**Limits, because both numbers are soft in different directions.** 27% is a *lower-bound proxy*: a
+guard proves the author hit the issue, its absence does not prove safety, since totality is often
+implicit in the operations chosen. The ~50% is judgement over 20 functions, not a measurement.
+Neither says the law would *fail* on shipped code — it will not; refutability asks whether a **wrong**
+implementation would be caught.
+
+**A method note worth more than the result.** The first pass classified by regex — force unwraps,
+subscripts, division — and returned **1 of 20**, with that one a false positive (`/` inside a
+comment). The regex asked *"does this implementation trap?"* when refutability asks *"would a
+plausible implementation be rejected?"* Different questions; the cheap proxy answered the wrong one,
+which is the fourth instance today of measuring through a proxy that does not cover the claim.
+
+**What it settles:** the wall-of-green objection to item 14 is gone. **What it does not:** the
+precise ranking of 14 against 13 — refutability was measured for `predicate` and not for access
+widening's output, though that output's 2 runnable rows were both `idempotence`, a conjecture
+template a wrong implementation can fail by construction.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
