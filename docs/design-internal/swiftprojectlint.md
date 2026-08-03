@@ -3,13 +3,22 @@
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
 **Book home:** Appendix C, Chapter 15, and the seed hand-off in Chapters 12 and 16.
 
-> **As of 2026-08-03** · subject `SwiftProjectLint@6c88715` · observer `SwiftInferProperties@2722975`
+> **Counts re-verified 2026-08-03 (second pass)** · subject `SwiftProjectLint@06647ce` · observer
+> `SwiftInferProperties@2a123ed`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
+>
+> **What the first pass got wrong, and how it was caught.** This doc was written against
+> `6c88715` — a local checkout that turned out to be **46 commits behind its origin**. Two counts
+> were stale within hours (`RuleIdentifier` 197 → 202, the testability family 7 → 9), and
+> `make docs-drift` reported `ok` throughout, because it compared against local `HEAD` rather than
+> the project. Both the checker and these numbers are fixed; the episode is why the checker now
+> resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftProjectLint@6c88715e9db35b3fcdd51066313cd020ed20c1ca observer=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftProjectLint@06647cefea48bdd272118ce47d3b4761249fc701 observer=SwiftInferProperties@2a123ed6b73f200b28df00263cc47aa773afd1ce -->
+
 
 
 ```
@@ -122,6 +131,12 @@ attached, so a `pure-function` kind would be a lie and a new kind would be a v3 
 `Impure Call in View Body`. Warnings about things that are broken; they do not seed and are not
 collapsed from the report. `Missing Equatable` is the quiet one — a law needs `==` to state a
 conclusion, so a state type without it cannot carry one.
+
+**The family grew to 9 on 2026-08-03** (`View Hosting Before Inspection`,
+`Observable Environment View Missing Inspection Hook`). Both are about **ViewInspector** — whether a
+test can drive a SwiftUI view at all — which is testability in the harness sense rather than the
+property sense. Neither seeds, and the seeding set is unchanged at four: this family is the category
+`--categories testability` selects, not the set `PBTSeedsFormatter` reads.
 
 ---
 
@@ -283,7 +298,7 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
 ## Traps
 
 - **Rule counts disagree across three places.** README says 160, Appendix C says 189,
-  `RuleIdentifier.swift` has ~197 `case`s. **Read the enum.** (`RuleIdentifier.allCases.count` is the
+  `RuleIdentifier.swift` has **202** `case`s. **Read the enum.** (`RuleIdentifier.allCases.count` is the
   only figure anything tests against.)
 - **`PBTSeed.role`'s doc comment is stale.** It says roles are absent for *"every rule but the two
   candidate rules"* — but `ExtractablePureKernelVisitor:106` sets `role: kernel.role` too, so three
