@@ -50,6 +50,39 @@ CHECKOUTS="${CHECKOUTS:-.build/checkouts}"
 drifted=0
 unresolved=0
 checked=0
+stale_clones=0
+
+# The commit a doc's claims should be measured against: the project's tip, not this machine's.
+#
+# Prefers `origin/<default-branch>`, resolved from `origin/HEAD` where it exists and falling
+# back to the conventional names. Returns the literal `HEAD` when there is no usable remote
+# ref — a local-only or never-fetched clone — and the caller SAYS SO rather than passing the
+# weaker measurement off as the stronger one.
+project_tip() {
+    local repo="$1" ref
+    ref=$(git -C "$repo" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null)
+    if [ -n "$ref" ] && git -C "$repo" rev-parse -q --verify "$ref" >/dev/null 2>&1; then
+        printf '%s' "$ref"; return
+    fi
+    for candidate in origin/main origin/master; do
+        if git -C "$repo" rev-parse -q --verify "$candidate" >/dev/null 2>&1; then
+            printf '%s' "$candidate"; return
+        fi
+    done
+    printf 'HEAD'
+}
+
+# Refresh remote refs so `origin/<branch>` means today rather than whenever this clone last
+# fetched — otherwise the fix above just moves the staleness one level out.
+#
+# `NOFETCH=1` skips it. The session-start hook is the reason: five network round-trips before
+# a prompt appears is how a check becomes something people disable. Skipping is safe because
+# the report still names the tip it used; the cost is that a repo nobody has fetched reports
+# against whatever it last saw, which is strictly better than reporting against local HEAD.
+fetch_quietly() {
+    [ -n "${NOFETCH:-}" ] && return 0
+    git -C "$1" fetch --quiet --no-tags origin >/dev/null 2>&1 || true
+}
 
 # Where a subject repo lives. Siblings sit next to this one; third-party dependencies
 # only exist as resolved checkouts, so both roots are tried before giving up.
@@ -104,6 +137,8 @@ for doc in "$DOCS_DIR"/*.md; do
         continue
     fi
 
+    fetch_quietly "$repo"
+
     # A SHA the repo has never heard of is unresolved, NOT zero drift. Usually a shallow
     # clone or an un-fetched remote; occasionally a typo in the trailer.
     if ! git -C "$repo" cat-file -e "${sha}^{commit}" 2>/dev/null; then
@@ -121,37 +156,67 @@ for doc in "$DOCS_DIR"/*.md; do
     # doc, so the two self-subject rows would report non-zero after every commit forever —
     # permanent noise, and noise gets muted. That is the failure the exit codes are designed
     # around, so it must not be reintroduced by the counting rule.
-    behind=$(git -C "$repo" rev-list --count "${sha}..HEAD" -- Sources Package.swift 2>/dev/null || echo "?")
-    total=$(git -C "$repo" rev-list --count "${sha}..HEAD" 2>/dev/null || echo "?")
+    # **Compare against the PROJECT tip, not the local clone's HEAD.**
+    #
+    # The first version counted `<sha>..HEAD`, which measures how stale the doc is relative to
+    # *this checkout* — a different question from the one the doc raises. Measured 2026-08-03:
+    # the local SwiftProjectLint clone sat 44 commits behind its origin, so a doc written
+    # against that clone reported `unmoved` while the project it describes had moved 44 times.
+    # True of the clone, false of the project, and the tool built to catch exactly that said
+    # `ok`. Same failure as every other border claim here — verified against a local proxy for
+    # the thing actually being claimed about.
+    tip=$(project_tip "$repo")
+    tip_label=""
+    [ "$tip" = "HEAD" ] && tip_label=" (no remote — local HEAD only)"
+
+    behind=$(git -C "$repo" rev-list --count "${sha}..${tip}" -- '*Sources/*' '*Package.swift' 2>/dev/null || echo "?")
+    total=$(git -C "$repo" rev-list --count "${sha}..${tip}" 2>/dev/null || echo "?")
+    # A stale clone is its own fact, reported separately. It does not make the doc wrong — the
+    # doc is measured against the project — but it does mean anything you go and READ in that
+    # checkout to re-verify a count is itself out of date.
+    local_behind=$(git -C "$repo" rev-list --count "HEAD..${tip}" 2>/dev/null || echo 0)
+
     if [ "$behind" = "?" ] || [ "$total" = "?" ]; then
         printf '  ?  %-28s could not count commits in %s\n' "$(basename "$doc")" "$name"
         unresolved=$((unresolved + 1))
     elif [ "$behind" -eq 0 ]; then
         if [ "$total" -eq 0 ]; then
-            printf '  ok %-28s %s @ %.7s — unmoved since %s\n' \
-                "$(basename "$doc")" "$name" "$sha" "$date"
+            printf '  ok %-28s %s @ %.7s — unmoved since %s%s\n' \
+                "$(basename "$doc")" "$name" "$sha" "$date" "$tip_label"
         else
-            printf '  ok %-28s %s @ %.7s — %s commit(s) since %s, none touching source\n' \
-                "$(basename "$doc")" "$name" "$sha" "$total" "$date"
+            printf '  ok %-28s %s @ %.7s — %s commit(s) since %s, none touching source%s\n' \
+                "$(basename "$doc")" "$name" "$sha" "$total" "$date" "$tip_label"
         fi
     else
         drifted=$((drifted + 1))
-        printf '  ⚠  %-28s %s has %s source commit(s) since %.7s (doc dated %s)\n' \
-            "$(basename "$doc")" "$name" "$behind" "$sha" "$date"
-        git -C "$repo" log --oneline "${sha}..HEAD" -- Sources Package.swift \
+        printf '  ⚠  %-28s %s has %s source commit(s) since %.7s (doc dated %s)%s\n' \
+            "$(basename "$doc")" "$name" "$behind" "$sha" "$date" "$tip_label"
+        git -C "$repo" log --oneline "${sha}..${tip}" -- '*Sources/*' '*Package.swift' \
             | head -5 | sed 's/^/         /'
         [ "$behind" -gt 5 ] && printf '         … and %s more\n' "$((behind - 5))"
+    fi
+
+    if [ "$local_behind" != "0" ]; then
+        printf '     ↳ your %s checkout is %s commit(s) behind %s — re-verify by fetching, not by reading it\n' \
+            "$name" "$local_behind" "$tip"
+        stale_clones=$((stale_clones + 1))
     fi
 done
 
 printf '\n  %s\n' "$(printf '─%.0s' {1..72})"
-printf '  %s doc(s) checked · %s drifted · %s unresolved\n\n' \
-    "$checked" "$drifted" "$unresolved"
+printf '  %s doc(s) checked · %s drifted · %s unresolved · %s stale checkout(s)\n\n' \
+    "$checked" "$drifted" "$unresolved" "$stale_clones"
 
 # Restore stdout, then show the buffer only if there is something to act on. Note
 # `unresolved` counts here as loudly as `drifted`: a check that could not answer must
 # never be indistinguishable from a clean one, least of all in the mode built for callers
 # who are not watching.
+#
+# `stale_clones` deliberately does NOT break silence. Since drift is now measured against the
+# project tip, a behind-by-N checkout invalidates no claim in any doc — it only means that
+# re-verifying a count by *reading that clone* would read the wrong thing. That is advisory,
+# and a repo someone is deliberately not pulling (local work in progress, say) would otherwise
+# nag at every session until they gave up on the check.
 if [ -n "${QUIET:-}" ]; then
     exec 1>&3 3>&-
     if [ "$drifted" -gt 0 ] || [ "$unresolved" -gt 0 ]; then
