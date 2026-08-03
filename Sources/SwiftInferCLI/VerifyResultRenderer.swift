@@ -107,17 +107,19 @@ public enum VerifyResultRenderer {
     ) -> String {
         let shape = renderShape(for: context)
         let edgeTag = edgeIndexTag(edgeCaseIndex: edge.caseIndex, context: context)
-        return [
+        let heading = [
             "⚠ verify holds for finite domain; edge-case advisory: "
                 + "\(shape.subjectLine(context: context)),",
             "    default pass \(defaultTrials)/\(defaultTrials), "
-                + "edge pass failed at trial \(edge.trial) on \(edgeTag):",
-            "    input  = \(displayValue(edge.input))",
-            "    \(shape.forwardExpression(context: context)) = \(displayValue(edge.forward))",
-            "    \(shape.inverseExpression(context: context)) = \(displayValue(edge.inverse))",
-            "    expected ≈ \(shape.expectedExpression(context: context)) "
-                + "(within \(context.carrierType).isApproximatelyEqual)"
-        ].joined(separator: "\n")
+                + "edge pass failed at trial \(edge.trial) on \(edgeTag):"
+        ]
+        let values = shape.valueLines(
+            input: edge.input,
+            forward: edge.forward,
+            inverse: edge.inverse,
+            context: context
+        )
+        return (heading + values).joined(separator: "\n")
     }
 
     private static func renderDefaultFails(
@@ -127,13 +129,13 @@ public enum VerifyResultRenderer {
         let shape = renderShape(for: context)
         var lines = [
             "✗ verify fails: \(shape.subjectLine(context: context)), "
-                + "counterexample at trial \(detail.trial) (default pass):",
-            "    input  = \(displayValue(detail.input))",
-            "    \(shape.forwardExpression(context: context)) = \(displayValue(detail.forwardResult))",
-            "    \(shape.inverseExpression(context: context)) = \(displayValue(detail.inverseResult))",
-            "    expected ≈ \(shape.expectedExpression(context: context)) "
-                + "(within \(context.carrierType).isApproximatelyEqual)"
-        ]
+                + "counterexample at trial \(detail.trial) (default pass):"
+        ] + shape.valueLines(
+            input: detail.input,
+            forward: detail.forwardResult,
+            inverse: detail.inverseResult,
+            context: context
+        )
         // v1.141: when the stub shrank the failing input, surface the minimal
         // counterexample — the most actionable form for the developer.
         if let shrink = detail.shrink, shrink.steps > 0 {
@@ -169,20 +171,16 @@ public enum VerifyResultRenderer {
 
     // MARK: - Template/carrier-aware phrasing
 
-    fileprivate static func renderShape(for context: Context) -> RenderShape {
-        switch context.templateName {
-        case "idempotence": return RenderShape(kind: .idempotence)
-        case "commutativity": return RenderShape(kind: .commutativity)
-        case "associativity": return RenderShape(kind: .associativity)
-        case "idempotence-lifted": return RenderShape(kind: .idempotenceLifted)
-        case "dual-style-consistency": return RenderShape(kind: .dualStyleConsistency)
-        case "monotonicity": return RenderShape(kind: .monotonicity)
-        case "involution": return RenderShape(kind: .involution)
-
-        // round-trip and codable-round-trip share the round-trip phrasing; any
-        // other verifiable template not named above also falls here.
-        default: return RenderShape(kind: .roundTrip)
-        }
+    /// Phrasing for this verdict, or the round-trip fallback.
+    ///
+    /// The fallback is a **silent** mis-render, not a safe default: five templates resolved
+    /// through it, and a passing `predicate` run printed `round-trip contains/contains` — the
+    /// forward name twice, standing in for an inverse the law does not have. Nothing failed; the
+    /// verdict was about a different property. It stays because a render must always produce
+    /// something, and `VerifiableTemplateReachTests` is what keeps it from hiding anything:
+    /// that suite renders every verifiable template and fails on any phrased as a round trip.
+    static func renderShape(for context: Context) -> RenderShape {
+        RenderShape.byTemplateName[context.templateName] ?? .roundTrip
     }
 
     /// Edge-coverage line for `.bothPass`. FP carriers map to their curated
@@ -256,129 +254,5 @@ public enum VerifyResultRenderer {
 
     private static func trialWord(_ count: Int) -> String {
         count == 1 ? "trial" : "trials"
-    }
-}
-
-/// Per-template render-time phrasing helper. File-scoped to keep
-/// the type-hierarchy within SwiftLint's `nesting` rule.
-private struct RenderShape {
-    enum Kind {
-        case roundTrip, idempotence, commutativity, associativity
-        case idempotenceLifted, dualStyleConsistency, monotonicity
-        case involution
-    }
-
-    let kind: Kind
-
-    func subjectLine(context: VerifyResultRenderer.Context) -> String {
-        switch kind {
-        case .roundTrip:
-            return "round-trip \(context.forwardName)/\(context.inverseName) "
-                + "over \(context.carrierType)"
-
-        case .idempotence:
-            return "idempotence on \(context.forwardName) over \(context.carrierType)"
-
-        case .commutativity:
-            return "commutativity on \(context.forwardName) over \(context.carrierType)"
-
-        case .associativity:
-            return "associativity on \(context.forwardName) over \(context.carrierType)"
-
-        case .idempotenceLifted:
-            return "idempotence-lifted on \(context.forwardName) over [\(context.carrierType)]"
-
-        case .dualStyleConsistency:
-            return "dual-style-consistency on \(context.forwardName)/\(context.inverseName) "
-                + "over \(context.carrierType)"
-
-        case .monotonicity:
-            return "monotonicity on \(context.forwardName) over \(context.carrierType)"
-
-        case .involution:
-            return "involution on \(context.forwardName) over \(context.carrierType)"
-        }
-    }
-
-    /// First value line. RT/idempotence: `f(input)`; commutativity:
-    /// `f(lhs, rhs)`; associativity: `f(f(a, b), c)`;
-    /// idempotence-lifted: `f(xs)`; dual-style-consistency:
-    /// `nonMut(x)`; monotonicity: `f(a)` (where a ≤ b).
-    func forwardExpression(context: VerifyResultRenderer.Context) -> String {
-        switch kind {
-        case .roundTrip, .idempotence: return "\(context.forwardName)(input) "
-        case .commutativity: return "\(context.forwardName)(lhs, rhs) "
-
-        case .associativity:
-            return "\(context.forwardName)(\(context.forwardName)(a, b), c) "
-
-        case .idempotenceLifted:
-            return "\(context.forwardName)(xs) "
-
-        case .dualStyleConsistency:
-            return "\(context.forwardName)(x) "
-
-        case .monotonicity:
-            return "\(context.forwardName)(a) "
-
-        case .involution:
-            return "\(context.forwardName)(input) "
-        }
-    }
-
-    /// Second value line. RT: `reverse(forward(input))`; idempotence:
-    /// `f(f(input))`; commutativity: `f(rhs, lhs)`; associativity:
-    /// `f(a, f(b, c))`; idempotence-lifted: `f(f(xs))`;
-    /// dual-style-consistency: `{ var c = x; c.mut(); c }`;
-    /// monotonicity: `f(b)` (where a ≤ b).
-    func inverseExpression(context: VerifyResultRenderer.Context) -> String {
-        switch kind {
-        case .roundTrip: return "\(context.inverseName)(\(context.forwardName)(input))"
-        case .idempotence: return "\(context.forwardName)(\(context.forwardName)(input))"
-        case .commutativity: return "\(context.forwardName)(rhs, lhs)"
-
-        case .associativity:
-            return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
-
-        case .idempotenceLifted:
-            return "\(context.forwardName)(\(context.forwardName)(xs))"
-
-        case .dualStyleConsistency:
-            return "{ var copy = x; copy.\(context.inverseName)(); return copy }()"
-
-        case .monotonicity:
-            return "\(context.forwardName)(b)"
-
-        case .involution:
-            return "\(context.forwardName)(\(context.forwardName)(input))"
-        }
-    }
-
-    /// Per-template expected expression. RT: `input`; idempotence:
-    /// `f(input)`; commutativity: `f(rhs, lhs)`; associativity:
-    /// `f(a, f(b, c))`; idempotence-lifted: `f(xs)`;
-    /// dual-style-consistency: `nonMut(x)`; monotonicity:
-    /// `f(a) ≤ f(b) when a ≤ b`.
-    func expectedExpression(context: VerifyResultRenderer.Context) -> String {
-        switch kind {
-        case .roundTrip: return "input"
-        case .idempotence: return "f(input)"
-        case .commutativity: return "\(context.forwardName)(rhs, lhs)"
-
-        case .associativity:
-            return "\(context.forwardName)(a, \(context.forwardName)(b, c))"
-
-        case .idempotenceLifted:
-            return "\(context.forwardName)(xs)"
-
-        case .dualStyleConsistency:
-            return "\(context.forwardName)(x)"
-
-        case .monotonicity:
-            return "f(a) ≤ f(b) when a ≤ b"
-
-        case .involution:
-            return "input"
-        }
     }
 }

@@ -3,25 +3,33 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
-/// **Every `TemplateName.verifiable` entry must survive both dispatch gates.**
+/// **Every `TemplateName.verifiable` entry must survive every dispatch gate.**
 ///
-/// The template vocabulary is enumerated in three places, and only the first is a list:
+/// The template vocabulary is enumerated in four places, and only the first is a list:
 ///
 /// | gate | where | shape |
 /// |---|---|---|
 /// | 1. is it verifiable? | `TemplateName.verifiable` | an array |
 /// | 2. how are its calls resolved? | `resolveFunctionCalls` | a `switch` |
 /// | 3. how is its law composed? | `defaultPassSection` + `algebraicLawPass` + `totalityLawPass` | a `switch` |
+/// | 4. how is its verdict phrased? | `VerifyResultRenderer.renderShape` | a `switch` |
+///
+/// Gate 4 was added after gates 2 and 3 were already guarded, because it fails in the one way the
+/// other two cannot: **it has no error path.** Gates 2 and 3 throw `unsupportedTemplate`, so a
+/// missing case is a refusal someone eventually notices. `renderShape`'s `default:` returns a
+/// *valid* shape, so `predicate`'s first six passing runs printed
+/// `round-trip contains/contains` — the forward name twice, standing in for an inverse the law
+/// does not have — and reported success while describing a different property.
 ///
 /// `TemplateName` exists so curated subsets cannot drift apart — and gates 2 and 3 are not subsets
 /// it can see. Adding `predicate` to the array and to gate 3 shipped a composer that **verify never
 /// reached**: gate 2's `default:` threw the very `unsupportedTemplate` the composer existed to
 /// prevent. All 49 indexed `predicate` entries declined, and the 11 unit tests stayed green because
-/// they call the composer *directly*, past both gates.
+/// they call the composer *directly*, past every gate.
 ///
 /// ## Why this is behavioural rather than a contents comparison
 ///
-/// Two of the three are `switch` statements; there is no list to compare against. A guard that
+/// Three of the four are `switch` statements; there is no list to compare against. A guard that
 /// checked what it *could* reach — the array against itself — would pass green through exactly the
 /// defect that motivated it, which is the failure mode this repo has already paid for twice
 /// (`KitCoverageDriftTests` at suite granularity, `CuratedEntryRole` on the wrong join). So the
@@ -36,7 +44,7 @@ import Testing
 /// The assertion is narrower and is the whole point: **no gate may refuse a verifiable template on
 /// the grounds that it is not verifiable.** `unsupportedTemplate` from a member of
 /// `TemplateName.verifiable` is a contradiction in terms, and it is precisely what drift looks like.
-@Suite("Verifiable templates reach both dispatch gates")
+@Suite("Verifiable templates reach every dispatch gate")
 struct VerifiableTemplateReachTests {
 
     private func entry(for template: TemplateName) -> SemanticIndexEntry {
@@ -113,6 +121,38 @@ struct VerifiableTemplateReachTests {
             } catch {
                 continue
             }
+        }
+    }
+
+    /// Gate 4. Detected by what the verdict SAYS, because the fallback is silent by construction.
+    ///
+    /// A template that has fallen through `renderShape`'s `default:` is phrased as a round trip,
+    /// so its subject line names `round-trip` and prints `forwardName/inverseName`. For a
+    /// single-function law the resolver sets both names to the same call, which is why the tell
+    /// is a doubled name rather than a missing one — and why reading the output of a passing run
+    /// is the only place this defect is visible.
+    ///
+    /// `codable-round-trip` shares the round-trip phrasing deliberately and is the sole exemption.
+    @Test func everyVerifiableTemplateHasItsOwnVerdictPhrasing() {
+        let roundTripPhrasings: Set<TemplateName> = [.roundTrip, .codableRoundTrip]
+        for template in TemplateName.verifiable where !roundTripPhrasings.contains(template) {
+            let rendered = VerifyResultRenderer.render(
+                .bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0),
+                context: .init(
+                    templateName: template.rawValue,
+                    forwardName: "subject",
+                    inverseName: "subject",
+                    carrierType: "Int"
+                )
+            )
+            #expect(
+                !rendered.contains("round-trip"),
+                """
+                `\(template.rawValue)` renders as a round trip, so `renderShape` has no case for \
+                it and fell to `default:`. Nothing threw — the verdict is simply about a \
+                different law. Add the case, and a `RenderShape.Kind` if the phrasing is new.
+                """
+            )
         }
     }
 
