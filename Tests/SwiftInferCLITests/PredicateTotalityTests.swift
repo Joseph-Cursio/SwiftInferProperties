@@ -197,9 +197,25 @@ struct PredicateTotalityTests {
 
     /// The composer must actually print what the parser requires — the two halves of this mechanism
     /// live in different files and nothing else joins them.
+    ///
+    /// **Asserts the resolved NAME, not the marker prefix.** The prefix-only version of this test
+    /// passed green while the composer emitted `\(escapedCarrierMarker)` — a compose-time value
+    /// escaped as if it were a runtime one, so the generated source referenced a variable that
+    /// does not exist there and all 114 indexed entries failed to build. The marker was present in
+    /// every one of them; only its argument was wrong. A check that stops at the prefix cannot see
+    /// the half of this contract that carries the information.
     @Test func theComposerPrintsTheCarrierTheParserNeeds() {
-        #expect(composed().contains("VERIFY_TRIAL_CARRIER:"))
+        let source = composed()
+        #expect(source.contains("VERIFY_TRIAL_CARRIER: String"))
+        #expect(
+            !source.contains(escapedCarrierMarker),
+            "the carrier is known at compose time; escaping it emits a dangling reference"
+        )
     }
+
+    /// Spelled as a computed value so this file contains no literal backslash-paren that a later
+    /// reader could mistake for the bug itself.
+    private var escapedCarrierMarker: String { #"\(carrierName)"# }
 
     /// Signals arrive both raw and as `128 + n` depending on the shell in between; `trapReason`
     /// accepts either, and this branch inherits that.

@@ -143,6 +143,18 @@ extension StrategistDispatchEmitter {
     /// There is no `!=` oracle here: a predicate that *returns* has satisfied the law. The result
     /// is bound to `_` deliberately — reading it would invite a reader to think the VALUE is being
     /// checked, and it is not. What this law owes, and all it owes, is that a value came back.
+    ///
+    /// ## Two interpolation depths, and the carrier is the shallow one
+    ///
+    /// Everything in the returned literal is either resolved HERE (single escape — the carrier
+    /// name, the generator expression, the call) or computed by the STUB AT RUNTIME (double
+    /// escape — `trial`, `candidate`). The carrier belongs to the first group and first shipped
+    /// in the second, which emitted a reference to a variable the stub does not declare. Every
+    /// one of the 114 indexed entries failed to build on it.
+    ///
+    /// Both compilers said so and neither was heard: this file warned that `carrierName` was
+    /// unused, and `theComposerPrintsTheCarrierTheParserNeeds` asserted the marker PREFIX, which
+    /// was present in all 114 broken stubs. The marker was never the part that was wrong.
     static func composePredicatePass(
         inputs: Inputs,
         recipe: GeneratorRecipe
@@ -160,7 +172,7 @@ extension StrategistDispatchEmitter {
         // The carrier decides whether a trap here is a FINDING or an ARTEFACT, and only the
         // parser can make that call — so it is printed rather than assumed. See
         // `FixedWidthIntegerNames.domainCompleteScalars`.
-        print("VERIFY_TRIAL_CARRIER: \\(carrierName)")
+        print("VERIFY_TRIAL_CARRIER: \(carrierName)")
 
         let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
             \(recipe.expression)
