@@ -32,8 +32,14 @@
 # same confident zero this whole toolchain is designed against, reproduced inside the tool
 # meant to catch it. Hence the split: exit 1 is a broken check, exit 2 is opt-in strictness.
 #
-# Usage:  make docs-drift          # report
-#         STRICT=1 make docs-drift # non-zero exit when anything has drifted
+# Usage:  make docs-drift           # report
+#         STRICT=1 make docs-drift  # non-zero exit when anything has drifted
+#         QUIET=1  make docs-drift  # print NOTHING when there is nothing to say
+#
+# QUIET exists for unattended callers — a session-start hook, a pre-push check. A clean
+# report printed on every session is wallpaper, and wallpaper is how a check stops being
+# read. Silence when clean is only safe because "could not answer" is NOT clean and still
+# prints: the quiet path is skipped whenever drifted or unresolved is non-zero.
 
 set -uo pipefail
 
@@ -57,6 +63,15 @@ resolve_repo() {
     done
     return 1
 }
+
+# Buffer stdout so QUIET can decide, AFTER the counts are known, whether any of it is
+# worth showing. Redirecting the whole body beats threading a `say()` helper through a
+# dozen call sites, and leaves the reporting code identical in both modes — so the quiet
+# path cannot drift from the loud one.
+if [ -n "${QUIET:-}" ]; then
+    QUIET_BUFFER=$(mktemp)
+    exec 3>&1 1>"$QUIET_BUFFER"
+fi
 
 printf '\n  Doc drift — has each doc'"'"'s subject repo moved since it was written?\n'
 printf '  %s\n\n' "$(printf '─%.0s' {1..72})"
@@ -132,6 +147,18 @@ done
 printf '\n  %s\n' "$(printf '─%.0s' {1..72})"
 printf '  %s doc(s) checked · %s drifted · %s unresolved\n\n' \
     "$checked" "$drifted" "$unresolved"
+
+# Restore stdout, then show the buffer only if there is something to act on. Note
+# `unresolved` counts here as loudly as `drifted`: a check that could not answer must
+# never be indistinguishable from a clean one, least of all in the mode built for callers
+# who are not watching.
+if [ -n "${QUIET:-}" ]; then
+    exec 1>&3 3>&-
+    if [ "$drifted" -gt 0 ] || [ "$unresolved" -gt 0 ]; then
+        cat "$QUIET_BUFFER"
+    fi
+    rm -f "$QUIET_BUFFER"
+fi
 
 if [ "$drifted" -gt 0 ]; then
     printf '  Drift means RE-VERIFY THE COUNTS in those docs — not that the prose is wrong.\n'
