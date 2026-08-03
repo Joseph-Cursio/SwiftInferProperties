@@ -11,6 +11,12 @@ themselves sort for finding a word, not for learning the order.
 Every definition here is keyed to code. Where a term's authority is a specific type or file,
 it is named — prefer reading that over trusting this file, which is a map and not the territory.
 
+> **As of 2026-08-03** · `SwiftInferProperties@2722975`. The **definitions** here do not expire; the
+> **measurements embedded in them do** — the 738-of-1,115 score-20 figure, the 95-of-251 composer
+> share, the 156 `unsupported-template` table, the 1,657-seeds-to-21-picks ratio. Re-verify a number
+> before citing it; the vocabulary around it stands.
+
+<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 observer=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 -->
 
 
 ---
