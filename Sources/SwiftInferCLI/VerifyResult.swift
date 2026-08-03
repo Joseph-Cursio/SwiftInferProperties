@@ -200,6 +200,11 @@ public enum VerifyResultParser {
             return survived
         }
 
+        // A trap that a TOTALITY law was hunting is a refutation, not an error.
+        if let refuted = totalityRefutation(from: output, lines: lines) {
+            return refuted
+        }
+
         // A signal-terminated run gets the trap diagnosis; anything else the
         // generic parse-error detail.
         return .error(reason: trapReason(from: output) ?? parseErrorReason(from: output))
@@ -268,7 +273,7 @@ public enum VerifyResultParser {
     /// nothing in the type says eight of them must sum inside an `Int`. That is
     /// the road test's recurring finding in a third costume — a generator tuned
     /// for the *type* and mistuned for the code's *domain*.
-    private static func trapReason(from output: VerifierSubprocess.Output) -> String? {
+    static func trapReason(from output: VerifierSubprocess.Output) -> String? {
         let code = output.exitCode
         guard crashSignals.contains(code) || crashSignals.contains(code - 128) else { return nil }
         let signal = crashSignals.contains(code) ? code : code - 128
@@ -324,7 +329,7 @@ public enum VerifyResultParser {
     /// whitespace-significant counterexample (e.g. `"  -"` for an
     /// indentation function) survives faithfully into the rendered output
     /// and the emitted regression test, instead of collapsing to `"-"`.
-    private static func value(forMarker marker: String, in lines: [String]) -> String? {
+    static func value(forMarker marker: String, in lines: [String]) -> String? {
         for line in lines where line.hasPrefix(marker) {
             var value = String(line.dropFirst(marker.count))
             if value.first == " " { value.removeFirst() }

@@ -286,11 +286,17 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return composeMonotonicityPass(inputs: inputs, recipe: recipe)
 
         default:
+            // `predicate` is not an algebraic law — it is a totality check whose
+            // failure is a trap — so it routes ahead of the algebraic fallthrough
+            // rather than joining it. Kept out of the switch above for the same
+            // reason the algebraic laws are: the complexity cap.
             // involution / binary-idempotence / homomorphism dispatch in a
             // sibling helper (in +AlgebraicLaws) to keep this switch under the
-            // complexity cap.
-            if let algebraicLaw = algebraicLawPass(inputs: inputs, recipe: recipe) {
-                return algebraicLaw
+            // complexity cap. Coalesced with `??` rather than a second `if let`
+            // for the same reason — a branch here costs the whole function.
+            if let composed = totalityLawPass(inputs: inputs, recipe: recipe)
+                ?? algebraicLawPass(inputs: inputs, recipe: recipe) {
+                return composed
             }
             throw VerifyError.unsupportedTemplate(
                 template: inputs.template,

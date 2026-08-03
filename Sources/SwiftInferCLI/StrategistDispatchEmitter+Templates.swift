@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 
 // V1.47.E — per-template Pass 1 composers for the strategist-routed
 // emitter. Each composer renders the same shape its v1.46-hardcoded
@@ -111,6 +112,66 @@ extension StrategistDispatchEmitter {
     }
 
     // MARK: - Commutativity (2 values per trial; f(a, b) == f(b, a))
+
+    /// Routes the one template whose law is neither algebraic nor comparison-based.
+    ///
+    /// A sibling of `algebraicLawPass` and deliberately checked *before* it: `predicate` is in
+    /// `TemplateName.verifiable` but excluded from `strategistAlgebraicLaws`, so the algebraic
+    /// fallthrough would reject it with an `unsupportedTemplate` naming a set it was never in.
+    static func totalityLawPass(inputs: Inputs, recipe: GeneratorRecipe) -> String? {
+        guard inputs.template == TemplateName.predicate.rawValue else { return nil }
+        return composePredicatePass(inputs: inputs, recipe: recipe)
+    }
+
+    /// **Totality** — the predicate returns a value for every input its type admits.
+    ///
+    /// The only composer whose law fails by **trap** rather than by assertion, and the whole shape
+    /// follows from that. A trapping predicate kills the process: no `VERIFY_DEFAULT_RESULT` is
+    /// printed, the exit is a signal rather than 0 or 1, and `VerifyResult.parse` rule 4 would file
+    /// it under `.error` — the same bucket as a broken build. The most valuable outcome this law
+    /// can produce would read as instrument failure.
+    ///
+    /// So the input is printed **before** the call. On a trap the last marker names the
+    /// counterexample, and `parse`'s trap branch turns it into a `.defaultFails` with that input.
+    ///
+    /// This works only because `SeededStubEmitter` opens every stub with
+    /// `setvbuf(stdout, nil, _IONBF, 0)` — `print` is block-buffered into a pipe, which is exactly
+    /// how the verifier is run, so without it a trap would discard every marker printed before it.
+    /// That preamble is load-bearing for this composer specifically; the other twelve never need a
+    /// marker to survive a crash.
+    ///
+    /// There is no `!=` oracle here: a predicate that *returns* has satisfied the law. The result
+    /// is bound to `_` deliberately — reading it would invite a reader to think the VALUE is being
+    /// checked, and it is not. What this law owes, and all it owes, is that a value came back.
+    static func composePredicatePass(
+        inputs: Inputs,
+        recipe: GeneratorRecipe
+    ) -> String {
+        let functionCall = inputs.functionCalls.first ?? "(missing)"
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+        //
+        // TOTALITY. The predicate must return for every input its type admits. A violation is a
+        // TRAP, not a false comparison, so it cannot be caught here — the marker printed before
+        // each call is what survives the crash and names the input. Relies on the unbuffered
+        // stdout the stub preamble sets.
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let candidate = defaultGenerator.run(using: &rng)
+            // BEFORE the call: if the next line traps, this is the counterexample.
+            print("VERIFY_TRIAL_INDEX: \\(trial)")
+            print("VERIFY_TRIAL_INPUT: \\(candidate)")
+            // Bound to `_` on purpose: totality is satisfied by RETURNING. The value is not the law.
+            _ = \(functionCall)(candidate)
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
 
     static func composeCommutativityPass(
         inputs: Inputs,
