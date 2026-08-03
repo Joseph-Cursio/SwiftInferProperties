@@ -28,8 +28,9 @@ conversation's residue does not evaporate.
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
-| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt, sequenced after 14**. A 20-function probe measured the funnel at 20 → 8 proposed → 2 runnable, i.e. **+60 runnable repo-wide against a base of 100 — a 60% gain**, but item 14 is twice that for less work and widens this one's funnel. See *Decisions* |
-| 14 | **Write a `predicate` composer** — do this first | **126 of the 156 non-runnable laws** on four targets are `predicate`. One composer takes runnable 100 → 226, needs no new machinery, and is the template a *totality* law uses — the one `3e38e34` says the code OWES |
+| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. A 20-function probe measured 20 → 8 proposed → 2 composer-supported, i.e. **≤+60 against a base of 100 — a 60% gain at the ceiling**. Ordering against 14 is **not settled**; see *Decisions* |
+| 14 | **Write a `predicate` composer** | **126 of the 156 non-runnable laws** on four targets are `predicate` — the largest blocked population, no new machinery needed. But the ≤+126 is a **ceiling by template name**, and whether a totality law over these is *refutable* or a wall of green is unmeasured. **Settle that first** (item 15) |
+| 15 | **Are `predicate`/totality laws refutable here, or a wall of green?** | the cheap check that decides 13-vs-14. Take a handful of the 126, hand-write the totality law, ask whether any plausible wrong implementation traps. Until then both levers are ranked by count, which this project rejects |
 
 ---
 
@@ -163,22 +164,43 @@ four targets:
 So +60 is a **60% increase in the executable population**, not a rounding error. Anchoring on the
 seed count made a substantial gain read as a small one.
 
-**What each lever is worth**, same corpus, same binary — 156 laws are non-runnable today and
-**126 of them are `predicate`**:
+**What each lever might be worth — CEILINGS, not predictions.** Same corpus, same binary. 156 laws
+are non-runnable today and **126 of them are `predicate`**:
 
-| lever | runnable after | change | needs |
+| lever | attemptable after | change | needs |
 |---|---:|---|---|
 | today | 100 | — | — |
-| `predicate` composer (item 14) | 226 | **+126** | no new machinery |
-| access widening (item 13) | ~160 | **+60** | copy-mutate-verify |
+| `predicate` composer (item 14) | ≤226 | **≤+126** | no new machinery |
+| access widening (item 13) | ≤160 | **≤+60** | copy-mutate-verify |
 
-**They compose, which is the ordering argument.** After a `predicate` composer the probe's own 8
-proposals go from 2 runnable to 5, so item 14 makes item 13 *better* rather than redundant. Do 14
-first because it is twice the gain for less work — not because 13 is not worth doing.
+Both are **composer-supported counts**, obtained by grouping declines by template name. That makes
+them comparable *to each other* and to nothing else. Composer support is **necessary, not
+sufficient** — the glossary says so — so every row still has to resolve a generator for its carrier,
+compile, and not trap. That attrition is unmeasured. Neither number is a count of laws that would
+run, still less of laws that would *hold*.
 
-The probe cost about twenty minutes. Recorded because the habit is worth more than the result: the
-tier looked obviously worth building until it was measured, and then the measurement itself was
-misread until it was given a denominator.
+**The ordering claim is NOT established, and the reason is worth more than the claim.** These levers
+were ranked by **count**, in a repo whose standing rule is *score refutability, not suggestion
+count*. A totality law over a function that never traps passes every time, and 126 new green results
+that cannot fail is the [Daikon trap](glossary.md#daikon-trap) wearing a composer — *"a wall of
+green unrefutable passes is the Daikon trap in a new costume."*
+
+The counter-argument is real and also unmeasured: `predicate`/totality is **role-entailed**, a law a
+*correct* implementation cannot fail, which is the combination a law wants. A green pass there is a
+guard against future change rather than noise. Both readings are available and nothing here decides
+between them.
+
+**What is actually known:** `predicate` is the largest blocked population, and `predicate` +
+access widening compose — after a composer the probe's own 8 proposals go from 2 attemptable to 5,
+so item 14 makes item 13 better rather than redundant. **What is not known:** whether unblocking
+`predicate` yields refutable laws or a wall of green. That is cheap to settle — take a handful of
+the 126, hand-write the totality law, and ask whether any plausible wrong implementation traps.
+Do that before committing to the order.
+
+The probe cost about twenty minutes. Recorded because the habit is worth more than the result, and
+the record now has **two** corrections stacked on one measurement: the extrapolation was first read
+against the wrong denominator, and then the corrected reading was used to rank two options by a unit
+this project explicitly rejects. Neither error was in the measuring.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
