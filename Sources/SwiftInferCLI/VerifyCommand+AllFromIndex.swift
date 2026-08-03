@@ -180,17 +180,17 @@ extension SwiftInferCommand.Verify {
     ) -> SurveyRecord {
         let context = recordContext(for: entry)
         do {
-            // For a curated corpus, the verifier path-depends on the corpus
-            // package + `import`s it (cycle27-surface library carriers pass nil).
-            // Three distinct names, one per axis: `import` = module,
-            // `.product(name:)` = resolved product, `.package` = path basename.
-            let extraImports = config.corpusModuleName.map { [$0] } ?? []
-            let userPackage = config.corpusProductName.map {
-                VerifierWorkdir.UserPackageReference(
-                    packagePath: packageRoot,
-                    productNames: [$0]
-                )
-            }
+            // Wiring is one decision with three outcomes — curated corpus, derived from the
+            // entry, or none — and it lives in `VerifyCommand+Wiring` beside the single-verify
+            // policy it differs from.
+            let wiring = Self.surveyWiring(
+                for: entry,
+                corpusModuleName: config.corpusModuleName,
+                corpusProductName: config.corpusProductName,
+                packageRoot: packageRoot
+            )
+            let extraImports = wiring.extraImports
+            let userPackage = wiring.userPackage
             let stubBundle = try Self.buildStubBundle(
                 entry: entry,
                 budget: config.budget,

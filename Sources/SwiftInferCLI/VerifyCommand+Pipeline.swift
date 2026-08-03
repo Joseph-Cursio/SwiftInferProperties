@@ -29,11 +29,12 @@ extension SwiftInferCommand.Verify {
             packageRoot: packageRoot
         )
         let entry = resolved.entry
-        // V1.149 — when `--target` names the user module, path-depend on the
-        // user package and `@testable`-import it so the stub can call functions
-        // defined there (incl. `internal`). Absent `--target`, behave exactly
-        // as v1.42 (no user package — only stdlib/library-dep carriers verify).
-        let wiring = userPackageWiring(target: target, packageRoot: packageRoot)
+        // V1.149 — path-depend on the user package and `@testable`-import the module, so the
+        // stub can call functions defined there (incl. `internal`). Absent `--target`, the module
+        // is DERIVED from the entry's own source path: the flag was optional and its absence
+        // silent, so the common gesture — `verify --suggestion <hash>` — reached none of the
+        // user's own code and failed to build. See `VerifyCommand+Wiring`.
+        let wiring = Self.wiring(for: entry, explicitTarget: target, packageRoot: packageRoot)
         let stubBundle = try Self.buildStubBundle(
             entry: entry,
             budget: parseBudget(budgetString),
@@ -73,32 +74,6 @@ extension SwiftInferCommand.Verify {
             packageRoot: packageRoot,
             regressionPath: regressionPath
         )
-    }
-
-    /// V1.149 — resolve the optional user-package wiring for the single-verify
-    /// path. When `target` names a non-empty module, returns a path-dependency
-    /// on `packageRoot` plus a `@testable` import of that module; otherwise
-    /// `(nil, [])` so the v1.42 stdlib-carrier behavior is unchanged. The three
-    /// distinct names are each resolved on their own axis: the `.package(path:)`
-    /// identity from `packageRoot`'s basename (inside `UserPackageReference`),
-    /// the `.product(name:)` from `PackageProductResolver` (tier 2 — may differ
-    /// from the module), and the `@testable import` from the module name. Any
-    /// of the three differing from the others now resolves correctly; the
-    /// product resolution falls back to the module name when unresolvable.
-    static func userPackageWiring(
-        target: String?,
-        packageRoot: URL
-    ) -> (userPackage: VerifierWorkdir.UserPackageReference?, extraImports: [String]) {
-        guard let module = target, !module.isEmpty else { return (nil, []) }
-        let product = PackageProductResolver.libraryProduct(
-            exposingModule: module,
-            packageRoot: packageRoot
-        ) ?? module
-        let reference = VerifierWorkdir.UserPackageReference(
-            packagePath: packageRoot,
-            productNames: [product]
-        )
-        return (reference, ["@testable \(module)"])
     }
 
     /// V1.142 — the verify stub's replayable seed (deterministic Xoshiro state
