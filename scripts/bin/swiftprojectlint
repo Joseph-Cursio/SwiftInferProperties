@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# Typeable entry point for SwiftProjectLint — always current, never installed.
+#
+# The loop's entry point could not be invoked: the package ships no installed binary and is
+# not on PATH, so "run the linter" meant knowing to type `swift run CLI` from the right
+# directory. That is the first thing standing between a reader and the toolchain.
+#
+# ## Why a wrapper rather than an installed binary
+#
+# An installed binary is a REMEMBERED BUILD — it asserts "I am the tool at revision X" and
+# nothing checks it, which is the same hazard the A/B rule exists to prevent (a remembered
+# count carries no record of what produced it). Neither tool can state its own build identity
+# today: `--version` reports a semver that reads identically whether built this morning or
+# months ago from another commit.
+#
+# Building through SwiftPM keeps the binary honest by construction — it is always the working
+# tree — and costs seconds once warm, because the build is incremental. Only the first build
+# after a change is slow. Install release binaries later, for measurement, once they can state
+# their own build SHA; see docs/design-internal/open-threads.md.
+#
+# ## Build to stderr, exec for stdout
+#
+# `swift run` interleaves build progress with the program's own output, which corrupts
+# `swiftprojectlint . --format pbt-seeds > seeds.json` — the one invocation the whole
+# lint→infer hop depends on. So: build first with progress on stderr, then exec the binary,
+# leaving stdout to the program alone.
+#
+# Usage:  swiftprojectlint <project-path> [--format pbt-seeds] [...]
+#         SWIFTPROJECTLINT_REPO=/path/to/repo swiftprojectlint ...
+
+set -uo pipefail
+
+REPO="${SWIFTPROJECTLINT_REPO:-$HOME/xcode_projects/SwiftProjectLint}"
+
+if [ ! -d "$REPO" ]; then
+    printf 'swiftprojectlint: no repository at %s\n' "$REPO" >&2
+    printf '  set SWIFTPROJECTLINT_REPO to point at your checkout.\n' >&2
+    exit 1
+fi
+
+if ! swift build --package-path "$REPO" --product CLI >&2; then
+    printf 'swiftprojectlint: build failed in %s\n' "$REPO" >&2
+    exit 1
+fi
+
+BIN="$REPO/.build/debug/CLI"
+if [ ! -x "$BIN" ]; then
+    printf 'swiftprojectlint: build reported success but %s is missing\n' "$BIN" >&2
+    exit 1
+fi
+
+exec "$BIN" "$@"

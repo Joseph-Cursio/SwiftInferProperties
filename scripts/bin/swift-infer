@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# Typeable entry point for swift-infer — always current, never installed.
+#
+# Companion to `swiftprojectlint` in this directory; the rationale lives there in full. In
+# short: an installed binary is a remembered build, neither tool can state its own build
+# identity, and SwiftPM's incremental build costs seconds once warm — so building through it
+# keeps the binary honest by construction.
+#
+# Less urgent than the linter's wrapper, since `.build/debug/swift-infer` at least exists after
+# any `swift build` here. It is provided anyway so the two halves of the lint→infer hop are
+# invoked the same way. A loop whose two commands are typed differently is a loop nobody runs
+# from memory.
+#
+# Usage:  swift-infer <subcommand> [...]
+#         SWIFTINFER_REPO=/path/to/repo swift-infer discover --target Foo
+
+set -uo pipefail
+
+# Default to the repository this script is checked into, not a hardcoded path — the wrapper
+# ships alongside the package it runs, so a clone anywhere works without configuration.
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="${SWIFTINFER_REPO:-$(cd "$SELF_DIR/../.." && pwd)}"
+
+if [ ! -f "$REPO/Package.swift" ]; then
+    printf 'swift-infer: no Swift package at %s\n' "$REPO" >&2
+    printf '  set SWIFTINFER_REPO to point at your checkout.\n' >&2
+    exit 1
+fi
+
+if ! swift build --package-path "$REPO" --product swift-infer >&2; then
+    printf 'swift-infer: build failed in %s\n' "$REPO" >&2
+    exit 1
+fi
+
+BIN="$REPO/.build/debug/swift-infer"
+if [ ! -x "$BIN" ]; then
+    printf 'swift-infer: build reported success but %s is missing\n' "$BIN" >&2
+    exit 1
+fi
+
+exec "$BIN" "$@"
