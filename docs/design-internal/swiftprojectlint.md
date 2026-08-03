@@ -3,8 +3,8 @@
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
 **Book home:** Appendix C, Chapter 15, and the seed hand-off in Chapters 12 and 16.
 
-> **Counts re-verified 2026-08-03 (second pass)** · subject `SwiftProjectLint@06647ce` · observer
-> `SwiftInferProperties@2a123ed`
+> **Counts re-verified 2026-08-03 (second pass)** · subject `SwiftProjectLint@9c5b305` · observer
+> `SwiftInferProperties@201e3ea`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
@@ -17,9 +17,9 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftProjectLint@06647cefea48bdd272118ce47d3b4761249fc701 observer=SwiftInferProperties@2a123ed6b73f200b28df00263cc47aa773afd1ce -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftProjectLint@9c5b305cdacd11f268f005beb5051df192cf7b7e observer=SwiftInferProperties@201e3eaa2b2ea0dfbed030a2fa1444453ee7e029 -->
 
-
+---
 
 ```
 SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ──▶ SwiftIdempotency
@@ -151,13 +151,28 @@ property sense. Neither seeds, and the seeding set is unchanged at four: this fa
 { "version": 2,
   "seeds": [ { "file": "Sync.swift", "line": 41, "symbol": "chunkCount",
                "rule": "Pure Function Property-Test Candidate",
-               "kind": "pure-function", "role": "partition" } ] }
+               "kind": "pure-function", "role": "partition" },
+             { "file": "Sync.swift", "line": 88, "symbol": "offset",
+               "rule": "Pure Function Property-Test Candidate",
+               "kind": "restricted-function", "restriction": "enclosing-type" } ] }
 ```
 
 Both sides pin **2** (`PBTSeedManifest.currentVersion`, `SeedManifest.supportedVersion`). Producer
 and consumer each declare `file`/`line`/`symbol`/`kind` required and `role` optional, for the same
 stated reason: an absent role is honestly unknown and nothing acts on it, whereas an absent `kind`
 would have to be *guessed*, and the guess decides whether a consumer narrows discovery onto the seed.
+
+**`restriction` (added 2026-08-03, optional, `restricted-function` only)** — `declaration` or
+`enclosing-type`, from `TestRestriction`. `kind` says a test cannot reach the symbol; this says what
+would have to move, and **the two remedies are not interchangeable**: widening a member nested
+inside a `private` type compiles and changes nothing, so a consumer acting on `kind` alone can emit
+a patch that unblocks nothing and then read the resulting verification failure as evidence against
+the *law*. `enclosing-type` wins when both apply, because it names the binding constraint.
+
+Measured when it shipped: **27 of 338** restricted seeds on SwiftProjectLint (8%) and **18 of 659**
+on SwiftInferProperties (2.7%) are `enclosing-type` — small, non-zero, and silent in exactly the
+direction that would have been misread. No version bump: absent means "producer does not classify",
+and a seed without it is byte-identical to one written before.
 
 ### The four seeding rules
 

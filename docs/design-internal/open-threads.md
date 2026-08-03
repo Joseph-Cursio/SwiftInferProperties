@@ -4,11 +4,11 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-03** · `SwiftInferProperties@db72ba3`. Entries here are *not* dated claims
+> **As of 2026-08-03** · `SwiftInferProperties@201e3ea`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@db72ba30e2c7240fc9ab6a4dff6f2ea5e1477bd2 observer=SwiftInferProperties@db72ba30e2c7240fc9ab6a4dff6f2ea5e1477bd2 -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@201e3eaa2b2ea0dfbed030a2fa1444453ee7e029 observer=SwiftInferProperties@201e3eaa2b2ea0dfbed030a2fa1444453ee7e029 -->
 
 ---
 
@@ -27,8 +27,9 @@ conversation's residue does not evaporate.
 | 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
-| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. Shape, tiering and build order in *Decisions* below. Start at access widening |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
+| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt, sequenced after 14**. A 20-function probe measured the funnel at 20 → 8 proposed → 2 runnable, i.e. **+60 runnable repo-wide against a base of 100 — a 60% gain**, but item 14 is twice that for less work and widens this one's funnel. See *Decisions* |
+| 14 | **Write a `predicate` composer** — do this first | **126 of the 156 non-runnable laws** on four targets are `predicate`. One composer takes runnable 100 → 226, needs no new machinery, and is the template a *totality* law uses — the one `3e38e34` says the code OWES |
 
 ---
 
@@ -123,6 +124,61 @@ verdict — record the source hash the way `run.json` records tool SHAs.
 
 **The safety line survives, and reads better.** `swift-infer` still never modifies your tree; it
 mutates a copy and proposes a patch, which is what every refactoring tool does.
+
+#### Measured before building — and it changed the plan (2026-08-03)
+
+The prerequisite shipped first (SwiftProjectLint#64: `TestRestriction`, so a patch generator can
+tell "widen this declaration" from "widening it is a no-op"). Then a probe, because the population
+figure answers the wrong question.
+
+**Sampling.** 20 of the 641 `declaration`-restricted seeds on this repo — every 32nd, sorted by
+`file:line`, **frozen before any was read**. Widened by line number in a throwaway worktree, then
+the same `swift-infer` binary run over four targets, before and after.
+
+| stage | count |
+|---|---:|
+| widened | **20** |
+| gained a proposed law | **8** (256 → 264 suggestions) |
+| law is **composer-supported**, i.e. `verify` can attempt it | **2** |
+
+The two runnable are both `idempotence`. The other six are `predicate` ×3, `filter-subset`,
+`comparator` — none of which has a composer, so they would be proposed, scored, rendered, and then
+decline `unsupported-template`. Six of the seven distinct laws are `Possible`, hidden by default.
+
+**Access is not the binding constraint.** Widening it moves a function from *invisible* to
+*proposed-but-unrunnable*; the binding constraint is the composer set. The probe's contribution is
+showing the access population lands in **the same bucket** the decline census already described.
+
+**The first reading of this was wrong, and the error is the instructive part.** Extrapolating 10%
+over 641 seeds gives ~60 runnable laws, which was written up as a disappointment — by comparing 60
+against **641 seeds**, the denominator this repo explicitly warns against (*"a seed is not a
+suggestion"*, glossary). Nobody had measured what 60 would be added *to*. Measured, over the same
+four targets:
+
+| | suggestions | **runnable** |
+|---|---:|---:|
+| default tier | 180 | 28 |
+| with `--include-possible` | 256 | **100** |
+
+So +60 is a **60% increase in the executable population**, not a rounding error. Anchoring on the
+seed count made a substantial gain read as a small one.
+
+**What each lever is worth**, same corpus, same binary — 156 laws are non-runnable today and
+**126 of them are `predicate`**:
+
+| lever | runnable after | change | needs |
+|---|---:|---|---|
+| today | 100 | — | — |
+| `predicate` composer (item 14) | 226 | **+126** | no new machinery |
+| access widening (item 13) | ~160 | **+60** | copy-mutate-verify |
+
+**They compose, which is the ordering argument.** After a `predicate` composer the probe's own 8
+proposals go from 2 runnable to 5, so item 14 makes item 13 *better* rather than redundant. Do 14
+first because it is twice the gain for less work — not because 13 is not worth doing.
+
+The probe cost about twenty minutes. Recorded because the habit is worth more than the result: the
+tier looked obviously worth building until it was measured, and then the measurement itself was
+misread until it was given a denominator.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
