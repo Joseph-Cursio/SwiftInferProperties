@@ -29,8 +29,9 @@ conversation's residue does not evaporate.
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
 | 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. A 20-function probe measured 20 → 8 proposed → 2 composer-supported, i.e. **≤+60 against a base of 100 — a 60% gain at the ceiling**. Ordering against 14 is **not settled**; see *Decisions* |
-| 14 | **Write a `predicate` composer** — unblocked | **126 of the 156 non-runnable laws** on four targets are `predicate` — the largest blocked population, no new machinery. ≤+126 remains a **ceiling by template name**, but item 15 removed the wall-of-green objection: the laws are refutable for a substantial fraction, and for 35 of them the law is a regression test on a guard that has none today |
+| 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. Zero refutations — these are regression guards on correct code, not bugs found |
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
+| 16 | **The index records a CARRIER; a law needs a SIGNATURE** | scoped 2026-08-03, **unbuilt**. The single largest blocker to running laws, **measured**: 56 of the 72 non-running `predicate` entries (78%). See *Decisions* → *Signature, not carrier* |
 
 ---
 
@@ -234,6 +235,72 @@ which is the fourth instance today of measuring through a proxy that does not co
 precise ranking of 14 against 13 — refutability was measured for `predicate` and not for access
 widening's output, though that output's 2 runnable rows were both `idempotence`, a conjecture
 template a wrong implementation can fail by construction.
+
+### Signature, not carrier — the largest measured blocker to running laws (2026-08-03, scoped not built)
+
+**The finding.** `verify --all-from-index --template predicate` over this repo, after the
+`--target` derivation fix, resolves 126 entries into:
+
+| outcome | count |
+|---|---:|
+| ran and held | **54** |
+| compile: type not in scope (cross-module) | 37 |
+| compile: n-ary predicate | 19 |
+| no generator for carrier (SwiftSyntax nodes) | 11 |
+| trapped — declined as domain evidence, correctly | 4 |
+| other | 1 |
+
+Two error buckets dominate, and they are **not two defects**. `SemanticIndexEntry` records
+`carrierTypeName` — **singular** — and `primaryFunctionName` carries argument *labels* only
+(`matches(typeName:inheritedTypeNames:)`). So:
+
+- a predicate taking `(A, B)` cannot be composed, because nothing says what `B` is — **19 rows**;
+- a predicate over a type declared in another module cannot be imported, because nothing records
+  which module any type lives in — **37 rows**, of which **31 are `FunctionSummary` alone**.
+
+One missing fact, two symptoms, **56 of the 72 non-running rows (78%)**.
+
+**The data already exists and is dropped.** `FunctionSummary.parameters[].typeText` carries every
+parameter type at scan time, and `FunctionSummary.location.file` carries the file;
+`TypeShapeBuilder` reads `decl.location.file` too. Neither survives projection into the index.
+
+**Where it must NOT go.** `Discover.PipelineResult.typeShapesByName` is
+`[String: PropertyLawCore.TypeShape]` — the **kit's** type, owned by SwiftPropertyLaws. Putting a
+module or source path on it is a cross-repo change plus a pin bump, for a fact the kit has no use
+for. The established alternative is a **sidecar map keyed by type name**, and this would be the
+third: `inheritedTypesByName` exists because the shape merges same-file extensions only, and
+`genericParametersByName` exists because — in its own words — *"`TypeShape` does not carry them …
+which is why `scaffold-kit-suites` wrote `Deque.self`"*. Same shape of gap, same remedy.
+
+**The change, in five pieces.**
+
+| # | what | where |
+|---|---|---|
+| 1 | `sourceFileByTypeName: [String: String]` | `Discover.PipelineResult` — third sidecar map, no kit change |
+| 2 | `parameterTypeNames: [String]?` on the entry | `SemanticIndexEntry` + the projection; straight pass-through from the summary |
+| 3 | persist the sidecar beside `typeShapes` | `IndexStore` / `IndexCommand` |
+| 4 | import set = union of modules over every type the recipe touches | the stub emitter, via **`VerifyTargetInference.module(forLocation:)` — already shipped**, so no new concept |
+| 5 | draw one value per parameter, not one per law | `composePredicatePass` |
+
+**Rollout is graceful and needs no schema bump.** `SemanticIndexEntry` has a hand-written
+`init(from decoder:)` using `decodeIfPresent`, so an added optional decodes as `nil` from an
+existing index and verify falls back to today's behaviour. `reindexIfNeeded` then repopulates it on
+the next stale read, which shipping the code itself triggers.
+
+**≤+56 is a CEILING, not a prediction** — the same discipline items 13/14 are held to. Composer
+support is necessary, not sufficient: an n-ary predicate still needs a resolvable generator for
+*each* parameter carrier, and the 11 SwiftSyntax declines are evidence that some will land exactly
+there. The honest claim is *up to* 110 of 126 (87%), with the attrition inside that unmeasured.
+
+**Two known limitations, stated rather than discovered later.** The sidecar is keyed by **bare type
+name**, so two modules declaring the same type name collide — an existing limitation of
+`typeShapesByName` that this inherits rather than introduces. And a stub importing N modules builds
+more than one importing one; this survey already costs ~35 min and ~72 GB for 126 entries.
+
+**How to measure it.** Re-run the identical command — `verify --all-from-index --template predicate
+--max-parallel 4` — per §10.3: two binaries, same day, same corpus, never against a remembered
+count. **The run above IS the before-binary measurement**, taken 2026-08-03 at `1d39745` plus the
+`--target` derivation. Do not substitute a recollection of it.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 

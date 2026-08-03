@@ -101,12 +101,13 @@ extension SwiftInferCommand {
         @Option(
             name: .long,
             help: """
-            SwiftPM target containing the suggestion's source. When \
-            omitted, swift-infer walks up from the working directory to \
-            find Package.swift and resolves the target from the \
-            SemanticIndex entry. Override is useful for multi-target \
-            packages where the same hash prefix could live in multiple \
-            targets (rare).
+            SwiftPM target containing the suggestion's source. The \
+            verifier path-depends on that package and @testable-imports \
+            the module, which is what lets a law reach carriers and \
+            functions you defined. When omitted, it is derived from the \
+            entry's own source path (Sources/<target>/…). Pass it \
+            explicitly for a layout that derivation declines — a module \
+            inside a nested package, or sources outside Sources/.
             """
         )
         public var target: String?
