@@ -39,7 +39,14 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 
 # Claude Code local state
-.claude/
+# `.claude/*` rather than `.claude/` so a single file can be un-ignored below — git will
+# not resurrect a path inside an excluded DIRECTORY, so the trailing-slash form makes the
+# negation on the next line silently do nothing.
+.claude/*
+# The one exception: project-scoped hooks belong to the repo, not the machine. Everything
+# else in here (settings.local.json's permission allowlist, scheduled_tasks.lock) is
+# session or machine state and stays ignored.
+!.claude/settings.json
 
 # V1.50.A — cycle27-surface fixture's SwiftPM-resolved checkouts
 fixtures/cycle27-surface/.build/
