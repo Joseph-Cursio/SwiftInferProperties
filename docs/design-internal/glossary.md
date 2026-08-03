@@ -11,6 +11,8 @@ themselves sort for finding a word, not for learning the order.
 Every definition here is keyed to code. Where a term's authority is a specific type or file,
 it is named — prefer reading that over trusting this file, which is a map and not the territory.
 
+
+
 ---
 
 ## The pipeline, in one pass
@@ -28,7 +30,7 @@ A function's trip: the linter **seeds** it → `discover` matches a **template**
 resolves a **carrier**, derives a **generator recipe**, composes a **stub**, and runs two
 **passes** → the **outcome** may **promote** the tier to `verified`.
 
-### The 24 `swift-infer` modes, by stage
+### The 25 `swift-infer` modes, by stage
 
 Abstracts are the shipped `--help` text, condensed. `discover` is the default subcommand.
 Everything touching interaction invariants is the v2.0 reducer/MVVM surface and is listed
@@ -81,6 +83,7 @@ separately because it runs on a different carrier population.
 | `docc` | Generate DocC docs for **verified** properties only. Inferred-but-unverified properties are never documented. |
 | `suggest-refactors` | Carrier-aware refactor suggestions from the index. Read-only; never modifies source. |
 | `scaffold` | Emit best-effort `gen()` stubs with `<#...#>` placeholders for types that cannot be fully auto-derived. |
+| `scaffold-kit-suites` | Emit the PropertyLawKit conformance-law tests your types already owe. Half the carriers emit **commented out** — `DerivationStrategist` reaches 180 of 351 — because a live emission that cannot compile is worse than a disclosed gap. |
 | `convert-counterexample` | Turn a property-test counterexample into a focused regression test. |
 
 **Three things the table does not say, and they matter.** Only `discover` accepts
