@@ -185,6 +185,9 @@ public enum TypeShapeBuilder {
         // The enclosing scope of this type's own members is the type itself, so
         // `Kind` written inside `IndexedTypeShape` resolves to
         // `IndexedTypeShape.Kind` if such a nested type was scanned.
+        let unconditionalExtensionInits = group
+            .filter { $0.kind == .extension && !$0.isConditionalExtension }
+            .flatMap(\.initializers)
         let resolve = { (spelling: String) in
             Self.resolvedSpelling(spelling, enclosing: name, universe: universe)
         }
@@ -197,10 +200,35 @@ public enum TypeShapeBuilder {
                 StoredMember(name: $0.name, typeName: resolve($0.typeName))
             },
             hasUserInit: primary.hasUserInit,
-            initializers: primary.initializers.map { signature in
+            // **Initializers merge from UNCONDITIONAL extensions, any file.** Only the
+            // primary body counted until 2026-08-02, and swift-collections declares nearly
+            // every initializer in an extension — `Deque`'s sequence constructor lives in
+            // `Deque+Collection.swift` under `extension Deque: RangeReplaceableCollection`.
+            // The result was that no public collection type could derive a generator, for a
+            // reason that looked like "no suitable initializer" and was really "we did not
+            // look".
+            //
+            // Same rationale as `hasUserGen` above, which already merges across all files:
+            // this asks whether a callable initializer EXISTS, and an extension in any file
+            // of the module provides one. Conformances stay same-file-scoped because they
+            // can be conditional — and so can initializers, which is why
+            // `isConditionalExtension` records are excluded. swift-collections has 267
+            // conditional extensions; an initializer from one may not apply to the
+            // instantiation the emitter chose, and calling it would not compile.
+            initializers: (primary.initializers + unconditionalExtensionInits).map { signature in
                 InitializerSignature(
                     parameters: signature.parameters.map {
-                        InitializerParameter(label: $0.label, typeName: resolve($0.typeName))
+                        // Substituted HERE rather than at scan time: an extension record has
+                        // no generic parameter clause of its own, so `Deque+Collection.swift`
+                        // records `[Element]` with nothing to resolve it against. The primary
+                        // declaration's generics are only in hand at merge.
+                        InitializerParameter(
+                            label: $0.label,
+                            typeName: resolve(MemberBlockInspector.substitutingCarrierGenerics(
+                                $0.typeName,
+                                carrierGenericParameters: primary.genericParameters.map(\.name)
+                            ))
+                        )
                     },
                     isFailable: signature.isFailable,
                     isThrowing: signature.isThrowing
