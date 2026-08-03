@@ -98,18 +98,33 @@ for doc in "$DOCS_DIR"/*.md; do
         continue
     fi
 
-    behind=$(git -C "$repo" rev-list --count "${sha}..HEAD" 2>/dev/null || echo "?")
-    if [ "$behind" = "?" ]; then
+    # Count only commits that touched what the docs make claims ABOUT — source and the
+    # manifest. Every countable claim in these docs (file counts, law-suite counts, arity
+    # ceilings, pins) is read off those paths; none is read off a doc or a README.
+    #
+    # Without this the check is self-defeating. The commit that ADDS a doc drifts that same
+    # doc, so the two self-subject rows would report non-zero after every commit forever —
+    # permanent noise, and noise gets muted. That is the failure the exit codes are designed
+    # around, so it must not be reintroduced by the counting rule.
+    behind=$(git -C "$repo" rev-list --count "${sha}..HEAD" -- Sources Package.swift 2>/dev/null || echo "?")
+    total=$(git -C "$repo" rev-list --count "${sha}..HEAD" 2>/dev/null || echo "?")
+    if [ "$behind" = "?" ] || [ "$total" = "?" ]; then
         printf '  ?  %-28s could not count commits in %s\n' "$(basename "$doc")" "$name"
         unresolved=$((unresolved + 1))
     elif [ "$behind" -eq 0 ]; then
-        printf '  ok %-28s %s @ %.7s — unmoved since %s\n' \
-            "$(basename "$doc")" "$name" "$sha" "$date"
+        if [ "$total" -eq 0 ]; then
+            printf '  ok %-28s %s @ %.7s — unmoved since %s\n' \
+                "$(basename "$doc")" "$name" "$sha" "$date"
+        else
+            printf '  ok %-28s %s @ %.7s — %s commit(s) since %s, none touching source\n' \
+                "$(basename "$doc")" "$name" "$sha" "$total" "$date"
+        fi
     else
         drifted=$((drifted + 1))
-        printf '  ⚠  %-28s %s is %s commit(s) ahead of %.7s (doc dated %s)\n' \
+        printf '  ⚠  %-28s %s has %s source commit(s) since %.7s (doc dated %s)\n' \
             "$(basename "$doc")" "$name" "$behind" "$sha" "$date"
-        git -C "$repo" log --oneline "${sha}..HEAD" | head -5 | sed 's/^/         /'
+        git -C "$repo" log --oneline "${sha}..HEAD" -- Sources Package.swift \
+            | head -5 | sed 's/^/         /'
         [ "$behind" -gt 5 ] && printf '         … and %s more\n' "$((behind - 5))"
     fi
 done
