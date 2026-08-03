@@ -79,3 +79,9 @@ __pycache__/
 # `swift-infer index --target VerifyRefutability`, and the measured RESULTS are recorded in
 # `predictions.json` alongside the frozen predictions — which is the file that matters.
 fixtures/verify-refutability/.swiftinfer/
+
+# Toolchain driver artifacts (`scripts/toolchain.sh`). Written into whatever target the
+# driver is pointed at, which includes this repo's own fixtures. `run.json` is the useful
+# one — it makes two runs comparable — but it records a moment, not a decision, so it is
+# regenerated rather than tracked.
+**/.toolchain-run/
