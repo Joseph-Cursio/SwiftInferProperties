@@ -83,7 +83,7 @@ public enum KitSuiteEmitter {
             guard !suites.isEmpty else { continue }
             switch classify(
                 finding: finding, shape: shape, suites: suites, resolve: resolve,
-                genericParameters: genericParametersByName[finding.typeName] ?? []
+                genericParametersByName: genericParametersByName
             ) {
             case .live(let text):
                 liveCarriers += 1
@@ -121,8 +121,23 @@ public enum KitSuiteEmitter {
     /// transitivity twice and read as two findings where there is one. A conformance is
     /// dropped when its laws are a strict subset of another declared conformance's, which
     /// needs no model of Swift's protocol hierarchy — the sets already encode it.
+    /// Conformances whose kit suite needs an argument this emitter cannot derive.
+    ///
+    /// `checkStrideablePropertyLaws` requires `strideGenerator: Generator<Value.Stride, _>`,
+    /// and `Stride` is an associated type the scanner does not resolve — for `_HashSlot` it
+    /// happens to be `Int`, but guessing would emit `missing argument for parameter
+    /// 'strideGenerator'` wherever it is not. Measured: that error, plus
+    /// `generic parameter 'StrideShrinker' could not be inferred`, in `HashTreeCollections`.
+    ///
+    /// **This is a codegen limit, not a coverage claim.** The kit does run
+    /// `Strideable.distanceRoundTrip`, so `ProtocolCoverageMap`'s entry stays true and
+    /// `discover` is right to defer; what is missing is our ability to write the call. A
+    /// carrier reaching only this conformance is reported blocked, with the reason.
+    static let conformancesNeedingUnderivableArguments: Set<String> = ["Strideable"]
+
     static func suiteConformances(for finding: ProtocolCoverageAudit.Finding) -> [String] {
         let declared = finding.declaredCoveringConformances
+            .filter { !conformancesNeedingUnderivableArguments.contains($0) }
         let kept = declared.filter { candidate in
             guard let mine = ProtocolCoverageMap.protocolCoverage[candidate], !mine.isEmpty else {
                 return false
@@ -154,16 +169,18 @@ public enum KitSuiteEmitter {
         shape: PropertyLawCore.TypeShape,
         suites: [String],
         resolve: (String) -> DerivationStrategist.ComposedGenerator?,
-        genericParameters: [TypeDecl.GenericParameter]
+        genericParametersByName: [String: [TypeDecl.GenericParameter]]
     ) -> CarrierBlock {
         guard let carrierName = ConcreteInstantiation.rendered(
-            typeName: finding.typeName, genericParameters: genericParameters
+            qualifiedTypeName: finding.typeName,
+            genericParametersByName: genericParametersByName
         ) else {
             return .blocked(blockedBlock(
                 finding,
                 suites: suites,
                 reason: ConcreteInstantiation.declineReason(
-                    typeName: finding.typeName, genericParameters: genericParameters
+                    qualifiedTypeName: finding.typeName,
+                    genericParametersByName: genericParametersByName
                 ) ?? "",
                 carrierName: finding.typeName
             ))
@@ -320,6 +337,22 @@ public enum KitSuiteEmitter {
     /// `EnforcementMode.default` does not throw, so an assertion tightened to Strict is not
     /// enough on its own — the suppression is what keeps the emitted suite green.
     static func options(_ conformance: String, isCaseIterable: Bool) -> String {
+        // **The `elementSameResult:` overload, always, for the Sequence chain.**
+        //
+        // The default overload requires `Value.Element: Equatable`, and a dictionary-shaped
+        // carrier's Element is a TUPLE — `(key: Key, value: Value)` — which cannot conform to
+        // a protocol. Measured: `OrderedDictionary`, `OrderedDictionary.Elements` and
+        // `_Bitmap` all failed with "cannot conform to 'Equatable'".
+        //
+        // The kit shipped these overloads for exactly this (its own note calls it "a missing
+        // conformance can be a harness problem, not a type problem"). Passing
+        // `{ $0 == $1 }` unconditionally is strictly more permissive than the default: it
+        // compiles for any Equatable element AND for a tuple of Equatables, since Swift
+        // defines `==` on tuples up to six members. A carrier whose Element is neither would
+        // not have compiled under the default overload either.
+        if conformance == "Sequence" || conformance == "Collection" {
+            return ",\n                        elementSameResult: { $0 == $1 }"
+        }
         guard isCaseIterable, conformance == "Hashable" else { return "" }
         return """
         ,
