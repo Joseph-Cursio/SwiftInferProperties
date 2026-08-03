@@ -26,7 +26,7 @@ extension VerifierWorkdir {
     /// road test found it the only way it could be found — by running a survey
     /// against a corpus that is itself a SwiftPropertyLaws consumer. See
     /// `docs/roadtest-self-dogfood.md` §9.
-    static let swiftPropertyLawsRequirement = "3.24.0"
+    static let swiftPropertyLawsRequirement = "3.26.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "
