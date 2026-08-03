@@ -46,6 +46,38 @@ public enum ConcreteInstantiation {
     ///
     /// Composed constraints (`T: Hashable & Codable`) are split and each side checked, since
     /// `Int` satisfying both is the same question asked twice.
+    /// A nested type's spelling, where the generic arguments belong to the ENCLOSING type.
+    ///
+    /// `OrderedDictionary.Elements` must be written `OrderedDictionary<Int, Int>.Elements` —
+    /// `Elements` declares no generics of its own and inherits `Key`/`Value` from its parent.
+    /// Rendering only the declaration's own parameters left it bare and the emitted suite
+    /// failed with *"generic parameter 'Key' could not be inferred"*, eight times in
+    /// `OrderedCollections` alone.
+    ///
+    /// Each dotted component is instantiated from its own entry in `genericParametersByName`,
+    /// so `A<Int>.B<Int>` works as well as `A<Int>.B`. A component with no entry is rendered
+    /// bare, which is correct for a non-generic nesting level.
+    public static func rendered(
+        qualifiedTypeName: String,
+        genericParametersByName: [String: [TypeDecl.GenericParameter]]
+    ) -> String? {
+        var pieces: [String] = []
+        var prefix: [String] = []
+        for component in qualifiedTypeName.split(separator: ".").map(String.init) {
+            prefix.append(component)
+            // Nested types are keyed by their qualified name where the scanner saw one, and
+            // by the bare name otherwise; try both so either indexing works.
+            let generics = genericParametersByName[prefix.joined(separator: ".")]
+                ?? genericParametersByName[component]
+                ?? []
+            guard let piece = rendered(typeName: component, genericParameters: generics) else {
+                return nil
+            }
+            pieces.append(piece)
+        }
+        return pieces.isEmpty ? nil : pieces.joined(separator: ".")
+    }
+
     public static func rendered(
         typeName: String,
         genericParameters: [TypeDecl.GenericParameter]
@@ -67,6 +99,24 @@ public enum ConcreteInstantiation {
     /// The reason a carrier could not be instantiated, phrased for the emitted comment so a
     /// reader can act on it — it names the parameter and the constraint that blocked it,
     /// not just the fact of failure.
+    /// The decline reason for a qualified name, or `nil` when it renders.
+    public static func declineReason(
+        qualifiedTypeName: String,
+        genericParametersByName: [String: [TypeDecl.GenericParameter]]
+    ) -> String? {
+        guard rendered(
+            qualifiedTypeName: qualifiedTypeName,
+            genericParametersByName: genericParametersByName
+        ) == nil else { return nil }
+        for component in qualifiedTypeName.split(separator: ".").map(String.init) {
+            let generics = genericParametersByName[component] ?? []
+            if let reason = declineReason(typeName: component, genericParameters: generics) {
+                return reason
+            }
+        }
+        return nil
+    }
+
     public static func declineReason(
         typeName: String,
         genericParameters: [TypeDecl.GenericParameter]
