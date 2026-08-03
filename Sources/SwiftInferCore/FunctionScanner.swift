@@ -347,7 +347,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .extension,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.extensionKeyword,
-            memberBlock: node.memberBlock
+            memberBlock: node.memberBlock, isConditionalExtension: node.genericWhereClause != nil
         ))
         typeStack.append(extendedTypeText)
         enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))

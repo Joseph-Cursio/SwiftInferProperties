@@ -14,7 +14,8 @@ extension FunctionScannerVisitor {
         inheritanceClause: InheritanceClauseSyntax?,
         keywordToken: TokenSyntax,
         memberBlock: MemberBlockSyntax,
-        genericParameterClause: GenericParameterClauseSyntax? = nil
+        genericParameterClause: GenericParameterClauseSyntax? = nil,
+        isConditionalExtension: Bool = false
     ) -> TypeDecl {
         let inheritedTypes = inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? []
         let position = keywordToken.positionAfterSkippingLeadingTrivia
@@ -57,15 +58,15 @@ extension FunctionScannerVisitor {
         // (`CodableRoundTripTemplate`). `InitializerDecodeSynthesizer` stays
         // struct-gated, so extension inits reach only the codable-round-trip
         // recogniser, which hard-filters to `Decoder`-typed inits.
-        let initializers = (kind == .struct || kind == .extension)
-            ? MemberBlockInspector.initializers(in: memberBlock)
-            : []
         let genericParameters = genericParameterClause?.parameters.map {
             TypeDecl.GenericParameter(
                 name: $0.name.text,
                 constraint: $0.inheritedType?.trimmedDescription
             )
         } ?? []
+        let initializers = (kind == .struct || kind == .extension)
+            ? MemberBlockInspector.initializers(in: memberBlock)
+            : []
         return TypeDecl(
             name: name,
             kind: kind,
@@ -84,7 +85,8 @@ extension FunctionScannerVisitor {
             // qualified); Swift forbids nested extensions, so there is no case
             // where an extension picks up a spurious prefix.
             qualifiedName: (typeStack + [name]).joined(separator: "."),
-            genericParameters: genericParameters
+            genericParameters: genericParameters,
+            isConditionalExtension: isConditionalExtension
         )
     }
 }

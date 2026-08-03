@@ -146,6 +146,16 @@ public struct TypeDecl: Sendable, Equatable {
     /// compiled. Empty for non-generic declarations, which is the overwhelming majority.
     public let genericParameters: [GenericParameter]
 
+    /// `true` for an extension record written with a `where` clause
+    /// (`extension Deque where Element: Hashable`). Always false for a primary declaration.
+    ///
+    /// **Captured so extension-declared initializers can be merged safely.** An initializer
+    /// on an unconditional extension is callable on the type, full stop; one on a
+    /// conditional extension may not apply to the instantiation the emitter chose, and
+    /// calling it would emit code that does not compile. swift-collections has 267
+    /// conditional extensions, so the distinction is not hypothetical.
+    public let isConditionalExtension: Bool
+
     /// One generic parameter and the constraint written on it, if any.
     public struct GenericParameter: Sendable, Equatable {
         public let name: String
@@ -171,13 +181,15 @@ public struct TypeDecl: Sendable, Equatable {
         initializers: [InitializerSignature] = [],
         enumCases: [EnumCase] = [],
         qualifiedName: String? = nil,
-        genericParameters: [GenericParameter] = []
+        genericParameters: [GenericParameter] = [],
+        isConditionalExtension: Bool = false
     ) {
         // Defaulted to `name` so the many hand-built test fixtures — and any
         // caller that has no enclosing-type context — keep working unchanged.
         self.qualifiedName = qualifiedName ?? name
         self.name = name
         self.genericParameters = genericParameters
+        self.isConditionalExtension = isConditionalExtension
         self.kind = kind
         self.inheritedTypes = inheritedTypes
         self.location = location
