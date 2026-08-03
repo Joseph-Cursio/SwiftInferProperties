@@ -48,4 +48,23 @@ public enum FixedWidthIntegerNames {
 
     /// The fixed-width integers plus the binary floats — the shrinkable scalars.
     public static let withBinaryFloats: Set<String> = names.union(binaryFloatNames)
+
+    /// Carriers whose **derived generator covers the type's real domain** — every value it
+    /// produces is a value the type genuinely admits.
+    ///
+    /// The distinction exists for the totality law, and it is the difference between a finding and
+    /// an artefact. A trap on a generated `Int` is a totality violation: the function was handed a
+    /// number, and `Int` has no invariants beyond being one. A trap on a generated *struct* usually
+    /// is not — a memberwise generator assembles a value no code path in the program could
+    /// construct, so the trap says the generator left the type's real domain, which is what
+    /// `trapReason` means by *"evidence about the generator's domain, not about the law."*
+    ///
+    /// Measured on the first live run: `isWorthSurfacingBelowCut` trapped at trial 0 on a
+    /// `Suggestion` with `score.total: 2524929203861660948` and a negative source column —
+    /// structurally impossible, and reported as a refutation until this set existed.
+    ///
+    /// `Bool` and `Character` join the shrinkable scalars here: neither shrinks usefully, but both
+    /// are exhaustively inhabited by their generator, which is the property that matters.
+    public static let domainCompleteScalars: Set<String> =
+        withBinaryFloats.union(["Bool", "Character", "String", "Substring"])
 }

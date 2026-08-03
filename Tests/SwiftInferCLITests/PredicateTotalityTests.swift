@@ -97,7 +97,7 @@ struct PredicateTotalityTests {
     /// The point of the whole exercise: a trap with a trial marker is a **refutation**, not an error.
     @Test func aTrapWithATrialMarkerIsARefutation() {
         let outcome = trapped(
-            stdout: "VERIFY_TRIAL_INDEX: 7\nVERIFY_TRIAL_INPUT: \"\"\n",
+            stdout: "VERIFY_TRIAL_CARRIER: String\nVERIFY_TRIAL_INDEX: 7\nVERIFY_TRIAL_INPUT: \"\"\n",
             stderr: "Swift runtime failure: Can't take a prefix of negative length\n"
         )
         guard case let .defaultFails(detail) = outcome else {
@@ -144,7 +144,7 @@ struct PredicateTotalityTests {
     /// The runtime message is best-effort; its absence must not cost the counterexample, which is
     /// the part a reader actually needs.
     @Test func aMissingRuntimeMessageStillYieldsTheInput() {
-        let outcome = trapped(stdout: "VERIFY_TRIAL_INPUT: 0\n")
+        let outcome = trapped(stdout: "VERIFY_TRIAL_CARRIER: Int\nVERIFY_TRIAL_INPUT: 0\n")
         guard case let .defaultFails(detail) = outcome else {
             Issue.record("expected .defaultFails, got \(outcome)")
             return
@@ -153,11 +153,59 @@ struct PredicateTotalityTests {
         #expect(detail.trial == -1, "an absent index decodes to -1 rather than failing the parse")
     }
 
+    /// **The narrowing, and the run that forced it.** A trap on a memberwise-derived struct is
+    /// evidence about the GENERATOR, not the law: the value assembled is one no code path could
+    /// construct, so the function was never handed an input its domain admits.
+    ///
+    /// This is not hypothetical. The branch shipped without a carrier gate, and the first live
+    /// survey reported `isWorthSurfacingBelowCut` refuted on a `Suggestion` carrying
+    /// `score.total: 2524929203861660948` and a negative source column.
+    @Test func aTrapOnANonScalarCarrierIsNotARefutation() {
+        let outcome = trapped(
+            stdout: "VERIFY_TRIAL_CARRIER: Suggestion\nVERIFY_TRIAL_INPUT: Suggestion(score: 2524929203861660948)\n",
+            stderr: "Swift runtime failure: arithmetic overflow\n"
+        )
+        guard case .error = outcome else {
+            Issue.record("a struct carrier's trap must stay .error, got \(outcome)")
+            return
+        }
+    }
+
+    /// The scalars where a trap DOES refute: the generator inhabits the whole type, so any value it
+    /// produces is one the function genuinely had to handle.
+    @Test func everyDomainCompleteScalarRefutes() {
+        for carrier in ["Int", "Int8", "UInt64", "Double", "Float", "Bool", "String", "Character"] {
+            let outcome = trapped(
+                stdout: "VERIFY_TRIAL_CARRIER: \(carrier)\nVERIFY_TRIAL_INPUT: v\n"
+            )
+            guard case .defaultFails = outcome else {
+                Issue.record("\(carrier) is domain-complete; its trap should refute")
+                continue
+            }
+        }
+    }
+
+    /// A marker-bearing trap with no carrier line cannot be judged, so it stays an error rather
+    /// than defaulting to the generous reading.
+    @Test func aMissingCarrierMarkerIsNotAssumedScalar() {
+        let outcome = trapped(stdout: "VERIFY_TRIAL_INPUT: 0\n")
+        guard case .error = outcome else {
+            Issue.record("without a carrier the branch must not claim a refutation")
+            return
+        }
+    }
+
+    /// The composer must actually print what the parser requires — the two halves of this mechanism
+    /// live in different files and nothing else joins them.
+    @Test func theComposerPrintsTheCarrierTheParserNeeds() {
+        #expect(composed().contains("VERIFY_TRIAL_CARRIER:"))
+    }
+
     /// Signals arrive both raw and as `128 + n` depending on the shell in between; `trapReason`
     /// accepts either, and this branch inherits that.
     @Test func bothSignalEncodingsAreRecognised() {
         for code in [Int32(4), Int32(132)] {
-            let outcome = trapped(stdout: "VERIFY_TRIAL_INPUT: x\n", exitCode: code)
+            let outcome = trapped(stdout: "VERIFY_TRIAL_CARRIER: Int\nVERIFY_TRIAL_INPUT: x\n", exitCode: code)
             guard case .defaultFails = outcome else {
                 Issue.record("exit \(code) should be recognised as a trap")
                 continue

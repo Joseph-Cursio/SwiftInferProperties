@@ -148,6 +148,7 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
+        let carrierName = recipe.carrierTypeName
         return """
         // --- Pass 1: default (strategist-derived generator) ---
         //
@@ -155,6 +156,11 @@ extension StrategistDispatchEmitter {
         // TRAP, not a false comparison, so it cannot be caught here — the marker printed before
         // each call is what survives the crash and names the input. Relies on the unbuffered
         // stdout the stub preamble sets.
+
+        // The carrier decides whether a trap here is a FINDING or an ARTEFACT, and only the
+        // parser can make that call — so it is printed rather than assumed. See
+        // `FixedWidthIntegerNames.domainCompleteScalars`.
+        print("VERIFY_TRIAL_CARRIER: \\(carrierName)")
 
         let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
             \(recipe.expression)
