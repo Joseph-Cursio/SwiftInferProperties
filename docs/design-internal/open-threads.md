@@ -24,6 +24,9 @@ conversation's residue does not evaporate.
 | 6 | **`.swiftinfer/` is not gitignored** — generated index/evidence JSON sits untracked in every `git status` | decide: ignore it, or commit the index deliberately |
 | 7 | **No current end-to-end number** for the loop | see *Standing observations* → *The measurements are all withdrawn* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
+| 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
+| 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
+| 11 | **Driver stage 0 builds another repository** (`swift build --product CLI` in SwiftProjectLint) | convenient, and it mutates a sibling's `.build`. Arguably it should only *locate* and fail telling you to build |
 
 ---
 
@@ -96,13 +99,29 @@ all testability/idempotency). The highest-value handoff is human-only; the highe
 nearly all noise. `CandidateInventory` fixed the reader-facing symptom by collapsing the census;
 the manifest still carries the flood and not the insight.
 
-### "Toolchain" claims more than the code backs
+### "Toolchain" claims more than the code backs — *now half-addressed*
 
-Two of five packages have no automated relationship to anything: SwiftIdempotency is zero-dependency
-plus one shared word, and lint → infer is a JSON file a human pipes by hand. **There is no command
-that runs the loop.** Defensible — each tool is meant to be adoptable alone — but it means every
-claim about "the loop" describes a sequence nobody has automated, and it is why end-to-end
-measurement keeps going stale: there is nothing to re-run.
+**Was:** two of five packages had no automated relationship to anything, and no command ran the
+loop, so every claim about "the loop" described a sequence nobody had automated.
+
+**Now:** `scripts/toolchain.sh` runs **stages 0–2** (locate → lint → `discover --seeds`) and
+declares 3–5 as not-implemented on every run. What that changes and what it does not:
+
+- **Closed:** the sequence is executable and attributable. `run.json` records tool SHAs, so two
+  runs are comparable — the precondition for any end-to-end number.
+- **Still open:** stages 3–4 do not exist, so **no run executes a law** (item 9). Stage 5 never
+  will — hardening is a human's job, and the driver says `not-a-command` rather than pretend.
+- **SwiftIdempotency is still attached by one word** (`@ClockDeterministic`, via SEI) and appears
+  in no stage. That half of the observation is untouched.
+
+**Two facts that only surfaced by writing it**, and they say more than the observation did:
+
+1. **`.pbt/seeds.json` had never existed anywhere on this machine.** Both repos document that
+   path — the formatter writes it, `discover --seeds` reads it — and the hop had no instance until
+   2026-08-03. A documented handoff with zero instances is not a handoff.
+2. **The loop's entry point cannot be invoked.** SwiftProjectLint ships no installed binary and is
+   not on `PATH`; stage 0 has to compile it. That is not an inconvenience in the driver, it is the
+   first thing standing between a reader and the loop.
 
 ### The measurements are all withdrawn; the diagnoses survive
 
@@ -111,6 +130,12 @@ measurement keeps going stale: there is nothing to re-run.
 "does a reader following the loop reach the bugs?"** — the one row the road test says should be
 the only row that matters. That is open item 7, and it is downstream of *"toolchain claims more
 than the code backs"*: you cannot cheaply re-measure a loop you cannot cheaply run.
+
+**Partly unblocked as of 2026-08-03.** `scripts/toolchain.sh` makes stages 0–2 re-runnable and
+writes a comparable `run.json`, so a *seed-and-suggestion* number is now cheap. A **refutation**
+number still is not, because that needs stage 3, which does not exist (item 9). Worth being exact
+about which number is back: the loop's own headline row — *would a reader reach the bugs?* —
+remains unmeasured.
 
 ### Every guard here was a retrofit
 
