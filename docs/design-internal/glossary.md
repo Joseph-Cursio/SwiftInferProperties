@@ -382,6 +382,54 @@ whether the loop would have caught each one **before** its fix. Stronger than a 
 public fix commit predates the tools and was written by someone who never heard of them, so it
 removes the last degree of freedom a self-built answer key leaves open.
 
+### Border claim
+An assertion **about a repository this one cannot see**, whose failure is an absence. The
+compiler is the boundary of automatic verification; a border claim sits one inch past it, is
+load-bearing (it gates behaviour), and running the code does not test it — because the claim is
+not about the code.
+
+**Why they fail silently, structurally.** The typical *use* of a fact about another repo is to
+decide **not** to do something: they cover this law, so suppress it; they parse this grammar, so
+don't; they already ran this, so stay quiet. The claim's whole job is to cause an absence, so the
+failure mode is inherited from the purpose. [Confident zero](#confident-zero) is not a neighbour
+of this term — it is the **shape a border claim takes when it breaks**.
+
+**Four classes, and the class decides what evidence can settle it.** Substituting a cheaper
+evidence type is the commonest way one goes wrong:
+
+| class | example | settled only by |
+|---|---|---|
+| **existence** — that symbol is over there | `AttributeRecognition.default` claims `@Pure` ships in SwiftIdempotency; `ProtocolCoverageMap` claims a kit law runs | a grep of the other repo |
+| **version** — we and they are at the same point | `VerifierWorkdir.swiftPropertyLawsRequirement`; the SEI revision pin | comparing two strings |
+| **capability** — the consumer can act on this | `PBTSeedKind.isAnalysable` | a contract test (`SeedRoleContractTests` is the working example) |
+| **behavioural** — this costs nothing / behaves the same | *"the SEI drift is latent, nothing observable"* | **measurement only** — no static check reaches it |
+
+The version row is the instructive one. Those are the cheapest claims in the toolchain to check
+and they drifted furthest — the kit pin by a full **major version**, the SEI pin by **9 commits**.
+Difficulty is not the variable; nobody thought of them as claims.
+
+**Measured instances.** `ProtocolCoverageMap` → **13 of 56** `(key, law)` claims false ·
+`PBTSeedKind.isAnalysable` → **319 seeds** wrongly suppressed · the SEI pin → a **~2× wall-clock
+regression** on the discover path, found only by an A/B · `AttributeRecognition` → unguarded to
+this day.
+
+**The trap: a guard at the wrong RESOLUTION certifies the error.** Worse than no guard, because
+it converts an open question into a settled one. Three times here a *passing test* pinned a false
+border claim — `AssumedKitCoverageTests:224` pinned a real law's suppression **as correct**;
+`KitCoverageDriftTests` ran green through all 13 falsehoods because every assertion worked at
+**suite** granularity and none opened the `Set<KnownProperty>` on the value side; and the first
+road test's five defects were each pinned by a test asserting the buggy behaviour. In every case
+the evidence was real, about the right subject, and at the wrong grain — which is also how the
+"latent drift" claim went wrong, by settling a *behavioural* question with *existence* evidence
+(the method exists at both revisions, so its cost must be unchanged).
+
+**Do not guard all of them.** The filter is *would a false claim here cause a different action?*
+The coverage map suppresses a real law — guard it. The pins change what compiles — guard them.
+A doc saying "44 kit suites" changes nothing, so it is **dated rather than guarded**
+(`make docs-drift`, and the provenance trailer at the top of this file).
+
+Fuller treatment, per package: `docs/design-internal/swift{projectlint,effectinference,propertylaws,idempotency}.md`.
+
 ### Confident zero
 The tool reporting "nothing here" when there was something. The failure mode this project
 treats as worst, because a zero is believed and generates no follow-up. The first five-repo road
@@ -390,6 +438,10 @@ a **passing test that asserted the buggy behavior**.
 
 The [Daikon trap](#daikon-trap) is its opposite number: too much output versus falsely no output.
 Both end with the tool unread.
+
+**Where they come from.** A [border claim](#border-claim) is the commonest single source — a fact
+about another repo is nearly always used to decide *not* to emit something, so when the fact rots
+the tool goes quiet rather than wrong.
 
 ### Daikon trap
 The failure mode this project is designed against, named for
