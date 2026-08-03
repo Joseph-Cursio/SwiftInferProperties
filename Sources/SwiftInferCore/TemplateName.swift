@@ -34,6 +34,22 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     case multiplicativeHomomorphism = "multiplicative-homomorphism"
     case measureNonNegativity = "measure-non-negativity"
 
+    /// Totality: the predicate returns a value for **every** input its type
+    /// admits — never traps, never diverges.
+    ///
+    /// Verifiable, but not like the others, and the difference is why it took
+    /// until 2026-08-03 to become so. Every law above fails by **assertion**,
+    /// which is catchable and prints a counterexample. Totality fails by
+    /// **trap**, which is not: the process dies, no result marker is printed,
+    /// and `VerifyResult.parse` rule 4 would file the single most valuable
+    /// outcome under `.error` — the same bucket as a broken build.
+    ///
+    /// `composePredicatePass` therefore prints each input **before the call**,
+    /// and `parse`'s trap branch recovers that marker and reports a refutation.
+    /// It survives the crash only because `SeededStubEmitter`'s preamble sets
+    /// `setvbuf(stdout, nil, _IONBF, 0)`.
+    case predicate
+
     // Additional discovery / pack template names — surfaced by discovery and
     // grouped into `TemplatePack`s, but not members of the verifiable set above
     // (they are witnessed or routed differently).
@@ -50,7 +66,7 @@ public extension TemplateName {
         .roundTrip, .codableRoundTrip, .idempotence, .commutativity, .associativity,
         .idempotenceLifted, .dualStyleConsistency, .monotonicity,
         .involution, .binaryIdempotence, .homomorphism, .multiplicativeHomomorphism,
-        .measureNonNegativity
+        .measureNonNegativity, .predicate
     ]
 
     // swiftprojectlint:disable:next parallel-list-drift
@@ -68,11 +84,19 @@ public extension TemplateName {
     static let regressionAutoDerivable: [TemplateName] = v146Hardcoded + [.monotonicity]
 
     /// The algebraic-law templates the strategist routes: everything verifiable
-    /// except the two that dispatch elsewhere (`codable-round-trip` has its own
-    /// Codable path; `measure-non-negativity` is a measure template). Derived
-    /// from `verifiable` so it stays in step by construction.
+    /// except the three that dispatch elsewhere (`codable-round-trip` has its own
+    /// Codable path; `measure-non-negativity` is a measure template; `predicate`
+    /// is a totality check and not an algebraic law at all). Derived from
+    /// `verifiable` so it stays in step by construction.
+    ///
+    /// **`predicate` must stay excluded.** `defaultPassSection` falls through to
+    /// `algebraicLawPass` for anything in this list, so leaving it in would route
+    /// totality into a switch that cannot compose it — and the error message
+    /// naming this set would then list a template it cannot actually handle.
     static let strategistAlgebraicLaws: [TemplateName] =
-        verifiable.filter { $0 != .codableRoundTrip && $0 != .measureNonNegativity }
+        verifiable.filter {
+            $0 != .codableRoundTrip && $0 != .measureNonNegativity && $0 != .predicate
+        }
 }
 
 public extension Sequence where Element == TemplateName {
