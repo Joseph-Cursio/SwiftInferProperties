@@ -62,7 +62,8 @@ extension SwiftInferCommand.Verify {
             corpusProductName: corpusProductName,
             emitRegression: emitRegression,
             // WS-6 Slice 2 — whole-module shape universe for recursive derivation.
-            allShapes: index.typeShapes
+            allShapes: index.typeShapes,
+            sourceFileByTypeName: index.sourceFileByTypeName
         )
         return await runParallelSurvey(
             entries: entries,
@@ -87,6 +88,9 @@ extension SwiftInferCommand.Verify {
         /// WS-6 Slice 2 — the persisted whole-module shape universe, threaded to
         /// each per-entry `buildStubBundle` so nested custom-type carriers derive.
         var allShapes: [String: IndexedTypeShape] = [:]
+        /// Declaration site per type name, so each entry's wiring can import every module its
+        /// carrier reaches rather than only the one the entry itself names.
+        var sourceFileByTypeName: [String: String] = [:]
     }
 
     static func loadIndex(
@@ -187,7 +191,9 @@ extension SwiftInferCommand.Verify {
                 for: entry,
                 corpusModuleName: config.corpusModuleName,
                 corpusProductName: config.corpusProductName,
-                packageRoot: packageRoot
+                packageRoot: packageRoot,
+                shapes: config.allShapes,
+                sourceFiles: config.sourceFileByTypeName
             )
             let extraImports = wiring.extraImports
             let userPackage = wiring.userPackage
