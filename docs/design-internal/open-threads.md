@@ -4,11 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-03** · `SwiftInferProperties@052515b`. Entries here are *not* dated claims
+> **As of 2026-08-04** · `SwiftInferProperties@1e0218e`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
-> putting the answer where it belongs.
+> putting the answer where it belongs. Measurements *inside* an entry carry their own date and
+> SHA; the suite run in item 0 is the only thing re-taken at `1e0218e`.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@052515ba389d5e55b6a2a567568ab11dcfa297bd observer=SwiftInferProperties@052515ba389d5e55b6a2a567568ab11dcfa297bd -->
+<!-- doc-provenance date=2026-08-04 subject=SwiftInferProperties@1e0218ed538b8d0c62c91b80cc1b1a5009d129b1 observer=SwiftInferProperties@1e0218ed538b8d0c62c91b80cc1b1a5009d129b1 -->
 
 ---
 
@@ -17,10 +18,33 @@ conversation's residue does not evaporate.
 Written at the close of 2026-08-03, after PRs #71/#72/#73 took running `predicate` laws from
 **0 → 104 of 126**. Ordered; item 0 is a chore and everything after it is a choice.
 
-**0. Run the batches this work never saw.** `make test-fast` (4,823) and `make batch3` (31 tests /
-417s) are green at `052515b`; **batches 1, 2, 4, 5, 6 and 7 were never run against it.** That is
-the one outstanding claim about the merged work, and it is a `make test` away. Do this before
-anything else — everything below assumes the tree is actually green.
+**0. ~~Run the batches this work never saw.~~ Closed 2026-08-04 — the whole tree is green.** Every
+target run at `1e0218e` (three commits past the `052515b` this was written against, so it covers
+PR #74 as well), each invoked *separately* rather than through `make test`: that target is
+fail-fast, and a failure in batch 1 would have hidden the six behind it — the same
+refuter-fires-first shape this repo already names as a design decision.
+
+| target | verdict | tests / suites | wall |
+|---|---|---:|---:|
+| `lint` | green | — | 0s |
+| `test-fast` | green | 4,823 / 653 | 31s |
+| `perf` | green | 8 / 5 | 17s |
+| `batch1` | green | 4 / 3 | 171s |
+| `batch2` | green | 3 / 3 | 136s |
+| `batch3` | green | 31 / 6 | 319s |
+| `batch4` | green | 7 / 7 | 370s |
+| `batch5` | green | 7 / 7 | 20s |
+| `batch6` | green | 4 / 4 | 171s |
+| `batch7` | green | 9 / 9 | 350s |
+
+Zero failures, zero flakes — no rerun was needed, which is worth recording given the standing note
+that the long measured suites occasionally drop one issue under load. **One test skipped**, in
+`perf`: the swift-collections `DequeModule` discover budget, which needs a corpus not checked out
+on this machine. That is a skip, not a pass; the §13 budget it guards is unmeasured here.
+
+`batch3` reproduces at **319s against the 417s** recorded at `052515b` — same 31 tests, and the
+gap is contention, not code: this run had the box to itself. Peak temp-disk never moved the free
+figure off 573–574 GB, and `make clean-temp` was run before and after.
 
 **1. Should the `predicate` composer be pushed past 83%? — No, and the number is the argument.**
 
@@ -48,12 +72,10 @@ largest single bucket left anywhere in this survey, and it is *one* question: ca
 SwiftPropertyLaws? The design decision *"generator inference delegates to SwiftPropertyLaws"* says
 the answer is probably not here, which makes this a scope-and-file item rather than a build item.
 
-**3. Re-measure item 13's access-widening probe, with a pre-check.** The recorded read is that
-access is not the binding constraint — widening moves a function from *invisible* to
-*proposed-but-unrunnable*. That was written before today. It is now cheaply falsifiable: take the
-20 widened functions, check their parameter types against the carrier-decline list above, and see
-whether they land in the same bucket. If they do, the read stands and item 13 stays deferred; if
-they do not, the ordering against item 14 changes.
+**3. ~~Re-measure item 13's access-widening probe, with a pre-check.~~ Closed 2026-08-04, and the
+read is REFUTED.** Widening no longer moves a function from *invisible* to
+*proposed-but-unrunnable*: **3 of 6 gained laws now execute, against 0 before.** See *Decisions* →
+*Access widening, re-measured*.
 
 **4. The whole-corpus number is still missing.** Everything above is `--template predicate` over
 126 entries. There is no measurement of how many laws run across *all* templates, which is the
@@ -83,7 +105,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
-| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. A 20-function probe measured 20 → 8 proposed → 2 composer-supported, i.e. **≤+60 against a base of 100 — a 60% gain at the ceiling**. Ordering against 14 is **not settled**; see *Decisions* |
+| 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**, and **re-measured 2026-08-04 with laws that RUN**. The 2026-08-03 funnel (20 → 8 proposed → 2 composer-supported) was a ceiling nobody had executed. Executed: **0 of 6 ran on the pre-composer binary, 3 of 6 on HEAD** — 1 holds, **2 refute**, and both refutations are false laws rather than bugs. The blocker was never the composer; it was the cross-module import (item 16). See *Decisions* → *Access widening, re-measured* |
 | 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. **Superseded by item 16: the figure is now 104.** Zero refutations — these are regression guards on correct code, not bugs found |
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
@@ -397,6 +419,86 @@ not more plumbing. Plus `[String: TypeShape]` ×2 and `[TypeDecl]` (containers o
 **And 104 laws holding is not 104 findings.** Zero refutations across all three runs. These are
 executable regression guards on code that is currently correct — item 15's prediction, and what
 *score refutability, not suggestion count* requires be said out loud.
+
+### Access widening, re-measured — the read was right about the cause and wrong about the lever (2026-08-04)
+
+Item 3 asked for a **pre-check**: do the widened functions' parameter types land in the same
+carrier-decline bucket the residual 17 do? Then it asked for the re-measurement. Both were run,
+in that order, and the pre-check turned out to answer a *narrower* question than it was asked.
+
+**Apparatus, stated first because one detail invalidated the first attempt.** 641
+`declaration`-restricted seeds (the identical figure to 2026-08-03), sorted by `file:line`, every
+32nd — indices 31, 63, … 639, exactly 20 — **frozen to a file before any body was read**. Two
+worktrees at `1e0218e`, pristine and widened. Two binaries, **same day, same trees**, per §10.3:
+**A** = `7e7a633` (the last commit before the `predicate` composer) and **B** = `1e0218e`. The
+index — not `discover`'s prose — is the instrument, because it is JSON, it defaults to
+`--include-possible`, and it is the artifact `verify --all-from-index` actually consumes.
+
+> ⚠ **These are not the same 20 functions as 2026-08-03.** That list was never recorded — only
+> the aggregate was. The sampling *rule* is reproduced exactly and the seed population is
+> identical (641), but function-level comparison to the old run is not available. Read the old
+> `20 → 8 → 2` as context, never as this table's before-column; the before-column is binary A.
+
+**The funnel, executed.**
+
+| stage | A (`7e7a633`) | B (`1e0218e`) |
+|---|---:|---:|
+| widened | 20 | 20 |
+| index entries, pristine → widened | 249 → 255 | 249 → 255 |
+| **gained a proposed law** | 6 | 6 |
+| composer-supported | 4 | 6 |
+| **ran a law** | **0** | **3** |
+| held | 0 | 1 |
+| refuted | 0 | 2 |
+
+**The recorded read is refuted, and not by the lever it was filed under.** *"Widening moves a
+function from invisible to proposed-but-unrunnable"* was true of binary A and is false of HEAD.
+But the `predicate` composer is **not** what changed it — the composer moved 2 rows from
+`unsupported-template: predicate` to `unsupported-carrier: FunctionDeclSyntax` /
+`InheritanceClauseSyntax?`, which is a **more honest decline and still zero laws run**. What made
+laws run was item 16's cross-module import fix: all three `idempotence` rows failed under A with
+`build-failed: cannot find 'LiftedTestEmitter' in scope` (and `IdempotenceStubEmitter`,
+`Suggestion`) and execute under B. **The two levers were ranked against each other; the one that
+mattered here was neither.**
+
+**The pre-check was right, and it was answering a smaller question than it was asked.** It
+predicted 3 of 20 SwiftSyntax carriers against 14 of 17 in the residual list, i.e. *not the same
+bucket*. Measured: the two rows that reach a carrier decline are **exactly** rows 10 and 20 of
+the pre-check, declining on `FunctionDeclSyntax` and `InheritanceClauseSyntax?` — the residual
+bucket named verbatim. So the bucket prediction held **per row**. What it could not predict is
+**which functions gain a law at all**: 6 of 20 did, and two of the five all-primitive rows
+(`source`, `manifest`) gained nothing, because the template gate — not the carrier — decides
+whether a law is proposed. Parameter types predict whether a proposed law can *run*; they say
+nothing about whether one is *proposed*. The pre-check conflated the two, cheaply and recoverably.
+
+**3 ran is not 3 wins, and this is the first time that was visible.** One is a real regression
+guard (`sanitizeKeyPathForIdentifier` — strips a leading `\.`, then `.`→`_`; genuinely
+idempotent, `measured-bothPass` at 100 + 100 trials). **Two are false laws refuted at trial 0**:
+`complexDoubleEdgePass` is a source-*template* emitter, so applying it twice embeds the block
+twice, and `rebuildWithCounterSignal` **appends** a signal and a caveat per call, so `f(f(s))`
+carries the counter-signal twice and scores −50 instead of −25. Neither is a bug; both are
+`idempotence` firing on a `T -> T` shape that is not idempotent. Both sit at `Possible` (score
+35), hidden without `--include-possible`. **The 2026-08-03 funnel could not see this at all** —
+nothing ran, so precision was unmeasurable, and *"2 composer-supported"* silently read as
+2 prospective wins. Against *score refutability, not suggestion count*: the honest yield of
+this sample is **1 guard, 2 false proposals, 3 declines**.
+
+**A trap that cost a full run, and it is the one item 13's design already warned about from a
+different direction.** The first widening rewrote `private ` → `internal `, which is the obvious
+spelling of "widen access". It gained **exactly nothing**: 249 → 249, *identical* identityHash
+set. `FunctionScanner` skips explicit `internal` too (cycle 148, Lever A) — it reads the token as
+deliberate SPI, and Swift's default access carries **no token**, which is the shape the scanner
+accepts. So a patch generator that emits `internal` produces a patch that compiles, changes
+nothing, and then fails verification for a reason unrelated to the law — the exact failure item
+13 anticipated for members nested inside a `private` type, arriving from a second, unrelated
+cause. **The patch must delete the modifier, not replace it.** Measured, not argued.
+
+**What this does to the ordering.** Item 13 no longer produces unrunnable output, so the reason
+to defer it is gone. But the case *for* it is now smaller and better-founded than the ceiling
+suggested: 20 widenings → 6 laws → 3 executions → **1 correct law**. Extrapolated over 641 seeds
+that is roughly 32 correct laws and 64 false proposals — a real gain and a real precision cost,
+where before there was only a count. The widened tree **compiles clean**, so the access tier's
+"the compiler makes the patch safe" claim is confirmed rather than assumed.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
