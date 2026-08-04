@@ -93,8 +93,8 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 
 | # | item | where it stands |
 |---|---|---|
-| 1 | **[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path | filed with an A/B; blocks the pin bump. Fix: stop `inferredEffect(for:)` delegating to `verdict(for:)` |
-| 2 | **Then**: bump the SEI pin, run `make perf` *before* `make test` (perf is step 3 of 9, fail-fast hides the rest), add a pin-equality guard, then adopt `verdict(for:)` | ordered; each step gated on the one before. **This chain now has a downstream consumer** — see item 20, which cannot start until the pin moves |
+| 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04, and the issue's own diagnosis was right.** `inferredEffect(for:)` no longer delegates to `verdict(for:)`: `verdict` cannot check `throws` until *after* the body walk (that walk is the only way to separate `.pureButPartial` from `.refuted`), but the whole-domain question treats `throws` as disqualifying and rejects on the signature. Fixed in [SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2). **Also settles the issue's open question — mechanism 1 was the ENTIRE cost**; the erased-`Syntax` generalisation contributes nothing measurable, so there is no second fix to chase |
+| 2 | **Then**: ~~bump the SEI pin~~, ~~run `make perf` before `make test`~~, add a pin-equality guard, then adopt `verdict(for:)` | **Pin bumped 2026-08-04** to `bfcf0e3` — *past* the regression rather than around it. All five §13 budgets back at control-arm cost (Discover-pipeline **3.677s** against its 6.0s budget, versus **6.777s** on `097181aa`); all ten `make` targets green. **Still open: the pin-equality guard and adopting `verdict(for:)`.** SwiftProjectLint remains on `097181aa`, which sharpens item 3 into *is SPL paying a cost this repo has stopped paying?* |
 | 3 | **Is SwiftProjectLint silently paying item 1?** It is already on `097181aa` and calls `PurityInferrer` from two visitors over every function *and closure* in a project | unmeasured. Cheap: point the same A/B at its own suite |
 | 4 | **The attribute-grammar join has no contract test.** SwiftIdempotency ships the macro names; `AttributeRecognition.default` hard-codes them; nothing asserts they still match | a rename fails as a *missing* annotation, indistinguishable from an unannotated codebase |
 | 5 | **`PBTSeed.role`'s doc comment is stale** — says two rules classify roles; `ExtractablePureKernelVisitor:106` makes it three | one-line fix in SwiftProjectLint |
@@ -112,7 +112,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
 | 18 | **`idempotence` has a 24% false-law rate on its executed surface** — 13 of 55, all at the score-35 shape-only floor | measured 2026-08-04, **no fix shipped**. A return-expression shape classifier, frozen before the verdicts, scores **83% precision / 38% recall**; the misses are a second class (**domain transfer**: `T -> T` where the output is a different *kind of thing*) that the `_description` and capacity vetoes have been chasing by NAME. Blocked behind a decision, not a build: a tenth veto vs PRD §3.5's *raise thresholds, don't add filters*. See *Decisions* → *The `idempotence` template's false-positive rate* |
 | 19 | **`Gen<URL>` has no member `url`** — generator derivation fails for every `URL` carrier | found 2026-08-04 as a side effect of item 18's survey; **9 rows blocked** on this repo alone (the whole `defaultPath(for:)` family). Not a false-positive question — a derivation gap that makes those rows unmeasurable in either direction |
-| 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **blocked on item 1, through a four-link chain** — see *Decisions* → *The `@EffectUnknown` dependency chain*. The reader must live in SEI (swift-infer re-implementing the grammar is what SEI exists to prevent), and swift-infer pins SEI at `1f2265a0` while SEI's HEAD is `097181a` — the very commit item 1 says blocks the bump |
+| 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
 
 ---
 
@@ -723,9 +723,14 @@ shipped 2026-07-10.
 | # | link | state |
 |---|---|---|
 | 0 | SwiftIdempotency ships the marker | **done** |
-| 1 | SEI learns to *read* it | blocked by link 2 |
-| 2 | swift-infer bumps the SEI pin | **blocked by open item 1** |
-| 3 | swift-infer suppresses on it | blocked by link 1 |
+| 1 | SEI learns to *read* it | **now the only blocker** |
+| 2 | swift-infer bumps the SEI pin | **done 2026-08-04** — `bfcf0e3` |
+| 3 | swift-infer suppresses on it | waiting on link 1 |
+
+**Links 2 and 3 came unblocked the same day**, by fixing open item 1 rather than
+working around it — the `~2×` regression that made the pin unbumpable is gone, and
+the bump landed past it. What is left is the one link that was never about
+performance.
 
 **Why the reader must live in SEI.** swift-infer could parse `@lint.effect`
 itself, and that is precisely what `EffectAnnotationParser` exists to prevent —
