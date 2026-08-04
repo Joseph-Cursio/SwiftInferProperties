@@ -23,6 +23,7 @@ extension SwiftInferCommand.Discover {
         evidence: DiscoverEvidenceInputs = .unrun,
         seedManifest: SeedManifest? = nil,
         requireCorroboration: Bool = false,
+        resolveEffects: Bool = false,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         // A run over an empty corpus must not be mistaken for a run that found nothing in your
@@ -57,7 +58,8 @@ extension SwiftInferCommand.Discover {
             crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys,
             counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys,
             templateFilter: setup.templateFilter,
-            rescuedRestrictedSymbols: rescuableRestrictedKeys(from: seedManifest)
+            rescuedRestrictedSymbols: rescuableRestrictedKeys(from: seedManifest),
+            resolveEffects: resolveEffects
         )
         // TestLifter M3.2 — promote LiftedSuggestions, share TemplateEngine's
         // GeneratorSelection pass, suppress duplicates already covered by

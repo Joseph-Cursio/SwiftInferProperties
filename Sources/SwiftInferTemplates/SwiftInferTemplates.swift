@@ -296,7 +296,8 @@ public enum TemplateRegistry {
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil,
-        rescuedRestrictedSymbols: Set<String> = []
+        rescuedRestrictedSymbols: Set<String> = [],
+        resolveEffects: Bool = false
     ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
@@ -309,8 +310,16 @@ public enum TemplateRegistry {
                     + "analysis: " + Self.namesForDiagnostic(rescued)
             )
         }
+        // Opt-in cross-file effect resolution. Applied to the summaries BEFORE
+        // templates run, so no template needs threading a resolver through — the
+        // summary already flows everywhere. A no-op when the flag is off, which
+        // is why the default path's §13 budgets cannot move.
+        let scanned = corpus.summaries + rescued.map(\.summary)
+        let analysed = resolveEffects
+            ? EffectResolver.resolve(summaries: scanned, in: directory, diagnostic: diagnostic)
+            : scanned
         let suggestions = discover(
-            in: corpus.summaries + rescued.map(\.summary),
+            in: analysed,
             identities: corpus.identities,
             typeDecls: corpus.typeDecls,
             vocabulary: vocabulary,
