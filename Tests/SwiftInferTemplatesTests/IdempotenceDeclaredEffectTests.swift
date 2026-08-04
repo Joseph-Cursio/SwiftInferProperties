@@ -11,13 +11,10 @@ struct IdempotenceDeclaredEffectTests {
 
     // MARK: - The claim corroborates
 
-    /// NB the arithmetic, because it is easy to misquote. A bare synthetic
-    /// summary scores **30** (type symmetry alone) and lands at `Likely` 70. The
-    /// real-corpus floor is **35**, because a value-semantic carrier adds +5 —
-    /// that is the band the 2026-08-04 survey measured 13 false laws in — and
-    /// there the same +40 reaches **75**, exactly `Tier.strong`'s floor. Both are
-    /// true; only the second is the one to quote about real code.
-    @Test("@Idempotent takes a shape-only candidate from Possible to Likely (30 → 70)")
+    /// NB the arithmetic. A bare synthetic summary scores **30** (type symmetry
+    /// alone); the real-corpus floor is **35**, because a value-semantic carrier
+    /// adds +5 — the band the 2026-08-04 survey measured 13 false laws in.
+    @Test("@Idempotent lifts a shape-only candidate out of hiding (30 → 45)")
     func declaredIdempotentPromotes() {
         let bare = makeIdempotenceSummary(name: "process", paramType: "String", returnType: "String")
         let annotated = makeIdempotenceSummary(
@@ -26,17 +23,25 @@ struct IdempotenceDeclaredEffectTests {
             returnType: "String",
             declaredEffect: .idempotent
         )
-        // The unannotated control is the score-35 floor this whole afternoon's
-        // false-positive survey lives at (13 of 55 executed rows were false).
         #expect(IdempotenceTemplate.suggest(for: bare)?.score.tier == .possible)
 
         let promoted = IdempotenceTemplate.suggest(for: annotated)
-        #expect(promoted?.score.total == 70)
+        #expect(promoted?.score.total == 45)
         #expect(promoted?.score.tier == .likely)
     }
 
-    @Test("The declared claim is worth exactly as much as a curated verb, and no more")
-    func parityWithCuratedVerb() {
+    /// **The weight is deliberately BELOW a curated verb, and that is the finding.**
+    ///
+    /// It shipped at +40 (verb parity) on the strength of SEI's paraphrase of the
+    /// tier — "`f(f(x))` is semantically equivalent to `f(x)`". The OWNING package
+    /// defines `@Idempotent` as "re-invocation with the same arguments produces the
+    /// same observable result": `f(x)` twice, never `f` fed its own output. The
+    /// annotation claims the adjacent property, so it cannot outrank a name that
+    /// claims this one. If a future change raises it back to 40, this is the test
+    /// that has to be argued with — and the argument has to address `quoted(_:)`,
+    /// which satisfies the owner's definition and fails composition at trial 0.
+    @Test("The declared claim scores BELOW a curated verb — it claims a weaker property")
+    func weakerThanCuratedVerb() {
         let byName = makeIdempotenceSummary(name: "normalize", paramType: "String", returnType: "String")
         let byAnnotation = makeIdempotenceSummary(
             name: "process",
@@ -44,13 +49,11 @@ struct IdempotenceDeclaredEffectTests {
             returnType: "String",
             declaredEffect: .idempotent
         )
-        // Both are "the author told us" — one by naming, one by annotating. If a
-        // future change makes an annotation outrank a name, this is the test that
-        // should have to be argued with first.
-        #expect(
-            IdempotenceTemplate.suggest(for: byName)?.score.total
-                == IdempotenceTemplate.suggest(for: byAnnotation)?.score.total
-        )
+        let nameScore = IdempotenceTemplate.suggest(for: byName)?.score.total
+        let annotationScore = IdempotenceTemplate.suggest(for: byAnnotation)?.score.total
+        #expect(nameScore == 70)
+        #expect(annotationScore == 45)
+        #expect((annotationScore ?? 0) < (nameScore ?? 0))
     }
 
     // MARK: - The denial vetoes
