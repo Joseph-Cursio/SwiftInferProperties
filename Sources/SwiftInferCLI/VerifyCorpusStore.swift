@@ -55,6 +55,13 @@ public enum VerifyCorpusStore {
     /// Accumulate `entry` into the corpus at `packageRoot` (load → add → write).
     /// Best-effort: a write failure returns a warning rather than throwing into
     /// the verify gesture. Returns any load + write warnings.
+    ///
+    /// Re-invocation with the same entry adds nothing: `VerifyCorpus.adding`
+    /// guards on `dedupKey`, so the second call writes byte-identical content.
+    /// That is the claim below, and it is the retry-safety one — nothing here
+    /// says the corpus is a fixed point of anything.
+    ///
+    /// @lint.effect idempotent
     public static func record(_ entry: VerifyCorpusEntry, packageRoot: URL) -> [String] {
         recordBatch([entry], packageRoot: packageRoot)
     }

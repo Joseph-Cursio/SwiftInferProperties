@@ -71,6 +71,13 @@ enum VerifyEvidenceRecorder {
     /// read warnings and any write failure are returned for the caller
     /// to surface on stderr; the verify command never fails on a
     /// persistence error.
+    ///
+    /// Re-invocation with the same evidence produces no additional observable
+    /// effect: `VerifyEvidenceLog.upserting` replaces by `identityHash`, so the
+    /// second write is byte-identical to the first. This is why a killed and
+    /// re-run survey does not corrupt the evidence file.
+    ///
+    /// @lint.effect idempotent
     static func record(
         _ evidence: VerifyEvidence,
         packageRoot: URL
