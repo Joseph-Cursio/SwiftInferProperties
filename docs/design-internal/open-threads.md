@@ -4,11 +4,66 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-03** · `SwiftInferProperties@76d59e8`. Entries here are *not* dated claims
+> **As of 2026-08-03** · `SwiftInferProperties@052515b`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@76d59e8c473fcf599c8540052498d7b90fb5224c observer=SwiftInferProperties@76d59e8c473fcf599c8540052498d7b90fb5224c -->
+<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@052515ba389d5e55b6a2a567568ab11dcfa297bd observer=SwiftInferProperties@052515ba389d5e55b6a2a567568ab11dcfa297bd -->
+
+---
+
+## Next session starts here
+
+Written at the close of 2026-08-03, after PRs #71/#72/#73 took running `predicate` laws from
+**0 → 104 of 126**. Ordered; item 0 is a chore and everything after it is a choice.
+
+**0. Run the batches this work never saw.** `make test-fast` (4,823) and `make batch3` (31 tests /
+417s) are green at `052515b`; **batches 1, 2, 4, 5, 6 and 7 were never run against it.** That is
+the one outstanding claim about the merged work, and it is a `make test` away. Do this before
+anything else — everything below assumes the tree is actually green.
+
+**1. Should the `predicate` composer be pushed past 83%? — No, and the number is the argument.**
+
+The question was asked as *"retry the predicate composer update even though it is still only at
+83%"*, and the honest answer is that **83% is where that composer's work ends**. The remaining 22
+are not composer failures. Both compile buckets are **zero**; what is left is 17 carrier declines
+(14 SwiftSyntax nodes and optionals, `[String: TypeShape]` ×2, `[TypeDecl]`), 4 traps the carrier
+gate refuses to call refutations, and 1 undiagnosed `build-failed`. Nothing in that list gets
+better by changing the composer — 14 of them are *"no generator derives a `TokenSyntax`"*, which is
+a different package's problem, and 4 are the tool being right.
+
+So the next honest gain is **breadth, not depth**: a second composer, reaching a template that has
+none, is worth more than the last 17% of this one. `item 13`'s probe already said the same thing
+from the other side — *"the binding constraint is the composer set"* — and this survey is the first
+measurement that agrees with it from inside a composer that works.
+
+**Do the 1-point version anyway, because it is cheap and it is a mystery:** diagnose the single
+`build-failed` on `isStale(indexPath:packageRoot:)`. One entry, one workdir, and an undiagnosed
+build failure in a bucket where every other cause is now named is exactly the shape that turns out
+to be a fourth defect.
+
+**2. Generators for syntax-node carriers — scope it before building it.** 14 of the 22 is the
+largest single bucket left anywhere in this survey, and it is *one* question: can a `TokenSyntax` /
+`SyntaxCollection` be derived at all, and by whom — here, or `DerivationStrategist` in
+SwiftPropertyLaws? The design decision *"generator inference delegates to SwiftPropertyLaws"* says
+the answer is probably not here, which makes this a scope-and-file item rather than a build item.
+
+**3. Re-measure item 13's access-widening probe, with a pre-check.** The recorded read is that
+access is not the binding constraint — widening moves a function from *invisible* to
+*proposed-but-unrunnable*. That was written before today. It is now cheaply falsifiable: take the
+20 widened functions, check their parameter types against the carrier-decline list above, and see
+whether they land in the same bucket. If they do, the read stands and item 13 stays deferred; if
+they do not, the ordering against item 14 changes.
+
+**4. The whole-corpus number is still missing.** Everything above is `--template predicate` over
+126 entries. There is no measurement of how many laws run across *all* templates, which is the
+number open item 7 actually wants. Cost is the blocker, not method: 126 entries ran in roughly an
+afternoon and left 3.4 GB of workdirs behind.
+
+**5. Two review findings from `/swiftui-pro`, both fixed at close** — `VerifyTargetInference` was
+re-implementing `TargetDirectory.isDirectory` (now shared), and `VerifyImportSet`'s doc said
+breadth-first over a depth-first `popLast`. Recorded because the second one is the house failure
+mode in miniature: a comment that describes something the code stopped doing. Neither was a bug.
 
 ---
 
@@ -21,7 +76,7 @@ conversation's residue does not evaporate.
 | 3 | **Is SwiftProjectLint silently paying item 1?** It is already on `097181aa` and calls `PurityInferrer` from two visitors over every function *and closure* in a project | unmeasured. Cheap: point the same A/B at its own suite |
 | 4 | **The attribute-grammar join has no contract test.** SwiftIdempotency ships the macro names; `AttributeRecognition.default` hard-codes them; nothing asserts they still match | a rename fails as a *missing* annotation, indistinguishable from an unannotated codebase |
 | 5 | **`PBTSeed.role`'s doc comment is stale** — says two rules classify roles; `ExtractablePureKernelVisitor:106` makes it three | one-line fix in SwiftProjectLint |
-| 6 | **`.swiftinfer/` is not gitignored** — generated index/evidence JSON sits untracked in every `git status` | decide: ignore it, or commit the index deliberately |
+| 6 | ~~`.swiftinfer/` is not gitignored~~ | **Closed 2026-08-03.** Ignored at the **root only** (`/.swiftinfer/`, not `**/`) — `fixtures/cycle27-surface/.swiftinfer/index.json` is a tracked frozen corpus and a recursive pattern would have hidden it. A deliberate commit is still available via `git add -f` |
 | 7 | **No current end-to-end number** for the loop | see *Standing observations* → *The measurements are all withdrawn* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
 | 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
