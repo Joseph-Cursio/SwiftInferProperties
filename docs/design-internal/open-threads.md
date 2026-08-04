@@ -109,7 +109,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. **Superseded by item 16: the figure is now 104.** Zero refutations — these are regression guards on correct code, not bugs found |
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
-| 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand |
+| 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
 
 ---
 
@@ -562,6 +562,66 @@ else in the effect vocabulary is parsed by a linked dependency and consumed by n
 an annotation the tool cannot see — a rename that fails as a *missing* annotation, which is item
 4's failure mode reproduced by hand. Same shape as the `private` → explicit `internal` no-op
 measured the same day.
+
+**Step 1 is next** (decided 2026-08-04), with one caveat against the framing that sold it. This
+repo carries **zero** effect annotations in its own sources — the `@lint.effect` hits are all code
+*about* the annotation — and SwiftIdempotency is not a dependency here. So a `@NonIdempotent` veto
+would affect **0 of the 13 false positives measured the same day** (item 18). It is a
+**capability, not a fix**: it gives an author a way to kill a false law, it does not kill one.
+The shape-based work and the annotation-reading work attack the same class from opposite ends,
+and only one of them helps a codebase that has annotated nothing — they should not be scored
+against each other. What does hold up is the dependency-free part: the doc-comment spelling
+`/// @lint.effect idempotent` needs no package dependency, so the veto is usable without adopting
+SwiftIdempotency. And the tool **already speaks this vocabulary outbound** —
+`discover --effect-annotations` recommends `/// @lint.effect pure` lines
+(`EffectAnnotationAdvice` / `EffectAnnotationRenderer`) — and reads none back. One tool talking to
+itself in English, which is the *consumer keeps asking the producer* observation with both ends in
+the same repo.
+
+#### Does `@ClockDeterministic` belong in SwiftIdempotency? (folded in 2026-08-04)
+
+Raised as *"I think it was bolted on later for the infer-properties work"*. **The timing claim is
+exactly right** — `@Idempotent` dates from 2026-05-19; `@ClockDeterministic` and `@Pure` both
+landed 2026-07-10, the latter committed as *"closing the recognizer-first gap"*: the recognizer
+existed first and the macro was shipped afterwards so the attribute spelling would compile.
+
+**Two questions, and merging them is the trap.**
+
+**Does it belong to the idempotency LATTICE? No — and four fences already say so**, none of them
+added by this conversation:
+
+1. Its own doc header: *"Not an effect tier … attaching it grants no lattice trust — it makes a
+   **determinism** claim."*
+2. A different doc-comment namespace — `@lint.determinism`, where every other marker is
+   `@lint.effect <tier>`.
+3. SEI **excludes it from `AttributeRecognition`**; the configurable set is
+   pure / idempotent / nonIdempotent / observational / externallyIdempotent, and this one gets a
+   bespoke `isClockDeterministic(declaration:)`.
+4. `Effect` has five ordered tiers. `@lint.determinism` has **exactly one legal value**
+   (`clock_deterministic`) — a singleton namespace beside an ordered lattice.
+
+**Does it belong in the PACKAGE? Probably yes, and the two arguments that look decisive both
+fail.** *"SwiftIdempotency does not consume it"* is true — and true of **all five markers**, which
+are `EmptyPeerMacro {}` and expand to nothing; the whole family is vocabulary, so this does not
+separate it. *"It landed late"* fails too: `@Pure` shipped the **same day** for the **same**
+recognizer-first reason and is uncontroversially the lattice bottom. And every alternative home is
+worse — moving it to swift-infer would have **SEI (upstream, shared with SwiftProjectLint)
+recognising a name owned by a downstream package**; SwiftPropertyLaws is a real candidate since it
+ships the law that falsifies the claim (`TimedAsyncSequence.debounceIsDeterministicUnderTestClock`),
+but its macro vocabulary is suite generation, not claims; a package for one marker is overkill.
+
+**So the problem is not location — it is that the package silently plays two roles** (the
+retry-safety lattice, and the toolchain's marker-macro home) and only the first is named.
+`@ClockDeterministic` is a tenant of the second, defended by four fences and stated as a structure
+nowhere.
+
+**The concrete cost, which is the part worth acting on.** Because it sits outside
+`AttributeRecognition`, it is the one annotation in the toolchain that is **neither configurable
+nor contract-tested** — and it is the one swift-infer depends on to admit `async` at all. That is
+open item 4's target. Either give it a `determinism` field in `AttributeRecognition` (a **separate**
+field, not an effect tier — the orthogonality is real and worth keeping) or write the contract
+test. Doing neither leaves a rename failing as a *missing* annotation, indistinguishable from
+unannotated code.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
