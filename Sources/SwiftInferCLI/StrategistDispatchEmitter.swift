@@ -166,7 +166,21 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return GeneratorRecipe(
                 expression: composed.expression,
                 carrierTypeName: carrier,
-                imports: Array(Set(["Foundation", "PropertyBased"]).union(composed.requiredImports)).sorted()
+                // `PropertyLawKit` is added here rather than taken from
+                // `composed.requiredImports`, because the kit leaves it out on
+                // purpose: `CompositeMemberParser` says the Foundation
+                // generators are "the generators every derivation consumer
+                // already imports", naming its own `GeneratedFileEmitter` /
+                // `ScaffoldFileEmitter`. True of those; false of a verify stub,
+                // which imports `PropertyBased` and nothing else — so
+                // `Gen<URL>.url()` arrived as an expression referencing an
+                // extension the file could not see. Meeting the kit's stated
+                // assumption is the smaller fix, and it keeps the declaration of
+                // what an expression needs where the expression is written.
+                imports: Array(
+                    Set(["Foundation", "PropertyBased", "PropertyLawKit"])
+                        .union(composed.requiredImports)
+                ).sorted()
             )
         }
         // WS-4 — no RawType and no indexed shape (an external/opaque carrier).

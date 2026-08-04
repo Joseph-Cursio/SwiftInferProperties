@@ -294,65 +294,6 @@ public enum VerifierWorkdir {
             .joined(separator: ",\n")
     }
 
-    /// Build the comma-joined target `dependencies:` array.
-    /// Mode-dependent: `.algebraic` (v1.42 default) declares
-    /// ComplexModule + OrderedCollections + RealModule + PropertyBased
-    /// + PropertyLawComplex. `.interaction` (V2.0 M3.E.2) declares
-    /// PropertyBased + PropertyLawKit only — the M3.B-emitted stub
-    /// imports just those. User products append in either mode.
-    private static func renderTargetDependenciesBlock(
-        userPackage: UserPackageReference?,
-        mode: WorkdirMode
-    ) -> String {
-        var entries: [String]
-        switch mode {
-        case .algebraic:
-            entries = [
-                ".product(name: \"ComplexModule\", package: \"swift-numerics\")",
-                ".product(name: \"OrderedCollections\", package: \"swift-collections\")",
-                // Phase 1 M4 (collections/async workplan) — DequeModule for
-                // the curated Deque<Int> recipe, same pattern as V1.59.A's
-                // OrderedCollections entry above.
-                ".product(name: \"DequeModule\", package: \"swift-collections\")",
-                ".product(name: \"RealModule\", package: \"swift-numerics\")",
-                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
-                ".product(name: \"PropertyLawComplex\", package: \"SwiftPropertyLaws\")"
-            ]
-
-        case .interaction:
-            entries = [
-                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
-                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"
-            ]
-
-        case .interactionTCA:
-            entries = [
-                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
-                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
-                ".product(name: \"ComposableArchitecture\", "
-                    + "package: \"swift-composable-architecture\")"
-            ]
-
-        case .interactionMobius:
-            entries = [
-                ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
-                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
-                ".product(name: \"MobiusCore\", package: \"Mobius.swift\")"
-            ]
-        }
-        if let userPackage {
-            for productName in userPackage.productNames {
-                entries.append(
-                    ".product(name: \(escapedLiteral(productName)), "
-                        + "package: \(escapedLiteral(userPackage.packageIdentity)))"
-                )
-            }
-        }
-        return entries
-            .map { "                \($0)" }
-            .joined(separator: ",\n")
-    }
-
     /// Escape a string for safe inclusion as a Swift string literal
     /// in the rendered Package.swift. Handles backslashes + double
     /// quotes (the typical filename-path concerns); doesn't
