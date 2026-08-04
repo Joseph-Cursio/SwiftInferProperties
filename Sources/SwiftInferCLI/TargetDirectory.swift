@@ -189,13 +189,19 @@ enum TargetDirectory {
         )
     }
 
-    // MARK: - Private
-
-    private static func isDirectory(_ url: URL) -> Bool {
+    /// Does `url` name a directory that actually exists?
+    ///
+    /// Internal rather than private because `VerifyTargetInference` walks this mapping in the
+    /// other direction — path back to module — and applies the same "confirm the directory is
+    /// really there" rule. Sharing the check is what keeps that one rule, rather than two copies
+    /// of it that can drift apart in separate files.
+    static func isDirectory(_ url: URL) -> Bool {
         var isDirectory: ObjCBool = false
         let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
         return exists && isDirectory.boolValue
     }
+
+    // MARK: - Private
 
     /// " Available targets: A, B, C." — or a note that there are none.
     private static func availableTargetsClause(in sources: URL) -> String {
