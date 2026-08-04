@@ -146,6 +146,19 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// emitter emits `value.name` (property access) rather than `value.name()`.
     public var isComputedProperty: Bool
 
+    /// Each parameter's type as written, in declaration order — the law's **signature**, where
+    /// every other field describes only its carrier.
+    ///
+    /// `carrierTypeName` is singular, which is enough to state a law about `f(_ x: T)` and not
+    /// enough for anything else. Measured 2026-08-03: 19 of 126 `predicate` entries failed to
+    /// compile with `missing argument for parameter #2`, because the composer had one type and
+    /// emitted one argument for a function that takes two.
+    ///
+    /// Empty means *not recorded* — an index written before this field existed, or an
+    /// `Evidence` built by hand — and verify falls back to the single-carrier behaviour rather
+    /// than guessing.
+    public var parameterTypeNames: [String]
+
     public init(
         identityHash: String,
         templateName: String,
@@ -165,7 +178,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         isMutatingMethod: Bool = false,
         isNullary: Bool = false,
         returnsSelfType: Bool = false,
-        isComputedProperty: Bool = false
+        isComputedProperty: Bool = false,
+        parameterTypeNames: [String] = []
     ) {
         // Delegates to the exhaustive initializer, which is the designated one
         // — see `EveryColumn`. The direction matters: the exhaustive init is
@@ -191,7 +205,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             isMutatingMethod: isMutatingMethod,
             isNullary: isNullary,
             returnsSelfType: returnsSelfType,
-            isComputedProperty: isComputedProperty
+            isComputedProperty: isComputedProperty,
+            parameterTypeNames: parameterTypeNames
         )
     }
 
@@ -221,6 +236,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         case isNullary
         case returnsSelfType
         case isComputedProperty
+        case parameterTypeNames
     }
 
     public init(from decoder: Decoder) throws {
@@ -251,6 +267,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             try container.decodeIfPresent(Bool.self, forKey: .returnsSelfType) ?? false
         self.isComputedProperty =
             try container.decodeIfPresent(Bool.self, forKey: .isComputedProperty) ?? false
+        // Absent on any index written before 2026-08-03 → empty, which verify reads as
+        // "not recorded" and falls back to the single-carrier composition.
+        self.parameterTypeNames =
+            try container.decodeIfPresent([String].self, forKey: .parameterTypeNames) ?? []
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -274,6 +294,13 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         try container.encode(isNullary, forKey: .isNullary)
         try container.encode(returnsSelfType, forKey: .returnsSelfType)
         try container.encode(isComputedProperty, forKey: .isComputedProperty)
+        // Encoded unconditionally, including when empty. It was briefly omitted-when-empty to
+        // keep an index of unary laws byte-identical to one written before the field existed —
+        // and `FieldCoverageReflectionTests` rejected that within the hour. It is right to: a
+        // stored property that silently never reaches the encoded form is the defect that guard
+        // exists for, and a tidier diff is not worth reopening it. Old indexes still load,
+        // because the DECODER is where back-compat belongs (`decodeIfPresent`).
+        try container.encode(parameterTypeNames, forKey: .parameterTypeNames)
     }
 
     /// Returns a copy of `self` with the upsert-mutable columns
@@ -312,7 +339,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         isMutatingMethod: Bool,
         isNullary: Bool,
         returnsSelfType: Bool,
-        isComputedProperty: Bool
+        isComputedProperty: Bool,
+        parameterTypeNames: [String]
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -333,6 +361,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.isNullary = isNullary
         self.returnsSelfType = returnsSelfType
         self.isComputedProperty = isComputedProperty
+        self.parameterTypeNames = parameterTypeNames
     }
 
     public func updated(from other: Self) -> Self {
@@ -356,7 +385,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             isMutatingMethod: other.isMutatingMethod,
             isNullary: other.isNullary,
             returnsSelfType: other.returnsSelfType,
-            isComputedProperty: other.isComputedProperty
+            isComputedProperty: other.isComputedProperty,
+            // From `other`: a re-scan is authoritative for the signature, exactly as it is for
+            // every other shape column. A parameter list that changed is a law that changed.
+            parameterTypeNames: other.parameterTypeNames
         )
     }
 }

@@ -72,6 +72,24 @@ extension SwiftInferCommand.Discover {
         /// concrete one at emission — which is why `scaffold-kit-suites` wrote `Deque.self`.
         public let genericParametersByName: [String: [TypeDecl.GenericParameter]]
 
+        /// The file each type is **declared** in, keyed by bare type name.
+        ///
+        /// Third sidecar map, and here for the same reason as the two above: `TypeShape` belongs
+        /// to SwiftPropertyLaws and has no use for a source path, so putting one on it would be a
+        /// cross-repo change plus a pin bump.
+        ///
+        /// What it is for: verify's stub `@testable`-imports the module the *function* lives in,
+        /// which is not enough. A law over `f(_ s: FunctionSummary)` names a type from another
+        /// module, and `@testable import` does not re-export — so the stub cannot see it and the
+        /// build fails. Measured 2026-08-03: **37 of 126** `predicate` entries failed exactly
+        /// this way, 31 of them on `FunctionSummary` alone. A path resolves to a module through
+        /// `VerifyTargetInference.module(forLocation:)`, so this map is the missing half of a
+        /// mechanism that already exists.
+        ///
+        /// Populated from **declarations only** — see `sourceFileIndex` for why an extension
+        /// must not vote.
+        public let sourceFileByTypeName: [String: String]
+
         /// Generators synthesized from how the tests construct each type
         /// (mock-synthesis over the full construction record), keyed by type
         /// name — for *any* test-constructed type, not only suggestion-bearing
@@ -113,6 +131,7 @@ extension SwiftInferCommand.Discover {
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             inheritedTypesByName: [String: Set<String>] = [:],
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
+            sourceFileByTypeName: [String: String] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
             restrictedFunctions: [RestrictedFunction] = [],
@@ -133,6 +152,7 @@ extension SwiftInferCommand.Discover {
             self.typeShapesByName = typeShapesByName
             self.inheritedTypesByName = inheritedTypesByName
             self.genericParametersByName = genericParametersByName
+            self.sourceFileByTypeName = sourceFileByTypeName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries
             self.restrictedFunctions = restrictedFunctions

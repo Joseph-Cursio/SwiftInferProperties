@@ -80,6 +80,26 @@ extension StrategistDispatchEmitter {
         /// keeps every pre-existing call site emitting exactly what it did.
         public let parameterCount: Int
 
+        /// Each parameter's type as written, in declaration order.
+        ///
+        /// `parameterCount` says how many; this says what. A law over `f(_ a: A, _ b: B)` needs a
+        /// generator per parameter, and until 2026-08-03 nothing carried `B` at all — 19 of 126
+        /// `predicate` entries failed to compile as `missing argument for parameter #2`.
+        ///
+        /// Empty means *not recorded* (a pre-2026-08-03 index, or a hand-built `Inputs`), and
+        /// every composer falls back to the single-carrier form it used before.
+        public let parameterTypeNames: [String]
+
+        /// The type an instance method is called ON, when the emitted call has a receiver — and
+        /// `nil` otherwise, so the gate is decided once here rather than re-derived at each use.
+        ///
+        /// `receiverCallExpression` renders `{ $0.method($1) }`, making the receiver an implicit
+        /// first argument. A composer that supplies one value per *declared* parameter is short
+        /// by one for every such law. Set only when `isInstanceMethod && !isMutatingMethod`,
+        /// matching that function's own condition — a mutating method takes the positional
+        /// trampoline and has no receiver argument.
+        public let receiverTypeName: String?
+
         public init(
             carrier: String,
             typeShape: IndexedTypeShape?,
@@ -95,7 +115,9 @@ extension StrategistDispatchEmitter {
             isNullary: Bool = false,
             returnsSelfType: Bool = false,
             isComputedProperty: Bool = false,
-            parameterCount: Int = 0
+            parameterCount: Int = 0,
+            parameterTypeNames: [String] = [],
+            receiverTypeName: String? = nil
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -112,6 +134,8 @@ extension StrategistDispatchEmitter {
             self.returnsSelfType = returnsSelfType
             self.isComputedProperty = isComputedProperty
             self.parameterCount = parameterCount
+            self.parameterTypeNames = parameterTypeNames
+            self.receiverTypeName = receiverTypeName
         }
     }
 }

@@ -139,7 +139,8 @@ extension SwiftInferCommand.Index {
             isMutatingMethod: evidence?.isMutatingMethod ?? false,
             isNullary: evidence?.isNullary ?? false,
             returnsSelfType: evidence?.returnsSelfType ?? false,
-            isComputedProperty: evidence?.isComputedProperty ?? false
+            isComputedProperty: evidence?.isComputedProperty ?? false,
+            parameterTypeNames: evidence?.parameterTypeNames ?? []
         )
     }
 

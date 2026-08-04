@@ -195,6 +195,24 @@ public struct Evidence: Sendable, Equatable {
     /// than a call (`value.conjugate()`).
     public let isComputedProperty: Bool
 
+    /// Each parameter's type as written, in declaration order.
+    ///
+    /// Carried rather than recovered from `signature`. That string is a *rendering* — the types
+    /// comma-joined — and splitting it back apart is wrong the moment a parameter is itself
+    /// generic over two arguments (`Dictionary<String, Int>`) or a tuple. The list is what the
+    /// scanner had; re-deriving it from prose it printed is the mistake `docs/parsing-catalog-gap`
+    /// keeps finding elsewhere.
+    ///
+    /// Consumed by verify, which needs one generated value **per parameter** to state a law about
+    /// an n-ary function. Measured 2026-08-03: 19 of 126 `predicate` entries failed to compile as
+    /// `missing argument for parameter #2`, because the composer had only ever been given one
+    /// type and so emitted one argument.
+    ///
+    /// Defaulted to `[]` so the many hand-built `Evidence` values in tests and non-scanner call
+    /// sites keep compiling; an empty list means *not recorded*, and verify falls back to the
+    /// single-carrier behaviour.
+    public let parameterTypeNames: [String]
+
     public init(
         displayName: String,
         signature: String,
@@ -203,7 +221,8 @@ public struct Evidence: Sendable, Equatable {
         isMutatingMethod: Bool = false,
         isNullary: Bool = false,
         returnsSelfType: Bool = false,
-        isComputedProperty: Bool = false
+        isComputedProperty: Bool = false,
+        parameterTypeNames: [String] = []
     ) {
         self.displayName = displayName
         self.signature = signature
@@ -213,6 +232,7 @@ public struct Evidence: Sendable, Equatable {
         self.isNullary = isNullary
         self.returnsSelfType = returnsSelfType
         self.isComputedProperty = isComputedProperty
+        self.parameterTypeNames = parameterTypeNames
     }
 }
 

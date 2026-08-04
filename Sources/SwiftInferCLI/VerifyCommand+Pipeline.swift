@@ -34,7 +34,7 @@ extension SwiftInferCommand.Verify {
         // is DERIVED from the entry's own source path: the flag was optional and its absence
         // silent, so the common gesture — `verify --suggestion <hash>` — reached none of the
         // user's own code and failed to build. See `VerifyCommand+Wiring`.
-        let wiring = Self.wiring(for: entry, explicitTarget: target, packageRoot: packageRoot)
+        let wiring = Self.wiring(for: resolved, explicitTarget: target, packageRoot: packageRoot)
         let stubBundle = try Self.buildStubBundle(
             entry: entry,
             budget: parseBudget(budgetString),
@@ -200,7 +200,7 @@ extension SwiftInferCommand.Verify {
         indexPathOverride: String?,
         packageRoot: URL,
         clockNow: Date = Date()
-    ) throws -> (entry: SemanticIndexEntry, allShapes: [String: IndexedTypeShape]) {
+    ) throws -> ResolvedEntry {
         // Injected via `now` so a test can pin it (SwiftProjectLint's
         // Non-Injected Nondeterminism rule). Only feeds `IndexStore.load`'s
         // `.empty(at:)` staleness fallback, so any stable value works.
@@ -224,7 +224,13 @@ extension SwiftInferCommand.Verify {
         // WS-6 Slice 2 — carry the whole-module shape universe alongside the
         // matched entry so verify can recursively derive nested custom-type
         // carriers. Empty on un-reindexed (pre-v4) indexes → no recursion.
-        return (lookup.entry, resolved.index.typeShapes)
+        // `sourceFileByTypeName` rides alongside for the same reason: verify must resolve the
+        // module of every type the carrier reaches, not just the one on the entry.
+        return ResolvedEntry(
+            entry: lookup.entry,
+            allShapes: resolved.index.typeShapes,
+            sourceFiles: resolved.index.sourceFileByTypeName
+        )
     }
 
     /// Sub-step: build the synthesized workdir and run the verifier binary.

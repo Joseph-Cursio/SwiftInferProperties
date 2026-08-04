@@ -29,9 +29,9 @@ conversation's residue does not evaporate.
 | 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
 | 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
 | 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**. A 20-function probe measured 20 → 8 proposed → 2 composer-supported, i.e. **≤+60 against a base of 100 — a 60% gain at the ceiling**. Ordering against 14 is **not settled**; see *Decisions* |
-| 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. Zero refutations — these are regression guards on correct code, not bugs found |
+| 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. **Superseded by item 16: the figure is now 104.** Zero refutations — these are regression guards on correct code, not bugs found |
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
-| 16 | **The index records a CARRIER; a law needs a SIGNATURE** | scoped 2026-08-03, **unbuilt**. The single largest blocker to running laws, **measured**: 56 of the 72 non-running `predicate` entries (78%). See *Decisions* → *Signature, not carrier* |
+| 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
 
 ---
 
@@ -301,6 +301,47 @@ more than one importing one; this survey already costs ~35 min and ~72 GB for 12
 --max-parallel 4` — per §10.3: two binaries, same day, same corpus, never against a remembered
 count. **The run above IS the before-binary measurement**, taken 2026-08-03 at `1d39745` plus the
 `--target` derivation. Do not substitute a recollection of it.
+
+### Signature, not carrier — the measured close (2026-08-03)
+
+Three binaries, same 126 entries, same afternoon — the §10.3 shape, and the reason the numbers are
+comparable at all.
+
+| bucket | A: `--target` | B: `+signature` | C: `+fixes` |
+|---|---:|---:|---:|
+| **ran and held** | 54 | 94 | **104** |
+| compile: type not in scope | 37 | 0 | **0** |
+| compile: arity | 19 | 7 | **0** |
+| no generator for carrier | 11 | 20 | 17 |
+| trapped — domain evidence | 4 | 4 | 4 |
+| other | 1 | 1 | 1 |
+
+**Both compile buckets closed. `≤+56` realised as +50**, and the 6 it fell short by are visible
+rather than unexplained: carrier declines rose 11 → 17. Those entries did not get worse — they
+stopped failing at compile and started failing earlier, at generator resolution, which is where
+they were always going to fail. `DefaultFileSystemReader` was never generatable; saying so beats
+reporting a missing argument count.
+
+**Two defects that only running it could find**, both invisible to the unit tests:
+
+1. **The receiver is an implicit parameter.** `receiverCallExpression` renders `{ $0.method($1) }`,
+   so an instance method's closure takes `parameters + 1` values. Exactly 7 entries, and all 7 had
+   been failing on a missing type first — *a refuter that fires first hides every refuter behind
+   it*, which is a design decision in this repo and turned out to describe its own measurement.
+2. **The n-ary path dropped the resolver.** `emit` builds a `GeneratorResolver` from `allShapes`;
+   the totality composer re-resolved per parameter without it, so nested custom types could not
+   derive. Five `FunctionSummary` laws declined for a type that derives fine on the unary path —
+   which never noticed, because it is handed an already-resolved recipe. **Anything that
+   re-resolves must re-resolve with the same resolver.**
+
+**What remains is a different kind of problem.** Of 22 non-passing, **17 are carrier declines** and
+14 of those are SwiftSyntax nodes or optionals — nothing derives generators for those, and it is
+not more plumbing. Plus `[String: TypeShape]` ×2 and `[TypeDecl]` (containers of custom types),
+4 traps the carrier gate correctly refuses to call refutations, and 1 undiagnosed build failure.
+
+**And 104 laws holding is not 104 findings.** Zero refutations across all three runs. These are
+executable regression guards on code that is currently correct — item 15's prediction, and what
+*score refutability, not suggestion count* requires be said out loud.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 

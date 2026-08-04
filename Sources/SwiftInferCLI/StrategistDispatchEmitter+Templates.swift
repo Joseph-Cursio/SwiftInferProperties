@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 
 // V1.47.E — per-template Pass 1 composers for the strategist-routed
@@ -118,9 +119,9 @@ extension StrategistDispatchEmitter {
     /// A sibling of `algebraicLawPass` and deliberately checked *before* it: `predicate` is in
     /// `TemplateName.verifiable` but excluded from `strategistAlgebraicLaws`, so the algebraic
     /// fallthrough would reject it with an `unsupportedTemplate` naming a set it was never in.
-    static func totalityLawPass(inputs: Inputs, recipe: GeneratorRecipe) -> String? {
+    static func totalityLawPass(inputs: Inputs, recipe: GeneratorRecipe) throws -> String? {
         guard inputs.template == TemplateName.predicate.rawValue else { return nil }
-        return composePredicatePass(inputs: inputs, recipe: recipe)
+        return try composePredicatePass(inputs: inputs, recipe: recipe)
     }
 
     /// **Totality** — the predicate returns a value for every input its type admits.
@@ -158,9 +159,12 @@ extension StrategistDispatchEmitter {
     static func composePredicatePass(
         inputs: Inputs,
         recipe: GeneratorRecipe
-    ) -> String {
+    ) throws -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
         let carrierName = recipe.carrierTypeName
+        // One generator per parameter. Unary laws take the single-carrier branch and emit exactly
+        // what they emitted before — see `totalityOperands`.
+        let operands = try totalityOperands(inputs: inputs, recipe: recipe)
         return """
         // --- Pass 1: default (strategist-derived generator) ---
         //
@@ -174,16 +178,15 @@ extension StrategistDispatchEmitter {
         // `FixedWidthIntegerNames.domainCompleteScalars`.
         print("VERIFY_TRIAL_CARRIER: \(carrierName)")
 
-        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
-            \(recipe.expression)
+        \(operands.declarations)
 
         for trial in 0 ..< trials {
-            let candidate = defaultGenerator.run(using: &rng)
+        \(operands.drawStatements)
             // BEFORE the call: if the next line traps, this is the counterexample.
             print("VERIFY_TRIAL_INDEX: \\(trial)")
-            print("VERIFY_TRIAL_INPUT: \\(candidate)")
+            print("VERIFY_TRIAL_INPUT: \\(\(operands.inputExpression))")
             // Bound to `_` on purpose: totality is satisfied by RETURNING. The value is not the law.
-            _ = \(functionCall)(candidate)
+            _ = \(functionCall)(\(operands.argumentList))
         }
 
         print("VERIFY_DEFAULT_RESULT: PASS")
