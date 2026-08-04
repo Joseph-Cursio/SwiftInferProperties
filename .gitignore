@@ -85,3 +85,20 @@ fixtures/verify-refutability/.swiftinfer/
 # one — it makes two runs comparable — but it records a moment, not a decision, so it is
 # regenerated rather than tracked.
 **/.toolchain-run/
+
+# This repo's OWN generated `.swiftinfer/`, at the root only — `**/` would be wrong, since
+# `fixtures/cycle27-surface/.swiftinfer/index.json` is tracked deliberately as a frozen corpus.
+#
+# The decisive argument is not "it is regenerable" (it is — `reindexIfNeeded` rebuilds it on a
+# stale read) but that `index.json` stores **absolute paths including the username**: the tracked
+# fixture index reads `/Users/joecursio/…` and a local one reads `/Users/josephcursio/…`. Tracking
+# it would conflict on every sync between the two machines and be wrong on whichever pulled last.
+#
+# `verify-evidence.json` and `kit-evidence.json` are per-run records with wall-clock stamps.
+#
+# `verify-corpus.json` is the one with a real claim to being tracked — it is the durable replay
+# corpus, and it only works as a *permanent* regression guard if it is committed. It is ignored
+# here rather than tracked because every local verify run appends to it, so tracking it trades
+# git-status noise for commit churn. That trade is a decision worth making explicitly; until then
+# `git add -f .swiftinfer/verify-corpus.json` is how to take it.
+/.swiftinfer/
