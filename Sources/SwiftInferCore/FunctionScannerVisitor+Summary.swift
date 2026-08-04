@@ -35,7 +35,11 @@ extension FunctionScannerVisitor {
         // Sound purity verdict — computed here, the one place the live
         // `FunctionDeclSyntax` is available, and carried on the summary for the
         // `@lint.effect pure` advisory channel.
-        let isInferredPure = SoundPurity.isPure(node)
+        // One call, both answers — `isInferredPure` is this verdict's two-state
+        // collapse, so computing them separately would walk the body twice and
+        // could drift.
+        let purityVerdict = SoundPurity.verdict(for: node)
+        let isInferredPure = purityVerdict == .pure
         // Clock-determinism claim — same scan-time posture as the purity
         // verdict above; consumed by the async-veto relaxation (workplan
         // Phase 4). First EffectAnnotationParser use in this repo.
@@ -68,7 +72,8 @@ extension FunctionScannerVisitor {
             isInferredPure: isInferredPure,
             isClockDeterministic: isClockDeterministic,
             docComment: docComment,
-            declaredEffect: declaredEffect
+            declaredEffect: declaredEffect,
+            purityVerdict: purityVerdict
         )
     }
 

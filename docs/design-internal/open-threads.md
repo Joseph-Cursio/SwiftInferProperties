@@ -96,7 +96,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | # | item | where it stands |
 |---|---|---|
 | 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04, and the issue's own diagnosis was right.** `inferredEffect(for:)` no longer delegates to `verdict(for:)`: `verdict` cannot check `throws` until *after* the body walk (that walk is the only way to separate `.pureButPartial` from `.refuted`), but the whole-domain question treats `throws` as disqualifying and rejects on the signature. Fixed in [SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2). **Also settles the issue's open question — mechanism 1 was the ENTIRE cost**; the erased-`Syntax` generalisation contributes nothing measurable, so there is no second fix to chase |
-| 2 | **Then**: ~~bump the SEI pin~~, ~~run `make perf` before `make test`~~, add a pin-equality guard, then adopt `verdict(for:)` | **Pin bumped 2026-08-04** to `bfcf0e3` — *past* the regression rather than around it. All five §13 budgets back at control-arm cost (Discover-pipeline **3.677s** against its 6.0s budget, versus **6.777s** on `097181aa`); all ten `make` targets green. **Still open: the pin-equality guard and adopting `verdict(for:)`.** SwiftProjectLint remains on `097181aa`, which sharpens item 3 into *is SPL paying a cost this repo has stopped paying?* |
+| 2 | ~~**Then**: bump the SEI pin, run `make perf` before `make test`, add a pin-equality guard, then adopt `verdict(for:)`~~ | **Pin bumped 2026-08-04** to `bfcf0e3` — *past* the regression rather than around it. All five §13 budgets back at control-arm cost (Discover-pipeline **3.677s** against its 6.0s budget, versus **6.777s** on `097181aa`); all ten `make` targets green. **All four done 2026-08-04.** Pin-equality guard landed in SwiftProjectLint ([SPL#66](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/66)) — its three manifests pin SEI by revision and only prose kept them aligned; the guard reads the manifest TEXT, not `Package.resolved`, and was watched failing on a divergence. SPL also moved to `bfcf0e3`, so the pins agree again. **`verdict(for:)` adopted, and the A/B argued against the obvious version** — see *Decisions* → *Adopting `verdict(for:)`*. Item 3 stays open: SPL now HAS the fix, which is not evidence it was paying for its absence |
 | 3 | **Is SwiftProjectLint silently paying item 1?** It is already on `097181aa` and calls `PurityInferrer` from two visitors over every function *and closure* in a project | unmeasured. Cheap: point the same A/B at its own suite |
 | 4 | **The attribute-grammar join has no contract test.** SwiftIdempotency ships the macro names; `AttributeRecognition.default` hard-codes them; nothing asserts they still match | a rename fails as a *missing* annotation, indistinguishable from an unannotated codebase |
 | 5 | ~~**`PBTSeed.role`'s doc comment is stale**~~ | **Closed 2026-08-04** ([SPL#65](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/65)), and it was wrong **twice over** — which is why it was not a one-line fix. The count was stale, *and* the wording (*"every rule but the two **candidate** rules"*) ruled the third out **by name**: `extractablePureKernel` is a kernel rule, so a reader checking the sentence against the code would have read the classification they found there as a bug. **A doc that characterises a set by a property its newest member lacks does not go out of date — it argues against the code.** The three are now named individually rather than counted. Also closed the gap the count rested on: `SeedRoleEmissionTests` had arms for the closure and kernel rules and **none** for `pureFunctionCandidate`, so the third classifier had no executable claim anywhere — which is how a doc about it could be wrong unnoticed |
@@ -815,6 +815,46 @@ predictions, nine confirmations, on rows that could not run when the prediction 
 That is the strongest evidence the classifier has, and it arrived from a defect fixed for
 an unrelated reason. The 2 remaining non-executing rows are a different class
 (`cannot find 'Scaffold' in scope` — item 16's residual, not this).
+
+### Adopting `verdict(for:)` — the measurement argued against the obvious version (2026-08-04)
+
+Item 2's last piece, and the A/B ran **before** the build rather than after it.
+
+**The population, measured on 2,500 functions in this repo:** 2,206 `.pure`, **35
+`.pureButPartial`** (1.4%), 259 `.refuted`. Those 35 are everything adoption could
+newly admit.
+
+**Why the literal reading of "adopt `verdict(for:)`" is wrong.** `isInferredPure` has
+exactly **one** consumer — the `/// @lint.effect pure` advisory. It gates no law, no
+score, no template. So adopting the verdict *there* would mean advising 35 partial
+functions `pure`, and that is false: SEI defines the tier as *"no side effects,
+deterministic, **and total**"*, and the lattice has **no tier** for
+deterministic-but-partial. There is nothing honest to tell them, so the advisory is
+deliberately unchanged.
+
+**What was adopted instead** is the half that is not a lie: `SoundPurity.verdict(for:)`
+and `FunctionSummary.purityVerdict`, carrying the state the Bool collapse destroyed.
+Before this, `isPure` answered `false` for all **294** non-pure functions alike —
+nothing downstream could distinguish *"reads the clock"* from *"raises its own error"*.
+The information was being discarded at the scan boundary, which is the same shape as
+every other producer→consumer loss in this toolchain.
+
+**The soundness worry is real and does not apply.** Admitting `throws` resembles the
+relaxation this project warns about — *"removing the `throws` gate once re-admitted
+`Process`/`Pipe`/`FileHandle`/SQLite at once"*. It is not: `.pureButPartial` requires
+the body contain **no `try` at all**, so a throw propagated from a dependency still
+refutes. Only a function raising its own errors qualifies. Pinned by a test, because
+the resemblance is close enough to be worth guarding rather than explaining.
+
+**A/B: 251 → 251 suggestions, and the only 12 differing lines are self-referential** —
+the docstring advisory went 139 → 140 because the new `verdict(for:)` is itself a
+documented function in the scanned corpus, plus two line-number shifts. The tool
+noticed the function just added to it.
+
+**The 35 stay unconsumed on purpose.** They are waiting on a consumer that can narrow a
+law's domain to the non-throwing inputs, which is what `PurityVerdict`'s own doc says
+the method is for. Filing them as available beats inventing an annotation tier to
+justify reading them.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
