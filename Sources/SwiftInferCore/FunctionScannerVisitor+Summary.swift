@@ -40,6 +40,14 @@ extension FunctionScannerVisitor {
         // verdict above; consumed by the async-veto relaxation (workplan
         // Phase 4). First EffectAnnotationParser use in this repo.
         let isClockDeterministic = EffectAnnotationParser.isClockDeterministic(declaration: node)
+        // The author's own retry-safety claim, in either spelling. Same
+        // scan-time posture and the same parser as the determinism claim
+        // above — but a DIFFERENT axis: `@lint.determinism` says the result
+        // does not vary with time, `@lint.effect` says what re-running costs.
+        // Until this line the parser was called for determinism alone, so
+        // `@Idempotent` / `@NonIdempotent` / `@ExternallyIdempotent` were
+        // parsed by a linked dependency and read by nothing.
+        let declaredEffect = EffectAnnotationParser.parseEffect(declaration: node)
         // The leading doc comment — carried on the summary as a candidate
         // reference definition for the docstring advisory. Unclassified here.
         let docComment = DocCommentExtractor.docComment(from: node.leadingTrivia)
@@ -59,7 +67,8 @@ extension FunctionScannerVisitor {
             invariantKeypath: invariantKeypath,
             isInferredPure: isInferredPure,
             isClockDeterministic: isClockDeterministic,
-            docComment: docComment
+            docComment: docComment,
+            declaredEffect: declaredEffect
         )
     }
 

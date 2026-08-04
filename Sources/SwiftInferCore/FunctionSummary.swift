@@ -1,3 +1,5 @@
+import SwiftEffectInference
+
 /// Structured record produced by `FunctionScanner` for every function
 /// declaration found in a Swift source file. Carries the header info the
 /// scoring engine (M1.3+) needs to evaluate templates against, plus a
@@ -124,6 +126,29 @@ public struct FunctionSummary: Sendable, Equatable {
     /// so call sites that don't populate it compile unchanged.
     public let docComment: String?
 
+    /// The idempotency effect the *author* declared, via either spelling of
+    /// SwiftIdempotency's vocabulary — the attribute form (`@Idempotent`,
+    /// `@NonIdempotent`, `@Observational`, `@ExternallyIdempotent(by:)`,
+    /// `@Pure`) or the dependency-free doc-comment form
+    /// (`/// @lint.effect idempotent`). `nil` when the declaration carries no
+    /// claim, which is the overwhelmingly common case.
+    ///
+    /// **Read, not inferred.** This is a human's assertion about their own
+    /// code, in the same posture as `isClockDeterministic` above: presence is
+    /// a claim a law can then check, never an analysis result. It is
+    /// deliberately the *whole* `Effect` rather than a pair of booleans,
+    /// because the tiers are a retry-safety lattice and a consumer that wants
+    /// "is this idempotent" must also be able to see `externallyIdempotent`,
+    /// which asserts idempotence **only** through a caller-supplied dedup key
+    /// — a distinction this repo previously had no way to express at all.
+    ///
+    /// Parsed by `EffectAnnotationParser`, which SwiftInferCore already
+    /// depends on and until now called for exactly one thing
+    /// (`isClockDeterministic`). Note the two are separate axes and the
+    /// parser keeps them apart: `@lint.determinism` is a determinism claim,
+    /// `@lint.effect` a retry-safety one.
+    public let declaredEffect: Effect?
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -141,7 +166,8 @@ public struct FunctionSummary: Sendable, Equatable {
         isClockDeterministic: Bool = false,
         isComputedProperty: Bool = false,
         isInitializer: Bool = false,
-        docComment: String? = nil
+        docComment: String? = nil,
+        declaredEffect: Effect? = nil
     ) {
         self.name = name
         self.parameters = parameters
@@ -160,6 +186,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.isComputedProperty = isComputedProperty
         self.isInitializer = isInitializer
         self.docComment = docComment
+        self.declaredEffect = declaredEffect
     }
 }
 

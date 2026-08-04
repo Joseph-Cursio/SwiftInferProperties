@@ -133,6 +133,12 @@ public enum IdempotenceTemplate {
             return []
         }
         var signals: [Signal] = [typeSymmetry]
+        // The author's own claim, in either direction. Kept out of the name- and
+        // veto-side helpers because it is neither: it reads a declaration, and it
+        // can corroborate or veto from the one field.
+        if let declared = declaredEffectSignal(for: summary) {
+            signals.append(declared)
+        }
         signals.append(contentsOf: nameSideSignals(for: summary, vocabulary: vocabulary))
         signals.append(contentsOf: vetoSideSignals(
             for: summary,

@@ -109,6 +109,34 @@ extension Signal {
         /// is `Equatable`'s and the kit already runs its law.
         case equivalenceRelationSignature
 
+        /// The author *declared* the property, in SwiftIdempotency's vocabulary —
+        /// `@Idempotent`, or the dependency-free `/// @lint.effect idempotent`.
+        /// `Effect`'s own definition of that tier is this template's law verbatim:
+        /// *"subsequent invocations have the same effect as a single invocation;
+        /// `f(f(x))` is semantically equivalent to `f(x)`"*. So this is the most
+        /// direct pre-execution evidence available — the human who wrote the
+        /// function saying what it does, machine-readably.
+        ///
+        /// **+40, the same as an exact curated-verb match**, and the parity is the
+        /// argument rather than a coincidence: both are the author telling us, one
+        /// by naming and one by annotating. Not *higher* than a verb, because a
+        /// claim is still unverified — that is precisely what `verify` is for, and
+        /// `verifyBothPass` is where execution outranks everything. Landing, on the
+        /// band that matters: a real value-semantic carrier scores 35 (type symmetry
+        /// +30, value semantics +5) — the floor where the 2026-08-04 survey measured
+        /// **13 false laws in 55 executed rows** — and 35 + 40 = 75 is exactly
+        /// `Tier.strong`'s floor, so an annotated `T -> T` surfaces by default while
+        /// an unannotated one stays `Possible` and hidden. (Type symmetry *alone* is
+        /// 30 and lands at `Likely` 70; quote the 35 for real code.)
+        ///
+        /// **Corroborate-only, by construction.** The template's `appliesTo` gate is
+        /// the type-symmetry shape, so this can only raise a candidate the shape
+        /// already matched — it can never surface a law from an annotation alone.
+        /// Same posture as `docstringCorroboration` (+15), and stronger for the same
+        /// reason that one is weaker than a name: prose can be aspirational, an
+        /// annotation is a deliberate declaration a downstream tool acts on.
+        case declaredIdempotentEffect
+
         // Negative (non-veto)
         case sideEffectPenalty
         case generatorQualityPenalty
@@ -318,5 +346,31 @@ extension Signal {
         /// A sequence-view law on a carrier whose `==` already IS that comparison, so it
         /// restates its own result expression. Penalty not veto — see `EqualityBodyShape`.
         case tautologicalEqualityBody
+
+        /// The author declared the **opposite** — `@NonIdempotent`, or
+        /// `@ExternallyIdempotent(by:)`, in either spelling. Full veto.
+        ///
+        /// **Why veto where measured evidence only demotes.** `KitEvidence` refutes
+        /// at −45 and never vetoes, on the stated ground that *"the reader needs the
+        /// prerequisite, not an empty run"* — so a stronger, *executed* signal gets
+        /// gentler treatment than this one, which looks backwards until you notice
+        /// the axis is **directness**, not strength. The kit refutes a *prerequisite*
+        /// (`==` is unsound), leaving the law itself still worth showing beside the
+        /// warning. This denies *this law, about this function*, and the reader is
+        /// the person who typed the denial. Restating it back at them is noise.
+        ///
+        /// `externallyIdempotent` vetoes for a different and sharper reason: it
+        /// asserts idempotence **only** when routed through a caller-supplied dedup
+        /// key, so the unconditional `f(f(x)) == f(x)` this template emits is
+        /// *false* as written. That tier is the one distinction this repo had no way
+        /// to express before reading the vocabulary at all.
+        ///
+        /// **`observational` and `pure` are deliberately NOT here.** Neither implies
+        /// non-idempotence: `observational` is retry-safe by definition (it logs or
+        /// reads, without affecting program semantics), and `pure` says nothing
+        /// either way — `x + 1` is pure and not idempotent. A function that merely
+        /// logs still satisfies the law on its return value, and the clock-reading
+        /// risk that tier carries is already `nonDeterministicBody`'s job.
+        case declaredNonIdempotentEffect
     }
 }
