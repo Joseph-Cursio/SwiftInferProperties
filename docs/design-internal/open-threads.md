@@ -109,6 +109,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. **Superseded by item 16: the figure is now 104.** Zero refutations — these are regression guards on correct code, not bugs found |
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
+| 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand |
 
 ---
 
@@ -499,6 +500,68 @@ suggested: 20 widenings → 6 laws → 3 executions → **1 correct law**. Extra
 that is roughly 32 correct laws and 64 false proposals — a real gain and a real precision cost,
 where before there was only a count. The widened tree **compiles clean**, so the access tier's
 "the compiler makes the patch safe" claim is confirmed rather than assumed.
+
+### Idempotency vocabulary — surveyed, not yet decided (2026-08-04)
+
+Raised while scoping speculative *annotation* (item 13's cousin: add an annotation to a copy,
+verify, propose it only when the law ran). Recorded as a survey because the decision is the
+user's and the facts were not written down anywhere.
+
+**The first read of this was WRONG and the correction is the useful part.** I claimed the
+SwiftIdempotency and swift-infer vocabularies "don't meet, with nothing asserting they match."
+The second half is item 4 and is true. The first half is false: **`EffectAnnotationParser` in
+SwiftEffectInference already parses the entire SwiftIdempotency family**, bilingually — attribute
+form (`@Idempotent`, `@NonIdempotent`, `@Observational`, `@ExternallyIdempotent(by:)`, `@Pure`)
+*and* doc-comment form (`/// @lint.effect …`, `@lint.determinism clock_deterministic`) — with the
+names configurable through `AttributeRecognition`. swift-infer already depends on it. The join
+exists; it is simply almost unused.
+
+**Three vocabularies, three genuinely different jobs. That part is healthy.**
+
+| package | ships | job |
+|---|---|---|
+| SwiftIdempotency | `@Idempotent` `@NonIdempotent` `@Observational` `@ExternallyIdempotent(by:)` `@Pure` `@ClockDeterministic` | *what this function does* |
+| SwiftPropertyLaws | `@Discoverable(group:)` `@PropertyLawSuite` `@ValueSemanticTests` … | *what to discover / generate suites for* |
+| **this repo** | `@CheckProperty(.idempotent / .roundTrip(pairedWith:) / .preservesInvariant(_:))` | *which law to check* |
+
+**The real inconsistency is one row of overlap, and it is duplicated FUNCTION, not spelling.**
+`@CheckProperty(.idempotent)` expands into a peer `@Test func` (`CheckPropertyMacro`, M5.2);
+SwiftIdempotency's `@Idempotent` + `@IdempotencyTests` does the same job. Two packages generating
+idempotency tests from an annotation.
+
+**And this repo reads neither half it owns.** `AttributeScanner` reads only the
+`.preservesInvariant` arm — its own comment says `.idempotent` and `.roundTrip` "are ignored
+here." `EffectAnnotationParser` is called at exactly **three sites, all `isClockDeterministic`**
+(`FunctionScannerVisitor+Summary`, `ViewModelDiscoveryVisitor`, `ReducerDiscoverer`). Everything
+else in the effect vocabulary is parsed by a linked dependency and consumed by nothing.
+
+**Two defects found while checking, both small and both real:**
+
+- `AttributeScanner`'s doc comment says it recognises `@CheckProperty` and that "SwiftInferProperties
+  does not take a runtime dependency on **`PropertyLawMacro`**'s definitions". But `@CheckProperty`
+  is **this repo's own macro** (`Sources/SwiftInferMacro/CheckProperty.swift`) — the comment
+  attributes a local macro to another package. House failure mode, again.
+- **`@ClockDeterministic` is deliberately OUTSIDE `AttributeRecognition`** and hardcoded — SEI's own
+  comment says so in as many words. So the one annotation swift-infer depends on for admitting
+  `async` is the single name that is neither configurable nor contract-tested. That is item 4's
+  precise bite, now with a named target instead of a general worry.
+
+**The order that was proposed, and the trap in reversing it.**
+
+1. **Make swift-infer READ the effect vocabulary.** No cross-repo change — the parser is already a
+   dependency. `@Idempotent` as corroboration; **`@NonIdempotent` / `@Observational` as vetoes**.
+   This lands on the same afternoon's false-positive work: an author-declared `@NonIdempotent` is
+   exactly the signal that kills a shape-only score-35 candidate, and SwiftIdempotency has
+   spellings for the negative and conditional cases (`@ExternallyIdempotent(by:)`) that this repo
+   cannot express at all. It also gives SwiftIdempotency its first stage in the toolchain.
+2. **Then** converge authoring — retire `.idempotent` from `CheckPropertyKind`, keep `.roundTrip`
+   and `.preservesInvariant` (no SwiftIdempotency equivalent).
+3. **Then** the item-4 contract test, against the hardcoded `@ClockDeterministic` name.
+
+**Doing 2 before 1 is the worst order**: it removes a working test generator and replaces it with
+an annotation the tool cannot see — a rename that fails as a *missing* annotation, which is item
+4's failure mode reproduced by hand. Same shape as the `private` → explicit `internal` no-op
+measured the same day.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
