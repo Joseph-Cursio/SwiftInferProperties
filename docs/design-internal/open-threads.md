@@ -65,8 +65,8 @@ measurement that agrees with it from inside a composer that works.
 undiagnosed `build-failed` on `isStale(indexPath:packageRoot:)` is
 `type 'Gen<URL>' has no member 'url'` — **item 19**, reached here from the `predicate` survey and
 independently from item 18's `idempotence` survey, where it blocks the nine `defaultPath(for:)`
-rows. Two surveys, different templates, one defect. See *Decisions* → *The `Gen<URL>` defect is a
-module-boundary problem*.
+rows. Two surveys, different templates, one defect — **now fixed**. See *Decisions* → *The
+`Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping*.
 
 **2. Generators for syntax-node carriers — scope it before building it.** 14 of the 22 is the
 largest single bucket left anywhere in this survey, and it is *one* question: can a `TokenSyntax` /
@@ -113,7 +113,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
 | 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
 | 18 | **`idempotence` has a 24% false-law rate on its executed surface** — 13 of 55, all at the score-35 shape-only floor | measured 2026-08-04, **no fix shipped**. A return-expression shape classifier, frozen before the verdicts, scores **83% precision / 38% recall**; the misses are a second class (**domain transfer**: `T -> T` where the output is a different *kind of thing*) that the `_description` and capacity vetoes have been chasing by NAME. Blocked behind a decision, not a build: a tenth veto vs PRD §3.5's *raise thresholds, don't add filters*. See *Decisions* → *The `idempotence` template's false-positive rate* |
-| 19 | **`Gen<URL>` has no member `url`** — a MODULE-BOUNDARY problem, not a spelling | **Diagnosed 2026-08-04**, and it is the same defect as the `predicate` survey's one undiagnosed `build-failed` — two templates, reached independently, one cause. `Gen` is from `PropertyBased`; `url()` is an extension in `PropertyLawKit`, which the stub does not import and the workdir does not depend on. **The obvious fix builds and then fails at launch** — `PropertyLawKit` drags `libTesting.dylib` into an executable, exactly as this repo's own `Package.swift` warns. Upstream fix looks cheap: **one** file in `PropertyLawKit` imports Testing, and `FoundationGenerators.swift` imports none. See *Decisions* → *The `Gen<URL>` defect is a module-boundary problem* |
+| 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change. Same defect as the `predicate` survey's one undiagnosed `build-failed` — two templates, reached independently, one cause. `Gen` is from `PropertyBased`; `url()` is an extension in `PropertyLawKit`, which the stub does not import and the workdir does not depend on. The `.algebraic` workdir was the outlier — `.interaction` already declared the product. **URL rows now 0 → 11 of 13 executing (2 hold, 9 refute)**, and the 9 refutations confirm item 18's frozen classifier on rows it could not previously run. **An earlier same-day diagnosis of this was WRONG** (a `libTesting` launch failure that was an artefact of running the binary outside its harness) and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
 
 ---
@@ -759,45 +759,62 @@ it.** Which is the very condition it was built to end — a declaration that is
 indistinguishable from an unannotated one. Worth saying plainly rather than
 letting "shipped" imply "working".
 
-### The `Gen<URL>` defect is a module-boundary problem, and the obvious fix does not work (2026-08-04)
+### The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping (2026-08-04)
 
-Item 19, diagnosed by chasing the *"1-point version"* the next-session list asked for: the single
-undiagnosed `build-failed` in the `predicate` survey. It turned out to be the **same** defect item
-18's `idempotence` survey found from the other side — one cause, two templates, reached
-independently. So the mystery is closed and the fourth-defect suspicion is retired.
+Item 19, closed. Two lines in this repo, no kit change, no version bump. **The first
+diagnosis of it, published earlier the same day, was wrong**, and the way it was wrong
+is the more useful half.
 
-**The expression is correct.** The stub emits `Gen<URL>.url()`, parens and all, matching what the
-kit ships. The failure is not a spelling.
+**What it actually was.** `Gen<T>` comes from `PropertyBased`; the Foundation
+generators — `Gen<URL>.url()`, `.uuid()`, `.data()`, `.decimal()` — are **extensions in
+`PropertyLawKit`**. The algebraic verify workdir declared `PropertyLawComplex` and not
+`PropertyLawKit`, and the strategist stub imported `PropertyBased` alone, so the
+expression the kit handed us referenced an extension the file could not see.
 
-**`Gen<T>` and `Gen<URL>.url()` live in different modules.** `Gen` comes from `PropertyBased` (the
-external `swift-property-based` backend); `url()` is an **extension** in
-`PropertyLawKit/Public/FoundationGenerators.swift`. The verify stub imports `PropertyBased`, and
-the synthesized workdir depends on `PropertyLawComplex` — the opt-in swift-numerics line — **not**
-on `PropertyLawKit`. So the extension is invisible and the type genuinely has no such member.
+**Why the kit is not at fault.** `CompositeMemberParser` omits `PropertyLawKit` from
+`requiredImports` **deliberately**, saying these are *"the generators every derivation
+consumer already imports"* and naming `GeneratedFileEmitter` / `ScaffoldFileEmitter`.
+True of the kit's own emitters. False of a verify stub — which is a
+[border claim](glossary.md#border-claim) about a consumer in another repository, and we
+were the consumer violating it. `.interaction` and `.valueSemantics` already declared
+the product; `.algebraic` was the outlier.
 
-**The obvious fix builds and then does not run**, which is why this is worth writing down. Adding
-`.product(name: "PropertyLawKit", …)` plus `import PropertyLawKit` compiles clean — measured — and
-the resulting executable dies at launch:
+**The wrong turn, recorded because it cost a cross-repo refactor.** The first pass added
+the product and the import by hand, ran the binary **directly**, and hit
+`dyld: Library not loaded: @rpath/libTesting.dylib`. That was written up as *"the obvious
+fix builds and then does not run"*, and a `PropertyLawFoundation` carve-out was built in
+SwiftPropertyLaws to move the generators out of a Testing-bound module.
 
-```
-dyld: Library not loaded: @rpath/libTesting.dylib
-```
+Three things falsified it, in order:
 
-`Package.swift` in this repo **already warns about exactly this**: *"`PropertyLawKit` transitively
-pulls swift-testing's `Testing.framework`, which would prevent the `swift-infer` executable from
-running outside a test context — only the generated test-target writeouts import it."* The verify
-stub is an *executable*, not a test target. A fix that turns a compile error into a launch failure
-is not progress, and it would have looked like progress right up to the first run.
+1. A probe importing **only** the new Testing-free target still failed to launch — so
+   `PropertyLawKit` was never the source.
+2. **`swift-property-based` itself imports `Testing`** (four files). Every verify stub
+   ever emitted links it.
+3. `VerifierSubprocess` **already injects `DYLD_LIBRARY_PATH` / `DYLD_FRAMEWORK_PATH`**
+   for exactly this, and says so — V1.53.A, tracing cycle-49's 12 parse-error picks to
+   this same `dyld` message.
 
-**The upstream fix looks cheap, and the measurement says how cheap.** Exactly **one** file in
-`PropertyLawKit` imports Testing (`Model/PropertyLawViolation.swift`), and
-`FoundationGenerators.swift` imports none. So the Foundation generators are Testing-free code
-sitting in a Testing-bound module. Moving them somewhere a non-test executable can reach —
-`PropertyLawCore`, or a small generators module — would make `URL` / `UUID` / `Data` / `Decimal`
-carriers verifiable without dragging the test framework into every synthesized binary.
+So the launch failure was an artefact of running the binary outside the harness that
+exists to run it. **The lesson is not "check the harness" but something narrower: a
+reproduction that skips the caller is not a reproduction.** The carve-out was reverted
+unpushed.
 
-**Not done here**: it is a SwiftPropertyLaws change plus a version bump, and this repo pins the kit
-`from: "3.26.0"`. Filed as the shape of the fix rather than the fix.
+**Measured after the fix**, every `URL`-carrier row on this repo:
+
+| | before | after |
+|---|---:|---:|
+| execute | 0 | **11 of 13** |
+| held | 0 | 2 |
+| **refuted** | 0 | **9** |
+
+The 9 refutations are the `defaultPath(for:)` family, and they are **not new bugs** —
+they are `appendingPathComponent`, which item 18's frozen classifier flagged as
+`extension` (the output extends its input, so it cannot be idempotent). Nine blind
+predictions, nine confirmations, on rows that could not run when the prediction was made.
+That is the strongest evidence the classifier has, and it arrived from a defect fixed for
+an unrelated reason. The 2 remaining non-executing rows are a different class
+(`cannot find 'Scaffold' in scope` — item 16's residual, not this).
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
