@@ -40,7 +40,8 @@ extension FunctionSummary {
             isMutatingMethod: isMutating,
             isNullary: parameters.isEmpty,
             returnsSelfType: inferenceReturnsSelfType,
-            isComputedProperty: isComputedProperty
+            isComputedProperty: isComputedProperty,
+            parameterTypeNames: parameters.map(\.typeText)
         )
     }
 

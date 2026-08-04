@@ -176,7 +176,14 @@ extension SwiftInferCommand.Verify {
             isNullary: entry.isNullary,
             returnsSelfType: entry.returnsSelfType,
             isComputedProperty: entry.isComputedProperty,
-            parameterCount: argumentLabels(from: entry.primaryFunctionName).count
+            parameterCount: argumentLabels(from: entry.primaryFunctionName).count,
+            parameterTypeNames: entry.parameterTypeNames,
+            // Only when the emitted call actually has a receiver — see `receiverCallExpression`,
+            // whose guard this mirrors. `typeName` is the declaring type; `carrierTypeName` is
+            // the first parameter's, and using it here would generate the wrong type.
+            receiverTypeName: entry.isInstanceMethod && !entry.isMutatingMethod
+                ? entry.typeName
+                : nil
         )
         let source = try StrategistDispatchEmitter.emit(inputs)
         let context = VerifyResultRenderer.Context(

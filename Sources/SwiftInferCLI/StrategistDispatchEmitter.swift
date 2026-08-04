@@ -294,7 +294,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             // sibling helper (in +AlgebraicLaws) to keep this switch under the
             // complexity cap. Coalesced with `??` rather than a second `if let`
             // for the same reason — a branch here costs the whole function.
-            if let composed = totalityLawPass(inputs: inputs, recipe: recipe)
+            if let composed = try totalityLawPass(inputs: inputs, recipe: recipe)
                 ?? algebraicLawPass(inputs: inputs, recipe: recipe) {
                 return composed
             }

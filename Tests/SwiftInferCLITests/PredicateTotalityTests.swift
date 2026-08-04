@@ -31,8 +31,8 @@ struct PredicateTotalityTests {
 
     // MARK: - What the composer emits
 
-    private func composed() -> String {
-        StrategistDispatchEmitter.composePredicatePass(
+    private func composed() throws -> String {
+        try StrategistDispatchEmitter.composePredicatePass(
             inputs: .init(
                 carrier: "String",
                 typeShape: nil,
@@ -60,28 +60,28 @@ struct PredicateTotalityTests {
     /// The marker must precede the call. After it, a trap discards the very thing it exists to
     /// record — so ordering is the whole mechanism, not a formatting preference.
     @Test func theInputMarkerIsPrintedBeforeTheCall() throws {
-        let source = composed()
+        let source = try composed()
         let markerAt = try #require(source.range(of: "VERIFY_TRIAL_INPUT:"))
         let callAt = try #require(source.range(of: "isEmptyPath(candidate)"))
         #expect(markerAt.lowerBound < callAt.lowerBound,
                 "the input marker must be printed BEFORE the call it describes")
     }
 
-    @Test func theResultIsDeliberatelyDiscarded() {
-        #expect(composed().contains("_ = isEmptyPath(candidate)"),
+    @Test func theResultIsDeliberatelyDiscarded() throws {
+        #expect(try composed().contains("_ = isEmptyPath(candidate)"),
                 "totality is satisfied by returning; binding the value would imply it is checked")
     }
 
     /// No `!=` oracle: there is nothing to compare. A composer that grew one would be checking
     /// something the law does not claim.
-    @Test func thereIsNoComparisonOracle() {
-        let source = composed()
+    @Test func thereIsNoComparisonOracle() throws {
+        let source = try composed()
         #expect(!source.contains("VERIFY_DEFAULT_RESULT: FAIL"),
                 "totality cannot fail by comparison — only by trap")
     }
 
-    @Test func aSurvivingRunReportsPass() {
-        let source = composed()
+    @Test func aSurvivingRunReportsPass() throws {
+        let source = try composed()
         #expect(source.contains("VERIFY_DEFAULT_RESULT: PASS"))
         #expect(source.contains("VERIFY_DEFAULT_TRIALS:"))
     }
@@ -204,8 +204,8 @@ struct PredicateTotalityTests {
     /// does not exist there and all 114 indexed entries failed to build. The marker was present in
     /// every one of them; only its argument was wrong. A check that stops at the prefix cannot see
     /// the half of this contract that carries the information.
-    @Test func theComposerPrintsTheCarrierTheParserNeeds() {
-        let source = composed()
+    @Test func theComposerPrintsTheCarrierTheParserNeeds() throws {
+        let source = try composed()
         #expect(source.contains("VERIFY_TRIAL_CARRIER: String"))
         #expect(
             !source.contains(escapedCarrierMarker),
@@ -227,5 +227,118 @@ struct PredicateTotalityTests {
                 continue
             }
         }
+    }
+
+    // MARK: - n-ary totality
+
+    /// A predicate of two parameters needs **two** generated values. Until 2026-08-03 the composer
+    /// had one type and emitted one argument, and 19 of 126 `predicate` entries failed to compile
+    /// with `missing argument for parameter #2`.
+    @Test func anNaryPredicateDrawsOneValuePerParameter() throws {
+        let source = try composedNary(types: ["String", "Int"])
+        #expect(source.contains("generator0"))
+        #expect(source.contains("generator1"))
+        #expect(source.contains("let candidate0 = generator0.run(using: &rng)"))
+        #expect(source.contains("let candidate1 = generator1.run(using: &rng)"))
+        #expect(source.contains("(candidate0, candidate1)"))
+    }
+
+    /// One marker still names the whole counterexample. The parser reads a single
+    /// `VERIFY_TRIAL_INPUT` line and must not have to know the law's arity to read it.
+    @Test func theInputMarkerCarriesEveryArgumentAsOneTuple() throws {
+        let source = try composedNary(types: ["String", "Int"])
+        let marker = source.split(separator: "\n").first { $0.contains("VERIFY_TRIAL_INPUT") }
+        #expect(marker?.contains("(candidate0, candidate1)") == true)
+    }
+
+    /// **A unary law must emit exactly what it emitted before.** The n-ary path cannot be allowed
+    /// to rewrite the 54 laws that already run — so the single-carrier branch is byte-identical,
+    /// which is asserted rather than assumed.
+    @Test func aUnaryLawIsUnchangedByTheNaryPath() throws {
+        let source = try composed()
+        #expect(source.contains("let defaultGenerator: Generator<String, some SendableSequenceType>"))
+        #expect(source.contains("let candidate = defaultGenerator.run(using: &rng)"))
+        #expect(!source.contains("generator0"))
+    }
+
+    /// A signature that is only half-recorded falls back rather than guessing. An index written
+    /// before the field existed has no types at all; a count that disagrees with `parameterCount`
+    /// means labels and types came from different places. Either way the old behaviour fails to
+    /// compile with a message naming the missing argument, which is more use than a wrong
+    /// generator failing somewhere else.
+    @Test func aPartiallyRecordedSignatureFallsBackToTheCarrier() throws {
+        // Two labels, one recorded type — disagreement.
+        let source = try composedNary(types: ["String"], parameterCount: 2)
+        #expect(source.contains("defaultGenerator"))
+        #expect(!source.contains("generator0"))
+    }
+
+    // MARK: - The receiver is an implicit parameter
+
+    /// `receiverCallExpression` renders an instance method as `{ $0.method($1) }`, so the closure
+    /// takes `parameters + 1` values. Supplying one per *declared* parameter is short by exactly
+    /// one — `missing argument for parameter #2`, for **7 of 126** entries measured 2026-08-03.
+    ///
+    /// All 7 survived the cross-module import fix because each had been failing on a missing type
+    /// first: a refuter that fires first hides every refuter behind it.
+    @Test func anInstanceMethodDrawsAValueForItsReceiver() throws {
+        // Stdlib types so the shape universe is not what is under test — `resolveRecipe`
+        // handles a `RawType` without one, and the claim here is about ARITY.
+        let source = try composedNary(types: ["Int"], receiver: "Bool")
+        #expect(source.contains("Generator<Bool, some SendableSequenceType>"))
+        #expect(source.contains("Generator<Int, some SendableSequenceType>"))
+        #expect(source.contains("(candidate0, candidate1)"))
+    }
+
+    /// The receiver's type is the DECLARING type, not the carrier. On
+    /// `ReducerPin.matches(_ c: ReducerCandidate)` those differ, and using the carrier would draw
+    /// two values of the same wrong type — which still compiles for a same-typed method and so
+    /// would pass unnoticed.
+    @Test func theReceiverTypeIsTheDeclaringTypeNotTheCarrier() throws {
+        // The recipe's carrier is `String`; the receiver is `Bool`. If the composer reached for
+        // the carrier instead of the declaring type, generator0 would be a String.
+        let source = try composedNary(types: ["Int"], receiver: "Bool")
+        #expect(source.contains("generator0: Generator<Bool"), "receiver comes first, and is the declaring type")
+    }
+
+    /// Gated to match `receiverCallExpression` exactly: a mutating method falls back to the
+    /// positional trampoline and has NO receiver argument, so widening the gate to
+    /// `isInstanceMethod` alone would break the shape this was meant to fix.
+    @Test func aMethodWithNoReceiverArgumentDrawsOnlyItsParameters() throws {
+        let source = try composedNary(types: ["String"], receiver: nil)
+        #expect(source.contains("defaultGenerator"))
+        #expect(!source.contains("generator0"))
+    }
+
+    private func composedNary(
+        types: [String],
+        parameterCount: Int? = nil,
+        receiver: String? = nil
+    ) throws -> String {
+        try StrategistDispatchEmitter.composePredicatePass(
+            inputs: .init(
+                carrier: "String",
+                typeShape: nil,
+                template: "predicate",
+                functionCalls: ["subject"],
+                extraImports: [],
+                seedHex: .init(stateA: 1, stateB: 2, stateC: 3, stateD: 4),
+                trialBudget: .small,
+                allShapes: [:],
+                isInstanceMethod: false,
+                isMutatingMethod: false,
+                isNullary: false,
+                returnsSelfType: false,
+                isComputedProperty: false,
+                parameterCount: parameterCount ?? types.count,
+                parameterTypeNames: types,
+                receiverTypeName: receiver
+            ),
+            recipe: .init(
+                expression: "Gen<String>.string()",
+                carrierTypeName: "String",
+                imports: []
+            )
+        )
     }
 }
