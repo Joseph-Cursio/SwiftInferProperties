@@ -1,3 +1,4 @@
+import SwiftEffectInference
 import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
@@ -345,6 +346,7 @@ func makeIdempotenceSummary(
     containingType: String? = nil,
     bodySignals: BodySignals = .empty,
     docComment: String? = nil,
+    declaredEffect: Effect? = nil,
     file: String = "Test.swift",
     line: Int = 1
 ) -> FunctionSummary {
@@ -367,7 +369,8 @@ func makeIdempotenceSummary(
         location: SourceLocation(file: file, line: line, column: 1),
         containingTypeName: containingType,
         bodySignals: bodySignals,
-        docComment: docComment
+        docComment: docComment,
+        declaredEffect: declaredEffect
     )
 }
 
