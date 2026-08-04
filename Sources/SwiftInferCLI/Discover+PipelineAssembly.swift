@@ -27,6 +27,34 @@ extension SwiftInferCommand.Discover {
         return index
     }
 
+    /// Where each type is **declared**, keyed by bare name — the fact verify needs to work out
+    /// which module to import, and the third sidecar map after `inheritedTypesByName` and
+    /// `genericParametersByName`.
+    ///
+    /// It is a sidecar rather than a field on the shape because `typeShapesByName` holds
+    /// `PropertyLawCore.TypeShape`, which belongs to **SwiftPropertyLaws**. Carrying a source
+    /// path on it would be a cross-repo change plus a pin bump, for a fact the kit has no use
+    /// for. `genericParametersByName` exists for exactly this reason and says so.
+    ///
+    /// **Extensions do not vote, and that is the whole rule.** A declaration tells you where a
+    /// type *lives*; an extension only tells you where somebody *reached* it. This repo writes
+    /// `extension String` in `SwiftInferCore`, and letting that count would attribute `String`
+    /// to `SwiftInferCore` — a module that does not define it. The consequence is not a stray
+    /// import but a wrong one: the stub would name a module for a stdlib type and stop looking.
+    ///
+    /// Ties among genuine declarations keep the first seen, matching
+    /// `genericParametersIndex`. Two modules declaring the same type name collide — an existing
+    /// limitation of `typeShapesByName`, which is keyed the same way, inherited here rather
+    /// than introduced.
+    static func sourceFileIndex(from typeDecls: [TypeDecl]) -> [String: String] {
+        var index: [String: String] = [:]
+        for decl in typeDecls where decl.kind != .extension {
+            let key = ProtocolCoverageMap.strippingGenericParameters(decl.name)
+            if index[key] == nil { index[key] = decl.location.file }
+        }
+        return index
+    }
+
     /// Build the result, applying the two corpus-dependent caveat passes on the way.
     ///
     /// Order matters and is not arbitrary: `withResolvedConformanceCaveats` *removes* lines
@@ -53,6 +81,7 @@ extension SwiftInferCommand.Discover {
             typeShapesByName: hints.typeShapesByName,
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: artifacts.typeDecls),
             genericParametersByName: genericParametersIndex(from: artifacts.typeDecls),
+            sourceFileByTypeName: sourceFileIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
             restrictedFunctions: artifacts.restrictedFunctions,

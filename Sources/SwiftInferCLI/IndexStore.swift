@@ -45,6 +45,7 @@ public enum IndexStore {
     /// version-control diffs minimal.
     private enum IndexCodingKeys: String, CodingKey {
         case schemaVersion, updatedAt, entries, typeShapes, interactionEntries
+        case sourceFileByTypeName
     }
 
     public struct Index: Codable, Sendable, Equatable {
@@ -70,18 +71,39 @@ public enum IndexStore {
         /// interaction rows until its next `index` run.
         public var interactionEntries: [InteractionIndexEntry]
 
+        /// Where each type is **declared**, keyed by bare type name — the fact verify needs to
+        /// resolve which module to import for a type it did not get from the entry itself.
+        ///
+        /// The stub `@testable`-imports the module the *function* lives in, which is not enough:
+        /// a law over `f(_ s: FunctionSummary)` names a type from another module, `@testable
+        /// import` does not re-export, and the build fails. Measured 2026-08-03, **37 of 126**
+        /// `predicate` entries failed exactly that way.
+        ///
+        /// Paths rather than module names, deliberately. A path is what the scan actually
+        /// observed; the module is derived from it at verify time by
+        /// `VerifyTargetInference.module(forLocation:packageRoot:)`, which already owns every
+        /// rule about which layouts can be resolved and which are declined. Storing a module here
+        /// would fork that judgement across two places and freeze it at index time, when the
+        /// package root the answer depends on is not necessarily the one verify will use.
+        ///
+        /// Absent in v1–v5 files → decodes to `[:]`, so an un-reindexed project keeps today's
+        /// behaviour exactly and gains the imports on its next `index` run.
+        public var sourceFileByTypeName: [String: String]
+
         public init(
             schemaVersion: Int = IndexStore.currentSchemaVersion,
             updatedAt: String,
             entries: [SemanticIndexEntry],
             typeShapes: [String: IndexedTypeShape] = [:],
-            interactionEntries: [InteractionIndexEntry] = []
+            interactionEntries: [InteractionIndexEntry] = [],
+            sourceFileByTypeName: [String: String] = [:]
         ) {
             self.schemaVersion = schemaVersion
             self.updatedAt = updatedAt
             self.entries = entries
             self.typeShapes = typeShapes
             self.interactionEntries = interactionEntries
+            self.sourceFileByTypeName = sourceFileByTypeName
         }
 
         /// Custom decode so v1–v4 files (no `typeShapes` / `interactionEntries`
@@ -99,6 +121,9 @@ public enum IndexStore {
             interactionEntries = try container.decodeIfPresent(
                 [InteractionIndexEntry].self, forKey: .interactionEntries
             ) ?? []
+            sourceFileByTypeName = try container.decodeIfPresent(
+                [String: String].self, forKey: .sourceFileByTypeName
+            ) ?? [:]
         }
 
         /// Empty index with the current run timestamp.
@@ -198,7 +223,8 @@ public enum IndexStore {
         _ freshEntries: [SemanticIndexEntry],
         into existing: Index,
         at runTimestamp: String,
-        typeShapes freshShapes: [String: IndexedTypeShape] = [:]
+        typeShapes freshShapes: [String: IndexedTypeShape] = [:],
+        sourceFiles freshSourceFiles: [String: String] = [:]
     ) -> Index {
         var byHash = Dictionary(
             uniqueKeysWithValues: existing.entries.map { ($0.identityHash, $0) }
@@ -217,12 +243,19 @@ public enum IndexStore {
         // so existing callers/tests that don't pass shapes lose nothing.
         var mergedShapes = existing.typeShapes
         mergedShapes.merge(freshShapes) { _, fresh in fresh }
+        // Same policy for declaration sites, and it matters more here than for shapes: indexing
+        // is per-target, so a law in target A over a type declared in target B can only resolve
+        // if B's rows SURVIVE A's run. Replacing rather than merging would make the import fix
+        // work only for whichever target was indexed last.
+        var mergedSourceFiles = existing.sourceFileByTypeName
+        mergedSourceFiles.merge(freshSourceFiles) { _, fresh in fresh }
         return Index(
             schemaVersion: existing.schemaVersion,
             updatedAt: runTimestamp,
             entries: Array(merged),
             typeShapes: mergedShapes,
-            interactionEntries: existing.interactionEntries
+            interactionEntries: existing.interactionEntries,
+            sourceFileByTypeName: mergedSourceFiles
         )
     }
 
