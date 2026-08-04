@@ -139,6 +139,9 @@ public enum IdempotenceTemplate {
         if let declared = declaredEffectSignal(for: summary) {
             signals.append(declared)
         }
+        if let inferred = inferredEffectSignal(for: summary) {
+            signals.append(inferred)
+        }
         signals.append(contentsOf: nameSideSignals(for: summary, vocabulary: vocabulary))
         signals.append(contentsOf: vetoSideSignals(
             for: summary,

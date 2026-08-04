@@ -28,6 +28,39 @@ extension IdempotenceTemplate {
     /// Both directions live in one function because they read one field and the
     /// exhaustive `switch` is the point: adding a tier to `Effect` upstream should
     /// be a compile error here, not a silently-unhandled case.
+    /// The body-resolved counterpart, from `EffectResolver` (opt-in). Separate
+    /// from the declared signal because the treatments differ: a declaration
+    /// vetoes, an inference demotes. See `Signal.Kind.inferredRetryHostileCallee`.
+    ///
+    /// Never fires when the author declared something — `EffectResolver` only
+    /// fills `inferredEffect` where `declaredEffect` is absent, so the two arms
+    /// cannot both speak about one function and a weaker signal can never dilute
+    /// a stronger one.
+    static func inferredEffectSignal(for summary: FunctionSummary) -> Signal? {
+        guard let inferred = summary.inferredEffect else { return nil }
+        let what: String
+        switch inferred {
+        case .nonIdempotent:
+            what = "non-idempotent"
+
+        case .externallyIdempotent:
+            what = "idempotent only through a dedup key"
+
+        case .pure, .observational, .idempotent:
+            // `EffectResolver.carriesInformationUpward` filters these out before
+            // they reach a summary; the arm exists so that widening the resolver
+            // is a compile error here rather than a silent new signal.
+            return nil
+        }
+        return Signal(
+            kind: .inferredRetryHostileCallee,
+            weight: -45,
+            detail: "Calls something declared \(what) — the effect was resolved from "
+                + "this function's body, not from its own declaration, so it is "
+                + "evidence about a callee rather than a refutation of the law"
+        )
+    }
+
     static func declaredEffectSignal(for summary: FunctionSummary) -> Signal? {
         guard let declared = summary.declaredEffect else { return nil }
         switch declared {

@@ -149,6 +149,25 @@ public struct FunctionSummary: Sendable, Equatable {
     /// `@lint.effect` a retry-safety one.
     public let declaredEffect: Effect?
 
+    /// The retry-hostile effect resolved from this function's **body**, when
+    /// `EffectResolver` ran and found one — a `@NonIdempotent` callee makes its
+    /// caller non-idempotent, and nothing on this declaration says so.
+    ///
+    /// **Never populated by the scan**, and `nil` on every default-path run: the
+    /// pass that fills it is opt-in (`discover --resolve-effects`) because it
+    /// re-parses the whole tree. Distinct from `declaredEffect` rather than
+    /// merged into it, because the two are different evidence and the templates
+    /// treat them differently — a declaration is the author denying the law, an
+    /// inference is a fact about a callee, which is one step removed from the
+    /// law's own subject.
+    ///
+    /// Only ever `nonIdempotent` or `externallyIdempotent`: an inferred
+    /// `pure`/`idempotent` is the *lub* of what a body calls and says nothing
+    /// about the caller (`f(x) = g(x) + 1` with pure `g` infers pure and is not
+    /// idempotent), so `EffectResolver` discards it rather than manufacture
+    /// corroboration from an absence.
+    public let inferredEffect: Effect?
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -167,7 +186,8 @@ public struct FunctionSummary: Sendable, Equatable {
         isComputedProperty: Bool = false,
         isInitializer: Bool = false,
         docComment: String? = nil,
-        declaredEffect: Effect? = nil
+        declaredEffect: Effect? = nil,
+        inferredEffect: Effect? = nil
     ) {
         self.name = name
         self.parameters = parameters
@@ -187,6 +207,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.isInitializer = isInitializer
         self.docComment = docComment
         self.declaredEffect = declaredEffect
+        self.inferredEffect = inferredEffect
     }
 }
 
@@ -329,4 +350,35 @@ public struct BodySignals: Sendable, Equatable {
         reducerOpsWithIdentitySeed: [],
         equalityBodyShape: nil
     )
+}
+
+public extension FunctionSummary {
+
+    /// A copy carrying a body-resolved effect. Written as a copy rather than a
+    /// `var` because `FunctionSummary` is otherwise immutable and every other
+    /// field is set once at scan time — `EffectResolver` runs after the scan and
+    /// should not be the one thing that can mutate a summary in place.
+    func withInferredEffect(_ effect: Effect) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: parameters,
+            returnTypeText: returnTypeText,
+            isThrows: isThrows,
+            isAsync: isAsync,
+            isMutating: isMutating,
+            isStatic: isStatic,
+            location: location,
+            containingTypeName: containingTypeName,
+            bodySignals: bodySignals,
+            discoverableGroup: discoverableGroup,
+            invariantKeypath: invariantKeypath,
+            isInferredPure: isInferredPure,
+            isClockDeterministic: isClockDeterministic,
+            isComputedProperty: isComputedProperty,
+            isInitializer: isInitializer,
+            docComment: docComment,
+            declaredEffect: declaredEffect,
+            inferredEffect: effect
+        )
+    }
 }

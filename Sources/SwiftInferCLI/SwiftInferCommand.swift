@@ -115,6 +115,25 @@ extension SwiftInferCommand {
         )
         public var requireCorroboration: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            OPT-IN. Resolve each function's idempotency effect ACROSS FILES, \
+            including effects nothing wrote down: a function that calls a \
+            `@NonIdempotent` one is itself non-idempotent, and reading its own \
+            declaration will never say so. Off by default because it re-parses \
+            the tree — FunctionScanner parses one file at a time and discards \
+            the syntax tree to hold the PRD §13 budget, and the inference needs \
+            every tree at once. Only the retry-HOSTILE direction is used: an \
+            inferred pure/idempotent is the least upper bound of what a body \
+            calls and says nothing about the caller. Demotes (-45) rather than \
+            vetoes — a declaration denies the law, an inference is a fact about \
+            a callee. Measured on this repo: +6% to +21% wall clock, under 1 MB \
+            peak RSS. See EffectResolver.
+            """
+        )
+        public var resolveEffects: Bool = false
+
         @Option(
             name: .long,
             help: """

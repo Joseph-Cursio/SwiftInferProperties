@@ -45,6 +45,7 @@ extension SwiftInferCommand.Discover {
             updateBaseline: updateBaseline,
             seedManifest: seedManifest,
             requireCorroboration: requireCorroboration,
+            resolveEffects: resolveEffects,
             output: PrintOutput(),
             diagnostics: PrintDiagnosticOutput()
         )
@@ -74,6 +75,7 @@ extension SwiftInferCommand.Discover {
         updateBaseline: Bool = false,
         seedManifest: SeedManifest? = nil,
         requireCorroboration: Bool = false,
+        resolveEffects: Bool = false,
         promptInput: any PromptInput = StdinPromptInput(),
         output: any DiscoverOutput,
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
@@ -93,6 +95,7 @@ extension SwiftInferCommand.Discover {
             evidence: evidence,
             seedManifest: seedManifest,
             requireCorroboration: requireCorroboration,
+            resolveEffects: resolveEffects,
             diagnostics: diagnostics
         )
         let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)
@@ -120,14 +123,54 @@ extension SwiftInferCommand.Discover {
                 output: output
             )
         }
+        renderTerminalOutput(
+            visible: visible,
+            context: RenderContext(
+                pipeline: pipeline,
+                evidence: evidence,
+                seedManifest: seedManifest,
+                statsOnly: statsOnly,
+                effectAnnotations: effectAnnotations
+            ),
+            output: output
+        )
+    }
+
+    /// Everything the rendering tail needs that is not the suggestion list.
+    ///
+    /// Bundled rather than passed loose so the extraction stays inside both the
+    /// `function_parameter_count` cap and the `function_body_length` cap it was
+    /// made to satisfy. The grouping is not arbitrary: all four are *context*
+    /// about the run, and the two switches in particular gate advisory sections
+    /// that never enter accept / verify.
+    struct RenderContext {
+        let pipeline: PipelineResult
+        let evidence: DiscoverEvidenceInputs
+        let seedManifest: SeedManifest?
+        let statsOnly: Bool
+        let effectAnnotations: Bool
+    }
+
+    /// The default (non-interactive, non-baseline) rendering tail.
+    ///
+    /// Extracted when `--resolve-effects` pushed `run` one line past the
+    /// `function_body_length` cap. The seam is the natural one rather than an
+    /// arithmetic split: everything above decides WHAT to show, this decides how
+    /// to show it.
+    private static func renderTerminalOutput(
+        visible: [Suggestion],
+        context: RenderContext,
+        output: any DiscoverOutput
+    ) {
+        let pipeline = context.pipeline
         renderAndWrite(
             visible: visible,
-            statsOnly: statsOnly,
-            evidenceByIdentity: evidence.verifyByIdentity,
-            effectAnnotations: effectAnnotations
+            statsOnly: context.statsOnly,
+            evidenceByIdentity: context.evidence.verifyByIdentity,
+            effectAnnotations: context.effectAnnotations
                 ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
             docstringAdvice: docstringAdviceIfEnabled(
-                pipeline: pipeline, visible: visible, seedManifest: seedManifest
+                pipeline: pipeline, visible: visible, seedManifest: context.seedManifest
             ),
             coverage: pipeline.coverage,
             output: output
