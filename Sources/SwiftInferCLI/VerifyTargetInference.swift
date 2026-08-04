@@ -53,13 +53,12 @@ enum VerifyTargetInference {
         guard !candidate.isEmpty else { return nil }
 
         // Confirm rather than assume, for the same reason `TargetDirectory.resolve` does: a name
-        // parsed out of a path is a guess until something on disk agrees with it.
-        var isDirectory: ObjCBool = false
-        let exists = FileManager.default.fileExists(
-            atPath: sources.appendingPathComponent(candidate).path,
-            isDirectory: &isDirectory
-        )
-        guard exists, isDirectory.boolValue else { return nil }
+        // parsed out of a path is a guess until something on disk agrees with it. Calling that
+        // type's own check rather than repeating it is what makes this doc comment's claim of
+        // kinship with the forward direction true instead of merely asserted.
+        guard TargetDirectory.isDirectory(sources.appendingPathComponent(candidate)) else {
+            return nil
+        }
         return candidate
     }
 

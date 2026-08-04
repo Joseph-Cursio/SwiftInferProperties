@@ -35,9 +35,11 @@ enum VerifyImportSet {
     /// Every type name reachable from `carrier` through stored members, initializer parameters,
     /// and enum associated values — including `carrier` itself.
     ///
-    /// Breadth-first with a visited set, so a recursive type (`indirect enum Tree`) or a cycle
-    /// between two shapes terminates rather than walking forever. `IndexedTypeShape` carries no
-    /// depth limit and the corpus contains genuine cycles, so this is load-bearing.
+    /// Depth-first — `frontier` is an array popped from the end — with a visited set, so a
+    /// recursive type (`indirect enum Tree`) or a cycle between two shapes terminates rather than
+    /// walking forever. `IndexedTypeShape` carries no depth limit and the corpus contains genuine
+    /// cycles, so the visited set is load-bearing. The **order** is not: the result is a set and
+    /// every reachable name is collected either way.
     static func referencedTypeNames(
         carrier: String,
         shapes: [String: IndexedTypeShape]
