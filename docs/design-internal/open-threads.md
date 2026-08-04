@@ -111,6 +111,9 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
 | 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
 
+| 18 | **`idempotence` has a 24% false-law rate on its executed surface** — 13 of 55, all at the score-35 shape-only floor | measured 2026-08-04, **no fix shipped**. A return-expression shape classifier, frozen before the verdicts, scores **83% precision / 38% recall**; the misses are a second class (**domain transfer**: `T -> T` where the output is a different *kind of thing*) that the `_description` and capacity vetoes have been chasing by NAME. Blocked behind a decision, not a build: a tenth veto vs PRD §3.5's *raise thresholds, don't add filters*. See *Decisions* → *The `idempotence` template's false-positive rate* |
+| 19 | **`Gen<URL>` has no member `url`** — generator derivation fails for every `URL` carrier | found 2026-08-04 as a side effect of item 18's survey; **9 rows blocked** on this repo alone (the whole `defaultPath(for:)` family). Not a false-positive question — a derivation gap that makes those rows unmeasurable in either direction |
+
 ---
 
 ## Decisions taken in conversation
@@ -622,6 +625,78 @@ open item 4's target. Either give it a `determinism` field in `AttributeRecognit
 field, not an effect tier — the orthogonality is real and worth keeping) or write the contract
 test. Doing neither leaves a rename failing as a *missing* annotation, indistinguishable from
 unannotated code.
+
+### The `idempotence` template's false-positive rate, executed (2026-08-04)
+
+Follow-on from *Access widening, re-measured*, where 2 of the 3 laws that ran were false. That was
+3 rows. This is the whole template's surface on this repo, **run rather than judged**.
+
+**Apparatus.** All 72 `idempotence` entries from the four source targets' index (default
+`--include-possible`), verified via `--all-from-index --index-path` against a worktree at
+`1e0218e`. **55 executed. 13 refuted — a 24% false-law rate.**
+
+| score | ran | refuted | held | error | declined |
+|---:|---:|---:|---:|---:|---:|
+| 30 | 2 | 0 | 2 | 1 | 0 |
+| **35** | 49 | **13** | 36 | 13 | 2 |
+| 55 | 4 | 0 | 4 | 0 | 0 |
+| 80 | 0 | — | 0 | 0 | 1 |
+
+**64 of 72 sit at score 35** — the shape-only floor (+30 type symmetry, +5 value semantics, no
+name signal) — and **every refutation is there**. Read this beside `leaderboard-sort`'s finding
+that the score is *inverted* inside the 30–45 band: on this larger sample it discriminates
+cleanly, 0 of 4 at 55 against 13 of 49 at 35. Different corpora, different bands; both
+measurements stand and neither supersedes the other.
+
+**A classifier, frozen before any verdict existed.** Hypothesis: an idempotent function
+*projects* onto a normal form, so its result is a **sub-part** of its input; a function whose
+result **extends** its input cannot be idempotent. Keyed on the **return expression**, not on
+calls anywhere in the body — `quoted` calls `replacingOccurrences` (a normalizer marker) and
+*then* wraps in delimiters, so a body-wide scan reads it as a normalizer. Recorded to
+`classification-FROZEN.json` while the survey stood at **0 verdicts**.
+
+| predicted | held | refuted | false-law rate |
+|---|---:|---:|---:|
+| `extension` | 1 | 5 | **83%** |
+| `reduction` | 32 | 3 | 9% |
+| `unknown` | 9 | 5 | 36% |
+
+**Precision 5/6, recall 5/13.** The single false alarm is `dedupedByStateAndAction`, flagged
+because `.append` appears in its body — but it is a *dedup*, and dedup is idempotent. That is the
+exact trap the return-expression-first rule was built to dodge, **re-introduced by my own
+body-wide fallback**; return-expression-only scores 5/5 at identical recall, so the fallback is
+pure cost. Same lesson twice in one measurement: *where* you look beats *what* you look for.
+
+**The 8 misses split into two causes, and only one is a limitation of the idea.**
+
+- **2 are the regex, not the concept.** `quoted` and `escapedLiteral` return `"\"\(escaped)\""`;
+  the pattern could not cross the escaped quote. They *are* extensions.
+- **6 are a genuinely different class** — `seedTuple`, `typeName(for:)`, `seedString`,
+  `codableRoundTripGenerator`, `rationale(for:)`, `regressionFileHash`. Not growth but **domain
+  transfer**: `T -> T` where the output is a different *kind of thing* (a hash, a rendered name, a
+  seed string), so `f(f(x))` is meaningless though it type-checks. **This is what the existing
+  `_description` and capacity-from-scale vetoes have been groping at by NAME for several cycles**
+   — the same name-versus-body-shape gap `EqualityBodyShape` was built to close for `==`.
+
+**One tool defect, incidental to all of the above.** `type 'Gen<URL>' has no member 'url'` blocks
+**9 rows**, all the `defaultPath(for:)` family — false laws by inspection
+(`appendingPathComponent`). So 24% is a **floor**: nine known-false rows cannot run. Plus 4
+verifier traps (signal 5) and 1 opaque-result-type failure.
+
+**An apparatus bug caught before it became a finding.** Six rows first failed
+`cannot find type … in scope`, which reads exactly like a residual of item 16's cross-module
+import fix. It was mine: the filtered index's `sourceFileByTypeName` still pointed into a
+worktree I had deleted, so the module lookup resolved against nothing and no import was emitted.
+Re-run with corrected paths, three of them compiled and ran. **Third instance in one day of the
+same shape** — after `private` → explicit `internal`, and item 13's own warning about widening a
+member of a private type. The harness fails in ways that look precisely like the tool failing.
+
+**What this does NOT settle.** Whether a shape veto should ship. It would be the tenth veto on
+this template, and PRD §3.5's corollary says the remedy for too much output is to raise
+thresholds rather than pile on filters — but this is a **precision** problem, not a volume one,
+and `EqualityBodyShape` is the standing precedent for exactly this move. What the numbers add is
+that the target is now sized (24% of an executed surface, 13 rows) and the discriminator scored
+(83% precision blind) rather than argued.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
