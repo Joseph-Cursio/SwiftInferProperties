@@ -4,11 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-03** · `SwiftInferProperties@052515b`. Entries here are *not* dated claims
+> **As of 2026-08-04** · `SwiftInferProperties@1e0218e`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
-> putting the answer where it belongs.
+> putting the answer where it belongs. Measurements *inside* an entry carry their own date and
+> SHA; the suite run in item 0 is the only thing re-taken at `1e0218e`.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftInferProperties@052515ba389d5e55b6a2a567568ab11dcfa297bd observer=SwiftInferProperties@052515ba389d5e55b6a2a567568ab11dcfa297bd -->
+<!-- doc-provenance date=2026-08-04 subject=SwiftInferProperties@1e0218ed538b8d0c62c91b80cc1b1a5009d129b1 observer=SwiftInferProperties@1e0218ed538b8d0c62c91b80cc1b1a5009d129b1 -->
 
 ---
 
@@ -17,10 +18,33 @@ conversation's residue does not evaporate.
 Written at the close of 2026-08-03, after PRs #71/#72/#73 took running `predicate` laws from
 **0 → 104 of 126**. Ordered; item 0 is a chore and everything after it is a choice.
 
-**0. Run the batches this work never saw.** `make test-fast` (4,823) and `make batch3` (31 tests /
-417s) are green at `052515b`; **batches 1, 2, 4, 5, 6 and 7 were never run against it.** That is
-the one outstanding claim about the merged work, and it is a `make test` away. Do this before
-anything else — everything below assumes the tree is actually green.
+**0. ~~Run the batches this work never saw.~~ Closed 2026-08-04 — the whole tree is green.** Every
+target run at `1e0218e` (three commits past the `052515b` this was written against, so it covers
+PR #74 as well), each invoked *separately* rather than through `make test`: that target is
+fail-fast, and a failure in batch 1 would have hidden the six behind it — the same
+refuter-fires-first shape this repo already names as a design decision.
+
+| target | verdict | tests / suites | wall |
+|---|---|---:|---:|
+| `lint` | green | — | 0s |
+| `test-fast` | green | 4,823 / 653 | 31s |
+| `perf` | green | 8 / 5 | 17s |
+| `batch1` | green | 4 / 3 | 171s |
+| `batch2` | green | 3 / 3 | 136s |
+| `batch3` | green | 31 / 6 | 319s |
+| `batch4` | green | 7 / 7 | 370s |
+| `batch5` | green | 7 / 7 | 20s |
+| `batch6` | green | 4 / 4 | 171s |
+| `batch7` | green | 9 / 9 | 350s |
+
+Zero failures, zero flakes — no rerun was needed, which is worth recording given the standing note
+that the long measured suites occasionally drop one issue under load. **One test skipped**, in
+`perf`: the swift-collections `DequeModule` discover budget, which needs a corpus not checked out
+on this machine. That is a skip, not a pass; the §13 budget it guards is unmeasured here.
+
+`batch3` reproduces at **319s against the 417s** recorded at `052515b` — same 31 tests, and the
+gap is contention, not code: this run had the box to itself. Peak temp-disk never moved the free
+figure off 573–574 GB, and `make clean-temp` was run before and after.
 
 **1. Should the `predicate` composer be pushed past 83%? — No, and the number is the argument.**
 
