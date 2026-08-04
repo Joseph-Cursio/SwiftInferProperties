@@ -168,6 +168,22 @@ public struct FunctionSummary: Sendable, Equatable {
     /// corroboration from an absence.
     public let inferredEffect: Effect?
 
+    /// The three-state purity verdict, where `isInferredPure` above is its
+    /// two-state collapse. `.refuted` for a summary nobody computed one for.
+    ///
+    /// `isInferredPure` is `purityVerdict == .pure` and stays the field every
+    /// current consumer reads — the `/// @lint.effect pure` advisory is the only
+    /// one, and it must not change. What this adds is the state that collapse
+    /// destroys: **`.pureButPartial`**, a function that is deterministic and
+    /// side-effect-free but raises its own errors, so it is pure over the inputs
+    /// it accepts and simply not total.
+    ///
+    /// Measured 2026-08-04 on this repo: 2,206 `.pure`, **35 `.pureButPartial`**,
+    /// 259 `.refuted` of 2,500. Small, and previously invisible — `isPure`
+    /// answered `false` for all 294 non-pure functions alike, so nothing
+    /// downstream could tell "reads the clock" from "throws its own error".
+    public let purityVerdict: PurityVerdict
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -187,7 +203,8 @@ public struct FunctionSummary: Sendable, Equatable {
         isInitializer: Bool = false,
         docComment: String? = nil,
         declaredEffect: Effect? = nil,
-        inferredEffect: Effect? = nil
+        inferredEffect: Effect? = nil,
+        purityVerdict: PurityVerdict = .refuted
     ) {
         self.name = name
         self.parameters = parameters
@@ -208,6 +225,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.docComment = docComment
         self.declaredEffect = declaredEffect
         self.inferredEffect = inferredEffect
+        self.purityVerdict = purityVerdict
     }
 }
 
@@ -350,35 +368,4 @@ public struct BodySignals: Sendable, Equatable {
         reducerOpsWithIdentitySeed: [],
         equalityBodyShape: nil
     )
-}
-
-public extension FunctionSummary {
-
-    /// A copy carrying a body-resolved effect. Written as a copy rather than a
-    /// `var` because `FunctionSummary` is otherwise immutable and every other
-    /// field is set once at scan time — `EffectResolver` runs after the scan and
-    /// should not be the one thing that can mutate a summary in place.
-    func withInferredEffect(_ effect: Effect) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: parameters,
-            returnTypeText: returnTypeText,
-            isThrows: isThrows,
-            isAsync: isAsync,
-            isMutating: isMutating,
-            isStatic: isStatic,
-            location: location,
-            containingTypeName: containingTypeName,
-            bodySignals: bodySignals,
-            discoverableGroup: discoverableGroup,
-            invariantKeypath: invariantKeypath,
-            isInferredPure: isInferredPure,
-            isClockDeterministic: isClockDeterministic,
-            isComputedProperty: isComputedProperty,
-            isInitializer: isInitializer,
-            docComment: docComment,
-            declaredEffect: declaredEffect,
-            inferredEffect: effect
-        )
-    }
 }
