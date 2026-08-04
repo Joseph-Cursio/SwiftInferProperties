@@ -97,7 +97,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 |---|---|---|
 | 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04, and the issue's own diagnosis was right.** `inferredEffect(for:)` no longer delegates to `verdict(for:)`: `verdict` cannot check `throws` until *after* the body walk (that walk is the only way to separate `.pureButPartial` from `.refuted`), but the whole-domain question treats `throws` as disqualifying and rejects on the signature. Fixed in [SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2). **Also settles the issue's open question — mechanism 1 was the ENTIRE cost**; the erased-`Syntax` generalisation contributes nothing measurable, so there is no second fix to chase |
 | 2 | ~~**Then**: bump the SEI pin, run `make perf` before `make test`, add a pin-equality guard, then adopt `verdict(for:)`~~ | **Pin bumped 2026-08-04** to `bfcf0e3` — *past* the regression rather than around it. All five §13 budgets back at control-arm cost (Discover-pipeline **3.677s** against its 6.0s budget, versus **6.777s** on `097181aa`); all ten `make` targets green. **All four done 2026-08-04.** Pin-equality guard landed in SwiftProjectLint ([SPL#66](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/66)) — its three manifests pin SEI by revision and only prose kept them aligned; the guard reads the manifest TEXT, not `Package.resolved`, and was watched failing on a divergence. SPL also moved to `bfcf0e3`, so the pins agree again. **`verdict(for:)` adopted, and the A/B argued against the obvious version** — see *Decisions* → *Adopting `verdict(for:)`*. Item 3 stays open: SPL now HAS the fix, which is not evidence it was paying for its absence |
-| 3 | **Is SwiftProjectLint silently paying item 1?** It is already on `097181aa` and calls `PurityInferrer` from two visitors over every function *and closure* in a project | unmeasured. Cheap: point the same A/B at its own suite |
+| 3 | ~~**Is SwiftProjectLint silently paying item 1?**~~ | **Measured 2026-08-04: NO, and the mechanism says why it never could.** Two release binaries differing only in the SEI revision, alternating runs over a 564-file corpus: `097181aa` **8.15 / 8.23 / 8.42s** vs `bfcf0e3` **8.16 / 8.40 / 8.42s** — indistinguishable. The reason is not that the regression was small: **SPL never calls the method that regressed.** It calls `PurityInferrer().verdict(for:)` and `isPure(accessor:)`; item 1 was `inferredEffect(for:)` inheriting `verdict`'s body walk by delegation. SPL was already asking the question that costs the walk. **Incidental finding, filed as [SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67)**: SPL's human-readable output is non-deterministic — 476 of 3,844 findings (12.4%) report a different LINE between identical runs, 472 of them the two cross-file *could be private* rules. The `pbt-seeds` manifest is stable, so the lint→infer hop is unaffected |
 | 4 | **The attribute-grammar join has no contract test.** SwiftIdempotency ships the macro names; `AttributeRecognition.default` hard-codes them; nothing asserts they still match | a rename fails as a *missing* annotation, indistinguishable from an unannotated codebase |
 | 5 | ~~**`PBTSeed.role`'s doc comment is stale**~~ | **Closed 2026-08-04** ([SPL#65](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/65)), and it was wrong **twice over** — which is why it was not a one-line fix. The count was stale, *and* the wording (*"every rule but the two **candidate** rules"*) ruled the third out **by name**: `extractablePureKernel` is a kernel rule, so a reader checking the sentence against the code would have read the classification they found there as a bug. **A doc that characterises a set by a property its newest member lacks does not go out of date — it argues against the code.** The three are now named individually rather than counted. Also closed the gap the count rested on: `SeedRoleEmissionTests` had arms for the closure and kernel rules and **none** for `pureFunctionCandidate`, so the third classifier had no executable claim anywhere — which is how a doc about it could be wrong unnoticed |
 | 6 | ~~`.swiftinfer/` is not gitignored~~ | **Closed 2026-08-03.** Ignored at the **root only** (`/.swiftinfer/`, not `**/`) — `fixtures/cycle27-surface/.swiftinfer/index.json` is a tracked frozen corpus and a recursive pattern would have hidden it. A deliberate commit is still available via `git add -f` |
@@ -855,6 +855,48 @@ noticed the function just added to it.
 law's domain to the non-throwing inputs, which is what `PurityVerdict`'s own doc says
 the method is for. Filing them as available beats inventing an annotation tier to
 justify reading them.
+
+### Was SwiftProjectLint paying the purity regression? No — item 3 closed (2026-08-04)
+
+The suspicion was reasonable: SPL calls `PurityInferrer` from two visitors over every
+function *and closure* in a project, so it has more calls into that path than anything
+else. It was still wrong, and the way it was wrong is the useful part.
+
+**Measured, §10.3 shape.** Two *release* binaries from one commit differing only in the
+three SEI manifest lines, alternating runs over a 564-file corpus:
+
+| run | `097181aa` (regressed) | `bfcf0e3` (fixed) |
+|---|---:|---:|
+| 1 | 8.15s | 8.16s |
+| 2 | 8.23s | 8.40s |
+| 3 | 8.42s | 8.42s |
+
+Indistinguishable.
+
+**The mechanism, which matters more than the number.** SPL calls
+`PurityInferrer().verdict(for:)` and `PurityInferrer().isPure(accessor:)`. It **never
+calls `inferredEffect(for:)`** — and that was the only method item 1 regressed, by
+delegating to `verdict` and inheriting a body walk before the `throws` check. SPL was
+already asking the question that legitimately costs the walk, so there was nothing to
+inherit. The fix helps swift-infer, which asks the whole-domain question, and is a
+genuine no-op here.
+
+**A null result is only worth recording with a mechanism**, otherwise it is
+indistinguishable from a measurement too coarse to see the effect. This one has both.
+
+**Incidental, and larger than the thing being measured**: while checking that both arms
+produced identical findings, they did not — and neither did the same binary run twice.
+**476 of 3,844 findings (12.4%) report a different LINE between identical runs**, 472
+of them the two cross-file *could be private* rules. Filed as
+[SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67). The `pbt-seeds`
+manifest is stable across three runs, so the lint→infer hop does not carry it.
+
+**One method note, because it nearly became a false finding.** A first pass compared
+seeds keyed on `(file, symbol)` and reported 238 "moved" seeds. Overloads share that key
+— two `merge` functions in one file — so the dictionary collapsed them and the
+comparison was meaningless. The multiset comparison on `(file, line, symbol, kind)` is
+the correct one, and it says stable. Same shape as the day's other near-misses: the
+cheap key answered a different question from the one being asked.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
