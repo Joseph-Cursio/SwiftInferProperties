@@ -173,6 +173,10 @@ public enum BulkIncrementalPairing {
         return nil
     }
 
+    /// Trim, then cut at the first `<`. Applying it twice cuts nothing further —
+    /// the result contains no `<` and is already trimmed.
+    ///
+    /// @lint.effect idempotent
     static func stripGenerics(_ typeText: String) -> String {
         let trimmed = typeText.trimmingCharacters(in: .whitespaces)
         guard let angle = trimmed.firstIndex(of: "<") else { return trimmed }

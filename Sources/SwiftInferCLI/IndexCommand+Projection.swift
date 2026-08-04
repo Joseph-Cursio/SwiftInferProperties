@@ -178,6 +178,8 @@ extension SwiftInferCommand.Index {
     /// `TypeShape` lookup hits the bare declaration name. e.g.
     /// `"OrderedSet<Element>"` → `"OrderedSet"`, `"Complex<Double>"` →
     /// `"Complex"`, `"Int"` → `"Int"`.
+    ///
+    /// @lint.effect idempotent
     static func bareTypeName(from carrier: String) -> String {
         if let openAngle = carrier.firstIndex(of: "<") {
             return String(carrier[..<openAngle])

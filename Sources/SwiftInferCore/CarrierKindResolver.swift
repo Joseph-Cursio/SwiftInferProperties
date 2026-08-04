@@ -219,6 +219,8 @@ public struct CarrierKindResolver: Sendable {
     /// Strip a single generic-parameter list from a textual type name.
     /// Mirrors `ProtocolCoverageMap.strippingGenericParameters` so the two
     /// resolvers agree on lookup keys.
+    ///
+    /// @lint.effect idempotent
     public static func strippingGenericParameters(_ name: String) -> String {
         guard let openAngle = name.firstIndex(of: "<") else { return name }
         return String(name[..<openAngle])

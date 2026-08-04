@@ -172,3 +172,27 @@ The witness is `fixtures/toolchain-coverage`: a projecting `==` beside a synthes
 pass — because a projection *is* an equivalence relation. A tool that kept proposing
 `==`-shaped laws for that type after the kit said so would be ignoring the best evidence it
 has.
+
+## `crossTypeRoundTripPair`
+
+Moved out of `Signal+Kind.swift` on 2026-08-04, when three signals for the
+idempotency-vocabulary work took the file past its 400-line cap. Per the standing
+rule in `CLAUDE.md`: when a new signal will not fit, relocate the next-longest
+*existing* rationale rather than trimming the new one. This was the longest that
+was not itself new.
+
+V1.4.3b — fires on `RoundTripTemplate` pairs whose forward and reverse functions
+have **different** `containingTypeName` values (excluding the both-nil
+free-function case, which is a valid module-scope round-trip). Emitted with
+weight `-25` — drops Score 30 → Score 5 (well into Suppressed) so cross-type
+pairs are filtered from both default-tier and `--include-possible` output.
+Calibration record preserved (the suggestion still scores; it just lands in
+Suppressed and gets filtered) so future cycles can introspect "how many
+cross-type pairs did this rule reject."
+
+Empirical motivation (V1.4.2 cycle-1 baseline): swift-algorithms surfaced 673
+round-trip Possible-tier hits, the vast majority signature-only matches across
+distinct `Index` member types (`AdjacentPairsCollection.Index` /
+`Chain2Sequence.Index` etc.). SemanticIndex would catch this via type
+resolution; this rule is a cheap pre-SemanticIndex approximation using the
+textual `containingTypeName` field already on `FunctionSummary`.

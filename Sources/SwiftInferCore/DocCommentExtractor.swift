@@ -22,10 +22,34 @@ public enum DocCommentExtractor {
     /// space per line removed, and the surviving lines joined with single
     /// spaces so keyword scanning and one-line presentation both work.
     public static func docComment(from trivia: Trivia) -> String? {
-        let lines = docLines(from: trivia)
+        let lines = docLines(from: trivia).filter { !isMachineDirective($0) }
         guard !lines.isEmpty else { return nil }
         let joined = lines.joined(separator: " ").trimmingCharacters(in: .whitespaces)
         return joined.isEmpty ? nil : joined
+    }
+
+    /// A `@lint.*` line is a **directive, not prose**, and must not reach the
+    /// consumers that read this string as English.
+    ///
+    /// Found by dogfooding on 2026-08-04: annotating a genuinely idempotent
+    /// function `/// @lint.effect idempotent` scored it **+55**, not the +40 the
+    /// declared-effect signal is worth — because `DocstringPropertyCorroborator`
+    /// then found the word "idempotent" in that same line and added its own +15.
+    /// One observation, counted twice, taking three real functions from 35 to 90.
+    ///
+    /// That is the failure `fixtures/leaderboard-sort` already names from the
+    /// other direction: corroboration counts signals, **not signal kinds**, so
+    /// two readings of one fact look like two facts. The annotation is parsed
+    /// from the trivia directly by `EffectAnnotationParser`, so removing these
+    /// lines here costs the effect vocabulary nothing — it only stops the same
+    /// line being paid for twice.
+    ///
+    /// **Spelling-dependent, which is why it hid.** `@Idempotent` is an
+    /// attribute and never enters the doc comment, so the attribute form scored
+    /// correctly while the dependency-free doc-comment form over-scored — the
+    /// same shape as `assumedCoverageSignal`'s `Self`-vs-written-out defect.
+    private static func isMachineDirective(_ line: String) -> Bool {
+        line.trimmingCharacters(in: .whitespaces).hasPrefix("@lint.")
     }
 
     /// The cleaned individual doc lines adjacent to the declaration, in source

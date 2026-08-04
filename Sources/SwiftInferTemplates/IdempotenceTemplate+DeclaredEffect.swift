@@ -67,10 +67,14 @@ extension IdempotenceTemplate {
         case .idempotent:
             return Signal(
                 kind: .declaredIdempotentEffect,
-                weight: 40,
+                weight: 15,
                 detail: "Author-declared idempotent (`@Idempotent` / "
-                    + "`@lint.effect idempotent`) — the annotation asserts exactly "
-                    + "this law, `\(summary.name)(\(summary.name)(x)) == \(summary.name)(x)`"
+                    + "`@lint.effect idempotent`). NOTE the annotation claims "
+                    + "RE-INVOCATION stability — calling it twice with the same "
+                    + "argument gives the same result — which is weaker than the "
+                    + "law here, `\(summary.name)(\(summary.name)(x)) == "
+                    + "\(summary.name)(x)`, where the second call is fed the FIRST "
+                    + "call's output"
             )
 
         case .nonIdempotent:

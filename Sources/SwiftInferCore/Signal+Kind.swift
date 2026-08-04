@@ -109,32 +109,35 @@ extension Signal {
         /// is `Equatable`'s and the kit already runs its law.
         case equivalenceRelationSignature
 
-        /// The author *declared* the property, in SwiftIdempotency's vocabulary —
+        /// The author *declared* idempotence, in SwiftIdempotency's vocabulary —
         /// `@Idempotent`, or the dependency-free `/// @lint.effect idempotent`.
-        /// `Effect`'s own definition of that tier is this template's law verbatim:
-        /// *"subsequent invocations have the same effect as a single invocation;
-        /// `f(f(x))` is semantically equivalent to `f(x)`"*. So this is the most
-        /// direct pre-execution evidence available — the human who wrote the
-        /// function saying what it does, machine-readably.
         ///
-        /// **+40, the same as an exact curated-verb match**, and the parity is the
-        /// argument rather than a coincidence: both are the author telling us, one
-        /// by naming and one by annotating. Not *higher* than a verb, because a
-        /// claim is still unverified — that is precisely what `verify` is for, and
-        /// `verifyBothPass` is where execution outranks everything. Landing, on the
-        /// band that matters: a real value-semantic carrier scores 35 (type symmetry
-        /// +30, value semantics +5) — the floor where the 2026-08-04 survey measured
-        /// **13 false laws in 55 executed rows** — and 35 + 40 = 75 is exactly
-        /// `Tier.strong`'s floor, so an annotated `T -> T` surfaces by default while
-        /// an unannotated one stays `Possible` and hidden. (Type symmetry *alone* is
-        /// 30 and lands at `Likely` 70; quote the 35 for real code.)
+        /// **+15, and the weight is the whole finding.** It first shipped at +40,
+        /// on the strength of `SwiftEffectInference.Effect`'s doc for that tier:
+        /// *"`f(f(x))` is semantically equivalent to `f(x)`"* — this template's law
+        /// verbatim. Dogfooding on 2026-08-04 sent me to the **owning** package,
+        /// where `@Idempotent` is defined as *"re-invocation with the same
+        /// arguments produces the same observable result and the same external
+        /// effects"*. That is **re-invocation stability**, not composition: `f(x)`
+        /// twice, never `f` fed its own output. SEI's paraphrase asserts a
+        /// strictly stronger property than the macro it paraphrases promises, and
+        /// +40 was keyed to the paraphrase.
         ///
-        /// **Corroborate-only, by construction.** The template's `appliesTo` gate is
-        /// the type-symmetry shape, so this can only raise a candidate the shape
-        /// already matched — it can never surface a law from an annotation alone.
-        /// Same posture as `docstringCorroboration` (+15), and stronger for the same
-        /// reason that one is weaker than a name: prose can be aspirational, an
-        /// annotation is a deliberate declaration a downstream tool acts on.
+        /// The gap is not academic. `quoted(_:)` in this repo is pure and
+        /// deterministic, so it satisfies the owner's definition and could be
+        /// truthfully annotated — and `verify` refutes its composition law at
+        /// **trial 0**. At +40 (35 → 75) that false law would have surfaced at
+        /// `Strong` by default; at +15 (35 → 50) it reaches `Likely`, which is
+        /// where an unverified claim of the adjacent property belongs.
+        ///
+        /// Parity with `docstringCorroboration` is therefore the right anchor
+        /// after all, for a reason the first version got backwards: an annotation
+        /// is more *deliberate* than prose but says less than it appears to, so
+        /// the two land at the same place by different routes.
+        ///
+        /// **Corroborate-only, by construction** — the template's `appliesTo` gate
+        /// is the type-symmetry shape, so this can only raise a candidate the
+        /// shape already matched, never surface a law from an annotation alone.
         case declaredIdempotentEffect
 
         // Negative (non-veto)
@@ -202,24 +205,10 @@ extension Signal {
         /// is intentionally exempt — exact identity on FP is reliably true
         /// (`x + 0.0 == x` modulo NaN).
         case floatingPointStorage
-        /// V1.4.3b — fires on `RoundTripTemplate` pairs whose forward and
-        /// reverse functions have **different** `containingTypeName` values
-        /// (excluding the both-nil free-function case, which is a valid
-        /// module-scope round-trip). Emitted with weight `-25` — drops
-        /// Score 30 → Score 5 (well into Suppressed) so cross-type pairs
-        /// are filtered from both default-tier and `--include-possible`
-        /// output. Calibration record preserved (the suggestion still
-        /// scores; it just lands in Suppressed and gets filtered) so
-        /// future cycles can introspect "how many cross-type pairs
-        /// did this rule reject."
-        ///
-        /// Empirical motivation (V1.4.2 cycle-1 baseline): swift-algorithms
-        /// surfaced 673 round-trip Possible-tier hits, the vast majority
-        /// signature-only matches across distinct `Index` member types
-        /// (`AdjacentPairsCollection.Index` / `Chain2Sequence.Index` etc.).
-        /// SemanticIndex would catch this via type resolution; this rule
-        /// is a cheap pre-SemanticIndex approximation using the textual
-        /// `containingTypeName` field already on `FunctionSummary`.
+        /// A `RoundTripTemplate` pair whose two halves live on **different** types.
+        /// Weight `-25`, scored-then-filtered. Full rationale, including the 673-hit
+        /// swift-algorithms measurement that motivated it:
+        /// `docs/signal-kind-rationales.md`.
         case crossTypeRoundTripPair
         /// V1.10.1 — fires on `IdempotenceTemplate` candidates whose first
         /// parameter argument label is in a curated direction-label set
