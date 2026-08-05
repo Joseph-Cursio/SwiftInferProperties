@@ -343,15 +343,29 @@ public struct BodySignals: Sendable, Equatable {
     /// available to templates.
     public let equalityBodyShape: EqualityBodyShape?
 
+    /// What a `T -> T` function's returned expression does to its input, when
+    /// this summary IS one. `nil` for every other shape — classifying every body
+    /// would pay a walk per function for a signal one template reads, the same
+    /// bargain `equalityBodyShape` above makes.
+    ///
+    /// Read `IdempotenceReturnShape` for why the RETURN expression alone decides
+    /// it: a body-wide scan calls `quoted` a normalizer (it calls
+    /// `replacingOccurrences` before wrapping) and calls a dedup an extender (it
+    /// appends while filtering). Both readings are wrong and both come from
+    /// looking in the wrong place.
+    public let idempotenceReturnShape: IdempotenceReturnShape?
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
         reducerOpsReferenced: [String] = [],
         reducerOpsWithIdentitySeed: [String] = [],
-        equalityBodyShape: EqualityBodyShape? = nil
+        equalityBodyShape: EqualityBodyShape? = nil,
+        idempotenceReturnShape: IdempotenceReturnShape? = nil
     ) {
         self.equalityBodyShape = equalityBodyShape
+        self.idempotenceReturnShape = idempotenceReturnShape
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected

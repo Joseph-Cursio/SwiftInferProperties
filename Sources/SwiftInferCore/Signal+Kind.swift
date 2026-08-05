@@ -245,23 +245,11 @@ extension Signal {
         /// the workstream-B mutating-method lift (v1.19). See
         /// `docs/v1.18 Calibration Plan.md` workstream A.
         case referenceTypeCarrier
-        /// V1.18.A — fires when the candidate's containing-type carrier
-        /// resolves via `CarrierKindResolver` to `.valueSemantic`
-        /// (`kind == .struct || .enum` AND every stored member is
-        /// recursively value-typed per the curated allow-list +
-        /// same-corpus `TypeDecl` lookup, depth-bounded 3 levels). Emitted
-        /// with weight `+5` — small positive bump that confirms the
-        /// algebraic property's structural soundness. Magnitude is
-        /// intentionally smaller than `referenceTypeCarrier`'s `-10`
-        /// because false positives on reference types are sharper bugs
-        /// than missed value-semantic positives.
-        ///
-        /// Mixed carriers (struct with a class-typed or closure-typed
-        /// stored property) emit no signal — conservative; the bug shapes
-        /// in `docs/valuesemantic-build-plan.md` §2.1
-        /// (broken CoW / closure-captured state) are bugs that look
-        /// value-semantic structurally and would falsely score positive
-        /// otherwise.
+        /// The carrier is a value type all the way down (`CarrierKindResolver`
+        /// `.valueSemantic`), so the algebraic property is well-defined under
+        /// aliasing. `+5`, deliberately smaller than `referenceTypeCarrier`'s `-10`.
+        /// Full rationale, including why mixed carriers stay silent:
+        /// `docs/signal-kind-rationales.md`.
         case valueSemanticCarrier
         /// V1.19.B — fires on suggestions emitted against a
         /// `LiftedTransformation` (a mutating method exposed in its
@@ -358,6 +346,30 @@ extension Signal {
         /// A sequence-view law on a carrier whose `==` already IS that comparison, so it
         /// restates its own result expression. Penalty not veto — see `EqualityBodyShape`.
         case tautologicalEqualityBody
+
+        /// The function's returned expression **builds around its input** rather than
+        /// projecting out of it — wraps it in delimiters, concatenates onto it, extends
+        /// a path. `f(f(x))` wraps twice, so the idempotence law is **false**, not
+        /// merely unlikely: full veto, on the same ground `orderSensitiveCarrier` gives.
+        ///
+        /// Measured: a 2026-08-04 survey ran every `idempotence` candidate on this repo
+        /// — **55 executed, 13 refuted, a 24% false-law rate**, every refutation at the
+        /// score-35 shape-only floor. A prototype frozen to disk *before* the verdicts
+        /// scored **5/5** on the rows that ran, keyed on the return expression alone.
+        ///
+        /// **It reads the RETURN expression and nothing else**, and that is the finding
+        /// rather than an implementation detail. A body-wide scan calls `quoted(_:)` a
+        /// normalizer — it runs `replacingOccurrences` and *then* wraps — and calls a
+        /// dedup an extender, because `.append` appears while it filters. Both readings
+        /// are wrong, and both come from looking in the wrong place.
+        ///
+        /// Deliberately does NOT cover **domain transfer**: `T -> T` where the output is
+        /// a different *kind* of thing (a hash, a rendered name), so `f(f(x))` is
+        /// meaningless though it type-checks. That was 6 of the 13 and is exactly what
+        /// the `_description` and capacity-from-scale vetoes have been chasing by NAME
+        /// for several cycles. It is not characterised well enough to veto on, and a
+        /// veto that fires on a guess suppresses true laws.
+        case returnExtendsInput
 
         /// The author declared the **opposite** — `@NonIdempotent`, or
         /// `@ExternallyIdempotent(by:)`, in either spelling. Full veto.

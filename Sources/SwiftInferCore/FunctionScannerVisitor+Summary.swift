@@ -4,6 +4,17 @@ import SwiftSyntax
 
 extension FunctionScannerVisitor {
 
+    /// A single non-`inout` parameter whose type text equals the return type —
+    /// the shape `IdempotenceTemplate.typeSymmetrySignal` gates on, restated
+    /// here so the scan does not classify bodies no template will ask about.
+    static func isUnaryEndomorphism(_ node: FunctionDeclSyntax) -> Bool {
+        let parameters = node.signature.parameterClause.parameters
+        guard parameters.count == 1, let parameter = parameters.first else { return false }
+        guard parameter.type.as(AttributedTypeSyntax.self)?.specifiers.isEmpty ?? true else { return false }
+        guard let returnType = node.signature.returnClause?.type else { return false }
+        return parameter.type.trimmedDescription == returnType.trimmedDescription
+    }
+
     /// Build a `FunctionSummary` from a `FunctionDeclSyntax`. Combines
     /// signature info (parameters / return / effects / modifiers), the
     /// `BodySignalVisitor` walk over the body, and the M5.3 + M7.2.a
@@ -219,6 +230,12 @@ extension FunctionScannerVisitor {
                         ($0.secondName ?? $0.firstName).text
                     }
                 )
+                : nil,
+            // Only for a `T -> T` shape — the one the idempotence template can
+            // even propose for. Same bargain as `equalityBodyShape` above: pay
+            // the read where a template will use it, nowhere else.
+            idempotenceReturnShape: Self.isUnaryEndomorphism(node)
+                ? IdempotenceReturnShapeClassifier.classify(body: body)
                 : nil
         )
     }
