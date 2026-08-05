@@ -34,7 +34,6 @@ forward, and only two:
 
 | # | item | where it stands |
 |---|---|---|
-| 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04** ([SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2)). `inferredEffect(for:)` no longer delegates to `verdict(for:)`, which cannot check `throws` until after the body walk. Mechanism 1 was the ENTIRE cost — no second fix to chase. Reasoning: SEI#1, and *Decisions* → *Adopting `verdict(for:)`* |
 | 4 | **The attribute-grammar join has no contract test** — *half closed 2026-08-04* | **The names this repo's behaviour is keyed to are now pinned** ([#79](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/79), `EffectVocabularyContractTests`): contents, behaviour (every spelling round-trips through the real scanner), and **the rename simulated** — a near-miss spelling yields `nil`, not a wrong effect. It became urgent when [#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78) made `IdempotenceTemplate` **veto** on these names, so a rename stops suppressing a false law instead of failing loudly. **Still open: the cross-repo half.** swift-infer deliberately does not depend on SwiftIdempotency — the doc-comment spelling needs no dependency and the attribute is matched by NAME — so asserting these equal its *shipped macro names* needs a fixture or a checked-in manifest |
 | 7 | **No current end-to-end number for the LOOP** — the verify half is closed | **Verify half closed 2026-08-05: 139 of 281 entries execute a law**, and it is re-takeable rather than remembered. **Still open**: that measures one repo's own index, not the five-package loop, and `scripts/toolchain.sh` stages 3–4 remain unimplemented (item 9) — so no run of *the loop* executes a law even though verify does. See *Decisions* → *The whole-corpus number* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
@@ -596,7 +595,7 @@ shipped 2026-07-10.
 | 2 | swift-infer bumps the SEI pin | **done 2026-08-04** — `bfcf0e3` |
 | 3 | swift-infer suppresses on it | waiting on link 1 |
 
-**Links 2 and 3 came unblocked the same day**, by fixing open item 1 rather than
+**Links 2 and 3 came unblocked the same day**, by fixing [SEI#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1) rather than
 working around it — the `~2×` regression that made the pin unbumpable is gone, and
 the bump landed past it. What is left is the one link that was never about
 performance.
@@ -608,7 +607,7 @@ vocabulary has not already drifted. Re-implementing it downstream would buy
 speed now and a second dialect later.
 
 **Why that blocks on a performance issue.** swift-infer pins SEI at
-`1f2265a0`; SEI's HEAD is `097181a`, the commit **open item 1** records as a
+`1f2265a0`; SEI's HEAD is `097181a`, the commit [SEI#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1) records as a
 `~2×` regression on the whole-domain purity path and names as blocking the pin
 bump. So the reader cannot ship without either moving past that commit or
 branching SEI from the old pin — and a divergent branch is worse than waiting.
@@ -723,6 +722,14 @@ law's domain to the non-throwing inputs, which is what `PurityVerdict`'s own doc
 the method is for. Filing them as available beats inventing an annotation tier to
 justify reading them.
 
+**The regression that made this adoption possible is fully closed, with no second fix to
+chase.** [SEI#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1) was a `~2×` cost on the whole-domain purity path;
+[SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2) removed it by
+stopping `inferredEffect(for:)` delegating to `verdict(for:)`, which cannot check
+`throws` until *after* the body walk. That delegation was the **entire** cost — the
+erased-`Syntax` generalisation the issue also suspected contributes nothing measurable —
+so SEI performance is not a live thread here.
+
 ### Was SwiftProjectLint paying the purity regression? No (2026-08-04)
 
 The suspicion was reasonable: SPL calls `PurityInferrer` from two visitors over every
@@ -742,7 +749,7 @@ Indistinguishable.
 
 **The mechanism, which matters more than the number.** SPL calls
 `PurityInferrer().verdict(for:)` and `PurityInferrer().isPure(accessor:)`. It **never
-calls `inferredEffect(for:)`** — and that was the only method item 1 regressed, by
+calls `inferredEffect(for:)`** — and that was the only method [SEI#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1) regressed, by
 delegating to `verdict` and inheriting a body walk before the `throws` check. SPL was
 already asking the question that legitimately costs the walk, so there was nothing to
 inherit. The fix helps swift-infer, which asks the whole-domain question, and is a
