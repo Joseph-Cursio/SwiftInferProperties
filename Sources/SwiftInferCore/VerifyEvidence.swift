@@ -197,25 +197,20 @@ public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
     /// across multiple `--decisions` corpora into one in-memory log for
     /// the §17.2 cross-reference. Identity-keyed; on collision the
     /// record with the later `capturedAt` wins (mirrors `upserting(_:)`'s
-    /// "latest run in effect" posture and `Decisions.merge`). The result
-    /// is sorted by `capturedAt` then `identityHash` so the in-memory
-    /// aggregate is order-deterministic regardless of input ordering.
+    /// "latest run in effect" posture and `Decisions.merge`), and an
+    /// EQUAL `capturedAt` is broken by canonical encoding — see
+    /// `IdentityKeyedFold`. The result is sorted by `capturedAt` then
+    /// `identityHash`, so the aggregate is order-deterministic in its
+    /// rows AND in their contents.
     public func merge(_ other: Self) -> Self {
-        var byHash: [String: VerifyEvidence] = [:]
-        for record in records + other.records {
-            if let existing = byHash[record.identityHash],
-               existing.capturedAt >= record.capturedAt {
-                continue
-            }
-            byHash[record.identityHash] = record
-        }
-        let merged = byHash.values.sorted { lhs, rhs in
-            if lhs.capturedAt != rhs.capturedAt { return lhs.capturedAt < rhs.capturedAt }
-            return lhs.identityHash < rhs.identityHash
-        }
-        return Self(
+        Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
-            records: merged
+            records: IdentityKeyedFold.merged(
+                primary: records,
+                secondary: other.records,
+                identity: \.identityHash,
+                timestamp: \.capturedAt
+            )
         )
     }
 }
