@@ -192,6 +192,9 @@ public enum IdempotenceTemplate {
         if let shapeVeto = shapeDisambiguationVeto(for: summary) {
             signals.append(shapeVeto)
         }
+        if let returnShape = returnShapeVeto(for: summary) {
+            signals.append(returnShape)
+        }
         if let builderVeto = resultBuilderVeto(for: summary) {
             signals.append(builderVeto)
         }

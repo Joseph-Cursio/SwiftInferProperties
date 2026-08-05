@@ -112,7 +112,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
 | 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
-| 18 | **`idempotence` has a 24% false-law rate on its executed surface** — 13 of 55, all at the score-35 shape-only floor | measured 2026-08-04, **no fix shipped**. A return-expression shape classifier, frozen before the verdicts, scores **83% precision / 38% recall**; the misses are a second class (**domain transfer**: `T -> T` where the output is a different *kind of thing*) that the `_description` and capacity vetoes have been chasing by NAME. Blocked behind a decision, not a build: a tenth veto vs PRD §3.5's *raise thresholds, don't add filters*. See *Decisions* → *The `idempotence` template's false-positive rate* |
+| 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04.** `IdempotenceReturnShape` reads the returned expression: a result built *around* its input cannot be idempotent, so the law is FALSE rather than unlikely — full veto, `orderSensitiveCarrier`'s ground. **72 → 54 rows; 8 of the 13 measured refutations removed plus the 9 `defaultPath` rows; ZERO laws that held were lost.** The §3.5 objection did not apply: score-35 is `Possible`, *hidden by default*, so the cost was never reader-facing volume — it was index and verify hygiene. **Domain transfer is deliberately still not claimed** (5 remaining refutations). See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
 | 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change. Same defect as the `predicate` survey's one undiagnosed `build-failed` — two templates, reached independently, one cause. `Gen` is from `PropertyBased`; `url()` is an extension in `PropertyLawKit`, which the stub does not import and the workdir does not depend on. The `.algebraic` workdir was the outlier — `.interaction` already declared the product. **URL rows now 0 → 11 of 13 executing (2 hold, 9 refute)**, and the 9 refutations confirm item 18's frozen classifier on rows it could not previously run. **An earlier same-day diagnosis of this was WRONG** (a `libTesting` launch failure that was an artefact of running the binary outside its harness) and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
 
@@ -897,6 +897,59 @@ seeds keyed on `(file, symbol)` and reported 238 "moved" seeds. Overloads share 
 comparison was meaningless. The multiset comparison on `(file, line, symbol, kind)` is
 the correct one, and it says stable. Same shape as the day's other near-misses: the
 cheap key answered a different question from the one being asked.
+
+### The `idempotence` false-positive rate, and the veto it earned (2026-08-04)
+
+Item 18, closed. The survey said 13 of 55 executed rows refuted — **24%** — all at the
+score-35 shape-only floor.
+
+**The decision turned on where those rows surface, not on how many there were.** Score 35
+is `Possible`, **hidden from default output**, so PRD §3.5's *raise thresholds, don't add
+filters* — an argument about reader-facing volume — never applied. What the false laws
+actually cost is **index and verify hygiene**: the index defaults to `--include-possible`
+by design (a recall surface), and each row burns a full SwiftPM build in
+`--all-from-index`. That reframing is what made a tenth veto defensible where a tenth
+*filter* would not have been.
+
+The precedent is exact. `orderSensitiveCarrier` vetoes because *"the suggestion is
+genuinely wrong, not merely low-confidence"*. A result built **around** its input cannot
+be idempotent — applying it twice wraps twice. Falsity, not doubt.
+
+**Measured, clean index both sides:**
+
+| | before | after |
+|---|---:|---:|
+| `idempotence` rows | 72 | **54** |
+| measured refutations removed | — | **8 of 13**, plus the 9 `defaultPath` rows |
+| laws that HELD and were vetoed | — | **none** |
+
+**Three things the measurement forced that reasoning did not.**
+
+1. **SwiftSyntax does not fold operators.** `text + "."` parses as a `SequenceExprSyntax`,
+   not `InfixOperatorExprSyntax`. The first concatenation check keyed on the folded node,
+   looked correct, and fired **never** — the exact failure this classifier exists to catch
+   in others.
+2. **A bare `+` rule vetoed two laws that HELD.** `prioritised` is
+   `kernels.filter{…} + kernels.filter{…}`; `unwrappingRepetition` is
+   `Array(leading) + loopBody`. Both operands derive from the input, so `+` there is a
+   **reordering**, not growth. The rule now requires a **literal** operand. Both are
+   pinned as regression tests.
+3. **`IndexStore.upsert` keeps historical entries**, so the first re-measurement showed
+   the veto firing on nothing. The index has to be deleted before an A/B, or it reports
+   the union of every run that ever happened.
+
+**Read the RETURN expression and nothing else**, which is the finding rather than an
+implementation detail. A body-wide scan calls `quoted(_:)` a normalizer — it runs
+`replacingOccurrences` and *then* wraps — and calls a dedup an extender, because
+`.append` appears while it filters. Both readings are wrong, and both come from looking
+in the wrong place. The frozen prototype's only false alarm came from its body-wide
+fallback; dropping it cost no recall.
+
+**Domain transfer stays unclaimed**: `T -> T` where the output is a different *kind* of
+thing (a hash, a rendered name). That is the 5 remaining refutations and exactly what the
+`_description` and capacity-from-scale vetoes have chased **by name** for cycles. It is
+not characterised well enough to veto on, and a veto that fires on a guess suppresses
+true laws — which is the failure that cannot be seen from the outside.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 

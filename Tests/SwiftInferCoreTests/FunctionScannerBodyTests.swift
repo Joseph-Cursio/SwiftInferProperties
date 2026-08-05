@@ -45,7 +45,23 @@ struct FunctionScannerBodyTests {
         let summary = try #require(
             FunctionScanner.scan(source: source, file: "Test.swift").first
         )
-        #expect(summary.bodySignals == .empty)
+        // Asserted field-by-field rather than `== .empty`, and the reason is the
+        // point rather than a workaround. `double` IS a `T -> T`, so the scan
+        // classifies its return shape and records `.notExtending` — *asked, and
+        // no extension found*, which is a different fact from `nil` (*never
+        // asked*, because the shape could not apply). Both are "no signal fired",
+        // which is what this test means; only one of them equals `.empty`.
+        //
+        // Collapsing `.notExtending` to `nil` would make `== .empty` work again
+        // and would lose that distinction — the same one `ProtocolCoverageAudit`
+        // draws between `assumed` and `contradicted`.
+        #expect(summary.bodySignals.hasNonDeterministicCall == false)
+        #expect(summary.bodySignals.hasSelfComposition == false)
+        #expect(summary.bodySignals.nonDeterministicAPIsDetected.isEmpty)
+        #expect(summary.bodySignals.reducerOpsReferenced.isEmpty)
+        #expect(summary.bodySignals.reducerOpsWithIdentitySeed.isEmpty)
+        #expect(summary.bodySignals.equalityBodyShape == nil)
+        #expect(summary.bodySignals.idempotenceReturnShape == .notExtending)
     }
 
     @Test

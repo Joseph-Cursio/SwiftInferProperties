@@ -196,3 +196,24 @@ distinct `Index` member types (`AdjacentPairsCollection.Index` /
 `Chain2Sequence.Index` etc.). SemanticIndex would catch this via type
 resolution; this rule is a cheap pre-SemanticIndex approximation using the
 textual `containingTypeName` field already on `FunctionSummary`.
+
+## `valueSemanticCarrier`
+
+Moved out of `Signal+Kind.swift` on 2026-08-04, the second relocation that day —
+four signals for the idempotency-vocabulary and false-positive work took the file
+past its 400-line cap twice. Per the standing rule: relocate the next-longest
+*existing* rationale rather than trim a new one.
+
+V1.18.A — fires when the candidate's containing-type carrier resolves via
+`CarrierKindResolver` to `.valueSemantic` (`kind == .struct || .enum` AND every
+stored member is recursively value-typed per the curated allow-list +
+same-corpus `TypeDecl` lookup, depth-bounded 3 levels). Emitted with weight `+5`
+— small positive bump that confirms the algebraic property's structural
+soundness. Magnitude is intentionally smaller than `referenceTypeCarrier`'s
+`-10` because false positives on reference types are sharper bugs than missed
+value-semantic positives.
+
+Mixed carriers (struct with a class-typed or closure-typed stored property) emit
+no signal — conservative; the bug shapes in `docs/valuesemantic-build-plan.md`
+§2.1 (broken CoW / closure-captured state) are bugs that look value-semantic
+structurally and would falsely score positive otherwise.
