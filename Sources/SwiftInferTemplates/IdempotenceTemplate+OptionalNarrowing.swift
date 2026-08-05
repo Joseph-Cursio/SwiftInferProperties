@@ -24,10 +24,12 @@ extension IdempotenceTemplate {
 
     /// Whether `candidate` is the `Optional` of `base` — written as `T?` or
     /// `Optional<T>`.
+    ///
+    /// Delegates to `IdempotenceCandidateShape` rather than keeping a second
+    /// copy: the scanner's gate decides whether the return-shape VETO is even
+    /// computed, and when these two disagreed the veto silently stopped applying
+    /// to every shape only this side admitted.
     private static func isOptional(_ candidate: String, of base: String) -> Bool {
-        let trimmedCandidate = candidate.trimmingCharacters(in: .whitespaces)
-        let trimmedBase = base.trimmingCharacters(in: .whitespaces)
-        return trimmedCandidate == "\(trimmedBase)?"
-            || trimmedCandidate == "Optional<\(trimmedBase)>"
+        IdempotenceCandidateShape.isOptional(candidate, of: base)
     }
 }

@@ -4,15 +4,25 @@ import SwiftSyntax
 
 extension FunctionScannerVisitor {
 
-    /// A single non-`inout` parameter whose type text equals the return type —
-    /// the shape `IdempotenceTemplate.typeSymmetrySignal` gates on, restated
-    /// here so the scan does not classify bodies no template will ask about.
+    /// A single non-`inout` parameter whose type the idempotence template can
+    /// propose a law for, so the scan does not classify bodies no template will
+    /// ask about.
+    ///
+    /// **The shape test is `IdempotenceCandidateShape`, not a local copy.** This
+    /// gate used to require exact `parameter == return` while the template also
+    /// accepts the narrowing `T? -> T`, so `idempotenceReturnShape` was `nil` for
+    /// every optional-narrowing candidate and `returnShapeVeto` could not tell
+    /// *never computed* from *computed and not extending*. See that type for the
+    /// witness.
     static func isUnaryEndomorphism(_ node: FunctionDeclSyntax) -> Bool {
         let parameters = node.signature.parameterClause.parameters
         guard parameters.count == 1, let parameter = parameters.first else { return false }
         guard parameter.type.as(AttributedTypeSyntax.self)?.specifiers.isEmpty ?? true else { return false }
         guard let returnType = node.signature.returnClause?.type else { return false }
-        return parameter.type.trimmedDescription == returnType.trimmedDescription
+        return IdempotenceCandidateShape.admitsIdempotenceLaw(
+            parameterType: parameter.type.trimmedDescription,
+            returnType: returnType.trimmedDescription
+        )
     }
 
     /// Build a `FunctionSummary` from a `FunctionDeclSyntax`. Combines
