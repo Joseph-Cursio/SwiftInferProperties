@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-05** · `SwiftInferProperties@cb89ede`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@b060070`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@cb89edeb0cd97525adb8a1ba8a75091d772ef314 observer=SwiftInferProperties@cb89edeb0cd97525adb8a1ba8a75091d772ef314 -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@b0600704c8e8445b6959175a0ef71b257a8d0ee8 observer=SwiftInferProperties@b0600704c8e8445b6959175a0ef71b257a8d0ee8 -->
 
 ---
 
@@ -50,7 +50,7 @@ forward, and only two:
 | 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04** (`IdempotenceReturnShape`), and **re-measured on the whole-corpus survey 2026-08-05: 24% → 10.6%**, with the `extendsInput` class producing ZERO refutations — the shape a working veto has. All survivors are domain transfer, now item 22. See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
 | 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change; the `.algebraic` workdir lacked the kit product its stubs import. URL rows 0 → 11 of 13 executing. An earlier same-day diagnosis of this was WRONG and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
-| 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed: **5 witnesses** (47 executed, 5 refuted). **Corrected 2026-08-05 — this row briefly claimed 6, counting `Scaffold.defaultOutputURL`. That is not domain transfer at all**: it appends a path component, so it is an `extendsInput` case the veto's own list already names, and item 26 is why it was never classified. A false law landing in the wrong bucket makes the class it is filed under look better characterised than it is. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
+| 22 | ~~**[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class~~ | **ANSWERED 2026-08-05 ([#104](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/104)): the class is real and NOT discriminable from the return expression.** Rule scored — *the parameter does not appear in the returned expression* — against the 47 executed rows: **recall 4/5, precision 4/12**. Two true laws suppressed per false one removed, so it does not ship. The signal is **dataflow**, not shape, which makes the classifier's refusal to veto this class *correct* rather than cautious. See *Decisions* → *Domain transfer, scored*. Original framing: The residual item 18 deliberately left unclaimed: **5 witnesses** (47 executed, 5 refuted). **Corrected 2026-08-05 — this row briefly claimed 6, counting `Scaffold.defaultOutputURL`. That is not domain transfer at all**: it appends a path component, so it is an `extendsInput` case the veto's own list already names, and item 26 is why it was never classified. A false law landing in the wrong bucket makes the class it is filed under look better characterised than it is. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
 | 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up. **Diagnosis CORRECTED and the fix deliberately NOT shipped**: the sole witness has two further errors behind the arity one (the inverse is qualified with the primary's carrier, and the law is not type-correct), so the patch would be unmeasurable on this corpus — and would help emit 45 false laws if #97 were fixed first. Blocked on a re-survey |
 | 25 | **[#97](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/97)** — `--all-from-index` builds 45 entries the cross-type counter already flagged as **uncompilable** | Deferred deliberately: a survey-cost optimisation, not a correctness bug. The counter's detail line already says *"property cannot type-check across distinct containing types"*, and the survey compiles them anyway — ~16% of a 76-minute, 107 GB run. Fix is one persisted field or one filter at survey time. **This issue's first version claimed the pairing ignored type ownership; it does not, and the correction is on the issue** |
 | 26 | ~~**[#99](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/99)** — the `idempotence` return-shape veto is **never computed for `T? -> T`**~~ | **FIXED 2026-08-05** ([#102](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/102)) — both gates now read `IdempotenceCandidateShape`, so widening one widens both. **A/B: 283 → 282 index entries, `idempotence` 54 → 53; the ONE removed row is the witness, zero additions, zero other removals.** Original diagnosis: Uncovered by #95's fix, and the one filing today that was checked against the source before it was written. `isUnaryEndomorphism` gates on exact `parameter.type == returnType`, so `idempotenceReturnShape` is `nil` for `(URL?) -> URL` and `returnShapeVeto` cannot tell *"never computed"* from *"computed, not extending"* — while `IdempotenceTemplate+OptionalNarrowing` deliberately ADMITS that shape. Witness: `Scaffold.defaultOutputURL` appends a path component, and `appendingPathComponent` is the **first entry** in the veto's own `extensionCalls` list. **The guard checked something narrower than the thing it protects** — the `CuratedEntryRole` / `KitCoverageDriftTests` pattern. **Method note: per-target and whole-`Sources/` `discover` both showed ZERO delta** — the witness exists only in the INDEX, built by a different pipeline, so measuring the convenient surface would have reported "no change" and proved nothing |
@@ -1002,6 +1002,50 @@ historical entries — item 18 learned that the hard way):
 **Unexplained and NOT chased**: the absolute index count moved from 281 earlier the same day to 283
 in both arms. It cannot affect a same-day two-binary comparison, but **do not cite 281 as current**
 until someone works out why.
+
+### Domain transfer, scored — a rule that cannot be built is a finding (2026-08-05)
+
+Item 22 closed. `IdempotenceReturnShapeClassifier` declines to veto its documented miss class on the
+grounds that it is *"not characterised well enough, and a veto that fires on a guess suppresses true
+laws"*. This is the number behind that sentence.
+
+**Method, fixed before the answer existed.** The candidate rule and its *predicted failure* were
+committed in `5a6cff0`, before the scorer was written — git order is the proof, the same posture as
+`q2-answer-key.json`. Scored against the 47 `idempotence` rows that EXECUTED in the whole-corpus
+survey: 5 refuted, **42 held**.
+
+Rule: **the parameter does not appear in the returned expression.**
+
+| | count | |
+|---|---:|---|
+| flagged, genuinely the class | **4** | `markovSynthesized`, `regressionFileHash`, `seedString`, `seedTuple` |
+| flagged, but a law that **HELD** | **8** | incl. `dedupedByStateAndAction`, `unwrappingRepetition` |
+| the class, missed | **1** | `codableRoundTripGenerator` |
+
+**Recall 80%, precision 33%** — two true laws suppressed for every false one removed.
+
+**Why it fails, and the reason generalises.** *"The parameter is absent from the return expression"*
+is true of **every function that binds a local and returns it** — a coding style, not a semantic
+property. `seedString` hashes its input and returns a rendering of the digest, so the input is gone;
+`normalisedTypeName` binds a trimmed copy and returns it, so the input is right there. **Those are
+the same shape.** No return-expression rule separates them, so the signal is **dataflow** — whether
+the parameter's value survives into the result or merely seeds something that replaces it. That is
+strictly more expensive than anything this classifier performs.
+
+**The prediction was right on both halves**, which is what makes it a test of the idea rather than a
+description of an outcome: recall 4 of 5 *naming the miss*, precision below 50% *naming the suspect*.
+
+**The transferable practice — score a veto against the laws that HELD, not against the class it
+targets.** Recall on the target class is easy and says almost nothing; the 42 held rows are where a
+veto's cost lives, and they are the only reason this failure was visible. It is also why
+`unwrappingRepetition` appears here after item 18's bare-`+` rule had already mis-vetoed it: **a
+handful of functions keep tripping every cheap heuristic aimed at this template**, and that set is
+worth naming before the next one is proposed.
+
+Closed as **measured-not-buildable**, not *no signal exists*. A dataflow proposal would likely work;
+reopen with one and score it against the same 47 rows. Artifacts:
+`fixtures/domain-transfer-signal/` and `DomainTransferSignalExperimentTests`, whose numbers are
+**asserted rather than described** so they cannot drift.
 
 ### The measurement artifacts are frozen now, because the run destroyed its own (2026-08-05)
 
