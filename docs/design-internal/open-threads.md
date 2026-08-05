@@ -51,6 +51,58 @@ forward, and only two:
 
 Recorded because the reasoning is the useful part and it exists nowhere else.
 
+### One package for the survey, not one per suggestion (2026-08-05, built)
+
+`verify --all-from-index` built a complete SwiftPM package **per suggestion** — resolve,
+fetch, compile four dependencies, link — around a stub that is a ~113-line `main.swift`.
+Measured on `fixtures/cycle27-surface` (53 entries): **13m 30s, 24 GB, 464 MB per
+workdir**. The shared form is **100s / 1.6 GB cold and 45s warm**, verdicts **53/53
+identical** against the frozen v1.134.0 answer key — reconfirmed 2026-08-05 at
+v1.148.0, 0 mismatches over an intersection of 53.
+
+**Cold vs warm is not a footnote — omitting it manufactured a contradiction.** This
+entry said `103s`; the source comments said `54s`; both were true and neither named
+its cache state, so for a day they read as two irreconcilable measurements of one
+run. Re-measured back to back on one binary: **cold** (no `verify-workdir`) 100s /
+1596 MB, **warm** (reusing that `.build`) 45s / 1596 MB. Same shape as the
+denominator lesson below — **a number is evidence only with the conditions it was
+taken under**, and wall-clock's condition is the cache.
+
+**The rationale was real and was read too widely.** `VerifierWorkdir`'s doc says one
+directory per hash *"so concurrent verify calls against different suggestions don't stomp
+on each other's `.build/`"* — a claim about two **concurrent** runs. It was taken to
+license 53 **sequential** entries each owning a dependency graph. Three properties were
+conflated under it, and only the third needed a separate package:
+
+| property | still required | how it survives |
+|---|---|---|
+| a trapping law takes one law, not the batch | yes — `predicate` fails by trap | each target is its own executable, run as its own process |
+| `build-failed` lands on one entry | yes | `swift build --product <target>` |
+| two concurrent runs don't share a `.build/` | only for single-entry callers | they keep their hash-keyed root |
+
+**`--product` is load-bearing and was measured, not assumed.** With one deliberately
+broken stub among 53: a whole-package `swift build` exits 1 and produces **zero**
+binaries — one bad emission would blank an entire survey — while `--product` builds 52
+and fails exactly the broken one. **`--target` is the wrong flag and lies**: exit 0, no
+binary, only an entitlement plist, so a caller keying on its exit code reports "built"
+for something that does not exist.
+
+**`--max-parallel` now schedules nothing.** The concurrency existed to overlap dependency
+builds that no longer happen; serial-over-one-`.build` is **8.1× faster cold** (810s →
+100s) and 18× warm than 4-way-over-53.
+Whether per-product builds are safe *in parallel* against one `.build` is **not
+established** — arm C and the shipped run were both serial. Left unmeasured on purpose:
+the flag is kept because it is a documented interface and because the *run* phase could
+still use it.
+
+**The comparison nearly reported a false green.** The frozen key writes `identityHash`
+without the `0x` prefix the JSONL stream carries, so the first diff found 53 rows on each
+side, an **empty intersection**, and "0 mismatches" — a loop over nothing. Printing the
+size of the compared set, not just the mismatch count, is what caught it. Same shape as
+the cycle27 rerun that compared against a file it had itself overwritten
+([#129](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/129)); the general
+form is that **a zero is only evidence when the denominator is printed beside it.**
+
 ### Road tests were misfiled, not mistimed (2026-08-03)
 
 They were premature **as scorecards** and exactly on time **as development instruments**. The
