@@ -107,6 +107,17 @@ public struct FunctionSummary: Sendable, Equatable {
     /// `false` so call sites that don't populate it compile unchanged.
     public let isClockDeterministic: Bool
 
+    /// The author declared the effect **cannot be determined** (`@EffectUnknown`
+    /// / `/// @lint.effect unknown`).
+    ///
+    /// Separate from `declaredEffect` because `unknown` is **not** an `Effect` —
+    /// incomparable to `nonIdempotent`, so SEI reads it with its own predicate
+    /// rather than admitting it to a linear chain. Same orthogonal-axis posture
+    /// as `isClockDeterministic`. **Not a weaker `@NonIdempotent`**: that denies
+    /// the law and vetoes; this claims nothing about it. See
+    /// `IdempotenceTemplate.unknownEffectCaveat`.
+    public let declaresUnknownEffect: Bool
+
     /// Recall-widening epic #1 — true when this summary was synthesized from a
     /// read-only COMPUTED PROPERTY (`var conjugate: Self`), modelled as a nullary
     /// `self -> T` method. The verify emitter reads it to emit a property access
@@ -212,6 +223,7 @@ public struct FunctionSummary: Sendable, Equatable {
         invariantKeypath: String? = nil,
         isInferredPure: Bool = false,
         isClockDeterministic: Bool = false,
+        declaresUnknownEffect: Bool = false,
         isComputedProperty: Bool = false,
         isInitializer: Bool = false,
         docComment: String? = nil,
@@ -234,6 +246,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.invariantKeypath = invariantKeypath
         self.isInferredPure = isInferredPure
         self.isClockDeterministic = isClockDeterministic
+        self.declaresUnknownEffect = declaresUnknownEffect
         self.isComputedProperty = isComputedProperty
         self.isInitializer = isInitializer
         self.docComment = docComment
@@ -293,107 +306,4 @@ public struct Parameter: Sendable, Equatable {
         self.isInout = isInout
         self.hasDefault = hasDefault
     }
-}
-
-/// File-relative source location. `file` is the path passed to
-/// `FunctionScanner.scan(source:file:)`; `line` and `column` are 1-based.
-public struct SourceLocation: Sendable, Equatable, Hashable {
-
-    public let file: String
-    public let line: Int
-    public let column: Int
-
-    public init(file: String, line: Int, column: Int) {
-        self.file = file
-        self.line = line
-        self.column = column
-    }
-}
-
-/// Type-flow-lite signals computed from a function's body. Empty / all-false
-/// when the function declaration has no body (e.g. protocol requirements).
-public struct BodySignals: Sendable, Equatable {
-
-    /// `true` when the body invokes any API in the curated
-    /// non-deterministic list (PRD §4.1's -∞ counter-signal). Drives
-    /// the structural disqualifier for idempotence and most algebraic
-    /// claims (Appendix B.3).
-    public let hasNonDeterministicCall: Bool
-
-    /// `true` when the body contains a self-composition pattern of the form
-    /// `f(f(x))` where `f` is the function's own name. Feeds the
-    /// idempotence type-flow signal (PRD §5.3, +20).
-    public let hasSelfComposition: Bool
-
-    /// Distinct callee texts that matched the non-deterministic list,
-    /// preserved for explainability rendering (M1.3+). Sorted alphabetically
-    /// for deterministic output.
-    public let nonDeterministicAPIsDetected: [String]
-
-    /// Distinct function names referenced as the closure-position argument
-    /// of `.reduce(_, X)` calls in this body (e.g. `xs.reduce(0, add)` or
-    /// `xs.reduce(into: 0, MyType.combine)` records `add` and `combine`).
-    /// Feeds the associativity template's reducer/builder-usage signal
-    /// (PRD §5.3, +20). Sorted alphabetically for deterministic output;
-    /// the corpus-level union is computed at template-discovery time.
-    public let reducerOpsReferenced: [String]
-
-    /// Subset of `reducerOpsReferenced` whose `.reduce(seed, op)` call site
-    /// uses an identity-shaped seed — `0`, `0.0`, `""`, `[]`, `[:]`, `nil`,
-    /// `false`, or a member-access reference whose leaf name is in the
-    /// curated identity list (`.empty`, `.zero`, `.identity`, `.none`,
-    /// `.default`). Feeds the identity-element template's
-    /// accumulator-with-empty-seed signal (PRD §5.3, +20). Sorted
-    /// alphabetically for deterministic output.
-    public let reducerOpsWithIdentitySeed: [String]
-
-    /// What a `static func ==` body actually does, when this summary IS one.
-    /// `nil` for every other function — the classification is only computed for
-    /// `==`, so the scan cost is paid once per Equatable conformance rather than
-    /// once per function.
-    ///
-    /// `fixtures/equatable-signal` measured that conformance does not predict
-    /// refutability and the **body shape** does; this is that measurement made
-    /// available to templates.
-    public let equalityBodyShape: EqualityBodyShape?
-
-    /// What a `T -> T` function's returned expression does to its input, when
-    /// this summary IS one. `nil` for every other shape — classifying every body
-    /// would pay a walk per function for a signal one template reads, the same
-    /// bargain `equalityBodyShape` above makes.
-    ///
-    /// Read `IdempotenceReturnShape` for why the RETURN expression alone decides
-    /// it: a body-wide scan calls `quoted` a normalizer (it calls
-    /// `replacingOccurrences` before wrapping) and calls a dedup an extender (it
-    /// appends while filtering). Both readings are wrong and both come from
-    /// looking in the wrong place.
-    public let idempotenceReturnShape: IdempotenceReturnShape?
-
-    public init(
-        hasNonDeterministicCall: Bool,
-        hasSelfComposition: Bool,
-        nonDeterministicAPIsDetected: [String],
-        reducerOpsReferenced: [String] = [],
-        reducerOpsWithIdentitySeed: [String] = [],
-        equalityBodyShape: EqualityBodyShape? = nil,
-        idempotenceReturnShape: IdempotenceReturnShape? = nil
-    ) {
-        self.equalityBodyShape = equalityBodyShape
-        self.idempotenceReturnShape = idempotenceReturnShape
-        self.hasNonDeterministicCall = hasNonDeterministicCall
-        self.hasSelfComposition = hasSelfComposition
-        self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected
-        self.reducerOpsReferenced = reducerOpsReferenced
-        self.reducerOpsWithIdentitySeed = reducerOpsWithIdentitySeed
-    }
-
-    /// Empty signals — used for functions without bodies.
-    public static let empty = Self(
-        hasNonDeterministicCall: false,
-        hasSelfComposition: false,
-        nonDeterministicAPIsDetected: [],
-        reducerOpsReferenced: [],
-        reducerOpsWithIdentitySeed: [],
-        equalityBodyShape: nil
-    )
 }

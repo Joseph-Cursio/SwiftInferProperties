@@ -237,9 +237,11 @@ public enum IdempotenceTemplate {
            ) != nil {
             caveats.append(erasedSelfFormCaveat(carrier: carrier, returnType: returnType))
         }
+        if summary?.declaresUnknownEffect == true {
+            caveats.append(unknownEffectCaveat)
+        }
         return caveats
     }
-
     /// Canonical hash input per PRD §7.5: `template ID | canonical
     /// signature`. Source location is intentionally excluded — moving a
     /// function within a file or across files must not change its
