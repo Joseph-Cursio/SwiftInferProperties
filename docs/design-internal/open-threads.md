@@ -15,125 +15,46 @@ conversation's residue does not evaporate.
 
 ## Next session starts here
 
-Written at the close of 2026-08-03, after PRs #71/#72/#73 took running `predicate` laws from
-**0 → 104 of 126**. Ordered; item 0 is a chore and everything after it is a choice.
+The 2026-08-03 list that lived here is **spent** — items 0/1/3/4/5 all closed, and the reasoning
+that outlived them is in *Open items* and *Decisions*. Two things from it are worth carrying
+forward, and only two:
 
-**0. ~~Run the batches this work never saw.~~ Closed 2026-08-04 — the whole tree is green.** Every
-target run at `1e0218e` (three commits past the `052515b` this was written against, so it covers
-PR #74 as well), each invoked *separately* rather than through `make test`: that target is
-fail-fast, and a failure in batch 1 would have hidden the six behind it — the same
-refuter-fires-first shape this repo already names as a design decision.
+- **The `predicate` composer stops at 83%, and the number is the argument.** The remaining 22 are
+  not composer failures: both compile buckets are ZERO, and what is left is 17 carrier declines
+  (14 SwiftSyntax nodes and optionals), 4 traps the gate correctly refuses to call refutations, and
+  1 `build-failed` that turned out to be item 19. Nothing on that list improves by changing the
+  composer. **The next gain is breadth, not depth** — and the whole-corpus survey agrees from the
+  other side: `codable-round-trip`, the one template that never has to guess, is the only one at
+  100% yield.
+- **Generators for syntax-node carriers** — now item 27, because it is the largest single bucket
+  left anywhere in this survey and it is a scope-and-file question rather than a build one.
 
-| target | verdict | tests / suites | wall |
-|---|---|---:|---:|
-| `lint` | green | — | 0s |
-| `test-fast` | green | 4,823 / 653 | 31s |
-| `perf` | green | 8 / 5 | 17s |
-| `batch1` | green | 4 / 3 | 171s |
-| `batch2` | green | 3 / 3 | 136s |
-| `batch3` | green | 31 / 6 | 319s |
-| `batch4` | green | 7 / 7 | 370s |
-| `batch5` | green | 7 / 7 | 20s |
-| `batch6` | green | 4 / 4 | 171s |
-| `batch7` | green | 9 / 9 | 350s |
-
-Zero failures, zero flakes — no rerun was needed, which is worth recording given the standing note
-that the long measured suites occasionally drop one issue under load. **One test skipped**, in
-`perf`: the swift-collections `DequeModule` discover budget, which needs a corpus not checked out
-on this machine. That is a skip, not a pass; the §13 budget it guards is unmeasured here.
-
-`batch3` reproduces at **319s against the 417s** recorded at `052515b` — same 31 tests, and the
-gap is contention, not code: this run had the box to itself. Peak temp-disk never moved the free
-figure off 573–574 GB, and `make clean-temp` was run before and after.
-
-**1. Should the `predicate` composer be pushed past 83%? — No, and the number is the argument.**
-
-The question was asked as *"retry the predicate composer update even though it is still only at
-83%"*, and the honest answer is that **83% is where that composer's work ends**. The remaining 22
-are not composer failures. Both compile buckets are **zero**; what is left is 17 carrier declines
-(14 SwiftSyntax nodes and optionals, `[String: TypeShape]` ×2, `[TypeDecl]`), 4 traps the carrier
-gate refuses to call refutations, and 1 undiagnosed `build-failed`. Nothing in that list gets
-better by changing the composer — 14 of them are *"no generator derives a `TokenSyntax`"*, which is
-a different package's problem, and 4 are the tool being right.
-
-So the next honest gain is **breadth, not depth**: a second composer, reaching a template that has
-none, is worth more than the last 17% of this one. `item 13`'s probe already said the same thing
-from the other side — *"the binding constraint is the composer set"* — and this survey is the first
-measurement that agrees with it from inside a composer that works.
-
-**~~Do the 1-point version anyway~~ — done 2026-08-04, and it was NOT a fourth defect.** The
-undiagnosed `build-failed` on `isStale(indexPath:packageRoot:)` is
-`type 'Gen<URL>' has no member 'url'` — **item 19**, reached here from the `predicate` survey and
-independently from item 18's `idempotence` survey, where it blocks the nine `defaultPath(for:)`
-rows. Two surveys, different templates, one defect — **now fixed**. See *Decisions* → *The
-`Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping*.
-
-**2. Generators for syntax-node carriers — scope it before building it.** 14 of the 22 is the
-largest single bucket left anywhere in this survey, and it is *one* question: can a `TokenSyntax` /
-`SyntaxCollection` be derived at all, and by whom — here, or `DerivationStrategist` in
-SwiftPropertyLaws? The design decision *"generator inference delegates to SwiftPropertyLaws"* says
-the answer is probably not here, which makes this a scope-and-file item rather than a build item.
-
-**3. ~~Re-measure item 13's access-widening probe, with a pre-check.~~ Closed 2026-08-04, and the
-read is REFUTED.** Widening no longer moves a function from *invisible* to
-*proposed-but-unrunnable*: **3 of 6 gained laws now execute, against 0 before.** See *Decisions* →
-*Access widening, re-measured*.
-
-**4. ~~The whole-corpus number is still missing.~~ MEASURED 2026-08-05: 139 of 281.** Everything
-above was `--template predicate`. The unfiltered run says **139 laws execute — 130 hold, 9 refute**.
-Cost was the blocker and it was affordable: **76 min wall, 7.7 CPU-hours, 107 GB of workdirs** at
-`--max-parallel 4`, about 2× the `predicate` survey rather than the 2.2× the entry count suggests
-(the 24 entries on templates with no composer decline without ever spawning a build).
-
-**The headline is not 139 — it is the tier cut.** `Strong` 3 entries / **0 run**; `Likely` 27 / 23
-run / **4 refute**; `Possible` 249 / 116 run / 5 refute. **All 4 real bugs are `Likely`; all 5
-`Possible` refutations are false laws**, so the tier predicts whether a refutation is worth reading.
-The 3 `Strong` rows are the only tier where nothing runs at all — they decline
-`unsupported-template`, so verify cannot attempt what discovery is most confident in.
-
-**`round-trip` contributing 0 of 46 is NOT a carrier-reach story**, which is what the first write-up
-of this said. 45 of the 46 are cross-module pairs the index forms only because it scans all of
-`Sources/` at once, all correctly demoted by a counter that fires on every one; the real population
-is **one** law, blocked on a generator. Five defects filed, two fixed; see *Decisions* → *The
-whole-corpus number*.
-
-**5. Two review findings from `/swiftui-pro`, both fixed at close** — `VerifyTargetInference` was
-re-implementing `TargetDirectory.isDirectory` (now shared), and `VerifyImportSet`'s doc said
-breadth-first over a depth-first `popLast`. Recorded because the second one is the house failure
-mode in miniature: a comment that describes something the code stopped doing. Neither was a bug.
-
----
 
 ## Open items
 
 | # | item | where it stands |
 |---|---|---|
-| 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04, and the issue's own diagnosis was right.** `inferredEffect(for:)` no longer delegates to `verdict(for:)`: `verdict` cannot check `throws` until *after* the body walk (that walk is the only way to separate `.pureButPartial` from `.refuted`), but the whole-domain question treats `throws` as disqualifying and rejects on the signature. Fixed in [SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2). **Also settles the issue's open question — mechanism 1 was the ENTIRE cost**; the erased-`Syntax` generalisation contributes nothing measurable, so there is no second fix to chase |
-| 2 | ~~**Then**: bump the SEI pin, run `make perf` before `make test`, add a pin-equality guard, then adopt `verdict(for:)`~~ | **Pin bumped 2026-08-04** to `bfcf0e3` — *past* the regression rather than around it. All five §13 budgets back at control-arm cost (Discover-pipeline **3.677s** against its 6.0s budget, versus **6.777s** on `097181aa`); all ten `make` targets green. **All four done 2026-08-04.** Pin-equality guard landed in SwiftProjectLint ([SPL#66](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/66)) — its three manifests pin SEI by revision and only prose kept them aligned; the guard reads the manifest TEXT, not `Package.resolved`, and was watched failing on a divergence. SPL also moved to `bfcf0e3`, so the pins agree again. **`verdict(for:)` adopted, and the A/B argued against the obvious version** — see *Decisions* → *Adopting `verdict(for:)`*. Item 3 stays open: SPL now HAS the fix, which is not evidence it was paying for its absence |
-| 3 | ~~**Is SwiftProjectLint silently paying item 1?**~~ | **Measured 2026-08-04: NO, and the mechanism says why it never could.** Two release binaries differing only in the SEI revision, alternating runs over a 564-file corpus: `097181aa` **8.15 / 8.23 / 8.42s** vs `bfcf0e3` **8.16 / 8.40 / 8.42s** — indistinguishable. The reason is not that the regression was small: **SPL never calls the method that regressed.** It calls `PurityInferrer().verdict(for:)` and `isPure(accessor:)`; item 1 was `inferredEffect(for:)` inheriting `verdict`'s body walk by delegation. SPL was already asking the question that costs the walk. **Incidental finding, filed as [SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67)**: SPL's human-readable output is non-deterministic — 476 of 3,844 findings (12.4%) report a different LINE between identical runs, 472 of them the two cross-file *could be private* rules. The `pbt-seeds` manifest is stable, so the lint→infer hop is unaffected |
+| 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04** ([SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2)). `inferredEffect(for:)` no longer delegates to `verdict(for:)`, which cannot check `throws` until after the body walk. Mechanism 1 was the ENTIRE cost — no second fix to chase. Reasoning: SEI#1, and *Decisions* → *Adopting `verdict(for:)`* |
+| 3 | ~~**Is SwiftProjectLint silently paying item 1?**~~ | **Closed 2026-08-04: NO** — SPL never calls the method that regressed. See *Decisions* → *Was SwiftProjectLint paying the purity regression?* Incidental finding filed as [SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67) (non-deterministic human-readable output, 12.4% of findings) |
 | 4 | **The attribute-grammar join has no contract test** — *half closed 2026-08-04* | **The names this repo's behaviour is keyed to are now pinned** ([#79](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/79), `EffectVocabularyContractTests`): contents, behaviour (every spelling round-trips through the real scanner), and **the rename simulated** — a near-miss spelling yields `nil`, not a wrong effect. It became urgent when [#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78) made `IdempotenceTemplate` **veto** on these names, so a rename stops suppressing a false law instead of failing loudly. **Still open: the cross-repo half.** swift-infer deliberately does not depend on SwiftIdempotency — the doc-comment spelling needs no dependency and the attribute is matched by NAME — so asserting these equal its *shipped macro names* needs a fixture or a checked-in manifest |
-| 5 | ~~**`PBTSeed.role`'s doc comment is stale**~~ | **Closed 2026-08-04** ([SPL#65](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/65)), and it was wrong **twice over** — which is why it was not a one-line fix. The count was stale, *and* the wording (*"every rule but the two **candidate** rules"*) ruled the third out **by name**: `extractablePureKernel` is a kernel rule, so a reader checking the sentence against the code would have read the classification they found there as a bug. **A doc that characterises a set by a property its newest member lacks does not go out of date — it argues against the code.** The three are now named individually rather than counted. Also closed the gap the count rested on: `SeedRoleEmissionTests` had arms for the closure and kernel rules and **none** for `pureFunctionCandidate`, so the third classifier had no executable claim anywhere — which is how a doc about it could be wrong unnoticed |
-| 6 | ~~`.swiftinfer/` is not gitignored~~ | **Closed 2026-08-03.** Ignored at the **root only** (`/.swiftinfer/`, not `**/`) — `fixtures/cycle27-surface/.swiftinfer/index.json` is a tracked frozen corpus and a recursive pattern would have hidden it. A deliberate commit is still available via `git add -f` |
-| 7 | ~~**No current end-to-end number** for the loop~~ | **Half closed 2026-08-05.** The *verify* half has one: **139 of 281 index entries execute a law, 130 hold, 9 refute** — whole corpus, no `--template` filter, `1ef7128`, and it is re-takeable rather than remembered (`swift-infer verify --all-from-index --max-parallel 4`, 76 min / 107 GB). Still open: this measures **one repo's own index**, not the five-package loop, and `scripts/toolchain.sh` stages 3–4 remain unimplemented (item 9), so *no run of the loop* executes a law even though verify does. See *Decisions* → *The whole-corpus number* and *Standing observations* → *The measurements are all withdrawn* |
+| 7 | **No current end-to-end number for the LOOP** — the verify half is closed | **Verify half closed 2026-08-05: 139 of 281 entries execute a law**, and it is re-takeable rather than remembered. **Still open**: that measures one repo's own index, not the five-package loop, and `scripts/toolchain.sh` stages 3–4 remain unimplemented (item 9) — so no run of *the loop* executes a law even though verify does. See *Decisions* → *The whole-corpus number* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
 | 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
-| 11 | ~~Driver stage 0 builds another repository~~ | **Closed 2026-08-03, the other way.** The rebuild is now *load-bearing*: a repo SHA describes the binary only if we just built the binary from it, so building unconditionally is what earns the attribution. A `stale` binary fails the stage — accepted deliberately, since an unattributable run is worse than no run |
-| 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for item 11's workaround: embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
+| 12 | **Neither binary can state its own build identity.** `swift-infer --version` reports `1.148.0` — identical whether built this morning or months ago from another commit | the real fix for the driver's unconditional-rebuild workaround (`toolchain.sh` stage 0, which earns SHA attribution by rebuilding): embed a build SHA at compile time, in *those* packages, and have the driver read it from the binary rather than the tree. Prerequisite for ever shipping installed release binaries |
 | 13 | **Speculative refactoring** — mutate a copy, verify, propose a patch only when the law ran | designed 2026-08-03, **unbuilt**, and **re-measured 2026-08-04 with laws that RUN**. The 2026-08-03 funnel (20 → 8 proposed → 2 composer-supported) was a ceiling nobody had executed. Executed: **0 of 6 ran on the pre-composer binary, 3 of 6 on HEAD** — 1 holds, **2 refute**, and both refutations are false laws rather than bugs. The blocker was never the composer; it was the cross-module import (item 16). See *Decisions* → *Access widening, re-measured* |
-| 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, and MEASURED.** Shipped, then found unreachable (gate 2), then found never-composing (a compose-time value escaped as a runtime one) — three defects between "written" and "runs", each invisible to the unit tests that call the composer directly. Survey of all 126: **54 run and hold**, against a measured base of **0**. The `≤+126` ceiling resolved to **+54**; 56 of the remaining 72 are item 16, 11 are SwiftSyntax carriers with no generator. **Superseded by item 16: the figure is now 104.** Zero refutations — these are regression guards on correct code, not bugs found |
-| 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
-| 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
+| 14 | ~~Write a `predicate` composer~~ | **Closed 2026-08-03, measured; superseded by item 16** (54 → **104 of 126**). Worth keeping: there were **three defects between "written" and "runs"** — unreachable at gate 2, then never-composing because a compile-time value escaped as a runtime one — and every one was invisible to the unit tests that call the composer directly. See *Decisions* → *Signature, not carrier* |
+| 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green** — 27% already carry a hand-written totality guard. See *Decisions* → *Are `predicate` laws refutable, or a wall of green? — answered* |
+| 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, measured.** `≤+56` realised as **+50** (54 → **104 of 126**); both compile buckets went to ZERO. See *Decisions* → *Signature, not carrier* (both entries — the scope and the measured close, including the two defects only running it could find) |
 | 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Step 1 SHIPPED** ([#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78)): swift-infer reads the effect vocabulary — `@Idempotent` corroborates, `@NonIdempotent`/`@ExternallyIdempotent` veto. **Dogfooding it found two defects** ([#81](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/81)): the annotation was paid for **twice** (the `@lint.effect` line is a doc comment, so `DocstringPropertyCorroborator` also credited it), and **+40 was keyed to the wrong definition** — the owner defines `@Idempotent` as re-invocation stability, not composition, so it is now +15. **Steps 2 and 3 remain**: retire `.idempotent` from `CheckPropertyKind`, and the cross-repo contract test (item 4). **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
-| 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04.** `IdempotenceReturnShape` reads the returned expression: a result built *around* its input cannot be idempotent, so the law is FALSE rather than unlikely — full veto, `orderSensitiveCarrier`'s ground. **72 → 54 rows; 8 of the 13 measured refutations removed plus the 9 `defaultPath` rows; ZERO laws that held were lost.** The §3.5 objection did not apply: score-35 is `Possible`, *hidden by default*, so the cost was never reader-facing volume — it was index and verify hygiene. **Domain transfer is deliberately still not claimed** (5 remaining refutations). **Re-measured on the whole-corpus survey 2026-08-05 and the veto holds: 47 executed, 5 refuted — 24% → 10.6%, and the `extendsInput` class produced ZERO refutations**, which is the shape a working veto has. All 5 survivors are domain transfer; no third mechanism appeared. Now tracked as item 22. See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
-| 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change. Same defect as the `predicate` survey's one undiagnosed `build-failed` — two templates, reached independently, one cause. `Gen` is from `PropertyBased`; `url()` is an extension in `PropertyLawKit`, which the stub does not import and the workdir does not depend on. The `.algebraic` workdir was the outlier — `.interaction` already declared the product. **URL rows now 0 → 11 of 13 executing (2 hold, 9 refute)**, and the 9 refutations confirm item 18's frozen classifier on rows it could not previously run. **An earlier same-day diagnosis of this was WRONG** (a `libTesting` launch failure that was an artefact of running the binary outside its harness) and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
+| 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04** (`IdempotenceReturnShape`), and **re-measured on the whole-corpus survey 2026-08-05: 24% → 10.6%**, with the `extendsInput` class producing ZERO refutations — the shape a working veto has. All survivors are domain transfer, now item 22. See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
+| 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change; the `.algebraic` workdir lacked the kit product its stubs import. URL rows 0 → 11 of 13 executing. An earlier same-day diagnosis of this was WRONG and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
-| 21 | ~~**[#92](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/92)** — the identity-keyed merge fold is **not commutative in four `SwiftInferCore` types**~~ | **FIXED 2026-08-05** ([#98](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/98)) — one shared `IdentityKeyedFold`, ties broken by canonical encoding rather than argument position. **And it was a RE-REPORT**: `MergeAlgebraPropertyTests` had already pinned this over an injected clock, naming all four logs, the associativity split, the stale docstrings, and a mutation test on `>=` vs `>`. Those arms now assert the law instead of the drift. Found again by the whole-corpus survey. `Decisions` / `PostAcceptanceOutcomeLog` / `VerifyEvidenceLog` / `InteractionDecisions` all run the same `records + other.records` fold with `>=` on the date, so first-seen wins on a tie and `a.merge(b) != b.merge(a)`. **`Decisions.merge` was already documented false in CLAUDE.md and the other three cite it** — the doc comments record the copy chain (*"same posture as v1's `Decisions.merge`"*). Each aggregates corpora for a §17.2 metric, so the fold ORDER decides the denominator; measured 0-vs-1 regressions from identical inputs. **Associativity correctly HOLDS in all four** (take-first-max is associative, not commutative — exhaustive, 0/512 triples), which both confirms the instrument and constrains the fix |
 | 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed, now **6 witnesses** — 5 from the survey (47 executed, 5 refuted) plus `Scaffold.defaultOutputURL`, which only became reachable once #95 was fixed. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
 | 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up. **Diagnosis CORRECTED and the fix deliberately NOT shipped**: the sole witness has two further errors behind the arity one (the inverse is qualified with the primary's carrier, and the law is not type-correct), so the patch would be unmeasurable on this corpus — and would help emit 45 false laws if #97 were fixed first. Blocked on a re-survey |
-| 24 | ~~**[#95](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/95)** — nested carrier types recorded **unqualified**, depending on declaration spelling~~ | **FIXED 2026-08-05** ([#98](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/98)) — `qualifiedTypeName` rides alongside `typeName` so the bare-name sidecar keys are untouched. **3 entries corrected, 1 on a verifiable template, and that one moves `build-failed` → `measured-defaultFails`** — stated as one, not three. Original diagnosis: | `extension SwiftInferCommand.Verify { … }` records `SwiftInferCommand.Verify`; `extension SwiftInferCommand { struct Scaffold { … } }` records bare `Scaffold`, which does not resolve in the stub. Same module, same nesting depth, different authoring style. **Third instance of the spelling-dependent family** — `assumedCoverageSignal`'s `"Self"` and the kit-suite backtest's bare generic name are the other two. Also raises collision risk in the bare-name-keyed sidecars |
 | 25 | **[#97](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/97)** — `--all-from-index` builds 45 entries the cross-type counter already flagged as **uncompilable** | Deferred deliberately: a survey-cost optimisation, not a correctness bug. The counter's detail line already says *"property cannot type-check across distinct containing types"*, and the survey compiles them anyway — ~16% of a 76-minute, 107 GB run. Fix is one persisted field or one filter at survey time. **This issue's first version claimed the pairing ignored type ownership; it does not, and the correction is on the issue** |
 | 26 | **[#99](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/99)** — the `idempotence` return-shape veto is **never computed for `T? -> T`** | Uncovered by #95's fix, and the one filing today that was checked against the source before it was written. `isUnaryEndomorphism` gates on exact `parameter.type == returnType`, so `idempotenceReturnShape` is `nil` for `(URL?) -> URL` and `returnShapeVeto` cannot tell *"never computed"* from *"computed, not extending"* — while `IdempotenceTemplate+OptionalNarrowing` deliberately ADMITS that shape. Witness: `Scaffold.defaultOutputURL` appends a path component, and `appendingPathComponent` is the **first entry** in the veto's own `extensionCalls` list. **The guard checks something narrower than the thing it protects** — the `CuratedEntryRole` / `KitCoverageDriftTests` pattern. Needs an A/B before widening: a veto that fires on a guess suppresses true laws |
+| 27 | **Generators for syntax-node carriers** — can a `TokenSyntax` / `SyntaxCollection` be derived at all, and by WHOM | **Scope-and-file, not build.** 14 of `predicate`'s 22 non-running rows, and the largest single decline bucket in the whole-corpus survey (`no generator for carrier` is 105 of 281 corpus-wide). The design decision *"generator inference delegates to SwiftPropertyLaws"* says the answer is probably **not here** — so the deliverable is a scoped question for `DerivationStrategist`, not a generator in this repo |
 
 ---
 
@@ -647,78 +568,6 @@ field, not an effect tier — the orthogonality is real and worth keeping) or wr
 test. Doing neither leaves a rename failing as a *missing* annotation, indistinguishable from
 unannotated code.
 
-### The `idempotence` template's false-positive rate, executed (2026-08-04)
-
-Follow-on from *Access widening, re-measured*, where 2 of the 3 laws that ran were false. That was
-3 rows. This is the whole template's surface on this repo, **run rather than judged**.
-
-**Apparatus.** All 72 `idempotence` entries from the four source targets' index (default
-`--include-possible`), verified via `--all-from-index --index-path` against a worktree at
-`1e0218e`. **55 executed. 13 refuted — a 24% false-law rate.**
-
-| score | ran | refuted | held | error | declined |
-|---:|---:|---:|---:|---:|---:|
-| 30 | 2 | 0 | 2 | 1 | 0 |
-| **35** | 49 | **13** | 36 | 13 | 2 |
-| 55 | 4 | 0 | 4 | 0 | 0 |
-| 80 | 0 | — | 0 | 0 | 1 |
-
-**64 of 72 sit at score 35** — the shape-only floor (+30 type symmetry, +5 value semantics, no
-name signal) — and **every refutation is there**. Read this beside `leaderboard-sort`'s finding
-that the score is *inverted* inside the 30–45 band: on this larger sample it discriminates
-cleanly, 0 of 4 at 55 against 13 of 49 at 35. Different corpora, different bands; both
-measurements stand and neither supersedes the other.
-
-**A classifier, frozen before any verdict existed.** Hypothesis: an idempotent function
-*projects* onto a normal form, so its result is a **sub-part** of its input; a function whose
-result **extends** its input cannot be idempotent. Keyed on the **return expression**, not on
-calls anywhere in the body — `quoted` calls `replacingOccurrences` (a normalizer marker) and
-*then* wraps in delimiters, so a body-wide scan reads it as a normalizer. Recorded to
-`classification-FROZEN.json` while the survey stood at **0 verdicts**.
-
-| predicted | held | refuted | false-law rate |
-|---|---:|---:|---:|
-| `extension` | 1 | 5 | **83%** |
-| `reduction` | 32 | 3 | 9% |
-| `unknown` | 9 | 5 | 36% |
-
-**Precision 5/6, recall 5/13.** The single false alarm is `dedupedByStateAndAction`, flagged
-because `.append` appears in its body — but it is a *dedup*, and dedup is idempotent. That is the
-exact trap the return-expression-first rule was built to dodge, **re-introduced by my own
-body-wide fallback**; return-expression-only scores 5/5 at identical recall, so the fallback is
-pure cost. Same lesson twice in one measurement: *where* you look beats *what* you look for.
-
-**The 8 misses split into two causes, and only one is a limitation of the idea.**
-
-- **2 are the regex, not the concept.** `quoted` and `escapedLiteral` return `"\"\(escaped)\""`;
-  the pattern could not cross the escaped quote. They *are* extensions.
-- **6 are a genuinely different class** — `seedTuple`, `typeName(for:)`, `seedString`,
-  `codableRoundTripGenerator`, `rationale(for:)`, `regressionFileHash`. Not growth but **domain
-  transfer**: `T -> T` where the output is a different *kind of thing* (a hash, a rendered name, a
-  seed string), so `f(f(x))` is meaningless though it type-checks. **This is what the existing
-  `_description` and capacity-from-scale vetoes have been groping at by NAME for several cycles**
-   — the same name-versus-body-shape gap `EqualityBodyShape` was built to close for `==`.
-
-**One tool defect, incidental to all of the above.** `type 'Gen<URL>' has no member 'url'` blocks
-**9 rows**, all the `defaultPath(for:)` family — false laws by inspection
-(`appendingPathComponent`). So 24% is a **floor**: nine known-false rows cannot run. Plus 4
-verifier traps (signal 5) and 1 opaque-result-type failure.
-
-**An apparatus bug caught before it became a finding.** Six rows first failed
-`cannot find type … in scope`, which reads exactly like a residual of item 16's cross-module
-import fix. It was mine: the filtered index's `sourceFileByTypeName` still pointed into a
-worktree I had deleted, so the module lookup resolved against nothing and no import was emitted.
-Re-run with corrected paths, three of them compiled and ran. **Third instance in one day of the
-same shape** — after `private` → explicit `internal`, and item 13's own warning about widening a
-member of a private type. The harness fails in ways that look precisely like the tool failing.
-
-**What this does NOT settle.** Whether a shape veto should ship. It would be the tenth veto on
-this template, and PRD §3.5's corollary says the remedy for too much output is to raise
-thresholds rather than pile on filters — but this is a **precision** problem, not a volume one,
-and `EqualityBodyShape` is the standing precedent for exactly this move. What the numbers add is
-that the target is now sized (24% of an executed surface, 13 rows) and the discriminator scored
-(83% precision blind) rather than argued.
-
 ### The `@EffectUnknown` dependency chain (2026-08-04)
 
 Recorded because the chain is four links long, crosses three repositories, and
@@ -919,22 +768,26 @@ cheap key answered a different question from the one being asked.
 
 ### The `idempotence` false-positive rate, and the veto it earned (2026-08-04)
 
-Item 18, closed. The survey said 13 of 55 executed rows refuted — **24%** — all at the
-score-35 shape-only floor.
+Item 18, closed. Survey of all 72 `idempotence` entries via `--all-from-index` at `1e0218e`:
+**55 executed, 13 refuted — a 24% false-law rate**, and **every refutation sits at score 35**, the
+shape-only floor (+30 type symmetry, +5 value semantics, no name signal); 0 of 4 at score 55. Read
+beside `leaderboard-sort`'s finding that the score is *inverted* inside the 30–45 band — different
+corpora, different bands, both measurements stand.
 
-**The decision turned on where those rows surface, not on how many there were.** Score 35
-is `Possible`, **hidden from default output**, so PRD §3.5's *raise thresholds, don't add
-filters* — an argument about reader-facing volume — never applied. What the false laws
-actually cost is **index and verify hygiene**: the index defaults to `--include-possible`
-by design (a recall surface), and each row burns a full SwiftPM build in
-`--all-from-index`. That reframing is what made a tenth veto defensible where a tenth
-*filter* would not have been.
+**A classifier frozen before any verdict existed.** Hypothesis: an idempotent function *projects*
+onto a normal form, so its result is a **sub-part** of its input; a result that **extends** its
+input cannot be idempotent. Recorded to `classification-FROZEN.json` at 0 verdicts, then scored:
+**precision 5/6, recall 5/13**, 83% false-law rate in the `extension` class against 9% in
+`reduction`.
 
-The precedent is exact. `orderSensitiveCarrier` vetoes because *"the suggestion is
-genuinely wrong, not merely low-confidence"*. A result built **around** its input cannot
-be idempotent — applying it twice wraps twice. Falsity, not doubt.
-
-**Measured, clean index both sides:**
+**The decision turned on where those rows surface, not how many there were.** Score 35 is
+`Possible`, **hidden from default output**, so PRD §3.5's *raise thresholds, don't add filters* — an
+argument about reader-facing volume — never applied. What false laws actually cost is **index and
+verify hygiene**: the index defaults to `--include-possible` by design, and each row burns a full
+SwiftPM build in `--all-from-index`. That reframing is what made a tenth veto defensible where a
+tenth *filter* would not have been. The precedent is exact: `orderSensitiveCarrier` vetoes because
+*"the suggestion is genuinely wrong, not merely low-confidence"*, and a result built **around** its
+input applies the construction twice. Falsity, not doubt.
 
 | | before | after |
 |---|---:|---:|
@@ -942,33 +795,38 @@ be idempotent — applying it twice wraps twice. Falsity, not doubt.
 | measured refutations removed | — | **8 of 13**, plus the 9 `defaultPath` rows |
 | laws that HELD and were vetoed | — | **none** |
 
+**Read the RETURN expression and nothing else** — the finding, not an implementation detail. A
+body-wide scan calls `quoted(_:)` a normalizer (it runs `replacingOccurrences` and *then* wraps) and
+calls a dedup an extender (`.append` appears while it filters). Both readings are wrong and both
+come from looking in the wrong place. The frozen prototype's single false alarm came from its
+body-wide fallback; dropping it cost no recall. *Where* you look beats *what* you look for.
+
 **Three things the measurement forced that reasoning did not.**
 
-1. **SwiftSyntax does not fold operators.** `text + "."` parses as a `SequenceExprSyntax`,
-   not `InfixOperatorExprSyntax`. The first concatenation check keyed on the folded node,
-   looked correct, and fired **never** — the exact failure this classifier exists to catch
-   in others.
+1. **SwiftSyntax does not fold operators.** `text + "."` parses as `SequenceExprSyntax`, not
+   `InfixOperatorExprSyntax`. The first concatenation check keyed on the folded node, looked
+   correct, and fired **never** — the exact failure this classifier exists to catch in others.
 2. **A bare `+` rule vetoed two laws that HELD.** `prioritised` is
-   `kernels.filter{…} + kernels.filter{…}`; `unwrappingRepetition` is
-   `Array(leading) + loopBody`. Both operands derive from the input, so `+` there is a
-   **reordering**, not growth. The rule now requires a **literal** operand. Both are
-   pinned as regression tests.
-3. **`IndexStore.upsert` keeps historical entries**, so the first re-measurement showed
-   the veto firing on nothing. The index has to be deleted before an A/B, or it reports
-   the union of every run that ever happened.
+   `kernels.filter{…} + kernels.filter{…}`; `unwrappingRepetition` is `Array(leading) + loopBody`.
+   Both operands derive from the input, so `+` there is a **reordering**, not growth. The rule now
+   requires a **literal** operand; both are pinned as regression tests.
+3. **`IndexStore.upsert` keeps historical entries**, so the first re-measurement showed the veto
+   firing on nothing. Delete the index before an A/B or it reports the union of every run.
 
-**Read the RETURN expression and nothing else**, which is the finding rather than an
-implementation detail. A body-wide scan calls `quoted(_:)` a normalizer — it runs
-`replacingOccurrences` and *then* wraps — and calls a dedup an extender, because
-`.append` appears while it filters. Both readings are wrong, and both come from looking
-in the wrong place. The frozen prototype's only false alarm came from its body-wide
-fallback; dropping it cost no recall.
+**An apparatus bug caught before it became a finding.** Six rows first failed
+`cannot find type … in scope`, which reads exactly like a residual of item 16's cross-module import
+fix. It was mine — the filtered index's `sourceFileByTypeName` pointed into a deleted worktree.
+**Third instance in one day of the same shape**, and the standing lesson: *the harness fails in ways
+that look precisely like the tool failing.*
 
-**Domain transfer stays unclaimed**: `T -> T` where the output is a different *kind* of
-thing (a hash, a rendered name). That is the 5 remaining refutations and exactly what the
-`_description` and capacity-from-scale vetoes have chased **by name** for cycles. It is
-not characterised well enough to veto on, and a veto that fires on a guess suppresses
-true laws — which is the failure that cannot be seen from the outside.
+**Domain transfer stays unclaimed** — `T -> T` where the output is a different *kind* of thing (a
+hash, a rendered name, a seed string), so `f(f(x))` is meaningless though it type-checks. That is
+the residual, and what the `_description` and capacity-from-scale vetoes have chased **by name** for
+cycles. Not characterised well enough to veto on, and a veto that fires on a guess suppresses true
+laws — the failure that cannot be seen from the outside. **Re-measured 2026-08-05** on the
+whole-corpus survey: 24% → **10.6%** with the `extendsInput` class producing ZERO refutations, and
+all survivors domain transfer. Now item 22 / [#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93).
+
 
 ### The whole-corpus number, and the "regression" that was not one (2026-08-05)
 
@@ -1184,6 +1042,15 @@ writes a comparable `run.json`, so a *seed-and-suggestion* number is now cheap. 
 number still is not, because that needs stage 3, which does not exist (item 9). Worth being exact
 about which number is back: the loop's own headline row — *would a reader reach the bugs?* —
 remains unmeasured.
+
+### A doc that characterises a set by a property its newest member lacks
+
+It does not go out of date — it **argues against the code**. `PBTSeed.role`'s comment said *"every
+rule but the two **candidate** rules"*, and `extractablePureKernel` is a kernel rule, so a reader
+checking the sentence against the classifier would have read the correct behaviour they found there
+as a bug. The count was stale *and* the wording ruled the third out by name, which is why it was not
+a one-line fix ([SPL#65](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/65)). Name the
+members individually rather than counting them.
 
 ### Every guard here was a retrofit
 
