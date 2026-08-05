@@ -35,7 +35,6 @@ forward, and only two:
 | # | item | where it stands |
 |---|---|---|
 | 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04** ([SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2)). `inferredEffect(for:)` no longer delegates to `verdict(for:)`, which cannot check `throws` until after the body walk. Mechanism 1 was the ENTIRE cost — no second fix to chase. Reasoning: SEI#1, and *Decisions* → *Adopting `verdict(for:)`* |
-| 3 | ~~**Is SwiftProjectLint silently paying item 1?**~~ | **Closed 2026-08-04: NO** — SPL never calls the method that regressed. See *Decisions* → *Was SwiftProjectLint paying the purity regression?* Incidental finding filed as [SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67) — **RESOLVED and VERIFIED 2026-08-05** ([SPL#68](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/68): measure a cross-file finding against its own file rather than the last one walked, and walk the cache in path order). Re-measured from a binary built at `27edc49` over this repo @ `522d4f7` — three runs, **752 findings each, `(file:line, rule)` multiset IDENTICAL**, including all 159 `Could Be Private Member` rows, which were 472 of the original 476. **The residual is ORDER, not content** — 624 of 752 findings change position run to run, filed as [SPL#69](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/69). **Two verification traps worth carrying**: an unsorted `diff` reports ~541 differences and reads as *still broken*, so separate ORDER from CONTENT before concluding; and capturing with `2>&1` splices the stderr banner into a finding line, which looks like a second output defect and is purely the redirection — it was nearly filed as one |
 | 4 | **The attribute-grammar join has no contract test** — *half closed 2026-08-04* | **The names this repo's behaviour is keyed to are now pinned** ([#79](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/79), `EffectVocabularyContractTests`): contents, behaviour (every spelling round-trips through the real scanner), and **the rename simulated** — a near-miss spelling yields `nil`, not a wrong effect. It became urgent when [#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78) made `IdempotenceTemplate` **veto** on these names, so a rename stops suppressing a false law instead of failing loudly. **Still open: the cross-repo half.** swift-infer deliberately does not depend on SwiftIdempotency — the doc-comment spelling needs no dependency and the attribute is matched by NAME — so asserting these equal its *shipped macro names* needs a fixture or a checked-in manifest |
 | 7 | **No current end-to-end number for the LOOP** — the verify half is closed | **Verify half closed 2026-08-05: 139 of 281 entries execute a law**, and it is re-takeable rather than remembered. **Still open**: that measures one repo's own index, not the five-package loop, and `scripts/toolchain.sh` stages 3–4 remain unimplemented (item 9) — so no run of *the loop* executes a law even though verify does. See *Decisions* → *The whole-corpus number* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
@@ -724,7 +723,7 @@ law's domain to the non-throwing inputs, which is what `PurityVerdict`'s own doc
 the method is for. Filing them as available beats inventing an annotation tier to
 justify reading them.
 
-### Was SwiftProjectLint paying the purity regression? No — item 3 closed (2026-08-04)
+### Was SwiftProjectLint paying the purity regression? No (2026-08-04)
 
 The suspicion was reasonable: SPL calls `PurityInferrer` from two visitors over every
 function *and closure* in a project, so it has more calls into that path than anything
@@ -765,6 +764,16 @@ seeds keyed on `(file, symbol)` and reported 238 "moved" seeds. Overloads share 
 comparison was meaningless. The multiset comparison on `(file, line, symbol, kind)` is
 the correct one, and it says stable. Same shape as the day's other near-misses: the
 cheap key answered a different question from the one being asked.
+
+**SPL#67 is fixed, and verified here rather than read off its state (2026-08-05).**
+[SPL#68](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/68) measures a cross-file
+finding against its own file instead of the last one walked, and walks the cache in path
+order. Re-measured from a binary built at that merge, three runs over this repo: **752
+findings each, `(file:line, rule)` multiset identical**, including all 159
+`Could Be Private Member` rows — 472 of the original 476. The residual is **order, not
+content** (624 of 752 findings change position), filed as
+[SPL#69](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/69) and irrelevant to
+the hop, since `pbt-seeds` is stable.
 
 ### The `idempotence` false-positive rate, and the veto it earned (2026-08-04)
 
@@ -1185,6 +1194,24 @@ writes a comparable `run.json`, so a *seed-and-suggestion* number is now cheap. 
 number still is not, because that needs stage 3, which does not exist (item 9). Worth being exact
 about which number is back: the loop's own headline row — *would a reader reach the bugs?* —
 remains unmeasured.
+
+### Two ways to manufacture a defect that is not there
+
+Both nearly produced a filed bug on 2026-08-05, verifying someone else's fix.
+
+**An unsorted `diff` of two runs conflates ORDER with CONTENT.** Comparing two lint runs
+reported ~541 differing lines and read as *the fix did not work*. Sorting first showed the
+findings and their line numbers were identical and only the sequence moved — a different,
+lesser defect. Separate the two before concluding anything about determinism.
+
+**Capturing with `2>&1` merges two unsynchronised streams.** A trailing banner written to
+stderr spliced into the middle of a stdout finding line, at a different byte offset each
+run, in every run. That looks exactly like a real output defect and is purely the
+redirection; re-running with the streams separated showed one clean line. It was one
+command from being filed.
+
+Same family as the `(file, symbol)` seed key and the §8.9 regex: **the cheap capture
+answered a different question from the one being asked.**
 
 ### A doc that characterises a set by a property its newest member lacks
 
