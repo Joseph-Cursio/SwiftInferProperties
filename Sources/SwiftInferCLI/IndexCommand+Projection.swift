@@ -141,7 +141,8 @@ extension SwiftInferCommand.Index {
             returnsSelfType: evidence?.returnsSelfType ?? false,
             isComputedProperty: evidence?.isComputedProperty ?? false,
             parameterTypeNames: evidence?.parameterTypeNames ?? [],
-            qualifiedTypeName: evidence?.qualifiedTypeName
+            qualifiedTypeName: evidence?.qualifiedTypeName,
+            structuralBlocker: StructuralBlocker.reason(among: suggestion.score.signals)
         )
     }
 
