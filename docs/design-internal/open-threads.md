@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-05** · `SwiftInferProperties@f8b64ac`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@2ab14ac`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@f8b64ac2eb80df975b2cb1997ce19af47d9dc203 observer=SwiftInferProperties@f8b64ac2eb80df975b2cb1997ce19af47d9dc203 -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@2ab14ac488adea082ded3ccdb564ed14fafab20c observer=SwiftInferProperties@2ab14ac488adea082ded3ccdb564ed14fafab20c -->
 
 ---
 
