@@ -1285,8 +1285,22 @@ members individually rather than counting them.
 
 ### Every guard here was a retrofit
 
-`VerifierWorkdirKitPinTests`, `SeedRoleContractTests`, `KitCoverageLawLevelTests` — all added
-*after* the incident. Not one [border claim](glossary.md#border-claim) was guarded when written.
+`VerifierWorkdirKitPinTests`, `SeedRoleContractTests`, `KitCoverageLawLevelTests`,
+`SubprocessBatchCoverageTests` — all added *after* the incident. Not one
+[border claim](glossary.md#border-claim) was guarded when written.
+
+The 2026-08-05 addition sharpens the diagnosis, because its claim was written **twice**
+and enforced neither time: the Makefile says *"Keep every regex-matched suite in exactly
+one batch"* and CLAUDE.md restates it as a standing instruction. Nine suites drifted
+through both. So restating a rule in a second prose location does not approximate a
+guard — **it produces the feeling of having one**, which is worse than a single
+unenforced comment, since the reader now finds agreement wherever they check.
+
+Worse still, that Makefile comment is not a general warning but a **tally**: it names
+BATCH5, BATCH6 and BATCH7 as batches added *because* suites had already been orphaned
+this way. The rule was therefore written at the site of the mistake, by someone who had
+just made it, three times, and it did not prevent the fourth. **A comment that records
+its own recurrences is a guard's worth of evidence being spent on prose.**
 The question is not "which guard is missing" but **what makes writing one feel like it needs no
 test** — and the answer looks like: it is expressed where prose is normally decorative, its failure
 is an absence, and the author is the only person who ever held both repos at once.
