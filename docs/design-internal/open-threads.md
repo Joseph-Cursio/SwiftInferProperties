@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-05** · `SwiftInferProperties@1ef7128`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@9efaa7e`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@1ef71283ce5100a11f0dffc10daf6bbec74b8fda observer=SwiftInferProperties@1ef71283ce5100a11f0dffc10daf6bbec74b8fda -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@9efaa7e404d39032528f67d20ad92b165a47a286 observer=SwiftInferProperties@9efaa7e404d39032528f67d20ad92b165a47a286 -->
 
 ---
 
@@ -85,9 +85,16 @@ Cost was the blocker and it was affordable: **76 min wall, 7.7 CPU-hours, 107 GB
 `--max-parallel 4`, about 2× the `predicate` survey rather than the 2.2× the entry count suggests
 (the 24 entries on templates with no composer decline without ever spawning a build).
 
-The headline is not 139. It is that **`round-trip` contributes 0 of 46** — the largest block of
-unrealised laws in the catalogue, and it is **carrier reach, not composer support**, which is a
-different fix from the one this item was pointed at. Four defects filed; see *Decisions* → *The
+**The headline is not 139 — it is the tier cut.** `Strong` 3 entries / **0 run**; `Likely` 27 / 23
+run / **4 refute**; `Possible` 249 / 116 run / 5 refute. **All 4 real bugs are `Likely`; all 5
+`Possible` refutations are false laws**, so the tier predicts whether a refutation is worth reading.
+The 3 `Strong` rows are the only tier where nothing runs at all — they decline
+`unsupported-template`, so verify cannot attempt what discovery is most confident in.
+
+**`round-trip` contributing 0 of 46 is NOT a carrier-reach story**, which is what the first write-up
+of this said. 45 of the 46 are cross-module pairs the index forms only because it scans all of
+`Sources/` at once, all correctly demoted by a counter that fires on every one; the real population
+is **one** law, blocked on a generator. Five defects filed, two fixed; see *Decisions* → *The
 whole-corpus number*.
 
 **5. Two review findings from `/swiftui-pro`, both fixed at close** — `VerifyTargetInference` was
@@ -121,10 +128,12 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04.** `IdempotenceReturnShape` reads the returned expression: a result built *around* its input cannot be idempotent, so the law is FALSE rather than unlikely — full veto, `orderSensitiveCarrier`'s ground. **72 → 54 rows; 8 of the 13 measured refutations removed plus the 9 `defaultPath` rows; ZERO laws that held were lost.** The §3.5 objection did not apply: score-35 is `Possible`, *hidden by default*, so the cost was never reader-facing volume — it was index and verify hygiene. **Domain transfer is deliberately still not claimed** (5 remaining refutations). **Re-measured on the whole-corpus survey 2026-08-05 and the veto holds: 47 executed, 5 refuted — 24% → 10.6%, and the `extendsInput` class produced ZERO refutations**, which is the shape a working veto has. All 5 survivors are domain transfer; no third mechanism appeared. Now tracked as item 22. See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
 | 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change. Same defect as the `predicate` survey's one undiagnosed `build-failed` — two templates, reached independently, one cause. `Gen` is from `PropertyBased`; `url()` is an extension in `PropertyLawKit`, which the stub does not import and the workdir does not depend on. The `.algebraic` workdir was the outlier — `.interaction` already declared the product. **URL rows now 0 → 11 of 13 executing (2 hold, 9 refute)**, and the 9 refutations confirm item 18's frozen classifier on rows it could not previously run. **An earlier same-day diagnosis of this was WRONG** (a `libTesting` launch failure that was an artefact of running the binary outside its harness) and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
-| 21 | **[#92](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/92)** — the identity-keyed merge fold is **not commutative in four `SwiftInferCore` types** | Found by the whole-corpus survey. `Decisions` / `PostAcceptanceOutcomeLog` / `VerifyEvidenceLog` / `InteractionDecisions` all run the same `records + other.records` fold with `>=` on the date, so first-seen wins on a tie and `a.merge(b) != b.merge(a)`. **`Decisions.merge` was already documented false in CLAUDE.md and the other three cite it** — the doc comments record the copy chain (*"same posture as v1's `Decisions.merge`"*). Each aggregates corpora for a §17.2 metric, so the fold ORDER decides the denominator; measured 0-vs-1 regressions from identical inputs. **Associativity correctly HOLDS in all four** (take-first-max is associative, not commutative — exhaustive, 0/512 triples), which both confirms the instrument and constrains the fix |
-| 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed, now **5 witnesses** (47 executed, 5 refuted). **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
-| 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up |
-| 24 | **[#95](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/95)** — nested carrier types recorded **unqualified**, depending on declaration spelling | `extension SwiftInferCommand.Verify { … }` records `SwiftInferCommand.Verify`; `extension SwiftInferCommand { struct Scaffold { … } }` records bare `Scaffold`, which does not resolve in the stub. Same module, same nesting depth, different authoring style. **Third instance of the spelling-dependent family** — `assumedCoverageSignal`'s `"Self"` and the kit-suite backtest's bare generic name are the other two. Also raises collision risk in the bare-name-keyed sidecars |
+| 21 | ~~**[#92](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/92)** — the identity-keyed merge fold is **not commutative in four `SwiftInferCore` types**~~ | **FIXED 2026-08-05** ([#98](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/98)) — one shared `IdentityKeyedFold`, ties broken by canonical encoding rather than argument position. **And it was a RE-REPORT**: `MergeAlgebraPropertyTests` had already pinned this over an injected clock, naming all four logs, the associativity split, the stale docstrings, and a mutation test on `>=` vs `>`. Those arms now assert the law instead of the drift. Found again by the whole-corpus survey. `Decisions` / `PostAcceptanceOutcomeLog` / `VerifyEvidenceLog` / `InteractionDecisions` all run the same `records + other.records` fold with `>=` on the date, so first-seen wins on a tie and `a.merge(b) != b.merge(a)`. **`Decisions.merge` was already documented false in CLAUDE.md and the other three cite it** — the doc comments record the copy chain (*"same posture as v1's `Decisions.merge`"*). Each aggregates corpora for a §17.2 metric, so the fold ORDER decides the denominator; measured 0-vs-1 regressions from identical inputs. **Associativity correctly HOLDS in all four** (take-first-max is associative, not commutative — exhaustive, 0/512 triples), which both confirms the instrument and constrains the fix |
+| 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed, now **6 witnesses** — 5 from the survey (47 executed, 5 refuted) plus `Scaffold.defaultOutputURL`, which only became reachable once #95 was fixed. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
+| 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up. **Diagnosis CORRECTED and the fix deliberately NOT shipped**: the sole witness has two further errors behind the arity one (the inverse is qualified with the primary's carrier, and the law is not type-correct), so the patch would be unmeasurable on this corpus — and would help emit 45 false laws if #97 were fixed first. Blocked on a re-survey |
+| 24 | ~~**[#95](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/95)** — nested carrier types recorded **unqualified**, depending on declaration spelling~~ | **FIXED 2026-08-05** ([#98](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/98)) — `qualifiedTypeName` rides alongside `typeName` so the bare-name sidecar keys are untouched. **3 entries corrected, 1 on a verifiable template, and that one moves `build-failed` → `measured-defaultFails`** — stated as one, not three. Original diagnosis: | `extension SwiftInferCommand.Verify { … }` records `SwiftInferCommand.Verify`; `extension SwiftInferCommand { struct Scaffold { … } }` records bare `Scaffold`, which does not resolve in the stub. Same module, same nesting depth, different authoring style. **Third instance of the spelling-dependent family** — `assumedCoverageSignal`'s `"Self"` and the kit-suite backtest's bare generic name are the other two. Also raises collision risk in the bare-name-keyed sidecars |
+| 25 | **[#97](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/97)** — `--all-from-index` builds 45 entries the cross-type counter already flagged as **uncompilable** | Deferred deliberately: a survey-cost optimisation, not a correctness bug. The counter's detail line already says *"property cannot type-check across distinct containing types"*, and the survey compiles them anyway — ~16% of a 76-minute, 107 GB run. Fix is one persisted field or one filter at survey time. **This issue's first version claimed the pairing ignored type ownership; it does not, and the correction is on the issue** |
+| 26 | **[#99](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/99)** — the `idempotence` return-shape veto is **never computed for `T? -> T`** | Uncovered by #95's fix, and the one filing today that was checked against the source before it was written. `isUnaryEndomorphism` gates on exact `parameter.type == returnType`, so `idempotenceReturnShape` is `nil` for `(URL?) -> URL` and `returnShapeVeto` cannot tell *"never computed"* from *"computed, not extending"* — while `IdempotenceTemplate+OptionalNarrowing` deliberately ADMITS that shape. Witness: `Scaffold.defaultOutputURL` appends a path component, and `appendingPathComponent` is the **first entry** in the veto's own `extensionCalls` list. **The guard checks something narrower than the thing it protects** — the `CuratedEntryRole` / `KitCoverageDriftTests` pattern. Needs an A/B before widening: a veto that fires on a guess suppresses true laws |
 
 ---
 
@@ -982,21 +991,73 @@ Item 4, closed. `verify --all-from-index` with **no `--template` filter**, relea
 
 Corpus-wide: **105 carrier declines (37%)**, 24 no-composer (9%), 11 errors, 2 misc.
 
-**Three things `--template predicate` could not have said.**
+**The tier cut is the honest headline, and 139-of-281 is not.** The table above averages a 249-row
+recall floor with 27 high-confidence rows, which are different populations asked different questions.
 
-1. **`round-trip` is the biggest single loss: 46 entries, ZERO laws.** 45 decline for want of a
-   generator. It is the second-largest verifiable template and contributes nothing, and the
-   binding constraint is **carrier reach, not composer support** — the opposite of what item 1's
-   *"the next honest gain is breadth, a second composer"* predicted. That read was taken from
-   inside the one composer that works; this is the view from outside it.
-2. **Refutations concentrate, and `predicate` contributes none.** 0 of 76 `predicate`, 5 of 47
+| tier | n | ran | held | ref | no generator | other | err |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **Strong** | 3 | **0** | 0 | 0 | 0 | 3 | 0 |
+| **Likely** | 27 | 23 (85%) | 19 | **4** | 4 | 0 | 0 |
+| **Possible** | 249 | 116 (47%) | 111 | 5 | 101 | 21 | 11 |
+
+**All 4 real bugs are `Likely`. All 5 `Possible` refutations are false laws.** That is a stronger
+result for the scoring than any aggregate — the tier predicts whether a refutation is worth reading.
+And the **3 `Strong` entries, score 80, are the only tier where NOTHING runs**: all three decline
+`unsupported-template` (`differential-equivalence` ×2, `invariant-preservation`). Verify cannot
+attempt the suggestions discovery is most confident in.
+
+**Two things `--template predicate` could not have said.**
+
+1. **Refutations concentrate, and `predicate` contributes none.** 0 of 76 `predicate`, 5 of 47
    `idempotence`, **4 of 4 `commutativity`**. The wall-of-green question, answered from the other
    side: `predicate` really is regression-guard work, and the refutable population lives elsewhere.
    Every executed `commutativity` law on this repo is one of the four merges, and every one is false.
-3. **`codable-round-trip` is the only template at 100% yield** — 8/8 ran, 8 held.
+2. **`codable-round-trip` is the only template at 100% yield** — 8/8 ran, 8 held. It is also the
+   only round-trip family that never has to GUESS an inverse: the inverse is the carrier's own
+   `Codable` conformance. That is the comparison the row below turns on.
 
-Four defects filed: **#92** (merge fold non-commutative ×4), **#93** (domain-transfer class),
-**#94** (round-trip receiver slot), **#95** (unqualified nested carriers). Items 21–24.
+#### `round-trip`'s zero is NOT carrier reach — that reading was wrong (corrected 2026-08-05)
+
+The first version of this entry called `round-trip` *"the biggest single loss — 46 entries, ZERO
+laws, and the binding constraint is carrier reach, not composer support."* The decline census says
+45 want a generator, so the census reads that way. It is wrong, and the correction matters more than
+the claim.
+
+| scan | round-trip suggestions | same-file | cross-file | cross-type counter fired |
+|---|---:|---:|---:|---:|
+| `--target <each of 7>` | **1** | 1 | 0 | — |
+| `--sources Sources` (what the INDEX does) | **46** | 1 | 45 | **45 of 46** |
+
+The index is built by a whole-`Sources/` scan, which pools functions across module boundaries and
+forms 45 cross-module pairs a per-target `discover` never produces. `crossTypeRoundTripCounterSignal`
+detects every one and demotes them to `Possible`/score 25, so **nothing false reaches default
+output** — discovery is behaving correctly. But they are still written to the index, and
+`--all-from-index` then spends a full SwiftPM build on each, rediscovering by compilation what the
+counter's own detail line already says: *"property cannot type-check across distinct containing
+types."* ~16% of a 76-minute run.
+
+So the real shape of the zero is **45 non-candidates plus exactly one real law**
+(`SamplingSeed.derive(fromIdentityHash:)` ↔ `renderHex(_:)`, same file, score 35), and that one is
+blocked on a missing `SamplingSeed` generator. Filed as **#97**.
+
+**How the wrong reading happened, because it is the reusable part.** The evidence was a `grep` for
+`func <name>(` across `Sources/`, used as a proxy for *where does the paired inverse live*. It
+answered a different question. `discover`'s own output was one command away and settles it exactly.
+Same failure as the §8.9 regex that returned 1 of 20, and the fourth instance this project has
+recorded of a cheap proxy not covering the claim.
+
+Five defects filed. **#92** (merge fold non-commutative ×4) and **#95** (unqualified nested
+carriers) are FIXED in [#98](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/98).
+**#93** (domain-transfer class), **#94** (round-trip receiver slot), **#97** (the survey builds
+entries the counter already flagged) stay open, plus **#99**, which #95's fix uncovered. Items 21–26.
+
+**Three of the five were re-reports of things this repo already knew**, and each was corrected in
+place rather than quietly closed: #92 was pinned by `MergeAlgebraPropertyTests` over an injected
+clock (all four logs, the associativity split, the stale docstrings, and a mutation test on
+`>=` vs `>`); #93's class is named verbatim in `IdempotenceReturnShapeClassifier`'s doc, which
+declines to veto it *on purpose*; #97's counter exists and fires. The tool's OUTPUT was new every
+time; the diagnosis was not. **Search `Tests/` and the type's own doc before filing** — all three
+would have been caught by one grep of the repo rather than of the corpus.
 
 #### The 106 does not reproduce — and the flag raised over it is WITHDRAWN
 
