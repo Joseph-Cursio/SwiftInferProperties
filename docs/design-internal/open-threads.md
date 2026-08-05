@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-05** · `SwiftInferProperties@9efaa7e`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@cb89ede`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@9efaa7e404d39032528f67d20ad92b165a47a286 observer=SwiftInferProperties@9efaa7e404d39032528f67d20ad92b165a47a286 -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@cb89edeb0cd97525adb8a1ba8a75091d772ef314 observer=SwiftInferProperties@cb89edeb0cd97525adb8a1ba8a75091d772ef314 -->
 
 ---
 
@@ -50,10 +50,10 @@ forward, and only two:
 | 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04** (`IdempotenceReturnShape`), and **re-measured on the whole-corpus survey 2026-08-05: 24% → 10.6%**, with the `extendsInput` class producing ZERO refutations — the shape a working veto has. All survivors are domain transfer, now item 22. See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
 | 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change; the `.algebraic` workdir lacked the kit product its stubs import. URL rows 0 → 11 of 13 executing. An earlier same-day diagnosis of this was WRONG and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
-| 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed, now **6 witnesses** — 5 from the survey (47 executed, 5 refuted) plus `Scaffold.defaultOutputURL`, which only became reachable once #95 was fixed. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
+| 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed: **5 witnesses** (47 executed, 5 refuted). **Corrected 2026-08-05 — this row briefly claimed 6, counting `Scaffold.defaultOutputURL`. That is not domain transfer at all**: it appends a path component, so it is an `extendsInput` case the veto's own list already names, and item 26 is why it was never classified. A false law landing in the wrong bucket makes the class it is filed under look better characterised than it is. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
 | 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up. **Diagnosis CORRECTED and the fix deliberately NOT shipped**: the sole witness has two further errors behind the arity one (the inverse is qualified with the primary's carrier, and the law is not type-correct), so the patch would be unmeasurable on this corpus — and would help emit 45 false laws if #97 were fixed first. Blocked on a re-survey |
 | 25 | **[#97](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/97)** — `--all-from-index` builds 45 entries the cross-type counter already flagged as **uncompilable** | Deferred deliberately: a survey-cost optimisation, not a correctness bug. The counter's detail line already says *"property cannot type-check across distinct containing types"*, and the survey compiles them anyway — ~16% of a 76-minute, 107 GB run. Fix is one persisted field or one filter at survey time. **This issue's first version claimed the pairing ignored type ownership; it does not, and the correction is on the issue** |
-| 26 | **[#99](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/99)** — the `idempotence` return-shape veto is **never computed for `T? -> T`** | Uncovered by #95's fix, and the one filing today that was checked against the source before it was written. `isUnaryEndomorphism` gates on exact `parameter.type == returnType`, so `idempotenceReturnShape` is `nil` for `(URL?) -> URL` and `returnShapeVeto` cannot tell *"never computed"* from *"computed, not extending"* — while `IdempotenceTemplate+OptionalNarrowing` deliberately ADMITS that shape. Witness: `Scaffold.defaultOutputURL` appends a path component, and `appendingPathComponent` is the **first entry** in the veto's own `extensionCalls` list. **The guard checks something narrower than the thing it protects** — the `CuratedEntryRole` / `KitCoverageDriftTests` pattern. Needs an A/B before widening: a veto that fires on a guess suppresses true laws |
+| 26 | ~~**[#99](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/99)** — the `idempotence` return-shape veto is **never computed for `T? -> T`**~~ | **FIXED 2026-08-05** ([#102](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/102)) — both gates now read `IdempotenceCandidateShape`, so widening one widens both. **A/B: 283 → 282 index entries, `idempotence` 54 → 53; the ONE removed row is the witness, zero additions, zero other removals.** Original diagnosis: Uncovered by #95's fix, and the one filing today that was checked against the source before it was written. `isUnaryEndomorphism` gates on exact `parameter.type == returnType`, so `idempotenceReturnShape` is `nil` for `(URL?) -> URL` and `returnShapeVeto` cannot tell *"never computed"* from *"computed, not extending"* — while `IdempotenceTemplate+OptionalNarrowing` deliberately ADMITS that shape. Witness: `Scaffold.defaultOutputURL` appends a path component, and `appendingPathComponent` is the **first entry** in the veto's own `extensionCalls` list. **The guard checked something narrower than the thing it protects** — the `CuratedEntryRole` / `KitCoverageDriftTests` pattern. **Method note: per-target and whole-`Sources/` `discover` both showed ZERO delta** — the witness exists only in the INDEX, built by a different pipeline, so measuring the convenient surface would have reported "no change" and proved nothing |
 | 27 | **Generators for syntax-node carriers** — can a `TokenSyntax` / `SyntaxCollection` be derived at all, and by WHOM | **Scope-and-file, not build.** 14 of `predicate`'s 22 non-running rows, and the largest single decline bucket in the whole-corpus survey (`no generator for carrier` is 105 of 281 corpus-wide). The design decision *"generator inference delegates to SwiftPropertyLaws"* says the answer is probably **not here** — so the deliverable is a scoped question for `DerivationStrategist`, not a generator in this repo |
 
 ---
@@ -958,6 +958,66 @@ and this one's own two halves.
 **A measurement whose artifact its own run destroys is not re-checkable.** Nothing was designed
 to prevent that; the survey persists over the file it is being compared against. Worth fixing
 before the next survey, or worth copying the evidence file first and saying so.
+
+### The veto that was never asked, and the surface that would have hidden it (2026-08-05)
+
+Item 26, closed ([#102](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/102)).
+`isUnaryEndomorphism` gated `idempotenceReturnShape` on exact
+`parameter.type == returnType`; `IdempotenceTemplate+OptionalNarrowing` admits `T? -> T` as well.
+The two gates disagreed and **nothing could notice**, because `returnShapeVeto` returns `nil` both
+when the shape was never computed and when it was computed and cleared. Same shape as
+`CuratedEntryRole` guarding the wrong join: a guard checking something narrower than the thing it
+protects looks green while the hole stays open.
+
+`Scaffold.defaultOutputURL(packageRoot: URL?) -> URL` returns
+`(packageRoot ?? …).appendingPathComponent(…)`, and `appendingPathComponent` is the **first entry**
+in the classifier's own `extensionCalls`. It would have returned `.extendsInput` unmodified. It was
+never asked, so the law was proposed, ran, and refuted at trial 0.
+
+**A/B, two binaries the same afternoon, index deleted between arms** (`IndexStore.upsert` keeps
+historical entries — item 18 learned that the hard way):
+
+| | before | after |
+|---|---:|---:|
+| index entries | 283 | **282** |
+| `idempotence` | 54 | **53** |
+| removed | — | **the witness, and only the witness** |
+| added | — | **0** |
+
+**Three things worth keeping.**
+
+1. **The surface decided the answer.** Per-target `discover` and whole-`Sources/` `discover` both
+   showed **zero** delta — the witness exists only in the **index**, which is built by a different
+   pipeline. Measuring the convenient surface would have reported "no change" and proved nothing.
+   Third time in two days that picking the wrong surface would have produced a confident wrong
+   number.
+2. **Three defects were stacked on one entry, each hiding the next**: a scope error (#95) hid a
+   false law, which hid this veto gap. Only fixing the first made the second visible, and only
+   running the second exposed the third. *A refuter that fires first hides every refuter behind it*
+   — at the level of a single index row.
+3. **A false law in the wrong bucket flatters the bucket.** This witness was briefly filed under
+   #93's domain-transfer class, which it is not. Domain transfer stays at **5** witnesses; a class
+   that absorbs anything unexplained stops being a characterisation.
+
+**Unexplained and NOT chased**: the absolute index count moved from 281 earlier the same day to 283
+in both arms. It cannot affect a same-day two-binary comparison, but **do not cite 281 as current**
+until someone works out why.
+
+### The measurement artifacts are frozen now, because the run destroyed its own (2026-08-05)
+
+`fixtures/whole-corpus-survey/` holds the raw `verify --all-from-index` streams behind every number
+in *The whole-corpus number* — 281 records, plus the 129-record `predicate` A/B before-arm and the
+bucketing script. 132 KB.
+
+**The reason is not tidiness.** That survey's own `persistSurveyBatch` overwrote
+`.swiftinfer/verify-evidence.json`, which is gitignored, so the figure it was being compared against
+**no longer existed anywhere** by the time the comparison was questioned. The SHAs and commands were
+recorded and both binaries rebuild from git, so the *method* was always reproducible — but the raw
+evidence lived in a session temp directory and would have gone with the session.
+
+Two caveats live in that directory's README rather than here, because that is where someone re-running
+will look: delete the index before an A/B, and **do not diff a fresh run against these files** — §10.3
+wants both arms taken the same day, so these are evidence of what was measured, not a baseline.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
