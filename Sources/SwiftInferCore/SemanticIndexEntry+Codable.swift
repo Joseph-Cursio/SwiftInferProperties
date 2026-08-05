@@ -37,6 +37,7 @@ extension SemanticIndexEntry {
         case isComputedProperty
         case parameterTypeNames
         case qualifiedTypeName
+        case structuralBlocker
     }
 
     public init(from decoder: Decoder) throws {
@@ -73,6 +74,8 @@ extension SemanticIndexEntry {
             try container.decodeIfPresent([String].self, forKey: .parameterTypeNames) ?? []
         self.qualifiedTypeName =
             try container.decodeIfPresent(String.self, forKey: .qualifiedTypeName)
+        self.structuralBlocker =
+            try container.decodeIfPresent(String.self, forKey: .structuralBlocker)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -109,5 +112,6 @@ extension SemanticIndexEntry {
         // form is exactly what `FieldCoverageReflectionTests` exists to catch. It
         // caught this one — the first version used `encodeIfPresent`.
         try container.encode(qualifiedTypeName, forKey: .qualifiedTypeName)
+        try container.encode(structuralBlocker, forKey: .structuralBlocker)
     }
 }

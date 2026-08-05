@@ -165,6 +165,11 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// and the call resolver falls back to `typeName`.
     public var qualifiedTypeName: String?
 
+    /// Why this entry's property cannot be measured, when a discovery signal
+    /// already knew. See `StructuralBlocker` — this is not a carrier-reach gap and
+    /// must not be reported as one. `nil` is the normal case.
+    public var structuralBlocker: String?
+
     public init(
         identityHash: String,
         templateName: String,
@@ -186,7 +191,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         returnsSelfType: Bool = false,
         isComputedProperty: Bool = false,
         parameterTypeNames: [String] = [],
-        qualifiedTypeName: String? = nil
+        qualifiedTypeName: String? = nil,
+        structuralBlocker: String? = nil
     ) {
         // Delegates to the exhaustive initializer, which is the designated one
         // — see `EveryColumn`. The direction matters: the exhaustive init is
@@ -214,7 +220,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             returnsSelfType: returnsSelfType,
             isComputedProperty: isComputedProperty,
             parameterTypeNames: parameterTypeNames,
-            qualifiedTypeName: qualifiedTypeName
+            qualifiedTypeName: qualifiedTypeName,
+            structuralBlocker: structuralBlocker
         )
     }
 
@@ -256,7 +263,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         returnsSelfType: Bool,
         isComputedProperty: Bool,
         parameterTypeNames: [String],
-        qualifiedTypeName: String? = nil
+        qualifiedTypeName: String? = nil,
+        structuralBlocker: String? = nil
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -279,6 +287,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.isComputedProperty = isComputedProperty
         self.parameterTypeNames = parameterTypeNames
         self.qualifiedTypeName = qualifiedTypeName
+        self.structuralBlocker = structuralBlocker
     }
 
     public func updated(from other: Self) -> Self {
@@ -306,7 +315,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             // From `other`: a re-scan is authoritative for the signature, exactly as it is for
             // every other shape column. A parameter list that changed is a law that changed.
             parameterTypeNames: other.parameterTypeNames,
-            qualifiedTypeName: other.qualifiedTypeName
+            qualifiedTypeName: other.qualifiedTypeName,
+            structuralBlocker: other.structuralBlocker
         )
     }
 }
