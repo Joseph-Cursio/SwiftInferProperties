@@ -1,0 +1,16 @@
+{
+  "_comment": "DERIVED, not hand-written. Regenerate with the script in README.md.",
+  "repo": "SwiftIdempotency",
+  "sha": "4a8e801c5a9ec2a93fb73650a0ff97a45466ab8c",
+  "capturedAt": "2026-08-05",
+  "rule": "@attached(peer) public macro \u2014 the effect-annotation vocabulary",
+  "peerMacros": [
+    "ClockDeterministic",
+    "EffectUnknown",
+    "ExternallyIdempotent",
+    "Idempotent",
+    "NonIdempotent",
+    "Observational",
+    "Pure"
+  ]
+}
