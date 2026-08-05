@@ -25,7 +25,15 @@ extension SwiftInferCommand.Discover {
     }
 
     public func run() async throws {
-        let directory = try Self.resolveScanDirectory(target: target, sources: sources)
+        // Infers the scope when neither flag is given, rather than erroring — the lint→infer
+        // hop's first-attempt failure. Only `discover` does this; see
+        // `TargetDirectory.resolveScanInferring` for why the other scanning commands keep the
+        // loud error, and why the several-modules case scans everything instead of picking one.
+        let scan = try TargetDirectory.resolveScanInferring(target: target, sources: sources)
+        if let note = scan.note {
+            FileHandle.standardError.write(Data("note: \(note)\n".utf8))
+        }
+        let directory = scan.directory
         let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
         let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }
         let explicitTestDirPath = testDir.map { URL(fileURLWithPath: $0) }
