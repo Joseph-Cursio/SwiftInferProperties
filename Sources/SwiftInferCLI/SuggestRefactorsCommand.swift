@@ -68,9 +68,36 @@ extension SwiftInferCommand {
         )
         public var limit: Int?
 
+        /// V1.149 — speculative mode (item 13, tier 1).
+        ///
+        /// Off by default and gated behind an explicit flag because each candidate
+        /// costs a package snapshot plus a verify workdir. The design priced this
+        /// before it was built: an 85-entry survey already leaves 3.4 GB behind, so
+        /// "hard-gated and opt-in" is a constraint, not a preference.
+        @Flag(
+            name: .long,
+            help: """
+            SPECULATIVE: copy the package, widen one `private`/`fileprivate` \
+            declaration, and report the laws that become visible WITH their \
+            verdicts. Emits a patch, not advice. Never modifies your tree. \
+            Expensive — one package snapshot and one verify workdir per candidate.
+            """
+        )
+        public var speculative: Bool = false
+
+        @Option(
+            name: .long,
+            help: "Cap speculative candidates. Each one costs a snapshot + a verify build."
+        )
+        public var maxCandidates: Int = 5
+
         public init() { /* no-op */ }
 
         public func run() async {
+            if speculative {
+                runSpeculative()
+                return
+            }
             let result = Self.runSuggestRefactors(
                 directoryOverride: directory,
                 explicitIndexPath: indexPath,
@@ -84,6 +111,20 @@ extension SwiftInferCommand {
                 )
             }
             print(result.rendered, terminator: "")
+        }
+
+        /// The `--speculative` path: patch + law + verdict per candidate.
+        private func runSpeculative() {
+            let root = directory.map { URL(fileURLWithPath: $0) }
+                ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            do {
+                let proposals = try SpeculativeRefactorRunner.run(
+                    options: .init(packageRoot: root, maxCandidates: maxCandidates, budget: "small")
+                )
+                print(Self.renderSpeculative(proposals), terminator: "")
+            } catch {
+                FileHandle.standardError.write(Data("error: \(error)\n".utf8))
+            }
         }
 
         /// Pure-function surface so unit tests can drive the subcommand
