@@ -24,8 +24,12 @@ enum SwiftInferMacroDiagnostic: String, DiagnosticMessage {
             return "@CheckProperty can only attach to a function declaration."
 
         case .unrecognizedKind:
-            return "@CheckProperty's first argument must be `.idempotent`, "
-                + "`.roundTrip(pairedWith:)`, or `.preservesInvariant(_:)`."
+            // `.idempotent` still parses and still expands — it is deprecated,
+            // not removed — so it stays listed. Leading with the supported pair
+            // keeps the suggestion order honest.
+            return "@CheckProperty's first argument must be "
+                + "`.roundTrip(pairedWith:)`, `.preservesInvariant(_:)`, or the "
+                + "deprecated `.idempotent`."
 
         case .idempotentRequiresUnaryShape:
             return "@CheckProperty(.idempotent) requires `func name(_: T) -> T` — "
@@ -41,9 +45,12 @@ enum SwiftInferMacroDiagnostic: String, DiagnosticMessage {
                 + "return type."
 
         case .roundTripRequiresDistinctTypes:
+            // Deliberately no longer says "for T -> T use .idempotent": that case
+            // is deprecated, and a diagnostic that steers users onto a deprecated
+            // API is the tool arguing with itself. Names the owner instead.
             return "@CheckProperty(.roundTrip, pairedWith:) requires the parameter "
-                + "type and return type to differ. For T -> T use "
-                + "@CheckProperty(.idempotent)."
+                + "type and return type to differ. For a T -> T idempotency check, "
+                + "use SwiftIdempotency's `@Idempotent` with `@IdempotencyTests`."
 
         case .preservesInvariantRequiresUnaryShape:
             return "@CheckProperty(.preservesInvariant(_:)) requires "

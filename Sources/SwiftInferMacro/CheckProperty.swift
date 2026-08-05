@@ -10,6 +10,9 @@
 /// stub for. Each case maps to one M5/M7 sub-milestone:
 ///
 /// - `.idempotent` (M5.2) — `f(f(x)) == f(x)` for an `f: T -> T`.
+///   **Deprecated**: duplicates SwiftIdempotency's `@Idempotent` +
+///   `@IdempotencyTests`. See the case's own doc for why it is deprecated
+///   rather than removed.
 /// - `.roundTrip(pairedWith:)` (M5.3) — `g(f(x)) == x` for `f: T -> U`
 ///   paired with `g: U -> T`.
 /// - `.preservesInvariant(_:)` (M7.2) — `inv(f(x))` whenever `inv(x)`,
@@ -30,7 +33,39 @@
 /// existing cases' Sendable guarantee for type-system consumers
 /// without rejecting the keypath-bearing case.
 public enum CheckPropertyKind: @unchecked Sendable {
+
+    /// **Deprecated — this job belongs to SwiftIdempotency.**
+    ///
+    /// Two packages independently generate idempotency tests from an
+    /// annotation: this case expands into a peer `@Test func`, and
+    /// SwiftIdempotency's `@Idempotent` + `@IdempotencyTests` does the same
+    /// work. That is duplicated *function*, not a naming clash, and this is the
+    /// copy that should go — SwiftIdempotency owns the effect vocabulary, ships
+    /// spellings this package cannot express (`@NonIdempotent`,
+    /// `@ExternallyIdempotent(by:)`, `@EffectUnknown`), and its definition is the
+    /// one swift-infer's inference now reads.
+    ///
+    /// **Deprecated rather than deleted, deliberately.** Removing it would take a
+    /// working test generator away from anyone using it and point them at a
+    /// package they may not depend on. `.roundTrip` and `.preservesInvariant`
+    /// stay: SwiftIdempotency has no equivalent for either.
+    ///
+    /// **Note what the replacement is and is not.** swift-infer *reading*
+    /// `@Idempotent` (as of #78) corroborates a discovered law; it does not
+    /// generate a test. Migrating means depending on SwiftIdempotency and using
+    /// `@Idempotent` together with `@IdempotencyTests`, not just relabelling.
+    @available(
+        *,
+        deprecated,
+        message: """
+            Idempotency test generation belongs to SwiftIdempotency. Use its \
+            `@Idempotent` with `@IdempotencyTests` instead; swift-infer reads \
+            `@Idempotent` as corroboration but does not generate the test. \
+            `.roundTrip` and `.preservesInvariant` are unaffected.
+            """
+    )
     case idempotent
+
     case roundTrip(pairedWith: String)
     case preservesInvariant(_ predicate: AnyKeyPath)
 }
