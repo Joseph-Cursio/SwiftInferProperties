@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-05** · `SwiftInferProperties@e8230bf`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@522d4f7`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@e8230bf8304b8207e1c384b3dee37cd0191c1c78 observer=SwiftInferProperties@e8230bf8304b8207e1c384b3dee37cd0191c1c78 -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@522d4f7a85336584d4e7e223cd4a69745bb6d954 observer=SwiftInferProperties@522d4f7a85336584d4e7e223cd4a69745bb6d954 -->
 
 ---
 
@@ -35,7 +35,7 @@ forward, and only two:
 | # | item | where it stands |
 |---|---|---|
 | 1 | ~~**[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1)** — `~2×` regression on the whole-domain purity path~~ | **Closed 2026-08-04** ([SEI#2](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/2)). `inferredEffect(for:)` no longer delegates to `verdict(for:)`, which cannot check `throws` until after the body walk. Mechanism 1 was the ENTIRE cost — no second fix to chase. Reasoning: SEI#1, and *Decisions* → *Adopting `verdict(for:)`* |
-| 3 | ~~**Is SwiftProjectLint silently paying item 1?**~~ | **Closed 2026-08-04: NO** — SPL never calls the method that regressed. See *Decisions* → *Was SwiftProjectLint paying the purity regression?* Incidental finding filed as [SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67) (non-deterministic human-readable output, 12.4% of findings) |
+| 3 | ~~**Is SwiftProjectLint silently paying item 1?**~~ | **Closed 2026-08-04: NO** — SPL never calls the method that regressed. See *Decisions* → *Was SwiftProjectLint paying the purity regression?* Incidental finding filed as [SPL#67](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/67) — **RESOLVED and VERIFIED 2026-08-05** ([SPL#68](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/68): measure a cross-file finding against its own file rather than the last one walked, and walk the cache in path order). Re-measured from a binary built at `27edc49` over this repo @ `522d4f7` — three runs, **752 findings each, `(file:line, rule)` multiset IDENTICAL**, including all 159 `Could Be Private Member` rows, which were 472 of the original 476. **The residual is ORDER, not content** — 624 of 752 findings change position run to run, filed as [SPL#69](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/69). **Two verification traps worth carrying**: an unsorted `diff` reports ~541 differences and reads as *still broken*, so separate ORDER from CONTENT before concluding; and capturing with `2>&1` splices the stderr banner into a finding line, which looks like a second output defect and is purely the redirection — it was nearly filed as one |
 | 4 | **The attribute-grammar join has no contract test** — *half closed 2026-08-04* | **The names this repo's behaviour is keyed to are now pinned** ([#79](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/79), `EffectVocabularyContractTests`): contents, behaviour (every spelling round-trips through the real scanner), and **the rename simulated** — a near-miss spelling yields `nil`, not a wrong effect. It became urgent when [#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78) made `IdempotenceTemplate` **veto** on these names, so a rename stops suppressing a false law instead of failing loudly. **Still open: the cross-repo half.** swift-infer deliberately does not depend on SwiftIdempotency — the doc-comment spelling needs no dependency and the attribute is matched by NAME — so asserting these equal its *shipped macro names* needs a fixture or a checked-in manifest |
 | 7 | **No current end-to-end number for the LOOP** — the verify half is closed | **Verify half closed 2026-08-05: 139 of 281 entries execute a law**, and it is re-takeable rather than remembered. **Still open**: that measures one repo's own index, not the five-package loop, and `scripts/toolchain.sh` stages 3–4 remain unimplemented (item 9) — so no run of *the loop* executes a law even though verify does. See *Decisions* → *The whole-corpus number* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
