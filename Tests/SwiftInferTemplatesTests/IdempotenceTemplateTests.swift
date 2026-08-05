@@ -347,6 +347,7 @@ func makeIdempotenceSummary(
     bodySignals: BodySignals = .empty,
     docComment: String? = nil,
     declaredEffect: Effect? = nil,
+    declaresUnknownEffect: Bool = false,
     file: String = "Test.swift",
     line: Int = 1
 ) -> FunctionSummary {
@@ -369,6 +370,7 @@ func makeIdempotenceSummary(
         location: SourceLocation(file: file, line: line, column: 1),
         containingTypeName: containingType,
         bodySignals: bodySignals,
+        declaresUnknownEffect: declaresUnknownEffect,
         docComment: docComment,
         declaredEffect: declaredEffect
     )

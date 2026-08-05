@@ -70,6 +70,7 @@ extension FunctionScannerVisitor {
         // verdict above; consumed by the async-veto relaxation (workplan
         // Phase 4). First EffectAnnotationParser use in this repo.
         let isClockDeterministic = EffectAnnotationParser.isClockDeterministic(declaration: node)
+        let declaresUnknownEffect = EffectAnnotationParser.declaresUnknownEffect(declaration: node)
         // The author's own retry-safety claim, in either spelling. Same
         // scan-time posture and the same parser as the determinism claim
         // above — but a DIFFERENT axis: `@lint.determinism` says the result
@@ -98,6 +99,7 @@ extension FunctionScannerVisitor {
             invariantKeypath: invariantKeypath,
             isInferredPure: isInferredPure,
             isClockDeterministic: isClockDeterministic,
+            declaresUnknownEffect: declaresUnknownEffect,
             docComment: docComment,
             declaredEffect: declaredEffect,
             purityVerdict: purityVerdict
