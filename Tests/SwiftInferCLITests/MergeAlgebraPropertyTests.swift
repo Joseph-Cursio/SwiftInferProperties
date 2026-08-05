@@ -12,9 +12,17 @@ import Testing
 // `InteractionDecisions`, `PostAcceptanceOutcomeLog`, `VerifyEvidenceLog` — as
 // **both** associativity and commutativity candidates, at the same default
 // (`Likely`) tier. That pairing is the whole point of running them: the four
-// folds are structurally identical last-write-wins merges, associativity holds,
-// and **commutativity does not**. Reading the code does not tell you which of
+// folds were structurally identical last-write-wins merges, associativity held,
+// and **commutativity did not**. Reading the code does not tell you which of
 // the two equal-confidence proposals is the real one. Executing them does.
+//
+// **Both laws now hold (2026-08-05).** The four folds were replaced by one
+// shared `IdentityKeyedFold` that breaks a timestamp tie by the records'
+// canonical encoding instead of by argument position, which makes the merge
+// commutative *and* leaves associativity intact — see that type's doc for why
+// `>=` → `>` would not have been a fix. The re-measurement that prompted it was
+// the whole-corpus verify survey: `commutativity` ran four laws on this repo,
+// all four were one of these merges, and all four refuted.
 //
 // **This suite is now clock-driven, and that is the second half of the story.**
 // The first version built `DecisionRecord`s and `VerifyEvidence`s by hand at
@@ -38,10 +46,12 @@ import Testing
 // inside one whole second and persisted at `.iso8601` resolution — rather than
 // by a literal chosen to make the point.
 //
-// Two of the four docstrings claim the aggregate is "order-deterministic
-// regardless of input ordering." The *sort* is. Which record survives to be
-// sorted is not. These tests pin the true laws (associativity, normalizer
-// idempotence, identity) and pin the drift (non-commutativity).
+// Two of the four docstrings used to claim the aggregate is "order-deterministic
+// regardless of input ordering." The *sort* was; which record survived to be
+// sorted was not — the claim was true of the rows and false of their contents.
+// That is now true as written, and the four docstrings say which half is which.
+// These tests pin the laws (associativity, commutativity, normalizer
+// idempotence, identity); there is no longer a drift arm.
 @Suite("Road test — merge fold algebra, driven by an injected clock")
 struct MergeAlgebraPropertyTests {
 

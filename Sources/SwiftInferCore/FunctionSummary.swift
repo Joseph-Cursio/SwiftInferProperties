@@ -46,6 +46,18 @@ public struct FunctionSummary: Sendable, Equatable {
     /// innermost wins.
     public let containingTypeName: String?
 
+    /// The full lexical type path — `"SwiftInferCommand.Scaffold"` where
+    /// `containingTypeName` is `"Scaffold"`. `nil` for top-level functions.
+    ///
+    /// **Why both.** The bare-name sidecars are keyed on the innermost frame, so
+    /// it cannot change without changing every key — but that frame is not always
+    /// a name that RESOLVES: a stub writing `Inner.method(…)` for a lexically
+    /// nested type gets *cannot find 'Inner' in scope*, while the same type
+    /// written as `extension Outer.Inner` records the dotted path. The old
+    /// behaviour was **spelling-dependent**, the family `assumedCoverageSignal`'s
+    /// `"Self"` belongs to.
+    public let qualifiedContainingTypeName: String?
+
     /// Body-derived type-flow signals (PRD §5.3).
     public let bodySignals: BodySignals
 
@@ -195,6 +207,7 @@ public struct FunctionSummary: Sendable, Equatable {
         location: SourceLocation,
         containingTypeName: String?,
         bodySignals: BodySignals,
+        qualifiedContainingTypeName: String? = nil,
         discoverableGroup: String? = nil,
         invariantKeypath: String? = nil,
         isInferredPure: Bool = false,
@@ -216,6 +229,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.location = location
         self.containingTypeName = containingTypeName
         self.bodySignals = bodySignals
+        self.qualifiedContainingTypeName = qualifiedContainingTypeName ?? containingTypeName
         self.discoverableGroup = discoverableGroup
         self.invariantKeypath = invariantKeypath
         self.isInferredPure = isInferredPure

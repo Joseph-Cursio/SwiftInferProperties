@@ -140,7 +140,8 @@ extension SwiftInferCommand.Index {
             isNullary: evidence?.isNullary ?? false,
             returnsSelfType: evidence?.returnsSelfType ?? false,
             isComputedProperty: evidence?.isComputedProperty ?? false,
-            parameterTypeNames: evidence?.parameterTypeNames ?? []
+            parameterTypeNames: evidence?.parameterTypeNames ?? [],
+            qualifiedTypeName: evidence?.qualifiedTypeName
         )
     }
 

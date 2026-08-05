@@ -40,6 +40,11 @@ extension FunctionScannerVisitor {
         )
 
         let containingTypeName = typeStack.last
+        // The whole stack, not just its last frame — see
+        // `FunctionSummary.qualifiedContainingTypeName` for why both are kept.
+        let qualifiedContainingTypeName = typeStack.isEmpty
+            ? nil
+            : typeStack.joined(separator: ".")
         let bodySignals = scanBody(of: node)
         let discoverableGroup = AttributeScanner.discoverableGroup(in: node.attributes)
         let invariantKeypath = AttributeScanner.invariantKeypath(in: node.attributes)
@@ -78,6 +83,7 @@ extension FunctionScannerVisitor {
             location: location,
             containingTypeName: containingTypeName,
             bodySignals: bodySignals,
+            qualifiedContainingTypeName: qualifiedContainingTypeName,
             discoverableGroup: discoverableGroup,
             invariantKeypath: invariantKeypath,
             isInferredPure: isInferredPure,

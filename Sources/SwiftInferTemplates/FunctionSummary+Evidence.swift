@@ -41,7 +41,8 @@ extension FunctionSummary {
             isNullary: parameters.isEmpty,
             returnsSelfType: inferenceReturnsSelfType,
             isComputedProperty: isComputedProperty,
-            parameterTypeNames: parameters.map(\.typeText)
+            parameterTypeNames: parameters.map(\.typeText),
+            qualifiedTypeName: qualifiedContainingTypeName
         )
     }
 

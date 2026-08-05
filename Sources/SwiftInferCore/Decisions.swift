@@ -170,23 +170,19 @@ public struct Decisions: Sendable, Equatable, Codable {
     /// across multiple benchmark corpora into one in-memory
     /// `Decisions` for §17.2 reporting. Identity-keyed; on collision
     /// the record with the later `timestamp` wins (mirrors the
-    /// `upserting(_:)` "latest decision in effect" posture).
+    /// `upserting(_:)` "latest decision in effect" posture), and an
+    /// EQUAL timestamp is broken by the records' canonical encoding
+    /// rather than by which side of `merge` they arrived on — see
+    /// `IdentityKeyedFold` for why that distinction is the whole fix.
     public func merge(_ other: Self) -> Self {
-        var byHash: [String: DecisionRecord] = [:]
-        for record in records + other.records {
-            if let existing = byHash[record.identityHash],
-               existing.timestamp >= record.timestamp {
-                continue
-            }
-            byHash[record.identityHash] = record
-        }
-        let merged = byHash.values.sorted { lhs, rhs in
-            if lhs.timestamp != rhs.timestamp { return lhs.timestamp < rhs.timestamp }
-            return lhs.identityHash < rhs.identityHash
-        }
-        return Self(
+        Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
-            records: merged
+            records: IdentityKeyedFold.merged(
+                primary: records,
+                secondary: other.records,
+                identity: \.identityHash,
+                timestamp: \.timestamp
+            )
         )
     }
 }

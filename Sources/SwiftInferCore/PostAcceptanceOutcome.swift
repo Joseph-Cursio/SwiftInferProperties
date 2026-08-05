@@ -186,25 +186,22 @@ public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
     /// multiple benchmark corpora into one in-memory log for the
     /// §17.2 section's denominator. Identity-keyed; on collision the
     /// record with the later `checkedAt` wins (mirrors
-    /// `upserting(_:)`'s "latest run in effect" posture). The result
-    /// is sorted by `checkedAt` then `identityHash` so the in-memory
-    /// aggregate is order-deterministic regardless of input ordering.
+    /// `upserting(_:)`'s "latest run in effect" posture), and an EQUAL
+    /// `checkedAt` is broken by canonical encoding — see
+    /// `IdentityKeyedFold`. The result is sorted by `checkedAt` then
+    /// `identityHash`, so the aggregate is order-deterministic in its
+    /// rows AND in their contents. **It used to guarantee only the
+    /// former**, which is what made this the §17.2 regression count's
+    /// bug rather than a cosmetic one.
     public func merge(_ other: Self) -> Self {
-        var byHash: [String: PostAcceptanceOutcome] = [:]
-        for record in records + other.records {
-            if let existing = byHash[record.identityHash],
-               existing.checkedAt >= record.checkedAt {
-                continue
-            }
-            byHash[record.identityHash] = record
-        }
-        let merged = byHash.values.sorted { lhs, rhs in
-            if lhs.checkedAt != rhs.checkedAt { return lhs.checkedAt < rhs.checkedAt }
-            return lhs.identityHash < rhs.identityHash
-        }
-        return Self(
+        Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
-            records: merged
+            records: IdentityKeyedFold.merged(
+                primary: records,
+                secondary: other.records,
+                identity: \.identityHash,
+                timestamp: \.checkedAt
+            )
         )
     }
 }

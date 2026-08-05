@@ -137,23 +137,18 @@ public struct InteractionDecisions: Sendable, Equatable, Codable {
     /// to aggregate per-corpus decision files into one in-memory
     /// `InteractionDecisions` for per-family acceptance-rate
     /// reporting. Identity-keyed; on collision the record with the
-    /// later `timestamp` wins (same posture as v1's `Decisions.merge`).
+    /// later `timestamp` wins (same posture as v1's `Decisions.merge`),
+    /// and an EQUAL timestamp is broken by canonical encoding rather
+    /// than argument order — see `IdentityKeyedFold`.
     public func merge(_ other: Self) -> Self {
-        var byHash: [String: InteractionDecisionRecord] = [:]
-        for record in records + other.records {
-            if let existing = byHash[record.identityHash],
-               existing.timestamp >= record.timestamp {
-                continue
-            }
-            byHash[record.identityHash] = record
-        }
-        let merged = byHash.values.sorted { lhs, rhs in
-            if lhs.timestamp != rhs.timestamp { return lhs.timestamp < rhs.timestamp }
-            return lhs.identityHash < rhs.identityHash
-        }
-        return Self(
+        Self(
             schemaVersion: max(schemaVersion, other.schemaVersion),
-            records: merged
+            records: IdentityKeyedFold.merged(
+                primary: records,
+                secondary: other.records,
+                identity: \.identityHash,
+                timestamp: \.timestamp
+            )
         )
     }
 }
