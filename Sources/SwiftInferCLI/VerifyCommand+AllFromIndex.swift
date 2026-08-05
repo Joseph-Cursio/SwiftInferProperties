@@ -140,50 +140,95 @@ extension SwiftInferCommand.Verify {
         config: SurveyConfig,
         quiet: Bool = false
     ) async -> [SurveyRecord] {
+        // `parallelism` no longer schedules concurrent BUILDS — see
+        // `SharedVerifierPackage`. Every stub now lives in one package, so the four
+        // dependencies are resolved and compiled once instead of once per
+        // suggestion, and the builds are serialized against that single `.build`.
+        // Measured on `fixtures/cycle27-surface` (53 entries): 13m 30s / 24 GB at
+        // parallelism 4, against **100s / 1.6 GB serial cold, 45s warm** — the
+        // concurrency was paying for work that no longer exists. The flag is kept
+        // because it is a documented interface and because the run phase can still
+        // use it.
+        _ = parallelism
         var collected: [SurveyRecord] = []
-        await withTaskGroup(of: SurveyRecord.self) { group in
-            var inFlight = 0
-            var nextIndex = 0
-            // Prime the pump with `parallelism` initial tasks.
-            while nextIndex < entries.count, inFlight < parallelism {
-                let entry = entries[nextIndex]
-                nextIndex += 1
-                inFlight += 1
-                group.addTask {
-                    surveyRecord(for: entry, packageRoot: packageRoot, config: config)
-                }
-            }
-            // For each completion, drain + add the next.
-            while let record = await group.next() {
-                inFlight -= 1
+        var members: [SharedVerifierPackage.Member] = []
+        for entry in entries {
+            switch surveyComposition(for: entry, packageRoot: packageRoot, config: config) {
+            case .terminal(let record):
+                // Declines and compose errors never reach a compiler, so they are
+                // settled here and never acquire a target. Same records as before;
+                // only the point at which they are known has moved earlier.
                 if !quiet { emit(record) }
                 collected.append(record)
-                if nextIndex < entries.count {
-                    let entry = entries[nextIndex]
-                    nextIndex += 1
-                    inFlight += 1
-                    group.addTask {
-                        surveyRecord(for: entry, packageRoot: packageRoot, config: config)
-                    }
+
+            case .member(let member):
+                members.append(member)
+            }
+        }
+
+        if !members.isEmpty {
+            let sharedRoot = sharedSurveyRoot(packageRoot: packageRoot)
+            do {
+                _ = try SharedVerifierPackage.synthesize(members: members, at: sharedRoot)
+                for member in members {
+                    let record = surveyExecute(
+                        member: member,
+                        sharedRoot: sharedRoot,
+                        packageRoot: packageRoot,
+                        config: config
+                    )
+                    if !quiet { emit(record) }
+                    collected.append(record)
+                }
+            } catch {
+                // Synthesis is all-or-nothing: a package that could not be written
+                // takes every member with it. Reported per entry rather than as one
+                // line, so a survey never silently returns a short list.
+                for member in members {
+                    let record = surveyErrorRecord(
+                        recordContext(for: member.entry), .measuredError,
+                        "shared-package synthesis failed: \(error.localizedDescription)"
+                    )
+                    if !quiet { emit(record) }
+                    collected.append(record)
                 }
             }
-            _ = inFlight  // Defensive: silence unused-var if the compiler tracks it.
         }
         persistSurveyBatch(collected, packageRoot: packageRoot)
         return collected
     }
 
-    /// Per-entry survey worker. Runs the full verify pipeline; maps
-    /// the result to a `SurveyRecord`. Catches all errors and maps
-    /// them to `.measuredError` so a single failure doesn't abort
-    /// the survey.
-    static func surveyRecord(
+    /// Where the one survey package lives. Under the same gitignored root the
+    /// per-suggestion workdirs used, so `make clean-temp` already sweeps it.
+    static func sharedSurveyRoot(packageRoot: URL) -> URL {
+        packageRoot
+            .appendingPathComponent(".swiftinfer")
+            .appendingPathComponent("verify-workdir")
+            .appendingPathComponent("shared-survey")
+    }
+
+    /// Either a stub that wants a target, or a record that is already settled.
+    enum SurveyComposition {
+        case member(SharedVerifierPackage.Member)
+        case terminal(SurveyRecord)
+    }
+
+    /// Phase 1 — decide, wire, and compose the stub. **No compiler runs here.**
+    ///
+    /// Split out of the old single `surveyRecord` so every stub can be composed
+    /// before any of them is built, which is what lets them share one package. The
+    /// error mapping is unchanged and deliberately so: a structural block, an
+    /// unsupported carrier and a compose exception produce the same records they
+    /// always did, just sooner.
+    static func surveyComposition(
         for entry: SemanticIndexEntry,
         packageRoot: URL,
         config: SurveyConfig
-    ) -> SurveyRecord {
+    ) -> SurveyComposition {
         let context = recordContext(for: entry)
-        if let record = structurallyBlockedRecord(for: entry, context: context) { return record }
+        if let record = structurallyBlockedRecord(for: entry, context: context) {
+            return .terminal(record)
+        }
         do {
             // Wiring is one decision with three outcomes — curated corpus, derived from the
             // entry, or none — and it lives in `VerifyCommand+Wiring` beside the single-verify
@@ -204,25 +249,19 @@ extension SwiftInferCommand.Verify {
                 extraImports: extraImports,
                 allShapes: config.allShapes
             )
-            let workdir = packageRoot
-                .appendingPathComponent(".swiftinfer")
-                .appendingPathComponent("verify-workdir")
-                .appendingPathComponent(workdirSegment(for: entry.identityHash))
-            _ = try VerifierWorkdir.synthesize(
-                VerifierWorkdir.Inputs(
-                    workdir: workdir,
+            return .member(
+                SharedVerifierPackage.Member(
+                    entry: entry,
+                    stubSource: stubBundle.source,
                     userPackage: userPackage,
-                    stubSource: stubBundle.source
+                    // Stated rather than defaulted. The survey has always been
+                    // algebraic-only — it took `VerifierWorkdir.Inputs`'s `.algebraic`
+                    // default and never named it, so nothing in the old call site said
+                    // so. Naming it here means a future interaction survey is a
+                    // compile-time decision instead of a silent inheritance.
+                    mode: .algebraic
                 )
             )
-            let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
-            if buildOutput.exitCode != 0 {
-                return surveyRecordForBuildFailure(buildOutput: buildOutput, context: context)
-            }
-            let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
-            let parsed = VerifyResultParser.parse(runOutput)
-            emitSurveyRegression(parsed, entry: entry, packageRoot: packageRoot, enabled: config.emitRegression)
-            return surveyRecord(from: parsed, context: context)
         } catch let error as VerifyError {
             // A timed-out run is a *defect in what we generated*, not a coverage
             // boundary — the stub compiled and ran and simply never finished. It
@@ -231,15 +270,103 @@ extension SwiftInferCommand.Verify {
             // §9.2 codegen bugs stayed invisible; see
             // `VerifierSubprocess.defaultRunTimeout`.
             if case let .runnerCrashed(reason) = error, reason.hasPrefix("timed-out:") {
-                return surveyErrorRecord(context, .measuredError, reason)
+                return .terminal(surveyErrorRecord(context, .measuredError, reason))
             }
             // .unsupportedCarrier / .unsupportedPair / .unsupportedTemplate map
             // to architectural-coverage-pending — the architecture is
             // feature-complete for these errors' fix paths (cycle-46 framing),
             // so the residual is measurement-tooling gaps, not architectural.
+            return .terminal(
+                surveyErrorRecord(context, .architecturalCoveragePending, detail(for: error))
+            )
+        } catch {
+            return .terminal(
+                surveyErrorRecord(
+                    context, .measuredError, "exception: \(error.localizedDescription)"
+                )
+            )
+        }
+    }
+
+    /// One entry, end to end — compose, then build and run it.
+    ///
+    /// Kept for the single-entry callers (`--replay`, the speculative-refactor
+    /// runner), which verify one suggestion and have no batch to share a package
+    /// with. It goes through the SAME two phases as the survey rather than keeping a
+    /// second build path alive, so a change to either phase cannot apply to the batch
+    /// and miss the singletons. The package it writes holds exactly one target, which
+    /// is what the per-suggestion design produced anyway.
+    static func surveyRecord(
+        for entry: SemanticIndexEntry,
+        packageRoot: URL,
+        config: SurveyConfig
+    ) -> SurveyRecord {
+        switch surveyComposition(for: entry, packageRoot: packageRoot, config: config) {
+        case .terminal(let record):
+            return record
+
+        case .member(let member):
+            // Its own root, keyed by the entry — a singleton run must not clobber a
+            // survey's package, and two singleton runs against different suggestions
+            // must not clobber each other. That is the isolation `VerifierWorkdir`'s
+            // doc asked for, kept exactly where it is still needed.
+            let root = packageRoot
+                .appendingPathComponent(".swiftinfer")
+                .appendingPathComponent("verify-workdir")
+                .appendingPathComponent(workdirSegment(for: entry.identityHash))
+            do {
+                _ = try SharedVerifierPackage.synthesize(members: [member], at: root)
+            } catch {
+                return surveyErrorRecord(
+                    recordContext(for: entry), .measuredError,
+                    "package synthesis failed: \(error.localizedDescription)"
+                )
+            }
+            return surveyExecute(
+                member: member, sharedRoot: root, packageRoot: packageRoot, config: config
+            )
+        }
+    }
+
+    /// Phase 2 — build this member's product and run its binary.
+    ///
+    /// Built with `--product`, not a whole-package `swift build`: one stub that fails
+    /// to compile must fail one entry. Run as its own process, so a trapping
+    /// `predicate` law takes one law rather than the batch. Both properties were
+    /// implicit in the per-suggestion design and are now explicit — see
+    /// `SharedVerifierPackage`.
+    static func surveyExecute(
+        member: SharedVerifierPackage.Member,
+        sharedRoot: URL,
+        packageRoot: URL,
+        config: SurveyConfig
+    ) -> SurveyRecord {
+        let context = recordContext(for: member.entry)
+        do {
+            let buildOutput = try VerifierSubprocess.runSwiftBuild(
+                workdir: sharedRoot, product: member.targetName
+            )
+            if buildOutput.exitCode != 0 {
+                return surveyRecordForBuildFailure(buildOutput: buildOutput, context: context)
+            }
+            let runOutput = try VerifierSubprocess.runVerifierBinary(
+                workdir: sharedRoot, product: member.targetName
+            )
+            let parsed = VerifyResultParser.parse(runOutput)
+            emitSurveyRegression(
+                parsed, entry: member.entry, packageRoot: packageRoot,
+                enabled: config.emitRegression
+            )
+            return surveyRecord(from: parsed, context: context)
+        } catch let error as VerifyError {
+            if case let .runnerCrashed(reason) = error, reason.hasPrefix("timed-out:") {
+                return surveyErrorRecord(context, .measuredError, reason)
+            }
             return surveyErrorRecord(context, .architecturalCoveragePending, detail(for: error))
         } catch {
-            return surveyErrorRecord(context, .measuredError, "exception: \(error.localizedDescription)")
+            return surveyErrorRecord(
+                context, .measuredError, "exception: \(error.localizedDescription)"
+            )
         }
     }
 }

@@ -20,6 +20,14 @@ import Foundation
 /// directory. The hash prefix is filename-safe (hex digits only after
 /// `0x` stripping).
 ///
+/// **That rationale no longer covers the survey**, and reading it as though it does
+/// costs 15×. It is a statement about two *concurrent* runs sharing a `.build/` — it
+/// was never an argument that 53 sequential entries each need their own dependency
+/// graph, which is what it was taken to license. `verify --all-from-index` now builds
+/// one package with one executable target per suggestion (`SharedVerifierPackage`);
+/// this type still serves the single-suggestion path, where the hash-keyed root is
+/// exactly right and the isolation above still applies.
+///
 /// **Always-rebuild scope.** V1.42.C.3 doesn't cache results — each
 /// verify call re-runs `swift build` (incremental within SwiftPM's
 /// cache but full from the harness's perspective) and re-runs the
@@ -234,7 +242,10 @@ public enum VerifierWorkdir {
     /// for why it may not be spelled out per-mode. Comma placement follows
     /// SwiftPM's accepted style — trailing comma after the last entry
     /// is legal but we omit it here for tidiness.
-    private static func renderDependenciesBlock(
+    /// Internal rather than private: `SharedVerifierPackage` renders the same
+    /// package-level dependency list for the survey package. Two spellings of
+    /// "what does an algebraic stub need" would drift.
+    static func renderDependenciesBlock(
         userPackage: UserPackageReference?,
         mode: WorkdirMode
     ) -> String {

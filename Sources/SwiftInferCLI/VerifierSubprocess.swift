@@ -43,13 +43,28 @@ public enum VerifierSubprocess {
     /// the path-dependency user module) with testing enabled, so a stub's
     /// `@testable import <UserModule>` resolves `internal` symbols. Harmless
     /// for stdlib-carrier stubs that don't `@testable`-import anything.
-    public static func runSwiftBuild(workdir: URL) throws -> Output {
-        try runProcess(
+    /// - Parameter product: when non-nil, builds **only** that product rather than
+    ///   the whole package. Required by `SharedVerifierPackage`, where the package
+    ///   holds one executable target per surveyed suggestion: a whole-package build
+    ///   there returns **zero** binaries if any single stub fails to compile, which
+    ///   would turn one bad emission into a blank run. Measured — 53 targets with one
+    ///   deliberately broken stub: `swift build` produced nothing, `--product` built
+    ///   52 and failed exactly the broken one.
+    ///
+    ///   `--target` is **not** an alternative: it exits 0 and emits only an
+    ///   entitlement plist, so a caller keying on its exit code reports "built" for a
+    ///   binary that does not exist.
+    public static func runSwiftBuild(workdir: URL, product: String? = nil) throws -> Output {
+        var arguments = [
+            "swift", "build", "--package-path", workdir.path,
+            "-Xswiftc", "-enable-testing"
+        ]
+        if let product {
+            arguments.append(contentsOf: ["--product", product])
+        }
+        return try runProcess(
             executable: URL(fileURLWithPath: "/usr/bin/env"),
-            arguments: [
-                "swift", "build", "--package-path", workdir.path,
-                "-Xswiftc", "-enable-testing"
-            ],
+            arguments: arguments,
             workingDirectory: workdir
         )
     }
@@ -91,15 +106,20 @@ public enum VerifierSubprocess {
     /// past five minutes is a hang rather than a slow property.
     public static let defaultRunTimeout: TimeInterval = 300
 
+    /// - Parameter product: the executable's name. Defaults to the single-workdir
+    ///   target; `SharedVerifierPackage` passes the per-suggestion target so each law
+    ///   still runs as **its own process** — a `predicate` law fails by trap, and the
+    ///   trap must take one law rather than the batch.
     public static func runVerifierBinary(
         workdir: URL,
+        product: String? = nil,
         extraEnvironment: [String: String] = [:],
         timeout: TimeInterval? = defaultRunTimeout
     ) throws -> Output {
         let binaryPath = workdir
             .appendingPathComponent(".build")
             .appendingPathComponent("debug")
-            .appendingPathComponent("SwiftInferVerifier")
+            .appendingPathComponent(product ?? "SwiftInferVerifier")
         guard FileManager.default.fileExists(atPath: binaryPath.path) else {
             throw VerifyError.runnerCrashed(
                 reason: "verifier binary not found at \(binaryPath.path); "
