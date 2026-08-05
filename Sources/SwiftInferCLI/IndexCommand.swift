@@ -49,6 +49,10 @@ struct IndexInputs {
     /// discoverer takes a target name + working directory, not a raw
     /// directory).
     let targetName: String?
+    /// V1.149 — path to a `.pbt/seeds.json`. When present the index is FILTERED to what
+    /// the seeds point at and written to `IndexStore.seedFocusedPath`, never the
+    /// conventional one.
+    let seedManifestPath: URL?
     /// V1.141 — working directory the interaction discoverer resolves
     /// `Sources/<target>` against. `nil` alongside `targetName`.
     let workingDirectory: URL?
@@ -62,7 +66,8 @@ struct IndexInputs {
         packsOverride: String?,
         dryRun: Bool,
         targetName: String? = nil,
-        workingDirectory: URL? = nil
+        workingDirectory: URL? = nil,
+        seedManifestPath: URL? = nil
     ) {
         self.scanDirectory = scanDirectory
         self.includePossible = includePossible
@@ -71,6 +76,7 @@ struct IndexInputs {
         self.explicitTestDirPath = explicitTestDirPath
         self.packsOverride = packsOverride
         self.dryRun = dryRun
+        self.seedManifestPath = seedManifestPath
         self.targetName = targetName
         self.workingDirectory = workingDirectory
     }
@@ -116,6 +122,23 @@ extension SwiftInferCommand {
             help: "Name of the SwiftPM target to scan. Resolved to Sources/<target>/ relative to the working directory."
         )
         public var target: String
+
+        /// V1.149 — the missing half of the lint→infer loop.
+        ///
+        /// `discover --seeds` focuses a run to what the linter pointed at and prints prose;
+        /// nothing persisted it, so `verify --all-from-index` reindexed all of `Sources/` and
+        /// verified a **different population** than the hop produced. This writes the focused
+        /// set to its own file so verify can consume exactly what the loop found.
+        @Option(
+            name: .long,
+            help: """
+            Path to a `.pbt/seeds.json`. Filters the index to what the seeds \
+            point at — the same focusing `discover --seeds` applies — and writes \
+            `.swiftinfer/seed-index.json`, NEVER the conventional index. Consume \
+            it with `verify --all-from-index --index-path`.
+            """
+        )
+        public var seeds: String?
 
         @Flag(
             name: .long,
@@ -204,7 +227,8 @@ extension SwiftInferCommand {
                     // the working directory (matching `directory`'s relative
                     // `Sources/<target>` for the algebraic scan).
                     targetName: target,
-                    workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                    workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
+                    seedManifestPath: seeds.map { URL(fileURLWithPath: $0) }
                 ),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -233,16 +257,25 @@ extension SwiftInferCommand {
                 diagnostics: diagnostics
             )
             let packageRoot = pipeline.packageRoot ?? inputs.scanDirectory
+            // Seed focusing reuses `Discover.focus` rather than re-deriving the rule, so
+            // `index --seeds` and `discover --seeds` cannot disagree about what a seed selects —
+            // which is the whole point of the flag existing.
+            let focused = try Self.seedFocused(pipeline, inputs: inputs, diagnostics: diagnostics)
             // Load existing index + decisions (both may be absent on a
             // cold-start run; that's fine — empty values flow through).
             let now = isoTimestampNow()
-            let indexPath = IndexStore.defaultPath(for: packageRoot)
+            // A seed-focused run NEVER writes the conventional path — see
+            // `IndexStore.seedFocusedRelativePath` for why sharing one would reintroduce the
+            // defect this flag exists to fix.
+            let indexPath = inputs.seedManifestPath == nil
+                ? IndexStore.defaultPath(for: packageRoot)
+                : IndexStore.seedFocusedPath(for: packageRoot)
             let indexLoad = IndexStore.load(from: indexPath, nowTimestamp: now)
             let decisionsLoad = DecisionsLoader.load(startingFrom: inputs.scanDirectory)
             replayWarnings(indexLoad.warnings + decisionsLoad.warnings, to: diagnostics)
             let decisionsByHash = decisionsByHash(from: decisionsLoad.decisions)
             let algebraic = mergedAlgebraicSurface(
-                pipeline: pipeline,
+                pipeline: focused,
                 into: indexLoad.index,
                 decisionsByHash: decisionsByHash,
                 now: now

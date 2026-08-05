@@ -17,7 +17,9 @@ extension SwiftInferCommand.Discover {
     /// in lockstep — anything `discover` would surface is what
     /// `drift` diffs against the baseline.
     public struct PipelineResult {
-        public let suggestions: [Suggestion]
+        /// `var` so `replacingSuggestions(_:)` can narrow the set without rebuilding all
+        /// fifteen stored properties — value semantics are unchanged.
+        public var suggestions: [Suggestion]
         public let packageRoot: URL?
 
         /// Refutable laws the tier cut hid — see `VisibilityCut`. Consumed by the final-answer
@@ -158,6 +160,19 @@ extension SwiftInferCommand.Discover {
             self.restrictedFunctions = restrictedFunctions
             self.docstringAdvice = docstringAdvice
             self.coverage = coverage
+        }
+
+        /// The same result with a narrowed suggestion set.
+        ///
+        /// **The shape maps are deliberately NOT narrowed.** `verify` resolves generators over
+        /// the whole scanned type universe, so filtering `typeShapesByName` alongside the
+        /// suggestions would manufacture carrier declines for types that are present — the
+        /// failure `allShapes` threading was added to prevent, and which a census once
+        /// misattributed two-thirds of a carrier problem to.
+        public func replacingSuggestions(_ suggestions: [Suggestion]) -> Self {
+            var copy = self
+            copy.suggestions = suggestions
+            return copy
         }
     }
 }

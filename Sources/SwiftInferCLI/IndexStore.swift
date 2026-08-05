@@ -20,6 +20,24 @@ public enum IndexStore {
     /// Conventional path beneath `<package-root>/.swiftinfer/`.
     public static let conventionalRelativePath = ".swiftinfer/index.json"
 
+    /// Where a **seed-focused** index goes — deliberately NOT the conventional path.
+    ///
+    /// The two are different populations answering different questions: the conventional
+    /// index is everything discovery found under `Sources/`, this one is only what the
+    /// linter's seeds pointed at. Sharing a path would let a `verify --all-from-index` run
+    /// silently answer about whichever was written last, which is how the loop came to
+    /// verify a population its own earlier stage never produced.
+    ///
+    /// `verify --index-path` consumes this and, by design, **never auto-rebuilds** an
+    /// explicit path — so a stale seed index stays visibly stale rather than being quietly
+    /// replaced by a whole-`Sources/` scan.
+    public static let seedFocusedRelativePath = ".swiftinfer/seed-index.json"
+
+    /// Path for a seed-focused index beneath `packageRoot`.
+    public static func seedFocusedPath(for packageRoot: URL) -> URL {
+        packageRoot.appendingPathComponent(seedFocusedRelativePath)
+    }
+
     /// Current schema version. Increment on backward-incompatible
     /// schema changes; pre-existing v1 files implicitly map to 1 when
     /// the field is absent.

@@ -12,8 +12,8 @@
 #   0  locate the tools          IMPLEMENTED  — versions + SHAs, so a run is attributable
 #   1  lint  -> seeds.json       IMPLEMENTED  — SwiftProjectLint --format pbt-seeds
 #   2  discover --seeds -> index IMPLEMENTED  — the one hop that is the whole lint->infer link
-#   3  verify                    IMPLEMENTED  — opt-in (--verify); executes laws, but over a
-#                                               WHOLE-SOURCES index, not stage 2's seed set
+#   3  verify                    IMPLEMENTED  — opt-in (--verify); executes the loop's OWN laws,
+#                                               via index --seeds -> verify --index-path
 #   4  kit conformance suites    HALF BUILT    — emits to the run dir; nothing executes them yet
 #   5  hardening                 NOT A COMMAND — annotating and writing tests is a human's job
 #
@@ -316,21 +316,28 @@ if [ ! -x "$INFER_BIN" ]; then
 elif [ -z "$RUN_VERIFY" ]; then
     record 3 "verify" skipped "pass --verify to execute laws; each suggestion costs a SwiftPM build"
 else
-    # ⚠ **This does NOT verify what stage 2 discovered, and the gap is structural.**
+    # **This verifies what stage 2 discovered**, which took `index --seeds` to make possible.
     #
-    # `discover --seeds` prints seed-focused suggestions; it does not write an index, and
-    # `swift-infer index` has no `--seeds` flag. So `--all-from-index` reindexes the whole of
-    # `Sources/` and verifies THAT — a different, usually larger population than the seed hop
-    # produced. On the fixture: stage 2 found 3, stage 3 indexed and verified 1.
+    # Before that flag existed, `discover --seeds` printed prose and persisted nothing, so
+    # `--all-from-index` reindexed all of `Sources/` and answered about a different, usually
+    # larger population than the seed hop produced — on the fixture, stage 2 found 3 and stage 3
+    # verified 1. The number this stage reports is now the loop's own.
     #
-    # The stage is still worth running: it executes real laws against the target, which is more
-    # than this driver could do before. But a number from here is NOT "of the laws the loop
-    # found, N ran", and the detail string below says so rather than letting the reader assume
-    # the two stages share a population. Tracked as the blocker on the loop-level number.
+    # `--index-path` is load-bearing twice over: it points at the seed-focused file, and verify
+    # NEVER auto-rebuilds an explicit path, so a stale seed index stays visibly stale instead of
+    # being silently replaced by a whole-Sources scan.
     #
     # `--max-parallel 2` rather than the default 4: this runs inside a driver that may itself be
     # under CI, and the §13 note records what contention does to a measurement.
-    if ( cd "$TARGET_REPO" && "$INFER_BIN" verify --all-from-index --max-parallel 2 ) \
+    SEED_INDEX="$TARGET_REPO/.swiftinfer/seed-index.json"
+    idx_args=(index --seeds "$SEEDS")
+    [ -n "$SPM_TARGET" ] && idx_args+=(--target "$SPM_TARGET")
+    if ! ( cd "$TARGET_REPO" && "$INFER_BIN" "${idx_args[@]}" ) >"$OUT_DIR/seed-index.log" 2>&1; then
+        record 3 "verify" failed "index --seeds failed — see seed-index.log"
+        SEED_INDEX=""
+    fi
+    if [ -n "$SEED_INDEX" ] && ( cd "$TARGET_REPO" && "$INFER_BIN" verify --all-from-index \
+        --index-path "$SEED_INDEX" --max-parallel 2 ) \
         > "$VERIFY_OUT" 2>"$OUT_DIR/verify.stderr"; then
         ran=$(grep -c 'measured-bothPass\|measured-defaultFails' "$VERIFY_OUT" 2>/dev/null || true)
         held=$(grep -c 'measured-bothPass' "$VERIFY_OUT" 2>/dev/null || true)
@@ -338,8 +345,8 @@ else
         # The count that matters is laws that RAN, not entries surveyed. A run where every
         # entry declined is a run that executed nothing, and reporting the survey size would
         # hide exactly that.
-        VERIFY_SUMMARY="$ran law(s) executed — $held held, $refuted refuted (whole-Sources index, NOT the seed-focused set)."
-        record 3 "verify" ok "$ran law(s) executed — $held held, $refuted refuted, over a WHOLE-SOURCES index — not stage 2's seed-focused suggestions (see verify.jsonl)"
+        VERIFY_SUMMARY="$ran law(s) executed — $held held, $refuted refuted, over the SEED-FOCUSED set."
+        record 3 "verify" ok "$ran law(s) executed — $held held, $refuted refuted, over the seed-focused index stage 2 produced (see verify.jsonl)"
     else
         record 3 "verify" failed "see $OUT_DIR/verify.stderr"
     fi
