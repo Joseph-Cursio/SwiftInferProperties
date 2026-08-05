@@ -55,7 +55,15 @@ extension SwiftInferCommand.Verify {
     /// that piece of the design.
     static func resolveFunctionCalls(for entry: SemanticIndexEntry) throws -> ResolvedCalls {
         let carrier = entry.typeName ?? "(none)"
-        let typeQualifier = RoundTripPairResolver.bareTypeName(from: carrier)
+        // The name the stub must WRITE, which is not always the name the index
+        // KEYS on. A type declared lexically inside another records its carrier as
+        // the innermost frame (`Scaffold`), and `Scaffold.defaultOutputURL(…)`
+        // fails to compile with *cannot find 'Scaffold' in scope*. The qualified
+        // path (`SwiftInferCommand.Scaffold`) resolves. Falls back to the carrier
+        // for an index written before the field existed — the behaviour every
+        // entry had until 2026-08-05.
+        let qualifier = entry.qualifiedTypeName ?? carrier
+        let typeQualifier = RoundTripPairResolver.bareTypeName(from: qualifier)
         let funcName = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
         switch entry.templateName {
         case "round-trip":

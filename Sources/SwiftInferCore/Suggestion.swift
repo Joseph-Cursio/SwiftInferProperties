@@ -213,6 +213,13 @@ public struct Evidence: Sendable, Equatable {
     /// single-carrier behaviour.
     public let parameterTypeNames: [String]
 
+    /// The full lexical type path of the declaring type — `"SwiftInferCommand.Scaffold"`
+    /// where the carrier records as `"Scaffold"`. Mirrors
+    /// `FunctionSummary.qualifiedContainingTypeName`; see that doc for why the bare
+    /// name is kept alongside. `nil` means *not recorded*, and verify falls back to
+    /// the carrier name.
+    public let qualifiedTypeName: String?
+
     public init(
         displayName: String,
         signature: String,
@@ -222,7 +229,8 @@ public struct Evidence: Sendable, Equatable {
         isNullary: Bool = false,
         returnsSelfType: Bool = false,
         isComputedProperty: Bool = false,
-        parameterTypeNames: [String] = []
+        parameterTypeNames: [String] = [],
+        qualifiedTypeName: String? = nil
     ) {
         self.displayName = displayName
         self.signature = signature
@@ -233,6 +241,7 @@ public struct Evidence: Sendable, Equatable {
         self.returnsSelfType = returnsSelfType
         self.isComputedProperty = isComputedProperty
         self.parameterTypeNames = parameterTypeNames
+        self.qualifiedTypeName = qualifiedTypeName
     }
 }
 
