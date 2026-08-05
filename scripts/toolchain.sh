@@ -206,7 +206,17 @@ INFER_BIN="$INFER_REPO/.build/debug/swift-infer"
 INFER_SHA="$(sha_of "$INFER_REPO")"
 INFER_STATE="$(build_product "$INFER_REPO" swift-infer "$INFER_BIN")"
 case "$INFER_STATE" in
-    built) record 0 "locate swift-infer" ok "$INFER_SHA (debug, built this run)" ;;
+    built) # Cross-check the tree SHA against what the BINARY says, when it can say anything.
+           # This is the driver's own border claim closing: `sha_of` reads the repository and
+           # `--version` reads the artifact, and until BuildIdentity existed nothing could
+           # compare them. An unstamped binary reports "unattributable build" and the tree SHA
+           # stands unchallenged — which is the status quo, not a regression.
+           binary_says="$("$INFER_BIN" --version 2>/dev/null || true)"
+           case "$binary_says" in
+               *unattributable*) record 0 "locate swift-infer" ok "$INFER_SHA (debug, built this run; binary is unstamped — see scripts/stamp_build_identity.sh)" ;;
+               *"$INFER_SHA"*)   record 0 "locate swift-infer" ok "$INFER_SHA (debug, built this run; binary AGREES)" ;;
+               *)                record 0 "locate swift-infer" failed "tree says $INFER_SHA, binary says '$binary_says' — the binary was not built from this tree" ;;
+           esac ;;
     stale) INFER_SHA="unattributable"
            record 0 "locate swift-infer" failed "binary exists but would not rebuild — its provenance is UNKNOWN, so this run is not attributable" ;;
     *)     INFER_SHA="unavailable"
