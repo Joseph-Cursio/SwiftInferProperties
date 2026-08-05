@@ -244,17 +244,20 @@ extension SwiftInferCommand {
             workingDirectory: URL
         ) -> (kind: PostAcceptanceOutcomeKind, detail: String?) {
             do {
-                _ = try Verify.runPipeline(
+                // Takes the verdict from the RUN, not from the evidence file it just wrote.
+                //
+                // This used to discard the return, reload `.swiftinfer/verify-evidence.json`,
+                // and read back the value the call had already computed — a disk round-trip to
+                // recover its own result, which also meant a persistence failure was reported
+                // as `.error "verify-evidence missing"` even though verify had run correctly.
+                // One question, three encodings; see #116.
+                let run = try Verify.runPipeline(
                     suggestionPrefix: record.identityHash,
                     indexPathOverride: indexPathOverride,
                     budgetString: budgetString,
                     workingDirectory: workingDirectory
                 )
-                let evidence = VerifyEvidenceStore.load(startingFrom: workingDirectory)
-                guard let post = evidence.log.record(for: record.identityHash) else {
-                    return (.error, "verify-evidence missing after re-run")
-                }
-                return classify(evidence: post.outcome)
+                return classify(evidence: run.evidenceOutcome)
             } catch VerifyError.suggestionNotFound {
                 return (.obsolete, "identity hash no longer surfaces in current source")
             } catch let VerifyError.unsupportedTemplate(template, _) {

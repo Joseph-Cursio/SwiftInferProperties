@@ -20,7 +20,7 @@ extension SwiftInferCommand.Verify {
         workingDirectory: URL,
         emitRegression: Bool = false,
         target: String? = nil
-    ) throws -> String {
+    ) throws -> VerifyRun {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
         let resolved = try resolveEntry(
@@ -67,13 +67,37 @@ extension SwiftInferCommand.Verify {
             regressionPath: regressionPath
         )
         persistCorpus(parsed: parsed, entry: entry, packageRoot: packageRoot)
-        return renderOutcome(
-            parsed: parsed,
-            context: stubBundle.rendererContext,
-            entry: entry,
-            packageRoot: packageRoot,
-            regressionPath: regressionPath
+        // The verdict and its rendering come back TOGETHER, from one `parsed`. Returning only
+        // the prose is what let the speculative runner match it for "bothPass" — a word this
+        // renderer never emits — and report `not-runnable` for every candidate, forever. See #116.
+        return VerifyRun(
+            outcome: parsed,
+            rendered: renderOutcome(
+                parsed: parsed,
+                context: stubBundle.rendererContext,
+                entry: entry,
+                packageRoot: packageRoot,
+                regressionPath: regressionPath
+            )
         )
+    }
+
+    /// One verify run: the verdict, and the prose for a human.
+    ///
+    /// **The prose is a projection of the verdict, not a parallel encoding.** Both are
+    /// computed from the same `VerifyOutcome`, so a caller can render it or switch on it and
+    /// the two cannot disagree. Before this, `runPipeline` returned only the rendering and
+    /// `surveyRecord` returned only the classification — one question, two encodings, and
+    /// nothing relating them.
+    struct VerifyRun {
+        let outcome: VerifyOutcome
+        let rendered: String
+
+        /// The persisted five-way classification, via the same mapper the evidence log uses,
+        /// so a consumer never has to re-derive it from prose or from disk.
+        var evidenceOutcome: VerifyEvidenceOutcome {
+            VerifyEvidenceRecorder.evidence(for: outcome).outcome
+        }
     }
 
     /// V1.142 — the verify stub's replayable seed (deterministic Xoshiro state

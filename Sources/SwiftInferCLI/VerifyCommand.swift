@@ -216,7 +216,7 @@ extension SwiftInferCommand {
                     reason: "either --suggestion <hash> or --all-from-index is required"
                 )
             }
-            let outcome = try Self.runPipeline(
+            let run = try Self.runPipeline(
                 suggestionPrefix: suggestion,
                 indexPathOverride: indexPath,
                 budgetString: budget,
@@ -224,7 +224,9 @@ extension SwiftInferCommand {
                 emitRegression: emitRegression ?? true,
                 target: target
             )
-            print(outcome)
+            // `.rendered`, not the value itself — printing the struct compiles fine and emits a
+            // memberwise description, which is the same class of silent wrong answer #116 is about.
+            print(run.rendered)
         }
     }
 }
