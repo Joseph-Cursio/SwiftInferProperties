@@ -12,14 +12,17 @@
 #   0  locate the tools          IMPLEMENTED  — versions + SHAs, so a run is attributable
 #   1  lint  -> seeds.json       IMPLEMENTED  — SwiftProjectLint --format pbt-seeds
 #   2  discover --seeds -> index IMPLEMENTED  — the one hop that is the whole lint->infer link
-#   3  verify                    NOT BUILT    — opt-in, spawns real builds per suggestion
-#   4  kit conformance suites    NOT BUILT    — scaffold-kit-suites emits; nothing runs them
+#   3  verify                    IMPLEMENTED  — opt-in (--verify); THE stage that executes a law
+#   4  kit conformance suites    HALF BUILT    — emits to the run dir; nothing executes them yet
 #   5  hardening                 NOT A COMMAND — annotating and writing tests is a human's job
 #
-# Stages 3-5 are declared and unimplemented ON PURPOSE. A driver that silently ended at
-# stage 2 would print a clean run having never executed a single law — a confident zero
-# wearing the loop's clothes, which is the exact failure this whole repo is built against.
-# So they are listed, marked, and reported every run.
+# Stage 5 is declared and unimplemented ON PURPOSE — it is a human's job. Stages 3 and 4 were
+# too, until 2026-08-05: a driver that silently ended at stage 2 printed a clean run having
+# never executed a single law — a confident zero wearing the loop's clothes, which is the
+# exact failure this whole repo is built against.
+#
+# Stage 3 now runs, opt-in. Stage 4 emits but does not execute, and says so in the same breath
+# every run, because "4 kit conformance suites ok" would otherwise read as suites that PASSED.
 #
 # ## This script is itself a border claim
 #
@@ -41,7 +44,7 @@
 #
 # Usage:
 #   scripts/toolchain.sh <target-repo> [--target <SwiftPM target>] [--sources <dir>]
-#                        [--out <dir>] [--include-possible]
+#                        [--out <dir>] [--include-possible] [--verify]
 #
 # Example:
 #   scripts/toolchain.sh ~/xcode_projects/MacCloud_client_iOS --sources Sources
@@ -61,6 +64,8 @@ SPM_TARGET=""
 SOURCES_DIR=""
 OUT_DIR=""
 INCLUDE_POSSIBLE=""
+RUN_VERIFY=""
+VERIFY_SUMMARY="verify ran; see run.json"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -68,6 +73,7 @@ while [ $# -gt 0 ]; do
         --sources)          SOURCES_DIR="${2:-}"; shift 2 ;;
         --out)              OUT_DIR="${2:-}"; shift 2 ;;
         --include-possible) INCLUDE_POSSIBLE=1; shift ;;
+        --verify)           RUN_VERIFY=1; shift ;;
         -h|--help)          sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*)                 printf 'unknown flag: %s\n' "$1" >&2; exit 1 ;;
         *)                  TARGET_REPO="$1"; shift ;;
@@ -129,7 +135,7 @@ STAGE_JSON=""
 
 # Record a stage outcome. `status` is deliberately richer than pass/fail, because the four
 # ways a stage can not-run are four different facts and collapsing them is how a driver
-# starts lying: ok · failed · unavailable · not-implemented · not-a-command.
+# starts lying: ok · failed · unavailable · skipped · not-implemented · not-a-command.
 record() {
     local id="$1" name="$2" status="$3" detail="$4"
     [ -n "$STAGE_JSON" ] && STAGE_JSON="$STAGE_JSON,"
@@ -141,6 +147,10 @@ record() {
         unavailable)     printf '  ✘ %d %-28s UNAVAILABLE — %s\n' "$id" "$name" "$detail"; failures=$((failures + 1)) ;;
         not-implemented) printf '  ▪ %d %-28s not built — %s\n' "$id" "$name" "$detail" ;;
         not-a-command)   printf '  ▪ %d %-28s not a command — %s\n' "$id" "$name" "$detail" ;;
+        # `skipped` is NOT `not-implemented`, and the difference is the whole point of adding
+        # it: once a stage is built, reporting it as "not built" is a lie that reads as a
+        # smaller gap than it is. This says the code exists and you did not ask for it.
+        skipped)         printf '  ▫ %d %-28s skipped — %s\n' "$id" "$name" "$detail" ;;
     esac
 }
 
@@ -281,9 +291,68 @@ else
     fi
 fi
 
-# ── Stages 3-5: declared, not run ─────────────────────────────────────────────────────────
-record 3 "verify" not-implemented "opt-in; spawns a full SwiftPM build per suggestion"
-record 4 "kit conformance suites" not-implemented "scaffold-kit-suites emits them; nothing runs them"
+# ── Stage 3: verify ───────────────────────────────────────────────────────────────────────
+# THE stage that makes the loop execute a law. Until it existed, every run of this driver
+# ended having proposed properties and checked none of them — a confident zero wearing the
+# loop's clothes.
+#
+# Opt-in, because it spawns a full SwiftPM build per suggestion and an 85-entry survey has
+# already left 3.4 GB behind. Not running it is `skipped`, not `not-implemented`: the code is
+# here now, and saying "not built" would understate the gap in the opposite direction.
+VERIFY_OUT="$OUT_DIR/verify.jsonl"
+if [ ! -x "$INFER_BIN" ]; then
+    record 3 "verify" unavailable "stage 0 could not provide swift-infer"
+elif [ -z "$RUN_VERIFY" ]; then
+    record 3 "verify" skipped "pass --verify to execute laws; each suggestion costs a SwiftPM build"
+else
+    # `--all-from-index` reads the index stage 2 just wrote. `--max-parallel 2` rather than the
+    # default 4: this runs inside a driver that may itself be under CI, and the §13 note records
+    # what contention does to a measurement.
+    if ( cd "$TARGET_REPO" && "$INFER_BIN" verify --all-from-index --max-parallel 2 ) \
+        > "$VERIFY_OUT" 2>"$OUT_DIR/verify.stderr"; then
+        ran=$(grep -c 'measured-bothPass\|measured-defaultFails' "$VERIFY_OUT" 2>/dev/null || true)
+        held=$(grep -c 'measured-bothPass' "$VERIFY_OUT" 2>/dev/null || true)
+        refuted=$(grep -c 'measured-defaultFails' "$VERIFY_OUT" 2>/dev/null || true)
+        # The count that matters is laws that RAN, not entries surveyed. A run where every
+        # entry declined is a run that executed nothing, and reporting the survey size would
+        # hide exactly that.
+        VERIFY_SUMMARY="$ran law(s) executed — $held held, $refuted refuted."
+        record 3 "verify" ok "$ran law(s) executed — $held held, $refuted refuted (see verify.jsonl)"
+    else
+        record 3 "verify" failed "see $OUT_DIR/verify.stderr"
+    fi
+fi
+
+# ── Stage 4: kit conformance suites ───────────────────────────────────────────────────────
+# Split honestly into the half that can run here and the half that cannot.
+#
+# EMITTING is possible and now happens: `scaffold-kit-suites --output` writes wherever it is
+# pointed, so the suites land in the run directory. **It must not write into the target tree**
+# — this toolchain's standing line is that it never modifies your code, and a driver that
+# quietly generated files into a repository it was pointed at would break it.
+#
+# RUNNING them is a different problem and is still not solved: the emitted suite is a test
+# file that has to compile against the target package, which needs a test target, a
+# PropertyLawKit dependency, and a place to put it. That is the same workdir synthesis
+# `verify` performs, and nothing generalises it to a whole suite yet.
+SUITES_OUT="$OUT_DIR/kit-suites.swift"
+if [ ! -x "$INFER_BIN" ]; then
+    record 4 "kit conformance suites" unavailable "stage 0 could not provide swift-infer"
+else
+    args=(scaffold-kit-suites --output "$SUITES_OUT")
+    [ -n "$SPM_TARGET" ] && args+=(--target "$SPM_TARGET")
+    [ -n "$SOURCES_DIR" ] && args+=(--sources "$SOURCES_DIR")
+    if ( cd "$TARGET_REPO" && "$INFER_BIN" "${args[@]}" ) >/dev/null 2>"$OUT_DIR/scaffold.stderr"; then
+        checks=$(grep -c 'PropertyLaws(' "$SUITES_OUT" 2>/dev/null || true)
+        # Emitted, NOT executed, and the detail says so every run. A stage that reported
+        # "ok, N suites" would read as N suites having passed.
+        record 4 "kit conformance suites" ok \
+            "$checks suite call(s) EMITTED to kit-suites.swift — nothing ran them; executing needs a test target this driver does not synthesize"
+    else
+        record 4 "kit conformance suites" failed "see $OUT_DIR/scaffold.stderr"
+    fi
+fi
+
 record 5 "hardening" not-a-command "annotate @Idempotent/@ClockDeterministic and write the tests — a human owes this"
 
 # ── Run manifest ──────────────────────────────────────────────────────────────────────────
@@ -315,5 +384,13 @@ if [ "$failures" -gt 0 ]; then
     printf '  %d stage(s) failed or were unavailable — this run did NOT execute the loop.\n\n' "$failures"
     exit 1
 fi
-printf '  stages 0-2 ran. Stages 3-5 did NOT — no law was executed by this run.\n\n'
+# The closing line is the one a reader remembers, so it must not be a template that was true
+# when it was written. It was: it said "stages 3-5 did NOT" for months, and stayed there
+# through stage 3 being built. It is now derived from what actually happened.
+if [ -n "$RUN_VERIFY" ]; then
+    printf '  stages 0-4 ran. %s\n' "$VERIFY_SUMMARY"
+else
+    printf '  stages 0-2 and 4 ran. Stage 3 was SKIPPED, so NO LAW WAS EXECUTED — pass --verify.\n'
+fi
+printf '  Stage 4 emitted suites; nothing ran them. Stage 5 is a human'"'"'s job.\n\n'
 exit 0
