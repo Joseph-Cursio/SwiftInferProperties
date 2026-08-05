@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-05** · `SwiftInferProperties@b060070`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@e8230bf`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@b0600704c8e8445b6959175a0ef71b257a8d0ee8 observer=SwiftInferProperties@b0600704c8e8445b6959175a0ef71b257a8d0ee8 -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@e8230bf8304b8207e1c384b3dee37cd0191c1c78 observer=SwiftInferProperties@e8230bf8304b8207e1c384b3dee37cd0191c1c78 -->
 
 ---
 
@@ -51,8 +51,8 @@ forward, and only two:
 | 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change; the `.algebraic` workdir lacked the kit product its stubs import. URL rows 0 → 11 of 13 executing. An earlier same-day diagnosis of this was WRONG and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
 | 22 | ~~**[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class~~ | **ANSWERED 2026-08-05 ([#104](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/104)): the class is real and NOT discriminable from the return expression.** Rule scored — *the parameter does not appear in the returned expression* — against the 47 executed rows: **recall 4/5, precision 4/12**. Two true laws suppressed per false one removed, so it does not ship. The signal is **dataflow**, not shape, which makes the classifier's refusal to veto this class *correct* rather than cautious. See *Decisions* → *Domain transfer, scored*. Original framing: The residual item 18 deliberately left unclaimed: **5 witnesses** (47 executed, 5 refuted). **Corrected 2026-08-05 — this row briefly claimed 6, counting `Scaffold.defaultOutputURL`. That is not domain transfer at all**: it appends a path component, so it is an `extendsInput` case the veto's own list already names, and item 26 is why it was never classified. A false law landing in the wrong bucket makes the class it is filed under look better characterised than it is. **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
-| 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up. **Diagnosis CORRECTED and the fix deliberately NOT shipped**: the sole witness has two further errors behind the arity one (the inverse is qualified with the primary's carrier, and the law is not type-correct), so the patch would be unmeasurable on this corpus — and would help emit 45 false laws if #97 were fixed first. Blocked on a re-survey |
-| 25 | **[#97](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/97)** — `--all-from-index` builds 45 entries the cross-type counter already flagged as **uncompilable** | Deferred deliberately: a survey-cost optimisation, not a correctness bug. The counter's detail line already says *"property cannot type-check across distinct containing types"*, and the survey compiles them anyway — ~16% of a 76-minute, 107 GB run. Fix is one persisted field or one filter at survey time. **This issue's first version claimed the pairing ignored type ownership; it does not, and the correction is on the issue** |
+| 23 | ~~**[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot~~ | **CLOSED 2026-08-05 as real-but-unwitnessed.** The code reading stands; the population does not. The sole witness was a cross-module pair and now declines as `not-a-candidate` before a stub is composed (item 25), so **no index entry reaches this path** — the reopen predicate (`round-trip` + instance + non-mutating + non-nullary + no structural blocker) matches **0**. Not fixed, because *measure after each fix* cannot be honoured with no witness, and this issue's own correction is what established that. The fix is written down: lift `StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which already handles the receiver and is not totality-specific. Original diagnosis: The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up. **Diagnosis CORRECTED and the fix deliberately NOT shipped**: the sole witness has two further errors behind the arity one (the inverse is qualified with the primary's carrier, and the law is not type-correct), so the patch would be unmeasurable on this corpus — and would help emit 45 false laws if #97 were fixed first. Blocked on a re-survey |
+| 25 | ~~**[#97](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/97)** — the census reports 45 cross-type pairs as **carrier-reach gaps**~~ | **FIXED 2026-08-05** ([#107](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/107)). `StructuralBlocker` carries the counter's own detail onto the entry; the survey declines with it. **Census before → after: `45 blocked-on-carrier + 1 error` → `45 not-a-candidate + 1 blocked-on-carrier`**, and that 1 is `SamplingSeed.derive`, the repo's one real round-trip pair. **This issue was wrong three times** — see *Decisions* → *The census that pointed at the wrong constraint*. Original framing: Deferred deliberately: a survey-cost optimisation, not a correctness bug. The counter's detail line already says *"property cannot type-check across distinct containing types"*, and the survey compiles them anyway — ~16% of a 76-minute, 107 GB run. Fix is one persisted field or one filter at survey time. **This issue's first version claimed the pairing ignored type ownership; it does not, and the correction is on the issue** |
 | 26 | ~~**[#99](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/99)** — the `idempotence` return-shape veto is **never computed for `T? -> T`**~~ | **FIXED 2026-08-05** ([#102](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/102)) — both gates now read `IdempotenceCandidateShape`, so widening one widens both. **A/B: 283 → 282 index entries, `idempotence` 54 → 53; the ONE removed row is the witness, zero additions, zero other removals.** Original diagnosis: Uncovered by #95's fix, and the one filing today that was checked against the source before it was written. `isUnaryEndomorphism` gates on exact `parameter.type == returnType`, so `idempotenceReturnShape` is `nil` for `(URL?) -> URL` and `returnShapeVeto` cannot tell *"never computed"* from *"computed, not extending"* — while `IdempotenceTemplate+OptionalNarrowing` deliberately ADMITS that shape. Witness: `Scaffold.defaultOutputURL` appends a path component, and `appendingPathComponent` is the **first entry** in the veto's own `extensionCalls` list. **The guard checked something narrower than the thing it protects** — the `CuratedEntryRole` / `KitCoverageDriftTests` pattern. **Method note: per-target and whole-`Sources/` `discover` both showed ZERO delta** — the witness exists only in the INDEX, built by a different pipeline, so measuring the convenient surface would have reported "no change" and proved nothing |
 | 27 | **Generators for syntax-node carriers** — can a `TokenSyntax` / `SyntaxCollection` be derived at all, and by WHOM | **Scope-and-file, not build.** 14 of `predicate`'s 22 non-running rows, and the largest single decline bucket in the whole-corpus survey (`no generator for carrier` is 105 of 281 corpus-wide). The design decision *"generator inference delegates to SwiftPropertyLaws"* says the answer is probably **not here** — so the deliverable is a scoped question for `DerivationStrategist`, not a generator in this repo |
 
@@ -1002,6 +1002,45 @@ historical entries — item 18 learned that the hard way):
 **Unexplained and NOT chased**: the absolute index count moved from 281 earlier the same day to 283
 in both arms. It cannot affect a same-day two-binary comparison, but **do not cite 281 as current**
 until someone works out why.
+
+### The census that pointed at the wrong constraint (2026-08-05)
+
+Item 25, closed. All 45 cross-module `round-trip` pairs were filed as
+`unsupported-carrier: <Carrier>` — *no generator derives this carrier*. They are not that. The
+inverse half lives on a different type in a different module, so **even a perfect generator would
+not make the call resolve**; `crossTypeRoundTripCounterSignal` had already said so at discovery
+time, in a detail string that states the conclusion outright.
+
+**The cost is demonstrated, not hypothetical: that label is what produced the claim "round-trip's
+zero is carrier reach" in the survey write-up, and a proposal to spend effort on generators.** A
+census that misattributes 45 rows to reach points work at the wrong constraint — the same failure
+`verify-carrier-reach-census.md` records for a different cause (*"a census that forgets to thread
+`allShapes` invents a carrier problem two-thirds of which is the harness"*), reached by a second
+route.
+
+| `round-trip` census | before | after |
+|---|---|---|
+| | 45 blocked-on-carrier + 1 error | **45 not-a-candidate + 1 blocked-on-carrier** |
+
+The remaining 1 is `SamplingSeed.derive(fromIdentityHash:)` — the repo's **one** real round-trip
+pair, genuinely waiting on a generator. That is the honest denominator.
+
+**This issue was wrong three times, and the pattern is the lesson.** Wrong about the mechanism (the
+counter does fire — 45 of 46, no misses); wrong about the population (discovery is correct, it is
+the whole-`Sources/` *index scan* that pools modules); wrong about the cost (**nothing builds** —
+`buildStubBundle` throws before `runSwiftBuild`, so the 45 already declined for free). Each error was
+**claiming without measuring something one command would settle**, and each was caught only by
+finally running it.
+
+**The one true cost claim is smaller and more specific than the one I invented.** A single
+cross-type entry *did* have a derivable carrier, reached the compiler and failed there — **46.0s of
+the round-trip arm's 46.5s**. So the saving is real and comes from exactly one row. That row was
+also item 23's only witness, which is why closing it followed immediately.
+
+**`StructuralBlocker`'s bar, stated because it will be tempting to widen**: the signal must make the
+law *unstatable as paired*, not merely improbable. A counter meaning "probably wrong" belongs in the
+score, where a reader can overrule it. One member today, and it carries the counter's own `detail`
+rather than a re-spelling, so the two cannot drift.
 
 ### Domain transfer, scored — a rule that cannot be built is a finding (2026-08-05)
 
