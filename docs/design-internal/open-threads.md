@@ -4,12 +4,12 @@ Things decided, noticed, or left undone that have **no other home**. Deliberatel
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.
 
-> **As of 2026-08-04** · `SwiftInferProperties@dafd320`. Entries here are *not* dated claims
+> **As of 2026-08-05** · `SwiftInferProperties@1ef7128`. Entries here are *not* dated claims
 > about code — they are open questions and standing reads. Close them by deleting the row and
 > putting the answer where it belongs. Measurements *inside* an entry carry their own date and
 > SHA; the suite run in item 0 was taken at `1e0218e` and has not been re-taken since.
 
-<!-- doc-provenance date=2026-08-04 subject=SwiftInferProperties@dafd320a223b67a519a90f2967edeb07cfa9e676 observer=SwiftInferProperties@dafd320a223b67a519a90f2967edeb07cfa9e676 -->
+<!-- doc-provenance date=2026-08-05 subject=SwiftInferProperties@1ef71283ce5100a11f0dffc10daf6bbec74b8fda observer=SwiftInferProperties@1ef71283ce5100a11f0dffc10daf6bbec74b8fda -->
 
 ---
 
@@ -79,10 +79,16 @@ read is REFUTED.** Widening no longer moves a function from *invisible* to
 *proposed-but-unrunnable*: **3 of 6 gained laws now execute, against 0 before.** See *Decisions* →
 *Access widening, re-measured*.
 
-**4. The whole-corpus number is still missing.** Everything above is `--template predicate` over
-126 entries. There is no measurement of how many laws run across *all* templates, which is the
-number open item 7 actually wants. Cost is the blocker, not method: 126 entries ran in roughly an
-afternoon and left 3.4 GB of workdirs behind.
+**4. ~~The whole-corpus number is still missing.~~ MEASURED 2026-08-05: 139 of 281.** Everything
+above was `--template predicate`. The unfiltered run says **139 laws execute — 130 hold, 9 refute**.
+Cost was the blocker and it was affordable: **76 min wall, 7.7 CPU-hours, 107 GB of workdirs** at
+`--max-parallel 4`, about 2× the `predicate` survey rather than the 2.2× the entry count suggests
+(the 24 entries on templates with no composer decline without ever spawning a build).
+
+The headline is not 139. It is that **`round-trip` contributes 0 of 46** — the largest block of
+unrealised laws in the catalogue, and it is **carrier reach, not composer support**, which is a
+different fix from the one this item was pointed at. Four defects filed; see *Decisions* → *The
+whole-corpus number*.
 
 **5. Two review findings from `/swiftui-pro`, both fixed at close** — `VerifyTargetInference` was
 re-implementing `TargetDirectory.isDirectory` (now shared), and `VerifyImportSet`'s doc said
@@ -101,7 +107,7 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 4 | **The attribute-grammar join has no contract test** — *half closed 2026-08-04* | **The names this repo's behaviour is keyed to are now pinned** ([#79](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/79), `EffectVocabularyContractTests`): contents, behaviour (every spelling round-trips through the real scanner), and **the rename simulated** — a near-miss spelling yields `nil`, not a wrong effect. It became urgent when [#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78) made `IdempotenceTemplate` **veto** on these names, so a rename stops suppressing a false law instead of failing loudly. **Still open: the cross-repo half.** swift-infer deliberately does not depend on SwiftIdempotency — the doc-comment spelling needs no dependency and the attribute is matched by NAME — so asserting these equal its *shipped macro names* needs a fixture or a checked-in manifest |
 | 5 | ~~**`PBTSeed.role`'s doc comment is stale**~~ | **Closed 2026-08-04** ([SPL#65](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/65)), and it was wrong **twice over** — which is why it was not a one-line fix. The count was stale, *and* the wording (*"every rule but the two **candidate** rules"*) ruled the third out **by name**: `extractablePureKernel` is a kernel rule, so a reader checking the sentence against the code would have read the classification they found there as a bug. **A doc that characterises a set by a property its newest member lacks does not go out of date — it argues against the code.** The three are now named individually rather than counted. Also closed the gap the count rested on: `SeedRoleEmissionTests` had arms for the closure and kernel rules and **none** for `pureFunctionCandidate`, so the third classifier had no executable claim anywhere — which is how a doc about it could be wrong unnoticed |
 | 6 | ~~`.swiftinfer/` is not gitignored~~ | **Closed 2026-08-03.** Ignored at the **root only** (`/.swiftinfer/`, not `**/`) — `fixtures/cycle27-surface/.swiftinfer/index.json` is a tracked frozen corpus and a recursive pattern would have hidden it. A deliberate commit is still available via `git add -f` |
-| 7 | **No current end-to-end number** for the loop | see *Standing observations* → *The measurements are all withdrawn* |
+| 7 | ~~**No current end-to-end number** for the loop~~ | **Half closed 2026-08-05.** The *verify* half has one: **139 of 281 index entries execute a law, 130 hold, 9 refute** — whole corpus, no `--template` filter, `1ef7128`, and it is re-takeable rather than remembered (`swift-infer verify --all-from-index --max-parallel 4`, 76 min / 107 GB). Still open: this measures **one repo's own index**, not the five-package loop, and `scripts/toolchain.sh` stages 3–4 remain unimplemented (item 9), so *no run of the loop* executes a law even though verify does. See *Decisions* → *The whole-corpus number* and *Standing observations* → *The measurements are all withdrawn* |
 | 8 | **Exit criteria for "the toolchain is in shape"** are unwritten | see *Decisions* → *Road tests were misfiled* |
 | 9 | **Driver stages 3–4** (`verify`, kit conformance suites) are declared and unimplemented | `scripts/toolchain.sh`. Until they exist, **no run of the loop executes a law** — the driver says so every run rather than implying otherwise |
 | 10 | **The two ends of the lint→infer hop take different inputs.** The linter takes a repo path and works out the layout; `discover` requires exactly one of `--target`/`--sources` and errors without one | a reader following the documented hop hits an argument error on their first attempt. The driver papers over it by inferring scope — open question whether the *fix* belongs in `discover` instead |
@@ -112,9 +118,13 @@ mode in miniature: a comment that describes something the code stopped doing. Ne
 | 15 | ~~Are `predicate`/totality laws refutable here, or a wall of green?~~ | **Closed 2026-08-03: not a wall of green.** 35 of the 126 (27%) already carry a hand-written totality guard, and ~half of a 20-sample would trap under a plausible implementation. Item 14 unblocked; see *Decisions* |
 | 16 | ~~The index records a CARRIER; a law needs a SIGNATURE~~ | **Closed 2026-08-03, and MEASURED.** Built as scoped; `≤+56` realised as **+50** (54 → **104 of 126**). Both compile buckets are ZERO: cross-module 37 → 0, arity 19 → 0. The shortfall accounts for itself — carrier declines 11 → 17, entries that used to fail at compile and now fail earlier at generator resolution. Two defects found only by running it: the receiver is an implicit parameter (7 rows, all previously hidden behind the import failure), and the n-ary path dropped the `GeneratorResolver` `emit` builds (5 rows, mine, same day). See *Decisions* → *Signature, not carrier* |
 | 17 | **The idempotency vocabulary is split across two packages, and this one reads neither half it owns** | surveyed 2026-08-04, **undecided by choice** — see *Decisions* → *Idempotency vocabulary*. Not a naming clash: two packages independently **generate idempotency tests from an annotation**, and swift-infer uses `EffectAnnotationParser` at exactly **three call sites, all `isClockDeterministic`**. Ordering matters — retiring `.idempotent` before swift-infer *reads* `@Idempotent` reproduces item 4's failure mode by hand. **Step 1 SHIPPED** ([#78](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/78)): swift-infer reads the effect vocabulary — `@Idempotent` corroborates, `@NonIdempotent`/`@ExternallyIdempotent` veto. **Dogfooding it found two defects** ([#81](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/81)): the annotation was paid for **twice** (the `@lint.effect` line is a doc comment, so `DocstringPropertyCorroborator` also credited it), and **+40 was keyed to the wrong definition** — the owner defines `@Idempotent` as re-invocation stability, not composition, so it is now +15. **Steps 2 and 3 remain**: retire `.idempotent` from `CheckPropertyKind`, and the cross-repo contract test (item 4). **Folded in**: whether `@ClockDeterministic` belongs in SwiftIdempotency — it does **not** belong to the effect lattice (four pre-existing fences say so) but probably does belong to the package; the actionable part is that it is the one annotation neither configurable nor contract-tested, which is item 4 |
-| 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04.** `IdempotenceReturnShape` reads the returned expression: a result built *around* its input cannot be idempotent, so the law is FALSE rather than unlikely — full veto, `orderSensitiveCarrier`'s ground. **72 → 54 rows; 8 of the 13 measured refutations removed plus the 9 `defaultPath` rows; ZERO laws that held were lost.** The §3.5 objection did not apply: score-35 is `Possible`, *hidden by default*, so the cost was never reader-facing volume — it was index and verify hygiene. **Domain transfer is deliberately still not claimed** (5 remaining refutations). See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
+| 18 | ~~**`idempotence` has a 24% false-law rate on its executed surface**~~ | **Veto SHIPPED 2026-08-04.** `IdempotenceReturnShape` reads the returned expression: a result built *around* its input cannot be idempotent, so the law is FALSE rather than unlikely — full veto, `orderSensitiveCarrier`'s ground. **72 → 54 rows; 8 of the 13 measured refutations removed plus the 9 `defaultPath` rows; ZERO laws that held were lost.** The §3.5 objection did not apply: score-35 is `Possible`, *hidden by default*, so the cost was never reader-facing volume — it was index and verify hygiene. **Domain transfer is deliberately still not claimed** (5 remaining refutations). **Re-measured on the whole-corpus survey 2026-08-05 and the veto holds: 47 executed, 5 refuted — 24% → 10.6%, and the `extendsInput` class produced ZERO refutations**, which is the shape a working veto has. All 5 survivors are domain transfer; no third mechanism appeared. Now tracked as item 22. See *Decisions* → *The `idempotence` false-positive rate, and the veto it earned* |
 | 19 | ~~**`Gen<URL>` has no member `url`**~~ | **FIXED 2026-08-04** — two lines, no kit change. Same defect as the `predicate` survey's one undiagnosed `build-failed` — two templates, reached independently, one cause. `Gen` is from `PropertyBased`; `url()` is an extension in `PropertyLawKit`, which the stub does not import and the workdir does not depend on. The `.algebraic` workdir was the outlier — `.interaction` already declared the product. **URL rows now 0 → 11 of 13 executing (2 hold, 9 refute)**, and the 9 refutations confirm item 18's frozen classifier on rows it could not previously run. **An earlier same-day diagnosis of this was WRONG** (a `libTesting` launch failure that was an artefact of running the binary outside its harness) and is kept as a correction. See *Decisions* → *The `Gen<URL>` defect — fixed, after a wrong diagnosis worth keeping* |
 | 20 | **Nothing reads `@EffectUnknown`.** SwiftIdempotency ships the marker as of [#3](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/3) (2026-08-04); no tool distinguishes it from an unannotated declaration | **Unblocked 2026-08-04.** Item 1 is fixed and the pin now sits at `bfcf0e3`, so links 2 and 3 of the chain are clear. What remains is **link 1: SEI must learn to read the marker** — and it belongs there, not here, because swift-infer re-implementing the `@lint.effect` grammar is exactly what SEI exists to prevent. See *Decisions* → *The `@EffectUnknown` dependency chain* |
+| 21 | **[#92](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/92)** — the identity-keyed merge fold is **not commutative in four `SwiftInferCore` types** | Found by the whole-corpus survey. `Decisions` / `PostAcceptanceOutcomeLog` / `VerifyEvidenceLog` / `InteractionDecisions` all run the same `records + other.records` fold with `>=` on the date, so first-seen wins on a tie and `a.merge(b) != b.merge(a)`. **`Decisions.merge` was already documented false in CLAUDE.md and the other three cite it** — the doc comments record the copy chain (*"same posture as v1's `Decisions.merge`"*). Each aggregates corpora for a §17.2 metric, so the fold ORDER decides the denominator; measured 0-vs-1 regressions from identical inputs. **Associativity correctly HOLDS in all four** (take-first-max is associative, not commutative — exhaustive, 0/512 triples), which both confirms the instrument and constrains the fix |
+| 22 | **[#93](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/93)** — characterise the `idempotence` **domain-transfer** class | The residual item 18 deliberately left unclaimed, now **5 witnesses** (47 executed, 5 refuted). **4 of the 5 are one tight sentence — an identifier in, rendered text out** (`seedTuple`, `seedString`, `regressionFileHash`, `codableRoundTripGenerator`), tighter than the classifier doc's "a hash, a rendered name, a seed string". `markovSynthesized` is the outlier and should probably be a neighbouring class, not folded in. **Still not a licence for a name gate** — `orderingNameStems` is the measured precedent against it |
+| 23 | **[#94](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/94)** — `composeRoundTripPass` ignores the implicit receiver slot | The item-16 *"receiver is an implicit parameter"* fix went into `composePredicatePass` **only**. Round-trip still draws one value and applies `{ $0.method($1) }` to it → `missing argument for parameter #2`, filed as `build-failed` so it reads as instrument failure. The machinery already exists and is not totality-specific (`StrategistDispatchEmitter+Totality`'s `operandTypeNames`, which handles the receiver); it is named `totalityOperands` in a `+Totality` file, which is likely why round-trip never picked it up |
+| 24 | **[#95](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/95)** — nested carrier types recorded **unqualified**, depending on declaration spelling | `extension SwiftInferCommand.Verify { … }` records `SwiftInferCommand.Verify`; `extension SwiftInferCommand { struct Scaffold { … } }` records bare `Scaffold`, which does not resolve in the stub. Same module, same nesting depth, different authoring style. **Third instance of the spelling-dependent family** — `assumedCoverageSignal`'s `"Self"` and the kit-suite backtest's bare generic name are the other two. Also raises collision risk in the bare-name-keyed sidecars |
 
 ---
 
@@ -950,6 +960,85 @@ thing (a hash, a rendered name). That is the 5 remaining refutations and exactly
 `_description` and capacity-from-scale vetoes have chased **by name** for cycles. It is
 not characterised well enough to veto on, and a veto that fires on a guess suppresses
 true laws — which is the failure that cannot be seen from the outside.
+
+### The whole-corpus number, and the "regression" that was not one (2026-08-05)
+
+Item 4, closed. `verify --all-from-index` with **no `--template` filter**, release binary at
+`1ef7128`, `--max-parallel 4`. **139 of 281 entries execute a law: 130 hold, 9 refute.**
+76 min wall, 7.7 CPU-hours, 107 GB of workdirs, 2.45 GB peak RSS.
+
+| template | n | ran | held | ref | why the rest did not run |
+|---|---:|---:|---:|---:|---|
+| `predicate` | 129 | 76 | 76 | 0 | 49 no generator · 4 trap |
+| `idempotence` | 54 | 47 | 42 | **5** | 4 trap · 1 build-failed · 1 no generator · 1 instance-method shape |
+| `round-trip` | 46 | **0** | 0 | 0 | **45 no generator** · 1 build-failed |
+| `input-totality` | 11 | 0 | 0 | 0 | 11 no composer |
+| `codable-round-trip` | 8 | **8** | 8 | 0 | — |
+| `associativity` | 6 | 4 | 4 | 0 | 2 no generator |
+| `commutativity` | 5 | 4 | **0** | **4** | 1 no generator |
+| `monotonicity` | 4 | 0 | 0 | 0 | 3 no generator · 1 domain not `Comparable` |
+| `measure-non-negativity` | 4 | 0 | 0 | 0 | 3 no generator · 1 trap |
+| 8 others (≤3 each) | 14 | 0 | 0 | 0 | 13 no composer · 1 no generator |
+
+Corpus-wide: **105 carrier declines (37%)**, 24 no-composer (9%), 11 errors, 2 misc.
+
+**Three things `--template predicate` could not have said.**
+
+1. **`round-trip` is the biggest single loss: 46 entries, ZERO laws.** 45 decline for want of a
+   generator. It is the second-largest verifiable template and contributes nothing, and the
+   binding constraint is **carrier reach, not composer support** — the opposite of what item 1's
+   *"the next honest gain is breadth, a second composer"* predicted. That read was taken from
+   inside the one composer that works; this is the view from outside it.
+2. **Refutations concentrate, and `predicate` contributes none.** 0 of 76 `predicate`, 5 of 47
+   `idempotence`, **4 of 4 `commutativity`**. The wall-of-green question, answered from the other
+   side: `predicate` really is regression-guard work, and the refutable population lives elsewhere.
+   Every executed `commutativity` law on this repo is one of the four merges, and every one is false.
+3. **`codable-round-trip` is the only template at 100% yield** — 8/8 ran, 8 held.
+
+Four defects filed: **#92** (merge fold non-commutative ×4), **#93** (domain-transfer class),
+**#94** (round-trip receiver slot), **#95** (unqualified nested carriers). Items 21–24.
+
+#### The 106 does not reproduce — and the flag raised over it is WITHDRAWN
+
+The survey's first write-up flagged a top follow-up: `predicate` ran **76** where the stored
+evidence recorded **106**, with carrier declines at 49 against 17. That was reported as a
+discrepancy needing an A/B rather than as a regression, which was the right call, because the
+A/B says **there was no regression and HEAD is better by 2**.
+
+Two binaries, same day, same machine, **same 129 entries from the same index file** — the §10.3
+shape, with the corpus held at HEAD so only the binary moves:
+
+| bucket | BEFORE `2f65f92` | HEAD `1ef7128` | delta |
+|---|---:|---:|---:|
+| ran and held | 74 | **76** | **+2** |
+| no generator for carrier | 49 | 49 | 0 |
+| error: trap/parse | 4 | 4 | 0 |
+| error: build-failed | 2 | **0** | **−2** |
+
+**2 disagreements in 129, both the same direction**: `isDirectory(_:)` and
+`isStale(indexPath:packageRoot:)` go `build-failed → ran and held`. That is item 19's `Gen<URL>`
+fix landing on exactly the row that motivated it. The carrier bucket is **49 in both arms**, so
+the "17" was never a property of any binary in this range.
+
+**The cheap half of the A/B was worth more than the expensive half.** Before running either
+verify arm, both binaries built an index over the same sources: the predicate index is
+**identical** — 129 entries, all 129 identities shared, 814 type shapes and 745 source-file
+entries matching exactly. That is a five-second check and it eliminated the discover side
+outright, including the two leading hypotheses (the purity-verdict change, the SEI pin bump).
+The only index delta anywhere is `idempotence` 72 → 54, which is #78 doing its job.
+
+**What the 106 was cannot be recovered, and that is itself the finding.** The survey's own
+`persistSurveyBatch` overwrote `.swiftinfer/verify-evidence.json`, so the figure now exists only
+as a reading taken mid-session. The evidence log upserts by identity and **keeps historical
+entries** — item 18 already recorded that trap in the other direction — so the likeliest reading
+is an accumulation across runs rather than one survey's output. Which is exactly why §10.3 says
+never to compare against a stored count. **Third instance of a "measured drift" that was an
+artefact of the comparison**, after the census's `SwiftInferCore` 96-vs-80 (`--include-possible`)
+and this one's own two halves.
+
+**A measurement whose artifact its own run destroys is not re-checkable.** Nothing was designed
+to prevent that; the survey persists over the file it is being compared against. Worth fixing
+before the next survey, or worth copying the evidence file first and saying so.
 
 ### Doc staleness: automate the trigger, not the habit (2026-08-03)
 
