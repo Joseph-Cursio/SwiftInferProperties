@@ -127,3 +127,81 @@ The honest ceiling, restated: the score is `.possible`, not a verdict. The templ
 proposes the right property on the right two handlers *from their shape*; a human still
 writes the effect recorder and confirms the law holds. Band promotion past `.possible`
 stays gated on this same external evidence, never the fixtures.
+
+## Broadened to the public trial corpus (2026-08-06) — and the precision blowup it caught
+
+MacCloud is one app with two genuine handlers. Two handlers validate *recall*; they cannot
+validate *precision*. So the finished template (M1+M2+M3) was swept across **8 public repos**
+— the upstreams of SwiftIdempotency's own package trials (HelloVapor, luka-vapor, penny-bot,
+VernissageServer, plc-handle-tracker, parse-server-swift, wallet, HomeAutomation), each pinned
+to the trial's commit, each written by strangers who never saw this tool. (AmpFin excluded:
+the `swiftdata-sample` fixture was modelled on it, so it grades its own homework. vreader failed
+to clone at its pin.) Syntax-only `discover --sources … --include-possible`, no builds.
+
+**First sweep: 12 hits, mostly false positives.** The 2-handler MacCloud pass had looked clean;
+the breadth pass did not. Two false-positive classes, verified against source:
+
+- **`isCancelled` fired on cooperative cancellation.** penny-bot's three hits were all
+  `if Task.isCancelled { return }` in background `run()` loops — the single most common idiom
+  in async Swift, nothing to do with dedup. `isCancelled`/`isCanceled` never belonged in the
+  state-flag set.
+- **The pre-fetched reader fired on pure getters.** `getReblogStatus`,
+  `getRegisteredExternalUser` (Vernissage), a mock middleware (HelloVapor) — `let x =
+  query().first(); if let x { return x }`, reads with **no insert or effect at all**. The
+  detector never checked that an effect *followed* the gate, so "fetch-then-**insert**" was a
+  misnomer for "fetch-then-return", which every nullable getter matches.
+
+**And a recall gap the same sweep exposed.** penny's *real* dedup —
+`guard await cache.canGiveCoin(…) else { return }`, keyed on `(sender, message)` — is a
+`guard` with a domain-named method, and the template handles neither. So on penny it fired
+three times on cancellation noise and stayed silent on the one genuine handler. The worst
+pairing, and only a broad corpus shows it.
+
+## Fix — M4 precision pass (licensed by the same external oracle)
+
+- **Tightened `stateFlags`** — dropped `isCancelled`/`isCanceled` and the ambiguous lifecycle
+  flags (`isComplete`/`isDone`/`isFinished`/`isClosed`/`isExpired`); kept the set that reads
+  "this key was already handled" (`isDeleted`, `isHandled`, `isProcessed`, …).
+- **Required a guarded effect** — `classify` now returns a shape only if the body performs an
+  effect-verb call (`insert`/`save`/`create`/`delete`/`publish`/…). A gate that guards nothing
+  is a getter's early return, not a dedup gate. (Effect-*dominance* — the effect sits on the
+  path the gate skips — is a finer check left to a later slice; "the body has an effect at all"
+  removes the getters without it.)
+- **Deferred, and named honestly:** `guard`-form gates and domain-named dedup methods
+  (`canGiveCoin`) remain uncaught. No verb list covers them; that is the fundamental
+  spell-checker-dictionary boundary, not a bug M4 can close.
+
+## Re-sweep: 12 → 5, and the 5 are real
+
+| repo | first sweep | after M4 |
+|---|---|---|
+| penny-bot | 3 (all `isCancelled`) | **0** |
+| HelloVapor | 1 (mock middleware) | **0** |
+| VernissageServer | 8 (getters + upserts) | **5** |
+| the other 5 | 0 | 0 |
+
+The five survivors are all in VernissageServer, and every one verified against source is a
+**genuine fetch-or-create dedup handler** where replaying matters:
+
+- `follow` — return the existing follow or create one (no duplicate follows on retry)
+- `getTwoFactorToken` — return the existing token or generate+save (no duplicate 2FA tokens)
+- `mute` — fetch-and-update or create (no duplicate mutes)
+- `update` — settings upsert
+- **`flag`** — the **ActivityPub inbox `Flag`** handler, dedup-gated on `activity.id`
+  (`if let report = Report.query().filter(activityPubId == activity.id).first() { return }`).
+  This is the *exact* handler the Vernissage trial's answer key identified by hand
+  (`IdempotencyKey(fromAuditedString: "ap-inbox:\(activity.id)")`) — surfaced here **from its
+  shape alone**, independently of that key.
+
+MacCloud's two true positives are unchanged (both carry `save`). False-positive rate on the
+corpus: ~10/12 → **0/5**.
+
+## Net
+
+The broad oracle did what the narrow one couldn't: it refuted a green self-assessment (M3
+looked clean on two handlers, over-fired on real code), and the fix it licensed left the
+template surfacing **real replay-idempotency handlers in real public servers from their shape**
+— up to and including one a careful adopter had already flagged by hand. The ledger's honest
+entry is not "it works" but "it over-fired, an external corpus caught it, the fix held, and
+what survives is true." The recall boundary (guard-form, domain-named dedup) is written down,
+not papered over.
