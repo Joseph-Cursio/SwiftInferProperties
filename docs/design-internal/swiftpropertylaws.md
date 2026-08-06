@@ -33,6 +33,26 @@ that is the thing to hold onto. The pipeline diagram says "downstream" and the `
 **equal to the kit's `HEAD`**. Read the pin from `Package.swift`, never from prose; this line has
 been a full major version stale before.
 
+### In and out, precisely
+
+A library in **both** directions, with no CLI — so "consumes" and "produces" split by *when*, not by
+*which side*. Build-time it hands this repo a generator; run-time it takes a generated stub and
+returns a verdict.
+
+| | what | shape |
+|---|---|---|
+| **consumes** *(build-time, ↑)* | a type and its shape | `DerivationStrategist` is called by `swift-infer`; the kit answers *"can I generate values for this?"* |
+| **consumes** *(run-time, ↓)* | a compiled stub calling `check<Protocol>PropertyLaws` | plus a `Gen<T>` for the carrier |
+| **produces** *(↑)* | a derivation strategy, or a refusal | the refusal is the signal — `no generator for carrier` is 105 of 281 corpus-wide declines |
+| **produces** *(↓)* | pass / fail + a **counterexample** | printed by the stub; parsed back out of stdout by `VerifierSubprocess` |
+| **produces** *(↔)* | the set of laws it *has* | read as `ProtocolCoverageMap` — a claim made **in this repo about the kit**, not an API |
+
+**The `↔` row is the one that bites.** `ProtocolCoverageMap` is this repo's hand-maintained belief
+about which laws the kit ships, and it **vetoes** proposals for laws the kit cannot run. Nothing
+compiles the two together, so the kit gaining a law family does not automatically make it proposable —
+the SetAlgebra suite went from 5 laws to 15 inside one stale-pin window, unnoticed. A veto keyed to a
+stale belief is silent in the expensive direction: it suppresses laws that would now run.
+
 ---
 
 ## Products

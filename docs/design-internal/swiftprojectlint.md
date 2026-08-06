@@ -3,12 +3,17 @@
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
 **Book home:** Appendix C, Chapter 15, and the seed hand-off in Chapters 12 and 16.
 
-> **Counts re-verified 2026-08-03 (second pass)** · subject `SwiftProjectLint@9c5b305` · observer
-> `SwiftInferProperties@201e3ea`
+> **Counts re-verified 2026-08-06 (third pass)** · subject `SwiftProjectLint@08a4b09` · observer
+> `SwiftInferProperties@2c599c0`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
+>
+> **What the third pass changed.** The subject moved 10 commits past the second pass's pin, and two
+> of them changed the seed contract: a **new optional `effect` object** on `idempotency` seeds
+> (§ *The effect tier*), and a fix to the `line` field's determinism. `RuleIdentifier` held at 202.
+> One trap was retired — the stale `PBTSeed.role` doc comment was fixed upstream by `0d56d982`.
 >
 > **What the first pass got wrong, and how it was caught.** This doc was written against
 > `6c88715` — a local checkout that turned out to be **46 commits behind its origin**. Two counts
@@ -17,7 +22,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftProjectLint@9c5b305cdacd11f268f005beb5051df192cf7b7e observer=SwiftInferProperties@201e3eaa2b2ea0dfbed030a2fa1444453ee7e029 -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftProjectLint@08a4b099276eb46e0a8b39a8ab0ea2f3e1e876c1 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
 
 ---
 
@@ -42,6 +47,65 @@ becomes job 2's input on the next run.** A kernel you extract this week is a nam
 symbol next week. That loop is the whole reason the linter sits upstream rather than beside.
 
 It never says whether a property *holds*. It says where to look and what to fix.
+
+### In and out, precisely
+
+| | what | shape |
+|---|---|---|
+| **consumes** | a directory of Swift source | files on disk, parsed with SwiftSyntax; no build, no run, no network |
+| | `.swiftprojectlint.yml` (optional) | severity overrides, category and rule enable/disable |
+| | **SwiftEffectInference**, in-process | the purity oracle — a library dependency, not a CLI hop |
+| **produces (1)** | the human report | `text` (default, collapses candidates) · `json` · `csv` — for a person |
+| **produces (2)** | the seed manifest | `--format pbt-seeds` → JSON v2 — for `swift-infer discover --seeds`, and nothing else |
+| | dropped-seed tally | **stderr**, so stdout stays a clean manifest |
+| | exit code | severity-gated — except under `pbt-seeds`, which always exits 0 |
+
+The two output channels are computed from **one** `issues` array. That is why disabling a noisy rule
+to tidy the report also empties the manifest, and why the candidate flood is fixed in presentation
+rather than detection (§ *The census flood*).
+
+---
+
+## The rule catalogue, and how little of it is about properties
+
+`RuleIdentifier` has **202** cases. The rules package registers **192** rules, each exactly once —
+so **10 enum cases are declared but never registered**.
+
+Both figures are worth carrying, and so is their disagreement: an identifier is not self-evidently a
+live rule. **Nothing asserts the enum and the registry agree**, which is exactly why they do not.
+
+> **Counting method, because the obvious one is wrong.** A raw grep for `category: \.` returns
+> **195**, and for `name: \.` returns 198 across 193 distinct values. Both overcount: six
+> `SyntaxPattern(name: .unknown, …)` placeholders live in **test-only convenience initializers**
+> (`MagicNumberVisitor`, `HardcodedStringVisitor`, `MemoryManagementVisitor`), three of which also
+> set a category. Dropping the `.unknown` blocks gives 192, all distinct. The naive count inflates
+> `accessibility` by 1 and `memoryManagement` by 2.
+
+| category | rules | anything for property inference? |
+|---|---|---|
+| `codeQuality` | 52 | incidental — `couldBePrivateMember` **fights** the pipeline (§ 1a) |
+| `architecture` | 32 | **3 rules** — the domain-type family (§ 1b), none of which seed |
+| `modernization` | 25 | no |
+| `accessibility` | 19 | no |
+| `performance` | 14 | no |
+| `stateManagement` | 13 | `Missing Equatable on State Type` is a blocker (§ 1c) |
+| `animation` | 10 | no |
+| `testability` | 9 | **the family** — candidates, kernels, blockers (§ 1a, § 1c) |
+| `uiPatterns` | 7 | no |
+| `security` | 5 | no |
+| `memoryManagement` | 3 | no |
+| `networking` | 3 | no |
+| **total** | **192** | **~11 rules, 4 of which seed** |
+
+**The ratio is the point.** Roughly 5% of the catalogue is upstream of property inference, and only
+**four** rules reach the manifest at all. Everything else is a SwiftUI architecture linter that
+happens to ship in the same binary. A reader who assumes "202 rules feed `swift-infer`" will
+mis-estimate both the coverage and the flood; the correct mental model is a large linter with a small
+deliberate seam cut into it.
+
+`--categories testability` selects the 9, which is **not** the same set as the 4 that seed — two of
+the seeding rules are testability, and the flood-collapsing opt-in is keyed to the category, not to
+the seeding set. Confusing the two is how a reader concludes the manifest is empty when it is not.
 
 ---
 
@@ -174,6 +238,70 @@ on SwiftInferProperties (2.7%) are `enclosing-type` — small, non-zero, and sil
 direction that would have been misread. No version bump: absent means "producer does not classify",
 and a seed without it is byte-identical to one written before.
 
+### Every field, and who may rely on it
+
+| field | required | values | consumer use |
+|---|---|---|---|
+| `file` | ✅ | path as walked | **focus key**, with `symbol` |
+| `line` | ✅ | 1-based | reported to the reader; **not** matched on |
+| `symbol` | ✅ | resolved name | **focus key**, with `file` |
+| `rule` | — | rule display name | attribution in warnings |
+| `kind` | ✅ | 4 cases, below | decides whether the seed may focus at all |
+| `role` | — | 6 cases | decides what law is *owed* |
+| `restriction` | — | `declaration` · `enclosing-type` | names what must move to verify |
+| `effect` | — | object, below | **`idempotency` seeds only; unread today** |
+
+**`line` is carried but never matched on**, and that is load-bearing rather than incidental. The
+subject fixed a real nondeterminism in it on 2026-08-06 (`36df9996`): `getLineNumber` measured a
+cross-file finding against whichever converter was installed last, so **476 of 3,844 findings moved
+between two runs over an unchanged corpus**. Because `Discover+Seeds` keys the focus set on
+`(file, symbol)`, that defect could not perturb which functions got focused — the consumer was immune
+by construction, not by luck. 472 of the 476 came from the two "could be private" rules, which do not
+seed. Worth knowing before anyone "optimises" the focus key to include `line`.
+
+### The effect tier — a field this repo does not yet read
+
+Shipped upstream 2026-08-06 (`9a21f3c1`), on `idempotency` seeds only:
+
+```json
+"effect": { "declared": "idempotent", "resolved": "non_idempotent",
+            "provenance": "inferred-upward", "depth": 3 }
+```
+
+| sub-field | values |
+|---|---|
+| `declared` | `pure` · `idempotent` · `observational` · `externally_idempotent` · `non_idempotent` |
+| `resolved` | same five — what the body actually reaches |
+| `provenance` | `declared` · `inferred-upward` · `inferred-downward` |
+| `depth` | 1 = every contributing callee was annotated; 4 = survived three unannotated hops |
+| `reason` | the phrase a heuristic matched (`inferred-downward` only) |
+
+Three things make this more than a convenience field:
+
+- **The valuable half is `resolved`, not `declared`.** A consumer parsing the same source can read
+  the annotation itself. What it cannot reproduce is a cross-file, multi-hop lattice join through
+  the call graph — knowledge only the linter has, which died at the manifest boundary until now.
+- **Provenance travels with the tier because the treatments differ** — a *declaration* vetoes a
+  proposed law, an *inference* demotes it. A bare tier forces a guess and both guesses cost:
+  inference-read-as-declaration suppresses laws that may be true; declaration-read-as-inference
+  dilutes the strongest signal the author ever gave. *"A tier without its provenance is not a weaker
+  version of this field; it is one the consumer cannot safely use."*
+- **The tiers use the annotation grammar** (`non_idempotent`, not `nonIdempotent`) because that
+  spelling is already shared by humans, this linter, and SwiftEffectInference. A second spelling
+  would be a fourth dialect.
+
+**Status on this side: READ, as of `f33dfd1` (2026-08-06).** `SeedManifest.Seed.effect` decodes it
+(`decodeIfPresent`, so a seed without one is still valid), `SeedEffect` mirrors the producer's five
+tiers and three provenances, and `SeedEffectResolver` consumes them. The hand-off is complete —
+**this row was written the same day describing it as inert, and was true for about two hours.**
+
+What it buys, in the committing change's own words: `EffectResolver`'s local pass runs
+`applyBodyInference` **one hop**, against a budget that must fit inside §13's 2-second `discover`
+ceiling. A linter running ahead of the pipeline has no such constraint, so *"a `@NonIdempotent`
+several calls down, which the local pass structurally cannot see, arrives already resolved — for
+free, since the linter already paid."* That is the argument for the field: not a shortcut, but a
+tier the consumer **cannot compute** within its own budget.
+
 ### The four seeding rules
 
 ```swift
@@ -203,8 +331,19 @@ code.
 | `kind` | *whether a tool can call it yet* | `PBTSeedKind.isAnalysable` |
 | `role` | *what law it owes* | `PBTSeedRole.impliesEntailedLaw` |
 
-**`kind` — analysable vs refactor-pending.** `pure-function`, `idempotency` and `restricted-function`
-are analysable; `extractable-kernel` is not. Feed a refactor-pending seed to a focus filter and you
+**`kind` — analysable vs refactor-pending.** Four cases produced, five recognised:
+
+| kind | produced by | `isAnalysable` | what it means |
+|---|---|---|---|
+| `pure-function` | `.pureFunctionCandidate` | ✅ | pure and total; index it, propose laws |
+| `idempotency` | `.idempotencyViolation` | ✅ | arrives with a ready-made property to verify |
+| `restricted-function` | *demotion* of `pure-function` | ✅ | named and analysable; `private`, so not *verifiable* cross-module |
+| `extractable-kernel` | `.extractablePureKernel`, `.pureClosureCandidate` | ❌ | the logic has no name yet; `symbol` is the **enclosing** function |
+| `unrecognised(_)` | — *consumer-side only* | ❌ | a spelling this consumer does not know; fails loudly, never silently |
+
+`restricted-function` has no rule of its own — it is `pure-function` demoted in
+`PBTSeedsFormatter.effectiveKind` once `TestReachability` says no test can call the symbol.
+`pure-function`, `idempotency` and `restricted-function` are analysable; `extractable-kernel` is not. Feed a refactor-pending seed to a focus filter and you
 get a **confident zero**: the tool narrows to a symbol it must then refuse (`private async throws`
 refutes purity) and reports `kept 0` for a codebase full of property-testable logic.
 
@@ -312,18 +451,33 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
 
 ## Traps
 
-- **Rule counts disagree across three places.** README says 160, Appendix C says 189,
-  `RuleIdentifier.swift` has **202** `case`s. **Read the enum.** (`RuleIdentifier.allCases.count` is the
-  only figure anything tests against.)
-- **`PBTSeed.role`'s doc comment is stale.** It says roles are absent for *"every rule but the two
-  candidate rules"* — but `ExtractablePureKernelVisitor:106` sets `role: kernel.role` too, so three
-  of the four seeding rules classify. `.idempotencyViolation` is the only one that does not.
+- **Rule counts disagree across four places.** README says 160, Appendix C says 189,
+  `RuleIdentifier.swift` has **202** `case`s, and the rules package registers **192**. **Read the
+  enum** for "how many rules exist" (`RuleIdentifier.allCases.count` is the only figure anything
+  tests against); read the category census for "how many are reachable by `--categories`". **The
+  10-case gap is unexplained and untested**, and a declared-but-unregistered identifier is a rule
+  that can be configured, named in a severity override, and never fire. Do not silently pick
+  whichever number supports the sentence you are writing.
+- **Counting registered rules by grepping `category:` or `name:` overcounts.** Six `.unknown`
+  `SyntaxPattern` placeholders sit in test-only convenience inits and are not rules. This bit *this
+  doc* — see the counting-method note in the catalogue section — and the naive numbers (195 / 193)
+  are close enough to the right one to survive review.
+- ~~**`PBTSeed.role`'s doc comment is stale.**~~ **Fixed upstream 2026-08-06** (`0d56d982`, *"Say how
+  many rules classify a seed role, and name them"*). The standing fact it recorded still holds and is
+  the thing to remember: **three of the four seeding rules classify a role** — the two candidate
+  rules and `ExtractablePureKernelVisitor` — and `.idempotencyViolation` is the only one that does
+  not. Kept struck-through rather than deleted because the *count* is what a reader needs and the
+  trap is where they will look for it.
 - **Only `PureFunctionCandidateVisitor` sets `testReachability`.** Everything else leaves it
   `.unknown`, which `effectiveKind` treats as reachable — deliberately, since demoting on "the rule
   did not look" would silently shrink the manifest. Consequence: the `restricted-function` demotion
   applies to pure-function seeds and to nothing else today.
-- **The seed count is not a suggestion count.** 1,657 seeds have produced 21 default-tier picks on
-  SwiftInferProperties. Never report one as evidence about the other.
+- **The seed count is not a suggestion count.** Re-measured 2026-08-06: **2,096 seeds → 180
+  default-tier picks** on SwiftInferProperties (was 1,657 → 21), of which only **3 `strong` + 27
+  `likely`** — the other 150 are rescue and advisory rows. A **seeded** run prints **1,738**, *more*
+  than an unseeded one, because 662 `restricted-function` seeds vouch for private functions a plain
+  run never opens. Never report one count as evidence about the other, and say which reading of
+  "default tier" you mean.
 - **The repo's own README opens with "THIS IS AN EXPERIMENT IN VIBE-CODING"** and says outright that
   some rules are bad ideas, some are poorly implemented, and some are both. The testability and
   idempotency families are the road-tested ones; treat a rule outside them as unvetted until measured.
@@ -335,6 +489,8 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
 | question | file (in `SwiftProjectLint`) |
 |---|---|
 | the manifest schema, seed kinds, dropped-seed detection | `Sources/Core/Export/PBTSeedsFormatter.swift` |
+| the effect tier, its provenance, and why both travel | `Packages/SwiftProjectLintModels/…/PBTSeedEffect.swift` |
+| which rules exist at all, and the count nothing tests | `Packages/SwiftProjectLintModels/…/RuleIdentifier.swift` |
 | what a role is and why these six | `Packages/SwiftProjectLintModels/…/PBTSeedRole.swift` |
 | reachability's three values | `Packages/SwiftProjectLintModels/…/TestReachability.swift` |
 | why the report collapses candidates but the manifest does not | `Sources/Core/Export/CandidateInventory.swift` |

@@ -3,14 +3,19 @@
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
 **Book home:** Appendix C; Chapter 26 §26.3 (the lattice), Chapter 22 §22.6 (clock-determinism).
 
-> **As of 2026-08-03** · subject `SwiftEffectInference@097181a` (HEAD; **this repo pins `1f2265a0`**
-> — see the pin section) · observer `SwiftInferProperties@2722975`
+> **As of 2026-08-06** · subject `SwiftEffectInference@6f45139` (HEAD; **this repo now pins HEAD** —
+> see the pin section) · observer `SwiftInferProperties@2c599c0`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
+>
+> **What the 2026-08-06 pass changed.** The pin divergence **reversed direction and is no longer
+> blocked**: SEI#1's regression was fixed (`6470222`), this repo bumped from `1f2265a0` to HEAD, and
+> the §13 budgets were re-measured green. SwiftProjectLint is now the laggard, by two commits, with a
+> named consequence. Size held at 13 files / ~3,800 lines.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftEffectInference@097181aa3ebcca3918c98cf071ca083d69d97650 pinned=1f2265a0fa63a9659886024a01fb3221bddc8768 observer=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftEffectInference@6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 pinned=6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
 
 
 ```
@@ -20,9 +25,28 @@ SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ─�
 ```
 
 The smallest package in the toolchain and the only one with **no CLI and no dependents below it** —
-13 source files, ~3,700 lines, depends on nothing in the set. It is a library two other tools
+13 source files, ~3,830 lines, depends on nothing in the set. It is a library two other tools
 *embed*, which is the entire architectural point: **the linter and the inference engine consult one
 purity oracle, so they cannot disagree about what is pure.**
+
+### In and out, precisely
+
+The only member of the toolchain with **no process boundary** — so its "output" is return values, not
+files, and there is no format to version.
+
+| | what | shape |
+|---|---|---|
+| **consumes** | SwiftSyntax nodes, in memory | `FunctionDeclSyntax` · `ClosureExprSyntax` · `AccessorBlockSyntax` — never a path, never source text |
+| | doc-comment and attribute annotations | the `@lint.effect` grammar + `@Idempotent`-family attribute names, matched **by name** |
+| | *(nothing else)* | no config, no disk, no network, no build |
+| **produces** | `Effect?` | the five-tier lattice position, or `nil` for "no opinion" |
+| | `PurityVerdict` | `pure` · `pureButPartial` · `refuted` — separates transparency from totality |
+| | `Bool` | the `isPure` overloads, for the three node kinds |
+
+**`nil` is a real answer and is not the same as `.pure`.** It means the oracle declines, which is why
+`@EffectUnknown` needed its own predicate (`declaresUnknownEffect`) rather than a sixth tier: before
+it, an author's explicit *"I cannot determine this"* returned the same `nil` as an unannotated
+declaration **and** as a misspelled tier — three different situations collapsed into one.
 
 That claim is the thing to check when reading this doc, because **the two consumers do not compile
 against the same revision, and as of 2026-08-03 they deliberately cannot** — closing the gap costs a
@@ -193,43 +217,65 @@ subprocess-spawning function judged pure.
 
 ## The pin divergence
 
-SEI carries **no version tags**, so both consumers pin by revision. They are not pinned to the same
-revision.
+SEI carries **no version tags**, so both consumers pin by revision. They are still not pinned to the
+same revision — but **the direction reversed on 2026-08-06**, and the gap is now two commits rather
+than a missing API surface.
 
-| package | manifest | revision |
-|---|---|---|
-| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `1f2265a0` |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `097181aa` |
+| package | manifest | revision | vs SEI `HEAD` |
+|---|---|---|---|
+| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `6f45139` | **at HEAD** |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `bfcf0e3` | 2 commits behind |
 
-`097181aa` is SEI's `HEAD` and is **9 commits ahead** of `1f2265a0`. The gap is not cosmetic — it is
-the purity oracle's public surface:
+**This repo was the laggard and is now the leader.** The table above used to read `1f2265a0` here
+against `097181aa` there, with this repo holding **two public methods against five** and unable to
+bump (§ *The bump was blocked*). Both consumers now compile against the full five-method
+`PurityInferrer` — `inferredEffect(for:)`, `isPure(_: FunctionDeclSyntax)`, `verdict(for:)`,
+`isPure(_: ClosureExprSyntax)`, `isPure(_: AccessorBlockSyntax)` — and **both are past the
+regression** that blocked it (`6470222` is an ancestor of both pins).
 
-| `PurityInferrer` public API | at `1f2265a0` (this repo) | at `097181aa` (the linter) |
-|---|---|---|
-| `inferredEffect(for: FunctionDeclSyntax)` | ✅ | ✅ |
-| `isPure(_: FunctionDeclSyntax)` | ✅ | ✅ |
-| `verdict(for:) -> PurityVerdict` | ❌ | ✅ |
-| `isPure(_: ClosureExprSyntax)` | ❌ | ✅ |
-| `isPure(_: AccessorBlockSyntax)` | ❌ | ✅ |
+The remaining gap is exactly two commits, and it has a named consequence:
 
-**Two methods against five.** The three the linter has and this repo does not are exactly the three
-that matter to the pipeline's known failure modes:
+| commit | what the linter's oracle cannot do |
+|---|---|
+| `7a70b3b` *Read `@EffectUnknown`* | `declaresUnknownEffect` does not exist, so `@lint.effect unknown` parses to `nil` — **indistinguishable from an unannotated declaration and from a misspelled tier** |
+| `5fc9265` *Split the call-site decision tree at its precision boundary* | — |
 
-- **`PurityVerdict.pureButPartial`** separates *transparency* from *totality*. Its own doc names the
-  incident: collapsing them made a throwing-but-transparent function indistinguishable from one that
-  reads the clock, *"which is exactly the confusion that cost the SwiftLintRuleStudio road test its
-  highest-value law."* `serialize(_:) throws -> String` is a deterministic function of its argument;
-  the linter refused to name it, so this repo — *"which vouches for purity via the seed and only
-  checks shape itself"* — never got to propose the law it already knew how to write.
-- **closure purity** — *"a great deal of pure logic in real Swift has no name"*; the backing for
-  SwiftProjectLint's `Pure Closure Property-Test Candidate`.
-- **computed-property purity**.
+That first row is the precise defect [SEI#3](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/3)
+was written to fix, and this repo consumes the fix while the linter does not. An author who writes
+*"I cannot determine this"* is heard by `swift-infer` and unheard by the linter — so the two tools
+**can now disagree about an author's own stated uncertainty**, which is a narrower version of exactly
+the disagreement the shared leaf exists to prevent.
 
-### The bump was attempted 2026-08-03 and is BLOCKED
+### The bump was blocked 2026-08-03, and is UNBLOCKED as of 2026-08-06
 
-**Do not re-apply it without reading [SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1).**
-`097181aa` costs a **~2× wall-clock regression on the whole-domain purity path**, which is the path
-this repo's every command runs. Five of the PRD §13 budgets fail, one hard.
+**Resolved in SEI, exactly where this doc predicted it belonged.** `6470222` — *"Stop the whole-domain
+purity path paying for verdict's body walk"* — is the fix for
+[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1), and it
+implements the remedy proposed below verbatim: `inferredEffect(for:)` stops delegating to
+`verdict(for:)`. Both consumers' pins now contain it.
+
+**Re-measured on this repo, 2026-08-06, at pin `6f45139`** — a full `make test` run, the §13 perf
+target in its own isolated step:
+
+| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | **now** |
+|---|---|---|---|---|
+| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | **4.219s** ✅ |
+| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | **0.669s** ✅ |
+| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | **0.916s** ✅ |
+| …with decisions-load active | — | 1.660s | 3.652s | **2.238s** ✅ |
+| 500-file corpus, peak RSS delta | 800 MB | — | — | **234.1 MB** ✅ |
+
+Slightly slower than `1f2265a0` and comfortably inside every budget, which is the expected shape: the
+cheap path is restored, and the extra three methods are real work that path no longer pays for.
+
+**The record below is kept as the diagnosis, not as current state.** It is the argument that a
+reasoned claim is not a measured one, and that argument is why the regression was caught at all.
+
+---
+
+**Historical — the blocking measurement (2026-08-03).**
+`097181aa` cost a **~2× wall-clock regression on the whole-domain purity path**, which is the path
+this repo's every command runs. Five of the PRD §13 budgets failed, one hard.
 
 Controlled A/B, same machine, same isolated `make perf`, one variable — the revision:
 
@@ -279,34 +325,40 @@ failing property in five minutes and found the reasoning had been optimistic. Sa
 in a document arguing that this failure keeps happening. **A reasoned claim about behaviour is not a
 measured one, and "I read the call site" is not a measurement.**
 
-### The invariant still stands; it is just unreachable today
+### The invariant still stands, and is now reachable
 
 **Keep this pin equal to SwiftProjectLint's**, not current with SEI's HEAD. The claim the shared leaf
 exists to support — *the linter and the inference engine can never disagree about what is pure* — is
-about the **oracle they compile against**, not the repository. The pin is currently **unequal on
-purpose**, with the reason above, which is a different and much better state than the unexamined
-divergence that preceded it.
+about the **oracle they compile against**, not the repository. The blocking reason is gone, so the
+inequality is no longer *on purpose*; it is now just unfinished.
 
-Nothing checks the condition. Same failure shape CLAUDE.md already has a rule for on the other
-dependency — *"The verifier's kit pin must equal this package's own,"* guarded by
-`VerifierWorkdirKitPinTests`, written after that pin drifted a full major version unnoticed. **There
-is no equivalent guard for SEI**, and SwiftProjectLint has none either: it repeats the SHA in *three*
-manifests coordinated by a comment saying "keep this aligned." Four manifests across two repos, no
-test.
+**The guard situation improved by half on 2026-08-04.** SwiftProjectLint's `SEIPinAgreementTests`
+asserts its own **three** manifests name one revision — the duplication that a comment saying "keep
+this aligned" was previously all that coordinated. Its doc comment is careful about what it cannot
+reach: *"This test cannot see that cross-repo gap; nothing in a single repository can. What it can do
+is make sure that when this repository's pin moves, it moves in all three places at once."*
 
-Open, in order:
+So of four manifests across two repos, three are now guarded as a group and **the cross-repo equality
+is still unchecked** — the same failure shape CLAUDE.md has a rule for on the other dependency
+(*"The verifier's kit pin must equal this package's own,"* guarded by `VerifierWorkdirKitPinTests`,
+written after that pin drifted a full major version unnoticed).
 
-1. **SEI#1** — restore the cheap path for the whole-domain question.
-2. **Then** bump, and re-run `make perf` before `make test`, since perf is step 3 of 9 and fail-fast
-   hides everything behind it.
-3. **Then** add a pin-equality guard, phrased as *equality with the sibling consumer* rather than
-   currency with HEAD.
-4. **Then** consider adopting `verdict(for:)` — a `.pureButPartial` function is a real candidate whose
-   law narrows to the success set, and it is the surface the seed manifest's own `isPartial` field was
-   built to carry.
-5. **Separately:** SwiftProjectLint is already on `097181aa` and calls `PurityInferrer` from two
-   visitors over every function and closure in a project. It may be paying this regression now, with
-   no wall-clock budget to say so.
+Progress against the ordered list this section used to carry:
+
+| | item | state |
+|---|---|---|
+| 1 | **SEI#1** — restore the cheap path | ✅ **done** (`6470222`) |
+| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — this repo is at HEAD, budgets green |
+| 3 | pin-equality guard, phrased as *equality with the sibling consumer* | ⚠️ **half** — intra-repo guarded there, cross-repo unguarded |
+| 4 | adopt `verdict(for:)` for `.pureButPartial` | **open, and now actually reachable** — the method is in the pinned surface for the first time |
+| 5 | SwiftProjectLint may be paying the regression unmeasured | ✅ **moot** — its pin is past the fix |
+
+Item 4 is the one with value left in it: a `.pureButPartial` function is a real candidate whose law
+narrows to the success set, and it is the surface the seed manifest's own `isPartial` field was built
+to carry. This repo has had the method available since 2026-08-06 and does not call it.
+
+Item 3 has a **new** motivating symptom rather than a hypothetical one — see the `@EffectUnknown` row
+above. A guard phrased as *equality with the sibling consumer* would currently fail, correctly.
 
 ---
 
