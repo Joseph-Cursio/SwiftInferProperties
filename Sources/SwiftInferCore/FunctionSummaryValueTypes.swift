@@ -79,6 +79,13 @@ public struct BodySignals: Sendable, Equatable {
     /// looking in the wrong place.
     public let idempotenceReturnShape: IdempotenceReturnShape?
 
+    /// A dedup gate (early-return / fetch-then-insert) in a side-effecting
+    /// handler's body, when this summary IS one. `nil` for every other shape —
+    /// computed only for `throws`/`async` functions (the M2 gate), the same
+    /// pay-the-walk-only-where-read bargain `idempotenceReturnShape` above makes.
+    /// Read by `ReplayIdempotenceTemplate`'s Branch C.
+    public let dedupGateShape: DedupGateShape?
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
@@ -86,10 +93,12 @@ public struct BodySignals: Sendable, Equatable {
         reducerOpsReferenced: [String] = [],
         reducerOpsWithIdentitySeed: [String] = [],
         equalityBodyShape: EqualityBodyShape? = nil,
-        idempotenceReturnShape: IdempotenceReturnShape? = nil
+        idempotenceReturnShape: IdempotenceReturnShape? = nil,
+        dedupGateShape: DedupGateShape? = nil
     ) {
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
+        self.dedupGateShape = dedupGateShape
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected

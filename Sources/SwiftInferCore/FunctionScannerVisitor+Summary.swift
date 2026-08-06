@@ -254,7 +254,21 @@ extension FunctionScannerVisitor {
             // the read where a template will use it, nowhere else.
             idempotenceReturnShape: Self.isUnaryEndomorphism(node)
                 ? IdempotenceReturnShapeClassifier.classify(body: body)
+                : nil,
+            // Only for `throws`/`async` functions — the effectful handler shape a
+            // replay-idempotency gate lives in. Keeps the statement walk off the
+            // pure-sync majority (and the discover-time budget), same bargain.
+            dedupGateShape: Self.couldCarryDedupGate(node)
+                ? DedupGateClassifier.classify(body: body)
                 : nil
         )
+    }
+
+    /// The `throws`/`async` gate for `dedupGateShape`: a replay-idempotency dedup
+    /// gate guards a side effect, so it lives in an effectful handler. Skipping
+    /// pure-sync functions keeps the extra statement walk off most of the corpus.
+    static func couldCarryDedupGate(_ node: FunctionDeclSyntax) -> Bool {
+        let effects = node.signature.effectSpecifiers
+        return effects?.throwsClause != nil || effects?.asyncSpecifier != nil
     }
 }
