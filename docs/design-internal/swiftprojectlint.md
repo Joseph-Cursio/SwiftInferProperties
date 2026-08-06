@@ -38,6 +38,12 @@
 > kept stating the count without the scope.** 192 was always true *of `SwiftProjectLintRules`*. It
 > was the subtraction that was fiction.
 >
+> **Sixth pass — `anchor` (§ *The effect tier*), which landed upstream mid-edit and is now read.**
+> It discharges a request `SeedEffect`'s own doc had written down (*"the fix is on the producer:
+> track anchor purity …"*), and building it exposed two defects here, both found by running rather
+> than reading: the parity guard did not open nested objects, and widening the rule made a latent
+> bare-symbol join reachable, which applied 5 effects for 3 seeds. Subject now `db4be6b6`.
+>
 > **What the first pass got wrong, and how it was caught.** This doc was written against
 > `6c88715` — a local checkout that turned out to be **46 commits behind its origin**. Two counts
 > were stale within hours (`RuleIdentifier` 197 → 202, the testability family 7 → 9), and
@@ -45,7 +51,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftProjectLint@d59cd7826c96348e6c37b99b3651f91ec9a5b856 observer=SwiftInferProperties@c14dc7e -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftProjectLint@db4be6b6 observer=SwiftInferProperties@1fdb178 -->
 
 ---
 
@@ -367,20 +373,42 @@ Three things make this more than a convenience field:
   spelling is already shared by humans, this linter, and SwiftEffectInference. A second spelling
   would be a fourth dialect.
 
-> **Already moving, and it landed mid-edit: `anchor` (upstream `a5795819`, merged `db4be6b6`,
-> 2026-08-06).** A fourth sub-field on `effect`, `declaration` | `heuristic`, present only for
+> **`anchor` (upstream `a5795819`, merged `db4be6b6`, 2026-08-06) — landed mid-edit and is now
+> READ.** A fourth sub-field on `effect`, `declaration` | `heuristic`, present only for
 > `inferred-upward`. Its own doc names this repo as the reason it exists — *"a consumer reading
 > provenance alone had to withhold every upward tier, which SwiftInferProperties did, keeping only
-> the direct-callee case. This field separates the two"* — so it is the direct answer to
-> `SeedEffect.carriesEnoughEvidenceToDemote`, which withholds upward chains precisely because they
-> may bottom out on a name guess. A `declaration`-anchored multi-hop chain is exactly the signal this
-> side cannot compute inside §13's 2-second budget. **Not read here yet.**
+> the direct-callee case. This field separates the two"* — and `SeedEffect`'s doc had already asked
+> for it in as many words: *"The fix is on the producer: track anchor purity … Until then the honest
+> reading of an upward tier is a caveat, not a score."* That "until then" expired the same day.
 >
-> **And the parity guard does not cover it.** `SeedFieldParity` enumerates `SeedManifest.Seed`'s
-> keys; `effect` is one key, and its *sub-object* is not walked. So a new field on a nested object is
-> silent here in exactly the way `restriction` was silent at the top level — the same defect class,
-> one level down, reappearing within hours of the guard that was supposed to end it. The guard needs
-> to recurse, or `SeedEffect` needs its own parity arm.
+> `carriesEnoughEvidenceToDemote` now admits `inferredUpward` **when `anchor == .declaration`**.
+> `.heuristic` stays excluded (the `save` failure, by the producer's own admission) and so does a
+> **nil** anchor on an upward tier — a producer that did not say is not a producer that said
+> `declaration`, and absent-means-guess is the one default that turns a missing field into a score.
+>
+> Measured on this repo: **3 idempotency seeds carry `anchor: declaration`**, two of them at
+> `depth: 5` — five hops, which `EffectResolver`'s one-hop local pass structurally cannot see inside
+> §13's 2-second ceiling. That is the case the field was built for, and it is the first time
+> anything in this repository has been demoted on linter-resolved evidence.
+>
+> **Two defects fell out of building it, and both were found by running rather than reading.**
+>
+> First: the parity guard did not reach nested objects. `SeedFieldParity` enumerated `Seed`'s keys,
+> `effect` was one key, and its sub-object was never opened — so `anchor` was silent here for
+> exactly the reason `restriction` had been silent three days earlier, hours after the guard meant
+> to end that. It now carries `knownNestedFields`, keyed by holder rather than flattened (a flat set
+> would let a field added to the *wrong* object pass), plus a source arm reading `PBTSeedEffect`
+> directly. Proven by control: removing `anchor` from the known set fails and names it.
+>
+> Second, and worse: **widening the rule made a latent precision defect reachable.**
+> `SeedEffectResolver` joined on the bare symbol name. Nothing here had ever carried a
+> `declared`-provenance effect, so nothing was applied and the looseness cost nothing — admitting
+> anchored upward chains applied 3 seeds and the run reported **5**. The extra two were functions
+> merely *named* `record` (`ViewModelVerifyEvidence`, `RefactorBridgeAccumulator`) inheriting a tier
+> resolved for a different function in a different file: a **false demotion**, in a codebase where
+> `record` / `resolve` / `apply` are everywhere. Now keyed `(file basename, symbol)` like
+> `SeedFocus` and `SeedRestrictionResolver`; 5 → 2. **The count in the diagnostic is what caught it**
+> — it did not match the number of seeds — which is the argument for reporting counts at all.
 
 **Status on this side: READ, as of `f33dfd1` (2026-08-06).** `SeedManifest.Seed.effect` decodes it
 (`decodeIfPresent`, so a seed without one is still valid), `SeedEffect` mirrors the producer's five

@@ -55,8 +55,32 @@ extension SeedManifest.Seed {
 /// declaration when a sibling checkout is present.
 public enum SeedFieldParity {
 
-    /// Every key `SeedManifest.Seed` decodes.
+    /// Every key `SeedManifest.Seed` decodes, at the top level of a seed.
     public static var knownFields: Set<String> {
         Set(SeedField.allCases.map(\.stringValue))
+    }
+
+    /// Every key this build decodes inside a **nested** object, keyed by the field that holds it.
+    ///
+    /// **The first version of this guard had no such notion, and the omission cost a field within
+    /// hours.** `SeedFieldParity` enumerated `Seed`'s keys; `effect` was one of them, and its
+    /// sub-object was never opened. SwiftProjectLint added `anchor` to `PBTSeedEffect` on
+    /// 2026-08-06 — the same day the top-level guard shipped, for the same reason `restriction` had
+    /// been silent three days earlier — and nothing here could have reported it.
+    ///
+    /// Keyed by holder rather than flattened into one set, because a flat set would let a field
+    /// added to the *wrong* object pass: `reason` is legitimate inside `effect` and would be a
+    /// silent drop at the top level.
+    public static var knownNestedFields: [String: Set<String>] {
+        [SeedField.effect.stringValue: Set(SeedEffectField.allCases.map(\.stringValue))]
+    }
+
+    /// Fields emitted under `holder` that this build does not decode.
+    ///
+    /// An **unknown holder is not a violation** — that case is already the top-level guard's job,
+    /// and reporting it twice would make one added field fail two tests with different messages.
+    public static func unreadFields(under holder: String, emitted: Set<String>) -> Set<String> {
+        guard let known = knownNestedFields[holder] else { return [] }
+        return emitted.subtracting(known)
     }
 }

@@ -8,15 +8,16 @@
       "symbol": "groupByReducer"
     },
     {
-      "file": "SwiftInferCore/IdempotenceReturnShape.swift",
+      "file": "SwiftInferCore/KitEvidenceScoring.swift",
       "kind": "extractable-kernel",
-      "line": 81,
-      "role": "predicate",
+      "line": 55,
+      "role": "transform",
       "rule": "Pure Closure Property-Test Candidate",
-      "symbol": "classify"
+      "symbol": "applied"
     },
     {
       "effect": {
+        "anchor": "declaration",
         "declared": "idempotent",
         "depth": 5,
         "provenance": "inferred-upward",
@@ -29,27 +30,19 @@
       "symbol": "record"
     },
     {
-      "file": "SwiftInferCore/BridgeSuggestion.swift",
+      "file": "SwiftInferCore/OrderedCarrierDiscriminator.swift",
       "kind": "pure-function",
-      "line": 54,
+      "line": 126,
+      "role": "predicate",
       "rule": "Pure Function Property-Test Candidate",
-      "symbol": "identityCanonicalInput"
+      "symbol": "isOrderSensitive"
     },
     {
-      "file": "SwiftInferCore/BridgeSuggestion.swift",
+      "file": "SwiftInferCore/OrderedCarrierDiscriminator.swift",
       "kind": "pure-function",
-      "line": 106,
-      "role": "normalizer",
+      "line": 146,
       "rule": "Pure Function Property-Test Candidate",
-      "symbol": "stubTypeName"
-    },
-    {
-      "file": "SwiftInferCore/SamplingSeed.swift",
-      "kind": "restricted-function",
-      "line": 92,
-      "restriction": "declaration",
-      "rule": "Pure Function Property-Test Candidate",
-      "symbol": "packUInt64"
+      "symbol": "verdict"
     },
     {
       "file": "SwiftInferCore/SwiftSourceFiles.swift",
@@ -59,6 +52,14 @@
       "role": "predicate",
       "rule": "Pure Function Property-Test Candidate",
       "symbol": "isSymbolicLink"
+    },
+    {
+      "file": "SwiftInferCore/TypeShapeBuilder.swift",
+      "kind": "restricted-function",
+      "line": 110,
+      "restriction": "declaration",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "identifiers"
     },
     {
       "file": "SwiftInferCore/IdentityKeyedFold.swift",

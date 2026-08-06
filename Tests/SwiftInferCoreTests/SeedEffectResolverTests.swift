@@ -116,10 +116,16 @@ struct SeedEffectResolverTests {
     /// SwiftProjectLint's upward inference supplies `HeuristicEffectInferrer` as
     /// its anchor resolver, so a chain can bottom out on a name guess and still
     /// surface as `inferred-upward`. The manifest's provenance describes the
-    /// final hop, not the whole chain, so an upward tier cannot be told apart
-    /// here from a name-anchored one.
-    @Test("an upward-inferred effect is not acted on either")
-    func upwardProvenanceWithheld() {
+    /// final hop, not the whole chain.
+    ///
+    /// **This test used to cover every upward chain; since 2026-08-06 it covers
+    /// the ones that do not SAY what they rest on.** `anchor` distinguishes them,
+    /// and a producer that states nothing is not a producer that stated
+    /// `declaration` — absent-means-guess is the one default that would turn a
+    /// missing field into a score. The name says `unanchored` now, because the
+    /// old name would have made the surviving case look like the whole rule.
+    @Test("an upward-inferred effect with no stated anchor is not acted on")
+    func unanchoredUpwardProvenanceWithheld() {
         let effect = SeedEffect(
             declared: .idempotent, resolved: .nonIdempotent,
             provenance: .inferredUpward, depth: 3
@@ -143,7 +149,83 @@ struct SeedEffectResolverTests {
                 declared: .idempotent, resolved: .nonIdempotent, provenance: .inferredUpward
             ))
         ) { lines.append($0) }
-        #expect(lines.contains { $0.contains("withheld") && $0.contains("inferred-upward") })
+        #expect(lines.contains { $0.contains("withheld") && $0.contains("no anchor stated") })
+    }
+
+    /// **The case `anchor` was added upstream to unlock**, and the reason it is
+    /// worth a wire field rather than a caveat.
+    ///
+    /// An upward chain anchored on `.declaration` is a multi-hop, cross-file walk
+    /// in which every justifying step was a human annotation — strictly more
+    /// evidence than the single declared callee this already acted on, and
+    /// unreachable from here: `EffectResolver`'s local pass runs one hop against
+    /// §13's 2-second `discover` ceiling.
+    @Test("an upward chain anchored on declarations IS acted on")
+    func declarationAnchoredUpwardIsActedOn() {
+        let effect = SeedEffect(
+            declared: .idempotent, resolved: .nonIdempotent,
+            provenance: .inferredUpward, depth: 3, anchor: .declaration
+        )
+        let result = SeedEffectResolver.resolve(
+            summaries: [summary(name: "confirmOrder")], manifest: manifest(effect: effect)
+        )
+        #expect(result.first?.inferredEffect == .nonIdempotent)
+    }
+
+    /// **A seed does not speak for every function that shares its name.**
+    ///
+    /// Regression for a defect the widening above made reachable. The join keyed
+    /// on the bare symbol until 2026-08-06; nothing in this repository carried a
+    /// `declared`-provenance effect, so nothing was applied and the looseness
+    /// cost nothing. Admitting declaration-anchored upward chains applied 3 seeds
+    /// and the run reported **5** — the extra two being functions merely *named*
+    /// `record`, in other files, which the manifest never named. Inheriting a
+    /// `nonIdempotent` tier resolved for a different function is a **false
+    /// demotion**, and `record` / `resolve` / `apply` are everywhere.
+    ///
+    /// Caught by the diagnostic's count not matching the seed count, which is the
+    /// argument for reporting counts at all.
+    @Test("a seed does not reach a same-named function in another file")
+    func joinIsScopedToTheFile() {
+        let effect = SeedEffect(
+            declared: .idempotent, resolved: .nonIdempotent,
+            provenance: .inferredUpward, depth: 3, anchor: .declaration
+        )
+        let elsewhere = FunctionSummary(
+            name: "confirmOrder",
+            parameters: [], returnTypeText: "Void",
+            isThrows: false, isAsync: false, isMutating: false, isStatic: false,
+            location: SourceLocation(file: "Unrelated.swift", line: 4, column: 1),
+            containingTypeName: nil,
+            bodySignals: BodySignals(
+                hasNonDeterministicCall: false,
+                hasSelfComposition: false,
+                nonDeterministicAPIsDetected: []
+            )
+        )
+        let result = SeedEffectResolver.resolve(
+            summaries: [summary(name: "confirmOrder"), elsewhere],
+            manifest: manifest(effect: effect)
+        )
+        // The seed names Orders.swift; the same-named function elsewhere is untouched.
+        #expect(result.first?.inferredEffect == .nonIdempotent)
+        #expect(result.last?.inferredEffect == nil)
+    }
+
+    /// And the control that keeps the widening honest: same shape, guessed
+    /// anchor, still withheld. Without this, "read the anchor" could have been
+    /// implemented as "act on every upward chain", which is the `save` failure
+    /// the exclusion existed to prevent.
+    @Test("an upward chain anchored on a name guess stays withheld")
+    func heuristicAnchoredUpwardWithheld() {
+        let effect = SeedEffect(
+            declared: .idempotent, resolved: .nonIdempotent,
+            provenance: .inferredUpward, depth: 3, anchor: .heuristic
+        )
+        let result = SeedEffectResolver.resolve(
+            summaries: [summary(name: "confirmOrder")], manifest: manifest(effect: effect)
+        )
+        #expect(result.first?.inferredEffect == nil)
     }
 
     /// **The case the whole feature exists for, and the one the first draft

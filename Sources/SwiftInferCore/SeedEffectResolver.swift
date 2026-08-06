@@ -15,11 +15,21 @@ import SwiftEffectInference
 /// every file. So a `@NonIdempotent` three calls down, which the local pass
 /// structurally cannot see, arrives here already resolved.
 ///
-/// **What it deliberately refuses.** Only `provenance: declared` is acted on.
-/// See `SeedEffect.carriesEnoughEvidenceToDemote` — the short version is that
-/// the linter's upward inference admits name-guessed anchors, and this package
-/// has already decided, in `EffectResolver`, that a veto built on a name guess
-/// is worse than no veto.
+/// **What it deliberately refuses.** A chain that bottoms out on a **name
+/// guess**, and one whose anchor the producer did not state. See
+/// `SeedEffect.carriesEnoughEvidenceToDemote` — the short version is that this
+/// package has already decided, in `EffectResolver`, that a veto built on a name
+/// guess is worse than no veto.
+///
+/// **This said "only `provenance: declared` is acted on" until 2026-08-06, and
+/// the widening is the whole point of the field that replaced it.** The old rule
+/// withheld *every* upward chain, because `provenance` names only the final hop
+/// and an upward tier could bottom out on a guess without saying so. The
+/// producer now emits `anchor` (SwiftProjectLint `a5795819`), so a multi-hop,
+/// cross-file chain in which every justifying step was a human annotation is
+/// distinguishable from a guessed one — and that chain is precisely what this
+/// resolver exists for, since the local pass runs **one hop** against §13's
+/// 2-second ceiling and structurally cannot see it.
 public enum SeedEffectResolver {
 
     /// Fills `inferredEffect` from the manifest on every summary a seed names.
@@ -72,18 +82,19 @@ public enum SeedEffectResolver {
             $0.effect?.carriesEnoughEvidenceToDemote == true
         }
         guard !actionable.isEmpty else { return summaries }
-        var effectBySymbol: [String: SeedEffect] = [:]
+        var effectByKey: [String: SeedEffect] = [:]
         for seed in actionable {
             guard let effect = seed.effect else { continue }
             // Last writer wins, which only matters when one manifest carries two
-            // seeds for one symbol name — and then the tiers agree, because they
-            // came from one analysis of one function.
-            effectBySymbol[seed.symbol] = effect
+            // seeds for one `(file, symbol)` — and then the tiers agree, because
+            // they came from one analysis of one function.
+            effectByKey[joinKey(file: seed.file, symbol: seed.symbol)] = effect
         }
 
         var applied = 0
         let updated = summaries.map { summary -> FunctionSummary in
-            guard let effect = effectBySymbol[summary.name],
+            let key = joinKey(file: summary.location.file, symbol: summary.name)
+            guard let effect = effectByKey[key],
                   EffectResolver.carriesInformationUpward(effect.resolved.asEffect)
             else {
                 return summary
@@ -100,6 +111,27 @@ public enum SeedEffectResolver {
         return updated
     }
 
+    /// `(file basename, symbol)`, matching `SeedFocus` and `SeedRestrictionResolver`.
+    ///
+    /// **This keyed on the bare symbol name until 2026-08-06, and widening
+    /// `carriesEnoughEvidenceToDemote` is what made that reachable.** Nothing in
+    /// this repository carried a `declared`-provenance effect, so nothing was
+    /// ever applied and the loose join cost nothing; admitting
+    /// declaration-anchored upward chains applied 3 seeds and the run reported
+    /// **5**. The extra two are functions merely *named* `record` —
+    /// `ViewModelVerifyEvidence.record` and `RefactorBridgeAccumulator.record` —
+    /// which the manifest never named and which would have inherited a
+    /// `nonIdempotent` tier resolved for a different function in a different
+    /// file. That is a **false demotion**, the precision failure this package is
+    /// built against, and it is exactly what a name-only join produces in a
+    /// codebase where `record`, `resolve` and `apply` are everywhere.
+    ///
+    /// Found by running the change rather than by reading it: the count in the
+    /// diagnostic did not match the count of seeds.
+    static func joinKey(file: String, symbol: String) -> String {
+        "\(URL(fileURLWithPath: file).lastPathComponent)::\(symbol)"
+    }
+
     /// Say what was dropped and why.
     ///
     /// A manifest can carry effects this resolver refuses, and refusing them
@@ -112,13 +144,17 @@ public enum SeedEffectResolver {
             !$0.carriesEnoughEvidenceToDemote
         }
         guard !withheld.isEmpty else { return }
-        let upward = withheld.filter { $0.provenance == .inferredUpward }.count
         let downward = withheld.filter { $0.provenance == .inferredDownward }.count
+        let guessAnchored = withheld.filter { $0.anchor == .heuristic }.count
+        let unanchored = withheld.filter {
+            $0.provenance == .inferredUpward && $0.anchor == nil
+        }.count
         diagnostic(
             "withheld \(withheld.count) linter-resolved effect(s) as evidence "
-                + "(\(upward) inferred-upward, \(downward) inferred-downward): only a callee "
-                + "the author DECLARED is acted on here, because the producer's upward chains "
-                + "may bottom out on a name guess and this tool does not veto on names"
+                + "(\(downward) inferred-downward, \(guessAnchored) upward but anchored on a name "
+                + "guess, \(unanchored) upward with no anchor stated): this tool does not veto on "
+                + "names, and a chain whose anchor the producer did not state cannot be "
+                + "distinguished from one that was guessed"
         )
     }
 }

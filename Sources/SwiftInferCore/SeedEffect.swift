@@ -69,6 +69,30 @@ public struct SeedEffect: Codable, Sendable, Equatable {
     /// Hops back to an anchor, when `provenance == .inferredUpward`.
     public let depth: Int?
 
+    /// **What an upward chain bottoms out on** — the field that makes
+    /// `inferredUpward` usable rather than merely reported.
+    ///
+    /// `provenance` names the *final hop*: how the immediate callee's effect was
+    /// known, and nothing about the chain beneath it. This says whether every
+    /// step was a human annotation or whether at least one was a guess. `nil`
+    /// for the other two provenances, where the question does not arise — a
+    /// declaration *is* the anchor, and a heuristic match is a guess by
+    /// construction.
+    public let anchor: Anchor?
+
+    /// What an upward chain rests on.
+    ///
+    /// Mirrors the producer's enum, and mirrored rather than shared for the same
+    /// reason `Tier` is: the manifest is a versioned wire format and must not
+    /// move because a dependency renamed a case.
+    public enum Anchor: String, Codable, Sendable {
+        /// Every step justifying the tier was a human annotation.
+        case declaration
+
+        /// At least one step was a name or framework guess.
+        case heuristic
+    }
+
     /// The phrase a heuristic matched, when `provenance == .inferredDownward`.
     public let reason: String?
 
@@ -83,24 +107,45 @@ public struct SeedEffect: Codable, Sendable, Equatable {
     /// a callee was called `save`."* Accepting `inferred-downward` from the
     /// manifest would re-import that exact failure through a JSON file.
     ///
-    /// **`inferredUpward` is excluded for a subtler reason, and it is the one
-    /// worth knowing.** The linter's upward inference is *not* the same
-    /// declaration-anchored walk `EffectResolver` performs: it calls
+    /// **`inferredUpward` used to be excluded for a subtler reason, and the
+    /// producer has now removed it.** The linter's upward inference is *not* the
+    /// same declaration-anchored walk `EffectResolver` performs: it calls
     /// `applyBodyInference` with `HeuristicEffectInferrer` supplied as the
     /// anchor resolver, so a chain can bottom out on a name guess and still
-    /// surface as `inferred-upward`. The manifest's `provenance` describes the
-    /// **final hop** — how the immediate callee's effect was known — not whether
-    /// everything beneath it was declared. So an upward tier cannot be
-    /// distinguished here from a name-anchored one, and a demotion built on it
-    /// would be the `save` failure again, one hop further away and harder to see.
+    /// surface as `inferred-upward`. `provenance` describes the **final hop** —
+    /// how the immediate callee's effect was known — not whether everything
+    /// beneath it was declared. So an upward tier could not be distinguished
+    /// here from a name-anchored one, and a demotion built on it would have been
+    /// the `save` failure again, one hop further away and harder to see.
     ///
-    /// The fix is on the producer: track anchor purity through
-    /// `BodyEffectInferrer` and emit it, at which point a declaration-anchored
-    /// multi-hop chain becomes exactly the signal this package cannot compute
-    /// for itself and most wants. Until then the honest reading of an upward
-    /// tier is a caveat, not a score.
+    /// This doc then said: *"The fix is on the producer: track anchor purity
+    /// through `BodyEffectInferrer` and emit it, at which point a
+    /// declaration-anchored multi-hop chain becomes exactly the signal this
+    /// package cannot compute for itself and most wants."* **That shipped
+    /// (SwiftProjectLint `a5795819`, 2026-08-06), and `anchor` is it.** An
+    /// upward chain anchored on `.declaration` is a multi-hop, cross-file walk
+    /// in which every justifying step was a human annotation — strictly more
+    /// evidence than the single declared callee this already acts on, and
+    /// unreachable from here, because `EffectResolver`'s local pass runs one hop
+    /// against §13's 2-second `discover` ceiling.
+    ///
+    /// **`.heuristic` stays excluded, and so does a `nil` anchor on an upward
+    /// tier.** The first is the `save` failure by the producer's own admission.
+    /// The second is a producer that does not compute anchors — an older linter,
+    /// or a newer one that declined to answer — and the safe reading of "did not
+    /// say" is not "said declaration". Absent-means-guess is the one default
+    /// that turns a missing field into a score.
     public var carriesEnoughEvidenceToDemote: Bool {
-        provenance == .declared
+        switch provenance {
+        case .declared:
+            return true
+
+        case .inferredUpward:
+            return anchor == .declaration
+
+        case .inferredDownward:
+            return false
+        }
     }
 
     public init(
@@ -108,25 +153,65 @@ public struct SeedEffect: Codable, Sendable, Equatable {
         resolved: Tier,
         provenance: Provenance,
         depth: Int? = nil,
+        anchor: Anchor? = nil,
         reason: String? = nil
     ) {
         self.declared = declared
         self.resolved = resolved
         self.provenance = provenance
         self.depth = depth
+        self.anchor = anchor
         self.reason = reason
     }
 
-    /// `depth` and `reason` decode leniently; the three that would have to be
-    /// guessed do not. The same rule `SeedManifest.Seed` applies to `kind`
-    /// versus `role`: absence with an honest reading may be optional, absence
-    /// that would be filled by a guess may not.
+    /// `depth`, `anchor` and `reason` decode leniently; the three that would
+    /// have to be guessed do not. The same rule `SeedManifest.Seed` applies to
+    /// `kind` versus `role`: absence with an honest reading may be optional,
+    /// absence that would be filled by a guess may not.
+    ///
+    /// `anchor` is optional and **safe** to be optional, because the guess it
+    /// would otherwise invite is made in the losing direction: a missing anchor
+    /// on an upward tier withholds the demotion rather than granting it. See
+    /// `carriesEnoughEvidenceToDemote`.
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let container = try decoder.container(keyedBy: SeedEffectField.self)
         self.declared = try container.decode(Tier.self, forKey: .declared)
         self.resolved = try container.decode(Tier.self, forKey: .resolved)
         self.provenance = try container.decode(Provenance.self, forKey: .provenance)
         self.depth = try container.decodeIfPresent(Int.self, forKey: .depth)
+        self.anchor = try container.decodeIfPresent(Anchor.self, forKey: .anchor)
         self.reason = try container.decodeIfPresent(String.self, forKey: .reason)
     }
+
+    /// Written out rather than synthesised, for the same reason `SeedField` is —
+    /// see there. Optionals use `encodeIfPresent`, so a seed effect from a
+    /// producer that computes no anchor stays byte-identical to one written
+    /// before the field existed.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: SeedEffectField.self)
+        try container.encode(declared, forKey: .declared)
+        try container.encode(resolved, forKey: .resolved)
+        try container.encode(provenance, forKey: .provenance)
+        try container.encodeIfPresent(depth, forKey: .depth)
+        try container.encodeIfPresent(anchor, forKey: .anchor)
+        try container.encodeIfPresent(reason, forKey: .reason)
+    }
+}
+
+/// Every key a seed's `effect` object carries.
+///
+/// Top-level and `CaseIterable` for the same reason `SeedField` is: `SeedFieldParity` has to
+/// enumerate it. **The nested object needed its own entry because the guard did not reach it** —
+/// `SeedFieldParity` walked `Seed`'s keys, `effect` was one key, and its sub-object was never
+/// opened. `anchor` arrived upstream on 2026-08-06 and was silent here for exactly the same reason
+/// `restriction` had been silent at the top level three days earlier: the same defect class, one
+/// level down, hours after the guard meant to end it. A guard that stops at the first level of a
+/// nested document only guards the first level.
+public enum SeedEffectField: String, CodingKey, CaseIterable {
+    case declared
+    case resolved
+    case provenance
+    case depth
+    case anchor
+    case reason
 }

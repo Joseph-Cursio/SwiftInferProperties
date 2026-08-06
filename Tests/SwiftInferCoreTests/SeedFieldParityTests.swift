@@ -30,6 +30,12 @@ import Testing
 @Suite("Seed manifest — producer/consumer field parity")
 struct SeedFieldParityTests {
 
+    private func fixtureSeeds() throws -> [[String: Any]] {
+        let url = repoRoot.appendingPathComponent("fixtures/seed-manifest-parity/seeds.json")
+        let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
+        return try #require((object as? [String: Any])?["seeds"] as? [[String: Any]])
+    }
+
     private var repoRoot: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()  // SwiftInferCoreTests
@@ -42,10 +48,7 @@ struct SeedFieldParityTests {
     /// Every key in a real manifest is one this build decodes.
     @Test("no field in real producer output goes unread")
     func fixtureFieldsAreAllKnown() throws {
-        let url = repoRoot
-            .appendingPathComponent("fixtures/seed-manifest-parity/seeds.json")
-        let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
-        let seeds = try #require((object as? [String: Any])?["seeds"] as? [[String: Any]])
+        let seeds = try fixtureSeeds()
         #expect(!seeds.isEmpty, "an empty fixture would pass this test while checking nothing")
 
         let emitted = Set(seeds.flatMap(\.keys))
@@ -60,15 +63,40 @@ struct SeedFieldParityTests {
         )
     }
 
+    /// **The same question one level down, and the level the first version of this guard missed.**
+    ///
+    /// `effect` is a single key at the top level, so the test above is satisfied by decoding it at
+    /// all — it says nothing about the object inside. SwiftProjectLint added `anchor` to
+    /// `PBTSeedEffect` hours after that guard shipped, and no test here could have reported it. A
+    /// guard that stops at the first level of a nested document guards only the first level.
+    @Test("no field inside a nested object goes unread")
+    func nestedFieldsAreAllKnown() throws {
+        let seeds = try fixtureSeeds()
+        var checked = 0
+        for seed in seeds {
+            for (holder, value) in seed {
+                guard let nested = value as? [String: Any] else { continue }
+                checked += 1
+                let unread = SeedFieldParity.unreadFields(under: holder, emitted: Set(nested.keys))
+                #expect(
+                    unread.isEmpty,
+                    """
+                    the producer emits field(s) this build does not decode inside `\(holder)`: \
+                    \(unread.sorted()). They are being silently dropped — add them to the \
+                    corresponding *Field enum.
+                    """
+                )
+            }
+        }
+        #expect(checked > 0, "no seed in the fixture carries a nested object; the arm is vacuous")
+    }
+
     /// The fixture has to actually exercise the fields, or the arm above is vacuous — a sample
     /// carrying only the required four would pass while saying nothing about `role`, `restriction`
     /// or `effect`, which are exactly the fields that arrive late and get dropped.
     @Test("the fixture covers every field this build knows")
     func fixtureCoversKnownFields() throws {
-        let url = repoRoot
-            .appendingPathComponent("fixtures/seed-manifest-parity/seeds.json")
-        let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
-        let seeds = try #require((object as? [String: Any])?["seeds"] as? [[String: Any]])
+        let seeds = try fixtureSeeds()
 
         let emitted = Set(seeds.flatMap(\.keys))
         let uncovered = SeedFieldParity.knownFields.subtracting(emitted)
@@ -139,13 +167,49 @@ struct SeedFieldParityTests {
         // hand-copied list. Every key in the fixture came out of a real run, so it must be a stored
         // property of the struct that wrote it; a parse that missed some would pass the subset
         // assertion above while checking almost nothing.
-        let url = repoRoot.appendingPathComponent("fixtures/seed-manifest-parity/seeds.json")
-        let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
-        let seeds = try #require((object as? [String: Any])?["seeds"] as? [[String: Any]])
-        let missed = Set(seeds.flatMap(\.keys)).subtracting(fields)
+        let missed = Set(try fixtureSeeds().flatMap(\.keys)).subtracting(fields)
         #expect(
             missed.isEmpty,
             "the PBTSeed parse missed \(missed.sorted()), which real output demonstrably carries"
+        )
+    }
+
+    /// **The arm that would have caught `anchor` on the day it landed**, and the reason the nested
+    /// check needs a source arm of its own.
+    ///
+    /// The fixture arm can only report a nested field that was present when the fixture was
+    /// captured. `anchor` was added upstream *after* the last capture, so only a read of the
+    /// producer's live declaration reports it — which is exactly the split the top-level guard
+    /// already documents, applied one level down.
+    @Test("this build decodes every stored property of the producer's PBTSeedEffect")
+    func producerNestedSourceFieldsAreAllKnown() {
+        let source = repoRoot
+            .deletingLastPathComponent()
+            .appendingPathComponent(
+                "SwiftProjectLint/Packages/SwiftProjectLintModels/Sources"
+                    + "/SwiftProjectLintModels/PBTSeedEffect.swift"
+            )
+        guard let text = try? String(contentsOf: source, encoding: .utf8) else { return }
+
+        let fields = Self.storedProperties(ofStruct: "PBTSeedEffect", in: text)
+        #expect(
+            !fields.isEmpty,
+            """
+            the producer's PBTSeedEffect was found but no stored properties were parsed out of it — \
+            the declaration moved or was reshaped, so this arm is now checking nothing. Fix the \
+            parse rather than deleting the test.
+            """
+        )
+
+        let known = SeedFieldParity.knownNestedFields[SeedField.effect.stringValue] ?? []
+        let unread = fields.subtracting(known)
+        #expect(
+            unread.isEmpty,
+            """
+            the producer's PBTSeedEffect declares field(s) this build does not decode: \
+            \(unread.sorted()). Add them to SeedEffect and SeedEffectField, decide whether they \
+            change carriesEnoughEvidenceToDemote, and regenerate the parity fixture.
+            """
         )
     }
 
