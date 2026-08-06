@@ -57,6 +57,15 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     case identityElement = "identity-element"
     case composition
     case invariantPreservation = "invariant-preservation"
+
+    /// Replay-idempotency: a side-effecting handler that is safe to run *twice*
+    /// (its observable effects happen once), stated over effects rather than a
+    /// return value. Discovered by `ReplayIdempotenceTemplate` and rendered as an
+    /// `assertIdempotentEffects` accept-flow scaffold. **Deliberately NOT in
+    /// `verifiable`:** the effect boundary (a recorder observing the real
+    /// side effect) cannot be synthesized, so `swift-infer verify` has nothing to
+    /// run — the property is completed by the author, not measured by the tool.
+    case replayIdempotence = "replay-idempotence"
 }
 
 public extension TemplateName {

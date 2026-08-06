@@ -375,26 +375,24 @@ extension Signal {
         /// `@ExternallyIdempotent(by:)`, in either spelling. Full veto.
         ///
         /// **Why veto where measured evidence only demotes.** `KitEvidence` refutes
-        /// at −45 and never vetoes, on the stated ground that *"the reader needs the
-        /// prerequisite, not an empty run"* — so a stronger, *executed* signal gets
-        /// gentler treatment than this one, which looks backwards until you notice
-        /// the axis is **directness**, not strength. The kit refutes a *prerequisite*
-        /// (`==` is unsound), leaving the law itself still worth showing beside the
-        /// warning. This denies *this law, about this function*, and the reader is
-        /// the person who typed the denial. Restating it back at them is noise.
-        ///
-        /// `externallyIdempotent` vetoes for a different and sharper reason: it
-        /// asserts idempotence **only** when routed through a caller-supplied dedup
-        /// key, so the unconditional `f(f(x)) == f(x)` this template emits is
-        /// *false* as written. That tier is the one distinction this repo had no way
-        /// to express before reading the vocabulary at all.
-        ///
-        /// **`observational` and `pure` are deliberately NOT here.** Neither implies
-        /// non-idempotence: `observational` is retry-safe by definition (it logs or
-        /// reads, without affecting program semantics), and `pure` says nothing
-        /// either way — `x + 1` is pure and not idempotent. A function that merely
-        /// logs still satisfies the law on its return value, and the clock-reading
-        /// risk that tier carries is already `nonDeterministicBody`'s job.
+        /// a *prerequisite* at −45 (leaving the law worth showing beside the warning);
+        /// this denies *this law, about this function*, typed by the reader — restating
+        /// it back is noise. `externallyIdempotent` vetoes for a sharper reason: it
+        /// asserts idempotence ONLY through a caller-supplied dedup key, so the
+        /// unconditional `f(f(x)) == f(x)` this template emits is *false* as written.
+        /// (`observational` and `pure` are NOT here — neither implies non-idempotence.)
         case declaredNonIdempotentEffect
+
+        /// V-ReplayM1 — the author's `@ExternallyIdempotent(by:)` claim, read as a
+        /// *positive* signal by `ReplayIdempotenceTemplate` — the exact mirror of
+        /// `declaredNonIdempotentEffect`, which vetoes the value law on the same
+        /// annotation. Names the key parameter to hold fixed; the stronger of the
+        /// two replay signals.
+        case replayExternallyIdempotentAnnotation
+
+        /// V-ReplayM1 — an `IdempotencyKey` parameter, read as a positive replay
+        /// signal. A handler threading a stable key is a candidate even unannotated;
+        /// weaker than the annotation, so it corroborates with it to `.likely`.
+        case replayIdempotencyKeyParameter
     }
 }
