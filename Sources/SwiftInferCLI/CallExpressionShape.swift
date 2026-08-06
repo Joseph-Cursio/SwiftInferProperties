@@ -64,6 +64,19 @@ public enum CallExpressionShape: Equatable, Sendable {
         if isOperatorName(bareFunctionName) {
             return .operatorFunction(name: bareFunctionName)
         }
+        // A genuinely free function has no owning type. `resolveFunctionCalls`
+        // spells that absence `entry.typeName ?? "(none)"`, and without this the
+        // sentinel is rendered as a qualifier — emitting `(none).isSwiftUIView(x)`,
+        // which fails to compile with *cannot find 'none' in scope*.
+        //
+        // Found 2026-08-05 on SwiftProjectLintVisitors, and only findable then:
+        // all three affected picks take a `StructDeclSyntax` or
+        // `FunctionCallExprSyntax`, so before the SwiftSyntax carrier recipes they
+        // declined at `unsupported-carrier` and never reached this renderer. One
+        // fixed gate is what exposes the next.
+        if typeQualifier.isEmpty || typeQualifier == "(none)" {
+            return .freeFunction(name: bareFunctionName)
+        }
         if let carrierFreeFunctions = freeFunctionMap[typeQualifier],
            carrierFreeFunctions.contains(bareFunctionName) {
             return .freeFunction(name: bareFunctionName)
