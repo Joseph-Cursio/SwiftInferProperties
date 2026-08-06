@@ -298,6 +298,29 @@ public enum VerifierWorkdir {
         return best.map { "\($0).0" }
     }
 
+    /// Whether the corpus at `packagePath` declares a swift-syntax dependency.
+    ///
+    /// Gates both the `.package(…)` line and the `.product(…)` entries for the
+    /// SwiftSyntax carrier recipes — see the call site in
+    /// `renderDependenciesBlock` for why this condition is exactly equivalent to
+    /// "those recipes can be reached".
+    ///
+    /// Matches the repository URL rather than a product name: the package can be
+    /// spelled `swiftlang/swift-syntax` or the older `apple/swift-syntax`, and a
+    /// corpus may re-export it under any target name. A corpus that reaches
+    /// swift-syntax only transitively (through a dependency that links it, never
+    /// naming it itself) reads as `false` here — correctly, since a function
+    /// whose *signature* names a syntax node needs the direct dependency to
+    /// compile at all.
+    static func packageDependsOnSwiftSyntax(at packagePath: URL) -> Bool {
+        guard let manifest = try? String(
+            contentsOf: packagePath.appendingPathComponent("Package.swift"), encoding: .utf8
+        ) else {
+            return false
+        }
+        return manifest.contains("swift-syntax")
+    }
+
     /// Build the comma-joined `dependencies:` array. Mode-dependent:
     /// `.algebraic` (v1.42 default) declares swift-numerics +
     /// swift-collections + swift-property-based + SwiftPropertyLaws.
@@ -327,6 +350,33 @@ public enum VerifierWorkdir {
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
                 swiftPropertyLawsDependencyLine
             ]
+            // swift-syntax, **only when the corpus already depends on it**.
+            //
+            // Declaring it unconditionally is what the first draft did, and it
+            // is measurably wrong: `swift test` on this repo went from
+            // `peakDeltaMB=233.7` to `8871.4` against a 800 MB §13 budget,
+            // because every verify integration test in the suite began
+            // resolving and building a large module it had no use for.
+            //
+            // The gate is not a heuristic. A corpus function can only *take* a
+            // `FunctionCallExprSyntax` if the corpus itself links swift-syntax,
+            // so "the syntax recipes are reachable" and "the corpus declares
+            // swift-syntax" are the same condition. Where the recipes are
+            // needed, the module is already in the graph and this line adds no
+            // build; where they are not, it adds nothing at all.
+            if let userPackage, packageDependsOnSwiftSyntax(at: userPackage.packagePath) {
+                // Range, not `from:`. swift-syntax versions its releases by
+                // Swift release (600 / 601 / 602), so `from: "600.0.0"` means
+                // `600.0.0 ..< 601.0.0` under semver and conflicts with any
+                // corpus pinning 601 or 602 — which is most of them, since a
+                // syntax-visitor package pins swift-syntax `exact:`. The open
+                // range lets SwiftPM take whatever the user package already
+                // resolved.
+                entries.append(
+                    ".package(url: \"https://github.com/swiftlang/swift-syntax.git\", "
+                        + "\"600.0.0\" ..< \"700.0.0\")"
+                )
+            }
 
         case .interaction:
             // V2.0 M3.E.2 — interaction verify needs the v2.2.0 kit
