@@ -128,12 +128,9 @@ extension Signal {
         /// truthfully annotated — and `verify` refutes its composition law at
         /// **trial 0**. At +40 (35 → 75) that false law would have surfaced at
         /// `Strong` by default; at +15 (35 → 50) it reaches `Likely`, which is
-        /// where an unverified claim of the adjacent property belongs.
-        ///
-        /// Parity with `docstringCorroboration` is therefore the right anchor
-        /// after all, for a reason the first version got backwards: an annotation
-        /// is more *deliberate* than prose but says less than it appears to, so
-        /// the two land at the same place by different routes.
+        /// where an unverified claim of the adjacent property belongs. Parity with
+        /// `docstringCorroboration` is the right anchor: an annotation is more
+        /// *deliberate* than prose but says less than it appears to.
         ///
         /// **Corroborate-only, by construction** — the template's `appliesTo` gate
         /// is the type-symmetry shape, so this can only raise a candidate the
@@ -394,5 +391,10 @@ extension Signal {
         /// signal. A handler threading a stable key is a candidate even unannotated;
         /// weaker than the annotation, so it corroborates with it to `.likely`.
         case replayIdempotencyKeyParameter
+
+        /// V-ReplayM2 — a dedup gate (early-return / fetch-then-insert) detected in
+        /// the handler body: `ReplayIdempotenceTemplate`'s Branch C structural signal
+        /// for a handler that guards its effect but carries no annotation or key type.
+        case replayDedupGate
     }
 }
