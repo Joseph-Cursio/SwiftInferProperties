@@ -67,6 +67,7 @@ struct DedupGateClassifierTests {
             func deleteFile(file: File) async throws -> Status {
                 if file.isDeleted { return .ok }
                 file.markAsDeleted()
+                try await file.save(on: db)
                 return .ok
             }
         }
@@ -84,11 +85,43 @@ struct DedupGateClassifierTests {
                 let latest = try await FileVersion.query(on: req.db).first()
                 if let latest, latest.hash == version.hash { return Row(latest) }
                 let created = FileVersion(hash: version.hash)
+                try await created.save(on: req.db)
                 return Row(created)
             }
         }
         """)
         #expect(shape == .fetchThenInsert)
+    }
+
+    @Test("Effect-less getter is NOT a gate (M4 — the Vernissage false positives)")
+    func effectLessGetterIsNotAGate() throws {
+        // getReblogStatus shape: fetch, return on hit, no insert/save anywhere.
+        // A read, not a dedup-gated handler — must not fire.
+        let shape = try gate("""
+        struct H {
+            func getStatus(id: Int, on db: Database) async throws -> Status? {
+                let status = try await Status.query(on: db).first()
+                if let status { return status }
+                return nil
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
+    @Test("Task.isCancelled early return is NOT a gate (M4 — the penny false positives)")
+    func taskCancellationIsNotAGate() throws {
+        // penny run() shape: `if Task.isCancelled { return }` then effectful work.
+        // Cancellation is not dedup; `isCancelled` was dropped from the flag set.
+        let shape = try gate("""
+        struct H {
+            func run() async throws {
+                if Task.isCancelled { return }
+                try await self.publish(event)
+            }
+        }
+        """)
+        #expect(shape == nil)
     }
 
     @Test("Reject-on-duplicate by throwing is NOT a gate (MacCloud uploadFile)")
