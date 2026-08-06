@@ -43,6 +43,15 @@ extension VerifierWorkdir {
                 // → *The `Gen<URL>` defect*.
                 ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"
             ]
+            // Products for the SwiftSyntax carrier recipes
+            // (`StrategistDispatchEmitter+SyntaxRecipes`), gated on the same
+            // condition as their `.package(…)` line — a product entry without
+            // its package declaration is a manifest error, so these two lists
+            // must agree. See `VerifierWorkdir.packageDependsOnSwiftSyntax`.
+            if let userPackage, packageDependsOnSwiftSyntax(at: userPackage.packagePath) {
+                entries.append(".product(name: \"SwiftSyntax\", package: \"swift-syntax\")")
+                entries.append(".product(name: \"SwiftParser\", package: \"swift-syntax\")")
+            }
 
         case .interaction:
             entries = [

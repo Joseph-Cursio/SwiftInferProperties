@@ -110,7 +110,7 @@ enum SharedVerifierPackage {
         let package = Package(
             name: "SwiftInferVerifierSurvey",
             platforms: [
-                .macOS(.v14)
+                \(platformLine(members: members))
             ],
             dependencies: [
                 \(packageDeps.sorted().joined(separator: ",\n        "))
@@ -125,6 +125,30 @@ enum SharedVerifierPackage {
             to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8
         )
         return root
+    }
+
+    /// The survey package's platform line, mirrored from the corpora its members
+    /// reference. Read rather than hardcoded for the reason
+    /// `VerifierWorkdir.macOSPlatformLine` documents — a floor below the corpus
+    /// fails every entry in the survey, not some of them.
+    ///
+    /// One package holds every member, so it must satisfy the *highest*
+    /// requirement present. Members with no user package contribute nothing;
+    /// with none at all this lands on `defaultMacOSVersion`, which is what the
+    /// survey emitted before this existed.
+    private static func platformLine(members: [Member]) -> String {
+        let versions = members.compactMap { member -> String? in
+            member.userPackage.flatMap {
+                VerifierWorkdir.declaredMacOSVersion(inPackageAt: $0.packagePath)
+            }
+        }
+        // Numeric max on the major component; see `declaredMacOSVersion` for why
+        // string ordering is wrong here.
+        let highest = versions
+            .compactMap { Int($0.split(separator: ".").first.map(String.init) ?? "") }
+            .max()
+        let version = highest.map { "\($0).0" } ?? VerifierWorkdir.defaultMacOSVersion
+        return ".macOS(\"\(version)\")"
     }
 
     /// One target directory holding one `main.swift` — the shape SwiftPM requires of

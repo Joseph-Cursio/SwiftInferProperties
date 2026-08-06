@@ -138,6 +138,14 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         if let curated = curatedOCRecipe(carrier: carrier) {
             return curated
         }
+        // SwiftSyntax node carriers. Same short-circuit rationale as the OC
+        // table — an external type with no indexed shape, so the strategist
+        // returns `.todo` — but a much larger share of the decline on any
+        // syntax-visitor corpus: 30 of 60 picks on SwiftProjectLint.
+        // See `StrategistDispatchEmitter+SyntaxRecipes`.
+        if let syntax = curatedSyntaxRecipe(carrier: carrier) {
+            return syntax
+        }
         if let typeShape {
             // WS-6 Slice 2 — `resolve` recurses through the whole-module shape
             // universe so nested custom-type members / init-params derive; the

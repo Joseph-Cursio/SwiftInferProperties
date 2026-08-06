@@ -215,7 +215,7 @@ public enum VerifierWorkdir {
         let package = Package(
             name: "SwiftInferVerifier",
             platforms: [
-                .macOS(.v14)
+                \(macOSPlatformLine(userPackage: userPackage))
             ],
             dependencies: [
         \(dependenciesBlock)
@@ -230,6 +230,95 @@ public enum VerifierWorkdir {
             ]
         )
         """
+    }
+
+    /// The verifier package's macOS deployment target, mirrored from the corpus.
+    ///
+    /// **A hardcoded floor cannot work here, and the failure is total rather than
+    /// partial.** SwiftPM refuses to link an executable requiring an older
+    /// platform than a product it depends on, so a verifier pinned to
+    /// `.macOS(.v14)` against a corpus declaring `.macOS(.v26)` fails *every*
+    /// entry with `requires macos 14.0, but depends on the product '<Module>'
+    /// which requires macos 26.0` — reported as `build-failed`, i.e. as a
+    /// tooling error rather than as the version mismatch it is. Measured on
+    /// SwiftProjectLint (2026-08-05): 60 of 60 picks, before this existed.
+    ///
+    /// Raising the constant just moves the wall: pinning 26 breaks every corpus
+    /// that deploys lower, which is most of them. The requirement is not a
+    /// number, it is *agreement with the corpus*, so it is read from the corpus.
+    ///
+    /// Deliberately a text scan, not a manifest evaluation. Evaluating a
+    /// `Package.swift` means running it, which is a `swift package dump-package`
+    /// subprocess per workdir for one integer. The regex covers both spellings
+    /// (`.macOS(.v26)` and `.macOS("26.0")`) and takes the highest it finds;
+    /// anything it cannot read falls back to `defaultMacOSVersion`, which is the
+    /// behaviour every corpus had before. A missed declaration therefore
+    /// degrades to the old failure rather than to a new one.
+    ///
+    /// Emitted in the **string** form (`.macOS("26.0")`) rather than
+    /// `.macOS(.v26)`: the generated manifest is `swift-tools-version: 6.1`, and
+    /// `.v26` does not exist in that version's `PackageDescription` — it fails
+    /// with `'v26' is unavailable`. The string form is accepted at every tools
+    /// version and needs no table of enum cases to stay current.
+    static func macOSPlatformLine(userPackage: UserPackageReference?) -> String {
+        let version = userPackage
+            .flatMap { declaredMacOSVersion(inPackageAt: $0.packagePath) }
+            ?? defaultMacOSVersion
+        return ".macOS(\"\(version)\")"
+    }
+
+    /// The floor used when the corpus declares nothing readable — unchanged from
+    /// the constant this replaced, so a corpus that worked before still does.
+    static let defaultMacOSVersion = "14.0"
+
+    /// Highest macOS version declared in `<packagePath>/Package.swift`, or `nil`.
+    static func declaredMacOSVersion(inPackageAt packagePath: URL) -> String? {
+        guard let manifest = try? String(
+            contentsOf: packagePath.appendingPathComponent("Package.swift"), encoding: .utf8
+        ) else {
+            return nil
+        }
+        // `.macOS(.v26)` → "26.0"; `.macOS("26.0")` / `.macOS("26")` → as written.
+        // Compared numerically by major version: string ordering would rank
+        // "9.0" above "14.0", which is the whole reason this is not a `max()`
+        // over the raw matches.
+        let patterns = [#"\.macOS\(\.v([0-9]+)\)"#, #"\.macOS\("([0-9]+)(?:\.[0-9]+)*"\)"#]
+        var best: Int?
+        for pattern in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            let range = NSRange(manifest.startIndex..., in: manifest)
+            for match in regex.matches(in: manifest, range: range) {
+                guard let majorRange = Range(match.range(at: 1), in: manifest),
+                      let major = Int(manifest[majorRange]) else {
+                    continue
+                }
+                best = Swift.max(best ?? major, major)
+            }
+        }
+        return best.map { "\($0).0" }
+    }
+
+    /// Whether the corpus at `packagePath` declares a swift-syntax dependency.
+    ///
+    /// Gates both the `.package(…)` line and the `.product(…)` entries for the
+    /// SwiftSyntax carrier recipes — see the call site in
+    /// `renderDependenciesBlock` for why this condition is exactly equivalent to
+    /// "those recipes can be reached".
+    ///
+    /// Matches the repository URL rather than a product name: the package can be
+    /// spelled `swiftlang/swift-syntax` or the older `apple/swift-syntax`, and a
+    /// corpus may re-export it under any target name. A corpus that reaches
+    /// swift-syntax only transitively (through a dependency that links it, never
+    /// naming it itself) reads as `false` here — correctly, since a function
+    /// whose *signature* names a syntax node needs the direct dependency to
+    /// compile at all.
+    static func packageDependsOnSwiftSyntax(at packagePath: URL) -> Bool {
+        guard let manifest = try? String(
+            contentsOf: packagePath.appendingPathComponent("Package.swift"), encoding: .utf8
+        ) else {
+            return false
+        }
+        return manifest.contains("swift-syntax")
     }
 
     /// Build the comma-joined `dependencies:` array. Mode-dependent:
@@ -261,6 +350,33 @@ public enum VerifierWorkdir {
                 ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
                 swiftPropertyLawsDependencyLine
             ]
+            // swift-syntax, **only when the corpus already depends on it**.
+            //
+            // Declaring it unconditionally is what the first draft did, and it
+            // is measurably wrong: `swift test` on this repo went from
+            // `peakDeltaMB=233.7` to `8871.4` against a 800 MB §13 budget,
+            // because every verify integration test in the suite began
+            // resolving and building a large module it had no use for.
+            //
+            // The gate is not a heuristic. A corpus function can only *take* a
+            // `FunctionCallExprSyntax` if the corpus itself links swift-syntax,
+            // so "the syntax recipes are reachable" and "the corpus declares
+            // swift-syntax" are the same condition. Where the recipes are
+            // needed, the module is already in the graph and this line adds no
+            // build; where they are not, it adds nothing at all.
+            if let userPackage, packageDependsOnSwiftSyntax(at: userPackage.packagePath) {
+                // Range, not `from:`. swift-syntax versions its releases by
+                // Swift release (600 / 601 / 602), so `from: "600.0.0"` means
+                // `600.0.0 ..< 601.0.0` under semver and conflicts with any
+                // corpus pinning 601 or 602 — which is most of them, since a
+                // syntax-visitor package pins swift-syntax `exact:`. The open
+                // range lets SwiftPM take whatever the user package already
+                // resolved.
+                entries.append(
+                    ".package(url: \"https://github.com/swiftlang/swift-syntax.git\", "
+                        + "\"600.0.0\" ..< \"700.0.0\")"
+                )
+            }
 
         case .interaction:
             // V2.0 M3.E.2 — interaction verify needs the v2.2.0 kit
