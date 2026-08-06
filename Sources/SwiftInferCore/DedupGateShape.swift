@@ -59,17 +59,36 @@ public enum DedupGateClassifier {
         "fetch", "find", "existing", "lookup", "query"
     ]
 
-    /// Boolean state properties that read as "already handled". Curated on
-    /// purpose (M3): the state-flag gate is real but narrow, and `isEmpty` /
-    /// `isValid` / `isNil` are guards, not dedup checks.
+    /// Boolean state properties that read as "already handled". Curated hard, and
+    /// tightened by the M4 public-corpus sweep: `isCancelled` fired on
+    /// `if Task.isCancelled { return }` (cooperative cancellation, not dedup) across
+    /// penny-bot, and the lifecycle flags (`isComplete`/`isDone`/`isFinished`/
+    /// `isClosed`/`isExpired`) are ambiguous enough to drop. What remains is the set
+    /// that genuinely reads "this key was already handled".
     static let stateFlags: Set<String> = [
-        "isDeleted", "isHandled", "isProcessed", "isCancelled", "isCanceled",
-        "isComplete", "isCompleted", "isDone", "isFinished", "isClosed",
-        "isDismissed", "isArchived", "isRevoked", "isExpired", "isAcknowledged",
-        "alreadyHandled", "handled", "processed"
+        "isDeleted", "isHandled", "isProcessed", "isDismissed", "isArchived",
+        "isRevoked", "isAcknowledged", "alreadyHandled", "handled", "processed"
+    ]
+
+    /// Callee base names that perform an observable **effect** — the thing a dedup
+    /// gate exists to run at most once. M4 requires one: without it, a
+    /// fetch-then-`return` or a flag-guard is a **getter**, not a handler, and the
+    /// M3 sweep found the corpus full of those (`getReblogStatus`,
+    /// `getRegisteredExternalUser`) firing as false positives.
+    static let effectVerbs: Set<String> = [
+        "insert", "save", "create", "delete", "remove", "update", "upsert",
+        "post", "send", "publish", "write", "store", "persist", "commit",
+        "enqueue", "dispatch", "emit", "put", "patch", "markAsDeleted",
+        "markAsHandled", "markHandled", "destroy"
     ]
 
     /// The first dedup gate among the body's top-level statements, or `nil`.
+    ///
+    /// M4: requires the body to also perform an effect. A gate that guards nothing
+    /// is a getter's early return, not a dedup gate — the distinction the sweep
+    /// forced. Effect-dominance (the effect sits on the path the gate skips) is a
+    /// finer check left to a later slice; "the body has an effect at all" removes
+    /// the getter false positives without it.
     public static func classify(body: CodeBlockSyntax) -> DedupGateShape? {
         let fetchedNames = fetchBoundNames(in: body)
         for item in body.statements {
@@ -77,10 +96,21 @@ public enum DedupGateClassifier {
                 continue
             }
             if let shape = shape(of: ifExpr, fetchedNames: fetchedNames) {
-                return shape
+                // Pay the whole-body effect walk only once a gate shape is found —
+                // the ~99% of async/throws functions with no gate never trigger it.
+                // A gate that guards no effect is a getter's early return, not dedup.
+                return bodyHasEffect(body) ? shape : nil
             }
         }
         return nil
+    }
+
+    /// Whether the body performs at least one effect-verb call — the mutation a
+    /// dedup gate is there to run once. Counts effects anywhere in the body,
+    /// including inside a `db.transaction { … save … }` closure, since that is
+    /// still the handler's effect.
+    private static func bodyHasEffect(_ body: CodeBlockSyntax) -> Bool {
+        firstCall(in: Syntax(body), matching: effectVerbs) != nil
     }
 
     /// Names bound to a fetch-verb call in a `let`/`var` statement, so a later
