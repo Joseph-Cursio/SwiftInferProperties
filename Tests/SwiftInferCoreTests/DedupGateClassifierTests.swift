@@ -58,6 +58,56 @@ struct DedupGateClassifierTests {
         #expect(shape == nil)
     }
 
+    @Test("State-flag early return is a gate (MacCloud deleteFile, M3)")
+    func stateFlagGuardDetected() throws {
+        // MacCloud_server deleteFile: `if file.isDeleted { return .ok }` — the
+        // already-handled question answered by a stored flag, not a method call.
+        let shape = try gate("""
+        struct H {
+            func deleteFile(file: File) async throws -> Status {
+                if file.isDeleted { return .ok }
+                file.markAsDeleted()
+                return .ok
+            }
+        }
+        """)
+        #expect(shape == .stateFlagGuard(flag: "isDeleted"))
+    }
+
+    @Test("Pre-fetched content-addressed dedup is a gate (MacCloud restore, M3)")
+    func preFetchedDedupDetected() throws {
+        // MacCloud_server restoreFileVersion: fetch upstream, then re-bind and
+        // compare content before returning the existing row.
+        let shape = try gate("""
+        struct H {
+            func restore(req: Request) async throws -> Row {
+                let latest = try await FileVersion.query(on: req.db).first()
+                if let latest, latest.hash == version.hash { return Row(latest) }
+                let created = FileVersion(hash: version.hash)
+                return Row(created)
+            }
+        }
+        """)
+        #expect(shape == .fetchThenInsert)
+    }
+
+    @Test("Reject-on-duplicate by throwing is NOT a gate (MacCloud uploadFile)")
+    func rejectOnDuplicateByThrowingIsNotAGate() throws {
+        // MacCloud_server uploadFile: `if fileExists { throw }` — the branch
+        // throws rather than returns, so the handler is NOT idempotent, and the
+        // gate must not fire. blockReturns is false → skipped.
+        let shape = try gate("""
+        struct H {
+            func upload(req: Request) async throws -> Row {
+                let fileExists = try await File.query(on: req.db).first() != nil
+                if fileExists { throw FileError.fileAlreadyExists }
+                return Row()
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
     @Test("A plain validation guard is not a dedup gate (precision)")
     func validationGuardIsNotADedupGate() throws {
         // `if x < 0 { return 0 }` returns early but names no dedup/fetch verb.
@@ -66,6 +116,21 @@ struct DedupGateClassifierTests {
             func clamp(_ x: Int) throws -> Int {
                 if x < 0 { return 0 }
                 return x
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
+    @Test("An off-list boolean property is not a state-flag gate (precision)")
+    func offListFlagIsNotAGate() throws {
+        // `isEmpty` is member-access-shaped like `isDeleted` but is a guard, not a
+        // dedup flag — the curated set is what keeps it from firing.
+        let shape = try gate("""
+        struct H {
+            func process(_ items: [Int]) throws -> Int {
+                if items.isEmpty { return 0 }
+                return items.count
             }
         }
         """)
