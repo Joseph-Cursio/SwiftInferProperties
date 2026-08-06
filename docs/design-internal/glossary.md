@@ -28,7 +28,7 @@ it is named — prefer reading that over trusting this file, which is a map and 
 > corpus — the bottleneck moved from *template* reach to *carrier* reach. And the seed funnel
 > inverted into a flood: 1,738 rows on a seeded run against 30 `strong`+`likely`.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@dde5397 observer=SwiftInferProperties@dde5397 -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@38368c3 observer=SwiftInferProperties@38368c3 -->
 
 
 ---
@@ -179,30 +179,42 @@ matched** still earns the generic determinism law `f(x) == f(x)`, synthesized do
 of the tier cut; and an empty manifest focuses to zero suggestions rather than to all of
 them. A missing or malformed file is an error, not a silent fallback.
 
-**A seed is not a suggestion.** Re-measured 2026-08-06 on this repo (`2c599c0`), linter at
-`SwiftProjectLint@08a4b09`:
+**A seed is not a suggestion.** Re-measured 2026-08-06 on this repo, twice the same day — the
+second time at `38368c3` with the linter at `SwiftProjectLint@db4be6b6`, both arms from one release
+binary over `--sources Sources`:
 
-| | 2026-08-03 | **2026-08-06** |
-|---|---|---|
-| seeds emitted | 1,657 | **2,096** |
-| default-tier picks, plain `discover` | 21 | **180** |
+| | 2026-08-03 | 2026-08-06 (`2c599c0` / `08a4b09`) | **2026-08-06 (`38368c3` / `db4be6b6`)** |
+|---|---|---|---|
+| seeds emitted | 1,657 | 2,096 | **2,108** |
+| default-tier picks, plain `discover` | 21 | 180 | **185** |
 
-**The funnel narrowed from ~79:1 to ~12:1, and the reason is not that inference got better.** The
-decomposition says so — of those 180, only **3 are `strong` and 27 `likely`**; **148 are `possible`
+The second move is **this repo growing, not the tool changing**: `c14dc7e` and `38368c3` added
+~1,600 lines of source, so more pure functions exist to seed.
+
+**The funnel narrowed from ~79:1 to ~11:1, and the reason is not that inference got better.** The
+decomposition says so — of those 185, only **3 are `strong` and 29 `likely`**; **151 are `possible`
 pulled up by the refutability rescue**, plus 2 advisory. Against the older, stricter reading of
-"default tier" as *likely and above*, the number is **30**, not 180. Both are given because the
+"default tier" as *likely and above*, the number is **32**, not 185. Both are given because the
 2026-08-03 figure does not record which reading it used, and 21 → 30 versus 21 → 180 tell different
 stories.
 
-**The seeded run is the surprising one.** `discover --seeds` prints **1,738**, *more* than the
-unseeded 180 — because a seed does not only focus, it also **vouches**: 662 `restricted-function`
-seeds rescued 666 access-restricted functions into template analysis that a plain run never opens.
-The `strong` + `likely` set is **identical** at 30 in both runs; every one of the extra 1,558 rows is
-advisory or possible. So the headline still holds in the direction it was written — a seed is not a
-suggestion — but the modern failure mode is **flood, not funnel**.
+**The seeded run is the surprising one.** `discover --seeds` prints **1,746**, *more* than the
+unseeded 185 — because a seed does not only focus, it also **vouches**: 659
+`restricted-function` seeds rescue **663** access-restricted functions into template analysis that a
+plain run never opens (663 > 659 because overloads share a seed). Every one of the extra
+1,561 rows is advisory or possible (1,455 · 261). So the headline still holds in the direction it
+was written — a seed is not a suggestion — but the modern failure mode is **flood, not funnel**.
 
-Seed kinds behind the 2,096: `pure-function` 1,176 · `restricted-function` 662 ·
-`extractable-kernel` 255 · `idempotency` 3.
+**The `strong` + `likely` sets are no longer identical, and the seeded run is the SMALLER one:
+32 unseeded, 30 seeded.** That was written as *"identical at 30 in both runs"* on 2026-08-06 and
+did not survive the same day. Focusing now costs two `likely` rows. It is not obviously a defect —
+the focus exists to narrow, and `keepRoleEntailedLaws` only overrides for laws the code *owes* — but
+it is the first time the high-confidence set has moved under focusing at all, and the direction is
+the one worth watching: the guard against this is `guardFinalAnswer`, which fires on an answer with
+**zero** refutable laws, not on one that quietly lost two. **Not yet diagnosed.**
+
+Seed kinds behind the 2,108: `pure-function` 1,189 · `restricted-function` 659 ·
+`extractable-kernel` 257 · `idempotency` 3.
 
 ### Template
 A named law shape that discovery can recognize from code — `idempotence`, `commutativity`,

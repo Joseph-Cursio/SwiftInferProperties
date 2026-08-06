@@ -16,7 +16,7 @@ Chapter 9; `known-properties` in Appendix A.
 > subcommand count held at 25. This doc is the fastest-rotting one in the directory and the
 > three-day interval is the evidence for how fast.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@dde5397 observer=SwiftInferProperties@dde5397 -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@38368c3 observer=SwiftInferProperties@38368c3 -->
 
 
 ```
@@ -46,7 +46,7 @@ the narrative history — `git log` and `docs/archive/claude-md-narrative-histor
 
 ## Shape
 
-**v1.148.0** · 8 source targets · ~89,500 lines of Swift · **~5,000 tests** (4,932 in the fast suite,
+**v1.148.0** · 8 source targets · ~90,500 lines of Swift · **~5,050 tests** (4,984 in the fast suite,
 66 more across `perf` and the eight subprocess batches — counted from a full `make test` run,
 2026-08-06).
 
