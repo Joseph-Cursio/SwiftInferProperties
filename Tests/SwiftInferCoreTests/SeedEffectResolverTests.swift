@@ -112,17 +112,65 @@ struct SeedEffectResolverTests {
         #expect(result.first?.inferredEffect == nil)
     }
 
-    /// The subtle one, and the reason this is not simply "trust the linter".
-    /// SwiftProjectLint's upward inference supplies `HeuristicEffectInferrer` as
-    /// its anchor resolver, so a chain can bottom out on a name guess and still
-    /// surface as `inferred-upward`. The manifest's provenance describes the
-    /// final hop, not the whole chain, so an upward tier cannot be told apart
-    /// here from a name-anchored one.
-    @Test("an upward-inferred effect is not acted on either")
-    func upwardProvenanceWithheld() {
+    /// **The case this whole three-repository chain was built for.** A
+    /// `@NonIdempotent` several calls down, resolved to a fixed point across
+    /// every file by a producer with no §13 budget to respect — reach that
+    /// `EffectResolver` is structurally incapable of, since it runs one hop.
+    ///
+    /// It was refused wholesale until the anchor existed, which cost exactly
+    /// this.
+    @Test("an upward chain anchored in an annotation is acted on")
+    func declarationAnchoredUpwardIsActedOn() {
+        let effect = SeedEffect(
+            declared: .idempotent, resolved: .nonIdempotent,
+            provenance: .inferredUpward, depth: 3, anchor: .declaration
+        )
+        let result = SeedEffectResolver.resolve(
+            summaries: [summary(name: "confirmOrder")], manifest: manifest(effect: effect)
+        )
+        #expect(result.first?.inferredEffect == .nonIdempotent)
+    }
+
+    /// The same shape, same tier, same distance — refused, because the bottom of
+    /// the chain is a name match. `EffectResolver` disables its own heuristic
+    /// classifier for this reason, and a guess laundered through three hops and
+    /// a JSON file is still a guess.
+    @Test("an upward chain bottoming out on a guess is not acted on")
+    func guessAnchoredUpwardWithheld() {
+        let effect = SeedEffect(
+            declared: .idempotent, resolved: .nonIdempotent,
+            provenance: .inferredUpward, depth: 3, anchor: .heuristic
+        )
+        let result = SeedEffectResolver.resolve(
+            summaries: [summary(name: "confirmOrder")], manifest: manifest(effect: effect)
+        )
+        #expect(result.first?.inferredEffect == nil)
+    }
+
+    /// A producer predating the field sends an upward tier with no anchor. That
+    /// must read as "not established", not as "fine" — the same answer this tool
+    /// gave before the field existed, so an older linter cannot silently gain
+    /// trust it never earned.
+    @Test("an upward effect with no anchor is withheld")
+    func anchorlessUpwardWithheld() {
         let effect = SeedEffect(
             declared: .idempotent, resolved: .nonIdempotent,
             provenance: .inferredUpward, depth: 3
+        )
+        let result = SeedEffectResolver.resolve(
+            summaries: [summary(name: "confirmOrder")], manifest: manifest(effect: effect)
+        )
+        #expect(result.first?.inferredEffect == nil)
+    }
+
+    /// An anchor cannot rescue a name heuristic. The provenance settles it
+    /// before the anchor is consulted, and a producer that emitted one here
+    /// would be contradicting itself.
+    @Test("a declaration anchor does not rescue a name heuristic")
+    func anchorDoesNotRescueDownward() {
+        let effect = SeedEffect(
+            declared: .idempotent, resolved: .nonIdempotent,
+            provenance: .inferredDownward, anchor: .declaration
         )
         let result = SeedEffectResolver.resolve(
             summaries: [summary(name: "confirmOrder")], manifest: manifest(effect: effect)
@@ -140,7 +188,8 @@ struct SeedEffectResolverTests {
         _ = SeedEffectResolver.resolve(
             summaries: [summary(name: "confirmOrder")],
             manifest: manifest(effect: SeedEffect(
-                declared: .idempotent, resolved: .nonIdempotent, provenance: .inferredUpward
+                declared: .idempotent, resolved: .nonIdempotent,
+                provenance: .inferredUpward, anchor: .heuristic
             )),
             diagnostic: { lines.append($0) }
         )

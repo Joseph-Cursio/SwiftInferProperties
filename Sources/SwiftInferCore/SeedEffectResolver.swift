@@ -15,11 +15,17 @@ import SwiftEffectInference
 /// every file. So a `@NonIdempotent` three calls down, which the local pass
 /// structurally cannot see, arrives here already resolved.
 ///
-/// **What it deliberately refuses.** Only `provenance: declared` is acted on.
-/// See `SeedEffect.carriesEnoughEvidenceToDemote` — the short version is that
-/// the linter's upward inference admits name-guessed anchors, and this package
-/// has already decided, in `EffectResolver`, that a veto built on a name guess
-/// is worse than no veto.
+/// **What it acts on.** A declared callee, and — since the producer began
+/// emitting `anchor` — an upward chain that bottoms out on one. A
+/// name-heuristic effect never. See `SeedEffect.carriesEnoughEvidenceToDemote`.
+///
+/// The upward case is the one this exists for. It was refused wholesale at
+/// first, because the producer's chains admit name-guessed anchors and
+/// `provenance` describes only the final hop — and that refusal cost the
+/// multi-hop reach entirely, which was most of the value on offer. With the
+/// anchor tracked end to end through `BodyEffectInferrer`, the two are
+/// distinguishable, and the precision stance now costs only the chains that
+/// actually rest on a guess.
 public enum SeedEffectResolver {
 
     /// Fills `inferredEffect` from the manifest on every summary a seed names.
@@ -116,9 +122,9 @@ public enum SeedEffectResolver {
         let downward = withheld.filter { $0.provenance == .inferredDownward }.count
         diagnostic(
             "withheld \(withheld.count) linter-resolved effect(s) as evidence "
-                + "(\(upward) inferred-upward, \(downward) inferred-downward): only a callee "
-                + "the author DECLARED is acted on here, because the producer's upward chains "
-                + "may bottom out on a name guess and this tool does not veto on names"
+                + "(\(upward) inferred-upward whose chain bottoms out on a name guess, "
+                + "\(downward) inferred-downward): an effect is acted on when a human declared "
+                + "it, or when an upward chain reaches one — this tool does not veto on names"
         )
     }
 }

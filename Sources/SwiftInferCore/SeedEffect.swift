@@ -69,6 +69,24 @@ public struct SeedEffect: Codable, Sendable, Equatable {
     /// Hops back to an anchor, when `provenance == .inferredUpward`.
     public let depth: Int?
 
+    /// What an upward chain bottoms out on. `nil` for the other provenances,
+    /// where the question does not arise.
+    ///
+    /// This is the field that turns `inferred-upward` from *reported* into
+    /// *usable* — see `carriesEnoughEvidenceToDemote`.
+    public let anchor: Anchor?
+
+    /// Mirrors SwiftProjectLint's `PBTSeedEffect.Anchor`, and through it
+    /// `SwiftEffectInference.BodyInference.Anchor`. Translated at each boundary
+    /// rather than shared, so a rename in one repository cannot silently move a
+    /// wire format two repositories away.
+    public enum Anchor: String, Codable, Sendable {
+        /// Every step justifying the tier was a human annotation.
+        case declaration
+        /// At least one step was a name or framework guess.
+        case heuristic
+    }
+
     /// The phrase a heuristic matched, when `provenance == .inferredDownward`.
     public let reason: String?
 
@@ -100,7 +118,31 @@ public struct SeedEffect: Codable, Sendable, Equatable {
     /// for itself and most wants. Until then the honest reading of an upward
     /// tier is a caveat, not a score.
     public var carriesEnoughEvidenceToDemote: Bool {
-        provenance == .declared
+        switch provenance {
+        case .declared:
+            return true
+
+        case .inferredUpward:
+            // Acted on **only** when the chain is annotation-anchored. The
+            // producer now distinguishes the two, so the blanket refusal this
+            // used to be is no longer the honest answer — it withheld a real
+            // signal to avoid an unrelated one.
+            //
+            // This is the case worth having: the producer resolves to a fixed
+            // point across every file, while `EffectResolver` here runs one hop
+            // against a budget it must fit inside §13's. A `@NonIdempotent`
+            // three calls down is structurally out of local reach and arrives
+            // here already resolved.
+            return anchor == .declaration
+
+        case .inferredDownward:
+            // Never. A name match is a guess by construction, and
+            // `EffectResolver` disables its own heuristic classifier for
+            // exactly this reason: "a veto built on a name guess would suppress
+            // a true law because a callee was called `save`". Accepting it
+            // through a JSON file would be the same mistake in a different hat.
+            return false
+        }
     }
 
     public init(
@@ -108,12 +150,14 @@ public struct SeedEffect: Codable, Sendable, Equatable {
         resolved: Tier,
         provenance: Provenance,
         depth: Int? = nil,
+        anchor: Anchor? = nil,
         reason: String? = nil
     ) {
         self.declared = declared
         self.resolved = resolved
         self.provenance = provenance
         self.depth = depth
+        self.anchor = anchor
         self.reason = reason
     }
 
@@ -127,6 +171,12 @@ public struct SeedEffect: Codable, Sendable, Equatable {
         self.resolved = try container.decode(Tier.self, forKey: .resolved)
         self.provenance = try container.decode(Provenance.self, forKey: .provenance)
         self.depth = try container.decodeIfPresent(Int.self, forKey: .depth)
+        // Absent means "no chain to describe", which is the honest reading for
+        // the two non-upward provenances — and, for an upward one, means a
+        // producer that predates the field. `carriesEnoughEvidenceToDemote`
+        // then reads nil as not-declaration and withholds, which is the same
+        // answer this tool gave before the field existed.
+        self.anchor = try container.decodeIfPresent(Anchor.self, forKey: .anchor)
         self.reason = try container.decodeIfPresent(String.self, forKey: .reason)
     }
 }
