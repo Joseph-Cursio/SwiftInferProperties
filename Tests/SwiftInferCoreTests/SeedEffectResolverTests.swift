@@ -190,9 +190,8 @@ struct SeedEffectResolverTests {
             manifest: manifest(effect: SeedEffect(
                 declared: .idempotent, resolved: .nonIdempotent,
                 provenance: .inferredUpward, anchor: .heuristic
-            )),
-            diagnostic: { lines.append($0) }
-        )
+            ))
+        ) { lines.append($0) }
         #expect(lines.contains { $0.contains("withheld") && $0.contains("inferred-upward") })
     }
 

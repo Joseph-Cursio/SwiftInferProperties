@@ -197,6 +197,14 @@ extension StrategistDispatchEmitter {
         "x.map { $0 }.filter { $0 > 0 }"
     ]
 
+    /// Payload-carrying and raw-valued forms alongside the empty one, since a
+    /// visitor asking about an enum is usually asking about its cases.
+    private static let enumCorpus = [
+        "enum E {}",
+        "enum F: String, CaseIterable { case a, b }",
+        "enum G<T> { case some(T), none }"
+    ]
+
     private static let closureCorpus = [
         "{ }",
         "{ x in x }",
@@ -242,8 +250,7 @@ extension StrategistDispatchEmitter {
         ),
         "EnumDeclSyntax": parsedRecipe(
             carrier: "EnumDeclSyntax",
-            sources: ["enum E {}", "enum F: String, CaseIterable { case a, b }",
-                      "enum G<T> { case some(T), none }"],
+            sources: enumCorpus,
             navigation: firstItem(as: "EnumDeclSyntax")
         ),
         "FunctionDeclSyntax": parsedRecipe(
