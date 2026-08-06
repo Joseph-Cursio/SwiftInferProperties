@@ -11,9 +11,26 @@ import SwiftInferCore
 /// result — Proven (surface), Disproven (drop), Unverifiable (couldn't be
 /// tested — explicitly NOT a pass), Inconclusive.
 ///
-/// Requires `--corpus-module` (the verifier builds against the target's
-/// compiled module), and is bounded by carrier constructibility — the
-/// Unverifiable bucket is honest about what execution could not reach.
+/// Bounded by carrier constructibility — the Unverifiable bucket is honest
+/// about what execution could not reach.
+///
+/// **`--corpus-module` was required, and requiring it was the single largest
+/// source of false coverage limits this command had.** The flag selects the
+/// curated-corpus wiring, which imports the module *plainly* on purpose — a
+/// corpus is consumed as a library, not opened up (see `surveyWiring`). Point
+/// that at the package you are standing in and every `internal` symbol becomes
+/// invisible, so entries fail to compile with *cannot find 'X' in scope* and
+/// land in Inconclusive, which reads as a tooling error rather than as the
+/// access-control boundary it is.
+///
+/// Measured on `SwiftProjectLintRules` (2026-08-05, 26 picks): **with**
+/// `--corpus-module`, 0 Proven / 18 build-failed; **without** it, 18 executed
+/// and passed, 0 build failures — the same binary, the same index, one flag.
+/// Omitting it routes to the per-entry derivation that emits
+/// `@testable import <Module>`, which `VerifierSubprocess.runSwiftBuild` has
+/// been able to honour since V1.149 (it passes `-Xswiftc -enable-testing` on
+/// every build). Nothing needed building; the capability was already there and
+/// the flag was suppressing it.
 extension SwiftInferCommand {
 
     public struct ProveThenShow: AsyncParsableCommand {
@@ -34,11 +51,13 @@ extension SwiftInferCommand {
         @Option(
             name: .long,
             help: """
-            Module name the verifier builds against (the target's compiled \
-            module). Required — the survey imports it to construct carriers.
+            CURATED-CORPUS module name: a separate package consumed as a \
+            library, imported plainly. Omit when proving the package you are \
+            standing in — the survey then derives the module per entry and \
+            imports it `@testable`, which is what reaches `internal` symbols.
             """
         )
-        public var corpusModule: String
+        public var corpusModule: String?
 
         @Option(name: .long, help: "Max concurrent verifier builds (default 4).")
         public var maxParallel: Int = 4
@@ -67,6 +86,12 @@ extension SwiftInferCommand {
             let workingDirectory = URL(fileURLWithPath: directory ?? ".")
 
             if surface == "interaction" {
+                guard let corpusModule else {
+                    throw VerifyError.invalidArguments(
+                        reason: "--surface interaction requires --corpus-module "
+                            + "(the interaction survey has no per-entry derivation)"
+                    )
+                }
                 let entries = try await VerifyInteractionSurvey.collectEntries(
                     targets: [target],
                     familyFilter: family,
