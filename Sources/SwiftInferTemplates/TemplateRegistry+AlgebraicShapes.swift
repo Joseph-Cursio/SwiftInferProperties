@@ -30,6 +30,12 @@ extension TemplateRegistry {
         ) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
+        // The replay counterpart: fires on the key-routed handlers the value
+        // template above vetoes. Effect-shaped, not value-shaped — see
+        // `ReplayIdempotenceTemplate`.
+        if let suggestion = ReplayIdempotenceTemplate.suggest(for: summary) {
+            collector.record(suggestion, generatorType: summaryGenType)
+        }
         if let suggestion = CommutativityTemplate.suggest(
             for: summary,
             vocabulary: context.vocabulary,

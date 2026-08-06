@@ -97,6 +97,9 @@ extension InteractiveTriage {
         case "idempotence":
             return idempotentStub(for: suggestion)
 
+        case "replay-idempotence":
+            return replayIdempotentStub(for: suggestion)
+
         case "round-trip":
             return roundTripStub(for: suggestion)
 
@@ -208,6 +211,35 @@ extension InteractiveTriage {
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: typeName),
             equalityKind: equalityKind(forTypeText: typeName)
+        )
+    }
+
+    /// Replay-idempotency scaffold for a `ReplayIdempotenceTemplate` suggestion.
+    /// Extracts the handler name, its `IdempotencyKey` parameter label (if any),
+    /// and the async/throws effect markers from the evidence signature, then hands
+    /// off to `LiftedTestEmitter.replayIdempotent`. Unlike the value stubs this
+    /// emits a `.todo`-style scaffold — see that emitter for why.
+    private static func replayIdempotentStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let funcName = functionName(from: evidence.displayName) else {
+            return nil
+        }
+        let isAsync = evidence.signature.contains(" async")
+        let isThrows = evidence.signature.contains(" throws")
+        let signature = evidence.signature
+            .replacingOccurrences(of: " async throws ->", with: " ->")
+            .replacingOccurrences(of: " async ->", with: " ->")
+            .replacingOccurrences(of: " throws ->", with: " ->")
+        let keyLabel = functionParameters(
+            displayName: evidence.displayName,
+            signature: signature
+        )?.first { $0.type == "IdempotencyKey" }?.label
+        return LiftedTestEmitter.replayIdempotent(
+            funcName: funcName,
+            keyLabel: keyLabel,
+            ownerType: suggestion.carrier,
+            isAsync: isAsync,
+            isThrows: isThrows
         )
     }
 
