@@ -32,10 +32,17 @@ extension IdempotenceTemplate {
     /// from the declared signal because the treatments differ: a declaration
     /// vetoes, an inference demotes. See `Signal.Kind.inferredRetryHostileCallee`.
     ///
-    /// Never fires when the author declared something — `EffectResolver` only
-    /// fills `inferredEffect` where `declaredEffect` is absent, so the two arms
-    /// cannot both speak about one function and a weaker signal can never dilute
-    /// a stronger one.
+    /// From `EffectResolver` this never fires alongside a declaration — that
+    /// resolver only fills `inferredEffect` where `declaredEffect` is absent, so
+    /// a weaker signal can never dilute a stronger one.
+    ///
+    /// **`SeedEffectResolver` deliberately breaks that pairing**, and the case it
+    /// creates is the one worth having. A linter's `idempotency` seed names a
+    /// function that annotated itself and whose body a cross-file walk found to
+    /// reach non-idempotent work — so `declaredEffectSignal` corroborates at +15
+    /// while this refutes at -45, on the same function, from different evidence.
+    /// That is not a signal colliding with itself; it is a claim and its
+    /// contradiction, and the reader should see both lines.
     static func inferredEffectSignal(for summary: FunctionSummary) -> Signal? {
         guard let inferred = summary.inferredEffect else { return nil }
         let what: String

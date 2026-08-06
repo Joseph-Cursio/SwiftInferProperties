@@ -297,7 +297,8 @@ public enum TemplateRegistry {
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil,
         rescuedRestrictedSymbols: Set<String> = [],
-        resolveEffects: Bool = false
+        resolveEffects: Bool = false,
+        seedManifest: SeedManifest? = nil
     ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
@@ -315,9 +316,25 @@ public enum TemplateRegistry {
         // summary already flows everywhere. A no-op when the flag is off, which
         // is why the default path's §13 budgets cannot move.
         let scanned = corpus.summaries + rescued.map(\.summary)
-        let analysed = resolveEffects
+        let locallyAnalysed = resolveEffects
             ? EffectResolver.resolve(summaries: scanned, in: directory, diagnostic: diagnostic)
             : scanned
+        // Effects the linter already resolved, applied whether or not the local
+        // pass ran. Not gated on `resolveEffects`: that flag buys a second parse
+        // of the corpus, and this costs a dictionary lookup against a manifest
+        // the caller already loaded. Gating free evidence behind a
+        // performance opt-in would only hide it.
+        //
+        // After the local pass rather than before, so that where both speak the
+        // local result stands. They agree on the tier whenever both see the same
+        // callee; where they differ it is because the manifest reached further,
+        // and `withInferredEffect` is a write, not a join — running this second
+        // lets the better-informed source win.
+        let analysed = seedManifest.map {
+            SeedEffectResolver.resolve(
+                summaries: locallyAnalysed, manifest: $0, diagnostic: diagnostic
+            )
+        } ?? locallyAnalysed
         let suggestions = discover(
             in: analysed,
             identities: corpus.identities,

@@ -59,7 +59,8 @@ extension SwiftInferCommand.Discover {
             counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys,
             templateFilter: setup.templateFilter,
             rescuedRestrictedSymbols: rescuableRestrictedKeys(from: seedManifest),
-            resolveEffects: resolveEffects
+            resolveEffects: resolveEffects,
+            seedManifest: seedManifest
         )
         // TestLifter M3.2 — promote LiftedSuggestions, share TemplateEngine's
         // GeneratorSelection pass, suppress duplicates already covered by
