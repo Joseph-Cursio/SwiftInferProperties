@@ -157,6 +157,10 @@ public enum ReplayIdempotenceTemplate {
 
         case .fetchThenInsert:
             description = "a fetch-existing-then-insert branch"
+
+        case let .stateFlagGuard(flag):
+            let named = flag.map { " on `\($0)`" } ?? ""
+            description = "an early return on an already-handled state flag\(named)"
         }
         return Signal(
             kind: .replayDedupGate,
