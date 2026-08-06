@@ -141,9 +141,8 @@ struct SeedEffectResolverTests {
             summaries: [summary(name: "confirmOrder")],
             manifest: manifest(effect: SeedEffect(
                 declared: .idempotent, resolved: .nonIdempotent, provenance: .inferredUpward
-            )),
-            diagnostic: { lines.append($0) }
-        )
+            ))
+        ) { lines.append($0) }
         #expect(lines.contains { $0.contains("withheld") && $0.contains("inferred-upward") })
     }
 

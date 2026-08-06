@@ -15,10 +15,22 @@ import Foundation
 ///                              "rule": "Pure Function …", "kind": "pure-function",
 ///                              "role": "predicate" } ] }
 /// ```
-/// `rule` and `role` are decoded leniently (optional) so a producer that drops or
-/// renames them doesn't break consumption. `file`/`line`/`symbol`/`kind` are
-/// required: the first three locate the seed, and `kind` decides whether this tool
-/// may narrow discovery onto it — a question with no safe default.
+/// `role`, `restriction` and `effect` are decoded leniently (optional) because absence is a
+/// *meaningful* answer for each: the producer classifies roles on three of its four seeding rules,
+/// restrictions on `restricted-function` seeds, and effects on `idempotency` seeds, so a seed
+/// without one is a seed nobody asked the question about.
+///
+/// `file`/`line`/`symbol`/`rule`/`kind` are required. The first three locate the seed, `kind`
+/// decides whether this tool may narrow discovery onto it — a question with no safe default — and
+/// `rule` is required because **the producer always emits it** (`PBTSeed.rule` is a non-optional
+/// `String`, written from `issue.ruleName.rawValue` on every seed), so absence means a malformed or
+/// hand-edited manifest rather than an honest unknown. Measured 2026-08-06 over this repo's own
+/// sources: 0 of 2,099 seeds lacked it.
+///
+/// It was `String?` until then, and lenient decoding was not the real cost — **nothing read it at
+/// all**. The field was write-only for the whole of its life, while this repo's warnings said
+/// "this is a LINTER gap" without naming a rule and reported an unreadable `kind` without saying
+/// which rule produced it.
 public struct SeedManifest: Codable, Sendable, Equatable {
 
     /// The schema version this build understands. A manifest with a different
@@ -53,12 +65,26 @@ public struct SeedManifest: Codable, Sendable, Equatable {
         public let file: String
         public let line: Int
         public let symbol: String
-        public let rule: String?
+
+        /// The linter rule that produced this seed, for attribution.
+        ///
+        /// Required — see the type doc. Not a focus key and never matched on: two rules can seed the
+        /// same symbol, and the *remedy* differs by rule while the location does not.
+        public let rule: String
         public let kind: SeedKind
 
         /// What the logic **is**, when the linter classified it. `nil` from any producer that does
         /// not emit roles — which is every producer before this field existed.
         public let role: SeedRole?
+
+        /// **What would have to move** for a test to reach this symbol — see `SeedRestriction`.
+        ///
+        /// Only `restricted-function` seeds carry one. It is the part of the access answer this side
+        /// structurally cannot compute: `FunctionScanner`'s enclosing-type stack is
+        /// same-declaration only, so a member of an unmarked `extension` of a `private` type reads
+        /// locally as blocked by its own modifier, and the widening remedy derived from that is a
+        /// no-op.
+        public let restriction: SeedRestriction?
 
         /// Where the linter placed this symbol on the effect lattice — what it
         /// claimed, what its body reached, and how the linter knows.
@@ -69,13 +95,19 @@ public struct SeedManifest: Codable, Sendable, Equatable {
         /// rather than retry-safety.
         public let effect: SeedEffect?
 
+        /// `rule` carries a default here and is **required by the decoder**, mirroring `kind`.
+        ///
+        /// The two initialisers answer different questions. This one is construction — mostly
+        /// tests, which have no rule to name and no interest in one. `init(from:)` is *reading a
+        /// producer's document*, where a missing field means the document is wrong.
         public init(
             file: String,
             line: Int,
             symbol: String,
-            rule: String? = nil,
+            rule: String = "(unattributed)",
             kind: SeedKind = .pureFunction,
             role: SeedRole? = nil,
+            restriction: SeedRestriction? = nil,
             effect: SeedEffect? = nil
         ) {
             self.file = file
@@ -84,6 +116,7 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             self.rule = rule
             self.kind = kind
             self.role = role
+            self.restriction = restriction
             self.effect = effect
         }
 
@@ -104,15 +137,22 @@ public struct SeedManifest: Codable, Sendable, Equatable {
         /// The version *number* check is untouched and still earns its keep: it is forward
         /// compatibility, for a future v3 producer meeting this build.
         public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let container = try decoder.container(keyedBy: SeedField.self)
             self.file = try container.decode(String.self, forKey: .file)
             self.line = try container.decode(Int.self, forKey: .line)
             self.symbol = try container.decode(String.self, forKey: .symbol)
-            self.rule = try container.decodeIfPresent(String.self, forKey: .rule)
+            // Required since 2026-08-06. The producer's own field is non-optional and every one of
+            // 2,099 measured seeds carried it, so a manifest without it is malformed rather than
+            // reticent — and the lenient reading bought nothing, since nothing consumed the field.
+            self.rule = try container.decode(String.self, forKey: .rule)
             self.kind = try container.decode(SeedKind.self, forKey: .kind)
             // Unlike `kind`, absence needs no semantic default: a seed with no role is a seed whose
             // producer classifies nothing, and "unknown" is the honest reading.
             self.role = try container.decodeIfPresent(SeedRole.self, forKey: .role)
+            // Same reading as `role`: only `restricted-function` seeds are classified, so absent is
+            // "not asked" rather than a value to guess. Guessing `.declaration` would be the worst
+            // available default — it is the one that licenses a widening patch.
+            self.restriction = try container.decodeIfPresent(SeedRestriction.self, forKey: .restriction)
             // Same reading as `role`: a seed with no effect is one whose producer
             // resolves no lattice position for it, and absent is honest.
             self.effect = try container.decodeIfPresent(SeedEffect.self, forKey: .effect)

@@ -289,3 +289,50 @@ struct DiscoverPipelineSeedsTests {
         }
     }
 }
+
+/// The manifest's **required** fields, and what a document missing one does.
+///
+/// Its own suite rather than another few tests on `DiscoverPipelineSeedsTests`, which is at its
+/// `type_body_length` cap — and the seam is real: everything above is about what a manifest does to
+/// a run, and these are about whether a document is a manifest at all.
+@Suite("Seed manifest — required fields")
+struct SeedManifestRequiredFieldTests {
+
+    /// `rule` became required on 2026-08-06, and a loud parse error is the whole point.
+    ///
+    /// The producer's own field is non-optional and every one of 2,099 measured seeds carried it,
+    /// so absence means a malformed or hand-edited manifest. Decoding it leniently bought nothing —
+    /// the field was consumed by nothing at all — while leaving the reader a manifest that silently
+    /// parsed into seeds whose provenance no warning could name.
+    @Test("loadSeedManifest throws on a seed with no rule")
+    func throwsOnSeedWithoutRule() throws {
+        let directory = try makeDPFixtureDirectory(name: "SeedsNoRule")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let path = directory.appendingPathComponent("seeds.json")
+        try Data("""
+        { "version": 2, "seeds": [
+            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function" }
+        ] }
+        """.utf8).write(to: path)
+        #expect(throws: (any Error).self) {
+            _ = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
+        }
+    }
+
+    /// The control for the test above: the same document *with* the field parses, so the failure is
+    /// attributable to `rule` and not to anything else in the fixture.
+    @Test("the same manifest with a rule parses")
+    func parsesWithRule() throws {
+        let directory = try makeDPFixtureDirectory(name: "SeedsWithRule")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let path = directory.appendingPathComponent("seeds.json")
+        try Data("""
+        { "version": 2, "seeds": [
+            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function",
+              "rule": "Pure Function Property-Test Candidate" }
+        ] }
+        """.utf8).write(to: path)
+        let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
+        #expect(manifest.seeds.first?.rule == "Pure Function Property-Test Candidate")
+    }
+}

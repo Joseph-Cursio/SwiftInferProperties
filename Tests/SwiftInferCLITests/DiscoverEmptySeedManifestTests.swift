@@ -138,6 +138,7 @@ struct DiscoverEmptySeedManifestTests {
             seedManifest: SeedManifest(seeds: [
                 SeedManifest.Seed(
                     file: "View.swift", line: 57, symbol: "fetchLocalFiles",
+                    rule: "Pure Closure Property-Test Candidate",
                     kind: .unrecognised("pure-closure")
                 )
             ]),
@@ -148,6 +149,12 @@ struct DiscoverEmptySeedManifestTests {
         #expect(diagnostics.joined.contains("warning"))
         #expect(diagnostics.joined.contains("'pure-closure', which this build does not recognise"))
         #expect(recording.text.contains("normalize(_:)"))
+
+        // The warning names the RULE, which is the only field that says where a version skew is.
+        // "kind 'x' is unrecognised" tells a reader to upgrade; naming the rule tells them which
+        // half of the producer moved. This is the first thing in this repo ever to read `rule` —
+        // it was decoded and stored from the day the field existed and consulted by nothing.
+        #expect(diagnostics.joined.contains("from rule `Pure Closure Property-Test Candidate`"))
     }
 
     @Test("an empty manifest surfaces every suggestion rather than none")
@@ -202,7 +209,7 @@ struct DiscoverEmptySeedManifestTests {
         // so the focus is honoured — but a run that discards everything must never look like a
         // run that found nothing.
         let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 1, symbol: "noSuchFunction", rule: nil)
+            .init(file: "Source.swift", line: 1, symbol: "noSuchFunction")
         ])
 
         let recording = DPRecordingOutput()
@@ -234,9 +241,9 @@ struct DiscoverEmptySeedManifestTests {
         // An analysable seed that matches nothing, PLUS a kernel seed — the phase-1 shape a real
         // reader has before performing any extraction.
         let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 1, symbol: "noSuchFunction", rule: nil),
+            .init(file: "Source.swift", line: 1, symbol: "noSuchFunction"),
             .init(
-                file: "Source.swift", line: 9, symbol: "uploadRemainingChunks", rule: nil,
+                file: "Source.swift", line: 9, symbol: "uploadRemainingChunks",
                 kind: .extractableKernel
             )
         ])
@@ -263,7 +270,7 @@ struct DiscoverEmptySeedManifestTests {
         defer { try? FileManager.default.removeItem(at: directory) }
 
         let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 2, symbol: "normalize", rule: nil)
+            .init(file: "Source.swift", line: 2, symbol: "normalize")
         ])
 
         let recording = DPRecordingOutput()

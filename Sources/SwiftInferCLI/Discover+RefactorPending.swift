@@ -83,13 +83,22 @@ extension SwiftInferCommand.Discover {
             }
         }
 
+        // The rule is named because this warning is about a **version skew**, and the rule is the
+        // only field that says where the skew is. "kind 'x' is unrecognised" tells a reader to
+        // upgrade; "rule `Pure Closure Property-Test Candidate` emitted kind 'x'" tells them which
+        // half of the producer moved, which is the difference between an upgrade and a bug report.
+        //
+        // This is the first thing in this repo ever to read `rule`. It was decoded and stored from
+        // the day the field existed and consulted by nothing — optional on this side, non-optional
+        // on the producer's, and documented as "attribution in warnings" while no warning attributed
+        // anything.
         for seed in unknown {
             diagnostics.writeDiagnostic(
-                "warning: seed `\(seed.symbol)` (\(seed.file):\(seed.line)) has kind "
-                    + "'\(seed.kind.rawValue)', which this build does not recognise. It was NOT "
-                    + "focused on: narrowing to a symbol whose meaning is unknown is how a tool "
-                    + "ends up reporting a confident zero. Upgrade swift-infer, or re-run without "
-                    + "--seeds."
+                "warning: seed `\(seed.symbol)` (\(seed.file):\(seed.line)), from rule "
+                    + "`\(seed.rule)`, has kind '\(seed.kind.rawValue)', which this build does not "
+                    + "recognise. It was NOT focused on: narrowing to a symbol whose meaning is "
+                    + "unknown is how a tool ends up reporting a confident zero. Upgrade "
+                    + "swift-infer, or re-run without --seeds."
             )
         }
     }

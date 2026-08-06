@@ -1,0 +1,82 @@
+{
+  "seeds": [
+    {
+      "file": "SwiftInferCLI/VerifyInteractionSurvey.swift",
+      "kind": "extractable-kernel",
+      "line": 203,
+      "rule": "Extractable Pure Kernel",
+      "symbol": "groupByReducer"
+    },
+    {
+      "file": "SwiftInferCore/IdempotenceReturnShape.swift",
+      "kind": "extractable-kernel",
+      "line": 81,
+      "role": "predicate",
+      "rule": "Pure Closure Property-Test Candidate",
+      "symbol": "classify"
+    },
+    {
+      "effect": {
+        "declared": "idempotent",
+        "depth": 5,
+        "provenance": "inferred-upward",
+        "resolved": "non_idempotent"
+      },
+      "file": "SwiftInferCLI/VerifyCorpusStore.swift",
+      "kind": "idempotency",
+      "line": 66,
+      "rule": "Idempotency Violation",
+      "symbol": "record"
+    },
+    {
+      "file": "SwiftInferCore/BridgeSuggestion.swift",
+      "kind": "pure-function",
+      "line": 54,
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "identityCanonicalInput"
+    },
+    {
+      "file": "SwiftInferCore/BridgeSuggestion.swift",
+      "kind": "pure-function",
+      "line": 106,
+      "role": "normalizer",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "stubTypeName"
+    },
+    {
+      "file": "SwiftInferCore/SamplingSeed.swift",
+      "kind": "restricted-function",
+      "line": 92,
+      "restriction": "declaration",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "packUInt64"
+    },
+    {
+      "file": "SwiftInferCore/SwiftSourceFiles.swift",
+      "kind": "restricted-function",
+      "line": 45,
+      "restriction": "declaration",
+      "role": "predicate",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "isSymbolicLink"
+    },
+    {
+      "file": "SwiftInferCore/IdentityKeyedFold.swift",
+      "kind": "restricted-function",
+      "line": 103,
+      "restriction": "enclosing-type",
+      "role": "predicate",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "isRankedAbove"
+    },
+    {
+      "file": "SwiftInferCore/ViewModelProtocolScanner.swift",
+      "kind": "restricted-function",
+      "line": 138,
+      "restriction": "enclosing-type",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "requirement"
+    }
+  ],
+  "version": 2
+}

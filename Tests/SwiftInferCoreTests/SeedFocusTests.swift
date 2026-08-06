@@ -49,9 +49,10 @@ struct SeedFocusTests {
         // in it. That is the empty-manifest bug arriving by a new route.
         let json = """
         { "version": 2, "seeds": [
-            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function" },
+            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function",
+              "rule": "Pure Function Property-Test Candidate"},
             { "file": "Upload.swift", "line": 73, "symbol": "uploadRemainingChunks",
-              "kind": "extractable-kernel" }
+              "kind": "extractable-kernel", "rule": "Pure Function Property-Test Candidate"}
         ] }
         """
         let manifest = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
@@ -69,7 +70,8 @@ struct SeedFocusTests {
         // to a symbol whose meaning you do not know.
         let json = """
         { "version": 3, "seeds": [
-            { "file": "View.swift", "line": 57, "symbol": "fetchLocalFiles", "kind": "pure-closure" }
+            { "file": "View.swift", "line": 57, "symbol": "fetchLocalFiles", "kind": "pure-closure",
+              "rule": "Pure Function Property-Test Candidate"}
         ] }
         """
         let manifest = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
@@ -112,15 +114,45 @@ struct SeedFocusTests {
         #expect(manifest.seeds.first?.rule == "Pure Function Property-Test Candidate")
     }
 
-    @Test("SeedManifest tolerates a missing rule field")
-    func toleratesMissingRule() throws {
+    /// **This test asserted the opposite until 2026-08-06**, and the reversal is deliberate.
+    ///
+    /// `rule` was decoded leniently on the theory that a producer might drop or rename it. No
+    /// producer does: `PBTSeed.rule` is a non-optional `String` written from `issue.ruleName` on
+    /// every seed, and 0 of 2,099 measured seeds lacked it. So the tolerance never tolerated
+    /// anything real — it only guaranteed that a genuinely malformed manifest would parse into
+    /// seeds whose provenance nothing could name.
+    ///
+    /// Which mattered because **nothing read the field at all**. It was decoded and stored from the
+    /// day it existed and consulted nowhere, while `discover`'s warnings reported an unreadable
+    /// `kind` without saying which rule produced it — the one thing that turns "upgrade the tool"
+    /// into "and here is which half moved".
+    ///
+    /// Same reasoning as `kind`, one field over: a silent default on a field the producer always
+    /// sends is a hatch that only ever admits bugs.
+    @Test("SeedManifest refuses a seed with no rule")
+    func refusesMissingRule() throws {
         let json = #"""
         { "version": 2, "seeds": [
             { "file": "A.swift", "line": 1, "symbol": "f", "kind": "pure-function" }
         ] }
         """#
+        #expect(throws: (any Error).self) {
+            _ = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
+        }
+    }
+
+    /// The control: identical document with the field, so the refusal above is attributable to
+    /// `rule` alone.
+    @Test("the same manifest with a rule decodes")
+    func decodesWithRule() throws {
+        let json = #"""
+        { "version": 2, "seeds": [
+            { "file": "A.swift", "line": 1, "symbol": "f", "kind": "pure-function",
+              "rule": "Pure Function Property-Test Candidate" }
+        ] }
+        """#
         let manifest = try JSONDecoder().decode(SeedManifest.self, from: Data(json.utf8))
-        #expect(manifest.seeds.first?.rule == nil)
+        #expect(manifest.seeds.first?.rule == "Pure Function Property-Test Candidate")
         #expect(manifest.seeds.first?.symbol == "f")
     }
 }

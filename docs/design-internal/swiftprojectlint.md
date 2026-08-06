@@ -15,6 +15,14 @@
 > (§ *The effect tier*), and a fix to the `line` field's determinism. `RuleIdentifier` held at 202.
 > One trap was retired — the stale `PBTSeed.role` doc comment was fixed upstream by `0d56d982`.
 >
+> **Fourth pass, same day — and it was the consumer that had moved, not the subject.** Subject
+> unchanged at `08a4b09`; observer is an uncommitted working tree on `b41a3bd`. Reading this doc
+> end to end surfaced three consumer-side defects, all in the same class — **fields the producer
+> sends that this repo does not act on** — and all three are now closed. `restriction` was not
+> decoded at all (§ *Every field*), `rule` was decoded and read by nothing, and the access question
+> `restriction` answers was being answered *wrongly* by this repo's own scanner. What did **not**
+> change is the producer: every count in the subject sections below was re-run and held.
+>
 > **What the first pass got wrong, and how it was caught.** This doc was written against
 > `6c88715` — a local checkout that turned out to be **46 commits behind its origin**. Two counts
 > were stale within hours (`RuleIdentifier` 197 → 202, the testability family 7 → 9), and
@@ -40,7 +48,7 @@ does**, which is two jobs and nothing else:
 | | job | output channel | who consumes it |
 |---|---|---|---|
 | **1** | **Make property-testable code exist** — extract a pure function, give a primitive a domain type, remove a blocker | the human-readable report | a person, who edits code |
-| **2** | **Say where to point the next tool** — `{file, line, symbol, rule, kind, role}` | `--format pbt-seeds` JSON | `swift-infer discover --seeds`, and **only** that |
+| **2** | **Say where to point the next tool** — `{file, line, symbol, rule, kind}` required, `{role, restriction, effect}` optional | `--format pbt-seeds` JSON | `swift-infer discover --seeds`, and **only** that |
 
 The two jobs are not independent, and the direction is the interesting part: **job 1's output
 becomes job 2's input on the next run.** A kernel you extract this week is a named, analysable
@@ -189,6 +197,18 @@ type gets no manifest entry for it, and the linter's own history says why that i
 Whether these should seed is **open**, not decided; the carrier they create has no callable function
 attached, so a `pure-function` kind would be a lie and a new kind would be a v3 schema event.
 
+> **From the consumer side, 2026-08-06: the stated blocker does not hold.** *"No callable function
+> attached"* assumes this tool's subject is always a function. It is not — `CodableRoundTripTemplate`,
+> `FunctorIdentityTemplate`, `ModelLawTemplate`, `SequenceViewModelLawTemplate` and the whole of
+> `verify-value-semantics` state laws over a **carrier**, and a newtype is a carrier that owes some.
+> That is the argument §1b already makes in its own last paragraph (*"the refactor turns a value with
+> no laws into a type that owes some"*), which the decline then contradicts.
+>
+> The real blocker is narrower and is on this side: **`SeedFocus` joins on function evidence**
+> (`Evidence.displayName`, a function name with parameter labels), so a `carrier` kind would decode
+> and then match nothing. That is a join change here, not a schema problem there — and it is worth
+> saying which of the two repos the work actually lands in before the decision is re-litigated.
+
 ### 1c. Blockers — things to remove before anything works
 
 `Global Mutable State` · `Non-Injected Nondeterminism` · `Missing Equatable on State Type` ·
@@ -236,7 +256,12 @@ the *law*. `enclosing-type` wins when both apply, because it names the binding c
 Measured when it shipped: **27 of 338** restricted seeds on SwiftProjectLint (8%) and **18 of 659**
 on SwiftInferProperties (2.7%) are `enclosing-type` — small, non-zero, and silent in exactly the
 direction that would have been misread. No version bump: absent means "producer does not classify",
-and a seed without it is byte-identical to one written before.
+and a seed without it is byte-identical to one written before. Re-measured 2026-08-06 at `08a4b09`:
+**15 of 662** on SwiftInferProperties, the same shape.
+
+**That paragraph turned out to be a prediction, and it was right about this repo.** *"A consumer
+acting on the kind alone can emit a patch that unblocks nothing"* is not hypothetical —
+`SpeculativeWidening` was doing exactly that, for a reason the field would have named. See below.
 
 ### Every field, and who may rely on it
 
@@ -245,11 +270,16 @@ and a seed without it is byte-identical to one written before.
 | `file` | ✅ | path as walked | **focus key**, with `symbol` |
 | `line` | ✅ | 1-based | reported to the reader; **not** matched on |
 | `symbol` | ✅ | resolved name | **focus key**, with `file` |
-| `rule` | — | rule display name | attribution in warnings |
+| `rule` | ✅ | rule display name | names the rule in the unrecognised-`kind` warning |
 | `kind` | ✅ | 4 cases, below | decides whether the seed may focus at all |
 | `role` | — | 6 cases | decides what law is *owed* |
-| `restriction` | — | `declaration` · `enclosing-type` | names what must move to verify |
-| `effect` | — | object, below | **`idempotency` seeds only; unread today** |
+| `restriction` | — | `declaration` · `enclosing-type` | names what must move to verify — **corrects the remedy this repo renders** |
+| `effect` | — | object, below | `idempotency` seeds only; read since `f33dfd1` |
+
+**Two of those "consumer use" cells were aspirational until 2026-08-06** — they described what the
+field was *for*, and this repo did neither. `rule` was optional here, decoded, stored, and read by
+nothing; `restriction` was **not decoded at all**. Both are fixed, and the second one had already
+cost something. See § *The three fields this consumer was not reading*.
 
 **`line` is carried but never matched on**, and that is load-bearing rather than incidental. The
 subject fixed a real nondeterminism in it on 2026-08-06 (`36df9996`): `getLineNumber` measured a
@@ -301,6 +331,84 @@ ceiling. A linter running ahead of the pipeline has no such constraint, so *"a `
 several calls down, which the local pass structurally cannot see, arrives already resolved — for
 free, since the linter already paid."* That is the argument for the field: not a shortcut, but a
 tier the consumer **cannot compute** within its own budget.
+
+### The three fields this consumer was not reading
+
+Written 2026-08-06, from the consumer side, after this doc's own field table was checked against
+`SeedManifest.swift` instead of being believed.
+
+**The class of defect is one thing, not three: `Codable` ignores unknown keys.** A producer *adding*
+a field is invisible here — no error, no warning, no changed output. That is the mirror image of the
+silent `kind` default the v1 → v2 bump exists to delete, and silent in the same direction. There was
+no test that could have failed.
+
+| field | what was wrong | what it cost |
+|---|---|---|
+| `restriction` | not decoded at all, 2026-08-03 → 08-06 | the remedy this repo prints was wrong for a whole shape, and a patch generator acted on it |
+| `rule` | optional here, non-optional upstream; **read by nothing** | warnings could not name the rule; the "attribution" cell above was fiction |
+| `effect` | (already closed by `f33dfd1`) | — |
+
+**`restriction` is the expensive one, and the cost was not the missing field.** This repo answers
+the same access question locally, in `FunctionScanner.accessRestriction` — and it was answering it
+wrongly. The declaration's own `private` was tested *before* anything about the enclosing type, so
+a `private` member of a `private` type came back `.notVisibleToTests`, which is the one **widenable**
+answer. `SpeculativeWidening` would then snapshot the package to delete a keyword that exposes
+nothing and report `"widening X exposed the symbol but no template proposed a law — the TEMPLATE
+gate decides this"` — both halves false, a patch failure attributed to the catalogue.
+
+Its own doc claimed that case was excluded, via `.nestedLocal`, which is a different shape (a
+function inside another *body*). Nothing produced the case being described, and the test asserted
+the exclusion **using that same wrong case**, so it passed green over an unguarded trap. *A doc
+asserting a guard is not a guard.*
+
+Measured over this repo's `Sources/`: **83 of 963 set-aside rows carried the wrong reason** — 15
+were genuine bogus widening candidates, 68 were never widenable but were told *"a same-package test
+target using `@testable import` can call it"*, which is false for a `private` enclosing type.
+Membership did not move: 877+15 / 68+1 / 2 reconstructs the same 963, so no suggestion appeared or
+disappeared. Only the advice changed.
+
+**What the field is worth now that the local bug is fixed: on this corpus, nothing — and that is
+the honest reading.** Against the live manifest, 659 rows matched, **659 agree, 0 corrected, 0
+disagreements**. The local classifier now reaches the producer's conclusion independently for every
+directly nested case. What the field still covers is the residual blind spot: the enclosing-type
+stack is **same-declaration only**, so a member of an unmarked `extension PrivateType { … }` reads
+locally as blocked by its own modifier, and resolving that needs the type's declaration, which may
+be visited later or live in another file. This repo contains no instance of it.
+
+So the field's live contribution is a **cross-check that passes**, plus a case the local analysis
+structurally cannot reach. Before the local fix the same measurement would have shown 15
+corrections — derived from the classification split, not re-run.
+
+Two design notes worth keeping, both about not over-trusting the manifest:
+
+- **Only one direction of disagreement is arbitrated.** Manifest `enclosing-type` + local
+  `.notVisibleToTests` → the manifest wins, because that pair has a known structural cause.
+  Preferring the manifest wholesale would let a stale seed overrule a syntactic reading of the
+  declaration in front of us, and the failure would be invisible, because both answers are
+  plausible sentences about access. Everything else is *reported* — one aggregate line, the
+  `ProtocolCoverageAudit` shape — because two tools disagreeing without saying so is exactly how
+  `restricted-function` went wrong the first time.
+- **Reconciled once, at the scan.** Three places turn an `AccessRestriction` into advice, and
+  fixing the one in front of you is how the original defect's computed-property arm nearly outlived
+  its own fix.
+
+**A second bug fell out of the first.** The rescued suggestion's caveat ended every remedy with
+*"and it is one keyword"* — true of exactly one of the four restrictions. That clause is what makes
+a reader act now rather than later, so attaching it to a refactor that is not one keyword spends
+the credibility the caveat exists to build.
+
+**The guard.** `SeedFieldParity` derives the read-field set from the coding keys, and
+`SeedFieldParityTests` compares it to what a *real* producer emits, two arms:
+`fixtures/seed-manifest-parity/seeds.json` (real output at `08a4b09`, one seed per shape, nine
+shapes covering all eight fields — always runs, and **cannot catch a field added after capture**),
+plus a read of `PBTSeed`'s stored properties out of a sibling `../SwiftProjectLint` checkout (cannot
+go stale, does not run without the sibling). Verified by control: injecting a `confidence` key made
+both arms fail and name it.
+
+**`rule` is now required and read.** The producer's field is non-optional and 0 of 2,099 measured
+seeds lacked it, so absence means a malformed document, not an honest unknown. It is read in the
+unrecognised-`kind` warning: *"kind 'x' is unrecognised"* tells a reader to upgrade, while naming
+the rule tells them which half of the producer moved.
 
 ### The four seeding rules
 
@@ -468,6 +576,15 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
   rules and `ExtractablePureKernelVisitor` — and `.idempotencyViolation` is the only one that does
   not. Kept struck-through rather than deleted because the *count* is what a reader needs and the
   trap is where they will look for it.
+- **A producer-side field ADDITION is silent on the consumer, and always will be.** `Codable`
+  ignores unknown keys, so a new field arrives, decodes into nothing, and changes no output. That is
+  not a bug anyone introduced; it is the default, and it is the opposite direction from the failure
+  the `kind`/`rule` requirements guard (a *missing* field). `restriction` sat unread here for three
+  days because of it. `SeedFieldParityTests` now fails on an unread field — but **only its
+  sibling-checkout arm can catch a field added tomorrow**; the committed fixture arm catches only
+  what was present when it was last regenerated. Regenerate `fixtures/seed-manifest-parity/seeds.json`
+  as part of any producer schema change, and treat "the parity test is green" as evidence about the
+  fixture's age, not about the producer.
 - **Only `PureFunctionCandidateVisitor` sets `testReachability`.** Everything else leaves it
   `.unknown`, which `effectiveKind` treats as reachable — deliberately, since demoting on "the rule
   did not look" would silently shrink the manifest. Consequence: the `restricted-function` demotion
@@ -499,4 +616,8 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
 | policing the cure vs detecting the disease | `Docs/design/primitive-bypassing-domain-type-rule-design.md` |
 | the format wiring and the exit-gate bypass | `Sources/CLI/OutputFormat.swift`, `SwiftProjectLintCLI.swift` |
 | consumer side of the same hop | `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift`, `SeedManifest.swift`, `SeedRole.swift` |
+| which fields this consumer reads, and the guard that says so | `SwiftInferCore/SeedField.swift` (`SeedFieldParity`) + `Tests/SwiftInferCoreTests/SeedFieldParityTests.swift` + `fixtures/seed-manifest-parity/` |
+| what `restriction` corrects, and the one disagreement it is allowed to settle | `SwiftInferCore/SeedRestriction.swift`, `SeedRestrictionResolver.swift` |
+| why the declaration's own `private` is **not** tested first | `SwiftInferCore/FunctionScannerVisitor+AccessRestriction.swift`, `RestrictedFunction.swift` |
+| the patch generator that acted on the wrong answer | `SwiftInferCore/SpeculativeWidening.swift` |
 | the vocabulary, both sides | `docs/design-internal/glossary.md` — *Seed / seed manifest*, *Role-entailed*, *Confident zero* |

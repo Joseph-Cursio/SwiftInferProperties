@@ -351,13 +351,23 @@ public enum TemplateRegistry {
             in: corpus.summaries,
             vocabulary: vocabulary
         )
+        // Access blockers the linter resolved, applied on the same terms as the effect tiers above
+        // and for the same reason: the manifest can see across a declaration boundary that this
+        // scan, in one pass, cannot. Done here — once, at the scan — because three downstream
+        // consumers turn this reason into advice, and reconciling at each is how the original
+        // defect's second arm outlived its own fix. See `SeedRestrictionResolver`.
+        let restricted = seedManifest.map {
+            SeedRestrictionResolver.resolve(
+                restricted: corpus.restricted, manifest: $0, diagnostic: diagnostic
+            )
+        } ?? corpus.restricted
         return DiscoverArtifacts(
             suggestions: suggestions,
             inverseElementPairs: inverseElementPairs,
             summaries: corpus.summaries,
             typeDecls: corpus.typeDecls,
             effectAnnotations: EffectAnnotationAdvice.adviceList(from: corpus.summaries),
-            restrictedFunctions: corpus.restricted
+            restrictedFunctions: restricted
         )
     }
 }

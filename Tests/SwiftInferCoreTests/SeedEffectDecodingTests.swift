@@ -57,7 +57,8 @@ struct SeedEffectDecodingTests {
         let manifest = try decode("""
         {"version":2,"seeds":[{"effect":{"declared":"observational",
         "provenance":"declared","resolved":"externally_idempotent"},
-        "file":"A.swift","kind":"idempotency","line":1,"symbol":"f"}]}
+        "file":"A.swift","kind":"idempotency","line":1,"symbol":"f",
+        "rule":"Idempotency Violation"}]}
         """)
         let effect = try #require(manifest.seeds.first?.effect)
         #expect(effect.declared == .observational)
@@ -70,7 +71,7 @@ struct SeedEffectDecodingTests {
     func absentEffectDecodes() throws {
         let manifest = try decode("""
         {"version":2,"seeds":[{"file":"Math.swift","line":3,"symbol":"add",
-        "kind":"pure-function"}]}
+        "kind":"pure-function", "rule": "Pure Function Property-Test Candidate"}]}
         """)
         #expect(manifest.seeds.first?.effect == nil)
     }
@@ -82,7 +83,8 @@ struct SeedEffectDecodingTests {
     func missingProvenanceThrows() throws {
         let json = """
         {"version":2,"seeds":[{"effect":{"declared":"idempotent","resolved":"non_idempotent"},
-        "file":"A.swift","kind":"idempotency","line":1,"symbol":"f"}]}
+        "file":"A.swift","kind":"idempotency","line":1,"symbol":"f",
+        "rule":"Idempotency Violation"}]}
         """
         let data = try #require(json.data(using: .utf8))
         #expect(throws: (any Error).self) {
@@ -98,7 +100,7 @@ struct SeedEffectDecodingTests {
         let json = """
         {"version":2,"seeds":[{"effect":{"declared":"idempotent","provenance":"declared",
         "resolved":"transactional_idempotent"},"file":"A.swift","kind":"idempotency",
-        "line":1,"symbol":"f"}]}
+        "line":1,"symbol":"f","rule":"Idempotency Violation"}]}
         """
         let data = try #require(json.data(using: .utf8))
         #expect(throws: (any Error).self) {

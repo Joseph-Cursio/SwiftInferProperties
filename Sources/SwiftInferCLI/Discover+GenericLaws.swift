@@ -48,6 +48,13 @@ extension SwiftInferCommand.Discover {
         // A seed naming a function the scan set aside is an explicit request from a producer that
         // has already examined it. The scan is right that no external test can *call* it — but the
         // answer to that is to say so, not to drop the reader's best candidate without a word.
+        //
+        // `restricted.restriction` has already been reconciled against the manifest's own
+        // `restriction` field by `SeedRestrictionResolver`, upstream at the scan. It is done there
+        // rather than here because this is one of *three* consumers of that remedy —
+        // `withAccessRestrictionCaveats` and `SpeculativeWidening` are the others — and fixing the
+        // one in front of you is how the computed-property arm of the original defect survived its
+        // own fix for an afternoon.
         for restricted in restrictedFunctions {
             let summary = restricted.summary
             let key = genericLawKey(file: summary.location.file, symbol: summary.name)

@@ -23,11 +23,23 @@ import Foundation
 ///
 /// ## Only one restriction is a candidate
 ///
-/// `.nestedLocal` is excluded deliberately, and it is the design's named trap:
+/// `.enclosingTypeNotVisibleToTests` is excluded, and it is the design's named trap:
 /// widening a member nested inside a private type is a **no-op**, so the patch
 /// would unblock nothing and then fail verification for a reason unrelated to the
-/// law. `.internalOrSPI` is excluded because a same-package test target with
-/// `@testable import` already reaches it — there is nothing to unblock.
+/// law. `.nestedLocal` is excluded on the same grounds — a local function has no
+/// caller to widen *to*. `.internalOrSPI` is excluded because a same-package test
+/// target with `@testable import` already reaches it — there is nothing to unblock.
+///
+/// **The named trap was live until 2026-08-06, and this doc is where it hid.** The
+/// paragraph above cited `.nestedLocal` as the guard, which is a different shape —
+/// a function declared inside another *body*, not a member of a private *type*.
+/// Nothing classified the member case at all: `FunctionScanner.accessRestriction`
+/// read the declaration's own `private` first and returned `.notVisibleToTests`,
+/// the one widenable answer. So the exclusion this doc describes was never
+/// implemented, and the trap it warns about was reachable for every such member —
+/// 15 of them in this repository's own `Sources/`, and independently 15 seeds
+/// tagged `enclosing-type` by SwiftProjectLint over the same tree. A doc asserting
+/// a guard is not a guard; `SpeculativeWideningTests` now pins the exclusion.
 ///
 /// That distinction is why `AccessRestriction` carries a *reason* rather than a
 /// single "restricted" kind: the remedies differ, and a generator that ignored the
@@ -61,7 +73,14 @@ public enum SpeculativeWidening {
     /// The restrictions widening can actually fix.
     ///
     /// Exactly one case, and the narrowness is the point — see the type doc for why
-    /// `.nestedLocal` and `.internalOrSPI` are not candidates.
+    /// `.enclosingTypeNotVisibleToTests`, `.nestedLocal` and `.internalOrSPI` are not
+    /// candidates.
+    ///
+    /// Written as an equality against the one admissible case rather than as a set of
+    /// exclusions, deliberately: a new `AccessRestriction` case then defaults to
+    /// *not* widenable, and a wrong default here costs a package snapshot and a
+    /// misattributed verdict, while a wrong default the other way costs one missed
+    /// candidate and says so.
     public static func isWidenable(_ restriction: AccessRestriction) -> Bool {
         restriction == .notVisibleToTests
     }

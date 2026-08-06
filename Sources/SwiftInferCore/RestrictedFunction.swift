@@ -31,6 +31,29 @@ public enum AccessRestriction: String, Sendable, Equatable, Codable {
     /// A function declared inside another body, reachable only through it.
     case nestedLocal
 
+    /// An enclosing type or extension is `private` / `fileprivate`, so nothing outside the file can
+    /// name the function — **whatever the function's own modifier says**.
+    ///
+    /// This is not a finer shade of `notVisibleToTests`; it is a different *remedy*, and conflating
+    /// the two produces a patch that cannot work. Deleting `private` from a member of a `private`
+    /// type compiles and changes nothing: the member is still unreachable, because the type is. So
+    /// `SpeculativeWidening` must not treat it as a candidate — see that type's doc.
+    ///
+    /// **When the function is itself `private` AND an enclosing type is, this case wins**, because
+    /// it names the *binding* constraint — the one that still blocks after the other is fixed.
+    /// SwiftProjectLint's seed manifest reaches the same conclusion in the same words: its
+    /// `restriction` field is `enclosing-type` rather than `declaration` for exactly this shape,
+    /// *"because it names the binding constraint"*. The two tools agree by construction rather than
+    /// by coincidence, and the manifest field is how a future build can check that they still do —
+    /// this repo does not decode it yet.
+    ///
+    /// **Known bound: same-declaration only.** The enclosing-type stack sees modifiers on the
+    /// nesting `class`/`struct`/`enum`/`actor`/`extension` the function is written inside. A member
+    /// of an unmarked `extension PrivateType { … }` is *not* caught, because resolving that needs
+    /// the type's own declaration, which may be visited later or live in another file. That is the
+    /// gap the manifest's `restriction` field could close without a second pass.
+    case enclosingTypeNotVisibleToTests
+
     /// What a reader has to do to make this function property-testable.
     public var remedy: String {
         switch self {
@@ -46,6 +69,11 @@ public enum AccessRestriction: String, Sendable, Equatable, Codable {
         case .nestedLocal:
             return "it is a local function inside another body, so nothing can call it directly. "
                 + "Lift it out to a member or a free function."
+
+        case .enclosingTypeNotVisibleToTests:
+            return "its enclosing type is `private` or `fileprivate`, so no test can name it — and "
+                + "widening this declaration alone would be a no-op, because the type is what "
+                + "blocks it. Widen the enclosing type first, or lift the logic out of it."
         }
     }
 }

@@ -34,7 +34,8 @@ struct SeedRoleContractTests {
 
     private func decodeRole(_ raw: String) throws -> SeedRole {
         let json = Data("""
-        {"file":"A.swift","line":1,"symbol":"f","kind":"extractable-kernel","role":"\(raw)"}
+        {"file":"A.swift","line":1,"symbol":"f","kind":"extractable-kernel","role":"\(raw)",
+          "rule": "Pure Function Property-Test Candidate"}
         """.utf8)
         return try #require(JSONDecoder().decode(SeedManifest.Seed.self, from: json).role)
     }
@@ -109,7 +110,8 @@ struct SeedRoleContractTests {
     @Test("the restricted-function kind decodes and IS analysable")
     func restrictedFunctionKindIsUnderstood() throws {
         let json = Data("""
-        {"file":"A.swift","line":1,"symbol":"hidden","kind":"restricted-function","role":"predicate"}
+        {"file":"A.swift","line":1,"symbol":"hidden","kind":"restricted-function","role":"predicate",
+          "rule": "Pure Function Property-Test Candidate"}
         """.utf8)
         let seed = try JSONDecoder().decode(SeedManifest.Seed.self, from: json)
         #expect(seed.kind == .restrictedFunction)
@@ -140,7 +142,7 @@ struct SeedRoleContractTests {
     @Test("a manifest with no role field still decodes")
     func absentRoleIsNil() throws {
         let json = Data("""
-        {"file":"A.swift","line":1,"symbol":"f","kind":"pure-function"}
+        {"file":"A.swift","line":1,"symbol":"f","kind":"pure-function", "rule": "Pure Function Property-Test Candidate"}
         """.utf8)
         #expect(try JSONDecoder().decode(SeedManifest.Seed.self, from: json).role == nil)
     }
@@ -152,7 +154,7 @@ struct SeedRoleContractTests {
     @Test("a role does not excuse a missing kind")
     func roleDoesNotExcuseMissingKind() {
         let json = Data("""
-        {"file":"A.swift","line":1,"symbol":"f","role":"comparator"}
+        {"file":"A.swift","line":1,"symbol":"f","role":"comparator", "rule": "Pure Function Property-Test Candidate"}
         """.utf8)
         #expect(throws: DecodingError.self) {
             try JSONDecoder().decode(SeedManifest.Seed.self, from: json)

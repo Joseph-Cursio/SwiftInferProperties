@@ -189,4 +189,102 @@ struct SeededPrivateFunctionTests {
         #expect(recording.text.contains("seeded(_:)"))
         #expect(recording.text.contains("unseeded") == false)
     }
+
+    // MARK: - The manifest's `restriction`, and the blind spot it covers
+
+    /// **The case the field is carried for**, end to end.
+    ///
+    /// `Helper` is `private`; the member is written in an *unmarked* extension of it. This scan's
+    /// enclosing-type stack is same-declaration only — the extension carries no modifier and the
+    /// type's own declaration is a different decl — so locally this reads as blocked by the
+    /// member's own `private`, which is the one **widenable** answer. The linter resolved the type
+    /// and said `enclosing-type`.
+    ///
+    /// Without the manifest field, the tool tells the reader to delete a keyword. They do it, it
+    /// compiles, nothing changes, and the law is still unrunnable — which is the failure mode the
+    /// whole `restricted-function` design exists to prevent, arriving by the one route the local
+    /// analysis cannot close.
+    @Test("the manifest's enclosing-type restriction corrects a remedy this scan gets wrong")
+    func manifestCorrectsTheRemedy() throws {
+        let source = """
+        private struct Helper {
+            let base: String
+        }
+        extension Helper {
+            private func isValidFolderName(_ name: String) -> Bool {
+                !name.isEmpty
+            }
+        }
+        """
+        let directory = try writeDPFixture(name: "PrivateEnclosing", contents: source)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let manifest = SeedManifest(seeds: [
+            .init(
+                file: "Source.swift",
+                line: 5,
+                symbol: "isValidFolderName",
+                rule: "Pure Function Property-Test Candidate",
+                kind: .restrictedFunction,
+                restriction: .enclosingType
+            )
+        ])
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        #expect(recording.text.contains("NO TEST CAN RUN THIS LAW AS WRITTEN"))
+        #expect(recording.text.contains("its enclosing type is `private` or `fileprivate`"))
+        #expect(recording.text.contains("would be a no-op"))
+        // The correction is announced, not applied silently: a remedy that changed because another
+        // tool knew better is exactly the kind of thing a reader should be able to trace.
+        #expect(diagnostics.joined.contains("corrected 1 access remedy"))
+
+        // The advice this scan would have given alone, and the effort claim that goes with it, are
+        // both gone. "One keyword" is the sentence that makes a reader act now, so leaving it on a
+        // refactor that is not one keyword is worse than saying nothing about effort.
+        #expect(recording.text.contains("Widen it to `internal`") == false)
+        #expect(recording.text.contains("it is one keyword") == false)
+    }
+
+    /// The control. Same law, same shape, enclosing type **not** private — so this scan is right,
+    /// the manifest agrees, and both the widening advice and the effort claim stand.
+    ///
+    /// Without this, the test above could be passed by a change that simply stopped saying "one
+    /// keyword" to anyone.
+    @Test("a declaration-blocked function keeps the widening advice and the effort claim")
+    func declarationBlockedKeepsWideningAdvice() throws {
+        let directory = try writeDPFixture(name: "PrivateDeclOnly", contents: Self.privateHelper)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let manifest = SeedManifest(seeds: [
+            .init(
+                file: "Source.swift",
+                line: 2,
+                symbol: "isValidFolderName",
+                rule: "Pure Function Property-Test Candidate",
+                kind: .restrictedFunction,
+                restriction: .declaration
+            )
+        ])
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: false,
+            seedManifest: manifest,
+            output: recording,
+            diagnostics: diagnostics
+        )
+
+        #expect(recording.text.contains("Widen it to `internal`"))
+        #expect(recording.text.contains("it is one keyword"))
+        #expect(diagnostics.joined.contains("corrected") == false)
+    }
 }

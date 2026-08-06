@@ -51,32 +51,47 @@ extension SwiftInferCommand.Discover {
     ) -> [Suggestion] {
         guard !restrictedFunctions.isEmpty else { return suggestions }
         let pairs = restrictedFunctions.map {
-            (SymbolJoinKey.make(for: $0.summary), $0.restriction.remedy)
+            (SymbolJoinKey.make(for: $0.summary), $0.restriction)
         }
         // First wins: the lossy join key can collide (see `SymbolJoinKey`), and two remedies for
         // one key differ only in wording — picking either beats trapping on a duplicate.
-        let remedyByKey = Dictionary(pairs) { first, _ in first }
+        let restrictionByKey = Dictionary(pairs) { first, _ in first }
         return suggestions.map { suggestion in
-            let remedies = suggestion.evidence.compactMap { row in
-                remedyByKey[
+            let restrictions = suggestion.evidence.compactMap { row in
+                restrictionByKey[
                     SymbolJoinKey.make(
                         file: row.location.file,
                         symbol: Self.functionBaseName(row.displayName)
                     )
                 ]
             }
-            guard let remedy = remedies.first else { return suggestion }
+            guard let restriction = restrictions.first else { return suggestion }
             var updated = suggestion
             updated.explainability = ExplainabilityBlock(
                 whySuggested: suggestion.explainability.whySuggested,
                 whyMightBeWrong: [
-                    "NO TEST CAN RUN THIS LAW AS WRITTEN: \(remedy) The law itself is right — a "
-                        + "seed asked for this function, and the property is worth stating — but "
-                        + "the refactor comes first, and it is one keyword."
+                    "NO TEST CAN RUN THIS LAW AS WRITTEN: \(restriction.remedy) The law itself is "
+                        + "right — a seed asked for this function, and the property is worth "
+                        + "stating — but the refactor comes first\(Self.effortClause(for: restriction))."
                 ] + suggestion.explainability.whyMightBeWrong
             )
             return updated
         }
+    }
+
+    /// *"and it is one keyword"* — true of exactly one restriction, and asserted for all four until
+    /// 2026-08-06.
+    ///
+    /// The sentence is the reason a reader acts now rather than later, so it has to be true. For an
+    /// enclosing-type blocker it is not merely imprecise but the specific wrong idea: it tells them
+    /// the fix is deleting a modifier, which compiles, changes nothing, and leaves the law still
+    /// unrunnable. Promising cheapness for a refactor that is not cheap spends the credibility the
+    /// caveat exists to build.
+    ///
+    /// Empty rather than a vaguer clause for the other cases: a caveat that says nothing about
+    /// effort is honest, while one that gestures at it without knowing is the same failure smaller.
+    static func effortClause(for restriction: AccessRestriction) -> String {
+        restriction == .notVisibleToTests ? ", and it is one keyword" : ""
     }
 
     // Internal rather than `private`: it moved out of `Discover+Pipeline.swift` and its one

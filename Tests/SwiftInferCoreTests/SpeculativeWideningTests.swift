@@ -32,11 +32,48 @@ struct SpeculativeWideningTests {
     /// The narrowness is the design, not an oversight. Widening a member nested in
     /// a private type is a **no-op** — the patch would unblock nothing and then
     /// fail verification for a reason that has nothing to do with the law.
+    ///
+    /// **`.enclosingTypeNotVisibleToTests` is the row that was missing**, and the
+    /// gap was invisible from here because this suite and `SpeculativeWidening`'s
+    /// doc both *described* the private-enclosing-type trap while asserting
+    /// `.nestedLocal`, a different shape. Nothing ever produced the case being
+    /// described, so the assertion passed green over an unguarded trap. Asserting a
+    /// classification the scanner cannot emit is the same defect as a coverage
+    /// claim about a law the kit does not ship — hence `scannerClassifies…` below,
+    /// which drives the real scanner rather than hand-building the enum.
     @Test("only notVisibleToTests is widenable")
     func onlyNotVisibleToTestsIsWidenable() {
         #expect(SpeculativeWidening.isWidenable(.notVisibleToTests))
         #expect(!SpeculativeWidening.isWidenable(.nestedLocal))
         #expect(!SpeculativeWidening.isWidenable(.internalOrSPI))
+        #expect(!SpeculativeWidening.isWidenable(.enclosingTypeNotVisibleToTests))
+    }
+
+    /// End to end: real source in, no candidate out.
+    ///
+    /// The unit assertion above can only say the classification is not widenable. This says the
+    /// **scanner produces that classification** for the shape in question — which is the half that
+    /// was actually broken, and the half a hand-built `RestrictedFunction` cannot reach.
+    @Test("a private member of a private type yields no widening candidate")
+    func privateMemberOfPrivateTypeIsNotACandidate() {
+        let source = """
+        private struct Helper {
+            private func trim(_ text: String) -> String { text }
+        }
+        public struct Exposed {
+            private func trim(_ text: String) -> String { text }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "F.swift")
+        let candidates = SpeculativeWidening.candidates(
+            from: corpus.restricted,
+            in: ["F.swift": source]
+        )
+
+        // Exactly one: the member of the public type. Widening it genuinely exposes something.
+        #expect(candidates.count == 1)
+        #expect(candidates.first?.line == 5)
+        #expect(candidates.first?.modifier == "private")
     }
 
     // MARK: - Finding the modifier

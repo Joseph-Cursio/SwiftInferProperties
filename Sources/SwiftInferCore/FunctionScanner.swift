@@ -109,10 +109,20 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     let file: String
     let converter: SourceLocationConverter
     var typeStack: [String] = []
-    /// Cycle 151 (Lever D) — parallel to `typeStack`: whether each enclosing
-    /// type/extension was declared with an explicit non-public access modifier
-    /// (`private` / `fileprivate` / `internal`). Pushed/popped in lockstep.
-    var enclosingTypeNonPublic: [Bool] = []
+    /// Cycle 151 (Lever D) — parallel to `typeStack`: the explicit access modifier on each
+    /// enclosing type/extension. Pushed/popped in lockstep.
+    ///
+    /// **This was a `[Bool]` — "explicitly non-public" — until 2026-08-06, and the missing
+    /// distinction was a live defect.** One flag cannot answer two different questions: *is this
+    /// surface non-public* (which decides whether it is set aside at all) and *is it invisible to
+    /// `@testable import`* (which decides whether widening one member could ever unblock it).
+    /// Collapsing them meant a `private` member of a `private` type was reported as
+    /// `.notVisibleToTests` — a **widenable** restriction — so `SpeculativeWidening` would snapshot
+    /// the package to delete a keyword that exposes nothing, then attribute the resulting silence
+    /// to the template catalogue. A second parallel `[Bool]` would have worked and was rejected:
+    /// this one already carries a "pushed/popped in lockstep" warning, and two stacks needing the
+    /// same discipline is how the pairing drifts.
+    var enclosingTypeAccess: [EnclosingTypeAccess] = []
 
     init(file: String, converter: SourceLocationConverter) {
         self.file = file
@@ -183,56 +193,6 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         return .skipChildren
     }
 
-    /// Why an external test could not call `node`, or `nil` when it could.
-    private func accessRestriction(of node: FunctionDeclSyntax) -> AccessRestriction? {
-        let modifiers = node.modifiers.map(\.name.text)
-
-        if modifiers.contains("private") || modifiers.contains("fileprivate") {
-            return .notVisibleToTests
-        }
-        if isNestedLocalFunction(node) {
-            return .nestedLocal
-        }
-        if modifiers.contains("internal")
-            || hasSPIAttribute(node)
-            || typeStack.contains(where: { $0.hasPrefix("_") })
-            || enclosingTypeNonPublic.contains(true) {
-            return .internalOrSPI
-        }
-        return nil
-    }
-
-    /// Cycle 151 (Lever D) — true if the function carries an `@_spi(...)`
-    /// attribute (system programming interface; not importable public API).
-    private func hasSPIAttribute(_ node: FunctionDeclSyntax) -> Bool {
-        node.attributes.contains { element in
-            if case let .attribute(attr) = element {
-                return attr.attributeName.trimmedDescription == "_spi"
-            }
-            return false
-        }
-    }
-
-    /// Cycle 151 (Lever D) — true if the function is a local helper declared
-    /// inside another body (function / accessor / closure), not a type member
-    /// or top-level declaration. Walks ancestors: a member func reaches a
-    /// `MemberBlock` (or the file root) first; a local func hits an enclosing
-    /// code block / closure first.
-    private func isNestedLocalFunction(_ node: FunctionDeclSyntax) -> Bool {
-        var ancestor = node.parent
-        while let current = ancestor {
-            if current.is(MemberBlockSyntax.self) || current.is(SourceFileSyntax.self) {
-                return false
-            }
-            if current.is(CodeBlockSyntax.self) || current.is(ClosureExprSyntax.self)
-                || current.is(AccessorBlockSyntax.self) {
-                return true
-            }
-            ancestor = current.parent
-        }
-        return false
-    }
-
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
         captureIdentityCandidates(from: node)
         // Recall-widening epic #1 — a read-only computed property is a nullary
@@ -249,29 +209,6 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         return .visitChildren
     }
 
-    /// Access restriction for a computed property, mirroring `accessRestriction`
-    /// for functions (private/fileprivate → not visible; internal/SPI/`_`-type →
-    /// internal). Properties are never "nested local", so that case is omitted.
-    private func accessRestriction(ofVariable node: VariableDeclSyntax) -> AccessRestriction? {
-        let modifiers = node.modifiers.map(\.name.text)
-        if modifiers.contains("private") || modifiers.contains("fileprivate") {
-            return .notVisibleToTests
-        }
-        let hasSPI = node.attributes.contains { element in
-            if case let .attribute(attr) = element {
-                return attr.attributeName.trimmedDescription == "_spi"
-            }
-            return false
-        }
-        if modifiers.contains("internal")
-            || hasSPI
-            || typeStack.contains(where: { $0.hasPrefix("_") })
-            || enclosingTypeNonPublic.contains(true) {
-            return .internalOrSPI
-        }
-        return nil
-    }
-
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         typeDecls.append(makeTypeDecl(
             name: node.name.text,
@@ -281,12 +218,12 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
-        enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
+        enclosingTypeAccess.append(Self.access(of: node.modifiers))
         return .visitChildren
     }
     override func visitPost(_: ClassDeclSyntax) {
         typeStack.removeLast()
-        enclosingTypeNonPublic.removeLast()
+        enclosingTypeAccess.removeLast()
     }
 
     override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -298,12 +235,12 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
-        enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
+        enclosingTypeAccess.append(Self.access(of: node.modifiers))
         return .visitChildren
     }
     override func visitPost(_: StructDeclSyntax) {
         typeStack.removeLast()
-        enclosingTypeNonPublic.removeLast()
+        enclosingTypeAccess.removeLast()
     }
 
     override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -315,12 +252,12 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
-        enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
+        enclosingTypeAccess.append(Self.access(of: node.modifiers))
         return .visitChildren
     }
     override func visitPost(_: EnumDeclSyntax) {
         typeStack.removeLast()
-        enclosingTypeNonPublic.removeLast()
+        enclosingTypeAccess.removeLast()
     }
 
     override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -332,12 +269,12 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
         ))
         typeStack.append(node.name.text)
-        enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
+        enclosingTypeAccess.append(Self.access(of: node.modifiers))
         return .visitChildren
     }
     override func visitPost(_: ActorDeclSyntax) {
         typeStack.removeLast()
-        enclosingTypeNonPublic.removeLast()
+        enclosingTypeAccess.removeLast()
     }
 
     override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -350,12 +287,12 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock, isConditionalExtension: node.genericWhereClause != nil
         ))
         typeStack.append(extendedTypeText)
-        enclosingTypeNonPublic.append(Self.isExplicitNonPublic(node.modifiers))
+        enclosingTypeAccess.append(Self.access(of: node.modifiers))
         return .visitChildren
     }
     override func visitPost(_: ExtensionDeclSyntax) {
         typeStack.removeLast()
-        enclosingTypeNonPublic.removeLast()
+        enclosingTypeAccess.removeLast()
     }
 
     /// Protocol decls — **record the declaration, skip the body**.
@@ -386,15 +323,5 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock
         ))
         return .skipChildren
-    }
-
-    /// Cycle 151 (Lever D) — true if a type/extension carries an explicit
-    /// `private` / `fileprivate` / `internal` access modifier. Default
-    /// (token-less) access is treated as public-eligible, matching Lever A's
-    /// "the modifier, not the absence, is the signal" rule.
-    private static func isExplicitNonPublic(_ modifiers: DeclModifierListSyntax) -> Bool {
-        let names = modifiers.map(\.name.text)
-        return names.contains("private") || names.contains("fileprivate")
-            || names.contains("internal")
     }
 }
