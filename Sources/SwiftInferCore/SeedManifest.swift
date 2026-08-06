@@ -60,13 +60,23 @@ public struct SeedManifest: Codable, Sendable, Equatable {
         /// not emit roles — which is every producer before this field existed.
         public let role: SeedRole?
 
+        /// Where the linter placed this symbol on the effect lattice — what it
+        /// claimed, what its body reached, and how the linter knows.
+        ///
+        /// Only idempotency seeds carry one. `nil` from any producer that does
+        /// not emit tiers, which is every producer before the field existed —
+        /// and, importantly, still the honest reading for a seed about purity
+        /// rather than retry-safety.
+        public let effect: SeedEffect?
+
         public init(
             file: String,
             line: Int,
             symbol: String,
             rule: String? = nil,
             kind: SeedKind = .pureFunction,
-            role: SeedRole? = nil
+            role: SeedRole? = nil,
+            effect: SeedEffect? = nil
         ) {
             self.file = file
             self.line = line
@@ -74,6 +84,7 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             self.rule = rule
             self.kind = kind
             self.role = role
+            self.effect = effect
         }
 
         /// `kind` is **required**, and that is a deliberate reversal.
@@ -102,6 +113,9 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             // Unlike `kind`, absence needs no semantic default: a seed with no role is a seed whose
             // producer classifies nothing, and "unknown" is the honest reading.
             self.role = try container.decodeIfPresent(SeedRole.self, forKey: .role)
+            // Same reading as `role`: a seed with no effect is one whose producer
+            // resolves no lattice position for it, and absent is honest.
+            self.effect = try container.decodeIfPresent(SeedEffect.self, forKey: .effect)
         }
     }
 }

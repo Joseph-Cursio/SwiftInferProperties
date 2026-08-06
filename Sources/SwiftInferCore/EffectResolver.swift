@@ -76,7 +76,7 @@ public enum EffectResolver {
     /// Only the retry-hostile tiers survive the trip upward. See the type doc:
     /// an inferred `pure` / `idempotent` / `observational` is a statement about
     /// a function's callees, not about the function.
-    static func carriesInformationUpward(_ effect: Effect) -> Bool {
+    public static func carriesInformationUpward(_ effect: Effect) -> Bool {
         switch effect {
         case .nonIdempotent, .externallyIdempotent:
             return true
