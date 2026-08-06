@@ -26,9 +26,18 @@ struct ReplayIdempotenceTemplateTests {
         isStatic: Bool = true,
         containingType: String? = "Handler",
         bodySignals: BodySignals = .empty,
+        dedupGateShape: DedupGateShape? = nil,
         declaredEffect: Effect? = nil
     ) -> FunctionSummary {
-        FunctionSummary(
+        let signals = dedupGateShape.map { shape in
+            BodySignals(
+                hasNonDeterministicCall: bodySignals.hasNonDeterministicCall,
+                hasSelfComposition: bodySignals.hasSelfComposition,
+                nonDeterministicAPIsDetected: bodySignals.nonDeterministicAPIsDetected,
+                dedupGateShape: shape
+            )
+        } ?? bodySignals
+        return FunctionSummary(
             name: name,
             parameters: parameters,
             returnTypeText: returnType,
@@ -38,7 +47,7 @@ struct ReplayIdempotenceTemplateTests {
             isStatic: isStatic,
             location: SourceLocation(file: "Handler.swift", line: 1, column: 1),
             containingTypeName: containingType,
-            bodySignals: bodySignals,
+            bodySignals: signals,
             declaredEffect: declaredEffect
         )
     }
@@ -121,16 +130,47 @@ struct ReplayIdempotenceTemplateTests {
         #expect(ReplayIdempotenceTemplate.suggest(for: summary) == nil)
     }
 
-    @Test("No annotation and no key parameter → not a candidate")
-    func plainHandlerIsNotACandidate() {
-        // Shape of OrderCreatedHandler.handle: dedup-gate handler, but NO annotation
-        // and NO IdempotencyKey parameter — an M2 (dedupGate) case, silent in M1.
+    @Test("No annotation, no key, and no detected gate → not a candidate")
+    func plainHandlerWithNoGateIsNotACandidate() {
+        // A handler the walker found no dedup gate in (the ungated buggy twin, or
+        // any effectful function that isn't a replay handler). No gate, no proposal.
         let summary = makeReplaySummary(
             name: "handle",
             parameters: [Parameter(label: nil, internalName: "order", typeText: "Order", isInout: false)],
             returnType: "Bool"
         )
         #expect(ReplayIdempotenceTemplate.suggest(for: summary) == nil)
+    }
+
+    // MARK: - Branch C: dedup gate (M2)
+
+    @Test("Branch C: a detected dedup gate is proposed, even unannotated & unkeyed")
+    func dedupGateMatches() {
+        // OrderCreatedHandler.handle: no annotation, no IdempotencyKey parameter,
+        // but the walker found an early-return dedup gate.
+        let summary = makeReplaySummary(
+            name: "handle",
+            parameters: [Parameter(label: nil, internalName: "order", typeText: "Order", isInout: false)],
+            returnType: "Bool",
+            dedupGateShape: .earlyReturnDedup(keyRoot: "order")
+        )
+        let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
+        #expect(suggestion?.templateName == "replay-idempotence")
+        // +30 gate alone → .possible band.
+        #expect(suggestion?.score.tier == .possible)
+        #expect(suggestion?.score.signals.contains { $0.kind == .replayDedupGate } ?? false)
+    }
+
+    @Test("Branch C + B: a gate plus a key parameter reaches .likely")
+    func gateAndKeyReachesLikely() {
+        let summary = makeReplaySummary(
+            name: "download",
+            parameters: [keyParam()],
+            returnType: "Row",
+            dedupGateShape: .fetchThenInsert
+        )
+        // 30 + 25 = 55 → .likely.
+        #expect(ReplayIdempotenceTemplate.suggest(for: summary)?.score.tier == .likely)
     }
 
     @Test("A pure value function is not a replay candidate")

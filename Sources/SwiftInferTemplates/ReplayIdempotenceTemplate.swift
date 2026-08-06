@@ -22,16 +22,21 @@ import SwiftInferCore
 ///     that threads a stable key through its signature even without annotating
 ///     itself.
 ///
-/// A handler that is *both* annotated and key-typed (the strongest fixtures) earns
-/// the two signals together and reaches the `.likely` band; either alone stays in
+///   - **Branch C — dedup gate (M2).** A dedup gate detected in the body
+///     (`BodySignals.dedupGateShape`): an early-return dedup check
+///     (`OrderCreatedHandler.handle`) or a fetch-then-insert
+///     (`OfflineManager.download` without its annotation). Structural inference,
+///     +30 — above the bare key parameter, below the author's own annotation.
+///
+/// A handler that combines signals (annotated + key-typed, or gate + key) earns
+/// them together and reaches the `.likely` band; any one alone stays in
 /// `.possible`, per the sketch's "start at possible, let evidence bias the score."
 ///
-/// **Deferred to M2** (needs a new `BodySignals.dedupGate`): the *unannotated*
-/// dedup-gate and fetch-or-insert handlers (`OrderCreatedHandler`) and the
-/// key-from-entity builder that constructs its key in the body
-/// (`StripeWebhookHandler`). This template stays silent on those rather than guess
-/// a gate it cannot yet see — the same "no confident zero, but no confident guess
-/// either" posture the rest of the toolchain keeps.
+/// **Still deferred** (M2+): the key-from-entity builder that constructs its key in
+/// the body (`StripeWebhookHandler`, no gate and no key parameter — needs a
+/// key-construction body signal), and the effect-dominance `unkeyedEffectVeto`.
+/// The ungated buggy twin needs no veto: with no gate detected, Branch C simply
+/// never fires — no gate, no proposal.
 ///
 /// Not in `TemplateName.verifiable`: the effect boundary can't be synthesized, so
 /// there is no runnable value law. Discovery proposes it; the accept flow emits an
@@ -60,13 +65,16 @@ public enum ReplayIdempotenceTemplate {
 
     // MARK: - Gate
 
-    /// The candidate gate: an author-declared `@ExternallyIdempotent` claim, or a
-    /// parameter typed `IdempotencyKey`. Computed properties are excluded — a
+    /// The candidate gate: an author-declared `@ExternallyIdempotent` claim
+    /// (Branch A), a parameter typed `IdempotencyKey` (Branch B), or a dedup gate
+    /// detected in the body (Branch C, M2). Computed properties are excluded — a
     /// getter is not a handler. Signals below can still veto a matched candidate
     /// (an author who wrote both a key parameter and `@NonIdempotent`).
     static func isCandidate(_ summary: FunctionSummary) -> Bool {
         guard !summary.isComputedProperty else { return false }
-        return hasExternallyIdempotentAnnotation(summary) || keyParameter(of: summary) != nil
+        return hasExternallyIdempotentAnnotation(summary)
+            || keyParameter(of: summary) != nil
+            || summary.bodySignals.dedupGateShape != nil
     }
 
     /// The `IdempotencyKey`-typed parameter, if any. Exact type-text match for M1;
@@ -90,6 +98,9 @@ public enum ReplayIdempotenceTemplate {
         }
         if let key = keyParameterSignal(for: summary) {
             signals.append(key)
+        }
+        if let gate = dedupGateSignal(for: summary) {
+            signals.append(gate)
         }
         if let veto = declaredNonIdempotentVeto(for: summary) {
             signals.append(veto)
@@ -128,6 +139,31 @@ public enum ReplayIdempotenceTemplate {
             detail: "Threads a stable `IdempotencyKey` parameter (`\(label)`) through "
                 + "its signature — a replay-safe handler holds that key fixed across "
                 + "retries; the property quantifies over it"
+        )
+    }
+
+    /// Branch C (M2). A dedup gate detected in the body — an early-return
+    /// dedup check or a fetch-then-insert. Worth +30: it is inferred *structure*,
+    /// so it sits above the bare key parameter (+25, a type without proof the
+    /// handler uses it) and just below the author's own annotation (+35). Alone it
+    /// lands in `.possible`.
+    static func dedupGateSignal(for summary: FunctionSummary) -> Signal? {
+        guard let shape = summary.bodySignals.dedupGateShape else { return nil }
+        let description: String
+        switch shape {
+        case let .earlyReturnDedup(keyRoot):
+            let key = keyRoot.map { " keyed on `\($0)`" } ?? ""
+            description = "an early-return dedup check\(key)"
+
+        case .fetchThenInsert:
+            description = "a fetch-existing-then-insert branch"
+        }
+        return Signal(
+            kind: .replayDedupGate,
+            weight: 30,
+            detail: "Body has a dedup gate (\(description)) before its effect — the "
+                + "effect runs at most once per key, so `run twice ⇒ effects run "
+                + "once` is the property to check"
         )
     }
 
@@ -184,9 +220,9 @@ public enum ReplayIdempotenceTemplate {
                 + "through an injected recorder (`IdempotentEffectRecorder`).",
             "Idempotence holds only if the key is stable across retries; a key "
                 + "derived from `UUID()` / `Date()` breaks it.",
-            "M1 matches the annotation and the `IdempotencyKey` parameter, not the "
-                + "handler body — it does not yet confirm a dedup gate actually "
-                + "guards the effect (that is the M2 `dedupGate` refinement)."
+            "Gate detection (Branch C) confirms a leading dedup/fetch branch that "
+                + "returns early, not that it dominates every effect path — a second "
+                + "effect outside the guarded branch is not yet checked."
         ]
         if hasExternallyIdempotentAnnotation(summary), keyParameter(of: summary) == nil {
             caveats.append(
