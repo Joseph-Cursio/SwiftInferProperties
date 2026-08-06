@@ -20,8 +20,23 @@
 > end to end surfaced three consumer-side defects, all in the same class — **fields the producer
 > sends that this repo does not act on** — and all three are now closed. `restriction` was not
 > decoded at all (§ *Every field*), `rule` was decoded and read by nothing, and the access question
-> `restriction` answers was being answered *wrongly* by this repo's own scanner. What did **not**
-> change is the producer: every count in the subject sections below was re-run and held.
+> `restriction` answers was being answered *wrongly* by this repo's own scanner.
+>
+> **Fifth pass, also the same day, and this one corrected the doc rather than the code.** Filing the
+> residue upstream meant re-verifying it first, and **two of the four claims did not survive
+> contact**. The catalogue section's *"10 enum cases are declared but never registered"* is an
+> artifact of scanning one package of three — the residue is **zero** — and the category table was
+> missing an entire category (`idempotency`, 7 rules) that contains one of the four **seeding** rules.
+> Both are corrected in place with the wrong figure kept visible, because the wrong figure is what
+> the obvious arithmetic gives. The two claims that held are filed as
+> [#74](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/74) and
+> [#75](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/75); the retraction became
+> [#73](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/73) and the §1b argument
+> [#76](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/76).
+>
+> The moral is narrower than "check your numbers": **a count is a claim about a scope, and this doc
+> kept stating the count without the scope.** 192 was always true *of `SwiftProjectLintRules`*. It
+> was the subtraction that was fiction.
 >
 > **What the first pass got wrong, and how it was caught.** This doc was written against
 > `6c88715` — a local checkout that turned out to be **46 commits behind its origin**. Two counts
@@ -30,7 +45,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftProjectLint@08a4b099276eb46e0a8b39a8ab0ea2f3e1e876c1 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftProjectLint@d59cd7826c96348e6c37b99b3651f91ec9a5b856 observer=SwiftInferProperties@c14dc7e -->
 
 ---
 
@@ -76,11 +91,32 @@ rather than detection (§ *The census flood*).
 
 ## The rule catalogue, and how little of it is about properties
 
-`RuleIdentifier` has **202** cases. The rules package registers **192** rules, each exactly once —
-so **10 enum cases are declared but never registered**.
+`RuleIdentifier` has **202** cases, and **every one is accounted for**: 200 live rules and 2
+deliberate sentinels.
 
-Both figures are worth carrying, and so is their disagreement: an identifier is not self-evidently a
-live rule. **Nothing asserts the enum and the registry agree**, which is exactly why they do not.
+> **This section said "10 enum cases are declared but never registered" until 2026-08-06, and that
+> was wrong.** It compared 202 against the **192** registered in `SwiftProjectLintRules` and read the
+> difference as a residue. The difference is two other places the count never looked:
+> `SwiftProjectLintIdempotencyRules` registers 7 more (including `.idempotencyViolation`, one of the
+> four **seeding** rules), and `Sources/` supplies the rest, some identifiers appearing in more than
+> one package. Distinct total referenced as `name:` across every package: **199**.
+>
+> The remaining three are not a gap either. `unknown` and `fileParsingError` are sentinels the config
+> layer subtracts by name (`LintConfiguration.swift:164`, and again in `ContentViewModel.swift:178`),
+> so they are deliberately not rules. `onTapGestureMissingAccessibility` **is** emitted — at
+> `OnTapGestureInsteadOfButtonVisitor.swift:97`, via `ruleName:` rather than `name:`, because one
+> visitor raises two findings. So: 199 + 1 + 2 = 202, residue **zero**.
+>
+> Measured across all packages at `d59cd782`. The lesson is the one this doc keeps relearning about
+> the subject's counts — **a census that scans one package reports the other packages as a defect**,
+> which is the same shape as the road test that invented a carrier problem two-thirds of which was
+> the harness. Filed upstream as
+> [#73](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/73), *with the false alarm as the
+> argument for the test*: nothing records this result, so the obvious arithmetic reproduces it.
+
+What survives, and is still true: **nothing asserts the enum and the registry agree.** The catalogue
+happens to be healthy; no test says so, and establishing it took a cross-package scan plus three
+special cases.
 
 > **Counting method, because the obvious one is wrong.** A raw grep for `category: \.` returns
 > **195**, and for `name: \.` returns 198 across 193 distinct values. Both overcount: six
@@ -94,22 +130,32 @@ live rule. **Nothing asserts the enum and the registry agree**, which is exactly
 | `codeQuality` | 52 | incidental — `couldBePrivateMember` **fights** the pipeline (§ 1a) |
 | `architecture` | 32 | **3 rules** — the domain-type family (§ 1b), none of which seed |
 | `modernization` | 25 | no |
-| `accessibility` | 19 | no |
+| `accessibility` | 20 | no |
 | `performance` | 14 | no |
 | `stateManagement` | 13 | `Missing Equatable on State Type` is a blocker (§ 1c) |
 | `animation` | 10 | no |
 | `testability` | 9 | **the family** — candidates, kernels, blockers (§ 1a, § 1c) |
 | `uiPatterns` | 7 | no |
+| **`idempotency`** | **7** | **1 rule — `.idempotencyViolation`, and it SEEDS** |
 | `security` | 5 | no |
 | `memoryManagement` | 3 | no |
 | `networking` | 3 | no |
-| **total** | **192** | **~11 rules, 4 of which seed** |
+| `other` | 2 | the two sentinels — not rules |
+| **total** | **202** | **~12 rules, 4 of which seed** |
 
-**The ratio is the point.** Roughly 5% of the catalogue is upstream of property inference, and only
-**four** rules reach the manifest at all. Everything else is a SwiftUI architecture linter that
-happens to ship in the same binary. A reader who assumes "202 rules feed `swift-infer`" will
-mis-estimate both the coverage and the flood; the correct mental model is a large linter with a small
-deliberate seam cut into it.
+> **This table was 12 rows totalling 192 until 2026-08-06, and the missing row held a seeding
+> rule.** `idempotency` is a whole category the census never had, because the census scanned
+> `SwiftProjectLintRules` and that package does not contain it — so a table whose stated job is *how
+> little of this catalogue is about properties* omitted one of the four rules that actually reach the
+> manifest. `accessibility` moved 19 → 20 for the `ruleName:`-emitted rule above. Read off
+> `RuleIdentifier+Category.swift` over all 202 cases at `d59cd782`, so it partitions by construction
+> rather than by summing what a grep found.
+
+**The ratio is the point, and correcting the table did not move it.** Roughly 6% of the catalogue is
+upstream of property inference, and only **four** rules reach the manifest at all. Everything else is
+a SwiftUI architecture linter that happens to ship in the same binary. A reader who assumes "202
+rules feed `swift-infer`" will mis-estimate both the coverage and the flood; the correct mental model
+is a large linter with a small deliberate seam cut into it.
 
 `--categories testability` selects the 9, which is **not** the same set as the 4 that seed — two of
 the seeding rules are testability, and the flood-collapsing opt-in is keyed to the category, not to
@@ -208,6 +254,7 @@ attached, so a `pure-function` kind would be a lie and a new kind would be a v3 
 > (`Evidence.displayName`, a function name with parameter labels), so a `carrier` kind would decode
 > and then match nothing. That is a join change here, not a schema problem there — and it is worth
 > saying which of the two repos the work actually lands in before the decision is re-litigated.
+> Filed as [#76](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/76).
 
 ### 1c. Blockers — things to remove before anything works
 
@@ -319,6 +366,21 @@ Three things make this more than a convenience field:
 - **The tiers use the annotation grammar** (`non_idempotent`, not `nonIdempotent`) because that
   spelling is already shared by humans, this linter, and SwiftEffectInference. A second spelling
   would be a fourth dialect.
+
+> **Already moving, and it landed mid-edit: `anchor` (upstream `a5795819`, merged `db4be6b6`,
+> 2026-08-06).** A fourth sub-field on `effect`, `declaration` | `heuristic`, present only for
+> `inferred-upward`. Its own doc names this repo as the reason it exists — *"a consumer reading
+> provenance alone had to withhold every upward tier, which SwiftInferProperties did, keeping only
+> the direct-callee case. This field separates the two"* — so it is the direct answer to
+> `SeedEffect.carriesEnoughEvidenceToDemote`, which withholds upward chains precisely because they
+> may bottom out on a name guess. A `declaration`-anchored multi-hop chain is exactly the signal this
+> side cannot compute inside §13's 2-second budget. **Not read here yet.**
+>
+> **And the parity guard does not cover it.** `SeedFieldParity` enumerates `SeedManifest.Seed`'s
+> keys; `effect` is one key, and its *sub-object* is not walked. So a new field on a nested object is
+> silent here in exactly the way `restriction` was silent at the top level — the same defect class,
+> one level down, reappearing within hours of the guard that was supposed to end it. The guard needs
+> to recurse, or `SeedEffect` needs its own parity arm.
 
 **Status on this side: READ, as of `f33dfd1` (2026-08-06).** `SeedManifest.Seed.effect` decodes it
 (`decodeIfPresent`, so a seed without one is still valid), `SeedEffect` mirrors the producer's five
@@ -559,13 +621,22 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
 
 ## Traps
 
-- **Rule counts disagree across four places.** README says 160, Appendix C says 189,
-  `RuleIdentifier.swift` has **202** `case`s, and the rules package registers **192**. **Read the
-  enum** for "how many rules exist" (`RuleIdentifier.allCases.count` is the only figure anything
-  tests against); read the category census for "how many are reachable by `--categories`". **The
-  10-case gap is unexplained and untested**, and a declared-but-unregistered identifier is a rule
-  that can be configured, named in a severity override, and never fire. Do not silently pick
-  whichever number supports the sentence you are writing.
+- **Rule counts disagree across four places.** README says 160 (in four separate lines, plus "150
+  files" of rule docs against **203** on disk), Appendix C says 189, `RuleIdentifier.swift` has
+  **202** `case`s, and `SwiftProjectLintRules` registers **192**. **Read the enum** for "how many
+  rules exist" (`RuleIdentifier.allCases.count` is the only figure anything tests against); read the
+  category census for "how many are reachable by `--categories`". Do not silently pick whichever
+  number supports the sentence you are writing. Filed upstream as
+  [#75](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/75).
+- ~~**The 10-case gap is unexplained and untested.**~~ **Retracted 2026-08-06 — there is no gap, and
+  this trap was itself the trap.** 202 = 199 referenced via `name:` across *all* packages + 1 via
+  `ruleName:` + 2 sentinels. The "10" came from subtracting one package's registrations from the
+  whole enum. Kept struck through rather than deleted because the wrong number is what a reader will
+  arrive with — it is the answer the obvious arithmetic gives, and nothing upstream contradicts it
+  yet ([#73](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/73)). **A
+  declared-but-unregistered identifier would still be a real hazard** — configurable, nameable in a
+  severity override, and never firing — which is why the check is worth having even though it
+  currently passes.
 - **Counting registered rules by grepping `category:` or `name:` overcounts.** Six `.unknown`
   `SyntaxPattern` placeholders sit in test-only convenience inits and are not rules. This bit *this
   doc* — see the counting-method note in the catalogue section — and the naive numbers (195 / 193)
@@ -585,7 +656,7 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
   what was present when it was last regenerated. Regenerate `fixtures/seed-manifest-parity/seeds.json`
   as part of any producer schema change, and treat "the parity test is green" as evidence about the
   fixture's age, not about the producer.
-- **Only `PureFunctionCandidateVisitor` sets `testReachability`.** Everything else leaves it
+- **Only `PureFunctionCandidateVisitor` sets `testReachability`** ([#74](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/74)). Everything else leaves it
   `.unknown`, which `effectiveKind` treats as reachable — deliberately, since demoting on "the rule
   did not look" would silently shrink the manifest. Consequence: the `restricted-function` demotion
   applies to pure-function seeds and to nothing else today.
