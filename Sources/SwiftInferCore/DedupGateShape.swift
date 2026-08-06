@@ -20,8 +20,16 @@ public enum DedupGateShape: Sendable, Equatable {
 
     /// `if let hit = <fetch>(…) { return hit }` — fetch an existing row under the
     /// key and return it on a hit, inserting only on a miss
-    /// (`OfflineManager.download`).
+    /// (`OfflineManager.download`). Also the *pre-fetched* form, where the fetch is
+    /// an upstream `let` and the gate re-binds it (`MacCloud restoreFileVersion`).
     case fetchThenInsert
+
+    /// `if <handledFlag> { return }` — an early return on a state property that
+    /// reads as already-handled (`if file.isDeleted { return .ok }`,
+    /// `MacCloud deleteFile`). The same semantic gate as `earlyReturnDedup`, but
+    /// the "already handled?" question is answered by a stored flag rather than a
+    /// dedup-store method call. Carries the flag name.
+    case stateFlagGuard(flag: String?)
 }
 
 /// Reads a `DedupGateShape` off a handler body.
@@ -45,21 +53,58 @@ public enum DedupGateClassifier {
     ]
 
     /// Callee base names that read as "fetch the existing row under this key".
+    /// `query` is included for the ORM idiom (`Model.query(on:)…first()`), which
+    /// the MacCloud road test surfaced as the real-world spelling of a fetch.
     static let fetchVerbs: Set<String> = [
-        "fetch", "find", "existing", "lookup"
+        "fetch", "find", "existing", "lookup", "query"
+    ]
+
+    /// Boolean state properties that read as "already handled". Curated on
+    /// purpose (M3): the state-flag gate is real but narrow, and `isEmpty` /
+    /// `isValid` / `isNil` are guards, not dedup checks.
+    static let stateFlags: Set<String> = [
+        "isDeleted", "isHandled", "isProcessed", "isCancelled", "isCanceled",
+        "isComplete", "isCompleted", "isDone", "isFinished", "isClosed",
+        "isDismissed", "isArchived", "isRevoked", "isExpired", "isAcknowledged",
+        "alreadyHandled", "handled", "processed"
     ]
 
     /// The first dedup gate among the body's top-level statements, or `nil`.
     public static func classify(body: CodeBlockSyntax) -> DedupGateShape? {
+        let fetchedNames = fetchBoundNames(in: body)
         for item in body.statements {
             guard let ifExpr = ifExpr(from: item), blockReturns(ifExpr.body) else {
                 continue
             }
-            if let shape = shape(of: ifExpr) {
+            if let shape = shape(of: ifExpr, fetchedNames: fetchedNames) {
                 return shape
             }
         }
         return nil
+    }
+
+    /// Names bound to a fetch-verb call in a `let`/`var` statement, so a later
+    /// `if let latest, latest.hash == … { return }` gate that re-binds an
+    /// already-fetched value is recognised as fetch-then-insert too — the
+    /// content-addressed, pre-fetched form the MacCloud road test surfaced.
+    private static func fetchBoundNames(in body: CodeBlockSyntax) -> Set<String> {
+        var names: Set<String> = []
+        for item in body.statements {
+            guard case let .decl(declaration) = item.item,
+                  let variable = declaration.as(VariableDeclSyntax.self) else {
+                continue
+            }
+            for binding in variable.bindings {
+                guard let value = binding.initializer?.value,
+                      firstCall(in: Syntax(value), matching: fetchVerbs) != nil,
+                      let name = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text
+                else {
+                    continue
+                }
+                names.insert(name)
+            }
+        }
+        return names
     }
 
     /// The `IfExprSyntax` a top-level statement is, if any. A statement-position
@@ -78,7 +123,10 @@ public enum DedupGateClassifier {
         }
     }
 
-    private static func shape(of ifExpr: IfExprSyntax) -> DedupGateShape? {
+    private static func shape(
+        of ifExpr: IfExprSyntax,
+        fetchedNames: Set<String>
+    ) -> DedupGateShape? {
         for element in ifExpr.conditions {
             switch element.condition {
             case let .expression(expr):
@@ -86,11 +134,20 @@ public enum DedupGateClassifier {
                 if let call = firstCall(in: Syntax(expr), matching: dedupVerbs) {
                     return .earlyReturnDedup(keyRoot: keyRoot(of: call))
                 }
+                // `if file.isDeleted { return .ok }` — state-flag gate (M3).
+                if let flag = stateFlag(in: expr) {
+                    return .stateFlagGuard(flag: flag)
+                }
 
             case let .optionalBinding(binding):
-                // `if let existing = try context.fetch(descriptor).first { return existing }`
+                // Inline: `if let existing = context.fetch(descriptor) { return existing }`.
                 if let value = binding.initializer?.value,
                    firstCall(in: Syntax(value), matching: fetchVerbs) != nil {
+                    return .fetchThenInsert
+                }
+                // Pre-fetched: `if let latest, latest.hash == … { return }`, where
+                // `latest` was bound to a fetch in an upstream statement (M3).
+                if let source = bindingSourceName(binding), fetchedNames.contains(source) {
                     return .fetchThenInsert
                 }
 
@@ -99,6 +156,30 @@ public enum DedupGateClassifier {
             }
         }
         return nil
+    }
+
+    /// The state-flag property this condition reads, if it is one — `isDeleted`
+    /// from `file.isDeleted` (or a bare `isDeleted`). `nil` for anything not in
+    /// the curated `stateFlags` set.
+    private static func stateFlag(in expr: ExprSyntax) -> String? {
+        let name: String?
+        if let member = expr.as(MemberAccessExprSyntax.self) {
+            name = member.declName.baseName.text
+        } else {
+            name = expr.as(DeclReferenceExprSyntax.self)?.baseName.text
+        }
+        guard let name, stateFlags.contains(name) else { return nil }
+        return name
+    }
+
+    /// The value an optional binding rebinds: the initializer's root identifier
+    /// (`if let x = latest`), or the bound name itself for the shorthand
+    /// (`if let latest`). Used to tie a gate back to an upstream fetch.
+    private static func bindingSourceName(_ binding: OptionalBindingConditionSyntax) -> String? {
+        if let value = binding.initializer?.value {
+            return rootIdentifier(of: value)
+        }
+        return binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text
     }
 
     /// The root identifier of the dedup call's first argument — `order` from
