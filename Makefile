@@ -62,7 +62,7 @@ BATCH8 := CodableRoundTripCorpusMeasuredTests|CodableRoundTripLiveSurveyMeasured
 # under `make -j`.
 .NOTPARALLEL:
 .DEFAULT_GOAL := help
-.PHONY: help test test-fast lint perf batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch8 clean-temp
+.PHONY: help test test-fast lint perf dead-code batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch8 clean-temp
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort | awk -F'\t' '{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -111,6 +111,9 @@ batch8: ## Subprocess batch 8 — codec round-trip / output-determinism / value-
 
 docs-drift: ## Report which docs/design-internal/ docs have a subject repo that has moved
 	@./scripts/docs_drift.sh
+
+dead-code: ## Report source files no other Sources file reaches (test-only or unreached)
+	@python3 scripts/dead_public_api.py
 
 clean-temp: ## Remove leftover verifier/corpus/measured build dirs (from killed runs + verify surveys)
 	find "$${TMPDIR:-/tmp}" -maxdepth 1 \( -name '*verify-pipeline-integration*' -o -name '*verify-interaction*' -o -name '*-corpus*' -o -name '*-survey-corpus*' -o -name '*measured*' -o -name 'tca-*' -o -name 'vm-*' -o -name 'TemporaryDirectory.*' -o -name '*.lock' \) -exec rm -rf {} + 2>/dev/null || true
