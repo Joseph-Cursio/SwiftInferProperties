@@ -75,8 +75,9 @@ struct ReplayIdempotenceTemplateTests {
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
         #expect(suggestion != nil)
         #expect(suggestion?.templateName == "replay-idempotence")
-        // +35 annotation alone → .possible band (20..<40).
-        #expect(suggestion?.score.tier == .possible)
+        // +40 annotation alone → .likely band (40..<75): the author's claim,
+        // promoted past .possible (2026-08-07).
+        #expect(suggestion?.score.tier == .likely)
         #expect(
             suggestion?.score.signals.contains { $0.kind == .replayExternallyIdempotentAnnotation } ?? false
         )
@@ -161,8 +162,9 @@ struct ReplayIdempotenceTemplateTests {
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.templateName == "replay-idempotence")
-        // +30 gate alone → .possible band.
-        #expect(suggestion?.score.tier == .possible)
+        // +40 gate alone → .likely band (promoted 2026-08-07 after clearing the
+        // ≥70%×3 external-evidence gate; 8/8 accepted across M5/M7/M8 re-sweeps).
+        #expect(suggestion?.score.tier == .likely)
         #expect(suggestion?.score.signals.contains { $0.kind == .replayDedupGate } ?? false)
     }
 
@@ -174,7 +176,7 @@ struct ReplayIdempotenceTemplateTests {
             returnType: "Row",
             dedupGateShape: .fetchThenInsert
         )
-        // 30 + 25 = 55 → .likely.
+        // 40 + 25 = 65 → .likely.
         #expect(ReplayIdempotenceTemplate.suggest(for: summary)?.score.tier == .likely)
     }
 

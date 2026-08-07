@@ -115,8 +115,13 @@ public enum ReplayIdempotenceTemplate {
         return signals
     }
 
-    /// Branch A. The `@ExternallyIdempotent(by:)` claim, worth +35 and naming the
-    /// key parameter to hold fixed. Alone this lands in `.possible`.
+    /// Branch A. The `@ExternallyIdempotent(by:)` claim, worth +40 and naming the
+    /// key parameter to hold fixed. Alone this lands in `.likely` (band-promotion,
+    /// 2026-08-07): this is the author's *explicit* retry-safety declaration, not
+    /// the tool's inference, so the "promote inference only on external evidence"
+    /// rule does not gate it — a claim is at least as confident as inferred
+    /// structure, and surfacing the property that tests it by default is the point
+    /// of the annotate-once-enforced-twice loop.
     static func annotationSignal(for summary: FunctionSummary) -> Signal? {
         guard case let .externallyIdempotent(keyParameter) = summary.declaredEffect else {
             return nil
@@ -124,7 +129,7 @@ public enum ReplayIdempotenceTemplate {
         let key = keyParameter.map { "`\($0)`" } ?? "a caller-supplied key"
         return Signal(
             kind: .replayExternallyIdempotentAnnotation,
-            weight: 35,
+            weight: 40,
             detail: "Author-declared externally idempotent (dedup key: \(key)) — "
                 + "the handler claims retry-safety when routed through that key, so "
                 + "the effect property `run twice under one key ⇒ effects run once` "
@@ -146,11 +151,15 @@ public enum ReplayIdempotenceTemplate {
         )
     }
 
-    /// Branch C (M2). A dedup gate detected in the body — an early-return
-    /// dedup check or a fetch-then-insert. Worth +30: it is inferred *structure*,
-    /// so it sits above the bare key parameter (+25, a type without proof the
-    /// handler uses it) and just below the author's own annotation (+35). Alone it
-    /// lands in `.possible`.
+    /// Branch C (M2). A dedup gate detected in the body — an early-return dedup
+    /// check, fetch-then-insert, state-flag, or guard-form. Worth +40, promoted from
+    /// +30 (2026-08-07) after clearing the external-evidence gate: 8/8 accepted
+    /// (MacCloud 2 + public corpus 6) across three consecutive re-sweeps (M5/M7/M8),
+    /// meeting the PRD §3.5 ≥70%×3 rule the reducer-idempotence family used. Alone it
+    /// now lands in `.likely`. **Caveat:** n=8 is far smaller than that family's
+    /// n=39, so this is the thinner basis — revisit if a larger external corpus
+    /// surfaces a structural false positive. Still above the bare key parameter
+    /// (+25, a type without proof of use), which stays `.possible`.
     static func dedupGateSignal(for summary: FunctionSummary) -> Signal? {
         guard let shape = summary.bodySignals.dedupGateShape else { return nil }
         let description: String
@@ -172,7 +181,7 @@ public enum ReplayIdempotenceTemplate {
         }
         return Signal(
             kind: .replayDedupGate,
-            weight: 30,
+            weight: 40,
             detail: "Body has a dedup gate (\(description)) before its effect — the "
                 + "effect runs at most once per key, so `run twice ⇒ effects run "
                 + "once` is the property to check"
