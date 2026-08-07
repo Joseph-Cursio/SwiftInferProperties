@@ -154,6 +154,44 @@ struct DedupGateClassifierTests {
         #expect(shape == nil)
     }
 
+    @Test("An effect BEFORE the gate is not dominated by it — not a gate (M7)")
+    func effectBeforeGateIsNotDominated() throws {
+        // The effect runs unconditionally FIRST, then a too-late dedup check. A
+        // replay re-runs the insert, so the handler is not idempotent — the gate
+        // dominates nothing after it.
+        let shape = try gate("""
+        struct H {
+            func handle(_ order: Order) async throws {
+                try await repo.insert(order)
+                if await dedup.hasHandled(order.id) { return }
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
+    @Test("An effect inside a fetch-or-create gate's branches still counts (M7 not over-strict)")
+    func effectInsideGateBranchesCounts() throws {
+        // Vernissage `mute` shape: `if let existing { update; save; return } else
+        // { create; save }` — the effect is in the gate's own branches, at the gate,
+        // not strictly before it, so dominance holds.
+        let shape = try gate("""
+        struct H {
+            func mute(id: Int, on db: Database) async throws -> Row {
+                if let existing = try await Row.query(on: db).first() {
+                    existing.value = 1
+                    try await existing.save(on: db)
+                    return existing
+                }
+                let row = Row(id: id)
+                try await row.save(on: db)
+                return row
+            }
+        }
+        """)
+        #expect(shape == .fetchThenInsert)
+    }
+
     @Test("Reject-on-duplicate by throwing is NOT a gate (MacCloud uploadFile)")
     func rejectOnDuplicateByThrowingIsNotAGate() throws {
         // MacCloud_server uploadFile: `if fileExists { throw }` — the branch
