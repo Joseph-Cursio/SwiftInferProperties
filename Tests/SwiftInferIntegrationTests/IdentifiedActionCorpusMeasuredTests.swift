@@ -17,7 +17,7 @@ import Testing
 /// ⚠️ TOOLCHAIN NOTE. Runs under **Swift 6.3.3** only (Swift 6.2.4 has a
 /// `swift-frontend` bug that crashes before the stub is reached — upstream of
 /// this feature). Run under 6.3.3+ (e.g. `swiftly use 6.3.3`). See
-/// `docs/plans/tca-determinism-followups.md`.
+/// `docs/design/tca-determinism-followups.md`.
 @Suite("TCA identified-action corpus — IdentifiedActionOf payload measured", .tags(.subprocess))
 struct IdentifiedActionCorpusMeasuredTests {
 

@@ -31,7 +31,7 @@ import Testing
 /// compiler bug (`swift-frontend` SIGABRT type-checking CA's `_alert`
 /// deprecation shim) that deadlocks any TCA measured-verify build before the
 /// stub is reached — entirely upstream of this feature. Run under 6.3.3+ (e.g.
-/// `swiftly use 6.3.3`). See `docs/plans/tca-determinism-followups.md` item 4.
+/// `swiftly use 6.3.3`). See `docs/design/tca-determinism-followups.md` item 4.
 @Suite("TCA examples measured corpus — real reducers, dependency-pinned determinism", .tags(.subprocess))
 struct TCAExamplesMeasuredTests {
 

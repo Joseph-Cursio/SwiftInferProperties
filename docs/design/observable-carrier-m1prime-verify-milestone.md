@@ -1,6 +1,6 @@
 # Milestone — Execution-backed verify for `@Observable` carriers (M1′ live path)
 
-> **Status:** `open` · **As of:** 2026-07-05
+> **Status:** `shipped` · **As of:** 2026-08-07
 
 
 **Status:** **Largely implemented — calibration gate cleared.** S1–S4 shipped (`ViewModelVerifyInteractionPipeline` + `…Survey`, measured proof, live wiring into `verify-interaction --all`). The 7-corpus diff (§5.1) found **zero false-positive REFUTEs**, so M1′ was wired live. Remaining: imported-path end-to-end fixture, keyed-refint resolution, and evidence-tier fold-back (§7).
@@ -119,6 +119,19 @@ Two findings the diff surfaced:
 2. ✅ A `.subprocess` measured test (`ViewModelM1PrimeVerifyMeasuredTests`) proves the full emit → `.interaction` workdir → build → run loop on a clean and a buggy fixture.
 3. ✅ The corpus diff (§5.1) across the seven corpora shows **no unexplained false positives**; results recorded here.
 4. ⏸ The single-pass `ViewModelInvariantStubEmitter` is *not yet* removed — it is retained until the imported-path e2e (item 5) lands, then it becomes a documented fallback or is deleted.
+
+> **Closed out 2026-08-07 — items 5/6/7 all shipped, and 4 resolved to neither
+> option it offered.** Item 5 landed as `d74fb71` + `ViewModelPackageVerifyMeasuredTests`,
+> item 6 as `c7b7626` + `ViewModelVerifyEvidence.swift` + `ViewModelVerifyEvidenceJoinMeasuredTests`,
+> item 7 as `0af9b75` + `ViewModelKeyedRefintVerifyMeasuredTests`. Item 4's premise
+> dissolved instead: `ViewModelInvariantStubEmitter` was not demoted to a fallback
+> and not deleted — it was **rewritten** into a randomized multi-step sequence
+> verifier with a shrink primitive, so it is now a second independent verifier
+> beside the M1′ materialized-enum path, not a legacy single pass. **The question
+> the box was tracking stopped existing, which is why nobody ticked it** — an
+> unchecked box that has been overtaken reads identically to one that is still
+> waiting, and this milestone was filed as live work on 2026-08-07 on the strength
+> of it.
 
 **Remaining before "done":**
 
