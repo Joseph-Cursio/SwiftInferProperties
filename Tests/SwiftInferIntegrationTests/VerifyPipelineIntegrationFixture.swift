@@ -175,7 +175,8 @@ enum VerifyPipelineIntegrationFixture {
         carrier: String,
         typeShape: IndexedTypeShape? = nil,
         template: String,
-        budget: StrategistDispatchEmitter.TrialBudget = .small
+        budget: StrategistDispatchEmitter.TrialBudget = .small,
+        preamble: String = ""
     ) throws -> VerifyOutcome {
         let workdir = try makeWorkdir()
         defer { cleanUp(workdir) }
@@ -187,7 +188,8 @@ enum VerifyPipelineIntegrationFixture {
                 functionCalls: functionCalls,
                 extraImports: [],
                 seedHex: canonicalSeed,
-                trialBudget: budget
+                trialBudget: budget,
+                preamble: preamble
             )
         )
         _ = try VerifierWorkdir.synthesize(

@@ -133,8 +133,6 @@ struct VerifyPipelineLiftedIntegrationTests {
             let y: Int
         }
         """
-        let workdir = try VerifyPipelineIntegrationFixture.makeWorkdir()
-        defer { VerifyPipelineIntegrationFixture.cleanUp(workdir) }
         let typeShape = IndexedTypeShape(
             name: "PairCarrier",
             kind: .struct,
@@ -146,36 +144,26 @@ struct VerifyPipelineLiftedIntegrationTests {
             ],
             hasUserInit: false
         )
-        let stubSource = try StrategistDispatchEmitter.emit(
-            StrategistDispatchEmitter.Inputs(
-                carrier: "PairCarrier",
-                typeShape: typeShape,
-                template: "idempotence",
-                functionCalls: ["{ (p: PairCarrier) in p }"],
-                extraImports: [],
-                seedHex: VerifyPipelineIntegrationFixture.canonicalSeed,
-                trialBudget: .small,
-                preamble: preamble
-            )
+        let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
+            functionCalls: ["{ (p: PairCarrier) in p }"],
+            carrier: "PairCarrier",
+            typeShape: typeShape,
+            template: "idempotence",
+            preamble: preamble
         )
-        _ = try VerifierWorkdir.synthesize(
-            VerifierWorkdir.Inputs(
-                workdir: workdir,
-                userPackage: nil,
-                stubSource: stubSource
-            )
-        )
-        let buildOutput = try VerifierSubprocess.runSwiftBuild(workdir: workdir)
-        guard buildOutput.exitCode == 0 else {
-            Issue.record("build failed: \(buildOutput.stderr)")
-            return
-        }
-        let runOutput = try VerifierSubprocess.runVerifierBinary(workdir: workdir)
-        let outcome = VerifyResultParser.parse(runOutput)
-        if case .bothPass = outcome {
+        if case let .bothPass(defaultTrials, edgeTrials, _) = outcome {
             // V1.49.B's memberwise emit + V1.49.A's preamble channel
             // together let the strategist build a generator for a
             // user-defined value-typed struct in the workdir.
+            #expect(defaultTrials == 100)
+            // `.bothPass` alone cannot tell a real Pass 2 from the zero-trial
+            // sentinel — which is what this arm reported until the edge pass
+            // learned to reach a memberwise carrier's MEMBERS. `PairCarrier`
+            // is not a `RawType`, so the carrier-level boundary lookup answers
+            // nil; the trials come from `x`/`y` drawn over the `Int` set. This
+            // is also the compile proof for the emitted boundary generator:
+            // the count is non-zero only if the swapped `zip` built and ran.
+            #expect(edgeTrials == 100, "Pass 2 draws each member's boundary set")
         } else {
             Issue.record("expected .bothPass; got \(outcome)")
         }
