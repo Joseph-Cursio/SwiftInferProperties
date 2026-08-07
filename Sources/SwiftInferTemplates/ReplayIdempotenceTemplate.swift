@@ -75,6 +75,7 @@ public enum ReplayIdempotenceTemplate {
         return hasExternallyIdempotentAnnotation(summary)
             || keyParameter(of: summary) != nil
             || summary.bodySignals.dedupGateShape != nil
+            || summary.bodySignals.buildsIdempotencyKey
     }
 
     /// The `IdempotencyKey`-typed parameter, if any. Exact type-text match for M1;
@@ -101,6 +102,9 @@ public enum ReplayIdempotenceTemplate {
         }
         if let gate = dedupGateSignal(for: summary) {
             signals.append(gate)
+        }
+        if let builder = keyBuilderSignal(for: summary) {
+            signals.append(builder)
         }
         if let veto = declaredNonIdempotentVeto(for: summary) {
             signals.append(veto)
@@ -172,6 +176,22 @@ public enum ReplayIdempotenceTemplate {
             detail: "Body has a dedup gate (\(description)) before its effect — the "
                 + "effect runs at most once per key, so `run twice ⇒ effects run "
                 + "once` is the property to check"
+        )
+    }
+
+    /// Branch B′ (M6). The body builds an `IdempotencyKey(…)` from its input — the
+    /// key-from-entity builder (`StripeWebhookHandler.makeChargeRequest`). Worth +25,
+    /// like the key parameter: `IdempotencyKey` is a precise, SwiftIdempotency-specific
+    /// marker. Unlike the gate shapes this is a *pure* value builder, so its property
+    /// is the value form (the built value is stable across calls), not an effect form.
+    static func keyBuilderSignal(for summary: FunctionSummary) -> Signal? {
+        guard summary.bodySignals.buildsIdempotencyKey else { return nil }
+        return Signal(
+            kind: .replayKeyBuilder,
+            weight: 25,
+            detail: "Constructs an `IdempotencyKey` from its input — the built value "
+                + "(and its key) must be stable across invocations, so a downstream "
+                + "retry is safe; a key derived from `UUID()`/`Date()` would break it"
         )
     }
 

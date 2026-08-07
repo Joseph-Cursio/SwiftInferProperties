@@ -12,6 +12,13 @@ final class BodySignalVisitor: SyntaxVisitor {
     var reducerOps: Set<String> = []
     var reducerOpsWithIdentitySeed: Set<String> = []
 
+    /// V-ReplayM6 — the body constructs an `IdempotencyKey(…)`, the key-from-entity
+    /// builder shape (`StripeWebhookHandler.makeChargeRequest`). A precise marker:
+    /// `IdempotencyKey` is SwiftIdempotency's own type, so only code adopting the
+    /// grammar matches, and the property is that the built value is stable across
+    /// invocations (a `UUID()`/`Date()`-derived "key" would break it).
+    var buildsIdempotencyKey = false
+
     init(funcName: String) {
         self.funcName = funcName
         super.init(viewMode: .sourceAccurate)
@@ -21,6 +28,9 @@ final class BodySignalVisitor: SyntaxVisitor {
         let calleeText = node.calledExpression.trimmedDescription
         if NonDeterministicAPIs.matches(calleeText) {
             detectedAPIs.insert(calleeText)
+        }
+        if calleeText == "IdempotencyKey" {
+            buildsIdempotencyKey = true
         }
         if calleeText == funcName {
             for arg in node.arguments
