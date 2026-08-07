@@ -1216,7 +1216,7 @@ that separates a hazard from a habit: *does the initialiser have defaults?* It w
 SwiftInferProperties at the commit before the fixes — **8 of the 8 real sites caught** — and every
 refinement was forced by a real miss or false positive (implicit-`self` rebuilds it was blind to; nine
 false positives from `static` factories reading their own parameters; a cross-type projection the ratio
-over-fired on). The write-up lives in SwiftProjectLint's `docs/rules/lossy-struct-rebuild.md`.
+over-fired on). The write-up lives in `SwiftProjectLint/docs/rules/lossy-struct-rebuild.md`.
 
 **Then it was run across all 18 owned repos. It found 19 field-by-field rebuilds — and two of them
 were live production bugs.**
