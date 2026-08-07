@@ -86,6 +86,11 @@ public struct BodySignals: Sendable, Equatable {
     /// Read by `ReplayIdempotenceTemplate`'s Branch C.
     public let dedupGateShape: DedupGateShape?
 
+    /// The body constructs an `IdempotencyKey(…)` — the key-from-entity builder
+    /// shape (M6). Read by `ReplayIdempotenceTemplate`'s key-builder branch; the
+    /// property is that the built value is stable across invocations.
+    public let buildsIdempotencyKey: Bool
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
@@ -94,11 +99,13 @@ public struct BodySignals: Sendable, Equatable {
         reducerOpsWithIdentitySeed: [String] = [],
         equalityBodyShape: EqualityBodyShape? = nil,
         idempotenceReturnShape: IdempotenceReturnShape? = nil,
-        dedupGateShape: DedupGateShape? = nil
+        dedupGateShape: DedupGateShape? = nil,
+        buildsIdempotencyKey: Bool = false
     ) {
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
         self.dedupGateShape = dedupGateShape
+        self.buildsIdempotencyKey = buildsIdempotencyKey
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected

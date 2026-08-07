@@ -380,21 +380,19 @@ extension Signal {
         /// (`observational` and `pure` are NOT here — neither implies non-idempotence.)
         case declaredNonIdempotentEffect
 
-        /// V-ReplayM1 — the author's `@ExternallyIdempotent(by:)` claim, read as a
-        /// *positive* signal by `ReplayIdempotenceTemplate` — the exact mirror of
-        /// `declaredNonIdempotentEffect`, which vetoes the value law on the same
-        /// annotation. Names the key parameter to hold fixed; the stronger of the
-        /// two replay signals.
+        /// V-ReplayM1 — the author's `@ExternallyIdempotent(by:)` claim; the positive
+        /// mirror of `declaredNonIdempotentEffect`. The strongest replay signal.
         case replayExternallyIdempotentAnnotation
 
-        /// V-ReplayM1 — an `IdempotencyKey` parameter, read as a positive replay
-        /// signal. A handler threading a stable key is a candidate even unannotated;
-        /// weaker than the annotation, so it corroborates with it to `.likely`.
+        /// V-ReplayM1 — an `IdempotencyKey` parameter: a keyed handler, even unannotated.
         case replayIdempotencyKeyParameter
 
-        /// V-ReplayM2 — a dedup gate (early-return / fetch-then-insert) detected in
-        /// the handler body: `ReplayIdempotenceTemplate`'s Branch C structural signal
-        /// for a handler that guards its effect but carries no annotation or key type.
+        /// V-ReplayM2/M5 — a dedup gate in the body (early-return / fetch-then-insert /
+        /// state-flag / guard-form): Branch C's structural signal.
         case replayDedupGate
+
+        /// V-ReplayM6 — the body builds an `IdempotencyKey(…)` (key-from-entity builder);
+        /// the property is that the built value is stable across invocations.
+        case replayKeyBuilder
     }
 }

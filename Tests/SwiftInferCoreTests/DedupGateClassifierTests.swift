@@ -14,6 +14,36 @@ struct DedupGateClassifierTests {
         return try #require(summaries.first).bodySignals.dedupGateShape
     }
 
+    private func buildsKey(_ source: String) throws -> Bool {
+        let summaries = FunctionScanner.scanCorpus(source: source, file: "S.swift").summaries
+        return try #require(summaries.first).bodySignals.buildsIdempotencyKey
+    }
+
+    @Test("Key-from-entity builder is detected (StripeWebhookHandler, M6)")
+    func keyFromEntityBuilderDetected() throws {
+        // StripeWebhookHandler.makeChargeRequest: a pure builder constructing an
+        // IdempotencyKey from its input's stable id.
+        let builds = try buildsKey("""
+        enum H {
+            static func makeChargeRequest(for event: PaymentIntent) -> ChargeRequest {
+                ChargeRequest(amount: event.amount, idempotencyKey: IdempotencyKey(fromEntity: event))
+            }
+        }
+        """)
+        #expect(builds)
+    }
+
+    @Test("A plain builder that constructs no IdempotencyKey is not flagged")
+    func plainBuilderIsNotFlagged() throws {
+        // PricingCalculator shape — value idempotence's turf, not this branch.
+        let builds = try buildsKey("""
+        enum H {
+            static func priceInCents(kg: Int, rate: Int) -> Int { kg * rate }
+        }
+        """)
+        #expect(builds == false)
+    }
+
     @Test("Early-return dedup gate is detected, keyed on its argument root")
     func earlyReturnDedupDetected() throws {
         // OrderCreatedHandler.handle shape.

@@ -226,6 +226,18 @@ extension InteractiveTriage {
         }
         let isAsync = evidence.signature.contains(" async")
         let isThrows = evidence.signature.contains(" throws")
+        // A key-from-entity builder (M6) is a pure value builder — emit the VALUE
+        // form (`#assertIdempotent`), not the effect form. Distinguished by its
+        // signal's marker line in the explainability block.
+        let isKeyBuilder = suggestion.explainability.whySuggested
+            .contains { $0.contains("Constructs an `IdempotencyKey`") }
+        if isKeyBuilder {
+            return LiftedTestEmitter.replayKeyBuilder(
+                funcName: funcName,
+                ownerType: suggestion.carrier,
+                isThrows: isThrows
+            )
+        }
         let signature = evidence.signature
             .replacingOccurrences(of: " async throws ->", with: " ->")
             .replacingOccurrences(of: " async ->", with: " ->")

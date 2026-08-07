@@ -27,16 +27,21 @@ struct ReplayIdempotenceTemplateTests {
         containingType: String? = "Handler",
         bodySignals: BodySignals = .empty,
         dedupGateShape: DedupGateShape? = nil,
+        buildsIdempotencyKey: Bool = false,
         declaredEffect: Effect? = nil
     ) -> FunctionSummary {
-        let signals = dedupGateShape.map { shape in
-            BodySignals(
+        let signals: BodySignals
+        if dedupGateShape != nil || buildsIdempotencyKey {
+            signals = BodySignals(
                 hasNonDeterministicCall: bodySignals.hasNonDeterministicCall,
                 hasSelfComposition: bodySignals.hasSelfComposition,
                 nonDeterministicAPIsDetected: bodySignals.nonDeterministicAPIsDetected,
-                dedupGateShape: shape
+                dedupGateShape: dedupGateShape,
+                buildsIdempotencyKey: buildsIdempotencyKey
             )
-        } ?? bodySignals
+        } else {
+            signals = bodySignals
+        }
         return FunctionSummary(
             name: name,
             parameters: parameters,
@@ -201,6 +206,40 @@ struct ReplayIdempotenceTemplateTests {
             )
         )
         #expect(ReplayIdempotenceTemplate.suggest(for: summary) == nil)
+    }
+
+    // MARK: - Branch B′: key-from-entity builder (M6)
+
+    @Test("Branch B′: a key-from-entity builder is proposed")
+    func keyBuilderMatches() {
+        // StripeWebhookHandler.makeChargeRequest: pure builder constructing an
+        // IdempotencyKey — no gate, no key parameter, no annotation.
+        let summary = makeReplaySummary(
+            name: "makeChargeRequest",
+            parameters: [Parameter(label: "for", internalName: "event", typeText: "PaymentIntent", isInout: false)],
+            returnType: "ChargeRequest",
+            isAsync: false,
+            isThrows: false,
+            buildsIdempotencyKey: true
+        )
+        let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
+        #expect(suggestion?.templateName == "replay-idempotence")
+        // +25 alone → .possible.
+        #expect(suggestion?.score.tier == .possible)
+        #expect(suggestion?.score.signals.contains { $0.kind == .replayKeyBuilder } ?? false)
+    }
+
+    @Test("Emitter: the key-builder scaffold is the VALUE form (#assertIdempotent), not the effect one")
+    func keyBuilderEmitterShape() {
+        let stub = LiftedTestEmitter.replayKeyBuilder(
+            funcName: "makeChargeRequest",
+            ownerType: "StripeWebhookHandler",
+            isThrows: false
+        )
+        #expect(stub.contains("makeChargeRequest_buildsAStableKey"))
+        #expect(stub.contains("#assertIdempotent"))
+        #expect(stub.contains("Issue.record"))          // no silent green
+        #expect(stub.contains("assertIdempotentEffects") == false)  // NOT the effect form
     }
 
     // MARK: - Emitter
