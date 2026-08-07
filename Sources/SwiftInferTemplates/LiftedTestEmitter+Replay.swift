@@ -72,4 +72,38 @@ extension LiftedTestEmitter {
         if isAsync { parts.append("await") }
         return parts.isEmpty ? "" : parts.joined(separator: " ") + " "
     }
+
+    /// Emit a key-stability scaffold for a key-from-entity builder (M6). Unlike the
+    /// gate scaffold this is the **value** form: the handler is a pure builder, so
+    /// the property is that the built value (and its `IdempotencyKey`) is identical
+    /// across invocations — `#assertIdempotent`, not `assertIdempotentEffects`. Still
+    /// a scaffold: swift-infer can't synthesize the input entity, so it fails via
+    /// `Issue.record` until completed. Requires `import Testing`, `import SwiftIdempotency`.
+    public static func replayKeyBuilder(
+        funcName: String,
+        ownerType: String?,
+        isThrows: Bool
+    ) -> String {
+        let testFunctionName = "\(funcName)_buildsAStableKey"
+        let ownerCall = ownerType.map { "\($0)." } ?? ""
+        let tryPrefix = isThrows ? "try " : ""
+        let todo = "TODO: complete the key-stability scaffold for \(funcName) — build a "
+            + "fixed input entity and assert #assertIdempotent over it"
+
+        return """
+
+        // Key-stability scaffold for `\(funcName)` — completes the one TODO.
+        // The handler derives an IdempotencyKey from its input; the property is that
+        // the built value is STABLE across invocations. A key derived from
+        // UUID()/Date() instead of the entity's stable id would break it. This is a
+        // scaffold (the input entity can't be synthesized) — it fails until completed.
+        // Requires: import Testing, import SwiftIdempotency.
+        @Test func \(testFunctionName)() throws {
+            // TODO: build a fixed input entity, held constant, then assert:
+            //   let entity = <FixedEntity>()
+            //   #assertIdempotent { \(tryPrefix)\(ownerCall)\(funcName)(entity) }
+            Issue.record("\(todo)")
+        }
+        """
+    }
 }
