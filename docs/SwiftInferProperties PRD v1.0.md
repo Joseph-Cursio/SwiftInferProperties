@@ -1,5 +1,8 @@
 # Product Requirements Document
 
+> **Status:** `reference` · **As of:** 2026-07-07
+
+
 ## SwiftInfer: Type-Directed Property Inference for Swift
 
 **Version:** 1.0

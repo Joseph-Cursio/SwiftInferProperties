@@ -1,5 +1,8 @@
 # Scope: stop gating *analysis* on access level — score it instead
 
+> **Status:** `open` · **As of:** 2026-07-29
+
+
 **Status: measurement done (§4a). The `comparator` blocker is CLEARED (`c9324d8`, §4b).
 The scoring change is still not started, and one prerequisite remains: `round-trip` is
 unmeasured (§4c).** §5 is kept as the method, but its "run this first" has been run —

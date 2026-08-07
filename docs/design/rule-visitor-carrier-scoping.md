@@ -1,5 +1,8 @@
 # Rule-visitor carrier — scoping (investigation + decision record)
 
+> **Status:** `declined` · **As of:** 2026-06-18
+
+
 **Status:** SCOPED. **Slice 1 (recognition) SHIPPED 2026-06-18** — see §7. Verify
 (slices 3–4) stays shelved per the recommendation below.
 

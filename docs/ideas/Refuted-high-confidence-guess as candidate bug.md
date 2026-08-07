@@ -1,5 +1,8 @@
 # Idea: a refuted high-confidence guess is a candidate bug, not just a bad guess
 
+> **Status:** `proposed` · **As of:** 2026-07-21
+
+
 ## Status
 
 **Idea only.** A *posture* extension, not a bug fix — read the "posture" section

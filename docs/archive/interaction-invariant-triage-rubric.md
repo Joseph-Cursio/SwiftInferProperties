@@ -1,5 +1,8 @@
 # Interaction-Invariant Triage Rubric (v2.0)
 
+> **Status:** `reference` · **As of:** 2026-07-07
+
+
 Methodology document for the v2.0 calibration loop. Defines accept / acceptAsConformance / reject / skip criteria per InteractionInvariant family, what counts as evidence under single-runner triage, and how the rubric handles edge cases.
 
 **Scope:** v1.100 / cycle 98 onward — the v2.0 analog of `cycle-6-triage-rubric.md`. Reusable across the three-cycle calibration loop (cycles 98 → 99 → 100) that gates tier promotion from default-`.possible` to `.likely`.

@@ -1,5 +1,8 @@
 # Pressure-test — should the coder-mediated round-trip boundary be crossed? (2026-07-20)
 
+> **Status:** `measured` · **As of:** 2026-07-20
+
+
 Review round 3 of the Apple-libraries backtest surfaced a real, in-scope
 round-trip bug (swift-asn1 `a9a5efd`, `decode(encode(128)) == -128`) that the
 tool MISSES on the real API because the round-trip is **coder-mediated** —

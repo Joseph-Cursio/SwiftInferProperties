@@ -1,5 +1,8 @@
 # Findings — the swift.org property-style-test study
 
+> **Status:** `measured` · **As of:** 2026-08-01
+
+
 Companion to `swiftorg-property-test-study-scope.md`, which is the plan. This is the
 record. **Every number here carries the corpus SHA it was measured at**; a count without
 one is not a measurement (scope §3).

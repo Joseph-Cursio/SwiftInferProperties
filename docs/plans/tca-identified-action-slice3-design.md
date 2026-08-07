@@ -1,5 +1,8 @@
 # Design: composition-action slice 3 — `IdentifiedActionOf<Child>`
 
+> **Status:** `open` · **As of:** 2026-07-05
+
+
 > **Status: 3b + 3c SHIPPED (3b 2026-07-04, 3c 2026-07-05).** The recount (below)
 > killed 3a (0 real reach — all real ids are UUID) and landed **3b** (canned id +
 > payload-free child). **3c** (depth-bounded payload-bearing / recursive child

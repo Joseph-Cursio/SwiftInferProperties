@@ -1,5 +1,8 @@
 # Cross-type insights (`swift-infer insights`, V1.143)
 
+> **Status:** `reference` · **As of:** 2026-07-08
+
+
 A read-only, on-demand **design pass** over `.swiftinfer/index.json`: surfaces
 types that share an algebraic structure ("you have three monoids — consider
 unifying them") as *author-facing* suggestions.

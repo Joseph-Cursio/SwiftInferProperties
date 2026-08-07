@@ -1,5 +1,8 @@
 # Accessibility Invariant Bridge Proposal
 
+> **Status:** `proposed` · **As of:** 2026-06-07
+
+
 **Status:** Draft / proposal — exploratory; likely a *companion project*, not an in-repo milestone (see §7).
 **Target:** A ViewInspector-backed bridge between SwiftInferProperties' interaction-invariant verify and rendered-view state. Cross-pollinates with SwiftProjectLint (sibling repo) for the static half.
 **Date:** 2026-06-07

@@ -1,5 +1,8 @@
 # Interaction-surface SemanticIndex (V1.141)
 
+> **Status:** `reference` · **As of:** 2026-07-07
+
+
 Extends the shipped SemanticIndex (PRD §20.1, `swift-infer index` / `query`,
 `.swiftinfer/index.json`) — previously **algebraic-only** — to also index the
 **interaction surface**: the reducer / MVVM invariant families discovered by

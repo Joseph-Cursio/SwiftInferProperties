@@ -1,5 +1,8 @@
 # TestStore Trace Mining — Build Plan / Scope
 
+> **Status:** `shipped` · **As of:** 2026-07-21
+
+
 **Status:** Slices 1–3 SHIPPED (2026-07-21). Grounds the `docs/ideas/TestStore Trace Mining Proposal.md` direction against the current code.
 **Target:** SwiftInferProperties (this repo). New extractor in `SwiftInferTestLifter`; additive threading into the interaction verify path. **No kit change for the default (payload-free replay) slice.**
 **One-line goal:** seed the interaction verifier's action sequences from the orderings a repo's own TCA `TestStore` tests already contain, instead of random generation alone.

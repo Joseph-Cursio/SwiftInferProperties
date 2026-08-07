@@ -1,5 +1,8 @@
 # Road-test — SwiftLintRuleStudio (2026-07-22)
 
+> **Status:** `measured` · **As of:** 2026-07-24
+
+
 Toolchain-facing record of pointing `swift-infer discover` at a third-party
 subject — **SwiftLintRuleStudio**, a macOS SwiftUI app with a SwiftPM Core
 package (`SwiftLintRuleStudioCore`). Unlike the MacCloud road-tests, the driving

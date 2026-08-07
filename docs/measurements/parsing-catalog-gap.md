@@ -1,5 +1,8 @@
 # The parsing gap — a survey of the catalog against two parser subjects
 
+> **Status:** `measured` · **As of:** 2026-07-29
+
+
 **Date:** 2026-07-28 · **Tool:** `swift-infer discover` @ v1.146.0 (`aa79370`)
 **Subjects:** `swiftlang/swift-syntax` @ `9d6e738` (11 modules, ~176k lines) and
 `SwiftProjectLint` @ `6c88715` (7 packages, ~36k lines of first-party source).

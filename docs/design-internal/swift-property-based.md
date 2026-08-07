@@ -1,5 +1,8 @@
 # swift-property-based — the engine underneath
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 **Repo:** [`github.com/x-sheep/swift-property-based`](https://github.com/x-sheep/swift-property-based)
 (Lennard Sprong) · **Book home:** Appendix C's closing section; `.fixedSeed` in Chapter 28 §28.1.1.
 

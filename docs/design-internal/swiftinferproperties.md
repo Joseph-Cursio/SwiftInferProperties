@@ -1,5 +1,8 @@
 # SwiftInferProperties — the inference engine
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 **Repo:** this one (`github.com/Joseph-Cursio/SwiftInferProperties`, binary `swift-infer`) ·
 **Book home:** Chapters 16–18; the interaction families of 23–24; `verify-value-semantics` in
 Chapter 9; `known-properties` in Appendix A.

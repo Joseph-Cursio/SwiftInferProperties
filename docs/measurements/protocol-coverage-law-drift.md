@@ -1,5 +1,8 @@
 # `ProtocolCoverageMap` — the coverage claims are false at law level, and the guard watches the wrong join
 
+> **Status:** `measured` · **As of:** 2026-08-02
+
+
 **Measured 2026-08-02.** SwiftInferProperties `main` @ `3056657`; SwiftPropertyLaws @ `4a2dada`
 (44 `check…PropertyLaws` suites). Every number below is reproducible from those two SHAs with
 the commands inline.

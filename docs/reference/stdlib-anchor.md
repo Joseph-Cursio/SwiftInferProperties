@@ -1,5 +1,8 @@
 # Standard-library confidence anchor (V1.147)
 
+> **Status:** `reference` · **As of:** 2026-07-30
+
+
 Connects a discovered candidate to the **proven standard-library truth (or trap)
 it resembles**, as explainability provenance. When a candidate's `(template
 family, stdlib carrier)` matches the known-properties catalog, `discover` appends:

@@ -1,5 +1,8 @@
 # User Guide
 
+> **Status:** `reference` · **As of:** 2026-05-07
+
+
 Task-oriented walkthroughs for each major workflow. If you've never used the tool before, work through the [tutorial](tutorial.md) first — this guide assumes you have a project set up and want to do something specific. For exhaustive flag and schema tables, see the [reference](reference.md).
 
 > **Tracks v1.4.** The `swift-infer metrics` subcommand and the v1.4 calibration posture are documented here; everything else has worked since v1.3.

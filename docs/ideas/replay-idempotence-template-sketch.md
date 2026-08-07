@@ -1,5 +1,8 @@
 # `ReplayIdempotenceTemplate` — match-rule sketch
 
+> **Status:** `open` · **As of:** 2026-08-07
+
+
 *A discovery template for effectful replay-safe handlers. Design source: SwiftIdempotency's
 [replay-idempotency shape catalog](../../../SwiftIdempotency/docs/replay-idempotency-shape-catalog.md)
 and its four fixtures. Status: **shipped (M1–M5, 2026-08-06)** — this document is the original

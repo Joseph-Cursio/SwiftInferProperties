@@ -1,5 +1,8 @@
 # Predicate volume on the default surface
 
+> **Status:** `shipped` · **As of:** 2026-07-31
+
+
 **Date:** 2026-07-31 · **Status:** fixed · **Trigger:** a stale comment that contradicted measured behaviour
 
 ## The contradiction

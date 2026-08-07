@@ -1,5 +1,8 @@
 # Signal-kind rationales — the overflow file
 
+> **Status:** `shipped` · **As of:** 2026-08-04
+
+
 `Signal.Kind` is one enum, and Swift will not let its cases be split across files, so
 `Sources/SwiftInferCore/Signal+Kind.swift` grows monotonically with the catalogue and
 hit its 400-line SwiftLint cap on 2026-08-01.

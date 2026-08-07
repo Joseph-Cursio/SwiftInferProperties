@@ -1,5 +1,8 @@
 # SwiftProjectLint — the entry point
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
 **Book home:** Appendix C, Chapter 15, and the seed hand-off in Chapters 12 and 16.
 

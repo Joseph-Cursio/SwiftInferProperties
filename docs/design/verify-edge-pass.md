@@ -1,5 +1,8 @@
 # The verify edge pass
 
+> **Status:** `shipped` · **As of:** 2026-07-31
+
+
 **Date:** 2026-07-31 · **Status:** built · **Scope:** strategist-routed carriers only
 
 ## What was there

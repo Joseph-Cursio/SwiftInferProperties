@@ -1,5 +1,8 @@
 # Scope — productionize codable-round-trip into `verify --all-from-index` (2026-07-20)
 
+> **Status:** `open` · **As of:** 2026-07-20
+
+
 The `codable-round-trip` template ships with **discover** + a **corpus-fixture
 measured verify** (`CodableRoundTripStubEmitter`, driven by
 `CodableRoundTripCorpusMeasuredTests`). This scopes the remaining

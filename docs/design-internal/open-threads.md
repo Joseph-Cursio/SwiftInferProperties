@@ -1,5 +1,8 @@
 # Open threads
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 Things decided, noticed, or left undone that have **no other home**. Deliberately terse — an
 index, not an essay. Anything with a real home lives there instead; this file exists so a
 conversation's residue does not evaporate.

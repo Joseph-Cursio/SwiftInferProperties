@@ -1,5 +1,8 @@
 # SwiftIdempotency — the terminal package
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 **Repo:** `~/xcode_projects/SwiftIdempotency` (`github.com/Joseph-Cursio/swiftidempotency`) ·
 **Book home:** Chapter 26; the `@Pure`/`@ClockDeterministic` markers in Chapter 22 §22.6; the
 sequence property's MBT reading in Chapter 19 §19.5.2.

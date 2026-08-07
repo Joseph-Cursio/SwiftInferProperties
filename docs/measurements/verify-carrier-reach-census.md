@@ -1,5 +1,8 @@
 # Verify carrier-reach census
 
+> **Status:** `measured` · **As of:** 2026-07-31
+
+
 **Date:** 2026-07-30 · **Corpus:** this repo's own SemanticIndex · **Status:** measured, two fixes shipped
 
 The question this answers: *`verify` produced a verdict for only 14% of proposed

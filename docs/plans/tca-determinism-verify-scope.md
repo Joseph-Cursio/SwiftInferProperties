@@ -1,5 +1,8 @@
 # Scope: dependency-pinned determinism verify for TCA reducers
 
+> **Status:** `shipped` · **As of:** 2026-07-03
+
+
 ## Motivation
 
 A road-test against Point-Free's own TCA examples (41 reducers) surfaced the

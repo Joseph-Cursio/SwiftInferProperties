@@ -1,5 +1,8 @@
 # Road test: SwiftInferProperties on itself
 
+> **Status:** `withdrawn` · **As of:** 2026-08-01
+
+
 **Subject:** this repo, `SwiftInferProperties @ 89d1a21` (473 source files, 653 test files).
 **Tools:** `SwiftProjectLint @ 6176101` (seed manifest) → `swift-infer` built from this checkout (discover) → `SwiftPropertyLaws` (run the laws).
 **Date opened:** 2026-07-26.

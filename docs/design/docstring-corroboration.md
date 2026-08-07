@@ -1,5 +1,8 @@
 # Docstring corroboration — docstrings touch first-stage inference
 
+> **Status:** `shipped` · **As of:** 2026-07-18
+
+
 **Status:** shipped — all six families (idempotence, involution, commutativity,
 associativity, round-trip, monotonicity), 2026-07-18.
 **Posture:** corroborate-only. A docstring can only *strengthen* a candidate the

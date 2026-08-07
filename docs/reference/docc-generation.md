@@ -1,5 +1,8 @@
 # Verified-only DocC generation (`swift-infer docc`, V1.142)
 
+> **Status:** `reference` · **As of:** 2026-07-07
+
+
 Emits DocC documentation for the properties in `.swiftinfer/index.json`, gated
 to the **verified** subset: a row is documented only when it has a
 `measured-bothPass` record in `.swiftinfer/verify-evidence.json` (joined by

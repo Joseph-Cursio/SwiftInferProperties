@@ -1,5 +1,8 @@
 # Project overview (`swift-infer report`, V1.149)
 
+> **Status:** `reference` · **As of:** 2026-07-08
+
+
 A read-only, one-glance overview of what the tool knows about a project —
 folding the SemanticIndex (algebraic + interaction), the measured-verify
 evidence, and the cross-type insights into a single status view. Reads only;

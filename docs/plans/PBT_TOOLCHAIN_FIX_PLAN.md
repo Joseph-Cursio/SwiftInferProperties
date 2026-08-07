@@ -1,5 +1,8 @@
 # Fix plan: the five-repo PBT adoption loop
 
+> **Status:** `open` · **As of:** 2026-08-01
+
+
 Companion to `PBT_ROAD_TEST.md`, which records what broke. This is what to do about it, in what
 order, and how to know it worked.
 

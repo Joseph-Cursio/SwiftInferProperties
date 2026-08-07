@@ -1,5 +1,8 @@
 # Scope: mining production-code assertions as a property-discovery signal
 
+> **Status:** `open` · **As of:** 2026-07-03
+
+
 ## Status
 
 **Not built. Design note only — needs sign-off before implementation.**

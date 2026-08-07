@@ -1,5 +1,8 @@
 # Scope: a systematic study of swift.org's property-style tests
 
+> **Status:** `shipped` · **As of:** 2026-07-31
+
+
 **Status: planned, not started.** Five questions, ordered by dependency in §7, run in **two
 passes** (§6): a sampled calibration pass, then a census on whichever populations the first
 pass shows are worth one. Read §2 first — a substantial amount is already measured, and the

@@ -1,5 +1,8 @@
 # ValueSemantic — build plan (type-level copy-independence verification)
 
+> **Status:** `shipped` · **As of:** 2026-07-06
+
+
 Status: **SHIPPED — slices 1–5 complete** (2026-07-06). Supersedes the
 discovery/verify half of `docs/ideas/ValueSemantic Kit Proposal.md` (2026-05-04).
 The feature discovers reference-backed struct candidates AND verifies the

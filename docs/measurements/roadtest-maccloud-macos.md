@@ -1,5 +1,8 @@
 # Road-test — MacCloud_client_MacOS (2026-07-18)
 
+> **Status:** `measured` · **As of:** 2026-07-18
+
+
 Toolchain-facing record of pointing the PBT toolchain at a second MacCloud fixture
 (the macOS client, after the iOS one). Goal: assess PBT adoption, find toolchain
 gaps, and find real bugs in the fixture. One toolchain fix landed in this repo

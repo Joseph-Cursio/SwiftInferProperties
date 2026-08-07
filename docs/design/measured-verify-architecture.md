@@ -1,5 +1,8 @@
 # Measured-verify architecture (v2 interaction families)
 
+> **Status:** `shipped` · **As of:** 2026-07-02
+
+
 **Status: complete (cycles 110–145). Consolidation doc — captured 2026-06-16.**
 
 This is the single-page reference for how SwiftInferProperties turns a

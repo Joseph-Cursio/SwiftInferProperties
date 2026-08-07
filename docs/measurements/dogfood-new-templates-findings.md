@@ -1,5 +1,8 @@
 # Dogfood — involution / binary-idempotence / homomorphism on real packages
 
+> **Status:** `measured` · **As of:** 2026-07-18
+
+
 > **Update (2026-07-15): the two follow-ups below were built** as the
 > recall-widening epics. **Epic 2** widened `binaryOperatorTypeSymmetrySignal`
 > to instance-method binary operators (`x.union(y)`), so commutativity /

@@ -1,5 +1,8 @@
 # Road-test — MacCloud_server (2026-07-18)
 
+> **Status:** `measured` · **As of:** 2026-07-18
+
+
 Third and final MacCloud fixture (after the iOS and macOS clients). Toolchain-facing
 record. Outcome: **one toolchain fix shipped** (namespace-reducer qualification), the
 **async clock-deterministic reducer verify validated** on a real server reducer, and

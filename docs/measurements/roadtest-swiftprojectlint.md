@@ -1,5 +1,8 @@
 # Road test — SwiftProjectLint (2026-07-24)
 
+> **Status:** `measured` · **As of:** 2026-07-25
+
+
 Toolchain-facing summary of the **first scored** road test in this series. The
 full record — answer key, per-candidate scoring, bugs, all nine prioritised
 fixes — lives in the subject repository:

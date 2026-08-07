@@ -1,5 +1,8 @@
 # Plan — backtest `scaffold-kit-suites` against real, already-fixed swift.org bugs
 
+> **Status:** `open` · **As of:** 2026-08-02
+
+
 **Status (2026-08-02): §3b measured, §3d added, Arm 1 RUN and it is a HIT.** Arms 2 and 3
 and the §4a decision are still open. Written for execution in a fresh context; the
 prerequisites section and the Arm 1 prediction are left as originally written, with results

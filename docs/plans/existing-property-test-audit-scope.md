@@ -1,5 +1,8 @@
 # Auditing property tests that already exist — scope, with the cheap version measured and rejected
 
+> **Status:** `open` · **As of:** 2026-08-02
+
+
 **Status: scoped, not built. 2026-08-02.**
 
 Every capability in this toolchain points at code that has *no* property tests: `discover`

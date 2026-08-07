@@ -1,5 +1,8 @@
 # TCA determinism measured-verify — open follow-ups
 
+> **Status:** `open` · **As of:** 2026-07-05
+
+
 ## Status
 
 Stage 3 (dependency-pinned determinism measured-verify for TCA reducers)

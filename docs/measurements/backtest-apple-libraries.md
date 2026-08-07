@@ -1,5 +1,8 @@
 # Historical backtest — Apple/Swift libraries (2026-07-18)
 
+> **Status:** `measured` · **As of:** 2026-08-02
+
+
 A validation method distinct from the planted-bug road-tests: point the toolchain
 at **real, already-fixed bugs** in mature Swift libraries and ask whether it would
 have caught each one *before* the fix. Real bugs beat planted ones — nobody can

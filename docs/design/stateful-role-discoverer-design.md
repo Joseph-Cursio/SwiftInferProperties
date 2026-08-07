@@ -1,5 +1,8 @@
 # StatefulRoleDiscoverer — generalizing architecture-aware discovery
 
+> **Status:** `shipped` · **As of:** 2026-07-07
+
+
 Status: **design sketch** (no code landed). Author note: grounds every claim in
 the existing `ReducerDiscoverer` / `ViewModelDiscoverer` implementations.
 

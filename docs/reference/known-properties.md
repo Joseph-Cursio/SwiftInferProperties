@@ -1,5 +1,8 @@
 # Standard-library known-properties catalog (`swift-infer known-properties`, V1.145)
 
+> **Status:** `reference` · **As of:** 2026-07-30
+
+
 A built-in, provable **seed of ground truth**: a curated catalog of known-true
 algebraic properties on standard-library types, plus the famous **caveats**
 (properties that look plausible but do NOT hold).

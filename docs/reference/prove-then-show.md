@@ -1,5 +1,8 @@
 # Prove-then-show (`swift-infer prove-then-show`, V1.144)
 
+> **Status:** `reference` · **As of:** 2026-07-08
+
+
 The one-shot **inversion of the conservative default**. Normally `discover`
 *hides* `Possible`-tier picks to avoid overwhelming you with false positives.
 `prove-then-show` instead **tests** every pick (including `Possible`) and shows

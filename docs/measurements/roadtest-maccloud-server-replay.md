@@ -1,5 +1,8 @@
 # Road-test — ReplayIdempotenceTemplate against MacCloud_server (2026-08-06)
 
+> **Status:** `measured` · **As of:** 2026-08-06
+
+
 The external-oracle validation the M1/M2 sketch demanded. `ReplayIdempotenceTemplate`
 (M1 annotation + key parameter, M2 dedup-gate walker) was pointed at `MacCloud_server`
 — real, unplanted, and **written before the SwiftIdempotency grammar existed**. The

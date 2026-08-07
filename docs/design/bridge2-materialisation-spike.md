@@ -1,5 +1,8 @@
 # Bridge 2 spike — idempotence on `self -> OtherType` (the materialisation case)
 
+> **Status:** `declined` · **As of:** 2026-07-18
+
+
 **Status:** spike complete — **decision: (B) document the boundary, no code change**
 (owner call, 2026-07-18). Discovery stays silent on `self -> OtherType` (its current,
 correct behaviour); the boundary is recorded here and in
