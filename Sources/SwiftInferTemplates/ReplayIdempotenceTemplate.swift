@@ -76,6 +76,7 @@ public enum ReplayIdempotenceTemplate {
             || keyParameter(of: summary) != nil
             || summary.bodySignals.dedupGateShape != nil
             || summary.bodySignals.buildsIdempotencyKey
+            || summary.bodySignals.callsIdempotentWrite
     }
 
     /// The `IdempotencyKey`-typed parameter, if any. Exact type-text match for M1;
@@ -105,6 +106,9 @@ public enum ReplayIdempotenceTemplate {
         }
         if let builder = keyBuilderSignal(for: summary) {
             signals.append(builder)
+        }
+        if let idempotentWrite = idempotentWriteSignal(for: summary) {
+            signals.append(idempotentWrite)
         }
         if let veto = declaredNonIdempotentVeto(for: summary) {
             signals.append(veto)
@@ -156,10 +160,12 @@ public enum ReplayIdempotenceTemplate {
     /// +30 (2026-08-07) after clearing the external-evidence gate: 8/8 accepted
     /// (MacCloud 2 + public corpus 6) across three consecutive re-sweeps (M5/M7/M8),
     /// meeting the PRD §3.5 ≥70%×3 rule the reducer-idempotence family used. Alone it
-    /// now lands in `.likely`. **Caveat:** n=8 is far smaller than that family's
-    /// n=39, so this is the thinner basis — revisit if a larger external corpus
-    /// surfaces a structural false positive. Still above the bare key parameter
-    /// (+25, a type without proof of use), which stays `.possible`.
+    /// now lands in `.likely`. The firming pass (2026-08-07) expanded the corpus to
+    /// 12 repos (~9,700 files): **0 false positives**, so the promotion's risk is
+    /// confirmed low — but the accepted-TP count held at 8 (in-handler dedup gates
+    /// are rare; typical code dedups at the DB/framework layer). Firm on precision,
+    /// TP-sparse by the shape's rarity. Still above the bare key parameter (+25, a
+    /// type without proof of use), which stays `.possible`.
     static func dedupGateSignal(for summary: FunctionSummary) -> Signal? {
         guard let shape = summary.bodySignals.dedupGateShape else { return nil }
         let description: String
@@ -201,6 +207,25 @@ public enum ReplayIdempotenceTemplate {
             detail: "Constructs an `IdempotencyKey` from its input — the built value "
                 + "(and its key) must be stable across invocations, so a downstream "
                 + "retry is safe; a key derived from `UUID()`/`Date()` would break it"
+        )
+    }
+
+    /// M10. The body calls an idempotent-write primitive (`upsert`, `firstOrCreate`,
+    /// …). Worth +40 → `.likely` alone — like the annotation, this is a *guarantee*,
+    /// not the tool's inference: an upsert applied twice leaves the same state, so
+    /// the "gate promotion on external evidence" rule doesn't apply (it gates
+    /// guesses, not the semantics of a chosen operation). This branch recovers the
+    /// recall the firming pass showed the gate detector can't reach — much real
+    /// dedup is an idempotent write, not an in-handler if/guard.
+    static func idempotentWriteSignal(for summary: FunctionSummary) -> Signal? {
+        guard summary.bodySignals.callsIdempotentWrite else { return nil }
+        return Signal(
+            kind: .replayIdempotentWrite,
+            weight: 40,
+            detail: "Uses an idempotent-write primitive (upsert / firstOrCreate / …) — "
+                + "the write is idempotent by construction, so `run twice ⇒ same state`. "
+                + "Confirm no OTHER effect (email, queue publish) runs unconditionally "
+                + "alongside it — the primitive guards the write, not those"
         )
     }
 

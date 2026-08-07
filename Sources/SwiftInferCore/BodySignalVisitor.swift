@@ -19,6 +19,20 @@ final class BodySignalVisitor: SyntaxVisitor {
     /// invocations (a `UUID()`/`Date()`-derived "key" would break it).
     var buildsIdempotencyKey = false
 
+    /// V-ReplayM10 — the body calls an **idempotent-write primitive** (`upsert`,
+    /// `firstOrCreate`, `getOrCreate`, …). Unlike a gate (which the tool infers), a
+    /// primitive is a *semantic guarantee*: an upsert applied twice leaves the same
+    /// state. So a handler using one is replay-idempotent by the operation it chose,
+    /// the way an `@ExternallyIdempotent` handler is by the annotation it wrote.
+    var callsIdempotentWrite = false
+
+    /// Callee base names that are idempotent by construction — the write is a no-op
+    /// (or a same-state update) on a repeat.
+    static let idempotentWriteVerbs: Set<String> = [
+        "upsert", "firstOrCreate", "getOrCreate", "findOrCreate",
+        "updateOrCreate", "insertOrUpdate", "createIfNotExists"
+    ]
+
     init(funcName: String) {
         self.funcName = funcName
         super.init(viewMode: .sourceAccurate)
@@ -31,6 +45,10 @@ final class BodySignalVisitor: SyntaxVisitor {
         }
         if calleeText == "IdempotencyKey" {
             buildsIdempotencyKey = true
+        }
+        if let baseName = node.calledExpression.as(MemberAccessExprSyntax.self)?.declName.baseName.text,
+           Self.idempotentWriteVerbs.contains(baseName) {
+            callsIdempotentWrite = true
         }
         if calleeText == funcName {
             for arg in node.arguments

@@ -391,8 +391,10 @@ extension Signal {
         /// state-flag / guard-form): Branch C's structural signal.
         case replayDedupGate
 
-        /// V-ReplayM6 — the body builds an `IdempotencyKey(…)` (key-from-entity builder);
-        /// the property is that the built value is stable across invocations.
+        /// V-ReplayM6 — the body builds an `IdempotencyKey(…)`; property = built value stable.
         case replayKeyBuilder
+
+        /// V-ReplayM10 — the body calls an idempotent-write primitive (`upsert`, …): idempotent by guarantee.
+        case replayIdempotentWrite
     }
 }

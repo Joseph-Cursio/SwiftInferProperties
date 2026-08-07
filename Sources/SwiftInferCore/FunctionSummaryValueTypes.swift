@@ -91,6 +91,11 @@ public struct BodySignals: Sendable, Equatable {
     /// property is that the built value is stable across invocations.
     public let buildsIdempotencyKey: Bool
 
+    /// The body calls an idempotent-write primitive (`upsert`, `firstOrCreate`, …)
+    /// — idempotent by the operation's guarantee (M10). Read by
+    /// `ReplayIdempotenceTemplate`'s idempotent-write branch.
+    public let callsIdempotentWrite: Bool
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
@@ -100,12 +105,14 @@ public struct BodySignals: Sendable, Equatable {
         equalityBodyShape: EqualityBodyShape? = nil,
         idempotenceReturnShape: IdempotenceReturnShape? = nil,
         dedupGateShape: DedupGateShape? = nil,
-        buildsIdempotencyKey: Bool = false
+        buildsIdempotencyKey: Bool = false,
+        callsIdempotentWrite: Bool = false
     ) {
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
         self.dedupGateShape = dedupGateShape
         self.buildsIdempotencyKey = buildsIdempotencyKey
+        self.callsIdempotentWrite = callsIdempotentWrite
         self.hasNonDeterministicCall = hasNonDeterministicCall
         self.hasSelfComposition = hasSelfComposition
         self.nonDeterministicAPIsDetected = nonDeterministicAPIsDetected
