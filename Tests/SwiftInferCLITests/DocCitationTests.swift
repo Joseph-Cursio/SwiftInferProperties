@@ -51,18 +51,22 @@ import Testing
 ///   bends around its exceptions stops being checkable.
 /// - **A reference with no file extension.** Prose in practice, and treating those
 ///   as paths would make the test argue with English.
-/// - **This file.** The doc comment above quotes the very paths it exists to
-///   describe, so scanning itself would report its own examples forever. Excluded by
-///   name rather than by an "is it inside a code fence" rule, because the quoting is
-///   prose here as often as it is a fence.
+/// - **This file, and ``DocProseCitationTests``.** A guard for citations has to quote
+///   broken citations to explain itself, so both would report their own examples
+///   forever. Excluded by name (``selfDescribingFiles``) rather than by an "is it
+///   inside a code fence" rule, because the quoting is prose here as often as it is
+///   a fence.
+/// - **A glob.** `docs/**/*.md` names a set, not a file — and this repo argues about
+///   globs often enough that treating one as a path produced ten false positives the
+///   first time the prose scan ran.
 @Suite("Doc citations — every `docs/…` path named in code resolves")
 struct DocCitationTests {
 
     @Test("no source or test comment cites a doc that does not exist")
     func citedDocsExist() throws {
-        let dangling = try Self.citations()
+        let dangling = try DocCitationScanner.citations()
             .filter { !$0.isHistorical }
-            .filter { !Self.existsCaseSensitively(atPath: Self.absolute($0.path)) }
+            .filter { !DocCitationScanner.existsCaseSensitively(atPath: DocCitationScanner.absolute($0.path)) }
 
         #expect(
             dangling.isEmpty,
@@ -70,7 +74,7 @@ struct DocCitationTests {
             These comments cite a `docs/…` path that does not exist. Either fix the \
             path, or — if the doc was pruned — cite it through the SHA it was last \
             present at, e.g. `git show <sha>:docs/foo.md`:
-            \(Self.render(dangling))
+            \(DocCitationScanner.render(dangling))
             """
         )
     }
@@ -81,9 +85,9 @@ struct DocCitationTests {
     /// moved on.
     @Test("no `git show <sha>:` citation names a doc that exists again")
     func historicalCitationsNameRemovedDocs() throws {
-        let resurrected = try Self.citations()
+        let resurrected = try DocCitationScanner.citations()
             .filter(\.isHistorical)
-            .filter { Self.existsCaseSensitively(atPath: Self.absolute($0.path)) }
+            .filter { DocCitationScanner.existsCaseSensitively(atPath: DocCitationScanner.absolute($0.path)) }
 
         #expect(
             resurrected.isEmpty,
@@ -91,7 +95,7 @@ struct DocCitationTests {
             These are cited through `git show <sha>:` as though pruned, but the file \
             exists in the tree. Drop the `git show <sha>:` wrapper and cite the path \
             directly — the history copy is frozen and the live one is not:
-            \(Self.render(resurrected))
+            \(DocCitationScanner.render(resurrected))
             """
         )
     }
@@ -111,7 +115,7 @@ struct DocCitationTests {
     /// source of unresolvable prose citations and must not be swept into the check).
     @Test("every relative markdown link between docs resolves")
     func relativeDocLinksResolve() throws {
-        let docsRoot = Self.repositoryRoot.appendingPathComponent("docs")
+        let docsRoot = DocCitationScanner.repositoryRoot.appendingPathComponent("docs")
         var broken: [String] = []
 
         let enumerator = FileManager.default.enumerator(at: docsRoot, includingPropertiesForKeys: nil)
@@ -119,13 +123,13 @@ struct DocCitationTests {
             guard url.pathExtension == "md" else { continue }
             let text = try String(contentsOf: url, encoding: .utf8)
             let relative = url.path.replacingOccurrences(
-                of: Self.repositoryRoot.path + "/", with: ""
+                of: DocCitationScanner.repositoryRoot.path + "/", with: ""
             )
             for (offset, line) in text.components(separatedBy: "\n").enumerated() {
-                for target in Self.markdownLinkTargets(in: line) {
+                for target in DocCitationScanner.markdownLinkTargets(in: line) {
                     let resolved = url.deletingLastPathComponent()
                         .appendingPathComponent(target).standardized
-                    guard !Self.existsCaseSensitively(atPath: resolved.path) else { continue }
+                    guard !DocCitationScanner.existsCaseSensitively(atPath: resolved.path) else { continue }
                     broken.append("\(relative):\(offset + 1) — \(target)")
                 }
             }
@@ -154,13 +158,13 @@ struct DocCitationTests {
     func caseSensitiveCheckRejectsRecasedPaths() {
         let real = "docs/README.md"
         #expect(
-            Self.existsCaseSensitively(atPath: Self.absolute(real)),
+            DocCitationScanner.existsCaseSensitively(atPath: DocCitationScanner.absolute(real)),
             "\(real) exists with this exact spelling — the check must accept it"
         )
 
         for recased in ["Docs/README.md", "docs/readme.md", "docs/DESIGN/verify-edge-pass.md"] {
             #expect(
-                !Self.existsCaseSensitively(atPath: Self.absolute(recased)),
+                !DocCitationScanner.existsCaseSensitively(atPath: DocCitationScanner.absolute(recased)),
                 """
                 `\(recased)` is a re-casing of a real path and must be rejected. \
                 Accepting it is the SwiftProjectLint failure: a citation that \
@@ -170,189 +174,8 @@ struct DocCitationTests {
         }
 
         // Directories and escapes-above-the-repo take the other branch of the walk.
-        #expect(Self.existsCaseSensitively(atPath: Self.absolute("docs/design")))
-        #expect(!Self.existsCaseSensitively(atPath: Self.absolute("docs/Design")))
-        #expect(!Self.existsCaseSensitively(atPath: "/no/such/path/anywhere.md"))
-    }
-
-    /// The `…` of `](…)` where the target is a local `.md`, with any `#fragment`
-    /// dropped and `%20` decoded — the PRD filenames contain spaces, and a link to
-    /// them is legitimately percent-encoded.
-    static func markdownLinkTargets(in line: String) -> [String] {
-        var targets: [String] = []
-        var searchStart = line.startIndex
-        while let open = line.range(of: "](", range: searchStart..<line.endIndex) {
-            searchStart = open.upperBound
-            guard let close = line.range(of: ")", range: open.upperBound..<line.endIndex)
-            else { break }
-            searchStart = close.upperBound
-            var target = String(line[open.upperBound..<close.lowerBound])
-            if let hash = target.firstIndex(of: "#") { target = String(target[..<hash]) }
-            target = target.replacingOccurrences(of: "%20", with: " ")
-            guard target.hasSuffix(".md"),
-                  !target.hasPrefix("http://"),
-                  !target.hasPrefix("https://")
-            else { continue }
-            targets.append(target)
-        }
-        return targets
-    }
-
-    // MARK: - Extracting citations
-
-    struct Citation {
-        let path: String
-        /// Written as `git show <sha>:docs/…` — a deliberate pointer into history.
-        let isHistorical: Bool
-        let file: String
-        let line: Int
-    }
-
-    static let repositoryRoot: URL = {
-        URL(fileURLWithPath: #filePath, isDirectory: false)
-            .deletingLastPathComponent()  // SwiftInferCLITests/
-            .deletingLastPathComponent()  // Tests/
-            .deletingLastPathComponent()  // repo root
-    }()
-
-    static func absolute(_ path: String) -> String {
-        repositoryRoot.appendingPathComponent(path).path
-    }
-
-    /// Does this path exist **with exactly this spelling**?
-    ///
-    /// `FileManager.fileExists` cannot answer that. APFS is case-*insensitive* by
-    /// default, so it returns `true` for `docs/Foo.md` when the file is `docs/foo.md`
-    /// — and that citation then 404s on GitHub and fails on a Linux runner. A guard
-    /// built on `fileExists` is therefore blind to the one class of broken path that
-    /// only breaks for other people.
-    ///
-    /// **This is not hypothetical, and it fooled this suite's own author.** On
-    /// 2026-08-07 a sweep of SwiftProjectLint reported three doc paths as resolving.
-    /// That repo's directory is `Docs/`, capitalised; all three said `docs/`. Every
-    /// check passed locally and all three were dead links on GitHub, including the
-    /// README's front-door index. The tell was `git diff` printing a path with
-    /// different casing than the one that had just been edited.
-    ///
-    /// So: walk the path a component at a time and require each name to appear
-    /// *verbatim* in its parent's directory listing, which reports true on-disk
-    /// casing. Anchored at ``repositoryRoot`` when the path is inside the repo —
-    /// that prefix comes from `#filePath`, so its casing is the compiler's and not
-    /// a citation's — and from `/` otherwise, since a relative doc link may point at
-    /// a sibling checkout.
-    static func existsCaseSensitively(atPath path: String) -> Bool {
-        let standardized = URL(fileURLWithPath: path).standardizedFileURL.path
-        let anchor = repositoryRoot.path
-        guard standardized != anchor else { return true }
-        guard standardized.hasPrefix("/") else { return false }
-
-        let insideRepository = standardized.hasPrefix(anchor + "/")
-        var current = insideRepository ? anchor : "/"
-        let remaining = (insideRepository
-            ? standardized.dropFirst(anchor.count + 1)
-            : standardized.dropFirst()
-        ).components(separatedBy: "/")
-
-        for component in remaining where !component.isEmpty {
-            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: current),
-                  entries.contains(component)
-            else { return false }
-            current = URL(fileURLWithPath: current).appendingPathComponent(component).path
-        }
-        return true
-    }
-
-    static func render(_ citations: [Citation]) -> String {
-        citations
-            .map { "\($0.file):\($0.line) — \($0.path)" }
-            .sorted()
-            .joined(separator: "\n")
-    }
-
-    /// Every `docs/…` citation under `Sources/` and `Tests/`.
-    ///
-    /// The read **throws rather than skipping**. A `try?` would drop any file it
-    /// could not open and quietly shorten the population, which is precisely the
-    /// under-reporting this test exists to catch.
-    static func citations() throws -> [Citation] {
-        var found: [Citation] = []
-        for root in ["Sources", "Tests"] {
-            let url = repositoryRoot.appendingPathComponent(root)
-            let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil)
-            while let fileURL = enumerator?.nextObject() as? URL {
-                guard fileURL.pathExtension == "swift" else { continue }
-                // This suite's own prose quotes example paths; see the type doc.
-                guard fileURL.lastPathComponent != "DocCitationTests.swift" else { continue }
-                let text = try String(contentsOf: fileURL, encoding: .utf8)
-                let relative = fileURL.path.replacingOccurrences(
-                    of: repositoryRoot.path + "/", with: ""
-                )
-                for (offset, line) in text.components(separatedBy: "\n").enumerated() {
-                    found.append(
-                        contentsOf: citations(in: line, file: relative, line: offset + 1)
-                    )
-                }
-            }
-        }
-        return found
-    }
-
-    /// Doc paths in this repo contain spaces (`docs/SwiftInferProperties PRD v1.0.md`),
-    /// so a character-class regex cannot bound them. Anchoring on the *extension*
-    /// instead: a citation runs from `docs/` to the first following `.md` / `.json`
-    /// on the same line, with the usual comment punctuation treated as a terminator
-    /// so `` `docs/a.md` §6 `` and `(../../docs/a.md)` both land on the path alone.
-    static func citations(in line: String, file: String, line lineNumber: Int) -> [Citation] {
-        var found: [Citation] = []
-        var searchStart = line.startIndex
-        while let marker = line.range(of: "docs/", range: searchStart..<line.endIndex) {
-            searchStart = marker.upperBound
-            let remainder = line[marker.upperBound...]
-            // Stop before punctuation that closes a citation rather than sitting
-            // inside one; `.` and `-` and spaces are all legitimate mid-path.
-            let terminator = remainder.firstIndex { "`)],;\"".contains($0) } ?? remainder.endIndex
-            let candidate = remainder[remainder.startIndex..<terminator]
-            guard let end = Self.extensionEnd(of: candidate) else { continue }
-            let path = "docs/" + candidate[candidate.startIndex..<end]
-            found.append(
-                Citation(
-                    path: path,
-                    isHistorical: Self.isHistoricalPrefix(line[line.startIndex..<marker.lowerBound]),
-                    file: file,
-                    line: lineNumber
-                )
-            )
-        }
-        return found
-    }
-
-    /// The index just past the first `.md` / `.json`, or nil when the candidate
-    /// carries no extension at all — prose like `docs/M6`, which is not a path.
-    static func extensionEnd(of candidate: Substring) -> Substring.Index? {
-        let extensions = [".md", ".json"]
-        return extensions
-            .compactMap { candidate.range(of: $0)?.upperBound }
-            .min()
-    }
-
-    /// True for `git show <sha>:docs/…`, including the quoted form the shell needs
-    /// when the path contains a space: `git show <sha>:'docs/… .md'`.
-    static func isHistoricalPrefix(_ prefix: Substring) -> Bool {
-        var text = prefix
-        if text.hasSuffix("'") { text = text.dropLast() }
-        guard text.hasSuffix(":") else { return false }
-        let sha = text.dropLast().suffix(while: \.isHexDigit)
-        return (7...40).contains(sha.count)
-    }
-}
-
-private extension Substring {
-    /// The maximal trailing run satisfying `predicate`.
-    func suffix(while predicate: (Character) -> Bool) -> Substring {
-        var index = endIndex
-        while index > startIndex, predicate(self[self.index(before: index)]) {
-            index = self.index(before: index)
-        }
-        return self[index...]
+        #expect(DocCitationScanner.existsCaseSensitively(atPath: DocCitationScanner.absolute("docs/design")))
+        #expect(!DocCitationScanner.existsCaseSensitively(atPath: DocCitationScanner.absolute("docs/Design")))
+        #expect(!DocCitationScanner.existsCaseSensitively(atPath: "/no/such/path/anywhere.md"))
     }
 }
