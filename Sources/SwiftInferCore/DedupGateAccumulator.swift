@@ -16,17 +16,31 @@ import SwiftSyntax
 /// and is not an observable effect.
 extension DedupGateClassifier {
 
-    /// Whether any statement strictly before the gate mutates stored state — an
-    /// accumulation the gate does not dominate.
+    /// Whether the gate is defeated by an accumulator: one in a statement strictly
+    /// before the gate (runs on every call), OR one in the gate's own **hit branch**
+    /// — the `if let existing { … }` body that returns the existing row (M11). A
+    /// `+=`/`.append` there is non-idempotent even though it is "inside" the gate:
+    /// on a replay the hit branch runs again and grows (`registerConnectionError`'s
+    /// `numberOfErrors += 1`). It distinguishes a set-update (`x.field = v`,
+    /// idempotent — `mute`) from an increment/append.
     static func hasUngatedAccumulator(
         _ statements: [CodeBlockItemSyntax],
         beforeGate gateIndex: Int
     ) -> Bool {
-        statements[..<gateIndex].contains { item in
-            let finder = AccumulatorFinder()
-            finder.walk(Syntax(item))
-            return finder.found
+        if statements[..<gateIndex].contains(where: { accumulates(Syntax($0)) }) {
+            return true
         }
+        if let ifExpr = ifExpr(from: statements[gateIndex]),
+           accumulates(Syntax(ifExpr.body)) {
+            return true
+        }
+        return false
+    }
+
+    private static func accumulates(_ subtree: Syntax) -> Bool {
+        let finder = AccumulatorFinder()
+        finder.walk(subtree)
+        return finder.found
     }
 }
 

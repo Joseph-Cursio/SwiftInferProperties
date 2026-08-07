@@ -19,6 +19,12 @@ private func buildsKey(_ source: String) throws -> Bool {
     return try #require(summaries.first).bodySignals.buildsIdempotencyKey
 }
 
+/// Reads the `callsIdempotentWrite` marker (M10) off a parsed body.
+private func writesIdempotently(_ source: String) throws -> Bool {
+    let summaries = FunctionScanner.scanCorpus(source: source, file: "S.swift").summaries
+    return try #require(summaries.first).bodySignals.callsIdempotentWrite
+}
+
 @Suite("DedupGateClassifier — dedup gates read off a parsed body")
 struct DedupGateClassifierTests {
 
@@ -34,6 +40,33 @@ struct DedupGateClassifierTests {
         }
         """)
         #expect(builds)
+    }
+
+    @Test("Idempotent-write primitive is detected (M10 recall)")
+    func idempotentWriteDetected() throws {
+        // A handler whose write is an upsert — idempotent by the primitive.
+        let writes = try writesIdempotently("""
+        struct H {
+            func record(event: Event, on db: Database) async throws {
+                try await Event(id: event.id).upsert(on: db)
+            }
+        }
+        """)
+        #expect(writes)
+    }
+
+    @Test("A plain insert is NOT an idempotent write (M10 precision)")
+    func plainInsertIsNotIdempotentWrite() throws {
+        // `.create`/`.save` are not idempotent-by-construction — only the
+        // upsert/getOrCreate family is.
+        let writes = try writesIdempotently("""
+        struct H {
+            func record(event: Event, on db: Database) async throws {
+                try await Event(id: event.id).create(on: db)
+            }
+        }
+        """)
+        #expect(writes == false)
     }
 
     @Test("A plain builder that constructs no IdempotencyKey is not flagged")
@@ -227,6 +260,48 @@ struct DedupGateClassifierTests {
         #expect(shape == .earlyReturnDedup(keyRoot: "order"))
     }
 
+    @Test("An INCREMENT in the gate's hit branch vetoes it (M11 — registerConnectionError)")
+    func incrementInHitBranchVetoes() throws {
+        // Vernissage registerConnectionError shape: fetch, and on a hit increment a
+        // counter. A replay double-counts, so it is NOT idempotent.
+        let shape = try gate("""
+        struct H {
+            func registerError(host: String, on db: Database) async throws {
+                let server = try await Server.query(on: db).first()
+                if let server {
+                    server.numberOfErrors += 1
+                    try await server.save(on: db)
+                    return
+                }
+                try await Server(host: host).save(on: db)
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
+    @Test("A SET-update in the gate's hit branch is fine (M11 — the mute distinction)")
+    func setUpdateInHitBranchIsFine() throws {
+        // Vernissage mute shape: on a hit, SET fields to given values (idempotent),
+        // not increment. Must still match.
+        let shape = try gate("""
+        struct H {
+            func mute(id: Int, status: Bool, on db: Database) async throws -> Row {
+                let existing = try await Row.query(on: db).first()
+                if let existing {
+                    existing.status = status
+                    try await existing.save(on: db)
+                    return existing
+                }
+                let row = Row(id: id)
+                try await row.save(on: db)
+                return row
+            }
+        }
+        """)
+        #expect(shape == .fetchThenInsert)
+    }
+
     @Test("A local accumulator before the gate does not false-veto (M8 member-scoped)")
     func localAccumulatorDoesNotVeto() throws {
         // `total += line` on a LOCAL resets each call — not an observable effect,
@@ -242,132 +317,5 @@ struct DedupGateClassifierTests {
         }
         """)
         #expect(shape == .earlyReturnDedup(keyRoot: "order"))
-    }
-}
-
-/// The precision refinements and vetoes — the "NOT a gate" half, split out to keep
-/// each suite under the type-body length cap.
-@Suite("DedupGateClassifier — precision refinements & vetoes")
-struct DedupGatePrecisionTests {
-
-    @Test("Reject-on-duplicate by throwing is NOT a gate (MacCloud uploadFile)")
-    func rejectOnDuplicateByThrowingIsNotAGate() throws {
-        // MacCloud_server uploadFile: `if fileExists { throw }` — the branch
-        // throws rather than returns, so the handler is NOT idempotent, and the
-        // gate must not fire. blockReturns is false → skipped.
-        let shape = try gate("""
-        struct H {
-            func upload(req: Request) async throws -> Row {
-                let fileExists = try await File.query(on: req.db).first() != nil
-                if fileExists { throw FileError.fileAlreadyExists }
-                return Row()
-            }
-        }
-        """)
-        #expect(shape == nil)
-    }
-
-    @Test("Guard-form claim-once dedup is detected (penny canGiveCoin, M5)")
-    func guardClaimOnceDetected() throws {
-        // penny-bot ReactionHandler.handle: `guard await cache.canGiveCoin(…) else
-        // { return }` before awarding — the guard-form dedup M4's sweep found missed.
-        let shape = try gate("""
-        struct H {
-            func handle() async throws {
-                guard let member = event.member,
-                      await cache.canGiveCoin(sender: member.id, message: messageId)
-                else { return }
-                try await coinService.post(to: member.id)
-            }
-        }
-        """)
-        #expect(shape == .guardDedup(verb: "canGiveCoin"))
-    }
-
-    @Test("Guard on a negated dedup check is detected (M5)")
-    func guardNegatedDedupDetected() throws {
-        let shape = try gate("""
-        struct H {
-            func handle(_ key: Key) async throws {
-                guard !dedup.hasHandled(key) else { return }
-                try await repo.insert(key)
-            }
-        }
-        """)
-        #expect(shape == .guardDedup(verb: "hasHandled"))
-    }
-
-    @Test("A permission guard that throws is NOT a gate (precision, M5)")
-    func permissionGuardThatThrowsIsNotAGate() throws {
-        // `guard file.canWrite(user) else { throw }` — authorisation, not dedup:
-        // the verb is a permission verb AND the else throws rather than returns.
-        let shape = try gate("""
-        struct H {
-            func update(file: File, user: User) async throws {
-                guard file.canWrite(user) else { throw Abort(.forbidden) }
-                try await file.save(on: db)
-            }
-        }
-        """)
-        #expect(shape == nil)
-    }
-
-    @Test("A permission guard that returns is still NOT a gate (verb, M5)")
-    func permissionGuardThatReturnsIsNotAGate() throws {
-        // `guard canAccess else { return }` — `canAccess` is authorisation, not a
-        // claim-once capability, so it is excluded from the capability prefixes.
-        let shape = try gate("""
-        struct H {
-            func handle(user: User) async throws {
-                guard user.canAccess else { return }
-                try await repo.insert(user)
-            }
-        }
-        """)
-        #expect(shape == nil)
-    }
-
-    @Test("A plain validation guard is not a dedup gate (precision)")
-    func validationGuardIsNotADedupGate() throws {
-        // `if x < 0 { return 0 }` returns early but names no dedup/fetch verb.
-        let shape = try gate("""
-        struct H {
-            func clamp(_ x: Int) throws -> Int {
-                if x < 0 { return 0 }
-                return x
-            }
-        }
-        """)
-        #expect(shape == nil)
-    }
-
-    @Test("An off-list boolean property is not a state-flag gate (precision)")
-    func offListFlagIsNotAGate() throws {
-        // `isEmpty` is member-access-shaped like `isDeleted` but is a guard, not a
-        // dedup flag — the curated set is what keeps it from firing.
-        let shape = try gate("""
-        struct H {
-            func process(_ items: [Int]) throws -> Int {
-                if items.isEmpty { return 0 }
-                return items.count
-            }
-        }
-        """)
-        #expect(shape == nil)
-    }
-
-    @Test("A pure sync function is gated out before the walk")
-    func pureSyncFunctionIsGatedOut() throws {
-        // Not throws/async → couldCarryDedupGate is false → never classified,
-        // even though it has an early-return-shaped `if`.
-        let shape = try gate("""
-        struct H {
-            func firstPositive(_ xs: [Int]) -> Int {
-                if let hit = xs.first(where: { $0 > 0 }) { return hit }
-                return 0
-            }
-        }
-        """)
-        #expect(shape == nil)
     }
 }

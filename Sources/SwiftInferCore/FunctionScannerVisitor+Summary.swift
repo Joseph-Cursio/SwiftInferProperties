@@ -263,7 +263,8 @@ extension FunctionScannerVisitor {
                 : nil,
             // M6: the key-from-entity builder marker. Not behind the throws/async
             // gate — the builder is typically a pure sync function.
-            buildsIdempotencyKey: scanner.buildsIdempotencyKey
+            buildsIdempotencyKey: scanner.buildsIdempotencyKey,
+            callsIdempotentWrite: scanner.callsIdempotentWrite
         )
     }
 

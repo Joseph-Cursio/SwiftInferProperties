@@ -309,11 +309,29 @@ bugs *before* looking at the fixes. That is the same posture that licensed the s
   genuine findings (MacCloud's two handlers, penny's `canGiveCoin`, Vernissage's five) now surface at
   `.likely` **by default**, not behind `--include-possible`.
 
-  **The one honest caveat, kept in view:** the structural-gate calibration is n=8, far smaller than the
-  reducer-idempotence family's n=39. The ≥70%×3 *rate* is met, but the *sample* is thin — so this
-  promotion is provisional: if a larger external corpus surfaces a structural false positive, Branch C
-  drops back to `.possible`. `.likely` is still discovery, not a verdict — a human writes the recorder
-  and confirms the law. Promotion is never gated on the fixtures.
+  **The caveat, and how the firming pass resolved it.** The M9 promotion shipped with n=8 accepted
+  gates — a thin sample vs the reducer family's n=39. The firming pass (2026-08-07) expanded the corpus
+  by four more public repos (hummingbird-examples, SteamPress, FeatherCMS, pointfreeco — **+4,700 files**,
+  ~9,700 total), and the result is one-dimensional: **0 false positives** on the larger, more varied
+  surface (a CMS, a blog engine, framework examples, the Point-Free backend), so the promotion's actual
+  risk — a false positive at `.likely` — is confirmed low, and the provisional "revert on a structural
+  FP" trigger did **not** fire. But the true-positive count stayed **8**: detectable *in-handler* dedup
+  gates are rare, because typical CRUD/webhook code dedups at the DB or framework layer (unique
+  constraints, repository methods, Stripe's own idempotency keys), not in a handler-body gate. So the
+  firming strengthened the *precision* axis, not the *TP-volume* axis; the acceptance rate holds at 8/8.
+  `.likely` is still discovery, not a verdict — a human writes the recorder and confirms the law.
+  Promotion is never gated on the fixtures. See
+  [`roadtest-maccloud-server-replay.md`](../measurements/roadtest-maccloud-server-replay.md) for the sweep.
+- **M10** — recall recovery the firming pointed at: a `callsIdempotentWrite` marker for a handler that
+  uses an **idempotent-write primitive** (`upsert`, `firstOrCreate`, `getOrCreate`, …). The write is
+  idempotent *by the operation's guarantee*, so — like the annotation — it scores +40 (`.likely`)
+  without external calibration; it recovers the dedup that isn't an in-handler if/guard. Validated on a
+  synthetic upsert handler; 0 corpus hits (this corpus uses no such primitive), so 0 new false positives.
+- **M11** — a precision refinement M10's surfacing exposed: reading the newly-visible
+  `registerConnectionError` (a fetch-then-update whose hit branch does `numberOfErrors += 1`) showed the
+  accumulator veto only checked *before* the gate. It now also checks the gate's **hit branch**, so an
+  in-branch increment/append vetoes (non-idempotent) while a set-update (`mute`) stays. Vernissage 6 → 5.
+  A worked example of recall and precision reinforcing: adding a shape made a missed refinement legible.
 
 Three of the sketch's four proposed vetoes are now built as classifier checks —
 `declaredNonIdempotentVeto` (M1), the effect requirement/dominance that subsumes `unkeyedEffectVeto`

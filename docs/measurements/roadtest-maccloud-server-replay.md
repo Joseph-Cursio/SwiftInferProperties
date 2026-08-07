@@ -245,3 +245,33 @@ prompted by — and the prefix-effect weakening did not reintroduce the getter f
 What remains outside is now genuinely narrow: a dedup whose *only* signal is a domain verb the
 capability prefixes don't reach, with no `guard`/`if`/flag/fetch shape to corroborate it. That
 is the irreducible spell-checker-dictionary floor, not a shape left on the table.
+
+## Firming the band promotion, and what it surfaced (2026-08-07)
+
+M9 promoted the structural gate to `.likely` on n=8 accepted gates — thin. So the corpus was
+expanded by four more public repos (**hummingbird-examples, SteamPress, FeatherCMS, pointfreeco**;
++4,700 files, ~9,700 total). The result is one-dimensional and honest:
+
+- **0 false positives** on the larger, more varied surface (a CMS, a blog engine, framework
+  examples, the Point-Free backend). The promotion's risk — a false positive at `.likely` — is
+  confirmed low; the provisional "revert on a structural FP" trigger did **not** fire.
+- **0 new true positives.** Detectable *in-handler* dedup gates are rare: typical CRUD/webhook code
+  dedups at the DB or framework layer (unique constraints, repository methods, Stripe's own keys),
+  not in a handler-body gate — pointfreeco's Stripe handling included. The acceptance rate holds at
+  8/8, but the accepted-TP sample can't grow by adding *typical* repos.
+
+**Two changes followed, reinforcing rather than trading off:**
+
+- **M10 — idempotent-write recall.** The gap the sweep pointed at: much real dedup is an
+  *idempotent-write primitive* (`upsert`, `firstOrCreate`, `getOrCreate`, …), not an if/guard. A
+  handler using one is idempotent by the operation's guarantee, so it scores `.likely` like a claim.
+  0 corpus hits (this corpus uses none), so no new false positives; validated on a synthetic upsert.
+
+- **M11 — the precision refinement M10 made legible.** Surfacing more gate hits exposed
+  `registerConnectionError` (Vernissage): a fetch-then-update whose hit branch does
+  `numberOfErrors += 1` — a *counter*, so a replay double-counts. The accumulator veto had only
+  checked *before* the gate; it now also checks the gate's **hit branch**, so an in-branch
+  increment/append vetoes while a set-update (`mute`, `x.field = v`) stays. Vernissage 6 → 5.
+
+The lesson worth keeping: adding a shape (recall) made a missed refinement (precision) visible. The
+two are not opposed — the honest way to grow one is to keep reading what it surfaces for the other.
