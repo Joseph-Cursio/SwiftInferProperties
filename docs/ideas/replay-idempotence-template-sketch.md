@@ -2,7 +2,32 @@
 
 *A discovery template for effectful replay-safe handlers. Design source: SwiftIdempotency's
 [replay-idempotency shape catalog](../../../SwiftIdempotency/docs/replay-idempotency-shape-catalog.md)
-and its four fixtures. Status: **proposal**, not built.*
+and its four fixtures. Status: **shipped (M1–M5, 2026-08-06)** — this document is the original
+plan; see the "As built" note below for where reality diverged, and
+[`roadtest-maccloud-server-replay.md`](../roadtest-maccloud-server-replay.md) for the validation
+journey.*
+
+## As built (M1–M5) — plan vs reality
+
+The template shipped. The sections below are preserved as the design thinking, but the
+implementation diverged in a few load-bearing ways — recorded here rather than edited into each
+section, so the plan stays legible next to what it became.
+
+| Plan (this doc) | As built | Where |
+|---|---|---|
+| A **third witnessed family** (`HandlerCandidate` / `ReplayIdempotenceWitness` / `…Detector`) modelled on `IdempotenceInteractionTemplate` | A **Constraint-Engine template** (`ReplayIdempotenceTemplate.suggest → ConstraintRunner`), like the value templates. Simpler; no witness/candidate/detector types were needed. | M1 |
+| `BodySignals.dedupGate` walker (§5) | Shipped as `BodySignals.dedupGateShape` + `DedupGateClassifier`, gated to `throws`/`async` functions. | M2 |
+| Branches A (annotation) + B (`IdempotencyKey` param) | Shipped as-designed. `+35` / `+25`; both → `.likely`, either alone → `.possible`. | M1 |
+| Branch C shapes: early-return dedup, fetch-then-insert | Shipped, **plus two the fixtures didn't show** and the external corpus did: `stateFlagGuard` (`if file.isDeleted { return }`, M3) and `guardDedup` (`guard canGiveCoin() else { return }`, M5). Fetch-then-insert also learned a **pre-fetched** form (M3). | M2/M3/M5 |
+| The four vetoes — `unkeyedEffectVeto` as the load-bearing refutation | Shipped `declaredNonIdempotentVeto`; `nonStableKey` stayed a **soft counter**, not a hard veto. `unkeyedEffectVeto` was replaced by M4's simpler **effect requirement** (a gate must guard an actual effect-verb call, or it is a getter) — forced by the public-corpus sweep, where effect-less getters were the dominant false positive. `mutatingAccumulatorVeto` not built. | M4 |
+| Emit a filled-in `assertIdempotentEffects` | Emits a **`.todo` scaffold** that fails via `Issue.record` until completed — the effect recorder can't be synthesized, as §4 anticipated. | M1 |
+| `.possible` band, promotion gated on external evidence | As-designed; still `.possible`. | all |
+| **Deferred, still open** | Branch B's `keyFromEntity` degenerate form (`StripeWebhookHandler` builds its key in the body — needs a key-construction body signal); the effect-**dominance** veto (M4 requires an effect *exists*, not that the gate dominates it); `mutatingAccumulatorVeto`. | — |
+
+**Validation went further than the plan's single-oracle §6.** MacCloud_server (M3) caught two real
+handlers; an 8-repo **public trial corpus** (M4) then caught the template *over-firing* (~10/12 false
+— a precision blowup a two-handler oracle had hidden), whose fix cut it to 0 false; the M5 guard-form
+close was re-swept on that corpus *before* shipping. The honest ledger is in the road-test doc.
 
 ## Where it fits in the two existing mechanisms
 
@@ -241,8 +266,21 @@ bugs *before* looking at the fixes. That is the same posture that licensed the s
 
 ---
 
-## Build order, in one line
+## Build order — as shipped
 
-**M1** Branches A+B (annotation + key-parameter), `.possible` band, `assertIdempotentEffects` emitter,
-fixtures as regression set. → **M2** `BodySignals.dedupGate` walker + Branch C + the four vetoes. →
-**M3** calibrate on `MacCloud_server`; promote the band only after the ≥70%×3 gate on an external corpus.
+- **M1** — Constraint-Engine template; Branches A+B (annotation + `IdempotencyKey` param); `.possible`
+  band; `assertIdempotentEffects` `.todo`-scaffold emitter; fixtures as regression set.
+- **M2** — `BodySignals.dedupGateShape` walker + `DedupGateClassifier` + Branch C (early-return dedup,
+  fetch-then-insert). Refutation is structural: no gate → no proposal, so `BuggyOrderHandler` needs no
+  veto.
+- **M3** — `MacCloud_server` road test (external oracle). Its confident zero, investigated, exposed two
+  missed idioms → added `stateFlagGuard` and the pre-fetched fetch-then-insert form; both handlers then
+  surfaced.
+- **M4** — 8-repo public trial-corpus sweep caught the template over-firing (~10/12 false: `isCancelled`
+  cancellation + effect-less getters). Fix: tightened the state-flag set and **required a guarded
+  effect**. Re-sweep 12 → 5, all genuine.
+- **M5** — closed the guard-form recall gap: `guardDedup` (`guard canGiveCoin() else { return }`) +
+  prefix-matched effects. Re-swept before shipping: 6 hits, all genuine, penny's real handler caught,
+  zero new false positives.
+
+The band stays `.possible`; promotion past it remains gated on external evidence, never the fixtures.
