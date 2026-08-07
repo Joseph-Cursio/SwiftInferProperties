@@ -123,9 +123,13 @@ public enum DedupGateClassifier {
             let shape = ifShape(from: item, fetchedNames: fetchedNames)
                 ?? guardShape(from: item)
             if let shape {
-                // Pay the effect walk only once a gate is found, and only over the
-                // statements the gate dominates (itself onward).
-                return effectDominatedByGate(statements, gateIndex: index) ? shape : nil
+                // The gate must dominate an effect (M7) and must not sit behind an
+                // ungated accumulator (M8, a counter/append before the gate).
+                guard effectDominatedByGate(statements, gateIndex: index),
+                      !hasUngatedAccumulator(statements, beforeGate: index) else {
+                    return nil
+                }
+                return shape
             }
         }
         return nil
