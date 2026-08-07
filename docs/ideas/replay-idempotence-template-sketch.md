@@ -22,7 +22,7 @@ section, so the plan stays legible next to what it became.
 | Branch B′ `keyFromEntity` (the pure builder, `StripeWebhookHandler`) | Shipped (M6) via a `BodySignals.buildsIdempotencyKey` marker (`IdempotencyKey(…)` construction — precise, SwiftIdempotency-specific). Being a **pure value builder** it bypasses M4's effect requirement and emits the **value** form (`#assertIdempotent`), not the effect form. **Uniquely has no external oracle:** no public repo adopts `IdempotencyKey`, so recall is confirmed only on the fixture and precision is by-construction (the type name), not measured. | M6 |
 | The four vetoes — `unkeyedEffectVeto` as the load-bearing refutation | Shipped `declaredNonIdempotentVeto`; `nonStableKey` stayed a **soft counter**, not a hard veto. `unkeyedEffectVeto` was replaced by M4's simpler **effect requirement** (a gate must guard an actual effect-verb call, or it is a getter) — forced by the public-corpus sweep, where effect-less getters were the dominant false positive. `mutatingAccumulatorVeto` not built. | M4 |
 | Emit a filled-in `assertIdempotentEffects` | Emits a **`.todo` scaffold** that fails via `Issue.record` until completed — the effect recorder can't be synthesized, as §4 anticipated. | M1 |
-| `.possible` band, promotion gated on external evidence | As-designed; still `.possible`. | all |
+| `.possible` band, promotion gated on external evidence | Held at `.possible` through M1–M8, then **promoted (M9, 2026-08-07)**: the annotation (a *claim*) and the structural gate (which cleared the ≥70%×3 external gate, 8/8 across M5/M7/M8) each reach `.likely` alone, so genuine findings surface by default. The two weak signals (key parameter, key builder) stay `.possible`. | M1–M9 |
 | Effect requirement: an effect must *exist* (M4) | **Sharpened to effect-*dominance* (M7):** the effect must sit at or after the gate, so an effect that ran *before* a too-late gate no longer qualifies (`insert(order); if hasHandled { return }` is now rejected). Left corpus results unchanged (all genuine gates dominate their effect); closes a latent false-positive class. | M7 |
 | `mutatingAccumulatorVeto` (one of the four proposed vetoes) | **Shipped (M8):** a member compound-assign (`self.count += 1`) or member `.append` in the statements *before* the gate vetoes it — an ungated accumulation runs on every replay, so the handler is not idempotent despite the gate. Member-scoped (a local accumulator resets each call and doesn't count). Corpus unchanged; closes a latent false-positive class M7's call-based dominance can't see. | M8 |
 | **Deferred, still open** | The irreducible floor — a dedup whose only tell is a domain verb no capability prefix reaches, with no `guard`/`if`/flag/fetch/key-builder shape to corroborate. | — |
@@ -297,7 +297,20 @@ bugs *before* looking at the fixes. That is the same posture that licensed the s
   accumulation that runs on every replay) vetoes it. Member-scoped so a local accumulator doesn't
   false-veto; corpus unchanged, closes the accumulation false-positive dominance can't see.
 
-The band stays `.possible`; promotion past it remains gated on external evidence, never the fixtures.
+- **M9** — the band promotion, on the terms the project set. Two signals reach `.likely` alone:
+  the **annotation** (Branch A, +35→+40) — a *claim*, not inference, so the "gate promotion on
+  external evidence" rule doesn't apply (it exists to check the tool's guesses, not the author's
+  declaration); and the **structural gate** (Branch C, +30→+40) — inference, so it had to clear the
+  external gate, which it did (8/8 accepted across the M5/M7/M8 re-sweeps, meeting PRD §3.5 ≥70%×3).
+  The two weak signals — key parameter (+25) and key builder (+25) — stay `.possible`. Effect: the
+  genuine findings (MacCloud's two handlers, penny's `canGiveCoin`, Vernissage's five) now surface at
+  `.likely` **by default**, not behind `--include-possible`.
+
+  **The one honest caveat, kept in view:** the structural-gate calibration is n=8, far smaller than the
+  reducer-idempotence family's n=39. The ≥70%×3 *rate* is met, but the *sample* is thin — so this
+  promotion is provisional: if a larger external corpus surfaces a structural false positive, Branch C
+  drops back to `.possible`. `.likely` is still discovery, not a verdict — a human writes the recorder
+  and confirms the law. Promotion is never gated on the fixtures.
 
 Three of the sketch's four proposed vetoes are now built as classifier checks —
 `declaredNonIdempotentVeto` (M1), the effect requirement/dominance that subsumes `unkeyedEffectVeto`
