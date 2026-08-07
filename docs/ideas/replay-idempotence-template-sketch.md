@@ -19,10 +19,11 @@ section, so the plan stays legible next to what it became.
 | `BodySignals.dedupGate` walker (§5) | Shipped as `BodySignals.dedupGateShape` + `DedupGateClassifier`, gated to `throws`/`async` functions. | M2 |
 | Branches A (annotation) + B (`IdempotencyKey` param) | Shipped as-designed. `+35` / `+25`; both → `.likely`, either alone → `.possible`. | M1 |
 | Branch C shapes: early-return dedup, fetch-then-insert | Shipped, **plus two the fixtures didn't show** and the external corpus did: `stateFlagGuard` (`if file.isDeleted { return }`, M3) and `guardDedup` (`guard canGiveCoin() else { return }`, M5). Fetch-then-insert also learned a **pre-fetched** form (M3). | M2/M3/M5 |
+| Branch B′ `keyFromEntity` (the pure builder, `StripeWebhookHandler`) | Shipped (M6) via a `BodySignals.buildsIdempotencyKey` marker (`IdempotencyKey(…)` construction — precise, SwiftIdempotency-specific). Being a **pure value builder** it bypasses M4's effect requirement and emits the **value** form (`#assertIdempotent`), not the effect form. **Uniquely has no external oracle:** no public repo adopts `IdempotencyKey`, so recall is confirmed only on the fixture and precision is by-construction (the type name), not measured. | M6 |
 | The four vetoes — `unkeyedEffectVeto` as the load-bearing refutation | Shipped `declaredNonIdempotentVeto`; `nonStableKey` stayed a **soft counter**, not a hard veto. `unkeyedEffectVeto` was replaced by M4's simpler **effect requirement** (a gate must guard an actual effect-verb call, or it is a getter) — forced by the public-corpus sweep, where effect-less getters were the dominant false positive. `mutatingAccumulatorVeto` not built. | M4 |
 | Emit a filled-in `assertIdempotentEffects` | Emits a **`.todo` scaffold** that fails via `Issue.record` until completed — the effect recorder can't be synthesized, as §4 anticipated. | M1 |
 | `.possible` band, promotion gated on external evidence | As-designed; still `.possible`. | all |
-| **Deferred, still open** | Branch B's `keyFromEntity` degenerate form (`StripeWebhookHandler` builds its key in the body — needs a key-construction body signal); the effect-**dominance** veto (M4 requires an effect *exists*, not that the gate dominates it); `mutatingAccumulatorVeto`. | — |
+| **Deferred, still open** | The effect-**dominance** veto (M4 requires an effect *exists*, not that the gate dominates it); `mutatingAccumulatorVeto`; and the irreducible floor — a dedup whose only tell is a domain verb no capability prefix reaches, with no `guard`/`if`/flag/fetch/key-builder shape to corroborate. | — |
 
 **Validation went further than the plan's single-oracle §6.** MacCloud_server (M3) caught two real
 handlers; an 8-repo **public trial corpus** (M4) then caught the template *over-firing* (~10/12 false
@@ -282,5 +283,10 @@ bugs *before* looking at the fixes. That is the same posture that licensed the s
 - **M5** — closed the guard-form recall gap: `guardDedup` (`guard canGiveCoin() else { return }`) +
   prefix-matched effects. Re-swept before shipping: 6 hits, all genuine, penny's real handler caught,
   zero new false positives.
+- **M6** — the key-from-entity builder (`StripeWebhookHandler`, catalog Shape 1): a
+  `buildsIdempotencyKey` marker (`IdempotencyKey(…)` construction) + a value-form (`#assertIdempotent`)
+  emitter, bypassing M4's effect requirement since the builder is pure. The one branch with no
+  external oracle — no public repo adopts `IdempotencyKey` — so it added zero corpus hits (confirming
+  its by-construction precision) and its recall is confirmed only on the fixture.
 
 The band stays `.possible`; promotion past it remains gated on external evidence, never the fixtures.
