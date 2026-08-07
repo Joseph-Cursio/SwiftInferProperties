@@ -30,6 +30,16 @@ public enum DedupGateShape: Sendable, Equatable {
     /// the "already handled?" question is answered by a stored flag rather than a
     /// dedup-store method call. Carries the flag name.
     case stateFlagGuard(flag: String?)
+
+    /// `guard <claim> else { return }` — the `guard`-form dedup the M4 public-corpus
+    /// sweep found the template blind to (penny-bot's
+    /// `guard await cache.canGiveCoin(…) else { return }`). `guard` inverts the
+    /// polarity — it returns when the condition is *false* — so the dedup reads as a
+    /// positive "claim-once" capability (`canGive…`/`shouldProcess`) or a negated
+    /// dedup check (`!hasHandled`). Carries the verb. Guarded by the same
+    /// else-must-return and body-must-have-an-effect requirements as the `if` forms,
+    /// so a permission guard (`guard canWrite else { throw }`) does not qualify.
+    case guardDedup(verb: String?)
 }
 
 /// Reads a `DedupGateShape` off a handler body.
@@ -70,16 +80,31 @@ public enum DedupGateClassifier {
         "isRevoked", "isAcknowledged", "alreadyHandled", "handled", "processed"
     ]
 
-    /// Callee base names that perform an observable **effect** — the thing a dedup
-    /// gate exists to run at most once. M4 requires one: without it, a
+    /// Callee base-name **prefixes** that perform an observable **effect** — the
+    /// thing a dedup gate exists to run at most once. M4 requires one: without it, a
     /// fetch-then-`return` or a flag-guard is a **getter**, not a handler, and the
     /// M3 sweep found the corpus full of those (`getReblogStatus`,
-    /// `getRegisteredExternalUser`) firing as false positives.
-    static let effectVerbs: Set<String> = [
+    /// `getRegisteredExternalUser`) firing as false positives. Prefix-matched (M5)
+    /// so the real-world spellings count — penny-bot's effect is `postCoin`, not a
+    /// bare `post`, and Discord/ORM handlers write `createMessage`, `markAsDeleted`,
+    /// `saveOrder`.
+    static let effectPrefixes: [String] = [
         "insert", "save", "create", "delete", "remove", "update", "upsert",
         "post", "send", "publish", "write", "store", "persist", "commit",
-        "enqueue", "dispatch", "emit", "put", "patch", "markAsDeleted",
-        "markAsHandled", "markHandled", "destroy"
+        "enqueue", "dispatch", "emit", "put", "patch", "mark", "destroy"
+    ]
+
+    /// Callee base-name prefixes that read as a "claim-once" capability in a
+    /// `guard … else { return }` — true means "OK to proceed (not yet claimed)",
+    /// false means "already claimed, return". Prefix-matched so `canGiveCoin` (the
+    /// penny-bot handler) is covered, and deliberately excluding the *permission*
+    /// family (`canWrite`/`canAccess`/`canRead`/`canEdit`/…), which is authorisation,
+    /// not dedup — the `guard permission else { throw }` shape the else-must-return
+    /// requirement also filters.
+    static let capabilityPrefixes: [String] = [
+        "canGive", "canAward", "canGrant", "canClaim", "canConsume", "canReserve",
+        "canRespond", "canProcess", "canHandle",
+        "shouldProcess", "shouldHandle", "shouldSend", "shouldNotify", "shouldReply"
     ]
 
     /// The first dedup gate among the body's top-level statements, or `nil`.
@@ -88,14 +113,13 @@ public enum DedupGateClassifier {
     /// is a getter's early return, not a dedup gate — the distinction the sweep
     /// forced. Effect-dominance (the effect sits on the path the gate skips) is a
     /// finer check left to a later slice; "the body has an effect at all" removes
-    /// the getter false positives without it.
+    /// the getter false positives without it. M5 adds the `guard`-form gate.
     public static func classify(body: CodeBlockSyntax) -> DedupGateShape? {
         let fetchedNames = fetchBoundNames(in: body)
         for item in body.statements {
-            guard let ifExpr = ifExpr(from: item), blockReturns(ifExpr.body) else {
-                continue
-            }
-            if let shape = shape(of: ifExpr, fetchedNames: fetchedNames) {
+            let shape = ifShape(from: item, fetchedNames: fetchedNames)
+                ?? guardShape(from: item)
+            if let shape {
                 // Pay the whole-body effect walk only once a gate shape is found —
                 // the ~99% of async/throws functions with no gate never trigger it.
                 // A gate that guards no effect is a getter's early return, not dedup.
@@ -105,12 +129,65 @@ public enum DedupGateClassifier {
         return nil
     }
 
+    /// The if-form gate a top-level statement carries, if any (M2–M4).
+    private static func ifShape(
+        from item: CodeBlockItemSyntax,
+        fetchedNames: Set<String>
+    ) -> DedupGateShape? {
+        guard let ifExpr = ifExpr(from: item), blockReturns(ifExpr.body) else {
+            return nil
+        }
+        return shape(of: ifExpr, fetchedNames: fetchedNames)
+    }
+
+    /// The `guard`-form dedup a top-level statement carries, if any (M5).
+    /// `guard <claim> else { return }`: the else block (`guardStmt.body`) must
+    /// return, and the condition must be a claim-once capability call or a negated
+    /// dedup verb — not a plain optional binding (`guard let x = fetch() else`
+    /// inverts to fetch-or-404, the opposite of dedup).
+    private static func guardShape(from item: CodeBlockItemSyntax) -> DedupGateShape? {
+        guard case let .stmt(statement) = item.item,
+              let guardStmt = statement.as(GuardStmtSyntax.self),
+              blockReturns(guardStmt.body) else {
+            return nil
+        }
+        for element in guardStmt.conditions {
+            guard case let .expression(expr) = element.condition else { continue }
+            // `guard !dedup.hasHandled(key) else { return }` — negated dedup verb.
+            if let operand = negatedOperand(of: expr),
+               let call = firstCall(in: Syntax(operand), matching: dedupVerbs) {
+                return .guardDedup(verb: Self.calleeBaseName(call.calledExpression))
+            }
+            // `guard await cache.canGiveCoin(key) else { return }` — claim-once.
+            if let call = firstCall(in: Syntax(expr), where: isCapabilityVerb) {
+                return .guardDedup(verb: Self.calleeBaseName(call.calledExpression))
+            }
+        }
+        return nil
+    }
+
+    /// Whether `name` reads as a claim-once capability (prefix-matched).
+    private static func isCapabilityVerb(_ name: String) -> Bool {
+        capabilityPrefixes.contains { name == $0 || name.hasPrefix($0) }
+    }
+
+    /// The operand of a `!` prefix expression (`!x` → `x`), or `nil`.
+    private static func negatedOperand(of expr: ExprSyntax) -> ExprSyntax? {
+        guard let prefix = expr.as(PrefixOperatorExprSyntax.self),
+              prefix.operator.text == "!" else {
+            return nil
+        }
+        return prefix.expression
+    }
+
     /// Whether the body performs at least one effect-verb call — the mutation a
     /// dedup gate is there to run once. Counts effects anywhere in the body,
     /// including inside a `db.transaction { … save … }` closure, since that is
     /// still the handler's effect.
     private static func bodyHasEffect(_ body: CodeBlockSyntax) -> Bool {
-        firstCall(in: Syntax(body), matching: effectVerbs) != nil
+        firstCall(in: Syntax(body)) { name in
+            effectPrefixes.contains { name == $0 || name.hasPrefix($0) }
+        } != nil
     }
 
     /// Names bound to a fetch-verb call in a `let`/`var` statement, so a later
@@ -234,9 +311,26 @@ public enum DedupGateClassifier {
         in subtree: Syntax,
         matching verbs: Set<String>
     ) -> FunctionCallExprSyntax? {
-        let finder = CallVerbFinder(verbs: verbs)
+        firstCall(in: subtree) { verbs.contains($0) }
+    }
+
+    /// The first call in `subtree` whose callee base name satisfies `matches`.
+    private static func firstCall(
+        in subtree: Syntax,
+        where matches: @escaping (String) -> Bool
+    ) -> FunctionCallExprSyntax? {
+        let finder = CallVerbFinder(matches: matches)
         finder.walk(subtree)
         return finder.match
+    }
+
+    /// The base name of a callee expression — `hasHandled` from `dedup.hasHandled`
+    /// or a bare `hasHandled`. `nil` for shapes with no simple base name.
+    static func calleeBaseName(_ expr: ExprSyntax) -> String? {
+        if let member = expr.as(MemberAccessExprSyntax.self) {
+            return member.declName.baseName.text
+        }
+        return expr.as(DeclReferenceExprSyntax.self)?.baseName.text
     }
 
     /// Whether `block` contains a `return`, not counting returns nested inside a
@@ -248,29 +342,25 @@ public enum DedupGateClassifier {
     }
 }
 
-/// Finds the first `FunctionCallExprSyntax` whose callee base name is in `verbs`.
+/// Finds the first `FunctionCallExprSyntax` whose callee base name satisfies a
+/// predicate.
 private final class CallVerbFinder: SyntaxVisitor {
-    private let verbs: Set<String>
+    private let matches: (String) -> Bool
     private(set) var match: FunctionCallExprSyntax?
 
-    init(verbs: Set<String>) {
-        self.verbs = verbs
+    init(matches: @escaping (String) -> Bool) {
+        self.matches = matches
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        if match == nil, let baseName = calleeBaseName(node.calledExpression), verbs.contains(baseName) {
+        if match == nil,
+           let baseName = DedupGateClassifier.calleeBaseName(node.calledExpression),
+           matches(baseName) {
             match = node
             return .skipChildren
         }
         return .visitChildren
-    }
-
-    private func calleeBaseName(_ expr: ExprSyntax) -> String? {
-        if let member = expr.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text
-        }
-        return expr.as(DeclReferenceExprSyntax.self)?.baseName.text
     }
 }
 
