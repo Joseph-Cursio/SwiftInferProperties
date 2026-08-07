@@ -16,7 +16,7 @@ import SwiftInferCore
 //     — V1.69 shape for OC collection carriers whose monotonicity pick
 //     is `index(after:)` / `index(before:)`: the property is over the
 //     *index* parameter (`Int`), not the carrier. See
-//     `docs/calibration-cycle-60-monotonicity-investigation.md`.
+//     `git show 31a347a:docs/calibration-cycle-60-monotonicity-investigation.md`.
 extension StrategistDispatchEmitter {
 
     /// V1.69 — carrier type-names whose monotonicity pick is an
@@ -92,7 +92,8 @@ extension StrategistDispatchEmitter {
     /// not over the carrier value. The v1.48 `min`/`max`-on-carrier +
     /// static-call shape hard-fails on those (the carrier isn't
     /// `Comparable` *and* `Carrier.index(value)` mismodels the instance
-    /// method — see `docs/calibration-cycle-60-monotonicity-investigation.md`).
+    /// method — see
+    /// `git show 31a347a:docs/calibration-cycle-60-monotonicity-investigation.md`).
     /// Those carriers route to `composeInstanceMethodMonotonicityPass`.
     static func composeMonotonicityPass(
         inputs: Inputs,
@@ -180,7 +181,8 @@ extension StrategistDispatchEmitter {
     /// `index(before:)` is over the *index* parameter — an `Int` for
     /// every curated OC carrier (all have `Index == Int`) — not over the
     /// carrier value. The cycle-60 investigation
-    /// (`docs/calibration-cycle-60-monotonicity-investigation.md`) showed
+    /// (`git show 31a347a:docs/calibration-cycle-60-monotonicity-investigation.md`)
+    /// showed
     /// the v1.48 `min`/`max`-on-carrier + static-call shape hard-fails
     /// with two co-occurring bugs: the carrier isn't `Comparable`, and
     /// `Carrier.index(value)` mismodels the instance method.

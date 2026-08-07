@@ -25,7 +25,7 @@ import Testing
 /// Those paths are caught by the static grep (`import Network`
 /// forbidden); the runtime test layers a second line of defense for
 /// the URLSession-shaped case. Open decision #5 in
-/// `docs/archive/v0.1.0 Release Plan.md`.
+/// `git show 31a347a:'docs/archive/v0.1.0 Release Plan.md'`.
 ///
 /// R1.1.h — closes the §14 + §19 runtime gap before the v0.1.0 cut.
 @Suite("Privacy — PRD §14 + §19 runtime no-network (R1.1.h)")

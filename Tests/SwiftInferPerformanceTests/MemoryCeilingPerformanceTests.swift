@@ -34,7 +34,7 @@ import Testing
 /// 604.7 MB × ~1.32 — generous CI headroom over the only confirmed
 /// CI data point. Future work touching this row should still re-check
 /// against the 600 MB local-measurement reference in
-/// `docs/perf-baseline-v1.1.md`; the 800 MB ceiling exists so CI
+/// `git show 31a347a:docs/perf-baseline-v1.1.md`; the 800 MB ceiling exists so CI
 /// measurement noise + cross-machine variance doesn't bust the
 /// regression test for non-real reasons.
 ///
@@ -47,7 +47,8 @@ import Testing
 /// the discover scan adds on top of that baseline — that delta is
 /// what regresses if discover starts allocating egregiously, which is
 /// the contract the §13 row gates. The absolute-RSS measurement
-/// against the real binary is captured in `docs/perf-baseline-v0.1.md`
+/// against the real binary is captured in
+/// `git show 31a347a:docs/perf-baseline-v0.1.md`
 /// (R1.2).
 ///
 /// R1.1.b — closes the §13 row 4 gap before the v0.1.0 cut.
@@ -139,7 +140,7 @@ struct MemoryCeilingPerformanceTests {
 /// every 50ms. Captures the running peak so a transient mid-scan
 /// allocation isn't lost to a late single sample. The PRD §13 budget
 /// is "memory ceiling" — peak is the conservative read (open decision
-/// #1 in `docs/archive/v0.1.0 Release Plan.md`).
+/// #1 in `git show 31a347a:'docs/archive/v0.1.0 Release Plan.md'`).
 private final class MemorySampler: @unchecked Sendable {
 
     private let lock = NSLock()

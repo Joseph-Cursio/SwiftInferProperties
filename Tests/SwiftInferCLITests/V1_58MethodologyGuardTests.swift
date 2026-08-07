@@ -6,8 +6,8 @@ import Testing
 
 // V1.58.B — methodology guard for `GenericBindingResolver.curatedBindings`.
 //
-// **Why this exists.** Cycle-50 measurement (`docs/calibration-cycle-50-
-// findings.md`) revealed that V1.52.C's 4 `<Type>.Index` binding keys
+// **Why this exists.** Cycle-50 measurement
+// (`git show 31a347a:docs/calibration-cycle-50-findings.md`) revealed that V1.52.C's 4 `<Type>.Index` binding keys
 // (e.g. `ChunkedByCollection.Index`) never matched any indexer-produced
 // carrier name in the cycle-27 fixture — they were dead code, latent
 // for an entire release cycle. V1.51.B had the same shape: dual-style

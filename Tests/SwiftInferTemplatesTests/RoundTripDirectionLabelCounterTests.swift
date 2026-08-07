@@ -4,7 +4,7 @@ import Testing
 
 // V1.12.1 — direction-label counter-signal on RoundTripTemplate.
 // Closes cycle-9 priority #1 from
-// docs/calibration-cycle-8-findings.md (round-trip template direction-
+// `git show 31a347a:docs/calibration-cycle-8-findings.md` (round-trip template direction-
 // label counter — third consumer of Signal.Kind.directionLabel +
 // the curated direction set).
 //

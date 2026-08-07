@@ -32,7 +32,8 @@ public enum VerifyInteractionPipeline {
     /// A workdir `swift build` that fails to resolve or compile surfaces
     /// as `.architecturalCoveragePending` rather than a pass/fail. The
     /// historical "kit-tag-publication gap" cause (SwiftPropertyLaws v2.2.0
-    /// not yet on remote; `docs/calibration-cycle-73-findings.md`) is
+    /// not yet on remote;
+    /// `git show 31a347a:docs/calibration-cycle-73-findings.md`) is
     /// resolved — the package pins SwiftPropertyLaws 3.3.0+ — so this now
     /// means a genuine coverage gap (unsupported shape/carrier, non-
     /// Equatable State), not a missing tag.

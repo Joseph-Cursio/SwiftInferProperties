@@ -8,7 +8,8 @@ import Foundation
 /// monolithic by design — splitting requires benchmark data to know
 /// which signals fire too often outside their natural domain."* Cycles
 /// 1–28 are that benchmark data; the per-template per-corpus rate
-/// tables in `docs/calibration-cycle-*-findings.md` directly inform
+/// tables in the per-cycle findings docs (pruned from the tree; read
+/// them at `31a347a`) directly inform
 /// the pack groupings below.
 ///
 /// Pack membership is **non-exclusive**: a template can be in multiple

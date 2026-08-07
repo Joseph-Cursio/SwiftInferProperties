@@ -4,7 +4,7 @@ import Testing
 
 // V1.10.1 — direction-label counter-signal on IdempotenceTemplate.
 // Closes cycle-7 priority #1 from
-// docs/calibration-cycle-6-findings.md (idempotence 0/10 acceptance
+// `git show 31a347a:docs/calibration-cycle-6-findings.md` (idempotence 0/10 acceptance
 // rate; counter-signal targets the dominant 5-of-10 direction-labeled
 // rejection sub-pattern). Split from IdempotenceTemplateTests.swift
 // per the V1.7.1/V1.8.1 split precedent.

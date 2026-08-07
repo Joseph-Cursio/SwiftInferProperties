@@ -55,7 +55,7 @@ extension Suggestion {
 /// guess — it is an *executed counterexample*. The property was run and
 /// mathematically failed. Suppressing a disproven suggestion raises
 /// precision; surfacing it would be a true false positive. See
-/// `docs/calibration-cycle-63-findings.md`.
+/// `git show 31a347a:docs/calibration-cycle-63-findings.md`.
 ///
 /// `.measuredEdgeCaseAdvisory` is left score-neutral — it holds for the
 /// default domain and is genuinely ambiguous; v1.64.C already annotates

@@ -216,7 +216,8 @@ extension RoundTripStubEmitter {
         // --- Pass 1: default (inline finite-domain) ---
         //
         // V1.55.A — per-function default-pass domain. Cycle-52 evidence
-        // (`docs/calibration-cycle-52-findings.md`) showed the round-trip
+        // (`git show 31a347a:docs/calibration-cycle-52-findings.md`)
+        // showed the round-trip
         // property holds only within each EF pair's principal-branch
         // domain; uniform ±1e6 (v1.42) and ±1.5 (cycle-52 first cut)
         // both miss cases. cos/cosh need `Re ≥ 0` (right half-plane);

@@ -14,8 +14,8 @@ import SwiftInferCore
 ///   merge via `InteractionDecisions.merge(_:)`, render.
 ///
 /// Output formats (`--format markdown|plain`, default markdown):
-/// - `markdown` — pipe-delimited table for direct paste into
-///   `docs/calibration-cycle-N-findings.md`.
+/// - `markdown` — pipe-delimited table for direct paste into a per-cycle findings
+///   write-up (those docs were pruned from the tree; read them at `31a347a`).
 /// - `plain` — fixed-width columns for terminal reading.
 
 /// Module-level (not nested in `MetricsInteraction`) per SwiftLint's

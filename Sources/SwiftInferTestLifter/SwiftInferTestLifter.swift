@@ -13,6 +13,7 @@ import SwiftInferCore
 /// set into TemplateEngine's existing `crossValidationFromTestLifter`
 /// parameter (the M3.5 dormant seam).
 ///
-/// See `docs/TestLifter M1 Plan.md` for the full sub-milestone breakdown.
+/// See `git show 1519c86:'docs/TestLifter M1 Plan.md'` for the full
+/// sub-milestone breakdown.
 public enum TestLifter {
 }

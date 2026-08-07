@@ -31,7 +31,8 @@ import SwiftInferCore
 /// `Tier(score:)`). **Promoted from 30 (`.possible`) in cycle 107** after
 /// idempotence held 100% acceptance (39/39) across three consecutive
 /// calibration cycles (104 + 105 + 106), clearing the PRD §3.5 gate
-/// (≥ 70% × 3). See `docs/calibration-cycle-106-findings.md` for the
+/// (≥ 70% × 3). See `git show 31a347a:docs/calibration-cycle-106-findings.md`
+/// for the
 /// promotion proposal. Idempotence is the first interaction-invariant
 /// family to graduate past default-`.possible`.
 public enum IdempotenceInteractionTemplate: InteractionTemplateFamily {

@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// V1.12.1 — direction-label counter-signal extension on
 /// `RoundTripTemplate`. Closes cycle-9 priority #1 from
-/// `docs/calibration-cycle-8-findings.md` (round-trip template
+/// `git show 31a347a:docs/calibration-cycle-8-findings.md` (round-trip template
 /// direction-label counter — third consumer of `Signal.Kind.directionLabel`
 /// + `DirectionLabels.curated`). Mirrors v1.10's `IdempotenceTemplate`
 /// direction-label counter at the same `-15` weight because round-trip's

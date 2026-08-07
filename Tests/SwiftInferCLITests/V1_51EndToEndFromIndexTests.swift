@@ -36,7 +36,7 @@ struct V151EndToEndFromIndexTests {
         .appendingPathComponent("fixtures/cycle27-surface/.swiftinfer/index.json")
 
     /// Cycle-27 #3 pick: Complex.exp(_:) × log(_:) round-trip.
-    /// Per `docs/calibration-cycle-27-data/triage-decisions.json`.
+    /// Per `git show 8d5281b:docs/calibration-cycle-27-data/triage-decisions.json`.
     private static let expLogIdentityHash = "0x4949D576A215E8C1"
 
     @Test("real-indexer Complex.exp×log entry resolves via buildStubBundle (no architectural error)")
@@ -81,7 +81,7 @@ struct V151EndToEndFromIndexTests {
         // time (`@_spi` capacity shims, the nested-local `binomial`, and the
         // explicit-`internal` `ViolationFormatter`) → 53, the all-measured
         // legitimate denominator (53/53 = 100%).
-        // See docs/calibration-cycle-151-findings.md.
+        // See `git show 59bc93b:docs/calibration-cycle-151-findings.md`.
         #expect(store.entries.count == 53)
     }
 

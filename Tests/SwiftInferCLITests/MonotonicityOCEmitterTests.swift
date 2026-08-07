@@ -10,7 +10,7 @@ import Testing
 // two valid indices from its own index range, and asserts
 // `receiver.index(after:)` / `receiver.index(before:)` is monotonic
 // over the *indices* — see
-// `docs/calibration-cycle-60-monotonicity-investigation.md`.
+// `git show 31a347a:docs/calibration-cycle-60-monotonicity-investigation.md`.
 
 @Suite("StrategistDispatchEmitter — V1.69 OC instance-method monotonicity")
 struct MonotonicityOCEmitterTests {

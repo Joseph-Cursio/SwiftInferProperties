@@ -220,10 +220,10 @@ extension Signal {
         /// decisions on the 349-surface) showed idempotence acceptance at
         /// 0/10 = 0%; all 10 rejected idempotence claims were directional
         /// `(T) -> T` ops. Per-decision rationale in
-        /// `docs/calibration-cycle-6-data/triage-notes.md`. The counter-
-        /// signal closes the dominant 5-of-10 sub-pattern (direction-
-        /// labeled args); the remaining 3-of-10 domain-mismatch sub-pattern
-        /// (HashTable scale-vs-capacity) is a cycle-8 concern.
+        /// `git show 8d5281b:docs/calibration-cycle-6-data/triage-notes.md`.
+        /// The counter-signal closes the dominant 5-of-10 sub-pattern
+        /// (direction-labeled args); the remaining 3-of-10 domain-mismatch
+        /// sub-pattern (HashTable scale-vs-capacity) is a cycle-8 concern.
         case directionLabel
         /// V1.18.A — fires when the candidate's containing-type carrier
         /// resolves via `CarrierKindResolver` to `.referenceType` (i.e.
@@ -240,7 +240,7 @@ extension Signal {
         /// as a small-projected-effect precision tweak. The v1.18 plan
         /// reframes this as the *necessary structural precondition* for
         /// the workstream-B mutating-method lift (v1.19). See
-        /// `docs/v1.18 Calibration Plan.md` workstream A.
+        /// `git show a585284:'docs/v1.18 Calibration Plan.md'` workstream A.
         case referenceTypeCarrier
         /// The carrier is a value type all the way down (`CarrierKindResolver`
         /// `.valueSemantic`), so the algebraic property is well-defined under
@@ -300,8 +300,8 @@ extension Signal {
         /// veto — unlike the heuristic vetoes, this is not inference but
         /// a measured falsification, so a disproven suggestion is
         /// genuinely wrong, not merely low-confidence. v1.66 overturns
-        /// the cycle-61/62 "defaultFails does not demote" decision on
-        /// exactly this ground (see `docs/calibration-cycle-63-findings.md`).
+        /// the cycle-61/62 "defaultFails does not demote" decision on exactly
+        /// this ground — `git show 31a347a:docs/calibration-cycle-63-findings.md`.
         case verifyDisproven
         /// The kit measured this carrier's `==` to be broken, so any law
         /// stated with it cannot be checked. See `docs/signal-kind-rationales.md`

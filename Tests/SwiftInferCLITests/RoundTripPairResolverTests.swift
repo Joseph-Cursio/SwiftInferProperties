@@ -33,7 +33,8 @@ struct RoundTripPairResolverTests {
     // MARK: - resolve(_:) — happy paths
 
     // V1.54.A — V1.52.A's free-function classification reverted per
-    // cycle-50 evidence (`docs/calibration-cycle-50-findings.md`).
+    // cycle-50 evidence
+    // (`git show 31a347a:docs/calibration-cycle-50-findings.md`).
     // The bare `exp(value)` form doesn't resolve from a workdir that
     // imports only `ComplexModule` + `RealModule` — the
     // `_Numerics`-globals live behind a separate import. The

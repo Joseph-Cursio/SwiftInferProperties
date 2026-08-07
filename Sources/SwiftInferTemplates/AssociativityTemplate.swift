@@ -18,7 +18,8 @@ import SwiftInferCore
 /// (`add`, `combine`, `merge`, `union`, `intersect`) and the project's
 /// `commutativityVerbs` vocab key are reused at the same +40 weight. No
 /// dedicated `associativityVerbs` key in M2 per the open-decision in
-/// `docs/M2 Plan.md` — keeps `vocabulary.json` schema small until a
+/// `git show 91f14a7:'docs/M2 Plan.md'` — keeps `vocabulary.json` schema
+/// small until a
 /// non-commutative associative case (e.g. `concat`) demands a separate
 /// list. Anti-commutativity verbs are intentionally NOT applied as a
 /// counter-signal here: `concat`/`append`-family ops are typically
