@@ -61,7 +61,12 @@ held standing constraints on live code. Sweep `docs/**/*.md`, not `docs/*.md`: t
 non-descending glob is exactly how seven `design-internal/` docs stayed invisible.
 
 **Citing a doc from code is a real dependency.** 117 Swift files name a `docs/…`
-path, and `DocCitationTests` asserts every one resolves. If you move a doc, that test
+path, and `DocCitationTests` asserts every one resolves — **case-sensitively**,
+because `FileManager.fileExists` is not. APFS is case-insensitive by default, so a
+citation spelled `docs/Design/foo.md` for a directory named `design` passes every
+local check and 404s on GitHub and on Linux CI. That is not hypothetical: a sweep of
+SwiftProjectLint reported three paths as fine when its directory is `Docs/` and all
+three said `docs/`, including the README's own front-door index. If you move a doc, that test
 tells you what you broke. If you *delete* one, cite it through the SHA it last
 existed at rather than dropping the reference — `git show 31a347a:docs/foo.md` —
 because the diagnosis outlives the file.

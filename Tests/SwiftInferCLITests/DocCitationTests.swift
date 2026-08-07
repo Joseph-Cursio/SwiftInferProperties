@@ -62,7 +62,7 @@ struct DocCitationTests {
     func citedDocsExist() throws {
         let dangling = try Self.citations()
             .filter { !$0.isHistorical }
-            .filter { !FileManager.default.fileExists(atPath: Self.absolute($0.path)) }
+            .filter { !Self.existsCaseSensitively(atPath: Self.absolute($0.path)) }
 
         #expect(
             dangling.isEmpty,
@@ -83,7 +83,7 @@ struct DocCitationTests {
     func historicalCitationsNameRemovedDocs() throws {
         let resurrected = try Self.citations()
             .filter(\.isHistorical)
-            .filter { FileManager.default.fileExists(atPath: Self.absolute($0.path)) }
+            .filter { Self.existsCaseSensitively(atPath: Self.absolute($0.path)) }
 
         #expect(
             resurrected.isEmpty,
@@ -122,7 +122,7 @@ struct DocCitationTests {
                 for target in Self.markdownLinkTargets(in: line) {
                     let resolved = url.deletingLastPathComponent()
                         .appendingPathComponent(target).standardized
-                    guard !FileManager.default.fileExists(atPath: resolved.path) else { continue }
+                    guard !Self.existsCaseSensitively(atPath: resolved.path) else { continue }
                     broken.append("\(relative):\(offset + 1) — \(target)")
                 }
             }
@@ -137,6 +137,39 @@ struct DocCitationTests {
             \(broken.sorted().joined(separator: "\n"))
             """
         )
+    }
+
+    /// The three assertions above are only as good as ``existsCaseSensitively(atPath:)``,
+    /// and the thing it replaces looked correct for months. So it is checked directly
+    /// rather than trusted: an exact spelling resolves, a re-cased one does not.
+    ///
+    /// Deliberately **not** asserted here: that `FileManager.fileExists` disagrees.
+    /// It does today, on a default APFS volume, and that disagreement is the whole
+    /// reason this helper exists — but pinning it would make the suite fail on a
+    /// case-sensitive volume, where the two agreeing is the *correct* outcome.
+    @Test("the case-sensitive existence check distinguishes spellings")
+    func caseSensitiveCheckRejectsRecasedPaths() {
+        let real = "docs/README.md"
+        #expect(
+            Self.existsCaseSensitively(atPath: Self.absolute(real)),
+            "\(real) exists with this exact spelling — the check must accept it"
+        )
+
+        for recased in ["Docs/README.md", "docs/readme.md", "docs/DESIGN/verify-edge-pass.md"] {
+            #expect(
+                !Self.existsCaseSensitively(atPath: Self.absolute(recased)),
+                """
+                `\(recased)` is a re-casing of a real path and must be rejected. \
+                Accepting it is the SwiftProjectLint failure: a citation that \
+                resolves on APFS and 404s on GitHub and Linux.
+                """
+            )
+        }
+
+        // Directories and escapes-above-the-repo take the other branch of the walk.
+        #expect(Self.existsCaseSensitively(atPath: Self.absolute("docs/design")))
+        #expect(!Self.existsCaseSensitively(atPath: Self.absolute("docs/Design")))
+        #expect(!Self.existsCaseSensitively(atPath: "/no/such/path/anywhere.md"))
     }
 
     /// The `…` of `](…)` where the target is a local `.md`, with any `#fragment`
@@ -181,6 +214,49 @@ struct DocCitationTests {
 
     static func absolute(_ path: String) -> String {
         repositoryRoot.appendingPathComponent(path).path
+    }
+
+    /// Does this path exist **with exactly this spelling**?
+    ///
+    /// `FileManager.fileExists` cannot answer that. APFS is case-*insensitive* by
+    /// default, so it returns `true` for `docs/Foo.md` when the file is `docs/foo.md`
+    /// — and that citation then 404s on GitHub and fails on a Linux runner. A guard
+    /// built on `fileExists` is therefore blind to the one class of broken path that
+    /// only breaks for other people.
+    ///
+    /// **This is not hypothetical, and it fooled this suite's own author.** On
+    /// 2026-08-07 a sweep of SwiftProjectLint reported three doc paths as resolving.
+    /// That repo's directory is `Docs/`, capitalised; all three said `docs/`. Every
+    /// check passed locally and all three were dead links on GitHub, including the
+    /// README's front-door index. The tell was `git diff` printing a path with
+    /// different casing than the one that had just been edited.
+    ///
+    /// So: walk the path a component at a time and require each name to appear
+    /// *verbatim* in its parent's directory listing, which reports true on-disk
+    /// casing. Anchored at ``repositoryRoot`` when the path is inside the repo —
+    /// that prefix comes from `#filePath`, so its casing is the compiler's and not
+    /// a citation's — and from `/` otherwise, since a relative doc link may point at
+    /// a sibling checkout.
+    static func existsCaseSensitively(atPath path: String) -> Bool {
+        let standardized = URL(fileURLWithPath: path).standardizedFileURL.path
+        let anchor = repositoryRoot.path
+        guard standardized != anchor else { return true }
+        guard standardized.hasPrefix("/") else { return false }
+
+        let insideRepository = standardized.hasPrefix(anchor + "/")
+        var current = insideRepository ? anchor : "/"
+        let remaining = (insideRepository
+            ? standardized.dropFirst(anchor.count + 1)
+            : standardized.dropFirst()
+        ).components(separatedBy: "/")
+
+        for component in remaining where !component.isEmpty {
+            guard let entries = try? FileManager.default.contentsOfDirectory(atPath: current),
+                  entries.contains(component)
+            else { return false }
+            current = URL(fileURLWithPath: current).appendingPathComponent(component).path
+        }
+        return true
     }
 
     static func render(_ citations: [Citation]) -> String {
