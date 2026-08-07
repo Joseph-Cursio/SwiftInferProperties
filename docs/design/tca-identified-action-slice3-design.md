@@ -187,6 +187,21 @@ Mirror slices 1–2:
 
 ## Open questions for sign-off
 
+> **All four are answered (annotated 2026-08-07); this section is the record of
+> what was asked, not a live sign-off.** Q1 — yes: 3b shipped
+> (`IdentifiedActionResolver`), so disclosure-set reduction was judged to earn the
+> plumbing. Q2 — done, and it changed the plan; see the next section, which killed
+> 3a outright. Q3 — accepted: the canned zero-UUID is at
+> `ActionSequenceStubEmitter+PayloadConstructibility.swift:97`. Q4 — **slice 3
+> paid**, not slice 4: the ID type is captured as `ReducerCandidate.stateIDTypeName`,
+> labelled "Item 2 slice 3" at its declaration, with `decodeIfPresent` so pre-slice-3
+> persisted records still decode.
+>
+> Left unmarked, a heading like this reads as *awaiting your decision* when the
+> decisions were taken a month earlier — the same failure as the "Recommendation"
+> section below and as slice 3c's stale summary. **A settled question and an open
+> one look identical until someone writes down which it is.**
+
 1. **Is disclosure-set reduction alone worth the plumbing?** Given the no-op
    semantics, 3a–3b buy "fewer excluded cases," not new bug-finding. Acceptable,
    or hold until State seeding makes the transitions load-bearing?
