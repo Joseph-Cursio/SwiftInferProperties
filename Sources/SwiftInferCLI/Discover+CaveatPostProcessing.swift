@@ -71,8 +71,8 @@ extension SwiftInferCommand.Discover {
                 whySuggested: suggestion.explainability.whySuggested,
                 whyMightBeWrong: [
                     "NO TEST CAN RUN THIS LAW AS WRITTEN: \(restriction.remedy) The law itself is "
-                        + "right — a seed asked for this function, and the property is worth "
-                        + "stating — but the refactor comes first\(Self.effortClause(for: restriction))."
+                        + "right and the property is worth stating — but the refactor comes "
+                        + "first\(Self.effortClause(for: restriction))."
                 ] + suggestion.explainability.whyMightBeWrong
             )
             return updated

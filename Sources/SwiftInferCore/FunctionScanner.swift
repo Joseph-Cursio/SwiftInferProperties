@@ -175,22 +175,22 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         //     type level. SAFE — internal-BY-default types (our fixtures) carry
         //     no token, so they're untouched; only deliberately-marked types.
         //
-        // Cycle A2 — the *reason* is now kept rather than thrown away. Discovery is unchanged:
-        // these never enter `summaries`, so no unseeded run surfaces them and the precision the
-        // cycles above bought is intact. But a **seed** naming one of them is an explicit request
-        // from a producer that has already examined the function, and silently overruling an
-        // explicit request is not precision — it is a confident zero. The calibration above was
-        // measured on library corpora, where `private` really is an implementation detail; an app
-        // has no public API at all, and its pure logic lives almost entirely in `private` helpers
-        // inside views and view models. Dropping them without a word is what left the tool with
-        // nothing to say about application code.
+        // The taxonomy above still classifies *why* a function is restricted — that reason
+        // becomes the caveat's remedy. What changed (Cycle 2026-08-07): the restriction no longer
+        // withholds the function from discovery.
+        //
+        // Privacy does not gate discovery. Property-based tests are refactoring-safe, so a
+        // `private` function's law is worth surfacing exactly like a public one — carried with
+        // the access caveat, which names the one refactor (widen to `internal`, widen the
+        // enclosing type, or lift a local out) that makes it callable. Dropping it silently was
+        // the confident zero that left the tool blind on application code, whose pure logic lives
+        // almost entirely in `private` helpers. So a restricted function still records its
+        // restriction (for that caveat) but is no longer withheld from the summaries.
+        let summary = makeSummary(from: node)
         if let restriction = accessRestriction(of: node) {
-            restricted.append(
-                RestrictedFunction(summary: makeSummary(from: node), restriction: restriction)
-            )
-            return .skipChildren
+            restricted.append(RestrictedFunction(summary: summary, restriction: restriction))
         }
-        summaries.append(makeSummary(from: node))
+        summaries.append(summary)
         return .skipChildren
     }
 
@@ -200,12 +200,13 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         // `self -> T` map, so surface it as a summary (the involution template's
         // instance shape). Skip non-public / SPI properties on the same basis as
         // functions: an external test can't reach them.
+        // Same rule as functions above: a `private` computed property is a nullary map with a
+        // real law; surface it, carrying the access caveat rather than withholding it.
         if let summary = makeSummary(fromComputedProperty: node) {
             if let restriction = accessRestriction(ofVariable: node) {
                 restricted.append(RestrictedFunction(summary: summary, restriction: restriction))
-            } else {
-                summaries.append(summary)
             }
+            summaries.append(summary)
         }
         return .visitChildren
     }

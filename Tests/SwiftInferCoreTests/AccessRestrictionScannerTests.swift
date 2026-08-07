@@ -5,12 +5,12 @@ import Testing
 
 /// Why the scanner sets a function aside — the *reason*, not the fact.
 ///
-/// The fact was never in doubt: every shape here lands in `restricted` and none reaches
-/// `summaries`, before this suite existed and after. What was wrong is the reason attached, and the
-/// reason is not decoration — `SpeculativeWidening` filters on it to decide whether to spend a
-/// package snapshot proposing a patch, and `AccessRestriction.remedy` is what the reader is told to
-/// do. A wrong reason therefore buys a no-op patch and false advice while leaving every count
-/// unchanged, which is why it survived: nothing that anyone measures moved.
+/// Every shape here lands in `restricted` with a reason (and, since 2026-08-07, also surfaces into
+/// `summaries` — privacy no longer gates discovery). The reason is not decoration:
+/// `SpeculativeWidening` filters on it to decide whether to spend a package snapshot proposing a
+/// patch, and `AccessRestriction.remedy` is what the reader is told to do. A wrong reason buys a
+/// no-op patch and false advice, so this suite pins the reason for each shape independently of the
+/// visibility change.
 @Suite("FunctionScanner — why a function is set aside")
 struct AccessRestrictionScannerTests {
 
@@ -156,14 +156,14 @@ struct AccessRestrictionScannerTests {
         #expect(restriction(of: "clean", in: source) == .notVisibleToTests)
     }
 
-    // MARK: - The set of set-aside functions is unchanged
+    // MARK: - Every set-aside function is also surfaced
 
-    /// **This fix moves reasons, never membership.** Every shape above was already restricted; only
-    /// the label changed. Pinning it here is what lets the change be read as contained: no
-    /// suggestion appears or disappears, so `discover`'s output is byte-identical and any later
-    /// count that moves is somebody else's change.
-    @Test("every shape is still set aside, and none reaches summaries")
-    func membershipUnchanged() {
+    /// **The reason is still recorded; the function is no longer withheld.** Every shape here is
+    /// classified in `restricted` (that reason becomes its caveat) AND now also reaches `summaries`
+    /// so a template can propose its law. The classification the rest of this suite pins is exactly
+    /// what survives — it just no longer decides visibility, only which remedy the caveat leads with.
+    @Test("every shape is classified in `restricted` and also surfaces in `summaries`")
+    func restrictedShapesAlsoSurface() {
         let source = """
         private struct Helper {
             private func a(_ text: String) -> String { text }
@@ -177,7 +177,9 @@ struct AccessRestrictionScannerTests {
         }
         """
         let corpus = FunctionScanner.scanCorpus(source: source, file: "F.swift")
-        #expect(Set(corpus.restricted.map(\.summary.name)) == ["a", "b", "c", "d"])
-        #expect(corpus.summaries.isEmpty)
+        let restrictedNames = Set(corpus.restricted.map(\.summary.name))
+        #expect(restrictedNames == ["a", "b", "c", "d"])
+        // The same four now appear in discovery, each carrying its restriction downstream.
+        #expect(restrictedNames.isSubset(of: Set(corpus.summaries.map(\.name))))
     }
 }

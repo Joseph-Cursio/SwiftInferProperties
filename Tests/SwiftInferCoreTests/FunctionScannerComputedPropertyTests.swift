@@ -62,14 +62,20 @@ struct FunctionScannerComputedPropertyTests {
         #expect(!summaries("public var now: Int { 42 }").map(\.name).contains("now"))
     }
 
-    @Test("a private computed property is excluded (not visible to tests)")
-    func privateComputedPropertyExcluded() {
+    @Test("a private computed property surfaces, classified not-visible-to-tests")
+    func privateComputedPropertySurfaces() {
+        // Privacy no longer gates discovery: the private nullary map is surfaced like any other,
+        // classified so its access caveat attaches. (Structural exclusions above still hold — a
+        // stored, read-write, effectful, or top-level property is not a read-only `self -> T` map.)
         let source = """
         public struct S {
             public var raw: Int = 0
             private var doubled: Int { raw * 2 }
         }
         """
-        #expect(!summaries(source).map(\.name).contains("doubled"))
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "T.swift")
+        #expect(corpus.summaries.map(\.name).contains("doubled"))
+        let restriction = corpus.restricted.first { $0.summary.name == "doubled" }?.restriction
+        #expect(restriction == .notVisibleToTests)
     }
 }

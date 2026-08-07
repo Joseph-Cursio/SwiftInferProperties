@@ -302,20 +302,17 @@ public enum TemplateRegistry {
     ) throws -> DiscoverArtifacts {
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
-        let rescued = corpus.restricted.filter {
-            rescuedRestrictedSymbols.contains(SymbolJoinKey.make(for: $0.summary))
-        }
-        if !rescued.isEmpty {
-            diagnostic(
-                "rescued \(rescued.count) seeded access-restricted function(s) into template "
-                    + "analysis: " + Self.namesForDiagnostic(rescued)
-            )
-        }
+        // Privacy no longer gates discovery: every access-restricted function already enters
+        // `corpus.summaries` at the scan, so the former seed-*rescue* merge (which pulled
+        // seeded restricted functions into analysis) is redundant — they are present unseeded.
+        // `rescuedRestrictedSymbols` is retained as a no-op for call-site compatibility; the
+        // access caveat still attaches downstream, keyed off `restrictedFunctions`.
+        _ = rescuedRestrictedSymbols
         // Opt-in cross-file effect resolution. Applied to the summaries BEFORE
         // templates run, so no template needs threading a resolver through — the
         // summary already flows everywhere. A no-op when the flag is off, which
         // is why the default path's §13 budgets cannot move.
-        let scanned = corpus.summaries + rescued.map(\.summary)
+        let scanned = corpus.summaries
         let locallyAnalysed = resolveEffects
             ? EffectResolver.resolve(summaries: scanned, in: directory, diagnostic: diagnostic)
             : scanned
