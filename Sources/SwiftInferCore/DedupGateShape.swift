@@ -109,24 +109,42 @@ public enum DedupGateClassifier {
 
     /// The first dedup gate among the body's top-level statements, or `nil`.
     ///
-    /// M4: requires the body to also perform an effect. A gate that guards nothing
-    /// is a getter's early return, not a dedup gate — the distinction the sweep
-    /// forced. Effect-dominance (the effect sits on the path the gate skips) is a
-    /// finer check left to a later slice; "the body has an effect at all" removes
-    /// the getter false positives without it. M5 adds the `guard`-form gate.
+    /// M4 required the body to perform an effect (a gate guarding nothing is a
+    /// getter's early return). **M7 sharpens that to effect-*dominance*:** the
+    /// effect must sit **at or after** the gate — a gate cannot make an effect that
+    /// already ran *before* it idempotent. Statements strictly before the gate are
+    /// excluded; the gate statement itself is included, because a fetch-or-create
+    /// gate (`if let existing { update; save; return } else { create; save }`)
+    /// carries its effect inside its own branches.
     public static func classify(body: CodeBlockSyntax) -> DedupGateShape? {
+        let statements = Array(body.statements)
         let fetchedNames = fetchBoundNames(in: body)
-        for item in body.statements {
+        for (index, item) in statements.enumerated() {
             let shape = ifShape(from: item, fetchedNames: fetchedNames)
                 ?? guardShape(from: item)
             if let shape {
-                // Pay the whole-body effect walk only once a gate shape is found —
-                // the ~99% of async/throws functions with no gate never trigger it.
-                // A gate that guards no effect is a getter's early return, not dedup.
-                return bodyHasEffect(body) ? shape : nil
+                // Pay the effect walk only once a gate is found, and only over the
+                // statements the gate dominates (itself onward).
+                return effectDominatedByGate(statements, gateIndex: index) ? shape : nil
             }
         }
         return nil
+    }
+
+    /// Whether an effect-verb call appears at or after `gateIndex` — the effect the
+    /// gate is there to run at most once. Effects strictly before the gate are not
+    /// dominated by it and do not count.
+    private static func effectDominatedByGate(
+        _ statements: [CodeBlockItemSyntax],
+        gateIndex: Int
+    ) -> Bool {
+        statements[gateIndex...].contains { hasEffectCall(Syntax($0)) }
+    }
+
+    private static func hasEffectCall(_ subtree: Syntax) -> Bool {
+        firstCall(in: subtree) { name in
+            effectPrefixes.contains { name == $0 || name.hasPrefix($0) }
+        } != nil
     }
 
     /// The if-form gate a top-level statement carries, if any (M2–M4).
@@ -178,16 +196,6 @@ public enum DedupGateClassifier {
             return nil
         }
         return prefix.expression
-    }
-
-    /// Whether the body performs at least one effect-verb call — the mutation a
-    /// dedup gate is there to run once. Counts effects anywhere in the body,
-    /// including inside a `db.transaction { … save … }` closure, since that is
-    /// still the handler's effect.
-    private static func bodyHasEffect(_ body: CodeBlockSyntax) -> Bool {
-        firstCall(in: Syntax(body)) { name in
-            effectPrefixes.contains { name == $0 || name.hasPrefix($0) }
-        } != nil
     }
 
     /// Names bound to a fetch-verb call in a `let`/`var` statement, so a later
