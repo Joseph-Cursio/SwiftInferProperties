@@ -2,7 +2,7 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-/// The protocol-mediated printer half — `docs/parsing-catalog-gap.md` §3c, and
+/// The protocol-mediated printer half — `docs/measurements/parsing-catalog-gap.md` §3c, and
 /// the last of the three blockers on swift-syntax's fidelity law.
 ///
 /// ```swift

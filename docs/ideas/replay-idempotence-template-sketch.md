@@ -4,7 +4,7 @@
 [replay-idempotency shape catalog](../../../SwiftIdempotency/docs/replay-idempotency-shape-catalog.md)
 and its four fixtures. Status: **shipped (M1–M5, 2026-08-06)** — this document is the original
 plan; see the "As built" note below for where reality diverged, and
-[`roadtest-maccloud-server-replay.md`](../roadtest-maccloud-server-replay.md) for the validation
+[`roadtest-maccloud-server-replay.md`](../measurements/roadtest-maccloud-server-replay.md) for the validation
 journey.*
 
 ## As built (M1–M5) — plan vs reality

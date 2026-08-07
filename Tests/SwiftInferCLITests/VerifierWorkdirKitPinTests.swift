@@ -2,7 +2,7 @@ import Foundation
 @testable import SwiftInferCLI
 import Testing
 
-/// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §9) — the drift guard
+/// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §9) — the drift guard
 /// for the bug that closed the loop.
 ///
 /// Every synthesized verifier declares a `SwiftPropertyLaws` requirement. So does

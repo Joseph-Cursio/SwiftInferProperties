@@ -18,7 +18,7 @@
 /// tree as reparsing the post-edit file from scratch."* It is a property —
 /// quantified over every edit — written as an example harness.
 ///
-/// This is the family `docs/parsing-catalog-gap.md` §6 names, and it has two
+/// This is the family `docs/measurements/parsing-catalog-gap.md` §6 names, and it has two
 /// independent witnesses: the incremental parser above, and the TestLifter
 /// finding that `mySort(x) == x.sorted()` in a hand-rolled random test is
 /// invisible because no template claims that shape.

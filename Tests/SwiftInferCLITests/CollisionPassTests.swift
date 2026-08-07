@@ -3,7 +3,7 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-/// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §12) — the fix for
+/// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §12) — the fix for
 /// the **confident green**, which was the finding this whole road test was built
 /// around and the last one still open.
 ///

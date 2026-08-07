@@ -237,7 +237,7 @@ public enum FunctionPairing {
         if lhsReturn == rhsDomain, lhsDomain == rhsReturn {
             return true
         }
-        // Protocol-mediated printer half — `docs/parsing-catalog-gap.md` §3c.
+        // Protocol-mediated printer half — `docs/measurements/parsing-catalog-gap.md` §3c.
         //
         // swift-syntax's printer is declared ONCE, on an extension of the
         // protocol:

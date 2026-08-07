@@ -93,7 +93,7 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
     /// spinning at 99.9% CPU for the better part of an hour, with the survey
     /// reporting nothing at all. SwiftPropertyLaws v3.19.0 fixed the precedence
     /// kit-side, and the fix could not fire here because there was nothing to
-    /// enumerate. See `docs/roadtest-self-dogfood.md` §11.3 — the third time a
+    /// enumerate. See `docs/measurements/roadtest-self-dogfood.md` §11.3 — the third time a
     /// correct kit-side fix was disabled by a lossy projection on this side.
     public struct EnumCase: Codable, Sendable, Equatable {
         public let name: String

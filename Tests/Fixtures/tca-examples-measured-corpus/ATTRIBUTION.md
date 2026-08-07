@@ -31,4 +31,4 @@ Point-Free's [The Composable Architecture](https://github.com/pointfreeco/swift-
   `Favoriting<ID>` with a required stored closure — the verifier can't
   construct it).
 - Requires **Swift 6.3.3+** (the 6.2.4 toolchain crashes compiling CA — see
-  `docs/tca-determinism-verify-scope.md` and `docs/tca-determinism-followups.md`).
+  `docs/plans/tca-determinism-verify-scope.md` and `docs/plans/tca-determinism-followups.md`).

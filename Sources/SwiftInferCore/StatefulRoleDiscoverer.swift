@@ -4,7 +4,7 @@ import SwiftSyntax
 /// offers it to an ordered list of `RolePolicy` (specific → generic). The first
 /// policy to claim a declaration builds the `StatefulRole`.
 ///
-/// Phase 0 of `docs/stateful-role-discoverer-design.md`. The engine owns the
+/// Phase 0 of `docs/design/stateful-role-discoverer-design.md`. The engine owns the
 /// walk and the import/location plumbing; everything architecture-specific lives
 /// in the policies. Phase 0 ships the engine with no production policies wired —
 /// it is exercised by a stub policy in tests — so it changes no existing

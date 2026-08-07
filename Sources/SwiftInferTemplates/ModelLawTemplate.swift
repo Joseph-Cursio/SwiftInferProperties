@@ -16,7 +16,7 @@ import SwiftInferCore
 /// the Equatable laws, for projections."* Nothing implemented it.
 ///
 /// **2 — swift.org writes it by hand, five times, for one type.** The `loops` population
-/// (`docs/swiftorg-property-test-study-findings.md` §1.25) found `RangeSet` checking `union`,
+/// (`docs/measurements/swiftorg-property-test-study-findings.md` §1.25) found `RangeSet` checking `union`,
 /// `intersection`, `symmetricDifference`, `isDisjoint` and `isSubset` against `Set<Int>` as
 /// reference semantics, with a hand-written `unionViaSet` per operation. Those five were
 /// `gap-with-witness` — the largest single cluster in a population that scored **33%**

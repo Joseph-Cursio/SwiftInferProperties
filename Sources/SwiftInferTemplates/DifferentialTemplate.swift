@@ -8,7 +8,7 @@ import SwiftInferCore
 ///
 ///     ⟹  parseIncrementally(source: s, parseTransition: t).tree == parse(source: s)
 ///
-/// `docs/parsing-catalog-gap.md` §6. The family had **two independent
+/// `docs/measurements/parsing-catalog-gap.md` §6. The family had **two independent
 /// witnesses** before it was built, which is why it was built first among the
 /// holes:
 ///

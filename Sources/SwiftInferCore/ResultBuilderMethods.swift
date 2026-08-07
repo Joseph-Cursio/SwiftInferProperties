@@ -4,7 +4,7 @@
 ///
 /// ## What this fixes
 ///
-/// `docs/parsing-catalog-gap.md` §8. Every result-builder method has the shape
+/// `docs/measurements/parsing-catalog-gap.md` §8. Every result-builder method has the shape
 /// `(Component) -> Component`, so type-symmetry pairing turns one builder into
 /// a clique. On swift-syntax's `SwiftSyntaxBuilder` — 23 suggestions total,
 /// **21 of them from one file**, `ListBuilder.swift`:

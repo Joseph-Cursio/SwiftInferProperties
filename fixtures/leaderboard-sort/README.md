@@ -22,7 +22,7 @@ package's own tests against deliberate mutants.
 
 They scored `discover` and the numbers were noise, for two independent reasons. The
 diagnoses below them stand; the scorecards do not. Same posture as
-`docs/roadtest-self-dogfood.md`: withdraw the measurements, keep what was diagnosed.
+`docs/measurements/roadtest-self-dogfood.md`: withdraw the measurements, keep what was diagnosed.
 
 **1. I contaminated the corpus.** `Laws.swift`, `Generators.swift` and the mutants were in
 `Sources/` — the directory `discover` was then pointed at. **6 of 13 suggestions were the
@@ -239,4 +239,4 @@ The merge false positive discussed alongside this design — a name-keyed `Leade
 whose `count` is sub-additive, which `HomomorphismMemberPairing` would wrongly admit — is
 deliberately **not** here. It measures what the tool *wrongly claims*, where this fixture
 measures what laws *catch*; bundling them would produce a README arguing two things at once,
-which is what made `docs/roadtest-self-dogfood.md` need withdrawing.
+which is what made `docs/measurements/roadtest-self-dogfood.md` need withdrawing.

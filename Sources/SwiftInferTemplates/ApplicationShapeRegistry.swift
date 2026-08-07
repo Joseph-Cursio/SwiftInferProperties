@@ -9,7 +9,7 @@ extension TemplateRegistry {
     /// *prove each one fires through `discover`*. Adding a template here therefore
     /// both wires it and enrolls it in the firing test at once; the coverage gap
     /// that let `filter-subset` ship unit-tested-but-unwired (and left three
-    /// siblings the same way — see `docs/roadtest-swiftlintrulestudio.md`) cannot
+    /// siblings the same way — see `docs/measurements/roadtest-swiftlintrulestudio.md`) cannot
     /// recur for a template on this list.
     ///
     /// **Pairing-based application shapes (`partition`, `state-machine`) are not

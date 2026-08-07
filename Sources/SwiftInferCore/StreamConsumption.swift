@@ -10,7 +10,7 @@
 /// is built out of types that do exactly what an iterator does and conform to
 /// nothing: `Lexer.Cursor`, `Parser.Lookahead`, `TokenConsumer`.
 ///
-/// Measured on `swiftlang/swift-syntax` @ `9d6e738` (`docs/parsing-catalog-gap.md`
+/// Measured on `swiftlang/swift-syntax` @ `9d6e738` (`docs/measurements/parsing-catalog-gap.md`
 /// §2): `discover` on `SwiftParser` returned 98 default-tier suggestions, of
 /// which **53 were lifted idempotence at `Likely`** — above the default cut —
 /// and every one was a consuming method:

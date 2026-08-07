@@ -5,7 +5,7 @@ import SwiftInferCore
 ///
 /// Motivated by the swift-asn1 signed-integer bug (`decode(encode(128)) ==
 /// -128`) surfaced in the Apple-libraries backtest (see
-/// `docs/backtest-codable-roundtrip-pressuretest.md`). The round-trip law is
+/// `docs/measurements/backtest-codable-roundtrip-pressuretest.md`). The round-trip law is
 /// squarely in scope, but the tool's `(T) -> U` / `(U) -> T` pairing never fires
 /// on a coder-mediated codec: `func encode(to: Encoder)` returns `Void` and
 /// `init(from: Decoder)` consumes a `Decoder`, so there is no type-symmetric

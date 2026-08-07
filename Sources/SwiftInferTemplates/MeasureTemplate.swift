@@ -3,7 +3,7 @@ import SwiftInferCore
 /// The **measure** role — a `count` / `size` / `magnitude`, and the one free law
 /// it owes: **non-negativity**, `measure >= 0`.
 ///
-/// This is the honest boundary the dogfood flagged (`docs/dogfood-new-templates-findings.md`):
+/// This is the honest boundary the dogfood flagged (`docs/measurements/dogfood-new-templates-findings.md`):
 /// a lone measure — especially a computed property like `var count: Int`, which
 /// `Epic #1` now surfaces — owes almost nothing *universal*. What it *does* owe,
 /// by virtue of being a cardinality or a magnitude, is that it is never negative.

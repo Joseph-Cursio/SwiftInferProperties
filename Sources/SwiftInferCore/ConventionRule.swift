@@ -5,7 +5,7 @@
 /// **output collaborator** (`view` / `output` / `presenter`) that Slice B will
 /// fake as a *recording* sink to check output determinism.
 ///
-/// Phase 2 of `docs/stateful-role-discoverer-design.md` proposes these live in a
+/// Phase 2 of `docs/design/stateful-role-discoverer-design.md` proposes these live in a
 /// project's `[roles.*]` config so a house naming convention needs no new code.
 /// This ships the *built-in defaults* first (`builtInDefaults`); the config-file
 /// plumbing that lets a project override them is a later follow-up. The rule is

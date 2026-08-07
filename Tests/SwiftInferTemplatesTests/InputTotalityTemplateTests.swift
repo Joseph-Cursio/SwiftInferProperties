@@ -2,7 +2,7 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-/// The input-totality law — `docs/parsing-catalog-gap.md` §6 follow-on.
+/// The input-totality law — `docs/measurements/parsing-catalog-gap.md` §6 follow-on.
 ///
 /// Reached by *rejecting* the feature that was asked for. Detecting libFuzzer
 /// harnesses was measured first: across every repo in reach there are exactly

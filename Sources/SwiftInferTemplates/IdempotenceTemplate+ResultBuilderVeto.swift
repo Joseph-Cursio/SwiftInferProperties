@@ -1,6 +1,6 @@
 import SwiftInferCore
 
-/// Result-builder veto on `IdempotenceTemplate` — `docs/parsing-catalog-gap.md`
+/// Result-builder veto on `IdempotenceTemplate` — `docs/measurements/parsing-catalog-gap.md`
 /// §8, the other half of the same finding as the pairing filter.
 ///
 /// The pairing filter removes the round-trip and inverse-pair cliques; this

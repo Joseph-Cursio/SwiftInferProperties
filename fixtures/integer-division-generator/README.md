@@ -161,5 +161,5 @@ completes the set. On this file the completion half found nothing to add: the
 law as written is already complete (the general division identity entails the
 remainder bound and sign, because both are true of the constructed `r` that
 equality is checked against), and `discover` proposes nothing on
-`dividingFullWidth` at all. See `docs/swiftorg-property-test-study-findings.md`
+`dividingFullWidth` at all. See `docs/measurements/swiftorg-property-test-study-findings.md`
 §6 for that half and for the reach gap behind it.

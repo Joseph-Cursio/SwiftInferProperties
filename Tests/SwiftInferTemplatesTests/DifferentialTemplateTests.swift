@@ -3,7 +3,7 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-/// The differential / oracle family — `docs/parsing-catalog-gap.md` §6.
+/// The differential / oracle family — `docs/measurements/parsing-catalog-gap.md` §6.
 ///
 /// Two implementations of one specification must agree on every input. Built
 /// first among the survey's holes because it had **two independent witnesses**:

@@ -10,7 +10,7 @@ import SwiftInferCore
 ///
 /// ## Why this needs its own template
 ///
-/// `docs/parsing-catalog-gap.md` §3d. A parse-print pair admits three laws, and
+/// `docs/measurements/parsing-catalog-gap.md` §3d. A parse-print pair admits three laws, and
 /// they do **not** have the same truth conditions:
 ///
 /// | law | domain | holds when |

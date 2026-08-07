@@ -42,7 +42,7 @@
 /// existing record or the fresh one? A build that cannot succeed beats a test
 /// that must be remembered.
 ///
-/// See `docs/roadtest-self-dogfood.md` §11.3.4.
+/// See `docs/measurements/roadtest-self-dogfood.md` §11.3.4.
 public enum EveryColumn: Sendable {
     /// The only case. Reads at the call site as
     /// `SemanticIndexEntry(everyColumn: .required, identityHash: …)`.

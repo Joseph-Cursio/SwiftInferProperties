@@ -226,7 +226,7 @@ struct AssociativityAssumedKitCoverageTests {
     /// The kit ships fifteen SetAlgebra laws and no associativity law for any set operand
     /// (`grep -rn "unionAssociat"` in SwiftPropertyLaws: zero hits), so the veto suppressed
     /// a true, refutable law that nothing else checks — and this test ratified it.
-    /// `docs/protocol-coverage-law-drift.md` §3.
+    /// `docs/measurements/protocol-coverage-law-drift.md` §3.
     @Test("\"union\" on : SetAlgebra does NOT veto — the kit ships no set-associativity law")
     func unionOnSetAlgebraDoesNotVeto() throws {
         let summary = makeBinaryOp(name: "union", typeText: "BitSet")

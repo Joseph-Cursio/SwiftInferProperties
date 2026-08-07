@@ -154,7 +154,7 @@ struct DiscoverPipelineGeneratorTests {
 
     /// A raw-valued enum with visible cases enumerates them rather than
     /// filtering random raw values — see the sibling golden in
-    /// `GeneratorSelectionIntegrationTests` and `docs/roadtest-self-dogfood.md`
+    /// `GeneratorSelectionIntegrationTests` and `docs/measurements/roadtest-self-dogfood.md`
     /// §11.2.1 for why the old recipe could not terminate.
     @Test("CLI surfaces .derivedEnumCases generator line for raw-value enum property")
     func cliRendersDerivedRawRepresentableGenerator() throws {

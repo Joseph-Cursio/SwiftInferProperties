@@ -286,7 +286,7 @@ public struct Parameter: Sendable, Equatable {
     /// operation's arity and cannot be elided.
     ///
     /// Added for the erased-self-form arm of `IdempotenceTemplate`
-    /// (`docs/parsing-catalog-gap.md` §4/§5): `SyntaxProtocol.formatted(using:)`
+    /// (`docs/measurements/parsing-catalog-gap.md` §4/§5): `SyntaxProtocol.formatted(using:)`
     /// was rejected partly because the self-form gate required
     /// `parameters.isEmpty`, which a *configuration* parameter should not
     /// trip. Defaults to `false` so every existing call site — including the

@@ -232,7 +232,7 @@ extension ActionSequenceStubEmitter {
         }
     }
 
-    /// Dependency-pinned TCA determinism (docs/tca-determinism-verify-scope.md):
+    /// Dependency-pinned TCA determinism (docs/plans/tca-determinism-verify-scope.md):
     /// with declared `@Dependencies` fixed to constant values, two applications
     /// of the same `(state, action)` must be equal. Any residual difference is
     /// UN-declared nondeterminism — a raw `Date()` / `UUID()` / `Set`-order in

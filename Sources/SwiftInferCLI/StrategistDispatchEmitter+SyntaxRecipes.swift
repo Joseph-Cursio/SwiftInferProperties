@@ -10,7 +10,7 @@ import Foundation
 // `ClosureExprSyntax`, `AccessorBlockSyntax`, and friends. Half the corpus was
 // unverifiable for one reason: nothing could produce a compiler AST node.
 //
-// That measurement also contradicts `docs/verify-carrier-reach-census.md`,
+// That measurement also contradicts `docs/measurements/verify-carrier-reach-census.md`,
 // which found carrier to be **3.6%** of declines on `SwiftInferCore` against
 // template at 65%, and concluded carrier was not the gate. Both numbers are
 // right about their own corpus. Which wall a corpus hits is a property of what

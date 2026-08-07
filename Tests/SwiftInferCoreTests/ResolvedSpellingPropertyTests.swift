@@ -3,7 +3,7 @@ import PropertyLawKit
 @testable import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §11.1) — the
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §11.1) — the
 // consumer-side half of the bare-name collapse.
 //
 // `TypeShapeBuilder` now keys shapes by qualified name, which fixes the collapse

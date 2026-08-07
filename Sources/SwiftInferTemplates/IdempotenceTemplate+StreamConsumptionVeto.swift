@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// Stream-consumption veto on `IdempotenceTemplate.suggest(forLifted:)` —
 /// closes the `swift-syntax` parsing-survey finding
-/// (`docs/parsing-catalog-gap.md` §2): 53 of `SwiftParser`'s 98 default-tier
+/// (`docs/measurements/parsing-catalog-gap.md` §2): 53 of `SwiftParser`'s 98 default-tier
 /// suggestions were lifted idempotence at `Likely` on cursor-consuming methods,
 /// and all 53 are false.
 ///

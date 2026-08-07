@@ -4,7 +4,7 @@ import PropertyLawKit
 import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §12) — the stage of
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §12) — the stage of
 // the loop I skipped, run late.
 //
 // SwiftProjectLint's `Non-Injected Nondeterminism` rule fired 18 times on this

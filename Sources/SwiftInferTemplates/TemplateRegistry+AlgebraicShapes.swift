@@ -14,7 +14,7 @@ extension TemplateRegistry {
     /// against a kit that runs both idempotence laws. Grouping them here makes the
     /// next omission visible: a template in this function that takes no
     /// `inheritedTypesByName` is either deliberate or a double-report waiting to
-    /// happen. See `docs/protocol-coverage-law-drift.md`.
+    /// happen. See `docs/measurements/protocol-coverage-law-drift.md`.
     static func collectAlgebraicShapeSuggestions(
         summary: FunctionSummary,
         reducerOps: Set<String>,

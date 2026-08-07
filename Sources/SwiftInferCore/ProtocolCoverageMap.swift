@@ -26,7 +26,7 @@
 /// runs it*. Those are opposite claims, and while one word covered both, a
 /// suppressed-because-redundant row and a deleted-law-nobody-checks row were
 /// indistinguishable in the vocabulary. That is not hypothetical: it is exactly
-/// how `setUnionAssociative` survived — see `docs/protocol-coverage-law-drift.md`,
+/// how `setUnionAssociative` survived — see `docs/measurements/protocol-coverage-law-drift.md`,
 /// and `ProtocolCoverageAudit`'s standing line, *"a veto that prevents
 /// double-reporting looks exactly like nothing to report."*
 ///
@@ -93,7 +93,7 @@ public enum ProtocolCoverageMap {
     /// `KnownProperty` to kit law identifiers and follows delegation. Before that
     /// guard existed, 13 of 56 `(key, law)` claims were false — 12 the
     /// `equatableBase` union on the additive chain and `SetAlgebra`, 1 the deleted
-    /// `setUnionAssociative`. See `docs/protocol-coverage-law-drift.md`.
+    /// `setUnionAssociative`. See `docs/measurements/protocol-coverage-law-drift.md`.
     ///
     /// `Encodable` and `Decodable` are deliberately
     /// excluded — neither alone covers `codableRoundTrip` (round-trip
@@ -124,7 +124,7 @@ public enum ProtocolCoverageMap {
         //
         // Verified law-by-law against `SetAlgebraLaws.swift` on 2026-08-02 (kit `4a2dada`,
         // fifteen laws). Two corrections landed from that sweep — see
-        // `docs/protocol-coverage-law-drift.md`:
+        // `docs/measurements/protocol-coverage-law-drift.md`:
         //
         //   1. `setUnionAssociative` was here and the kit ships NO associativity law for
         //      sets, of any operand. `grep -rn "unionAssociat"` in SwiftPropertyLaws: zero

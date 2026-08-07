@@ -6,7 +6,7 @@ import Testing
 /// The codable-round-trip template — a type with a *hand-written* `Codable`
 /// conformance (`encode(to: Encoder)` + `init(from: Decoder)`) owes
 /// `decode(encode(x)) == x`. Motivated by the swift-asn1 signed-integer bug
-/// (`docs/backtest-codable-roundtrip-pressuretest.md`).
+/// (`docs/measurements/backtest-codable-roundtrip-pressuretest.md`).
 @Suite("CodableRoundTripTemplate — custom Codable round-trip")
 struct CodableRoundTripTemplateTests {
 

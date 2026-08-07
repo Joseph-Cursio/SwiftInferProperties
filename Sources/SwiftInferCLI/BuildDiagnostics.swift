@@ -9,7 +9,7 @@ import Foundation
 /// as `build-failed: exit=1` with no detail whatsoever.
 ///
 /// That is why one entry cost three investigations and read as three different
-/// problems (`docs/roadtest-self-dogfood.md` §13.4). The evidence was captured
+/// problems (`docs/measurements/roadtest-self-dogfood.md` §13.4). The evidence was captured
 /// and discarded at the last step, and "(no stderr captured)" reads as *the
 /// compiler said nothing* rather than *we looked in the wrong place*.
 ///

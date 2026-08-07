@@ -6,7 +6,7 @@ import SwiftInferCore
 ///
 /// ## The shape, and why the existing gate rejected it
 ///
-/// `docs/parsing-catalog-gap.md` §4/§5. swift-syntax's formatter is:
+/// `docs/measurements/parsing-catalog-gap.md` §4/§5. swift-syntax's formatter is:
 ///
 /// ```swift
 /// extension SyntaxProtocol {

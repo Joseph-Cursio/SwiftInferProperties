@@ -28,7 +28,7 @@ import Testing
 /// symptom was a *limitation* several layers downstream — a derivation tier
 /// quietly not firing, surfaced as `unsupported-carrier` or a hung verifier.
 /// Here it is a named field in a failing assertion, next to the type that lost
-/// it. See `docs/roadtest-self-dogfood.md` §11.3.
+/// it. See `docs/measurements/roadtest-self-dogfood.md` §11.3.
 ///
 /// **Scope, honestly.** `Mirror` sees stored properties, so this covers the
 /// encode side of hand-written `Codable`. It does not cover a field that is

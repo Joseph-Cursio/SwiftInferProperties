@@ -14,10 +14,11 @@ import Testing
 /// **It had already broken, silently, in two directions.** On 2026-08-07 there
 /// were 16 distinct dangling `docs/…` paths across ~30 sites:
 ///
-/// - `docs/glossary.md` moved to `docs/design-internal/glossary.md`. CLAUDE.md's
-///   own row was corrected on 2026-08-06 — *"path corrected; this row said
-///   `docs/glossary.md`, which does not exist"* — and the two Swift files saying
-///   the same thing were not.
+/// - `docs/glossary.md` moved to `docs/design-internal/glossary.md`. CLAUDE.md's own
+///   row was corrected on 2026-08-06 — *"path corrected; this row said
+///   `docs/glossary.md`, which does not exist"* — and the two Swift files saying the
+///   same thing were not. (Quoted as history, and this file is excluded from the
+///   scan, so neither path here is a live citation.)
 /// - The per-cycle findings docs and the perf baselines were pruned from the tree
 ///   across five commits (539 files). Twenty-odd comments still named them.
 ///

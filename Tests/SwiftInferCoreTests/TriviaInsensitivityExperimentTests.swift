@@ -11,7 +11,7 @@ import Testing
 /// round-trip pairs. A scanner is `SourceFileSyntax -> [Finding]`, which matches
 /// none of them, and the self-dogfood road test measured the consequence
 /// exactly: **715 seeds in `SwiftInferCLI` produced two default-tier picks**
-/// (`docs/roadtest-self-dogfood.md` §3). The engine is out of catalog on its own
+/// (`docs/measurements/roadtest-self-dogfood.md` §3). The engine is out of catalog on its own
 /// analysis layer.
 ///
 /// The family that fits parser-adjacent code is *metamorphic*: not "f(x) equals
@@ -57,7 +57,7 @@ import Testing
 /// That is real, and it is not free. It is the same shape as the road test's
 /// central finding: a derived generator is tuned for coverage of the **type**
 /// and silently mistuned for coverage of the **law**
-/// (`docs/roadtest-self-dogfood.md` §12).
+/// (`docs/measurements/roadtest-self-dogfood.md` §12).
 ///
 /// **Subjects, chosen so the result discriminates:**
 ///
@@ -270,7 +270,7 @@ struct TriviaInsensitivityExperimentTests {
     /// If this reported "invariant", the rewrite would not be rewriting and the
     /// two passes above would be vacuous — the degenerate-green shape that made
     /// the first collision sweep pass cleanly while reaching nothing
-    /// (`docs/roadtest-self-dogfood.md` §13.3).
+    /// (`docs/measurements/roadtest-self-dogfood.md` §13.3).
     @Test("the control: docComment IS trivia-sensitive, proving the rewrite bites")
     func docCommentIsTriviaSensitive() {
         var sawADifference = false

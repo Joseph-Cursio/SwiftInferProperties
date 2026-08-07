@@ -4,7 +4,7 @@ import PropertyLawKit
 import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md`) — the laws
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md`) — the laws
 // `swift-infer discover --target SwiftInferCore` proposed against this repo's
 // own persistence layer, executed rather than read.
 //

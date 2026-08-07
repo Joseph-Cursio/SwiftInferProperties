@@ -22,7 +22,7 @@ extension KitCoverageDriftTests {
     /// the value side. `SetAlgebra` is a real suite and is in the map, so all four passed green
     /// while it claimed `setUnionAssociative` — a law the kit does not ship — and while four
     /// keys claimed the `Equatable` triple their entrypoints never run. 13 of 56 `(key, law)`
-    /// pairs were false. See `docs/protocol-coverage-law-drift.md`.
+    /// pairs were false. See `docs/measurements/protocol-coverage-law-drift.md`.
     ///
     /// **The mapping is not 1:1**, which is why this could not be a string comparison:
     /// `.distributivity` is two kit laws, `.comparableTotalOrder` is three, and
