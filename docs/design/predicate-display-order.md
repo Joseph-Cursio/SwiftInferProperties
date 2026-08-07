@@ -81,7 +81,7 @@ did not.
 
 ## What this corrects in the record
 
-`docs/verify-carrier-reach-census.md` and the CLAUDE.md row derived from it say
+`docs/measurements/verify-carrier-reach-census.md` and the CLAUDE.md row derived from it say
 **"template reach is 65%, half of it `predicate`"**, framing the predicate share
 as a *reach* deficit for `verify`. That reading is wrong twice:
 

@@ -99,4 +99,4 @@ tests). Nothing to fix on the server value layer.
 
 Two toolchain fixes shipped, two fixture bugs fixed, one boundary documented, and the
 async-verify + two-tool workflows validated on independent fixtures. See
-`docs/roadtest-maccloud-macos.md` for the macOS half.
+`docs/measurements/roadtest-maccloud-macos.md` for the macOS half.

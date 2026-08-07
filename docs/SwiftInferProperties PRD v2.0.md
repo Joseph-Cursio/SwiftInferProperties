@@ -6,11 +6,11 @@
 ## SwiftInferProperties v2.0: Interaction-Invariant Inference for SwiftUI State Systems
 
 **Version:** 2.0 (draft)
-**Status:** Substantially shipped on the v1.x release line (current: v1.140.0). All five interaction-invariant families — cardinality, referential integrity, biconditional, conservation, idempotence — are discovered, surfaced, and verified end-to-end via measured execution, over both reducer carriers (`(State, Action) -> State`, TCA `Reducer.body`) and the SwiftUI `@Observable`/`ObservableObject` MVVM carrier. Idempotence is promoted `.possible → .likely → .verified`; the other four stay `.possible` behind `--include-possible` pending their promotion gates. Remaining §20-deferred families (reachability, temporal, accessibility) are unshipped. This document stays forward-looking prose; the CLAUDE.md "Current" block + `docs/measured-verify-architecture.md` are the authority on what has actually landed.
+**Status:** Substantially shipped on the v1.x release line (current: v1.140.0). All five interaction-invariant families — cardinality, referential integrity, biconditional, conservation, idempotence — are discovered, surfaced, and verified end-to-end via measured execution, over both reducer carriers (`(State, Action) -> State`, TCA `Reducer.body`) and the SwiftUI `@Observable`/`ObservableObject` MVVM carrier. Idempotence is promoted `.possible → .likely → .verified`; the other four stay `.possible` behind `--include-possible` pending their promotion gates. Remaining §20-deferred families (reachability, temporal, accessibility) are unshipped. This document stays forward-looking prose; the CLAUDE.md "Current" block + `docs/design/measured-verify-architecture.md` are the authority on what has actually landed.
 **Audience:** Open Source Contributors, Swift Ecosystem
 **Depends On:** SwiftPropertyLaws next minor (additive bump — new `InteractionInvariant` law surface; see §13)
 
-> This document was written forward-looking, before any v2.0 surface shipped. Much of it has since landed on the v1.x line (see the Status note above), but the prose is preserved in its original *planning* voice and should be read as design intent, not as a shipped-feature manifest. No individual claim here should be read as a commitment or as evidence a feature exists — the CLAUDE.md "Current" block, `git log`, and `docs/measured-verify-architecture.md` are the authority on what has actually landed, and the calibration record overrules any prose below that turns out to be wrong.
+> This document was written forward-looking, before any v2.0 surface shipped. Much of it has since landed on the v1.x line (see the Status note above), but the prose is preserved in its original *planning* voice and should be read as design intent, not as a shipped-feature manifest. No individual claim here should be read as a commitment or as evidence a feature exists — the CLAUDE.md "Current" block, `git log`, and `docs/design/measured-verify-architecture.md` are the authority on what has actually landed, and the calibration record overrules any prose below that turns out to be wrong.
 
 -----
 
@@ -666,7 +666,7 @@ Hard targets enforced by regression tests in CI:
 | Trace shrinking (initial 16-action sequence → minimal) | < 500ms wall | Regression test fails |
 | Memory ceiling on 500-file module | < 1 GB resident (v2.0 starting point; recalibrate post-v2.1.0) | Regression test fails |
 
-Numbers are Swift-realistic, not aspirational. SwiftSyntax parsing + in-process action execution dominate. The reference corpus is TCA's `swift-composable-architecture` examples directory, pinned at a commit fixed in `docs/calibration-corpus-v2.0.md` at M1 ship (the file will list each examples-app reducer, its carrier kind, and its expected per-family suggestion counts). v2.0's analog of v1's cycle-1 1167-baseline is the per-family suggestion count against this frozen corpus.
+Numbers are Swift-realistic, not aspirational. SwiftSyntax parsing + in-process action execution dominate. The reference corpus is TCA's `swift-composable-architecture` examples directory, pinned at a commit fixed in `docs/calibration-corpus-v2.0.md` at M1 ship (the file will list each examples-app reducer, its carrier kind, and its expected per-family suggestion counts) — **that file was pruned in `59bc93b`; recover with `git show 59bc93b^:docs/calibration-corpus-v2.0.md`**. v2.0's analog of v1's cycle-1 1167-baseline is the per-family suggestion count against this frozen corpus.
 
 -----
 

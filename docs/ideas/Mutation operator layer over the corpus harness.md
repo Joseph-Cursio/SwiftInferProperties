@@ -9,7 +9,7 @@
 exists, not a new engine. Sibling to `docs/ideas/Refuted-high-confidence-guess as
 candidate bug.md` (that note turns a *disproof* into a candidate bug; this one
 turns a *surviving mutant* into a candidate gap in the property suite) and to the
-self-dogfooding road test (`docs/roadtest-self-dogfood.md`). The concrete
+self-dogfooding road test (`docs/measurements/roadtest-self-dogfood.md`). The concrete
 integration target is **SwiftIdempotency's** `mutants/` harness, but every
 corpus-carrying repo (MacCloud ×3 + the five tools) has the same shape.
 
@@ -173,7 +173,7 @@ once; curated cheapness thereafter — the two halves in their lanes.
 **The `gen-unreachable` branch is not optional, and this repo already proves it.**
 A survivor can be killable *in principle* — a killer may even already exist — yet
 survive because the suite's **generator cannot reach the witness**. The
-self-dogfood road test (`docs/roadtest-self-dogfood.md`) documents both halves of
+self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md`) documents both halves of
 this:
 
 - §9.1, "a confident green on a law that is false": `Decisions.merge` commutativity
@@ -201,7 +201,7 @@ The corpus is **living tooling, not a benchmark** — and it sits opposite the r
 test's frozen yardstick on the one axis that matters. That yardstick is **frozen**:
 it must never be edited in response to tool output (the "grades its own homework"
 trap). Its form varies — a pre-written *answer key* (MacCloud) or a *prediction
-logged before the first run* (`docs/roadtest-self-dogfood.md` §1, hard-frozen at
+logged before the first run* (`docs/measurements/roadtest-self-dogfood.md` §1, hard-frozen at
 "nothing above this line is edited in response to" the results below) — but the
 invariant is the same: **the yardstick must predate and ignore the tool output.**
 The corpus is the reverse: it is *meant*

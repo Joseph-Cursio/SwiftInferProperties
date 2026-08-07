@@ -123,7 +123,7 @@ The dogfood's value is the **precision confirmation** and this documented bounda
   involution, and correctly stays out of the involution template.
 - **Materialisation idempotence** (`self.f() -> C` where `C != Self`, e.g. a lazy
   view materialising to a concrete type) — **deliberate boundary, not built**
-  (bridge 2 spike, `docs/bridge2-materialisation-spike.md`, 2026-07-18). Its only
+  (bridge 2 spike, `docs/design/bridge2-materialisation-spike.md`, 2026-07-18). Its only
   checkable law is `value.f().f() == value.f()`, which compiles **only** when the
   materialised type `C` has a nullary `f() -> C` — the exact gate that separates a
   materialiser (admit) from a `reversed()`-style round-trip (which won't even

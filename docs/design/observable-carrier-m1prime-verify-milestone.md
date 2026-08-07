@@ -5,7 +5,7 @@
 
 **Status:** **Largely implemented — calibration gate cleared.** S1–S4 shipped (`ViewModelVerifyInteractionPipeline` + `…Survey`, measured proof, live wiring into `verify-interaction --all`). The 7-corpus diff (§5.1) found **zero false-positive REFUTEs**, so M1′ was wired live. Remaining: imported-path end-to-end fixture, keyed-refint resolution, and evidence-tier fold-back (§7).
 **Author context:** written after the Observable Carrier "thread 1" work (materialize the action enum, M1′ live-class), then updated with the as-built record + calibration results. Slices 1–3b + the same-target groundwork shipped first; this milestone promoted that emitter from a measured-test engine into the live inference loop.
-**Relates to:** `docs/ideas/Observable Carrier Proposal.md`, `docs/measured-verify-architecture.md`, PRD §3.5 (ViewModel suggestions as an inference source), PRD §5 (interaction families).
+**Relates to:** the Observable Carrier Proposal (`docs/ideas/Observable Carrier Proposal.md`, removed in `c5c685b` once implemented; recover with `git show c5c685b^:"docs/ideas/Observable Carrier Proposal.md"`), `docs/design/measured-verify-architecture.md`, PRD §3.5 (ViewModel suggestions as an inference source), PRD §5 (interaction families).
 
 ---
 

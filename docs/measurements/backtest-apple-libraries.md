@@ -398,7 +398,7 @@ the claim honestly (the Appendix C posture).
 **Boundary pressure-test → the coder-mediated boundary was CROSSED for `Codable`.**
 Rather than only catalogue the swift-asn1 boundary, it was pressure-tested (should
 it stop being a boundary?) and the answer was yes for `Codable` with a
-custom-conformance gate — see `docs/backtest-codable-roundtrip-pressuretest.md`.
+custom-conformance gate — see `docs/measurements/backtest-codable-roundtrip-pressuretest.md`.
 The `codable-round-trip` template now ships (`92da233` discover + `5146629`
 measured verify): a type with a *hand-written* `Codable` conformance
 (`encode(to:)` + `init(from:)`) surfaces at Likely 50, and

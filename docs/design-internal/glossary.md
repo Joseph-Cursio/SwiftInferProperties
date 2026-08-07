@@ -161,7 +161,7 @@ state. No suggestion scored 50, 80 or 85.
 
 > **Method trap, paid in this session.** `discover` over swift-syntax **`SIGBUS`es under the debug
 > binary** — reproducibly, in under a second, on `Sources/` alone. That is the stack-depth trap
-> `docs/parsing-catalog-gap.md` warns about, and the fix is the **release** binary (`swift build -c
+> `docs/measurements/parsing-catalog-gap.md` warns about, and the fix is the **release** binary (`swift build -c
 > release`), which completes in 105s. A debug-binary run does not produce a smaller number; it
 > produces *no* number and an exit code of 138.
 
@@ -428,7 +428,7 @@ reports separately and cannot retract Pass 1.
 The asymmetry is deliberate and load-bearing: boundary values cannot go in the verdict pass,
 because `x + 1` traps at `Int.max` and the repo's existing tests depend on that being
 unreachable at ~2⁻⁵⁸ per trial. Mixing them in turned three integration tests into
-`signal 5` crashes. See `docs/verify-edge-pass.md`.
+`signal 5` crashes. See `docs/design/verify-edge-pass.md`.
 
 **Historical trap:** before 2026-07-31 Pass 2 was a hardcoded `print("VERIFY_EDGE_RESULT: PASS")`
 with zero trials for every strategist-routed carrier. Any `measured-bothPass` recorded before
