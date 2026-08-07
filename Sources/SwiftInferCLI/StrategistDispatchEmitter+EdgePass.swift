@@ -52,8 +52,10 @@ import PropertyLawCore
 extension StrategistDispatchEmitter {
 
     /// Curated boundary values for `carrier`, as Swift source, or `nil` when
-    /// the carrier has no meaningful finite boundary set (in which case the
-    /// sentinel is still emitted and the renderer says no edge pass ran).
+    /// the carrier has no meaningful finite boundary set. A carrier answering
+    /// `nil` here may still get an edge pass through its *members* — see
+    /// `edgeMemberSpecs` — and only a carrier that fails both keeps the
+    /// sentinel, with the renderer saying no edge pass ran.
     ///
     /// Unsigned types omit the negatives — `-1` does not compile as a `UInt`,
     /// and `min` is `0`.
@@ -82,18 +84,118 @@ extension StrategistDispatchEmitter {
         #""""#, #"" ""#, #""  ""#, #""\n""#, #""\t""#, #""-""#, #""- ""#, #""a\n- b""#
     ]
 
+    /// A generator drawing **only** from `carrier`'s curated boundary set, or
+    /// `nil` when it has none.
+    static func edgeDomainGenerator(for carrier: String) -> String? {
+        guard let values = edgeDomainValues(for: carrier), !values.isEmpty else {
+            return nil
+        }
+        let list = values.joined(separator: ", ")
+        return "Gen<\(carrier)?>.element(of: [\(list)] as [\(carrier)]).map { $0! }"
+    }
+
+    /// The kit's raw-type generator expressions, each paired with the
+    /// boundary-only generator that replaces it.
+    ///
+    /// `RawType.generatorExpression` is a **closed, kit-owned vocabulary** of
+    /// exact literals (`Gen<Int>.int()`, `Gen<Character>.letterOrNumber.string(of:
+    /// 0...8)`, …), which is what makes matching them by string safe — the same
+    /// argument the marker relabel below rests on. Raw types with no curated
+    /// boundary set (`Bool`, `Double`, `Float`) are absent, so their leaves stay
+    /// on the generator Pass 1 uses.
+    static var boundarySubstitutions: [(defaultGenerator: String, boundaryGenerator: String)] {
+        RawType.allCases.compactMap { rawType in
+            guard let boundary = edgeDomainGenerator(for: rawType.rawValue) else { return nil }
+            return (rawType.generatorExpression, boundary)
+        }
+    }
+
+    /// Rewrite every raw-type generator inside a composed expression onto its
+    /// boundary set, or `nil` when the expression contains none.
+    ///
+    /// ## Why the leaves and not the carrier
+    ///
+    /// A composed carrier — a struct, an enum with payloads, a tuple — is not a
+    /// `RawType`, so `edgeDomainValues` answers `nil` for it and the whole
+    /// carrier fell to the sentinel: **35 of the 130 `measured-bothPass`
+    /// verdicts** in the frozen whole-corpus survey, 27% of the passing verdicts,
+    /// reported with a boundary domain nothing had checked. But a composed
+    /// carrier's boundary set is not a property of the carrier; it is the product
+    /// of its leaves', and those *are* curated. `ReducerPin(moduleName: "",
+    /// typeName: "", functionName: "")` is reachable from the leaf domains alone.
+    ///
+    /// ## Why textual, and not by threading each strategy's payload through
+    ///
+    /// The obvious alternative is to carry `[MemberSpec]` on the recipe and
+    /// recompose with boundary member generators. It was built first, and
+    /// **measured to reach nothing**: an A/B over the 37 sentinel entries moved
+    /// **zero** of them, because every struct in that population declares a user
+    /// `init` and so takes Tier 6 `.initializerBased`, not `.memberwiseArbitrary`
+    /// — and `InitArgument` carries no `rawType` to key on. Threading each
+    /// strategy's payload separately would mean a new branch per strategy, and a
+    /// silent gap every time the kit adds one.
+    ///
+    /// Every strategy renders the *same* closed set of leaf generator literals,
+    /// so substituting at that level reaches memberwise, initializer-based,
+    /// enum-payload, tuple and composite carriers at once — and reaches a
+    /// strategy added later without being told about it.
+    ///
+    /// A recursive carrier is excluded for free: its expression is
+    /// `__genNode(3)`, which contains no leaf generator, so this returns `nil`
+    /// and the sentinel stands. The helper *declaration* does contain them and is
+    /// deliberately not swept — it is emitted once and shared with Pass 1.
+    ///
+    /// ## Every eligible leaf at once, not one at a time
+    ///
+    /// The alternative is per-slot rotation — n variants, leaf `k` at its
+    /// boundary and the rest ordinary, combined with `Gen.oneOf`. Not chosen, for
+    /// two reasons. The `Gen.oneOf` overload admitting heterogeneous sequence
+    /// types is `@available(swift 6.2)` and delegates to `Gen.frequency`, which
+    /// `GeneratorRecipeCompileSafetyTests` bans outright as a construct that does
+    /// not compile in an older language mode; and n variants of an n-leaf `zip`
+    /// is n² inlined generator expressions, in a repo whose CI has already lost a
+    /// release to a type-check timeout on a 12-arm expression.
+    ///
+    /// The cost is real and worth stating: a law that breaks on *one* leaf at its
+    /// boundary **with the others ordinary** is not reached. The boundary sets
+    /// are not degenerate — `0`, `1`, `-1` for integers, `"-"` and `"a\n- b"` for
+    /// strings — so mixed-magnitude combinations do occur, but that is
+    /// mitigation, not coverage. Rotation is the open follow-up.
+    static func boundarySweep(_ expression: String) -> String? {
+        var swept = expression
+        var substituted = false
+        for (defaultGenerator, boundaryGenerator) in boundarySubstitutions
+        where swept.contains(defaultGenerator) {
+            swept = swept.replacingOccurrences(of: defaultGenerator, with: boundaryGenerator)
+            substituted = true
+        }
+        return substituted ? swept : nil
+    }
+
     /// A recipe drawing **only** from the curated boundary set. Same
     /// `Generator` shape as the default recipe, so every composer consumes it
     /// unchanged.
     static func edgeRecipe(from recipe: GeneratorRecipe) -> GeneratorRecipe? {
         let carrier = recipe.carrierTypeName
-        guard let values = edgeDomainValues(for: carrier), !values.isEmpty else {
-            return nil
+        // The carrier's own boundary set first: the precise answer when the
+        // carrier IS a raw type, and it also covers the top-level `String`
+        // carrier, whose default generator is already edge-biased (V1.150) and so
+        // matches no entry in the substitution table.
+        if let generator = edgeDomainGenerator(for: carrier) {
+            return GeneratorRecipe(
+                expression: generator,
+                carrierTypeName: carrier,
+                imports: recipe.imports,
+                declarations: []
+            )
         }
-        let list = values.joined(separator: ", ")
+        guard let swept = boundarySweep(recipe.expression) else { return nil }
         return GeneratorRecipe(
-            expression: "Gen<\(carrier)?>.element(of: [\(list)] as [\(carrier)]).map { $0! }",
+            expression: swept,
             carrierTypeName: carrier,
+            // The default recipe's imports verbatim: a leaf this sweep leaves
+            // alone may name a module (`Foundation` for a `Date`) that a
+            // recomposed import list would not carry.
             imports: recipe.imports,
             declarations: []
         )
@@ -121,7 +223,13 @@ extension StrategistDispatchEmitter {
     /// PASS while asserting nothing: the exact defect this file exists to fix.
     static func edgePassBody(fromDefaultBody body: String) -> String? {
         guard body.contains("VERIFY_DEFAULT_") else { return nil }
-        let renamed = body.replacingOccurrences(of: "VERIFY_DEFAULT_", with: "VERIFY_EDGE_")
+        // The composers open with `// --- Pass 1: default … ---`. Reusing the
+        // body verbatim carried that header inside Pass 2, so the emitted
+        // workdir told a reader the boundary pass was the default one. Only the
+        // banner is rewritten; the markers below are the parser's contract.
+        let renamed = body
+            .replacingOccurrences(of: "VERIFY_DEFAULT_", with: "VERIFY_EDGE_")
+            .replacingOccurrences(of: "// --- Pass 1: default", with: "// --- Pass 2: boundary")
         let indented = renamed
             .split(separator: "\n", omittingEmptySubsequences: false)
             .map { $0.isEmpty ? "" : "    \($0)" }

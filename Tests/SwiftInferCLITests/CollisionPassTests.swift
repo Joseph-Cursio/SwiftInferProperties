@@ -164,12 +164,32 @@ struct CollisionPassTests {
 
     /// The unary sweep draws **one** value per trial, not two. Drawing a pair
     /// here would silently turn an idempotence check into something else.
+    ///
+    /// Scoped to Pass 1. `Decisions` is a composed carrier, so it now also gets
+    /// an advisory boundary pass, which is the *same composed body* over a
+    /// boundary generator — sweep included. Counting to the end of the stub
+    /// therefore counts both passes and reads as "the sweep draws two values",
+    /// which is a claim about the pass count, not about the sweep.
     @Test("the unary sweep draws exactly one value per trial")
     func unarySweepDrawsOneValue() throws {
         let stub = try Self.emit(template: "codable-round-trip")
         let sweep = try #require(stub.range(of: "Pass 1b"))
-        let tail = String(stub[sweep.lowerBound...])
+        let pass1 = String(stub[sweep.lowerBound...])
+            .components(separatedBy: "// --- Pass 2:")[0]
+        #expect(pass1.components(separatedBy: "defaultGenerator.run(using: &narrowed)").count - 1 == 1)
+    }
+
+    /// And the boundary pass carries its own copy — one sweep per pass, so a
+    /// collision-dependent law is swept over the boundary domain too. Pinned
+    /// because the scoping above would otherwise hide a Pass 2 that lost it.
+    @Test("the boundary pass carries its own collision sweep")
+    func boundaryPassKeepsTheSweep() throws {
+        let stub = try Self.emit(template: "codable-round-trip")
+        let pass2 = try #require(stub.range(of: "// --- Pass 2:"))
+        let tail = String(stub[pass2.lowerBound...])
+        #expect(tail.contains("Pass 1b: collision sweep"))
         #expect(tail.components(separatedBy: "defaultGenerator.run(using: &narrowed)").count - 1 == 1)
+        #expect(tail.contains("VERIFY_EDGE_PASS_KIND: collision"))
     }
 
     /// It shares the binary sweep's machinery rather than reimplementing it —

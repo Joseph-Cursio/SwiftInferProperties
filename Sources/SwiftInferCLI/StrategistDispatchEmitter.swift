@@ -20,11 +20,17 @@ import SwiftInferCore
 /// `.rawRepresentable` strategies fall through to `.error` in v1.47;
 /// cycle-44 evidence will guide which (if any) lands in v1.48.
 ///
-/// **Single-pass output.** Strategist-routed carriers are all
-/// integral or `String` — there's no `NaN`/`Inf` semantic, so Pass 2
-/// emits the V1.44.B/C zero-edge sentinel directly (matching the v1.46
-/// Int path). The marker contract is preserved unchanged so
-/// `VerifyResultParser` reads strategist-routed output identically.
+/// **Two-pass output.** This paragraph used to say the opposite — *"strategist-routed
+/// carriers are all integral or `String`, so Pass 2 emits the zero-edge sentinel
+/// directly"* — and that justification was measured wrong: `Int.min` is the canonical
+/// arithmetic boundary, and `fixtures/verify-refutability`'s `mergedBound(_:)`, wrong
+/// only there, came back holding. Pass 2 is now a real advisory boundary pass
+/// (`+EdgePass`), reaching raw-type carriers and the raw-typed LEAVES of every
+/// composed strategy.
+/// Carriers with no curated boundary set still get the sentinel, and the renderer
+/// says the edge pass did not run rather than claiming it was inapplicable. The
+/// marker contract is preserved unchanged so `VerifyResultParser` reads
+/// strategist-routed output identically.
 public enum StrategistDispatchEmitter: SeededStubEmitter {
 
     /// Seed-hex format shared with the v1.46 emitters.

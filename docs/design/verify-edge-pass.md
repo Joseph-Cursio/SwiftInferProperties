@@ -1,6 +1,6 @@
 # The verify edge pass
 
-> **Status:** `shipped` · **As of:** 2026-07-31
+> **Status:** `shipped` · **As of:** 2026-08-07
 
 
 **Date:** 2026-07-31 · **Status:** built · **Scope:** strategist-routed carriers only
@@ -118,6 +118,93 @@ correct **severity**:
 `combinedTally`'s `measured-error` is pre-existing and unrelated: `self - other`
 over two full-range Ints overflows in the *default* pass.
 
+## Composed carriers — the sentinel's remaining 27%, closed 2026-08-07
+
+The limit below used to read *"carriers with no curated boundary set keep the
+sentinel — `Bool`, enums, custom structs."* Measured against the frozen
+whole-corpus survey (`fixtures/whole-corpus-survey/2026-08-05-whole-corpus.jsonl`,
+281 records), that limit cost:
+
+| `measured-bothPass` | entries |
+|---|---|
+| with a real Pass 2 (`edgeTrials=100`) | 95 |
+| **with the zero-trial sentinel** | **35** |
+
+**27% of the passing verdicts had a boundary domain nothing had checked** — the
+same shape as the original defect, one level down. A struct is not a `RawType`,
+so `edgeDomainValues` answers `nil` for the *carrier* — but the carrier's
+boundary set is not a property of the carrier. It is the product of its
+**leaves'**, and those are already curated.
+
+### The first attempt reached nothing, and that is how the design was found
+
+The obvious move is to carry `[MemberSpec]` on `GeneratorRecipe` and recompose
+via the same `memberwiseRecipe` with boundary member generators — the exact
+"same composer, different recipe" shape the top-level pass uses. It was built,
+and an A/B over the 37 sentinel entries moved **zero of them**.
+
+The reason is a fact about the corpus that reading the emitter cannot tell you:
+**every struct in that population declares a user `init`**, so it takes Tier 6
+`.initializerBased`, not `.memberwiseArbitrary` — and `InitArgument` carries no
+`rawType` to key on. Threading each strategy's payload separately would mean a
+branch per strategy and a silent gap every time the kit adds one.
+
+What every strategy *does* have in common is the rendered expression, and every
+one of them composes the same closed vocabulary of leaf generator literals
+(`RawType.generatorExpression` — 14 exact strings, kit-owned). So the swap
+happens there: `boundarySweep` replaces each leaf generator with its boundary-only
+form, which reaches memberwise, initializer-based, enum-payload, tuple and
+composite carriers at once — and reaches a strategy added later without being
+told about it. Textual substitution is safe here for the same reason the
+`VERIFY_DEFAULT_` → `VERIFY_EDGE_` relabel is: a closed vocabulary. A test pins
+that no key is a substring of another (`Gen<Int>.int()` vs `Gen<Int8>.int8()`).
+
+A recursive carrier falls out excluded for free — its expression is
+`__genNode(3)`, which holds no leaf generator. Its helper *declaration* does, and
+is deliberately not swept: it is emitted once and shared with Pass 1, so
+sweeping it would move the domain the **verdict** was taken over.
+
+### Measured (A/B, two release binaries, same afternoon, same index)
+
+56 entries: the 37 sentinel `bothPass` rows plus a 19-entry control of rows that
+already ran an edge pass or refuted. Both arms `verify --all-from-index` at
+`--max-parallel 4`, 2026-08-07.
+
+| bucket | before | after | Δ |
+|---|---|---|---|
+| `bothPass` edge=0 (sentinel) | 37 | 2 | **−35** |
+| `bothPass` edge>0 | 12 | 47 | **+35** |
+| `measured-defaultFails` | 5 | 5 | 0 |
+| `measured-error` | 2 | 2 | 0 |
+
+**35 of 37 converted; zero verdict changes, zero new errors, zero movement on
+the control.** State the gain honestly: this is *unchecked → checked and held*,
+not *found a bug*. No entry became `edgeCaseAdvisory`. The `mergedBound`-class
+refutation this pass exists to catch has not yet appeared on a composed carrier;
+what changed is that a run which reports one is now possible.
+
+**The 2 that remain are correct.** `TargetDirectory.isDirectory(_:)` and
+`VerifyHarness.isStale(indexPath:packageRoot:)` both take `URL`, whose generator
+is a kit value-type form with no curated boundary set. A `URL` boundary set
+(empty path, `file:///`, percent-encoding) is the obvious next entry and is not
+guessed at here.
+
+### Every eligible leaf at once — and what that does not reach
+
+All eligible leaves are swapped in one pass, not rotated one at a time. Per-slot
+rotation would need `Gen.oneOf` over n variants: the overload admitting
+heterogeneous sequence types is `@available(swift 6.2)` and delegates to
+`Gen.frequency`, which `GeneratorRecipeCompileSafetyTests` bans outright as not
+compiling in an older language mode — and n variants of an n-leaf `zip` is n²
+inlined generator expressions, in a repo that has already lost a release to a
+type-check timeout on a 12-arm expression.
+
+The cost is real: **a law that breaks on one leaf at its boundary with the others
+ordinary is not reached.** The boundary sets are not degenerate (`0`, `1`, `-1`;
+`"-"`, `"a\n- b"`), so mixed-magnitude combinations do occur — but that is
+mitigation, not coverage. Rotation is the open follow-up, and it needs the
+`Gen.frequency` ban resolved first.
+
 ## Scope and limits
 
 - **Strategist-routed carriers only.** The v1.46 hardcoded emitters
@@ -125,9 +212,9 @@ over two full-range Ints overflows in the *default* pass.
   sentinel. Those Int composers are unreachable through the current router
   (`v146HardcodedCarriers` is `Complex<Double>` / `Double`), but the sentinel
   text is still there and still tested.
-- **Carriers with no curated boundary set keep the sentinel** — `Bool`, enums,
-  custom structs. The renderer now says the edge pass did not run instead of
-  claiming it was inapplicable.
+- **Carriers whose every leaf is uncurated keep the sentinel** — `Bool`,
+  `Double`, `Float`, `URL`, and any carrier composed only of those. The renderer
+  says the edge pass did not run instead of claiming it was inapplicable.
 - **Boundary sets are per-carrier and hand-curated**: signed integers get
   `min`/`max`/`0`/`±1`, unsigned drop the negatives, `String` gets the
   empty/whitespace/newline set. Nothing derives them from the code under test.

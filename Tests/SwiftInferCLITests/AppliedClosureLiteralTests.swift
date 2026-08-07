@@ -84,12 +84,20 @@ struct AppliedClosureLiteralTests {
 
     /// The collision sweep is where it actually surfaced, so it gets its own
     /// assertion rather than relying on the whole-stub scan above.
+    /// **The raw `contains` this used to do was the same bug the helper above
+    /// was written to fix.** It relied on the emitter's `{ … }(value)` comment
+    /// sitting *before* `Pass 1b` in the stub. When the advisory edge pass
+    /// learned to reach composed carriers it re-emitted the whole body — comment
+    /// included — after that point, and the test reported the documentation as
+    /// the bug, exactly as `inlineApplications`' docstring warns. Scan through
+    /// the helper so prose can never be mistaken for code again.
     @Test("the collision sweep calls the bound function, not the literal")
     func collisionSweepUsesTheBinding() throws {
         let stub = try Self.emit(template: "idempotence")
         let sweep = try #require(stub.range(of: "Pass 1b"))
         let tail = String(stub[sweep.lowerBound...])
-        #expect(!tail.contains("}("), "the sweep still applies the literal inline")
+        let offenders = Self.inlineApplications(in: tail)
+        #expect(offenders.isEmpty, "the sweep still applies the literal inline: \(offenders)")
         #expect(tail.contains("collisionOnce = "))
     }
 
