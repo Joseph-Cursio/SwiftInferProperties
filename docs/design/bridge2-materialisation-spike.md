@@ -6,7 +6,7 @@
 **Status:** spike complete — **decision: (B) document the boundary, no code change**
 (owner call, 2026-07-18). Discovery stays silent on `self -> OtherType` (its current,
 correct behaviour); the boundary is recorded here and in
-`docs/dogfood-new-templates-findings.md` beside the sibling `reversed()` round-trip note.
+`docs/measurements/dogfood-new-templates-findings.md` beside the sibling `reversed()` round-trip note.
 **Predecessor:** B32 (bridge 1) added the instance *self-form* `self -> Self`; it deferred
 `self -> OtherType` ("the materialisation case, bridge 2") explicitly.
 
@@ -70,7 +70,7 @@ exists.
 
 ## Recall reality
 
-- The dogfood (`docs/dogfood-new-templates-findings.md`) found **zero**
+- The dogfood (`docs/measurements/dogfood-new-templates-findings.md`) found **zero**
   materialisation-idempotence across **1166 real picks** (ComplexModule / RealModule
   / BigInt). The only `self -> OtherType` near-miss (swift-syntax `reversed()`) is a
   **round-trip bridge 2 must exclude**.

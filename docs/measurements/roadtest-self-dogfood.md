@@ -8,7 +8,7 @@
 **Date opened:** 2026-07-26.
 
 This is the kit dogfooding on itself — Appendix C's "and so do the five tool packages above." It is
-scored the same way as `docs/roadtest-swiftprojectlint.md`: **refutability, not suggestion count**
+scored the same way as `docs/measurements/roadtest-swiftprojectlint.md`: **refutability, not suggestion count**
 (Appendix C, "Score refutability, not suggestions"). A law counts only if some type-correct, plausible
 implementation of the function is *rejected* by it. `f(x) == f(x)` scores zero.
 
@@ -22,7 +22,7 @@ implementation of the function is *rejected* by it. `f(x) == f(x)` scores zero.
 > **(a) RETRACTED — instrument error.** Every `measured-bothPass` verdict below was produced
 > by a verifier whose Pass 2 was a hardcoded `print("VERIFY_EDGE_RESULT: PASS")` with
 > `VERIFY_EDGE_TRIALS: 0` — nothing asserted, on every strategist-routed carrier (i.e. everything
-> outside `Complex<Double>` / `Double`). See `docs/verify-edge-pass.md`, which measured **23 of 23
+> outside `Complex<Double>` / `Double`). See `docs/design/verify-edge-pass.md`, which measured **23 of 23
 > `measured-bothPass` verdicts in one full gate run** going through it. `bothPass` in this document
 > means *Pass 1 passed and Pass 2 was free*, which is not what the word claims.
 > Affected: **§9.1, §9.3, §9.4, §11.1, §11.2.3, §13.1**.
@@ -312,7 +312,7 @@ candidates from §2. Then `verify --all-from-index --corpus-module SwiftInferCor
 > alphabet width. That cause is real and was confirmed by direct experiment below — but it was never
 > the only one, and this section could not have known that. Read the alphabet analysis; do not read
 > "`measured-bothPass`, 100 trials" as a characterisation of what the verifier did.
-> See `docs/verify-edge-pass.md`.
+> See `docs/design/verify-edge-pass.md`.
 
 `Decisions.merge` commutativity — the law §F1 disproves — is reported by the tool as
 **`measured-bothPass`, 100 trials**.
@@ -837,7 +837,7 @@ with no error at either end. The kit's tests pass. The consumer's index looks co
 the pipeline end to end shows the tier is dead.
 
 It also rhymes with the road test's own earlier lesson, recorded before any of this: *three passes
-each named "the remaining blocker" for `serialize` and each was wrong* (`docs/roadtest-swiftlintrulestudio.md`).
+each named "the remaining blocker" for `serialize` and each was wrong* (`docs/measurements/roadtest-swiftlintrulestudio.md`).
 A refuter that fires first hides every refuter behind it, and reading the code cannot tell you how
 many are queued up. That was said about purity gates; it turns out to describe cross-repo projections
 just as well.

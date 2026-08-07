@@ -7,7 +7,7 @@
 (44 `check…PropertyLaws` suites). Every number below is reproducible from those two SHAs with
 the commands inline.
 
-Found while pre-flighting `docs/kit-suite-backtest-plan.md` Arm 1 — the plan described the
+Found while pre-flighting `docs/plans/kit-suite-backtest-plan.md` Arm 1 — the plan described the
 kit's `SetAlgebra` coverage as four laws, which is `ProtocolCoverageMap`'s list, not the kit's
 fifteen. Checking why the two disagreed turned up the drift below.
 
@@ -315,6 +315,6 @@ expected shape for a latent claim.
    caught that defect on the day it was written. `known-properties` is a third input to this
    same join.
 
-Referenced from `docs/kit-suite-backtest-plan.md` §4 Arm 1, whose blocking decision this
+Referenced from `docs/plans/kit-suite-backtest-plan.md` §4 Arm 1, whose blocking decision this
 resolves — the arm's generated suite is unaffected either way, since `KitSuiteEmitter` emits
 whole-suite calls and none of this changes which suites are emitted.

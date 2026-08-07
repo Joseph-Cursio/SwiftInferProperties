@@ -57,7 +57,7 @@ The `integer-division` weakness was found by **running mutants** — take the fu
 test, perturb it, and see whether the existing test's generator produces an input that
 catches the perturbation. That is execution, not analysis, and it means:
 
-- A build of the subject, per mutant. `docs/roadtest-self-dogfood.md` §15 already carries a
+- A build of the subject, per mutant. `docs/measurements/roadtest-self-dogfood.md` §15 already carries a
   metamorphic cost estimate; this is the same order.
 - A mutation operator set. The leaderboard fixture has 7 hand-written mutants for one sort;
   generating them per-function is its own project.

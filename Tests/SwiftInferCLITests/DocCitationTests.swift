@@ -104,8 +104,11 @@ struct DocCitationTests {
     /// Scoped to markdown link syntax (`](…)`) rather than prose mentions of a path.
     /// A link is unambiguously a claim that the target is reachable; a path named in
     /// a sentence may be history (`docs/archive/claude-md-narrative-history.md` is a
-    /// verbatim copy of an old CLAUDE.md and cites docs that were pruned years of
-    /// commits ago — correctly, since it is a record of what was once written).
+    /// copy of an old CLAUDE.md — verbatim in prose — and cites docs that were pruned
+    /// years of commits ago, correctly, since it is a record of what was once written.
+    /// Its paths to docs that merely *moved* were repointed on 2026-08-07; the ones to
+    /// pruned docs were deliberately left dangling, so this file stays a permanent
+    /// source of unresolvable prose citations and must not be swept into the check).
     @Test("every relative markdown link between docs resolves")
     func relativeDocLinksResolve() throws {
         let docsRoot = Self.repositoryRoot.appendingPathComponent("docs")

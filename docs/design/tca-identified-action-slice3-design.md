@@ -10,9 +10,9 @@
 > action, `maxChildDepth = 2`) followed — ~0 added real reach as the recount
 > predicted, but it completes construction for payload-only children (composing
 > slice 4) and proves the self-recursion termination bound. See the "Recount
-> results" section and the slice-2 entry in `docs/tca-determinism-followups.md`.
+> results" section and the slice-2 entry in `docs/design/tca-determinism-followups.md`.
 
-Design note for follow-up item 2, slice 3 (`docs/tca-determinism-followups.md`).
+Design note for follow-up item 2, slice 3 (`docs/design/tca-determinism-followups.md`).
 Slices 1 (`PresentationAction`) and 2 (`Result<_, any Error>`) are built; this
 note works out slice 3 before any code, because it is categorically harder than
 1–2 and forces two net-new capabilities plus a genuine precision decision. No

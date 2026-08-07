@@ -9,7 +9,7 @@ prerequisites section and the Arm 1 prediction are left as originally written, w
 appended rather than folded in, because a pre-registered prediction that gets quietly
 corrected was never pre-registered.
 
-Read this file and `docs/backtest-apple-libraries.md` before touching anything. This plan is
+Read this file and `docs/measurements/backtest-apple-libraries.md` before touching anything. This plan is
 a *different question* asked with the *same method* as that 2026-07-18 backtest.
 
 ---
@@ -57,7 +57,7 @@ Reading C does not apply to Arm 1: the `876177db` bug is in the public `@inlinab
 PersistentSet.symmetricDifference(_:)` itself, with no dispatch layer that could route around
 it. Verified 2026-08-02. That is a fact about Arm 1, not a reason to skip §3d on the others.
 
-The method is already established in `docs/backtest-apple-libraries.md` (§Method). Reuse it
+The method is already established in `docs/measurements/backtest-apple-libraries.md` (§Method). Reuse it
 verbatim; do not reinvent it — with §3d inserted between its step 2 (check out `<fix>^`) and
 step 3 (discover), which is the one thing it does not have.
 
@@ -185,7 +185,7 @@ The kit's four `symmetricDifference*` laws were added in response to a *differen
 years later, and Pass 3's sweep of 1,873 swift-collections commits never surfaced `876177db`
 at all. The laws were not fitted to this witness.
 
-> **Blocking decision, found while checking the above — see `docs/protocol-coverage-law-drift.md`.**
+> **Blocking decision, found while checking the above — see `docs/measurements/protocol-coverage-law-drift.md`.**
 > Reading the kit to write this section turned up that **`checkSetAlgebraPropertyLaws` does
 > not run union associativity** (no such law exists anywhere in the kit) while
 > `ProtocolCoverageMap` vetoes the suggestion as though it did, with

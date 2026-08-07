@@ -7,7 +7,7 @@
 
 **Idea only.** A *posture* extension, not a bug fix — read the "posture" section
 before scoping. Sibling to the measured-verify machinery that already exists
-(`docs/measured-verify-architecture.md`, `docs/prove-then-show.md`).
+(`docs/design/measured-verify-architecture.md`, `docs/reference/prove-then-show.md`).
 
 ## The observation
 

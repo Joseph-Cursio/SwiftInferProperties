@@ -9,7 +9,9 @@ This is the single-page reference for how SwiftInferProperties turns a
 statically-discovered interaction-invariant suggestion into a
 *machine-confirmed* one by **executing** a generated verifier. It
 synthesizes the per-cycle findings (`docs/calibration-cycle-1NN-findings.md`)
-into one place. For the change-by-change story, read `git log` + those docs.
+into one place. For the change-by-change story, read `git log`. Those per-cycle
+files no longer exist — they were pruned in `59bc93b` and folded into
+`docs/archive/claude-md-narrative-history.md`.
 
 ---
 
