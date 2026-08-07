@@ -3,7 +3,7 @@ import Foundation
 /// Pure-function drift computation for `swift-infer drift` (M6.5).
 /// Takes (current suggestions, baseline, decisions) and returns the
 /// filtered list of warning candidates per PRD §9 +
-/// `docs/M6 Plan.md` open decision #4 (Strong-tier-only):
+/// `git show 53f8f6a:'docs/M6 Plan.md'` open decision #4 (Strong-tier-only):
 ///
 /// 1. **Identity not in baseline** — the suggestion didn't exist (or
 ///    wasn't surfaced) at the last `--update-baseline` snapshot.

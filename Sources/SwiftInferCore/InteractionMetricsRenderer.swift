@@ -6,8 +6,8 @@ import Foundation
 /// findings doc.
 ///
 /// Two output modes:
-/// - `.markdown` — pipe-delimited tables suitable for
-///   `docs/calibration-cycle-N-findings.md`.
+/// - `.markdown` — pipe-delimited tables suitable for a per-cycle findings write-up
+///   (those docs were pruned from the tree; read them at `31a347a`).
 /// - `.plain` — fixed-width columns for terminal reading.
 public enum InteractionMetricsRenderer {
 

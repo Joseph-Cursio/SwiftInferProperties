@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// V1.15.1 — domain-marker counter-signal extension on
 /// `RoundTripTemplate`. Closes post-v1.14 priority #1 from
-/// `docs/calibration-cycle-11-findings.md` (OC HashTable internals: 9
+/// `git show 31a347a:docs/calibration-cycle-11-findings.md` (OC HashTable internals: 9
 /// round-trip Possible-tier survivors with both pair sides' first-
 /// parameter labels in `DomainMarkerLabels.curated`).
 ///

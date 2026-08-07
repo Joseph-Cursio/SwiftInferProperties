@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// V1.11.1 — direction-label counter-signal extension on
 /// `InversePairTemplate`. Closes cycle-8 priority #1 from
-/// `docs/calibration-cycle-7-findings.md` (inverse-pair 0/5 acceptance
+/// `git show 31a347a:docs/calibration-cycle-7-findings.md` (inverse-pair 0/5 acceptance
 /// rate per cycle-6's measurement). Mirrors v1.10's
 /// `IdempotenceTemplate` direction-label counter; reuses the curated
 /// 10-element `DirectionLabels.curated` set verbatim — cross-template

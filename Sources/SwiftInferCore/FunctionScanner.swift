@@ -132,7 +132,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         // V1.57.A (cycle 54) — skip `private` / `fileprivate` helpers, which
-        // can't be property-tested cross-module (`docs/calibration-cycle-53/54`).
+        // can't be property-tested cross-module (cycles 53/54 — findings
+        // pruned from the tree; read them at `31a347a`).
         //
         // Cycle 148 (Lever A) — also skip the other non-public / SPI shapes an
         // external verifier can never call. Pre-148 they were indexed and only

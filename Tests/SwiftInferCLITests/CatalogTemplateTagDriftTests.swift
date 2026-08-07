@@ -139,7 +139,7 @@ struct CatalogTemplateTagDriftTests {
     /// - `TemplatePack.allTemplateNames` resolves to **10** names — packs are a `--packs`
     ///   filter, not a registry, and it omits `involution` and `homomorphism`, which the
     ///   catalog has tagged since long before this sweep.
-    /// - `TemplateName` has **17** cases against ~89 template files (`docs/glossary.md`
+    /// - `TemplateName` has **17** cases against ~89 template files (`docs/design-internal/glossary.md`
     ///   says so outright: it "does not enumerate every template discovery emits").
     ///
     /// So the guard here is narrower but real: a **typo** in a tag silently never fires,

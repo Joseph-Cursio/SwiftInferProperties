@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// V1.15.1 — domain-marker counter-signal extension on
 /// `IdempotenceTemplate`. Closes post-v1.14 priority #1 from
-/// `docs/calibration-cycle-11-findings.md` (OC HashTable internals: 7
+/// `git show 31a347a:docs/calibration-cycle-11-findings.md` (OC HashTable internals: 7
 /// idempotence Possible-tier survivors with first-parameter labels in
 /// `DomainMarkerLabels.curated`).
 ///

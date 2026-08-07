@@ -8,7 +8,7 @@ import Testing
 // accidental tightening of the kit's public API. Same posture as
 // `DerivationStrategistSmokeTests` for the v1.6.0 strategist hoist.
 //
-// Drafted in `docs/calibration-cycle-73-findings.md` and held back
+// Drafted in `git show 31a347a:docs/calibration-cycle-73-findings.md` and held back
 // until the kit tag was published; landed in this commit.
 
 @Suite("ActionSequenceFactory smoke — V2.0.M2 kit-pin wiring")

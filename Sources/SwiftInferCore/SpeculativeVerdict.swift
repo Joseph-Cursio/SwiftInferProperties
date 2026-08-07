@@ -52,7 +52,8 @@ public enum SpeculativeVerdict: String, Sendable, Equatable, Codable {
 ///
 /// ## The source hash is not decoration
 ///
-/// The copy is a [border claim](../../docs/glossary.md): the verdict is measured
+/// The copy is a [border claim](../../docs/design-internal/glossary.md): the verdict
+/// is measured
 /// against a snapshot and reported about the original. If the file moved
 /// underneath the run, the verdict silently becomes a claim about code that no
 /// longer exists — the same failure `run.json` records tool SHAs to prevent.

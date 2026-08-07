@@ -4,7 +4,7 @@ import Testing
 
 // V1.11.1 — direction-label counter-signal on InversePairTemplate.
 // Closes cycle-8 priority #1 from
-// docs/calibration-cycle-7-findings.md (inverse-pair 0/5 acceptance
+// `git show 31a347a:docs/calibration-cycle-7-findings.md` (inverse-pair 0/5 acceptance
 // rate per cycle-6's measurement; counter-signal targets the dominant
 // 2-of-5 direction-labeled rejection sub-pattern). Mirrors v1.10's
 // IdempotenceDirectionLabelCounterTests shape.

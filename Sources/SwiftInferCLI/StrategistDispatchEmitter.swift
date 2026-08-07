@@ -103,7 +103,8 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             // V1.54.C — add `RealModule` for FP carriers so the static
             // `Double.log(_:)` / `Float.log(_:)` etc. forms declared
             // by `ElementaryFunctions` resolve. Cycle-51 measurement
-            // (`docs/calibration-cycle-51-findings.md`) showed that
+            // (`git show 31a347a:docs/calibration-cycle-51-findings.md`)
+            // showed that
             // without this import, V1.54.A's free-function revert
             // breaks the 2 monotonicity-on-Double picks that were
             // `.bothPass` in cycle-50 (the v1.42 `Foundation` import
@@ -134,7 +135,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         // (wrapper-around-Array types like `OrderedSet<Int>`). v1.59
         // ships with one entry; v1.60+ extends to `OrderedDictionary<Int, Int>`,
         // `_HashTable`, `ChunkedByCollection<Array<Int>>`, etc.
-        // See `docs/calibration-cycle-55-findings.md`.
+        // See `git show 31a347a:docs/calibration-cycle-55-findings.md`.
         if let curated = curatedOCRecipe(carrier: carrier) {
             return curated
         }

@@ -10,7 +10,8 @@ import SwiftInferCore
 /// V1.42.B build returns a clear "not yet wired" diagnostic rather than
 /// silently doing nothing.
 ///
-/// **Phase 1 across cycles** — see `docs/v1.42 Calibration Plan.md`:
+/// **Phase 1 across cycles** — see
+/// `git show c090031:'docs/v1.42 Calibration Plan.md'`:
 ///   - **v1.42** (this cycle): subprocess-based round-trip verify on
 ///     `Complex<Double>` carriers, default-generator single pass,
 ///     3-way pass/fail/error reporting.

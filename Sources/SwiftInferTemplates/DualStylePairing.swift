@@ -6,7 +6,8 @@ import SwiftInferCore
 ///
 /// The shape is the "sweet spot" pattern from the
 /// `_2_Designing APIs Around Transformations.md` value-semantics
-/// conversation referenced in `docs/v1.18 Calibration Plan.md`. Stdlib
+/// conversation referenced in
+/// `git show a585284:'docs/v1.18 Calibration Plan.md'`. Stdlib
 /// follows it across `SetAlgebra` (`formUnion` / `union`), `Sequence`
 /// (`sort` / `sorted`), `Collection` (`reverse` / `reversed`), and
 /// `RangeReplaceableCollection` (`append` / `appending`).

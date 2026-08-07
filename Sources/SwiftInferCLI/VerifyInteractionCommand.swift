@@ -10,7 +10,8 @@ import SwiftInferCore
 /// and renders the result. At M3.C/M3.D ship (this cycle), the
 /// rendered output is "stub emitted, harness pending kit publication"
 /// — the build-and-run loop lands at M3.E once the SwiftPropertyLaws
-/// v2.2.0 tag is published. See `docs/calibration-cycle-73-findings.md`
+/// v2.2.0 tag is published. See
+/// `git show 31a347a:docs/calibration-cycle-73-findings.md`
 /// "kit-tag-publication gap" for the next-action.
 ///
 /// **CLI shape mirrors v1's verify-as-separate-subcommand posture.**
