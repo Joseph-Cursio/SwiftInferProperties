@@ -26,15 +26,17 @@ import SwiftInferCore
 ///     (`BodySignals.dedupGateShape`): an early-return dedup check
 ///     (`OrderCreatedHandler.handle`) or a fetch-then-insert
 ///     (`OfflineManager.download` without its annotation). Structural inference,
-///     +30 — above the bare key parameter, below the author's own annotation.
+///     +40 (M9) — above the bare key parameter, level with the annotation once the
+///     ≥70%×3 external calibration gate cleared.
 ///
-/// A handler that combines signals (annotated + key-typed, or gate + key) earns
-/// them together and reaches the `.likely` band; any one alone stays in
-/// `.possible`, per the sketch's "start at possible, let evidence bias the score."
+/// Band (post-M9, and B′ promoted 2026-08-07): the author-intent and by-construction
+/// signals each reach `.likely` alone — Branch A's annotation (+40), Branch C's dedup
+/// gate (+40), the idempotent-write guarantee (+40), and Branch B′'s `IdempotencyKey`
+/// builder (+40). Only the bare key PARAMETER (+25 — a type *without proof of use*)
+/// stays `.possible`, reaching `.likely` only combined with another signal, per the
+/// sketch's "start at possible, let evidence bias the score."
 ///
-/// **Still deferred** (M2+): the key-from-entity builder that constructs its key in
-/// the body (`StripeWebhookHandler`, no gate and no key parameter — needs a
-/// key-construction body signal), and the effect-dominance `unkeyedEffectVeto`.
+/// The `unkeyedEffectVeto` was subsumed by M4/M7's effect-dominance requirement.
 /// The ungated buggy twin needs no veto: with no gate detected, Branch C simply
 /// never fires — no gate, no proposal.
 ///
@@ -194,16 +196,27 @@ public enum ReplayIdempotenceTemplate {
         )
     }
 
-    /// Branch B′ (M6). The body builds an `IdempotencyKey(…)` from its input — the
-    /// key-from-entity builder (`StripeWebhookHandler.makeChargeRequest`). Worth +25,
-    /// like the key parameter: `IdempotencyKey` is a precise, SwiftIdempotency-specific
-    /// marker. Unlike the gate shapes this is a *pure* value builder, so its property
-    /// is the value form (the built value is stable across calls), not an effect form.
+    /// Branch B′ (M6; promoted 2026-08-07). The body builds an `IdempotencyKey(…)`
+    /// from its input — the key-from-entity builder (`StripeWebhookHandler.makeChargeRequest`).
+    /// Worth +40 → `.likely` alone, like the annotation and unlike the bare key
+    /// PARAMETER (+25, which stays `.possible`).
+    ///
+    /// The M9 rule "promote inference only on external evidence" guards *shape*
+    /// inferences that can false-positive on real code; this is not one. Constructing
+    /// `IdempotencyKey` is a **by-construction author signal**: the type exists solely
+    /// for idempotency and cannot be built by accident, so precision is 1.0 by the type
+    /// name. That is a claim of intent — the same class as `@ExternallyIdempotent`
+    /// (Branch A, +40) — not a guess to hold at `.possible`. It needs no external
+    /// calibration and can acquire none: the type is SwiftIdempotency-specific, so no
+    /// public corpus uses it and promotion adds exactly zero external false positives.
+    /// The key parameter stays `.possible` because it is a type *without proof of use*
+    /// — received, not established here. Being a *pure* value builder, its property is
+    /// the value form (the built value is stable across calls), not an effect form.
     static func keyBuilderSignal(for summary: FunctionSummary) -> Signal? {
         guard summary.bodySignals.buildsIdempotencyKey else { return nil }
         return Signal(
             kind: .replayKeyBuilder,
-            weight: 25,
+            weight: 40,
             detail: "Constructs an `IdempotencyKey` from its input — the built value "
                 + "(and its key) must be stable across invocations, so a downstream "
                 + "retry is safe; a key derived from `UUID()`/`Date()` would break it"

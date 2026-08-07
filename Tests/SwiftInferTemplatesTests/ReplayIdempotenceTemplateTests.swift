@@ -228,8 +228,12 @@ struct ReplayIdempotenceTemplateTests {
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.templateName == "replay-idempotence")
-        // +25 alone → .possible.
-        #expect(suggestion?.score.tier == .possible)
+        // +40 alone → .likely (promoted 2026-08-07): constructing `IdempotencyKey`
+        // is a by-construction author signal, not a shape inference — the same class
+        // as the annotation. It surfaces by default; the bare key PARAMETER stays
+        // `.possible` (see `keyParameterMatches`), because it is a type without proof
+        // of use.
+        #expect(suggestion?.score.tier == .likely)
         #expect(suggestion?.score.signals.contains { $0.kind == .replayKeyBuilder } ?? false)
     }
 
