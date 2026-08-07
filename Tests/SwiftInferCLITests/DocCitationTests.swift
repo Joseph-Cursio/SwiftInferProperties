@@ -96,6 +96,72 @@ struct DocCitationTests {
         )
     }
 
+    /// Cross-doc links are *relative*, so every one of them breaks when a doc changes
+    /// directory — and unlike the prose citations above, they break in a way a reader
+    /// only discovers by clicking. The 2026-08-07 reorganisation moved 64 docs at
+    /// once, which is exactly the operation that needs this.
+    ///
+    /// Scoped to markdown link syntax (`](…)`) rather than prose mentions of a path.
+    /// A link is unambiguously a claim that the target is reachable; a path named in
+    /// a sentence may be history (`docs/archive/claude-md-narrative-history.md` is a
+    /// verbatim copy of an old CLAUDE.md and cites docs that were pruned years of
+    /// commits ago — correctly, since it is a record of what was once written).
+    @Test("every relative markdown link between docs resolves")
+    func relativeDocLinksResolve() throws {
+        let docsRoot = Self.repositoryRoot.appendingPathComponent("docs")
+        var broken: [String] = []
+
+        let enumerator = FileManager.default.enumerator(at: docsRoot, includingPropertiesForKeys: nil)
+        while let url = enumerator?.nextObject() as? URL {
+            guard url.pathExtension == "md" else { continue }
+            let text = try String(contentsOf: url, encoding: .utf8)
+            let relative = url.path.replacingOccurrences(
+                of: Self.repositoryRoot.path + "/", with: ""
+            )
+            for (offset, line) in text.components(separatedBy: "\n").enumerated() {
+                for target in Self.markdownLinkTargets(in: line) {
+                    let resolved = url.deletingLastPathComponent()
+                        .appendingPathComponent(target).standardized
+                    guard !FileManager.default.fileExists(atPath: resolved.path) else { continue }
+                    broken.append("\(relative):\(offset + 1) — \(target)")
+                }
+            }
+        }
+
+        #expect(
+            broken.isEmpty,
+            """
+            These markdown links point at a doc that is not there. Relative links move \
+            with the file, so a doc that changed directory needs its links recomputed \
+            against the new depth — not just its own path updated:
+            \(broken.sorted().joined(separator: "\n"))
+            """
+        )
+    }
+
+    /// The `…` of `](…)` where the target is a local `.md`, with any `#fragment`
+    /// dropped and `%20` decoded — the PRD filenames contain spaces, and a link to
+    /// them is legitimately percent-encoded.
+    static func markdownLinkTargets(in line: String) -> [String] {
+        var targets: [String] = []
+        var searchStart = line.startIndex
+        while let open = line.range(of: "](", range: searchStart..<line.endIndex) {
+            searchStart = open.upperBound
+            guard let close = line.range(of: ")", range: open.upperBound..<line.endIndex)
+            else { break }
+            searchStart = close.upperBound
+            var target = String(line[open.upperBound..<close.lowerBound])
+            if let hash = target.firstIndex(of: "#") { target = String(target[..<hash]) }
+            target = target.replacingOccurrences(of: "%20", with: " ")
+            guard target.hasSuffix(".md"),
+                  !target.hasPrefix("http://"),
+                  !target.hasPrefix("https://")
+            else { continue }
+            targets.append(target)
+        }
+        return targets
+    }
+
     // MARK: - Extracting citations
 
     struct Citation {
