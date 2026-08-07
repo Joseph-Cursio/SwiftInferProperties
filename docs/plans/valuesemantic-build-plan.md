@@ -26,7 +26,7 @@ bug and its shrink-to-minimal-repro (§9.2), the reference-type identity/`===`
 law family (§9.3), the value-plus-edit-script generator pair (§9.4), and the
 `COWBox<Element>` worked example (§9.5). This plan is "discover + auto-generate
 the Chapter-9 property for candidate types," so it cites the chapter the way
-the kit's `docs/FLOATING_POINT_ORACLE_RECONCILIATION.md` cites the book's
+the kit's `SwiftPropertyLaws/docs/FLOATING_POINT_ORACLE_RECONCILIATION.md` cites the book's
 Chapter 8. Read Chapter 9 first for the *why*; this doc is the *how*.
 
 ## 1. Summary

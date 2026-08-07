@@ -11,7 +11,7 @@ import SwiftInferCore
 /// to run **twice** (its observable effects happen once), a property stated over
 /// effects, not return values.
 ///
-/// **M1 scope** (Branches A + B of `docs/ideas/replay-idempotence-template-sketch.md`,
+/// **M1 scope** (Branches A + B of `docs/archive/replay-idempotence-template-sketch.md`,
 /// itself distilled from SwiftIdempotency's replay-idempotency shape catalog):
 ///
 ///   - **Branch A — annotation.** `declaredEffect == .externallyIdempotent`, i.e.

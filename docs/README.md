@@ -71,5 +71,25 @@ tells you what you broke. If you *delete* one, cite it through the SHA it last
 existed at rather than dropping the reference — `git show 31a347a:docs/foo.md` —
 because the diagnosis outlives the file.
 
+**Docs citing docs is guarded too, and was not until 2026-08-07.** `DocCitationTests`
+read Swift comments and markdown *link* syntax; the backtick-in-prose form — which is
+how these docs cite each other nearly everywhere — was checked by neither. The
+reorganisation that moved 64 docs left 130 dangling occurrences over 60 paths with
+every check green. `DocProseCitationTests` now scans the live docs plus CLAUDE.md.
+Two conventions come with it. A pruned doc may be **named in prose** as long as its
+recovery pointer sits on the same line:
+
+> Post-v0.1.0 perf-tuning candidates are recorded in `docs/perf-baseline-v0.1.md` (pruned in `59bc93b`; recover with `git show 59bc93b^:docs/perf-baseline-v0.1.md`).
+
+Keep both halves on one line — the pairing is matched per line, so a wrap between the
+name and its pointer reads as an ordinary dangling citation. And a doc
+in a sibling checkout must carry the repo **in the path** — `SwiftProjectLint/docs/rules/…`,
+not a bare `docs/…` with the repo named in the surrounding sentence, which reads as
+though it points here.
+
+History is deliberately out of scope: `docs/archive/`, `CHANGELOG.md` and the root
+`README.md` record what was true when written, so a citation to a since-pruned doc is
+*correct* there and repointing it would be the actual mistake.
+
 Note the limit of that guard: it only sees **this** repo. Sibling repos in the
 toolchain cite these paths too, and nothing checks those.
