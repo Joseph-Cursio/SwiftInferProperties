@@ -6,7 +6,10 @@ import Foundation
 /// ## Why corpus-level, not per-declaration
 ///
 /// Phase 0 introduced a per-declaration `RolePolicy` engine. Phase 1 found it is
-/// the wrong granularity for the existing discoverers:
+/// the wrong granularity for the existing discoverers, and **this seam replaced
+/// it** — the engine, its `RolePolicy` protocol and its stub-driven tests were
+/// deleted on 2026-08-07, having never had a production conformance. The reasons
+/// it lost are below and are the reason not to rebuild it:
 ///
 /// - `ReducerDiscoverer` is single-pass per file — a per-decl fit.
 /// - `ViewModelDiscoverer` is **corpus-level + two-phase**: it *accumulates*
