@@ -205,3 +205,40 @@ template surfacing **real replay-idempotency handlers in real public servers fro
 entry is not "it works" but "it over-fired, an external corpus caught it, the fix held, and
 what survives is true." The recall boundary (guard-form, domain-named dedup) is written down,
 not papered over.
+
+## Closing the guard-form recall gap (M5)
+
+The M4 boundary named a real miss: penny-bot's *actual* dedup is
+`guard await cache.canGiveCoin(sender, message) else { return }` — a `guard`, which the
+classifier only handled as an `if`, and a domain-named capability verb (`canGiveCoin`), which
+no curated dedup-verb list covers. Two changes close it:
+
+- **`guard`-form gates** — `guard <claim> else { return }`, with `guard`'s inverted polarity
+  handled: it returns when the condition is *false*, so a dedup reads as a positive claim-once
+  capability (`canGive…`, `shouldProcess`) or a negated dedup check (`!hasHandled`). The
+  else-block must **return** (not `throw`), which excludes the `guard permission else { throw }`
+  authorisation shape; the capability prefixes deliberately exclude the *permission* family
+  (`canWrite`/`canAccess`/`canRead`/…), which is authorisation, not dedup.
+- **Prefix-matched effect verbs** — M4's exact-match `effectVerbs` missed penny's effect,
+  `postCoin` (not a bare `post`). Effects are now prefix-matched (`postCoin`→`post`,
+  `createMessage`→`create`, `markAsDeleted`→`mark`), so the M4 effect requirement still gates
+  but recognises real-world spellings.
+
+The precision risk was real — a broad capability heuristic plus a weakened effect filter is
+exactly the shape that over-fired at M3 — so it was **re-swept across all 8 repos before
+shipping**:
+
+| repo | M4 | M5 |
+|---|---|---|
+| penny-bot | 0 | **1** — `ReactionHandler.handle()`, the real `canGiveCoin` dedup |
+| VernissageServer | 5 | 5 (unchanged, all genuine) |
+| the other 6 | 0 | 0 |
+
+**6 hits, all genuine; zero new false positives.** The guard-form detection added exactly the
+one real handler the M4 write-up had named as missed — the handler this whole broadening was
+prompted by — and the prefix-effect weakening did not reintroduce the getter false positives
+(the M3 getters call no mutation-prefix verb). MacCloud's two are unchanged.
+
+What remains outside is now genuinely narrow: a dedup whose *only* signal is a domain verb the
+capability prefixes don't reach, with no `guard`/`if`/flag/fetch shape to corroborate it. That
+is the irreducible spell-checker-dictionary floor, not a shape left on the table.
