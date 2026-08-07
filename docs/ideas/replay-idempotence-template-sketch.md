@@ -21,7 +21,7 @@ section, so the plan stays legible next to what it became.
 | A **third witnessed family** (`HandlerCandidate` / `ReplayIdempotenceWitness` / `…Detector`) modelled on `IdempotenceInteractionTemplate` | A **Constraint-Engine template** (`ReplayIdempotenceTemplate.suggest → ConstraintRunner`), like the value templates. Simpler; no witness/candidate/detector types were needed. | M1 |
 | `BodySignals.dedupGate` walker (§5) | Shipped as `BodySignals.dedupGateShape` + `DedupGateClassifier`, gated to `throws`/`async` functions. | M2 |
 | Branches A (annotation) + B (`IdempotencyKey` param) | Shipped as-designed. `+35` / `+25`; both → `.likely`, either alone → `.possible`. | M1 |
-| Branch C shapes: early-return dedup, fetch-then-insert | Shipped, **plus two the fixtures didn't show** and the external corpus did: `stateFlagGuard` (`if file.isDeleted { return }`, M3) and `guardDedup` (`guard canGiveCoin() else { return }`, M5). Fetch-then-insert also learned a **pre-fetched** form (M3). | M2/M3/M5 |
+| Branch C shapes: early-return dedup, fetch-then-insert | Shipped, **plus two the fixtures didn't show** and the external corpus did: `stateFlagGuard` (`if file.isDeleted { return }`, M3) and `guardDedup` (`guard canGiveCoin() else { return }`, M5). Fetch-then-insert also learned a **pre-fetched** form — the `if let` shape (M3) and its `!= nil` sibling (`let r = …first(); if r != nil { return }`, wallet's `createRegistration`, M12). | M2/M3/M5/M12 |
 | Branch B′ `keyFromEntity` (the pure builder, `StripeWebhookHandler`) | Shipped (M6) via a `BodySignals.buildsIdempotencyKey` marker (`IdempotencyKey(…)` construction — precise, SwiftIdempotency-specific). Being a **pure value builder** it bypasses M4's effect requirement and emits the **value** form (`#assertIdempotent`), not the effect form. **Uniquely has no external oracle:** no public repo adopts `IdempotencyKey`, so recall is confirmed only on the fixture and precision is by-construction (the type name), not measured. | M6 |
 | The four vetoes — `unkeyedEffectVeto` as the load-bearing refutation | Shipped `declaredNonIdempotentVeto`; `nonStableKey` stayed a **soft counter**, not a hard veto. `unkeyedEffectVeto` was replaced by M4's simpler **effect requirement** (a gate must guard an actual effect-verb call, or it is a getter) — forced by the public-corpus sweep, where effect-less getters were the dominant false positive. `mutatingAccumulatorVeto` not built. | M4 |
 | Emit a filled-in `assertIdempotentEffects` | Emits a **`.todo` scaffold** that fails via `Issue.record` until completed — the effect recorder can't be synthesized, as §4 anticipated. | M1 |
@@ -332,6 +332,15 @@ bugs *before* looking at the fixes. That is the same posture that licensed the s
   accumulator veto only checked *before* the gate. It now also checks the gate's **hit branch**, so an
   in-branch increment/append vetoes (non-idempotent) while a set-update (`mute`) stays. Vernissage 6 → 5.
   A worked example of recall and precision reinforcing: adding a shape made a missed refinement legible.
+- **M12** — the `!= nil` pre-fetched dedup gate: `let r = …first(); if r != nil { return .ok }; …create()`
+  (wallet's `PassesServiceCustom.createRegistration`), the comparison sibling of M3's `if let` form.
+  Added `DedupGateClassifier.isFetchedNilCheck` and the Fluent `first` get-one terminal to `fetchVerbs`
+  (safe now because effect-dominance filters the array-`.first` getters that made it too broad at M4).
+  It stays **fetch-bound** — the name compared to nil must come from a fetch — so an error-classification
+  `if beginError != nil { … }` (FeatherCMS) does not match. Shipped alongside the toolchain-wide change
+  that made `private` functions discoverable ([PR #158](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/158)):
+  M12 recovers 0 TPs until private is visible, because wallet's handler is `private static` — the two
+  changes are why they shipped together, and the caveat now leads the surfaced law with the widen-to-`internal` remedy.
 
 Three of the sketch's four proposed vetoes are now built as classifier checks —
 `declaredNonIdempotentVeto` (M1), the effect requirement/dominance that subsumes `unkeyedEffectVeto`
