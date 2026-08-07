@@ -28,16 +28,18 @@ struct ReplayIdempotenceTemplateTests {
         bodySignals: BodySignals = .empty,
         dedupGateShape: DedupGateShape? = nil,
         buildsIdempotencyKey: Bool = false,
+        callsIdempotentWrite: Bool = false,
         declaredEffect: Effect? = nil
     ) -> FunctionSummary {
         let signals: BodySignals
-        if dedupGateShape != nil || buildsIdempotencyKey {
+        if dedupGateShape != nil || buildsIdempotencyKey || callsIdempotentWrite {
             signals = BodySignals(
                 hasNonDeterministicCall: bodySignals.hasNonDeterministicCall,
                 hasSelfComposition: bodySignals.hasSelfComposition,
                 nonDeterministicAPIsDetected: bodySignals.nonDeterministicAPIsDetected,
                 dedupGateShape: dedupGateShape,
-                buildsIdempotencyKey: buildsIdempotencyKey
+                buildsIdempotencyKey: buildsIdempotencyKey,
+                callsIdempotentWrite: callsIdempotentWrite
             )
         } else {
             signals = bodySignals
@@ -242,6 +244,24 @@ struct ReplayIdempotenceTemplateTests {
         #expect(stub.contains("#assertIdempotent"))
         #expect(stub.contains("Issue.record"))          // no silent green
         #expect(stub.contains("assertIdempotentEffects") == false)  // NOT the effect form
+    }
+
+    // MARK: - M10: idempotent-write primitive
+
+    @Test("Idempotent-write handler is proposed at .likely (M10)")
+    func idempotentWriteReachesLikely() {
+        // A handler whose write is an upsert — idempotent by the primitive, no
+        // annotation/key/gate. +40 → .likely alone (a guarantee, like a claim).
+        let summary = makeReplaySummary(
+            name: "record",
+            parameters: [Parameter(label: nil, internalName: "event", typeText: "Event", isInout: false)],
+            returnType: nil,
+            callsIdempotentWrite: true
+        )
+        let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
+        #expect(suggestion?.templateName == "replay-idempotence")
+        #expect(suggestion?.score.tier == .likely)
+        #expect(suggestion?.score.signals.contains { $0.kind == .replayIdempotentWrite } ?? false)
     }
 
     // MARK: - Emitter
