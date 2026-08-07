@@ -54,19 +54,18 @@ public enum DedupGateShape: Sendable, Equatable {
 /// against a measured false-positive rate, not a guess to make now.
 public enum DedupGateClassifier {
 
-    /// Callee base names that read as "have we already handled this key?". Narrow
-    /// on purpose — broad verbs (`contains`, `first`, `exists`) fire on ordinary
-    /// guard-and-return code that is not a dedup gate.
+    /// Callee base names that read as "have we already handled this key?". Narrow on purpose —
+    /// broad verbs (`contains`, `exists`) fire on ordinary guard-and-return code that is not a gate.
     static let dedupVerbs: Set<String> = [
         "hasHandled", "isHandled", "alreadyHandled", "wasHandled",
         "isProcessed", "wasProcessed", "isDuplicate", "isKnown", "hasSeen"
     ]
 
-    /// Callee base names that read as "fetch the existing row under this key".
-    /// `query` is included for the ORM idiom (`Model.query(on:)…first()`), which
-    /// the MacCloud road test surfaced as the real-world spelling of a fetch.
+    /// Callee base names that read as "fetch the existing row under this key". `query` is the ORM
+    /// idiom; `first` (M12) is the Fluent get-one terminal (wallet's `…filter(…).first()`), safe now
+    /// because effect-dominance filters the array-`.first` getters that made it too broad at M4.
     static let fetchVerbs: Set<String> = [
-        "fetch", "find", "existing", "lookup", "query"
+        "fetch", "find", "existing", "lookup", "query", "first"
     ]
 
     /// Boolean state properties that read as "already handled". Curated hard, and
@@ -249,13 +248,14 @@ public enum DedupGateClassifier {
         for element in ifExpr.conditions {
             switch element.condition {
             case let .expression(expr):
-                // `if dedup.hasHandled(orderID: order.id) { return false }`
                 if let call = firstCall(in: Syntax(expr), matching: dedupVerbs) {
-                    return .earlyReturnDedup(keyRoot: keyRoot(of: call))
+                    return .earlyReturnDedup(keyRoot: keyRoot(of: call))  // `if dedup.hasHandled(key) { return }`
                 }
-                // `if file.isDeleted { return .ok }` — state-flag gate (M3).
-                if let flag = stateFlag(in: expr) {
+                if let flag = stateFlag(in: expr) {         // `if file.isDeleted { return }` (M3)
                     return .stateFlagGuard(flag: flag)
+                }
+                if isFetchedNilCheck(expr, fetchedNames: fetchedNames) {
+                    return .fetchThenInsert                  // `if r != nil { return .ok }` (M12)
                 }
 
             case let .optionalBinding(binding):

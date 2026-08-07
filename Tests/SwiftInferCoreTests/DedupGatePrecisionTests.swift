@@ -30,6 +30,25 @@ struct DedupGatePrecisionTests {
         #expect(shape == nil)
     }
 
+    @Test("Pre-fetched `!= nil` dedup IS a gate (wallet createRegistration, M12)")
+    func preFetchedNilCheckDedupDetected() throws {
+        // wallet PassesServiceCustom.createRegistration: fetch the row, and if it already exists
+        // (`!= nil`) early-return a no-op, else create. The `!= nil` sibling of the `if let`
+        // pre-fetched form — a precision refinement because it must stay fetch-bound to avoid
+        // matching an error-classification `if beginError != nil { … }` (see DedupGateNilCheck).
+        let shape = try gate("""
+        struct H {
+            func make(id: String, on db: Database) async throws -> Status {
+                let existing = try await Row.query(on: db).filter(id).first()
+                if existing != nil { return .ok }
+                try await Row(id).create(on: db)
+                return .created
+            }
+        }
+        """)
+        #expect(shape == .fetchThenInsert)
+    }
+
     @Test("Guard-form claim-once dedup is detected (penny canGiveCoin, M5)")
     func guardClaimOnceDetected() throws {
         // penny-bot ReactionHandler.handle: `guard await cache.canGiveCoin(…) else
