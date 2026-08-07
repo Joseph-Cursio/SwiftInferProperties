@@ -6,18 +6,21 @@ import Testing
 /// Branch C reads it. The SwiftIdempotency handler shapes are the acceptance set;
 /// the ungated twin and a plain validation guard are the refutations that keep the
 /// detector from firing on every `if … return`.
+/// Reads the `dedupGateShape` off a body parsed via the scanner — exactly as
+/// `ReplayIdempotenceTemplate` Branch C reads it. Shared by both suites below.
+private func gate(_ source: String) throws -> DedupGateShape? {
+    let summaries = FunctionScanner.scanCorpus(source: source, file: "S.swift").summaries
+    return try #require(summaries.first).bodySignals.dedupGateShape
+}
+
+/// Reads the `buildsIdempotencyKey` marker (M6) off a parsed body.
+private func buildsKey(_ source: String) throws -> Bool {
+    let summaries = FunctionScanner.scanCorpus(source: source, file: "S.swift").summaries
+    return try #require(summaries.first).bodySignals.buildsIdempotencyKey
+}
+
 @Suite("DedupGateClassifier — dedup gates read off a parsed body")
 struct DedupGateClassifierTests {
-
-    private func gate(_ source: String) throws -> DedupGateShape? {
-        let summaries = FunctionScanner.scanCorpus(source: source, file: "S.swift").summaries
-        return try #require(summaries.first).bodySignals.dedupGateShape
-    }
-
-    private func buildsKey(_ source: String) throws -> Bool {
-        let summaries = FunctionScanner.scanCorpus(source: source, file: "S.swift").summaries
-        return try #require(summaries.first).bodySignals.buildsIdempotencyKey
-    }
 
     @Test("Key-from-entity builder is detected (StripeWebhookHandler, M6)")
     func keyFromEntityBuilderDetected() throws {
@@ -191,6 +194,61 @@ struct DedupGateClassifierTests {
         """)
         #expect(shape == .fetchThenInsert)
     }
+
+    @Test("An ungated accumulator before the gate vetoes it (M8)")
+    func ungatedAccumulatorBeforeGateVetoes() throws {
+        // `self.callCount += 1` runs on every call, before the gate — a replay
+        // grows it, so the handler is not idempotent despite the gate.
+        let shape = try gate("""
+        struct H {
+            func handle(_ order: Order) async throws {
+                self.callCount += 1
+                if await dedup.hasHandled(order.id) { return }
+                try await repo.insert(order)
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
+    @Test("An accumulator AFTER the gate is fine — it is dominated (M8 not over-strict)")
+    func accumulatorAfterGateIsFine() throws {
+        // `self.processed.append(order)` runs only when the gate did not fire, so
+        // it is the guarded effect — the gate dominates it.
+        let shape = try gate("""
+        struct H {
+            func handle(_ order: Order) async throws {
+                if await dedup.hasHandled(order.id) { return }
+                try await repo.insert(order)
+                self.processed.append(order)
+            }
+        }
+        """)
+        #expect(shape == .earlyReturnDedup(keyRoot: "order"))
+    }
+
+    @Test("A local accumulator before the gate does not false-veto (M8 member-scoped)")
+    func localAccumulatorDoesNotVeto() throws {
+        // `total += line` on a LOCAL resets each call — not an observable effect,
+        // so it must not veto (member-scoping: only stored mutations count).
+        let shape = try gate("""
+        struct H {
+            func handle(_ order: Order, lines: [Int]) async throws {
+                var total = 0
+                for line in lines { total += line }
+                if await dedup.hasHandled(order.id) { return }
+                try await repo.insert(order, total: total)
+            }
+        }
+        """)
+        #expect(shape == .earlyReturnDedup(keyRoot: "order"))
+    }
+}
+
+/// The precision refinements and vetoes — the "NOT a gate" half, split out to keep
+/// each suite under the type-body length cap.
+@Suite("DedupGateClassifier — precision refinements & vetoes")
+struct DedupGatePrecisionTests {
 
     @Test("Reject-on-duplicate by throwing is NOT a gate (MacCloud uploadFile)")
     func rejectOnDuplicateByThrowingIsNotAGate() throws {
