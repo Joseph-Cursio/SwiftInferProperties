@@ -161,6 +161,10 @@ public enum ReplayIdempotenceTemplate {
         case let .stateFlagGuard(flag):
             let named = flag.map { " on `\($0)`" } ?? ""
             description = "an early return on an already-handled state flag\(named)"
+
+        case let .guardDedup(verb):
+            let named = verb.map { " `\($0)`" } ?? ""
+            description = "a guard-form claim-once check\(named)"
         }
         return Signal(
             kind: .replayDedupGate,
