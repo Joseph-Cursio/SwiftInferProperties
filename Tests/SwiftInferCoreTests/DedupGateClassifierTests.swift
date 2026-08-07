@@ -141,6 +141,66 @@ struct DedupGateClassifierTests {
         #expect(shape == nil)
     }
 
+    @Test("Guard-form claim-once dedup is detected (penny canGiveCoin, M5)")
+    func guardClaimOnceDetected() throws {
+        // penny-bot ReactionHandler.handle: `guard await cache.canGiveCoin(…) else
+        // { return }` before awarding — the guard-form dedup M4's sweep found missed.
+        let shape = try gate("""
+        struct H {
+            func handle() async throws {
+                guard let member = event.member,
+                      await cache.canGiveCoin(sender: member.id, message: messageId)
+                else { return }
+                try await coinService.post(to: member.id)
+            }
+        }
+        """)
+        #expect(shape == .guardDedup(verb: "canGiveCoin"))
+    }
+
+    @Test("Guard on a negated dedup check is detected (M5)")
+    func guardNegatedDedupDetected() throws {
+        let shape = try gate("""
+        struct H {
+            func handle(_ key: Key) async throws {
+                guard !dedup.hasHandled(key) else { return }
+                try await repo.insert(key)
+            }
+        }
+        """)
+        #expect(shape == .guardDedup(verb: "hasHandled"))
+    }
+
+    @Test("A permission guard that throws is NOT a gate (precision, M5)")
+    func permissionGuardThatThrowsIsNotAGate() throws {
+        // `guard file.canWrite(user) else { throw }` — authorisation, not dedup:
+        // the verb is a permission verb AND the else throws rather than returns.
+        let shape = try gate("""
+        struct H {
+            func update(file: File, user: User) async throws {
+                guard file.canWrite(user) else { throw Abort(.forbidden) }
+                try await file.save(on: db)
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
+    @Test("A permission guard that returns is still NOT a gate (verb, M5)")
+    func permissionGuardThatReturnsIsNotAGate() throws {
+        // `guard canAccess else { return }` — `canAccess` is authorisation, not a
+        // claim-once capability, so it is excluded from the capability prefixes.
+        let shape = try gate("""
+        struct H {
+            func handle(user: User) async throws {
+                guard user.canAccess else { return }
+                try await repo.insert(user)
+            }
+        }
+        """)
+        #expect(shape == nil)
+    }
+
     @Test("A plain validation guard is not a dedup gate (precision)")
     func validationGuardIsNotADedupGate() throws {
         // `if x < 0 { return 0 }` returns early but names no dedup/fetch verb.
