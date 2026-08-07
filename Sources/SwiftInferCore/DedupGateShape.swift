@@ -229,7 +229,7 @@ public enum DedupGateClassifier {
     /// The `IfExprSyntax` a top-level statement is, if any. A statement-position
     /// `if` is wrapped in an `ExpressionStmtSyntax` under `.stmt`; the `.expr`
     /// arm covers the value-position spelling too, so both are handled.
-    private static func ifExpr(from item: CodeBlockItemSyntax) -> IfExprSyntax? {
+    static func ifExpr(from item: CodeBlockItemSyntax) -> IfExprSyntax? {
         switch item.item {
         case let .expr(expression):
             return expression.as(IfExprSyntax.self)
