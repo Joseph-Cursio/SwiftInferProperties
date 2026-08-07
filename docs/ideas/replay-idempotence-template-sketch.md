@@ -24,7 +24,8 @@ section, so the plan stays legible next to what it became.
 | Emit a filled-in `assertIdempotentEffects` | Emits a **`.todo` scaffold** that fails via `Issue.record` until completed — the effect recorder can't be synthesized, as §4 anticipated. | M1 |
 | `.possible` band, promotion gated on external evidence | As-designed; still `.possible`. | all |
 | Effect requirement: an effect must *exist* (M4) | **Sharpened to effect-*dominance* (M7):** the effect must sit at or after the gate, so an effect that ran *before* a too-late gate no longer qualifies (`insert(order); if hasHandled { return }` is now rejected). Left corpus results unchanged (all genuine gates dominate their effect); closes a latent false-positive class. | M7 |
-| **Deferred, still open** | `mutatingAccumulatorVeto`; and the irreducible floor — a dedup whose only tell is a domain verb no capability prefix reaches, with no `guard`/`if`/flag/fetch/key-builder shape to corroborate. | — |
+| `mutatingAccumulatorVeto` (one of the four proposed vetoes) | **Shipped (M8):** a member compound-assign (`self.count += 1`) or member `.append` in the statements *before* the gate vetoes it — an ungated accumulation runs on every replay, so the handler is not idempotent despite the gate. Member-scoped (a local accumulator resets each call and doesn't count). Corpus unchanged; closes a latent false-positive class M7's call-based dominance can't see. | M8 |
+| **Deferred, still open** | The irreducible floor — a dedup whose only tell is a domain verb no capability prefix reaches, with no `guard`/`if`/flag/fetch/key-builder shape to corroborate. | — |
 
 **Validation went further than the plan's single-oracle §6.** MacCloud_server (M3) caught two real
 handlers; an 8-repo **public trial corpus** (M4) then caught the template *over-firing* (~10/12 false
@@ -292,5 +293,13 @@ bugs *before* looking at the fixes. That is the same posture that licensed the s
 - **M7** — sharpened M4's effect requirement to effect-**dominance**: the effect must sit at or after
   the gate. Rejects `insert(order); if hasHandled { return }` (effect before a too-late gate); left all
   corpus + MacCloud hits unchanged (every genuine gate already dominates its effect).
+- **M8** — the `mutatingAccumulatorVeto`: a member `+=`/`.append` *before* the gate (an ungated
+  accumulation that runs on every replay) vetoes it. Member-scoped so a local accumulator doesn't
+  false-veto; corpus unchanged, closes the accumulation false-positive dominance can't see.
 
 The band stays `.possible`; promotion past it remains gated on external evidence, never the fixtures.
+
+Three of the sketch's four proposed vetoes are now built as classifier checks —
+`declaredNonIdempotentVeto` (M1), the effect requirement/dominance that subsumes `unkeyedEffectVeto`
+(M4/M7), and `mutatingAccumulatorVeto` (M8); `nonStableKeyVeto` remains M1's soft non-determinism
+counter. The only genuinely open item is the irreducible vocabulary floor.
