@@ -3,7 +3,7 @@ import SwiftInferCore
 import Testing
 
 /// Result-builder plumbing is vetoed from every template —
-/// `docs/parsing-catalog-gap.md` §8.
+/// `docs/measurements/parsing-catalog-gap.md` §8.
 ///
 /// Every `@resultBuilder` method has the shape `(Component) -> Component`, so
 /// type-symmetry pairing turns one builder into a clique. Measured on

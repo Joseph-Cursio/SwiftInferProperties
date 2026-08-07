@@ -5,7 +5,7 @@ import SwiftSyntax
 ///
 /// Split out of `FunctionScanner.swift` on 2026-08-06, when documenting the enclosing-type fix
 /// pushed that file past its 400-line cap. The unit moved rather than the reasoning being trimmed,
-/// following the rule `docs/signal-kind-rationales.md` states for `Signal+Kind`: every comment here
+/// following the rule `docs/design/signal-kind-rationales.md` states for `Signal+Kind`: every comment here
 /// records a measurement or a corpus finding, and several are the only surviving record of why a
 /// gate exists.
 ///

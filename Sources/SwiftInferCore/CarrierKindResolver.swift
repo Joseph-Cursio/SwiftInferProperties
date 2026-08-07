@@ -27,7 +27,7 @@ public enum CarrierKind: Sendable, Equatable {
     case referenceType
     /// `kind == .struct || .enum` but at least one stored member resolves
     /// to a reference type or a closure type, breaking the value-semantic
-    /// guarantee per `docs/valuesemantic-build-plan.md` §2.1 bug shapes 1
+    /// guarantee per `docs/plans/valuesemantic-build-plan.md` §2.1 bug shapes 1
     /// (reference-container leak) + 3 (closure capturing shared state).
     /// Templates emit no signal in this case — conservative.
     case mixed
@@ -148,7 +148,7 @@ public struct CarrierKindResolver: Sendable {
 
     private func classifyMembers(_ allStoredMembers: [StoredMember], depth: Int) -> CarrierKind {
         // Closure-typed stored member → reference-leaking risk per
-        // `docs/valuesemantic-build-plan.md` §2.1 bug shape 3.
+        // `docs/plans/valuesemantic-build-plan.md` §2.1 bug shape 3.
         // Closures capture by reference; struct copies share the closure's
         // captured `var` state.
         if allStoredMembers.contains(where: { Self.isClosureType($0.typeName) }) {

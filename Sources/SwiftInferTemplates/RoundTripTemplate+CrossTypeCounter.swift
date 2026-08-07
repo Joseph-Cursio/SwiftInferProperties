@@ -18,7 +18,7 @@ extension RoundTripTemplate {
     /// member mismatches.
     ///
     /// The counter still earns its keep — re-measured for
-    /// `docs/parsing-catalog-gap.md` §3b, it suppresses 1,380 cross-type
+    /// `docs/measurements/parsing-catalog-gap.md` §3b, it suppresses 1,380 cross-type
     /// pairs across the reference corpora and all but a handful are noise.
     /// Exemption 4 carves out the one shape that is not: a codec whose two
     /// halves live in a `Loader`/`Writer`-style pair of types, which is how

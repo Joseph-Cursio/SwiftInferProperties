@@ -1,5 +1,8 @@
 # Tutorial — Surface your first property suggestion
 
+> **Status:** `reference` · **As of:** 2026-05-07
+
+
 > **Audience.** A Swift developer who has never used SwiftInferProperties. By the end of this page you will have surfaced, accepted, and run an inferred property test against your own code.
 >
 > **Time.** ~15 minutes.

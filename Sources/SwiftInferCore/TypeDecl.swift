@@ -128,7 +128,7 @@ public struct TypeDecl: Sendable, Equatable {
     ///
     /// Measured on this repo before the change: 218 shape entries, 13 of which
     /// carried more than one source declaration. See
-    /// `docs/roadtest-self-dogfood.md` §11.1.
+    /// `docs/measurements/roadtest-self-dogfood.md` §11.1.
     ///
     /// `name` is deliberately kept bare — `containingTypeName` matching, template
     /// vocabularies, and identity hashes all key on the simple name, and

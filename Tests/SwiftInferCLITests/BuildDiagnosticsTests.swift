@@ -12,7 +12,7 @@ import Testing
 ///
 /// That is why the `SeedFocus` idempotence entry cost three investigations and
 /// read as three different problems — a SIGTRAP, then a masked build failure,
-/// then a closure-inference error (`docs/roadtest-self-dogfood.md` §13.4). The
+/// then a closure-inference error (`docs/measurements/roadtest-self-dogfood.md` §13.4). The
 /// evidence naming the cause was captured and then thrown away at the last
 /// step. A diagnostic that discards the diagnosis is worse than none, because
 /// "(no stderr captured)" reads as *the compiler said nothing*.

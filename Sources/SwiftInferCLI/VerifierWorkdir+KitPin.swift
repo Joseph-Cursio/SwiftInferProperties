@@ -25,7 +25,7 @@ extension VerifierWorkdir {
     /// `from: "3.17.0"`. The self-dogfood
     /// road test found it the only way it could be found — by running a survey
     /// against a corpus that is itself a SwiftPropertyLaws consumer. See
-    /// `docs/roadtest-self-dogfood.md` §9.
+    /// `docs/measurements/roadtest-self-dogfood.md` §9.
     static let swiftPropertyLawsRequirement = "3.26.0"
 
     static var swiftPropertyLawsDependencyLine: String {

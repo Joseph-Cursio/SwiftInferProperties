@@ -3,7 +3,7 @@ import PropertyLawKit
 import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md`) — the largest group
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md`) — the largest group
 // `swift-infer discover --target SwiftInferCore` surfaced: seven
 // `codable-round-trip` candidates at default tier, every one of them a type with
 // a **hand-written** `encode(to:)` / `init(from:)` pair.

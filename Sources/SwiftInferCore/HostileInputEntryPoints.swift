@@ -3,7 +3,7 @@
 ///
 /// ## Where this came from
 ///
-/// `docs/parsing-catalog-gap.md` §6's follow-on. The starting question was
+/// `docs/measurements/parsing-catalog-gap.md` §6's follow-on. The starting question was
 /// whether to detect libFuzzer harnesses (`LLVMFuzzerTestOneInput`). Measured
 /// answer: **no**. Across every repo in reach there are exactly two Swift
 /// harness definitions, both compiler test fixtures — one deliberately crashes

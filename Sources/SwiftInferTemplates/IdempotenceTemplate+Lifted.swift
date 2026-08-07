@@ -224,7 +224,7 @@ extension IdempotenceTemplate {
         ) {
             signals.append(iteratorVeto)
         } else if let streamVeto = streamConsumptionVeto(forLifted: lifted) {
-            // Stream-consumption veto. `docs/parsing-catalog-gap.md` §2:
+            // Stream-consumption veto. `docs/measurements/parsing-catalog-gap.md` §2:
             // 53/53 reject on SwiftParser's Lexer.Cursor / Parser.Lookahead /
             // TokenConsumer lifted-idempotence picks, none of which conform
             // to IteratorProtocol. Generalizes V1.21.A from "conforms to

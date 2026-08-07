@@ -1,5 +1,8 @@
 # Product Requirements Document
 
+> **Status:** `reference` · **As of:** 2026-07-07
+
+
 ## SwiftInferProperties v2.0: Interaction-Invariant Inference for SwiftUI State Systems
 
 **Version:** 2.0 (draft)

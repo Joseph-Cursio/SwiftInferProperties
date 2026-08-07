@@ -138,7 +138,7 @@ Three rules, in the order the two corpora established them:
 > against a *membership* view rather than a `Sequence` view: `(a.union(b)).contains(x) ==
 > (a.contains(x) || b.contains(x))`, keyed on a curated set operation plus an element-typed
 > `contains`. It was driven by the swift.org `loops` study, where `RangeSet` states five such
-> laws by hand (`docs/swiftorg-property-test-study-findings.md` §1.25), and it measures 6 rows
+> laws by hand (`docs/measurements/swiftorg-property-test-study-findings.md` §1.25), and it measures 6 rows
 > on `stdlib/public/core`.
 >
 > **It does not close this recommendation.** The three bugs above are ORDER and REPRESENTATION

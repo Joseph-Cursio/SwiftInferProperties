@@ -14,7 +14,7 @@ import SwiftInferCore
 /// indistinguishable, at the call site, from a table that has considered the verb and
 /// decided the kit does not cover it. Keeping it in one small file with this note is
 /// the cheapest guard against the next verb being added to `setCombinationVerbs`
-/// without a matching arm here. See `docs/protocol-coverage-law-drift.md`.
+/// without a matching arm here. See `docs/measurements/protocol-coverage-law-drift.md`.
 extension CommutativityTemplate {
 
     /// V1.5.2 — op-class → KnownProperty candidate set for the
@@ -37,7 +37,7 @@ extension CommutativityTemplate {
         // `setCombinationVerbs` proposed commutativity on them, so the kit's
         // `intersectionCommutativity` / `symmetricDifferenceCommutativity` were
         // double-reported. Measured on a two-carrier probe: both surfaced on the
-        // concrete AND the `Self` spelling. `docs/protocol-coverage-law-drift.md` §3.
+        // concrete AND the `Self` spelling. `docs/measurements/protocol-coverage-law-drift.md` §3.
         case "intersection", "formIntersection", "intersect":
             return [.setIntersectionCommutative]
 

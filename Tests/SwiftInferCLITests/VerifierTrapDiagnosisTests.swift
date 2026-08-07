@@ -34,7 +34,7 @@ import Testing
 ///   2. The stub's `print` is block-buffered when its output is redirected, so
 ///      the trial number and the input were flushed into oblivion by the trap.
 ///      Diagnosing this cost two attempts for exactly that reason
-///      (`docs/roadtest-self-dogfood.md` §13.4).
+///      (`docs/measurements/roadtest-self-dogfood.md` §13.4).
 @Suite("A trapped verifier run reports what trapped and why")
 struct VerifierTrapDiagnosisTests {
 

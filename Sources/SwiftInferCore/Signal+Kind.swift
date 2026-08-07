@@ -181,13 +181,13 @@ extension Signal {
         /// no ordering name to corroborate that the relation is meant to *order* its
         /// operands. Measured 11 of 22 false on this repo, three already shipping at
         /// `Likely`; the sibling `equivalence-relation` template makes the weaker claim and
-        /// was already name-gated. Full rationale: `docs/signal-kind-rationales.md`.
+        /// was already name-gated. Full rationale: `docs/design/signal-kind-rationales.md`.
         case unsupportedComparatorShape
         /// A round-trip pair that is `T -> T` × `T -> T` with **nothing but the shape** —
         /// no curated name, no docstring, no `@Discoverable` group, no canonical inverse.
         /// Measured 432 of 438 on this repo, and every one sampled was false. The counter is
         /// not "same type is suspicious" but "same type AND nobody has said otherwise", and
-        /// four channels can vouch. Full rationale: `docs/signal-kind-rationales.md`.
+        /// four channels can vouch. Full rationale: `docs/design/signal-kind-rationales.md`.
         case endomorphismRoundTripPair
         /// V1.4.3 — fires on candidates whose parameter type is a curated
         /// IEEE 754 floating-point-storage type (Float / Double / Float16 /
@@ -205,7 +205,7 @@ extension Signal {
         /// A `RoundTripTemplate` pair whose two halves live on **different** types.
         /// Weight `-25`, scored-then-filtered. Full rationale, including the 673-hit
         /// swift-algorithms measurement that motivated it:
-        /// `docs/signal-kind-rationales.md`.
+        /// `docs/design/signal-kind-rationales.md`.
         case crossTypeRoundTripPair
         /// V1.10.1 — fires on `IdempotenceTemplate` candidates whose first
         /// parameter argument label is in a curated direction-label set
@@ -246,7 +246,7 @@ extension Signal {
         /// `.valueSemantic`), so the algebraic property is well-defined under
         /// aliasing. `+5`, deliberately smaller than `referenceTypeCarrier`'s `-10`.
         /// Full rationale, including why mixed carriers stay silent:
-        /// `docs/signal-kind-rationales.md`.
+        /// `docs/design/signal-kind-rationales.md`.
         case valueSemanticCarrier
         /// V1.19.B — fires on suggestions emitted against a
         /// `LiftedTransformation` (a mutating method exposed in its
@@ -304,7 +304,7 @@ extension Signal {
         /// this ground — `git show 31a347a:docs/calibration-cycle-63-findings.md`.
         case verifyDisproven
         /// The kit measured this carrier's `==` to be broken, so any law
-        /// stated with it cannot be checked. See `docs/signal-kind-rationales.md`
+        /// stated with it cannot be checked. See `docs/design/signal-kind-rationales.md`
         /// — the rationale is long and the file is at its cap.
         case kitEqualityOracleRefuted
         /// V1.5.1 — fires when the candidate's primary type already
@@ -338,7 +338,7 @@ extension Signal {
         /// trivially, and where it does not the variant traps — and a trap is not a
         /// refutation. Measured zero true positives on every corpus tried; `stdlib` produced
         /// 57 Likely-tier claims, all of this class. Scored-then-filtered so `metrics` can
-        /// still count it. Full rationale: `docs/signal-kind-rationales.md`.
+        /// still count it. Full rationale: `docs/design/signal-kind-rationales.md`.
         case preconditionElidingVariant
         /// A sequence-view law on a carrier whose `==` already IS that comparison, so it
         /// restates its own result expression. Penalty not veto — see `EqualityBodyShape`.

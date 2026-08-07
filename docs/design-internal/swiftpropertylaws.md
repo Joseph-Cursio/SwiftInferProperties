@@ -1,5 +1,8 @@
 # SwiftPropertyLaws — the law kit
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 **Repo:** `~/xcode_projects/SwiftPropertyLaws` (`github.com/Joseph-Cursio/SwiftPropertyLaws`) ·
 **Book home:** Chapters 13–14, Appendix A; law families surface in nearly every chapter.
 

@@ -3,7 +3,7 @@ import PropertyLawKit
 import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md`) — the two precision
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md`) — the two precision
 // decisions `CLAUDE.md` lists under "follow rather than re-litigate," executed
 // rather than asserted.
 //

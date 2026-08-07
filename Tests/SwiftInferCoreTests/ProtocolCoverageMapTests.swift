@@ -82,7 +82,7 @@ struct ProtocolCoverageMapTests {
     /// `setUnionAssociative` was removed: the kit ships no set-associativity law, so the
     /// entry claimed coverage that does not exist. Three were added for laws the kit DOES
     /// run and the map had not claimed, each of which `discover` was double-reporting.
-    /// `docs/protocol-coverage-law-drift.md`.
+    /// `docs/measurements/protocol-coverage-law-drift.md`.
     @Test("SetAlgebra covers union/intersection laws and NOT Equatable")
     func setAlgebraCoverage() {
         #expect(ProtocolCoverageMap.covers("SetAlgebra", .setUnionCommutative))
@@ -280,7 +280,7 @@ struct ProtocolCoverageMapTests {
         //
         // 25 → 27 on 2026-08-02, and this is the first movement that REMOVES a case.
         // A law-by-law audit of `ProtocolCoverageMap` against the kit (kit `4a2dada`) found
-        // 13 of 56 `(key, law)` claims false — `docs/protocol-coverage-law-drift.md`:
+        // 13 of 56 `(key, law)` claims false — `docs/measurements/protocol-coverage-law-drift.md`:
         //
         //   −1  `setUnionAssociative`. The kit ships no set-associativity law, for `union`
         //       or any other operand, so the veto suppressed a true refutable law citing a

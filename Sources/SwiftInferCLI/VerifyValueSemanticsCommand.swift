@@ -8,7 +8,7 @@ extension SwiftInferCommand {
     /// candidates under `Sources/<target>/` and verify each against the kit's
     /// copy-mutate-compare law, reporting **confirmed leaks with a minimal
     /// reproduction**. Slice 5a (self-contained packaging); see
-    /// `docs/valuesemantic-build-plan.md` §11.
+    /// `docs/plans/valuesemantic-build-plan.md` §11.
     public struct VerifyValueSemantics: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(

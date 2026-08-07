@@ -4,7 +4,7 @@ import PropertyLawKit
 @testable import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §11.3) — the guard for
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §11.3) — the guard for
 // the failure mode that bit three times.
 //
 // `IndexedTypeShape` is the persisted mirror of the kit's `TypeShape`, and its

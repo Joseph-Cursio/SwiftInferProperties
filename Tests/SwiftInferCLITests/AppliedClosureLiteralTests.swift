@@ -15,7 +15,7 @@ import Testing
 /// and the whole verify run comes back `measured-error: build-failed`.
 ///
 /// This is the third distinct failure the same `SeedFocus` idempotence entry
-/// has produced (`docs/roadtest-self-dogfood.md` §13.4): first a SIGTRAP, then
+/// has produced (`docs/measurements/roadtest-self-dogfood.md` §13.4): first a SIGTRAP, then
 /// a masked build failure, now this. Each one read as a different kind of
 /// problem, and only the last is the emitter's own.
 ///

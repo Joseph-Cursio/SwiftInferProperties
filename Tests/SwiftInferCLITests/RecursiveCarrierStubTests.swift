@@ -5,7 +5,7 @@ import Testing
 
 /// A **recursive carrier** now emits a runnable stub.
 ///
-/// `docs/parsing-catalog-gap.md` §7(a) measured the dead end: `normalize(Node)
+/// `docs/measurements/parsing-catalog-gap.md` §7(a) measured the dead end: `normalize(Node)
 /// -> Node` over `struct Node { var kids: [Node] }` was proposed at **Strong**
 /// tier with `Generator: .todo`. The tool made its most confident claim about a
 /// law and then could not run it — the worst combination available, because a

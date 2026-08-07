@@ -1,7 +1,7 @@
 import Foundation
 
 /// Corpus-level discovery seam for `StatefulRole` (Phase 1 of
-/// `docs/stateful-role-discoverer-design.md`).
+/// `docs/design/stateful-role-discoverer-design.md`).
 ///
 /// ## Why corpus-level, not per-declaration
 ///

@@ -3,7 +3,7 @@ import SwiftInferCore
 import Testing
 
 /// Exemption 4 on `RoundTripTemplate`'s cross-type counter —
-/// `docs/parsing-catalog-gap.md` §3b.
+/// `docs/measurements/parsing-catalog-gap.md` §3b.
 ///
 /// The counter subtracts 25 from any pair whose halves live in different
 /// types, and it earns that: re-measured across the reference corpora it

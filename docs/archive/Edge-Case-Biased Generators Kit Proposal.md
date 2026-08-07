@@ -1,5 +1,8 @@
 # Edge-Case-Biased Generators Kit Proposal
 
+> **Status:** `shipped` · **As of:** 2026-07-21
+
+
 **Status:** ✅ **Kit-side landed in `SwiftPropertyLaws v2.1.0`** (commit `ba19ab7`, 2026-05-11). Downstream consumption now queued for SwiftInferProperties v1.42 — see §8 below.
 **Target (now landed):** SwiftPropertyLaws v2.1.0 — opt-in `PropertyLawComplex` library product. Main `PropertyLawKit` line keeps a zero `swift-numerics` footprint.
 **Date:** 2026-05-11

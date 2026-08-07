@@ -2,7 +2,7 @@ import Foundation
 @testable import SwiftInferCLI
 import Testing
 
-/// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §11.2) — the bound
+/// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §11.2) — the bound
 /// that turns a hung verifier into a verdict.
 ///
 /// A generated property can fail to terminate. The strategist's

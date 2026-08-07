@@ -55,7 +55,7 @@ struct TCAExamplesCorpusDiscoveryTests {
         #expect(byFamily[.biconditional] == 1)
         #expect(byFamily[.cardinality] == 1)
         // Determinism now surfaces once per reducer — the TCA determinism work
-        // (docs/tca-determinism-verify-scope.md) closed the gap this test used
+        // (docs/plans/tca-determinism-verify-scope.md) closed the gap this test used
         // to pin at 0. One per discovered reducer (dependency-pinned at verify).
         #expect(byFamily[.determinism] == candidates.count)
     }

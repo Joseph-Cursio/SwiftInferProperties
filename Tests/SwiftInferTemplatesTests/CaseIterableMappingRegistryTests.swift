@@ -14,7 +14,7 @@ import Testing
 ///
 /// That is precisely the failure this repo has already had once: `filter-subset`
 /// shipped unit-tested but unwired, along with three siblings (see
-/// `docs/roadtest-swiftlintrulestudio.md`). These tests are the equivalent guard
+/// `docs/measurements/roadtest-swiftlintrulestudio.md`). These tests are the equivalent guard
 /// for this family, and they go through `TypeDecl` rather than `TypeShape`
 /// because the real pipeline builds the shapes itself — so they also cover the
 /// `TypeShapeBuilder` fold that a hand-made `TypeShape` would bypass.

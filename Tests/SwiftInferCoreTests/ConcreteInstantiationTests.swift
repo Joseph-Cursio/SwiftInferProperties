@@ -5,7 +5,7 @@ import Testing
 /// Neither typechecks — `generic parameter 'Element' could not be inferred` — so no generic
 /// carrier could produce a compiling suite whether or not a generator existed. Measured on
 /// swift-collections `899809d3` and on the 2022 `876177db^` tree; see
-/// `docs/kit-suite-backtest-plan.md` §3b and §Arm 1.
+/// `docs/plans/kit-suite-backtest-plan.md` §3b and §Arm 1.
 struct ConcreteInstantiationTests {
 
     private func parameter(_ name: String, _ constraint: String?) -> TypeDecl.GenericParameter {

@@ -3,7 +3,7 @@ import SwiftInferCore
 import Testing
 
 /// The erased self-form arm of `IdempotenceTemplate.typeSymmetrySignal` —
-/// `docs/parsing-catalog-gap.md` §4/§5.
+/// `docs/measurements/parsing-catalog-gap.md` §4/§5.
 ///
 /// swift-syntax's formatter is
 /// `extension SyntaxProtocol { func formatted(using: BasicFormat = …) -> Syntax }`,

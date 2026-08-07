@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stratified, seeded sampler for the swift.org property-style-test study.
 
-`docs/swiftorg-property-test-study-scope.md` requires samples that are "stratified,
+`docs/plans/swiftorg-property-test-study-scope.md` requires samples that are "stratified,
 sampled not cherry-picked". That is only a checkable claim if the sampling is
 **reproducible**, so this emits a manifest carrying the seed, the corpus SHA, the
 population definition, and every selected site. Same seed + same SHA -> same sample,
@@ -122,7 +122,7 @@ def main() -> int:
              "established that this MUST be the stdlib test dirs: 91%% of an unscoped "
              "count is OUT-OF-POPULATION (loops 95%%, lit-checknot 100%%) — real compiler "
              "tests sharing our syntax, not spurious matches. See "
-             "docs/swiftorg-property-test-study-findings.md 1.1.",
+             "docs/measurements/swiftorg-property-test-study-findings.md 1.1.",
     )
     parser.add_argument("--out", default="-")
     args = parser.parse_args()

@@ -1,5 +1,8 @@
 # Idea: mutation-driven property quality — an operator layer over the corpus harness
 
+> **Status:** `proposed` · **As of:** 2026-07-26
+
+
 ## Status
 
 **Idea only. Design-level.** A *producer* bolted in front of tooling that already

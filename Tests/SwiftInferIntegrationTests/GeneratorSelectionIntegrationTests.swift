@@ -70,7 +70,7 @@ struct GeneratorSelectionIntegrationTests {
     /// v3.19.0. That recipe emits `.compactMap { StatusCode(rawValue: $0) }` over
     /// `Gen<Int>.int()` — the full `Int` range filtered for the two values that
     /// name a case — which does not terminate in practice. See
-    /// `docs/roadtest-self-dogfood.md` §11.2.1.
+    /// `docs/measurements/roadtest-self-dogfood.md` §11.2.1.
     @Test("derivedEnumCases — raw enum with visible cases enumerates them")
     func derivedRawRepresentableGolden() throws {
         let directory = try writeFixture(named: "GenSelectRawRep", file: "Source.swift", contents: """

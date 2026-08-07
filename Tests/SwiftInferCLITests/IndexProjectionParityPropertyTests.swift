@@ -4,7 +4,7 @@ import PropertyLawKit
 import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md` §11.3.2) — extending
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §11.3.2) — extending
 // the parity guard from the `TypeShape` mirror to the rest of the persisted
 // index.
 //

@@ -108,13 +108,13 @@ extension SwiftInferCommand {
                 // PROTOTYPE — also surface SwiftSyntax lint-rule visitor
                 // carriers (issue-accumulating `SyntaxVisitor` subclasses).
                 // Recognition only (slice 1): no invariant is emitted — see
-                // docs/rule-visitor-carrier-scoping.md.
+                // docs/design/rule-visitor-carrier-scoping.md.
                 let ruleVisitors = try RuleVisitorDiscoverer.discover(directory: directory)
                 // PROTOTYPE — also surface value-semantics carriers: structs
                 // holding reference-backed storage (a closure / mutable
                 // container / corpus class), through which a "value" can leak
                 // shared mutable state. Recognition only (slice 2): no invariant
-                // is emitted yet — see docs/valuesemantic-build-plan.md.
+                // is emitted yet — see docs/plans/valuesemantic-build-plan.md.
                 let valueSemantics = try ValueSemanticDiscoverer.discover(directory: directory)
                 // PROTOTYPE — also surface defensive-copy carriers: classes that
                 // vend a copy()/clone() (Ch. 9 §9.3). Recognition only.
@@ -126,7 +126,7 @@ extension SwiftInferCommand {
                 // (`*Presenter` / `*Interactor`): a presenter is a view model
                 // minus @Observable — stored state + mutating methods + injected
                 // protocol collaborators (one of which is the assertable output
-                // sink). See docs/stateful-role-discoverer-design.md.
+                // sink). See docs/design/stateful-role-discoverer-design.md.
                 let conventionRoles = try ConventionRoleDiscoverer.discover(directory: directory)
                 return renderSummary(candidates: candidates)
                     + "\n" + renderViewModelSummary(viewModels)
@@ -266,7 +266,7 @@ extension SwiftInferCommand {
         /// only (slice 1) — no candidate invariant is surfaced, by design:
         /// the carrier's generic law (detection determinism) is near-always
         /// true and would flood `.possible`. See
-        /// `docs/rule-visitor-carrier-scoping.md`.
+        /// `docs/design/rule-visitor-carrier-scoping.md`.
         static func renderRuleVisitorSummary(_ candidates: [RuleVisitorCandidate]) -> String {
             if candidates.isEmpty {
                 return "swift-infer discover-reducers: no SwiftSyntax lint-rule "
@@ -308,7 +308,7 @@ extension SwiftInferCommand {
         /// block per struct: location + Equatability note, the reference-backed
         /// members (with why each qualifies), and the mutation surface.
         /// Recognition only (slice 2) — no invariant is emitted yet. See
-        /// docs/valuesemantic-build-plan.md.
+        /// docs/plans/valuesemantic-build-plan.md.
         static func renderValueSemanticSummary(_ candidates: [ValueSemanticCandidate]) -> String {
             if candidates.isEmpty {
                 return "swift-infer discover-reducers: no value-semantics "

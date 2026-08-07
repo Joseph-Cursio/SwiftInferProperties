@@ -21,7 +21,7 @@ import Foundation
 /// true on a pure AST walk and would flood the `.possible` tier across every
 /// visitor (the Daikon trap the PRD warns against). Its one high-value law —
 /// no false positive on pattern-free input — is per-rule, not generic, and
-/// is TestLifter territory. See `docs/rule-visitor-carrier-scoping.md` for
+/// is TestLifter territory. See `docs/design/rule-visitor-carrier-scoping.md` for
 /// the full fork analysis and why verify is shelved.
 public struct RuleVisitorCandidate: Sendable, Equatable {
 

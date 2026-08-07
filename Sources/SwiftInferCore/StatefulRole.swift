@@ -6,7 +6,7 @@ import SwiftEffectInference
 /// to drive and which **collaborators** to fake.
 ///
 /// Phase 0 of the `StatefulRoleDiscoverer` design
-/// (`docs/stateful-role-discoverer-design.md`). This generalizes — and is
+/// (`docs/design/stateful-role-discoverer-design.md`). This generalizes — and is
 /// adapter-compatible with — the two existing candidate types:
 ///
 /// - `ReducerCandidate` (TCA / Elm / ReSwift / Mobius / Workflow), and

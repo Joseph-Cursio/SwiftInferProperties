@@ -4,7 +4,7 @@ import SwiftInferCore
 /// the one refutable law it owes: **subset**, `Set(result) ⊆ Set(haystack)`.
 ///
 /// This is the application-shape gap the SwiftLintRuleStudio road-test surfaced
-/// (`docs/roadtest-swiftlintrulestudio.md`): a filter like
+/// (`docs/measurements/roadtest-swiftlintrulestudio.md`): a filter like
 /// `filterViolations([Violation], …) -> [Violation]` matched no template, so the
 /// pipeline fell back to the `f(x) == f(x)` determinism tautology. A filter owes
 /// something better and refutable — it returns only elements it was given.

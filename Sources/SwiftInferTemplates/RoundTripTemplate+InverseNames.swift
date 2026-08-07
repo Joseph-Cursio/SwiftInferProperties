@@ -15,7 +15,7 @@ extension RoundTripTemplate {
     /// Shared with `InversePairTemplate` (at weight 10 there rather than 40),
     /// so an addition here widens both templates.
     ///
-    /// **The text↔structure block is the `docs/parsing-catalog-gap.md` §3a
+    /// **The text↔structure block is the `docs/measurements/parsing-catalog-gap.md` §3a
     /// closure.** Before it, the list held exactly one parse-ish entry —
     /// `parse`/`format` — and every other spelling of the same law scored 35,
     /// which is `Possible`, which is hidden on a default run. Measured on

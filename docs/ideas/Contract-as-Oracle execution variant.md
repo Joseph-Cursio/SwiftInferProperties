@@ -1,5 +1,8 @@
 # Idea: Contract-as-Oracle — the execution variant (AutoTest-style)
 
+> **Status:** `proposed` · **As of:** 2026-07-21
+
+
 ## Status
 
 **Idea only. More aggressive than, and a sibling to,

@@ -24,7 +24,7 @@ import SwiftSyntax
 /// table keyed by type name before assembling candidates.
 ///
 /// **Slice 1 is recognition only** — see `RuleVisitorCandidate` and
-/// `docs/rule-visitor-carrier-scoping.md`. No invariant is emitted: the
+/// `docs/design/rule-visitor-carrier-scoping.md`. No invariant is emitted: the
 /// carrier's generic law (determinism) is near-always true and would flood
 /// `.possible`; its high-value law (no false positive on clean input) is
 /// per-rule (TestLifter territory), not a generic property.

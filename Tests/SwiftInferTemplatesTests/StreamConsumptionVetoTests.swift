@@ -4,7 +4,7 @@ import SwiftInferCore
 import Testing
 
 /// Stream-consumption veto on idempotence-lifted. Closes
-/// `docs/parsing-catalog-gap.md` §2: `discover` on `swiftlang/swift-syntax`
+/// `docs/measurements/parsing-catalog-gap.md` §2: `discover` on `swiftlang/swift-syntax`
 /// @ `9d6e738` `Sources/SwiftParser` returned 98 default-tier suggestions, of
 /// which 53 were lifted idempotence at `Likely` on cursor-consuming methods —
 /// every one false, and none on a carrier conforming to `IteratorProtocol`.

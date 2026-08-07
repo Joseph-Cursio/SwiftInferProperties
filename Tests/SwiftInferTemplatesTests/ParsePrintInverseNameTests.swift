@@ -3,7 +3,7 @@ import SwiftInferCore
 import Testing
 
 /// The text↔structure widening of `RoundTripTemplate.curatedInversePairs` —
-/// `docs/parsing-catalog-gap.md` §3a.
+/// `docs/measurements/parsing-catalog-gap.md` §3a.
 ///
 /// Before it, the list held exactly one parse-ish entry (`parse`/`format`) and
 /// every other spelling of the same law scored 35 — `Possible`, hidden on a

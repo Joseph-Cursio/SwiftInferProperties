@@ -19,7 +19,7 @@
 /// produced the claim *"round-trip's zero is carrier reach"* in the whole-corpus
 /// survey write-up, and a proposal to spend effort on generators. A census that
 /// misattributes 45 rows to reach points work at the wrong constraint — the same
-/// failure `docs/verify-carrier-reach-census.md` records for a different cause
+/// failure `docs/measurements/verify-carrier-reach-census.md` records for a different cause
 /// (*"a census that forgets to thread `allShapes` invents a carrier problem
 /// two-thirds of which is the harness"*).
 ///

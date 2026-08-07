@@ -35,7 +35,7 @@ import SwiftInferCore
 ///    source formatter, `format(format(x)) == format(x)` is the canonical
 ///    law it owes, and the veto suppressed it on the name prefix while
 ///    `curatedVerbs` was simultaneously crediting that same name +40. See
-///    `docs/parsing-catalog-gap.md` §4.
+///    `docs/measurements/parsing-catalog-gap.md` §4.
 ///
 ///    **Where the gate leaves `format*`, stated plainly.** Only two arms of
 ///    `typeSymmetrySignal` admit a parameter — the exact-equal form and the
@@ -143,7 +143,7 @@ extension IdempotenceTemplate {
 
         // Pattern 2b: `format*` — the TYPE argument, so it takes the type gate.
         //
-        // §4 of `docs/parsing-catalog-gap.md`. The rationale this veto has
+        // §4 of `docs/measurements/parsing-catalog-gap.md`. The rationale this veto has
         // always stated is a type mismatch: "`format(_:)` returns String for
         // non-String input", so `format(format(x))` cannot type-check. True —
         // and it only obtains when the parameter type differs from the return

@@ -3,7 +3,7 @@ import PropertyLawKit
 import SwiftInferCore
 import Testing
 
-// Self-dogfood road test (`docs/roadtest-self-dogfood.md`) — the confidence
+// Self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md`) — the confidence
 // algebra `swift-infer discover` proposed **nothing** for.
 //
 // `Tier` and `Score` are the two types the whole tool's output passes through:

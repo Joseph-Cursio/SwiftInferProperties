@@ -27,7 +27,7 @@ extension StrategistDispatchEmitter {
     /// the stub failed to parse — `consecutive statements on a line must be
     /// separated by ';'` at line 5, pointing at a *comment*.
     ///
-    /// Found by the self-dogfood road test (`docs/roadtest-self-dogfood.md` §9),
+    /// Found by the self-dogfood road test (`docs/measurements/roadtest-self-dogfood.md` §9),
     /// and it had stayed hidden because every carrier in the frozen
     /// cycle27-surface corpus derives a single-line recipe. The first
     /// multi-property struct to reach this path is the first one that breaks.

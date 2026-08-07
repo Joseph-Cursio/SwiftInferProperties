@@ -367,7 +367,7 @@ public enum VerifierSubprocess {
     /// two defects at once, and SwiftProjectLint flagged both within hours —
     /// four `Non-Injected Nondeterminism` hits and two `Thread Sleep` hits, in
     /// code whose entire purpose is to make a *timing* behaviour testable
-    /// (`docs/roadtest-self-dogfood.md` §14.4). `Process.terminationHandler`
+    /// (`docs/measurements/roadtest-self-dogfood.md` §14.4). `Process.terminationHandler`
     /// plus a semaphore waits on the actual event and takes its deadline from a
     /// monotonic source, so nothing reads the wall clock and nothing spins.
     private static func waitForExit(_ process: Process, timeout: TimeInterval?) -> Bool {

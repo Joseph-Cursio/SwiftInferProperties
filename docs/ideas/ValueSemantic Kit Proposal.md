@@ -1,5 +1,8 @@
 # ValueSemantic Kit Proposal
 
+> **Status:** `shipped` · **As of:** 2026-07-07
+
+
 **Status (updated 2026-07-07):** **Workstream 1 SHIPPED; Workstream 2 resolved (no action); Workstream 3 mostly pre-existing, remainder low-value.**
 - **WS1 `ValueSemantic`** — **delivered end-to-end.** The kit ships `ValueSemantic` + `DefensiveCopy` + `StableIdentity` (protocols + `*Laws` + peer macros, kit **v3.4.0–v3.9.0**), and the engine discovers + measured-verifies all three §2.2 bug classes (`valuesemantic-verify-corpus`: `SafeStore`/`LeakyStore`/`ClosureCounter`). The closure-capture case (open decision #8) shipped as multi-step interleaving (`copyMutationDoesNotLeakUnderInterleaving`, kit v3.5.0). See §6 for the as-built version map.
 - **WS2 shrinking** — **premise resolved, nothing to build here.** `swift-property-based` already provides `.shrink(towards:)`, and the engine uses it in its emitted verifiers (algebraic since v1.141; MVVM state-invariant sequences since 2026-07). The proposal's actual workstream — refactoring `Gen<T>` to carry a shrinker — targets `x-sheep/swift-property-based`, an **external dependency the owner doesn't control**; the practical need is met engine-side.

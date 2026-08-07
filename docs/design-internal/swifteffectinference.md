@@ -1,5 +1,8 @@
 # SwiftEffectInference — the shared leaf
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
 **Book home:** Appendix C; Chapter 26 §26.3 (the lattice), Chapter 22 §22.6 (clock-determinism).
 

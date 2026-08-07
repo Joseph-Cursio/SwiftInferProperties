@@ -6,7 +6,7 @@ import SwiftInferCore
 /// domain is the whole case list.
 ///
 /// The gap this closes, from the SwiftProjectLint road test
-/// (`docs/roadtest-swiftprojectlint.md`): two of the ten hand-keyed candidates
+/// (`docs/measurements/roadtest-swiftprojectlint.md`): two of the ten hand-keyed candidates
 /// were mappings of exactly this shape, and **nothing in the catalog named
 /// them**. Their laws are not about a function's *inputs* — the function has
 /// none — they are about the mapping *across all cases*, which no

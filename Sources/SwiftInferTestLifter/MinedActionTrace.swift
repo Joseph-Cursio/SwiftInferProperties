@@ -10,7 +10,7 @@ import SwiftInferCore
 /// (`.select(a.id)`) carries argument source text that references
 /// test-body-local bindings the verifier doesn't have — so Slice 2's
 /// replay-then-extend emits only the payload-free subset, and payload
-/// generalization is deferred (see `docs/teststore-trace-mining-build-plan.md`).
+/// generalization is deferred (see `docs/plans/teststore-trace-mining-build-plan.md`).
 public struct MinedAction: Equatable, Sendable {
 
     /// Whether the action was *sent* (user-driven) or *received*

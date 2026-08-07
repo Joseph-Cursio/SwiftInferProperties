@@ -5,7 +5,7 @@
 ///
 /// `RoundTripTemplate`'s cross-type counter subtracts 25 whenever a pair's
 /// halves live in different containing types. That counter earns its keep: on
-/// the corpora measured for `docs/parsing-catalog-gap.md` §3b it suppresses
+/// the corpora measured for `docs/measurements/parsing-catalog-gap.md` §3b it suppresses
 /// **1,380 cross-type pairs**, and essentially all of them are noise — 1,310
 /// have the degenerate `T -> T` shape (`index(after:)` on one collection
 /// against `index(before:)` on another; every `Index -> Index` function pairs

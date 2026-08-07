@@ -2,7 +2,7 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-/// The formatter veto's type gate — `docs/parsing-catalog-gap.md` §4.
+/// The formatter veto's type gate — `docs/measurements/parsing-catalog-gap.md` §4.
 ///
 /// `shapeDisambiguationVeto` pattern 2 used to fire on the name prefix alone
 /// (`_description*` or `format*`), while its own stated rationale was a type

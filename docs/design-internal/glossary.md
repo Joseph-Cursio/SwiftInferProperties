@@ -1,5 +1,8 @@
 # Glossary
 
+> **Status:** `reference` · **As of:** 2026-08-06
+
+
 Vocabulary used across this repo's source, docs, and CLI output. Terms are grouped by the
 stage they belong to and **alphabetical within each stage**, because several of them mean
 different things at different stages — **"template" in `discover` and "template" in `verify` are

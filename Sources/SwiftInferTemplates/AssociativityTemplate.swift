@@ -60,7 +60,7 @@ public enum AssociativityTemplate {
     /// `checkSetAlgebraPropertyLaws`)"*, which was the whole defect in one line:
     /// `checkSetAlgebraPropertyLaws` runs fifteen laws and not one of them is an
     /// associativity law, for `union` or any other operand. The rationale named a
-    /// function nobody had checked. See `docs/protocol-coverage-law-drift.md` §3.
+    /// function nobody had checked. See `docs/measurements/protocol-coverage-law-drift.md` §3.
     /// V1.38.A — migrated to the Constraint Engine (PRD §20.2). The
     /// template now expresses itself as a `Constraint<FunctionSummary>`
     /// via `makeConstraint(vocabulary:reducerOps:inheritedTypesByName:)`,
@@ -324,7 +324,7 @@ extension AssociativityTemplate {
         // suppressed the suggestion, citing `checkSetAlgebraPropertyLaws` — which
         // ships fifteen laws and no associativity law for any set operand. Set
         // associativity is a true, refutable law that nothing else runs, so it is
-        // `discover`'s to propose. See `docs/protocol-coverage-law-drift.md` §3;
+        // `discover`'s to propose. See `docs/measurements/protocol-coverage-law-drift.md` §3;
         // re-adding a candidate here requires adding the law to the kit first.
         default:
             return []

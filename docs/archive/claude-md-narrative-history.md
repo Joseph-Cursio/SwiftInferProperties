@@ -1,5 +1,8 @@
 # CLAUDE.md
 
+> **Status:** `superseded` · **As of:** 2026-07-26
+
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. **This file is a pointer-only index** — per-cycle narratives live in `git log` + `docs/calibration-cycle-N-findings.md` + `docs/calibration-cycle-N-data/`.
 
 ## What this repo is

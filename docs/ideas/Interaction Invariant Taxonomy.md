@@ -1,5 +1,8 @@
 # Interaction Invariant Taxonomy
 
+> **Status:** `open` · **As of:** 2026-07-07
+
+
 **Status:** **Substantially delivered + outgrown.** Drafted 2026-05-13 as a v2.x direction note. Families 3.1–3.5 (idempotence, conservation, cardinality, referential integrity, biconditional) have since shipped end-to-end — discovered, surfaced, AND measured-verified — over reducer (TCA / Elm / ReSwift / Mobius / Workflow), `@Observable` MVVM, and (2026-07) VIPER/MVP convention carriers. **The engine also grew THREE paradigm-distinctive families this taxonomy's original eight didn't name — `determinism`, `unknownActionIsNoOp`, `outputDeterminism` — recorded in the new §3.9.** See `docs/measured-verify-architecture.md` + `docs/stateful-role-discoverer-design.md`. **The live content is now §3.6 (reachability), §3.7 (temporal), and §5 (the LTL/CTL framing);** the rest is the design record it turned out to predict accurately.
 **Target:** SwiftInferProperties engine (this repo); orthogonal to the SwiftPropertyLaws kit roadmap.
 **Date:** 2026-05-13 (status refreshed 2026-07-07)

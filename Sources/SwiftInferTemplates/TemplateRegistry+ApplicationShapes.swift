@@ -55,7 +55,7 @@ extension TemplateRegistry {
     /// These are the two laws the SwiftProjectLint road test found unnamed: the
     /// candidates' laws quantify over `allCases`, not over a function's inputs, so
     /// no signature-pattern template could see them and the pipeline fell back to
-    /// `f(x) == f(x)`. See `docs/roadtest-swiftprojectlint.md`.
+    /// `f(x) == f(x)`. See `docs/measurements/roadtest-swiftprojectlint.md`.
     ///
     /// The two are mutually exclusive by construction — a key mapping returns a
     /// scalar, a classifier returns another enum — so both are offered and at most
@@ -83,7 +83,7 @@ extension TemplateRegistry {
     /// (`added`/`removed`): it owes `Set(result.added) ∩ Set(result.removed) = ∅`.
     /// Shapes-aware (reads the return type's members), so it is its own pass —
     /// the refutable law `generateDiff` owes instead of the `f(x)==f(x)` tautology
-    /// (see `docs/roadtest-swiftlintrulestudio.md`, cause 1).
+    /// (see `docs/measurements/roadtest-swiftlintrulestudio.md`, cause 1).
     private static func collectDiffDisjointnessSuggestions(
         summaries: [FunctionSummary],
         shapesByName: [String: TypeShape],
@@ -100,7 +100,7 @@ extension TemplateRegistry {
     /// corpus type with a `[T]` member: it owes `Set(result) ⊆ Set(container.<member>)`.
     /// Shapes-aware, so it is its own pass rather than part of the shapes-free
     /// single-function registry — the gap that left `layerChain` on the
-    /// `f(x)==f(x)` tautology (see `docs/roadtest-swiftlintrulestudio.md`).
+    /// `f(x)==f(x)` tautology (see `docs/measurements/roadtest-swiftlintrulestudio.md`).
     private static func collectSelectionSubsetSuggestions(
         summaries: [FunctionSummary],
         shapesByName: [String: TypeShape],
@@ -121,7 +121,7 @@ extension TemplateRegistry {
     /// predicate) — driven from `singleFunctionAppShapes`, the one list that both
     /// wires them and is iterated by `ApplicationShapeRegistryTests`. Replaces four
     /// hand-written passes whose `collector.record` branches drifted out of test
-    /// coverage one template at a time (see `docs/roadtest-swiftlintrulestudio.md`).
+    /// coverage one template at a time (see `docs/measurements/roadtest-swiftlintrulestudio.md`).
     ///
     /// Behaviour is preserved exactly: the same (summary, template) records with
     /// the same `generatorType`, and the trio's "stronger law wins the shared

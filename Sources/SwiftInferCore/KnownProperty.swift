@@ -45,7 +45,7 @@ public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
     // suppressed a true, refutable law on the grounds that `checkSetAlgebraPropertyLaws`
     // ran it, and it did not. `AssociativityTemplate` now returns no candidate for the set
     // verbs and set associativity is `discover`'s to propose. Do not re-add this without
-    // first adding the law to the kit. See `docs/protocol-coverage-law-drift.md` §3.
+    // first adding the law to the kit. See `docs/measurements/protocol-coverage-law-drift.md` §3.
     /// `a ∪ b == b ∪ a` — kit `SetAlgebra.unionCommutativity`
     case setUnionCommutative
     /// `a ∩ b == b ∩ a` — kit `SetAlgebra.intersectionCommutativity`.

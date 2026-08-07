@@ -1,5 +1,8 @@
 # Reference
 
+> **Status:** `reference` · **As of:** 2026-07-30
+
+
 Lookup-style documentation for the SwiftInferProperties tool. Every CLI flag, every template, every file schema. For task-oriented walkthroughs, see the [user guide](guide.md). For the design rationale behind any particular threshold or weight, follow the PRD §-references in the relevant section.
 
 > **Tracks v1.4.** All flag tables and schemas reflect the v1.4 surface unless explicitly marked.
