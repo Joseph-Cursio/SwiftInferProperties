@@ -1,6 +1,6 @@
 # TCA determinism measured-verify — open follow-ups
 
-> **Status:** `open` · **As of:** 2026-07-05
+> **Status:** `shipped` · **As of:** 2026-07-05
 
 
 ## Status
@@ -10,11 +10,21 @@ shipped and verified green under Swift 6.3.3 — the three-way
 `tca-determinism-corpus` (pure / proper-dependency / snuck-raw). This note
 registers the four follow-ups deferred at that point. **Items 3 and 4 are built.
 Item 2 is now 4/5 slices built** — slices 1 (PresentationAction), 2 (Result),
-3b (IdentifiedActionOf), and 4 (BindingAction) shipped 2026-07-04; only slice 3c
-(child recursion — deferred, 0 added reach) remains. **Item 1 is now fully built
-— discovery + pin disambiguation *and* multi-module measured verify (M3, 2026-07-05).**
-All four registered follow-ups are complete but for the deliberately-deferred
-slice 3c. See `tca-determinism-verify-scope.md` for the shipped design.
+3b (IdentifiedActionOf), and 4 (BindingAction) shipped 2026-07-04, and **slice 3c
+(depth-bounded child recursion) shipped 2026-07-05** — see its own row below.
+**Item 1 is now fully built — discovery + pin disambiguation *and* multi-module
+measured verify (M3, 2026-07-05).** All four registered follow-ups are complete.
+
+> **Corrected 2026-08-07.** This paragraph and the closing section both said slice
+> 3c was *deferred*, dating from 2026-07-04 and never updated when 3c landed the
+> next day — while the per-slice row at §Slice 3c was updated and reads
+> `✅ BUILT (2026-07-05)`. The code agrees with the row, not the summaries:
+> `IdentifiedActionResolver.maxChildDepth = 2` with the recursive descent at
+> `IdentifiedActionResolver.swift:127`, and two termination tests
+> (`IdentifiedActionResolverTests.swift:186`, `:202`). CLAUDE.md had propagated
+> the stale half. **The detail was maintained and the summary was not** — which is
+> the direction that misleads, because a summary is what a reader and an index
+> quote. See `tca-determinism-verify-scope.md` for the shipped design.
 
 ## 1. Multi-module reducer pins / cross-module disambiguation
 
@@ -226,9 +236,8 @@ still disclosed, so no new precision decision.
 high-reach slices — the value-type slice was correctly bypassed (low reach,
 ~2/99 per cycle 123) in favour of composition-action construction
 (`PresentationAction`, `Result`, `IdentifiedActionOf`, `BindingAction`), all
-shipped; only slice 3c (child recursion — 0 added reach) is deferred. (1) is **done** —
+shipped — including slice 3c (child recursion), built 2026-07-05. (1) is **done** —
 discovery + pin disambiguation *and* measured-verify M3 (multi-module survey,
-per-module product resolution). Everything registered here is now complete
-except the deliberately-deferred slice 3c (0 reach). Remaining TCA-track items
+per-module product resolution). Everything registered here is now complete. Remaining TCA-track items
 are all off this list: blocked upstream (Workflow's uncallable `ApplyContext`;
 the Mobius release pin) or optional volume (corpus / value-type widening).

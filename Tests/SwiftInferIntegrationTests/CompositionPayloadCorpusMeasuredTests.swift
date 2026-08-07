@@ -12,7 +12,7 @@ import Testing
 /// failure branch deterministically.
 ///
 /// Real `swift build` against ComposableArchitecture — tagged `.subprocess`,
-/// 6.3.3-gated (see `docs/plans/tca-determinism-followups.md`).
+/// 6.3.3-gated (see `docs/design/tca-determinism-followups.md`).
 @Suite("TCA composition-payload corpus — Result payload measured", .tags(.subprocess))
 struct CompositionPayloadCorpusMeasuredTests {
 

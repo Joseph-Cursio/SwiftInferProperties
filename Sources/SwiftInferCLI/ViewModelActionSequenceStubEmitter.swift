@@ -4,8 +4,9 @@ import SwiftInferCore
 
 /// PROTOTYPE — the M1′ multi-step ViewModel interaction verifier
 /// (Observable Carrier thread 1, Slice 3). Where
-/// `ViewModelInvariantStubEmitter` does a single deterministic pass over
-/// each action once, this emits the *materialized-enum* path: it lifts the
+/// `ViewModelInvariantStubEmitter` drives randomized sequences against a
+/// *reference-typed instance* it mutates in place, this emits the
+/// *materialized-enum* path: it lifts the
 /// action alphabet into a synthetic `enum` + `drive(_:_:)`
 /// (`ViewModelActionEnumEmitter`), draws random `[Action]` sequences from
 /// the kit's `ActionSequenceFactory`, and — per trial — constructs a

@@ -1,9 +1,10 @@
 # Design: composition-action slice 3 — `IdentifiedActionOf<Child>`
 
-> **Status:** `open` · **As of:** 2026-07-05
+> **Status:** `shipped` · **As of:** 2026-08-07
 
 
-> **Status: 3b + 3c SHIPPED (3b 2026-07-04, 3c 2026-07-05).** The recount (below)
+> **Slice 3 is COMPLETE: 3a killed by measurement, 3b + 3c shipped (3b 2026-07-04,
+> 3c 2026-07-05).** The recount (below)
 > killed 3a (0 real reach — all real ids are UUID) and landed **3b** (canned id +
 > payload-free child). **3c** (depth-bounded payload-bearing / recursive child
 > action, `maxChildDepth = 2`) followed — ~0 added real reach as the recount
@@ -18,6 +19,16 @@ note works out slice 3 before any code, because it is categorically harder than
 implementation is proposed as landed here — this is a scoping + sequencing
 record, in the spirit of `tca-determinism-verify-scope.md` and the cycle-123/124
 Phase-B decision records.
+
+> **That paragraph is the doc's original premise and stopped being true on
+> 2026-07-05**, when 3c landed; the banner above is the current state. It is kept
+> because the *sequencing* it argues for is what the recount then overturned, and
+> the "Recommendation" section at the foot is likewise the pre-3c recommendation,
+> preserved as the record of what was recommended rather than what was done.
+> **It misfiled the doc on 2026-08-07** — read literally, "no implementation is
+> proposed as landed here" says *plan*, and the doc was moved to `docs/plans/` on
+> that basis without checking the code. A stale framing sentence outranked a
+> correct banner four lines above it.
 
 ## Why slice 3 is not "one more branch"
 
