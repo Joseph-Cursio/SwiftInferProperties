@@ -5,7 +5,7 @@ import Testing
 
 /// M1 coverage for `ReplayIdempotenceTemplate` — Branches A (annotation) and
 /// B (`IdempotencyKey` parameter). The four SwiftIdempotency fixtures are the
-/// acceptance set (see `docs/ideas/replay-idempotence-template-sketch.md` §6);
+/// acceptance set (see `docs/archive/replay-idempotence-template-sketch.md` §6);
 /// the two *annotated* fixtures are matchable in M1, the two unannotated ones are
 /// deliberately deferred to M2 and asserted here as non-matches so the boundary
 /// is pinned rather than silently drifting.

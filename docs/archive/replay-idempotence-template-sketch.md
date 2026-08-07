@@ -1,12 +1,12 @@
 # `ReplayIdempotenceTemplate` — match-rule sketch
 
-> **Status:** `open` · **As of:** 2026-08-07
+> **Status:** `shipped` · **As of:** 2026-08-07
 
 
 *A discovery template for effectful replay-safe handlers. Design source: SwiftIdempotency's
 [replay-idempotency shape catalog](../../../SwiftIdempotency/docs/replay-idempotency-shape-catalog.md)
-and its four fixtures. Status: **shipped (M1–M5, 2026-08-06)** — this document is the original
-plan; see the "As built" note below for where reality diverged, and
+and its four fixtures. Status: **shipped, M1–M13 (2026-08-06 → 2026-08-07)** — this document is the
+original plan; see the "As built" note below for where reality diverged, and
 [`roadtest-maccloud-server-replay.md`](../measurements/roadtest-maccloud-server-replay.md) for the validation
 journey.*
 
