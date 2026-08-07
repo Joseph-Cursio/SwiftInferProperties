@@ -209,22 +209,38 @@ extension FunctionScannerVisitor {
     /// so this stripping — not `Self`-resolution — is the actual fix on the
     /// swift-infer side.
     static func strippingParameterSpecifiers(_ raw: String) -> (typeText: String, isInout: Bool) {
-        var text = Substring(raw)
+        // Trim up front and after every strip: a reformatter can put any run of whitespace (or a
+        // newline) between a specifier and the type, and the bare type text must not depend on it.
+        // Matching `keyword + one literal space` and dropping a fixed count missed that — inflated
+        // trivia leaked a leading space into `typeText`, which the trivia-insensitivity experiment
+        // catches now that `private` helpers (the only ones taking `inout` dictionaries) surface.
+        var text = Substring(raw).drop(while: \.isWhitespace)
         var isInout = false
-        let ownership = ["__owned ", "__shared ", "consuming ", "borrowing ", "sending ", "_const "]
+        let ownership = ["__owned", "__shared", "consuming", "borrowing", "sending", "_const"]
         stripping: while true {
-            if text.hasPrefix("inout ") {
+            if let rest = Self.afterSpecifier("inout", in: text) {
                 isInout = true
-                text = text.dropFirst("inout ".count)
+                text = rest.drop(while: \.isWhitespace)
                 continue
             }
-            for specifier in ownership where text.hasPrefix(specifier) {
-                text = text.dropFirst(specifier.count)
-                continue stripping
+            for specifier in ownership {
+                if let rest = Self.afterSpecifier(specifier, in: text) {
+                    text = rest.drop(while: \.isWhitespace)
+                    continue stripping
+                }
             }
             break
         }
         return (String(text), isInout)
+    }
+
+    /// `text` past `keyword` when it leads as a *specifier* — the keyword followed by whitespace, so
+    /// a type spelled `borrowingBox` is not mis-stripped. `nil` when `keyword` does not lead.
+    private static func afterSpecifier(_ keyword: String, in text: Substring) -> Substring? {
+        guard text.hasPrefix(keyword) else { return nil }
+        let rest = text.dropFirst(keyword.count)
+        guard let next = rest.first, next.isWhitespace else { return nil }
+        return rest
     }
 
     private func scanBody(of node: FunctionDeclSyntax) -> BodySignals {
