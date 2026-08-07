@@ -400,13 +400,42 @@ top-level discovery path — `UnifiedRoleDiscoverer` is.
 > conformance**. It was constructed in exactly one place, a test, by a stub policy.
 >
 > **It was not forgotten, it lost an argument.** Phase 1 found per-declaration to be
-> the wrong granularity, and `ParadigmDiscoverer` records why: `ViewModelDiscoverer`
-> is corpus-level and two-phase — a view model's methods routinely live in
-> `extension VM {}` blocks in *other files*, and a per-decl `buildRole(classDecl)`
-> cannot see them even in the same file. So the seam moved to the corpus level and
-> each paradigm **wraps its existing, heavily-tested discoverer**, which makes parity
-> with the legacy discoverers true by construction instead of something a
-> reimplemented extraction has to chase.
+> the wrong granularity: `ViewModelDiscoverer` is corpus-level and two-phase — a view
+> model's methods routinely live in `extension VM {}` blocks in *other files*, and a
+> per-decl `buildRole(classDecl)` cannot see them even in the same file, so it cannot
+> reproduce the fixed-point transitive-action resolution that needs the type's full
+> method set. `ReducerDiscoverer`, by contrast, is single-pass per file and would
+> have fitted. One of the two didn't, and that was enough.
+>
+> ### Correction (2026-08-07, later the same day): the replacement was never adopted either
+>
+> The note above originally said the corpus-level `ParadigmDiscoverer` seam
+> **"replaced"** the engine. It did not. `make dead-code` — written the same day,
+> precisely because the first miss took three passes to find by hand — reported
+> `ParadigmDiscoverer.swift` as **test-only**, and it was deleted too, along with the
+> `asStatefulRole()` adapters whose only production caller it was.
+>
+> So **both** unification attempts were built and neither was adopted, for different
+> reasons:
+>
+> | Attempt | Shape | Why it lost |
+> |---|---|---|
+> | Phase 0 `RolePolicy` engine | per-declaration policies | wrong granularity — cannot see a type's extensions |
+> | Phase 1 `ParadigmDiscoverer` facade | corpus-level wrappers | **lossy** — `StatefulRole` is 9 fields against `ReducerCandidate`'s 17 and `ViewModelCandidate`'s 32 |
+>
+> The second is the sharper lesson, because it is checkable rather than arguable: a
+> consumer routed through `UnifiedRoleDiscoverer` **loses `stateIDTypeName`**, which
+> `IdentifiedActionResolver` needs to construct `IdentifiedActionOf` payloads for
+> slice 3b/3c. The facade was not merely unadopted — it was *unadoptable* without
+> redesigning the unified shape. Every production caller kept reaching for the
+> concrete candidate types, which is exactly what the facade's own doc comment said
+> it existed to stop them doing.
+>
+> **`StatefulRole` itself survives both.** Not as a universal shape but as the
+> convention path's own: `ConventionRoleDiscoverer` builds it directly for VIPER /
+> MVP, where there is no richer candidate type to lose anything to, and
+> `ConventionRoleInteractionAnalyzer` and `OutputDeterminismVerifierEmitter` consume
+> it. The generalisation failed; the type found a narrower job and kept it.
 >
 > What was left was a decision taken and not executed. The engine sat compiling,
 > passing its own tests, and reachable from nothing — and its header still read as a

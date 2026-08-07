@@ -5,15 +5,21 @@ import SwiftEffectInference
 /// entry points** (an action alphabet), plus how to **construct** an instance
 /// to drive and which **collaborators** to fake.
 ///
-/// From `docs/design/stateful-role-discoverer-design.md`. This generalizes — and
-/// is adapter-compatible with — the two existing candidate types:
+/// From `docs/design/stateful-role-discoverer-design.md`. It was conceived as the
+/// unification of `ReducerCandidate` (TCA / Elm / ReSwift / Mobius / Workflow) and
+/// `ViewModelCandidate` (MVVM), reached through adapters.
 ///
-/// - `ReducerCandidate` (TCA / Elm / ReSwift / Mobius / Workflow), and
-/// - `ViewModelCandidate` (MVVM), already documented as a "reducer-in-disguise".
+/// **That unification never happened, and this type outlived it.** The adapters and
+/// the `ParadigmDiscoverer` facade over them were deleted on 2026-08-07, unadopted:
+/// this shape is a *lossy projection* — 9 fields against `ReducerCandidate`'s 17 and
+/// `ViewModelCandidate`'s 32 — so a consumer routed through it loses fields it needs
+/// (`stateIDTypeName`, which `IdentifiedActionResolver` requires, is not here). Every
+/// production caller kept reaching for the concrete candidate types.
 ///
-/// Phase 0 introduces this type *alongside* those, with adapters
-/// (`asStatefulRole`) proving the lift; it changes no existing behavior. The
-/// existing discoverers and their `Codable` wire shapes are untouched.
+/// What it IS, and is good at, is the shape for roles that have **no** richer
+/// candidate type: `ConventionRoleDiscoverer` builds these directly for VIPER / MVP,
+/// and `ConventionRoleInteractionAnalyzer` + `OutputDeterminismVerifierEmitter`
+/// consume them. Read it as the convention path's own type, not as a universal one.
 public struct StatefulRole: Sendable, Equatable {
 
     /// `<path>:<line>` of the declaration — same click-target UX as
@@ -53,8 +59,7 @@ public struct StatefulRole: Sendable, Equatable {
     /// The role's effect on the SwiftEffectInference lattice, when known. A
     /// `.pure` reducer can be fuzzed as a free function with no harness; an
     /// effectful role needs the instance + mock path. `nil` when not yet
-    /// classified (the adapters map only the *sound* signals — see
-    /// `asStatefulRole`).
+    /// classified.
     public let effect: Effect?
 
     public init(
@@ -206,8 +211,8 @@ public enum CollaboratorRole: Sendable, Equatable {
     case output(assertable: Bool)
 }
 
-/// A paradigm-specific property family a `ParadigmDiscoverer`'s roles can
-/// generate, layered on top of the shared interaction-invariant families.
+/// A paradigm-specific property family a role can generate, layered on top of
+/// the shared interaction-invariant families.
 public enum PropertyKind: String, Sendable, Equatable, Codable, CaseIterable {
     case idempotence
     case actionSequence = "action-sequence"
