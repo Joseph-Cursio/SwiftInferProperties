@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code (claude.ai/code) working in this repository. **This file is a pointer-only index.** Per-cycle narratives live in `git log`, in `docs/archive/claude-md-narrative-history.md`, and in the road-test / design docs listed below. (This line used to send readers to `docs/calibration-cycle-N-findings.md`; those files no longer exist — they were folded into that archive, as the table below already said.) The pre-2026-07-26 changelog-style CLAUDE.md is archived verbatim there too — read it only when you need the story behind a specific shipped decision.
+Guidance for Claude Code (claude.ai/code) working in this repository. **This file is a pointer-only index.** Per-cycle narratives live in `git log`, in `docs/archive/claude-md-narrative-history.md`, and in the road-test / design docs listed below. (This line used to send readers to `docs/calibration-cycle-N-findings.md`; those files no longer exist — they were folded into that archive, as the table below already said.) The pre-2026-07-26 changelog-style CLAUDE.md is archived there too — read it only when you need the story behind a specific shipped decision. **Verbatim in prose, but not in paths:** 18 lines were repointed on 2026-08-07 so citations that merely changed directory in the docs reorganisation resolve again. Citations to *pruned* docs (the per-cycle findings, the perf baselines) are left dangling on purpose — they are a record of what was once written, and there is nothing to point at.
 
 ## What this repo is
 
