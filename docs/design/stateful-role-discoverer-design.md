@@ -390,7 +390,41 @@ top-level discovery path — `UnifiedRoleDiscoverer` is.
    absent. Building `*Model` recognition would trade a clean miss of ~nothing for a
    low-precision flood — against the conservative posture. MVC stays unbuilt.
 
+> ## Outcome (2026-08-07) — the policy engine was built, rejected, and is now deleted
+>
+> **Phase 0 shipped in two halves and only one survived.** `StatefulRole` and its
+> adapters (`ReducerCandidate.asStatefulRole()`, `ViewModelCandidate.asStatefulRole()`)
+> are live and load-bearing. The per-declaration `RolePolicy` engine —
+> `StatefulRoleDiscoverer`, `RolePolicy`, `FileContext`, `RoleMatch` — is gone:
+> ~300 lines including its tests, deleted having **never had a single production
+> conformance**. It was constructed in exactly one place, a test, by a stub policy.
+>
+> **It was not forgotten, it lost an argument.** Phase 1 found per-declaration to be
+> the wrong granularity, and `ParadigmDiscoverer` records why: `ViewModelDiscoverer`
+> is corpus-level and two-phase — a view model's methods routinely live in
+> `extension VM {}` blocks in *other files*, and a per-decl `buildRole(classDecl)`
+> cannot see them even in the same file. So the seam moved to the corpus level and
+> each paradigm **wraps its existing, heavily-tested discoverer**, which makes parity
+> with the legacy discoverers true by construction instead of something a
+> reimplemented extraction has to chase.
+>
+> What was left was a decision taken and not executed. The engine sat compiling,
+> passing its own tests, and reachable from nothing — and its header still read as a
+> roadmap (*"Phase 1 registers `TCAReducerPolicy` / `MVVMPolicy`"*), so it described
+> a future rather than a rejection. **A superseded design that still compiles is
+> indistinguishable from a pending one**, which is the same trap as slice 3c's stale
+> summary, in code rather than prose.
+>
+> The five risks below are all closed: adapters shipped (1), the precedence
+> tie-break was implemented *and* tested before the engine was dropped (2),
+> `recognizedBy` is surfaced across four files (3), the recording fake shipped as
+> `ViewModelProtocolFaker` + `OutputDeterminismVerify` (4), and MVC is an explicit
+> measured decline (5). **Nothing in this document is outstanding work.**
+
 ## Recommended first step
+
+> *Superseded — see the outcome note above. Phase 0's engine half was rejected; the
+> adapters are what shipped.*
 
 Phase 0 + `ReduxPolicy`: the lowest-risk, highest-signal slice, because Redux
 recognition is already mostly implemented and a pure reducer is the most

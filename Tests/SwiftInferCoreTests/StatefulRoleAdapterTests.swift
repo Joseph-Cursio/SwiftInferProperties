@@ -2,9 +2,10 @@ import SwiftEffectInference
 @testable import SwiftInferCore
 import Testing
 
-/// Phase 0 — proves `ReducerCandidate` and `ViewModelCandidate` lift faithfully
-/// onto the unified `StatefulRole` via `asStatefulRole()`. This is the
-/// isomorphism the `StatefulRoleDiscoverer` design rests on.
+/// Proves `ReducerCandidate` and `ViewModelCandidate` lift faithfully onto the
+/// unified `StatefulRole` via `asStatefulRole()`. This is the isomorphism the
+/// whole `ParadigmDiscoverer` seam rests on: each paradigm wraps its existing
+/// discoverer and adapts the result, so these adapters are the parity guarantee.
 @Suite("StatefulRole adapters")
 struct StatefulRoleAdapterTests {
 

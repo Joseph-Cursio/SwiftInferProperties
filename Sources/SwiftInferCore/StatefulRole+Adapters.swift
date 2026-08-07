@@ -1,10 +1,14 @@
 import SwiftEffectInference
 
 /// Phase 0 adapters: lift the two existing candidate types onto the unified
-/// `StatefulRole`. These prove the isomorphism the `StatefulRoleDiscoverer`
-/// design rests on, and let Phase 1 reimplement the discoverers behind the
-/// `RolePolicy` seam while keeping the existing `Codable` candidate types (and
-/// their persisted wire shapes) untouched.
+/// `StatefulRole`, keeping the existing `Codable` candidate types (and their
+/// persisted wire shapes) untouched.
+///
+/// These turned out to be the *whole* mechanism rather than a stepping stone.
+/// Phase 1 was meant to reimplement the discoverers behind a per-declaration
+/// `RolePolicy` seam; it instead found that seam to be the wrong granularity
+/// (see `ParadigmDiscoverer`) and wrapped the existing discoverers here. Parity
+/// with the legacy discoverers is therefore true by construction.
 
 public extension ViewModelCandidate {
 

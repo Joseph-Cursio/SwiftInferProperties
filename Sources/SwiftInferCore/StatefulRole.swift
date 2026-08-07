@@ -5,9 +5,8 @@ import SwiftEffectInference
 /// entry points** (an action alphabet), plus how to **construct** an instance
 /// to drive and which **collaborators** to fake.
 ///
-/// Phase 0 of the `StatefulRoleDiscoverer` design
-/// (`docs/design/stateful-role-discoverer-design.md`). This generalizes — and is
-/// adapter-compatible with — the two existing candidate types:
+/// From `docs/design/stateful-role-discoverer-design.md`. This generalizes — and
+/// is adapter-compatible with — the two existing candidate types:
 ///
 /// - `ReducerCandidate` (TCA / Elm / ReSwift / Mobius / Workflow), and
 /// - `ViewModelCandidate` (MVVM), already documented as a "reducer-in-disguise".
@@ -207,8 +206,8 @@ public enum CollaboratorRole: Sendable, Equatable {
     case output(assertable: Bool)
 }
 
-/// A paradigm-specific property family a `RolePolicy` declares it can generate,
-/// layered on top of the shared interaction-invariant families.
+/// A paradigm-specific property family a `ParadigmDiscoverer`'s roles can
+/// generate, layered on top of the shared interaction-invariant families.
 public enum PropertyKind: String, Sendable, Equatable, Codable, CaseIterable {
     case idempotence
     case actionSequence = "action-sequence"
