@@ -37,6 +37,29 @@ public enum RefutedExpectation {
         case partial
     }
 
+    /// What the refutation is known to have been *caused by*.
+    ///
+    /// The interaction surface can fail for two reasons that look identical from the exit
+    /// code: the emitted invariant check fired (the property is genuinely refuted) or the
+    /// subject trapped on its own (`precondition`, force-unwrap, index out of range),
+    /// which is an artifact. `InteractionVerifyOutcomeParser.TrapOrigin` separates them by
+    /// a marker on stderr, and `docs/measurements/interaction-trap-attribution-census.md`
+    /// measured **10 of 10 `.invariantCheck`, 0 `.subjectCode`** over six reducer corpora.
+    ///
+    /// `notApplicable` is the algebraic surface, where the outcome partition already does
+    /// this work — a trap or parse failure is `measuredError`, never
+    /// `measuredDefaultFails`.
+    ///
+    /// `unknown` is deliberately not folded into `subjectTrap`: the census's own rule is
+    /// that absence of the marker never convicts the subject on its own, because a harness
+    /// that stopped emitting it would turn every real refutation into an "artifact".
+    public enum Attribution: Sendable, Equatable {
+        case notApplicable
+        case propertyViolation
+        case subjectTrap
+        case unknown
+    }
+
     /// Whether this refutation is one the reader was entitled to expect would hold.
     ///
     /// Three clauses, each corrected against a measurement in the scope note §2:
@@ -49,14 +72,20 @@ public enum RefutedExpectation {
     ///    record is well-formed.
     /// 3. **Coverage is not partial.** A partial exploration can false-fail from the
     ///    action space it excluded.
+    /// 4. **The refutation is not a known artifact.** A subject-code trap is the subject
+    ///    falling over, not the property failing, and an unattributable trap is not known
+    ///    to be either — neither is something to put in front of a reader as a law that
+    ///    was expected to hold.
     public static func statesAFork(
         tier: Tier?,
         hasCounterexample: Bool,
-        coverage: Coverage
+        coverage: Coverage,
+        attribution: Attribution = .notApplicable
     ) -> Bool {
         guard let tier, Tier.atLeastAsProminentAs(.likely).contains(tier) else { return false }
         guard hasCounterexample else { return false }
-        return coverage != .partial
+        guard coverage != .partial else { return false }
+        return attribution == .notApplicable || attribution == .propertyViolation
     }
 
     /// The two readings, in the order a reader should weigh them.

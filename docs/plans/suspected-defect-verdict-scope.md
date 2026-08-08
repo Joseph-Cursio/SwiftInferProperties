@@ -226,8 +226,15 @@ Deliberately **not** in this list: a `discover`-default surface. See §7.
   which, read as this feature's question, is a **0/10 defect rate on the interaction
   surface**, the opposite of the algebraic one. That census is reducer-only and says so.
   Suspected defect should therefore ship algebraic-first, with the interaction fold
-  deferred (falsifier: `InteractionRefutedExpectation`) until that census is
-  re-run over an MVVM/VIPER corpus.
+  deferred until that census is re-run over an MVVM/VIPER corpus.
+
+  > **CORRECTED 2026-08-08 — this paragraph misreads the census, and the deferral it
+  > justified is withdrawn (§13).** The census defines `.invariantCheck` as *"the property
+  > is genuinely refuted"* and `.subjectCode` as the subject's own trap, so **10 of 10
+  > `.invariantCheck`** means **zero harness artifacts**, not zero defects. Its own §4 says
+  > *"the `.measuredDefaultFails` verdicts these corpora produce are all genuine."* That is
+  > a reason to surface interaction refutations, not to defer them. The deferral's falsifier
+  > is removed because the fold is built.
 
 ## 8. Recommendation
 
@@ -490,3 +497,44 @@ failed on the tool's correctly-hedged reading 2, which has to say the function m
 wrong or the fork has one prong. It now asserts the property instead: neither reading is
 ever rendered without the other. Guarding a claim is not the same as guarding a
 vocabulary.
+
+
+## 13. The interaction fold, and the misreading that had deferred it (2026-08-08)
+
+§7 deferred the interaction fold on the grounds that the trap-attribution census showed
+*"a 0/10 defect rate on the interaction surface, the opposite of the algebraic one."*
+**That is a misreading of the census and the deferral is withdrawn.**
+
+`docs/measurements/interaction-trap-attribution-census.md` defines its two outcomes:
+
+| stderr | attribution |
+|---|---|
+| carries the marker | `.invariantCheck` — **the property is genuinely refuted** |
+| no marker, but a sequence was reached | `.subjectCode` — the subject's own trap |
+
+So **10 of 10 `.invariantCheck`, 0 `.subjectCode`** means *no harness artifacts*, and its §4
+says so directly: *"the `.measuredDefaultFails` verdicts these corpora produce are all
+genuine."* Read correctly, the census **supports** surfacing interaction refutations. The
+error was reading "subject-code" as "defect" when it means "artifact", and it propagated
+from §7 into §12, into two source comments and into a test comment before anyone re-read
+the source.
+
+### What the census does leave open, and how the fold answers it
+
+Its §4 *"does not"* is narrower than the deferral claimed: the corpora are reducer-only, and
+whether an **MVVM/VIPER** carrier could produce a subject-code trap that the parser
+conflates into a refutation is unmeasured. That risk needs no corpus to manage, because the
+census's own machinery already answers it per run — `TrapOrigin` is on every
+`measuredDefaultFails` result.
+
+So the fold gains a fourth clause rather than waiting: **`attribution`**. An interaction
+refutation reaches EXPECTED TO HOLD only when the trap is attributed to the invariant check.
+A `.subjectTrap` is the subject falling over, not the property failing; `.unknown` stays out
+too, following the census's rule that absence of the marker never convicts the subject —
+which means it is not evidence of a property violation either. The algebraic surface passes
+`.notApplicable`, because its outcome partition already does this work: a trap there is
+`measuredError`, never `measuredDefaultFails`.
+
+`RefutedExpectation.statesAFork` is now tier + counterexample + coverage + attribution, with
+`Coverage` and `Attribution` as the two surface-specific soundness clauses and
+`.notApplicable` the honest answer on the surface that does not need them.
