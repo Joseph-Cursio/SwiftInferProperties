@@ -2,6 +2,10 @@
 
 > **Status:** `measured` · **As of:** 2026-08-08
 
+**Re-tested the same day at `10c59e8` — see §7.** The `As of` line stays a bare date because
+`DocStatusHeaderTests` parses it as an expiry stamp; a trailer there is unparseable, which is
+the guard that had just been repaired on `main` when this note nearly reintroduced the break.
+
 **Subject:** this repo at `fa57c45` (`v1.148.0`), six source targets.
 **Tool:** `swift-infer` built from that checkout, release, into an isolated scratch path.
 **Predecessor:** `docs/measurements/roadtest-self-dogfood.md` (2026-07-26, measurements
@@ -346,3 +350,97 @@ rule must be scored against the laws that **held**, not against the class it tar
   agree, and `lawTotal` is additive. The honest gain is `unchecked → checked and held`, plus
   a drift guard over nine copies that previously had none — not `bug found`.
 * **§1's 19-of-26 is a floor**, for the reason given there.
+
+---
+
+## §7 Re-test at `10c59e8`, same day
+
+Re-run after the holes above were worked, with a release binary built from `origin/main`.
+Same day as §0–§6, so this is a controlled comparison rather than a run against a remembered
+count (§10.3).
+
+### §7.1 The scoping fix holds in production
+
+| target | §1 baseline (`fa57c45`) | re-test (`223373b`) |
+|---|---|---|
+| SwiftInferCore | 129 / **4** Strong | 129 / **4** |
+| SwiftInferTemplates | 114 / **4** | 114 / **4** |
+| SwiftInferCLI | 73 / **6** | 73 / **5** |
+| SwiftInferTestLifter | 24 / **4** | 23 / **3** |
+| SwiftInferKitEvidence | 4 / **4** | **0 / 0** |
+| SwiftInferMacroImpl | 4 / **4** | **0 / 0** |
+| **Strong total** | **26** | **16** |
+
+Identical to the A/B's "after" arm, on a binary built from `main` rather than from the
+branch. Confirmation, not new information — recorded because a fix that measures well on its
+own branch and not in production is the failure mode this table exists to exclude.
+
+### §7.2 REFUTED — no self-corroboration from the tests this road test produced
+
+The worry, worth stating because it sounds right: §0 landed 15 laws *because `discover`
+proposed them*; TestLifter pays **+20 `crossValidation`** for a law restated in a test; so the
+tool might now corroborate its own suggestions with no new evidence, inflating tier.
+
+**It does not happen.** `strippingGenericParameters` idempotence is still `Likely` **50**,
+carrying type-symmetry (+30), author-declared (+15) and value-semantic (+5) and **no
+`crossValidation` signal** — although `NameStrippingDifferentialPropertyTests` asserts exactly
+`implementation.strip(once) == once`. `lawTotal` is unchanged at 70, `deduplicated` at 75.
+
+The loop is not closed. But the *reason* it is not closed is the finding below, and it is a
+worse problem than the one feared.
+
+### §7.3 NEW — TestLifter cannot see the property tests this workflow produces
+
+Four suites, 15 laws, in test targets that scoping puts **in scope** for the modules they
+test. Lifted rows attributable to them: **zero**.
+
+`SwiftInferCLI`'s four lifted rows are `expectedRender` vs `render`, `Set(declarations).count`,
+`merge(merge(log))` and a `SipHasher.finalize()` value-semantics lift. None is
+`BareTypeNameDifferentialPropertyTests` — which states a **differential-equivalence** law
+explicitly, the very family the row above it was lifted for — and none is
+`HashPrefixLookupPropertyTests`.
+
+The shape TestLifter misses is `propertyCheck(input: gen) { value in #expect(...) }` with the
+subject reached through a collection element (`implementation.strip(name)`). That is the
+house style for property tests in this repo — 10 suites before this road test, 14 after.
+
+**The consequence is sharper than a missed row.** The `+20` cross-validation seam exists to
+reward a codebase that already states its laws. It is systematically unavailable to precisely
+the tests this toolchain's own workflow produces: `discover` proposes, a human writes the
+property test, and `discover` cannot read it back. The seam works for XCTest-style example
+assertions and not for the property tests the product exists to encourage.
+
+This confirms, in a new context, the standing note that TestLifter's detectors are keyed to
+existing templates and miss hand-rolled random-input property tests. What is new is that the
+gap now covers the tool's *own* recommended output.
+
+### §7.4 NEW — a lifted row carries no provenance, and that is why §1 hid so long
+
+Every lifted row renders `Lifted from <test-body>:0`. Not a path, not a line — a placeholder
+and a zero. A source-derived row in the same output carries
+`— …/Sources/SwiftInferCore/EqualityBodyShape.swift:391`.
+
+**This is the diagnostic gap that let §1 survive.** A row citing `render(suggestion)` on
+`SwiftInferKitEvidence` is only *obviously* wrong if it says which file it came from; without
+that, it reads as a plausible finding about a target you have not memorised. §1 was found by
+noticing four byte-identical rows across six targets and then grepping — not by reading the
+output, which could not say.
+
+It also blocked §7.3 above: establishing that none of the four new suites was lifted could not
+be done from the tool's output at all, and needed the *content* of each lifted row matched
+against source by hand. **A tool whose entire posture is human review is emitting a row a
+human cannot audit.**
+
+Cheapest fix of the three findings here, and the one that makes the other two checkable:
+`LiftedOrigin` already exists as a type; the renderer prints a placeholder instead of it.
+
+### §7.5 Status of the original findings
+
+| finding | status |
+|---|---|
+| §1 package-wide lifting | **FIXED** — `TestTargetScope`, confirmed in production above |
+| §2 private subjects | **not a hole** — lift the law, do not widen access (corrected) |
+| §3 same-name duplication miss | **DECLINED** — 40% precision, `same-name-differential-pairing.md` |
+| §4 emitter-shape flood | open, deliberately — observation, not a filter request |
+| §5 `--stats-only` hides the leak | open; §7.4 is the same gap seen from the row level |
+| §6 `verify` / `prove-then-show` | still not exercised |
