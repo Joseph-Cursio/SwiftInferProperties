@@ -612,12 +612,39 @@ Reasons: 24 `unsupported-carrier`, 10 `unsupported-template`, the rest assorted
 (`monotonicity-domain-not-comparable` ×2, and single instances).
 
 By template the bucket is 40 `predicate`, 7 `idempotence`, 3 `monotonicity`,
-3 `input-totality`. The carriers are dominated by SwiftSyntax visitor types —
-`FunctionScannerVisitor`, `BodySignalVisitor`, `DeclModifierListSyntax`. **Those are
-untestable by construction, not a gap**: a syntax visitor has no meaningful generator, and
-the tool declining to invent one is the conservative posture working.
+3 `input-totality`.
 
-One Unverifiable *is* a real gap, and it is one this road test had already met by hand:
+> **CORRECTED 2026-08-08.** This section first read: *"The carriers are dominated by
+> SwiftSyntax visitor types … **those are untestable by construction, not a gap**: a syntax
+> visitor has no meaningful generator."* **That was too strong, and it drew the line in the
+> wrong place.** It is true of the *visitors* and false of the syntax *nodes*, which the
+> sentence lumped together — `DeclModifierListSyntax` was cited as an example of the former
+> and is one of the latter. The corrected split is below. Prompted by SwiftPropertyLaws'
+> `PropertyLawSyntax`, which demonstrably generates syntax values, so "no meaningful
+> generator" cannot be a property of the kind.
+
+The 24 `unsupported-carrier` picks split three ways, and only the first is untestable by
+construction:
+
+| kind | count | carriers | reading |
+|---|---|---|---|
+| **our own visitor / aggregate types** | 11 | `FunctionScannerVisitor` ×2, `BodySignalVisitor` ×2, `Visitor`, `TypeDecl`, `SamplingSeed`, `FunctionSummary`, `Finding`, `Effect`, `Coverage`, `Ranked<Record>` | a visitor is a *traversal*, not a value; generating one is meaningless. Correct silence |
+| **concrete SwiftSyntax nodes** | 6 | `DeclModifierListSyntax` ×2, `StringLiteralExprSyntax`, `InheritanceClauseSyntax`, `DictionaryExprSyntax`, `CodeBlockItemSyntax`, `ArraySlice<CodeBlockItemSyntax>` | **a gap, not a law of nature.** These are ordinary values with a grammar |
+| stdlib / unresolved generic | 2 | `String`, `S` | `String` is generable and the pick is a shape problem, not a carrier one |
+
+**The middle row is the correction.** `PropertyLawSyntax` vends `gen()` for six *erased base*
+types — `DeclSyntax`, `ExprSyntax`, `PatternSyntax`, `StmtSyntax`, `TokenSyntax`,
+`TypeSyntax` — so the kit already generates syntax. Our six are **concrete or collection**
+nodes, and **zero of the 24 are among the six**, which is why adopting
+`--extra-import PropertyLawSyntax` would unblock none of them today. But "nobody has written
+the generator" is a different claim from "no generator is possible", and the first draft
+asserted the second.
+
+That also makes the middle row the concrete downstream ask for the kit: generators for
+concrete nodes, or a derivation from the erased base, would move six picks out of
+Unverifiable. Recorded as a measured demand rather than a guess.
+
+One Unverifiable is a gap on **our** side that this road test had already met by hand:
 
 ```
 ? ProtocolCoverageAudit  homomorphism  lawTotal(for:)  (unsupported-carrier: Finding)
