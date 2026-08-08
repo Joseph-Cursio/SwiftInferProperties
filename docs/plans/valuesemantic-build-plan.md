@@ -4,7 +4,7 @@
 
 
 Status: **SHIPPED — slices 1–5 complete** (2026-07-06). Supersedes the
-discovery/verify half of `docs/ideas/ValueSemantic Kit Proposal.md` (2026-05-04).
+discovery/verify half of `docs/archive/ValueSemantic Kit Proposal.md` (2026-05-04).
 The feature discovers reference-backed struct candidates AND verifies the
 copy-mutate-compare law end-to-end, catching all three pbt-book Ch. 9 bug shapes
 (reference container / broken CoW / closure capture), a CI macro for adopters,
@@ -63,7 +63,7 @@ core struct property lands first — flagged now because the book pairs them.
 ### 2.1 The bug class (invisible to review, real in bridging code)
 
 Three shapes, all compile clean, type-check, and pass casual tests (verbatim
-from `docs/ideas/ValueSemantic Kit Proposal.md` §2.2):
+from `docs/archive/ValueSemantic Kit Proposal.md` §2.2):
 
 1. **Reference-container leak** — a struct wraps `NSMutableArray` (or any
    class-typed storage). `var b = a` copies the *reference*; `b.add(x)` mutates

@@ -2,6 +2,11 @@
 
 > **Status:** `shipped` · **As of:** 2026-07-07
 
+> **Moved from `docs/ideas/` on 2026-08-08.** Fully adjudicated — WS1 shipped kit-side,
+> WS2 resolved with no action, WS3 mostly pre-existing. Archived on the same grounds as
+> the `Edge-Case-Biased Generators Kit Proposal`: the design now lives in
+> SwiftPropertyLaws, and this is kept for the reasoning, never for current counts.
+
 
 **Status (updated 2026-07-07):** **Workstream 1 SHIPPED; Workstream 2 resolved (no action); Workstream 3 mostly pre-existing, remainder low-value.**
 - **WS1 `ValueSemantic`** — **delivered end-to-end.** The kit ships `ValueSemantic` + `DefensiveCopy` + `StableIdentity` (protocols + `*Laws` + peer macros, kit **v3.4.0–v3.9.0**), and the engine discovers + measured-verifies all three §2.2 bug classes (`valuesemantic-verify-corpus`: `SafeStore`/`LeakyStore`/`ClosureCounter`). The closure-capture case (open decision #8) shipped as multi-step interleaving (`copyMutationDoesNotLeakUnderInterleaving`, kit v3.5.0). See §6 for the as-built version map.

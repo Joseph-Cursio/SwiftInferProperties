@@ -18,7 +18,7 @@ not remove the string a detector keys on.
 | doc | summary said | detail said |
 |---|---|---|
 | `docs/design/tca-determinism-followups.md` | "only slice 3c deferred" | per-slice row: `✅ BUILT` |
-| `docs/ideas/Interaction Invariant Taxonomy.md` | "gated on a kit-side harness landing" | header note: the harness shipped in kit v2.2.0 |
+| `docs/design/Interaction Invariant Taxonomy.md` | "gated on a kit-side harness landing" | header note: the harness shipped in kit v2.2.0 |
 | `docs/design/tca-identified-action-slice3-design.md` | "Keep **3c deferred**" | banner + sign-off: 3c shipped `23de8e4` |
 
 In every case the contradicting fact was **already in the same file**, which is what made a text

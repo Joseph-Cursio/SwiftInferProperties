@@ -26,7 +26,7 @@ legitimately carry preconditions. There, an unguarded random sequence can call a
 order, trap, and produce a `measured` refutation that is an artifact of the generator rather than
 evidence about the invariant — a false positive at the tier the reader-facing `docc` surface trusts.
 
-This was the live half of `docs/ideas/Interaction Invariant Taxonomy.md` §3.6: *"sequences today are
+This was the live half of `docs/design/Interaction Invariant Taxonomy.md` §3.6: *"sequences today are
 unguarded, so an action that traps on an invalid precondition can mask signal."* The kit shipped the
 remedy (`StatefulGuard`, v2.2.0) and the engine never passed one. Before building that, the
 question is whether the population it would protect exists.
