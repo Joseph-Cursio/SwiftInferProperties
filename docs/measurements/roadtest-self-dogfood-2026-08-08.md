@@ -459,7 +459,7 @@ Cheapest fix of the three findings here, and the one that makes the other two ch
 | §3 same-name duplication miss | **DECLINED** — 40% precision, `same-name-differential-pairing.md` |
 | §4 emitter-shape flood | open, deliberately — observation, not a filter request |
 | §5 `--stats-only` hides the leak | open; §7.4 is the same gap seen from the row level |
-| §6 `verify` / `prove-then-show` | still not exercised |
+| §6 `verify` / `prove-then-show` | **CLOSED — §8**: 153 picks, 81 Proven, 1 Disproven (a false law at `Possible`), **0 defects** |
 
 
 ---
@@ -545,3 +545,182 @@ narrower caveats stand unchanged: TestLifter still reads source rather than resu
 failing or skipped test corroborates as much as a passing one; and the signal still cannot
 distinguish a test written independently from one written on the tool's advice — it can now only
 show you which test, and let you decide.
+
+---
+
+## §8 `prove-then-show` — §6 closed, and the tool gets a clean bill
+
+The measured-verify path had never been exercised by this road test: every verdict up to here
+came from `discover` plus hand-executed laws. §6 recorded that as the standing gap. This runs it.
+
+**Subject:** `SwiftInferCore` @ `ca2e73c`, release binary built from `origin/main`.
+**Command:** `prove-then-show --target SwiftInferCore --budget small --max-parallel 4`, no
+`--corpus-module` (per that command's doc: omit it when proving the package you stand in, so
+the survey derives `@testable import` per entry). **12 min, 9.3 GB of workdir, exit 0.**
+
+**The stale-index precondition §6 warned about was sidestepped rather than managed.** The run
+was done in a fresh `git worktree`, and `.swiftinfer/` is gitignored — so the index was clean
+*by construction*, with no archive-and-restore dance and no risk of verifying the union of
+every past run.
+
+### §8.1 The result
+
+| | count |
+|---|---|
+| **Proven** | **81** |
+| Expected-to-hold | 0 |
+| **Disproven** | **1** |
+| Unverifiable | 63 |
+| Inconclusive | 8 |
+| **tested** | **153** |
+
+Proven by template: `predicate` 49 · `idempotence` 14 · `codable-round-trip` 10 ·
+`commutativity` 4 · `associativity` 4.
+
+The four `commutativity` and four `associativity` rows are the `merge(_:)` folds — the laws
+the *first* road test proposed, that refuted, that drove `IdentityKeyedFold`, and that
+`MergeAlgebraPropertyTests` pins. They now execute and hold under the tool's own generator as
+well as under the hand-written suite.
+
+### §8.2 The single refutation is a false law, not a defect
+
+```
+✗ BuildIdentity  idempotence  versionString(_:)   [counterexample: XO8hGC]
+```
+
+```swift
+isAttributable ? "\(version) (\(commit))" : "\(version) (unattributable build)"
+```
+
+Applying it twice appends the suffix twice. **The code is correct and the conjecture was
+wrong** — precisely what the tool's own standing caveat says (*a `T -> T` need not be
+idempotent; a one-shot suffix strip applied twice removes two suffixes*).
+
+It sits at **`Possible`, score 35**. That independently reproduces the whole-corpus survey's
+finding — *all real bugs are `Likely`; all `Possible` refutations are false laws* — on a
+different corpus and a different binary. **Tier predicted the reading correctly.**
+
+**So the honest headline is a clean bill: 81 laws executed and held, zero defects found.**
+That is the outcome a correct codebase should produce, and it is the first *execution-backed*
+evidence anywhere in this road test. It is also the weaker kind of result — absence of
+refutation over a generated domain is not proof, and `measured-bothPass` means only "no
+counterexample in the generated domain" (Appendix C).
+
+### §8.3 Unverifiable 63 of 153 (41%) — mostly correct silence
+
+Reasons: 24 `unsupported-carrier`, 10 `unsupported-template`, the rest assorted
+(`monotonicity-domain-not-comparable` ×2, and single instances).
+
+By template the bucket is 40 `predicate`, 7 `idempotence`, 3 `monotonicity`,
+3 `input-totality`. The carriers are dominated by SwiftSyntax visitor types —
+`FunctionScannerVisitor`, `BodySignalVisitor`, `DeclModifierListSyntax`. **Those are
+untestable by construction, not a gap**: a syntax visitor has no meaningful generator, and
+the tool declining to invent one is the conservative posture working.
+
+One Unverifiable *is* a real gap, and it is one this road test had already met by hand:
+
+```
+? ProtocolCoverageAudit  homomorphism  lawTotal(for:)  (unsupported-carrier: Finding)
+```
+
+That is the law §0 landed as `LawTotalHomomorphismPropertyTests` — where a `Finding`
+generator had to be **hand-written**. So the tool proposes a law it cannot itself test, and
+the missing capability is generator derivation for a struct holding a `Set<KnownProperty>`
+and an enum. It says so plainly rather than passing silently, which is the right failure.
+
+### §8.4 Inconclusive 8 — two findings, and the honest one is about the generator
+
+**Six are generator traps.** The verifier trapped (signal 5) before comparing, and the
+message is explicit that this is *"evidence about the generator's domain, not about the
+law"*. One flushed counterexample shows the mechanism outright:
+
+```
+SourceLocation(file: "4pUWyvJ8", line: -691367222 …)
+```
+
+An unbounded negative `Int` drawn for a line number. That is the weak-generator idiom
+`parsing-catalog-gap.md` records as a measured weakness, caught in the act on this repo's own
+types. It is not a defect in the subject code and the tool does not claim it is.
+
+**Two are build failures, and these are the actionable finding:**
+
+```
+build-failed: cannot find 'Visitor' in scope
+build-failed: cannot find 'NonDeterministicAPIs' in scope
+```
+
+The survey derives `@testable import <Module>` per entry, which reaches `internal` but not
+types that are nested or otherwise unreachable at file scope. Two picks are therefore lost to
+an emitter gap rather than to anything about their laws. **Open follow-up**, and the cheapest
+remaining item in this document. (falsifier: `nestedCarrierImportResolution`)
+
+### §8.6 A Proven verdict that is FALSE — and the 81 were never tests
+
+Two things this section exists to correct, both found *after* the survey ran.
+
+**(a) "81 Proven" is not 81 tests.** The survey generates each law into a throwaway verifier
+workdir, compiles it, runs it once, and the workdir is deleted with the run. A Proven verdict
+is a **measurement, not regression protection** — nothing re-checks it afterwards. The picks
+that survive have to be *banked* to become tests. Banked here: the 5 uncovered
+`codable-round-trip` carriers (`InversePair`, `MarkerPair`, `SeedEffect`, `SeedRestriction`,
+`SeedRole`) and the uncovered `idempotence` subjects, as
+`SurveyedCodableRoundTripPropertyTests` and `SurveyedIdempotencePropertyTests` — **13 laws,
+2 mutant controls**. The rest were already covered (`MergeAlgebraPropertyTests`,
+`PersistenceRoundTripPropertyTests`, `NameStrippingDifferentialPropertyTests`) or are
+`predicate` totality claims that the Daikon-trap entry already warns are 88% of output.
+
+**(b) One Proven verdict is wrong.** `ViewModelNameHeuristics.booleanStem` is **not
+idempotent**, and the survey proved it:
+
+```
+isShowing     -> showing    -> ing
+hasShown      -> shown      -> n
+willShowAlert -> showalert  -> alert
+```
+
+It strips ONE prefix from `["isshowing", "is", "has", "show", "should", "did", "will"]`, so a
+second application strips a second prefix whenever the stem starts with another one — which
+English identifiers do constantly.
+
+**Why the verifier missed it is the whole lesson.** The derived `String` generator draws
+values like `"XO8hGC"` and `"uvYUbS"` — the literal counterexamples §8.4 captured from other
+picks — which never begin with an English boolean prefix, so the failing branch was
+unreachable in the generated domain. This is the standing rule in the sharpest form it has
+taken in this repo: ***`measured-bothPass` means no counterexample in the generated domain,
+not that the property holds.*** It generalises the `Decisions.merge` alphabet-width finding
+from *collisions* to *any branch keyed on realistic content*.
+
+**It is a false law, not a defect.** Both call sites apply it once to a raw property name and
+the docstring says one strip by design. `SurveyedIdempotencePropertyTests` therefore pins the
+**refutation**, with a message telling a future editor to check those call sites before
+"fixing" it — looping would turn `isShowingSheet` into `sheet` and change what every
+view-model invariant keys on.
+
+**This was found by reading the code, not by running the tool**, which bounds §8.1's headline:
+81 Proven contains at least one false positive, discovered by hand on the ~30 non-`predicate`
+rows. The 49 `predicate` rows were not audited this way.
+
+### §8.7 The controls
+
+Banking a Proven law is only worth it if the banked law can fail. Both suites were run against
+deliberate mutants:
+
+| mutant | killed by | correctly survived |
+|---|---|---|
+| `SemanticIndexEntry.updated(from:)` takes `identityHash` from the **argument** | identity-preservation | **idempotence** — still true, and blind to it |
+| `InversePair.init(from:)` decodes the two-element array **swapped** | round-trip + the explicit `forward` assertion | the other four carriers |
+
+The first row is the argument for not banking the survey's verdict alone: **the law the survey
+proved is exactly the law that cannot see this bug.** Re-keying every index row stays perfectly
+idempotent. The refutable companion law had to be added by hand.
+
+### §8.5 What §8 does not claim
+
+* **Zero defects found is not zero defects present.** 81 held over a generated domain at
+  `--budget small`; a wider budget or a narrowed alphabet could still refute. The
+  collision-dependent class (merge tie-breaks, dedup, key injectivity) is invisible to a
+  generator drawn for type coverage — the standing `measured-bothPass` rule.
+* **One target only.** `SwiftInferCore`. The other five are unmeasured on this path.
+* **41% Unverifiable bounds the claim**, and the bound is honest rather than hidden: the
+  report separates *not tested* from *passed*, which is the distinction the withdrawn 2026-07
+  road test got wrong when a hardcoded Pass 2 made zero-trial runs read as `bothPass`.
