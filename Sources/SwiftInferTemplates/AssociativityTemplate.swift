@@ -109,6 +109,13 @@ public enum AssociativityTemplate {
             },
             identity: Self.makeIdentity(for:),
             carrier: { $0.containingTypeName },
+            // #128 — a FREE function has no containing type, so `carrier` is nil and the
+            // verify path falls back to the `"(none)"` sentinel and declines with
+            // `unsupported-carrier: (none)` — naming a carrier that does not exist, for a
+            // type that is perfectly supported. Recording the operand type here is what
+            // `BinaryIdempotenceTemplate` already did, which is why the same free function's
+            // binary-idempotence law executes while its commutativity law declines.
+            carrierType: { $0.returnTypeText },
             caveats: { summary in
                 Self.makeCaveats(for: summary)
             }
