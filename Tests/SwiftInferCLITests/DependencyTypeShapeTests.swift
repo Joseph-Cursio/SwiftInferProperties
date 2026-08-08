@@ -10,6 +10,10 @@ import Testing
 /// (32 of 105) for exactly this reason: two of its initializer parameters are declared in
 /// SwiftEffectInference, and **zero** of the index's 745 recorded source files pointed
 /// outside the package. Invisible by construction, not by omission.
+private struct SilentDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* the collision warning is asserted elsewhere */ }
+}
+
 @Suite("Dependency type shapes — recorded, but never at the cost of a wrong one")
 struct DependencyTypeShapeTests {
 
@@ -88,6 +92,25 @@ struct DependencyTypeShapeTests {
         #expect(scanned.shapes["OnlyA"] != nil)
         #expect(scanned.shapes["OnlyB"] != nil)
         #expect(scanned.shapes["Mutex"] == nil)
+    }
+
+    /// **The gate, both directions.** Off by default, so an ordinary run pays none of the
+    /// widening; on request, the dependency's shape is recorded. A test that only asserted
+    /// the "on" half could not tell a gate from a no-op.
+    @Test("the merge is opt-in", arguments: [false, true])
+    func mergeIsOptIn(scanDependencies: Bool) throws {
+        let root = try Self.makeCheckouts([
+            "DepA": "public struct Widget { public let size: Int }\n"
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let merged = scanDependencies
+            ? DependencyTypeShapes.merging(
+                shapes: [:], sourceFiles: [:], localTypeNames: [],
+                packageRoot: root, diagnostics: SilentDiagnostics()
+            )
+            : (shapes: [:], sourceFiles: [:])
+        #expect((merged.shapes["Widget"] != nil) == scanDependencies)
     }
 
     /// A package that was never resolved has no dependency source to read, and that is not

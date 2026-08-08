@@ -27,6 +27,7 @@ extension SwiftInferCommand.Verify {
     @discardableResult
     static func runAllFromIndex(
         persistEvidence: Bool = true,
+        scanDependencies: Bool = false,
         indexPathOverride: String?,
         budgetString: String,
         workingDirectory: URL,
@@ -40,7 +41,8 @@ extension SwiftInferCommand.Verify {
             ?? workingDirectory
         let index = try loadIndex(
             indexPathOverride: indexPathOverride,
-            packageRoot: packageRoot
+            packageRoot: packageRoot,
+            scanDependencies: scanDependencies
         )
         let entries = filtered(entries: index.entries, templateFilter: templateFilter)
         if entries.isEmpty {
@@ -98,7 +100,8 @@ extension SwiftInferCommand.Verify {
     static func loadIndex(
         indexPathOverride: String?,
         packageRoot: URL,
-        clockNow: Date = Date()
+        clockNow: Date = Date(),
+        scanDependencies: Bool = false
     ) throws -> IndexStore.Index {
         // Injected via `now` so a test can pin it (SwiftProjectLint's
         // Non-Injected Nondeterminism rule). Only feeds `IndexStore.load`'s
@@ -106,7 +109,11 @@ extension SwiftInferCommand.Verify {
         let now = ISO8601DateFormatter().string(from: clockNow)
         let explicitIndexPath = indexPathOverride.map { URL(fileURLWithPath: $0) }
         // V1.42.C.5 — reindex the conventional index on demand if stale/missing.
-        try reindexIfNeeded(packageRoot: packageRoot, explicitIndexPath: explicitIndexPath)
+        try reindexIfNeeded(
+            packageRoot: packageRoot,
+            explicitIndexPath: explicitIndexPath,
+            scanDependencies: scanDependencies
+        )
         let resolved = try VerifyHarness.resolveIndex(
             packageRoot: packageRoot,
             explicitIndexPath: explicitIndexPath,

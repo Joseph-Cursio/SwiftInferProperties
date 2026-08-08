@@ -25,7 +25,8 @@ extension SwiftInferCommand.Verify {
     static func reindexIfNeeded(
         packageRoot: URL,
         explicitIndexPath: URL?,
-        diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
+        diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
+        scanDependencies: Bool = false
     ) throws {
         guard explicitIndexPath == nil else { return }
         let indexPath = IndexStore.defaultPath(for: packageRoot)
@@ -47,7 +48,8 @@ extension SwiftInferCommand.Verify {
                 explicitConfigPath: nil,
                 explicitTestDirPath: nil,
                 packsOverride: nil,
-                dryRun: false
+                dryRun: false,
+                scanDependencies: scanDependencies
             ),
             diagnostics: diagnostics
         )
