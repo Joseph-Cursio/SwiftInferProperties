@@ -40,7 +40,10 @@ PERF_RE := PerformanceTests
 # the batch FILTERS are substrings, so `BATCH3 := VerifyPipeline` matches every
 # `VerifyPipeline*` suite. Keep every regex-matched suite in exactly one batch.
 BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests|MobiusVerifyCorpusMeasuredTests
-BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests
+# TrapAttributionCensusMeasuredTests is batched to satisfy the coverage guard but
+# is opt-in (SWIFT_INFER_RUN_TRAP_CENSUS) — it re-surveys corpora this batch and
+# BATCH4/BATCH7 already build, so it costs nothing here unless asked for.
+BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests|TrapAttributionCensusMeasuredTests
 BATCH3 := VerifyPipeline
 BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|PromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests|AlgebraicSurveyCorpusMeasuredTests
 # MVVM-carrier verify suites (dependency-free builds — light; one batch is fine).
