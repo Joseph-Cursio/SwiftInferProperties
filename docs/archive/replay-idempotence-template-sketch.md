@@ -3,9 +3,11 @@
 > **Status:** `shipped` · **As of:** 2026-08-07
 
 
-*A discovery template for effectful replay-safe handlers. Design source: SwiftIdempotency's
-[replay-idempotency shape catalog](../../../SwiftIdempotency/docs/replay-idempotency-shape-catalog.md)
-and its four fixtures. Status: **shipped, M1–M13 (2026-08-06 → 2026-08-07)** — this document is the
+*A discovery template for effectful replay-safe handlers. Design source:
+`SwiftIdempotency/docs/replay-idempotency-shape-catalog.md` and its four fixtures — cited in
+the repo-rooted sibling form rather than as a relative link, because a `../../../` link leaves
+this repository and therefore 404s for every reader who is not standing in a checkout with
+that sibling beside it. Status: **shipped, M1–M13 (2026-08-06 → 2026-08-07)** — this document is the
 original plan; see the "As built" note below for where reality diverged, and
 [`roadtest-maccloud-server-replay.md`](../measurements/roadtest-maccloud-server-replay.md) for the validation
 journey.*
