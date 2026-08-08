@@ -98,6 +98,49 @@ extension TestLifter {
             Set(liftedSuggestions.map(\.crossValidationKey))
         }
 
+        /// Which test each cross-validation key came from, so the `+20` signal can name
+        /// its corroborator instead of saying only "Cross-validated by TestLifter".
+        ///
+        /// **Advisory, and deliberately separate from `crossValidationKeys`.** The key set
+        /// stays authoritative for *whether* the signal fires; this map only affects how it
+        /// **renders**. A missing entry degrades to the unqualified text, so the two
+        /// collections disagreeing can never produce a wrong score — only a less specific
+        /// sentence.
+        ///
+        /// It exists because the `+20` was designed to mean *this codebase independently
+        /// states this law*, and once TestLifter could read property tests it could equally
+        /// mean *this codebase took our advice*: the four `merge(_:)` commutativity rows are
+        /// corroborated by a suite whose own header says `discover` proposed them
+        /// (`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §7.6). Those are different
+        /// claims and they rendered identically. Naming the source lets a reader judge
+        /// independence instead of inferring it.
+        ///
+        /// Ties are broken by `(file, line)` so a key corroborated in several places always
+        /// names the same one — the byte-identical-reproducibility guarantee (PRD §16 #6).
+        public var crossValidationOrigins: [CrossValidationKey: LiftedOrigin] {
+            var result: [CrossValidationKey: LiftedOrigin] = [:]
+            for lifted in liftedSuggestions {
+                guard let origin = lifted.origin, origin.sourceLocation.isResolvable else {
+                    continue
+                }
+                guard let existing = result[lifted.crossValidationKey] else {
+                    result[lifted.crossValidationKey] = origin
+                    continue
+                }
+                if isEarlier(origin, than: existing) {
+                    result[lifted.crossValidationKey] = origin
+                }
+            }
+            return result
+        }
+
+        private func isEarlier(_ lhs: LiftedOrigin, than rhs: LiftedOrigin) -> Bool {
+            if lhs.sourceLocation.file != rhs.sourceLocation.file {
+                return lhs.sourceLocation.file < rhs.sourceLocation.file
+            }
+            return lhs.sourceLocation.line < rhs.sourceLocation.line
+        }
+
         /// M7 — counter-signal keys to feed into
         /// `TemplateRegistry.discover(counterSignalsFromTestLifter:)`.
         /// Same shape as `crossValidationKeys`; the discover pipeline

@@ -2,8 +2,31 @@ import SwiftInferCore
 
 extension TemplateRegistry {
 
-    /// Detail text rendered for the cross-validation signal.
+    /// Detail text rendered for the cross-validation signal when the corroborating test is
+    /// not known. Retained as the degraded form — see `crossValidationDetail(for:)`.
     static var crossValidationDetail: String { "Cross-validated by TestLifter" }
+
+    /// Detail text naming **which** test corroborates this law.
+    ///
+    /// The `+20` was designed to mean *this codebase independently states this law*. Once the
+    /// slicer could read property tests, it could equally mean *this codebase took our
+    /// advice* — and the two rendered identically. Measured: the four `merge(_:)`
+    /// commutativity rows are corroborated by `MergeAlgebraPropertyTests`, whose own header
+    /// says the laws were ones `discover` **proposed**
+    /// (`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §7.6).
+    ///
+    /// The fix is not to suppress the signal but to **name its source**, the same medicine
+    /// §7.4 applied to lifted rows: a reader who can see the corroborating test can judge its
+    /// independence, and a reader who cannot is being asked to take "cross-validated" on
+    /// trust. This does not settle whether such corroboration *should* count — it makes the
+    /// question answerable at the point of reading.
+    static func crossValidationDetail(for origin: LiftedOrigin?) -> String {
+        guard let origin, origin.sourceLocation.isResolvable else {
+            return crossValidationDetail
+        }
+        return "\(crossValidationDetail) — \(origin.sourceLocation.file):"
+            + "\(origin.sourceLocation.line) `\(origin.testMethodName)`"
+    }
 
     /// Walk `suggestions` and rebuild any whose `crossValidationKey` is
     /// in `keys`, appending a `+20` cross-validation signal and a
@@ -15,9 +38,14 @@ extension TemplateRegistry {
     /// to `Set<CrossValidationKey>` — the lighter-weight key
     /// (template + sorted callee names) matches what TestLifter can
     /// extract from a test body without semantic resolution.
+    /// `origins` is **advisory**: it changes only the rendered detail, never whether the
+    /// signal fires. `keys` stays authoritative, so a key present without an origin still
+    /// scores `+20` and renders the unqualified sentence — the two collections disagreeing
+    /// can produce a vaguer message but never a wrong score.
     static func applyCrossValidation(
         to suggestions: [Suggestion],
-        matching keys: Set<CrossValidationKey>
+        matching keys: Set<CrossValidationKey>,
+        origins: [CrossValidationKey: LiftedOrigin] = [:]
     ) -> [Suggestion] {
         if keys.isEmpty {
             return suggestions
@@ -26,15 +54,20 @@ extension TemplateRegistry {
             guard keys.contains(suggestion.crossValidationKey) else {
                 return suggestion
             }
-            return rebuildWithCrossValidation(suggestion)
+            return rebuildWithCrossValidation(
+                suggestion, origin: origins[suggestion.crossValidationKey]
+            )
         }
     }
 
-    private static func rebuildWithCrossValidation(_ suggestion: Suggestion) -> Suggestion {
+    private static func rebuildWithCrossValidation(
+        _ suggestion: Suggestion,
+        origin: LiftedOrigin?
+    ) -> Suggestion {
         let signal = Signal(
             kind: .crossValidation,
             weight: 20,
-            detail: crossValidationDetail
+            detail: crossValidationDetail(for: origin)
         )
         let newScore = Score(signals: suggestion.score.signals + [signal])
         let newWhy = suggestion.explainability.whySuggested + [signal.formattedLine]

@@ -65,6 +65,7 @@ public enum TemplateRegistry {
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
+        crossValidationOriginsFromTestLifter: [CrossValidationKey: LiftedOrigin] = [:],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil
     ) -> [Suggestion] {
@@ -134,6 +135,7 @@ public enum TemplateRegistry {
         return finalizeSuggestions(
             withCodableFallback,
             crossValidation: crossValidationFromTestLifter,
+            crossValidationOrigins: crossValidationOriginsFromTestLifter,
             counterSignals: counterSignalsFromTestLifter,
             templateFilter: templateFilter
         )
@@ -147,10 +149,13 @@ public enum TemplateRegistry {
     private static func finalizeSuggestions(
         _ suggestions: [Suggestion],
         crossValidation: Set<CrossValidationKey>,
+        crossValidationOrigins: [CrossValidationKey: LiftedOrigin],
         counterSignals: Set<CrossValidationKey>,
         templateFilter: Set<String>?
     ) -> [Suggestion] {
-        let crossValidated = applyCrossValidation(to: suggestions, matching: crossValidation)
+        let crossValidated = applyCrossValidation(
+            to: suggestions, matching: crossValidation, origins: crossValidationOrigins
+        )
         // M7 counter-signal pass runs AFTER cross-validation (M7 plan
         // OD #5): suggestions both cross-validated AND counter-signaled
         // land at base+20-25 = base-5, preserving relative weighting.
@@ -177,6 +182,7 @@ public enum TemplateRegistry {
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
+        crossValidationOriginsFromTestLifter: [CrossValidationKey: LiftedOrigin] = [:],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil
     ) throws -> [Suggestion] {
@@ -185,6 +191,7 @@ public enum TemplateRegistry {
             vocabulary: vocabulary,
             diagnostic: diagnostic,
             crossValidationFromTestLifter: crossValidationFromTestLifter,
+            crossValidationOriginsFromTestLifter: crossValidationOriginsFromTestLifter,
             counterSignalsFromTestLifter: counterSignalsFromTestLifter,
             templateFilter: templateFilter
         ).suggestions
@@ -294,6 +301,7 @@ public enum TemplateRegistry {
         vocabulary: Vocabulary = .empty,
         diagnostic: (String) -> Void = { _ in /* no-op */ },
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
+        crossValidationOriginsFromTestLifter: [CrossValidationKey: LiftedOrigin] = [:],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
         templateFilter: Set<String>? = nil,
         rescuedRestrictedSymbols: Set<String> = [],
@@ -339,6 +347,7 @@ public enum TemplateRegistry {
             vocabulary: vocabulary,
             diagnostic: diagnostic,
             crossValidationFromTestLifter: crossValidationFromTestLifter,
+            crossValidationOriginsFromTestLifter: crossValidationOriginsFromTestLifter,
             counterSignalsFromTestLifter: counterSignalsFromTestLifter,
             templateFilter: templateFilter
         ).filter { suggestion in

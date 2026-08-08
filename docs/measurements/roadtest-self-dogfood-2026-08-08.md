@@ -516,10 +516,32 @@ for a law a test merely *states* — a failing or skipped test corroborates exac
 a passing one. And a third-party reader sees `Strong 90, cross-validated` and reasonably
 infers two independent sources agreeing, when one caused the other.
 
-**The proposed remedy is the same medicine as §7.4: name the source.** Thread `LiftedOrigin`
-through the cross-validation seam — today it is a bare `Set<CrossValidationKey>` — so the
-signal renders *"Cross-validated by `MergeAlgebraPropertyTests.commutativityHolds`"* and a
-reader can judge independence themselves. That is a change to the
-`crossValidationFromTestLifter` interface and is **not** made here; it is recorded as the
-open follow-up rather than decided quietly.
-(falsifier: `crossValidationOrigin`)
+### The remedy, applied — name the source
+
+**Done in the same PR**, and it is §7.4's medicine again. `Artifacts.crossValidationOrigins`
+carries the corroborating `LiftedOrigin` per key, threaded through
+`discover`/`discoverArtifacts` into `applyCrossValidation`, and the row now reads:
+
+```
+✓ Cross-validated by TestLifter — Tests/SwiftInferCLITests/MergeAlgebraPropertyTests+Commutativity.swift:53 `mergeCommutesForEveryReadingPair` (+20)
+✓ Cross-validated by TestLifter — Tests/SwiftInferCLITests/MergeAlgebraPropertyTests.swift:177 `decisionsMergeIsAssociative` (+20)
+```
+
+A reader who recognises `MergeAlgebraPropertyTests` as a suite this road test wrote can now
+discount the corroboration accordingly. That was impossible when the line said only
+*"Cross-validated by TestLifter"*.
+
+**The origins map is advisory, and that is the load-bearing design choice.** The key set stays
+authoritative for *whether* the `+20` fires; origins change only how it **renders**. So the two
+collections disagreeing can produce a vaguer sentence but never a wrong score — a presentational
+map never becomes a scoring input. `CrossValidationOriginTests` pins exactly that: supplying
+origins must not change which suggestions are cross-validated, and an origin without a matching
+key must fire nothing.
+
+**What this does and does not settle.** It does not decide whether corroboration-from-our-own-
+advice *should* count `+20` — that is a judgement about evidence, and reasonable people can
+differ. It makes the judgement **available at the point of reading** instead of hidden. The two
+narrower caveats stand unchanged: TestLifter still reads source rather than results, so a
+failing or skipped test corroborates as much as a passing one; and the signal still cannot
+distinguish a test written independently from one written on the tool's advice — it can now only
+show you which test, and let you decide.
