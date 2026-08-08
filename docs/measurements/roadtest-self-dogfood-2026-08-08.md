@@ -414,6 +414,13 @@ This confirms, in a new context, the standing note that TestLifter's detectors a
 existing templates and miss hand-rolled random-input property tests. What is new is that the
 gap now covers the tool's *own* recommended output.
 
+> **FIXED 2026-08-08 — `Slicer.quantifierClosureBody`.** A quantifier's trailing closure is
+> now unwrapped exactly as a tail `for` body always was, gated on a curated callee list
+> (`propertyCheck`, `forAll`, `property`, `checkProperty`, `quickCheck`). A/B across six
+> targets: **Strong 16 → 24**, totals 339 → 342. **Read §7.6 before celebrating that number** —
+> most of the movement is the `+20` cross-validation seam firing for the first time, and four
+> of the eight new Strong rows are corroborated by a test this road test itself wrote.
+
 ### §7.4 NEW — a lifted row carries no provenance, and that is why §1 hid so long
 
 > **FIXED same day.** `LiftedSuggestion.provenanceLine()` resolves through `LiftedOrigin`,
@@ -453,3 +460,88 @@ Cheapest fix of the three findings here, and the one that makes the other two ch
 | §4 emitter-shape flood | open, deliberately — observation, not a filter request |
 | §5 `--stats-only` hides the leak | open; §7.4 is the same gap seen from the row level |
 | §6 `verify` / `prove-then-show` | still not exercised |
+
+
+---
+
+## §7.6 The §7.3 fix closes a loop §7.2 could only refute because the tool was blind
+
+§7.2 asked whether the 15 laws this road test landed would feed back as `+20`
+`crossValidation` and inflate their own tier. The answer was no — **because TestLifter could
+not read a property test at all**. §7.3 fixes that, and the loop is now live.
+
+**Measured.** A/B, two binaries, same afternoon:
+
+| target | Strong before | Strong after |
+|---|---|---|
+| SwiftInferCore | 4 | **8** |
+| SwiftInferTemplates | 4 | **5** |
+| SwiftInferCLI | 5 | **6** |
+| SwiftInferTestLifter | 3 | **4** |
+| **total** | **16** | **24** |
+
+Totals barely move (339 → 342), so this is **promotion, not discovery**: only 3 genuinely new
+rows, and 8 existing rows crossing into `Strong` because the `+20` finally fires.
+
+**The four promotions on `SwiftInferCore` are the whole question.** All four are `merge(_:)`
+commutativity, 70 → **90**, on `Decisions`, `InteractionDecisions`, `PostAcceptanceOutcome`
+and `VerifyEvidence`. Their corroborating suite is `MergeAlgebraPropertyTests`, whose own
+header reads:
+
+> *"Self-dogfood road test — the laws `swift-infer discover --target SwiftInferCore`
+> **proposed** against this repo's own persistence layer, executed rather than read."*
+
+So: `discover` proposed the law, a human wrote the property test **on that advice**, and
+`discover` now reads the test back and raises its own suggestion by 20 points.
+
+### Why this was still shipped
+
+**Blindness is not a safeguard.** The slicer failing to parse a property test is a defect
+whichever way the score moves; keeping it would be preserving a bug because it happened to
+suppress a second one.
+
+And the evidence is not empty. `MergeAlgebraPropertyTests` did not rubber-stamp the law — it
+**refuted** commutativity when first written, which is what drove the `IdentityKeyedFold`
+fix. A law that survives an executing property test over a generated domain is better
+supported than one read off a name and a shape.
+
+### What is genuinely unresolved
+
+The `+20` was designed to mean *this codebase independently states this law*. After §7.3 it
+can also mean *this codebase took our advice*. Those are different claims and the signal
+renders identically for both — `Cross-validated by TestLifter`, naming nothing.
+
+Two further caveats sharpen it. TestLifter reads **source, not results**, so the signal fires
+for a law a test merely *states* — a failing or skipped test corroborates exactly as much as
+a passing one. And a third-party reader sees `Strong 90, cross-validated` and reasonably
+infers two independent sources agreeing, when one caused the other.
+
+### The remedy, applied — name the source
+
+**Done in the same PR**, and it is §7.4's medicine again. `Artifacts.crossValidationOrigins`
+carries the corroborating `LiftedOrigin` per key, threaded through
+`discover`/`discoverArtifacts` into `applyCrossValidation`, and the row now reads:
+
+```
+✓ Cross-validated by TestLifter — Tests/SwiftInferCLITests/MergeAlgebraPropertyTests+Commutativity.swift:53 `mergeCommutesForEveryReadingPair` (+20)
+✓ Cross-validated by TestLifter — Tests/SwiftInferCLITests/MergeAlgebraPropertyTests.swift:177 `decisionsMergeIsAssociative` (+20)
+```
+
+A reader who recognises `MergeAlgebraPropertyTests` as a suite this road test wrote can now
+discount the corroboration accordingly. That was impossible when the line said only
+*"Cross-validated by TestLifter"*.
+
+**The origins map is advisory, and that is the load-bearing design choice.** The key set stays
+authoritative for *whether* the `+20` fires; origins change only how it **renders**. So the two
+collections disagreeing can produce a vaguer sentence but never a wrong score — a presentational
+map never becomes a scoring input. `CrossValidationOriginTests` pins exactly that: supplying
+origins must not change which suggestions are cross-validated, and an origin without a matching
+key must fire nothing.
+
+**What this does and does not settle.** It does not decide whether corroboration-from-our-own-
+advice *should* count `+20` — that is a judgement about evidence, and reasonable people can
+differ. It makes the judgement **available at the point of reading** instead of hidden. The two
+narrower caveats stand unchanged: TestLifter still reads source rather than results, so a
+failing or skipped test corroborates as much as a passing one; and the signal still cannot
+distinguish a test written independently from one written on the tool's advice — it can now only
+show you which test, and let you decide.

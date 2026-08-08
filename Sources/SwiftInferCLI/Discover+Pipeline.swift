@@ -56,6 +56,7 @@ extension SwiftInferCommand.Discover {
             vocabulary: setup.vocabulary,
             diagnostic: { diagnostics.writeDiagnostic($0) },
             crossValidationFromTestLifter: liftedArtifacts.crossValidationKeys,
+            crossValidationOriginsFromTestLifter: liftedArtifacts.crossValidationOrigins,
             counterSignalsFromTestLifter: liftedArtifacts.counterSignalKeys,
             templateFilter: setup.templateFilter,
             rescuedRestrictedSymbols: rescuableRestrictedKeys(from: seedManifest),

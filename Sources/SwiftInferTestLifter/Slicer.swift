@@ -87,7 +87,7 @@ public enum Slicer {
         return Array(leading) + loopBody
     }
 
-    /// The body of a `for`/`while`/`repeat`, or `nil` when this is not one.
+    /// A `for`/`while`/`repeat` body, or a quantifier's closure (`Slicer+Quantifier.swift`).
     private static func repetitionBody(
         of item: CodeBlockItemSyntax
     ) -> [CodeBlockItemSyntax]? {
@@ -100,7 +100,7 @@ public enum Slicer {
         if let repeatStatement = item.item.as(RepeatStmtSyntax.self) {
             return Array(repeatStatement.body.statements)
         }
-        return nil
+        return quantifierClosureBody(of: item)
     }
 
     /// A plain `let`/`var` declaration — the only thing allowed to precede the
