@@ -259,6 +259,26 @@ Consequences for the sub-slices:
 
 ## Recommendation (revised by the recount)
 
+> **This is what was recommended, not what happened — 3c was built the next day.**
+> The recommendation below to *"keep 3c deferred"* was made on the recount's
+> evidence (0 added real reach + the recursion hazard) and then **overtaken**:
+> slice 3c shipped as `23de8e4` (2026-07-05), one day after 3b, as
+> `IdentifiedActionResolver.maxChildDepth = 2` with recursive descent at
+> `IdentifiedActionResolver.swift:127` and two termination arms in
+> `IdentifiedActionResolverTests` (`depthBoundTerminates`, plus the
+> payload-free-base-case arm that proves recursion is not entered when a base
+> case exists). The reach prediction held — 3c bought ~0 added real reach — but
+> it was built anyway for two reasons the recount did not weigh: it completes
+> construction for payload-only children, which slice 4 composes, and it proves
+> the self-recursion termination bound rather than leaving it as a hazard.
+>
+> Left unmarked, a section titled **Recommendation** is the first thing a reader
+> skims to, and this one said *defer* about work that had already landed —
+> **the banner at the top of this file and the sign-off section below both
+> already record 3c as shipped, so the doc contradicted itself twice over.**
+> Same shape as the stale slice-3c summary CLAUDE.md documents: the detail was
+> maintained, one summary was not, and a summary is what gets quoted.
+
 Skip 3a as a standalone (0 real reach) and build **3b directly**: recognize
 `IdentifiedActionOf<Child>` / `IdentifiedAction<ID, Action>`, resolve `Child`'s
 candidate, require a defaultable id (`UUID` via the canned zero-UUID literal;
