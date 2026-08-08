@@ -1,7 +1,7 @@
 import Foundation
 
 /// Recognizes value-semantics verification candidates from a scanned corpus.
-/// Slice 2 of the ValueSemantic build plan (`docs/plans/valuesemantic-build-plan.md`):
+/// Slice 2 of the ValueSemantic build plan (`docs/archive/valuesemantic-build-plan.md`):
 /// a textual/corpus fold over `TypeDecl`s + `FunctionSummary`s — no new AST
 /// pass, mirroring `EquatableResolver` / `IdentifiableResolver`.
 ///

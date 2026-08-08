@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stratified, seeded sampler for the swift.org property-style-test study.
 
-`docs/plans/swiftorg-property-test-study-scope.md` requires samples that are "stratified,
+`docs/archive/swiftorg-property-test-study-scope.md` requires samples that are "stratified,
 sampled not cherry-picked". That is only a checkable claim if the sampling is
 **reproducible**, so this emits a manifest carrying the seed, the corpus SHA, the
 population definition, and every selected site. Same seed + same SHA -> same sample,

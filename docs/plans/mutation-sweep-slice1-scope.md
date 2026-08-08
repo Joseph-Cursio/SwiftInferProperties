@@ -1,6 +1,6 @@
 # Mutation sweep, slice 1 — measure the noise before building the layer
 
-> **Status:** `open` · **As of:** 2026-08-08
+> **Status:** `shipped` · **As of:** 2026-08-08
 
 Scopes the first slice of `docs/ideas/Mutation operator layer over the corpus harness.md`.
 
