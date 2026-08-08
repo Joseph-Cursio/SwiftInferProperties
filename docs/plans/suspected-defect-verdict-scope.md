@@ -1,7 +1,14 @@
 # Suspected-defect verdict — scope, with the proposed gate measured and refuted
 
-> **Status:** `open` · **As of:** 2026-08-07
+> **Status:** `open` · **As of:** 2026-08-08
 
+
+> **§6 step 1 was RUN on 2026-08-08 and is misspecified. See §9 for the result.**
+> Three corpora, 0 refutations, so the confound is **unsettled** — and not for want
+> of trying: a HEAD corpus is correct code, and correct code does not refute. The
+> step asks for "a second corpus with an unrelated template mix"; what it needs is
+> **pre-fix commits**. Two blocking defects were found and fixed on the way (#170,
+> #169), and one clause of §2 is now measurably weaker than when it was written.
 
 **Status: scoped, not built. 2026-08-07.** Scopes
 `docs/ideas/Refuted-high-confidence-guess as candidate bug.md`, which is unchanged and
@@ -73,6 +80,16 @@ classify.
 Shipped as written, the feature would be a guard green because it cannot fire — the
 arm-4 trap `docs/measurements/stale-summary-guard-declined.md` names, and the same
 failure `DeferralFalsifierTests.resolverActuallyResolves` exists to prevent.
+
+> **Weakened 2026-08-08 — the conclusion holds, the reason given for it does not.**
+> `Strong` is **not** structurally unable to execute; it had never been pointed at a
+> corpus where it could. Five `Strong` rows executed on swift-collections (§9) —
+> `idempotence` ×3, `dual-style-consistency` ×2 — the first anywhere. So "verify
+> cannot execute the suggestions discovery is most confident in" was a statement
+> about this repo's template mix and about two tooling defects, not about the tier.
+> The `.likely` gate in §3 still stands, but on the §9 evidence rather than on
+> `.strong` being unreachable: **5 Strong rows ran and 0 refuted**, so a `.strong`
+> gate remains a gate with no measured population to classify.
 
 ### 2.2 `>=` is backwards against this repo's `Tier`
 
@@ -165,10 +182,14 @@ surface discriminator to `VerifyEvidence` rather than parsing `template`.
 
 ## 6. Build order
 
-1. **Settle the confound (§4).** Re-run `verify --all-from-index` over a second corpus
+1. ~~**Settle the confound (§4).** Re-run `verify --all-from-index` over a second corpus
    with an unrelated template mix and check whether the tier/template readings come apart.
    One run, no code. If they do not come apart, this ships as a template rule and the
-   framing changes.
+   framing changes.~~
+   **Run 2026-08-08 and MISSPECIFIED — see §9.** Three corpora produced 0 refutations,
+   because a corpus at HEAD is correct code and correct code does not refute. Replace
+   with: **re-run at `<fix>^` commits**, per `docs/plans/kit-suite-backtest-plan.md`'s
+   own argument. It also was not "one run, no code": two defects had to be fixed first.
 2. **The classifier**, per §3 and §5. A pure function per fold plus its tests; no new
    execution machinery — the disproof, the counterexample, the shrunk counterexample, the
    seed and the coverage stamp are all already persisted on `VerifyEvidence`.
@@ -222,3 +243,78 @@ What must not carry forward is the gate. Three clauses, three ways of selecting 
 and the reason each is wrong is a fact about this codebase that was not available when the
 idea was written. **Write the corrected gate down before writing the classifier** — that
 is the whole point of this note.
+
+## 9. Step 1, run — three corpora, zero refutations (2026-08-08)
+
+swift-infer `1.148.0`, release binary, `verify --all-from-index --max-parallel 4`.
+Streams and the focused index in the session scratchpad; the two fixes below carry
+their own regression tests, which is the durable half.
+
+| corpus | SHA | entries | executed | refuted |
+|---|---|---:|---:|---:|
+| SwiftEffectInference | `50c5d3a` | 38 | 8 | **0** |
+| SwiftPropertyLaws | `91e09a2` | 39 | 0 | — |
+| swift-collections (focused, 3 arms) | `899809d3` | 98 | 12 | **0** |
+
+**No refutation, anywhere. The confound is untouched**: tier and template remain
+perfectly aligned across the only nine refutations that exist, exactly as in §4.
+
+### 9.1 Why zero, and why the step cannot work as written
+
+Not bad luck, and not carrier reach. **A corpus at HEAD is correct code.**
+`BitSet.union`, `OrderedSet.formUnion` and `SortedSet.intersection` are associative
+and commutative; the laws hold because they are true. The base rate of refutation in
+the original survey was 9 of 281, and 4 of those 9 were one defect (#92) in four
+near-identical log types — so the expected yield from ~150 correct entries was
+approximately zero before the run started.
+
+This project already made this argument, in a doc this scope cites for a different
+purpose. `docs/plans/kit-suite-backtest-plan.md` is built on it:
+
+> These libraries are correct at HEAD, so an all-green run is indistinguishable from
+> the tool being blind; only the pre-fix commit separates those readings.
+
+That is the same problem in a different feature. **Step 1 needs `<fix>^` commits**,
+which is a materially more expensive experiment than "one run, no code": each arm
+needs a known defect, its fixing commit, and a corpus that builds at the parent.
+`876177db^` on swift-collections is the one already scouted (§Arm 1 of that plan) and
+would give a `symmetricDifference` refutation at `Likely` — a `commutativity` row, so
+it *replicates* the observed cell rather than breaking it. **An arm that separates the
+readings has to be a refutation at `Likely`/`Strong` in a template that is not
+`commutativity`, or at `Possible` in one that is.** Nothing yet scouted supplies one.
+
+### 9.2 What the run did establish
+
+- **`Strong` executes.** Five rows, the first anywhere: `idempotence` ×3,
+  `dual-style-consistency` ×2. §2.1's conclusion survives; its stated reason does not.
+- **Arm A ran on both sides of the tier split within one template.** `idempotence` at
+  `Strong` (3 ran) and `Likely` (3 ran), 0 refuted on each; `Possible` reached 0. So the
+  arm designed to separate tier from template *ran* and returned no signal, rather than
+  being blocked.
+- **The confound is confirmed non-structural in a third corpus.** `idempotence` spans
+  `Possible`/`Likely`/`Strong` in swift-collections as it does here and in
+  SwiftPropertyLaws. Tier is not template in disguise; it is the refutations that align.
+- **Two defects, both fixed, both invisible to this repo's own corpus.**
+  **#170** — `PackageProductResolver` waited for the child to exit before draining its
+  pipe, so `verify` hung indefinitely at 0% CPU on any package whose `dump-package`
+  output exceeds ~64 KB (swift-collections: 133,341 bytes). **#169** — the synthesized
+  manifest declared the corpus both by URL and by path whenever the corpus was one of
+  the verifier's own dependencies, which is every canonical algebraic corpus; and
+  removing that uncovered a third, where one unresolvable product edge failed *manifest
+  loading* for all 54 buildable entries.
+
+### 9.3 The methodological residue, which outlasts the question
+
+- **A completion check must not be satisfiable by the previous run's artifact.** A
+  monitor keyed on `wc -l >= 98` reported COMPLETE against the *prior* run's file while
+  the new one was still building, and its numbers were read as fresh. Delete the output
+  first, or key on process exit. Same family as §10.3's "never compare against a stored
+  count", met from a new direction.
+- **Green unit tests are not evidence that a fix works.** #169's first fix passed seven
+  tests and moved the corpus **not at all** — 54 of 98 failing before and after — because
+  every test exercised the renderer in isolation while the defect lived in how its output
+  was combined. The corpus is the oracle; the suite is a regression net afterwards.
+- **A blocked measurement is worth more than it looks.** The question this run was
+  supposed to answer is still open. It nonetheless found two defects that made
+  `swift-collections` and `swift-numerics` unverifiable, which is most of the population
+  the algebraic surface exists for.
