@@ -4,6 +4,12 @@
 
 Scopes the first slice of `docs/ideas/Mutation operator layer over the corpus harness.md`.
 
+> **RUN 2026-08-08 — `docs/measurements/mutation-sweep-slice1-findings.md`.** 26 killed,
+> **1 survived**, 3 did not compile. §9 fired: one survivor is not a rate, so the question
+> this slice exists to answer is **unmeasured**, and the §6 GO bar is arithmetically
+> satisfiable only by treating a sample of one as evidence. The survivor was a real gap and
+> is fixed. Read §7 of the findings before designing slice 2.
+
 **Slice 1 does not build the layer. It answers the one question that decides whether the
 layer is worth building**: on a mechanically-mutated real target, what fraction of
 survivors are *actionable*, and what fraction are noise?

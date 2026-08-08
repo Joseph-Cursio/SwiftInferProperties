@@ -91,6 +91,45 @@ struct InteractionMetricsRendererTests {
         #expect(rendered.contains("refinement threshold"))
     }
 
+    /// The threshold is **exclusive**, and nothing pinned that until a mutation sweep
+    /// asked.
+    ///
+    /// `docs/measurements/mutation-sweep-slice1-findings.md`: `skipRate > threshold`
+    /// mutated to `>=` was the sweep's only survivor. The two differ solely at exactly
+    /// 0.30, and the existing coverage sits at 80% — its own comment says "well above 30%
+    /// threshold" — so no test could tell the two apart.
+    ///
+    /// **3 skipped of 10 is the witness**, and it is exact rather than approximate:
+    /// `3.0 / 10.0` and the literal `0.30` round to the same `Double`, so the comparison
+    /// really does land on the boundary rather than near it. A footnote here would mean
+    /// the renderer flags a family that merely *reaches* the refinement threshold instead
+    /// of exceeding it.
+    @Test func skipRateExactlyAtThresholdIsNotFlagged() {
+        // 3 skipped / 10 total = 0.30 exactly — the boundary, not beyond it.
+        var records = [
+            record(identity: "A", family: .biconditional, decision: .skipped),
+            record(identity: "B", family: .biconditional, decision: .skipped),
+            record(identity: "C", family: .biconditional, decision: .skipped)
+        ]
+        for name in ["D", "E", "F", "G", "H", "I", "J"] {
+            records.append(record(identity: name, family: .biconditional, decision: .accepted))
+        }
+        let report = InteractionDecisionsAggregator.aggregate(InteractionDecisions(records: records))
+        let rendered = InteractionMetricsRenderer.render(
+            report,
+            sources: ["test"],
+            format: .markdown
+        )
+        #expect(rendered.contains("| 30% |"), "the rate itself should still render")
+        // The footnote is what `anyFamilyExceedsSkipThreshold` drives, so it is the
+        // assertion that separates `>` from `>=`. Asserting on the row's asterisk instead
+        // does NOT: the overall row renders `**30%**`, and `"30%*"` matches the markdown
+        // bold delimiter — a false positive that made the first version of this test fail
+        // against correct code.
+        #expect(!rendered.contains("refinement threshold"), "at the threshold exactly, no footnote")
+        #expect(!rendered.contains("| 30%* |"), "and no flag on the row")
+    }
+
     @Test func plainFormatRendersFixedWidthColumns() {
         let report = InteractionDecisionsAggregator.aggregate(InteractionDecisions(records: [
             record(identity: "A", family: .cardinality, decision: .accepted)
