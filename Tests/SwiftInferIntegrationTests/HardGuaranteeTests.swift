@@ -143,9 +143,17 @@ struct HardGuaranteeTests {
         // package — it fires only under `--verify` when an external-library law is
         // in scope, never on discover/index/drift, and only reaches the declared
         // Apple package URLs.
+        //
+        // `DrainedProcess.swift` (#170) is exempt as the *extraction* of the
+        // spawn already exempted in `PackageProductResolver.swift` and two sites
+        // in `VerifierSubprocess.swift` — it moved the `Process(` rather than
+        // adding one, and the net count of spawning sites went DOWN by two. It
+        // reaches only `/usr/bin/env` and whatever the caller names; no URL, no
+        // network, and the callers are the same verify-mode gestures.
         let processExemptions: Set<String> = [
             "VerifierSubprocess.swift",
             "PackageProductResolver.swift",
+            "DrainedProcess.swift",
             "KnownPropertiesCommand.swift",
             "KnownPropertiesPackageVerify.swift"
         ]

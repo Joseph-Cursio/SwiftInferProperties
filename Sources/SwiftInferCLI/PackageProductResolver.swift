@@ -72,18 +72,13 @@ public enum PackageProductResolver {
     /// `/usr/bin/env swift` resolution `VerifierSubprocess` uses so the same
     /// PATH-resolved toolchain that runs `swift build` evaluates the manifest.
     private static func dump(packageRoot: URL) -> DumpedPackage? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [
-            "swift", "package", "dump-package", "--package-path", packageRoot.path
-        ]
-        let stdoutPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = Pipe()
-        do { try process.run() } catch { return nil }
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        // Via `DrainedProcess`, not a bare `Process`: this dump is the largest
+        // output anything in this package reads from a pipe (133 KB on
+        // swift-collections), and the wait-then-read shape deadlocked on it
+        // outright — see #170 and that type's doc comment.
+        guard let data = DrainedProcess.standardOutputViaEnv(
+            ["swift", "package", "dump-package", "--package-path", packageRoot.path]
+        ) else { return nil }
         return try? JSONDecoder().decode(DumpedPackage.self, from: data)
     }
 }
