@@ -66,8 +66,12 @@ extension SwiftInferCommand.Verify {
         let typeQualifier = RoundTripPairResolver.bareTypeName(from: qualifier)
         let funcName = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
         switch entry.templateName {
-        case "round-trip":
-            return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
+        // The two-function laws. Both resolve a pair and render each half with
+        // `roundTripHalfCall`; they differ only in how the second half is found
+        // (curated-then-entry vs entry-only), so they share one arm here rather
+        // than each costing the switch a branch against its complexity cap.
+        case "round-trip", "differential-equivalence":
+            return try resolveTwoFunctionCalls(entry: entry, typeQualifier: typeQualifier)
 
         case "codable-round-trip":
             return try resolveCodableRoundTripCalls(entry: entry, carrier: carrier)
@@ -185,6 +189,58 @@ extension SwiftInferCommand.Verify {
             expressions: [forwardCall, inverseCall],
             rendererForwardName: forwardCall,
             rendererInverseName: inverseCall
+        )
+    }
+
+    /// Route a two-function law to its resolver. Keeps the dispatch switch at
+    /// one branch for both.
+    static func resolveTwoFunctionCalls(
+        entry: SemanticIndexEntry,
+        typeQualifier: String
+    ) throws -> ResolvedCalls {
+        if entry.templateName == "differential-equivalence" {
+            return try resolveDifferentialCalls(entry: entry, typeQualifier: typeQualifier)
+        }
+        return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
+    }
+
+    /// Resolve the two halves of `reference(x) == variant(x)`.
+    ///
+    /// **No curated table, deliberately.** `round-trip` tries
+    /// `RoundTripPairResolver.curated` before falling back to the entry, and
+    /// `dual-style-consistency` has only the curated route. Neither applies
+    /// here: a differential pair is discovered by NAME MARKER (`fooSlow`,
+    /// `appendUnchecked`) over the user's own corpus, so there is no fixed list
+    /// to curate — any table would be a list of names this repo happened to
+    /// have seen. The entry carries the pair, so the entry is the source.
+    ///
+    /// Both halves render through `roundTripHalfCall`, which gives each one the
+    /// receiver shape when it is the entry's signalled instance method and the
+    /// static/free shape otherwise. That matters more here than for round-trip:
+    /// a variant pair is frequently one instance method and one free function
+    /// (`x.sortedFast()` against `referenceSort(x)`), so assuming a single shape
+    /// for both halves would emit a call that does not compile.
+    static func resolveDifferentialCalls(
+        entry: SemanticIndexEntry,
+        typeQualifier: String
+    ) throws -> ResolvedCalls {
+        let referenceBare = entry.primaryFunctionName
+        guard let variantBare = entry.secondaryFunctionName else {
+            throw VerifyError.missingPairedFunction(
+                template: "differential-equivalence",
+                primary: referenceBare
+            )
+        }
+        let referenceCall = roundTripHalfCall(
+            entry: entry, typeQualifier: typeQualifier, bareName: referenceBare
+        )
+        let variantCall = roundTripHalfCall(
+            entry: entry, typeQualifier: typeQualifier, bareName: variantBare
+        )
+        return ResolvedCalls(
+            expressions: [referenceCall, variantCall],
+            rendererForwardName: referenceCall,
+            rendererInverseName: variantCall
         )
     }
 }
