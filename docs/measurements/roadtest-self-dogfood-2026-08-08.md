@@ -269,7 +269,17 @@ because no test ever ran two of them on one input. That is now five laws that do
 A candidate rule — *same name, same signature, different enclosing type* — is **not**
 proposed as a filter here. Per the `domain-transfer-signal` practice, it would have to be
 scored against the pairs that legitimately differ (`run()`, `makeConstraint()`) before
-anyone builds it. The census does say the shape is not rare: `intDefaultPass(functionCall:)
+anyone builds it.
+
+> **It was scored, and DECLINED — `docs/measurements/same-name-differential-pairing.md`
+> (2026-08-08).** Precision **40%** against a ≥50% bar frozen before the scorer existed, so
+> the template does not ship and the hand-written suite stays. Two results worth carrying
+> back here. The dominant false positive is **not** protocol conformance as guessed above but
+> *undeclared role interfaces* (`emit` ×16, `makeConstraint` ×14, `suggest` ×13) — a name is
+> shared because it names a **role**, and no vocabulary separates a role from a copy. And the
+> pairs the rule gets right are the byte-identical ones, whose differential law is `f(x) ==
+> f(x)` and cannot fail — their value is drift protection, which is a lint question rather
+> than a property one. The census does say the shape is not rare: `intDefaultPass(functionCall:)
 -> String`, `doubleEdgePass`, `doubleDefaultPass`, `complexDoubleShrinkPhase` and five more
 are each declared 3× in this repo.
 
