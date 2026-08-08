@@ -612,12 +612,144 @@ Reasons: 24 `unsupported-carrier`, 10 `unsupported-template`, the rest assorted
 (`monotonicity-domain-not-comparable` ×2, and single instances).
 
 By template the bucket is 40 `predicate`, 7 `idempotence`, 3 `monotonicity`,
-3 `input-totality`. The carriers are dominated by SwiftSyntax visitor types —
-`FunctionScannerVisitor`, `BodySignalVisitor`, `DeclModifierListSyntax`. **Those are
-untestable by construction, not a gap**: a syntax visitor has no meaningful generator, and
-the tool declining to invent one is the conservative posture working.
+3 `input-totality`.
 
-One Unverifiable *is* a real gap, and it is one this road test had already met by hand:
+> **CORRECTED 2026-08-08.** This section first read: *"The carriers are dominated by
+> SwiftSyntax visitor types … **those are untestable by construction, not a gap**: a syntax
+> visitor has no meaningful generator."* **That was too strong, and it drew the line in the
+> wrong place.** It is true of the *visitors* and false of the syntax *nodes*, which the
+> sentence lumped together — `DeclModifierListSyntax` was cited as an example of the former
+> and is one of the latter. The corrected split is below. Prompted by SwiftPropertyLaws'
+> `PropertyLawSyntax`, which demonstrably generates syntax values, so "no meaningful
+> generator" cannot be a property of the kind.
+
+The 24 `unsupported-carrier` picks split three ways, and only the first is untestable by
+construction:
+
+| kind | count | carriers | reading |
+|---|---|---|---|
+| **our own visitor / aggregate types** | 11 | `FunctionScannerVisitor` ×2, `BodySignalVisitor` ×2, `Visitor`, `TypeDecl`, `SamplingSeed`, `FunctionSummary`, `Finding`, `Effect`, `Coverage`, `Ranked<Record>` | a visitor is a *traversal*, not a value; generating one is meaningless. Correct silence |
+| **concrete SwiftSyntax nodes** | 6 | `DeclModifierListSyntax` ×2, `StringLiteralExprSyntax`, `InheritanceClauseSyntax`, `DictionaryExprSyntax`, `CodeBlockItemSyntax`, `ArraySlice<CodeBlockItemSyntax>` | **a gap, not a law of nature.** These are ordinary values with a grammar |
+| stdlib / unresolved generic | 2 | `String`, `S` | `String` is generable and the pick is a shape problem, not a carrier one |
+
+**The middle row is the correction.** `PropertyLawSyntax` vends `gen()` for six *erased base*
+types — `DeclSyntax`, `ExprSyntax`, `PatternSyntax`, `StmtSyntax`, `TokenSyntax`,
+`TypeSyntax` — so the kit already generates syntax. Our six are **concrete or collection**
+nodes, and **zero of the 24 are among the six**, which is why adopting
+`--extra-import PropertyLawSyntax` would unblock none of them today. But "nobody has written
+the generator" is a different claim from "no generator is possible", and the first draft
+asserted the second.
+
+That also makes the middle row the concrete downstream ask for the kit: generators for
+concrete nodes, or a derivation from the erased base, would move six picks out of
+Unverifiable. Recorded as a measured demand rather than a guess.
+
+### §8.3.1 The ask was answered, and four of the six already worked
+
+Relayed back from the kit side the same day. **Four of the six needed nothing new** —
+`DeclModifierListSyntax`, `StringLiteralExprSyntax`, `InheritanceClauseSyntax` and
+`CodeBlockItemSyntax` were already generable, because `Gen<T>.syntaxNode()` was written
+**generically** rather than by hand for the three types some earlier corpus happened to name.
+That is the payoff of the general form landing before the demand for it did, and it is worth
+recording as the reason the answer was cheap rather than as a lucky outcome.
+
+The remaining two each needed real work, and each is a different kind:
+
+* **`DictionaryExprSyntax`** — needed a new template (no existing template carried a
+  dictionary literal). A gap in *coverage*.
+* **`ArraySlice<CodeBlockItemSyntax>`** — **not a `SyntaxProtocol` at all**, so it was not a
+  syntax problem. It became a new `GeneratorPlan.arraySlice` case in the kit's
+  `CompositeMemberParser` — **general, not syntax-specific**, since `ArraySlice` is stdlib
+  and every element type gains. Deliberately a distinct case rather than a spelling of
+  `.array`, because **a member declared `ArraySlice<T>` will not accept `[T]`**; collapsing
+  them would emit a generator that does not typecheck at the use site.
+
+**This is unconfirmed on our side, and the bound matters.** The work is uncommitted in the
+kit's working tree (`GeneratorPlan.swift` modified, `Sources/PropertyLawSyntax/` untracked)
+and the newest tag, `v3.27.1`, contains no `arraySlice` — so the version this package resolves
+cannot exercise any of it. **Nothing here is measured by us.** Confirming it means bumping the
+pin once the kit tags, re-running `prove-then-show --target SwiftInferCore`, and checking that
+those six move out of `unsupported-carrier`. Until then this section records a *reported*
+outcome, not a verified one.
+
+**No falsifier is attached, deliberately, and the reason is worth keeping.** The first draft
+wrote `(falsifier: ``SwiftPropertyLaws/GeneratorPlan.arraySlice``)` and
+`DeferralFalsifierTests` immediately failed it — correctly. The resolver reads the sibling's
+**working tree**, where that symbol already exists, so it reported the deferral as resolved.
+But the symbol existing is not the condition being waited on: the kit has to *tag*, this
+package has to bump its pin, and the survey has to be *re-run*. The falsifier convention
+answers "has this landed in the tree", and what is pending here is "have we re-measured" —
+which no symbol can settle. Attaching one anyway would have produced a guard that goes green
+while the claim stays unverified, which is the failure mode the convention exists to prevent.
+
+### §8.3.2 MEASURED — and it corrects §8.3 a second time
+
+Run against the kit at `0720714` (its `access-provenance-and-syntax-generators` branch, since
+`v3.27.1` is still the newest tag and contains none of this). **Both pins had to move**: this
+package's, so the binary can *derive* the plan, and
+`VerifierWorkdir.swiftPropertyLawsRequirement`, so the generated stub packages resolve the
+same kit — changing only the first would have left every stub on 3.27.1 and produced a null
+result that looked like a finding.
+
+| | 3.27.1 | 0720714 |
+|---|---|---|
+| Proven | 81 | 81 |
+| Disproven | 1 | 1 |
+| **Unverifiable** | **63** | **61** |
+| Inconclusive | 8 | **10** |
+| `unsupported-carrier` picks | **24** | **20** |
+
+**Four picks stopped being "no generator" — and none of them is a syntax node.** The carriers
+that left the unsupported set are `Finding`, `Coverage` and `TypeDecl`: *our own aggregate
+structs*. The six concrete SwiftSyntax nodes §8.3 predicted would move did **not**, because
+their generators live in `PropertyLawSyntax`, a product this package does not depend on and
+whose import is opt-in by design. The prediction was right that they are generable and wrong
+about what a pin bump reaches.
+
+**So §8.3's corrected table is still wrong, in a new place.** It put `Finding`, `Coverage`,
+`TypeDecl`, `SamplingSeed`, `FunctionSummary`, `Effect` and `Ranked<Record>` in a row headed
+*"our own visitor / aggregate types … a visitor is a traversal, not a value"* and called the
+whole row correct silence. **Only the visitors belong there.** `FunctionScannerVisitor`,
+`BodySignalVisitor` and `Visitor` are traversals; the other seven are ordinary value structs,
+and at least three of them are generable — measured, not argued.
+
+The line is **traversal vs value**, and it cuts across both origins. It is not
+visitor-vs-node (§8.3's first attempt) and not ours-vs-theirs (§8.3's second). Two wrong cuts
+in one section is the reason this subsection exists: the classification kept being made from
+the *name* of the type, and only the survey settled it.
+
+### §8.3.3 The bottleneck moved from the kit to us
+
+The four picks did not become Proven. They became **Inconclusive**, and `build-failed` went
+from 2 to 4:
+
+```
+? lawTotal(for:)  (unsupported-carrier: Finding)                    ← 3.27.1
+· lawTotal(for:)  (build-failed: cannot find type 'Finding' in scope) ← 0720714
+```
+
+The kit can now derive a plan for `ProtocolCoverageAudit.Finding`; our emitter then writes
+`Finding` unqualified into a stub that has no such type at file scope. **That is exactly the
+`cannot find 'Visitor' in scope` gap already recorded in §8.4** — nested-carrier
+qualification — and this run doubles its population from 2 picks to 4.
+
+**The transferable result is the direction of the constraint, not the two picks.** Before this
+run the honest reading was "the kit cannot generate our carriers". After it, the kit can, and
+**our own emitter is what stops the law from executing**. That reprices
+`nestedCarrierImportResolution` from the cheapest open item to the one gating everything the
+kit unblocks next. (falsifier: `nestedCarrierImportResolution`)
+
+**Nothing was shipped to get this.** Both pin edits were made in a throwaway worktree and
+discarded; this package still resolves `v3.27.1`. The measurement stands on a committed,
+citable SHA rather than on a working tree.
+
+**What the exchange demonstrates is the loop, not the six picks.** A downstream survey named
+six concrete types it could not generate; the upstream answer was four already-solved, one
+coverage gap, and one general stdlib improvement that no syntax-shaped framing would have
+found. The ask was worth making *because* it named types rather than asking for "better
+generators".
+
+One Unverifiable is a gap on **our** side that this road test had already met by hand:
 
 ```
 ? ProtocolCoverageAudit  homomorphism  lawTotal(for:)  (unsupported-carrier: Finding)
