@@ -10,6 +10,11 @@
 > building, which is the equivalent-mutant rate this doc's own argument predicts will be
 > high. Three of the costs below moved that day (#129, #130), and
 > `fixtures/planted-defect-arm/` is now a worked n=1 precedent.
+>
+> **Slice 1 ran the same day and did not clear its own bar** —
+> `docs/measurements/mutation-sweep-slice1-findings.md`: 26 killed of 30, **1 survivor**, so
+> the equivalent-mutant rate this doc predicts is still unmeasured. It did establish the
+> mechanics (~44s/mutant, 0 apply-failures) and walked the graduate path once in full.
 
 **Idea only. Design-level.** A *producer* bolted in front of tooling that already
 exists, not a new engine. Sibling to
