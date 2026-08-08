@@ -217,6 +217,6 @@ soundness. Magnitude is intentionally smaller than `referenceTypeCarrier`'s
 value-semantic positives.
 
 Mixed carriers (struct with a class-typed or closure-typed stored property) emit
-no signal — conservative; the bug shapes in `docs/plans/valuesemantic-build-plan.md`
+no signal — conservative; the bug shapes in `docs/archive/valuesemantic-build-plan.md`
 §2.1 (broken CoW / closure-captured state) are bugs that look value-semantic
 structurally and would falsely score positive otherwise.

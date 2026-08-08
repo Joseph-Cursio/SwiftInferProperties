@@ -114,7 +114,7 @@ extension SwiftInferCommand {
                 // holding reference-backed storage (a closure / mutable
                 // container / corpus class), through which a "value" can leak
                 // shared mutable state. Recognition only (slice 2): no invariant
-                // is emitted yet — see docs/plans/valuesemantic-build-plan.md.
+                // is emitted yet — see docs/archive/valuesemantic-build-plan.md.
                 let valueSemantics = try ValueSemanticDiscoverer.discover(directory: directory)
                 // PROTOTYPE — also surface defensive-copy carriers: classes that
                 // vend a copy()/clone() (Ch. 9 §9.3). Recognition only.
@@ -308,7 +308,7 @@ extension SwiftInferCommand {
         /// block per struct: location + Equatability note, the reference-backed
         /// members (with why each qualifies), and the mutation surface.
         /// Recognition only (slice 2) — no invariant is emitted yet. See
-        /// docs/plans/valuesemantic-build-plan.md.
+        /// docs/archive/valuesemantic-build-plan.md.
         static func renderValueSemanticSummary(_ candidates: [ValueSemanticCandidate]) -> String {
             if candidates.isEmpty {
                 return "swift-infer discover-reducers: no value-semantics "

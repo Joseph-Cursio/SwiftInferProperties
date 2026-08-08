@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Extract the Q2 answer key from swift.org's own axiom-battery call sites.
 
-`docs/plans/swiftorg-property-test-study-scope.md` Q2: *"a tool may not grade its own homework.
+`docs/archive/swiftorg-property-test-study-scope.md` Q2: *"a tool may not grade its own homework.
 Extract the answer key mechanically from the `check*` call sites and freeze it with a SHA
 BEFORE running `discover`."* This is that extractor, and running it before `discover` is
 the whole point — the key must not be able to have been influenced by what we found.

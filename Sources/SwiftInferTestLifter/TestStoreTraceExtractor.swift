@@ -6,7 +6,7 @@ import SwiftSyntax
 /// sequences a repo's TCA `TestStore` tests already contain, so the
 /// interaction verifier can check developer-authored orderings before
 /// (never instead of) random generation. See
-/// `docs/plans/teststore-trace-mining-build-plan.md`.
+/// `docs/archive/teststore-trace-mining-build-plan.md`.
 ///
 /// Consumes `TestMethodSummary.body` — the same input the `Slicer` takes,
 /// so no new parsing infrastructure. Recognizes, per test body:

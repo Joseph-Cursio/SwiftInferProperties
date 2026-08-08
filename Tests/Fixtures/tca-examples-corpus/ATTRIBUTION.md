@@ -13,4 +13,4 @@ Point-Free's [The Composable Architecture](https://github.com/pointfreeco/swift-
   SwiftUI / navigation code untouched so discovery sees authentic reducers.
 - **Not for measured-verify as-is:** most of these reference external models /
   child reducers and won't co-compile standalone. The measured-verify corpus is
-  a separate, curated, compilable subset (see `docs/plans/tca-determinism-verify-scope.md`).
+  a separate, curated, compilable subset (see `docs/archive/tca-determinism-verify-scope.md`).
