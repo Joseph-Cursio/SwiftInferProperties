@@ -1,7 +1,19 @@
 # Idea: a refuted high-confidence guess is a candidate bug, not just a bad guess
 
-> **Status:** `proposed` · **As of:** 2026-07-21
+> **Status:** `proposed` · **As of:** 2026-08-07
 
+
+> **Scoped 2026-08-07 — the idea stands, the gate below is refuted.**
+> `docs/plans/suspected-defect-verdict-scope.md` scores this against the nine
+> refutations in the whole-corpus survey and carries the corrected gate. The
+> separation is better than this note assumed (**4/4** of the high-tier refutations
+> were real defects, fixed in PR #98; **0/5** of the low-tier ones were), but all
+> three clauses of the gate proposed under *The enhancement* and *Precision risks*
+> select **zero rows**: `.strong` is the one tier where nothing executes, `>=` is
+> backwards against `Tier`'s `Comparable` (`verified` is the minimum), and
+> `excludedActionCount` is interaction-side only, so the full-coverage clause
+> rejects every algebraic refutation including the four confirmed defects. Read the
+> scope before building from the text below.
 
 ## Status
 
