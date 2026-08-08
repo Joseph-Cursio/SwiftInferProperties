@@ -278,7 +278,8 @@ extension SwiftInferCommand {
                 pipeline: focused,
                 into: indexLoad.index,
                 decisionsByHash: decisionsByHash,
-                now: now
+                now: now,
+                context: SurfaceContext(packageRoot: packageRoot, diagnostics: diagnostics)
             )
             let freshEntries = algebraic.freshEntries
             let diff = computeDiff(priorIndex: indexLoad.index, freshEntries: freshEntries)
@@ -303,46 +304,6 @@ extension SwiftInferCommand {
                     diff: diff,
                     dryRun: inputs.dryRun
                 )
-            )
-        }
-
-        /// Merge one pass's **algebraic surface** into the existing index — the three things a
-        /// scan learns and verify later needs, kept together because they are one fact about one
-        /// pass and were drifting apart as separate statements.
-        ///
-        /// Returns the fresh entries alongside the merged index so the caller can still diff
-        /// against the prior one; the diff is a reporting concern, not a merging one.
-        static func mergedAlgebraicSurface(
-            pipeline: Discover.PipelineResult,
-            into existing: IndexStore.Index,
-            decisionsByHash: [String: DecisionRecord],
-            now: String
-        ) -> (index: IndexStore.Index, freshEntries: [SemanticIndexEntry]) {
-            // Project Suggestions → SemanticIndexEntry. Fresh `firstSeenAt` is `now` for new
-            // entries; `IndexStore.upsert` preserves the prior one for already-known entries.
-            let freshEntries = pipeline.suggestions.map { suggestion in
-                buildEntry(
-                    from: suggestion,
-                    decisionsByHash: decisionsByHash,
-                    typeShapesByName: pipeline.typeShapesByName,
-                    now: now
-                )
-            }
-            // WS-6 Slice 2 — the whole-module shape universe, not just per-entry carrier shapes,
-            // so verify can build a `GeneratorResolver` over every scanned type and recursively
-            // derive nested custom-type carriers.
-            let freshShapes = pipeline.typeShapesByName.mapValues { IndexedTypeShape(from: $0) }
-            return (
-                IndexStore.upsert(
-                    freshEntries,
-                    into: existing,
-                    at: now,
-                    typeShapes: freshShapes,
-                    // Declaration sites for every type this pass saw, so verify can resolve the
-                    // module of a type that appears in a law's signature but not on its entry.
-                    sourceFiles: pipeline.sourceFileByTypeName
-                ),
-                freshEntries
             )
         }
 
