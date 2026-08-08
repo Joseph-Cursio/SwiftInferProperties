@@ -644,6 +644,50 @@ That also makes the middle row the concrete downstream ask for the kit: generato
 concrete nodes, or a derivation from the erased base, would move six picks out of
 Unverifiable. Recorded as a measured demand rather than a guess.
 
+### §8.3.1 The ask was answered, and four of the six already worked
+
+Relayed back from the kit side the same day. **Four of the six needed nothing new** —
+`DeclModifierListSyntax`, `StringLiteralExprSyntax`, `InheritanceClauseSyntax` and
+`CodeBlockItemSyntax` were already generable, because `Gen<T>.syntaxNode()` was written
+**generically** rather than by hand for the three types some earlier corpus happened to name.
+That is the payoff of the general form landing before the demand for it did, and it is worth
+recording as the reason the answer was cheap rather than as a lucky outcome.
+
+The remaining two each needed real work, and each is a different kind:
+
+* **`DictionaryExprSyntax`** — needed a new template (no existing template carried a
+  dictionary literal). A gap in *coverage*.
+* **`ArraySlice<CodeBlockItemSyntax>`** — **not a `SyntaxProtocol` at all**, so it was not a
+  syntax problem. It became a new `GeneratorPlan.arraySlice` case in the kit's
+  `CompositeMemberParser` — **general, not syntax-specific**, since `ArraySlice` is stdlib
+  and every element type gains. Deliberately a distinct case rather than a spelling of
+  `.array`, because **a member declared `ArraySlice<T>` will not accept `[T]`**; collapsing
+  them would emit a generator that does not typecheck at the use site.
+
+**This is unconfirmed on our side, and the bound matters.** The work is uncommitted in the
+kit's working tree (`GeneratorPlan.swift` modified, `Sources/PropertyLawSyntax/` untracked)
+and the newest tag, `v3.27.1`, contains no `arraySlice` — so the version this package resolves
+cannot exercise any of it. **Nothing here is measured by us.** Confirming it means bumping the
+pin once the kit tags, re-running `prove-then-show --target SwiftInferCore`, and checking that
+those six move out of `unsupported-carrier`. Until then this section records a *reported*
+outcome, not a verified one.
+
+**No falsifier is attached, deliberately, and the reason is worth keeping.** The first draft
+wrote `(falsifier: ``SwiftPropertyLaws/GeneratorPlan.arraySlice``)` and
+`DeferralFalsifierTests` immediately failed it — correctly. The resolver reads the sibling's
+**working tree**, where that symbol already exists, so it reported the deferral as resolved.
+But the symbol existing is not the condition being waited on: the kit has to *tag*, this
+package has to bump its pin, and the survey has to be *re-run*. The falsifier convention
+answers "has this landed in the tree", and what is pending here is "have we re-measured" —
+which no symbol can settle. Attaching one anyway would have produced a guard that goes green
+while the claim stays unverified, which is the failure mode the convention exists to prevent.
+
+**What the exchange demonstrates is the loop, not the six picks.** A downstream survey named
+six concrete types it could not generate; the upstream answer was four already-solved, one
+coverage gap, and one general stdlib improvement that no syntax-shaped framing would have
+found. The ask was worth making *because* it named types rather than asking for "better
+generators".
+
 One Unverifiable is a gap on **our** side that this road test had already met by hand:
 
 ```
