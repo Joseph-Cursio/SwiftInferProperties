@@ -116,6 +116,32 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
     /// (auto-bridge off, non-auto-derivable template, or non-default-fail).
     public let regressionTestPath: String?
 
+    /// #174 — which corpus checkout this verdict was taken against, when the
+    /// survey path-depends on one. `nil` for a library-carrier survey, where no
+    /// local checkout is in the graph and the pinned dependencies are the whole
+    /// answer.
+    ///
+    /// **`swiftInferVersion` records half the graph; this records the other
+    /// half.** Since #172 a corpus sharing an identity with one of the verifier's
+    /// own dependencies supersedes the pin, so a law can be checked against
+    /// whatever is checked out next door. #175 warns a human about that at run
+    /// time, which is not the same thing: the warning is gone once the terminal
+    /// scrolls, and the *stream* is what gets compared later. Two survey streams
+    /// taken a week apart are not comparable without this, and nothing in either
+    /// would say why — the same failure `fixtures/whole-corpus-survey` exists to
+    /// prevent, where a run destroyed the artifact it was being compared against.
+    ///
+    /// A rendered string rather than a structured triple, deliberately: the
+    /// interesting cases are *not* uniform. A corpus need not be a git checkout,
+    /// so there is no revision to put in a `revision` field, and a schema that
+    /// demands one invites a synthesized value. `CorpusProvenance.describe`
+    /// distinguishes the three honest answers and this stores what it said.
+    ///
+    /// Optional so existing `verify-evidence.json` files decode unchanged —
+    /// synthesized `Codable` uses `decodeIfPresent` for optionals, so no schema
+    /// bump, the same argument `excludedActionCount` makes above.
+    public let corpusProvenance: String?
+
     public init(
         identityHash: String,
         template: String,
@@ -127,7 +153,8 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         counterexample: String? = nil,
         shrunkCounterexample: String? = nil,
         seed: String? = nil,
-        regressionTestPath: String? = nil
+        regressionTestPath: String? = nil,
+        corpusProvenance: String? = nil
     ) {
         self.identityHash = identityHash
         self.template = template
@@ -140,6 +167,7 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         self.shrunkCounterexample = shrunkCounterexample
         self.seed = seed
         self.regressionTestPath = regressionTestPath
+        self.corpusProvenance = corpusProvenance
     }
 }
 

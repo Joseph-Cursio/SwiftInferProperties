@@ -52,6 +52,30 @@ extension SwiftInferCommand.Verify {
         }
     }
 
+    /// Provenance for the corpus this survey path-depends on, stamped onto every
+    /// persisted record.
+    ///
+    /// Recorded whenever a corpus is in the graph, not only when it supersedes a
+    /// pin. The A/B question — *is this stream comparable to that one?* — turns on
+    /// which checkout was surveyed, and that is as true of an ordinary corpus as
+    /// of a superseding one; superseding only makes it surprising.
+    ///
+    /// Resolved once per distinct corpus path, because `describe` shells out to
+    /// git twice and a 98-entry survey would otherwise pay for it 98 times. Joined
+    /// when a survey somehow holds several, rather than silently picking one.
+    static func corpusProvenance(
+        for members: [SharedVerifierPackage.Member]
+    ) -> String? {
+        var paths: [URL] = []
+        var seen: Set<String> = []
+        for member in members {
+            guard let path = member.userPackage?.packagePath else { continue }
+            if seen.insert(path.path).inserted { paths.append(path) }
+        }
+        guard !paths.isEmpty else { return nil }
+        return paths.map { CorpusProvenance.describe($0) }.joined(separator: "; ")
+    }
+
     static func disclosure(
         superseded: [String],
         corpus: VerifierWorkdir.UserPackageReference

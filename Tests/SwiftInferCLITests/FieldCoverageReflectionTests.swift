@@ -166,7 +166,8 @@ struct FieldCoverageReflectionTests {
                 counterexample: "x",
                 shrunkCounterexample: "x",
                 seed: "seed",
-                regressionTestPath: "Tests/Generated/T.swift"
+                regressionTestPath: "Tests/Generated/T.swift",
+                corpusProvenance: "/tmp/corpus @ abc1234"
             ),
             "VerifyEvidence"
         )

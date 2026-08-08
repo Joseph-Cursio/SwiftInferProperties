@@ -126,3 +126,124 @@ struct CorpusDisclosureTests {
         #expect(!described.contains("not a git checkout"))
     }
 }
+
+/// #174, persisted half — the warning reaches a human at run time; the evidence
+/// field is what makes two saved streams comparable a week later.
+@Suite("Corpus provenance — persisted alongside the verdict")
+struct CorpusProvenanceEvidenceTests {
+
+    /// **Old files must keep decoding.** The optional field is the whole reason
+    /// this is not a schema bump, and that claim is worth checking rather than
+    /// asserting — `excludedActionCount` makes the same one directly above it.
+    @Test("evidence written before this field decodes with a nil provenance")
+    func legacyRecordDecodes() throws {
+        let legacy = """
+        {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "identityHash": "ABCD000000000001",
+              "template": "idempotence",
+              "outcome": "measured-bothPass",
+              "capturedAt": "2026-08-05T02:24:00Z",
+              "swiftInferVersion": "1.148.0"
+            }
+          ]
+        }
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let log = try decoder.decode(VerifyEvidenceLog.self, from: Data(legacy.utf8))
+        #expect(log.records.count == 1)
+        #expect(log.records.first?.corpusProvenance == nil)
+        #expect(log.records.first?.outcome == .measuredBothPass)
+    }
+
+    @Test("provenance survives a round trip")
+    func roundTrips() throws {
+        let evidence = VerifyEvidence(
+            identityHash: "ABCD000000000002",
+            template: "commutativity",
+            outcome: .measuredDefaultFails,
+            detail: "trial=1",
+            capturedAt: Date(timeIntervalSince1970: 1_000_000),
+            swiftInferVersion: "1.148.0",
+            corpusProvenance: "/tmp/swift-collections @ 899809d3"
+        )
+        let decoded = try JSONDecoder().decode(
+            VerifyEvidence.self, from: JSONEncoder().encode(evidence)
+        )
+        #expect(decoded == evidence)
+        #expect(decoded.corpusProvenance == "/tmp/swift-collections @ 899809d3")
+    }
+
+    /// One resolution per distinct corpus, and `nil` when there is no local
+    /// checkout in the graph — a library-carrier survey against pinned
+    /// dependencies has nothing to disclose.
+    @Test("provenance is nil without a corpus and present with one")
+    func provenanceTracksTheCorpus() {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let bare = SharedVerifierPackage.Member(
+            entry: SemanticIndexEntry(
+                identityHash: "0xEEEE000000000001", templateName: "idempotence", typeName: "T",
+                score: 50, tier: "Likely", primaryFunctionName: "f()",
+                location: "Sources/T.swift:1",
+                firstSeenAt: "2026-08-08T00:00:00Z", lastSeenAt: "2026-08-08T00:00:00Z"
+            ),
+            stubSource: "print(\"PASS\")\n", userPackage: nil, mode: .algebraic
+        )
+        #expect(SwiftInferCommand.Verify.corpusProvenance(for: [bare]) == nil)
+
+        let withCorpus = SharedVerifierPackage.Member(
+            entry: bare.entry,
+            stubSource: bare.stubSource,
+            userPackage: VerifierWorkdir.UserPackageReference(
+                packagePath: repository, productNames: ["X"]
+            ),
+            mode: .algebraic
+        )
+        let resolved = SwiftInferCommand.Verify.corpusProvenance(for: [withCorpus, withCorpus])
+        #expect(resolved?.contains(" @ ") == true)
+        // Joined per distinct path, so one corpus twice is not reported twice.
+        #expect(resolved?.contains(";") == false)
+    }
+
+    /// Declines are stamped too. A stream carrying provenance on its verdicts but
+    /// not on its declines is not comparable either — half the rows would be
+    /// unattributable.
+    @Test("persisted records carry provenance, declines included")
+    func declinesAreStampedToo() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("provenance-persist-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        SwiftInferCommand.Verify.persistSurveyBatch(
+            [
+                SwiftInferCommand.Verify.SurveyRecord(
+                    identityHash: "0xFFFF000000000001",
+                    templateName: "idempotence",
+                    primaryFunctionName: "f()",
+                    carrier: "T",
+                    outcome: .architecturalCoveragePending,
+                    outcomeDetail: "unsupported-carrier: T"
+                )
+            ],
+            packageRoot: root,
+            now: Date(timeIntervalSince1970: 1_000_000),
+            corpusProvenance: "/tmp/swift-collections @ 899809d3"
+        )
+        // Read the file directly rather than via `load(startingFrom:)`, which walks
+        // up looking for a Package.swift the temp root does not have — it would
+        // return an empty log and the assertion would pass through `nil == nil`
+        // shaped as a failure, or worse, as a pass.
+        let path = root.appendingPathComponent(".swiftinfer")
+            .appendingPathComponent("verify-evidence.json")
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let log = try decoder.decode(VerifyEvidenceLog.self, from: Data(contentsOf: path))
+        #expect(log.records.count == 1)
+        #expect(log.records.first?.corpusProvenance == "/tmp/swift-collections @ 899809d3")
+    }
+}
