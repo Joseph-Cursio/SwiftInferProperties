@@ -6,8 +6,10 @@
 ## Status
 
 **Idea only. Design-level.** A *producer* bolted in front of tooling that already
-exists, not a new engine. Sibling to `docs/ideas/Refuted-high-confidence-guess as
-candidate bug.md` (that note turns a *disproof* into a candidate bug; this one
+exists, not a new engine. Sibling to
+`docs/archive/Refuted-high-confidence-guess as candidate bug.md`
+(that note turns a *disproof* into a candidate bug — **it shipped 2026-08-08 as the
+EXPECTED TO HOLD verdict, so read it for reasoning, not as a plan**; this one
 turns a *surviving mutant* into a candidate gap in the property suite) and to the
 self-dogfooding road test (`docs/measurements/roadtest-self-dogfood.md`). The concrete
 integration target is **SwiftIdempotency's** `mutants/` harness, but every

@@ -2,6 +2,11 @@
 
 > **Status:** `shipped` · **As of:** 2026-08-07
 
+> **Moved from `docs/ideas/` on 2026-08-08.** It is not an unbuilt proposal: 3.1–3.5
+> and the three paradigm-distinctive families shipped, and §3.6's two halves are
+> **declines** — one on measurement, one on evidence model. A decline that constrains
+> future work must not sit where a reader looks for things to build.
+
 
 **Status:** **Substantially delivered + outgrown.** Drafted 2026-05-13 as a v2.x direction note. Families 3.1–3.5 (idempotence, conservation, cardinality, referential integrity, biconditional) have since shipped end-to-end — discovered, surfaced, AND measured-verified — over reducer (TCA / Elm / ReSwift / Mobius / Workflow), `@Observable` MVVM, and (2026-07) VIPER/MVP convention carriers. **The engine also grew THREE paradigm-distinctive families this taxonomy's original eight didn't name — `determinism`, `unknownActionIsNoOp`, `outputDeterminism` — recorded in the new §3.9.** See `docs/design/measured-verify-architecture.md` + `docs/design/stateful-role-discoverer-design.md`. **Nothing here is live as of 2026-08-07** — §3.6's two halves were closed that day (one declined on measurement, one on evidence model) and §3.7 stays out of scope on its original grounds, so the whole doc is now a design record, and one that predicted its own build-out accurately. §5's LTL/CTL framing is the part still worth reading forward: it is what makes §3.6(b)'s decline a category judgment rather than a budget one.
 **Target:** SwiftInferProperties engine (this repo); orthogonal to the SwiftPropertyLaws kit roadmap.

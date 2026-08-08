@@ -1,6 +1,14 @@
 # Idea: a refuted high-confidence guess is a candidate bug, not just a bad guess
 
-> **Status:** `proposed` · **As of:** 2026-08-07
+> **Status:** `shipped` · **As of:** 2026-08-08
+
+> **Moved from `docs/ideas/` on 2026-08-08, and the status was stale.** This shipped as
+> `RefutedExpectation` and the **EXPECTED TO HOLD** bucket — but **not as proposed**: all
+> three clauses of the gate below were measured and refuted, and the verdict deliberately
+> does not claim a defect, because no static signal separates *the guess was wrong* from
+> *the code is wrong*. Archived rather than filed under `design/` for that reason — the
+> built thing differs from this proposal. The live record is
+> `docs/plans/suspected-defect-verdict-scope.md`.
 
 
 > **Scoped 2026-08-07 — the idea stands, the gate below is refuted.**

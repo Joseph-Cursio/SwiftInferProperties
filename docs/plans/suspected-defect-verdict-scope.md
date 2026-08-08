@@ -11,7 +11,7 @@
 > #169), and one clause of §2 is now measurably weaker than when it was written.
 
 **Status: scoped, not built. 2026-08-07.** Scopes
-`docs/ideas/Refuted-high-confidence-guess as candidate bug.md`, which is unchanged and
+`docs/archive/Refuted-high-confidence-guess as candidate bug.md`, which is unchanged and
 still the statement of the idea. **The idea survives contact with the data; its gate does
 not.** All three of the gate's clauses, applied literally to this repo, select **zero
 rows** — including the four refutations that turned out to be real defects and were fixed.

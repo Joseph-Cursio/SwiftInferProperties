@@ -2,7 +2,7 @@
 ///
 /// ## Why this is not called a suspected defect
 ///
-/// `docs/ideas/Refuted-high-confidence-guess as candidate bug.md` proposed exactly that
+/// `docs/archive/Refuted-high-confidence-guess as candidate bug.md` proposed exactly that
 /// name. `docs/plans/suspected-defect-verdict-scope.md` §11 measured whether the tool can
 /// earn it and the answer is no:
 ///
