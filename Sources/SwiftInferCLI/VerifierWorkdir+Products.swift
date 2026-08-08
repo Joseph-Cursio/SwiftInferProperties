@@ -82,7 +82,16 @@ extension VerifierWorkdir {
                 )
             }
         }
+        // #169 — the product edges need no rewrite when a URL dependency is
+        // collapsed into the corpus, because the collision *is* the two
+        // identities being equal: `package: "swift-collections"` resolves
+        // against the surviving path dependency unchanged. What can now repeat
+        // is a product: surveying swift-collections makes the built-in
+        // `OrderedCollections` edge and the corpus's own resolved product the
+        // same line. Order-preserving, so the built-in entries stay first.
+        var seen: Set<String> = []
         return entries
+            .filter { seen.insert($0).inserted }
             .map { "                \($0)" }
             .joined(separator: ",\n")
     }

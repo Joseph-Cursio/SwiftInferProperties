@@ -71,6 +71,24 @@ public enum PackageProductResolver {
     /// caller degrades to the module-name-as-product-name fallback. Mirrors the
     /// `/usr/bin/env swift` resolution `VerifierSubprocess` uses so the same
     /// PATH-resolved toolchain that runs `swift build` evaluates the manifest.
+    /// Every library product the package vends, or `nil` if the manifest could
+    /// not be read.
+    ///
+    /// The set form exists because a *guessed* product name breaks more than the
+    /// entry that guessed it. `libraryProduct(exposingModule:packageRoot:)`
+    /// returns `nil` when nothing vends the module and the caller falls back to
+    /// the module name — reasonable per entry, and fatal in a shared package,
+    /// where one unresolvable `.product(name:package:)` edge fails **manifest
+    /// loading** and takes every other member with it. Measured on
+    /// swift-collections: a `BigString` carrier produced `RopeModule`, which the
+    /// package does not vend (its product is `_RopeModule`, and there is no
+    /// `RopeModule` target either), and all 54 buildable entries failed with
+    /// `product 'RopeModule' … not found`. See `SharedVerifierPackage`.
+    static func libraryProductNames(packageRoot: URL) -> Set<String>? {
+        guard let dumped = dump(packageRoot: packageRoot) else { return nil }
+        return Set(dumped.products.filter(\.isLibrary).map(\.name))
+    }
+
     private static func dump(packageRoot: URL) -> DumpedPackage? {
         // Via `DrainedProcess`, not a bare `Process`: this dump is the largest
         // output anything in this package reads from a pipe (133 KB on

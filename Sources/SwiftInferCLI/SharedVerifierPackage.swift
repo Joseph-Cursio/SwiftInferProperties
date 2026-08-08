@@ -113,7 +113,7 @@ enum SharedVerifierPackage {
                 \(platformLine(members: members))
             ],
             dependencies: [
-                \(packageDeps.sorted().joined(separator: ",\n        "))
+                \(collapsingCorpusIdentities(packageDeps).sorted().joined(separator: ",\n        "))
             ],
             targets: [
         \(targetBlocks.joined(separator: ",\n"))
@@ -160,6 +160,37 @@ enum SharedVerifierPackage {
         try member.stubSource.write(
             to: sources.appendingPathComponent("main.swift"), atomically: true, encoding: .utf8
         )
+    }
+
+    /// Drop URL dependencies that collide with a path dependency **anywhere in the
+    /// union**.
+    ///
+    /// `VerifierWorkdir.renderDependenciesBlock` already collapses per member, and
+    /// for the single-suggestion workdir that is sufficient — one package, one
+    /// corpus. It is **not** sufficient here, and the first fix for #169 shipped
+    /// believing it was: the survey manifest is a `Set` union across members, and a
+    /// member with no corpus (`userPackage == nil`) contributes the *uncollapsed*
+    /// URL list. Union that with a corpus member's path dependency and the collision
+    /// is back, having been correctly removed from one contributor and reintroduced
+    /// by another.
+    ///
+    /// Measured: the per-member fix alone left **54 of 98** entries still reporting
+    /// `Conflicting identity for swift-collections`, unchanged from before it. The
+    /// constraint belongs to the finished manifest, not to any member of it.
+    private static func collapsingCorpusIdentities(_ dependencies: Set<String>) -> Set<String> {
+        let pathIdentities = Set(
+            dependencies.compactMap { line -> String? in
+                guard let marker = line.range(of: "path: \"") else { return nil }
+                let rest = line[marker.upperBound...]
+                guard let end = rest.firstIndex(of: "\"") else { return nil }
+                return URL(fileURLWithPath: String(rest[..<end])).lastPathComponent.lowercased()
+            }
+        )
+        guard !pathIdentities.isEmpty else { return dependencies }
+        return dependencies.filter { line in
+            guard let identity = VerifierWorkdir.urlDependencyIdentity(in: line) else { return true }
+            return !pathIdentities.contains(identity.lowercased())
+        }
     }
 
     /// The `.package(…)` lines this member needs, read back off the shared renderer.
