@@ -59,6 +59,14 @@ extension StrategistDispatchEmitter {
         curatedSyntaxRecipes[carrier]
     }
 
+    /// The carriers this table answers for, sorted. Read by
+    /// `CuratedRecipePremiseTests` for the same reason as
+    /// `curatedOCRecipeCarriers` — the guard reads the population out of the
+    /// table, so a new curated entry is enrolled in the premise check for free.
+    static var curatedSyntaxRecipeCarriers: [String] {
+        curatedSyntaxRecipes.keys.sorted()
+    }
+
     /// `SwiftSyntaxBuilder` is deliberately absent: the string-literal node
     /// initialisers it provides are the "constructed, not parsed" path this file
     /// rejects. `SwiftParser` is what turns source into trees.

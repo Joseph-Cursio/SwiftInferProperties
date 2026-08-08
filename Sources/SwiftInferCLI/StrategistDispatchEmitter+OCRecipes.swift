@@ -27,6 +27,16 @@ extension StrategistDispatchEmitter {
         curatedOCRecipes[carrier]
     }
 
+    /// The carriers this table answers for, sorted.
+    ///
+    /// Exists so `CuratedRecipePremiseTests` can read the population **out of
+    /// the table** rather than restate it — a guard that restates what it guards
+    /// only checks that two copies agree. Adding a curated entry therefore
+    /// enrols it in the premise check automatically.
+    static var curatedOCRecipeCarriers: [String] {
+        curatedOCRecipes.keys.sorted()
+    }
+
     /// Shared import set for every curated OC recipe.
     private static let ocImports = ["Foundation", "OrderedCollections", "PropertyBased"]
 
