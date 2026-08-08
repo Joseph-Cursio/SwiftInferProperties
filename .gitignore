@@ -80,6 +80,12 @@ __pycache__/
 # `predictions.json` alongside the frozen predictions — which is the file that matters.
 fixtures/verify-refutability/.swiftinfer/
 
+# The planted-defect arm's generated index. Regenerable with
+# `swift-infer index --target PlantedDefectArm`, and the measured verdicts live in the
+# fixture README, which is the file that matters. Same absolute-path-with-username problem
+# as the root index below.
+fixtures/planted-defect-arm/.swiftinfer/
+
 # Toolchain driver artifacts (`scripts/toolchain.sh`). Written into whatever target the
 # driver is pointed at, which includes this repo's own fixtures. `run.json` is the useful
 # one — it makes two runs comparable — but it records a moment, not a decision, so it is

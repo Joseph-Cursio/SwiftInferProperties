@@ -318,3 +318,45 @@ readings has to be a refutation at `Likely`/`Strong` in a template that is not
   supposed to answer is still open. It nonetheless found two defects that made
   `swift-collections` and `swift-numerics` unverifiable, which is most of the population
   the algebraic surface exists for.
+
+## 10. The confound is settled by a planted arm — and the gate takes a hit (2026-08-08)
+
+§9 could not settle §4 because correct code does not refute and no historical `<fix>^`
+candidate was reachable. `fixtures/planted-defect-arm/` takes the other route: rather than
+hunting history for a bug that lands in the empty cell, it plants one there.
+
+Three types, one method name (`combine(_:)`), all scored **`Likely` 70** by both
+`associativity` and `commutativity`, so template and implementation vary while every
+scoring signal is held constant. One run, one generator.
+
+| template | carrier | verdict | the refutation was |
+|---|---|---|---|
+| `associativity` | `BlendSummary` (averages the averages) | **REFUTED** | **a real defect** |
+| `commutativity` | `PathSegment` (joins with `/`) | **REFUTED** | **a false law about correct code** |
+| both | the remaining four rows | held | controls |
+
+**The template reading is dead.** It needed both *"a non-`commutativity` refutation is a
+false law"* and *"a `commutativity` refutation is a defect"*, and each now has a
+counterexample at the same tier, in the same run. §4's confound is broken: template does
+not determine whether a refutation is worth reading.
+
+**And the corrected gate has its first measured false positive.** Every row in the arm is
+`Likely` 70, so it says nothing about whether *tier* discriminates — but it does show that
+at one high tier a refutation can be either kind. `PathSegment`'s commutativity refutation
+would render as *Suspected defect* under §3, and it is not one. The tool's own
+explainability already names this exact case (*"a `(T, T) -> T` need not commute —
+subtraction, division, concatenation"*), which suggests the gate should consult the
+conjecture warning it already emits rather than tier alone.
+
+**What the arm cannot do**, and §3 should not be re-tuned as though it could: planted
+evidence has no base rate. These three types were chosen to occupy particular cells, so the
+arm falsifies a categorical claim and cannot estimate precision. The nine natural
+refutations remain the only base-rate evidence, and they are still 4/4 and 0/5.
+
+Revised standing of the build order:
+
+- **Step 1 (settle the confound) — DONE**, by the planted arm rather than by a corpus.
+- **New step: re-examine §3's gate.** `.likely` alone admits a known false positive. The
+  candidate refinement is to consult the conjecture signal, not to move the tier cut.
+- The `<fix>^` backtest is no longer needed to settle the confound. It is still the only
+  way to get a *rate*, and §9.1's reachability findings bound what it could ever measure.
