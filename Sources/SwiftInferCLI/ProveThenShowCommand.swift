@@ -110,6 +110,24 @@ extension SwiftInferCommand {
             try await runAlgebraic(workingDirectory: workingDirectory)
         }
 
+        /// Pre-verify tier per identity hash, read back off the index written in step 1.
+        ///
+        /// Best-effort: an unreadable index yields an empty map, and an empty map leaves
+        /// every refutation in DISPROVEN. That is the conservative direction — a missing
+        /// tier must never promote a row into a section headed "read these first".
+        private func loadPreVerifyTiers(workingDirectory: URL) -> [String: Tier] {
+            let packageRoot = SwiftInferCommand.Verify
+                .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+            guard let index = try? SwiftInferCommand.Verify.loadIndex(
+                indexPathOverride: nil, packageRoot: packageRoot
+            ) else { return [:] }
+            var tiers: [String: Tier] = [:]
+            for entry in index.entries {
+                tiers[entry.identityHash] = Tier(rawValue: entry.tier.lowercased())
+            }
+            return tiers
+        }
+
         private func runAlgebraic(workingDirectory: URL) async throws {
 
             // 1. Index WITH Possible — the whole point is to test the
@@ -145,8 +163,13 @@ extension SwiftInferCommand {
                 quiet: true
             )
 
-            // 3. Show.
-            print(ProveThenShowRenderer.render(records), terminator: "")
+            // 3. Show. The PRE-verify tier comes from the index just built, keyed by
+            //    identity: `SurveyRecord` does not carry one, and the effective tier after
+            //    verify would be the wrong input — `Tier.promoted(byVerifyOutcome:)` only
+            //    moves on a pass, but reading a post-verify tier here would invite that
+            //    confusion the first time it does move.
+            let tiers = loadPreVerifyTiers(workingDirectory: workingDirectory)
+            print(ProveThenShowRenderer.render(records, tiers: tiers), terminator: "")
         }
     }
 }

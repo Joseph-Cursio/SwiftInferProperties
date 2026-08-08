@@ -36,7 +36,7 @@ struct ProveThenShowRendererTests {
         #expect(rendered.contains("index is empty"))
     }
 
-    @Test("V1.144 — the four buckets classify by outcome, with a summary tally")
+    @Test("V1.144 — the buckets classify by outcome, with a summary tally")
     func fourBuckets() {
         let disproven = record(
             "Level", "commutativity", "combine(_:_:)", .measuredDefaultFails,
@@ -55,10 +55,15 @@ struct ProveThenShowRendererTests {
         ]
         let out = ProveThenShowRenderer.render(records)
         #expect(out.contains("Prove-then-show — 5 pick(s) tested"))
-        #expect(out.contains("Proven 2 · Disproven 1 · Unverifiable 1 · Inconclusive 1"))
+        // Expected-to-hold is 0 here: these rows carry no tier, and an untiered
+        // refutation stays in DISPROVEN rather than being promoted on missing
+        // information.
+        #expect(out.contains(
+            "Proven 2 · Expected-to-hold 0 · Disproven 1 · Unverifiable 1 · Inconclusive 1"
+        ))
         // Section headers present.
         #expect(out.contains("PROVEN — surface these"))
-        #expect(out.contains("DISPROVEN — drop these"))
+        #expect(out.contains("DISPROVEN — a low-confidence guess"))
         #expect(out.contains("UNVERIFIABLE — NOT tested, NOT a pass"))
         #expect(out.contains("INCONCLUSIVE"))
         // Rows land in the right sections.

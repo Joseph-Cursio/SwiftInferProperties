@@ -226,7 +226,7 @@ Deliberately **not** in this list: a `discover`-default surface. See §7.
   which, read as this feature's question, is a **0/10 defect rate on the interaction
   surface**, the opposite of the algebraic one. That census is reducer-only and says so.
   Suspected defect should therefore ship algebraic-first, with the interaction fold
-  deferred (falsifier: `InteractionSuspectedDefectClassifier`) until that census is
+  deferred (falsifier: `InteractionRefutedExpectation`) until that census is
   re-run over an MVVM/VIPER corpus.
 
 ## 8. Recommendation
@@ -455,3 +455,38 @@ Concretely, for the build in §6:
   score it over a population first — the standing practice from
   `fixtures/domain-transfer-signal`: score a candidate signal against the laws that HELD,
   not against the class it targets.
+
+
+## 12. Built (2026-08-08)
+
+§11.4's first two prescriptions shipped; §6 steps 2 and 3 are done.
+
+`RefutedExpectation` (Core) decides **visibility** and never blame — `.likely` or better
+via `Tier.atLeastAsProminentAs`, a counterexample present, coverage not partial.
+`ProveThenShowRenderer` gained a fifth bucket, **EXPECTED TO HOLD, AND DOES NOT**, which
+renders both readings and the sentence saying the tool cannot choose. Tiers are read
+pre-verify from the index; with no tier, a refutation stays in DISPROVEN, because a missing
+tier must never promote a row into a section headed *read these first*.
+
+Measured on `fixtures/planted-defect-arm`, which is why the fixture exists:
+
+```
+  Proven 4 · Expected-to-hold 2 · Disproven 3 · Unverifiable 0 · Inconclusive 0
+
+EXPECTED TO HOLD, AND DOES NOT — read these first
+  ! BlendSummary  associativity  combine(_:)    ← a real defect
+  ! PathSegment   commutativity  combine(_:)    ← a false law about correct code
+```
+
+Both at `Likely` 70, in one bucket, described identically. That is the design, not a
+limitation of it.
+
+**Still open**, and deliberately: the interaction fold (§7's deferral, now keyed to
+`InteractionRefutedExpectation`), and docstring corroboration as an unmeasured escalation
+— score it over a population first, per §11.3.
+
+**The wording guard caught its own first draft.** It banned the substring `is a bug`, and
+failed on the tool's correctly-hedged reading 2, which has to say the function may be
+wrong or the fork has one prong. It now asserts the property instead: neither reading is
+ever rendered without the other. Guarding a claim is not the same as guarding a
+vocabulary.

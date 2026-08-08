@@ -4,7 +4,7 @@ import SwiftInferCore
 import Testing
 
 /// V1.148 — prove-then-show over the interaction surface: classify the
-/// interaction survey's `Entry`s into the same four buckets.
+/// interaction survey's `Entry`s into the same buckets.
 @Suite("ProveThenShow interaction — V1.148 render")
 struct ProveThenShowInteractionRenderTests {
 
@@ -44,7 +44,7 @@ struct ProveThenShowInteractionRenderTests {
         #expect(out.contains("discover-interaction"))
     }
 
-    @Test("V1.148 — the four buckets classify interaction outcomes, labelled by family + reducer")
+    @Test("V1.148 — the buckets classify interaction outcomes, labelled by family + reducer")
     func fourBuckets() {
         let entries = [
             entry(.idempotence, "NavFeature.reduce", .measuredBothPass),
@@ -57,7 +57,11 @@ struct ProveThenShowInteractionRenderTests {
         ]
         let out = ProveThenShowRenderer.render(interactionEntries: entries)
         #expect(out.contains("Prove-then-show — 4 pick(s) tested"))
-        #expect(out.contains("Proven 1 · Disproven 1 · Unverifiable 1 · Inconclusive 1"))
+        // Interaction rows never reach Expected-to-hold: the verdict ships
+        // algebraic-first while the trap-attribution census is reducer-only.
+        #expect(out.contains(
+            "Proven 1 · Expected-to-hold 0 · Disproven 1 · Unverifiable 1 · Inconclusive 1"
+        ))
         #expect(out.contains("✓ idempotence  NavFeature.reduce"))
         #expect(out.contains("✗ cardinality  RouterFeature.reduce   [counterexample: failing action-sequence #3]"))
         #expect(out.contains("? referential-integrity  LibFeature.reduce   (non-Identifiable element)"))
