@@ -84,6 +84,12 @@ struct SubprocessBatchCoverageTests {
             "shells out to `swift package dump-package`, which evaluates a manifest — "
             + "seconds, no `.build`. It runs inside the 28s fast suite without moving "
             + "it. Batching a cheap suite costs coverage on every `make test-fast`.",
+        "TestTargetScopeTests":
+            "shells out to `swift package dump-package` on a tmpdir fixture package — "
+            + "same cost argument as PackageProductResolverTests (seconds, no `.build`). "
+            + "It guards the test-lifting target-scoping fix, whose fallback arms "
+            + "silently disable lifting when wrong, so it is worth running on every "
+            + "`make test-fast` rather than once per batch run.",
         "PersistEvidenceOptOutTests":
             "shells out to `git ls-files` / `git rev-parse` on paths already in this "
             + "checkout — milliseconds, no network, no `.build`. The point of the suite "

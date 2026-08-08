@@ -61,10 +61,44 @@ public enum TestSuiteParser {
     /// CLI wiring applies the `Tests` / `*Tests` heuristic before
     /// invoking this method.
     public static func scanTests(directory: URL) throws -> [TestMethodSummary] {
-        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
+        try scanTests(directories: [directory])
+    }
+
+    /// Scan several roots as one corpus.
+    ///
+    /// The plural form exists for **target scoping**: `discover --target X` must lift
+    /// only from the test targets that could be exercising `X`, and those are
+    /// several sibling directories under `Tests/` rather than one subtree. See
+    /// `TestTargetScope` for why the set is computed from the manifest's dependency
+    /// graph rather than from `Tests/<Target>Tests/` name matching.
+    ///
+    /// Roots are **deduplicated by standardized path and sorted** before scanning, so
+    /// the byte-identical-reproducibility guarantee (PRD §16 #6) survives a caller
+    /// passing overlapping or unordered roots. Files are still sorted within each
+    /// root by `SwiftSourceFiles.sorted(in:)`; sorting the roots too makes the
+    /// concatenation deterministic as well.
+    ///
+    /// Overlapping roots would otherwise double-count a file — scanning `Tests/` and
+    /// `Tests/FooTests/` together would parse everything under the latter twice, and
+    /// a duplicated `TestMethodSummary` reads downstream as independent corroboration
+    /// ("stated N times by the scan"), inflating a score from one source.
+    public static func scanTests(directories: [URL]) throws -> [TestMethodSummary] {
+        var seen: Set<String> = []
+        let roots = directories
+            .map(\.standardizedFileURL)
+            .filter { seen.insert($0.path).inserted }
+            .sorted { $0.path < $1.path }
+        // Drop any root nested inside another; see the double-counting note above.
+        let outermost = roots.filter { candidate in
+            !roots.contains { other in
+                other.path != candidate.path && candidate.path.hasPrefix(other.path + "/")
+            }
+        }
         var summaries: [TestMethodSummary] = []
-        for fileURL in swiftFiles {
-            try summaries.append(contentsOf: scan(file: fileURL))
+        for root in outermost {
+            for fileURL in SwiftSourceFiles.sorted(in: root) {
+                try summaries.append(contentsOf: scan(file: fileURL))
+            }
         }
         return summaries
     }

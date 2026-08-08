@@ -121,4 +121,65 @@ extension SwiftInferCommand.Discover {
         }
         return productionTarget
     }
+
+    /// The scan roots TestLifter should read, scoped to the test targets that could
+    /// be exercising `productionTarget`.
+    ///
+    /// The plural form of `effectiveTestDirectory`, and the fix for the
+    /// **target-scoping defect**: production code resolved to `Sources/<target>/`
+    /// while lifting read `<package-root>/Tests/` wholesale, so every lifted law was
+    /// attributed to whichever target you happened to name. Measured on this repo,
+    /// Strong-tier rows went **26 → 7** once scoped, with `SwiftInferKitEvidence`
+    /// and `SwiftInferMacroImpl` at **4 of 4** rows about other targets' code
+    /// (`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §1).
+    ///
+    /// Precedence, deliberately identical to the singular form at every step where
+    /// the singular form had an answer:
+    ///   1. explicit `--test-dir` — the user override always wins, unscoped, and
+    ///      still warns-and-falls-through when the path does not exist;
+    ///   2. **manifest-scoped test targets** (the new step) — see `TestTargetScope`;
+    ///   3. walk-up to `<package-root>/Tests/` — the pre-fix behaviour, reached
+    ///      whenever the manifest cannot answer;
+    ///   4. the production target itself — degraded fallback for tmpdir fixtures
+    ///      without a `Package.swift`.
+    ///
+    /// **Step 2 may legitimately return an empty array**, and that is the point: a
+    /// target no test target reaches lifts nothing. `TestTargetScope` distinguishes
+    /// that from "cannot answer" (`nil`), which falls through to step 3 — collapsing
+    /// the two would either reintroduce the defect or silently disable lifting.
+    static func effectiveTestDirectories(
+        productionTarget: URL,
+        explicitTestDir: URL?,
+        diagnostic: (String) -> Void
+    ) -> [URL] {
+        let fileManager = FileManager.default
+        if let explicit = explicitTestDir {
+            if fileManager.fileExists(atPath: explicit.path) {
+                return [explicit]
+            }
+            diagnostic(
+                "--test-dir path '\(explicit.path)' does not exist; "
+                    + "falling back to walk-up resolution"
+            )
+        }
+        if let packageRoot = findPackageRootForTestDir(startingFrom: productionTarget) {
+            // The module name follows the `Sources/<target>/` convention `--target`
+            // resolves through. A directory that is not a declared target — the
+            // `--sources` escape hatch, or a manifest `path` override — makes
+            // `TestTargetScope` answer `nil`, not empty, so this cannot silently
+            // switch lifting off.
+            let module = productionTarget.standardizedFileURL.lastPathComponent
+            if let scoped = TestTargetScope.testDirectories(
+                exercising: module,
+                packageRoot: packageRoot
+            ) {
+                return scoped
+            }
+            let tests = packageRoot.appendingPathComponent("Tests")
+            if fileManager.fileExists(atPath: tests.path) {
+                return [tests]
+            }
+        }
+        return [productionTarget]
+    }
 }
