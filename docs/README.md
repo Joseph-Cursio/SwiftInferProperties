@@ -91,5 +91,23 @@ History is deliberately out of scope: `docs/archive/`, `CHANGELOG.md` and the ro
 `README.md` record what was true when written, so a citation to a since-pruned doc is
 *correct* there and repointing it would be the actual mistake.
 
+**A deferral should name what would refute it.** Writing *"X is deferred"* states
+something unfalsifiable: nothing can ever report that it stopped being true. Writing
+
+> Deferred kit-side: `CommutativeGroup` (falsifier: `SwiftPropertyLaws/checkCommutativeGroupPropertyLaws`)
+
+says *if that symbol appears, this sentence is wrong* — and `DeferralFalsifierTests`
+checks it, failing the day the kit ships one. The symbol is a name in this repo's
+`Sources/`, or `Repo/Name` for a sibling checkout, the same repo-in-the-path
+spelling the citation guards use.
+
+This exists because prose could not be guarded. `docs/measurements/stale-summary-guard-declined.md`
+records four text detectors for stale summaries, all refuted, and the reason is
+structural: **we correct by annotation, not by rewriting**, so a fixed doc still
+contains the wrong sentence and a text detector fires on it forever. A falsifier is
+checkable against the tree instead of against another sentence. Deleting one to
+silence the guard is possible, but it shows up in the diff — which is the most a
+guard can ask.
+
 Note the limit of that guard: it only sees **this** repo. Sibling repos in the
 toolchain cite these paths too, and nothing checks those.
