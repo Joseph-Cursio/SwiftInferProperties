@@ -205,16 +205,9 @@ public enum VerifierSubprocess {
     /// Returns `nil` on any failure — caller falls back to inherited
     /// environment.
     private static func computeTestingLibraryDirectory() -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["swift", "-print-target-info"]
-        let stdoutPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = Pipe()
-        do { try process.run() } catch { return nil }
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let data = DrainedProcess.standardOutputViaEnv(["swift", "-print-target-info"]) else {
+            return nil
+        }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let paths = json["paths"] as? [String: Any],
               let runtimeResourcePath = paths["runtimeResourcePath"] as? String,
@@ -236,16 +229,9 @@ public enum VerifierSubprocess {
     /// posture as `computeTestingLibraryDirectory`, for the framework form
     /// swift-testing migrated to.
     private static func computeTestingFrameworkDirectory() -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["xcode-select", "-p"]
-        let stdoutPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = Pipe()
-        do { try process.run() } catch { return nil }
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let data = DrainedProcess.standardOutputViaEnv(["xcode-select", "-p"]) else {
+            return nil
+        }
         guard let developerDir = String(data: data, encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines), !developerDir.isEmpty else {
             return nil
