@@ -1,6 +1,6 @@
 # Suspected-defect verdict — scope, with the proposed gate measured and refuted
 
-> **Status:** `open` · **As of:** 2026-08-08
+> **Status:** `shipped` · **As of:** 2026-08-08
 
 
 > **§6 step 1 was RUN on 2026-08-08 and is misspecified. See §9 for the result.**
