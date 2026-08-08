@@ -1,6 +1,6 @@
 # Kit-suite backtest — §3a, §4a, Arm 2 and Arm 3
 
-> **Status:** `measured` · **As of:** 2026-08-08
+> **Status:** `measured` · **As of:** 2026-08-08 (revised same day — see §2.2a and §2.6)
 
 Closes the open remainder of [`docs/plans/kit-suite-backtest-plan.md`](../plans/kit-suite-backtest-plan.md),
 whose Arm 1 ran 2026-08-02 and was a HIT. Read that plan first — it carries the method, the
@@ -37,6 +37,11 @@ two have different remedies and only one of them is the tool's to fix.
 
 The model-law recommendation survives (it refutes all three at trial 1, against 12–314 for the
 narrowed conformance law), but it is now the *second* recommendation, not the first.
+
+**And a fourth subject arrived after the fact that is better than all three**: a real, open
+upstream `==` bug (`swift-collections#696`) in the same projection-view class, needing no
+mutation. The emitted suite reaches it, names the law, and is blocked only on a generator; given
+one by hand it refutes at **trial 1**. See §2.7.
 
 ---
 
@@ -76,6 +81,25 @@ fail.** All six trace to two derived generators, not to the library.
 |---|---|---|
 | `BitSet.Counted` — Codable, Sequence, SetAlgebra | `zip(…map { BitSet(words: $0) }, Gen<Int>.int(in: -10_000...10_000)).map { BitSet.Counted(_bits: $0.0, count: $0.1) }` | `count` is drawn **independently of the bits**, so the generator constructs values whose count contradicts their contents. `SetAlgebra.unionIdempotence` fails at trial 1. |
 | `OrderedDictionary`, `.Elements`, `.Values` — Hashable | `zip(Gen<Int>.int(in: -10_000...10_000), Gen<Bool>.bool()).map { OrderedDictionary(minimumCapacity: $0.0, persistent: $0.1) }` | every value is an **empty** dictionary differing only in reserved capacity and a flag — and the capacity can be negative. |
+
+> **CORRECTION, same day.** The sentence below over-generalised: it was written from the
+> generator expressions, not from the counterexamples, and only the `BitSet.Counted` half is the
+> invariant-violating kind. **The `OrderedDictionary` trio is `Hashable.distribution` at
+> *Heuristic* tier** — *"1000 samples produced only 1 unique hashValues; last sample: `[:]`"* — a
+> **vacuous** generator, not an inconsistent one. It surfaces as a *test* failure only because
+> the kit records a swift-testing Issue for a Heuristic violation even when
+> `EnforcementMode.default` does not throw, which `KitSuiteEmitter`'s own doc comment already
+> warns about. The emitted `#expect` never fired.
+>
+> **The consequence is worse than the miscategorisation.** If every drawn value is the empty
+> dictionary, then `OrderedDictionary`, `.Elements` and `.Values` did not merely fail a
+> distribution check — **their Equatable and Hashable laws passed over a single value, so those
+> three "passes" in the 20 are vacuous.** A vacuous pass and a real one are indistinguishable in
+> the count, which is the `f(x) == f(x)` failure mode wearing a generator, one level up.
+>
+> `BitSet.Counted — Codable` is also **Conventional** tier, not Strict: the counterexample prints
+> `x` and `restored` identically and still reports `!(x == restored)`, because the description
+> shows the bits and `==` also compares the count the generator drew independently.
 
 Both are the same defect class: **the strategist picked an initializer whose parameters are not
 independent**, and `@testable` is what made it reachable — `BitSet.Counted(_bits:count:)` is
@@ -143,6 +167,77 @@ So the recommendation stands and its order changes:
    into a HIT on a law the tool already emits.
 2. **Emit model laws alongside conformance suites.** Cheaper witnesses (trial 1 vs up to 314)
    and it does not depend on a lucky draw.
+
+### 2.6 Is OrderedCollections' own `==` sound? Yes — checked, not assumed
+
+Asked directly, because §2.2's vacuous generator means the emitted run never exercised
+`OrderedDictionary.==` at all, and a projection bug in the *subject* would have contaminated the
+arm rather than the mutant.
+
+Re-ran the same kit suites on **pristine** sources with generators that produce real values over
+a four-symbol alphabet, so two draws collide:
+
+| carrier | Strict laws | only violation |
+|---|---|---|
+| `OrderedSet` (Hashable, Sequence) | **pass** | `Hashable.distribution`, Heuristic |
+| `OrderedSet.UnorderedView` (Hashable, SetAlgebra) | **pass** | `Hashable.distribution`, Heuristic |
+| `OrderedDictionary` (Hashable) | **pass** | — |
+| `OrderedDictionary.Elements` / `.Values` (Hashable) | **pass** | `Hashable.distribution`, Heuristic |
+
+A Heuristic `distribution` violation is *expected* here and is not a defect: four symbols cannot
+fill 1,000 trials with distinct hashes. Every Strict law passed.
+
+Read against the sources, the two candidate mismatches are both consistent: `OrderedDictionary`
+is order-sensitive on **both** sides (`_keys == _keys && _values == _values`; `hash` iterates in
+order), and `UnorderedView` is order-**in**sensitive on both (membership scan; `hash` XORs member
+hashes). A direct semantics probe over 400 pairs — permutation pairs confirmed reached —
+found `==` disagreeing with element order **0 times** and `isEqualSet(to:)` disagreeing with set
+equality **0 times**.
+
+**So OrderedCollections did not interfere with Arm 2.** The three mutated carriers were sound
+before mutation.
+
+### 2.7 Arm 2b — the same question against a REAL, open upstream bug
+
+Prompted by [`apple/swift-collections#696`](https://github.com/apple/swift-collections/issues/696):
+`SortedDictionary.Keys.==` and `.Values.==` bail out when a pair of elements is **equal**
+(`if e1 == e2 { return false }`, where `!=` was intended), inverting the comparison for any
+non-empty view. Open, and present at `c8080d05`. `SortedSet.==`, `SortedSet.SubSequence.==`,
+`SortedDictionary.==` and `SortedDictionary.SubSequence.==` are correct — only these two
+projection views are affected.
+
+**This arm needs no mutation.** Arm 2's three subjects were bugs I injected; this one ships. It is
+strictly better evidence and it was not in the plan.
+
+**It did not touch the earlier results.** `SortedCollections` is trait-gated
+(`UnstableSortedCollections` → `#if COLLECTIONS_UNSTABLE_SORTED_COLLECTIONS`) and appears in
+**zero of the 13 emissions** in §5.
+
+| step | result |
+|---|---|
+| does `scaffold-kit-suites` reach the carrier? | **yes** — both views named, with `checkHashablePropertyLaws` and `checkSequencePropertyLaws`, reported **BLOCKED on a generator** and carrying the exact `gen()` signature to provide |
+| does the emitted suite compile? | **no** — 2 of its 3 live carriers, `_BTree<Int, Int>` and `_Node<Int, Int>`, are not `Sendable` |
+| with the generator written by hand, is the bug caught? | **yes — `Equatable.reflexivity` [Strict, **1 trial**], `x == x evaluated to false`**, on both views |
+| control | `SortedSet`, same suite, same alphabet: **clean at Strict** |
+| direct check, independent of the kit | `keys == itself → false`, `values == itself → false`, `SortedSet == itself → true` |
+
+**This is Arm 1's unit of value, reproduced on a bug nobody has fixed yet**, and with the same
+honest bound: the tool reached the carrier, named the law, named the suite, and stated the one
+thing missing; a human supplied the domain. One detail of that domain is load-bearing and is the
+same collision lesson as §2.4 — **the inverted `==` is vacuously correct on an EMPTY view**
+(the loop never runs, so it returns `true`), so a generator that can draw empty is a generator
+that can miss this bug. The hand-written one is non-empty by construction.
+
+**And two new findings fell out of running it:**
+
+1. **§3b's `Sendable` prediction finally bit** — first time in this backtest. Not on a public
+   type: on internal B-tree scaffolding (`_BTree`, `_Node`) that `@testable` made reachable and
+   the emitter selected. The compile rate for this corpus is **0 files**, and dropping the two
+   offending suites is what let the arm run at all.
+2. **The emitter does not evaluate compilation conditions.** It emitted carriers for
+   `SortedDictionary` and friends, which do not exist unless the `UnstableSortedCollections`
+   trait is on. Harmless for a blocked entry a human reads; a live entry for a type behind an
+   inactive `#if` would not compile.
 
 ---
 
@@ -231,9 +326,13 @@ Per the plan: context, never a headline, and not to be read without Arms 1 and 2
 | swift-nio · NIOCore | 33 | 11 | 33% | 124 | 47 | 37% |
 | swift-syntax · SwiftSyntax | 21 | 12 | 57% | 77 | 50 | 64% |
 | **swift stdlib** · public/core | 105 | 19 | 18% | 293 | 98 | 33% |
+| swift-collections · SortedCollections † | 12 | 3 | 25% | 53 | 15 | 28% |
 | *self* · SwiftInferCLI | 36 | 31 | 86% | 109 | 94 | 86% |
 | *self* · SwiftInferTemplates | 16 | 6 | 37% | 54 | 24 | 44% |
-| **TOTAL** | **366** | **141** | **38%** | **1168** | **591** | **50%** |
+| **TOTAL** | **378** | **144** | **38%** | **1221** | **606** | **49%** |
+
+† Added 2026-08-08 with Arm 2b (§2.7); trait-gated, so it was in none of the original 12. Its
+emitted file **does not compile** — `_BTree` and `_Node` are not `Sendable`.
 
 **Derivation on third-party code is roughly half what it is on the codebase the emitter was
 written against.** §7's handoff figure was 74%; that was this repo. `SwiftInferCLI` scores 86%
@@ -274,6 +373,12 @@ Recorded unscored, per §5's *a tool may not grade its own homework*.
 4. **A collision-dependent law needs a *wrapped* witness, not merely a narrow alphabet** (§2.4).
    Narrowing the alphabet was necessary and not sufficient for `Deque`; three hand-built witness
    attempts produced non-witnesses for structural reasons.
+5. **A vacuous generator makes a PASS meaningless, and the count cannot tell you** (§2.2a). Three
+   of the baseline's 20 passes were taken over a single value.
+6. **The emitter does not evaluate compilation conditions** (§2.7) — it emits carriers for code
+   behind an inactive `#if`.
+7. **`Sendable` finally bit, on internals rather than public types** (§2.7), taking one corpus's
+   compile rate to zero.
 
 ## 7. Still open
 
@@ -285,3 +390,9 @@ Recorded unscored, per §5's *a tool may not grade its own homework*.
   in a scratch directory — committing it means vendoring swift-collections, so the decision is
   not automatic. §2.1 and §2.4 carry enough to rebuild it.
 - **The 26 s type-check has not been re-measured in isolation** (§3.1).
+- **`SortedDictionary.Keys` / `.Values` are still broken upstream** (`swift-collections#696`,
+  open; a contributor claimed it 2026-08-02). Nothing here is blocked on it — the arm wanted a
+  bug, and an unfixed one is the better subject.
+- **The two generator defects in §2.2 are unfixed**, and they outrank everything else in this
+  file: they make the emitted suite report false refutations on correct code, and they make some
+  of its passes vacuous.
