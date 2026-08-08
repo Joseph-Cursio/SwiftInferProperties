@@ -27,25 +27,25 @@ extension ActionSequenceStubEmitter {
         case .conservation:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"Conservation invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Conservation invariant violated\")"
             ]
 
         case .cardinality:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"Cardinality invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Cardinality invariant violated\")"
             ]
 
         case .referentialIntegrity:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"Referential-integrity invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Referential-integrity invariant violated\")"
             ]
 
         case .biconditional:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"Biconditional invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Biconditional invariant violated\")"
             ]
 
         // Idempotence and unknown-action-is-no-op are single-witness post-loop
@@ -153,7 +153,7 @@ extension ActionSequenceStubEmitter {
         let awaitPrefix = isAsync ? "await " : ""
         let assertion =
             "precondition(once == twice, "
-                + "\"Idempotence invariant violated for \(actionExpr)\")"
+                + "\"\(Self.invariantViolationMarker) Idempotence invariant violated for \(actionExpr)\")"
         // Mobius: double-apply the witness, taking `Next.model` each time
         // (nil = `.noChange` → keep the prior model). Effects discarded.
         if isMobius {
@@ -281,7 +281,7 @@ extension ActionSequenceStubEmitter {
         let awaitPrefix = isAsync ? "await " : ""
         let assertion =
             "precondition(detFirst == detSecond, "
-                + "\"Determinism invariant violated\")"
+                + "\"\(Self.invariantViolationMarker) Determinism invariant violated\")"
         if isMobius {
             return [
                 "let detFirst = \(awaitPrefix)\(reducerCall)(state, action).model ?? state",
@@ -347,7 +347,8 @@ extension ActionSequenceStubEmitter {
         let probe = "\(Self.unknownActionProbeTypeName)()"
         let assertion =
             "precondition(afterProbe == state, "
-                + "\"unknown-action-is-no-op invariant violated: reduce(s, unknown) != s\")"
+                + "\"\(Self.invariantViolationMarker) unknown-action-is-no-op "
+                + "invariant violated: reduce(s, unknown) != s\")"
         if isMobius {
             return [
                 "let afterProbe = \(awaitPrefix)\(reducerCall)(state, \(probe)).model ?? state",

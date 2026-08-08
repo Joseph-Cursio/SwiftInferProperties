@@ -1,12 +1,12 @@
 # Interaction Invariant Taxonomy
 
-> **Status:** `open` · **As of:** 2026-07-07
+> **Status:** `shipped` · **As of:** 2026-08-07
 
 
-**Status:** **Substantially delivered + outgrown.** Drafted 2026-05-13 as a v2.x direction note. Families 3.1–3.5 (idempotence, conservation, cardinality, referential integrity, biconditional) have since shipped end-to-end — discovered, surfaced, AND measured-verified — over reducer (TCA / Elm / ReSwift / Mobius / Workflow), `@Observable` MVVM, and (2026-07) VIPER/MVP convention carriers. **The engine also grew THREE paradigm-distinctive families this taxonomy's original eight didn't name — `determinism`, `unknownActionIsNoOp`, `outputDeterminism` — recorded in the new §3.9.** See `docs/design/measured-verify-architecture.md` + `docs/design/stateful-role-discoverer-design.md`. **The live content is now §3.6 (reachability), §3.7 (temporal), and §5 (the LTL/CTL framing);** the rest is the design record it turned out to predict accurately.
+**Status:** **Substantially delivered + outgrown.** Drafted 2026-05-13 as a v2.x direction note. Families 3.1–3.5 (idempotence, conservation, cardinality, referential integrity, biconditional) have since shipped end-to-end — discovered, surfaced, AND measured-verified — over reducer (TCA / Elm / ReSwift / Mobius / Workflow), `@Observable` MVVM, and (2026-07) VIPER/MVP convention carriers. **The engine also grew THREE paradigm-distinctive families this taxonomy's original eight didn't name — `determinism`, `unknownActionIsNoOp`, `outputDeterminism` — recorded in the new §3.9.** See `docs/design/measured-verify-architecture.md` + `docs/design/stateful-role-discoverer-design.md`. **Nothing here is live as of 2026-08-07** — §3.6's two halves were closed that day (one declined on measurement, one on evidence model) and §3.7 stays out of scope on its original grounds, so the whole doc is now a design record, and one that predicted its own build-out accurately. §5's LTL/CTL framing is the part still worth reading forward: it is what makes §3.6(b)'s decline a category judgment rather than a budget one.
 **Target:** SwiftInferProperties engine (this repo); orthogonal to the SwiftPropertyLaws kit roadmap.
 **Date:** 2026-05-13 (status refreshed 2026-07-07)
-**On the "Stateful Testing Kit Proposal":** earlier revisions of this note referenced a kit-side `Stateful Testing Kit Proposal.md` companion. **That doc was never written.** Its runtime primitives partially shipped in the kit anyway (`StatefulGuard` + `ActionSequenceFactory`, v2.2.0), which the reducer interaction verifier already uses; the full command-sequence / state-machine harness it envisioned remains the unbuilt frontier (§3.6).
+**On the "Stateful Testing Kit Proposal":** earlier revisions of this note referenced a kit-side `Stateful Testing Kit Proposal.md` companion. **That doc was never written.** Its runtime primitives partially shipped in the kit anyway (`StatefulGuard` + `ActionSequenceFactory`, v2.2.0). **The verifier calls the factory and has never passed a guard** — the gap this note called the unbuilt frontier was, from v2.2.0 onward, an unused parameter rather than a missing harness. §3.6(a) records what happened when that was finally measured instead of assumed.
 
 ## 1. Summary
 
@@ -63,6 +63,41 @@ For each family: definition, check strategy, example, the original v1.63 verdict
 - Check: bounded model checking or random sequence exploration. Where stateful PBT lives (Hypothesis bundles, `quickcheck-state-machine`, Erlang QuickCheck).
 - v1.63 verdict: **no** — would need a sequence generator and a transition-relation template family. Overlaps heavily with the kit-side Stateful Testing proposal.
 - **Today: the live frontier — the *safety half* is now well-explored; the *reachability queries* are not.** The verifier drives the action alphabet and re-checks a *state predicate* after each step (the safety half, `G(ϕ)`) via **randomized multi-step sequences + shrinking** on *every* carrier: the reducer path runs 1024 randomized sequences with a shrink primitive, and (2026-07) the MVVM/convention path runs 500 randomized sequences + greedy shrink (previously a single sorted pass — the update that caught order-dependent interleaving bugs a single pass missed). What remains genuinely unbuilt: **precondition-guarded *valid*-sequence generation** (the "no select-after-delete-of-selected" problem, §6 Q2 — sequences today are unguarded, so an action that traps on an invalid precondition can mask signal) and **reachability queries proper** (`AG EF Q` — "is state Q reachable/unreachable"). Those two are the state-machine-harness / model-checking territory that should still wait on a kit-side stateful-testing harness rather than be duplicated here.
+- **2026-08-07 — both halves CLOSED, and neither by building them. Read this before proposing either.**
+
+  **(a) Valid-sequence generation — DECLINED on measurement, not on cost.** The deferral above is
+  stale twice over. The kit-side harness it waits on *shipped* — `StatefulGuard` is precisely a
+  precondition filter (`wouldAllow(_:given:)`) and `ActionSequenceFactory.actionSequence(from:length:statefulGuards:)`
+  threads it into generation, both in v2.2.0, which this doc's own header note records. And the
+  engine has been calling that factory at all four emit sites ever since, always with
+  `statefulGuards:` omitted. So the capability was plumbed end to end and never exercised — the
+  `RolePolicy` shape, invisible to `make dead-code` because the *file* is live and only the
+  parameter is dead.
+
+  What was never established is that the problem exists. The stated harm is that "an action that
+  traps on an invalid precondition can mask signal" — and it is worse than masking, because
+  `InteractionVerifyOutcomeParser` maps every non-zero exit to `.measuredDefaultFails`, so such a
+  trap *manufactures* a refutation. That is now measurable: every emitted invariant `precondition`
+  carries `ActionSequenceStubEmitter.invariantViolationMarker`, and the parser attributes each trap
+  to the check or to the subject. **Measured over six corpora: 10 refutations, 10 from the invariant
+  check, 0 from subject code** (`docs/measurements/interaction-trap-attribution-census.md`).
+
+  With no artifact population, a guard is a filter with no measured problem — the
+  `fixtures/domain-transfer-signal` result restated: score a candidate veto against what actually
+  happened, not against the class it targets. **The honest bound: those are reducer corpora, and a
+  reducer is total over its action alphabet by construction, which is exactly where the conflation
+  was predicted to be harmless.** The MVVM / VIPER case is *unmeasured*, not refuted — no fixture
+  carries a method with a real precondition. So the decline is conditional and its trigger is
+  named: a `.subjectCode` attribution appearing in that census reopens this, and nothing else does.
+
+  **(b) Reachability queries (`AG EF Q`) — DECLINED permanently, on evidence model.** Not deferred:
+  the tool cannot make this claim, at any budget. `AG EF Q` quantifies over *all* paths, and bounded
+  random exploration can only ever report "not reached in N sequences." That is not a weaker version
+  of the claim — it is a different claim, and shipping it as the stronger one is precisely the
+  over-claiming this project's posture exists to prevent. A finite counterexample is what makes the
+  safety half checkable (§5); unreachability has none, so it is not a template gap but a category
+  mismatch, the same reason §3.8 accessibility is out. Building it would need a model checker over a
+  transition relation the tool does not have and could not soundly infer from Swift source.
 
 ### 3.7 Temporal
 "Eventually X" or "never X within T."
@@ -96,7 +131,7 @@ Triaged by extension cost. The "delivered" column records what actually landed �
 | 3.1 Cardinality | medium | New template + emitter (count predicate over `State`) | ✅ cycle 136 |
 | 3.2 Referential integrity | medium | New template + emitter (membership across two `State` fields) | ✅ cycle 138/139 |
 | 3.3 Biconditional | medium-high | New template spanning view-derived and model state | ✅ cycle 137 |
-| 3.6 Reachability | high | New harness (sequence generator, state-machine bundle, action-precondition system) — overlaps with kit-side Stateful Testing | ◑ safety half shipped (randomized multi-step sequences + shrink on all carriers); valid-sequence-gen + reachability queries unbuilt |
+| 3.6 Reachability | high | New harness (sequence generator, state-machine bundle, action-precondition system) — overlaps with kit-side Stateful Testing | ◑ safety half shipped (randomized multi-step sequences + shrink on all carriers); valid-sequence-gen **declined on measurement** and reachability queries **declined on evidence model**, both 2026-08-07 (§3.6) |
 | 3.7 Temporal | very high | Virtual clock + async-aware shrinking — research-level | ❌ not built |
 | 3.8 Accessibility | n/a | Belongs in a linter, not here | ❌ out of scope |
 
@@ -126,4 +161,4 @@ The five questions this note raised were all answered by the v2.x interaction-in
 
 ## 7. Status
 
-**Families 3.1–3.5 delivered**, plus the three §3.9 paradigm-distinctive families (determinism / unknown-action-is-no-op / output-determinism) and the VIPER/MVP convention carrier — across the v2.x interaction-invariant + StatefulRole work (see `docs/design/measured-verify-architecture.md` + `docs/design/stateful-role-discoverer-design.md`). The v1.63-era measurement figure that gated this note (42/103 = 40.8%) is superseded — the v1 algebraic corpus is now 53/53 = 100% (cycle 151), and every interaction family has a measured-verify path. The safety-property half of §3.6 is now well-explored (randomized multi-step sequences + shrinking on all carriers). **Remaining live surface: §3.6's *reachability queries* + *valid-sequence generation*, and §3.7 temporal** — both still gated on a kit-side stateful-testing harness landing or being firmly deferred.
+**Families 3.1–3.5 delivered**, plus the three §3.9 paradigm-distinctive families (determinism / unknown-action-is-no-op / output-determinism) and the VIPER/MVP convention carrier — across the v2.x interaction-invariant + StatefulRole work (see `docs/design/measured-verify-architecture.md` + `docs/design/stateful-role-discoverer-design.md`). The v1.63-era measurement figure that gated this note (42/103 = 40.8%) is superseded — the v1 algebraic corpus is now 53/53 = 100% (cycle 151), and every interaction family has a measured-verify path. The safety-property half of §3.6 is now well-explored (randomized multi-step sequences + shrinking on all carriers). **Remaining live surface: none.** §3.6's two halves closed 2026-08-07 — *valid-sequence generation* declined on measurement (0 subject-code traps in 10 measured refutations; the kit harness it was waiting on had shipped in v2.2.0 and gone uncalled), *reachability queries* declined permanently on evidence model (`AG EF Q` quantifies over all paths; bounded exploration cannot make that claim). §3.7 temporal remains out of scope on the original grounds. See §3.6's 2026-08-07 entry for both, including the one condition that would reopen (a) — it is named there rather than left to judgment.
