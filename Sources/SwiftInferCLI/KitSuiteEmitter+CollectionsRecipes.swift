@@ -36,6 +36,20 @@ extension KitSuiteEmitter {
     /// comment gets a generator that varies the value instead; the reader who hand-rolls one
     /// from the `.gen()` hint may well reproduce the vacuous version.
     ///
+    /// > **Corrected 2026-08-08, kit `3.27.1` (`595e400`) — the conclusion stands, its
+    /// > evidence does not.** The paragraph above was written against kit `91e09a2`, and the
+    /// > kit moved the same afternoon. `minimumCapacity` is now in the public
+    /// > `InitializerBasedDerivation.capacityHintLabels`, and `isCapacityOnly` declines any
+    /// > initializer whose parameters are ALL capacity-shaped — so the strategist no longer
+    /// > derives that vacuous generator, it returns the carrier to `.todo`. The recipe below
+    /// > is therefore *more* load-bearing than when it was written, not less: the reader now
+    /// > arrives here holding a `.gen()` hint rather than a wrong generator, and the kit's own
+    /// > decline comment says as much — *"Declining here returns the carrier to `.todo`, where
+    /// > the message already tells the user to supply `gen()` … which the kit's own
+    /// > `PropertyLawCollections` recipes then satisfy."* Do not read the sentence above as a
+    /// > live description of strategist behaviour; it is the measurement that motivated this
+    /// > table.
+    ///
     /// **Prior art, and it cuts the other way.** `StrategistDispatchEmitter.curatedOCRecipes`
     /// already keys on carrier names — 8 entries — and hand-writes generators for
     /// `OrderedSet<Int>`, `OrderedDictionary<Int, Int>` and `Deque<Int>`, three of the seven
@@ -53,7 +67,12 @@ extension KitSuiteEmitter {
         propertyLawCollectionsRecipes[carrierName]
     }
 
-    /// Read off `SwiftPropertyLaws@91e09a2 Sources/PropertyLawCollections/*Generators.swift`.
+    /// Read off `SwiftPropertyLaws@91e09a2 Sources/PropertyLawCollections/*Generators.swift`,
+    /// **re-verified at `595e400` (3.27.1) on 2026-08-08**: the five commits between the two
+    /// SHAs touch `PropertyLawCore/InitializerBasedDerivation.swift` only, and
+    /// `git diff 91e09a2..595e400 -- Sources/PropertyLawCollections/` is empty, so every
+    /// recipe string below is unchanged. The original SHA is kept as the provenance of the
+    /// reading; the second is the last commit it was checked against.
     /// Every recipe's arguments are fully defaulted and every one returns
     /// `Generator<Value, some SendableSequenceType>`, which is exactly the `using:` parameter
     /// of `check<Protocol>PropertyLaws` — so the emitted line is paste-and-run once the
