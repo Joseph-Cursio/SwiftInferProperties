@@ -654,6 +654,66 @@ types that are nested or otherwise unreachable at file scope. Two picks are ther
 an emitter gap rather than to anything about their laws. **Open follow-up**, and the cheapest
 remaining item in this document. (falsifier: `nestedCarrierImportResolution`)
 
+### §8.6 A Proven verdict that is FALSE — and the 81 were never tests
+
+Two things this section exists to correct, both found *after* the survey ran.
+
+**(a) "81 Proven" is not 81 tests.** The survey generates each law into a throwaway verifier
+workdir, compiles it, runs it once, and the workdir is deleted with the run. A Proven verdict
+is a **measurement, not regression protection** — nothing re-checks it afterwards. The picks
+that survive have to be *banked* to become tests. Banked here: the 5 uncovered
+`codable-round-trip` carriers (`InversePair`, `MarkerPair`, `SeedEffect`, `SeedRestriction`,
+`SeedRole`) and the uncovered `idempotence` subjects, as
+`SurveyedCodableRoundTripPropertyTests` and `SurveyedIdempotencePropertyTests` — **13 laws,
+2 mutant controls**. The rest were already covered (`MergeAlgebraPropertyTests`,
+`PersistenceRoundTripPropertyTests`, `NameStrippingDifferentialPropertyTests`) or are
+`predicate` totality claims that the Daikon-trap entry already warns are 88% of output.
+
+**(b) One Proven verdict is wrong.** `ViewModelNameHeuristics.booleanStem` is **not
+idempotent**, and the survey proved it:
+
+```
+isShowing     -> showing    -> ing
+hasShown      -> shown      -> n
+willShowAlert -> showalert  -> alert
+```
+
+It strips ONE prefix from `["isshowing", "is", "has", "show", "should", "did", "will"]`, so a
+second application strips a second prefix whenever the stem starts with another one — which
+English identifiers do constantly.
+
+**Why the verifier missed it is the whole lesson.** The derived `String` generator draws
+values like `"XO8hGC"` and `"uvYUbS"` — the literal counterexamples §8.4 captured from other
+picks — which never begin with an English boolean prefix, so the failing branch was
+unreachable in the generated domain. This is the standing rule in the sharpest form it has
+taken in this repo: ***`measured-bothPass` means no counterexample in the generated domain,
+not that the property holds.*** It generalises the `Decisions.merge` alphabet-width finding
+from *collisions* to *any branch keyed on realistic content*.
+
+**It is a false law, not a defect.** Both call sites apply it once to a raw property name and
+the docstring says one strip by design. `SurveyedIdempotencePropertyTests` therefore pins the
+**refutation**, with a message telling a future editor to check those call sites before
+"fixing" it — looping would turn `isShowingSheet` into `sheet` and change what every
+view-model invariant keys on.
+
+**This was found by reading the code, not by running the tool**, which bounds §8.1's headline:
+81 Proven contains at least one false positive, discovered by hand on the ~30 non-`predicate`
+rows. The 49 `predicate` rows were not audited this way.
+
+### §8.7 The controls
+
+Banking a Proven law is only worth it if the banked law can fail. Both suites were run against
+deliberate mutants:
+
+| mutant | killed by | correctly survived |
+|---|---|---|
+| `SemanticIndexEntry.updated(from:)` takes `identityHash` from the **argument** | identity-preservation | **idempotence** — still true, and blind to it |
+| `InversePair.init(from:)` decodes the two-element array **swapped** | round-trip + the explicit `forward` assertion | the other four carriers |
+
+The first row is the argument for not banking the survey's verdict alone: **the law the survey
+proved is exactly the law that cannot see this bug.** Re-keying every index row stays perfectly
+idempotent. The refutable companion law had to be added by hand.
+
 ### §8.5 What §8 does not claim
 
 * **Zero defects found is not zero defects present.** 81 held over a generated domain at
