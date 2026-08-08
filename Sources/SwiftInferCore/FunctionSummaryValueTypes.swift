@@ -18,6 +18,27 @@ public struct SourceLocation: Sendable, Equatable, Hashable {
         self.line = line
         self.column = column
     }
+
+    /// The location `Slicer` emits when it has no `SourceLocationConverter` —
+    /// `<test-body>:0`. Declared here, and referenced by both the producer
+    /// (`Slicer.location(of:)`) and the consumer that must recognise it
+    /// (`LiftedSuggestion.makeExplainability`), so the two cannot drift into
+    /// disagreeing about what "unknown" looks like.
+    ///
+    /// **A placeholder that reaches a user is a bug**, and this one did: every
+    /// lifted row rendered `Lifted from <test-body>:0` while source-derived rows
+    /// carried `file.swift:line`. That is what let the package-wide test-lifting
+    /// defect hide — a row citing `render(suggestion)` on `SwiftInferKitEvidence`
+    /// is only obviously wrong if it names the file it came from
+    /// (`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §7.4).
+    public static let testBodyPlaceholder = Self(file: "<test-body>", line: 0, column: 0)
+
+    /// Whether this location can be shown to a user as provenance. False for the
+    /// slicer placeholder and for the corpus-level `<corpus>` origin, both of which
+    /// name no file a reader could open.
+    public var isResolvable: Bool {
+        line > 0 && !file.hasPrefix("<")
+    }
 }
 
 /// Type-flow-lite signals computed from a function's body. Empty / all-false

@@ -383,11 +383,18 @@ enum AssertionAnchor {
     }
 
     private static func location(of _: Syntax) -> SwiftInferCore.SourceLocation {
-        // The slicer doesn't carry a SourceLocationConverter, and
-        // M1.3's round-trip detector consumes the assertion's argument
-        // shape, not its absolute location. We surface a placeholder
-        // here; M1.5's CLI wiring threads a converter through when the
-        // location actually feeds rendering.
-        SwiftInferCore.SourceLocation(file: "<test-body>", line: 0, column: 0)
+        // The slicer doesn't carry a SourceLocationConverter, and M1.3's
+        // round-trip detector consumes the assertion's argument shape, not its
+        // absolute location. We surface a placeholder here; M1.5's CLI wiring was
+        // to thread a converter through when the location actually fed rendering.
+        //
+        // **It never did, and the placeholder reached users for the whole of that
+        // gap** — every lifted row rendered `Lifted from <test-body>:0`. Rather
+        // than thread a converter (which would move an assertion-precise location
+        // through six detectors), `makeExplainability` now falls back to
+        // `LiftedOrigin`, which already carries the enclosing test METHOD's real
+        // file and line. Less precise than the assertion line, and auditable,
+        // which the placeholder was not.
+        SwiftInferCore.SourceLocation.testBodyPlaceholder
     }
 }
