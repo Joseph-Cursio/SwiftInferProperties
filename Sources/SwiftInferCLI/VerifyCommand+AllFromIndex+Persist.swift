@@ -22,7 +22,8 @@ extension SwiftInferCommand.Verify {
     static func persistSurveyBatch(
         _ collected: [SurveyRecord],
         packageRoot: URL,
-        now: Date = Date()
+        now: Date = Date(),
+        corpusProvenance: String? = nil
     ) {
         let capturedAt = now
         let batch = collected.map { record in
@@ -32,7 +33,11 @@ extension SwiftInferCommand.Verify {
                 outcome: VerifyEvidenceRecorder.evidenceOutcome(for: record.outcome),
                 detail: record.outcomeDetail,
                 capturedAt: capturedAt,
-                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
+                swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
+                // #174 — stamped on every record, including declines: a decline is
+                // also a statement about this checkout, and a stream missing it on
+                // half its rows is not comparable either.
+                corpusProvenance: corpusProvenance
             )
         }
         let corpusEntries: [VerifyCorpusEntry] = collected.compactMap { record in

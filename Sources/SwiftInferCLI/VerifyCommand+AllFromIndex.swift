@@ -166,6 +166,11 @@ extension SwiftInferCommand.Verify {
             }
         }
 
+        // Resolved from the COMPOSED members, before the quarantine filters them:
+        // a survey whose every member is quarantined still ran against a corpus,
+        // and dropping the provenance there would lose it from exactly the stream
+        // that most needs explaining.
+        let provenance = corpusProvenance(for: members)
         members = settleUnresolvableProducts(members, into: &collected, quiet: quiet)
         // #174 — before any verdict, say so if the corpus displaced a pinned
         // dependency. A reader who learns this after the stream has already
@@ -200,7 +205,11 @@ extension SwiftInferCommand.Verify {
                 }
             }
         }
-        persistSurveyBatch(collected, packageRoot: packageRoot)
+        persistSurveyBatch(
+            collected,
+            packageRoot: packageRoot,
+            corpusProvenance: provenance
+        )
         return collected
     }
 
