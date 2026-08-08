@@ -16,7 +16,7 @@ Three steps in one command:
    is to test the low-confidence ones the default view hides).
 2. **Prove** — run the measured verify survey over every pick (`verify
    --all-from-index` internally, quietly).
-3. **Show** — classify the live results into four honest buckets.
+3. **Show** — classify the live results into five honest buckets.
 
 ```
 swift-infer prove-then-show --target <T> --corpus-module <T>
@@ -30,20 +30,38 @@ compiled module to construct carrier values.
 **Two surfaces (V1.148).** `--surface algebraic` (default) rides
 `verify --all-from-index` over the algebraic picks. `--surface interaction`
 rides `verify-interaction --all` over the reducer / MVVM invariant families
-(`--family` restricts to one), classifying the same four buckets — so a
+(`--family` restricts to one), classifying the same buckets — so a
 `.possible` interaction invariant that *passed* execution surfaces, one that
 *failed* is dropped, and a reducer that couldn't be constructed lands in
 Unverifiable. A shared row-based renderer serves both; the algebraic and
 interaction surveys already speak the same 5-outcome vocabulary.
 
-## The four buckets
+## The five buckets
 
 | Bucket | Meaning | Action |
 |---|---|---|
 | **Proven** | `measured-bothPass` — held under an executed property test | **surface these** |
-| **Disproven** | `measured-defaultFails` — execution found a counterexample | drop these (shown with the counterexample) |
+| **Expected to hold** | `measured-defaultFails` on a `.likely`-or-better pick, with a counterexample and no partial coverage | **read these first** — and read both readings |
+| **Disproven** | `measured-defaultFails` on a lower-confidence pick | a guess that did not survive |
 | **Unverifiable** | `architectural-coverage-pending` — no generator for the carrier | **NOT tested, NOT a pass** — explicitly separated |
 | **Inconclusive** | edge-case advisory / tooling error | needs a look |
+
+**Expected to hold is a VISIBILITY class, not a verdict about your code**, and the
+distinction is measured rather than cautious. `docs/plans/suspected-defect-verdict-scope.md`
+§11 scored every signal that might separate *"the guess was wrong"* from *"the code is
+wrong"*: the conjecture caveat fires on **14 of 14** refutations on record, defects and
+false laws alike, and a body-shape reader would suppress the real defects while keeping the
+false law. The distinguishing question is whether the property was ever *intended* to hold,
+which is not in the code.
+
+So the section renders **both readings and picks neither**. `fixtures/planted-defect-arm`
+holds the measured pair that forces this: at the same tier, in one run, `BlendSummary`'s
+`associativity` refutation is a real defect and `PathSegment`'s `commutativity` refutation
+is a false law about correct code. Any wording that fits one misdescribes the other.
+
+Tiers come from the index built in step 1, so they are **pre-verify**. When no tier is
+available every refutation stays in Disproven — a missing tier must never promote a row
+into a section headed *read these first*.
 
 The **Unverifiable** bucket is the honest core of the design: an
 un-constructible carrier (see the "non-constructible carrier" notes) can't be
@@ -62,12 +80,12 @@ $ swift-infer prove-then-show --target LoopDemo --corpus-module LoopDemo --templ
 
 Prove-then-show — 2 pick(s) tested
 
-  Proven 1 · Disproven 1 · Unverifiable 0 · Inconclusive 0
+  Proven 1 · Expected-to-hold 0 · Disproven 1 · Unverifiable 0 · Inconclusive 0
 
 PROVEN — surface these (verified by an executed property test)
   ✓ Level  commutativity  join(_:_:)
 
-DISPROVEN — drop these (execution found a counterexample)
+DISPROVEN — a low-confidence guess that execution refuted
   ✗ Level  commutativity  combine(_:_:)   [counterexample: (medium, low)]
 ```
 
