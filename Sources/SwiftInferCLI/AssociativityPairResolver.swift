@@ -38,7 +38,20 @@ public enum AssociativityPairResolver {
                 expected: ["associativity"]
             )
         }
-        let carrier = entry.typeName ?? "(none)"
+        // #128 — `carrierTypeName` first: a free function has no containing type, so
+        // `typeName` is nil and the `"(none)"` sentinel would be gated against
+        // `supportedCarriers` as if it were a type. The operand type is the carrier for a
+        // free binary operation, and the templates now record it.
+        //
+        // Rebind `Self` rather than taking the recorded text literally. `func merge(_
+        // other: Self) -> Self` records `carrierTypeName == "Self"`, and gating that
+        // against `supportedCarriers` would decline a member that resolved fine before —
+        // the spelling-dependence trap `assumedCoverageSignal` already carries. This is
+        // the same expression `VerifyCommand+TemplateDispatch` uses, deliberately.
+        let carrier = GenericBindingResolver.bound(
+            entry.carrierTypeName ?? entry.typeName ?? "(none)",
+            selfType: entry.typeName
+        )
         guard AssociativityStubEmitter.supportedCarriers.contains(carrier) else {
             throw VerifyError.unsupportedCarrier(
                 carrier: carrier,
