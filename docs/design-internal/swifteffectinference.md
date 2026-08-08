@@ -6,8 +6,8 @@
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
 **Book home:** Appendix C; Chapter 26 §26.3 (the lattice), Chapter 22 §22.6 (clock-determinism).
 
-> **As of 2026-08-06** · subject `SwiftEffectInference@6f45139` (HEAD; **this repo now pins HEAD** —
-> see the pin section) · observer `SwiftInferProperties@2c599c0`
+> **Counts verified 2026-08-06** against subject `SwiftEffectInference@6f45139` · observer
+> `SwiftInferProperties@2c599c0`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
@@ -15,10 +15,17 @@
 >
 > **What the 2026-08-06 pass changed.** The pin divergence **reversed direction and is no longer
 > blocked**: SEI#1's regression was fixed (`6470222`), this repo bumped from `1f2265a0` to HEAD, and
-> the §13 budgets were re-measured green. SwiftProjectLint is now the laggard, by two commits, with a
-> named consequence. Size held at 13 files / ~3,800 lines.
+> the §13 budgets were re-measured green. SwiftProjectLint was then the laggard, by two commits, with
+> a named consequence. Size held at 13 files / ~3,800 lines.
+>
+> **2026-08-07 — pin only, counts NOT re-verified.** SEI moved two commits to `bc084fb` (`01bcdf7`
+> *Track what an inferred effect rests on*) and this repo's pin was bumped to match, closing the
+> divergence — see § *The pin divergence*. That section and the **§13 perf table** are current (all
+> 8 budgets re-measured green at `bc084fb`); **the file/line counts and every other number still
+> describe `6f45139`** and have not been retaken. The bump was source-compatible (additive, defaulted
+> argument), so the diagnoses are unaffected.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftEffectInference@6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 pinned=6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftEffectInference@6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 pinned=bc084fb9613c22f1aee94d9d1781b0eca2e67620 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
 
 
 ```
@@ -218,36 +225,42 @@ subprocess-spawning function judged pure.
 
 ---
 
-## The pin divergence
+## The pin divergence — CLOSED 2026-08-07
 
-SEI carries **no version tags**, so both consumers pin by revision. They are still not pinned to the
-same revision — but **the direction reversed on 2026-08-06**, and the gap is now two commits rather
-than a missing API surface.
+SEI carries **no version tags**, so both consumers pin by revision. As of 2026-08-07 they pin **the
+same revision** for the first time, and the section title is kept rather than renamed because the
+divergence is the thing worth remembering: it ran for weeks, and it had a named consequence each time.
 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `6f45139` | **at HEAD** |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `bfcf0e3` | 2 commits behind |
+| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `bc084fb` | **at HEAD** |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `bc084fb` | **at HEAD** |
 
-**This repo was the laggard and is now the leader.** The table above used to read `1f2265a0` here
-against `097181aa` there, with this repo holding **two public methods against five** and unable to
-bump (§ *The bump was blocked*). Both consumers now compile against the full five-method
-`PurityInferrer` — `inferredEffect(for:)`, `isPure(_: FunctionDeclSyntax)`, `verdict(for:)`,
-`isPure(_: ClosureExprSyntax)`, `isPure(_: AccessorBlockSyntax)` — and **both are past the
-regression** that blocked it (`6470222` is an ancestor of both pins).
+**Both consumers now agree, and the linter got there first.** SwiftProjectLint was already at
+`bc084fb` in all three of its manifests when this repo bumped from `6f45139` to match — so the
+two-commit gap this section used to describe closed from the *other* side, which is the reverse of
+how the previous two closures went. The convergence is the state the shared leaf exists to produce:
+one purity oracle, one revision, no way for the two tools to disagree about what is pure.
 
-The remaining gap is exactly two commits, and it has a named consequence:
+The history of the gap, kept because each phase had a distinct cause:
 
-| commit | what the linter's oracle cannot do |
-|---|---|
-| `7a70b3b` *Read `@EffectUnknown`* | `declaresUnknownEffect` does not exist, so `@lint.effect unknown` parses to `nil` — **indistinguishable from an unannotated declaration and from a misspelled tier** |
-| `5fc9265` *Split the call-site decision tree at its precision boundary* | — |
+| date | this repo | the linter | why the gap existed |
+|---|---|---|---|
+| 2026-08-03 | `1f2265a0` | `097181aa` | this repo held **two public methods against five** and the bump was blocked by the SEI#1 regression (§ *The bump was blocked*) |
+| 2026-08-06 | `6f45139` | `bfcf0e3` | direction reversed; the linter's oracle could not read `@EffectUnknown` (`7a70b3b`), so `@lint.effect unknown` parsed to `nil` — **indistinguishable from an unannotated declaration and from a misspelled tier**, and the two tools could disagree about an author's own stated uncertainty |
+| 2026-08-07 | `bc084fb` | `bc084fb` | — |
 
-That first row is the precise defect [SEI#3](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/3)
-was written to fix, and this repo consumes the fix while the linter does not. An author who writes
-*"I cannot determine this"* is heard by `swift-infer` and unheard by the linter — so the two tools
-**can now disagree about an author's own stated uncertainty**, which is a narrower version of exactly
-the disagreement the shared leaf exists to prevent.
+Both consumers compile against the full five-method `PurityInferrer` — `inferredEffect(for:)`,
+`isPure(_: FunctionDeclSyntax)`, `verdict(for:)`, `isPure(_: ClosureExprSyntax)`,
+`isPure(_: AccessorBlockSyntax)` — and both are past the regression that once blocked the bump
+(`6470222` is an ancestor of both pins).
+
+**What the 2026-08-07 bump adds here.** `01bcdf7` *Track what an inferred effect rests on* gives
+`BodyInference` an `Anchor` (`.declared` / `.heuristic`), so a consumer can tell an author's
+annotation from a name-or-framework guess. It is **additive with a default argument**, and this repo
+constructs no `BodyInference` — it only calls `applyBodyInference` — so the bump is source-compatible
+and nothing here reads the anchor yet. That last clause is the open end: the anchor exists to let a
+consumer *decline* a heuristic, and declining is not wired up.
 
 ### The bump was blocked 2026-08-03, and is UNBLOCKED as of 2026-08-06
 
@@ -260,13 +273,17 @@ implements the remedy proposed below verbatim: `inferredEffect(for:)` stops dele
 **Re-measured on this repo, 2026-08-06, at pin `6f45139`** — a full `make test` run, the §13 perf
 target in its own isolated step:
 
-| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | **now** |
-|---|---|---|---|---|
-| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | **4.219s** ✅ |
-| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | **0.669s** ✅ |
-| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | **0.916s** ✅ |
-| …with decisions-load active | — | 1.660s | 3.652s | **2.238s** ✅ |
-| 500-file corpus, peak RSS delta | 800 MB | — | — | **234.1 MB** ✅ |
+| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` |
+|---|---|---|---|---|---|
+| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | **4.310s** ✅ |
+| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | **0.690s** ✅ |
+| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | **0.960s** ✅ |
+| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | **2.406s** ✅ |
+| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | **245.6 MB** ✅ |
+
+The `bc084fb` column was taken 2026-08-07 by `make perf` (serial, alone, 22.1s, 8 tests). Every row
+is within noise of `6f45139` — the anchor work adds a field to `BodyInference` and does not change
+the walk, so a flat reading is the expected shape rather than a reassuring one.
 
 Slightly slower than `1f2265a0` and comfortably inside every budget, which is the expected shape: the
 cheap path is restored, and the extra three methods are real work that path no longer pays for.
