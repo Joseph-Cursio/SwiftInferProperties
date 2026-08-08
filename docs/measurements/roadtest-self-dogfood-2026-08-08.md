@@ -682,6 +682,67 @@ answers "has this landed in the tree", and what is pending here is "have we re-m
 which no symbol can settle. Attaching one anyway would have produced a guard that goes green
 while the claim stays unverified, which is the failure mode the convention exists to prevent.
 
+### §8.3.2 MEASURED — and it corrects §8.3 a second time
+
+Run against the kit at `0720714` (its `access-provenance-and-syntax-generators` branch, since
+`v3.27.1` is still the newest tag and contains none of this). **Both pins had to move**: this
+package's, so the binary can *derive* the plan, and
+`VerifierWorkdir.swiftPropertyLawsRequirement`, so the generated stub packages resolve the
+same kit — changing only the first would have left every stub on 3.27.1 and produced a null
+result that looked like a finding.
+
+| | 3.27.1 | 0720714 |
+|---|---|---|
+| Proven | 81 | 81 |
+| Disproven | 1 | 1 |
+| **Unverifiable** | **63** | **61** |
+| Inconclusive | 8 | **10** |
+| `unsupported-carrier` picks | **24** | **20** |
+
+**Four picks stopped being "no generator" — and none of them is a syntax node.** The carriers
+that left the unsupported set are `Finding`, `Coverage` and `TypeDecl`: *our own aggregate
+structs*. The six concrete SwiftSyntax nodes §8.3 predicted would move did **not**, because
+their generators live in `PropertyLawSyntax`, a product this package does not depend on and
+whose import is opt-in by design. The prediction was right that they are generable and wrong
+about what a pin bump reaches.
+
+**So §8.3's corrected table is still wrong, in a new place.** It put `Finding`, `Coverage`,
+`TypeDecl`, `SamplingSeed`, `FunctionSummary`, `Effect` and `Ranked<Record>` in a row headed
+*"our own visitor / aggregate types … a visitor is a traversal, not a value"* and called the
+whole row correct silence. **Only the visitors belong there.** `FunctionScannerVisitor`,
+`BodySignalVisitor` and `Visitor` are traversals; the other seven are ordinary value structs,
+and at least three of them are generable — measured, not argued.
+
+The line is **traversal vs value**, and it cuts across both origins. It is not
+visitor-vs-node (§8.3's first attempt) and not ours-vs-theirs (§8.3's second). Two wrong cuts
+in one section is the reason this subsection exists: the classification kept being made from
+the *name* of the type, and only the survey settled it.
+
+### §8.3.3 The bottleneck moved from the kit to us
+
+The four picks did not become Proven. They became **Inconclusive**, and `build-failed` went
+from 2 to 4:
+
+```
+? lawTotal(for:)  (unsupported-carrier: Finding)                    ← 3.27.1
+· lawTotal(for:)  (build-failed: cannot find type 'Finding' in scope) ← 0720714
+```
+
+The kit can now derive a plan for `ProtocolCoverageAudit.Finding`; our emitter then writes
+`Finding` unqualified into a stub that has no such type at file scope. **That is exactly the
+`cannot find 'Visitor' in scope` gap already recorded in §8.4** — nested-carrier
+qualification — and this run doubles its population from 2 picks to 4.
+
+**The transferable result is the direction of the constraint, not the two picks.** Before this
+run the honest reading was "the kit cannot generate our carriers". After it, the kit can, and
+**our own emitter is what stops the law from executing**. That reprices
+`nestedCarrierImportResolution` from the cheapest open item to the one gating everything the
+kit unblocks next. (falsifier: `nestedCarrierImportResolution`)
+
+**Nothing was shipped to get this.** Both pin edits were made in a throwaway worktree and
+discarded; this package still resolves `v3.27.1`. The measurement stands on a committed,
+citable SHA rather than on a working tree.
+
 **What the exchange demonstrates is the loop, not the six picks.** A downstream survey named
 six concrete types it could not generate; the upstream answer was four already-solved, one
 coverage gap, and one general stdlib improvement that no syntax-shaped framing would have
