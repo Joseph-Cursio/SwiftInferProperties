@@ -166,6 +166,8 @@ extension SwiftInferCommand.Verify {
             }
         }
 
+        members = settleUnresolvableProducts(members, into: &collected, quiet: quiet)
+
         if !members.isEmpty {
             let sharedRoot = sharedSurveyRoot(packageRoot: packageRoot)
             do {

@@ -324,6 +324,11 @@ public enum VerifierWorkdir {
                     + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")"
             ]
         }
+        // #169 — a corpus that IS one of the packages above arrives with the
+        // same SwiftPM identity from two sources, and SwiftPM rejects the graph
+        // outright. Drop the URL line and let the corpus vend those products;
+        // see `VerifierWorkdir+CorpusIdentity.swift` for why the corpus wins.
+        entries = collapsingCorpusIdentity(entries, corpus: userPackage)
         if let userPackage {
             entries.append(".package(path: \(escapedLiteral(userPackage.packagePath.path)))")
         }

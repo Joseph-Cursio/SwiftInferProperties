@@ -185,4 +185,33 @@ extension SwiftInferCommand.Verify {
             print(line)
         }
     }
+
+    /// Settle members whose product edges name something the corpus does not
+    /// vend, and return the rest.
+    ///
+    /// A bad edge fails **manifest loading**, which precedes every build — so
+    /// `--product`-per-member does not isolate it and one such member takes the
+    /// whole survey with it. Measured on swift-collections: a single `RopeModule`
+    /// edge failed all 54 buildable entries, 53 of which were fine.
+    ///
+    /// Settled here alongside the composition-time declines, for the same reason
+    /// they are: an entry that cannot reach a compiler should never acquire a
+    /// target.
+    static func settleUnresolvableProducts(
+        _ members: [SharedVerifierPackage.Member],
+        into collected: inout [SurveyRecord],
+        quiet: Bool
+    ) -> [SharedVerifierPackage.Member] {
+        let split = SharedVerifierPackage.quarantiningUnresolvableProducts(members)
+        for entry in split.quarantined {
+            let record = surveyErrorRecord(
+                recordContext(for: entry.member.entry),
+                .architecturalCoveragePending,
+                entry.reason
+            )
+            if !quiet { emit(record) }
+            collected.append(record)
+        }
+        return split.usable
+    }
 }
