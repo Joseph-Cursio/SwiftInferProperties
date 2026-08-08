@@ -34,6 +34,19 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     case multiplicativeHomomorphism = "multiplicative-homomorphism"
     case measureNonNegativity = "measure-non-negativity"
 
+    /// Differential / oracle equivalence: two implementations of one
+    /// specification must agree on every input — `reference(x) == variant(x)`.
+    ///
+    /// **Verifiable since 2026-08-08, and the delay was not a design decision.**
+    /// The law is the simplest two-call shape there is (one generated value,
+    /// two calls, compare), simpler than `round-trip`, which nests them. What
+    /// blocked it was that `IndexCommand+Projection` persisted
+    /// `secondaryFunctionName` for `round-trip` only, so the variant half of the
+    /// pair was computed by `DifferentialTemplate` and then discarded — the
+    /// verify path declined `unsupported-template` for want of data the
+    /// discover path already had.
+    case differentialEquivalence = "differential-equivalence"
+
     /// Totality: the predicate returns a value for **every** input its type
     /// admits — never traps, never diverges.
     ///
@@ -56,6 +69,41 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     case inversePair = "inverse-pair"
     case identityElement = "identity-element"
     case composition
+    /// Invariant preservation — `inv(f(x))` whenever `inv(x)`.
+    ///
+    /// **Not in `verifiable`, and unlike `replay-idempotence` the obstacle is
+    /// this repo's own plumbing rather than the law.** The oracle is already
+    /// written and shipping: `LiftedTestEmitter.invariantPreserving` emits
+    /// `!value[keyPath: kp] || f(value)[keyPath: kp]`. A verify composer would
+    /// state the same thing.
+    ///
+    /// What is missing is `kp`. The keypath is scanned into
+    /// `FunctionSummary.invariantKeypath`, carried through `Evidence`, and
+    /// recovered downstream by *parsing the signature back out*
+    /// (`InteractiveTriage+Accept.swift:298`). `SemanticIndexEntry` carries
+    /// neither the keypath nor the signature, so verify — which sees only the
+    /// entry — cannot reconstruct which invariant to check. It is the same
+    /// shape as the `differential-equivalence` gap fixed on 2026-08-08 (data
+    /// computed at discover time and dropped before the index), but the remedy
+    /// is larger: differential's second half already had a field waiting for it,
+    /// and this needs a new one.
+    ///
+    /// Two things to settle before building it, neither of which is cost:
+    /// 1. The keypath is **opaque source text** by design (M7 open decision
+    ///    #5(a)). `LiftedTestEmitter` can accept that because a non-resolving
+    ///    keypath becomes a compile error in the user's own test target, which
+    ///    they are reviewing. In verify the same failure becomes
+    ///    `measured-error: build-failed` — an instrument-failure bucket — for a
+    ///    law that may be perfectly true but names a non-public member.
+    /// 2. This repo currently has **no annotated subject at all**: every
+    ///    `preservesInvariant` occurrence is a test expectation. Shipping the
+    ///    path would mean shipping a composer nothing exercises.
+    ///
+    /// Deferred rather than declined — the law is verifiable in principle and
+    /// the oracle exists. The falsifier is registered in CLAUDE.md rather than
+    /// here, because `DeferralFalsifierTests` scans `CLAUDE.md` and `docs/` and
+    /// **not `Sources/`**: an annotation written here would read as guarded
+    /// while nothing checked it.
     case invariantPreservation = "invariant-preservation"
 
     /// Replay-idempotency: a side-effecting handler that is safe to run *twice*
@@ -75,7 +123,7 @@ public extension TemplateName {
         .roundTrip, .codableRoundTrip, .idempotence, .commutativity, .associativity,
         .idempotenceLifted, .dualStyleConsistency, .monotonicity,
         .involution, .binaryIdempotence, .homomorphism, .multiplicativeHomomorphism,
-        .measureNonNegativity, .predicate
+        .measureNonNegativity, .predicate, .differentialEquivalence
     ]
 
     // swiftprojectlint:disable:next parallel-list-drift

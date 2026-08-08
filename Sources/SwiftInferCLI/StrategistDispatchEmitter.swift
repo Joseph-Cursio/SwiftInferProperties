@@ -323,7 +323,13 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             // sibling helper (in +AlgebraicLaws) to keep this switch under the
             // complexity cap. Coalesced with `??` rather than a second `if let`
             // for the same reason — a branch here costs the whole function.
+            // `differential-equivalence` joins the sibling helpers for the same
+            // reason `predicate` did: it is verifiable but its law is a
+            // comparison of two calls on one input, so the algebraic
+            // fallthrough cannot compose it — and adding a `case` above tips
+            // this switch past its cyclomatic cap.
             if let composed = try totalityLawPass(inputs: inputs, recipe: recipe)
+                ?? differentialLawPass(inputs: inputs, recipe: recipe)
                 ?? algebraicLawPass(inputs: inputs, recipe: recipe) {
                 return composed
             }

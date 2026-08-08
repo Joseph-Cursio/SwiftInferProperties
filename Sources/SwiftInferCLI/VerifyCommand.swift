@@ -281,6 +281,16 @@ public enum VerifyError: Error, CustomStringConvertible {
     case runnerCrashed(reason: String)
     case unsupportedTemplate(template: String, expected: [String])
     case unsupportedPair(forward: String, supported: [String])
+    /// A two-function law whose entry carries only its primary half.
+    ///
+    /// Distinct from `.unsupportedPair`, which means *this function is not in
+    /// the curated table*. `differential-equivalence` has no curated table by
+    /// design — it reconstructs its pair from `secondaryFunctionName`, which the
+    /// index populated for round-trip only until 2026-08-08. So the failure is
+    /// a **stale entry**, and the remedy is re-indexing rather than expanding a
+    /// list; saying "not in the curated pair list" would send the reader to fix
+    /// the wrong thing.
+    case missingPairedFunction(template: String, primary: String)
     /// Monotonicity pre-flight: the property `a ≤ b ⟹ f(a) ≤ f(b)` orders the
     /// input domain with `min`/`max`, so a non-`Comparable` domain can't be
     /// verified (the ordering is undefined). Thrown at emit so the doomed
@@ -346,6 +356,13 @@ public enum VerifyError: Error, CustomStringConvertible {
             return "swift-infer verify: forward-side function '\(forward)' is not in v1.42's "
                 + "curated round-trip pair list. Supported forwards: \(supportedList). "
                 + "Pair-list expansion lands in v1.43."
+
+        case let .missingPairedFunction(template, primary):
+            return "swift-infer verify: the '\(template)' entry for '\(primary)' records no "
+                + "second function, so its law has nothing to compare against. This template "
+                + "reconstructs its pair from the index rather than a curated list, and the "
+                + "index persisted second-half names for round-trip only before 2026-08-08. "
+                + "Re-run `swift-infer index` to repopulate the entry."
 
         case let .invalidArguments(reason):
             return "swift-infer verify: \(reason)"

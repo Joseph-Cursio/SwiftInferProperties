@@ -146,14 +146,40 @@ extension SwiftInferCommand.Index {
         )
     }
 
-    /// V1.49.C.2 — read the round-trip inverse-half name from the
-    /// Suggestion's evidence array. The round-trip template emits
-    /// `evidence = [forward, reverse]`; v1.49 persists the second half so
-    /// the verify resolver can use it as a non-curated fallback. Returns
-    /// `nil` for non-round-trip templates and for evidence arrays with
-    /// fewer than 2 entries.
+    /// V1.49.C.2 — read the second-half function name from the Suggestion's
+    /// evidence array, for the templates whose law names TWO functions. The
+    /// round-trip template emits `evidence = [forward, reverse]`; v1.49
+    /// persists the second half so the verify resolver can use it as a
+    /// non-curated fallback. Returns `nil` for single-function templates and
+    /// for evidence arrays with fewer than 2 entries.
+    ///
+    /// **`differential-equivalence` joined 2026-08-08**, and it needed no new
+    /// machinery — `DifferentialTemplate.makeConstraint` already emits
+    /// `evidence: { [$0.reference.inferenceEvidence, $0.variant.inferenceEvidence] }`,
+    /// the same two-element shape in the same order. Only this guard stood
+    /// between it and the index, so its verify path declined
+    /// `unsupported-template` while the pair it needed was being computed and
+    /// thrown away one function earlier.
+    ///
+    /// This is deliberately the *non-curated* route. `dual-style-consistency`
+    /// recovers its pair from a hand-maintained table because its index entry
+    /// records only one name; a differential pair reconstructs from the entry
+    /// itself, so there is no list to keep in step with the corpus. Prefer this
+    /// shape for any future two-function template — the curated table is the
+    /// fallback for templates that cannot do this, not the pattern to copy.
+    ///
+    /// The set is named rather than open (`evidence.count >= 2` alone) because
+    /// several single-function templates emit a second evidence entry for the
+    /// carrier or a corroborating test, and persisting that as a *function*
+    /// name would hand the verify resolver a call expression that does not
+    /// exist.
+    private static let twoFunctionTemplates: Set<String> = [
+        "round-trip",
+        "differential-equivalence"
+    ]
+
     private static func secondaryFunctionName(for suggestion: Suggestion) -> String? {
-        guard suggestion.templateName == "round-trip" else { return nil }
+        guard twoFunctionTemplates.contains(suggestion.templateName) else { return nil }
         guard suggestion.evidence.count >= 2 else { return nil }
         return suggestion.evidence[1].displayName
     }

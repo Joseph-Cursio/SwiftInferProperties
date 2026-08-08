@@ -161,6 +161,31 @@ extension RenderShape {
         expected: { _ in "f(a) ≤ f(b) when a ≤ b" }
     )
 
+    /// Differential equivalence — `reference(x) == variant(x)`.
+    ///
+    /// The two expressions take the **same** input rather than nesting, which
+    /// is the whole difference from `.roundTrip` and the reason this record
+    /// exists: routed through the round-trip fallback, a refutation would have
+    /// rendered `variant(reference(input)) … expected input`, a nesting the law
+    /// never states and a value it never mentions.
+    ///
+    /// `expected` is the reference's own result, because that is what the law
+    /// says the variant should have produced. Note what this does NOT claim:
+    /// the law is symmetric and is silent about which side is wrong. Naming the
+    /// reference as "expected" reflects which one the reader is likely to be
+    /// changing, not a verdict — the caveats carry that, and the composer
+    /// prints both results so the reader can decide.
+    static let differentialEquivalence = RenderShape(
+        framing: .equation,
+        subject: {
+            "differential equivalence of \($0.inverseName) against \($0.forwardName) "
+                + "over \($0.carrierType)"
+        },
+        forward: { "\($0.forwardName)(input) " },
+        inverse: { "\($0.inverseName)(input)" },
+        expected: { "\($0.forwardName)(input)" }
+    )
+
     static let involution = RenderShape(
         framing: .equation,
         subject: { "involution on \($0.forwardName) over \($0.carrierType)" },
@@ -238,6 +263,7 @@ extension RenderShape {
         "binary-idempotence": .binaryIdempotence,
         "homomorphism": .homomorphism,
         "multiplicative-homomorphism": .multiplicativeHomomorphism,
-        "measure-non-negativity": .measureNonNegativity
+        "measure-non-negativity": .measureNonNegativity,
+        "differential-equivalence": .differentialEquivalence
     ]
 }
