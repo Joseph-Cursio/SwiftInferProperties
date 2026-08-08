@@ -13,6 +13,17 @@ extension SwiftInferCommand.Index {
     struct SurfaceContext {
         let packageRoot: URL
         let diagnostics: any DiagnosticOutput
+        /// #118 — opt-in. See `IndexInputs.scanDependencies` for why the default is off.
+        let scanDependencies: Bool
+
+        /// Read the opt-in off the pass's own inputs, so the flag cannot be dropped on the
+        /// way through — the failure would be silent, and it would look like the scan
+        /// finding nothing.
+        init(_ inputs: IndexInputs, packageRoot: URL, diagnostics: any DiagnosticOutput) {
+            self.packageRoot = packageRoot
+            self.diagnostics = diagnostics
+            self.scanDependencies = inputs.scanDependencies
+        }
     }
 
     /// Merge one pass's **algebraic surface** into the existing index — the three things a
@@ -45,13 +56,16 @@ extension SwiftInferCommand.Index {
             // `FunctionSummary` was the largest carrier-decline bucket in the whole-corpus
             // survey purely because two of its initializer parameters are declared in a
             // dependency, and the scan reads only the package's own `Sources/`.
-        let merged = DependencyTypeShapes.merging(
-            shapes: pipeline.typeShapesByName.mapValues { IndexedTypeShape(from: $0) },
-            sourceFiles: pipeline.sourceFileByTypeName,
-            localTypeNames: Set(pipeline.typeShapesByName.keys),
-            packageRoot: context.packageRoot,
-            diagnostics: context.diagnostics
-        )
+        let ownShapes = pipeline.typeShapesByName.mapValues { IndexedTypeShape(from: $0) }
+        let merged = context.scanDependencies
+            ? DependencyTypeShapes.merging(
+                shapes: ownShapes,
+                sourceFiles: pipeline.sourceFileByTypeName,
+                localTypeNames: Set(pipeline.typeShapesByName.keys),
+                packageRoot: context.packageRoot,
+                diagnostics: context.diagnostics
+            )
+            : (shapes: ownShapes, sourceFiles: pipeline.sourceFileByTypeName)
         let freshShapes = merged.shapes
         let freshSourceFiles = merged.sourceFiles
         return (

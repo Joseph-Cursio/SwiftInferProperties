@@ -196,6 +196,17 @@ extension SwiftInferCommand {
         )
         public var persistEvidence: Bool = true
 
+        @Flag(
+            name: .long,
+            help: """
+            When verify reindexes on demand, also record shapes for types declared in \
+            resolved dependencies. Off by default — see `index --scan-dependencies`. \
+            Without it, a law whose carrier is declared in a dependency keeps declining \
+            as `unsupported-carrier`.
+            """
+        )
+        public var scanDependencies: Bool = false
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -216,6 +227,7 @@ extension SwiftInferCommand {
                 }
                 try await Self.runAllFromIndex(
                     persistEvidence: persistEvidence,
+                    scanDependencies: scanDependencies,
                     indexPathOverride: indexPath,
                     budgetString: budget,
                     workingDirectory: workingDirectory,

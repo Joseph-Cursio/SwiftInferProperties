@@ -56,6 +56,17 @@ struct IndexInputs {
     /// V1.141 — working directory the interaction discoverer resolves
     /// `Sources/<target>` against. `nil` alongside `targetName`.
     let workingDirectory: URL?
+    /// #118 — also record shapes for types declared in resolved dependencies.
+    ///
+    /// **Off by default, and the default is the decision.** Recording them takes this
+    /// package's `typeShapes` from 283 to 2,313 and the index to 3.4 MB, and the index keys
+    /// on the BARE type name, so a wider population is exactly how a name collision starts
+    /// mattering. The issue that asked for this left "whether recording dependency-module
+    /// shapes is even wanted" explicitly undecided; opting in per run answers it per run.
+    ///
+    /// The cost of leaving it off is stated rather than hidden: the 32 `FunctionSummary`
+    /// carrier declines it removes stay declined without the flag.
+    let scanDependencies: Bool
 
     init(
         scanDirectory: URL,
@@ -67,7 +78,8 @@ struct IndexInputs {
         dryRun: Bool,
         targetName: String? = nil,
         workingDirectory: URL? = nil,
-        seedManifestPath: URL? = nil
+        seedManifestPath: URL? = nil,
+        scanDependencies: Bool = false
     ) {
         self.scanDirectory = scanDirectory
         self.includePossible = includePossible
@@ -79,6 +91,7 @@ struct IndexInputs {
         self.seedManifestPath = seedManifestPath
         self.targetName = targetName
         self.workingDirectory = workingDirectory
+        self.scanDependencies = scanDependencies
     }
 }
 
@@ -204,6 +217,19 @@ extension SwiftInferCommand {
         )
         public var dryRun: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            Also record type shapes for types declared in resolved dependencies \
+            (.build/checkouts). Off by default: it takes this package's typeShapes \
+            from 283 to 2,313 and the index to 3.4 MB, and the index keys on the \
+            BARE type name, so a wider population is where a name collision starts \
+            to matter. Turn it on when a law's carrier is declared in a dependency \
+            — it is what unblocks those declines.
+            """
+        )
+        public var scanDependencies: Bool = false
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -228,7 +254,8 @@ extension SwiftInferCommand {
                     // `Sources/<target>` for the algebraic scan).
                     targetName: target,
                     workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath),
-                    seedManifestPath: seeds.map { URL(fileURLWithPath: $0) }
+                    seedManifestPath: seeds.map { URL(fileURLWithPath: $0) },
+                    scanDependencies: scanDependencies
                 ),
                 diagnostics: PrintDiagnosticOutput()
             )
@@ -279,7 +306,7 @@ extension SwiftInferCommand {
                 into: indexLoad.index,
                 decisionsByHash: decisionsByHash,
                 now: now,
-                context: SurfaceContext(packageRoot: packageRoot, diagnostics: diagnostics)
+                context: SurfaceContext(inputs, packageRoot: packageRoot, diagnostics: diagnostics)
             )
             let freshEntries = algebraic.freshEntries
             let diff = computeDiff(priorIndex: indexLoad.index, freshEntries: freshEntries)
