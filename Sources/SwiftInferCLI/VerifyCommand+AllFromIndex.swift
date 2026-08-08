@@ -167,6 +167,10 @@ extension SwiftInferCommand.Verify {
         }
 
         members = settleUnresolvableProducts(members, into: &collected, quiet: quiet)
+        // #174 — before any verdict, say so if the corpus displaced a pinned
+        // dependency. A reader who learns this after the stream has already
+        // scrolled past has learned it too late.
+        discloseSupersededDependencies(for: members)
 
         if !members.isEmpty {
             let sharedRoot = sharedSurveyRoot(packageRoot: packageRoot)
