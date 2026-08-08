@@ -41,6 +41,11 @@ of four** laws green and breaks exactly one. That is the law carrying the docstr
 
 ## §1 Hole — test-lifting is package-wide while discovery is target-scoped
 
+> **FIXED 2026-08-08 — `TestTargetScope`.** Lifting is now scoped to the test targets that
+> (transitively) depend on the scanned target, read from `swift package dump-package`.
+> **Measured Strong-tier: 26 → 16.** See §1.1 for why that is not the 26 → 7 this section
+> originally measured, and why the difference is the fix being *correct* rather than weak.
+
 **73% of this repo's Strong-tier output is cross-target leakage.**
 
 `discover --target X` resolves production code to `Sources/X/`, but
@@ -73,6 +78,81 @@ exercises `SwiftInferCLI`, so the correct scoping is by test-target dependency, 
 **No recorded decision says this is deliberate.** `DiscoverCLITestDirTests` covers the
 resolution *precedence* only (explicit → walk-up → degraded fallback) and never asserts
 attribution. The doc comment describes the same precedence and is silent on scope.
+
+---
+
+## §1.1 The fix, and why it lands at 16 rather than 7
+
+`TestTargetScope` resolves the test targets that could be exercising the scanned module by
+walking the **transitive closure of target dependencies** in `swift package dump-package`,
+and TestLifter scans that set of roots instead of `Tests/` wholesale.
+
+**A/B, one binary, same afternoon.** `--test-dir Tests` reproduces the pre-fix default
+*exactly* (an explicit override bypasses scoping), so the two arms differ only in the change
+under test — a cleaner comparison than §10.3's two-binary form:
+
+| target | Strong before | Strong after | total before | total after |
+|---|---|---|---|---|
+| SwiftInferCore | 4 | 4 | 129 | 129 |
+| SwiftInferTemplates | 4 | 4 | 114 | 114 |
+| SwiftInferCLI | 6 | **5** | 74 | 73 |
+| SwiftInferTestLifter | 4 | **3** | 24 | 23 |
+| SwiftInferKitEvidence | 4 | **0** | 4 | 0 |
+| SwiftInferMacroImpl | 4 | **0** | 4 | 0 |
+| **total** | **26** | **16** | 349 | 339 |
+
+**All 10 removed rows are lifted Strong-tier rows; nothing else moved.** No non-lifted
+suggestion was lost on any target, which is the control that says the change did what it
+claims and nothing else.
+
+### Why not 26 → 7
+
+§1 measured 26 → 7 by narrowing to `Tests/<Target>Tests/`. That number is **too good**, and
+§1 said so at the time: name-matching is a bound, not a fix, because it drops
+`SwiftInferIntegrationTests`, which legitimately exercises `SwiftInferCLI`. Dependency
+scoping keeps those rows, so it lands higher — and higher is correct.
+
+The 10 that go are the ones that were *provably* wrong. `SwiftInferKitEvidence` and
+`SwiftInferMacroImpl` are reached by exactly one test target each, because nothing else
+depends on them; they had been inheriting laws citing `render(suggestion)` and
+`Set(declarations).count`, symbols neither target declares. `SwiftInferCore` stays at 4
+because **everything genuinely does depend on Core** — and at least one of those rows,
+`merge(merge(log))`, really is about `Decisions.merge`, which lives in Core. Scoping it away
+would have been the error.
+
+### The honest limit
+
+Transitive dependency is a **sound over-approximation, not an attribution**. It answers *could
+this test target be exercising that module* — and for a base module the answer is legitimately
+"all of them". A law lifted from a CLI test body still shows up on `SwiftInferCore` whenever
+the dependency graph permits it, even when the symbol it names is CLI's.
+
+Closing that needs the lifted law attributed to **the target that declares the symbol it
+mentions**, which is a different feature (symbol resolution) and is not built here. Recorded
+as the remaining gap rather than smuggled in as a name heuristic — which is the thing §1
+already measured and rejected.
+
+### Cost
+
+`dump-package` is ~0.3s. On a leaf target the scan savings more than pay for it; on the
+widest target there is nothing to save and it is a straight add:
+
+| target | before | after |
+|---|---|---|
+| SwiftInferKitEvidence (leaf) | 0.61s | **0.30s** |
+| SwiftInferCore (scoped to all 8) | 1.48s | **1.76s** |
+
+Neither §13 perf suite is affected — both call `TemplateRegistry.discover` /
+`TestLifter.discover` directly and never reach the CLI resolver.
+
+**Guards.** `TestTargetScopeTests` (9 laws) and `MultiRootScanTests` (6). The fallback arms
+carry the weight: every arm that cannot answer returns `nil` rather than empty and is
+separately asserted to reach the old whole-`Tests/` behaviour, because a scoping bug that
+returns "nothing" silently switches lifting off, and a tool that suggests nothing looks
+exactly like a tool with nothing to suggest. `MultiRootScanTests` pins the two properties the
+widening introduces: overlapping roots must not double-count (a duplicated summary reads
+downstream as *independent corroboration* — the "stated N times by the scan" line — inflating
+a score from one source), and root order must not change output (PRD §16 #6).
 
 ---
 

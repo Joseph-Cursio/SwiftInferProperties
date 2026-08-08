@@ -42,7 +42,7 @@ extension SwiftInferCommand.Discover {
         // TestLifter M6.0 — resolve the test directory separately
         // from the production target. Default walk-up looks for
         // <package-root>/Tests/; the user can override with --test-dir.
-        let testDirectory = effectiveTestDirectory(
+        let testDirectories = effectiveTestDirectories(
             productionTarget: directory,
             explicitTestDir: overrides.testDirectory
         ) { diagnostics.writeDiagnostic("warning: \($0)") }
@@ -58,7 +58,7 @@ extension SwiftInferCommand.Discover {
             includePossible: effectiveIncludePossible,
             docstringAdvice: effectiveDocstringAdvice,
             vocabulary: vocabResult.vocabulary,
-            testDirectory: testDirectory,
+            testDirectories: testDirectories,
             packageRoot: configResult.packageRoot,
             templateFilter: templateFilter,
             requireCorroboration: requireCorroboration

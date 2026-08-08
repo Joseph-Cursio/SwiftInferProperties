@@ -48,7 +48,7 @@ extension SwiftInferCommand.Discover {
         // validation seam (PRD §4.1). Production source naturally
         // produces no lifted records (no recognized test methods).
         let liftedArtifacts = try TestLifter.discover(
-            in: setup.testDirectory,
+            in: setup.testDirectories,
             markerTable: effectiveMarkerTable(for: setup.vocabulary)
         )
         let artifacts = try TemplateRegistry.discoverArtifacts(
@@ -172,7 +172,7 @@ extension SwiftInferCommand.Discover {
         let skipFiltered = applyLiftedSkipMarkerFilter(
             to: promotedLifted,
             productionTarget: setup.directory,
-            testDirectory: setup.testDirectory,
+            testDirectories: setup.testDirectories,
             diagnostics: diagnostics
         )
         // M7 — filter lifted-side suggestions whose key matches a
@@ -274,7 +274,11 @@ extension SwiftInferCommand.Discover {
         /// Effective docstring-advice setting; see `Config.docstringAdvice`.
         let docstringAdvice: Bool
         let vocabulary: Vocabulary
-        let testDirectory: URL
+        /// Scan roots for TestLifter, scoped to the test targets that could be
+        /// exercising `directory` — see `TestTargetScope`. Plural because the scope is
+        /// a set of sibling roots under `Tests/`, not one subtree, and possibly EMPTY
+        /// when no test target reaches this production target.
+        let testDirectories: [URL]
         let packageRoot: URL?
         /// V1.32.C — Domain Template Packs (PRD §20.3). `nil` = no
         /// filter applied (all 10 templates run; current monolithic-

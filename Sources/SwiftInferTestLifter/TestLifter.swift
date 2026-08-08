@@ -128,7 +128,27 @@ extension TestLifter {
             sets: MarkerTable.curatedSets
         )
     ) throws -> Artifacts {
-        let summaries = try TestSuiteParser.scanTests(directory: directory)
+        try discover(in: [directory], markerTable: markerTable)
+    }
+
+    /// Lift from several scan roots as one corpus.
+    ///
+    /// The plural form exists for **target scoping** — `discover --target X` lifts
+    /// only from the test targets that could be exercising `X`, which is a set of
+    /// sibling directories rather than one subtree. See `TestTargetScope`.
+    ///
+    /// Passing `[]` is meaningful and returns empty artifacts: a production target
+    /// that no test target reaches lifts nothing. That is the case the scoping fix
+    /// exists to produce — before it, such a target inherited every lifted law in
+    /// the package (measured at 4 of 4 rows on two targets of this repo).
+    public static func discover(
+        in directories: [URL],
+        markerTable: MarkerTable = MarkerTable(
+            pairs: MarkerTable.curatedPairs,
+            sets: MarkerTable.curatedSets
+        )
+    ) throws -> Artifacts {
+        let summaries = try TestSuiteParser.scanTests(directories: directories)
         var lifted: [LiftedSuggestion] = []
         var counterSignals: [LiftedCounterSignal] = []
         var annotationsByOrigin: [LiftedOrigin: [String: String]] = [:]

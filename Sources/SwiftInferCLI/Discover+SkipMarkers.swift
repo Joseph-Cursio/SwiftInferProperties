@@ -18,12 +18,12 @@ extension SwiftInferCommand.Discover {
     static func applyLiftedSkipMarkerFilter(
         to promotedLifted: [Suggestion],
         productionTarget: URL,
-        testDirectory: URL,
+        testDirectories: [URL],
         diagnostics: any DiagnosticOutput
     ) -> [Suggestion] {
         let liftedSkipHashes = collectLiftedSkipHashes(
             productionTarget: productionTarget,
-            testDirectory: testDirectory,
+            testDirectories: testDirectories,
             diagnostics: diagnostics
         )
         if liftedSkipHashes.isEmpty {
@@ -43,7 +43,7 @@ extension SwiftInferCommand.Discover {
     /// `discoverArtifacts` takes for its prod-target scan.
     static func collectLiftedSkipHashes(
         productionTarget: URL,
-        testDirectory: URL,
+        testDirectories: [URL],
         diagnostics: any DiagnosticOutput
     ) -> Set<String> {
         var hashes: Set<String> = []
@@ -55,7 +55,13 @@ extension SwiftInferCommand.Discover {
                     + " markers: \(error.localizedDescription)"
             )
         }
-        if testDirectory.standardizedFileURL != productionTarget.standardizedFileURL {
+        // Scoping (`TestTargetScope`) turns this into a set of sibling roots rather
+        // than one `Tests/` subtree. Deduplicated by standardized path so a repeated
+        // root cannot double-scan; the production target is excluded because it was
+        // already scanned above.
+        var seen: Set<String> = [productionTarget.standardizedFileURL.path]
+        for testDirectory in testDirectories.map(\.standardizedFileURL)
+        where seen.insert(testDirectory.path).inserted {
             do {
                 hashes.formUnion(try SkipMarkerScanner.skipHashes(in: testDirectory))
             } catch {
