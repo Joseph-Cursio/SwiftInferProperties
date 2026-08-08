@@ -74,9 +74,12 @@ struct DiscoverIdentityDedupTests {
         let why = output[0].explainability.whySuggested.joined(separator: " ")
         #expect(why.contains("Stated 5 times"))
         #expect(why.contains("corroboration"), "five tests asserting one law is corroboration")
-        // It must not name test methods: LiftedOrigin renders `<test-body>:0` on this path,
-        // so there is nothing truthful to name. If origins become real, this assertion is
-        // the one to revisit.
+        // It must not name test methods — and as of the provenance fix this is a CHOICE, not
+        // a limitation. The old comment here said origins render `<test-body>:0` so there was
+        // nothing truthful to name, and flagged itself as "the one to revisit" if origins
+        // became real. They have: each surviving row's own `whySuggested` block now names its
+        // test file, line and method. Listing them again at the point of collapse would
+        // restate, one line below, what the row already says.
         #expect(!why.contains("testMethod"))
     }
 

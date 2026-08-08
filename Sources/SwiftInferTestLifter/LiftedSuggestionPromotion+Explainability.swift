@@ -15,12 +15,44 @@ extension LiftedSuggestion {
             return consumerProducerChainExplainability(hint: hint)
         }
         let assertionLine = assertionLineText()
-        let location = assertionLocation()
-        let provenance = "Lifted from \(location.file):\(location.line)"
         return ExplainabilityBlock(
-            whySuggested: [assertionLine, provenance],
+            whySuggested: [assertionLine, provenanceLine()],
             whyMightBeWrong: []
         )
+    }
+
+    /// Where this law was read from, named so a reviewer can open the file.
+    ///
+    /// **Three tiers, because the most precise source is the one most often
+    /// missing.** `Slicer` has no `SourceLocationConverter`, so the assertion's own
+    /// location is `SourceLocation.testBodyPlaceholder` on every path that reaches
+    /// `discover` — which is how every lifted row came to render
+    /// `Lifted from <test-body>:0`, a placeholder and a zero, while source-derived
+    /// rows in the same output carried `file.swift:line`.
+    ///
+    /// That is not cosmetic. It is what let the package-wide test-lifting defect
+    /// survive: a row citing `render(suggestion)` on `SwiftInferKitEvidence` reads
+    /// as a plausible finding until it says which file it came from, and the defect
+    /// was eventually found by noticing four byte-identical rows across six targets
+    /// and grepping — not by reading output that could not say
+    /// (`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §7.4).
+    ///
+    /// `LiftedOrigin` has carried the enclosing test method's real file and line
+    /// since M3.2 for the accept-flow's provenance header; the renderer simply
+    /// never consulted it. Naming the METHOD rather than the assertion line is a
+    /// deliberate trade — less precise, and true, which the placeholder was not.
+    func provenanceLine() -> String {
+        let assertion = assertionLocation()
+        if assertion.isResolvable {
+            return "Lifted from \(assertion.file):\(assertion.line)"
+        }
+        if let origin, origin.sourceLocation.isResolvable {
+            return "Lifted from \(origin.sourceLocation.file):"
+                + "\(origin.sourceLocation.line) `\(origin.testMethodName)`"
+        }
+        // Both unresolvable: say so plainly rather than printing `<test-body>:0`,
+        // which reads like a path a reader could open and is not one.
+        return "Lifted from a test body (exact location unavailable)"
     }
 
     /// M11.2 — equivalence-class explainability surfaces the corpus

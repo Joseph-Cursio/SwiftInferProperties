@@ -45,10 +45,18 @@ extension SwiftInferCommand.Discover {
     /// line saying how many there were, so the five golden tests read as *corroboration* —
     /// which is what they are — rather than vanishing.
     ///
-    /// The line does not name the test methods. `LiftedOrigin` carries a `testMethodName` and a
-    /// `sourceLocation`, but these rows render `<test-body>:0`: the origin is a placeholder on
-    /// this path, so there is nothing truthful to name yet. Populating it is the natural
-    /// follow-up, and would turn the count into a list.
+    /// The line does not name the test methods, and that is now a choice rather than a
+    /// limitation. It used to be the latter: `LiftedOrigin` carried a `testMethodName` and a
+    /// `sourceLocation`, but the renderer ignored them and every lifted row printed
+    /// `<test-body>:0`, so there was nothing truthful to name. **That is fixed** —
+    /// `LiftedSuggestion.provenanceLine()` now resolves through the origin, and each row names
+    /// the test file, line and method it came from
+    /// (`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §7.4).
+    ///
+    /// Turning this count into a LIST is therefore unblocked and deliberately not done here:
+    /// the collapse line answers *how much corroboration*, and the per-row provenance already
+    /// answers *from where*. Listing five paths on the survivor would restate, at the point of
+    /// collapse, what the surviving row's own `whySuggested` block says one line above.
     static func dedupedByIdentity(_ suggestions: [Suggestion]) -> [Suggestion] {
         var countsByIdentity: [String: Int] = [:]
         for suggestion in suggestions {

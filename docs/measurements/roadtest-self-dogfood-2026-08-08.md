@@ -416,6 +416,15 @@ gap now covers the tool's *own* recommended output.
 
 ### §7.4 NEW — a lifted row carries no provenance, and that is why §1 hid so long
 
+> **FIXED same day.** `LiftedSuggestion.provenanceLine()` resolves through `LiftedOrigin`,
+> and every lifted row now names its test file, line and method. Measured after:
+> `SwiftInferCore`'s three lifted rows resolve to `SharedVerifierPackageTests.swift:79`,
+> `GeneratorSelectionIntegrationTests.swift:18` and
+> `IdentityElementTemplateGoldenTests.swift:9` — **an audit that was impossible before**,
+> and which shows none of them sits in `Tests/SwiftInferCoreTests/`. Whether each is
+> *correctly* attributed is now a question a reader can answer in one click, which is the
+> whole point. Guarded by `LiftedProvenanceTests`.
+
 Every lifted row renders `Lifted from <test-body>:0`. Not a path, not a line — a placeholder
 and a zero. A source-derived row in the same output carries
 `— …/Sources/SwiftInferCore/EqualityBodyShape.swift:391`.
