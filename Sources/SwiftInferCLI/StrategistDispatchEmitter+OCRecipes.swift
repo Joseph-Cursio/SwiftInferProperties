@@ -19,10 +19,36 @@ extension StrategistDispatchEmitter {
     /// randomness and the `.map` closure must be pure — this keeps the
     /// v1.42 Xoshiro seed → outcome chain deterministic.
     ///
-    /// **Sample-coverage scope**: each recipe produces a fixed 4-element
-    /// collection `{n, n+1, n+2, n+3}` (or a view of one). Modest
-    /// variety per trial, but the 100-trial budget covers n ∈ [0, 100],
-    /// i.e. 100 distinct collections.
+    /// **Sample-coverage scope** (widened 2026-08-08 — see
+    /// `fixtures/ordered-set-generator/README.md`): each recipe draws a
+    /// variable-length collection of 1–6 elements from `-100 ... 100`.
+    ///
+    /// It previously produced a fixed 4-element `{n, n+1, n+2, n+3}` over
+    /// n ∈ [0, 100] — **101 reachable values**, every one four consecutive
+    /// ascending non-negative integers. Three properties therefore held across
+    /// the *entire* domain (fixed arity, never negative, always an arithmetic
+    /// progression), and a subject depending on any of them was untestable.
+    /// Measured with three mutants, one per property: all three survive the
+    /// old domain **exhaustively** (all 101 values, so unreachable rather than
+    /// merely unlikely) and all three are caught by this one — 0 of 3 → 3 of 3,
+    /// gained 3, lost 0, with a correct-subject control holding on both.
+    ///
+    /// **The arity floor is 1, not the kit's 0, deliberately.** These recipes
+    /// serve `index(after:)` / `index(before:)` monotonicity picks, and an empty
+    /// receiver has no valid index to advance from; the trap would be read as
+    /// `.measuredDefaultFails` against the subject — the conflation
+    /// `docs/measurements/interaction-trap-attribution-census.md` exists to
+    /// separate. The kit's `smallIntOrderedSet()` uses `0 ... 8` and is right
+    /// for the Equatable/Hashable laws it serves. The stated cost is that an
+    /// empty-collection mutant stays unreachable here.
+    ///
+    /// **What this does NOT buy**: the `OrderedSet` order projection. That law
+    /// can only fail on a pair colliding on its element set while differing in
+    /// order, which independent draws essentially never produce — the
+    /// collision-dependence rule, which binds the kit's generator just as hard.
+    /// The lever there is a permuting *pair sampler* in the harness, not a wider
+    /// element generator (falsifier: `Pairing.permuted` reaching an emitted
+    /// stub).
     static func curatedOCRecipe(carrier: String) -> GeneratorRecipe? {
         curatedOCRecipes[carrier]
     }
@@ -40,12 +66,16 @@ extension StrategistDispatchEmitter {
     /// Shared import set for every curated OC recipe.
     private static let ocImports = ["Foundation", "OrderedCollections", "PropertyBased"]
 
-    /// `Gen<Int>` source producing a fresh 4-element `OrderedSet<Int>`,
-    /// with `viewSuffix` (`""`, `".unordered"`, `"[...]"`) projecting the
-    /// view under test.
+    /// `Gen<Int>` source producing a fresh 1–6 element `OrderedSet<Int>`, with
+    /// `viewSuffix` (`""`, `".unordered"`, `"[...]"`) projecting the view under
+    /// test.
+    ///
+    /// Duplicates in the drawn array collapse on insert, so the realised count
+    /// can fall below the drawn one — which is the point, since it is the only
+    /// way this recipe reaches a 1- or 2-element `OrderedSet` at all often.
     private static func ocSetExpression(viewSuffix: String) -> String {
-        "Gen<Int>.int(in: 0 ... 100).map { "
-            + "OrderedSet([$0, $0 + 1, $0 + 2, $0 + 3])\(viewSuffix) }"
+        "Gen<Int>.int(in: -100 ... 100).array(of: 1 ... 6).map { "
+            + "OrderedSet($0)\(viewSuffix) }"
     }
 
     /// `Gen<Int>` source producing a fresh 4-key `OrderedDictionary<Int,
@@ -54,14 +84,24 @@ extension StrategistDispatchEmitter {
     ///
     /// The `OrderedDictionary<Int, Int>(...)` construction is bound to a
     /// concretely-typed local before the view is projected: the
-    /// single-expression form with an inline 4-tuple literal *plus* a
+    /// single-expression form with an inline tuple literal *plus* a
     /// `.elements[...]` slice overloads the Swift type-checker
     /// ("unable to type-check this expression in reasonable time").
+    ///
+    /// **The `OrderedSet` round-trip on the keys is load-bearing, not tidiness.**
+    /// `uniqueKeysWithValues:` has a precondition that the keys are distinct and
+    /// **traps** when they are not. The old recipe drew one seed and derived
+    /// four distinct keys from it arithmetically, so uniqueness was free; a
+    /// drawn array can repeat, so the keys are deduplicated before the pairs are
+    /// built. Without this, widening the domain would convert a generator into a
+    /// crash — and `InteractionVerifyOutcomeParser` maps any non-zero exit to
+    /// `.measuredDefaultFails`, so it would have surfaced as the subject being
+    /// refuted rather than as a broken harness.
     private static func ocDictExpression(viewSuffix: String) -> String {
-        "Gen<Int>.int(in: 0 ... 100).map { seed in "
-            + "let dict = OrderedDictionary<Int, Int>(uniqueKeysWithValues: ["
-            + "(seed, seed * 2), (seed + 1, (seed + 1) * 2), "
-            + "(seed + 2, (seed + 2) * 2), (seed + 3, (seed + 3) * 2)]); "
+        "Gen<Int>.int(in: -100 ... 100).array(of: 1 ... 6).map { seeds in "
+            + "let keys = OrderedSet(seeds); "
+            + "let dict = OrderedDictionary<Int, Int>("
+            + "uniqueKeysWithValues: keys.map { ($0, $0 * 2) }); "
             + "return dict\(viewSuffix) }"
     }
 
@@ -125,9 +165,12 @@ extension StrategistDispatchEmitter {
         // picks stalled at `unsupported-carrier: Deque`). Lives in
         // DequeModule, not OrderedCollections, hence its own import set;
         // the `.algebraic` workdir manifest declares the product.
+        // Widened with the OC recipes 2026-08-08. `Deque` keeps duplicates —
+        // it is a sequence, not a set — so the drawn array maps across
+        // unchanged and the realised count always equals the drawn one.
         "Deque<Int>": GeneratorRecipe(
-            expression: "Gen<Int>.int(in: 0 ... 100).map { "
-                + "Deque([$0, $0 + 1, $0 + 2, $0 + 3]) }",
+            expression: "Gen<Int>.int(in: -100 ... 100).array(of: 1 ... 6).map { "
+                + "Deque($0) }",
             carrierTypeName: "Deque<Int>",
             imports: ["Foundation", "DequeModule", "PropertyBased"]
         )
