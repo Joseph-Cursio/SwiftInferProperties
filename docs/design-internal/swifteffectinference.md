@@ -25,7 +25,7 @@
 > describe `6f45139`** and have not been retaken. The bump was source-compatible (additive, defaulted
 > argument), so the diagnoses are unaffected.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftEffectInference@6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 pinned=bc084fb9613c22f1aee94d9d1781b0eca2e67620 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
+<!-- doc-provenance date=2026-08-06 subject=SwiftEffectInference@6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 pinned=50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
 
 
 ```
@@ -225,16 +225,36 @@ subprocess-spawning function judged pure.
 
 ---
 
-## The pin divergence — CLOSED 2026-08-07
+## The pin divergence — RE-OPENED and re-closed 2026-08-08
 
 SEI carries **no version tags**, so both consumers pin by revision. As of 2026-08-07 they pin **the
 same revision** for the first time, and the section title is kept rather than renamed because the
 divergence is the thing worth remembering: it ran for weeks, and it had a named consequence each time.
 
+> **2026-08-08 — it did not stay closed for a day, and the shape is worth more than the fix.**
+> SEI moved two source commits; SwiftProjectLint bumped to `fc82ec4` and this repo did not, so the
+> divergence re-opened **with this repo as the laggard** while the section above said CLOSED. A
+> heading that records a state rather than a rule goes stale the moment the state changes — the
+> rule is *read the pin from `Package.swift`*, which is the standing instruction in CLAUDE.md and
+> the reason this table names the manifest line.
+>
+> Now at `50c5d3a`, which is `fc82ec4` **plus a docs-only commit**, so the two consumers are
+> source-identical again.
+>
+> **A/B measured before bumping, because one of the two commits relaxes a purity gate.**
+> `a7acb22` counts a nested closure's parameters as locals, which its own message says makes
+> `isPure` *"strictly more permissive"* — and CLAUDE.md's standing rule is that purity gates must
+> not relax to reach a target. This is an upstream bug fix rather than a relaxation, but that is
+> an argument, not a measurement. Two release binaries, same afternoon, `discover
+> --include-possible` over **seven corpora** — this repo's three targets plus `OrderedCollections`,
+> `DequeModule`, `ArgumentParser` and `NIOCore`: **byte-identical output on all seven, zero rows
+> moved.** The other commit, `20b6e5a`, is additive API (it publishes the capture-write clause on
+> its own for SwiftProjectLint's `unreachable-effect-closure` rule) and cannot move a verdict here.
+
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `bc084fb` | **at HEAD** |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `bc084fb` | **at HEAD** |
+| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `50c5d3a` | **at HEAD** |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `fc82ec4` | 1 commit behind, **docs only** |
 
 **Both consumers now agree, and the linter got there first.** SwiftProjectLint was already at
 `bc084fb` in all three of its manifests when this repo bumped from `6f45139` to match — so the

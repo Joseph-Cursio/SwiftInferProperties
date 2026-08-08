@@ -1,6 +1,11 @@
 # Kit-suite backtest — §3a, §4a, Arm 2 and Arm 3
 
-> **Status:** `measured` · **As of:** 2026-08-08 (revised same day — see §2.2a and §2.6)
+> **Status:** `measured` · **As of:** 2026-08-08
+
+**Revised the same day** — see the §2.2 correction, §2.6 (the OrderedCollections probe) and §2.7
+(Arm 2b, against a real open upstream bug). The `As of` line stays a bare date because
+`DocStatusHeaderTests` parses it as an expiry stamp; a parenthetical there is unparseable, which
+is how this note came to be a sentence instead.
 
 Closes the open remainder of [`docs/plans/kit-suite-backtest-plan.md`](../plans/kit-suite-backtest-plan.md),
 whose Arm 1 ran 2026-08-02 and was a HIT. Read that plan first — it carries the method, the
