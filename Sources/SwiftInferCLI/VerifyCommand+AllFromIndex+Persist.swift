@@ -23,8 +23,13 @@ extension SwiftInferCommand.Verify {
         _ collected: [SurveyRecord],
         packageRoot: URL,
         now: Date = Date(),
-        corpusProvenance: String? = nil
+        corpusProvenance: String? = nil,
+        persistEvidence: Bool = true
     ) {
+        // #129 — a survey that is being COMPARED against its own baseline must be able to
+        // run without rewriting it. Opting out skips the replay corpus too: both are
+        // outputs of the run, and a half-persisted run is a worse artifact than none.
+        guard persistEvidence else { return }
         let capturedAt = now
         let batch = collected.map { record in
             VerifyEvidence(
@@ -52,8 +57,15 @@ extension SwiftInferCommand.Verify {
                 swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion
             )
         }
-        let warnings = VerifyEvidenceRecorder.recordBatch(batch, packageRoot: packageRoot)
+        var warnings = VerifyEvidenceRecorder.recordBatch(batch, packageRoot: packageRoot)
             + VerifyCorpusStore.recordBatch(corpusEntries, packageRoot: packageRoot)
+        // #129 — a tracked evidence file is somebody's frozen answer key, and rewriting
+        // it silently turns the next comparison into a comparison against this run.
+        if let tracked = TrackedFileGuard.overwriteWarning(
+            for: VerifyEvidenceStore.defaultPath(for: packageRoot)
+        ) {
+            warnings.append(tracked)
+        }
         for warning in warnings {
             FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
         }

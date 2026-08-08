@@ -183,6 +183,19 @@ extension SwiftInferCommand {
         )
         public var replayOnly: Bool = false
 
+        @Flag(
+            name: .long,
+            inversion: .prefixedNo,
+            help: """
+            Persist this run's verdicts to .swiftinfer/verify-evidence.json (and \
+            the replay corpus). On by default. Pass --no-persist-evidence when \
+            the run is being COMPARED against that file: persisting first makes \
+            the comparison a comparison against this run's own output, which has \
+            silently produced a false "0 drift" twice.
+            """
+        )
+        public var persistEvidence: Bool = true
+
         public init() { /* no-op */ }
 
         public func run() async throws {
@@ -202,6 +215,7 @@ extension SwiftInferCommand {
                     )
                 }
                 try await Self.runAllFromIndex(
+                    persistEvidence: persistEvidence,
                     indexPathOverride: indexPath,
                     budgetString: budget,
                     workingDirectory: workingDirectory,

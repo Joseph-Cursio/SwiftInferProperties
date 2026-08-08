@@ -26,6 +26,7 @@ extension SwiftInferCommand.Verify {
     /// summary (`prove-then-show`).
     @discardableResult
     static func runAllFromIndex(
+        persistEvidence: Bool = true,
         indexPathOverride: String?,
         budgetString: String,
         workingDirectory: URL,
@@ -70,7 +71,8 @@ extension SwiftInferCommand.Verify {
             packageRoot: packageRoot,
             parallelism: parallelism,
             config: config,
-            quiet: quiet
+            quiet: quiet,
+            persistEvidence: persistEvidence
         )
     }
 
@@ -138,7 +140,8 @@ extension SwiftInferCommand.Verify {
         packageRoot: URL,
         parallelism: Int,
         config: SurveyConfig,
-        quiet: Bool = false
+        quiet: Bool = false,
+        persistEvidence: Bool = true
     ) async -> [SurveyRecord] {
         // `parallelism` no longer schedules concurrent BUILDS — see
         // `SharedVerifierPackage`. Every stub now lives in one package, so the four
@@ -208,7 +211,8 @@ extension SwiftInferCommand.Verify {
         persistSurveyBatch(
             collected,
             packageRoot: packageRoot,
-            corpusProvenance: provenance
+            corpusProvenance: provenance,
+            persistEvidence: persistEvidence
         )
         return collected
     }
