@@ -57,6 +57,12 @@ fixtures/cycle27-surface/Package.resolved
 # subject), so there is no Package.resolved to ignore.
 fixtures/integer-division-generator/.build/
 
+# The ordered-set-generator fixture. Resolves swift-collections over the
+# network (real `OrderedSet` semantics are the subject), so it has a
+# Package.resolved to ignore as well.
+fixtures/ordered-set-generator/.build/
+fixtures/ordered-set-generator/Package.resolved
+
 # SwiftLint config backups left by the SwiftLintRuleStudio editor on save
 .swiftlint.yml.*.backup
 
