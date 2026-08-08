@@ -8,7 +8,7 @@ import SwiftInferCore
 /// | Subprocess result                            | Outcome                       |
 /// |---|---|
 /// | exit code 0 + marker line "bothPass totalRuns=N clean=N" | `.measuredBothPass`            |
-/// | exit code != 0 (Swift trap)                  | `.measuredDefaultFails`        |
+/// | exit code != 0 (Swift trap)                  | `.measuredDefaultFails` + a ``TrapOrigin`` |
 /// | exit code 0 but no marker line               | `.measuredError`               |
 /// | build failure (exit code != 0 from `swift build`) | `.architecturalCoveragePending` |
 ///
@@ -26,6 +26,36 @@ import SwiftInferCore
 /// `.measuredEdgeCaseAdvisory` is intentionally unused at M3.0/M3.E
 /// — curated edge-case action sequences ship at M5+.
 public enum InteractionVerifyOutcomeParser {
+
+    /// What actually killed the verifier process, for a non-zero exit.
+    ///
+    /// The table above collapses every trap into `.measuredDefaultFails`, and the
+    /// note defending it — "the reducer panicked under some action sequence, which
+    /// IS a real signal" — is sound for a **reducer**, which is total over its
+    /// action alphabet by construction. It is not obviously sound for a carrier
+    /// whose methods legitimately carry preconditions, where an unguarded random
+    /// sequence can call one out of order and produce a trap that says nothing
+    /// about the invariant under test.
+    ///
+    /// This records which of the two happened. **It deliberately does not change
+    /// the outcome**: whether a subject-code trap should still count as a
+    /// refutation is a calibration question, and answering it needs the split
+    /// measured first. Changing the verdict in the same step would destroy the
+    /// baseline the question is asked against.
+    public enum TrapOrigin: String, Equatable, Sendable {
+        /// stderr carries ``ActionSequenceStubEmitter/invariantViolationMarker`` —
+        /// the harness's own check fired. The property is genuinely refuted.
+        case invariantCheck
+        /// The process reached at least one sequence and then trapped without the
+        /// marker, so the trap came from the subject: its own `precondition`, a
+        /// force-unwrap, an out-of-range index.
+        case subjectCode
+        /// Trapped before emitting any sequence marker (e.g. during generator
+        /// construction), so there is nothing to attribute it to. Distinct from
+        /// `.subjectCode` because the honest answer is "don't know", and folding
+        /// the two would inflate whichever conclusion the split is meant to test.
+        case unattributable
+    }
 
     public struct Result: Equatable, Sendable {
         public let outcome: VerifyEvidenceOutcome
@@ -47,13 +77,17 @@ public enum InteractionVerifyOutcomeParser {
         /// gate the cycle-135 Finding-G pin-overrule on full coverage.
         public let excludedActionCount: Int?
 
+        /// Set only when `outcome` came from a non-zero exit; `nil` otherwise.
+        public let trapOrigin: TrapOrigin?
+
         public init(
             outcome: VerifyEvidenceOutcome,
             totalRuns: Int? = nil,
             cleanRuns: Int? = nil,
             detail: String? = nil,
             failingSequenceIndex: Int? = nil,
-            excludedActionCount: Int? = nil
+            excludedActionCount: Int? = nil,
+            trapOrigin: TrapOrigin? = nil
         ) {
             self.outcome = outcome
             self.totalRuns = totalRuns
@@ -61,6 +95,7 @@ public enum InteractionVerifyOutcomeParser {
             self.detail = detail
             self.failingSequenceIndex = failingSequenceIndex
             self.excludedActionCount = excludedActionCount
+            self.trapOrigin = trapOrigin
         }
     }
 
@@ -95,11 +130,13 @@ public enum InteractionVerifyOutcomeParser {
                 )
             }
             let indexDetail = failingIndex.map { " at sequence index \($0)" } ?? ""
+            let origin = attributeTrap(stderr: stderr, failingIndex: failingIndex)
             return Result(
                 outcome: .measuredDefaultFails,
                 detail: "verifier exited with code \(binaryExitCode)\(indexDetail) "
-                    + "— trap in reducer body",
-                failingSequenceIndex: failingIndex
+                    + "— \(trapDescription(origin))",
+                failingSequenceIndex: failingIndex,
+                trapOrigin: origin
             )
         }
         guard let parsed = extractMarker(from: stdout) else {
@@ -136,6 +173,39 @@ public enum InteractionVerifyOutcomeParser {
     }
 
     // MARK: - Internals
+
+    /// Attribute a non-zero exit to the harness's own invariant check or to the
+    /// subject's code.
+    ///
+    /// The marker is the only positive evidence available, so its **absence** is
+    /// never read as proof of a subject trap on its own — that would make a
+    /// harness that forgot to emit the marker look like a corpus full of
+    /// subject-code traps, which is exactly the conclusion this split exists to
+    /// test. A trap is attributed to the subject only when the process is known
+    /// to have reached a sequence (`failingIndex != nil`); otherwise it stays
+    /// `.unattributable`.
+    static func attributeTrap(stderr: String, failingIndex: Int?) -> TrapOrigin {
+        if stderr.contains(ActionSequenceStubEmitter.invariantViolationMarker) {
+            return .invariantCheck
+        }
+        return failingIndex == nil ? .unattributable : .subjectCode
+    }
+
+    /// The `detail` clause for each attribution. Rendered, so it says what is
+    /// known rather than implying more.
+    static func trapDescription(_ origin: TrapOrigin) -> String {
+        switch origin {
+        case .invariantCheck:
+            return "the invariant check trapped — property refuted"
+
+        case .subjectCode:
+            return "trap in the subject's own code, not the invariant check "
+                + "(may be an artifact of an unguarded action sequence)"
+
+        case .unattributable:
+            return "trapped before reaching any sequence — cause unattributed"
+        }
+    }
 
     /// Cycle 110 (Blocker B) — does stderr carry a dynamic-loader
     /// (`dyld`) failure signature? Used to tell a launch failure (the

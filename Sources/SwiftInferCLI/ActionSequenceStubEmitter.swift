@@ -35,6 +35,31 @@ public enum ActionSequenceStubEmitter {
     /// parser keys on this byte-stable string.
     public static let cleanOutcomeMarker = "INTERACTION-VERIFY-OUTCOME: bothPass"
 
+    /// Prefix on every emitted invariant `precondition` message, so a trap can
+    /// be attributed.
+    ///
+    /// **The problem it solves.** A `precondition` failure prints its message to
+    /// stderr and exits non-zero, and ``InteractionVerifyOutcomeParser`` maps
+    /// *any* non-zero exit to `.measuredDefaultFails`. But two very different
+    /// things exit non-zero: this harness's own invariant check firing (the
+    /// property is genuinely refuted) and the subject's code trapping for its own
+    /// reasons — a precondition of its own, a force-unwrap, an index out of
+    /// range. The second is not evidence about the invariant at all, and on a
+    /// carrier whose methods legitimately carry preconditions it can be an
+    /// artifact of an action sequence the generator had no reason to think was
+    /// valid.
+    ///
+    /// A marker rather than the English ("… invariant violated") because the
+    /// parser must not be matching prose that a subject could coincidentally
+    /// print — same reasoning as ``cleanOutcomeMarker`` and
+    /// ``traceCurrentSequenceMarker``, both of which are byte-stable on purpose.
+    ///
+    /// Deliberately **not** applied to the `outputDeterminism` misrouting guard
+    /// in `makePerStepCheck`: that trap means the emitter was handed a family it
+    /// does not verify, which is a harness bug, not a refutation. It should read
+    /// as an unattributed trap, because that is what it is.
+    public static let invariantViolationMarker = "INTERACTION-INVARIANT-VIOLATED:"
+
     /// Header marker (first non-blank line) — tests pin the format
     /// without depending on emit-time variables.
     public static let stubHeaderMarker = "// swift-infer verify-interaction stub (V2.0 M3.B)"
