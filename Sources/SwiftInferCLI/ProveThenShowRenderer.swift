@@ -27,6 +27,8 @@ enum ProveThenShowRenderer {
         var tier: Tier?
         /// How much of the subject's input space the run explored.
         var coverage: RefutedExpectation.Coverage = .notApplicable
+        /// What the refutation is known to have been caused by.
+        var attribution: RefutedExpectation.Attribution = .notApplicable
     }
 
     // MARK: - Algebraic surface
@@ -82,13 +84,29 @@ enum ProveThenShowRenderer {
             label: "\(suggestion.family.rawValue)  \(suggestion.reducerQualifiedName)",
             counterexample: entry.result.failingSequenceIndex.map { "failing action-sequence #\($0)" },
             detail: oneLine(entry.result.detail),
-            // Interaction rows carry no tier here on purpose: the scope note ships the
-            // verdict algebraic-first, because the trap-attribution census measured a
-            // 0-of-10 subject-code rate on reducer corpora — the opposite of the algebraic
-            // base rate — and that census is reducer-only by its own disclosure.
-            tier: nil,
-            coverage: entry.result.excludedActionCount == 0 ? .full : .partial
+            tier: suggestion.tier,
+            coverage: entry.result.excludedActionCount == 0 ? .full : .partial,
+            // The interaction surface's soundness clause, and the reason it can have one:
+            // `TrapOrigin` already separates "the check fired" from "the subject fell
+            // over", so an artifact never reaches a section headed "read these first".
+            // The algebraic surface needs no equivalent — its outcome partition does the
+            // same work, since a trap there is `measuredError`.
+            attribution: attribution(of: entry.result.trapOrigin)
         )
+    }
+
+    /// `TrapOrigin` is `nil` unless the outcome came from a non-zero exit, which for
+    /// `measuredDefaultFails` it always did — so a `nil` here means the row is not a
+    /// refutation and the value is never consulted. Mapped rather than reused directly to
+    /// keep Core free of a CLI type.
+    private static func attribution(
+        of origin: InteractionVerifyOutcomeParser.TrapOrigin?
+    ) -> RefutedExpectation.Attribution {
+        switch origin {
+        case .invariantCheck: return .propertyViolation
+        case .subjectCode: return .subjectTrap
+        case .unattributable, nil: return .unknown
+        }
     }
 
     /// Collapse a multi-line detail (e.g. a build-failure stderr snippet) to a
@@ -113,12 +131,14 @@ enum ProveThenShowRenderer {
         let refuted = rows.filter { $0.outcome == .measuredDefaultFails }
         let expectedToHold = refuted.filter {
             RefutedExpectation.statesAFork(
-                tier: $0.tier, hasCounterexample: $0.counterexample != nil, coverage: $0.coverage
+                tier: $0.tier, hasCounterexample: $0.counterexample != nil,
+                coverage: $0.coverage, attribution: $0.attribution
             )
         }
         let disproven = refuted.filter {
             !RefutedExpectation.statesAFork(
-                tier: $0.tier, hasCounterexample: $0.counterexample != nil, coverage: $0.coverage
+                tier: $0.tier, hasCounterexample: $0.counterexample != nil,
+                coverage: $0.coverage, attribution: $0.attribution
             )
         }
         let unverifiable = rows.filter { $0.outcome == .architecturalCoveragePending }

@@ -57,8 +57,9 @@ struct ProveThenShowInteractionRenderTests {
         ]
         let out = ProveThenShowRenderer.render(interactionEntries: entries)
         #expect(out.contains("Prove-then-show — 4 pick(s) tested"))
-        // Interaction rows never reach Expected-to-hold: the verdict ships
-        // algebraic-first while the trap-attribution census is reducer-only.
+        // Expected-to-hold is 0 here because these fixture rows carry no
+        // invariant-check attribution, not because the surface is excluded — the
+        // interaction fold is built (scope note §13).
         #expect(out.contains(
             "Proven 1 · Expected-to-hold 0 · Disproven 1 · Unverifiable 1 · Inconclusive 1"
         ))
