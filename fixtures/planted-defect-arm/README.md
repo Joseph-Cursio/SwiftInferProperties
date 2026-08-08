@@ -74,6 +74,17 @@ refutation would be rendered *Suspected defect*, and it is not one.
 That is worth stating plainly rather than filing under future work: the first thing this
 arm produced for the gate it was built to support was a counterexample to it.
 
+**And the obvious repair does not work.** The scope note first proposed consulting the
+tool's own conjecture warning instead of tier alone. Measured the same day, that caveat
+fires on **14 of 14** refutations on record — 5 defects and 9 false laws — because
+`commutativity`, `associativity` and `idempotence` are all absent from
+`Refutability.roleEntailedTemplates` by design. A body-shape reader fails more sharply:
+`Decisions.merge`'s pre-fix body composed its operands positionally
+(`records + other.records`), which is the same shape as `PathSegment`'s
+`text + "/" + other.text`, so it would suppress the defect and keep the false law. See
+`docs/plans/suspected-defect-verdict-scope.md` §11 — the conclusion there is that the fix
+is the verdict's *wording*, not a better gate.
+
 **Planted evidence cannot estimate a rate.** These three types were chosen to occupy
 particular cells. The arm can *falsify* a categorical claim, which is what it was built
 for; it cannot say how often a `Likely` refutation is a defect in real code. The nine

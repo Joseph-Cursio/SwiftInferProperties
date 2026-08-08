@@ -348,6 +348,13 @@ explainability already names this exact case (*"a `(T, T) -> T` need not commute
 subtraction, division, concatenation"*), which suggests the gate should consult the
 conjecture warning it already emits rather than tier alone.
 
+> **That suggestion was measured the same day and is REFUTED — see §11.** The conjecture
+> caveat fires on **14 of 14** refutations on record, defects and false laws alike, because
+> `commutativity`, `associativity` and `idempotence` are all absent from
+> `Refutability.roleEntailedTemplates`. It has no discriminating power at all. The
+> body-shape alternative fails for a sharper reason, and §11 argues the false positive is
+> not fixable by a static gate.
+
 **What the arm cannot do**, and §3 should not be re-tuned as though it could: planted
 evidence has no base rate. These three types were chosen to occupy particular cells, so the
 arm falsifies a categorical claim and cannot estimate precision. The nine natural
@@ -360,3 +367,91 @@ Revised standing of the build order:
   candidate refinement is to consult the conjecture signal, not to move the tier cut.
 - The `<fix>^` backtest is no longer needed to settle the confound. It is still the only
   way to get a *rate*, and §9.1's reachability findings bound what it could ever measure.
+
+## 11. The false positive is not fixable by a static signal (2026-08-08)
+
+§10 closed by proposing that the gate consult the conjecture warning rather than tier
+alone. Scored against every refutation on record, that fails outright, and the two obvious
+alternatives fail with it. The negative result is the finding.
+
+### 11.1 The conjecture signal has no discriminating power
+
+`SuggestionRenderer.conjectureCaveat` fires when a law is refutable and **not**
+role-entailed, and `Refutability.roleEntailedTemplates` is a ten-name set —
+`predicate`, `comparator`, `partition`, `state-machine`, `filter-subset`,
+`selection-subset`, `diff-disjointness`, `caseiterable-key-injectivity`,
+`input-totality`, `normal-form`. `commutativity`, `associativity` and `idempotence` are
+all absent, by design: a correct implementation genuinely can fail them.
+
+| refutations on record | conjecture caveat fires |
+|---|---|
+| 5 real defects (4 merge folds + `BlendSummary`) | **5 of 5** |
+| 9 false laws (5 domain-transfer + `PathSegment` + 3 fixture `idempotence`) | **9 of 9** |
+
+**14 of 14.** As a gate it suppresses everything; as a signal it says nothing. It is a
+correct warning aimed at a different question — *can a correct implementation fail this?* —
+and every law this feature will ever classify answers yes. That is what makes them
+classifiable in the first place.
+
+### 11.2 The body-shape alternative fails for a sharper reason
+
+The natural next idea is to read the body, as `EqualityBodyClassifier` does for `==`:
+a binary operation that composes its two operands *positionally* is order-dependent by
+construction, so do not call a commutativity failure a bug.
+
+It does not separate them, and the pre-fix source says why. `Decisions.merge` at
+`1355f69^`:
+
+```swift
+for record in records + other.records {
+    if let existing = byHash[record.identityHash],
+       existing.timestamp >= record.timestamp { continue }
+```
+
+`records + other.records` — a fixed positional composition of the two operands, and the
+`>=` makes the first-visited win a tie. Structurally that is the same shape as
+`PathSegment`'s `text + "/" + other.text`. **One is a real defect and the other is correct
+code, and a body-shape reader cannot tell them apart** — worse, it would suppress the
+defects, which is the recall failure `fixtures/domain-transfer-signal` already measured for
+a different veto (recall 4/5, precision 4/12).
+
+### 11.3 What actually separates them is intent, which is not in the shape
+
+The one signal with any evidence is the **docstring**, and the evidence is thin. The
+pre-fix `Decisions.merge` doc states a rule that is symmetric in its operands —
+*"Identity-keyed; on collision the record with the later `timestamp` wins"* — which claims
+an outcome depending only on timestamps, never on argument position. The body violated its
+own stated contract; that is what made it a defect. `PathSegment.combine`'s doc describes a
+positional operation and claims nothing.
+
+That is **one real pair**, and it would miss `BlendSummary`, whose docstring is silent — and
+whose docstring is silent because this scope's author wrote it that way, so it is an
+artifact of the fixture rather than evidence about real code. `DocstringPropertyCorroborator`
+already exists and is the natural home if anyone wants to measure it properly, over a
+population rather than an anecdote.
+
+**The general claim, and the reason to stop looking for a gate:** *"is commutativity a
+property this function owes?"* is a question about intent. Two functions with the same
+signature, the same tier, the same generated counterexample and the same body shape can
+answer it differently. No static signal reads intent.
+
+### 11.4 So the fix is the wording, not the gate
+
+This is the idea doc's own open question 3 — *"the tool can't know which; the verdict should
+present the fork, not assert the bug"* — promoted from a stylistic preference to a measured
+constraint. §3's gate stays as the *visibility* rule (which refutations are worth a second
+look) and stops being read as a *classification* (which refutations are bugs).
+
+Concretely, for the build in §6:
+
+- **Rename the verdict.** Not *Suspected defect*. Something that states the fork —
+  *"expected to hold; it does not"* — so a reader meets `PathSegment` and `Decisions.merge`
+  in the same bucket and is not told the wrong thing about either.
+- **Render both readings, always**, with the counterexample: either the law does not apply
+  here, or this is a bug. The tool has no basis for choosing and should not appear to.
+- **Keep `.likely` as the cut**, since §10 gives no reason to move it and no measured
+  alternative beats it.
+- **Docstring corroboration is an escalation, not a gate**, and unmeasured. If it is built,
+  score it over a population first — the standing practice from
+  `fixtures/domain-transfer-signal`: score a candidate signal against the laws that HELD,
+  not against the class it targets.
