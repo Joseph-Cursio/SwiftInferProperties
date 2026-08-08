@@ -251,119 +251,32 @@ public enum KitSuiteEmitter {
         .joined(separator: "\n\n")
     }
 
+    /// **The kit's own recipe is named here when it has one — see plan §4a.**
+    /// `propertyLawCollectionsRecipe` is consulted from this function and no other: a blocked
+    /// entry is inert text a reader acts on, so pointing at the generator that already exists
+    /// costs no dependency and no live-path name-keying. `liveBlock` never sees the table.
     static func blockedBlock(
         _ finding: ProtocolCoverageAudit.Finding,
         suites: [String],
         reason: String,
         carrierName: String
     ) -> String {
+        let recipe = propertyLawCollectionsRecipe(for: carrierName)
         let calls = suites.map { conformance in
             "    //     _ = try await check\(conformance)PropertyLaws("
-                + "for: \(carrierName).self, using: \(carrierName).gen())"
+                + "for: \(carrierName).self, using: \(recipe ?? "\(carrierName).gen()"))"
         }
         .joined(separator: "\n")
+        let hint = recipe.map {
+            "\n    // The kit already ships this generator: add the opt-in "
+                + "`PropertyLawCollections`\n    // product and use `\($0)` — "
+                + "no hand-written `gen()` needed."
+        } ?? ""
         return """
             // \(finding.typeName) — \(finding.coveredLaws.count) law(s), \
         BLOCKED on a generator.
-            // \(reason)
+            // \(reason)\(hint)
         \(calls)
-        """
-    }
-
-    /// **Bound the derived numeric leaves, because an aggregating carrier traps.**
-    ///
-    /// `GeneratorExpressionEmitter` emits `Gen<Int>.int()`, which draws the FULL `Int` range.
-    /// That is correct for a law about one value and fatal for a carrier that sums its
-    /// members: `Score.init(signals:)` does `.reduce(0, +)` over up to eight weights, so a
-    /// full-range draw overflows and the process dies with **SIGTRAP** — measured, as an
-    /// `exited with unexpected signal code 5` that killed the whole run rather than failing
-    /// one test.
-    ///
-    /// ±10_000 is not a new invention: it is the bound the verify path already draws from,
-    /// for the same reason, recorded in the multiplicative-homomorphism warning
-    /// (*"MIND OVERFLOW … the property must be checked over a BOUNDED domain (the verifier
-    /// draws from ±10_000)"*). Matching it keeps one answer to the question in the repo.
-    ///
-    /// **The trade is real and worth naming**: a bounded draw cannot find an overflow bug at
-    /// the numeric extremes. That is the same call the verifier already made — a law about
-    /// sign or measure logic is reachable in ±10_000; one about `Int.max` is not.
-    static func boundingNumerics(_ expression: String) -> String {
-        expression
-            .replacingOccurrences(of: "Gen<Int>.int()", with: "Gen<Int>.int(in: -10_000...10_000)")
-            .replacingOccurrences(of: "Gen<UInt64>.uint64()", with: "Gen<UInt64>.uint64(in: 0...10_000)")
-    }
-
-    /// **Nesting depth at which the emitted generator stops being worth it.**
-    ///
-    /// Passing the whole-module resolver took derivation from 51% to 78% of carriers, but
-    /// composed generators nest: a type whose members are themselves user types emits
-    /// `zip(zip(zip(...)))`, and Swift's type checker is superlinear in that nesting. Measured
-    /// on `SwiftInferCore`: expressions reached **8 nested `zip(`s and 1,935 characters**, and
-    /// the build failed with *"the compiler is unable to type-check this expression in
-    /// reasonable time"*.
-    ///
-    /// This repo has been bitten by exactly that before — a 12-arm `+` chain that compiled
-    /// locally and tripped CI's type-check timeout, silently failing every push for eight
-    /// commits (`bbd634c`). A generated file that compiles on the author's machine and not on
-    /// the reviewer's is worse than one that admits the limit up front.
-    static let maximumZipNesting = 4
-
-    /// Non-nil when the expression is too complex to emit as live code.
-    static func typeCheckerOverrun(_ expression: String) -> String? {
-        let nesting = expression.components(separatedBy: "zip(").count - 1
-        guard nesting > maximumZipNesting else { return nil }
-        return "Generator DERIVES, but the composed expression nests \(nesting) `zip`s "
-            + "(limit \(maximumZipNesting)) and risks a compiler type-check timeout. Emitted "
-            + "commented out rather than shipped as a build failure. Provide `static func "
-            + "gen() -> Generator<T, some SendableSequenceType>` to replace the composition "
-            + "with something the type checker can handle."
-    }
-
-    /// Skip `Hashable.distribution` for a `CaseIterable` enum, and nothing else.
-    ///
-    /// **Measured, not anticipated.** Running the first generated file, `KnownProperty` and
-    /// `TemplateName` were the only two failures of 126: *"1000 samples produced only 25
-    /// unique hashValues (ratio 0.025)"*. The law is right and the type is right — the
-    /// generator draws from `allCases`, so the domain is the case list and 1000 trials
-    /// cannot produce more distinct hashes than there are cases. No generator fixes it.
-    ///
-    /// Scoped to `.caseIterable` deliberately. On a wide domain a bad `hash(into:)` really
-    /// does show up as clustering, so suppressing `distribution` everywhere would trade a
-    /// real signal for a green run — the exact bargain `fixtures/toolchain-coverage` warns
-    /// against when it says a reader who narrows a generator "should not widen it to silence
-    /// the distribution law".
-    ///
-    /// The kit records a swift-testing Issue for a Heuristic violation even though
-    /// `EnforcementMode.default` does not throw, so an assertion tightened to Strict is not
-    /// enough on its own — the suppression is what keeps the emitted suite green.
-    static func options(_ conformance: String, isCaseIterable: Bool) -> String {
-        // **The `elementSameResult:` overload, always, for the Sequence chain.**
-        //
-        // The default overload requires `Value.Element: Equatable`, and a dictionary-shaped
-        // carrier's Element is a TUPLE — `(key: Key, value: Value)` — which cannot conform to
-        // a protocol. Measured: `OrderedDictionary`, `OrderedDictionary.Elements` and
-        // `_Bitmap` all failed with "cannot conform to 'Equatable'".
-        //
-        // The kit shipped these overloads for exactly this (its own note calls it "a missing
-        // conformance can be a harness problem, not a type problem"). Passing
-        // `{ $0 == $1 }` unconditionally is strictly more permissive than the default: it
-        // compiles for any Equatable element AND for a tuple of Equatables, since Swift
-        // defines `==` on tuples up to six members. A carrier whose Element is neither would
-        // not have compiled under the default overload either.
-        if conformance == "Sequence" || conformance == "Collection" {
-            return ",\n                        elementSameResult: { $0 == $1 }"
-        }
-        guard isCaseIterable, conformance == "Hashable" else { return "" }
-        return """
-        ,
-                        options: LawCheckOptions(suppressions: [
-                            // A CaseIterable domain cannot fill 1000 trials with distinct
-                            // hashes; the law is degenerate here by construction, not failing.
-                            .skip(
-                                LawIdentifier(protocolName: "Hashable", lawName: "distribution"),
-                                reason: "domain is `allCases` — fewer values than trials"
-                            )
-                        ])
         """
     }
 

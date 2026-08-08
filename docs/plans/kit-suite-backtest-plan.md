@@ -1,7 +1,15 @@
 # Plan — backtest `scaffold-kit-suites` against real, already-fixed swift.org bugs
 
-> **Status:** `open` · **As of:** 2026-08-02
+> **Status:** `shipped` · **As of:** 2026-08-08
 
+
+**Status (2026-08-08): ALL ARMS RUN.** Arm 1 was a HIT (2026-08-02). **Arms 2 and 3, §3a and
+the §4a decision closed 2026-08-08 — results in
+[`docs/measurements/kit-suite-backtest-arms-2-3.md`](../measurements/kit-suite-backtest-arms-2-3.md).**
+Arm 2's prediction held (MISS) and **its reasoning did not**: the conformance laws are not
+structurally blind to a projection bug — the same emitted suite refutes all three mutants once
+the generator's alphabet is narrowed, so the MISS is a *generator-domain* failure. Read §4a and
+Arm 2 below as written, then that file.
 
 **Status (2026-08-02): §3b measured, §3d added, Arm 1 RUN and it is a HIT.** Arms 2 and 3
 and the §4a decision are still open. Written for execution in a fresh context; the
@@ -82,6 +90,17 @@ derived: 8 nested `zip`s failed to type-check, 4 compiled, and nothing in betwee
 Third-party types nest more deeply than ours, so derivation rate would be measured against an
 arbitrary constant. Bisect 4→8 on `SwiftInferCore` (and ideally on swift-collections) and set
 the real boundary. Record the number that failed.
+
+> **DONE 2026-08-08 — and no number failed.** Bisected 4 → **13**; the cap now carries its
+> experiment in `KitSuiteEmitter`'s own doc comment. A synthetic wide-and-deep ladder reached
+> **13 nested `zip`s / 2,412 characters** with no expression over 200 ms, and `SwiftInferCore`
+> emitted with the cap lifted compiled with **0 errors, 191/191 green**. **Measured cost of the
+> old value: 2 suites of 241** across seven corpora, both verified to compile and pass.
+> Two corrections: the constant counts `zip(` **occurrences**, not depth (the emitter writes
+> *variadic* `zip`, so a 15-member flat struct is never capped at any value), and the doc's own
+> justification no longer reproduces. **The real pathology is unguarded and unrelated**: one
+> expression took **26,209 ms** to type-check at `zip(` count **1** — `Gen.oneOf` +
+> `eraseToAny` over enum arms. Deliberately not fixed by inventing a second threshold.
 
 **3b. Measure `Sendable` / access-level compile failures.** ~~`check<Protocol>PropertyLaws`
 requires `Value: Sendable`, which a `TypeShape` cannot always establish, and a carrier may be
@@ -297,6 +316,23 @@ The honest middle is probably to **emit the recipe as a comment** on the blocked
 "`PropertyLawCollections` ships `Gen<Deque<Int>>`; add that product and use it" — which costs
 no dependency and no name-keying in the live path. Decide before Arm 1.
 
+> **DECIDED 2026-08-08 — the honest middle, taken as written.**
+> `KitSuiteEmitter.propertyLawCollectionsRecipe` is read by `blockedBlock` and nothing else, so
+> the live path never references the opt-in product; seven recipes, guarded by
+> `KitSuiteCollectionsRecipeTests` (including a freshness test re-derived against the sibling
+> kit checkout, and a control watched failing). **`BitArray` is deliberately absent** — the kit
+> ships no generator for it, and six of seven siblings being answered is exactly when a reader
+> assumes the seventh was too.
+>
+> **The lever was mostly spent before it was pulled.** §3b's *"single largest lever on the
+> blocked count"* is now worth **one row** — `TreeDictionary`, 5 laws — because `749df12` and
+> `b99019e` have since made seven of the eight public types derive live. Measured across five
+> swift-collections modules.
+>
+> **And the objection was already conceded elsewhere.** `StrategistDispatchEmitter.curatedOCRecipes`
+> keys on carrier names today and hand-writes generators for three of these seven. Not the same
+> concession — there the recipe must be *live* — but recorded rather than left to inference.
+
 ### Arm 2 — the projection bugs. **Predicted MISS, and publish it.**
 
 `fixtures/equatable-signal/README.md` measured that **3 of 3 real swift-collections projection
@@ -316,6 +352,30 @@ at trial ≤3, and `ModelLawTemplate` / `SequenceViewModelLawTemplate` already s
 finding converts into a recommendation — *generate model laws alongside conformance suites* —
 rather than a shrug.
 
+> ## RUN 2026-08-08 — **MISS, as predicted. The reasoning was wrong, and that is the finding.**
+>
+> swift-collections `c8080d05`, three modules vendored, one file mutated per arm. **26 emitted
+> tests, verdict-for-verdict identical between correct code and all three mutants.** Not one law
+> moved. Full record: `docs/measurements/kit-suite-backtest-arms-2-3.md`.
+>
+> **But the laws are not blind.** Same kit calls, same laws, same mutants, **only the generator
+> narrowed** — and `Hashable.equalityConsistency`, a Strict law the emitted file already runs,
+> refutes **all three**: OrderedSet at 73–102 trials, BitArray at 2–12, Deque in 5 of 6 runs at
+> 10–314. Every one of these bugs needs two values to **collide**, and a 20,001-wide alphabet
+> does not collide. So the MISS is a **generator-domain** failure, not a structural one — a
+> different problem with a different owner, and it is this repo's.
+>
+> The model law still earns its recommendation (all three at trial **1**), but it is now the
+> second recommendation. The first is *narrow the alphabet where a law is collision-dependent*.
+>
+> **Two things running it taught that reading could not.** The **baseline is not green**: 6 of
+> 26 tests fail on *correct* code, all six from two derived generators that construct
+> invariant-violating values — `BitSet.Counted(_bits:count:)` draws its count independently of
+> its bits. That is §3b's finding 3 arriving from the other side, no longer saved by a compile
+> error, and it reports three swift-collections `SetAlgebra` laws as violated when they are not.
+> And the `Deque` witness needs a **wrapped** buffer, not merely a narrow alphabet — three
+> hand-built witnesses were non-witnesses for structural reasons before one worked.
+
 ### Arm 3 — derivation and compile rate across the corpora. **Diagnostic only.**
 
 For each package: carriers covered, laws covered, % derivable, % of emitted files that
@@ -324,6 +384,15 @@ never the headline, and it must not be reported without Arms 1 and 2.
 
 `swift/stdlib/public/core` can only yield derivability — validating compilation there means
 building the toolchain. Say so rather than quietly omitting it.
+
+> **RUN 2026-08-08 — 12 corpora, 366 carriers, 141 derivable (38%), 591 of 1,168 laws live
+> (50%).** Table in `docs/measurements/kit-suite-backtest-arms-2-3.md` §5.
+> **Derivation on third-party code is roughly half what it is here**: §7's 74% was this repo,
+> `SwiftInferCLI` scores 86% and the stdlib 18%. **Compile-and-pass was measured on 2 of 12**
+> (SwiftInferCore 191/191, vendored swift-collections 20/26) and the other **10 are named, not
+> dropped** — compiling a third-party emitted suite means vendoring it with `@testable` reach,
+> which is the whole Arm 2 apparatus. The stdlib is derivability-only as predicted. Also:
+> **`Heap` is reached by neither list**, the only public collection type that is not.
 
 ---
 
