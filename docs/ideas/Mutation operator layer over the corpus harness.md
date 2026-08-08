@@ -5,6 +5,12 @@
 
 ## Status
 
+> **Slice 1 scoped 2026-08-08: `docs/plans/mutation-sweep-slice1-scope.md`.** It does
+> not build this layer — it measures the number that decides whether the layer is worth
+> building, which is the equivalent-mutant rate this doc's own argument predicts will be
+> high. Three of the costs below moved that day (#129, #130), and
+> `fixtures/planted-defect-arm/` is now a worked n=1 precedent.
+
 **Idea only. Design-level.** A *producer* bolted in front of tooling that already
 exists, not a new engine. Sibling to
 `docs/archive/Refuted-high-confidence-guess as candidate bug.md`
