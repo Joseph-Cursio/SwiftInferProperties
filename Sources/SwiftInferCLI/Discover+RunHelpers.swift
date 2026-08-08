@@ -163,6 +163,23 @@ extension SwiftInferCommand.Discover {
             )
         }
         if let packageRoot = findPackageRootForTestDir(startingFrom: productionTarget) {
+            let tests = packageRoot.appendingPathComponent("Tests")
+            // **Check the directory exists BEFORE paying to scope it.** Scoping shells out to
+            // `swift package dump-package`, and a package with no `Tests/` has nothing to
+            // scope — the answer is the degraded fallback either way, so the subprocess buys
+            // nothing.
+            //
+            // Ordering these the other way was a measured regression, not a hypothetical: the
+            // §13 budgets that drive `Discover.run` build a `Package.swift`-rooted fixture with
+            // no `Tests/`, and every one of those runs paid a manifest evaluation that could
+            // only fail. `PerformanceTests:144` went to 2.11s against a 2.0s budget and
+            // `DriftIncrementalPerformanceTests` to 0.86s against 0.5s. The PR that introduced
+            // the scoping claimed neither perf suite was affected "because both call the
+            // library directly" — true of `PerformanceTests:42`, and false of the two CLI-path
+            // tests it was generalised to.
+            guard fileManager.fileExists(atPath: tests.path) else {
+                return [productionTarget]
+            }
             // The module name follows the `Sources/<target>/` convention `--target`
             // resolves through. A directory that is not a declared target — the
             // `--sources` escape hatch, or a manifest `path` override — makes
@@ -175,10 +192,7 @@ extension SwiftInferCommand.Discover {
             ) {
                 return scoped
             }
-            let tests = packageRoot.appendingPathComponent("Tests")
-            if fileManager.fileExists(atPath: tests.path) {
-                return [tests]
-            }
+            return [tests]
         }
         return [productionTarget]
     }

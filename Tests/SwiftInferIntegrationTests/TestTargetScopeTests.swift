@@ -206,6 +206,34 @@ struct TestTargetScopeTests {
         )
     }
 
+    /// **A package with a manifest but no `Tests/` never pays to scope.**
+    ///
+    /// The answer is the degraded fallback either way, so shelling out to `dump-package`
+    /// buys nothing — and doing it anyway was a measured regression: the §13 budgets that
+    /// drive `Discover.run` build exactly this shape, and each run paid a manifest
+    /// evaluation that could only fail (`PerformanceTests:144` 2.11s against a 2.0s budget,
+    /// `DriftIncrementalPerformanceTests` 0.86s against 0.5s).
+    ///
+    /// Asserted on the returned value rather than by counting subprocesses, because the
+    /// value is the contract; the cost is why the ordering matters.
+    @Test("a package with no Tests directory degrades without scoping")
+    func noTestsDirectoryDegradesWithoutScoping() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("TestTargetScope-notests-\(UUID().uuidString)")
+        let target = base.appendingPathComponent("Sources/Lib")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try "// swift-tools-version: 6.1\n".write(
+            to: base.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8
+        )
+        defer { try? FileManager.default.removeItem(at: base) }
+
+        let resolved = SwiftInferCommand.Discover.effectiveTestDirectories(
+            productionTarget: target,
+            explicitTestDir: nil
+        ) { _ in /* diagnostics are not the subject here */ }
+        #expect(resolved.map(\.standardizedFileURL) == [target.standardizedFileURL])
+    }
+
     /// The degraded tmpdir arm: no `Package.swift` anywhere up the tree, so the
     /// production target itself is the scan root. Preserved from the singular
     /// resolver, and the reason many fixtures in this suite still lift anything.
