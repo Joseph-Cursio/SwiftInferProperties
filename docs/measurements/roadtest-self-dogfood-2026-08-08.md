@@ -936,7 +936,7 @@ not reach a nested carrier"*. The re-run has three, and only one of them is that
 |---|---|---|
 | `RefutedExpectation.statesAFork(…)` — `cannot find type 'Coverage' in scope` | **residual bug in `e5731a9`** | **FIXED — §9.4** |
 | `Visitor.isStaticOrSelfMemberAccess(_:)` — `cannot find 'Visitor' in scope` | ambiguous: **7 declaration sites** | fix declining correctly |
-| `NonDeterministicAPIs.matches(_:)` — `cannot find 'NonDeterministicAPIs' in scope` | `private` at file scope | **not a qualification problem** |
+| `NonDeterministicAPIs.matches(_:)` — `cannot find 'NonDeterministicAPIs' in scope` | `private` at file scope | **relabel DECLINED — §9.5** |
 
 **`Coverage` is the actionable one, and it is small.** The emitted stub qualifies the
 *values* and not the *type annotation*:
@@ -1068,3 +1068,66 @@ accessibility decline misfiled as a tooling error — §2's remedy, not a qualif
 site is a rewrite rule that has been applied to one of the places that needed it, and
 nothing in the type system says how many those are. Guarded by
 `NestedParameterQualificationTests`.
+
+
+### §9.5 The accessibility relabel was built, measured and REVERTED (2026-08-09)
+
+§9.2 called `NonDeterministicAPIs` the cheapest remaining item: the row is correctly
+*declined*, just under `build-failed` when `internal-api-not-accessible` — a bucket that
+already holds 30 rows — says the true thing. It is not cheap, and the reason is a fact
+about the index that reading its purpose does not give you.
+
+**Why the obvious fix is not available.** `architecturalPendingDetail` is a pure
+`(stdout, stderr) -> String?` classifier keyed on `is inaccessible due to '<level>'`, which
+is what Swift emits for an **`internal`** member. A **`private`** type at file scope emits
+`cannot find 'X' in scope` instead — the name does not resolve at all. That string cannot
+be mapped on its own, because it is *also* what an unqualified nested carrier produces:
+`Visitor` fails with exactly the same diagnostic. Relabelling it would be **worse than the
+wrong bucket**, turning a live unresolved-nesting bug into a settled "cannot reach this"
+verdict. The value-vs-type spelling does not separate them either; both are value-position
+references.
+
+**The design that was built.** Thread the index's type-name set into the classifier: a leaf
+name matching no key was never scanned, therefore not test-visible, therefore an
+accessibility decline; a name that matches stays `build-failed`. Written with an
+empty-set-answers-false guard and a conservative mixed-output rule, plus seven tests.
+
+**It is a no-op, and the premise is false.** Arm D: `build-failed` **2 → 2**, the row
+unmoved. One query against the survey's own `index.json` says why:
+
+```
+typeShapes keys: 283
+NonDeterministicAPIs keys: ['NonDeterministicAPIs']
+```
+
+**`TypeShapeBuilder` indexes declarations regardless of access.**
+`EnclosingTypeAccess.notVisibleToTests` gates *function candidacy*, not type-shape
+indexing — so a `private` type is in the index like any other, and "absent ⇒ private" is
+false on the exact case it was written for. The premise came from reasoning about what the
+index is *for* rather than looking at what is *in* it.
+
+**Reverted rather than kept**, because the arm is not merely inert: absence from a 283-type
+index means a genuinely unknown name — an external type, a typo, a real unresolved symbol —
+and those would start reporting as accessibility declines. A signal that cannot fire on its
+target and can fire on others is worse than none.
+
+**What would work is carrying the access level** on the shape rather than inferring it —
+`IndexedTypeShape` has no such field and `SemanticIndexEntry+Codable` has explicit coding
+keys, so it is a schema addition plus decode-tolerance for existing indexes. That is real
+work on persisted state to correct a label on a row whose *verdict* is already right, so it
+is **recorded as declined-for-now** rather than queued: the two open generator items each
+add executing laws, and this adds none.
+(falsifier: `IndexedTypeShape.accessLevel`)
+
+**One thing the same query corrected in passing.** §9.2 describes `Visitor` as ambiguous
+across seven declaration sites. The index holds **both** `ViewModelProtocolScanner.Visitor`
+*and* a bare `Visitor` key, so the candidates are not uniformly qualified. The verdict is
+unchanged — still ambiguous, still correctly declined — but anyone building
+`ambiguousNestedCarrierResolution` should check that mechanism rather than inherit the
+seven-qualified-siblings picture from §9.2.
+
+**Method note.** This is the `domain-transfer-signal` practice landing on a classifier
+instead of a veto: the rule was scored against the case it targets *and* the cases it must
+not touch, and it failed on the first. The whole cost was one build and one survey because
+the prediction was written down first — `build-failed` 2 → 1 with Proven held at 84 — so
+the null result was legible immediately rather than needing interpretation.
