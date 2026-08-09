@@ -94,11 +94,40 @@ extension VerifierWorkdir {
     /// naming it itself) reads as `false` here — correctly, since a function
     /// whose *signature* names a syntax node needs the direct dependency to
     /// compile at all.
-    static func packageDependsOnSwiftSyntax(at packagePath: URL) -> Bool {
-        guard let manifest = try? String(
-            contentsOf: packagePath.appendingPathComponent("Package.swift"), encoding: .utf8
-        ) else {
+    /// - Parameter diagnostic: reports a manifest that EXISTS but cannot be read. Defaults
+    ///   to a no-op, matching `SeedRestrictionResolver.resolve` and `KitEvidenceStore.load`.
+    ///
+    /// **An absent manifest and an unreadable one answer the same `false` for different
+    /// reasons, and only one is benign.** No manifest means an Xcode project or a `--sources`
+    /// run — a corpus that genuinely does not declare swift-syntax, and `false` is right. A
+    /// manifest that exists and cannot be read means the answer is *unknown*, and `false`
+    /// makes the stub omit `SwiftSyntax`, `SwiftParser` and `PropertyLawSyntax`.
+    ///
+    /// The failure then surfaces as `cannot find type 'DeclSyntax' in scope` at build time,
+    /// which the survey files as `build-failed` — an instrument-failure bucket — or, worse,
+    /// as `unsupported-carrier`, which reads as *no generator exists for this type* and
+    /// points a reader at the kit. That is the exact misattribution
+    /// `roadtest-self-dogfood-2026-08-08.md` §9.3 spent a day unpicking from the other end.
+    static func packageDependsOnSwiftSyntax(
+        at packagePath: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> Bool {
+        let manifestURL = packagePath.appendingPathComponent("Package.swift")
+        guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+            // No manifest at all — an Xcode project or a `--sources` run. Silent, because
+            // this is a normal shape and `false` is the correct answer for it.
             return false
         }
-        return manifest.contains("swift-syntax")
+        do {
+            return try String(contentsOf: manifestURL, encoding: .utf8).contains("swift-syntax")
+        } catch {
+            diagnostic(
+                "warning: \(manifestURL.path) exists but could not be read — \(error). "
+                    + "Assuming the corpus does NOT depend on swift-syntax, so the verifier "
+                    + "stub will omit SwiftSyntax/SwiftParser/PropertyLawSyntax. If it does "
+                    + "depend on them, entries will fail to build and report as though no "
+                    + "generator exists for their carrier."
+            )
+            return false
+        }
     }}
