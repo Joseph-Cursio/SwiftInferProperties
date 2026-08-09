@@ -1199,3 +1199,83 @@ metamorphic strengthening came from. A row reporting *no generator for the carri
 at the wrong repo entirely. Ten rows now name their real blocker. But the honest headline
 for three changes is **+2 executing laws**, and anyone reading a bucket count as progress
 should read this table first.
+
+## §9.7 The tool already knew: `subjectNotVisibleToTests` (2026-08-09)
+
+§9.2 filed `NonDeterministicAPIs` as an accessibility decline misfiled as `build-failed`
+and called relabelling it the cheapest remaining item. §9.5 then measured a relabel and
+**reverted it** — inferring privateness from absence in the index is false, because
+`TypeShapeBuilder` indexes private declarations like any other.
+
+Both were looking in the wrong place. **The verdict already existed, one stage earlier.**
+
+`accessRestriction` gets this right at scan time: `private enum NonDeterministicAPIs`
+pushes `.notVisibleToTests`, `matches(_:)` is classified `.enclosingTypeNotVisibleToTests`,
+and `withAccessRestrictionCaveats` writes it onto the suggestion in as many words —
+
+> *"NO TEST CAN RUN THIS LAW AS WRITTEN"*
+
+— as **prose**. `StructuralBlocker` keys on `Signal.Kind`, so nothing downstream could act
+on it, and `verify` built the stub anyway and filed *cannot find 'X' in scope* as
+`build-failed`: an instrument-failure bucket for a fact known before the build started.
+
+`Signal.Kind.subjectNotVisibleToTests` says it as a signal. No schema change, no new
+persisted field — the channel (`score.signals` → `StructuralBlocker.reason` →
+`SemanticIndexEntry.structuralBlocker` → `structurallyBlockedRecord`) already ran end to
+end and was carrying one kind.
+
+**Weight 0, deliberately.** §2's remedy is to LIFT the law to the nearest reachable caller,
+not widen the helper's access; demoting the row would suppress the advice it exists to give.
+
+**Two of the four restrictions only.** `.internalOrSPI` is genuinely reached by `@testable`,
+and blocking it would silently stop verifying laws that pass today. `.nestedLocal` is also
+unreachable but is left out until measured. The asymmetry is tested in both directions.
+
+### Measured (arm F)
+
+| bucket | arm E | arm F |
+|---|---|---|
+| Proven | 84 | **84** |
+| Disproven | 1 | 1 |
+| Unverifiable | 59 | 61 |
+| Inconclusive | 9 | **7** |
+| `not-a-candidate` | 0 | **46** |
+| `internal-api-not-accessible` | 32 | **0** |
+| `unsupported-carrier` | 13 | **6** |
+| `build-failed` | 2 | **0** |
+
+**Proven unchanged is the safety property, not a null result.** A private subject can never
+have been Proven — `@testable` cannot reach it — so any movement in Proven would mean a
+reachable row had been blocked. It was checked row-by-row, not inferred: no Proven row from
+arm E is absent in arm F.
+
+**46 rows — 30% of the corpus — now decline on the tool's own analysis, before a build**,
+rather than by pattern-matching compiler output after one.
+
+### §9.7.1 Three earlier findings are corrected, all in the same direction
+
+**(a) `build-failed` is ZERO, including `Visitor`.** §9.2 called it an ambiguous nested
+carrier correctly declined. That was true and **not the binding constraint**: `Visitor` is
+private, so it could never have run whatever the qualifier decided. A diagnosis can be
+correct about a mechanism and wrong about which mechanism is load-bearing.
+
+**(b) 7 of 13 `unsupported-carrier` rows were accessibility-blocked all along** —
+`BodySignalVisitor` ×4, `Visitor`, `Ranked<Record>`, `String.Index`. They were reported as
+generator gaps where no generator would have helped.
+
+**(c) §9.6.1's "five remaining value types" is wrong; there are THREE** — `Effect`,
+`FunctionSummary`, `SamplingSeed`. Of the other three rows, `FunctionScannerVisitor` ×2 is a
+traversal (correct silence) and `S` is a generic parameter (unsupportable by construction).
+
+This **strengthens** §9.6.1 rather than undermining it. The generator chase was even less
+load-bearing than that table showed, because part of what it was chasing was never a
+generator problem. The corpus has now said the same thing four times: **accessibility is the
+binding constraint, and every measurement that looked like carrier reach was partly this.**
+
+### §9.7.2 Method — the previous attempt was the reason this one worked
+
+§9.5 built the wrong fix and reverted it, and that was not wasted. It established that the
+index cannot answer *is this private*, which is what sent the search one stage earlier to
+where the answer already was. The generalisable form: **when a downstream stage cannot tell
+two cases apart, check whether an upstream stage already did** — the tool had been printing
+the right sentence for weeks and only prose carried it.

@@ -67,6 +67,19 @@ extension SwiftInferCommand.Discover {
             }
             guard let restriction = restrictions.first else { return suggestion }
             var updated = suggestion
+            // The caveat below has always SAID this law cannot run. Say it as a signal too, so
+            // `StructuralBlocker` can key on it and `verify` stops filing a known-unrunnable
+            // entry as `build-failed`. Weight 0 — the row's score and tier are unchanged, because
+            // §2's remedy is to LIFT the law, and demoting it would suppress that advice.
+            if Self.blocksEveryTest(restriction) {
+                updated.score = Score(advisorySignals: suggestion.score.signals + [
+                    Signal(
+                        kind: .subjectNotVisibleToTests,
+                        weight: 0,
+                        detail: "no test can name the subject: \(restriction.remedy)"
+                    )
+                ])
+            }
             updated.explainability = ExplainabilityBlock(
                 whySuggested: suggestion.explainability.whySuggested,
                 whyMightBeWrong: [
@@ -76,6 +89,20 @@ extension SwiftInferCommand.Discover {
                 ] + suggestion.explainability.whyMightBeWrong
             )
             return updated
+        }
+    }
+
+    /// Whether the restriction puts the subject beyond EVERY test, not merely beyond an
+    /// ordinary import.
+    ///
+    /// `.internalOrSPI` is deliberately excluded: `@testable` promotes `internal`, so those rows
+    /// verify today and blocking them would suppress working laws. `.nestedLocal` is also
+    /// unreachable in principle but is left out until measured, on the same conservative footing —
+    /// the cost of a wrong inclusion is a row that silently stops being verified.
+    static func blocksEveryTest(_ restriction: AccessRestriction) -> Bool {
+        switch restriction {
+        case .notVisibleToTests, .enclosingTypeNotVisibleToTests: true
+        case .internalOrSPI, .nestedLocal: false
         }
     }
 
