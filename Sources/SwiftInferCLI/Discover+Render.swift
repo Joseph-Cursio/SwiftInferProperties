@@ -104,7 +104,12 @@ extension SwiftInferCommand.Discover {
     ) -> DiscoverEvidenceInputs {
         DiscoverEvidenceInputs(
             verifyByIdentity: loadVerifyEvidenceMap(directory: directory, diagnostics: diagnostics),
-            kit: KitEvidenceStore.load(startingFrom: directory)
+            // The sibling call already threads diagnostics; this one did not, so an
+            // unreadable kit-evidence log reached the reader as "no evidence".
+            kit: KitEvidenceStore.load(
+                startingFrom: directory,
+                diagnostic: diagnostics.writeDiagnostic
+            )
         )
     }
 

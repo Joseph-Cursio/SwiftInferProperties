@@ -32,23 +32,58 @@ public enum KitEvidenceStore {
     ///   found nothing, and silently proceeded as though the kit had never run — which is
     ///   indistinguishable from the honest "no evidence" case and would have made this whole
     ///   feature a no-op wherever `--sources` is used.
+    /// - Parameter diagnostic: reports a log that EXISTS but cannot be read. Defaults to a
+    ///   no-op so existing callers are unchanged, matching `SeedRestrictionResolver.resolve`.
     public static func load(
         startingFrom directory: URL,
-        explicitPath: String? = nil
+        explicitPath: String? = nil,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
     ) -> KitEvidenceLog {
         if let explicitPath {
-            return decode(at: URL(fileURLWithPath: explicitPath))
+            return decode(at: URL(fileURLWithPath: explicitPath), diagnostic: diagnostic)
         }
         let root = packageRoot(startingFrom: directory) ?? directory
-        return decode(at: root.appendingPathComponent(conventionalRelativePath))
+        return decode(
+            at: root.appendingPathComponent(conventionalRelativePath),
+            diagnostic: diagnostic
+        )
     }
 
-    private static func decode(at url: URL) -> KitEvidenceLog {
-        guard let data = try? Data(contentsOf: url),
-              let log = try? JSONDecoder().decode(KitEvidenceLog.self, from: data) else {
+    /// **An absent log and an unreadable one are different facts, and only one is normal.**
+    ///
+    /// Absent is the common case and not an error: most projects never record kit evidence.
+    /// Unreadable — the file is there and will not parse — means evidence exists and cannot
+    /// be counted, which is the case `ProtocolCoverageAudit` cannot survive being told wrong.
+    /// Its three states are `verified` / `assumed` / `contradicted`, and its own doc says
+    /// `wasExercised` cannot separate the last two because **"the log's EMPTINESS is what
+    /// tells them apart"**. A corrupt log therefore reads as `assumed` — *normal, one
+    /// aggregate line* — when the truth may be `contradicted`: the project demonstrably uses
+    /// the kit and demonstrably did not run it here, so those laws are checked by nothing.
+    ///
+    /// The bug this closes is the one the `load` doc above already describes for a different
+    /// cause. That instance was fixed by walking up to the package root; this one was left
+    /// swallowing, and it fails in exactly the direction that doc warns about.
+    private static func decode(
+        at url: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> KitEvidenceLog {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            // Genuinely absent. The normal state, and deliberately silent — saying
+            // something here would put a line on every run of every project that has
+            // never recorded evidence.
             return KitEvidenceLog()
         }
-        return log
+        do {
+            return try JSONDecoder().decode(KitEvidenceLog.self, from: Data(contentsOf: url))
+        } catch {
+            diagnostic(
+                "warning: kit evidence exists at \(url.path) but could not be read — "
+                    + "\(error). It is being treated as NO evidence, which reads as "
+                    + "\"the kit was never run here\" when it may mean the opposite. "
+                    + "Coverage claims derived from it are unreliable until this is fixed."
+            )
+            return KitEvidenceLog()
+        }
     }
 
     /// Nearest ancestor holding a `Package.swift`, or the first holding a `.swiftinfer/` —
