@@ -32,7 +32,14 @@ extension SwiftInferCommand.Verify {
         let indexPath = IndexStore.defaultPath(for: packageRoot)
         let exists = FileManager.default.fileExists(atPath: indexPath.path)
         let stale = exists
-            && VerifyHarness.isStale(indexPath: indexPath, packageRoot: packageRoot)
+            && VerifyHarness.isStale(
+                indexPath: indexPath,
+                packageRoot: packageRoot,
+                // A staleness probe that cannot read the filesystem answers "fresh",
+                // which is the conservative verdict but silently commits the run to
+                // whatever the index already held.
+                diagnostic: diagnostics.writeDiagnostic
+            )
         guard !exists || stale else { return }
         let sources = packageRoot.appendingPathComponent("Sources")
         guard FileManager.default.fileExists(atPath: sources.path) else { return }
