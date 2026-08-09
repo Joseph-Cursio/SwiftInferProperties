@@ -47,7 +47,17 @@ public enum StructuralBlocker {
     /// conclusion — *"property cannot type-check across distinct containing
     /// types"* — so this is only carrying a verdict that already existed as far as
     /// the thing that needed it.
-    static let blockingKinds: Set<Signal.Kind> = [.crossTypeRoundTripPair]
+    /// `subjectNotVisibleToTests` joined on 2026-08-09 and meets the bar in the strictest
+    /// way available: the law is not merely unlikely to type-check, the test target cannot
+    /// NAME the symbol. `discover` already said so in prose — *"NO TEST CAN RUN THIS LAW AS
+    /// WRITTEN"* — and `verify` built the stub anyway and filed the result as `build-failed`,
+    /// an instrument-failure bucket for a fact known before the build started (§9.2 of
+    /// `docs/measurements/roadtest-self-dogfood-2026-08-08.md`).
+    ///
+    /// It changes the recorded REASON, not the outcome: these entries decline either way.
+    /// That is the same contribution `crossTypeRoundTripPair` makes and the same one this
+    /// type's doc calls the whole value — an honest denominator.
+    static let blockingKinds: Set<Signal.Kind> = [.crossTypeRoundTripPair, .subjectNotVisibleToTests]
 
     /// The reason to record for an entry, or `nil` when nothing structural blocks it.
     ///

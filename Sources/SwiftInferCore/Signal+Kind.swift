@@ -109,33 +109,30 @@ extension Signal {
         /// is `Equatable`'s and the kit already runs its law.
         case equivalenceRelationSignature
 
-        /// The author *declared* idempotence, in SwiftIdempotency's vocabulary —
-        /// `@Idempotent`, or the dependency-free `/// @lint.effect idempotent`.
-        ///
-        /// **+15, and the weight is the whole finding.** It first shipped at +40,
-        /// on the strength of `SwiftEffectInference.Effect`'s doc for that tier:
-        /// *"`f(f(x))` is semantically equivalent to `f(x)`"* — this template's law
-        /// verbatim. Dogfooding on 2026-08-04 sent me to the **owning** package,
-        /// where `@Idempotent` is defined as *"re-invocation with the same
-        /// arguments produces the same observable result and the same external
-        /// effects"*. That is **re-invocation stability**, not composition: `f(x)`
-        /// twice, never `f` fed its own output. SEI's paraphrase asserts a
-        /// strictly stronger property than the macro it paraphrases promises, and
-        /// +40 was keyed to the paraphrase.
-        ///
-        /// The gap is not academic. `quoted(_:)` in this repo is pure and
-        /// deterministic, so it satisfies the owner's definition and could be
-        /// truthfully annotated — and `verify` refutes its composition law at
-        /// **trial 0**. At +40 (35 → 75) that false law would have surfaced at
-        /// `Strong` by default; at +15 (35 → 50) it reaches `Likely`, which is
-        /// where an unverified claim of the adjacent property belongs. Parity with
-        /// `docstringCorroboration` is the right anchor: an annotation is more
-        /// *deliberate* than prose but says less than it appears to.
-        ///
-        /// **Corroborate-only, by construction** — the template's `appliesTo` gate
-        /// is the type-symmetry shape, so this can only raise a candidate the
-        /// shape already matched, never surface a law from an annotation alone.
-        case declaredIdempotentEffect
+    /// Rationale relocated to `docs/design/signal-kind-rationales.md` on 2026-08-09,
+    /// when adding `subjectNotVisibleToTests` took this file past its 400-line cap.
+    /// Relocate, do not trim — every comment here records a measurement.
+        /// The subject is `private`/`fileprivate`, or sits inside a type that is — so **no test
+    /// can name it**, whatever generator exists for its carrier.
+    ///
+    /// Score-neutral by construction (`weight: 0`). This is not a judgement about whether the
+    /// law is true; §2 of `docs/measurements/roadtest-self-dogfood-2026-08-08.md` argues the
+    /// law is usually right and the remedy is to LIFT it to the nearest reachable caller, not
+    /// to widen the helper's access. Demoting the row would suppress the advice.
+    ///
+    /// **It exists so `StructuralBlocker` can see what the caveat already says.** `discover`
+    /// has emitted *"NO TEST CAN RUN THIS LAW AS WRITTEN"* on these rows since the caveat
+    /// post-processing landed — as PROSE, which nothing downstream can key on. `verify` then
+    /// built the stub anyway and reported `cannot find 'X' in scope`, filed as `build-failed`:
+    /// an instrument-failure bucket for a fact the tool knew before it started.
+    /// Measured on `SwiftInferCore` (§9.2): `NonDeterministicAPIs.matches(_:)`.
+    ///
+    /// **Two of the four restrictions only.** `.internalOrSPI` is genuinely reached by
+    /// `@testable`, and blocking it would suppress rows that verify today. `.nestedLocal` is
+    /// also unreachable but is left out until measured, on the same conservative footing.
+    case subjectNotVisibleToTests
+
+    case declaredIdempotentEffect
 
         // Negative (non-veto)
         case sideEffectPenalty
