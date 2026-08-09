@@ -67,6 +67,51 @@ extension StrategistDispatchEmitter {
         curatedSyntaxRecipes.keys.sorted()
     }
 
+    /// Fallback for a syntax node the curated table does not name: delegate to
+    /// the kit's `Gen<T>.syntaxNode()`, which is written **generically over
+    /// `SyntaxProtocol`** rather than per type.
+    ///
+    /// ## Why a fallback rather than sixteen more curated entries
+    ///
+    /// The curated table is 16 carriers and the survey blocks on five it does
+    /// not name (`DeclModifierListSyntax`, `CodeBlockItemSyntax`,
+    /// `StringLiteralExprSyntax`, `InheritanceClauseSyntax`,
+    /// `DictionaryExprSyntax`). Hand-writing a navigation per kind is how that
+    /// table got to 16 and it does not converge — swift-syntax has hundreds of
+    /// node kinds. The kit's generator parses a snippet pool and pulls nodes of
+    /// the requested kind out of it, so it answers for a kind nobody enumerated.
+    ///
+    /// **Curated wins on purpose.** Consulted only AFTER `curatedSyntaxRecipe`,
+    /// because a curated recipe navigates to a *specific shape* the law is about
+    /// (`funcCorpus` → the `FunctionDeclSyntax` of a function that throws),
+    /// while the generic one draws whatever the pool happens to contain. Losing
+    /// that targeting would weaken laws that currently bite.
+    ///
+    /// ## The gate is a naming convention, and that is load-bearing
+    ///
+    /// Every swift-syntax node type ends in `Syntax`. This is the one place a
+    /// name-suffix test is sound rather than a heuristic: it is the library's
+    /// own generated-code convention, not an inference about intent. The cost of
+    /// a false positive is bounded and loud — a user type named `FooSyntax` gets
+    /// a recipe that fails to compile against `SyntaxProtocol`, which reports as
+    /// `build-failed` on that one entry rather than silently changing a verdict.
+    ///
+    /// A trailing `?` is unwrapped because `InheritanceClauseSyntax?` is a real
+    /// surveyed carrier; collections are deliberately NOT unwrapped here, since
+    /// `[CodeBlockItemSyntax]` and `ArraySlice<CodeBlockItemSyntax>` reach the
+    /// kit through `GeneratorPlan.array` / `.arraySlice` over the element, which
+    /// is the composite path's job rather than this one's.
+    static func kitSyntaxNodeRecipe(carrier: String) -> GeneratorRecipe? {
+        let bare = carrier.hasSuffix("?") ? String(carrier.dropLast()) : carrier
+        guard bare.hasSuffix("Syntax"), !bare.contains("<"), !bare.contains("[") else { return nil }
+        guard curatedSyntaxRecipes[bare] == nil else { return nil }
+        return GeneratorRecipe(
+            expression: "Gen<\(bare)>.syntaxNode()",
+            carrierTypeName: bare,
+            imports: syntaxImports + ["PropertyLawSyntax"]
+        )
+    }
+
     /// `SwiftSyntaxBuilder` is deliberately absent: the string-literal node
     /// initialisers it provides are the "constructed, not parsed" path this file
     /// rejects. `SwiftParser` is what turns source into trees.
