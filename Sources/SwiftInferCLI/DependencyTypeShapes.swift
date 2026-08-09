@@ -47,20 +47,48 @@ enum DependencyTypeShapes {
         var collisions: [String] = []
         /// Dependency roots actually scanned, for reporting.
         var roots: [String] = []
+        /// Whether `.build/checkouts` existed at all. **The distinction this type exists to
+        /// preserve:** no checkouts means *the package was never resolved*, an empty scan
+        /// means *it was resolved and had nothing* — and a caller that cannot tell them apart
+        /// reports a confident zero. Measured: a survey with `--scan-dependencies` returned
+        /// byte-identical output to one without, because the run happened in a fresh
+        /// `git worktree` that has no `.build`. Nothing said so.
+        var checkoutsDirectoryFound = false
+        /// Dependencies whose sources could not be read, with the reason. Was a bare
+        /// `try? … else { continue }`, so a parse failure in one dependency was
+        /// indistinguishable from that dependency having no types.
+        var unreadable: [(dependency: String, reason: String)] = []
     }
 
     /// Scan the resolved dependency checkouts under `packageRoot`.
     ///
     /// Reads `.build/checkouts/*/Sources`, which is where SwiftPM puts a resolved
-    /// dependency's source. Silent and empty when there is no `.build` — a package that has
-    /// never been resolved has no dependency source to read, and that is not an error.
+    /// dependency's source.
+    ///
+    /// **Returns what happened, and never merely nothing.** An empty result used to be
+    /// unreadable in three different ways — no `.build`, an unreadable checkout, a checkout
+    /// with no types — and the caller saw one undifferentiated empty map. `Scanned` now
+    /// carries `checkoutsDirectoryFound`, `roots` and `unreadable` so `merging` can say which
+    /// happened. This function stays free of a diagnostics channel deliberately: reporting is
+    /// the caller's job, and a pure return value is what a test can assert on.
     static func scan(packageRoot: URL, localTypeNames: Set<String>) -> Scanned {
         var result = Scanned()
         var seenIn: [String: String] = [:]
 
-        for root in checkoutSourceRoots(packageRoot: packageRoot) {
+        let located = checkoutSourceRoots(packageRoot: packageRoot)
+        result.checkoutsDirectoryFound = located.directoryFound
+        for root in located.roots {
             let dependency = root.deletingLastPathComponent().lastPathComponent
-            guard let corpus = try? FunctionScanner.scanCorpus(directory: root) else { continue }
+            let corpus: ScannedCorpus
+            do {
+                corpus = try FunctionScanner.scanCorpus(directory: root)
+            } catch {
+                // Was `try? … else { continue }`. A dependency that fails to parse is a
+                // different fact from one that declares no types, and the survey has no way
+                // to notice the difference on its own.
+                result.unreadable.append((dependency: dependency, reason: "\(error)"))
+                continue
+            }
             result.roots.append(dependency)
 
             for shape in TypeShapeBuilder.shapes(from: corpus.typeDecls) {
@@ -101,11 +129,49 @@ enum DependencyTypeShapes {
         let scanned = scan(packageRoot: packageRoot, localTypeNames: localTypeNames)
         var shapes = shapes
         var sourceFiles = sourceFiles
+        var added = 0
         for (name, shape) in scanned.shapes where shapes[name] == nil {
             shapes[name] = IndexedTypeShape(from: shape)
+            added += 1
         }
         for (name, file) in scanned.sourceFiles where sourceFiles[name] == nil {
             sourceFiles[name] = file
+        }
+        // **Say what happened.** Every branch below was previously silence, and the cost is
+        // measured: a `--scan-dependencies` survey produced output byte-identical to one
+        // without the flag, and the only reason that was caught is that an unrelated control
+        // happened to print the shape count. `Confident zero` in the glossary is this exact
+        // failure — an empty result a reader cannot distinguish from a clean one.
+        //
+        // The caller asked for dependency scanning, so a zero here is always worth a line.
+        // (`merging` is only reached when the flag is on; with it off nothing is said, which
+        // is correct — then empty genuinely is a non-event.)
+        if !scanned.checkoutsDirectoryFound {
+            diagnostics.writeDiagnostic(
+                "warning: dependency scanning was requested, but there is no "
+                    + "`.build/checkouts` under \(packageRoot.path) — SwiftPM puts resolved "
+                    + "dependency sources there, so nothing could be read. Run `swift build` "
+                    + "first. 0 dependency shape(s) recorded."
+            )
+        } else if scanned.roots.isEmpty {
+            diagnostics.writeDiagnostic(
+                "warning: `.build/checkouts` exists under \(packageRoot.path) but no checkout "
+                    + "has a readable `Sources` directory — 0 dependency shape(s) recorded."
+            )
+        } else {
+            diagnostics.writeDiagnostic(
+                "scanned \(scanned.roots.count) dependency checkout(s) "
+                    + "(\(scanned.roots.prefix(4).joined(separator: ", "))"
+                    + (scanned.roots.count > 4 ? ", …" : "") + "), "
+                    + "recorded \(added) shape(s)."
+            )
+        }
+        for failure in scanned.unreadable {
+            diagnostics.writeDiagnostic(
+                "warning: could not read dependency `\(failure.dependency)` — "
+                    + "\(failure.reason). Its types have no recorded shape, so a law whose "
+                    + "carrier it declares will decline as `unsupported-carrier`."
+            )
         }
         if !scanned.collisions.isEmpty {
             diagnostics.writeDiagnostic(
@@ -120,17 +186,19 @@ enum DependencyTypeShapes {
     }
 
     /// `<packageRoot>/.build/checkouts/*/Sources`, for every checkout that has one.
-    private static func checkoutSourceRoots(packageRoot: URL) -> [URL] {
+    private static func checkoutSourceRoots(
+        packageRoot: URL
+    ) -> (directoryFound: Bool, roots: [URL]) {
         let checkouts = packageRoot
             .appendingPathComponent(".build")
             .appendingPathComponent("checkouts")
         guard let entries = try? FileManager.default.contentsOfDirectory(
             at: checkouts, includingPropertiesForKeys: [.isDirectoryKey]
-        ) else { return [] }
-        return entries
+        ) else { return (directoryFound: false, roots: []) }
+        return (directoryFound: true, roots: entries
             .map { $0.appendingPathComponent("Sources") }
             .filter { isDirectory($0) }
-            .sorted { $0.path < $1.path }
+            .sorted { $0.path < $1.path })
     }
 
     private static func isDirectory(_ url: URL) -> Bool {

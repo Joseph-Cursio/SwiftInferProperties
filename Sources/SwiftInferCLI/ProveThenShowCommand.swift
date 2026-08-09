@@ -82,6 +82,14 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
+        @Flag(
+            name: .long,
+            help: """
+            Record type shapes for types declared in a DEPENDENCY, not just this package.             Off by default for the reason `IndexCommand` gives: it took this repo's index             from 283 shapes to 2,313 and 3.4 MB, and the index keys on the BARE type name,             so a wider population is where a name collision starts to matter. Turn it on             when a survey declines `unsupported-carrier` for a type the package does not             declare — measured on `Effect` (SwiftEffectInference), §9.10.
+            """
+        )
+        public var scanDependencies: Bool = false
+
         public func run() async throws {
             let workingDirectory = URL(fileURLWithPath: directory ?? ".")
 
@@ -145,7 +153,13 @@ extension SwiftInferCommand {
                     packsOverride: nil,
                     dryRun: false,
                     targetName: target,
-                    workingDirectory: workingDirectory
+                    workingDirectory: workingDirectory,
+                    // Without this the dependency shape is never recorded, and a carrier
+                    // the package does not declare declines `unsupported-carrier` — which
+                    // reads as "no generator exists" when the truth is "no shape was
+                    // scanned". `DependencyTypeShapes` exists for exactly this and was
+                    // reachable only from `index` and `verify`, never from here.
+                    scanDependencies: scanDependencies
                 ),
                 diagnostics: StderrDiagnosticOutput()
             )
