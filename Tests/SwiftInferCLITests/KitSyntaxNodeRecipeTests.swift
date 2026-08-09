@@ -1,5 +1,5 @@
-import Testing
 @testable import SwiftInferCLI
+import Testing
 
 /// The kit-backed fallback for syntax node carriers the curated table does not name.
 ///
