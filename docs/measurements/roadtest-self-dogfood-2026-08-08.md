@@ -720,6 +720,15 @@ the *name* of the type, and only the survey settled it.
 
 ### §8.3.3 The bottleneck moved from the kit to us
 
+> **RESOLVED 2026-08-09 — see §9.** Both halves shipped and the prediction below held:
+> the kit work merged as SwiftPropertyLaws `b59cdb4` / **`v3.28.0`**, this package's two
+> pins moved together (`9919bed`), and `e5731a9` (PR #206) qualifies the generator
+> carrier. `ProtocolCoverageAudit.homomorphism lawTotal(for:)` — the pick this section
+> is about — now **executes and holds**. Its three-configuration trajectory is the
+> record: `unsupported-carrier: Finding` → `build-failed: cannot find type 'Finding'`
+> → **Proven**. The sentence below that "this package still resolves `v3.27.1`" is
+> therefore superseded, and so is the *"nothing was shipped"* note.
+
 The four picks did not become Proven. They became **Inconclusive**, and `build-failed` went
 from 2 to 4:
 
@@ -737,7 +746,7 @@ qualification — and this run doubles its population from 2 picks to 4.
 run the honest reading was "the kit cannot generate our carriers". After it, the kit can, and
 **our own emitter is what stops the law from executing**. That reprices
 `nestedCarrierImportResolution` from the cheapest open item to the one gating everything the
-kit unblocks next. (falsifier: `nestedCarrierImportResolution`)
+kit unblocks next. **Resolved 2026-08-09 — see §9.1**; the falsifier that stood here is retired, because the generator-carrier half it named is fixed and measured.
 
 **Nothing was shipped to get this.** Both pin edits were made in a throwaway worktree and
 discarded; this package still resolves `v3.27.1`. The measurement stands on a committed,
@@ -762,6 +771,20 @@ and an enum. It says so plainly rather than passing silently, which is the right
 
 ### §8.4 Inconclusive 8 — two findings, and the honest one is about the generator
 
+> **CORRECTED 2026-08-09 (§9.2): "two build failures, one emitter gap" was one label over
+> three different defects.** The re-run splits them, and only one was what this section
+> says. `Coverage` is a **residual bug in the `e5731a9` fix** — the stub qualifies the
+> *values* (`Gen.always(RefutedExpectation.Coverage.notApplicable)`) but not the *type
+> annotation* (`Generator<Coverage, …>`), because `Coverage` is a **parameter type**
+> rather than the generator carrier and flows through an emit path the fix never reached.
+> `Visitor` is the fix **correctly declining**: seven declaration sites, so it is
+> ambiguous and `VerifyCommand+NestedCarrier`'s never-guess rule refuses to pick one.
+> `NonDeterministicAPIs` is **not a qualification problem at all** — it is `private` at
+> file scope, and `@testable` promotes `internal`, not `private`, so it is misfiled here
+> when the survey already has an `internal-api-not-accessible` bucket that describes it
+> exactly. The falsifier below is therefore **narrowed, not retired**: it now names only
+> the ambiguous-name case.
+
 **Six are generator traps.** The verifier trapped (signal 5) before comparing, and the
 message is explicit that this is *"evidence about the generator's domain, not about the
 law"*. One flushed counterexample shows the mechanism outright:
@@ -784,7 +807,7 @@ build-failed: cannot find 'NonDeterministicAPIs' in scope
 The survey derives `@testable import <Module>` per entry, which reaches `internal` but not
 types that are nested or otherwise unreachable at file scope. Two picks are therefore lost to
 an emitter gap rather than to anything about their laws. **Open follow-up**, and the cheapest
-remaining item in this document. (falsifier: `nestedCarrierImportResolution`)
+remaining item in this document. **Narrowed 2026-08-09 (§9.2)** to the AMBIGUOUS-name case only — `Visitor` has seven declaration sites and no lookup can choose between them, so closing it needs module-aware resolution rather than a name lookup. (falsifier: `ambiguousNestedCarrierResolution`)
 
 ### §8.6 A Proven verdict that is FALSE — and the 81 were never tests
 
@@ -856,3 +879,150 @@ idempotent. The refutable companion law had to be added by hand.
 * **41% Unverifiable bounds the claim**, and the bound is honest rather than hidden: the
   report separates *not tested* from *passed*, which is the distinction the withdrawn 2026-07
   road test got wrong when a hardcoded Pass 2 made zero-trial runs read as `bothPass`.
+
+---
+
+## §9 Re-run at kit `v3.28.0` (2026-08-09)
+
+Same corpus (`SwiftInferCore`), same command, a release binary built from the branch that
+bumps the kit pin. **Two variables moved against §8.3.2 and that is stated rather than
+buried:** the kit version *and* `e5731a9`'s nested-carrier qualification, on a tree 25
+commits past §8's `ca2e73c`. This tests §8.3.3's prediction; it does not isolate a cause.
+
+**The configuration was verified, not assumed.** The survey workdir's `Package.resolved`
+names revision `b59cdb4` and its `Package.swift` declares `from: "3.28.0"` — so the stubs
+really did build against the new kit. That check exists because §8.3.2's method note warns
+that a pin which fails to move makes a null result read as a finding, and because the
+subject worktree was checked out before the pin commit and still declares `3.27.1`; `from:`
+ranges unify upward, which is an argument, and the resolved file is the evidence.
+
+| | §8 (kit 3.27.1) | §9 (kit 3.28.0) |
+|---|---|---|
+| Proven | 81 | **82** |
+| Disproven | 1 | 1 |
+| Unverifiable | 63 | **61** |
+| Inconclusive | 8 | **9** |
+| total picks | 153 | 153 |
+
+The single `Disproven` is unchanged — `BuildIdentity.versionString`, counterexample
+`XO8hGC` — independently reproducing §8.2's false-law finding on a different kit.
+
+### §9.1 The §8.3.3 prediction held, and the marquee row is Proven
+
+`ProtocolCoverageAudit  homomorphism  lawTotal(for:)` now **executes and holds**. Its
+trajectory across three configurations is the whole result:
+
+```
+? lawTotal(for:)  (unsupported-carrier: Finding)                      ← 3.27.1        (§8.3)
+· lawTotal(for:)  (build-failed: cannot find type 'Finding' in scope) ← kit 0720714   (§8.3.2)
+✓ lawTotal(for:)                                                      ← 3.28.0 + e5731a9
+```
+
+The stub now writes `Generator<ProtocolCoverageAudit.Finding, …>` qualified. **Both halves
+were required**: the kit had to derive a plan for a nested type, and our emitter had to
+write its qualified path. Neither alone moves the row, which is exactly what §8.3.3 said
+and is now measured rather than predicted.
+
+This is also the row §8.3.3 called out as *"the tool proposes a law it cannot itself test"*
+— the law §0 landed as `LawTotalHomomorphismPropertyTests` only after hand-writing a
+`Finding` generator. The tool can now test it itself.
+
+### §9.2 Three build failures, three different causes
+
+§8.4 filed two build failures under one heading — *"the per-entry `@testable import` does
+not reach a nested carrier"*. The re-run has three, and only one of them is that:
+
+| row | cause | verdict |
+|---|---|---|
+| `RefutedExpectation.statesAFork(…)` — `cannot find type 'Coverage' in scope` | **residual bug in `e5731a9`** | fix it |
+| `Visitor.isStaticOrSelfMemberAccess(_:)` — `cannot find 'Visitor' in scope` | ambiguous: **7 declaration sites** | fix declining correctly |
+| `NonDeterministicAPIs.matches(_:)` — `cannot find 'NonDeterministicAPIs' in scope` | `private` at file scope | **not a qualification problem** |
+
+**`Coverage` is the actionable one, and it is small.** The emitted stub qualifies the
+*values* and not the *type annotation*:
+
+```swift
+let generator2: Generator<Coverage, some SendableSequenceType> =   // ← unqualified
+    Gen.oneOf(
+    Gen.always(RefutedExpectation.Coverage.notApplicable).eraseToAny(),   // ← qualified
+```
+
+`Finding` gets both because it is the **generator carrier**, which is what `e5731a9`
+fixed. `Coverage` is a **parameter type** of a four-argument predicate and reaches the
+stub through a different emit path. Same defect class, one site missed — and it was
+invisible until a carrier appeared in the parameter position rather than the carrier
+position.
+
+**`Visitor` is the fix working.** Seven declaration sites across `SwiftInferCore` and
+`SwiftInferTemplates`, so `VerifyCommand+NestedCarrier`'s never-guess rule declines.
+Closing it needs module-aware resolution, not a wider name lookup. The falsifier is
+narrowed to this case rather than retired.
+
+**`NonDeterministicAPIs` is misfiled.** It is `private enum` at file scope in
+`BodySignalVisitor.swift`, and `@testable` promotes `internal`, not `private`. The survey
+already has an `internal-api-not-accessible` bucket holding 27 rows that describes it
+exactly; reporting it as `build-failed` calls an accessibility decline a tooling error.
+The remedy is §2's, not a qualification fix: lift the law to a reachable caller.
+
+### §9.3 Can the unsupported carriers be supported?
+
+**20 rows decline `unsupported-carrier`** (not 18 — a first count used a character class
+that dropped carriers containing `[`, `?` or a space). They are four different questions,
+and the doc has twice filed them under one:
+
+| group | rows | verdict |
+|---|---|---|
+| syntax nodes + `ArraySlice<CodeBlockItemSyntax>` | 9 | **supportable today** |
+| our own visitors (`FunctionScannerVisitor`, `BodySignalVisitor`, `Visitor`) | 5 | correct silence — a traversal is not a value |
+| our own value types (`SamplingSeed`, `FunctionSummary`, `Effect`, `Ranked<Record>`, `String.Index`) | 5 | a real gap; `static func gen()` is the cheap route |
+| `S`, a generic parameter | 1 | unsupportable by construction |
+
+**The 9 declined for want of an import, not for want of a generator.** The kit's coverage
+is *generic* — `public extension Gen where Value: SyntaxProtocol { static func syntaxNode() }`
+— which is why grepping `PropertyLawSyntax` for those type names finds nothing and reads as
+absence. `ArraySlice<…>` is `GeneratorPlan.arraySlice` in `PropertyLawCore` and not
+syntax-specific at all.
+
+**Wired and measured, same afternoon (arm A = §9's run, arm B = the same binary with
+`PropertyLawSyntax` declared and `StrategistDispatchEmitter.kitSyntaxNodeRecipe` routing
+to `Gen<T>.syntaxNode()`):**
+
+| | arm A | arm B |
+|---|---|---|
+| Proven | 82 | **83** |
+| Unverifiable | 61 | **60** |
+| `unsupported-carrier` rows | 20 | **16** |
+
+**All 6 bare syntax-node rows moved. Only 1 became Proven.** That gap is the result:
+
+| arm A row | arm B |
+|---|---|
+| `ReducerDiscoveryVisitor  declaresReducerConformance` (`InheritanceClauseSyntax?`) | **✓ Proven** |
+| `Visitor  isStatic` (`DeclModifierListSyntax`) | `internal-api-not-accessible` |
+| `MemberBlockInspector  isStaticOrClass` (`DeclModifierListSyntax`) | `internal-api-not-accessible` |
+| `EqualityBodyClassifier  iteratesAZipOfBoth` (`StringLiteralExprSyntax`) | `internal-api-not-accessible` |
+| 2 rows (`CodeBlockItemSyntax`, `DictionaryExprSyntax`) | `unsupported-carrier: BodySignalVisitor` |
+
+**This is the standing rule measured again: a refuter that fires first hides every refuter
+behind it.** Five of the six picks were blocked by *two* independent things, and reading the
+code could not say so — the generator gap was simply the one that reported. Three turn out to
+have unreachable subjects (§2's case: lift the law, do not widen access) and two have a second
+unsupported carrier in the same signature, the enclosing visitor.
+
+**So the honest gain is `+1 executed law` and `5 truer diagnoses`, not "9 carriers
+supported".** The rows that did not become Proven are better off — *the subject is
+unreachable* is actionable where *no generator for the carrier* was a dead end pointing at
+the wrong repo — but a reader counting laws should count one.
+
+**The prediction was 7 of 9 and the answer is 6 of 9.** The miss is arithmetic, not
+conceptual: three rows are collection spellings (`[CodeBlockItemSyntax]` ×2 and
+`ArraySlice<CodeBlockItemSyntax>`), not two, and `kitSyntaxNodeRecipe` declines all of them
+by design — they reach the kit through `GeneratorPlan.array` / `.arraySlice` over the
+element. They did **not** move, so that path does not currently pick up the element recipe.
+Open, and cheaper to state than to guess at: the composite path never consults the syntax
+fallback for its element type. (falsifier: `compositeElementSyntaxRecipe`)
+
+**What was NOT touched, deliberately.** The 5 visitor rows stay unsupported — a traversal is
+not a value — and `S` stays unsupportable, being a generic parameter with no concrete type.
+The 5 our-own-value-type rows (`SamplingSeed`, `FunctionSummary`, `Effect`, `Ranked<Record>`,
+`String.Index`) are untouched by this change and remain the largest addressable group.
