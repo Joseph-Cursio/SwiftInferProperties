@@ -85,7 +85,12 @@ extension SwiftInferCommand {
         @Flag(
             name: .long,
             help: """
-            Record type shapes for types declared in a DEPENDENCY, not just this package.             Off by default for the reason `IndexCommand` gives: it took this repo's index             from 283 shapes to 2,313 and 3.4 MB, and the index keys on the BARE type name,             so a wider population is where a name collision starts to matter. Turn it on             when a survey declines `unsupported-carrier` for a type the package does not             declare — measured on `Effect` (SwiftEffectInference), §9.10.
+            Record type shapes for types declared in a DEPENDENCY, not just
+            this package. Off by default for the reason `IndexCommand` gives:
+            it took this repo's index from 283 shapes to 2,313 and 3.4 MB, and
+            the index keys on the BARE type name, so a wider population is where
+            a name collision starts to matter. Turn it on when a survey declines
+            `unsupported-carrier` for a type the package does not declare.
             """
         )
         public var scanDependencies: Bool = false

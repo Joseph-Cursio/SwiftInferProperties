@@ -15,6 +15,7 @@ struct DependencyScanReportingTests {
 
     private final class Recorder: DiagnosticOutput, @unchecked Sendable {
         var lines: [String] = []
+
         func writeDiagnostic(_ message: String) { lines.append(message) }
     }
 
