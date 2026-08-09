@@ -1020,7 +1020,7 @@ conceptual: three rows are collection spellings (`[CodeBlockItemSyntax]` ×2 and
 by design — they reach the kit through `GeneratorPlan.array` / `.arraySlice` over the
 element. They did **not** move, so that path does not currently pick up the element recipe.
 Open, and cheaper to state than to guess at: the composite path never consults the syntax
-fallback for its element type. (falsifier: `compositeElementSyntaxRecipe`)
+fallback for its element type. **FIXED — §9.6.**
 
 **What was NOT touched, deliberately.** The 5 visitor rows stay unsupported — a traversal is
 not a value — and `S` stays unsupportable, being a generic parameter with no concrete type.
@@ -1131,3 +1131,71 @@ instead of a veto: the rule was scored against the case it targets *and* the cas
 not touch, and it failed on the first. The whole cost was one build and one survey because
 the prediction was written down first — `build-failed` 2 → 1 with Proven held at 84 — so
 the null result was legible immediately rather than needing interpretation.
+
+
+## §9.6 Syntax nodes in leaf position (2026-08-09)
+
+§9.3 left exactly three rows declining — `[CodeBlockItemSyntax]` ×2 and
+`ArraySlice<CodeBlockItemSyntax>` — and named the cause. It was right.
+
+`resolveRecipe` consults the syntax tables for the **top-level** carrier, so
+`CodeBlockItemSyntax` derives. `[CodeBlockItemSyntax]` takes the composite branch instead,
+where `DerivationStrategist.composedGenerator` recurses through `Array`/`Set`/`Optional`
+and hands each **leaf** to `resolve` — a resolver that knows only the indexed shape
+universe. A swift-syntax node has no indexed shape, so the leaf answered nil and the whole
+composition collapsed, for an element type the emitter generates perfectly well one call
+earlier. `syntaxAwareResolve` wraps the resolver: base first, then curated, then generic.
+
+**The base resolver is never overridden**, which is the arm that matters — a type the
+module declares keeps its real shape even if its name ends in `Syntax`. And the leaf
+carries its own imports on the `ComposedGenerator`, which the composite branch already
+unions in, so the collection case never has to know its element wants `PropertyLawSyntax`.
+
+**Measured (arm E), and the prediction was exact:**
+
+| | arm D | arm E |
+|---|---|---|
+| Proven | 84 | 84 |
+| Unverifiable | 60 | **59** |
+| Inconclusive | 8 | **9** |
+| `unsupported-carrier` rows | 16 | **13** |
+
+| row | before | after |
+|---|---|---|
+| `DedupGateClassifier.effectDominatedByGate` | `unsupported-carrier` | `internal-api-not-accessible` |
+| `EqualityBodyClassifier.drawsFromTwoIterators` | `unsupported-carrier` | `internal-api-not-accessible` |
+| `DedupGateClassifier.hasUngatedAccumulator` | `unsupported-carrier` | **`parse-error`** |
+
+The third row is the proof the gap closed: the generator ran, produced a
+`[CodeBlockItemSyntax]`, and the subject trapped — a real trial, reported as evidence about
+the generator's domain rather than about the law.
+
+### §9.6.1 Three fixes, three exact predictions, ZERO new executing laws
+
+This is the third consecutive generator gap closed on this corpus, and the pattern is now
+strong enough to state as a finding rather than a coincidence:
+
+| fix | rows moved | became Proven |
+|---|---|---|
+| §9.3 syntax carriers | 6 of 6 | **1** |
+| §9.4 parameter qualification | 1 of 1 | **1** |
+| §9.6 syntax leaves | 3 of 3 | **0** |
+
+Ten rows moved; **two** laws execute that did not before. Every other row landed on a
+second, independent blocker — overwhelmingly `internal-api-not-accessible`, whose bucket
+has grown from 27 to 32 across these three changes while Proven went 82 → 84.
+
+**The generator gap was never the binding constraint on this corpus; ACCESSIBILITY is.**
+That is §2's finding arriving from the opposite direction — §2 reasoned from source that
+58% of non-`predicate` CLI subjects are `private`, and the survey has now walked into the
+same wall three times from the generator side. The remaining generator work
+(`SamplingSeed`, `FunctionSummary`, `Effect`, `Ranked<Record>`, `String.Index`) should be
+expected to behave the same way: the rows will move and mostly not execute.
+
+**What this does NOT say is that the fixes were not worth making.** A row reporting
+*the subject is unreachable* is actionable — §2's remedy is to lift the law to the nearest
+reachable caller, which is exactly what `HashPrefixLookupPropertyTests` did and where the
+metamorphic strengthening came from. A row reporting *no generator for the carrier* points
+at the wrong repo entirely. Ten rows now name their real blocker. But the honest headline
+for three changes is **+2 executing laws**, and anyone reading a bucket count as progress
+should read this table first.

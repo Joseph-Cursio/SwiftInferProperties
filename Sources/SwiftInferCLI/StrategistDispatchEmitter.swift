@@ -51,7 +51,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         var recipe = try resolveRecipe(
             carrier: inputs.carrier,
             typeShape: inputs.typeShape,
-            resolve: resolver?.customTypeGenerator ?? { _ in nil }
+            resolve: syntaxAwareResolve(resolver?.customTypeGenerator ?? { _ in nil })
         )
         recipe = withRecursiveHelpers(recipe, resolver: resolver, carrier: inputs.carrier)
         let trials = inputs.trialBudget.count
