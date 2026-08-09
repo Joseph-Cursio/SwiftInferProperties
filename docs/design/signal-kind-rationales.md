@@ -220,3 +220,35 @@ Mixed carriers (struct with a class-typed or closure-typed stored property) emit
 no signal — conservative; the bug shapes in `docs/archive/valuesemantic-build-plan.md`
 §2.1 (broken CoW / closure-captured state) are bugs that look value-semantic
 structurally and would falsely score positive otherwise.
+
+
+## `declaredIdempotentEffect`
+
+*Relocated from `Signal+Kind.swift` on 2026-08-09, when adding `subjectNotVisibleToTests` took that file past its 400-line cap. Relocated rather than trimmed, per the rule this document exists to serve.*
+
+The author *declared* idempotence, in SwiftIdempotency's vocabulary —
+    `@Idempotent`, or the dependency-free `/// @lint.effect idempotent`.
+
+    **+15, and the weight is the whole finding.** It first shipped at +40,
+    on the strength of `SwiftEffectInference.Effect`'s doc for that tier:
+    *"`f(f(x))` is semantically equivalent to `f(x)`"* — this template's law
+    verbatim. Dogfooding on 2026-08-04 sent me to the **owning** package,
+    where `@Idempotent` is defined as *"re-invocation with the same
+    arguments produces the same observable result and the same external
+    effects"*. That is **re-invocation stability**, not composition: `f(x)`
+    twice, never `f` fed its own output. SEI's paraphrase asserts a
+    strictly stronger property than the macro it paraphrases promises, and
+    +40 was keyed to the paraphrase.
+
+    The gap is not academic. `quoted(_:)` in this repo is pure and
+    deterministic, so it satisfies the owner's definition and could be
+    truthfully annotated — and `verify` refutes its composition law at
+    **trial 0**. At +40 (35 → 75) that false law would have surfaced at
+    `Strong` by default; at +15 (35 → 50) it reaches `Likely`, which is
+    where an unverified claim of the adjacent property belongs. Parity with
+    `docstringCorroboration` is the right anchor: an annotation is more
+    *deliberate* than prose but says less than it appears to.
+
+    **Corroborate-only, by construction** — the template's `appliesTo` gate
+    is the type-symmetry shape, so this can only raise a candidate the
+    shape already matched, never surface a law from an annotation alone.
