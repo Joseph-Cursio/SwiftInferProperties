@@ -1333,3 +1333,75 @@ A row that declines because of ambiguity, on any corpus. This one has none, and 
 is not a general claim: a syntax-visitor corpus like SwiftProjectLint has different carrier
 shapes and was never checked here. **The trigger is a witness, not an argument** — and the
 population scan above is the cheap way to look for one before building anything.
+
+## §9.9 "Three real generator gaps" was three different things (2026-08-09)
+
+§9.7.1 narrowed the `unsupported-carrier` remainder to three carriers and called them the
+real generator gaps: `Effect`, `FunctionSummary`, `SamplingSeed`. Opening the rows shows
+**one of the three is not a generator gap at all**, and the other two are not the same kind
+of problem as each other.
+
+| carrier | actual cause |
+|---|---|
+| `SamplingSeed` | **carrier-attribution bug.** A caseless namespace enum — no value of that type exists |
+| `Effect` | **cross-module.** `public enum` in SwiftEffectInference with an associated value (`externallyIdempotent(keyParameter: String?)`), so not `CaseIterable`; needs enum-payload derivation *and* a dependency shape |
+| `FunctionSummary` | **the one real local gap.** `public struct`, 8 stored properties, 2 user inits → Tier 6 `.initializerBased`, and needs `Parameter` and `SourceLocation` to derive too |
+
+**This is the fourth time in §9 that a bucket label turned out to be several problems
+wearing one name** — §9.2's three build failures, §9.3's four groups, §9.7's 46 rows, and
+now this. The generalisable practice is uncomfortable and cheap: **a decline-reason count is
+a hypothesis, not a finding, until the rows are opened.** Every count in §9 that was
+reported without opening rows has been corrected by opening them.
+
+### The `SamplingSeed` defect
+
+`SamplingSeed` is `public enum SamplingSeed { public struct Value { … }; public static func
+derive(…) -> Value }` — a namespace. `RoundTripTemplate:61` takes
+`carrier: { $0.forward.containingTypeName }`, which is **right for an instance method**,
+where the containing type is the value being round-tripped, and **wrong for a `static` on a
+namespace**, where the containing type has no values at all.
+
+Reported as `unsupported-carrier: SamplingSeed`, it reads as a generator gap and sends a
+reader to write `static func gen() -> Generator<SamplingSeed, _>` — a function that cannot
+return.
+
+**Declined rather than re-attributed, deliberately.** The obvious repair — take the forward
+function's parameter type — is ambiguous for a round trip, which has *two* legitimate
+carriers depending on which direction the stub runs: `g(f(a)) == a` generates `A`,
+`f(g(b)) == b` generates `B`. *A caseless enum has no values* requires no such choice and
+cannot be wrong. **Re-attribution stays open and would supersede this.**
+
+**The predicate is provable, not heuristic.** Swift does not permit adding cases to an enum
+in an extension, so `kind == .enum && enumCases.isEmpty` is a statement about inhabitants,
+not about what the scan happened to read.
+
+**And it has a load-bearing dependency worth stating.** This is sound only while `enumCases`
+is populated. That field was dropped from the index once — `IndexedTypeShape.EnumCase`
+records it — and a `String`-raw enum then fell through to `.rawRepresentable`, hanging two
+verifiers at 99.9% CPU for the better part of an hour with the survey reporting nothing. If
+that regresses, this arm converts a hung verifier into a **silent decline**: quieter, and no
+more correct.
+
+### Measured (arm G)
+
+| | arm F | arm G |
+|---|---|---|
+| Proven | 84 | **84** |
+| `unsupported-carrier` | 6 | **5** |
+| `not-a-candidate` | 46 | **47** |
+
+```
+? SamplingSeed  round-trip  derive(fromIdentityHash:)
+  (not-a-candidate: carrier `SamplingSeed` is a caseless enum — a namespace
+   with no values, so no generator can exist for it)
+```
+
+Proven unchanged, as it must be: this is a relabel, and the law it declines was very likely
+false anyway — `renderHex(derive(fromIdentityHash: s)) == s` is a hash round-trip that
+cannot hold.
+
+**The remaining five are now honest.** `Effect` (cross-module), `FunctionSummary` (a real
+local derivation gap), `FunctionScannerVisitor` ×2 (a traversal — correct silence), and `S`
+(a generic parameter — unsupportable by construction). Neither remaining actionable row was
+attempted here: `Effect` needs dependency shapes, and `FunctionSummary` wants the kit to
+derive through a user init, which is kit-side work worth measuring on more than one row.

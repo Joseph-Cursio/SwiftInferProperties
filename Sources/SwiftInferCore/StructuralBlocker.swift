@@ -59,6 +59,40 @@ public enum StructuralBlocker {
     /// type's doc calls the whole value — an honest denominator.
     static let blockingKinds: Set<Signal.Kind> = [.crossTypeRoundTripPair, .subjectNotVisibleToTests]
 
+    /// A carrier that is a **caseless enum** — a namespace, not a value.
+    ///
+    /// Swift does not permit adding cases to an enum in an extension, so
+    /// `kind == .enum && enumCases.isEmpty` is not "cases we failed to read", it is
+    /// definitively a type with **no inhabitants**. No generator can exist, and telling a
+    /// reader to write `static func gen() -> Generator<Namespace, _>` asks for a function
+    /// that cannot return.
+    ///
+    /// **Measured (`roadtest-self-dogfood-2026-08-08.md` §9.9):**
+    /// `SamplingSeed.derive(fromIdentityHash:)` reported `unsupported-carrier: SamplingSeed`,
+    /// which reads as a generator gap and is not one. `SamplingSeed` is
+    /// `public enum SamplingSeed { public struct Value { … } ; public static func … }` — the
+    /// containing type of a `static` function, and `RoundTripTemplate` takes
+    /// `forward.containingTypeName` as its carrier. That is right for an INSTANCE method,
+    /// where the containing type is the value being round-tripped, and wrong for a static on
+    /// a namespace.
+    ///
+    /// **Why this declines rather than re-attributing.** The obvious repair — use the
+    /// forward function's parameter type — is ambiguous for a round trip, which has two
+    /// legitimate carriers depending on which direction the stub runs (`g(f(a)) == a`
+    /// generates `A`; `f(g(b)) == b` generates `B`). "A caseless enum has no values" needs no
+    /// such choice and cannot be wrong. Re-attribution stays open, and would supersede this.
+    ///
+    /// **The enum-cases field must be populated for this to be sound.** It was dropped from
+    /// the index once, and an enum whose cases had gone missing would look caseless here —
+    /// see `IndexedTypeShape.EnumCase`, which records that bug and its fix. If that
+    /// regresses, this arm turns a hung verifier into a silent decline, which is quieter but
+    /// no more correct.
+    public static func caselessEnumCarrier(_ shape: IndexedTypeShape?) -> String? {
+        guard let shape, shape.kind == .enum, shape.enumCases.isEmpty else { return nil }
+        return "carrier `\(shape.name)` is a caseless enum — a namespace with no values, "
+            + "so no generator can exist for it"
+    }
+
     /// The reason to record for an entry, or `nil` when nothing structural blocks it.
     ///
     /// Returns the signal's own `detail` rather than a re-spelling: the counter

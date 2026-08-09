@@ -143,6 +143,7 @@ extension SwiftInferCommand.Index {
             parameterTypeNames: evidence?.parameterTypeNames ?? [],
             qualifiedTypeName: evidence?.qualifiedTypeName,
             structuralBlocker: StructuralBlocker.reason(among: suggestion.score.signals)
+                ?? StructuralBlocker.caselessEnumCarrier(typeShape)
         )
     }
 
