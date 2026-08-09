@@ -95,9 +95,27 @@ extension StrategistDispatchEmitter {
             // Each parameter is resolved on its own, through the same path the carrier took.
             // A parameter the strategist cannot derive throws here and the whole entry declines —
             // which is right: a law that can only generate half its arguments is not a law.
+            // A PARAMETER type needs the same nested-carrier qualification the generator
+            // carrier gets. `e5731a9` fixed the carrier and stopped there, and the gap was
+            // invisible until a nested type turned up in the parameter position rather than
+            // the carrier position: the strategist qualifies the VALUES it composes
+            // (`Gen.always(RefutedExpectation.Coverage.notApplicable)`) from the shape it was
+            // handed, while the type ANNOTATION is written from `carrierTypeName` — so the
+            // stub read `Generator<Coverage, …>` and failed with *cannot find type 'Coverage'
+            // in scope*. Measured as 1 of the 3 `build-failed` picks in
+            // `roadtest-self-dogfood-2026-08-08.md` §9.2.
+            let qualifiedTypeText = SwiftInferCommand.Verify.qualifyingNestedCarrier(
+                typeText,
+                in: inputs.allShapes
+            )
+            // Prefer the qualified key: `TypeShapeBuilder` groups `allShapes` by
+            // `TypeDecl.qualifiedName`, so a bare lookup MISSES every nested type and the
+            // strategist then derives without a shape. The bare fallback keeps the previous
+            // behaviour for everything the qualifier leaves alone.
             let parameterRecipe = try resolveRecipe(
-                carrier: typeText,
-                typeShape: inputs.allShapes[RoundTripPairResolver.bareTypeName(from: typeText)],
+                carrier: qualifiedTypeText,
+                typeShape: inputs.allShapes[qualifiedTypeText]
+                    ?? inputs.allShapes[RoundTripPairResolver.bareTypeName(from: typeText)],
                 resolve: resolve
             )
             let name = "candidate\(offset)"
