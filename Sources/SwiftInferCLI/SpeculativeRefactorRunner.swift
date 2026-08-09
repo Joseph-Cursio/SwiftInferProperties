@@ -87,11 +87,16 @@ enum SpeculativeRefactorRunner {
             widened: widened,
             line: candidate.line
         )
-        guard let snapshot = try? snapshotTree(of: options.packageRoot, replacing: path, with: widened)
-        else { return nil }
+        guard let snapshot = snapshotOrReport(
+            packageRoot: options.packageRoot, path: path, widened: widened,
+            candidate: candidate, diagnostics: diagnostics
+        ) else { return nil }
         defer { try? FileManager.default.removeItem(at: snapshot.root) }
 
-        let gained = ((try? identities(of: snapshot.sources)) ?? []).subtracting(baseline)
+        guard let identified = identitiesOrReport(
+            sources: snapshot.sources, candidate: candidate, diagnostics: diagnostics
+        ) else { return nil }
+        let gained = identified.subtracting(baseline)
         guard !gained.isEmpty else {
             return SpeculativeProposal(
                 path: relative(path, to: options.packageRoot),

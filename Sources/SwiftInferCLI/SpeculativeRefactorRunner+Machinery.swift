@@ -163,3 +163,56 @@ extension SpeculativeRefactorRunner {
 struct SilentDiagnostics: DiagnosticOutput {
     func writeDiagnostic(_: String) { /* deliberately silent */ }
 }
+
+extension SpeculativeRefactorRunner {
+
+    /// Snapshot the tree, or report why not and skip the candidate.
+    ///
+    /// Was `try? … else { return nil }` inline, which dropped the candidate with no trace —
+    /// indistinguishable from a candidate that was never proposed at all.
+    static func snapshotOrReport(
+        packageRoot: URL,
+        path: String,
+        widened: String,
+        candidate: SpeculativeWidening.Candidate,
+        diagnostics: any DiagnosticOutput
+    ) -> Snapshot? {
+        do {
+            return try snapshotTree(of: packageRoot, replacing: path, with: widened)
+        } catch {
+            diagnostics.writeDiagnostic(
+                "warning: speculative: could not snapshot the tree for "
+                    + "\(candidate.summary.name) — \(error). This candidate is skipped, not "
+                    + "judged: it is absent from the results rather than reported as gaining "
+                    + "nothing."
+            )
+            return nil
+        }
+    }
+
+    /// Read the laws visible in a widened tree, or report why not and skip the candidate.
+    ///
+    /// **An error here used to become a VERDICT.** `(try? …) ?? []` made the gained set empty,
+    /// and the caller then reported `.noLawGained` with the detail *"widening exposed the
+    /// symbol but no template proposed a law — the TEMPLATE gate decides this"*. That sentence
+    /// asserts a specific mechanism, and an I/O or parse failure produced it verbatim. A wrong
+    /// explanation is worse than no result: it is actionable in the wrong direction, sending a
+    /// reader to inspect the template gate for a read failure.
+    static func identitiesOrReport(
+        sources: URL,
+        candidate: SpeculativeWidening.Candidate,
+        diagnostics: any DiagnosticOutput
+    ) -> Set<String>? {
+        do {
+            return try identities(of: sources)
+        } catch {
+            diagnostics.writeDiagnostic(
+                "warning: speculative: could not read laws from the widened tree for "
+                    + "\(candidate.summary.name) — \(error). This candidate is skipped, not "
+                    + "judged — reporting `no law became visible` here would blame the "
+                    + "template gate for a read failure."
+            )
+            return nil
+        }
+    }
+}
