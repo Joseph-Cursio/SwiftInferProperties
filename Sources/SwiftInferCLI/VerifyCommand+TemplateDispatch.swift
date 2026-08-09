@@ -157,9 +157,10 @@ extension SwiftInferCommand.Verify {
         // Homomorphism quantifies over arrays `[T]`; its composer draws arrays by
         // wrapping an ELEMENT generator, so the generator carrier is the element
         // type — strip the array brackets (`[Int]` → `Int`).
-        let generatorCarrier = entry.templateName == "homomorphism"
+        let elementCarrier = entry.templateName == "homomorphism"
             ? arrayElementType(of: boundCarrier)
             : boundCarrier
+        let generatorCarrier = qualifyingNestedCarrier(elementCarrier, in: allShapes)
         let inputs = StrategistDispatchEmitter.Inputs(
             carrier: generatorCarrier,
             typeShape: entry.typeShape,
