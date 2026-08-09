@@ -153,6 +153,13 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         if let syntax = curatedSyntaxRecipe(carrier: carrier) {
             return syntax
         }
+        // The tail the curated table does not name, via the kit's generic
+        // `Gen<T>.syntaxNode()`. Strictly after the curated lookup — a curated
+        // recipe navigates to the shape a law is ABOUT, and the generic one
+        // draws from a pool. See `kitSyntaxNodeRecipe`.
+        if let kitSyntax = kitSyntaxNodeRecipe(carrier: carrier) {
+            return kitSyntax
+        }
         if let typeShape {
             // WS-6 Slice 2 — `resolve` recurses through the whole-module shape
             // universe so nested custom-type members / init-params derive; the

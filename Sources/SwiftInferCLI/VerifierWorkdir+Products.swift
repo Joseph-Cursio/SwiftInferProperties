@@ -51,6 +51,24 @@ extension VerifierWorkdir {
             if let userPackage, packageDependsOnSwiftSyntax(at: userPackage.packagePath) {
                 entries.append(".product(name: \"SwiftSyntax\", package: \"swift-syntax\")")
                 entries.append(".product(name: \"SwiftParser\", package: \"swift-syntax\")")
+                // The kit's generic node generator (`Gen<T>.syntaxNode()` over
+                // every `SyntaxProtocol`), which backs
+                // `StrategistDispatchEmitter.kitSyntaxNodeRecipe` for the node
+                // kinds the curated table does not name. Gated on the SAME
+                // condition as the two products above, not declared always:
+                // `PropertyLawSyntax` links `SwiftParser`, so a subject that
+                // does not already use swift-syntax would pay for a dependency
+                // no pick of its can reach. That gate is the kit's opt-in
+                // posture honoured at the point where the cost is actually
+                // known — here the stub already links SwiftSyntax+SwiftParser
+                // because the subject does, so the marginal cost is nil.
+                //
+                // Measured (2026-08-09, `SwiftInferCore` @ kit 3.28.0): 9 of 20
+                // `unsupported-carrier` rows name a syntax node or
+                // `ArraySlice<CodeBlockItemSyntax>`, and the kit vends a
+                // generator for every one — they declined for want of an
+                // import, not for want of a generator.
+                entries.append(".product(name: \"PropertyLawSyntax\", package: \"SwiftPropertyLaws\")")
             }
 
         case .interaction:
