@@ -75,7 +75,7 @@ extension StrategistDispatchEmitter {
         let resolver = inputs.allShapes.isEmpty
             ? nil
             : GeneratorResolver(types: inputs.allShapes.values.map { $0.toKitShape() })
-        let resolve = resolver?.customTypeGenerator ?? { _ in nil }
+        let resolve = syntaxAwareResolve(resolver?.customTypeGenerator ?? { _ in nil })
         guard types.count > 1, types.count == expectedArity(of: inputs) else {
             return TotalityOperands(
                 declarations: """
