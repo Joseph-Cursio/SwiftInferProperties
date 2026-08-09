@@ -934,7 +934,7 @@ not reach a nested carrier"*. The re-run has three, and only one of them is that
 
 | row | cause | verdict |
 |---|---|---|
-| `RefutedExpectation.statesAFork(…)` — `cannot find type 'Coverage' in scope` | **residual bug in `e5731a9`** | fix it |
+| `RefutedExpectation.statesAFork(…)` — `cannot find type 'Coverage' in scope` | **residual bug in `e5731a9`** | **FIXED — §9.4** |
 | `Visitor.isStaticOrSelfMemberAccess(_:)` — `cannot find 'Visitor' in scope` | ambiguous: **7 declaration sites** | fix declining correctly |
 | `NonDeterministicAPIs.matches(_:)` — `cannot find 'NonDeterministicAPIs' in scope` | `private` at file scope | **not a qualification problem** |
 
@@ -1026,3 +1026,45 @@ fallback for its element type. (falsifier: `compositeElementSyntaxRecipe`)
 not a value — and `S` stays unsupportable, being a generic parameter with no concrete type.
 The 5 our-own-value-type rows (`SamplingSeed`, `FunctionSummary`, `Effect`, `Ranked<Record>`,
 `String.Index`) are untouched by this change and remain the largest addressable group.
+
+
+### §9.4 The `Coverage` residual is fixed (2026-08-09)
+
+`qualifyingNestedCarrier` had **exactly one production call site** — the generator carrier
+in `VerifyCommand+TemplateDispatch.swift:163`. The n-ary parameter loop in
+`StrategistDispatchEmitter+Totality` resolved each parameter from raw `typeText` and never
+went through it.
+
+**That is why `e5731a9` looked complete.** For a unary law the carrier and the parameter are
+the same type, so one call site covers both; it took a four-argument predicate with a nested
+type in the *third* slot to separate them. The symptom was two adjacent lines disagreeing —
+values qualified, annotation not:
+
+```swift
+let generator2: Generator<Coverage, some SendableSequenceType> =        // ← wrong
+    Gen.oneOf(Gen.always(RefutedExpectation.Coverage.notApplicable)…)   // ← right
+```
+
+Two changes at that site. Parameters now pass through the qualifier. And the shape lookup
+prefers the **qualified** key — `TypeShapeBuilder` groups `allShapes` by
+`TypeDecl.qualifiedName`, so the old bare lookup missed *every* nested type and the
+strategist derived with no shape at all; the bare fallback preserves prior behaviour for
+names the qualifier leaves alone.
+
+**Measured, same corpus and binary discipline as §9:**
+
+| | arm B | arm C (this fix) |
+|---|---|---|
+| Proven | 83 | **84** |
+| Inconclusive | 9 | **8** |
+| `build-failed` rows | 3 | **2** |
+
+The pick did not merely stop failing to build — it **executes and holds**. The two
+remaining `build-failed` rows are the two that should not clear: `Visitor` (ambiguous, and
+the qualifier is right to decline) and `NonDeterministicAPIs` (`private` at file scope, an
+accessibility decline misfiled as a tooling error — §2's remedy, not a qualification one).
+
+**The transferable point is about call sites, not carriers.** A rewrite rule with one call
+site is a rewrite rule that has been applied to one of the places that needed it, and
+nothing in the type system says how many those are. Guarded by
+`NestedParameterQualificationTests`.
