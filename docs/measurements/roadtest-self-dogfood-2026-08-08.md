@@ -807,7 +807,7 @@ build-failed: cannot find 'NonDeterministicAPIs' in scope
 The survey derives `@testable import <Module>` per entry, which reaches `internal` but not
 types that are nested or otherwise unreachable at file scope. Two picks are therefore lost to
 an emitter gap rather than to anything about their laws. **Open follow-up**, and the cheapest
-remaining item in this document. **Narrowed 2026-08-09 (§9.2)** to the AMBIGUOUS-name case only — `Visitor` has seven declaration sites and no lookup can choose between them, so closing it needs module-aware resolution rather than a name lookup. (falsifier: `ambiguousNestedCarrierResolution`)
+remaining item in this document. **Narrowed 2026-08-09 (§9.2)** to the AMBIGUOUS-name case only — `Visitor` has seven declaration sites and no lookup can choose between them, so closing it needs module-aware resolution rather than a name lookup. **DECLINED on measurement 2026-08-09 — §9.8.**
 
 ### §8.6 A Proven verdict that is FALSE — and the 81 were never tests
 
@@ -1279,3 +1279,57 @@ index cannot answer *is this private*, which is what sent the search one stage e
 where the answer already was. The generalisable form: **when a downstream stage cannot tell
 two cases apart, check whether an upstream stage already did** — the tool had been printing
 the right sentence for weeks and only prose carried it.
+
+
+## §9.8 Ambiguous nested carriers — declined, with the rule recorded (2026-08-09)
+
+§9.2 narrowed the nested-carrier deferral to the ambiguous case: `Visitor` has several
+declaration sites, `qualifyingNestedCarrier` refuses to choose, and closing it needs
+module-aware resolution. **§9.7 removed its only witness** — `Visitor` is `private`, so it
+is now blocked as `subjectNotVisibleToTests` before a build, and would never have run
+whatever a resolver decided.
+
+### The population is real; the reachable population is empty
+
+Structural scan of `Sources/` — 876 type declarations, 784 distinct leaf names:
+
+| | count |
+|---|---|
+| ambiguous leaf names (≥2 declarations) | 35 |
+| …with a nested declaration | 34 |
+| …and at least one non-`private` declaration | **27** |
+
+Led by `Inputs` ×19 (all `public`), `Result` ×12, `Resolved` ×9, `Kind` ×7, `Collector` ×6.
+So ambiguity has not gone away — this is the same `Inputs`-nested-in-40-odd-emitters shape
+CLAUDE.md's dead-code note already records.
+
+**But none of the 27 is ever a carrier.** Checked against the arm-F survey: zero rows, in
+any bucket, take one of them as a carrier. They are emitter input structs and internal
+result types — plumbing, never the subject of a law. And arm F has **zero** declines
+attributable to ambiguity, in any bucket.
+
+### Why declining is not merely cheaper
+
+`qualifyingNestedCarrier`'s own doc states the decisive fact: *"a wrong qualification fails
+to compile just as surely as no qualification — while being harder to read."* **Declining
+and guessing wrong have the same outcome.** Only a *correct* resolution gains anything, and
+there is no case on this corpus to be correct about. Building it now would ship an
+unexercised path — the shape §3.6 records for `statefulGuards:`, plumbed end to end and
+never once passed, invisible to `make dead-code` because only the parameter was dead.
+
+### The rule, recorded so it is not re-derived
+
+It is **not** a heuristic, which is why it is worth keeping. Prefer the candidate whose
+parent path matches the call-site owner's qualified path — already carried on
+`entry.qualifiedTypeName`, which `resolveFunctionCalls` has qualified since 2026-08-05.
+`lawTotal(for:)` is declared on `ProtocolCoverageAudit` and quantifies over `Finding`, so
+`ProtocolCoverageAudit.Finding` wins. That is lexical scoping, the same way Swift resolves
+the name in the source. Fall back to declining when no candidate's parent matches — two
+types called `Finding` under unrelated parents still give no way to choose.
+
+### What reopens it
+
+A row that declines because of ambiguity, on any corpus. This one has none, and one corpus
+is not a general claim: a syntax-visitor corpus like SwiftProjectLint has different carrier
+shapes and was never checked here. **The trigger is a witness, not an argument** — and the
+population scan above is the cheap way to look for one before building anything.
