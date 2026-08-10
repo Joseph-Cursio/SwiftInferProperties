@@ -187,36 +187,106 @@ public enum VerifyHarness {
         return count
     }
 
-    /// Best-effort staleness probe: walks `<packageRoot>/Sources/`,
-    /// returns `true` if any `.swift` file has an mtime newer than the
-    /// index file's. Silently returns `false` on I/O errors so a
-    /// transient FS hiccup doesn't block a verify call. V1.42.C.5 made
-    /// this `internal` so `Verify.reindexIfNeeded` shares the one
-    /// staleness definition rather than re-implementing it.
-    static func isStale(indexPath: URL, packageRoot: URL) -> Bool {
+    /// Best-effort staleness probe: walks `<packageRoot>/Sources/`, returns `true` if any
+    /// `.swift` file has an mtime newer than the index file's. V1.42.C.5 made this `internal`
+    /// so `Verify.reindexIfNeeded` shares the one staleness definition rather than
+    /// re-implementing it.
+    ///
+    /// **The conservative verdict is kept; the silence is not.** On an I/O error this still
+    /// answers `false`, so a transient FS hiccup does not force a reindex — that was the
+    /// original intent and it is preserved. What changes is that it now says so.
+    ///
+    /// The reason the difference matters is what `false` means to the caller: not *"do not
+    /// block"* but *"this index is fresh, verify against it"*. A survey then runs on an index
+    /// that `IndexStore.upsert` has been accumulating, and reports **the union of every run
+    /// that ever happened** — the trap the whole-corpus-survey README names, and the one §6
+    /// of `docs/measurements/roadtest-self-dogfood-2026-08-08.md` hit for real: the index was a
+    /// week stale at 251 entries against ~123 current picks, and nothing said so.
+    ///
+    /// Three separate swallows, and the first two decide the whole answer:
+    /// the index's own attributes, the `Sources` enumerator, and per-file attributes (which
+    /// only cost the one file its chance to mark the index stale, so it is reported as a
+    /// count rather than per file).
+    ///
+    /// - Parameter diagnostic: defaults to a no-op, matching `SeedRestrictionResolver.resolve`
+    ///   and `KitEvidenceStore.load`.
+    static func isStale(
+        indexPath: URL,
+        packageRoot: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> Bool {
         let fileManager = FileManager.default
         guard let indexAttrs = try? fileManager.attributesOfItem(atPath: indexPath.path),
               let indexMTime = indexAttrs[.modificationDate] as? Date else {
+            diagnostic(
+                "warning: could not read the modification time of \(indexPath.path), so "
+                    + "staleness could not be determined. Treating the index as FRESH — if it "
+                    + "is not, this run verifies whatever the index accumulated previously."
+            )
             return false
         }
-        let sourcesRoot = packageRoot.appendingPathComponent("Sources")
-        guard let enumerator = fileManager.enumerator(
-            at: sourcesRoot,
-            includingPropertiesForKeys: [.contentModificationDateKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else {
-            return false
-        }
+        guard let enumerator = sourceEnumerator(
+            packageRoot: packageRoot, fileManager: fileManager, diagnostic: diagnostic
+        ) else { return false }
+        var unreadable = 0
         for case let fileURL as URL in enumerator
         where fileURL.pathExtension == "swift" {
             guard let attrs = try? fileManager.attributesOfItem(atPath: fileURL.path),
                   let modified = attrs[.modificationDate] as? Date else {
+                unreadable += 1
                 continue
             }
             if modified > indexMTime {
                 return true
             }
         }
+        if unreadable > 0 {
+            diagnostic(
+                "warning: \(unreadable) source file(s) had unreadable modification times and "
+                    + "could not mark the index stale. The index is reported fresh on the "
+                    + "files that COULD be read."
+            )
+        }
         return false
+    }
+
+    /// The `Sources` walker, or `nil` with the reason reported.
+    ///
+    /// Extracted when reporting took `isStale` to 55 lines against the 50-line cap, and it is
+    /// a real seam: *can this run look at the sources at all* is a different question from
+    /// *are any of them newer than the index*.
+    private static func sourceEnumerator(
+        packageRoot: URL,
+        fileManager: FileManager,
+        diagnostic: (String) -> Void
+    ) -> FileManager.DirectoryEnumerator? {
+        let sourcesRoot = packageRoot.appendingPathComponent("Sources")
+        // **`enumerator(at:)` returns non-nil for a directory that does not exist**, so the
+        // guard below never fires for the commonest failure — it walks zero files and the
+        // caller answers "fresh" having compared nothing. Found by a test written for that
+        // guard, which is the direction that matters: the arm was unreachable, not wrong.
+        var isDirectory: ObjCBool = false
+        let exists = fileManager.fileExists(atPath: sourcesRoot.path, isDirectory: &isDirectory)
+        guard exists, isDirectory.boolValue else {
+            diagnostic(
+                "warning: \(sourcesRoot.path) does not exist, so no source file could be "
+                    + "compared against the index. Treating the index as FRESH — nothing was "
+                    + "actually checked."
+            )
+            return nil
+        }
+        guard let enumerator = fileManager.enumerator(
+            at: sourcesRoot,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else {
+            diagnostic(
+                "warning: could not walk \(sourcesRoot.path), so no source file could be "
+                    + "compared against the index. Treating the index as FRESH — nothing was "
+                    + "actually checked."
+            )
+            return nil
+        }
+        return enumerator
     }
 }

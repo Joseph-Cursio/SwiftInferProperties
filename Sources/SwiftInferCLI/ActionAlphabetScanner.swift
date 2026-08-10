@@ -67,12 +67,41 @@ public struct ActionCaseSpec: Equatable, Sendable {
 /// (→ the selector mines nothing → byte-identical un-mined path).
 enum ActionAlphabetScanner {
 
-    static func scan(directory: URL, actionTypeName: String) -> [ActionCaseSpec] {
+    /// - Parameter diagnostic: reports a source file that could not be read. Defaults to a
+    ///   no-op, matching `SeedRestrictionResolver.resolve` and `KitEvidenceStore.load`.
+    ///
+    /// **The empty result is a designed fallback; an unreadable file is not.** Returning `[]`
+    /// takes the un-mined path, which the type doc above says is byte-identical to not having
+    /// the feature — so a genuine "this enum is not here" costs nothing and is correctly
+    /// silent. A file that *cannot be read* is different: mining switches off for a reason
+    /// nobody can see, which is the shape `TestTargetScope` records — *"a scoping bug
+    /// returning empty silently switches lifting off and looks identical to having nothing to
+    /// suggest."*
+    ///
+    /// Deliberately NOT claimed: that this corrupts a partial-coverage denominator. It cannot
+    /// — the scan returns the cases of the FIRST file declaring the enum and never
+    /// accumulates across files, so a skipped file yields all-or-nothing, not a short
+    /// alphabet. An earlier reading of this function got that wrong.
+    static func scan(
+        directory: URL,
+        actionTypeName: String,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> [ActionCaseSpec] {
         let components = actionTypeName.split(separator: ".").map(String.init)
         guard let enumName = components.last else { return [] }
         let enclosing = components.dropLast().last  // nil for a bare name
         for fileURL in SwiftSourceFiles.sorted(in: directory) {
-            guard let source = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+            let source: String
+            do {
+                source = try String(contentsOf: fileURL, encoding: .utf8)
+            } catch {
+                diagnostic(
+                    "warning: could not read \(fileURL.lastPathComponent) while looking for "
+                        + "`\(actionTypeName)` — \(error). If the enum is declared there, "
+                        + "action mining is silently off for this run."
+                )
+                continue
+            }
             let visitor = ActionEnumVisitor(enumName: enumName, enclosing: enclosing)
             visitor.walk(Parser.parse(source: source))
             if let found = visitor.cases {
