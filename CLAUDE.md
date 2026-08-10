@@ -19,14 +19,14 @@ Sibling checkouts expected at `../SwiftPropertyLaws` and `../SwiftEffectInferenc
 
 ## Current state
 
-**v1.148.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end to end:
+**v1.149.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end to end:
 
 - **Algebraic** — pure-function laws from signatures, cross-function pairs, and lifted test bodies. v1 corpus (`fixtures/cycle27-surface/`) is **100% measured** (53/53, cycle 151 — epic complete; zero false positives, zero coverage-pending). Further movement needs *new* public algebraic API, not filters or recipes.
 - **Interaction** — five families (idempotence / cardinality / biconditional / referential-integrity / conservation) over reducer carriers (TCA, Elm, ReSwift, Mobius, Workflow, generic) and SwiftUI MVVM carriers. All five have a demonstrated measured-verify path; idempotence promotes `.likely → .verified` on measured execution, the rest default `.possible` behind `--include-possible`.
 
 Consumers over the SemanticIndex, split by audience and trust bar: `query` (author, all tiers, raw rows) · `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**). Async is admitted only via the `@ClockDeterministic` claim — bare `async` keeps a clean rejection that says how to make the claim.
 
-Suites green at **~5,000 tests** (4,932 fast + 66 across `perf` and the eight batches; full `make test` verified green 2026-08-06 **at `2c599c0`** — `dde5397` added `SeedEffect*` tests that this run predates). **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing.
+Suites green at **5,360 tests** (5,277 fast + 83 across `perf` and the eight batches; full `make test` verified green 2026-08-10 **at `b3be02a`**, exit 0 with zero failures across all ten runs). **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing.
 
 ## Where to look
 
