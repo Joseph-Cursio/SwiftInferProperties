@@ -58,11 +58,15 @@ extension SwiftInferCommand.Verify {
     /// `.measuredError` (everything else).
     static func surveyRecordForBuildFailure(
         buildOutput: VerifierSubprocess.Output,
-        context: RecordContext
+        context: RecordContext,
+        config: SurveyConfig? = nil
     ) -> SurveyRecord {
         if let detail = Self.architecturalPendingDetail(
             buildStdout: buildOutput.stdout,
-            buildStderr: buildOutput.stderr
+            buildStderr: buildOutput.stderr,
+            // Declaration sites, so a carrier the stub cannot IMPORT is told apart from one
+            // no generator derives and from a tooling failure. Three different remedies.
+            sourceFileByTypeName: config?.sourceFileByTypeName ?? [:]
         ) {
             return SurveyRecord(
                 identityHash: context.identityHash,
