@@ -1537,6 +1537,9 @@ shape that omits the body.
 
 ### §10.3 `--stats-only` structurally cannot say `Verified`
 
+> **FIXED 2026-08-10 — and fixing it uncovered a worse one right next to it. See §10.9.**
+
+
 The renderers are asymmetric. `SuggestionRenderer.render(_:verifyEvidenceByIdentity:)` applies
 `.promoted(byVerifyOutcome:)`; `SuggestionRenderer.renderStats(_ suggestions:)` takes **no
 evidence parameter at all**, so the tier it prints falls back to `tier(forScore:)` — and a
@@ -1594,6 +1597,10 @@ evidence — and has been promoted from a survey artifact into the default outpu
   road test left it, which is what rules out a scoring change as the cause of the 379.
 
 ### §10.6 The pending-falsifier report says the opposite of what it means
+
+> **FIXED 2026-08-10.** `renderPending` gives the report its own verdict phrase; a green run
+> now prints `is pending`. The failure path keeps `has landed`, which is correct there.
+
 
 Found by running the guards after editing docs, not by looking for it.
 
@@ -1785,3 +1792,69 @@ green for the opposite of the intended reason.
 
 §10.3 (`--stats-only` cannot say `Verified`) and §10.4 (the `booleanStem` loop has no channel
 for a human-established refutation) are untouched and remain open.
+
+---
+
+## §10.9 Fixing the stats view uncovered a contradiction in the one shipped the day before
+
+§10.3 was queued as a one-parameter fix: `renderStats` takes no evidence map, so
+`--stats-only` cannot print `Verified`. It is a one-parameter fix. But reading the *full*
+renderer to mirror its tier logic turned up a defect in **§10.8's own fix**, shipped hours
+earlier and merged.
+
+### The contradiction
+
+`SuggestionRenderer.render` computes the displayed tier as
+`score.tier.promoted(byVerifyOutcome:)` — `.verified` is set by the surfacing pipeline rather
+than derived from the score (`Tier`) — and it was handed the **raw** evidence map. The
+staleness gate lives in `VerifyEvidenceScoring`, one stage upstream.
+
+So a row whose `+50` had been correctly withheld still printed `Verified`, immediately above
+its own caveat saying the evidence was not being applied:
+
+```
+Score:    100 (Verified)
+  ⚠ Verify evidence from … is NOT being applied: it was recorded before swift-infer
+    stamped runs with the subject's body …
+```
+
+**Measured: 4 such rows on `SwiftInferCore`.** The score was right and the label was wrong,
+which is the worse half — a reader takes the tier.
+
+### Why it survived §10.8's guards
+
+`VerifyEvidenceStalenessTests` asserts on `score.total`, `score.tier` and the signal list —
+all of which were **correct**. Nothing asserted on *rendered output*, and the rendered tier is
+computed independently of the score by design. The guards were complete about the thing they
+guarded and blind to the seam beside it.
+
+**The transferable point: a fix that adds a gate must be checked at every consumer of the
+thing it gates, not only at the point the gate was installed.** Scoring and rendering both
+consume verify evidence, and only one of them learned about staleness.
+
+### The remedy
+
+One rule, one place. `VerifyEvidenceScoring.applicable(evidenceByIdentity:currentFingerprintByIdentity:)`
+filters the map by the same `stalenessCaveat` the scorer uses, and the discover render path
+passes the **filtered** map to both renderers. Scoring and rendering can no longer disagree
+because they are the same decision.
+
+`ApplicableEvidenceTests` pins it, including the arm asserting `applicable` and `applied`
+agree in both directions — a filter that diverged from the scorer would reintroduce exactly
+this bug — and the control that a *matching* body still survives the filter, since filtering
+everything would make the renderer silent about every verified law and read as a clean result.
+
+### Measured after
+
+| | before | after |
+|---|---|---|
+| rows both `Verified` and "NOT being applied" | **4** | **0** |
+| `SwiftInferCore` full render | 4 Verified + 4 Strong | **8 Strong** |
+| `SwiftInferCore` `--stats-only` | "36 Strong" (§10.3) | **8 Strong** |
+
+The two views now agree, which was §10.3's whole complaint. Zero `Verified` is correct on this
+corpus today: every record predates fingerprinting, so nothing is applicable until a re-verify.
+
+`RenderStatsTierTests` guards the stats side — a `bothPass` row reports `1 Verified` rather
+than being folded into `Strong`, the no-evidence line is byte-identical to before (so goldens
+are unaffected), and the stats and full renderers are asserted to agree on the effective tier.

@@ -204,3 +204,184 @@ struct VerifyEvidenceStalenessTests {
         )
     }
 }
+
+/// Rendering must not contradict scoring.
+///
+/// **The defect these guard shipped WITH the staleness gate and was caught by re-reading the
+/// output the next day.** `SuggestionRenderer.render` computes the displayed tier as
+/// `score.tier.promoted(byVerifyOutcome:)` — `.verified` is set by the surfacing pipeline, not
+/// derived from the score — and it was handed the RAW evidence map. So a row whose `+50` had
+/// been correctly withheld still printed `Verified`, immediately above its own caveat saying
+/// the evidence was not being applied. Measured: 4 such rows on `SwiftInferCore`.
+///
+/// The remedy is one rule in one place: `VerifyEvidenceScoring.applicable` filters the map,
+/// and every consumer inherits that decision.
+@Suite("Rendering uses only the evidence scoring accepted")
+struct ApplicableEvidenceTests {
+
+    private let identity = "AABBCCDDAABBCCDD"
+
+    private func evidence(fingerprint: String?) -> VerifyEvidence {
+        VerifyEvidence(
+            identityHash: identity,
+            template: "idempotence",
+            outcome: .measuredBothPass,
+            detail: "held",
+            capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
+            swiftInferVersion: "1.149.0",
+            subjectFingerprint: fingerprint
+        )
+    }
+
+    @Test("evidence measured on a different body is filtered out")
+    func staleEvidenceIsNotApplicable() {
+        let result = VerifyEvidenceScoring.applicable(
+            evidenceByIdentity: [identity: evidence(fingerprint: "OLDBODY000000000")],
+            currentFingerprintByIdentity: [identity: "NEWBODY000000000"]
+        )
+        #expect(result.isEmpty, "a row the scorer withheld must not reach the renderer as Verified")
+    }
+
+    @Test("evidence with no fingerprint is filtered out")
+    func unfingerprintedEvidenceIsNotApplicable() {
+        let result = VerifyEvidenceScoring.applicable(
+            evidenceByIdentity: [identity: evidence(fingerprint: nil)],
+            currentFingerprintByIdentity: [identity: "ANYBODY000000000"]
+        )
+        #expect(result.isEmpty)
+    }
+
+    /// **The control.** Filtering everything would make the renderer silent about every
+    /// verified law and look like a clean result.
+    @Test("evidence measured on the current body survives the filter")
+    func matchingEvidenceIsApplicable() {
+        let result = VerifyEvidenceScoring.applicable(
+            evidenceByIdentity: [identity: evidence(fingerprint: "SAMEBODY00000000")],
+            currentFingerprintByIdentity: [identity: "SAMEBODY00000000"]
+        )
+        #expect(result.count == 1)
+        #expect(result[identity]?.outcome == .measuredBothPass)
+    }
+
+    /// `applicable` and `applied` must agree — the whole point is that scoring and rendering
+    /// cannot diverge. Asserted over both directions rather than assumed.
+    @Test("a row filtered from rendering is also withheld from scoring, and vice versa")
+    func filterAndScoringAgree() {
+        let suggestion = Suggestion(
+            templateName: "idempotence",
+            evidence: [
+                Evidence(
+                    displayName: "normalize(_:)",
+                    signature: "(String) -> String",
+                    location: SourceLocation(file: "S.swift", line: 1, column: 1)
+                )
+            ],
+            score: Score(signals: [Signal(kind: .exactNameMatch, weight: 40, detail: "n")]),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: ["n"], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "agree")
+        )
+        let key = suggestion.identity.normalized
+        let record = VerifyEvidence(
+            identityHash: key,
+            template: "idempotence",
+            outcome: .measuredBothPass,
+            detail: "held",
+            capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
+            swiftInferVersion: "1.149.0",
+            subjectFingerprint: "OLDBODY000000000"
+        )
+        let current = [key: "NEWBODY000000000"]
+
+        let filtered = VerifyEvidenceScoring.applicable(
+            evidenceByIdentity: [key: record], currentFingerprintByIdentity: current
+        )
+        let scored = VerifyEvidenceScoring.applied(
+            to: [suggestion], evidenceByIdentity: [key: record], currentFingerprintByIdentity: current
+        )[0]
+
+        #expect(filtered.isEmpty, "rendering must not see it")
+        #expect(scored.score.total == 40, "scoring must not count it")
+        #expect(scored.score.signals.last?.kind == .verifyEvidenceStale)
+    }
+}
+
+/// `--stats-only` must be able to say `Verified`.
+///
+/// **It structurally could not until v1.149.** `renderStats` took no evidence parameter, so
+/// the tier it printed fell back to `tier(forScore:)` — and a 100-point row is `Strong` there,
+/// because `.verified` is set by the surfacing pipeline rather than derived from the score.
+/// Measured on this repo: `SwiftInferCore` printed **"36 Strong"** where the truth was 33
+/// Verified + 3 Strong, and `SwiftInferCLI` **"22"** where it was 18 + 4. Both add up exactly,
+/// which is what made it a mechanism rather than a coincidence.
+///
+/// It is the view a CI dashboard reads, and it was both inflating `Strong` and hiding the
+/// tool's best result.
+@Suite("--stats-only reports the effective tier")
+struct RenderStatsTierTests {
+
+    private func suggestion(_ canonical: String) -> Suggestion {
+        Suggestion(
+            templateName: "idempotence",
+            evidence: [
+                Evidence(
+                    displayName: "normalize(_:)",
+                    signature: "(String) -> String",
+                    location: SourceLocation(file: "S.swift", line: 1, column: 1)
+                )
+            ],
+            // 90 lands squarely in Strong, so any move to Verified is the evidence talking.
+            score: Score(signals: [Signal(kind: .exactNameMatch, weight: 90, detail: "n")]),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: ["n"], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: canonical)
+        )
+    }
+
+    private func bothPass(for pick: Suggestion) -> [String: VerifyEvidence] {
+        [
+            pick.identity.normalized: VerifyEvidence(
+                identityHash: pick.identity.normalized,
+                template: pick.templateName,
+                outcome: .measuredBothPass,
+                detail: "held",
+                capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
+                swiftInferVersion: "1.149.0",
+                subjectFingerprint: "SAMEBODY00000000"
+            )
+        ]
+    }
+
+    @Test("a bothPass row is reported as Verified, not folded into Strong")
+    func bothPassReportsVerified() {
+        let pick = suggestion("stats-verified")
+        let stats = SuggestionRenderer.renderStats([pick], verifyEvidenceByIdentity: bothPass(for: pick))
+
+        #expect(stats.contains("1 Verified"), "the execution-backed verdict must be visible")
+        #expect(!stats.contains("Strong"), "and must not be reported as a static Strong score")
+    }
+
+    /// **The control**: with no evidence the line is unchanged, so existing output and goldens
+    /// are unaffected by the new parameter.
+    @Test("with no evidence the tier line is unchanged")
+    func noEvidenceIsUnchanged() {
+        let pick = suggestion("stats-strong")
+        #expect(SuggestionRenderer.renderStats([pick]).contains("1 Strong"))
+        #expect(
+            SuggestionRenderer.renderStats([pick])
+                == SuggestionRenderer.renderStats([pick], verifyEvidenceByIdentity: [:])
+        )
+    }
+
+    /// The stats view and the full view must not disagree about a row's tier — the whole
+    /// complaint was that a reader got a different answer depending on which they read.
+    @Test("stats and full render agree on the effective tier")
+    func statsAgreesWithFullRender() {
+        let pick = suggestion("stats-agree")
+        let evidence = bothPass(for: pick)
+        let full = SuggestionRenderer.render(pick, verifyEvidence: evidence[pick.identity.normalized])
+
+        #expect(full.contains("(Verified)"))
+        #expect(SuggestionRenderer.renderStats([pick], verifyEvidenceByIdentity: evidence).contains("1 Verified"))
+    }
+}

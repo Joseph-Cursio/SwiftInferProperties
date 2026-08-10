@@ -33,7 +33,13 @@ extension SwiftInferCommand.Discover {
         let anchored = visible.map { StdlibAnchor.enriched($0) }
         var rendered: String
         if statsOnly {
-            rendered = SuggestionRenderer.renderStats(anchored)
+            // The same evidence the full renderer gets. Until v1.149 this call passed none,
+            // so `--stats-only` could not print `Verified` and reported every
+            // execution-backed row as `Strong` — see `tierBreakdown`.
+            rendered = SuggestionRenderer.renderStats(
+                anchored,
+                verifyEvidenceByIdentity: evidenceByIdentity
+            )
         } else {
             rendered = SuggestionRenderer.render(
                 anchored,

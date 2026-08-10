@@ -100,6 +100,28 @@ public enum VerifyEvidenceScoring {
         }
     }
 
+    /// The subset of `evidenceByIdentity` that is actually about the code in front of the
+    /// reader — the same rule `applied` scores by, exposed so RENDERING cannot disagree with
+    /// scoring.
+    ///
+    /// **It had to be exposed because the two did disagree.** `SuggestionRenderer.render`
+    /// computes the displayed tier as `score.tier.promoted(byVerifyOutcome:)` — `.verified` is
+    /// set by the surfacing pipeline rather than derived from the score (`Tier`) — and it was
+    /// handed the RAW map. So a row whose `+50` had been correctly withheld still printed
+    /// `Verified`, directly above its own caveat saying the evidence was not being applied.
+    /// Measured on this repo the day the staleness gate shipped: 4 such rows on
+    /// `SwiftInferCore`.
+    ///
+    /// One rule, one place: filter here, and every consumer inherits the decision.
+    public static func applicable(
+        evidenceByIdentity: [String: VerifyEvidence],
+        currentFingerprintByIdentity: [String: String]
+    ) -> [String: VerifyEvidence] {
+        evidenceByIdentity.filter { identity, evidence in
+            stalenessCaveat(evidence: evidence, current: currentFingerprintByIdentity[identity]) == nil
+        }
+    }
+
     /// Fold one piece of evidence into one suggestion.
     ///
     /// Split out of `applied`'s closure for SwiftLint's 30-line closure cap once the
