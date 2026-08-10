@@ -98,3 +98,65 @@ the same way (one binary, one flag, in the package proper, index deleted between
 `swift-collections` and `swift-async-algorithms` are poor candidates — they are leaf-ish. An
 app target depending on several first-party frameworks is the shape that would show it, and
 `MacCloud_client_iOS` is the fixture already on hand.
+
+
+## 7. `FunctionSummary` — a second route, investigated and also declined (2026-08-10)
+
+§5 recommends against the product edge at a population of 2 rows. One of those two,
+`FunctionSummary`, has a **cheaper-looking route that does not need the edge at all**, and it
+is worth recording why that is also declined rather than leaving it to be rediscovered.
+
+### The observation
+
+`FunctionSummary` is blocked by `declaredEffect: Effect?` and `inferredEffect: Effect?`, both
+of which are **stored properties whose initializer parameters carry `= nil` defaults**. A
+generator does not have to supply them. `FunctionSummary(name:parameters:…)` compiles without
+either, so the carrier is derivable **without `Effect` ever being generated** — no product
+edge, no import, no manifest work.
+
+### Why it is not cheap
+
+Neither `IndexedTypeShape.InitializerParameter` **nor the kit's `PropertyLawCore.InitializerParameter`**
+records whether a parameter has a default. Both are `(label, typeName)`. So closing it needs:
+
+1. the scanner to capture `defaultValue` from SwiftSyntax;
+2. our mirror to carry it (additive schema change, `decodeIfPresent`);
+3. **the kit's `initializerBasedStrategy` to skip a defaulted parameter it cannot derive** —
+   which is work in SwiftPropertyLaws, not here.
+
+That is a cross-repo feature, strictly more expensive than §3's product edge, which is
+single-repo.
+
+### The population, stated in both forms because they differ by two orders of magnitude
+
+| | count |
+|---|---|
+| `public init`s in `Sources/` with at least one defaulted parameter | **91 of 310 (29%)** |
+| …where a defaulted parameter's type is **underivable**, i.e. the rule would change anything | **1** |
+
+**The 29% is not the reachable population and must not be quoted as one.** Most defaults are
+`Int`, `[String]`, `Bool` — types that derive fine, so skipping them changes nothing. The rule
+only bites when the defaulted parameter's type is one the strategist cannot generate, and on
+this corpus that is `FunctionSummary` alone.
+
+### The route that must NOT be taken
+
+Generating `Effect?` as **`nil` only** would derive `FunctionSummary` today, single-repo, with
+no schema change. It is rejected: a nil-only optional is a **degenerate domain**, and the
+standing rule is that *`measured-bothPass` means no counterexample in the generated domain, not
+that the property holds*. Any law keyed on a function's effect would pass without ever being
+tested, and pass *silently* — the exact shape §8.6 records for `booleanStem`, where a `String`
+generator that never drew an English boolean prefix made the failing branch unreachable.
+
+A generator that cannot fail is worse than a decline, because a decline is legible.
+
+### Recommendation
+
+**Do not build.** Same arithmetic as §5, worse cost: cross-repo instead of single-repo, for one
+row, and that row's law is `isSelfTypedBinaryOp` — a two-comparison `predicate` totality claim
+on a function whose body is `paramType == "Self" && returnTypeText == "Self"`.
+
+**Revisit if a corpus shows a double-digit count in the second row of that table**, not the
+first. The kit-side half would be worth proposing on its own if SwiftPropertyLaws sees the same
+shape from other consumers — it is a reasonable capability, just not one this repo's evidence
+justifies asking for. (falsifier: `SwiftPropertyLaws/InitializerParameter.hasDefault`)
