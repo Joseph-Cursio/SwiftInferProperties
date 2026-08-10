@@ -48,11 +48,17 @@ extension SwiftInferCommand.Verify {
     /// motivates.
     static func architecturalPendingDetail(
         buildStdout: String,
-        buildStderr: String
+        buildStderr: String,
+        sourceFileByTypeName: [String: String] = [:]
     ) -> String? {
         if buildStdout.contains("is inaccessible due to '")
             || buildStderr.contains("is inaccessible due to '") {
             return "internal-api-not-accessible"
+        }
+        if let dependency = dependencyDeclaredCarrier(
+            stdout: buildStdout, stderr: buildStderr, sourceFileByTypeName: sourceFileByTypeName
+        ) {
+            return "carrier-declared-in-dependency: \(dependency)"
         }
         if matchesInstanceMethodShape(stdout: buildStdout, stderr: buildStderr) {
             return "instance-method-shape-not-supported"
@@ -61,6 +67,63 @@ extension SwiftInferCommand.Verify {
             return "carrier-missing-required-conformance"
         }
         return nil
+    }
+
+    /// A carrier the stub cannot NAME because its declaration lives in a dependency checkout —
+    /// which is a third thing, and neither existing bucket says it.
+    ///
+    /// `unsupported-carrier` means *no generator derives this type* and sends the reader to the
+    /// kit. `build-failed` means *our tooling broke* and sends them to us. The truth here is
+    /// **the verify stub is not allowed to import this module**: the generator exists, the shape
+    /// is indexed, and `@testable import <Subject>` does not re-export a dependency. Mislabelling
+    /// it is the mistake `missingPairedFunction`'s doc already names — *"saying 'not in the
+    /// curated pair list' would send the reader to fix the wrong thing."*
+    ///
+    /// **Positive evidence, not inference from absence.** The recorded declaration path either
+    /// contains `.build/checkouts/` or it does not. An earlier attempt at a neighbouring
+    /// problem inferred *private* from a type being missing from the index and was measurably
+    /// wrong (§9.5); this reads a fact the index states.
+    ///
+    /// Measured 2026-08-09 (§9, `--scan-dependencies`): `Effect` and `FunctionSummary`, both
+    /// reported `build-failed: cannot find type … in scope`.
+    ///
+    /// Silent when the map is empty or the name is locally declared — then the build failure is
+    /// something else and `build-failed` remains the honest label.
+    private static func dependencyDeclaredCarrier(
+        stdout: String,
+        stderr: String,
+        sourceFileByTypeName: [String: String]
+    ) -> String? {
+        guard !sourceFileByTypeName.isEmpty else { return nil }
+        for name in unfoundNames(in: stdout) + unfoundNames(in: stderr) {
+            guard let file = sourceFileByTypeName[name],
+                  let module = dependencyModule(declaringPath: file) else { continue }
+            return "`\(name)` is declared in dependency module `\(module)`, which the verify "
+                + "stub does not import"
+        }
+        return nil
+    }
+
+    /// `<…>/.build/checkouts/<Checkout>/Sources/<Module>/…` → `<Module>`, or nil when the path
+    /// is not inside a dependency checkout.
+    private static func dependencyModule(declaringPath: String) -> String? {
+        let parts = declaringPath.split(separator: "/").map(String.init)
+        guard let checkoutsAt = parts.firstIndex(of: "checkouts"),
+              parts.dropFirst(checkoutsAt).contains("Sources") else { return nil }
+        let afterCheckouts = parts[(checkoutsAt + 1)...]
+        guard let sourcesAt = afterCheckouts.firstIndex(of: "Sources"),
+              sourcesAt + 1 < afterCheckouts.endIndex else { return nil }
+        return afterCheckouts[sourcesAt + 1]
+    }
+
+    /// Every identifier in a `cannot find ['type '] 'X' in scope` diagnostic.
+    private static func unfoundNames(in output: String) -> [String] {
+        let pattern = "cannot find (?:type )?'([A-Za-z_][A-Za-z0-9_]*)' in scope"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(output.startIndex..., in: output)
+        return regex.matches(in: output, range: range).compactMap { match in
+            Range(match.range(at: 1), in: output).map { String(output[$0]) }
+        }
     }
 
     /// V1.59.A — recognize instance-method-on-type errors. Three

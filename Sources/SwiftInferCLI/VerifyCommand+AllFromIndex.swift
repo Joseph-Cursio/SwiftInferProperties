@@ -373,7 +373,7 @@ extension SwiftInferCommand.Verify {
                 workdir: sharedRoot, product: member.targetName
             )
             if buildOutput.exitCode != 0 {
-                return surveyRecordForBuildFailure(buildOutput: buildOutput, context: context)
+                return surveyRecordForBuildFailure(buildOutput: buildOutput, context: context, config: config)
             }
             let runOutput = try VerifierSubprocess.runVerifierBinary(
                 workdir: sharedRoot, product: member.targetName

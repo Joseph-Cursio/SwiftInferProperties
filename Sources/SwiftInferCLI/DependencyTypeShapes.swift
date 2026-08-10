@@ -74,6 +74,9 @@ enum DependencyTypeShapes {
     static func scan(packageRoot: URL, localTypeNames: Set<String>) -> Scanned {
         var result = Scanned()
         var seenIn: [String: String] = [:]
+        // Names an actual `struct`/`class`/`enum`/`actor` declaration has claimed, so a later
+        // `extension` in another module cannot overwrite the declaring site.
+        var primaryDeclarationSites: Set<String> = []
 
         let located = checkoutSourceRoots(packageRoot: packageRoot)
         result.checkoutsDirectoryFound = located.directoryFound
@@ -107,12 +110,53 @@ enum DependencyTypeShapes {
                 seenIn[shape.name] = dependency
                 result.shapes[shape.name] = shape
             }
-            for decl in corpus.typeDecls where result.shapes[decl.name] != nil {
-                result.sourceFiles[decl.name] = decl.location.file
-            }
+            // **A declaration beats an extension, and last-writer-wins was picking either.**
+            // The map answers *which module must be imported to name this type*, and an
+            // `extension` is not where a type is declared — it is somewhere the type is used.
+            // Measured: `CodeBlockItemSyntax` recorded
+            // `SwiftSyntaxBuilder/generated/SyntaxExpressibleByStringInterpolationConformances`
+            // rather than its declaration in `SwiftSyntax`, so a decline naming the module
+            // would have sent a reader to import the wrong one. `primaryDeclarationSites`
+            // holds the names an actual declaration has claimed; an extension only fills a
+            // gap none of them filled.
+            recordDeclarationSites(
+                from: corpus.typeDecls, into: &result, primaries: &primaryDeclarationSites
+            )
         }
         result.collisions.sort()
         return result
+    }
+
+    /// Where each type is declared, preferring a real declaration over an `extension`.
+    ///
+    /// **A declaration beats an extension, and last-writer-wins was picking either.** The map
+    /// answers *which module must be imported to name this type*, and an `extension` is not
+    /// where a type is declared — it is somewhere the type is used.
+    ///
+    /// Measured 2026-08-09: `CodeBlockItemSyntax` recorded
+    /// `SwiftSyntaxBuilder/generated/SyntaxExpressibleByStringInterpolationConformances.swift`
+    /// rather than its declaration in `SwiftSyntax`, so a decline naming the module would have
+    /// sent a reader to import the wrong one — the mistake `missingPairedFunction`'s doc names,
+    /// arrived at from a different direction.
+    ///
+    /// An extension only fills a gap no declaration filled, and the first declaration wins over
+    /// a later one so the result does not depend on checkout order.
+    private static func recordDeclarationSites(
+        from typeDecls: [TypeDecl],
+        into result: inout Scanned,
+        primaries: inout Set<String>
+    ) {
+        for decl in typeDecls where result.shapes[decl.name] != nil {
+            if decl.kind == .extension {
+                if result.sourceFiles[decl.name] == nil {
+                    result.sourceFiles[decl.name] = decl.location.file
+                }
+                continue
+            }
+            guard !primaries.contains(decl.name) else { continue }
+            primaries.insert(decl.name)
+            result.sourceFiles[decl.name] = decl.location.file
+        }
     }
 
     /// Fold dependency shapes into a pass's own maps, local-wins, and report collisions.
