@@ -171,10 +171,23 @@ extension SwiftInferCommand.Discover {
         output: any DiscoverOutput
     ) {
         let pipeline = context.pipeline
+        // Only the evidence that is actually about the code being rendered. The RAW map here
+        // was a real defect: `render` derives the displayed tier via
+        // `promoted(byVerifyOutcome:)`, so a row whose `+50` the staleness gate had correctly
+        // withheld still printed `Verified` — directly above its own caveat saying the
+        // evidence was not being applied. Measured at 4 rows on `SwiftInferCore` the day the
+        // gate shipped. Scoring and rendering must not be able to disagree, so both go
+        // through `VerifyEvidenceScoring`.
+        let applicableEvidence = VerifyEvidenceScoring.applicable(
+            evidenceByIdentity: context.evidence.verifyByIdentity,
+            currentFingerprintByIdentity: fingerprintsByIdentity(
+                for: visible, summaries: pipeline.summaries
+            )
+        )
         renderAndWrite(
             visible: visible,
             statsOnly: context.statsOnly,
-            evidenceByIdentity: context.evidence.verifyByIdentity,
+            evidenceByIdentity: applicableEvidence,
             effectAnnotations: context.effectAnnotations
                 ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
             docstringAdvice: docstringAdviceIfEnabled(

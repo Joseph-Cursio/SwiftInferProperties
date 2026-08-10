@@ -144,7 +144,10 @@ public enum SuggestionRenderer {
     /// / Possible order; empty tiers omitted; `.suppressed` excluded
     /// because suppressed suggestions never reach the renderer at the
     /// CLI surface anyway.
-    public static func renderStats(_ suggestions: [Suggestion]) -> String {
+    public static func renderStats(
+        _ suggestions: [Suggestion],
+        verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
+    ) -> String {
         if suggestions.isEmpty {
             return "0 suggestions."
         }
@@ -162,7 +165,7 @@ public enum SuggestionRenderer {
             lines.append(renderTemplateLine(
                 template: template,
                 count: group.count,
-                tierBreakdown: tierBreakdown(group),
+                tierBreakdown: tierBreakdown(group, verifyEvidenceByIdentity: verifyEvidenceByIdentity),
                 targetWidth: targetWidth
             ))
         }
@@ -204,10 +207,24 @@ public enum SuggestionRenderer {
     /// adds — `.verified` — cannot currently occur in `score.tier` (`Tier(score:)`
     /// never returns it; the verify promotion is applied at render time to a local
     /// `effectiveTier`), so its count is always zero and empty tiers are dropped.
-    private static func tierBreakdown(_ suggestions: [Suggestion]) -> String {
+    private static func tierBreakdown(
+        _ suggestions: [Suggestion],
+        verifyEvidenceByIdentity: [String: VerifyEvidence] = [:]
+    ) -> String {
         var counts: [Tier: Int] = [:]
         for suggestion in suggestions {
-            counts[suggestion.score.tier, default: 0] += 1
+            // The EFFECTIVE tier, exactly as `render` computes it. Until v1.149 this read
+            // `suggestion.score.tier` and the map was never passed, so `renderStats` could not
+            // say `Verified` at all: `.verified` is set by the surfacing pipeline rather than
+            // derived from the score, and a 100-point row falls out as `Strong`. Measured on
+            // this repo, `SwiftInferCore` printed "36 Strong" where the truth was 33 Verified
+            // + 3 Strong, and `SwiftInferCLI` "22" where it was 18 + 4 — both adding up
+            // exactly. That both inflates `Strong` and hides the tool's best result, in the
+            // view a CI dashboard reads.
+            let effectiveTier = suggestion.score.tier.promoted(
+                byVerifyOutcome: verifyEvidenceByIdentity[suggestion.identity.normalized]?.outcome
+            )
+            counts[effectiveTier, default: 0] += 1
         }
         let parts: [String] = Tier.allCases.sorted().filter { $0 != .suppressed }.compactMap { tier in
             guard let value = counts[tier], value > 0 else { return nil }
