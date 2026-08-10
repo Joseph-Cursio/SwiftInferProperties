@@ -78,6 +78,42 @@ struct DeferralFalsifierTests {
         }
     }
 
+    /// **The pending population, reported rather than merely counted.**
+    ///
+    /// This suite fails when a falsifier RESOLVES. There is no state in which it fails because
+    /// a falsifier will *never* resolve — so one naming a symbol nobody will ever create is
+    /// green forever, indistinguishable from one correctly pending.
+    ///
+    /// Measured twice in one week (`docs/measurements/falsifier-naming-failure-modes.md`):
+    /// `nestedCarrierImportResolution` went inert when the fix shipped as
+    /// `VerifyCommand+NestedCarrier`, and survived in CLAUDE.md — the index everyone reads —
+    /// after all three parts of its gap had closed.
+    ///
+    /// **No detector is possible**: it would have to know what a future fix will be called,
+    /// which is what the author could not know either, and a text detector over the
+    /// surrounding prose is the arm `stale-summary-guard-declined.md` measured at 0/11
+    /// precision. So this reports instead. The local/sibling split is the actionable part —
+    /// a sibling falsifier names another repo's published API and will be used verbatim if
+    /// that repo ships the thing; a local one names an internal symbol nobody is obliged to
+    /// create.
+    @Test("the pending falsifier population is reported, not merely green")
+    func pendingPopulationIsVisible() throws {
+        let pending = try Self.falsifiers().filter { Self.resolves($0.symbol) != .resolved }
+        let local = pending.filter { !$0.symbol.contains("/") }
+        // Never a failure — an unresolved falsifier is the NORMAL state and the whole point of
+        // the convention. The value is that the numbers appear in the run's output at all.
+        print(
+            """
+            [falsifiers] \(pending.count) pending — \(local.count) local, \
+            \(pending.count - local.count) sibling-scoped. A local falsifier names a symbol \
+            nobody is obliged to create and can go inert silently; see \
+            docs/measurements/falsifier-naming-failure-modes.md §4 before adding one.
+            \(Self.render(local))
+            """
+        )
+        #expect(pending.count >= local.count, "arithmetic sanity on the split")
+    }
+
     /// A syntax slip in one doc would silently shrink the population; a slip in the
     /// pattern would empty it. Either way the suite would pass by seeing nothing.
     @Test("the convention is actually in use")
