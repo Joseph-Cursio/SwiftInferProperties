@@ -204,6 +204,17 @@ public enum VerifierSubprocess {
     /// location, matching what the verifier binary was built against.
     /// Returns `nil` on any failure — caller falls back to inherited
     /// environment.
+    ///
+    /// **Deliberately silent, and reviewed as part of the 2026-08-09 silent-swallow sweep.**
+    /// Every guard here is a legitimate *this toolchain is shaped differently* — no
+    /// `-print-target-info`, no `runtimeResourcePath`, no `macosx/testing` directory — not an
+    /// error to report. The fallback is inheriting the environment, which is what a normal
+    /// toolchain wants anyway.
+    ///
+    /// That makes it the opposite case from the sites the sweep changed: there, an empty
+    /// result was indistinguishable from a real answer and the caller drew a conclusion from
+    /// it. Here the caller draws no conclusion — it falls back — so a line on every run with
+    /// an unfamiliar toolchain would be noise, and noise is how a real warning gets skipped.
     private static func computeTestingLibraryDirectory() -> String? {
         guard let data = DrainedProcess.standardOutputViaEnv(["swift", "-print-target-info"]) else {
             return nil
