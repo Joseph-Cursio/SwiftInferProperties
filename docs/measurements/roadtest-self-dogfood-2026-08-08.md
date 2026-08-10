@@ -1405,3 +1405,383 @@ local derivation gap), `FunctionScannerVisitor` ×2 (a traversal — correct sil
 (a generic parameter — unsupportable by construction). Neither remaining actionable row was
 attempted here: `Effect` needs dependency shapes, and `FunctionSummary` wants the kit to
 derive through a user init, which is kit-side work worth measuring on more than one row.
+
+---
+
+## §10 Third pass at `af7ebc9` (2026-08-10)
+
+29 commits past arm G (12 touching `Sources/`), almost all of it *error-reporting*
+hardening — the "report the swallow" series — plus dependency-scan reporting. Release
+binary built from `af7ebc9` into an isolated scratch path.
+
+**The measured-verify path did not move, and the discover surface moved a great deal for a
+reason that is not progress.** The second half is the finding.
+
+### §10.1 `prove-then-show` is bucket-for-bucket identical to arm G
+
+`prove-then-show --target SwiftInferCore --budget small --max-parallel 4`, run in a fresh
+`git worktree` so `.swiftinfer/` is absent by construction (§8's method note).
+
+| | arm G (2026-08-09) | §10 (2026-08-10) |
+|---|---|---|
+| Proven | 84 | **84** |
+| Disproven | 1 | **1** |
+| Unverifiable | 61 | **61** |
+| Inconclusive | 7 | **7** |
+| `not-a-candidate` | 47 | **47** |
+| `unsupported-carrier` | 5 | **5** |
+| `build-failed` | 0 | **0** |
+| total picks | 153 | **153** |
+
+Every bucket identical. That is the **correct** result and is recorded as a control, not as
+a null: the 12 source commits were about reporting errors that were previously swallowed,
+and a change to error *reporting* that moved a verification bucket would mean it had
+changed verification. `BuildIdentity.versionString` is still the single Disproven with
+counterexample `XO8hGC` — §8.2's false law reproducing a third time — and §9.1's marquee
+row `ProtocolCoverageAudit.lawTotal(for:)` is still Proven.
+
+### §10.2 THE HOLE — `discover` promotes on verify evidence of unbounded age, and the identity hash cannot see a body change
+
+> **FIXED 2026-08-10 — `SubjectFingerprint`. See §10.8 for the shipped design and its
+> measured effect.** The identity hash is deliberately NOT changed: evidence now carries a
+> fingerprint of the body it was measured against, and is applied only when that matches.
+
+
+**Symptom first.** The same binary, the same six targets, the same afternoon — run once in
+the working repo and once in a clean worktree. The only difference is the presence of
+`.swiftinfer/`:
+
+| target | clean total | working total | clean "Strong" | working "Strong" |
+|---|---|---|---|---|
+| SwiftInferCore | 129 | **138** | 7 | **36** |
+| SwiftInferTemplates | 115 | **123** | 5 | **14** |
+| SwiftInferCLI | 75 | **92** | 4 | **22** |
+| SwiftInferTestLifter | 25 | 25 | 4 | 4 |
+| SwiftInferKitEvidence | 0 | **1** | 0 | **1** |
+| SwiftInferMacroImpl | 0 | 0 | 0 | 0 |
+| **total** | **344** | **379** | **20** | **77** |
+
+The clean arm is within noise of §7.6's 342 / 24. **Read against a remembered count, the
+working-repo arm reads as "Strong tripled since the last road test."** It did not. Nothing
+in scoring changed — the only signal added since 2026-08-08 is
+`subjectNotVisibleToTests`, at weight 0. The entire delta is `.swiftinfer/verify-evidence.json`.
+
+This is CLAUDE.md §10.3's rule earning itself again, in a new way. That rule was written
+about *flags* (`--include-possible` moved the headline 20%). The same failure has a second
+cause nobody had recorded: **a persisted evidence store, whose contents depend on what was
+run in this directory last week.**
+
+**What is in the store.** 349 records, all distinct identity hashes:
+
+| `capturedAt` | records |
+|---|---|
+| 2026-08-04 | 9 |
+| 2026-08-05 | **187** |
+| 2026-08-10 | 153 |
+
+Of the 150 `measured-bothPass` records — the ones paying `+50` — **66 are from 2026-08-05**.
+On `SwiftInferCLI` the picture is starker: **all 28** evidence-promoted rows are dated
+2026-08-05, five days and ~40 commits stale. Not one is current.
+
+**`discover` never asks.** `VerifyEvidence` records `capturedAt` and `swiftInferVersion`,
+and ten CLI files reference staleness — `grep -rn "stale" Sources/SwiftInferCLI/Discover*.swift`
+returns **nothing**. The row renders `✓ Verify: bothPass — defaultTrials=100 …` with no
+date, no commit, no provenance of any kind. This is §7.4's finding — *a row a human cannot
+audit* — arriving on a different channel, and §7.4's remedy (name the source) is the same one.
+
+**And `swiftInferVersion` cannot stand in for it.** All 349 records say `1.148.0`, because
+that is a *package* version and the package has not been bumped across ~40 commits. The
+field varies for an unrelated reason instead — 153 records read
+`1.148.0 (unattributable build)`, distinguishing *how the binary was built*, not *when*.
+A staleness key that does not move when the code moves, and does move when it does not, is
+worse than none.
+
+#### The soundness half, and it was tested rather than argued
+
+`SuggestionIdentity`'s own docstring says the hash is computed from *"(template ID, function
+signature canonical form, AST shape of property region)"* — and then: *"M1.5 uses template
+ID + canonical signature(s) only — the AST-shape addition is deferred until M6."* The
+canonical input is `"<template>|<canonicalSignature>"`. **The body is not in the hash.**
+
+So a body-only edit that falsifies the law leaves the identity unchanged, and stale evidence
+keeps attaching. Measured, in a throwaway worktree with the store copied in:
+
+```swift
+ public static func strippingGenericParameters(_ name: String) -> String {
+-    guard let openAngle = name.firstIndex(of: "<") else { return name }
++    guard let openAngle = name.firstIndex(of: "<") else { return name + "!" }
+     return String(name[..<openAngle])
+ }
+```
+
+`f("Foo")` is now `"Foo!"` and `f(f("Foo"))` is `"Foo!!"` — flatly not idempotent, signature
+byte-identical.
+
+| arm | verdict |
+|---|---|
+| mutant **+ evidence** | **`Score: 100 (Verified)`** · `✓ Verify: bothPass — defaultTrials=100 edgeTrials=100 edgeSampled=0 (+50)` |
+| mutant, **no evidence** (control) | `Score: 50 (Likely)`, no verify line |
+
+Identity `0x8454E302FAC7F5BB` in **both** arms. The control is what makes this a measurement
+rather than an anecdote: the evidence store alone produces the false verdict, and the hash is
+provably blind to the change that falsified the law.
+
+**This is the tool's strongest claim failing in its safest direction.** `Verified` is the only
+execution-backed tier — the one a reader is *entitled* to trust more than a static score — and
+it can be carried across an arbitrary rewrite of the subject. Appendix C's confident-zero
+inverted: a confident *positive*.
+
+**No guard covers it.** No test asserts that evidence is invalidated by a body change, and the
+`canonicalInput` assertions in `Tests/` pin the `"<template>|"` prefix — i.e. they ratify the
+shape that omits the body.
+
+### §10.3 `--stats-only` structurally cannot say `Verified`
+
+The renderers are asymmetric. `SuggestionRenderer.render(_:verifyEvidenceByIdentity:)` applies
+`.promoted(byVerifyOutcome:)`; `SuggestionRenderer.renderStats(_ suggestions:)` takes **no
+evidence parameter at all**, so the tier it prints falls back to `tier(forScore:)` — and a
+score of 100 is `Strong`.
+
+Measured, same run, two views:
+
+| target | full output | `--stats-only` |
+|---|---|---|
+| SwiftInferCore | 33 Verified + 3 Strong | **36 "Strong"** |
+| SwiftInferCLI | 18 Verified + 4 Strong | **22 "Strong"** |
+
+Both add up exactly, which is the proof of mechanism rather than a correlation. The stats view
+**inflates `Strong`** (36 reported, 3 true) and simultaneously **hides the tool's best result**
+(33 execution-backed verdicts rendered as static ones). It is the view a CI dashboard reads —
+the same complaint as §5, now with a second instance and a one-parameter cause.
+
+### §10.4 The known-false `booleanStem` law is re-proven every run, and now renders `Verified`
+
+§8.6(b) established by hand that `ViewModelNameHeuristics.booleanStem` is **not** idempotent
+(`isShowing → showing → ing`), that the survey proved it anyway because the derived `String`
+generator never draws an English boolean prefix, and banked the **refutation** as
+`SurveyedIdempotencePropertyTests`.
+
+Three runs later nothing has changed, and the blast radius has grown:
+
+* `prove-then-show` proves it again this pass (`✓ ViewModelNameHeuristics idempotence booleanStem(_:)`).
+* That writes a fresh `measured-bothPass` record.
+* `discover` reads it back and renders **`Score: 85 (Verified)`**.
+
+So the repo now contains a passing test whose entire purpose is to assert the law is false,
+and the flagship developer-facing command labels the same law with its strongest tier. **The
+two never meet.** `VerifyEvidenceScoring` has a `verifyDisproven` veto, but it fires on
+`.measuredDefaultFails` — a *machine* refutation. There is no channel by which a refutation
+established by a **human**, and banked as a test, re-enters the evidence loop.
+
+This is not the generator-domain lesson §8.6 already drew; that one is recorded and stands.
+What is new is that the false verdict is now **self-regenerating** — each survey re-mints the
+evidence — and has been promoted from a survey artifact into the default output.
+
+### §10.5 What §10 does not claim
+
+* **The stale-evidence effect is not a bug in persistence.** Evidence feeding back into
+  inference is the design (`KitEvidence`, `VerifyEvidence`). What is missing is *provenance at
+  the point of reading* and an identity that covers what the evidence was about.
+* **The mutation is planted evidence.** Per `fixtures/planted-defect-arm`, it falsifies a
+  categorical claim ("a `Verified` row reflects the current body") and **cannot estimate how
+  often** a real edit would strand real evidence.
+* **One target for the survey.** `SwiftInferCore`. The other five are unmeasured on that path.
+* **Nothing was shipped.** No fix is included here; the working repo's `.swiftinfer/` was read
+  and never written (timestamps unchanged at 06:33/06:36), and the mutation lived in a
+  throwaway worktree that has been removed.
+* **The 344 clean total is not comparable to §1.1's 339 or §7.6's 342** as drift — those were
+  taken on different binaries. It is quoted only to show the clean arm sits where the last
+  road test left it, which is what rules out a scoring change as the cause of the 379.
+
+### §10.6 The pending-falsifier report says the opposite of what it means
+
+Found by running the guards after editing docs, not by looking for it.
+
+`DeferralFalsifierTests.pendingPopulationIsVisible` selects the **pending** falsifiers
+(`resolves($0.symbol) != .resolved`) and renders them through `Self.render(_:)`, whose line is:
+
+```
+\(entry.file):\(entry.line) — falsifier `\(entry.symbol)` has landed
+```
+
+So a green run prints:
+
+```
+CLAUDE.md:75 — falsifier `Pairing.permuted` has landed
+docs/measurements/roadtest-self-dogfood-2026-08-08.md:1120 — falsifier `IndexedTypeShape.accessLevel` has landed
+docs/plans/dependency-carrier-imports-scope.md:92 — falsifier `VerifierWorkdir.dependencyProductEdge` has landed
+```
+
+All three are **pending** — `grep -rn "accessLevel" Sources/SwiftInferCore/SemanticIndexEntry.swift`
+is empty, and the sibling assertion *"no deferral names a falsifier that now exists"* passes,
+which is only possible if none of them exists. The wording belongs to the failure path and was
+reused for the population report.
+
+**Why it is worth a line rather than a shrug.** This shipped in `d98ed6e` — *"Report the
+pending falsifier population, and retire an inert one"* — one of the commits in this very
+window, and the report exists precisely so a falsifier cannot go inert unnoticed
+(`falsifier-naming-failure-modes.md`). A reader skimming a green run sees three deferrals
+announced as resolved and would reasonably go reopen them. **A visibility mechanism that
+states the negation of its own finding is worse than silence**, which is the same argument
+§9.5 used to revert a signal that could fire on the wrong target.
+
+One-word fix (`has landed` → `is pending` on the report path, or a separate renderer per
+path). Not applied here, per §10.5's "nothing was shipped".
+
+### §10.7 `--scan-dependencies` is inert under this document's own recommended method
+
+`prove-then-show --scan-dependencies` is the main new *feature* in this window. It was run
+twice against `SwiftInferCore` and recorded **0 dependency shapes both times**, so the output
+is identical to §10.1 in every bucket (84 / 1 / 61 / 7) and `EffectResolver
+carriesInformationUpward(_:)` still declines `unsupported-carrier: Effect` rather than
+`carrier-declared-in-dependency`.
+
+**The reason is a collision between two pieces of this document.** §8's method note recommends
+running the survey in a fresh `git worktree`, because `.swiftinfer/` is gitignored and the
+index is therefore clean *by construction*. But a fresh worktree has no `.build/checkouts` —
+and **a prove-then-show run to completion does not create one**, because it builds its stubs in
+a separate verifier workdir. Checked directly: after the §10.1 run finished, the worktree
+contained `.swiftinfer/` and **no `.build/` at all**.
+
+So the documented way to get a trustworthy index is also the way to guarantee the new flag has
+nothing to read. Neither half is wrong on its own; the two were written against different
+preconditions and nothing states the intersection.
+
+**The tool reports this correctly, and that is worth crediting**, because it is exactly what
+`27608f7` ("Make the dependency scan say which empty it is") shipped for:
+
+```
+warning: dependency scanning was requested, but there is no `.build/checkouts` under <root>
+— SwiftPM puts resolved dependency sources there, so nothing could be read.
+Run `swift build` first. 0 dependency shape(s) recorded.
+```
+
+Without that line this pass would have recorded *"`--scan-dependencies` moves nothing"* as a
+finding about the feature, when the truth is that the scan never ran. **A null result that says
+which null it is, is the difference between a measurement and a wrong conclusion** — the same
+argument `DependencyTypeShapes` makes in its own doc comment about `checkoutsDirectoryFound`.
+
+**One accommodation was tried and FAILED, recorded so it is not repeated.** Symlinking the main
+checkout's directory in (`ln -s <main>/.build/checkouts .build/checkouts`) did **not** make the
+scan see it: the warning was byte-identical and shapes stayed 0, even though the exact path the
+warning names is readable — `os.listdir` returns 11 entries through it, and `SwiftSourceFiles`
+explicitly resolves symlinks (`isSymbolicLink` → `resolvingSymlinksInPath()`). **The mechanism
+was not isolated** and is deliberately not guessed at here. The honest next step is a real
+`swift build` in the worktree rather than a symlink, which costs a dependency build plus a
+~40-minute survey and was not spent.
+
+**So the label added by `3035e7e` remains unexercised on this corpus.** `DependencyCarrierLabelTests`
+pins it at the unit level and its arms are the right ones (including the must-not-fire arm for a
+locally declared type), but no end-to-end run in this repo has yet produced a
+`carrier-declared-in-dependency` row. The population that would produce one is `Effect`, and
+`dependency-carrier-imports-scope.md` already measures that population at **2 rows** — which is
+the reason to fix the label rather than the plumbing, and equally the reason this is a low-value
+gap to close rather than an urgent one.
+
+---
+
+## §10.8 The fix — validate evidence, do not destabilise identity (2026-08-10)
+
+§10.2 measured that a body-only edit falsifying a law left the suggestion identity unchanged,
+so stale `measured-bothPass` evidence still attached and `discover` reported the now-false law
+as `Verified`. The obvious repair — put the body in the identity hash — was **considered and
+rejected**, and the reason is the useful part.
+
+### Why not fix the identity hash
+
+`SuggestionIdentity` is not only an evidence key. It keys `decisions.json` (accept/reject),
+`baseline.json` and drift, the deterministic sampling seed, and the user-written
+`// swiftinfer: skip 0x…` markers that live in source. Two PRD guarantees say so explicitly:
+
+* §7.5 — *"`// swiftinfer: skip [hash]` markers in source survive regeneration."*
+* §16 #1 — *"The AST-shape suggestion-identity hash survives renames and signature-preserving
+  refactors."*
+
+Folding the body into that hash would void a user's skip markers and reset their decisions and
+baseline every time they edited a function. **The bug is not that identity is stable — identity
+is stable on purpose. The bug is that nothing else was answering the other question.**
+
+### What shipped
+
+Identity is untouched. `VerifyEvidence` gains `subjectFingerprint`, and the outcome is applied
+only when it matches the subject's body as scanned *this run*:
+
+| stage | change |
+|---|---|
+| scan | `FunctionSummary.bodyFingerprint` — `SubjectFingerprint.of(bodyText:)` over the body syntax |
+| index | `SemanticIndexEntry.subjectFingerprint`, from the same pass's summaries |
+| verify | stamps each record with the entry's fingerprint |
+| discover | `VerifyEvidenceScoring` withholds the outcome unless it matches |
+
+Four decisions carry the weight, and each is guarded:
+
+1. **Withheld in BOTH directions.** The premise is *evidence taken against a different body is
+   not evidence about this body*; honouring it for promotions but not vetoes would be
+   incoherent. A stale `defaultFails` stops suppressing — but the caveat still names the
+   refutation, so the warning survives even though the score effect does not.
+2. **Weight 0.** A stale pass is not counter-evidence; the law may well still hold. Demoting
+   would assert more than is known. Withholding the `+50` is the whole effect; the signal
+   exists to make that visible.
+3. **A missing fingerprint counts as stale.** Every pre-fix record has none, so nothing can
+   establish what it measured. Treating unknown as valid would preserve the defect on exactly
+   the population most likely to be stale.
+4. **A partial fingerprint is no fingerprint.** A law over two functions returns `nil` if
+   either subject is unfingerprintable — validating a round trip against one half would leave
+   the other half's edits invisible, which is the hole one layer down.
+
+**Normalization is whitespace-only, and over-invalidation is the deliberate direction.**
+Reindenting does not move the fingerprint; a comment change does. Withholding good evidence
+under-claims (the row falls back to its static tier, which is true); applying stale evidence
+over-claims (the row asserts `Verified` about code nobody ran it against). Keeping comments is
+not merely caution: this project *reads comments as evidence*
+(`DocstringPropertyCorroborator`), so a comment is not reliably inert here.
+
+### Measured, on the real store
+
+The working repo's 349 records all predate fingerprinting, so all 349 are now withheld. Same
+binary discipline as §10.2 — the fixed binary against the same contaminated store, versus the
+clean-worktree arm:
+
+| target | working repo, before fix | working repo, AFTER fix | clean worktree (no evidence) |
+|---|---|---|---|
+| SwiftInferCore | 138 / **36 "Strong"** | 130 / **7** | 129 / 7 |
+| SwiftInferCLI | 92 / **22 "Strong"** | **75 / 4** | 75 / 4 |
+
+**`SwiftInferCLI` lands exactly on the clean arm, 75 for 75.** Core is 130 against 129 because
+the corpus itself grew by one row — `SubjectFingerprint.normalized(_:)` is a `String -> String`
+the fix itself added, and the tool proposes an idempotence law about it. **129 rows carry the
+new caveat**, which renders as:
+
+```
+⚠ Verify evidence from 2026-08-10T11:36:28Z is NOT being applied: it was recorded before
+  swift-infer stamped runs with the subject's body, so there is no way to tell whether it was
+  measured on the code above. Re-run `swift-infer verify` for this pick to restore it. (+0)
+```
+
+### The cost, stated plainly
+
+**Every existing verify verdict stops counting until re-verified.** That is not a side effect;
+it is the fix. Anyone upgrading sees execution-backed rows fall back to their static tiers
+until they re-run `verify`, and the caveat tells them why and what to do.
+
+### Guards
+
+`VerifyEvidenceStalenessTests` — 8 laws. The mutation from §10.2 is one of them (same identity,
+different body, promotion withheld). **The arm that matters most is the control**: a *matching*
+body must still promote, because a gate that withholds everything is indistinguishable from a
+broken evidence loop and would read as a clean result. Both absent-fingerprint directions are
+asserted separately, and each is required to say which of the two it is. `FieldCoverageReflectionTests`
+caught the new field the moment it was added — a `nil` optional is dropped by the synthesized
+encoder, so an unpopulated fixture read as *never encoded*.
+
+Four existing suites had to be updated, and how is worth recording: they hand-write evidence
+for a fixture and expect it applied, which now requires a real fingerprint. They derive it
+through the **same production join** (`subjectFingerprint(of:in:)` in the test support file)
+rather than a literal — a hardcoded hash would silently stop matching the first time a fixture
+was reformatted, and the arm would then pass only because the evidence was being discarded,
+green for the opposite of the intended reason.
+
+### Not fixed here
+
+§10.3 (`--stats-only` cannot say `Verified`) and §10.4 (the `booleanStem` loop has no channel
+for a human-established refutation) are untouched and remain open.
