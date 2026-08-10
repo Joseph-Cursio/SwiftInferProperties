@@ -114,12 +114,48 @@ public enum VerifyEvidenceScoring {
     ///
     /// One rule, one place: filter here, and every consumer inherits the decision.
     public static func applicable(
+        to suggestions: [Suggestion],
         evidenceByIdentity: [String: VerifyEvidence],
         currentFingerprintByIdentity: [String: String]
     ) -> [String: VerifyEvidence] {
-        evidenceByIdentity.filter { identity, evidence in
-            stalenessCaveat(evidence: evidence, current: currentFingerprintByIdentity[identity]) == nil
+        // Identities whose law a test in this codebase explicitly contradicts. Rendering must
+        // honour this for the same reason scoring does — and it is the ONLY thing that can
+        // remove the `Verified` label, which `promoted(byVerifyOutcome:)` derives from the
+        // outcome rather than from the score.
+        let contradicted = Set(
+            suggestions.filter(isContradictedByAuthor).map(\.identity.normalized)
+        )
+        return evidenceByIdentity.filter { identity, evidence in
+            guard !contradicted.contains(identity) else { return false }
+            return stalenessCaveat(
+                evidence: evidence, current: currentFingerprintByIdentity[identity]
+            ) == nil
         }
+    }
+
+    /// A human has explicitly asserted this law does NOT hold, so no machine measurement of
+    /// the same law may be applied.
+    ///
+    /// **This is the channel road test §10.4 said was missing.** `verifyDisproven` vetoes on
+    /// `.measuredDefaultFails` — a *machine* refutation — and there was no way for a
+    /// refutation a person established, and banked as a test, to re-enter the loop. So
+    /// `ViewModelNameHeuristics.booleanStem` kept rendering `Verified` while
+    /// `SurveyedIdempotencePropertyTests` existed for the sole purpose of pinning it as false.
+    ///
+    /// **Why the counter-signal alone was not enough.** `TemplateRegistry+CrossValidation`
+    /// already applies `-25 .asymmetricAssertion` when TestLifter finds a negative-form
+    /// assertion. But `-25` against `+50` still nets positive, and — decisively — the
+    /// displayed `Verified` never came from the score at all: it comes from
+    /// `Tier.promoted(byVerifyOutcome:)`, which reads the outcome and ignores every signal.
+    /// A demotion could not have removed the label no matter how large.
+    ///
+    /// **Dispositive, matching the polarity already documented for the lifted side**
+    /// (`LiftedCounterSignal`: *"we don't surface a suggestion the test author has actively
+    /// contradicted"*). A measurement over a generated domain cannot outrank a person who has
+    /// written down a counterexample: `measured-bothPass` means only *no counterexample in the
+    /// generated domain*, and the human is telling us where the domain fell short.
+    static func isContradictedByAuthor(_ suggestion: Suggestion) -> Bool {
+        suggestion.score.signals.contains { $0.kind == .asymmetricAssertion }
     }
 
     /// Fold one piece of evidence into one suggestion.
@@ -131,6 +167,23 @@ public enum VerifyEvidenceScoring {
         with evidence: VerifyEvidence,
         currentFingerprint: String?
     ) -> Suggestion {
+        // A human who has written down a counterexample outranks a measurement that found
+        // none — see `isContradictedByAuthor`. Checked before staleness because it does not
+        // depend on the evidence being current: the law is false either way.
+        if Self.isContradictedByAuthor(suggestion) {
+            return suggestion.appendingScoreSignal(
+                Signal(
+                    kind: .verifyEvidenceStale,
+                    weight: 0,
+                    detail: "Verify evidence is NOT being applied: a test in this codebase "
+                        + "asserts this law does NOT hold. A measurement that found no "
+                        + "counterexample does not overrule a counterexample somebody wrote "
+                        + "down — `measured-bothPass` means only that the generated domain "
+                        + "contained none."
+                ),
+                explainabilityArm: .whyMightBeWrong
+            )
+        }
         // Evidence is only about the code it was measured on. `identityHash` cannot
         // establish that — it is deliberately blind to the body (PRD §7.5) — so the
         // fingerprint is what licenses USING this outcome at all.
