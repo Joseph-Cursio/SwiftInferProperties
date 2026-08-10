@@ -1858,3 +1858,86 @@ corpus today: every record predates fingerprinting, so nothing is applicable unt
 `RenderStatsTierTests` guards the stats side — a `bothPass` row reports `1 Verified` rather
 than being folded into `Strong`, the no-evidence line is byte-identical to before (so goldens
 are unaffected), and the stats and full renderers are asserted to agree on the effective tier.
+
+---
+
+## §10.10 Re-verify — the loop closes, and the tool refutes a law about the fix itself
+
+The staleness gate (§10.8) made all 349 existing records inert, so only the WITHHOLDING
+direction had been demonstrated on this repo. The matching direction — verify writes a
+fingerprint, discover matches it, the row promotes — was covered by unit tests and fixtures
+and had never run here. This closes that gap.
+
+`prove-then-show --target SwiftInferCore --budget small --max-parallel 4`, fresh worktree at
+`d1eaa1f`, binary built from the merged `main`.
+
+### §10.10.1 Buckets are stable
+
+| | §10.1 (arm G parity) | §10.10 |
+|---|---|---|
+| picks tested | 153 | **156** |
+| Proven | 84 | **85** |
+| Disproven | 1 | **2** |
+| Unverifiable | 61 | 62 |
+| Inconclusive | 7 | 7 |
+
+**The +3 picks are the corpus growing, not the tool changing** — §10.8 and §10.9 added
+`SubjectFingerprint` and `VerifyEvidenceScoring.applicable`, and the templates propose laws
+about them like any other code.
+
+### §10.10.2 The new refutation is a false law, about the fix's own code
+
+```
+✗ SubjectFingerprint  idempotence  of(bodyText:)   [counterexample: ]
+```
+
+`of(bodyText:)` returns a 16-character digest, so `of(of(x)) != of(x)`. **Correct code, wrong
+conjecture** — and specifically the **domain-transfer** class: a `T -> T` whose output is a
+different *kind* of thing, so composing it type-checks and means nothing. That is the exact
+exclusion `returnExtendsInput`'s rationale names (moved to
+`docs/design/signal-kind-rationales.md` earlier the same day), and the one
+`fixtures/domain-transfer-signal` measured a veto for and **declined** at 4/12 precision.
+
+Its sibling is the control:
+
+| pick | tier | verdict | reading |
+|---|---|---|---|
+| `SubjectFingerprint.normalized(_:)` | **Strong 75** | **Proven** | true law — collapsing whitespace twice is idempotent |
+| `SubjectFingerprint.of(bodyText:)` | **Possible 35** | **Disproven** | false law — a digest is not its own input |
+
+**Tier predicted the reading, for the third independent time** — after the whole-corpus survey
+and §8.2's `BuildIdentity.versionString`, which is also `Possible` 35. *All real bugs are
+`Likely`+; all `Possible` refutations are false laws.* Two laws proposed about the same new
+type, one held and one refuted, and the tier separated them before either ran.
+
+**Zero defects found in the fix's own code.**
+
+### §10.10.3 The loop closes
+
+New store: **156 records, 153 carrying a fingerprint.**
+
+| | stale store (§10.8) | re-verified store |
+|---|---|---|
+| `discover` full render | 0 Verified, 8 Strong | **34 Verified**, 3 Strong |
+| `discover --stats-only` | 8 Strong | **34 Verified**, 3 Strong |
+| rows both `Verified` and "NOT being applied" | 0 | **0** |
+
+The two views agree, and every `Verified` row is now backed by evidence measured against the
+body that is there. **Before §10.9 this table would have been meaningless**: the renderer
+promoted from the raw map, so rows showed `Verified` whether or not the evidence was
+applicable. A `Verified` here now carries information it did not carry yesterday.
+
+### §10.10.4 The 3 records with no fingerprint, and the limitation they expose
+
+All three are `architectural-coverage-pending` — declines, not verdicts — so nothing is lost:
+`differential-equivalence` ×2 and `invariant-preservation` ×1, the same rows CLAUDE.md already
+records as not running because both `differential` subjects are `private` funcs in test files.
+
+**But the mechanism is worth stating, because it is a standing limitation rather than an
+accident.** `forSuggestion` returns `nil` when ANY subject is unfingerprintable — deliberately,
+since validating a two-function law against one half would let an edit to the other half
+through. The consequence is that **a multi-subject law whose subjects are not all scannable can
+never have applicable evidence**, even if it one day produces a verdict. Today that set is
+exactly the rows that decline for other reasons, so the cost is zero; it would stop being zero
+if a differential pair ever became reachable. Recorded rather than fixed — the alternative
+(validate partially) is the hole this rule exists to close.
