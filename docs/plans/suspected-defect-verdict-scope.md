@@ -3,14 +3,26 @@
 > **Status:** `shipped` · **As of:** 2026-08-08
 
 
-> **§6 step 1 was RUN on 2026-08-08 and is misspecified. See §9 for the result.**
-> Three corpora, 0 refutations, so the confound is **unsettled** — and not for want
-> of trying: a HEAD corpus is correct code, and correct code does not refute. The
-> step asks for "a second corpus with an unrelated template mix"; what it needs is
-> **pre-fix commits**. Two blocking defects were found and fixed on the way (#170,
-> #169), and one clause of §2 is now measurably weaker than when it was written.
+> **§6 step 1 was RUN on 2026-08-08 and is misspecified. See §9 for the result, then §10.**
+> Three corpora, 0 refutations — not for want of trying: a HEAD corpus is correct code, and
+> correct code does not refute. The step asks for "a second corpus with an unrelated template
+> mix"; what it needs is **pre-fix commits**. Two blocking defects were found and fixed on the
+> way (#170, #169), and one clause of §2 is now measurably weaker than when it was written.
+>
+> **This banner said "so the confound is unsettled". That was true when written and was
+> superseded the same day**: §10 settles it with `fixtures/planted-defect-arm/`, which plants a
+> bug in the empty cell rather than hunting history for one. Step 1 is **DONE** — see §10's
+> revised build order. Corrected 2026-08-10.
 
-**Status: scoped, not built. 2026-08-07.** Scopes
+> **The line below read "Status: scoped, not built. 2026-08-07." until 2026-08-10, while the
+> header three lines above said `shipped` and §10 recorded step 1 DONE.** It is the failure this
+> repo keeps paying for: *the detail was maintained, the summary was not, and an index quotes
+> the summary* (CLAUDE.md's slice-3c row). Corrected rather than annotated in place, because a
+> status line is not a diagnosis — it is the thing a reader and an index quote, so leaving the
+> wrong words visible under a banner would keep the defect working.
+
+**Status: `shipped` 2026-08-08 — the scope was built and then measured, and the measurement
+refuted its gate.** Scopes
 `docs/archive/Refuted-high-confidence-guess as candidate bug.md`, which is unchanged and
 still the statement of the idea. **The idea survives contact with the data; its gate does
 not.** All three of the gate's clauses, applied literally to this repo, select **zero
