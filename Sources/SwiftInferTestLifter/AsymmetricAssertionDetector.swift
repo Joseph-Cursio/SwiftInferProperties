@@ -43,9 +43,17 @@ import SwiftSyntax
 public enum AsymmetricAssertionDetector {
 
     public static func detect(in slice: SlicedTestBody) -> [DetectedAsymmetricAssertion] {
-        guard let assertion = slice.assertion else {
+        guard let sliceAssertion = slice.assertion else {
             return []
         }
+        // Substitute the slice's local `let` bindings into the assertion's arguments FIRST, so
+        // every matcher below sees the nested form it was written for even when the test author
+        // used intermediate variables — which is how refutations are actually written. Without
+        // this, `let once = f(x); let twice = f(once); #expect(once != twice)` matched nothing,
+        // and a law the repo's own suite refutes kept being promoted (road test §10.4).
+        // Substituting once here rather than teaching six matchers about variables keeps the
+        // widening in one place and reaches detectors added later.
+        let assertion = withResolvedBindings(sliceAssertion, propertyRegion: slice.propertyRegion)
         var detections: [DetectedAsymmetricAssertion] = []
         if let detection = detectRoundTripNegative(assertion: assertion) {
             detections.append(detection)
@@ -69,6 +77,27 @@ public enum AsymmetricAssertionDetector {
             detections.append(detection)
         }
         return detections
+    }
+
+    /// The assertion with its slice's local `let` bindings substituted in.
+    ///
+    /// `monotonicity` reads `slice.setup + slice.propertyRegion` for its preconditions and is
+    /// handed the substituted assertion as its conclusion; the precondition statements are
+    /// deliberately left alone, since substituting there would rewrite the very bindings the
+    /// precondition matcher looks for by name.
+    private static func withResolvedBindings(
+        _ assertion: AssertionInvocation,
+        propertyRegion: [CodeBlockItemSyntax]
+    ) -> AssertionInvocation {
+        let bindings = LocalBindingResolver.bindings(in: propertyRegion)
+        guard !bindings.isEmpty else { return assertion }
+        return AssertionInvocation(
+            kind: assertion.kind,
+            arguments: assertion.arguments.map {
+                LocalBindingResolver.substituting($0, bindings: bindings)
+            },
+            location: assertion.location
+        )
     }
 
     // MARK: - Round-trip negative — `XCTAssertNotEqual(decode(encode(x)), x)`
