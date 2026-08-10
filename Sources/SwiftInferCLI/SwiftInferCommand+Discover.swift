@@ -179,6 +179,7 @@ extension SwiftInferCommand.Discover {
         // gate shipped. Scoring and rendering must not be able to disagree, so both go
         // through `VerifyEvidenceScoring`.
         let applicableEvidence = VerifyEvidenceScoring.applicable(
+            to: visible,
             evidenceByIdentity: context.evidence.verifyByIdentity,
             currentFingerprintByIdentity: fingerprintsByIdentity(
                 for: visible, summaries: pipeline.summaries

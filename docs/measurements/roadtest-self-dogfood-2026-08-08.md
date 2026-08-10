@@ -1559,6 +1559,11 @@ the same complaint as §5, now with a second instance and a one-parameter cause.
 
 ### §10.4 The known-false `booleanStem` law is re-proven every run, and now renders `Verified`
 
+> **FIXED 2026-08-10 — see §10.11.** The channel existed and was blind: TestLifter's
+> counter-signal detector could not read the shape the refutation was written in, and even
+> when it fires a demotion cannot remove a `Verified` label that never came from the score.
+
+
 §8.6(b) established by hand that `ViewModelNameHeuristics.booleanStem` is **not** idempotent
 (`isShowing → showing → ing`), that the survey proved it anyway because the derived `String`
 generator never draws an English boolean prefix, and banked the **refutation** as
@@ -1941,3 +1946,97 @@ never have applicable evidence**, even if it one day produces a verdict. Today t
 exactly the rows that decline for other reasons, so the cost is zero; it would stop being zero
 if a differential pair ever became reachable. Recorded rather than fixed — the alternative
 (validate partially) is the hole this rule exists to close.
+
+---
+
+## §10.11 The human-refutation channel existed, and was blind twice over (2026-08-10)
+
+§10.4 recorded that `discover` renders `ViewModelNameHeuristics.booleanStem` at `Verified`
+while `SurveyedIdempotencePropertyTests` exists for the sole purpose of pinning that law as
+FALSE, and concluded there was *"no channel by which a refutation established by a human, and
+banked as a test, re-enters the evidence loop."*
+
+**That conclusion was wrong in an instructive way: the channel was built, and silent.**
+`LiftedCounterSignal` + `AsymmetricAssertionDetector` read negative-form assertions out of test
+code and apply `-25 .asymmetricAssertion`, with the polarity already stated in its own doc —
+*"the user's explicit negative assertion is dispositive: we don't surface a suggestion the test
+author has actively contradicted."* It was doing nothing here for **two independent reasons**,
+and either alone was enough to hide it.
+
+### Blindness 1 — the detector could not read the shape a human writes
+
+Every matcher keys on syntax. `idempotenceNegativePair` requires both sides of the inequality
+to be `FunctionCallExprSyntax`, so it recognises
+
+```swift
+#expect(booleanStem(booleanStem(name)) != booleanStem(name))
+```
+
+and nothing else. The refutation this repo actually banked reads:
+
+```swift
+let once = ViewModelNameHeuristics.booleanStem(name)
+let twice = ViewModelNameHeuristics.booleanStem(once)
+#expect(once != twice)
+```
+
+Both sides are `DeclReferenceExprSyntax`, so the matcher returned nil. **This is §7.3's failure
+mode on the negative side** — a detector keyed to the shape the tool imagines rather than the
+shape people write — and it is the second time that exact mistake has surfaced in this road
+test.
+
+`LocalBindingResolver` substitutes the slice's local `let` bindings into the assertion before
+matching, once, so all six negative detectors benefit and any added later inherit it.
+
+### Blindness 2 — a demotion could never have removed the label
+
+Even firing, `-25` against `+50` nets positive. And decisively: **the displayed `Verified`
+never came from the score at all.** `Tier.promoted(byVerifyOutcome:)` reads the outcome and
+ignores every signal, so no demotion of any size could have removed it. Fixing only the
+detector would have moved the number and left the label.
+
+`VerifyEvidenceScoring.isContradictedByAuthor` makes the evidence **inapplicable** — in scoring
+and in rendering both, via the §10.9 `applicable` seam. A measurement over a generated domain
+cannot outrank a person who has written a counterexample down: `measured-bothPass` means only
+*no counterexample in the generated domain*, and the author is telling us where that domain
+fell short.
+
+### Measured
+
+`booleanStem` is gone from the output entirely, and the arithmetic says why:
+
+| | before | after |
+|---|---|---|
+| type-symmetry + value-semantic | 35 | 35 |
+| verify `bothPass` | **+50** | **withheld** |
+| counter-signal | not firing | **−25** |
+| **total → tier** | **85 → `Verified`** | **10 → `.suppressed`** |
+
+**Its absence under `--include-possible` is the proof the counter-signal fired**, and is worth
+stating as a method note: 35 alone lands in `Possible` (20..<40) and would be visible with that
+flag, so only the `-25` explains the silence. Both halves are confirmed by one observation.
+
+That matches how a MACHINE refutation is already treated (`verifyDisproven` → veto →
+suppressed → dropped) and the polarity `LiftedCounterSignal` documents for the lifted side.
+Corpus totals are unchanged at 139 rows; `Verified` 34 → 33.
+
+### Two honest bounds
+
+**Suppression here is score arithmetic, not a guarantee.** `booleanStem` lands at 10 because
+its base is 35. A contradicted law with a stronger base — say 70 — would land at 45 and still
+surface at `Likely`, carrying the counter-signal caveat. What is closed unconditionally is the
+**`Verified` label**, since the evidence is filtered rather than merely outweighed. That is the
+right split: the false confident claim is gone in every case, and a lower-tier row that names
+its own contradiction is information rather than a wrong answer.
+
+**A crash found the real edge, and it is recorded because reading would not have found it.**
+The first implementation substituted every binding, including a member's NAME — a member
+access holds its callee in a `DeclReferenceExprSyntax` too. The rewritten tree violated the
+grammar and the first consumer to read `.declName` force-cast and TRAPPED: `swift-infer
+discover` died with `Unexpectedly found nil while unwrapping an Optional value` inside
+`roundTripNegativePair`, a detector the change was not aiming at. Then the **control arm**
+caught a second over-reach: substituting INPUT bindings (`let name = "isShowing"`) rewrote the
+identifier the matchers quantify over into a string literal, so the nested form that had always
+worked stopped matching. Substitution is now restricted to bindings whose initializer is a
+CALL — computed intermediates — and inputs stay symbolic. **Both bugs were in the widening, not
+the feature, and both were found by arms written to fail rather than by reading.**
