@@ -155,7 +155,13 @@ extension SwiftInferCommand.Verify {
                 counterexample: counterexample,
                 shrunkCounterexample: shrunkCounterexample,
                 seed: seed,
-                regressionTestPath: regressionPath.map { packageRelative($0, packageRoot: packageRoot) }
+                regressionTestPath: regressionPath.map { packageRelative($0, packageRoot: packageRoot) },
+                // Stamp the measurement with the body it was taken against, so a later
+                // `discover` can tell "this was measured on the code in front of you" from
+                // "this was measured on something else". Without it the outcome outlives any
+                // edit to the subject, because `identityHash` is deliberately blind to the
+                // body (PRD §7.5) — road test §10.2.
+                subjectFingerprint: entry.subjectFingerprint
             ),
             packageRoot: packageRoot
         )

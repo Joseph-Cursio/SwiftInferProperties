@@ -64,7 +64,8 @@ struct DiscoverCLIVerifySuppressionTests {
     private func evidence(
         for suggestion: Suggestion,
         outcome: VerifyEvidenceOutcome,
-        detail: String?
+        detail: String?,
+        fingerprint: String? = nil
     ) -> VerifyEvidence {
         VerifyEvidence(
             identityHash: suggestion.identity.normalized,
@@ -72,7 +73,10 @@ struct DiscoverCLIVerifySuppressionTests {
             outcome: outcome,
             detail: detail,
             capturedAt: Date(timeIntervalSince1970: 0),
-            swiftInferVersion: "test"
+            swiftInferVersion: "test",
+            // v1.149 — evidence only applies to the body it was measured on; see
+            // `subjectFingerprint(of:in:)`.
+            subjectFingerprint: fingerprint
         )
     }
 
@@ -104,10 +108,13 @@ struct DiscoverCLIVerifySuppressionTests {
         // Persist a defaultFails veto and re-run: the pipeline loads the
         // file, grades the pick to `.suppressed`, and drops it before
         // the visibility cut — the CLI output no longer carries it.
-        try writeEvidence(
-            [evidence(for: strong, outcome: .measuredDefaultFails, detail: "trial=4")],
-            toRoot: root
+        let vetoRecord = evidence(
+            for: strong,
+            outcome: .measuredDefaultFails,
+            detail: "trial=4",
+            fingerprint: try #require(try subjectFingerprint(of: strong, in: target))
         )
+        try writeEvidence([vetoRecord], toRoot: root)
         let vetoed = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: target,
@@ -132,10 +139,13 @@ struct DiscoverCLIVerifySuppressionTests {
             )
             .suggestions.first { $0.score.tier == .strong }
         )
-        try writeEvidence(
-            [evidence(for: strong, outcome: .measuredDefaultFails, detail: "trial=4")],
-            toRoot: root
+        let vetoRecord = evidence(
+            for: strong,
+            outcome: .measuredDefaultFails,
+            detail: "trial=4",
+            fingerprint: try #require(try subjectFingerprint(of: strong, in: target))
         )
+        try writeEvidence([vetoRecord], toRoot: root)
 
         let vetoed = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
@@ -181,10 +191,13 @@ struct DiscoverCLIVerifySuppressionTests {
         // Persist bothPass and re-run with no `--include-possible`: the
         // +50 signal grades the pick to `.strong` before the visibility
         // cut, lifting it into the default CLI output.
-        try writeEvidence(
-            [evidence(for: possible, outcome: .measuredBothPass, detail: "defaultTrials=100 edgeTrials=100")],
-            toRoot: root
+        let passRecord = evidence(
+            for: possible,
+            outcome: .measuredBothPass,
+            detail: "defaultTrials=100 edgeTrials=100",
+            fingerprint: try #require(try subjectFingerprint(of: possible, in: target))
         )
+        try writeEvidence([passRecord], toRoot: root)
         let rescued = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: target,

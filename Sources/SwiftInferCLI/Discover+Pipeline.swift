@@ -150,6 +150,29 @@ extension SwiftInferCommand.Discover {
         )
     }
 
+    /// Fingerprint every suggestion's subject(s) from THIS run's scan, keyed by suggestion
+    /// identity, so `VerifyEvidenceScoring` can check persisted evidence against the code
+    /// that is actually here.
+    ///
+    /// A suggestion missing from the result is one whose subjects could not all be
+    /// fingerprinted; that reads downstream as *cannot validate*, which withholds the
+    /// evidence rather than trusting it.
+    static func fingerprintsByIdentity(
+        for suggestions: [Suggestion],
+        summaries: [FunctionSummary]
+    ) -> [String: String] {
+        let byLocation = SubjectFingerprint.byLocation(summaries)
+        var result: [String: String] = [:]
+        for suggestion in suggestions {
+            guard let fingerprint = SubjectFingerprint.forSuggestion(
+                evidenceLocations: suggestion.evidence.map(\.location),
+                byLocation: byLocation
+            ) else { continue }
+            result[suggestion.identity.normalized] = fingerprint
+        }
+        return result
+    }
+
     /// Combine TE + lifted suggestions, skip-filter, counter-signal-filter,
     /// and apply the include-possible visibility cut. Extracted from
     /// `collectVisibleSuggestions` for SwiftLint's body-length cap.
@@ -195,9 +218,18 @@ extension SwiftInferCommand.Discover {
         // applied this after the cut, in the CLI layer, where it could
         // only re-grade already-visible picks. An empty map (every
         // caller but `discover`) leaves `combined` untouched.
+        // Fingerprints of the bodies AS SCANNED THIS RUN. Evidence is applied only where it
+        // matches — a measurement taken against a different body is not evidence about the
+        // code in front of the reader, and `identityHash` cannot tell the difference because
+        // it is deliberately blind to the body (PRD §7.5). Road test §10.2.
+        let currentFingerprints = fingerprintsByIdentity(
+            for: combined,
+            summaries: artifacts.summaries
+        )
         let verifyGraded = VerifyEvidenceScoring.applied(
             to: combined,
-            evidenceByIdentity: evidence.verifyByIdentity
+            evidenceByIdentity: evidence.verifyByIdentity,
+            currentFingerprintByIdentity: currentFingerprints
         )
         // Then PropertyLawKit's verdicts. Order is deliberate — the kit's demotion applies
         // to whatever verify concluded, because a pick verify lifted to `bothPass` is still

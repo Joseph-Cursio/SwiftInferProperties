@@ -41,11 +41,16 @@ extension SwiftInferCommand.Index {
     ) -> (index: IndexStore.Index, freshEntries: [SemanticIndexEntry]) {
             // Project Suggestions → SemanticIndexEntry. Fresh `firstSeenAt` is `now` for new
             // entries; `IndexStore.upsert` preserves the prior one for already-known entries.
+            // The fingerprints come from THIS pass's summaries, so an entry always records
+            // the body as of the scan that wrote it — which is what lets verify stamp its
+            // evidence with the code it ran against.
+        let fingerprintsByLocation = SubjectFingerprint.byLocation(pipeline.summaries)
         let freshEntries = pipeline.suggestions.map { suggestion in
             buildEntry(
                 from: suggestion,
                 decisionsByHash: decisionsByHash,
                 typeShapesByName: pipeline.typeShapesByName,
+                fingerprintsByLocation: fingerprintsByLocation,
                 now: now
             )
         }

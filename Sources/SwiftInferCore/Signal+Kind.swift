@@ -300,6 +300,12 @@ extension Signal {
         /// the cycle-61/62 "defaultFails does not demote" decision on exactly
         /// this ground — `git show 31a347a:docs/calibration-cycle-63-findings.md`.
         case verifyDisproven
+
+        /// v1.149 — persisted verify evidence exists for this pick but was measured against
+        /// a DIFFERENT body, so it is not applied in either direction. Weight 0: this is a
+        /// statement about the evidence, not about the law. Rationale in
+        /// `docs/design/signal-kind-rationales.md`.
+        case verifyEvidenceStale
         /// The kit measured this carrier's `==` to be broken, so any law
         /// stated with it cannot be checked. See `docs/design/signal-kind-rationales.md`
         /// — the rationale is long and the file is at its cap.
@@ -341,28 +347,10 @@ extension Signal {
         /// restates its own result expression. Penalty not veto — see `EqualityBodyShape`.
         case tautologicalEqualityBody
 
-        /// The function's returned expression **builds around its input** rather than
-        /// projecting out of it — wraps it in delimiters, concatenates onto it, extends
-        /// a path. `f(f(x))` wraps twice, so the idempotence law is **false**, not
-        /// merely unlikely: full veto, on the same ground `orderSensitiveCarrier` gives.
-        ///
-        /// Measured: a 2026-08-04 survey ran every `idempotence` candidate on this repo
-        /// — **55 executed, 13 refuted, a 24% false-law rate**, every refutation at the
-        /// score-35 shape-only floor. A prototype frozen to disk *before* the verdicts
-        /// scored **5/5** on the rows that ran, keyed on the return expression alone.
-        ///
-        /// **It reads the RETURN expression and nothing else**, and that is the finding
-        /// rather than an implementation detail. A body-wide scan calls `quoted(_:)` a
-        /// normalizer — it runs `replacingOccurrences` and *then* wraps — and calls a
-        /// dedup an extender, because `.append` appears while it filters. Both readings
-        /// are wrong, and both come from looking in the wrong place.
-        ///
-        /// Deliberately does NOT cover **domain transfer**: `T -> T` where the output is
-        /// a different *kind* of thing (a hash, a rendered name), so `f(f(x))` is
-        /// meaningless though it type-checks. That was 6 of the 13 and is exactly what
-        /// the `_description` and capacity-from-scale vetoes have been chasing by NAME
-        /// for several cycles. It is not characterised well enough to veto on, and a
-        /// veto that fires on a guess suppresses true laws.
+        /// The returned expression **builds around its input** rather than projecting out
+        /// of it, so `f(f(x))` wraps twice and the idempotence law is false, not merely
+        /// unlikely — a full veto. Measured 24% false-law rate; reads the RETURN expression
+        /// and nothing else. Rationale in `docs/design/signal-kind-rationales.md`.
         case returnExtendsInput
 
         /// The author declared the **opposite** — `@NonIdempotent`, or

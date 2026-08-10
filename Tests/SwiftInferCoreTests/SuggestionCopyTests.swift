@@ -160,12 +160,17 @@ struct SuggestionCopyTests {
             outcome: .measuredBothPass,
             detail: "property held at execution",
             capturedAt: Date(timeIntervalSince1970: 0),
-            swiftInferVersion: "test"
+            swiftInferVersion: "test",
+            // v1.149 — evidence is applied only when it matches the subject's current body.
+            // This test is about the COPY behaviour of a re-graded suggestion, so the
+            // fingerprints are made to agree and the staleness path stays out of it.
+            subjectFingerprint: "FEEDFACEFEEDFACE"
         )
 
         let graded = VerifyEvidenceScoring.applied(
             to: [original],
-            evidenceByIdentity: [original.identity.normalized: evidence]
+            evidenceByIdentity: [original.identity.normalized: evidence],
+            currentFingerprintByIdentity: [original.identity.normalized: "FEEDFACEFEEDFACE"]
         )
 
         guard var restored = graded.first else {

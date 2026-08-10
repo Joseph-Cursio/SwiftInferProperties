@@ -15,7 +15,8 @@ struct VerifyEvidenceScoringTests {
 
         let result = VerifyEvidenceScoring.applied(
             to: [suggestion],
-            evidenceByIdentity: evidenceMap(suggestion, .measuredBothPass)
+            evidenceByIdentity: evidenceMap(suggestion, .measuredBothPass),
+            currentFingerprintByIdentity: currentBody(suggestion)
         )[0]
         #expect(result.score.total == 40 + VerifyEvidenceScoring.verifyBothPassWeight)
         #expect(result.score.tier == .strong)
@@ -33,7 +34,8 @@ struct VerifyEvidenceScoringTests {
 
         let result = VerifyEvidenceScoring.applied(
             to: [suggestion],
-            evidenceByIdentity: evidenceMap(suggestion, .measuredDefaultFails)
+            evidenceByIdentity: evidenceMap(suggestion, .measuredDefaultFails),
+            currentFingerprintByIdentity: currentBody(suggestion)
         )[0]
         #expect(result.score.isVetoed)
         #expect(result.score.tier == .suppressed)
@@ -53,7 +55,8 @@ struct VerifyEvidenceScoringTests {
         ] {
             let result = VerifyEvidenceScoring.applied(
                 to: [suggestion],
-                evidenceByIdentity: evidenceMap(suggestion, outcome)
+                evidenceByIdentity: evidenceMap(suggestion, outcome),
+                currentFingerprintByIdentity: currentBody(suggestion)
             )[0]
             #expect(result == suggestion)
         }
@@ -64,7 +67,8 @@ struct VerifyEvidenceScoringTests {
         let suggestion = makeSuggestion(canonicalInput: "no-evidence", signalWeight: 50)
         let result = VerifyEvidenceScoring.applied(
             to: [suggestion],
-            evidenceByIdentity: [:]
+            evidenceByIdentity: [:],
+            currentFingerprintByIdentity: currentBody(suggestion)
         )[0]
         #expect(result == suggestion)
     }
@@ -86,7 +90,8 @@ struct VerifyEvidenceScoringTests {
         #expect(advisory.score.tier == .advisory)
         let result = VerifyEvidenceScoring.applied(
             to: [advisory],
-            evidenceByIdentity: evidenceMap(advisory, .measuredBothPass)
+            evidenceByIdentity: evidenceMap(advisory, .measuredBothPass),
+            currentFingerprintByIdentity: currentBody(advisory)
         )[0]
         #expect(result == advisory)
     }
@@ -100,7 +105,8 @@ struct VerifyEvidenceScoringTests {
         let third = makeSuggestion(canonicalInput: "order-3", signalWeight: 50)
         let result = VerifyEvidenceScoring.applied(
             to: [first, second, third],
-            evidenceByIdentity: evidenceMap(second, .measuredDefaultFails)
+            evidenceByIdentity: evidenceMap(second, .measuredDefaultFails),
+            currentFingerprintByIdentity: currentBody(first, second, third)
         )
         #expect(result.map(\.identity.normalized) == [
             first.identity.normalized,
@@ -138,9 +144,18 @@ struct VerifyEvidenceScoringTests {
         )
     }
 
+    /// The fingerprint these tests treat as "the body that was measured".
+    ///
+    /// Every pre-v1.149 test in this suite implicitly assumed evidence was always
+    /// applicable. It no longer is: evidence is only used when it matches the subject's
+    /// current body, so each arm now states which body it means. The arms about *staleness*
+    /// live in `VerifyEvidenceStalenessTests`.
+    static let measuredBody = "A1B2C3D4A1B2C3D4"
+
     private func evidenceMap(
         _ suggestion: Suggestion,
-        _ outcome: VerifyEvidenceOutcome
+        _ outcome: VerifyEvidenceOutcome,
+        fingerprint: String? = Self.measuredBody
     ) -> [String: VerifyEvidence] {
         [
             suggestion.identity.normalized: VerifyEvidence(
@@ -151,8 +166,19 @@ struct VerifyEvidenceScoringTests {
                     ? "defaultTrials=100 edgeTrials=100 edgeSampled=6"
                     : (outcome == .measuredDefaultFails ? "trial=7" : nil),
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
-                swiftInferVersion: "1.66.0"
+                swiftInferVersion: "1.66.0",
+                subjectFingerprint: fingerprint
             )
         ]
+    }
+
+    /// Current-body fingerprints that MATCH the evidence above, so these arms exercise
+    /// scoring rather than staleness.
+    private func currentBody(_ suggestions: Suggestion...) -> [String: String] {
+        var result: [String: String] = [:]
+        for suggestion in suggestions {
+            result[suggestion.identity.normalized] = Self.measuredBody
+        }
+        return result
     }
 }

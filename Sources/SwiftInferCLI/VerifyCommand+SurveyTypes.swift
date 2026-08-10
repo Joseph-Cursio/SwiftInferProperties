@@ -37,6 +37,11 @@ extension SwiftInferCommand.Verify {
         public let counterexample: String?
         public let shrunkCounterexample: String?
 
+        /// The subject body this record was measured against (`SubjectFingerprint`), carried
+        /// from the index entry so the persisted evidence can be validated later. `nil` for
+        /// a pre-v1.149 index, which reads downstream as "cannot validate".
+        public let subjectFingerprint: String?
+
         public init(
             identityHash: String,
             templateName: String,
@@ -45,7 +50,8 @@ extension SwiftInferCommand.Verify {
             outcome: SurveyOutcome,
             outcomeDetail: String?,
             counterexample: String? = nil,
-            shrunkCounterexample: String? = nil
+            shrunkCounterexample: String? = nil,
+            subjectFingerprint: String? = nil
         ) {
             self.identityHash = identityHash
             self.templateName = templateName
@@ -55,6 +61,7 @@ extension SwiftInferCommand.Verify {
             self.outcomeDetail = outcomeDetail
             self.counterexample = counterexample
             self.shrunkCounterexample = shrunkCounterexample
+            self.subjectFingerprint = subjectFingerprint
         }
     }
 }

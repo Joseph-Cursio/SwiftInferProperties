@@ -287,7 +287,11 @@ struct DriftDetectionTests {
                 outcome: .measuredDefaultFails,
                 detail: nil,
                 capturedAt: Date(timeIntervalSince1970: 0),
-                swiftInferVersion: "test"
+                swiftInferVersion: "test",
+                // v1.149 — evidence applies only to the body it was measured on, so this
+                // fixture record has to carry the real fingerprint or the veto is withheld
+                // and drift correctly reports the pick it was meant to suppress.
+                subjectFingerprint: try #require(try subjectFingerprint(of: strong, in: target))
             )
         ])
         try VerifyEvidenceStore.write(

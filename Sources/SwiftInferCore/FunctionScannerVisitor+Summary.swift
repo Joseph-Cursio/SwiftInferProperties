@@ -30,6 +30,16 @@ extension FunctionScannerVisitor {
     /// `BodySignalVisitor` walk over the body, and the M5.3 + M7.2.a
     /// attribute scans for `@Discoverable(group:)` and
     /// `@CheckProperty(.preservesInvariant(\..))`.
+    /// Source position of the `func` keyword, converted to this scanner's file coordinates.
+    /// Extracted from `makeSummary(from:)` when adding the body fingerprint took that
+    /// function past SwiftLint's 50-line body cap — the conversion is self-contained and
+    /// reads better named than inline.
+    private func funcKeywordLocation(of node: FunctionDeclSyntax) -> SourceLocation {
+        let position = node.funcKeyword.positionAfterSkippingLeadingTrivia
+        let converted = converter.location(for: position)
+        return SourceLocation(file: file, line: converted.line, column: converted.column)
+    }
+
     func makeSummary(from node: FunctionDeclSyntax) -> FunctionSummary {
         let name = node.name.text
         let parameters = node.signature.parameterClause.parameters.map(makeParameter(from:))
@@ -41,13 +51,7 @@ extension FunctionScannerVisitor {
         let isMutating = modifiers.contains("mutating")
         let isStatic = modifiers.contains("static") || modifiers.contains("class")
 
-        let position = node.funcKeyword.positionAfterSkippingLeadingTrivia
-        let sourceLocation = converter.location(for: position)
-        let location = SourceLocation(
-            file: file,
-            line: sourceLocation.line,
-            column: sourceLocation.column
-        )
+        let location = funcKeywordLocation(of: node)
 
         let containingTypeName = typeStack.last
         // The whole stack, not just its last frame — see
@@ -82,6 +86,12 @@ extension FunctionScannerVisitor {
         // The leading doc comment — carried on the summary as a candidate
         // reference definition for the docstring advisory. Unclassified here.
         let docComment = DocCommentExtractor.docComment(from: node.leadingTrivia)
+        // Fingerprint of the body as it is RIGHT NOW, so verify evidence can later be
+        // checked against the code it was measured on. Computed here because this is the
+        // one place the live body syntax exists. `nil` for a bodyless declaration (a
+        // protocol requirement), which reads downstream as "cannot validate" — see
+        // `SubjectFingerprint` for why that withholds evidence rather than trusting it.
+        let bodyFingerprint = node.body.map { SubjectFingerprint.of(bodyText: $0.description) }
 
         return FunctionSummary(
             name: name,
@@ -102,7 +112,8 @@ extension FunctionScannerVisitor {
             declaresUnknownEffect: declaresUnknownEffect,
             docComment: docComment,
             declaredEffect: declaredEffect,
-            purityVerdict: purityVerdict
+            purityVerdict: purityVerdict,
+            bodyFingerprint: bodyFingerprint
         )
     }
 
@@ -144,7 +155,11 @@ extension FunctionScannerVisitor {
             bodySignals: .empty,
             isInferredPure: true,
             isComputedProperty: true,
-            docComment: DocCommentExtractor.docComment(from: node.leadingTrivia)
+            docComment: DocCommentExtractor.docComment(from: node.leadingTrivia),
+            // The accessor block is this subject's body — a computed property reached by a
+            // law is verified by executing its getter, so it must be fingerprinted like any
+            // other body or its evidence could outlive a rewritten getter.
+            bodyFingerprint: SubjectFingerprint.of(bodyText: accessorBlock.description)
         )
     }
 
