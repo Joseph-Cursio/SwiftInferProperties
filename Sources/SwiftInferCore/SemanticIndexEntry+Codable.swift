@@ -38,6 +38,7 @@ extension SemanticIndexEntry {
         case parameterTypeNames
         case qualifiedTypeName
         case structuralBlocker
+        case subjectFingerprint
     }
 
     public init(from decoder: Decoder) throws {
@@ -76,6 +77,11 @@ extension SemanticIndexEntry {
             try container.decodeIfPresent(String.self, forKey: .qualifiedTypeName)
         self.structuralBlocker =
             try container.decodeIfPresent(String.self, forKey: .structuralBlocker)
+        // Added v1.149. A pre-v1.149 index has no fingerprint, which reads downstream as
+        // "cannot validate this evidence" rather than "evidence is fine" — see
+        // `VerifyEvidenceScoring`.
+        self.subjectFingerprint =
+            try container.decodeIfPresent(String.self, forKey: .subjectFingerprint)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -113,5 +119,6 @@ extension SemanticIndexEntry {
         // caught this one — the first version used `encodeIfPresent`.
         try container.encode(qualifiedTypeName, forKey: .qualifiedTypeName)
         try container.encode(structuralBlocker, forKey: .structuralBlocker)
+        try container.encode(subjectFingerprint, forKey: .subjectFingerprint)
     }
 }

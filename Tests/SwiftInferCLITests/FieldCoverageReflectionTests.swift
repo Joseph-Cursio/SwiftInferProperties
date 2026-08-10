@@ -167,7 +167,11 @@ struct FieldCoverageReflectionTests {
                 shrunkCounterexample: "x",
                 seed: "seed",
                 regressionTestPath: "Tests/Generated/T.swift",
-                corpusProvenance: "/tmp/corpus @ abc1234"
+                corpusProvenance: "/tmp/corpus @ abc1234",
+                // v1.149 — the body this verdict was measured against. Caught by this guard
+                // when the field was added: a `nil` optional is dropped by the synthesized
+                // encoder, so an unpopulated fixture reads as "never encoded".
+                subjectFingerprint: "A1B2C3D4A1B2C3D4"
             ),
             "VerifyEvidence"
         )

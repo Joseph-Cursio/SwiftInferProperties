@@ -26,7 +26,8 @@ extension SwiftInferCommand.Verify {
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
             outcome: outcome,
-            outcomeDetail: detail
+            outcomeDetail: detail,
+            subjectFingerprint: context.subjectFingerprint
         )
     }
 
@@ -74,7 +75,8 @@ extension SwiftInferCommand.Verify {
                 primaryFunctionName: context.primaryFunctionName,
                 carrier: context.carrier,
                 outcome: .architecturalCoveragePending,
-                outcomeDetail: detail
+                outcomeDetail: detail,
+                subjectFingerprint: context.subjectFingerprint
             )
         }
         return SurveyRecord(
@@ -83,7 +85,8 @@ extension SwiftInferCommand.Verify {
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
             outcome: .measuredError,
-            outcomeDetail: BuildDiagnostics.surveyDetail(from: buildOutput)
+            outcomeDetail: BuildDiagnostics.surveyDetail(from: buildOutput),
+            subjectFingerprint: context.subjectFingerprint
         )
     }
 
@@ -137,7 +140,8 @@ extension SwiftInferCommand.Verify {
             outcome: outcome,
             outcomeDetail: detail,
             counterexample: counterexample,
-            shrunkCounterexample: shrunkCounterexample
+            shrunkCounterexample: shrunkCounterexample,
+            subjectFingerprint: context.subjectFingerprint
         )
     }
 
@@ -167,6 +171,9 @@ extension SwiftInferCommand.Verify {
         let templateName: String
         let primaryFunctionName: String
         let carrier: String?
+        /// Carried so every survey record — verdict or decline alike — can stamp the
+        /// persisted evidence with the body it was measured against.
+        let subjectFingerprint: String?
     }
 
     static func recordContext(for entry: SemanticIndexEntry) -> RecordContext {
@@ -174,7 +181,8 @@ extension SwiftInferCommand.Verify {
             identityHash: entry.identityHash,
             templateName: entry.templateName,
             primaryFunctionName: entry.primaryFunctionName,
-            carrier: entry.typeName
+            carrier: entry.typeName,
+            subjectFingerprint: entry.subjectFingerprint
         )
     }
 

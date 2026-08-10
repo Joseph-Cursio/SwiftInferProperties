@@ -84,37 +84,95 @@ public enum VerifyEvidenceScoring {
     /// callers can rely on `==`).
     public static func applied(
         to suggestions: [Suggestion],
-        evidenceByIdentity: [String: VerifyEvidence]
+        evidenceByIdentity: [String: VerifyEvidence],
+        currentFingerprintByIdentity: [String: String]
     ) -> [Suggestion] {
         suggestions.map { suggestion in
             guard suggestion.score.tier != .advisory,
                   let evidence = evidenceByIdentity[suggestion.identity.normalized] else {
                 return suggestion
             }
-            switch evidence.outcome {
-            case .measuredBothPass:
-                return suggestion.appendingScoreSignal(
-                    Signal(
-                        kind: .verifyBothPass,
-                        weight: verifyBothPassWeight,
-                        detail: "Verify: bothPass — \(evidence.detail ?? "property held at execution")"
-                    ),
-                    explainabilityArm: .whySuggested
-                )
-
-            case .measuredDefaultFails:
-                return suggestion.appendingScoreSignal(
-                    Signal(
-                        kind: .verifyDisproven,
-                        weight: Signal.vetoWeight,
-                        detail: "Verify: defaultFails — \(evidence.detail ?? "disproven by counterexample")"
-                    ),
-                    explainabilityArm: .whyMightBeWrong
-                )
-
-            case .measuredEdgeCaseAdvisory, .measuredError, .architecturalCoveragePending:
-                return suggestion
-            }
+            return graded(
+                suggestion,
+                with: evidence,
+                currentFingerprint: currentFingerprintByIdentity[suggestion.identity.normalized]
+            )
         }
+    }
+
+    /// Fold one piece of evidence into one suggestion.
+    ///
+    /// Split out of `applied`'s closure for SwiftLint's 30-line closure cap once the
+    /// staleness gate joined it.
+    private static func graded(
+        _ suggestion: Suggestion,
+        with evidence: VerifyEvidence,
+        currentFingerprint: String?
+    ) -> Suggestion {
+        // Evidence is only about the code it was measured on. `identityHash` cannot
+        // establish that — it is deliberately blind to the body (PRD §7.5) — so the
+        // fingerprint is what licenses USING this outcome at all.
+        if let staleness = stalenessCaveat(evidence: evidence, current: currentFingerprint) {
+            return suggestion.appendingScoreSignal(
+                Signal(kind: .verifyEvidenceStale, weight: 0, detail: staleness),
+                explainabilityArm: .whyMightBeWrong
+            )
+        }
+        switch evidence.outcome {
+        case .measuredBothPass:
+            return suggestion.appendingScoreSignal(
+                Signal(
+                    kind: .verifyBothPass,
+                    weight: verifyBothPassWeight,
+                    detail: "Verify: bothPass — \(evidence.detail ?? "property held at execution")"
+                ),
+                explainabilityArm: .whySuggested
+            )
+
+        case .measuredDefaultFails:
+            return suggestion.appendingScoreSignal(
+                Signal(
+                    kind: .verifyDisproven,
+                    weight: Signal.vetoWeight,
+                    detail: "Verify: defaultFails — \(evidence.detail ?? "disproven by counterexample")"
+                ),
+                explainabilityArm: .whyMightBeWrong
+            )
+
+        case .measuredEdgeCaseAdvisory, .measuredError, .architecturalCoveragePending:
+            return suggestion
+        }
+    }
+
+    /// Why this evidence may not be used, or `nil` when it is valid for the code in front of
+    /// the reader.
+    ///
+    /// **Applied to promotions and vetoes alike, deliberately.** The premise is *evidence
+    /// taken against a different body is not evidence about this body*; honouring that in one
+    /// direction only would be incoherent. A stale `defaultFails` therefore stops suppressing
+    /// — but the caveat still names the refutation, so the warning survives even though the
+    /// score effect does not.
+    ///
+    /// **A missing fingerprint is treated as unvalidatable, not as valid.** That is the
+    /// deliberate cost of the fix: every record written before this shipped stops promoting
+    /// until re-verified. Trusting them instead would preserve exactly the defect being
+    /// closed, on exactly the records known to be stale.
+    static func stalenessCaveat(evidence: VerifyEvidence, current: String?) -> String? {
+        let captured = ISO8601DateFormatter().string(from: evidence.capturedAt)
+        guard let recorded = evidence.subjectFingerprint else {
+            return "Verify evidence from \(captured) is NOT being applied: it was recorded "
+                + "before swift-infer stamped runs with the subject's body, so there is no way "
+                + "to tell whether it was measured on the code above. Re-run `swift-infer "
+                + "verify` for this pick to restore it."
+        }
+        guard let current else {
+            return "Verify evidence from \(captured) is NOT being applied: this run could not "
+                + "fingerprint the subject's body (a declaration with no body, or a subject "
+                + "the scan did not reach), so the evidence cannot be matched to it."
+        }
+        guard recorded != current else { return nil }
+        return "Verify evidence from \(captured) is NOT being applied: it was measured against "
+            + "a DIFFERENT version of this function's body (recorded \(recorded), now "
+            + "\(current)). The law may no longer hold — re-run `swift-infer verify`."
     }
 }

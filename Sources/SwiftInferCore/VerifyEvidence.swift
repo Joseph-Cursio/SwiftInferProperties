@@ -142,6 +142,18 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
     /// bump, the same argument `excludedActionCount` makes above.
     public let corpusProvenance: String?
 
+    /// Fingerprint of the SUBJECT CODE this measurement was taken against
+    /// (`SubjectFingerprint`), so a later run can ask *was this measured on the code that is
+    /// here now?* — a question `identityHash` cannot answer, because identity is
+    /// deliberately stable across body edits (PRD §7.5, §16 #1).
+    ///
+    /// `nil` for records written before fingerprinting shipped, and for a subject whose body
+    /// could not be read. **Absent is treated as unvalidatable, not as valid**: the scoring
+    /// pass withholds the outcome rather than trusting it, so the 349 records already on disk
+    /// stop promoting until re-verified. That is the deliberate cost of closing road test
+    /// §10.2 — see `VerifyEvidenceScoring`.
+    public let subjectFingerprint: String?
+
     public init(
         identityHash: String,
         template: String,
@@ -154,7 +166,8 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         shrunkCounterexample: String? = nil,
         seed: String? = nil,
         regressionTestPath: String? = nil,
-        corpusProvenance: String? = nil
+        corpusProvenance: String? = nil,
+        subjectFingerprint: String? = nil
     ) {
         self.identityHash = identityHash
         self.template = template
@@ -168,6 +181,7 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         self.seed = seed
         self.regressionTestPath = regressionTestPath
         self.corpusProvenance = corpusProvenance
+        self.subjectFingerprint = subjectFingerprint
     }
 }
 

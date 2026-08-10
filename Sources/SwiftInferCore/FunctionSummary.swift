@@ -207,6 +207,14 @@ public struct FunctionSummary: Sendable, Equatable {
     /// downstream could tell "reads the clock" from "throws its own error".
     public let purityVerdict: PurityVerdict
 
+    /// Fingerprint of this function's BODY, for validating verify evidence against the code
+    /// it was measured on. `nil` for summaries built without a body (a protocol requirement,
+    /// or one of the many hand-built summaries in tests).
+    ///
+    /// Deliberately **not** part of `SuggestionIdentity`: identity must survive refactors
+    /// (PRD §7.5 skip markers, §16 #1), and this must not. See `SubjectFingerprint`.
+    public let bodyFingerprint: String?
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -229,7 +237,8 @@ public struct FunctionSummary: Sendable, Equatable {
         docComment: String? = nil,
         declaredEffect: Effect? = nil,
         inferredEffect: Effect? = nil,
-        purityVerdict: PurityVerdict = .refuted
+        purityVerdict: PurityVerdict = .refuted,
+        bodyFingerprint: String? = nil
     ) {
         self.name = name
         self.parameters = parameters
@@ -253,6 +262,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.declaredEffect = declaredEffect
         self.inferredEffect = inferredEffect
         self.purityVerdict = purityVerdict
+        self.bodyFingerprint = bodyFingerprint
     }
 }
 

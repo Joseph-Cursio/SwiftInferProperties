@@ -42,7 +42,10 @@ extension SwiftInferCommand.Verify {
                 // #174 — stamped on every record, including declines: a decline is
                 // also a statement about this checkout, and a stream missing it on
                 // half its rows is not comparable either.
-                corpusProvenance: corpusProvenance
+                corpusProvenance: corpusProvenance,
+                // The body this verdict was measured against, so `discover` can later tell
+                // a live measurement from one taken on code that has since been rewritten.
+                subjectFingerprint: record.subjectFingerprint
             )
         }
         let corpusEntries: [VerifyCorpusEntry] = collected.compactMap { record in

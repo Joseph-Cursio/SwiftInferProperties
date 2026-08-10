@@ -33,7 +33,8 @@ struct DiscoverPipelineVerifyEvidenceTests {
     private func evidenceMap(
         _ suggestion: Suggestion,
         _ outcome: VerifyEvidenceOutcome,
-        detail: String?
+        detail: String?,
+        fingerprint: String? = nil
     ) -> [String: VerifyEvidence] {
         [
             suggestion.identity.normalized: VerifyEvidence(
@@ -42,7 +43,8 @@ struct DiscoverPipelineVerifyEvidenceTests {
                 outcome: outcome,
                 detail: detail,
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
-                swiftInferVersion: "1.67.0"
+                swiftInferVersion: "1.67.0",
+                subjectFingerprint: fingerprint
             )
         ]
     }
@@ -81,7 +83,8 @@ struct DiscoverPipelineVerifyEvidenceTests {
             evidence: evidenceMap(
                 idempotence,
                 .measuredBothPass,
-                detail: "defaultTrials=100 edgeTrials=100 edgeSampled=6"
+                detail: "defaultTrials=100 edgeTrials=100 edgeSampled=6",
+                fingerprint: try #require(try subjectFingerprint(of: idempotence, in: directory))
             )
         )
         let lifted = rescued.first { $0.identity.normalized == idempotence.identity.normalized }
@@ -104,7 +107,12 @@ struct DiscoverPipelineVerifyEvidenceTests {
         let vetoed = try collect(
             directory,
             includePossible: true,
-            evidence: evidenceMap(idempotence, .measuredDefaultFails, detail: "trial=4")
+            evidence: evidenceMap(
+                idempotence,
+                .measuredDefaultFails,
+                detail: "trial=4",
+                fingerprint: try #require(try subjectFingerprint(of: idempotence, in: directory))
+            )
         )
         // The idempotence pick is vetoed → .suppressed → never shown,
         // even with --include-possible. The monotonicity pick is

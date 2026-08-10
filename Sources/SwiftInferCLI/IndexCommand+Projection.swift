@@ -97,6 +97,7 @@ extension SwiftInferCommand.Index {
         from suggestion: Suggestion,
         decisionsByHash: [String: DecisionRecord],
         typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
+        fingerprintsByLocation: [String: String] = [:],
         now: String
     ) -> SemanticIndexEntry {
         let evidence = suggestion.evidence.first
@@ -120,6 +121,16 @@ extension SwiftInferCommand.Index {
             typeShapesByName: typeShapesByName
         )
         let secondaryFunctionName = secondaryFunctionName(for: suggestion)
+        // Hoisted out of the initializer call below rather than inlined: that literal already
+        // has ~20 arguments, and SourceKit reports it as unable to type-check in reasonable
+        // time once another call joins it. This repo has already shipped a type-check
+        // timeout that compiled locally and failed only on CI (`bbd634c`).
+        let subjectFingerprint = SubjectFingerprint.forSuggestion(
+            evidenceLocations: suggestion.evidence.map(\.location),
+            byLocation: fingerprintsByLocation
+        )
+        let structuralBlocker = StructuralBlocker.reason(among: suggestion.score.signals)
+            ?? StructuralBlocker.caselessEnumCarrier(typeShape)
         return SemanticIndexEntry(
             identityHash: displayHash,
             templateName: suggestion.templateName,
@@ -142,8 +153,11 @@ extension SwiftInferCommand.Index {
             isComputedProperty: evidence?.isComputedProperty ?? false,
             parameterTypeNames: evidence?.parameterTypeNames ?? [],
             qualifiedTypeName: evidence?.qualifiedTypeName,
-            structuralBlocker: StructuralBlocker.reason(among: suggestion.score.signals)
-                ?? StructuralBlocker.caselessEnumCarrier(typeShape)
+            structuralBlocker: structuralBlocker,
+            // Every function the law names, not just the primary — a round trip is stale if
+            // either half was edited. `nil` when any subject's body could not be read, which
+            // reads downstream as "cannot validate".
+            subjectFingerprint: subjectFingerprint
         )
     }
 

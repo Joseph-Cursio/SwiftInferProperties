@@ -252,3 +252,68 @@ The author *declared* idempotence, in SwiftIdempotency's vocabulary —
     **Corroborate-only, by construction** — the template's `appliesTo` gate
     is the type-symmetry shape, so this can only raise a candidate the
     shape already matched, never surface a law from an annotation alone.
+
+---
+
+## `returnExtendsInput`
+
+Moved here 2026-08-10 to make room for `verifyEvidenceStale`, per this file's own rule.
+It is the longest rationale in `Signal+Kind.swift` and the one this file exists to hold;
+none of it is trimmed.
+
+The function's returned expression **builds around its input** rather than projecting out
+of it — wraps it in delimiters, concatenates onto it, extends a path. `f(f(x))` wraps
+twice, so the idempotence law is **false**, not merely unlikely: full veto, on the same
+ground `orderSensitiveCarrier` gives.
+
+Measured: a 2026-08-04 survey ran every `idempotence` candidate on this repo — **55
+executed, 13 refuted, a 24% false-law rate**, every refutation at the score-35 shape-only
+floor. A prototype frozen to disk *before* the verdicts scored **5/5** on the rows that
+ran, keyed on the return expression alone.
+
+**It reads the RETURN expression and nothing else**, and that is the finding rather than
+an implementation detail. A body-wide scan calls `quoted(_:)` a normalizer — it runs
+`replacingOccurrences` and *then* wraps — and calls a dedup an extender, because `.append`
+appears while it filters. Both readings are wrong, and both come from looking in the wrong
+place.
+
+Deliberately does NOT cover **domain transfer**: `T -> T` where the output is a different
+*kind* of thing (a hash, a rendered name), so `f(f(x))` is meaningless though it
+type-checks. That was 6 of the 13 and is exactly what the `_description` and
+capacity-from-scale vetoes have been chasing by NAME for several cycles. It is not
+characterised well enough to veto on, and a veto that fires on a guess suppresses true
+laws. See also `docs/measurements/domain-transfer-signal` — the candidate rule was scored
+and declined at 4/12 precision.
+
+---
+
+## `verifyEvidenceStale`
+
+Persisted verify evidence exists for a pick, but the subject's body has changed since the
+measurement was taken (or the evidence predates fingerprinting, or this run could not
+fingerprint the subject). The outcome is **not applied in either direction** and the row
+falls back to its static tier carrying this caveat.
+
+**Why the signal is weight 0.** It says something about the *evidence*, not about the law.
+A stale `bothPass` is not counter-evidence — the property may well still hold — so
+demoting would assert more than is known. The correct effect is simply that an
+unvalidatable measurement stops counting, which is what withholding the `+50` already
+does; the signal exists to make that visible rather than to move the score.
+
+**Why it applies to `defaultFails` too.** The premise is *evidence taken against a
+different body is not evidence about this body*. Honouring that for promotions but not
+vetoes would be incoherent — and a stale refutation is exactly as likely to be about
+deleted code as a stale pass. The caveat still names the refutation, so the reader keeps
+the warning even though the score effect is withdrawn.
+
+**Why a missing fingerprint counts as stale.** Records written before v1.149 carry no
+fingerprint, so nothing can establish what they measured. Treating "unknown" as "valid"
+would preserve the defect on precisely the records most likely to be stale — the 349 in
+this repo's own store at the time of the fix were spread over three days, with all 28 of
+`SwiftInferCLI`'s promoted rows five days old. The cost is that those records stop
+promoting until re-verified, and that cost is the point.
+
+Road test §10.2 (`docs/measurements/roadtest-self-dogfood-2026-08-08.md`) is the
+measurement that produced it: because `SuggestionIdentity` is `(template, canonical
+signature)` and deliberately blind to the body, a body-only edit that falsified the law
+left the identity unchanged and `discover` reported the now-false law as `Verified`.
