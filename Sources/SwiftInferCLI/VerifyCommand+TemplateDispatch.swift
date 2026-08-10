@@ -204,14 +204,39 @@ extension SwiftInferCommand.Verify {
     /// dual-style / idempotence-lifted aren't `ConvertCounterexampleEngine`
     /// shapes) — a graceful skip, since the verify stub already reported the
     /// counterexample. Best-effort: never throws into the verify gesture.
+    /// - Parameter diagnostic: reports a call-resolution failure. Defaults to a no-op.
+    ///
+    /// **The guard used to conflate two outcomes.** A template that is not
+    /// `regressionAutoDerivable` is the normal, expected skip — most templates are not, and
+    /// saying so on every refutation would be noise. A template that IS auto-derivable but
+    /// whose calls fail to resolve is a different fact: the tool refuted a law, could have
+    /// banked the counterexample as a regression test, and silently did not.
+    ///
+    /// That matters because a survey verdict is a measurement, not regression protection —
+    /// `roadtest-self-dogfood-2026-08-08.md` §8.6 makes the point that "81 Proven" is not 81
+    /// tests, and banking is what converts one into the other. A bank that quietly declines
+    /// leaves the refutation unprotected with nothing to notice.
     static func emitRegressionTest(
         entry: SemanticIndexEntry,
         detail: DefaultFailDetail,
-        packageRoot: URL
+        packageRoot: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
     ) -> URL? {
         let autoDerivable = Set(TemplateName.regressionAutoDerivable.rawValues)
-        guard autoDerivable.contains(entry.templateName),
-            let calls = try? resolveFunctionCalls(for: entry) else { return nil }
+        // Not auto-derivable: the normal case, deliberately silent.
+        guard autoDerivable.contains(entry.templateName) else { return nil }
+        let calls: ResolvedCalls
+        do {
+            calls = try resolveFunctionCalls(for: entry)
+        } catch {
+            diagnostic(
+                "warning: \(entry.primaryFunctionName) was refuted and its template supports "
+                    + "an auto-derived regression test, but its calls could not be resolved — "
+                    + "\(error). The counterexample is NOT banked; nothing will re-check this "
+                    + "refutation."
+            )
+            return nil
+        }
         // Prefer the minimal (shrunk) counterexample; fall back to the first
         // failing input when the carrier wasn't shrinkable.
         let counterexample = detail.shrink?.minimal ?? detail.input

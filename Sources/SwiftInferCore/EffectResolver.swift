@@ -102,7 +102,17 @@ public enum EffectResolver {
     /// Internal rather than private so `EffectResolverTests` can build the same
     /// table the pass builds and assert the signature key finds it. A test that
     /// re-implemented this would only prove two copies of the assumption agree.
-    static func parseSources(in directory: URL) -> [SourceFileSyntax] {
+    /// - Parameter diagnostic: reports a source file that could not be read. Defaults to a
+    ///   no-op, matching `SeedRestrictionResolver.resolve` and `KitEvidenceStore.load`.
+    ///
+    /// **A dropped file changes what this resolves, not just how much it sees.** The effect
+    /// table is built from these trees and feeds the purity gates; a file that silently fails
+    /// to parse can leave a function unresolved, or resolve it from fewer call sites than the
+    /// tree actually contains. Both read downstream as a fact about the code.
+    static func parseSources(
+        in directory: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> [SourceFileSyntax] {
         guard let enumerator = FileManager.default.enumerator(
             at: directory,
             includingPropertiesForKeys: nil
@@ -116,8 +126,16 @@ public enum EffectResolver {
             .sorted()
 
         return paths.compactMap { path in
-            guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return nil }
-            return Parser.parse(source: text)
+            do {
+                return Parser.parse(source: try String(contentsOfFile: path, encoding: .utf8))
+            } catch {
+                diagnostic(
+                    "warning: could not read \(path) while building the effect table — "
+                        + "\(error). Effects declared or called there are missing from this "
+                        + "resolution, which reads downstream as a property of the code."
+                )
+                return nil
+            }
         }
     }
 }

@@ -18,11 +18,30 @@ extension SpeculativeRefactorRunner {
         let sourcesByFile: [String: String]
     }
 
-    static func scanRestricted(under sources: URL) -> RestrictedScan {
+    /// - Parameter diagnostic: reports a source file that could not be read.
+    ///
+    /// **A dropped file shrinks the candidate population silently.** Its restricted functions
+    /// are never proposed for widening, and its path is absent from `sourcesByFile`, which
+    /// makes the caller's `guard let original = sourcesByFile[path]` drop the candidate a
+    /// second time. Two silent exits for one unreadable file.
+    static func scanRestricted(
+        under sources: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> RestrictedScan {
         var restricted: [RestrictedFunction] = []
         var sourcesByFile: [String: String] = [:]
         for url in swiftFiles(under: sources) {
-            guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            let text: String
+            do {
+                text = try String(contentsOf: url, encoding: .utf8)
+            } catch {
+                diagnostic(
+                    "warning: could not read \(url.lastPathComponent) while scanning for "
+                        + "widening candidates — \(error). Any restricted function it "
+                        + "declares is absent from this run, not judged."
+                )
+                continue
+            }
             sourcesByFile[url.path] = text
             restricted.append(contentsOf: FunctionScanner.scanCorpus(source: text, file: url.path).restricted)
         }
