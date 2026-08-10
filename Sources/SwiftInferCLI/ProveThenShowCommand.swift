@@ -131,9 +131,24 @@ extension SwiftInferCommand {
         private func loadPreVerifyTiers(workingDirectory: URL) -> [String: Tier] {
             let packageRoot = SwiftInferCommand.Verify
                 .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
-            guard let index = try? SwiftInferCommand.Verify.loadIndex(
-                indexPathOverride: nil, packageRoot: packageRoot
-            ) else { return [:] }
+            let index: IndexStore.Index
+            do {
+                index = try SwiftInferCommand.Verify.loadIndex(
+                    indexPathOverride: nil, packageRoot: packageRoot
+                )
+            } catch {
+                // The conservative direction is argued above and is unchanged. What was
+                // missing is that the degradation is invisible: step 1 wrote this index
+                // moments ago, so failing to read it back is anomalous, and every row
+                // silently loses the tier that decides whether it is worth reading first.
+                FileHandle.standardError.write(Data(
+                    ("warning: could not read back the index just written at \(packageRoot.path)"
+                        + " — \(error). Every refutation will render without its pre-verify"
+                        + " tier, which is conservative but means the ranking is absent"
+                        + " rather than computed.\n").utf8
+                ))
+                return [:]
+            }
             var tiers: [String: Tier] = [:]
             for entry in index.entries {
                 tiers[entry.identityHash] = Tier(rawValue: entry.tier.lowercased())

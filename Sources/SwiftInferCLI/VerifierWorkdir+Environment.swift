@@ -54,10 +54,31 @@ extension VerifierWorkdir {
     static let defaultMacOSVersion = "14.0"
 
     /// Highest macOS version declared in `<packagePath>/Package.swift`, or `nil`.
-    static func declaredMacOSVersion(inPackageAt packagePath: URL) -> String? {
-        guard let manifest = try? String(
-            contentsOf: packagePath.appendingPathComponent("Package.swift"), encoding: .utf8
-        ) else {
+    ///
+    /// **Absent and unreadable both answer `nil`, and the caller cannot tell them apart.**
+    /// No manifest is an Xcode project or a `--sources` run, and falling to
+    /// `defaultMacOSVersion` is right for it. A manifest that exists and cannot be read means
+    /// the declared floor is UNKNOWN, and silently using 14.0 produces a stub that fails to
+    /// build on a corpus requiring more — an error naming an availability symbol, which reads
+    /// as a property of the code rather than of the read.
+    ///
+    /// Same split, same file: `packageDependsOnSwiftSyntax` below. Leaving this one silent
+    /// while its sibling reports would be an inconsistency a reader has to discover.
+    static func declaredMacOSVersion(
+        inPackageAt packagePath: URL,
+        diagnostic: (String) -> Void = { _ in /* no-op */ }
+    ) -> String? {
+        let manifestURL = packagePath.appendingPathComponent("Package.swift")
+        guard FileManager.default.fileExists(atPath: manifestURL.path) else { return nil }
+        let manifest: String
+        do {
+            manifest = try String(contentsOf: manifestURL, encoding: .utf8)
+        } catch {
+            diagnostic(
+                "warning: \(manifestURL.path) exists but could not be read — \(error). "
+                    + "Falling back to the macOS \(defaultMacOSVersion) floor; if the corpus "
+                    + "declares a higher one, its stubs will fail to build on availability."
+            )
             return nil
         }
         // `.macOS(.v26)` → "26.0"; `.macOS("26.0")` / `.macOS("26")` → as written.
