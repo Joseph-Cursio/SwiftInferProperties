@@ -108,7 +108,7 @@ struct DeferralFalsifierTests {
             \(pending.count - local.count) sibling-scoped. A local falsifier names a symbol \
             nobody is obliged to create and can go inert silently; see \
             docs/measurements/falsifier-naming-failure-modes.md §4 before adding one.
-            \(Self.render(local))
+            \(Self.renderPending(local))
             """
         )
         #expect(pending.count >= local.count, "arithmetic sanity on the split")
@@ -146,8 +146,28 @@ struct DeferralFalsifierTests {
         }
     }
 
+    /// Render for the FAILURE path: these falsifiers resolved, so their deferrals are refuted.
     static func render(_ entries: [Falsifier]) -> String {
-        let lines = entries.map { "\($0.file):\($0.line) — falsifier `\($0.symbol)` has landed" }
+        render(entries, verdict: "has landed")
+    }
+
+    /// Render for the pending-population REPORT.
+    ///
+    /// **A separate verdict phrase because sharing one said the opposite of the truth.** The
+    /// report selects falsifiers that have NOT resolved and rendered them through the failure
+    /// path's wording, so a green run announced three open deferrals as *"has landed"* — a
+    /// reader would reasonably have gone and closed them. Shipped in `d98ed6e`, the commit
+    /// that added the report, and found by reading a passing run's output.
+    ///
+    /// A visibility mechanism that states the negation of its own finding is worse than
+    /// silence — the same argument §9.5 used to revert a signal that could fire on the wrong
+    /// target.
+    static func renderPending(_ entries: [Falsifier]) -> String {
+        render(entries, verdict: "is pending")
+    }
+
+    private static func render(_ entries: [Falsifier], verdict: String) -> String {
+        let lines = entries.map { "\($0.file):\($0.line) — falsifier `\($0.symbol)` \(verdict)" }
         return lines.sorted().joined(separator: "\n")
     }
 
