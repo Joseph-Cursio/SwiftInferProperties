@@ -77,11 +77,31 @@ enum VerifyImportSet {
     /// before this existed. The rest are sorted, because an import list that reorders between
     /// runs would make two otherwise-identical stubs differ and defeat replay.
     ///
-    /// A type whose declaration site resolves to no module is **silently skipped**, and that is
-    /// correct rather than lenient: `VerifyTargetInference` declines nested packages, dependency
-    /// checkouts and non-`Sources/` layouts, and every one of those is a type the stub genuinely
-    /// cannot reach by importing something. Failing loudly here would turn a build error that
-    /// names the missing type into an argument error that does not.
+    /// A type whose declaration site resolves to no module is **silently skipped**.
+    /// `VerifyTargetInference` declines nested packages, dependency checkouts and non-`Sources/`
+    /// layouts. Failing loudly here would turn a build error that names the missing type into an
+    /// argument error that does not.
+    ///
+    /// **The justification for the checkout case was true when written and is now false.** It
+    /// read: *"every one of those is a type the stub genuinely cannot reach by importing
+    /// something."* That held while nothing put dependency types in the index. `--scan-
+    /// dependencies` (`DependencyTypeShapes`) changed the population: `Effect` is a `public`
+    /// type in a package this project already depends on, and a stub **could** name it, given a
+    /// product edge it does not currently have.
+    ///
+    /// Measured 2026-08-09, one binary, one flag, in the package proper: shapes 283 → 2,315,
+    /// and both remaining generator gaps — `Effect` and `FunctionSummary` — moved out of
+    /// `unsupported-carrier` and into `build-failed: cannot find type … in scope`. The
+    /// constraint moved from *the kit cannot generate this carrier* to *the stub cannot name
+    /// it*, which is this skip.
+    ///
+    /// Closing it needs two halves and the first alone is not progress: resolve
+    /// `.build/checkouts/<Checkout>/Sources/<Module>/…` to `<Module>`, **and** give the stub
+    /// package a `.package` + product edge, since `@testable import <Subject>` does not
+    /// re-export its dependencies. Scoped in
+    /// `docs/plans/dependency-carrier-imports-scope.md`; deliberately not built here, because
+    /// emitting an import the manifest cannot satisfy trades one build failure for another.
+    /// (falsifier: `VerifierWorkdir.dependencyProductEdge`)
     static func modules(
         forTypes typeNames: Set<String>,
         entryModule: String?,
