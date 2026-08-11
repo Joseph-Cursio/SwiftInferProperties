@@ -161,7 +161,7 @@ state. No suggestion scored 50, 80 or 85.
 
 > **Method trap, paid in this session.** `discover` over swift-syntax **`SIGBUS`es under the debug
 > binary** — reproducibly, in under a second, on `Sources/` alone. That is the stack-depth trap
-> `docs/measurements/parsing-catalog-gap.md` warns about, and the fix is the **release** binary (`swift build -c
+> `SwiftInferProperties/docs/measurements/parsing-catalog-gap.md` warns about, and the fix is the **release** binary (`swift build -c
 > release`), which completes in 105s. A debug-binary run does not produce a smaller number; it
 > produces *no* number and an exit code of 138.
 
@@ -224,7 +224,7 @@ A named law shape that discovery can recognize from code — `idempotence`, `com
 `round-trip`, `predicate`. A template decides *whether it fires* and *what score it assigns*,
 and ships the "why suggested / why this might be wrong" pair with each firing.
 
-The canonical name vocabulary is `TemplateName` (`Sources/SwiftInferCore/TemplateName.swift`),
+The canonical name vocabulary is `TemplateName` (`SwiftInferProperties/Sources/SwiftInferCore/TemplateName.swift`),
 which exists so the several curated subsets ("the verifiable ones", "the v1.46 hardcoded set")
 can't drift apart as string literals.
 
@@ -236,7 +236,7 @@ figures were 89/17 three days earlier — **the ratio drifts in both terms**, wh
 stated as a ratio and not as a number to memorise).
 
 ### Tier
-Visibility band derived from score (`Sources/SwiftInferCore/Tier.swift`):
+Visibility band derived from score (`SwiftInferProperties/Sources/SwiftInferCore/Tier.swift`):
 
 | tier | rule | shown by default |
 |---|---|---|
@@ -268,7 +268,7 @@ A law some type-correct, plausible implementation would be **rejected** by. The 
 this repo uses instead of suggestion count, because `f(x) == f(x)` passes "did discovery return
 > 0" and can never fail.
 
-Authority: `Refutability.isRefutable` (`Sources/SwiftInferCore/Refutability.swift`).
+Authority: `Refutability.isRefutable` (`SwiftInferProperties/Sources/SwiftInferCore/Refutability.swift`).
 
 **Caveat — it is declared, not measured.** The current implementation is set membership against
 `tautologicalTemplates`, which contains exactly one name (`determinism`). Everything else is
@@ -389,7 +389,7 @@ attributing a decline to the wrong one is a documented way to build the wrong pl
 
 ### Decline
 Verify returning no verdict because it could not build the attempt at all — as distinct from
-running and passing. The `VerifyError` cases (`Sources/SwiftInferCLI/VerifyCommand.swift`):
+running and passing. The `VerifyError` cases (`SwiftInferProperties/Sources/SwiftInferCLI/VerifyCommand.swift`):
 
 | decline | meaning |
 |---|---|
@@ -406,7 +406,7 @@ governs only the v1.46 hardcoded Route 1; everything else derives from `RawType`
 `TypeShape`. Reading that constant and believing it produced a wrong plan once already.
 
 ### Outcome
-`VerifyEvidenceOutcome` (`Sources/SwiftInferCore/VerifyEvidence.swift`):
+`VerifyEvidenceOutcome` (`SwiftInferProperties/Sources/SwiftInferCore/VerifyEvidence.swift`):
 
 | outcome | meaning |
 |---|---|
@@ -428,7 +428,7 @@ reports separately and cannot retract Pass 1.
 The asymmetry is deliberate and load-bearing: boundary values cannot go in the verdict pass,
 because `x + 1` traps at `Int.max` and the repo's existing tests depend on that being
 unreachable at ~2⁻⁵⁸ per trial. Mixing them in turned three integration tests into
-`signal 5` crashes. See `docs/design/verify-edge-pass.md`.
+`signal 5` crashes. See `SwiftInferProperties/docs/design/verify-edge-pass.md`.
 
 **Historical trap:** before 2026-07-31 Pass 2 was a hardcoded `print("VERIFY_EDGE_RESULT: PASS")`
 with zero trials for every strategist-routed carrier. Any `measured-bothPass` recorded before

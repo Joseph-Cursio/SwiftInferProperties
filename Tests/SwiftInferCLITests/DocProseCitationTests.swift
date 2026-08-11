@@ -53,6 +53,12 @@ import Testing
 ///    into that form when this test was written, and every one of them read as though
 ///    it pointed at a file in *this* repo.
 ///
+///    **`SwiftInferProperties/docs/…` is exempt from the exemption**, and stays checked.
+///    `docs/design-internal/` is copied verbatim into each sibling it describes, where
+///    a bare `docs/…` resolves to nothing — so those citations name this repo on
+///    purpose. Reading the repo's own name as "somewhere else" would have retired the
+///    check on every path that spelling reaches.
+///
 /// ## What is left is a four-entry allowlist, and every entry is the same idiom
 ///
 /// This repo documents its own broken links: *"this row said `docs/glossary.md`, which

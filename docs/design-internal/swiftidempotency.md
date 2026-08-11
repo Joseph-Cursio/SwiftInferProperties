@@ -261,5 +261,5 @@ lattice, it is the third.
 | task-oriented adoption, incl. coordinating with the linter | `…/USER_GUIDE.md` · `TUTORIAL.md` · `REFERENCE.md` |
 | who parses the grammar | `docs/design-internal/swifteffectinference.md` |
 | who enforces it | `docs/design-internal/swiftprojectlint.md` |
-| where the claim is consumed here | `Sources/SwiftInferCore/FunctionSummary.swift`, `ReducerCandidate.swift`, `ViewModelDiscoveryVisitor.swift:154` |
+| where the claim is consumed here | `SwiftInferProperties/Sources/SwiftInferCore/FunctionSummary.swift`, `ReducerCandidate.swift`, `ViewModelDiscoveryVisitor.swift:154` |
 | vocabulary — `@ClockDeterministic`, *Effect lattice* | `docs/design-internal/glossary.md` § Neighbours |

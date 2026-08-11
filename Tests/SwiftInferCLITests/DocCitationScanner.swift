@@ -46,6 +46,10 @@ enum DocCitationScanner {
         /// opposite answers — a Swift comment saying `../../docs/a.md` does mean *this*
         /// repo, while a doc naming `SwiftProjectLint/docs/…` does not.
         /// ``DocProseCitationTests`` is the consumer.
+        ///
+        /// One root is **not** a sibling: this repo's own name. See
+        /// ``isOwnRepositoryPrefix(_:)`` — `SwiftInferProperties/docs/…` is a checkable
+        /// path wearing a prefix, not an unreachable one.
         let isSiblingRooted: Bool
         let file: String
         let line: Int
@@ -177,7 +181,7 @@ enum DocCitationScanner {
                 Citation(
                     path: path,
                     isHistorical: Self.isHistoricalPrefix(prefix),
-                    isSiblingRooted: prefix.hasSuffix("/"),
+                    isSiblingRooted: prefix.hasSuffix("/") && !Self.isOwnRepositoryPrefix(prefix),
                     file: file,
                     line: lineNumber
                 )
@@ -220,6 +224,23 @@ enum DocCitationScanner {
         }
         let sha = text.suffix(while: \.isHexDigit)
         return (7...40).contains(sha.count)
+    }
+
+    /// Is this `docs/` rooted in **this** repo, spelled with the repo's own name?
+    ///
+    /// `SwiftInferProperties/docs/design/foo.md` sits directly after a `/`, so the
+    /// sibling test above reads it as another checkout and stops checking it. It is
+    /// not another checkout — it is this one, named. That spelling exists because
+    /// `docs/design-internal/` is **copied verbatim into the sibling repos it
+    /// describes**, where a bare `docs/…` resolves to nothing; writing the repo in
+    /// is what makes the copy readable. Excluding it would trade a live check for a
+    /// spelling change, which is the expensive direction: these are exactly the
+    /// paths this guard *can* verify.
+    ///
+    /// The prefix is stripped by the caller's `path`, so existence is checked
+    /// against `docs/…` as usual.
+    static func isOwnRepositoryPrefix(_ prefix: Substring) -> Bool {
+        prefix.hasSuffix("SwiftInferProperties/")
     }
 }
 
