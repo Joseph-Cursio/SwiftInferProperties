@@ -543,7 +543,7 @@ else in the effect vocabulary is parsed by a linked dependency and consumed by n
 
 - `AttributeScanner`'s doc comment says it recognises `@CheckProperty` and that "SwiftInferProperties
   does not take a runtime dependency on **`PropertyLawMacro`**'s definitions". But `@CheckProperty`
-  is **this repo's own macro** (`Sources/SwiftInferMacro/CheckProperty.swift`) — the comment
+  is **this repo's own macro** (`SwiftInferProperties/Sources/SwiftInferMacro/CheckProperty.swift`) — the comment
   attributes a local macro to another package. House failure mode, again.
 - **`@ClockDeterministic` is deliberately OUTSIDE `AttributeRecognition`** and hardcoded — SEI's own
   comment says so in as many words. So the one annotation swift-infer depends on for admitting

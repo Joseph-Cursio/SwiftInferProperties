@@ -43,7 +43,7 @@ Three docs already describe this repo and none of them describes its *shape*:
 
 This one is the **architecture**: the targets, the stage order a suggestion actually travels, the
 extension points, and the invariants that govern the whole thing. It deliberately does not restate
-the narrative history — `git log` and `docs/archive/claude-md-narrative-history.md` own that.
+the narrative history — `git log` and `SwiftInferProperties/docs/archive/claude-md-narrative-history.md` own that.
 
 ---
 
@@ -139,7 +139,7 @@ and does not need a second channel.
 **Why 13 exists at all.** 88% of default output on some corpora was `predicate`, and a reader
 scrolled past 56 score-20 rows to reach the first score-80 finding. Two right decisions were in
 contradiction — `PredicateTemplate` says totality is hidden below the cut; `3e38e34` says a law the
-code OWES is never hidden. Fixed by **ordering**, not hiding. See `docs/design/predicate-display-order.md`.
+code OWES is never hidden. Fixed by **ordering**, not hiding. See `SwiftInferProperties/docs/design/predicate-display-order.md`.
 
 ---
 
@@ -166,7 +166,7 @@ bounds verify reach**: 13 templates, and 62% of index entries decline `unsupport
 **4. A signal** (`Signal+Kind.swift`) contributes weighted score. The file is capped at 400 lines and
 `Signal.Kind` is one enum Swift will not split across files, so it grows monotonically with the
 catalogue. **If a new signal will not fit, move the next-longest rationale to
-`docs/design/signal-kind-rationales.md`** — do not trim the new one. Every comment left inline records a
+`SwiftInferProperties/docs/design/signal-kind-rationales.md`** — do not trim the new one. Every comment left inline records a
 measurement, and several are the only surviving record of why a veto exists.
 
 ---
@@ -267,11 +267,11 @@ before you touch anything:
 | question | file |
 |---|---|
 | what a word means | `docs/design-internal/glossary.md` |
-| the measured-verify design (the whole v2 story) | `docs/design/measured-verify-architecture.md` — **read first** |
-| why `bothPass` used to under-claim | `docs/design/verify-edge-pass.md` |
-| why `verify` declines so much (it is not the carrier) | `docs/measurements/verify-carrier-reach-census.md` |
-| why 88% of default output was `predicate` | `docs/design/predicate-display-order.md` |
+| the measured-verify design (the whole v2 story) | `SwiftInferProperties/docs/design/measured-verify-architecture.md` — **read first** |
+| why `bothPass` used to under-claim | `SwiftInferProperties/docs/design/verify-edge-pass.md` |
+| why `verify` declines so much (it is not the carrier) | `SwiftInferProperties/docs/measurements/verify-carrier-reach-census.md` |
+| why 88% of default output was `predicate` | `SwiftInferProperties/docs/design/predicate-display-order.md` |
 | the catalog health census, and how to A/B a template | findings §10 |
-| product scope and success criteria | `docs/SwiftInferProperties PRD v1.0.md` + `v2.0.md` |
-| the full shipped-cycle changelog | `docs/archive/claude-md-narrative-history.md` |
+| product scope and success criteria | `SwiftInferProperties/docs/SwiftInferProperties PRD v1.0.md` + `v2.0.md` |
+| the full shipped-cycle changelog | `SwiftInferProperties/docs/archive/claude-md-narrative-history.md` |
 | the four sibling packages | `docs/design-internal/swift{projectlint,effectinference,propertylaws,idempotency}.md` |

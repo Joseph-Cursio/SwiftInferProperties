@@ -195,7 +195,7 @@ heuristic-downward > silent`, of which the table covers the first three.
 
 ## How this repo consumes it: `SoundPurity`
 
-`Sources/SwiftInferCore/SoundPurity.swift` — 45 lines, and the reason the conjunctive framing above
+`SwiftInferProperties/Sources/SwiftInferCore/SoundPurity.swift` — 45 lines, and the reason the conjunctive framing above
 matters. It takes the **meet of two independent refutations**:
 
 ```swift
@@ -426,14 +426,14 @@ above. A guard phrased as *equality with the sibling consumer* would currently f
 
 ## Where to look
 
-| question | file (in `SwiftEffectInference`) |
+| question | file |
 |---|---|
-| the lattice, `lub`, and what was deliberately left out | `Sources/SwiftEffectInference/Effect.swift` |
-| the purity refuters and the soundness argument | `Sources/SwiftEffectInference/PurityInferrer.swift` |
-| both annotation grammars + the clock-determinism marker | `Sources/SwiftEffectInference/EffectAnnotationParser.swift` |
-| collision-withdrawal and lookup precedence | `Sources/SwiftEffectInference/EffectSymbolTable.swift` |
-| why a name match needs an `import` to count | `Sources/…/Internal/FrameworkGates.swift` |
-| why `Set.insert` is not a non-idempotent `insert` | `Sources/…/Internal/StdlibIdempotentMutations.swift` |
+| the lattice, `lub`, and what was deliberately left out | `SwiftEffectInference/Sources/SwiftEffectInference/Effect.swift` |
+| the purity refuters and the soundness argument | `SwiftEffectInference/Sources/SwiftEffectInference/PurityInferrer.swift` |
+| both annotation grammars + the clock-determinism marker | `SwiftEffectInference/Sources/SwiftEffectInference/EffectAnnotationParser.swift` |
+| collision-withdrawal and lookup precedence | `SwiftEffectInference/Sources/SwiftEffectInference/EffectSymbolTable.swift` |
+| why a name match needs an `import` to count | `SwiftEffectInference/Sources/…/Internal/FrameworkGates.swift` |
+| why `Set.insert` is not a non-idempotent `insert` | `SwiftEffectInference/Sources/…/Internal/StdlibIdempotentMutations.swift` |
 | the full design, including the migration plan §10 | `SwiftEffectInference/docs/SwiftEffectInference Design v0.2.md` |
 | **the meet this repo actually takes** | `SwiftInferProperties/Sources/SwiftInferCore/SoundPurity.swift` |
 | where the verdict is recorded at scan time | `…/FunctionScannerVisitor+Summary.swift:38`, `FunctionSummary.swift` |

@@ -184,7 +184,7 @@ Three rules find pure logic, and they differ by **whether the logic already has 
 | `Pure Closure Property-Test Candidate` | a closure passed to `sorted`/`filter`/`map`/`reduce` | `extractable-kernel` | **no** — extract it first |
 | `Extractable Pure Kernel` | statements in the middle of an impure method | `extractable-kernel` | **no** — extract it first |
 
-The third is the valuable one and the reason this family exists. `Docs/rules/extractable-pure-kernel.md`
+The third is the valuable one and the reason this family exists. `SwiftProjectLint/Docs/rules/extractable-pure-kernel.md`
 carries the motivating case verbatim: `uploadRemainingChunks` is `private async throws`, does network
 I/O, and has chunk arithmetic inlined in it that is a function of `(data.count, chunkSize, index)`
 and nothing else. Two real bugs lived there — an unclamped resume counter that completes a partial
@@ -629,7 +629,7 @@ gate, and a redirect into `.pbt/seeds.json` must not abort under a threshold.
 
 ## The hand-off, read from the consumer side
 
-Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short version:
+Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short version:
 
 - **A seed focuses, it does not extend.** Discovery scans the whole target and *then* narrows to
   seeded functions. An empty manifest focuses to **zero**, not to all. A missing or malformed file is
@@ -705,20 +705,20 @@ Worth reading `Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short ve
 
 ## Where to look
 
-| question | file (in `SwiftProjectLint`) |
+| question | file |
 |---|---|
-| the manifest schema, seed kinds, dropped-seed detection | `Sources/Core/Export/PBTSeedsFormatter.swift` |
-| the effect tier, its provenance, and why both travel | `Packages/SwiftProjectLintModels/…/PBTSeedEffect.swift` |
-| which rules exist at all, and the count nothing tests | `Packages/SwiftProjectLintModels/…/RuleIdentifier.swift` |
-| what a role is and why these six | `Packages/SwiftProjectLintModels/…/PBTSeedRole.swift` |
-| reachability's three values | `Packages/SwiftProjectLintModels/…/TestReachability.swift` |
-| why the report collapses candidates but the manifest does not | `Sources/Core/Export/CandidateInventory.swift` |
-| what counts as a pure-function candidate | `Packages/SwiftProjectLintVisitors/…/PropertyTestCandidacy.swift` |
-| the kernel motivating case, with its two real bugs | `Docs/rules/extractable-pure-kernel.md` |
-| policing the cure vs detecting the disease | `Docs/design/primitive-bypassing-domain-type-rule-design.md` |
-| the format wiring and the exit-gate bypass | `Sources/CLI/OutputFormat.swift`, `SwiftProjectLintCLI.swift` |
+| the manifest schema, seed kinds, dropped-seed detection | `SwiftProjectLint/Sources/Core/Export/PBTSeedsFormatter.swift` |
+| the effect tier, its provenance, and why both travel | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/PBTSeedEffect.swift` |
+| which rules exist at all, and the count nothing tests | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/RuleIdentifier.swift` |
+| what a role is and why these six | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/PBTSeedRole.swift` |
+| reachability's three values | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/TestReachability.swift` |
+| why the report collapses candidates but the manifest does not | `SwiftProjectLint/Sources/Core/Export/CandidateInventory.swift` |
+| what counts as a pure-function candidate | `SwiftProjectLint/Packages/SwiftProjectLintVisitors/…/PropertyTestCandidacy.swift` |
+| the kernel motivating case, with its two real bugs | `SwiftProjectLint/Docs/rules/extractable-pure-kernel.md` |
+| policing the cure vs detecting the disease | `SwiftProjectLint/Docs/design/primitive-bypassing-domain-type-rule-design.md` |
+| the format wiring and the exit-gate bypass | `SwiftProjectLint/Sources/CLI/OutputFormat.swift`, `SwiftProjectLintCLI.swift` |
 | consumer side of the same hop | `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift`, `SeedManifest.swift`, `SeedRole.swift` |
-| which fields this consumer reads, and the guard that says so | `SwiftInferCore/SeedField.swift` (`SeedFieldParity`) + `Tests/SwiftInferCoreTests/SeedFieldParityTests.swift` + `fixtures/seed-manifest-parity/` |
+| which fields this consumer reads, and the guard that says so | `SwiftInferCore/SeedField.swift` (`SeedFieldParity`) + `SwiftInferProperties/Tests/SwiftInferCoreTests/SeedFieldParityTests.swift` + `fixtures/seed-manifest-parity/` |
 | what `restriction` corrects, and the one disagreement it is allowed to settle | `SwiftInferCore/SeedRestriction.swift`, `SeedRestrictionResolver.swift` |
 | why the declaration's own `private` is **not** tested first | `SwiftInferCore/FunctionScannerVisitor+AccessRestriction.swift`, `RestrictedFunction.swift` |
 | the patch generator that acted on the wrong answer | `SwiftInferCore/SpeculativeWidening.swift` |
