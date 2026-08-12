@@ -135,8 +135,6 @@ extension SwiftInferCommand.Verify {
         }
     }
 
-    /// Route 2 — strategist-routed dispatch. Resolves the call
-    /// expressions per template (reusing the existing pair resolvers),
     /// The type a `round-trip` law quantifies over, when that is *not* the
     /// declaring type. `nil` means "no opinion" and the caller keeps the
     /// `carrierTypeName ?? typeName` behaviour it had before this existed.
@@ -180,6 +178,8 @@ extension SwiftInferCommand.Verify {
         return domain
     }
 
+    /// Route 2 — strategist-routed dispatch. Resolves the call
+    /// expressions per template (reusing the existing pair resolvers),
     /// then emits via `StrategistDispatchEmitter`.
     private static func strategistBundle(
         entry: SemanticIndexEntry,
