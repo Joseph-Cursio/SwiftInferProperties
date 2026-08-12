@@ -137,6 +137,49 @@ extension SwiftInferCommand.Verify {
 
     /// Route 2 — strategist-routed dispatch. Resolves the call
     /// expressions per template (reusing the existing pair resolvers),
+    /// The type a `round-trip` law quantifies over, when that is *not* the
+    /// declaring type. `nil` means "no opinion" and the caller keeps the
+    /// `carrierTypeName ?? typeName` behaviour it had before this existed.
+    ///
+    /// The composer emits `inverse(forward(value)) != value`, so `value` must have
+    /// the type `forward` **accepts** — which is the declaring type only when the
+    /// forward half is the receiver. For a parse/print pair the forward is a static
+    /// factory over someone else's type:
+    ///
+    ///     static func parse(_ text: String) -> Self     // forward
+    ///     func serialized() -> String                   // inverse
+    ///
+    /// Here the round trip is anchored at `String`, not at the carrier. Measured on
+    /// SwiftFormatRuleStudio (issue #235): the entry generated
+    /// `Generator<SwiftFormatConfig>` and then fed it to `parse`, which takes a
+    /// `String` — `cannot convert value of type 'SwiftFormatConfig' to expected
+    /// argument type 'String'`, twice, before anything ran.
+    ///
+    /// Anchoring at the parameter also *dissolves* the isolation failure that was
+    /// first reported as the defect: nothing constructs the carrier inside a
+    /// `@Sendable` generator closure any more, so a MainActor-isolated carrier stops
+    /// mattering for this shape.
+    ///
+    /// Three guards, and each excludes a case the rule would get wrong:
+    /// - **instance-method forward** — the value IS the receiver, so the declaring
+    ///   type is already right;
+    /// - **exactly one parameter** — a two-argument forward has no single domain,
+    ///   and guessing one is how `parameterTypeNames` was needed in the first place;
+    /// - **non-empty `parameterTypeNames`** — empty means *not recorded* (an index
+    ///   written before that field), and the fallback must be the old behaviour
+    ///   rather than a guess.
+    ///
+    /// Bit-identical for the curated `Complex`/`Double`/`Int` pairs: `Complex.exp`
+    /// takes one `Complex<Double>`, which is what `typeName` already said.
+    static func roundTripDomainCarrier(entry: SemanticIndexEntry) -> String? {
+        guard entry.templateName == "round-trip",
+              !entry.isInstanceMethod,
+              entry.parameterTypeNames.count == 1,
+              let domain = entry.parameterTypeNames.first,
+              !domain.isEmpty else { return nil }
+        return domain
+    }
+
     /// then emits via `StrategistDispatchEmitter`.
     private static func strategistBundle(
         entry: SemanticIndexEntry,
@@ -151,7 +194,8 @@ extension SwiftInferCommand.Verify {
         // The `selfType:` overload rebinds a bare `Self` carrier to the owning
         // type; `Self.Index` / `Self.Element` keep their curated bindings.
         let boundCarrier = GenericBindingResolver.bound(
-            entry.carrierTypeName ?? entry.typeName ?? "(none)",
+            roundTripDomainCarrier(entry: entry)
+                ?? entry.carrierTypeName ?? entry.typeName ?? "(none)",
             selfType: entry.typeName
         )
         // Homomorphism quantifies over arrays `[T]`; its composer draws arrays by

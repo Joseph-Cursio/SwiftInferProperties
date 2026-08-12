@@ -108,12 +108,34 @@ struct ReceiverCallExpressionTests {
         #expect(inverse == "{ $0.flipped() }")
     }
 
-    @Test("a round-trip half that is NOT the primary keeps the static shape")
-    func roundTripHalfStaticForNonPrimary() {
-        // Primary (forward) is an instance method, but the inverse half is a
-        // different function we have no instance signal for → static shape.
+    @Test("a NULLARY round-trip half that is not the primary emits the receiver shape")
+    func roundTripHalfReceiverForNullaryNonPrimary() {
+        // Changed 2026-08-12 (issue #235). This asserted `"Payload.decoded"`, on the
+        // stated reasoning that a non-primary half has "no instance signal → static
+        // shape". The fallback was wrong rather than merely unsignalled: the composer
+        // emits `inverse(forward(value))`, so with `encoded()` forward the inverse is
+        // applied to the ENCODED type, and `Payload.decoded` cannot consume that under
+        // either reading — as a curried instance reference it wants a `Payload`, and a
+        // nullary static consumes nothing at all.
+        //
+        // The name is the evidence the index does not store: an inverse taking no
+        // arguments has to be an instance method on whatever the forward returned.
         let signal = entry(function: "encoded()", isInstanceMethod: true)
         let inverse = VerifyCmd.roundTripHalfCall(entry: signal, typeQualifier: "Payload", bareName: "decoded()")
+        #expect(inverse == "{ $0.decoded() }")
+    }
+
+    @Test("an ARG-TAKING round-trip half that is not the primary keeps the static shape")
+    func roundTripHalfStaticForNonPrimaryTakingArgument() {
+        // The control for the case above, and the reason its guard tests the argument
+        // labels rather than just "is it the secondary". `decoded(_:)` takes the
+        // encoded value, so the static reference applies cleanly and the receiver
+        // shape would be wrong. A guard that widened to every non-primary half would
+        // break this one.
+        let signal = entry(function: "encoded()", isInstanceMethod: true)
+        let inverse = VerifyCmd.roundTripHalfCall(
+            entry: signal, typeQualifier: "Payload", bareName: "decoded(_:)"
+        )
         #expect(inverse == "Payload.decoded")
     }
 
