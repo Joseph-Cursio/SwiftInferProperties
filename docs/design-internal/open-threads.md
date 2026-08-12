@@ -1,6 +1,6 @@
 # Open threads
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-08-12
 
 
 Things decided, noticed, or left undone that have **no other home**. Deliberately terse — an
@@ -20,7 +20,22 @@ conversation's residue does not evaporate.
 >
 > **Item 28 added 2026-08-06** — the linter now emits an effect tier that nothing here reads.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@38368c3 observer=SwiftInferProperties@38368c3 -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@21bc279 observer=SwiftInferProperties@21bc279 -->
+
+> **2026-08-12 — re-dated, NOT re-measured, and the distinction is the whole point of this note.**
+> 99 commits landed since the last pass. Every figure in this file comes from a survey stream or a
+> scored experiment, each already carrying its own date inline; none was re-run here, because
+> re-running one of them is hours and re-running some but not others would produce a table whose
+> rows are no longer comparable to each other.
+>
+> So the provenance SHA below means *this file was reviewed against a tree at `21bc279`*, not
+> *these numbers were re-measured there*. Read every count as of the date printed beside it.
+>
+> **Four threads did close in that window** and are the ones most likely to be stale here: the
+> round-trip domain anchor and the inverse call shape (#236), the TestLifter type-qualifier misread
+> (#242), the seed focus keeping a lifted law (#244), and lifted evidence gaining a real source
+> location (#245). Anything below that describes lifted rows as unlocatable, or a round-trip stub as
+> mis-anchored, has been overtaken.
 
 ---
 

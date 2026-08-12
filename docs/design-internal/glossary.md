@@ -1,6 +1,6 @@
 # Glossary
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-08-12
 
 
 Vocabulary used across this repo's source, docs, and CLI output. Terms are grouped by the
@@ -31,7 +31,15 @@ it is named — prefer reading that over trusting this file, which is a map and 
 > corpus — the bottleneck moved from *template* reach to *carrier* reach. And the seed funnel
 > inverted into a flood: 1,738 rows on a seeded run against 30 `strong`+`likely`.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@38368c3 observer=SwiftInferProperties@38368c3 -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@21bc279 observer=SwiftInferProperties@21bc279 -->
+
+> **2026-08-12 — scope of this re-verification.** The template-file / enum-case ratio was
+> re-counted (92/18 → **93/20**). The survey-derived figures — composer-supported, the
+> `unsupported-carrier` / `unsupported-template` split, the 663 restricted-function rescues — are
+> **carried from their 2026-08-05 and 2026-08-01 streams and were not re-run**: each comes from a
+> multi-hour `verify --all-from-index` sweep, and a partial re-measure would be worse than a dated
+> one because the numbers are only meaningful against each other. Their dates are stated inline
+> where they appear.
 
 
 ---
@@ -231,9 +239,10 @@ can't drift apart as string literals.
 **Trap:** `TemplateName` does *not* enumerate every template discovery can emit. It holds the
 verifiable set plus four extras; names like `predicate`, `input-totality`, and `filter-subset`
 are live in the index and absent from the enum. Counting templates by `TemplateName.allCases`
-undercounts. There are **~92** `*Template*.swift` files against **18** enum cases (2026-08-06; both
-figures were 89/17 three days earlier — **the ratio drifts in both terms**, which is why the trap is
-stated as a ratio and not as a number to memorise).
+undercounts. There are **~93** `*Template*.swift` files against **20** enum cases (2026-08-12; the
+figures were 92/18 on 2026-08-06 and 89/17 three days before that — **the ratio drifts in both
+terms**, which is why the trap is stated as a ratio and not as a number to memorise. Three passes,
+three different pairs, and the same conclusion each time).
 
 ### Tier
 Visibility band derived from score (`SwiftInferProperties/Sources/SwiftInferCore/Tier.swift`):

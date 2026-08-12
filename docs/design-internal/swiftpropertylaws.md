@@ -6,14 +6,26 @@
 **Repo:** `~/xcode_projects/SwiftPropertyLaws` (`github.com/Joseph-Cursio/SwiftPropertyLaws`) ·
 **Book home:** Chapters 13–14, Appendix A; law families surface in nearly every chapter.
 
-> **As of 2026-08-03** · subject `SwiftPropertyLaws@14d8987` (`v3.26.0`, equal to this repo's pin) ·
+> **As of 2026-08-12** · subject `SwiftPropertyLaws@9a73903` (`v3.28.0`, equal to this repo's pin) ·
 > observer `SwiftInferProperties@2722975`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
 
-<!-- doc-provenance date=2026-08-03 subject=SwiftPropertyLaws@14d89875d80ce99e1dce2ac5d2021c8cc1299bf1 version=3.26.0 observer=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftPropertyLaws@9a73903 version=3.28.0 observer=SwiftInferProperties@21bc279 -->
+
+> **2026-08-12 — scope of this re-verification.** The **pin** was re-checked and moved
+> (`3.26.0` → `3.28.0`, resolving `14d89875` → `9a73903`), along with the guarded
+> `VerifierWorkdir.swiftPropertyLawsRequirement`, which agrees. The kit's **law-catalogue counts
+> below were NOT re-counted** and are carried from 2026-08-03.
+>
+> Two reasons to say so rather than quietly re-stamp the date. The local checkout is on the branch
+> `access-provenance-and-syntax-generators`, not `main`, so counting from it would measure
+> unmerged work — the stale-checkout trap `make docs-drift` warns about, in its other form. And six
+> commits landed in the kit since this doc was written, at least one of which (`0720714`, syntax-node
+> generators) plausibly moves a catalogue count. Treat every number below the pin as dated
+> 2026-08-03 until someone counts them from `main`.
 
 
 ```
@@ -32,7 +44,7 @@ that is the thing to hold onto. The pipeline diagram says "downstream" and the `
 | **↓ downstream (run-time)** | `PropertyLawKit` (+ opt-in products) | `check<Protocol>PropertyLaws` calls emitted into stubs and scaffolds |
 | **↔ sideways (inference-time)** | neither — a *claim about* the kit | `ProtocolCoverageMap`'s veto, and `KitEvidence` reading its verdicts back |
 
-**Pin:** `from: "3.26.0"` (`Package.swift:112`), resolving to `14d89875` / tag `v3.26.0` — currently
+**Pin:** `from: "3.28.0"` (`Package.swift:112`), resolving to `9a73903` / tag `v3.28.0` — currently
 **equal to the kit's `HEAD`**. Read the pin from `Package.swift`, never from prose; this line has
 been a full major version stale before.
 
@@ -130,7 +142,7 @@ and composers read the generator solely from `recipe.expression`.
 Two emitters generate calls **into** the kit:
 
 **1. Verify stubs.** `VerifierWorkdir` builds a throwaway SwiftPM package per suggestion, whose
-manifest carries `VerifierWorkdir.swiftPropertyLawsRequirement` — currently `"3.26.0"`,
+manifest carries `VerifierWorkdir.swiftPropertyLawsRequirement` — currently `"3.28.0"`,
 **equal to this package's own pin and guarded by `VerifierWorkdirKitPinTests`.**
 
 > **The verifier's kit pin must equal this package's own.** A `--corpus-module` survey resolves both
