@@ -165,9 +165,25 @@ public enum AssertReferenceEquivalenceDetector {
             }
         }
         // `input.sorted()` — the receiver is the operand's real input.
+        //
+        // **A TYPE QUALIFIER IS NOT.** `Self.normalized(text)` is a static call whose
+        // receiver names a namespace, and counting it as an input made every pair of
+        // static helpers on one type "share" it — which is this detector's entire gate,
+        // since a shared identifier is what separates a law from two unrelated values.
+        //
+        // Measured (#241) on a real test file: `Self.normalized(source) == source`, where
+        // `source` binds to `Self.lossless(seed:)`, was lifted as
+        // `normalized(x) == lossless(x)` at **Strong** — the top tier — for a law that
+        // cannot be written at all: `normalized` takes `String`, `lossless` takes
+        // `UInt64`, so no argument satisfies both. The shared "input" was `Self`.
+        //
+        // Excluding the qualifier costs nothing real. A genuine oracle stated statically
+        // (`Reference.sort(x) == mySort(x)`) still pairs on `x` through the ARGUMENT path;
+        // only the receiver-as-input route narrows, and a namespace was never an input.
         var isMethodOnInput = false
         if let member = call.calledExpression.as(MemberAccessExprSyntax.self),
-           let receiver = member.base?.as(DeclReferenceExprSyntax.self)?.baseName.text {
+           let receiver = member.base?.as(DeclReferenceExprSyntax.self)?.baseName.text,
+           !isTypeQualifier(receiver) {
             inputs.insert(receiver)
             isMethodOnInput = true
         }
@@ -179,6 +195,25 @@ public enum AssertReferenceEquivalenceDetector {
             isMethodOnInput: isMethodOnInput,
             hasLiteralArgument: hasLiteralArgument
         )
+    }
+
+    /// `Self`, `Array`, `SwiftFormatConfig` — a receiver that names a TYPE rather than a
+    /// value, by Swift's UpperCamelCase nominal-type convention.
+    ///
+    /// A convention check, not semantic resolution: TestLifter reads one test body with no
+    /// type information, so `Foo.bar()` cannot be resolved to know whether `Foo` is a type
+    /// or an unconventionally-named variable. The convention is the strongest signal
+    /// available and the failure it admits is benign — an uppercase *value* receiver stops
+    /// being treated as a shared input, which loses a detection rather than inventing one.
+    /// That is the right direction for a tool whose posture is high precision.
+    ///
+    /// Two other files carry this same first-letter test privately
+    /// (`SetupRegionTypeAnnotationScanner`, `SetupRegionConstructionScanner`). Left as is
+    /// here: folding three copies into one is worth doing, and doing it inside a bug fix
+    /// would put two scanners with their own semantics into this change's review surface.
+    private static func isTypeQualifier(_ name: String) -> Bool {
+        guard let first = name.first else { return false }
+        return first.isLetter && first.isUppercase
     }
 
     /// `(subject, reference)` — see the type's doc comment for the rule.
