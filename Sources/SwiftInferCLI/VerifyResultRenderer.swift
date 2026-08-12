@@ -210,6 +210,26 @@ public enum VerifyResultRenderer {
                 + "boundary values are mixed into the default generator instead)"
         }
         let curatedCount = curatedEdgeCaseCount(for: context.carrierType)
+
+        // **A carrier with no curated table used to render `0 / 0`.** Only
+        // `Complex<Double>` and `Double` have an indexed edge-case list, so every
+        // other carrier that DID run an edge pass printed a zero numerator over a
+        // zero denominator — which reads as *the edge pass covered nothing*, when
+        // the truth is that `edgeTrials` boundary-biased trials ran and there is
+        // no table to count them against. Two verifies on a `String` carrier
+        // reported `100 edge-case-biased trials, all pass` and then
+        // `(0 / 0 curated edge cases sampled)` on the next line, which is the
+        // confident-zero shape this project keeps designing against — found by
+        // pointing the tool at SwiftProjectLint on 2026-08-11.
+        //
+        // The population is not marginal and it grew with a fix: extending the
+        // edge pass to composed carriers (2026-08-07) moved 35 verdicts off the
+        // zero-trial sentinel, and every one of them lands here.
+        guard curatedCount > 0 else {
+            return "    (\(edgeTrials) boundary-biased \(trialWord(edgeTrials)) ran; "
+                + "no curated edge-case table exists for \(context.carrierType), "
+                + "so there is no index to report coverage against)"
+        }
         return "    (\(edgeSampled) / \(curatedCount) curated edge cases sampled)"
     }
 
