@@ -34,13 +34,19 @@ extension SwiftInferCommand.Discover {
         pipeline: PipelineResult,
         diagnostics: any DiagnosticOutput
     ) -> [Suggestion] {
-        let focused = SeedFocus.filter(pipeline.suggestions, to: analysableManifest)
+        // The base names this run's own sources declare. A lifted law whose subject is not among
+        // them is out of any manifest's reach for this scan — see `SeedFocus.isUnseedableLifted`.
+        let declaredSubjects = Set(pipeline.summaries.map(\.name))
+        let focused = SeedFocus.filter(
+            pipeline.suggestions, to: analysableManifest, declaredSubjects: declaredSubjects
+        )
 
         // A seed-independent law was never *in* the search the seeds narrow — its subject is impure,
         // and a pure-function manifest cannot name one. Counting it as a "seed match" would be a lie,
         // and filtering it out would throw away the only law in the run that can fail.
         let exempt = SeedFocus.seedIndependent(in: focused)
-        let matched = focused.count - exempt.count
+        let lifted = SeedFocus.unseedableLifted(in: focused, declaredSubjects: declaredSubjects)
+        let matched = focused.count - exempt.count - lifted.count
 
         diagnostics.writeDiagnostic(
             "focused on \(focusing.count) analysable seed(s)"
@@ -60,10 +66,12 @@ extension SwiftInferCommand.Discover {
             )
         }
 
+        reportUnseedableLifted(lifted, diagnostics: diagnostics)
+
         // Seeds that match nothing are the other way to end up at a confident zero. The focus is
         // honoured — the user asked for it — but they are told it emptied the run, and why. See
         // `warnIfNoSeedsMatched` for the "kept 0" note-vs-warning distinction (W1).
-        let seedableFound = pipeline.suggestions.count - exempt.count
+        let seedableFound = pipeline.suggestions.count - exempt.count - lifted.count
         warnIfNoSeedsMatched(
             matched: matched,
             seedableFound: seedableFound,
@@ -98,6 +106,24 @@ extension SwiftInferCommand.Discover {
             restrictedFunctions: pipeline.restrictedFunctions
         )
         return guardFinalAnswer(covered + generic, pipeline: pipeline, diagnostics: diagnostics)
+    }
+
+    /// Say why a lifted law survived the focus, so it does not read as a lucky seed match —
+    /// the same disclosure `seedIndependentTemplates` already gets. Hoisted out of
+    /// `focusOnAnalysableSeeds` to keep that function under the body-length cap.
+    private static func reportUnseedableLifted(
+        _ lifted: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) {
+        guard !lifted.isEmpty else { return }
+        diagnostics.writeDiagnostic(
+            "kept \(lifted.count) law(s) read out of your TESTS whose subject this scan never "
+                + "declared — so no seed manifest over these sources could name them, and the "
+                + "focus does not get to discard them. A lifted law records no source location "
+                + "(`<test-body>:0`), so it can never join a manifest on `(file, symbol)`; without "
+                + "this it would be dropped silently, which is how a Strong-tier law went missing "
+                + "from a seeded run."
+        )
     }
 
     /// Seeds that match nothing are the other way to end up at a confident zero. The focus is
