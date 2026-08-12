@@ -64,4 +64,21 @@ public enum ViewModelVerifyEvidence {
             packageRoot: packageRoot
         )
     }
+
+    /// Batch upsert — one read-modify-write for a whole survey, mirroring
+    /// `VerifyInteractionPipeline.recordEvidenceBatch`. The survey calls this
+    /// once after collecting every outcome rather than recording per entry,
+    /// so a parallel survey cannot lose one record to an interleaved
+    /// read-modify-write of the shared store.
+    @discardableResult
+    public static func recordBatch(
+        _ outcomes: [(suggestion: InteractionInvariantSuggestion, outcome: VerifyOutcome)],
+        packageRoot: URL
+    ) -> [String] {
+        guard !outcomes.isEmpty else { return [] }
+        return VerifyEvidenceRecorder.recordBatch(
+            outcomes.map { evidence(for: $0.suggestion, outcome: $0.outcome) },
+            packageRoot: packageRoot
+        )
+    }
 }
