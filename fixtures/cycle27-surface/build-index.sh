@@ -21,6 +21,28 @@
 # picks from PropertyLawKit (3 file-private helpers in
 # *CollectionLaws.swift + 3 `private static` members of
 # ViolationFormatter). See docs/calibration-cycle-54-findings.md.
+#
+# ── Diffing a sweep of this fixture: compare `outcome`, NOT `outcomeDetail` ──
+#
+# `verify --all-from-index` over this fixture is verdict-stable and detail-noisy.
+# Two entries report a different FAILING TRIAL INDEX run to run, with the same
+# binary and no source change:
+#
+#   0x0EE19DA4B456B0F5  associativity   trial=1 / trial=0
+#   0xB8FE8FAB14F3C1A8  commutativity   trial=0 / trial=1 / trial=3
+#
+# Both stay `measured-defaultFails` every time, so this never surfaces as a
+# pass/fail flake — only as movement in `outcomeDetail`.
+#
+# Measured 2026-08-12 while A/B-ing the round-trip domain-anchor fix (#236):
+# three sweeps, the arm comparison showed exactly these two entries differing,
+# and a SAME-BINARY control reproduced both. Without that control the honest
+# reading was "the change perturbed two entries", and the search would have gone
+# looking for a cause in `associativity`/`commutativity` — templates the change
+# cannot reach. **Run the control arm before attributing any delta here.**
+#
+# Verdict tallies across all three sweeps: 39 bothPass, 6 defaultFails,
+# 8 edgeCaseAdvisory, over 53 entries.
 
 set -euo pipefail
 
