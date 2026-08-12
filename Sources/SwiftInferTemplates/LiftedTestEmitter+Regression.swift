@@ -258,11 +258,82 @@ public extension LiftedTestEmitter {
         let typeAnnotation = inputType.isEmpty ? "" : ": \(inputType)"
         return """
 
-        @Test func \(testFunctionName)() {
-            let \(inputBinding)\(typeAnnotation) = \(inputSource)
+        @Test func \(identifierSafe(testFunctionName))() {
+            let \(inputBinding)\(typeAnnotation) = \(literal(inputSource, ofType: inputType))
             #expect(\(propertyExpression))
         }
         """
+    }
+
+    /// Reduce an arbitrary caller-supplied name to something that can follow `@Test func`.
+    ///
+    /// The arms above compose this from callee names, and a callee reaching them is a rendered
+    /// CALL EXPRESSION rather than an identifier — `SwiftFormatConfig.parse`, or after #242 the
+    /// receiver-closure form `{ $0.serialized() }`. Interpolated raw, that produced
+    ///
+    ///     @Test func SwiftFormatConfig.parse_{ $0.serialized() }_roundTrip_regression_6C179F21()
+    ///
+    /// which is not a Swift identifier — dots, braces, spaces and a `$` (issue #249).
+    ///
+    /// Each `_`-separated segment collapses to its LAST identifier run, which is the method name
+    /// in every shape observed: `Type.method` → `method`, `{ $0.method() }` → `method`. Anything
+    /// with no identifier run at all is dropped rather than mangled, and a name that reduces to
+    /// nothing falls back to `regression` so the stub is still parseable and still obviously
+    /// unfinished.
+    ///
+    /// Defensive rather than the whole fix: the callers should pass bare function names, which the
+    /// index already carries. This is the floor, so a future caller passing an expression gets an
+    /// ugly name instead of a syntax error.
+    static func identifierSafe(_ name: String) -> String {
+        let segments = name.split(separator: "_", omittingEmptySubsequences: true).map { segment -> String in
+            var runs: [String] = []
+            var current = ""
+            for character in segment {
+                if character.isLetter || character.isNumber || character == "_" {
+                    current.append(character)
+                } else if !current.isEmpty {
+                    runs.append(current)
+                    current = ""
+                }
+            }
+            if !current.isEmpty { runs.append(current) }
+            // Drop all-DIGIT runs only: `$0` reduces to `0`, which is a positional placeholder and
+            // not a name. A run may otherwise begin with a digit — the trailing segment of every
+            // arm's name is a hex hash, and `6C179F21` is as valid a segment as `AB12CD34`.
+            //
+            // Requiring a leading letter here silently deleted the hash from every name whose hash
+            // began with a digit, which is 10 of the 16 possible first characters. The arm's
+            // byte-stable tests caught it; the control in `RegressionStubWellFormednessTests` did
+            // not, because it happened to use a hash starting with `A`.
+            return runs.last { !$0.allSatisfy(\.isNumber) } ?? ""
+        }
+        let joined = segments.filter { !$0.isEmpty }.joined(separator: "_")
+        guard let first = joined.first else { return "regression" }
+        // Only the WHOLE identifier is forbidden from starting with a digit.
+        return first.isNumber ? "regression_\(joined)" : joined
+    }
+
+    /// Render `source` as an expression of `type`, quoting when the type needs it.
+    ///
+    /// `inputSource` arrives as the RAW counterexample value — `verify` reports the value, not a
+    /// Swift literal for it. Interpolated directly after `=`, a `String` counterexample is a syntax
+    /// error, and a whitespace-only one leaves the binding with no right-hand side at all:
+    ///
+    ///     let value: SwiftFormatConfig =
+    ///
+    /// which is what issue #249 was filed on. Only `String` is quoted here, because that is the
+    /// case observed and the one where a raw value is never valid; every other type's
+    /// counterexample already arrives as an expression. A wider rule wants the type-aware
+    /// rendering `verify` uses for replay, and should be measured rather than guessed.
+    static func literal(_ source: String, ofType type: String) -> String {
+        guard type == "String" || type == "String?" else { return source }
+        if source.hasPrefix("\""), source.hasSuffix("\""), source.count >= 2 { return source }
+        let escaped = source
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\t", with: "\\t")
+        return "\"\(escaped)\""
     }
 
     /// Strip the leading `\.` from a key-path source-text and rewrite

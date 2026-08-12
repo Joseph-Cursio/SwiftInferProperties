@@ -287,7 +287,12 @@ extension SwiftInferCommand.Verify {
         let args = ConvertCounterexampleEngine.Args(
             template: entry.templateName,
             callee: calls.rendererForwardName,
-            type: entry.typeName ?? "(none)",
+            // The type the law QUANTIFIES OVER, which is the declaring type only when the forward
+            // half is the receiver — see `roundTripDomainCarrier`. Passing `typeName` bound the
+            // regression stub's `value` to the carrier while the verifier generated the parameter
+            // type, so the two disagreed about the law's domain and the stub could not compile
+            // (#249). #236 fixed this on the verify side and did not reach here.
+            type: roundTripDomainCarrier(entry: entry) ?? entry.typeName ?? "(none)",
             counterexample: counterexample,
             reverseCallee: entry.templateName == "round-trip" ? calls.rendererInverseName : nil
         )
