@@ -17,15 +17,28 @@
 
 > **2026-08-12 — scope of this re-verification.** The **pin** was re-checked and moved
 > (`3.26.0` → `3.28.0`, resolving `14d89875` → `9a73903`), along with the guarded
-> `VerifierWorkdir.swiftPropertyLawsRequirement`, which agrees. The kit's **law-catalogue counts
-> below were NOT re-counted** and are carried from 2026-08-03.
+> `VerifierWorkdir.swiftPropertyLawsRequirement`, which agrees.
 >
-> Two reasons to say so rather than quietly re-stamp the date. The local checkout is on the branch
-> `access-provenance-and-syntax-generators`, not `main`, so counting from it would measure
-> unmerged work — the stale-checkout trap `make docs-drift` warns about, in its other form. And six
-> commits landed in the kit since this doc was written, at least one of which (`0720714`, syntax-node
-> generators) plausibly moves a catalogue count. Treat every number below the pin as dated
-> 2026-08-03 until someone counts them from `main`.
+> **Counted from `main` (`b59cdb4`), not from a feature branch.** The first draft of this note said
+> the catalogue counts were carried because the local checkout sat on
+> `access-provenance-and-syntax-generators`; it was then checked out to `main` and they were
+> counted properly:
+>
+> | claim | verdict on `main` |
+> |---|---|
+> | `checkSetAlgebraPropertyLaws` runs **fifteen** laws | **holds** — 15 private `check…` functions, and the suite's own docstring says "Fifteen Strict-tier laws" |
+> | union associativity is **not** among them | **holds** — no `associat` of any spelling in `SetAlgebraLaws.swift` |
+> | `checkRingPropertyLaws` ships | **holds** |
+> | `CommutativeGroup` / `Group action` still deferred | **holds** — both falsifier symbols are absent, so `DeferralFalsifierTests` stays green for the right reason |
+> | `check<Protocol>PropertyLaws` entry points | **44** (newly counted; no prior figure to compare) |
+>
+> `main` is **2 commits past the `v3.28.0` tag** this repo resolves, so the pin is current and the
+> tip is simply ahead of it — not a divergence to act on.
+>
+> Still carried and NOT re-measured: **996 laws over 299 carriers, of which 5 execute**. That is an
+> observer-side figure from `ProtocolCoverageAudit` over a corpus this doc does not name, so
+> re-running it would produce a number measured against a different population — the same
+> incomparability that kept SwiftProjectLint's grep figures frozen this pass.
 
 
 ```
