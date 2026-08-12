@@ -273,9 +273,14 @@ extension SwiftInferCommand {
             discovery still scans the whole target but the surfaced suggestions \
             are FOCUSED to functions named in the manifest — the consumer side \
             of the lint → infer pipeline. A seeded pure function that no template \
-            matched still earns the generic determinism law (f(x) == f(x)). A \
-            missing or malformed file is an error; an empty manifest focuses to \
-            zero suggestions.
+            matched still earns the generic determinism law (f(x) == f(x)). \
+            Focusing is not total: a law the code OWES, and one whose subject a \
+            manifest could never name (a state machine's moves are impure), \
+            survive it — see `SeedFocus`. A missing or malformed file is an \
+            error. An EMPTY manifest does NOT focus, and returns what an \
+            unseeded run would: a manifest is whatever the linter happened to \
+            find, so "focus on zero functions" is what a producer with a blind \
+            spot looks like, not a request anyone makes.
             """
         )
         public var seeds: String?
