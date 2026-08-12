@@ -76,7 +76,11 @@ public enum SeedFocus {
     /// A type name is a far more distinctive key than a bare function name, which is what makes
     /// dropping the file scope tolerable here and not for functions: `add` collides across a
     /// codebase, `Percentage` rarely does.
-    public static func filter(_ suggestions: [Suggestion], to manifest: SeedManifest) -> [Suggestion] {
+    public static func filter(
+        _ suggestions: [Suggestion],
+        to manifest: SeedManifest,
+        declaredSubjects: Set<String> = []
+    ) -> [Suggestion] {
         let focusing = manifest.analysableSeeds
         guard !focusing.isEmpty else { return suggestions }
 
@@ -86,11 +90,60 @@ public enum SeedFocus {
 
         return suggestions.filter { suggestion in
             if seedIndependentTemplates.contains(suggestion.templateName) { return true }
+            if isUnseedableLifted(suggestion, declaredSubjects: declaredSubjects) { return true }
             if let carrier = suggestion.carrierTypeName, carriers.contains(carrier) { return true }
             return suggestion.evidence.contains { evidence in
                 keys.contains(key(file: evidence.location.file, symbol: functionBaseName(evidence.displayName)))
             }
         }
+    }
+
+    /// A law read out of a test whose subject **the scan never declared** — so no manifest
+    /// over those sources could name it, and the focus does not get to discard it.
+    ///
+    /// The same rule as `seedIndependentTemplates`, applied per row instead of per template
+    /// because liftedness is not a property of the template: `idempotence` arises both from
+    /// source and from a test body, and only the second kind can be unnameable.
+    ///
+    /// **Why the check is "did the scan declare it" rather than "is it in a test file".**
+    /// A lifted suggestion records `location` as the literal placeholder `<test-body>:0` —
+    /// it carries no path at all, which is *also* the mechanical reason every lifted row is
+    /// dropped today: the join key is `(file basename, symbol)` and `<test-body>` matches no
+    /// seed's file, ever. So a path predicate cannot be written, and one keyed on liftedness
+    /// alone would be wrong in the other direction — a law lifted from
+    /// `#expect(mySort(input) == input.sorted())` has a subject the manifest can and SHOULD
+    /// name, and `SeedFocus`'s standing rule sends that case to the linter, not here.
+    ///
+    /// Asking the scan closes both: a subject the run's own sources declare is seedable and
+    /// stays subject to the focus; one they do not declare is out of the manifest's reach by
+    /// construction. Note this is scoped to THIS run — a production function declared in a
+    /// target you did not scan is correctly unnameable by a manifest for the target you did.
+    ///
+    /// Measured (#240): a `normalized(_:)` idempotence law lifted from a property suite,
+    /// Strong tier, dropped by a manifest that named nothing in the scanned package — and
+    /// dropped silently, unlike the role-entailed rescue which announces itself.
+    static func isUnseedableLifted(
+        _ suggestion: Suggestion,
+        declaredSubjects: Set<String>
+    ) -> Bool {
+        guard suggestion.liftedOrigin != nil else { return false }
+        // An empty set means the caller did not supply the scan's declarations. Answering
+        // "unseedable" for every lifted row then would exempt them wholesale on no evidence,
+        // so the conservative reading is that nothing is exempt.
+        guard !declaredSubjects.isEmpty else { return false }
+        let subjects = suggestion.evidence.map { functionBaseName($0.displayName) }
+        guard !subjects.isEmpty else { return false }
+        return !subjects.contains { declaredSubjects.contains($0) }
+    }
+
+    /// The lifted laws the focus kept because the scan never declared their subject — so the
+    /// CLI can say so, the way it already does for `seedIndependentTemplates`. A row kept for
+    /// a reason the reader cannot see is indistinguishable from a lucky seed match.
+    public static func unseedableLifted(
+        in suggestions: [Suggestion],
+        declaredSubjects: Set<String>
+    ) -> [Suggestion] {
+        suggestions.filter { isUnseedableLifted($0, declaredSubjects: declaredSubjects) }
     }
 
     /// The suggestions the focus kept *because no manifest could ever have named them* — so the CLI
