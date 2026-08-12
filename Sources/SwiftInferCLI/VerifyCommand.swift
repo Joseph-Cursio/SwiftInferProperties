@@ -265,13 +265,21 @@ extension SwiftInferCommand {
 /// violate the rule. Public so tests can pattern-match on the case
 /// rather than the rendered text.
 ///
-/// **Cycle progression.** V1.42.B shipped `.harnessNotYetWired` only.
-/// V1.42.C.1 adds `.suggestionNotFound`, `.ambiguousPrefix`,
-/// `.indexMissing`, `.indexEmpty`. V1.42.C.2 adds `.unsupportedCarrier`.
-/// V1.42.C.3 adds `.buildFailed`, `.runnerCrashed`. V1.42.C.6 adds
-/// `.unsupportedTemplate`, `.unsupportedPair`.
+/// **On version numbers in these messages: don't.** Three of these refusals used to read "not
+/// supported in v1.42 … wider support lands in v1.44", and a fourth case, `.harnessNotYetWired`,
+/// told the reader to "try again after the next v1.42 deliverable". Pointing the tool at
+/// SwiftProjectLint on 2026-08-11 surfaced all four from a **1.149.0** binary: the reader is
+/// refused, and then told to wait for a release that shipped a hundred versions ago without
+/// delivering the thing. A refusal is the one message a user is guaranteed to read closely, so it
+/// must name the actual gate — what would have to be true — rather than a date.
+///
+/// `.harnessNotYetWired` was deleted in the same pass. Nothing had raised it since V1.42.C.6; its
+/// only reference was a test asserting the description was "still load-bearing", which is the
+/// `make dead-code` **test-only** verdict — a passing suite keeping dead code looking maintained.
+///
+/// `.missingPairedFunction` below is the shape to copy: it dates its claim ("before 2026-08-08")
+/// and names the remedy, so it stays true or becomes visibly false.
 public enum VerifyError: Error, CustomStringConvertible {
-    case harnessNotYetWired
     case suggestionNotFound(prefix: String, closest: [String])
     case ambiguousPrefix(prefix: String, matches: [String])
     case indexMissing(expectedPath: URL)
@@ -303,11 +311,6 @@ public enum VerifyError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .harnessNotYetWired:
-            return "swift-infer verify: V1.42.B argument surface is in place but "
-                + "the harness pipeline lands in V1.42.C. Try again after the next "
-                + "v1.42 deliverable."
-
         case let .suggestionNotFound(prefix, closest):
             let suffix = closest.isEmpty
                 ? ""
@@ -331,9 +334,12 @@ public enum VerifyError: Error, CustomStringConvertible {
 
         case let .unsupportedCarrier(carrier, expected):
             let expectedList = expected.joined(separator: ", ")
-            return "swift-infer verify: carrier type '\(carrier)' is not supported in v1.42. "
-                + "Supported carriers: \(expectedList). Wider carrier support lands in v1.44 "
-                + "once the kit-side generators for additional carriers ship."
+            return "swift-infer verify: no generator could be derived for carrier type "
+                + "'\(carrier)', so there is no domain to quantify over. Carriers reachable "
+                + "today: \(expectedList). The gate is a generator, not a release: this clears "
+                + "when `DerivationStrategist` derives one for the type, or when the kit ships "
+                + "it — for SwiftSyntax nodes, `PropertyLawSyntax` vends generators for the "
+                + "erased base types and is opt-in via --extra-import."
 
         case let .buildFailed(exitCode, diagnostics):
             // `diagnostics` is already the extracted cause — see
@@ -348,14 +354,20 @@ public enum VerifyError: Error, CustomStringConvertible {
 
         case let .unsupportedTemplate(template, expected):
             let expectedList = expected.joined(separator: ", ")
-            return "swift-infer verify: suggestion template '\(template)' is not supported in v1.42. "
-                + "Supported templates: \(expectedList). Wider template support lands in v1.44."
+            return "swift-infer verify: template '\(template)' has no verify composer, so its "
+                + "law is proposed but never executed. Templates that execute: \(expectedList). "
+                + "The gate is a composer arm, not a release: a template becomes verifiable once "
+                + "it is named in all of `TemplateName.verifiable`, the composer switch, "
+                + "`resolveFunctionCalls` and `RenderShape.byTemplateName` — missing one is "
+                + "silent, and differently silent each time."
 
         case let .unsupportedPair(forward, supported):
             let supportedList = supported.joined(separator: ", ")
-            return "swift-infer verify: forward-side function '\(forward)' is not in v1.42's "
-                + "curated round-trip pair list. Supported forwards: \(supportedList). "
-                + "Pair-list expansion lands in v1.43."
+            return "swift-infer verify: forward-side function '\(forward)' is not in the curated "
+                + "round-trip pair list, so nothing names its inverse. Curated forwards: "
+                + "\(supportedList). The list is curated because a round-trip pair cannot be "
+                + "recovered from one entry — contrast `.missingPairedFunction`, where the pair "
+                + "IS reconstructible and the remedy is re-indexing."
 
         case let .missingPairedFunction(template, primary):
             return "swift-infer verify: the '\(template)' entry for '\(primary)' records no "

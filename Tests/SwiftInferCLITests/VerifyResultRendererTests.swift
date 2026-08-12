@@ -37,6 +37,15 @@ struct VerifyResultRendererTests {
         carrierType: "Double"
     )
 
+    /// A carrier that DOES run an edge pass and has no curated edge-case table — the population
+    /// the `0 / 0` line was rendering for. `String` is the one the defect was measured on.
+    private static let stringContext = VerifyResultRenderer.Context(
+        templateName: "idempotence",
+        forwardName: "NameListReader.normalize",
+        inverseName: "NameListReader.normalize",
+        carrierType: "String"
+    )
+
     private static func output(
         exitCode: Int32,
         stdout: String,
@@ -253,6 +262,33 @@ struct VerifyResultRendererTests {
         #expect(rendered.contains("✓ verify holds (strong)"))
         #expect(rendered.contains("no edge pass ran for this carrier"))
         // The "curated edge cases sampled" phrasing must NOT appear.
+        #expect(!rendered.contains("curated edge cases sampled"))
+    }
+
+    // MARK: - A carrier that runs an edge pass but has no curated table
+
+    /// A carrier with no indexed edge-case list must not report `0 / 0`.
+    ///
+    /// Only `Complex<Double>` and `Double` have a curated table, so every other carrier that runs
+    /// an edge pass used to render a zero numerator over a zero denominator — which reads as *the
+    /// edge pass covered nothing*, while `edgeTrials` boundary-biased trials had in fact run.
+    /// Measured on SwiftProjectLint, 2026-08-11: two `String`-carrier verifies printed
+    /// `100 edge-case-biased trials, all pass` and then `(0 / 0 curated edge cases sampled)`.
+    ///
+    /// **Both halves are asserted, and the negative one is the point.** Checking only that the new
+    /// sentence appears would still pass if `0 / 0` were printed beside it; the population is every
+    /// composed carrier the 2026-08-07 edge-pass extension reached, so the wrong line reappearing
+    /// is the failure worth catching.
+    @Test("a carrier with no curated table reports trials ran, not 0 / 0")
+    func rendersUncuratedCarrierEdgeCoverageWithoutAZeroFraction() {
+        let rendered = VerifyResultRenderer.render(
+            .bothPass(defaultTrials: 100, edgeTrials: 100, edgeSampled: 0),
+            context: Self.stringContext
+        )
+
+        #expect(rendered.contains("100 boundary-biased trials ran"))
+        #expect(rendered.contains("no curated edge-case table exists for String"))
+        #expect(!rendered.contains("0 / 0"))
         #expect(!rendered.contains("curated edge cases sampled"))
     }
 }
