@@ -92,8 +92,14 @@ extension SwiftInferCommand {
             name: .long,
             inversion: .prefixedNo,
             help: """
-            Include `Possible` tier suggestions (score 20–39). Hidden by \
-            default per PRD §4.2. Pass --include-possible / \
+            Also show the below-cut CONJECTURES — `round-trip`, \
+            `idempotence`, `monotonicity` and the like, which a correct \
+            implementation could legitimately fail (PRD §4.2). This is not a \
+            plain score cut: a role-entailed law, one the code OWES such as a \
+            `predicate` totality claim, is shown by DEFAULT at any score, so \
+            some `Possible`-tier rows appear without this flag and \
+            --no-include-possible will not remove them. See \
+            docs/design/predicate-display-order.md. Pass --include-possible / \
             --no-include-possible to override the project's \
             .swiftinfer/config.toml setting.
             """
