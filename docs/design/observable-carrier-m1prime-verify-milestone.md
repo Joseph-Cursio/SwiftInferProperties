@@ -133,7 +133,7 @@ Two findings the diff surfaced:
 > waiting, and this milestone was filed as live work on 2026-08-07 on the strength
 > of it.
 
-> **Item 6's ✅ is WRONG — corrected 2026-08-12 at `a3959f0`. See §8.** The commit it
+> **Item 6's ✅ was WRONG — corrected 2026-08-12 at `a3959f0`, and FIXED the same day (§8.1). See §8.** The commit it
 > cites, `c7b7626`, added `ViewModelVerifyEvidence.swift` and two test files and **no
 > production call site**; nothing in `Sources/` has ever called the recorder. The live
 > chain (`VerifyInteractionCommand.swift:197` → `ViewModelVerifyInteractionSurvey.runLive`
@@ -176,8 +176,47 @@ so a suite named for the join does not exercise the join. A measured, subprocess
 green test — the `test-only` verdict earning its keep, since a passing suite makes dead
 code look maintained.
 
-Refuted the day the live survey persists what it verified
-(falsifier: `ViewModelVerifyInteractionSurvey.viewModelEvidenceFoldBack`).
+**FIXED 2026-08-12, hours after being recorded — `ViewModelVerifyInteractionSurvey.foldBack`
++ `ViewModelVerifyEvidence.recordBatch`, called from `runLive`.** Three things about the fix
+are worth more than the wiring, which is four lines.
+
+**The pairing is not "record what you verified", because it cannot be.** Evidence is keyed by
+`SuggestionIdentity`, whose canonical input is `family::reducerQualifiedName::subjects` — so a
+record joins only if it carries the identity the *discover* side computes. This survey resolves
+an **executable** predicate (`ViewModelCardinalityResolver` renders a Swift expression over
+`probe`), which is a different string from the analyzer's subject list. Re-deriving the identity
+here would have been a fifth enumeration of one fact, so the suggestions are asked for
+(`ViewModelInteractionAnalyzer.suggestions`) rather than reconstructed.
+
+**The exactly-one rule is a soundness gate, and it costs recall on purpose.**
+`referentialIntegrity`, `conservation` and `biconditional` may each surface *several*
+suggestions per candidate while the resolvers return at most one predicate per family — so
+`(type, family)` does not identify an invariant. A verdict whose key is ambiguous is withheld
+and **disclosed in the render**, never guessed: recording under a guessed key would promote to
+`.verified` a law that was never run, and of the two failure directions only under-claiming is
+recoverable.
+
+**The falsifier this section shipped with named nothing that was built.** It said
+`viewModelEvidenceFoldBack`; the function is `foldBack`, so `DeferralFalsifierTests` would have
+stayed green forever while the deferral read as open — `nestedCarrierImportResolution`'s exact
+failure mode, reproduced within hours of citing it, by the person citing it. It is removed
+rather than repointed, because the deferral is closed.
+
+**The guard is the part that had to be different.** The pre-existing
+`ViewModelVerifyEvidenceJoinMeasuredTests` proved the recorder worked *by calling it directly*,
+which is precisely why it could not notice that nothing else did. `ViewModelEvidenceFoldBackTests`
+drives `runLive` instead, with an injected runner so no `swift build` is spawned (the seam is new,
+and is the reason the whole chain is now cheap to exercise at all). Checked by mutation, not by
+reading: reverting `runLive` to render-only makes 3 of the 7 arms fail with an empty store, the
+pre-fix state exactly. One arm asserts the recorded identities are a **subset of what the discover
+side computes**, since a record with a plausible-looking key that joins nothing is the failure this
+whole section is about.
+
+**Two bounds stated rather than fixed.** Interaction evidence has no staleness gate —
+`InteractionVerifyEvidenceScoring` reads no `subjectFingerprint`, so §10.8's protection on the
+algebraic path does not cover this one, and a ViewModel verdict persists across an edit to the
+model it measured. And idempotence still does not fold back at all, for the reason in §8.2: the
+survey never resolves that family, though `discover-interaction` surfaces it.
 
 ### 8.2 The idempotence prototype is NOT superseded — it is unadoptable
 
