@@ -217,6 +217,22 @@ extension SwiftInferCommand.Verify {
             bareFunctionName: stripped
         )
         let primaryStripped = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
+        // The half that is NOT the primary carries no shape flags of its own — the
+        // index records it as a bare `secondaryFunctionName`, and every
+        // `isInstanceMethod`/`isNullary` field describes the primary. Its name is
+        // still evidence: a round-trip inverse must CONSUME the forward's result, so
+        // one taking no arguments cannot be a static function. It has to be an
+        // instance method, and the static reference `Type.serialized(x)` is the
+        // curried `(Self) -> () -> String` — which type-checks at the call and then
+        // fails against the comparison, the confusing way round.
+        //
+        // This is the same curried-reference trap `idempotence` documents for
+        // `Decisions.merge`; round-trip reaches it through the *inverse* half, which
+        // the `stripped == primaryStripped` gate below is structurally unable to see.
+        if stripped != primaryStripped, argumentLabels(from: bareName).isEmpty {
+            let methodName = stripped.split(separator: ".").last.map(String.init) ?? stripped
+            return "{ $0.\(methodName)() }"
+        }
         guard entry.isInstanceMethod, stripped == primaryStripped else { return reference }
         return receiverCallExpression(entry: entry, reference: reference, bareFunctionName: stripped)
     }
