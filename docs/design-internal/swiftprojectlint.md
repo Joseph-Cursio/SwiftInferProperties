@@ -1,6 +1,6 @@
 # SwiftProjectLint — the entry point
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-08-12
 
 
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
@@ -54,7 +54,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftProjectLint@db4be6b6 observer=SwiftInferProperties@1fdb178 -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftProjectLint@0eec5f95 observer=SwiftInferProperties@21bc279 -->
 
 ---
 
@@ -100,8 +100,15 @@ rather than detection (§ *The census flood*).
 
 ## The rule catalogue, and how little of it is about properties
 
-`RuleIdentifier` has **202** cases, and **every one is accounted for**: 200 live rules and 2
+`RuleIdentifier` has **203** cases, and **every one is accounted for**: 201 live rules and 2
 deliberate sentinels.
+
+> **2026-08-12:** +1 since the last pass — `.unreachableEffectClosure`, which lands in
+> `testability` (taking that family to 10). The distinct-`name:` figures below are left at their
+> 2026-08-06 values deliberately: this pass verified the enum count and the new case's category
+> from the diff, and did not re-run the two greps whose overcounting the footnote documents.
+> Re-running them with a different pattern would replace a measured number with an
+> incomparable one.
 
 > **This section said "10 enum cases are declared but never registered" until 2026-08-06, and that
 > was wrong.** It compared 202 against the **192** registered in `SwiftProjectLintRules` and read the
@@ -143,14 +150,14 @@ special cases.
 | `performance` | 14 | no |
 | `stateManagement` | 13 | `Missing Equatable on State Type` is a blocker (§ 1c) |
 | `animation` | 10 | no |
-| `testability` | 9 | **the family** — candidates, kernels, blockers (§ 1a, § 1c) |
+| `testability` | **10** | **the family** — candidates, kernels, blockers (§ 1a, § 1c) |
 | `uiPatterns` | 7 | no |
 | **`idempotency`** | **7** | **1 rule — `.idempotencyViolation`, and it SEEDS** |
 | `security` | 5 | no |
 | `memoryManagement` | 3 | no |
 | `networking` | 3 | no |
 | `other` | 2 | the two sentinels — not rules |
-| **total** | **202** | **~12 rules, 4 of which seed** |
+| **total** | **203** | **~12 rules, 4 of which seed** |
 
 > **This table was 12 rows totalling 192 until 2026-08-06, and the missing row held a seeding
 > rule.** `idempotency` is a whole category the census never had, because the census scanned
@@ -166,7 +173,7 @@ a SwiftUI architecture linter that happens to ship in the same binary. A reader 
 rules feed `swift-infer`" will mis-estimate both the coverage and the flood; the correct mental model
 is a large linter with a small deliberate seam cut into it.
 
-`--categories testability` selects the 9, which is **not** the same set as the 4 that seed — two of
+`--categories testability` selects the 10, which is **not** the same set as the 4 that seed — two of
 the seeding rules are testability, and the flood-collapsing opt-in is keyed to the category, not to
 the seeding set. Confusing the two is how a reader concludes the manifest is empty when it is not.
 

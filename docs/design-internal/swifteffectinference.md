@@ -1,6 +1,6 @@
 # SwiftEffectInference — the shared leaf
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-08-12
 
 
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
@@ -25,7 +25,7 @@
 > describe `6f45139`** and have not been retaken. The bump was source-compatible (additive, defaulted
 > argument), so the diagnoses are unaffected.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftEffectInference@6f45139e3e243a451c20fd5f6af43d6f8a8db2a5 pinned=50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftEffectInference@50c5d3a pinned=50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd observer=SwiftInferProperties@21bc279 -->
 
 
 ```
@@ -254,7 +254,17 @@ divergence is the thing worth remembering: it ran for weeks, and it had a named 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
 | SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `50c5d3a` | **at HEAD** |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `fc82ec4` | 1 commit behind, **docs only** |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `fc82ec4` | **2 commits behind**, still **docs only** |
+
+> **2026-08-12 — the roles reversed, and the pin is the thing to read, not the prose below it.**
+> This repo is now **at** SEI's tip (`50c5d3a`, verified against `origin/main` after a fetch) while
+> SwiftProjectLint sits 2 commits back in all three of its manifests. The paragraph following this
+> table says the linter got there first; that was true on 2026-08-06 and is not now.
+>
+> The gap is inert: both intervening commits are a PRD citation repair and its merge
+> (`07d9711`, `50c5d3a`), so no inference behaviour differs between the two pins. Recorded because
+> the pin divergence is what this section exists to track, and because "docs only" is a claim that
+> has to be re-checked each time rather than inherited.
 
 **Both consumers now agree, and the linter got there first.** SwiftProjectLint was already at
 `bc084fb` in all three of its manifests when this repo bumped from `6f45139` to match — so the

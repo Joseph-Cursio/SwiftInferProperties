@@ -7,19 +7,24 @@
 **Book home:** Chapters 16–18; the interaction families of 23–24; `verify-value-semantics` in
 Chapter 9; `known-properties` in Appendix A.
 
-> **As of 2026-08-06** · subject **is** the observer: `SwiftInferProperties@2c599c0` (`v1.148.0`).
+> **As of 2026-08-12** · subject **is** the observer: `SwiftInferProperties@21bc279` (`v1.149.0`).
 >
 > Counts and measurements here are **dated and will rot** — this is the doc most exposed to that,
 > since its file counts and stage order change with ordinary work. Diagnoses, design rationale, and
 > the reasons a decision was made **do not expire**. Re-verify the numbers; don't re-litigate the
 > prose.
 >
-> **What the 2026-08-06 pass changed.** 35 commits in three days moved **every** size count —
-> version `1.146.0` → `1.148.0`, +26 source files, +4,100 lines, tests `~4,400` → `~5,000`. The
-> subcommand count held at 25. This doc is the fastest-rotting one in the directory and the
-> three-day interval is the evidence for how fast.
+> **What the 2026-08-12 pass changed.** 99 commits in six days, and again **every** size count
+> moved — version `1.148.0` → `1.149.0`, +28 source files, +4,600 lines, fast suite `4,984` →
+> `5,299`. The subcommand count held at **25 for the third pass running**, which is now the most
+> informative number in the table: three re-verifications across nine days, +54 source files, and
+> not one new command. Growth keeps going into depth behind the existing surface.
+>
+> **The 2026-08-06 note said this is the fastest-rotting doc in the directory.** Six days later
+> every count in it was wrong again, so treat the table as a snapshot with a date rather than a
+> fact about the package.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftInferProperties@38368c3 observer=SwiftInferProperties@38368c3 -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@21bc279 observer=SwiftInferProperties@21bc279 -->
 
 
 ```
@@ -49,26 +54,33 @@ the narrative history — `git log` and `SwiftInferProperties/docs/archive/claud
 
 ## Shape
 
-**v1.148.0** · 8 source targets · ~90,500 lines of Swift · **~5,050 tests** (4,984 in the fast suite,
-66 more across `perf` and the eight subprocess batches — counted from a full `make test` run,
-2026-08-06).
+**v1.149.0** · 8 source targets · ~95,100 lines of Swift · **~5,380 tests** (5,299 in the fast suite,
+measured 2026-08-12; the `perf` and eight subprocess batches added **83** at the last full `make
+test` run, 2026-08-10, and are carried rather than re-counted here — a fast-suite figure is one
+command, a full run is ten).
 
-| target | files | 2026-08-03 | what it owns |
-|---|---|---|---|
-| `SwiftInferCore` | **148** | 137 | value types, scanners, scoring, the index, purity |
-| `SwiftInferTemplates` | **151** (**92 `*Template*`**) | 148 (89) | the catalog — every law shape that can fire |
-| `SwiftInferCLI` | **240** | 225 | 25 subcommands, the verify workdir, every emitter |
-| `SwiftInferTestLifter` | 41 | 41 | reads existing tests to *corroborate*, never to propose |
-| `SwiftInferMacro` / `Impl` | 1 / 3 | 1 / 3 | the macro surface |
-| `SwiftInferKitEvidence` | 1 | 1 | the kit-verdict feedback channel |
+| target | files | 2026-08-06 | 2026-08-03 | what it owns |
+|---|---|---|---|---|
+| `SwiftInferCore` | **156** | 148 | 137 | value types, scanners, scoring, the index, purity |
+| `SwiftInferTemplates` | **153** (**93 `*Template*`**) | 151 (92) | 148 (89) | the catalog — every law shape that can fire |
+| `SwiftInferCLI` | **256** | 240 | 225 | 25 subcommands, the verify workdir, every emitter |
+| `SwiftInferTestLifter` | **43** | 41 | 41 | reads existing tests to *corroborate*, never to propose |
+| `SwiftInferMacro` / `Impl` | 1 / 3 | 1 / 3 | 1 / 3 | the macro surface |
+| `SwiftInferKitEvidence` | 1 | 1 | 1 | the kit-verdict feedback channel |
 
-**Three days moved every count except the small targets** — +11 Core, +15 CLI, +3 templates, +4,100
-lines. The subcommand count did **not** move (25), which is the useful part of the comparison: growth
-is going into depth behind the existing surface, not into new commands.
+**Six more days moved every count except the small targets** — +8 Core, +16 CLI, +2 templates,
++2 lifter, +4,600 lines. `SwiftInferTestLifter` moved for the first time across three passes, which
+is where this window's work went: reading test bodies more carefully, not adding surface.
 
-Dependencies: `swift-syntax` (exact `602.0.0`), `SwiftPropertyLaws` (`from: 3.26.0`),
-`SwiftEffectInference` (revision — **see the pin note in `swifteffectinference.md`**),
-`swift-argument-parser`.
+**The subcommand count has now held at 25 across all three passes** — nine days, +54 source files,
+no new command. That is the useful column: the growth is depth behind an unchanged surface, and a
+reader who wants to know what the tool *does* can trust the command list far longer than the table
+above it.
+
+Dependencies: `swift-syntax` (exact `602.0.0`), `SwiftPropertyLaws` (`from: 3.28.0` — was `3.26.0`
+on 2026-08-06; **read it from `Package.swift`, never from here**, which is CLAUDE.md's standing
+instruction about exactly this line), `SwiftEffectInference` (revision `50c5d3a` — **see the pin
+note in `swifteffectinference.md`**), `swift-argument-parser`.
 
 **The CLI is the biggest target, and that is not an accident.** Most of the hard-won behaviour in
 this repo is about *what to show a reader and when* — the tier cut, the seed focus, the rescues, the

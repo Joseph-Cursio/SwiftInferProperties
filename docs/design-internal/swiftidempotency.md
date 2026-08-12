@@ -1,6 +1,6 @@
 # SwiftIdempotency — the terminal package
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-08-12
 
 
 **Repo:** `~/xcode_projects/SwiftIdempotency` (`github.com/Joseph-Cursio/swiftidempotency`) ·
@@ -19,7 +19,7 @@ sequence property's MBT reading in Chapter 19 §19.5.2.
 > doc's headline count expired, exactly as three open threads predicted it would. The subject also
 > gained a seventh annotation (`@EffectUnknown`, `1467faa`). The zero-dependency fact is unchanged.
 
-<!-- doc-provenance date=2026-08-06 subject=SwiftIdempotency@4a8e801c5a9ec2a93fb73650a0ff97a45466ab8c version=0.4.1 observer=SwiftInferProperties@2c599c02fd5a070b97c582a610909f542bbc5cdc -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftIdempotency@797290c version=0.4.1 observer=SwiftInferProperties@21bc279 -->
 
 
 ```
@@ -33,21 +33,34 @@ the end of the *adoption loop*, not the bottom of a dependency graph.
 So the honest question this doc answers is narrower than the previous three: **what does property
 inference actually touch here?** Same grep over `Sources/`, re-measured 2026-08-06:
 
-| grammar term | 2026-08-03 | **2026-08-06** |
-|---|---|---|
-| `@ClockDeterministic` | 9 | **9** |
-| `@Idempotent` | 0 | **15** |
-| `@NonIdempotent` | 0 | **12** |
-| `@ExternallyIdempotent` | 0 | **5** |
-| `@EffectUnknown` | — *(did not exist)* | **5** |
-| `@Pure` · `@Observational` | 0 | **1** each |
-| `IdempotencyKey` · `assertIdempotent` | 0 | **0** |
+| grammar term | 2026-08-03 | 2026-08-06 | **2026-08-12** |
+|---|---|---|---|
+| `@ClockDeterministic` | 9 | 9 | **9** |
+| `@Idempotent` | 0 | 15 | **14** |
+| `@NonIdempotent` | 0 | 12 | **16** |
+| `@ExternallyIdempotent` | 0 | 5 | **14** |
+| `@EffectUnknown` | — *(did not exist)* | 5 | **5** |
+| `@Pure` · `@Observational` | 0 | 1 each | **1** each |
+| `IdempotencyKey` · `assertIdempotent` | 0 | 0 | **40** · **9** |
+
+> **2026-08-12 — the last row left zero, and it is the interesting one.** Every earlier pass
+> measured `IdempotencyKey` and `assertIdempotent` at 0: swift-infer knew the *annotation* grammar
+> and not the *types*. It now reads `IdempotencyKey` as a shape signal — `replayIdempotencyKeyParameter`,
+> `DedupGateShape`, `BodySignalVisitor` — so the contact is no longer only vocabulary the scanner
+> recognises in a comment, it is a carrier the scorer keys on. 38 occurrences across 20 files, 20 of
+> them in code rather than doc comments.
+>
+> The measurement is the same `grep -rho "@Term" Sources/` over THIS repo's sources, verified
+> comparable by two anchors that did not move (`@ClockDeterministic` 9, `@EffectUnknown` 5). The
+> small `@Idempotent` dip (15 → 14) is within that method's noise — it counts occurrences, not
+> call sites — and is not read as a retreat.
 
 **"One word of shared vocabulary" is no longer true, and its expiry was the point of three open
 threads.** This doc used to headline that number; the vocabulary went from one term to six between
 2026-08-03 and 2026-08-06 because open-threads items 17 and 20 shipped — `swift-infer` now *reads*
 the effect grammar (`@Idempotent` corroborates, `@NonIdempotent` / `@ExternallyIdempotent` veto,
-`@EffectUnknown` earns a caveat and no score). It is spread across **ten files**, with
+`@EffectUnknown` earns a caveat and no score). It is spread across **20 files** (**ten** on
+2026-08-06), with
 `EffectResolver`, `IdempotenceTemplate+DeclaredEffect` and `IdempotenceTemplate+UnknownEffect` doing
 the work.
 
