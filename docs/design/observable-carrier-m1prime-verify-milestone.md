@@ -133,8 +133,109 @@ Two findings the diff surfaced:
 > waiting, and this milestone was filed as live work on 2026-08-07 on the strength
 > of it.
 
+> **Item 6's ✅ is WRONG — corrected 2026-08-12 at `a3959f0`. See §8.** The commit it
+> cites, `c7b7626`, added `ViewModelVerifyEvidence.swift` and two test files and **no
+> production call site**; nothing in `Sources/` has ever called the recorder. The live
+> chain (`VerifyInteractionCommand.swift:197` → `ViewModelVerifyInteractionSurvey.runLive`
+> → print) contains zero evidence writes, so promotion is still render-level and item 6's
+> own text below — "Promotion is currently render-level" — remained true the whole time.
+> **The older detail was right and the newer summary was wrong**, the reverse of the stale-
+> summary shape this repo keeps meeting, and neither reading is checkable from prose alone.
+
 **Remaining before "done":**
 
 5. **Imported-path e2e.** The live command uses the *imported* workdir shape (real user package via `.package(path:)` + module import); the code compiles and reuses the reducer path's resolution helpers, but there is no measured test against a real library-product package yet. Add one (a fixture package exposing an `@Observable` module) to prove the imported path end-to-end.
 6. **Evidence-tier fold-back.** Promotion is currently render-level. Persist the outcome to `verify-evidence.json` (as reducers do via `recordEvidence`) so `discover-interaction` re-tiers the ViewModel suggestion — closing the discover → verify → re-tier loop.
 7. **Keyed-refint resolution** (§5.1) for single-pass parity.
+
+## 8. What `make dead-code` found — 2026-08-12, at `a3959f0`
+
+Prompted by nothing more than running `make dead-code` and asking what the
+**test-only** verdict covered. Four `ViewModel*` files sit in that bucket, and they
+turned out to be two unrelated findings, neither of which is visible from this doc's
+own status line.
+
+### 8.1 Item 6 never shipped — the loop is open
+
+`ViewModelVerifyEvidence` (68L) was added by `c7b7626` (2026-06-18) together with
+`ViewModelVerifyEvidenceTests` and `ViewModelVerifyEvidenceJoinMeasuredTests`, and
+**with no production caller**. Both surviving `Sources/` mentions of the name are `///`
+doc comments (in `SeedEffectResolver` and `OutputDeterminismVerifyEvidence`) — which is
+why a raw grep reads it as live, and exactly the comment-stripping rule `make dead-code`
+was built on. It has been test-only since the day it was written.
+
+Contrast the reducer path, which persists at four call sites, the survey-level one being
+`VerifyInteractionSurvey.swift:143`'s `recordEvidenceBatch`. Grepping the whole live
+ViewModel chain — `ViewModelVerifyInteractionSurvey` and `ViewModelVerifyInteractionPipeline`
+— for evidence writes returns **none**.
+
+**The guard is what hid it.** `ViewModelVerifyEvidenceJoinMeasuredTests` calls
+`ViewModelVerifyEvidence.record(...)` *itself* at `:48` and `:53`, then reads the store
+back. It genuinely proves the recorder and the round-trip; it never drives the command,
+so a suite named for the join does not exercise the join. A measured, subprocess-tagged,
+green test — the `test-only` verdict earning its keep, since a passing suite makes dead
+code look maintained.
+
+Refuted the day the live survey persists what it verified
+(falsifier: `ViewModelVerifyInteractionSurvey.viewModelEvidenceFoldBack`).
+
+### 8.2 The idempotence prototype is NOT superseded — it is unadoptable
+
+The first reading of the other three files was that `ViewModelIdempotenceStubEmitter`
+(158L) + `ViewModelDependencyConstructor` (84L) + `ViewModelArgumentGenerator` (62L) are a
+June prototype overtaken by the July M1′ path, and should be deleted — the
+`ParadigmDiscoverer` shape from `docs/design/stateful-role-discoverer-design.md` again.
+**That reading was wrong, and it was reached from the dates and this doc's framing rather
+than from the two emitters' contracts.** Comparing the contracts kills it on two axes:
+
+| | prototype `ViewModelIdempotenceStubEmitter` | live `ViewModelActionSequenceStubEmitter` |
+|---|---|---|
+| model construction | `construction: String?` — accepts an injected expression | hardcodes `let probe = TypeName()` (`:266`); **0** occurrences of construction / dependency / faker |
+| law checked | state-level `f(f(x)) == f(x)`, plus the x-curried single-arg form | an invariant `predicate` over random `[Action]` sequences |
+
+And the live survey resolves four families — `referential-integrity`, `cardinality`,
+`biconditional`, `conservation`. **Idempotence is not among them.**
+
+So routing through the live emitter loses *both* the dependency-injected construction and
+the idempotence law. That is `StatefulRole`'s lossiness argument with the polarity
+reversed: the superseded-looking file is the one with the richer capability, which makes
+it **unadoptable, not merely unadopted**. Two consequences worth stating plainly:
+
+1. The live `verify-interaction` path can only verify a **zero-arg-constructible** view
+   model. **This half is deliberate and was already recorded** — §3.2 step 2 above gates on
+   `candidate.constructibility` and calls dependency-faked construction "a later widening",
+   and the gate is really there, at `ViewModelVerifyInteractionPipeline.swift:56`, skipping
+   `.requiresArguments` **with a disclosure**. So the finding is narrower than it first
+   looked: not an unnoticed gap but a **widening that never happened**, whose machinery
+   (`ViewModelProtocolFaker` + `ViewModelDependencyConstructor`) has sat reachable only from
+   tests since June. Worth saying because §3.2 asserts the infra "already exists" as though
+   that were most of the work; the emitter it would have to feed does not take a
+   construction, so the widening is a change to the **live emitter**, not just plumbing.
+2. The idempotence half is **not** covered by an existing decision. §3.2 step 1 lists the
+   resolvers "(+ the idempotence path)" — and there is no `ViewModelIdempotenceResolver` in
+   `Sources/`; the five that exist are `ViewModelInvariantResolver` plus the refint /
+   cardinality / biconditional / conservation four. The only thing that checks view-model
+   idempotence is the prototype emitter, from a measured test. So CLAUDE.md's "all five
+   have a demonstrated measured-verify path" holds for the **measured-suite** reading and
+   not for the live command, on the MVVM carrier specifically.
+
+Deleting the cluster was scoped and **declined on this evidence**: it would have removed
+the only implementation of dependency-injected view-model construction, and taken with it
+six measured suites (848 lines), three of whose subjects are live code
+(`ViewModelRefintResolver`, the cardinality / biconditional / conservation resolvers via
+the live `ViewModelInvariantStubEmitter`) and which merely *use* `ViewModelArgumentGenerator`
+as a helper. No code was changed.
+
+Refuted when the live emitter can construct a dependency-injected probe
+(falsifier: `ViewModelActionSequenceStubEmitter.dependencyInjectedProbeConstruction`) and
+when the live survey resolves the fifth family
+(falsifier: `ViewModelVerifyInteractionSurvey.viewModelIdempotenceFamily`).
+
+**Both of those are the *fragile* falsifier shape** — a new local name invented at
+deferral time, the third of the four grades in
+`docs/measurements/falsifier-naming-failure-modes.md`, and they go inert if whoever
+fixes this picks a different name (`construction` is the obvious one, and it already
+resolves against the prototype, so it cannot be used while the prototype stands). The
+witness that cannot go inert is the plainer one: **a `@Observable` carrier with an
+injected protocol dependency, surveyed by `verify-interaction --all`, that reaches a
+verdict instead of being skipped.**
