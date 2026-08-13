@@ -67,15 +67,25 @@ struct ProveThenShowInteractionRenderTests {
         #expect(out.contains("✗ cardinality  RouterFeature.reduce   [counterexample: failing action-sequence #3]"))
         #expect(out.contains("? referential-integrity  LibFeature.reduce   (non-Identifiable element)"))
         #expect(out.contains("· conservation  CartFeature.reduce   (build-failed)"))
-        // The gen() hook hint surfaces because there's an Unverifiable row.
-        #expect(out.contains("static func gen()"))
+        // **Was `#expect(out.contains("static func gen()"))`, and this fixture is the clearest
+        // case for why that was wrong.** The Unverifiable row here declines with
+        // `(non-Identifiable element)` — a shape problem, not a missing generator — and the
+        // old renderer answered it with "add a `static func gen()`", which would not have
+        // moved it. The cause is unrecognised by the classifier, so it is now reported as
+        // unrecognised and no remedy is claimed.
+        #expect(out.contains("Unverifiable by cause: unrecognised 1"))
+        #expect(!out.contains("static func gen()"))
     }
 
-    @Test("V1.150 — no gen() hint when nothing is Unverifiable")
+    @Test("V1.150 — no cause breakdown at all when nothing is Unverifiable")
     func noHintWithoutUnverifiable() {
         let out = ProveThenShowRenderer.render(interactionEntries: [
             entry(.idempotence, "NavFeature.reduce", .measuredBothPass)
         ])
         #expect(!out.contains("static func gen()"))
+        // Strengthened alongside the 2026-08-13 rewrite: asserting only the absence of the
+        // `gen()` string would now pass for the wrong reason, since that string is absent for
+        // most Unverifiable causes too. The claim is that the whole section is absent.
+        #expect(!out.contains("Unverifiable by cause"))
     }
 }

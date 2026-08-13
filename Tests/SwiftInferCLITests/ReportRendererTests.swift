@@ -96,7 +96,14 @@ struct ReportRendererTests {
         #expect(out.contains("Interaction surface — 3 invariant(s)"))
         #expect(out.contains("by family: idempotence 2, cardinality 1"))
         #expect(out.contains("Proven 1 · Disproven 1 · Unverifiable 1 · Inconclusive 0"))
-        #expect(out.contains("static func gen()"))   // hint surfaces (1 Unverifiable)
+        // **This assertion used to read `out.contains("static func gen()")`, and it was
+        // pinning the defect.** This fixture's Unverifiable record carries `detail: nil`, so
+        // its cause is unknown — and the old renderer prescribed a `gen()` for it anyway,
+        // because it prescribed one for every Unverifiable row whatever the cause. Measured
+        // on a real subject, that advice covered 1 row of 18. An unknown cause now reports
+        // itself as unknown and claims no remedy it cannot justify.
+        #expect(out.contains("Unverifiable by cause: unrecognised 1"))
+        #expect(!out.contains("static func gen()"))
         #expect(out.contains("Cross-type structure — 1 group(s)"))
         #expect(out.contains("2 types share a commutative monoid shape (Config, EventLog)"))
     }

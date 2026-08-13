@@ -163,7 +163,10 @@ enum ProveThenShowRenderer {
             disproven, marker: "✗", showCounterexample: true
         )
         lines += section(
-            "UNVERIFIABLE — NOT tested, NOT a pass (no generator for the carrier)",
+            // The parenthetical used to read "(no generator for the carrier)", naming one of
+            // six causes — measured at 1 of 18 rows on the subject that caught it. The
+            // heading now states what the bucket MEANS; the causes are counted below it.
+            "UNVERIFIABLE — NOT tested, NOT a pass (the law never ran)",
             unverifiable, marker: "?", showDetail: true
         )
         lines += section(
@@ -171,7 +174,7 @@ enum ProveThenShowRenderer {
             inconclusive, marker: "·", showDetail: true
         )
         if !unverifiable.isEmpty {
-            lines.append(GenHookHint.text)
+            lines += GenHookHint.lines(details: unverifiable.map(\.detail))
             lines.append("")
         }
         return lines.joined(separator: "\n") + "\n"
