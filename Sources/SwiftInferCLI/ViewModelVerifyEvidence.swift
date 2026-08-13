@@ -47,7 +47,10 @@ public enum ViewModelVerifyEvidence {
             // Full action-space coverage: the verifier drives the whole
             // generatable alphabet, so the cycle-135 gated-family overrule
             // (cardinality / biconditional) applies for MVVM too.
-            excludedActionCount: 0
+            excludedActionCount: 0,
+            // The view model this verdict was measured against — see
+            // `InteractionSubjectFingerprint` for why the subject is the file.
+            subjectFingerprint: InteractionSubjectFingerprint.of(location: suggestion.reducerLocation)
         )
     }
 

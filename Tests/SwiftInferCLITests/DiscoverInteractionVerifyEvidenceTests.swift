@@ -121,7 +121,13 @@ struct DiscoverInteractionVerifyEvidenceTests {
                 outcome: outcome,
                 detail: detail,
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
-                swiftInferVersion: "1.118.0"
+                swiftInferVersion: "1.118.0",
+                // Stamped from the carrier's file exactly as the production
+                // recorder does, so these arms exercise the JOIN. Omitting it
+                // would make them assert the staleness gate instead — which is
+                // what they started doing when the gate shipped, and is a real
+                // check but not this suite's question.
+                subjectFingerprint: InteractionSubjectFingerprint.of(location: suggestion.reducerLocation)
             ),
             packageRoot: packageRoot
         )

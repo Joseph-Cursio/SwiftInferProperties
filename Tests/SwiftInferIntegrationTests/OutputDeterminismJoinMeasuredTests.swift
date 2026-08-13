@@ -50,7 +50,11 @@ struct OutputDeterminismJoinMeasuredTests {
         let evidence = VerifyEvidenceStore.load(startingFrom: env.packageRoot).log.records
         #expect(evidence.count == 2)
         let byIdentity = Dictionary(evidence.map { ($0.identityHash, $0) }) { _, latest in latest }
-        let graded = InteractionVerifyEvidenceScoring.applied(to: suggestions, evidenceByIdentity: byIdentity)
+        let graded = InteractionVerifyEvidenceScoring.applied(
+            to: suggestions,
+            evidenceByIdentity: byIdentity,
+            currentFingerprintByIdentity: InteractionSubjectFingerprint.byIdentity(for: suggestions)
+        )
 
         let gradedSafe = try #require(graded.first { $0.reducerQualifiedName == "SafePresenter" })
         let gradedLeaky = try #require(graded.first { $0.reducerQualifiedName == "LeakyPresenter" })

@@ -72,7 +72,8 @@ struct FindingGGatePropertyTests {
                 detail: nil,
                 capturedAt: Date(timeIntervalSince1970: 1_000_000),
                 swiftInferVersion: "test",
-                excludedActionCount: excludedActionCount
+                excludedActionCount: excludedActionCount,
+                subjectFingerprint: "fixture-\(suggestion.identity.normalized)"
             )
         ]
     }
@@ -132,7 +133,11 @@ struct FindingGGatePropertyTests {
         for family in InteractionInvariantFamily.allCases {
             for score in [0, 30, 40, 80] {
                 let input = [Self.suggestion(family: family, score: score)]
-                #expect(InteractionVerifyEvidenceScoring.applied(to: input, evidenceByIdentity: [:]) == input)
+                let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
+                    to: input,
+                    evidenceByIdentity: [:]
+                )
+                #expect(graded == input)
             }
         }
     }
@@ -144,7 +149,7 @@ struct FindingGGatePropertyTests {
     @Test("the fold preserves length and order")
     func foldPreservesLengthAndOrder() {
         let inputs = InteractionInvariantFamily.allCases.map { Self.suggestion(family: $0, score: 30) }
-        let folded = InteractionVerifyEvidenceScoring.applied(
+        let folded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: inputs,
             evidenceByIdentity: Self.evidence(for: inputs[0], outcome: .measuredBothPass, excludedActionCount: 0)
         )
@@ -163,7 +168,7 @@ struct FindingGGatePropertyTests {
         for family in InteractionInvariantFamily.allCases {
             for score in [0, 20, 40, 75, 120] {
                 let pick = Self.suggestion(family: family, score: score)
-                let folded = InteractionVerifyEvidenceScoring.applied(
+                let folded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
                     to: [pick],
                     evidenceByIdentity: Self.evidence(
                         for: pick,
@@ -188,7 +193,7 @@ struct FindingGGatePropertyTests {
         for family in InteractionInvariantFamily.allCases {
             for outcome in neutral {
                 let pick = Self.suggestion(family: family, score: 40)
-                let folded = InteractionVerifyEvidenceScoring.applied(
+                let folded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
                     to: [pick],
                     evidenceByIdentity: Self.evidence(for: pick, outcome: outcome, excludedActionCount: 0)
                 )
@@ -217,7 +222,7 @@ struct FindingGGatePropertyTests {
             for coverage in coverages {
                 let pick = Self.suggestion(family: family, score: 30)
                 #expect(pick.tier == .possible, "fixture precondition")
-                let folded = InteractionVerifyEvidenceScoring.applied(
+                let folded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
                     to: [pick],
                     evidenceByIdentity: Self.evidence(
                         for: pick,
@@ -260,7 +265,7 @@ struct FindingGGatePropertyTests {
             var tiers: Set<Tier> = []
             for coverage in coverages {
                 let pick = Self.suggestion(family: family, score: 40)
-                let folded = InteractionVerifyEvidenceScoring.applied(
+                let folded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
                     to: [pick],
                     evidenceByIdentity: Self.evidence(
                         for: pick,
@@ -286,7 +291,7 @@ struct FindingGGatePropertyTests {
         for family in InteractionInvariantFamily.allCases {
             for score in [0, 30, 40, 80] {
                 let pick = Self.suggestion(family: family, score: score)
-                let folded = InteractionVerifyEvidenceScoring.applied(
+                let folded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
                     to: [pick],
                     evidenceByIdentity: Self.evidence(
                         for: pick,
@@ -321,8 +326,8 @@ struct FindingGGatePropertyTests {
     func foldIsNotIdempotent() {
         let pick = Self.suggestion(family: .idempotence, score: 40)
         let evidence = Self.evidence(for: pick, outcome: .measuredBothPass, excludedActionCount: 0)
-        let once = InteractionVerifyEvidenceScoring.applied(to: [pick], evidenceByIdentity: evidence)
-        let twice = InteractionVerifyEvidenceScoring.applied(to: once, evidenceByIdentity: evidence)
+        let once = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(to: [pick], evidenceByIdentity: evidence)
+        let twice = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(to: once, evidenceByIdentity: evidence)
 
         #expect(once[0].score == 90)
         #expect(twice[0].score == 140, "the +50 is applied again")
