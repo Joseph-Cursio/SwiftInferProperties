@@ -69,15 +69,17 @@ extension KitSuiteEmitter {
         //
         //   \(counts.liveCarriers) carrier(s), \(counts.liveLaws) law(s)  — live below.
         //   \(counts.blockedCarriers) carrier(s), \(counts.blockedLaws) law(s)  — \
-        commented out: the generator could not be derived.
+        commented out, each with its reason.
         //
-        // The commented-out ones are not omissions. Each carries the kit's own reason, which
-        // ends with the exact `gen()` signature to provide. Uncomment once you have written
-        // it.
+        // The commented-out ones are not omissions, and they do not share one cause: a carrier
+        // is blocked when its target's default isolation makes every conformance unusable,
+        // when a generic cannot be named concretely, when the composed generator risks a
+        // type-check timeout, or when no generator could be derived. Only the last is waiting
+        // on a hand-written `gen()`. Read the reason on the block before acting on it — this
+        // banner said "the generator could not be derived" for all four until 2026-08-13.
         //
-        // NOT GUARANTEED TO COMPILE. `check<Protocol>PropertyLaws` requires `Value: Sendable`,
-        // which the type shapes cannot always establish, and a carrier may be `private` or
-        // nested past what `@testable` reaches. Delete what does not fit.
+        // NOT GUARANTEED TO COMPILE. A carrier may be `private` or nested past what
+        // `@testable` reaches. Delete what does not fit.
         """
     }
 }

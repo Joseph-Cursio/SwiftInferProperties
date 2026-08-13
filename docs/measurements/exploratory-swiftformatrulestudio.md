@@ -37,6 +37,42 @@ Nothing reached `Verified`.
 
 ## 2. The headline hole — `scaffold-kit-suites` over-claims by 64 laws
 
+> **FIXED 2026-08-13 — `TargetIsolation` + `KitSuiteEmitter.isolationBlocked`. Measured A/B,
+> two release binaries, same subject, same command, only the emitter changed:**
+>
+> | | before | after |
+> |---|---|---|
+> | reported | `21 carriers / 64 laws live`, `0 commented out` | `0 live`, **`21 carriers / 64 laws commented out`** |
+> | compile errors | **132** | **0** |
+>
+> The gate reads `defaultIsolation` for the **scanned target** from `swift package
+> dump-package` and, when set, blocks every carrier with the reason and the remedy. It runs
+> **first** among the four gates, because it is the binding constraint — the same argument the
+> instantiation gate already made one level down.
+>
+> **Control: `SwiftInferCore` is byte-identical across the change** — `122 carriers / 447 laws
+> live, 8 / 26 commented out`, no isolation note. A gate that blocks everything must be inert
+> where it does not apply, and every can't-answer arm (no manifest, `dump-package` failure,
+> JSON drift, unknown target, `--sources`) returns `nil` and emits exactly as before. That
+> asymmetry is the opposite of `TestTargetScope`'s and is chosen deliberately: a broken read
+> that answered `"MainActor"` would empty the emitted file for every package in the world.
+>
+> **Two honest limits.** The gate is a sound **over-approximation** — a type declared
+> `nonisolated` escapes default isolation and would compile, and the scanner records no
+> isolation modifiers, so it is blocked anyway (0 of 43 public value types on this subject, so
+> the cost is nil here; falsifier: `IndexedTypeShape.isNonisolated`). And because it runs
+> first, the per-carrier gaps behind it are not reported while it fires — the reason says so
+> and tells the reader to re-run.
+>
+> **It also fixed a misattribution the finding did not name.** The banner said *"commented
+> out: the generator could not be derived"*, the stderr note said *"pending a hand-written
+> `gen()`"*, and each block was headed *"BLOCKED on a generator"* — all three for **four**
+> gates, only one of which is about a generator. A reader following that advice writes a
+> `gen()` that changes nothing. All three are now cause-neutral, with the cause on the block.
+> Guarded by `TargetIsolationGateTests` (12 laws).
+>
+> The finding as originally measured follows.
+
 The emitter reports:
 
 > `21 carrier(s) / 64 law(s) emitted live; 0 carrier(s) / 0 law(s) commented out pending a

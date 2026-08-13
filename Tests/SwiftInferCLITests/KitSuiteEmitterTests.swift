@@ -135,7 +135,11 @@ struct KitSuiteEmitterTests {
         )
         #expect(emission.blockedCarriers == 1)
         #expect(emission.liveCarriers == 0)
-        #expect(emission.source.contains("BLOCKED on a generator"))
+        // The marker is cause-neutral as of 2026-08-13; the cause is the line below it. This
+        // carrier is genuinely a generator gap, so that is asserted on the REASON rather than
+        // on the marker — which is the distinction the old wording collapsed.
+        #expect(emission.source.contains("BLOCKED."))
+        #expect(emission.source.contains("gen()"))
         #expect(emission.source.contains("//     _ = try await checkEquatablePropertyLaws"))
         // The counts must appear in the header, so a reader cannot mistake the live half for
         // the whole — the "no silent caps" rule applied to generated output.
