@@ -70,8 +70,8 @@ enum DrainedProcess {
         return stdoutBox.value
     }
 
-    /// stdout of `/usr/bin/env <arguments>`, the PATH-resolving form all three
-    /// callers use so the toolchain that runs `swift build` is the one that
+    /// stdout of `/usr/bin/env <arguments>`, the PATH-resolving form every
+    /// caller uses so the toolchain that runs `swift build` is the one that
     /// answers these questions too.
     static func standardOutputViaEnv(_ arguments: [String]) -> Data? {
         standardOutput(of: URL(fileURLWithPath: "/usr/bin/env"), arguments: arguments)

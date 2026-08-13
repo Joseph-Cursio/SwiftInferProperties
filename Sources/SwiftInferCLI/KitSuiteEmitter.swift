@@ -58,11 +58,15 @@ public enum KitSuiteEmitter {
     ///
     /// - Parameter moduleName: the module under test, for `@testable import`. Carriers are
     ///   frequently `internal`, so a plain `import` would not see them.
+    /// - Parameter defaultIsolation: the scanned target's `.defaultIsolation(_:)` setting as
+    ///   `TargetIsolation` read it, or `nil` when there is none or the manifest could not be
+    ///   read. Non-nil blocks every carrier — see `isolationBlocked`.
     public static func emit(
         findings: [ProtocolCoverageAudit.Finding],
         shapes: [String: PropertyLawCore.TypeShape],
         moduleName: String,
-        genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:]
+        genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
+        defaultIsolation: String? = nil
     ) -> Emission {
         // **The whole-module resolver, and leaving it out was the single biggest cost.**
         //
@@ -83,7 +87,8 @@ public enum KitSuiteEmitter {
             guard !suites.isEmpty else { continue }
             switch classify(
                 finding: finding, shape: shape, suites: suites, resolve: resolve,
-                genericParametersByName: genericParametersByName
+                genericParametersByName: genericParametersByName,
+                defaultIsolation: defaultIsolation
             ) {
             case .live(let text):
                 liveCarriers += 1
@@ -160,17 +165,28 @@ public enum KitSuiteEmitter {
     /// Decide a single carrier's fate. Extracted from `emit` on 2026-08-02, when the
     /// concrete-instantiation gate pushed that function past the 50-line body cap.
     ///
-    /// **The order of the gates is the point.** Naming the carrier comes first, because a
-    /// generic type that cannot be instantiated cannot produce a compiling call however good
-    /// its generator is. `Deque.self` was emitted behind a derivable generator that nothing
-    /// could reach, and the resulting compile error read as a generator problem.
+    /// **The order of the gates is the point.** Target isolation comes first, because it is
+    /// the *binding* constraint — under `.defaultIsolation(MainActor.self)` no carrier
+    /// compiles whatever its generator or its instantiation does (see `isolationBlocked`).
+    /// Naming the carrier comes next, because a generic type that cannot be instantiated
+    /// cannot produce a compiling call however good its generator is. `Deque.self` was emitted
+    /// behind a derivable generator that nothing could reach, and the resulting compile error
+    /// read as a generator problem. Each gate is the same mistake at a different altitude:
+    /// reporting a cause the reader cannot act on while a broader one is what actually stopped
+    /// the file compiling.
     static func classify(
         finding: ProtocolCoverageAudit.Finding,
         shape: PropertyLawCore.TypeShape,
         suites: [String],
         resolve: (String) -> DerivationStrategist.ComposedGenerator?,
-        genericParametersByName: [String: [TypeDecl.GenericParameter]]
+        genericParametersByName: [String: [TypeDecl.GenericParameter]],
+        defaultIsolation: String? = nil
     ) -> CarrierBlock {
+        if let isolation = isolationBlocked(defaultIsolation) {
+            return .blocked(blockedBlock(
+                finding, suites: suites, reason: isolation, carrierName: finding.typeName
+            ))
+        }
         guard let carrierName = ConcreteInstantiation.rendered(
             qualifiedTypeName: finding.typeName,
             genericParametersByName: genericParametersByName
@@ -272,9 +288,12 @@ public enum KitSuiteEmitter {
                 + "`PropertyLawCollections`\n    // product and use `\($0)` — "
                 + "no hand-written `gen()` needed."
         } ?? ""
+        // "BLOCKED" without a cause, because the cause is the next line and only one of the
+        // four gates is about the generator. This said "BLOCKED on a generator." for all of
+        // them, so an isolation block — where writing a `gen()` changes nothing — announced
+        // itself as a generator gap directly above a reason saying otherwise.
         return """
-            // \(finding.typeName) — \(finding.coveredLaws.count) law(s), \
-        BLOCKED on a generator.
+            // \(finding.typeName) — \(finding.coveredLaws.count) law(s), BLOCKED.
             // \(reason)\(hint)
         \(calls)
         """

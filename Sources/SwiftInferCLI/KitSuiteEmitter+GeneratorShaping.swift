@@ -94,6 +94,38 @@ extension KitSuiteEmitter {
             + "with something the type checker can handle."
     }
 
+    /// Non-nil when the TARGET's default isolation makes every conformance unusable.
+    ///
+    /// `check<Protocol>PropertyLaws` constrains `Value: Sendable`. Under
+    /// `.defaultIsolation(MainActor.self)` an unannotated type's conformances are
+    /// MainActor-isolated, and an isolated conformance cannot satisfy that constraint —
+    /// `[#IsolatedConformances]`. Measured: 21 carriers emitted live, **132 errors, 0 of 64
+    /// laws compiled** (`docs/measurements/exploratory-swiftformatrulestudio.md` §2).
+    ///
+    /// **This gate runs first, and that ordering is the point** — the same argument the
+    /// instantiation gate already makes one level down. A carrier whose generator derives
+    /// perfectly still cannot compile here, so reporting a generator gap would put the wrong
+    /// cause in front of the reader. It is the *binding* constraint: fix this one line and
+    /// every carrier is back in play.
+    ///
+    /// The cost of ordering it first is real and is stated in the reason: while it fires, the
+    /// per-carrier gaps behind it are not reported, so a reader who fixes the isolation should
+    /// re-run rather than assume the file is now complete.
+    ///
+    /// `nil` for every other value **and for the unreadable case** — see `TargetIsolation`,
+    /// where the failure direction is chosen so an unreadable manifest changes nothing.
+    static func isolationBlocked(_ defaultIsolation: String?) -> String? {
+        guard let defaultIsolation, defaultIsolation != "nonisolated" else { return nil }
+        return "Generator DERIVES, but this target sets `.defaultIsolation(\(defaultIsolation)"
+            + ".self)`, so the type's conformances are \(defaultIsolation)-isolated and cannot "
+            + "satisfy `check<Protocol>PropertyLaws`' `Value: Sendable` requirement "
+            + "(`[#IsolatedConformances]`). Emitted commented out rather than shipped as a "
+            + "build failure. Declare the type `nonisolated` to make its conformances "
+            + "non-isolated, then uncomment — and re-run `scaffold-kit-suites` afterwards, "
+            + "because this gate runs before the per-carrier ones and hides what they would "
+            + "have reported."
+    }
+
     /// Skip `Hashable.distribution` for a `CaseIterable` enum, and nothing else.
     ///
     /// **Measured, not anticipated.** Running the first generated file, `KnownProperty` and
