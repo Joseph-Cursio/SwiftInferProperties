@@ -59,9 +59,12 @@ enum ReportRenderer {
             "  Proven \(count(.measuredBothPass)) · Disproven \(count(.measuredDefaultFails)) "
                 + "· Unverifiable \(count(.architecturalCoveragePending)) · Inconclusive \(inconclusive)"
         ]
-        if count(.architecturalCoveragePending) > 0 {
-            lines.append("  " + GenHookHint.text)
-        }
+        lines += GenHookHint.lines(
+            details: evidence.records
+                .filter { $0.outcome == .architecturalCoveragePending }
+                .map(\.detail),
+            indent: "  "
+        )
         lines.append("")
         return lines
     }

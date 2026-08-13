@@ -194,6 +194,33 @@ human cannot audit*, one step further along: a row a human cannot **see**.
    always the wrong suspect … reading that constant and believing it produced a wrong plan
    once already"* — shipped verbatim as user-facing guidance.
 
+   > **FIXED 2026-08-13 — `UnverifiableCause`.** The tip is replaced by a cause breakdown with
+   > a remedy per cause present, largest first. On this exact population it now renders
+   > *"Unverifiable by cause: no composer for the template 9, subject not visible to tests 6,
+   > instance-method shape 2, no generator for the carrier 1"*, and the `gen()` advice is
+   > attached to the line that says it covers **1**.
+   >
+   > **Every cause present gets a line, not just the dominant one** — picking the biggest
+   > bucket is the same mistake with better arithmetic, and would have prescribed against 9 of
+   > 18 while still implying it covered the rest. **Two causes now say the reader cannot fix
+   > them** (`unsupported-template`, `instance-method-shape`): naming a tool gap as a tool gap
+   > beats prescribing work that cannot move the number.
+   >
+   > **An unrecognised detail is a reported case, never folded into a known bucket** — that
+   > silent folding is exactly how the original tip read as true.
+   >
+   > **Two existing tests were pinning the defect and both are corrected.**
+   > `ReportRendererTests` asserted the `gen()` tip appeared for a record with `detail: nil`,
+   > and `ProveThenShowInteractionRenderTests` asserted it for a row declining with
+   > `(non-Identifiable element)` — a shape problem a generator cannot fix. Both now assert
+   > the tip is **absent** for those causes. Same shape as the road test's own *"each defect
+   > pinned in place by a passing test that asserted the buggy behavior"*.
+   >
+   > Guarded by `UnverifiableCauseTests` (9 laws), including one that reads the **producer
+   > sources** and fails if a `detail` prefix is renamed out from under the classifier — the
+   > stated cost of parsing a human-readable string instead of adding a field to a persisted
+   > format.
+
 2. **TestLifter: zero cross-validation signals across 19 picks.** `SwiftFormatConfigTests`
    states the top-scoring law byte-exactly —
    `#expect(SwiftFormatConfig.parse(Self.sample).serialized() == Self.sample)` — and the
