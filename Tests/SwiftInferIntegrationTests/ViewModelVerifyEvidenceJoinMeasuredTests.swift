@@ -59,7 +59,11 @@ struct ViewModelVerifyEvidenceJoinMeasuredTests {
         // Re-fold through the production discover-side consumer.
         let evidence = VerifyEvidenceStore.load(startingFrom: packageRoot).log.records
         let byIdentity = Dictionary(evidence.map { ($0.identityHash, $0) }) { _, latest in latest }
-        let graded = InteractionVerifyEvidenceScoring.applied(to: suggestions, evidenceByIdentity: byIdentity)
+        let graded = InteractionVerifyEvidenceScoring.applied(
+            to: suggestions,
+            evidenceByIdentity: byIdentity,
+            currentFingerprintByIdentity: InteractionSubjectFingerprint.byIdentity(for: suggestions)
+        )
 
         let gradedSelectAll = try #require(graded.first { $0.identity == selectAll.identity })
         let gradedSelectNext = try #require(graded.first { $0.identity == selectNext.identity })

@@ -43,7 +43,13 @@ public enum OutputDeterminismVerifyEvidence {
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
             // The verifier drives the whole no-arg action alphabet; no gated
             // family applies to outputDeterminism, so coverage is full.
-            excludedActionCount: 0
+            excludedActionCount: 0,
+            // The third producer on this path. Missing it left every
+            // output-determinism verdict unfingerprintable and therefore
+            // withheld — caught by `OutputDeterminismJoinMeasuredTests`, which
+            // is the argument for gating in the CONSUMER and stamping in every
+            // producer rather than trusting a survey of the call sites.
+            subjectFingerprint: InteractionSubjectFingerprint.of(location: suggestion.reducerLocation)
         )
     }
 

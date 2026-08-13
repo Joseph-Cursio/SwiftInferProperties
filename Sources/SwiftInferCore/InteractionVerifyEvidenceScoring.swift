@@ -40,13 +40,38 @@ public enum InteractionVerifyEvidenceScoring {
     /// Fold `evidenceByIdentity` into `suggestions`, keyed by
     /// `suggestion.identity.normalized` — the exact key the cycle-111
     /// producer writes.
+    /// `currentFingerprintByIdentity` is **required, with no default**, and that
+    /// is the design. A default would let a new consumer inherit the pre-gate
+    /// behaviour by omission — the silent-by-forgetting shape this repo keeps
+    /// paying for — whereas a required parameter makes every caller state what
+    /// it knows about the subject. Build it with
+    /// `InteractionSubjectFingerprint.byIdentity(for:)`; pass `[:]` only to mean
+    /// *nothing here can be validated*, which withholds every outcome.
     public static func applied(
         to suggestions: [InteractionInvariantSuggestion],
-        evidenceByIdentity: [String: VerifyEvidence]
+        evidenceByIdentity: [String: VerifyEvidence],
+        currentFingerprintByIdentity: [String: String]
     ) -> [InteractionInvariantSuggestion] {
         suggestions.map { suggestion in
             guard let evidence = evidenceByIdentity[suggestion.identity.normalized] else {
                 return suggestion
+            }
+            // The staleness gate, sharing `VerifyEvidenceScoring.stalenessCaveat`
+            // verbatim with the algebraic path rather than restating it — two
+            // copies of a rule only ever check that the copies agree.
+            //
+            // Withheld in BOTH directions, at weight 0: a stale `defaultFails`
+            // is as likely to be about deleted code as a stale `bothPass`, and a
+            // stale pass is not counter-evidence, so demoting on it would assert
+            // more than is known. The caveat keeps the warning; only the score
+            // and tier effects go.
+            if let staleness = VerifyEvidenceScoring.stalenessCaveat(
+                evidence: evidence,
+                current: currentFingerprintByIdentity[suggestion.identity.normalized]
+            ) {
+                return suggestion.with(
+                    whyMightBeWrong: suggestion.whyMightBeWrong + [staleness]
+                )
             }
             switch evidence.outcome {
             case .measuredBothPass:

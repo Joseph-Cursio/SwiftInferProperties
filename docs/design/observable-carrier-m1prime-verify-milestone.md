@@ -212,11 +212,65 @@ pre-fix state exactly. One arm asserts the recorded identities are a **subset of
 side computes**, since a record with a plausible-looking key that joins nothing is the failure this
 whole section is about.
 
-**Two bounds stated rather than fixed.** Interaction evidence has no staleness gate —
-`InteractionVerifyEvidenceScoring` reads no `subjectFingerprint`, so §10.8's protection on the
-algebraic path does not cover this one, and a ViewModel verdict persists across an edit to the
-model it measured. And idempotence still does not fold back at all, for the reason in §8.2: the
-survey never resolves that family, though `discover-interaction` surfaces it.
+**Two bounds were stated rather than fixed, and the first is now FIXED (§8.3).** Idempotence
+still does not fold back at all, for the reason in §8.2: the survey never resolves that family,
+though `discover-interaction` surfaces it.
+
+## 8.3 The interaction staleness gate — 2026-08-12
+
+§8.1 shipped a fold-back into a store nothing validated: `InteractionVerifyEvidenceScoring` read
+no `subjectFingerprint`, so §10.8's protection covered the algebraic path and not this one. A
+`verify-interaction` verdict promoted a suggestion **forever** — edit the reducer or the view
+model, and `.verified` still stood on a measurement of code that no longer existed. Closing the
+loop in §8.1 made that worse by construction, since it put records into the store where there
+had been none.
+
+**The rule is shared, not restated.** `InteractionVerifyEvidenceScoring` calls
+`VerifyEvidenceScoring.stalenessCaveat` verbatim — two copies of a rule only ever check that the
+copies agree — so all four of §10.8's decisions carry over unchanged: withheld in **both**
+directions, at **weight 0**, a **missing fingerprint counts as stale** (so every
+pre-gate interaction record stops promoting until re-verified), and the caveat keeps the warning
+while the score effect goes.
+
+**What a "subject" is here had to be decided, and the answer is weaker than the algebraic one.**
+An algebraic law names one or two *functions* and `SubjectFingerprint.byLocation` hashes their
+bodies. An interaction invariant names a *carrier* and quantifies over its whole action alphabet
+— and `ReducerCandidate` / `ViewModelCandidate` carry structure (state fields, action names,
+parameter types) and **no body text at all**. A structural fingerprint over what they do carry
+was considered and rejected: it moves when the alphabet changes but **not when a method body
+changes from correct to broken**, which is exactly the edit that falsifies a verified invariant.
+So the subject is the carrier's source **file**, normalized whitespace-only.
+
+Two consequences, both deliberate and only one comfortable. It **over-invalidates** — an edit
+anywhere in the file withholds evidence, including for a type the invariant has nothing to do
+with — which is the safe direction. And it **under-invalidates across files**, which is the
+honest weakness: a view model's methods may live in `extension VM {}` blocks in other files (the
+reason `ViewModelDiscoverer` is corpus-level and two-phase), so editing an action's body
+elsewhere leaves the fingerprint unmoved and the evidence still applying. Closing that needs the
+discoverer to report every file that contributed to a candidate, which it does not
+(falsifier: `ViewModelCandidate.contributingFiles`). **The gate is strictly better than the
+nothing it replaces, not complete**, and saying which is the point.
+
+**Three producers, one consumer, and the third producer is the finding.** Stamping
+`VerifyInteractionPipeline.makeEvidence` and `ViewModelVerifyEvidence` looked complete;
+`OutputDeterminismVerifyEvidence` is a third, and missing it left every output-determinism
+verdict unfingerprintable and therefore silently withheld. It was caught by
+`OutputDeterminismJoinMeasuredTests` failing, not by reading — which is the argument for gating
+in **one consumer** while stamping in **every producer**, and for keeping an end-to-end arm per
+producer rather than trusting a survey of call sites. §10.9's rule with the polarity flipped: a
+fix that adds a gate must be checked at every producer of the thing it gates, as well as every
+consumer.
+
+**`currentFingerprintByIdentity` is required, with no default.** A default would let a new
+consumer inherit the pre-gate behaviour by forgetting, which is the silent-by-omission shape this
+repo keeps paying for. The 20 pre-existing unit-test call sites route through an explicitly named
+test shim (`appliedAssumingCurrent`) whose doc says it can never observe a withheld outcome, so
+nobody mistakes it for a test of the gate.
+
+**Checked by mutation, in both directions.** Removing the gate fails the four withholding arms;
+making it withhold unconditionally fails `freshEvidenceStillApplies` — the control that exists
+because a gate which withholds everything is indistinguishable from a broken evidence loop and
+would otherwise read as a clean result.
 
 ### 8.2 The idempotence prototype is NOT superseded — it is unadoptable
 

@@ -57,7 +57,8 @@ struct InteractionVerifyEvidenceScoringTests {
                 detail: detail,
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.118.0",
-                excludedActionCount: excludedActionCount
+                excludedActionCount: excludedActionCount,
+                subjectFingerprint: "fixture-\(suggestion.identity.normalized)"
             )
         ]
     }
@@ -67,7 +68,7 @@ struct InteractionVerifyEvidenceScoringTests {
     @Test("bothPass lifts a .likely idempotence pick to .verified (40 + 50 = 90 → strong → verified)")
     func bothPassPromotesIdempotenceToVerified() {
         let pick = idempotenceLikely()
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(for: pick, outcome: .measuredBothPass, detail: "totalRuns=1024 clean=1024")
         )
@@ -81,7 +82,7 @@ struct InteractionVerifyEvidenceScoringTests {
     @Test("bothPass with nil detail still records a why-suggested line")
     func bothPassNilDetailFallsBackToDefaultProse() {
         let pick = idempotenceLikely()
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(for: pick, outcome: .measuredBothPass, detail: nil)
         )
@@ -96,7 +97,7 @@ struct InteractionVerifyEvidenceScoringTests {
         // unrecorded (nil — evidence written before cycle 136), the overrule
         // does not fire: the gate clamps to .possible despite the +50 weight.
         let pick = suggestion(family: .cardinality, predicate: "atMostOne(...)", score: 30, tier: .possible)
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(for: pick, outcome: .measuredBothPass)
         )
@@ -109,7 +110,7 @@ struct InteractionVerifyEvidenceScoringTests {
         // The failure mode lives in the excluded composition actions, so a
         // partial bothPass is biased toward false-pass — no overrule.
         let pick = suggestion(family: .cardinality, predicate: "atMostOne(...)", score: 30, tier: .possible)
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(
                 for: pick, outcome: .measuredBothPass, excludedActionCount: 2
@@ -126,7 +127,7 @@ struct InteractionVerifyEvidenceScoringTests {
         // overrules the Finding-G pin and promotes via the ungated tier
         // (30 + 50 = 80 → .strong → .verified) with a disclosure.
         let pick = suggestion(family: .cardinality, predicate: "atMostOne(...)", score: 30, tier: .possible)
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(
                 for: pick, outcome: .measuredBothPass, excludedActionCount: 0
@@ -142,7 +143,7 @@ struct InteractionVerifyEvidenceScoringTests {
     @Test("bothPass at FULL coverage overrules the biconditional pin → .verified")
     func bothPassFullCoverageOverrulesBiconditionalPin() {
         let pick = suggestion(family: .biconditional, predicate: "bothOrNeither(...)", score: 30, tier: .possible)
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(
                 for: pick, outcome: .measuredBothPass, excludedActionCount: 0
@@ -157,7 +158,7 @@ struct InteractionVerifyEvidenceScoringTests {
         // promotion happens through the ungated tier regardless of coverage,
         // and no overrule disclosure is appended.
         let pick = suggestion(family: .conservation, predicate: "state.a == state.b.count", score: 30, tier: .possible)
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(
                 for: pick, outcome: .measuredBothPass, excludedActionCount: 0
@@ -172,7 +173,7 @@ struct InteractionVerifyEvidenceScoringTests {
     @Test("defaultFails collapses any pick to .suppressed and records a caveat")
     func defaultFailsSuppresses() {
         let pick = idempotenceLikely()
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [pick],
             evidenceByIdentity: evidence(for: pick, outcome: .measuredDefaultFails, detail: "at sequence index 3")
         )
@@ -189,7 +190,7 @@ struct InteractionVerifyEvidenceScoringTests {
             .measuredEdgeCaseAdvisory, .measuredError, .architecturalCoveragePending
         ]
         for outcome in neutral {
-            let graded = InteractionVerifyEvidenceScoring.applied(
+            let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
                 to: [pick],
                 evidenceByIdentity: evidence(for: pick, outcome: outcome)
             )
@@ -200,7 +201,7 @@ struct InteractionVerifyEvidenceScoringTests {
     @Test("a pick with no matching evidence is returned identically (== holds)")
     func noEvidencePassesThroughUnchanged() {
         let pick = idempotenceLikely()
-        let graded = InteractionVerifyEvidenceScoring.applied(to: [pick], evidenceByIdentity: [:])
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(to: [pick], evidenceByIdentity: [:])
         #expect(graded == [pick])
     }
 
@@ -209,7 +210,7 @@ struct InteractionVerifyEvidenceScoringTests {
         let idem = idempotenceLikely()
         let other = suggestion(family: .conservation, predicate: "state.a == state.b.count", score: 30, tier: .possible)
         // Evidence only for the idempotence pick.
-        let graded = InteractionVerifyEvidenceScoring.applied(
+        let graded = InteractionVerifyEvidenceScoring.appliedAssumingCurrent(
             to: [other, idem],
             evidenceByIdentity: evidence(for: idem, outcome: .measuredBothPass)
         )

@@ -31,9 +31,13 @@ extension SwiftInferCommand.DiscoverInteraction {
         let evidenceByIdentity = Dictionary(
             evidenceResult.log.records.map { ($0.identityHash, $0) }
         ) { _, latest in latest }
+        // The staleness gate's other half: what the subject looks like NOW.
+        // Computed from the same `of(location:)` the producer stamped with, so
+        // a match means the carrier's file is byte-identical modulo whitespace.
         return InteractionVerifyEvidenceScoring.applied(
             to: suggestions,
-            evidenceByIdentity: evidenceByIdentity
+            evidenceByIdentity: evidenceByIdentity,
+            currentFingerprintByIdentity: InteractionSubjectFingerprint.byIdentity(for: suggestions)
         )
     }
 }

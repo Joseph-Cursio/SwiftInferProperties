@@ -76,7 +76,12 @@ extension VerifyInteractionPipeline {
             detail: result.detail,
             capturedAt: now,
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
-            excludedActionCount: result.excludedActionCount
+            excludedActionCount: result.excludedActionCount,
+            // Stamp the carrier this verdict was measured against, so a later
+            // `discover-interaction` can tell whether the reducer still is what
+            // it was. Nil (an unreadable subject) is recorded as nil and read
+            // back as "cannot validate" — never as "valid".
+            subjectFingerprint: InteractionSubjectFingerprint.of(location: invariant.reducerLocation)
         )
     }
 
