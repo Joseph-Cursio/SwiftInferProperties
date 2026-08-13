@@ -1,0 +1,236 @@
+# Exploratory run — SwiftFormatRuleStudio
+
+> **Status:** `measured` · **As of:** 2026-08-13
+
+**Not a road test.** No frozen fixture, no frozen answer key, nothing scored. The question
+was *how many property-based tests can this toolchain actually land on a fresh subject*, and
+*where does the process leak*. Numbers here are of their date and their commits; the
+diagnoses are the durable half.
+
+**Subject:** `SwiftFormatRuleStudio@2799291` — `SwiftFormatRuleStudioCore` (a SwiftPM library,
+3,400 lines of source / 2,553 lines of tests over 24 files, zero property tests today) plus
+`App/` (an Xcode SwiftUI target, reached with `--sources`).
+**Instrument:** `SwiftInferProperties@95bf915`, release binary.
+**Kit:** SwiftPropertyLaws `from: "3.28.0"`.
+
+A hand list of the laws the package owes was written **before** any tool run
+(`§6`), so a silence is legible as a silence.
+
+---
+
+## 1. The answer: how many tests
+
+| surface | proposed | **executable today** |
+|---|---:|---:|
+| `scaffold-kit-suites` (conformance laws) | 21 carriers / **64 laws**, 100% live, 0 commented | **0** — see §2 |
+| `discover` (algebraic), Core | 19 indexed (16 on the default surface) | **1** — and it refuted, see §3 |
+| `discover-interaction`, Core | 4 (over 5 `@Observable` view models) | 0 — all `.possible`, hidden by default |
+| `discover` / `discover-interaction`, App via `--sources` | 14 + 4 | not attempted (verify declines `--sources` by design) |
+
+**Bankable today: one property test, and it is a banked *refutation*.** The 64 kit laws are
+one build-setting away from being the bulk of the value, and that setting is the finding.
+
+Tier distribution on the algebraic surface: **0 Strong, 2 Likely, 11 Possible, 6 Advisory.**
+Nothing reached `Verified`.
+
+---
+
+## 2. The headline hole — `scaffold-kit-suites` over-claims by 64 laws
+
+The emitter reports:
+
+> `21 carrier(s) / 64 law(s) emitted live; 0 carrier(s) / 0 law(s) commented out pending a
+> hand-written gen()`
+
+100% derivation, nothing withheld — a better rate than any corpus in
+`kit-suite-backtest-arms-2-3.md`. **It does not compile: 132 errors, 0 of 64 laws.**
+
+One root cause. The package is built with `.defaultIsolation(MainActor.self)`, so every
+type's conformances are MainActor-isolated, and `check<Protocol>PropertyLaws` requires
+`Value: Sendable`:
+
+```
+error: main actor-isolated conformance of 'FormatOption' to 'Equatable' cannot satisfy
+       conformance requirement for a 'Sendable' type parameter  [#IsolatedConformances]
+```
+
+**The cascade is proved, not assumed.** Of the 132, 52 are `#IsolatedConformances` and 80 are
+`cannot infer contextual base in reference to member 'strict' / 'passed'` — which look like a
+second defect in the emitted `#expect(results.allSatisfy { $0.tier != .strict || $0.outcome
+== .passed })`. They are not. A minimal package (`scratchpad/cascade/`) with the *identical*
+emitted shape — same `checkEquatablePropertyLaws(for:using:)` call, same `zip(...).map`
+generator, same `#expect` line — against a plain non-isolated `Sendable` struct builds with
+**0 errors and the law passes in 0.065s**. The emitted code is correct Swift; `results` simply
+fails to type-check once the call errors, and every `.strict`/`.passed` reference falls over
+behind it.
+
+**Why this is the tool's problem and not the subject's.** The gate applied is *can I derive a
+generator*, and the question that decides whether the file is usable is *will this compile*.
+The deciding fact is one line of `Package.swift`, a file this repo **already parses** —
+`TestTargetScope` shells out to `swift package dump-package` to scope test lifting. The
+emitted header does warn, in prose, that the file is "NOT GUARANTEED TO COMPILE" because
+`check<Protocol>PropertyLaws` requires `Sendable` — but the *count* on the line above says
+`0 commented out`, and the count is what a reader takes. This is the
+`docs/measurements/roadtest-self-dogfood-2026-08-08.md` §10.9 rule again in a new place: a
+number and its own caveat, disagreeing, with the number winning.
+
+**No remedy is offered, because the obvious one was tried and failed.** Marking the twenty
+model types `nonisolated` (the one-keyword reading) left 115 errors — 64 `duplicate modifier`
+where the declaration already said `nonisolated`, then `rawValue` isolation and a
+`RawRepresentable` conformance failure underneath. Making these conformances non-isolated is
+a real refactor of the subject with its own ripple, not a keyword. Recording it as *measured
+and unsolved* rather than recommending an untested fix.
+
+**Suggested shape of a fix, unbuilt:** read `defaultIsolation` from `dump-package` and, when
+it is `MainActor`, emit the affected carriers **commented out** with the reason — which is
+exactly the machinery the emitter already has for underivable generators, pointed at a second
+gate. That converts a 64-law over-claim into a disclosed gap, which is the posture the
+emitter already argues for in its own header.
+
+---
+
+## 3. One law ran, and it found a real defect
+
+`round-trip` on `SwiftFormatConfig.parse(_:)` / `serialized()` — the only pick of 19 that
+executed — returned `measured-defaultFails` at **trial 27**, counterexample `"  "`.
+
+Reproduced by hand, independent of the harness:
+
+| input | `parse(_:).serialized()` | |
+|---|---|---|
+| `"  "` | `""` | **FAIL** |
+| `"\t"` | `""` | **FAIL** |
+| `"--indent 2\n  \n"` | `"--indent 2\n\n"` | **FAIL** |
+| `"  # c\n"` | `"  # c\n"` | ok |
+
+`SwiftFormatConfig.Line.blank` is the **only** case that does not keep its `raw` text; every
+other case does. So a whitespace-only line loses its whitespace on save. Against the type's
+own docstring — *"preserves the original line order, comments, blanks, and unknown lines …
+so unedited lines serialize byte-for-byte"* — that is a contract violation, and it defeats
+the stated design goal (minimal diffs) for any config containing a `  \n`.
+
+The existing hand-written suite has **two** round-trip tests, one of them
+`roundTripEdges` covering `"--indent 2\n  # indented comment\n\n"` — an indented *comment*,
+never an indented *blank*. Four example inputs, and the property found it at trial 27. That
+is the case for property tests made on the subject's own code.
+
+**Severity is cosmetic; the class is not.** This is the one place the loop delivered end to
+end: proposed from shape + docstring, executed, refuted, reproduced.
+
+---
+
+## 4. …and then the finding became invisible
+
+After `verify` recorded the refutation, `discover` **stops printing the row entirely** — the
+`verifyDisproven` veto, working as designed. But the veto is silent: no note, no
+counterexample, no "this was refuted on <date>". The row simply is not there.
+
+`report` is the only surface that mentions it, as a bare count:
+
+```
+Measured verify — 19 record(s)
+  Proven 0 · Disproven 1 · Unverifiable 18 · Inconclusive 0
+```
+
+**One digit.** To learn *which* law, on which function, with what counterexample, you read
+`.swiftinfer/verify-evidence.json` by hand. The single most valuable thing this run produced
+is, on the default surface, indistinguishable from having found nothing — a `Confident zero`
+manufactured by the tool's own success. `roadtest-self-dogfood-2026-08-08.md` §7.4's *a row a
+human cannot audit*, one step further along: a row a human cannot **see**.
+
+> **Method note — I got this wrong first.** The vanishing row was initially diagnosed as a
+> `--test-dir` effect, because a probe passing `--test-dir` reproduced it. The control that
+> settled it was moving `.swiftinfer/verify-evidence.json` aside: `--test-dir Tests` and the
+> bare default *both* print the row with the store gone, and *neither* does with it present.
+> The probe and the cause were simply concurrent. **A/B the artifact, not the flag** — the
+> flag was the thing I had changed, which is exactly why it read as the cause.
+
+---
+
+## 5. Seven smaller holes
+
+1. **`report`'s Unverifiable tip misattributes 17 of 18.** It reads: *"an Unverifiable pick
+   means the strategist has no generator for its carrier. Add `static func gen()`…"*. The
+   actual split of the 18: **9** `unsupported-template` (no composer), **6** subject is
+   `private`, **2** `instance-method-shape-not-supported`, **1** `unsupported-carrier`. The
+   advice addresses the one cause responsible for a single row, and the fix it prescribes
+   would move nothing else. This is the glossary's own *"`unsupported-carrier` is nearly
+   always the wrong suspect … reading that constant and believing it produced a wrong plan
+   once already"* — shipped verbatim as user-facing guidance.
+
+2. **TestLifter: zero cross-validation signals across 19 picks.** `SwiftFormatConfigTests`
+   states the top-scoring law byte-exactly —
+   `#expect(SwiftFormatConfig.parse(Self.sample).serialized() == Self.sample)` — and the
+   `round-trip` pick scores 50 from type-symmetry (+30), docstring (+15) and value-semantics
+   (+5), with no `+20`. 24 test files, 2,553 lines, nothing lifted. (Measured on the runs
+   taken *before* any verify evidence existed, so this is not the §4 veto.) The known blind
+   spot is `propertyCheck`-shaped bodies; this subject shows the same silence on a plain
+   `#expect` with a static-property input, which is the ordinary way a human writes it.
+
+3. **A generator recipe from the wrong domain.** `rulesAlreadyPresent(_ name: String, kind:
+   RuleDirectiveKind)` — a rule-name lookup — is issued a **path** collision generator:
+   a four-symbol alphabet including `/`, the rationale *"any path contains its own
+   ancestors"*, `Gen.element(of: ["a","b","c","/"])…map { "/" + $0.joined() }`, and the
+   instruction to build the carrier with `.map { SwiftFormatConfig(currentPath: $0) }` **for a
+   stored property that does not exist on that type**. The collision *advice* is sound and the
+   `predicate` template is right that the carrier's own state must be drawn from the same
+   alphabet; the recipe attached to it is canned for a different subject. A reader following
+   it writes code that does not compile, against a law that is fine.
+
+4. **Totality is name-gated, and the gate costs the best law in the package.**
+   `input-totality` fires on all four `parse(_:)` functions and **not** on
+   `SwiftCodeTokenizer.tokens(inLine: String) -> [Token]` — same `String -> structure` shape,
+   different verb. The tokenizer also owes a conservation law,
+   `tokens(inLine: l).map(\.text).joined() == l`, which catches any dropped or duplicated
+   character and which nothing else in the suite checks. It is proposed by no template and
+   does not even reach the docstring-fallback list. Same shape as the `commutativity`
+   name gate in `fixtures/planted-defect-arm`.
+
+5. **The mutating editors are invisible.** `setOption`, `removeOption`, `disableRule`,
+   `enableRule`, `clearRuleOverride` — five textbook `idempotence-lifted` subjects on a
+   value-semantic carrier, with `enable`/`disable`/`clear` forming an obvious inverse triple —
+   produce **zero rows** and appear nowhere, not in the suggestions and not in the fallback
+   list. `addRule`/`removeOption(key:)` draw a `state-machine` row each, both Advisory, and
+   both then decline as `private`.
+
+6. **6 of 19 picks decline because the subject is `private`.** The tool proposes, scores,
+   renders and indexes a law, then reports at verify time that no test can call it. The
+   message is good (it names the one-keyword remedy); the ordering wastes a sixth of the run,
+   and visibility is knowable at discovery.
+
+7. **The interaction default surface is empty.** 4 candidates found on 5 `@Observable` view
+   models; `discover-interaction` prints *"0 interaction-invariant suggestions shown (4 at
+   .possible tier hidden)"*. For an app developer — the audience of that surface — the first
+   run of the command aimed at their code shows nothing.
+
+**Operational:** `verify --all-from-index` left **549 MB** in
+`SwiftFormatRuleStudioCore/.swiftinfer/verify-workdir/` for 19 entries of which 1 ran, and
+`.swiftinfer/` is **not** in that project's `.gitignore`, so it lands in `git status` as an
+untracked directory. Removed after the run; the repo is as found.
+
+---
+
+## 6. The hand list, scored
+
+Written before any tool run. Not an answer key — a check on silence.
+
+| # | law | outcome |
+|---|---|---|
+| 1 | `parse(serialized(c)) == c` | **hit**, `round-trip` 50 |
+| 2 | `serialized(parse(t)) == t` | **hit** — and this is the one that **refuted** (§3) |
+| 3–8 | `setOption`/`removeOption`/`disableRule`/`enableRule`/`clearRuleOverride` idempotence + inverses | **miss** (§5.5) |
+| 9 | `commandLineArguments` structural invariant | miss |
+| 10–13 | `filteredRules` subset / case-insensitivity / trim / monotone in `includeDeprecated` | **no template**, but named by the docstring fallback |
+| 14–16 | `groupedRules` conservation / no empty group / sorted | **no template**, named by the docstring fallback |
+| 17 | tokenizer conservation | **miss**, and it is the strongest law here (§5.4) |
+| 18 | `parse(_:)` totality ×4 | **hit** ×4 |
+| 19 | `category(for:)` totality | miss |
+| 20 | `OptionRuleUsage` inverse relation | **withdrawn by me before running** — `optionKeysByRule` is derived from `rulesByOptionKey` in a static initializer, so it is true by construction and unrefutable. Recorded because predicting it from the signature and withdrawing it on reading the body is the same error the tool is scored against |
+
+**The best output on this corpus is the part that admits defeat.** The docstring-fallback
+section — *"the templates could offer only a determinism tautology here; your docstring is the
+one refutable contract"* — caught 19 subjects including `filteredRules` and `groupedRules`,
+and quoted back the sentences (*"case-insensitively"*, *"each group's rules sorted by name …
+empty groups are omitted"*) that are precisely hand-list items 10–16. It reached the right
+laws by declining to name them. Both predicted instrument problems (§6 of the pre-run list)
+held: the MainActor collision, and the metamorphic statability gap.
