@@ -27,6 +27,12 @@ extension SwiftInferCommand.Discover {
         /// hiding them left the reader with an honest empty or a confident pile of tautologies.
         public let tierHiddenRefutableLaws: [Suggestion]
 
+        /// Laws an executed counterexample refuted. Distinct from `tierHiddenRefutableLaws`,
+        /// which is about laws the CUT hid: these were run and failed, so they are the run's
+        /// strongest evidence and the one thing that must not be silently dropped. Rendered
+        /// by `RefutationRenderer`.
+        public let refutedLaws: [Suggestion]
+
         /// Inverse-element witness pairs (M8.3) — feeds M8.4.a's
         /// `RefactorBridgeOrchestrator.proposals(from:inverseElementPairs:)`
         /// to surface `Group` conformance proposals when the corpus
@@ -127,6 +133,7 @@ extension SwiftInferCommand.Discover {
             suggestions: [Suggestion],
             packageRoot: URL?,
             tierHiddenRefutableLaws: [Suggestion] = [],
+            refutedLaws: [Suggestion] = [],
             inverseElementPairs: [InverseElementPair] = [],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
@@ -148,6 +155,7 @@ extension SwiftInferCommand.Discover {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
             self.tierHiddenRefutableLaws = tierHiddenRefutableLaws
+            self.refutedLaws = refutedLaws
             self.inverseElementPairs = inverseElementPairs
             self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity

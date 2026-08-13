@@ -262,13 +262,8 @@ extension SwiftInferCommand.Discover {
         // single-signal suggestion. The role-entailed escape hatch below is deliberately NOT
         // gated by it: `isWorthSurfacingBelowCut` surfaces a law the code OWES, which is a
         // different justification from "one signal fired" and does not need a second channel.
-        let visible = live.filter {
-            setup.includePossible
-                || ($0.score.tier.isVisibleByDefault
-                    && (!setup.requireCorroboration || CorroborationRule.isCorroborated($0.score)))
-                || Refutability.isWorthSurfacingBelowCut($0)
-        }
-        .sorted(by: Self.strongestFirst)
+        let visible = live.filter { isVisible($0, setup: setup) }
+            .sorted(by: Self.strongestFirst)
         let visibleIdentities = Set(visible.map(\.identity))
 
         return VisibilityCut(
@@ -276,8 +271,23 @@ extension SwiftInferCommand.Discover {
             hiddenRefutable: live.filter { candidate in
                 Refutability.isRefutable(candidate) && !visibleIdentities.contains(candidate.identity)
             },
+            refuted: RefutationRenderer.refuted(in: graded),
             coverage: coverage
         )
+    }
+
+    /// Whether one graded pick survives the visibility cut. Extracted from `combineAndFilter`
+    /// on 2026-08-13, when carrying the refuted picks out pushed that body one line past the
+    /// 50-line cap. The three clauses and their rationale are unchanged — see the comment at
+    /// the call site for why the role-entailed arm is deliberately not gated by
+    /// `--require-corroboration`.
+    private static func isVisible(_ candidate: Suggestion, setup: PipelineSetup) -> Bool {
+        if setup.includePossible { return true }
+        if candidate.score.tier.isVisibleByDefault,
+           !setup.requireCorroboration || CorroborationRule.isCorroborated(candidate.score) {
+            return true
+        }
+        return Refutability.isWorthSurfacingBelowCut(candidate)
     }
 
     /// The tier cut's verdict, plus what it hid that could have failed.
@@ -292,6 +302,10 @@ extension SwiftInferCommand.Discover {
     struct VisibilityCut {
         let visible: [Suggestion]
         let hiddenRefutable: [Suggestion]
+        /// Picks a measured counterexample refuted. Carried OUT of the cut rather than
+        /// dropped with the rest of `.suppressed`: the veto is right and the silence was
+        /// not. See `RefutationRenderer`.
+        let refuted: [Suggestion]
         /// Computed where the conformance index is already in hand, and carried out so the
         /// renderer can pair it with the suggestion count. See `CoverageHeadline`.
         let coverage: CoverageSummary

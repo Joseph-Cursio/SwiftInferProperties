@@ -121,7 +121,15 @@ struct DiscoverCLIVerifySuppressionTests {
             output: vetoed,
             diagnostics: DPRecordingDiagnosticOutput()
         )
-        #expect(!vetoed.text.contains(strong.identity.display))
+        // **Was `!vetoed.text.contains(...)` over the WHOLE output, and that is now too
+        // strong.** As of 2026-08-13 a refuted pick is named in a `REFUTED BY MEASUREMENT`
+        // block — deliberately, because suppressing it silently is what made the toolchain's
+        // only executed refutation invisible. The invariant being guarded was never "the
+        // string is absent"; it was "the pick is not offered as a SUGGESTION", so that is what
+        // is asserted, plus the refutation being present. Strictly stronger than before.
+        #expect(!Self.suggestionRegion(of: vetoed.text).contains(strong.identity.display))
+        #expect(vetoed.text.contains("REFUTED BY MEASUREMENT"))
+        #expect(vetoed.text.contains(strong.identity.display))
     }
 
     @Test("defaultFails veto holds through Discover.run even with --include-possible")
@@ -155,9 +163,19 @@ struct DiscoverCLIVerifySuppressionTests {
             diagnostics: DPRecordingDiagnosticOutput()
         )
         // `.suppressed` is dropped unconditionally — `--include-possible`
-        // must not leak a verify-disproven pick (the V1.67.A
-        // `combineAndFilter` guard, exercised through the CLI here).
-        #expect(!vetoed.text.contains(strong.identity.display))
+        // must not leak a verify-disproven pick back into the SUGGESTION list (the V1.67.A
+        // `combineAndFilter` guard, exercised through the CLI here). It may, and since
+        // 2026-08-13 must, appear in the refutation block: that block is a result, not a
+        // proposal, and `--include-possible` does not gate it either way.
+        #expect(!Self.suggestionRegion(of: vetoed.text).contains(strong.identity.display))
+        #expect(vetoed.text.contains("REFUTED BY MEASUREMENT"))
+    }
+
+    /// Everything before the refutation block — the region where a pick appearing means it was
+    /// offered as a suggestion. Splitting on the heading rather than counting `[Suggestion]`
+    /// markers keeps the assertion working when a fixture surfaces unrelated picks too.
+    private static func suggestionRegion(of text: String) -> String {
+        text.components(separatedBy: "REFUTED BY MEASUREMENT").first ?? text
     }
 
     @Test("bothPass evidence on disk rescues a sub-threshold pick into Discover.run output")

@@ -59,6 +59,22 @@ enum ReportRenderer {
             "  Proven \(count(.measuredBothPass)) · Disproven \(count(.measuredDefaultFails)) "
                 + "· Unverifiable \(count(.architecturalCoveragePending)) · Inconclusive \(inconclusive)"
         ]
+        // **Named, not counted.** `Disproven 1` was the only trace a measured refutation left
+        // anywhere on a default surface, and one digit is not a finding: learning WHICH law
+        // failed meant reading `.swiftinfer/verify-evidence.json` by hand. A refutation is the
+        // strongest evidence this tool holds, so it is the last thing that should need a
+        // JSON reader. Listed before the Unverifiable breakdown because it is a result and
+        // that is a gap.
+        let disproven = evidence.records.filter { $0.outcome == .measuredDefaultFails }
+        if !disproven.isEmpty {
+            lines.append("  Disproven — executed and refuted:")
+            lines += disproven
+                .sorted { $0.template < $1.template }
+                .map { record in
+                    "    ✗ \(record.template)  \(record.identityHash)"
+                        + "  \(record.detail.map { "— \($0)" } ?? "")"
+                }
+        }
         lines += GenHookHint.lines(
             details: evidence.records
                 .filter { $0.outcome == .architecturalCoveragePending }

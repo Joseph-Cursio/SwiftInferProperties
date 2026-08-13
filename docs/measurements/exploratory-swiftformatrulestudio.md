@@ -157,6 +157,51 @@ end: proposed from shape + docstring, executed, refuted, reproduced.
 
 ## 4. …and then the finding became invisible
 
+> **FIXED 2026-08-13 — `RefutationRenderer`.** A refuted law is now shown in its own
+> `REFUTED BY MEASUREMENT` block on **stdout**, carrying the subject, its `file:line`, the
+> counterexample detail and the identity. On this run's own evidence:
+>
+> ```
+> REFUTED BY MEASUREMENT — 1 law was executed and a counterexample was found.
+> These are NOT suggestions and are not proposed again: each was run and failed. …
+>
+>   ✗ round-trip  parse(_:)  (String) -> Self
+>     …/Config/SwiftFormatConfig.swift:61
+>     Verify: defaultFails — trial=27
+>     Identity: 0x0809244D12C83111
+> ```
+>
+> **The veto is unchanged** — a refuted pick still never re-enters the suggestion list, because
+> it has been measured false. What changed is that the suppression stopped being silent.
+>
+> **stdout, not the neighbouring stderr channel, and that is measured rather than preferred.**
+> `Discover+EvidenceDiagnostics` exists for this same class of problem and writes to stderr;
+> its own header records that its coverage `note:` went unseen through an entire eight-corpus
+> census, because every invocation ran with `2>/dev/null` — *including the runs whose numbers
+> were written into the findings doc*. Putting the strongest evidence the tool produces on a
+> channel already measured to be discarded would repeat a mistake this repo has paid for once.
+>
+> **It survives `--stats-only`**, which is what CI reads, and it survives a run with **zero
+> suggestions** — the exact shape measured here, where everything else declined and the one
+> law that ran refuted. Both are guarded arms, not incidental.
+>
+> `report` names the row too: `Disproven — executed and refuted: ✗ round-trip 0809244D12C83111
+> — trial=27`, in place of the bare `Disproven 1`.
+>
+> **The selection filter is on the `verifyDisproven` SIGNAL, never on the `.suppressed`
+> tier** — several vetoes land a pick in that tier, and only this one means *executed*.
+> Reporting a coverage-vetoed pick as a refutation would present inference as measurement,
+> which is worse than the silence being fixed. `RefutationVisibilityTests` (9 laws) pins that,
+> plus a control asserting output is byte-identical when nothing was refuted.
+>
+> **Two existing tests were asserting the silence** and are now precise instead of loose:
+> `DiscoverCLIVerifySuppressionTests` checked the identity was absent from the *whole* output.
+> The invariant was never "the string is absent" but "the pick is not offered as a
+> suggestion", so they now assert absence from the suggestion region **and** presence in the
+> refutation block — strictly stronger than before.
+>
+> The finding as originally measured follows.
+
 After `verify` recorded the refutation, `discover` **stops printing the row entirely** — the
 `verifyDisproven` veto, working as designed. But the veto is silent: no note, no
 counterexample, no "this was refuted on <date>". The row simply is not there.
