@@ -78,20 +78,26 @@ extension SwiftInferCommand {
                 inheritedTypesByName: pipeline.inheritedTypesByName,
                 kitEvidence: evidence.kit
             )
+            // Only consulted for `--target`, deliberately. `--sources` exists to bypass the
+            // `Sources/<target>/` convention entirely — an Xcode app has no manifest target —
+            // so attributing a manifest target's settings to an arbitrary directory would be a
+            // guess, and `--module` names a module rather than necessarily a manifest target.
+            // No answer beats a wrong one: `nil` here emits exactly as before.
+            let defaultIsolation = target.flatMap { targetName in
+                TargetIsolation.packageRoot(containing: directory).flatMap {
+                    TargetIsolation.defaultIsolation(packageRoot: $0, targetName: targetName)
+                }
+            }
             let emission = KitSuiteEmitter.emit(
                 findings: findings,
                 shapes: shapes,
                 moduleName: moduleName,
-                genericParametersByName: pipeline.genericParametersByName
+                genericParametersByName: pipeline.genericParametersByName,
+                defaultIsolation: defaultIsolation
             )
 
-            // The summary goes to stderr so `--output`-less runs can be piped into a file
-            // without the counts landing inside the Swift source.
-            diagnostics.writeDiagnostic(
-                "note: \(emission.liveCarriers) carrier(s) / \(emission.liveLaws) law(s) "
-                    + "emitted live; \(emission.blockedCarriers) carrier(s) / "
-                    + "\(emission.blockedLaws) law(s) commented out pending a hand-written "
-                    + "`gen()`. Nothing was written into your build."
+            reportCounts(
+                emission, defaultIsolation: defaultIsolation, diagnostics: diagnostics
             )
             if let output {
                 let url = URL(fileURLWithPath: output)
@@ -103,6 +109,42 @@ extension SwiftInferCommand {
             } else {
                 print(emission.source)
             }
+        }
+
+        /// The stderr summary. Extracted from `run()` on 2026-08-13, when the isolation note
+        /// pushed that body past the 50-line cap.
+        ///
+        /// Goes to stderr so an `--output`-less run can be piped into a file without the
+        /// counts landing inside the Swift source.
+        private func reportCounts(
+            _ emission: KitSuiteEmitter.Emission,
+            defaultIsolation: String?,
+            diagnostics: PrintDiagnosticOutput
+        ) {
+            // **Cause-neutral wording, because there are four blocking gates and this line
+            // used to name one.** It read "commented out pending a hand-written `gen()`",
+            // which is true only of the `.todo` gate — a carrier blocked on instantiation, on
+            // type-check overrun, or on target isolation is not waiting for a `gen()`, and
+            // writing one changes nothing. Each block carries its own reason; this line
+            // reports the count and stops claiming to know why.
+            diagnostics.writeDiagnostic(
+                "note: \(emission.liveCarriers) carrier(s) / \(emission.liveLaws) law(s) "
+                    + "emitted live; \(emission.blockedCarriers) carrier(s) / "
+                    + "\(emission.blockedLaws) law(s) commented out, each with its reason. "
+                    + "Nothing was written into your build."
+            )
+            // Surfaced separately because it is the one blocking cause that is a single
+            // setting rather than a per-carrier gap: it explains EVERY block in the run, and
+            // a reader who fixes it gets all of them back at once.
+            guard let defaultIsolation else { return }
+            diagnostics.writeDiagnostic(
+                "note: every carrier is blocked by one setting — target `\(target ?? "")` "
+                    + "sets `.defaultIsolation(\(defaultIsolation).self)`, so its conformances "
+                    + "are \(defaultIsolation)-isolated and cannot satisfy "
+                    + "`check<Protocol>PropertyLaws`' `Value: Sendable` requirement. Types "
+                    + "declared `nonisolated` are exempt, and this gate cannot see that — it "
+                    + "blocks the whole target, so re-run after changing it."
+            )
         }
     }
 }
