@@ -80,8 +80,23 @@ public enum InputTotalityTemplate {
         return summary.parameters.first { parameter in
             HostileInputEntryPoints.byteCarriers.contains(parameter.typeText)
                 || (HostileInputEntryPoints.textCarriers.contains(parameter.typeText)
-                    && HostileInputEntryPoints.hasInterpretationVerb(summary.name))
+                    && admitsText(summary, parameter: parameter))
         }
+    }
+
+    /// Whether a text-carrying parameter admits this function.
+    ///
+    /// **Two routes on deliberately different terms.** A leading interpretation VERB asserts
+    /// that the argument is being read as a structure, so it needs only the absence of a
+    /// location label. A leading result-NOUN (`tokens(inLine:)`) describes the return value and
+    /// asserts nothing about the argument, so it additionally requires a positive content
+    /// label — measured, because the noun on the verb's terms admits
+    /// `tokens(startingWith: String)`, whose `String` is a filter prefix. See
+    /// `HostileInputEntryPoints.resultNouns`.
+    private static func admitsText(_ summary: FunctionSummary, parameter: Parameter) -> Bool {
+        if HostileInputEntryPoints.hasInterpretationVerb(summary.name) { return true }
+        return HostileInputEntryPoints.hasResultNoun(summary.name)
+            && HostileInputEntryPoints.isContentLabel(parameter.label)
     }
 
     /// How the function was admitted, or `nil`.
@@ -97,6 +112,27 @@ public enum InputTotalityTemplate {
         }
         guard let verb = StreamConsumption.camelCaseTokens(summary.name).first else { return nil }
         return .interpretedText(typeName: parameter.typeText, verb: verb)
+    }
+
+    /// The "why suggested" line for a text-admitted function.
+    ///
+    /// **Two routes admit a text carrier and they are not the same claim**, so this must not
+    /// say "verb" for both: a reader checking the reasoning against the name would find it
+    /// flatly untrue for `tokens(inLine:)`, which leads with a noun. That row shipped for one
+    /// afternoon reading *"leads with the interpretation verb `tokens`"*.
+    static func textAdmissionReason(
+        _ summary: FunctionSummary,
+        typeName: String,
+        verb: String
+    ) -> String {
+        if HostileInputEntryPoints.hasInterpretationVerb(summary.name) {
+            return "`\(summary.name)` leads with the interpretation verb `\(verb)` and takes a "
+                + "`\(typeName)` — it reads the argument as a structure, so it owes TOTALITY "
+                + "over every string that type admits"
+        }
+        return "`\(summary.name)` names its RESULT (`\(verb)`) rather than its action, and "
+            + "takes a `\(typeName)` under a content label — the argument is the text it "
+            + "interprets, so it owes TOTALITY over every string that type admits"
     }
 
     static func signals(for summary: FunctionSummary) -> [Signal] {
@@ -119,9 +155,7 @@ public enum InputTotalityTemplate {
                 Signal(
                     kind: .exactNameMatch,
                     weight: 30,
-                    detail: "`\(summary.name)` leads with the interpretation verb `\(verb)` and "
-                        + "takes a `\(typeName)` — it reads the argument as a structure, so it "
-                        + "owes TOTALITY over every string that type admits"
+                    detail: textAdmissionReason(summary, typeName: typeName, verb: verb)
                 )
             )
         }

@@ -74,6 +74,56 @@ public enum HostileInputEntryPoints {
         "unmarshal", "unpack", "demangle", "disassemble"
     ]
 
+    /// Nouns naming the **result** of an admitted verb, for a function that states its output
+    /// instead of its action — `tokens(inLine:)` beside `tokenize(line:)`.
+    ///
+    /// ## Why a second route rather than more verbs
+    ///
+    /// Measured on `SwiftFormatRuleStudioCore`: `SwiftCodeTokenizer.tokens(inLine: String) ->
+    /// [Token]` gets no totality law, while a byte-identical function named `tokenize` does
+    /// (`docs/measurements/exploratory-swiftformatrulestudio.md` §5.4). Same shape, same
+    /// docstring, same body — only the leading name token differs, noun against verb.
+    ///
+    /// **Result-nouns only. Agent-nouns are excluded and the distinction is the whole rule.**
+    /// `tokens` names what comes *out*; `parser`, `decoder`, `lexer` name a thing that *does*
+    /// the work, so a function called `parser(...)` is a factory returning a parser and
+    /// interprets nothing. Admitting agent-nouns would claim totality over a constructor.
+    ///
+    /// ## This route is STRICTER than the verb route, because measurement said so
+    ///
+    /// Across eight corpora there are exactly four `func tokens(` declarations, and admitting
+    /// the noun on the verb route's terms — a text carrier and no location label — scores
+    /// **2 of 4, and 1 of the 2 text-carrying ones is wrong**:
+    ///
+    /// | declaration | text carrier | correct to admit |
+    /// |---|---|---|
+    /// | `tokens(startingWith: String) -> [Token]` (Harmonize) | yes | **no** — a filter prefix |
+    /// | `tokens(viewMode:)` (swift-syntax) | no | n/a |
+    /// | `tokens(inByteRange:)` (SwiftLint) | no | n/a |
+    /// | `tokens(inLine: String) -> [Token]` (the witness) | yes | yes |
+    ///
+    /// 50% precision, against the ≥50% bar `same-name-differential-pairing.md` froze and then
+    /// rejected a rule at 40% under. **A verb asserts interpretation; a noun only describes
+    /// the return value**, and `startingWith` is exactly the *"a bare `String` is far more
+    /// often a name than a payload"* case this type's header already warns about.
+    ///
+    /// So the noun route additionally requires a **positive content label**, where the verb
+    /// route needs only the absence of a location one. That separates the two witnesses
+    /// cleanly: `inLine` is content, `startingWith` is a predicate.
+    ///
+    /// **Population is 1 and that is stated, not hidden.** This is a correctness fix for a
+    /// shape the catalog already intends to cover, not a recall win — see the A/B in the
+    /// findings doc, which moves exactly one row across eight corpora.
+    public static let resultNouns: [String] = ["tokens", "lexemes"]
+
+    /// Whether `methodName` leads with a result-noun of an admitted verb.
+    public static func hasResultNoun(_ methodName: String) -> Bool {
+        guard let leading = StreamConsumption.camelCaseTokens(methodName).first else {
+            return false
+        }
+        return resultNouns.contains(leading)
+    }
+
     /// Verbs that mean the bytes are going **out**, not coming in.
     ///
     /// The byte-carrier route needs no verb — raw bytes are content by
@@ -109,21 +159,47 @@ public enum HostileInputEntryPoints {
 
     /// Argument labels that positively name a payload. Not required, but they
     /// raise confidence when the type alone is ambiguous.
+    /// `line` / `lines` joined on 2026-08-13 with the result-noun route: a line IS the text,
+    /// which is why `tokens(inLine:)` is a payload-taker and `tokens(startingWith:)` is not.
     public static let contentLabels: Set<String> = [
         "source", "text", "content", "fileContent", "contents",
-        "data", "bytes", "input", "buffer", "payload", "body", "raw"
+        "data", "bytes", "input", "buffer", "payload", "body", "raw",
+        "line", "lines"
     ]
 
     /// Whether `label` names somewhere to look rather than something to read.
     public static func isLocationLabel(_ label: String?) -> Bool {
         guard let label else { return false }
-        return locationLabels.contains(label)
+        return locationLabels.contains(normalizedLabel(label))
     }
 
     /// Whether `label` positively names a payload.
     public static func isContentLabel(_ label: String?) -> Bool {
         guard let label else { return false }
-        return contentLabels.contains(label)
+        return contentLabels.contains(normalizedLabel(label))
+    }
+
+    /// A label with a leading English preposition removed — `inLine` → `line`.
+    ///
+    /// Swift's labels read as prose at the call site, so the same noun appears bare in one
+    /// declaration and prepositioned in another: `tokenize(line:)` against
+    /// `tokens(inLine:)`, `parse(source:)` against `parse(fromSource:)`. Exact set membership
+    /// sees those as different words and classifies one of each pair as unknown.
+    ///
+    /// **Only the preposition is stripped, never a longer prefix.** Anything more aggressive
+    /// starts matching inside real words — and the label sets are the precision mechanism for
+    /// both admission routes, so a loose match here weakens the veto that keeps
+    /// `load(projectRoot:)` out.
+    static func normalizedLabel(_ label: String) -> String {
+        for preposition in ["in", "from", "of", "for", "with", "at", "to"] {
+            guard label.hasPrefix(preposition), label.count > preposition.count else { continue }
+            let rest = label.dropFirst(preposition.count)
+            // `inLine` splits, `internal` does not: the character after the preposition must
+            // begin a new camel-case word, or `into`/`information` normalise to nonsense.
+            guard let first = rest.first, first.isUppercase else { continue }
+            return first.lowercased() + rest.dropFirst()
+        }
+        return label
     }
 
     /// Whether `methodName` leads with an interpretation verb.
