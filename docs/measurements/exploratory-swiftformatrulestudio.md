@@ -286,6 +286,49 @@ human cannot audit*, one step further along: a row a human cannot **see**.
    it writes code that does not compile, against a law that is fine.
 
 4. **Totality is name-gated, and the gate costs the best law in the package.**
+
+   > **HALF FIXED 2026-08-13 — `HostileInputEntryPoints.resultNouns`. Read which half.**
+   > The **totality** gate now admits `tokens(inLine:)`; the **conservation** law is untouched
+   > and remains a catalog gap.
+   >
+   > Isolated first: a probe with four spellings of one body showed `tokenize(line:)` and
+   > `parse(_:)` admit while `tokens(inLine:)` and `tokens(inSource:)` do not — same type,
+   > same docstring, same body, only the leading name token differing.
+   >
+   > **The obvious fix was measured and rejected.** Adding `tokens` to `interpretationVerbs`
+   > scores **50%**: across eight corpora there are exactly four `func tokens(`, two take a
+   > text carrier, and one of those is Harmonize's `tokens(startingWith: String) -> [Token]`,
+   > whose `String` is a **filter prefix, not a payload** — the *"a bare `String` is far more
+   > often a name than a payload"* case the type's own header warns about. 50% is the bar
+   > `same-name-differential-pairing.md` froze and then rejected a rule at 40% under.
+   >
+   > So the noun route is **stricter than the verb route**: a verb asserts interpretation and
+   > needs only the absence of a location label, while a noun only describes the return value
+   > and additionally requires a **positive content label**. That separates the two witnesses
+   > cleanly — `inLine` is content, `startingWith` is a predicate — and needed one supporting
+   > change, stripping a leading preposition so `inLine` and `line` classify alike.
+   >
+   > **Agent-nouns are excluded and that is the rule, not an omission**: `tokens` names what
+   > comes *out*; `parser`/`decoder`/`lexer` name a thing that *does* the work, so a function
+   > called `parser(...)` is a factory that interprets nothing.
+   >
+   > **A/B, two binaries, same afternoon, four corpora:** SwiftFormatRuleStudioCore
+   > **19 → 20 rows** (totality 6 → 7, the witness); `SwiftInferCore` 156/3,
+   > `SwiftInferTemplates` 136/0, `SwiftInferCLI` 198/11 — **all unchanged, and 0 score lines
+   > differ** on any control, which is the check that matters since the label change touches
+   > the verb route too.
+   >
+   > **Honest bound: population is 1.** This is a correctness fix for a shape the catalog
+   > already intends to cover, **not a recall win** — it moves exactly one row across eight
+   > corpora, and a rule fitted to a single witness is what `maximumZipNesting`'s comment warns
+   > about. What justifies it is that the rejected-alternative measurement is real and the
+   > rejection arms are guarded (`ResultNounAdmissionTests`, 11 laws, most of them asserting
+   > NON-admission).
+   >
+   > **One defect shipped and was caught in the A/B**: the new row first rendered *"`tokens`
+   > leads with the interpretation verb `tokens`"* — false, it is a noun. The two routes now
+   > render different reasons, which is the same misattribution class as §5.1 and the
+   > kit-suite banner.
    `input-totality` fires on all four `parse(_:)` functions and **not** on
    `SwiftCodeTokenizer.tokens(inLine: String) -> [Token]` — same `String -> structure` shape,
    different verb. The tokenizer also owes a conservation law,
