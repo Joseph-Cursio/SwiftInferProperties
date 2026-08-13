@@ -1,6 +1,11 @@
 # Prediction — a whole-to-parts partition form
 
-> **Status:** `open` · **As of:** 2026-08-13
+> **Status:** `superseded` · **As of:** 2026-08-13
+>
+> **SCORED AND DECLINED — see `docs/measurements/whole-to-parts-partition-declined.md`.**
+> 1 of 5 predictions held, and the one that did is moot. Kept unedited: its value now is that
+> it was wrong in a checkable way, and editing it would destroy the only evidence that the
+> census was not tuned to the answer.
 
 **Committed BEFORE the census script exists**, so "not tuned to the answer" is checkable in
 `git log` rather than asserted — the practice `same-name-differential-pairing.md` established.
