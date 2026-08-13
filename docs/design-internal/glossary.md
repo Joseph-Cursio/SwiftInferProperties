@@ -130,6 +130,67 @@ separately because it runs on a different carrier population.
 `verify` column is **opt-in** — no discovery path ever compiles or runs anything, which
 is why `discover` on a hostile corpus is safe.
 
+### The `.swiftinfer/` artifacts — what each stage writes and reads
+
+The modes above talk to each other through files, not through memory: every mode is a
+separate process invocation, so **the artifacts _are_ the pipeline's state**. Thirteen live
+under `.swiftinfer/` at the package root, and knowing which mode writes which is how you
+tell a stale result from a wrong one.
+
+| artifact | written by | read by | owner |
+|---|---|---|---|
+| `index.json` | `index`, and `verify`'s reindex | `query`, `report`, `docc`, `insights`, `suggest-refactors`, `prove-then-show`, `verify --all-from-index`, `metrics` | `IndexStore` |
+| `seed-index.json` | `index --seeds` — **never** the conventional index | `verify --all-from-index --index-path` | `IndexStore.seedFocusedRelativePath` |
+| `decisions.json` | `discover --interactive` (triage), `accept-check` | `index` (joined into entries), `discover`, `drift`, `metrics` | `DecisionsLoader` |
+| `interaction-decisions.json` | `accept-interaction`, `accept-bridge`, interaction triage | `metrics-interaction`, `drift-interaction`, `index`, `accept-check-interaction` | `InteractionDecisionsLoader` |
+| `verify-evidence.json` | `verify`, `verify-interaction` (three producers — see below) | `discover`, `discover-interaction`, `report`, `docc`, `drift`, `metrics` | `VerifyEvidenceStore` |
+| `baseline.json` | `discover --update-baseline` | `drift` | `BaselineLoader` |
+| `interaction-baseline.json` | `discover-interaction --update-baseline` | `drift-interaction` | `InteractionBaselineLoader` |
+| `verify-corpus.json` | `verify` | `drift`, `verify --replay` | `VerifyCorpusStore` |
+| `post-acceptance-outcomes.json` | `accept-check` | `metrics` | `PostAcceptanceOutcomesStore` |
+| `interaction-post-acceptance-outcomes.json` | `accept-check-interaction` | `metrics-interaction` | `InteractionPostAcceptanceOutcomesStore` |
+| `kit-evidence.json` | **nothing here** — your test target, via `SwiftInferKitEvidence` | `discover` (scoring), the verify harness | `KitEvidenceStore` |
+| `vocabulary.json` | **nothing** — you author it | `discover` (naming heuristics, skip markers) | `VocabularyLoader` |
+| `config.toml` | **nothing** — you author it | every mode | `ConfigLoader` |
+
+**Five of them share one implementation and eight do not.** `Baseline`, `Decisions`,
+`VerifyEvidenceLog`, `InteractionBaseline` and `InteractionDecisions` conform to
+`JSONArtifact` and are read and written by the generic `JSONArtifactStore`, which is also
+where each declares its own `conventionalRelativePath`; before that, five files agreed by
+hand, and one carried a comment describing itself as mirroring another. The rest keep
+bespoke stores.
+
+**The encoder tells you how far that collapse got.** `CanonicalJSON` — `prettyPrinted` +
+`sortedKeys` + `.iso8601`, so the files diff the same way — is reached by the five, and by
+`VerifyCorpusStore` through a deliberate re-export (it writes a neighbouring file and says
+it "must use the identical encoder"). Everyone else still builds a `JSONEncoder` by hand
+and sets the same flags: `IndexStore` does exactly that. The settings agree today; nothing
+makes them agree tomorrow, which is the same by-hand agreement `JSONArtifactStore` was
+introduced to end, surviving in the stores it did not absorb.
+
+**Three of them are written from outside a `swift-infer` run**, which is the distinction
+worth carrying: `config.toml` and `vocabulary.json` are yours to author (`VocabularyLoader`
+has `load` and no writer at all), and `kit-evidence.json` is written by
+`KitEvidenceRecorder` from `SwiftInferKitEvidence` — a library **your test target** imports
+and calls after running the kit's laws. So an absent `kit-evidence.json` means *nobody
+recorded a kit run*, not *the kit failed* — a distinction `ProtocolCoverageAudit` turns on,
+since it cannot otherwise tell "the kit never ran" from "it ran elsewhere".
+
+**`verify-evidence.json` is the one to understand**, because it is the only artifact that
+feeds a measurement back into inference, and its producers do not all live in one place.
+On the interaction side alone there are **three** — `VerifyInteractionPipeline` (reducers),
+`ViewModelVerifyEvidence` (MVVM), `OutputDeterminismVerifyEvidence` (VIPER/MVP) — against
+one consumer, and a producer that forgets to stamp a record is silent: its verdicts simply
+stop applying. Since 2026-08-12 each record also carries a `subjectFingerprint`, and a
+verdict whose subject has changed is **withheld in both directions at weight 0** rather
+than trusted or inverted; a record with no fingerprint counts as stale. See
+[Promotion](#promotion).
+
+**Everything here is derived and disposable except the two you author.** Deleting
+`.swiftinfer/` costs you recorded decisions and measured evidence — both re-creatable, the
+second only by re-running `verify`. It is gitignored, which is also why a survey's workdir
+can accumulate there unnoticed (`make clean-temp`).
+
 ---
 
 ## Discovery
