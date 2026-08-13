@@ -338,8 +338,11 @@ public enum VerifyError: Error, CustomStringConvertible {
                 + "'\(carrier)', so there is no domain to quantify over. Carriers reachable "
                 + "today: \(expectedList). The gate is a generator, not a release: this clears "
                 + "when `DerivationStrategist` derives one for the type, or when the kit ships "
-                + "it — for SwiftSyntax nodes, `PropertyLawSyntax` vends generators for the "
-                + "erased base types and is opt-in via --extra-import."
+                + "it. A SwiftSyntax node needs no flag — the kit's PropertyLawSyntax is linked "
+                + "into the verifier automatically when your own package depends on "
+                + "swift-syntax. One declining anyway means either your package does not (an "
+                + "Xcode project or a --sources run has no manifest to read), or the carrier is "
+                + "generic or collection-shaped and takes the composite path instead."
 
         case let .buildFailed(exitCode, diagnostics):
             // `diagnostics` is already the extracted cause — see
