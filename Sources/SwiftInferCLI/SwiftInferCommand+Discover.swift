@@ -194,6 +194,7 @@ extension SwiftInferCommand.Discover {
             docstringAdvice: docstringAdviceIfEnabled(
                 pipeline: pipeline, visible: visible, seedManifest: context.seedManifest
             ),
+            refutedLaws: pipeline.refutedLaws,
             coverage: pipeline.coverage,
             output: output
         )

@@ -75,6 +75,7 @@ extension SwiftInferCommand.Discover {
             ),
             packageRoot: setup.packageRoot,
             tierHiddenRefutableLaws: cut.hiddenRefutable,
+            refutedLaws: cut.refuted,
             inverseElementPairs: artifacts.inverseElementPairs,
             equivalenceClassHintsByIdentity: hints.equivalenceClassHints,
             consumerProducerChainHintsByIdentity: hints.chainHints,

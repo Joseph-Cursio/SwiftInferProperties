@@ -22,6 +22,7 @@ extension SwiftInferCommand.Discover {
         evidenceByIdentity: [String: VerifyEvidence],
         effectAnnotations: [EffectAnnotationAdvice] = [],
         docstringAdvice: [DocstringAdviceItem] = [],
+        refutedLaws: [Suggestion] = [],
         coverage: CoverageSummary = CoverageSummary(
             lawCount: 0, carrierCount: 0, evidenceState: .noEvidence
         ),
@@ -52,6 +53,15 @@ extension SwiftInferCommand.Discover {
         // advice-free output is byte-identical to before. `DiscoverOutput.write`
         // replaces rather than appends, so the block joins the rendered string
         // here and a single `write` carries both.
+        // **Before the advisory blocks and OUTSIDE the `statsOnly` guard, both deliberately.**
+        // A refutation is the only execution-backed output this tool produces, and it is the
+        // one thing a reader must not miss — `--stats-only` is what CI reads, and hiding a
+        // measured counterexample from CI is the whole defect. Advisories are suggestions
+        // about what to write; this is a result.
+        let refutationBlock = RefutationRenderer.render(refutedLaws)
+        if !refutationBlock.isEmpty {
+            rendered += "\n\n" + refutationBlock
+        }
         if !statsOnly {
             let adviceBlock = EffectAnnotationRenderer.render(effectAnnotations)
             if !adviceBlock.isEmpty {
