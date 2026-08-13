@@ -31,10 +31,13 @@ it is named — prefer reading that over trusting this file, which is a map and 
 > corpus — the bottleneck moved from *template* reach to *carrier* reach. And the seed funnel
 > inverted into a flood: 1,738 rows on a seeded run against 30 `strong`+`likely`.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@21bc279 observer=SwiftInferProperties@21bc279 -->
+<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@718ca91 observer=SwiftInferProperties@718ca91 -->
 
-> **2026-08-12 — scope of this re-verification.** The template-file / enum-case ratio was
-> re-counted (92/18 → **93/20**). The survey-derived figures — composer-supported, the
+> **2026-08-12 — scope of this re-verification.** Re-verified twice today; the second pass, at
+> `718ca91`, re-counted the template-file / enum-case ratio and found it **unmoved at 93/20**, and
+> corrected the pipeline sketch's opening hop (it presented the optional `--seeds` linter step as
+> though every function's trip began there — the [Seed](#seed--seed-manifest) entry had said
+> otherwise all along). The first pass re-counted the ratio 92/18 → **93/20**. The survey-derived figures — composer-supported, the
 > `unsupported-carrier` / `unsupported-template` split, the 663 restricted-function rescues — are
 > **carried from their 2026-08-05 and 2026-08-01 streams and were not re-run**: each comes from a
 > multi-hour `verify --all-from-index` sweep, and a partial re-measure would be worse than a dated
@@ -54,10 +57,17 @@ SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ─�
         └──── SwiftEffectInference (purity oracle; no CLI, runs inside both) ────┘
 ```
 
-A function's trip: the linter **seeds** it → `discover` matches a **template** and assigns a
-**score** → the score maps to a **tier** → `index` persists it as an **entry** → `verify`
-resolves a **carrier**, derives a **generator recipe**, composes a **stub**, and runs two
-**passes** → the **outcome** may **promote** the tier to `verified`.
+A function's trip: `discover` scans the target, matches a **template** and assigns a **score** →
+the score maps to a **tier** → `index` persists it as an **entry** → `verify` resolves a
+**carrier**, derives a **generator recipe**, composes a **stub**, and runs two **passes** → the
+**outcome** may **promote** the tier to `verified`.
+
+**The linter is an optional first hop, not a step.** `--seeds` is an *optional* flag on
+`discover` and `index` alone, and a seeded run does not start earlier — it ends narrower:
+discovery still scans the whole target and the surfaced suggestions are then filtered to the
+functions the manifest names. See [Seed / seed manifest](#seed--seed-manifest), which is the
+authority; this sketch used to open *"the linter **seeds** it →"* and read as though no trip
+began without SwiftProjectLint.
 
 ### The 25 `swift-infer` modes, by stage
 
