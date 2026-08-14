@@ -109,19 +109,19 @@ public enum AssertAfterTransformDetector {
     ) -> DetectedRoundTrip? {
         guard let outerCall = call.as(FunctionCallExprSyntax.self),
               let backwardName = outerCall.calledExpression.trailingIdentifierName,
-              let outerArg = outerCall.arguments.first?.expression,
+              let outerArg = outerCall.consumedValueExpression,
               let innerCall = outerArg.as(FunctionCallExprSyntax.self),
               let forwardName = innerCall.calledExpression.trailingIdentifierName,
-              let innerArg = innerCall.arguments.first?.expression,
-              let inputRef = innerArg.as(DeclReferenceExprSyntax.self),
-              let otherRef = otherSide.as(DeclReferenceExprSyntax.self),
-              inputRef.baseName.text == otherRef.baseName.text else {
+              let innerArg = innerCall.consumedValueExpression,
+              let inputText = innerArg.stableValueReferenceText,
+              let otherText = otherSide.stableValueReferenceText,
+              inputText == otherText else {
             return nil
         }
         return DetectedRoundTrip(
             forwardCallee: forwardName,
             backwardCallee: backwardName,
-            inputBindingName: inputRef.baseName.text,
+            inputBindingName: inputText,
             recoveredBindingName: nil,
             assertionLocation: location
         )
@@ -173,12 +173,12 @@ public enum AssertAfterTransformDetector {
         guard let recoveredInit = bindings[recoveredName],
               let outerCall = recoveredInit.as(FunctionCallExprSyntax.self),
               let backwardName = outerCall.calledExpression.trailingIdentifierName,
-              let intermediateArg = outerCall.arguments.first?.expression,
+              let intermediateArg = outerCall.consumedValueExpression,
               let intermediateRef = intermediateArg.as(DeclReferenceExprSyntax.self),
               let intermediateInit = bindings[intermediateRef.baseName.text],
               let innerCall = intermediateInit.as(FunctionCallExprSyntax.self),
               let forwardName = innerCall.calledExpression.trailingIdentifierName,
-              let inputArg = innerCall.arguments.first?.expression,
+              let inputArg = innerCall.consumedValueExpression,
               let inputRef = inputArg.as(DeclReferenceExprSyntax.self),
               inputRef.baseName.text == inputName else {
             return nil

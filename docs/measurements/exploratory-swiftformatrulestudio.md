@@ -266,7 +266,47 @@ human cannot audit*, one step further along: a row a human cannot **see**.
    > stated cost of parsing a human-readable string instead of adding a field to a persisted
    > format.
 
-2. **TestLifter: zero cross-validation signals across 19 picks.** `SwiftFormatConfigTests`
+2. **TestLifter: zero cross-validation signals across 19 picks.**
+
+   > **FIXED 2026-08-14 — two independent causes, either alone enough to hide it.** Both were
+   > in the round-trip detector, and both made it blind to house style rather than to the law.
+   >
+   > **(a) The value reaches the second call through the RECEIVER.** `parse(x).serialized()`
+   > is a method chain whose outer call takes **no arguments**, and the detector read
+   > `arguments.first`. `FunctionCallExprSyntax.consumedValueExpression` falls back to the
+   > member-access base *only when the argument list is empty*, so no existing match changes.
+   > **(b) The input is `Self.sample`, a member access**, where both sides were required to be
+   > `DeclReferenceExprSyntax`. Comparison is now over `stableValueReferenceText`.
+   >
+   > **A four-arm probe is what separated them** — one law, one body, four spellings — and it
+   > is why the first fix alone would have read as a failure: after (a), `localLet` and
+   > `propertyCheck` lifted while `staticMember` and `literal` still did not.
+   >
+   > | spelling | before | after (a) | after (a)+(b) |
+   > |---|---|---|---|
+   > | `let sample = …` | ✗ | ✓ | ✓ |
+   > | `propertyCheck { }` | ✗ | ✓ | ✓ |
+   > | `Self.sample` (**the witness**) | ✗ | ✗ | ✓ |
+   > | `"literal"` | ✗ | ✗ | ✓ |
+   >
+   > **A/B against a same-day baseline built from `main` with only these files stashed**, so
+   > the arms differ in nothing else: `SwiftFormatRuleStudioCore` **cross-validated 0 → 1**,
+   > `round-trip` **50 → 70**, rows unchanged at 20. Controls: `SwiftInferCore` **8 → 8**
+   > (no existing lift lost — the regression that mattered), `SwiftInferTemplates` and
+   > `SwiftInferCLI` unchanged.
+   >
+   > **The precision mechanism is that a CALL is not a value reference.** Comparing raw
+   > expression text would match `f(makeValue()).g() == makeValue()`, which states a law only
+   > if `makeValue` is deterministic — and reporting that as corroboration would have the
+   > lifter claim a codebase asserts a law it never wrote. References, literals and pure member
+   > chains qualify; anything rooted in a call does not. Guarded by `RoundTripSpellingTests`,
+   > whose rejection arms are the load-bearing half.
+   >
+   > **The §7.2 caveat still stands and is now sharper**: this repo's own road test drove that
+   > test's creation, so a `+20` can mean *this codebase took our advice* rather than *this
+   > codebase independently states this law*. `Artifacts.crossValidationOrigins` renders which
+   > test corroborated, so a reader can discount it — the fix widens reach, it does not settle
+   > what the signal means. `SwiftFormatConfigTests`
    states the top-scoring law byte-exactly —
    `#expect(SwiftFormatConfig.parse(Self.sample).serialized() == Self.sample)` — and the
    `round-trip` pick scores 50 from type-symmetry (+30), docstring (+15) and value-semantics
