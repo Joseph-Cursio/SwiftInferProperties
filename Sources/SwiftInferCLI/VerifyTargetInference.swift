@@ -40,6 +40,20 @@ enum VerifyTargetInference {
     ///   - packageRoot: the package the verifier will path-depend on.
     static func module(forLocation location: String, packageRoot: URL) -> String? {
         let path = sourcePath(from: location)
+        if let conventional = conventionalModule(forPath: path, packageRoot: packageRoot) {
+            return conventional
+        }
+        // Only now pay for the manifest. `dump-package` is a subprocess, this runs once per
+        // index entry, and a survey has hundreds — the first version consulted the manifest
+        // FIRST and took the ~33-second fast suite past ten minutes. Caching the dump did not
+        // rescue it, because the cost is invoking SwiftPM at all on paths that never needed
+        // it. Cheap structural check first, subprocess only when the convention does not
+        // answer, which is the ordering `TestTargetScope` records a measured reason for.
+        return manifestModule(forPath: path, packageRoot: packageRoot)
+    }
+
+    /// The `Sources/<module>/…` rule — the original implementation, unchanged.
+    private static func conventionalModule(forPath path: String, packageRoot: URL) -> String? {
         let sources = packageRoot.appendingPathComponent("Sources")
         let prefix = sources.standardizedFileURL.path + "/"
         guard path.hasPrefix(prefix) else { return nil }
@@ -60,6 +74,38 @@ enum VerifyTargetInference {
             return nil
         }
         return candidate
+    }
+
+    /// The module owning `path` according to the manifest, or nil when the manifest cannot
+    /// answer.
+    ///
+    /// **Consulted BEFORE the path-shape rule, because the manifest is authoritative and the
+    /// path shape is a convention.** For a conventional package the two agree, so this changes
+    /// nothing; for GRDB, which declares `path: "GRDB"`, it is the only thing that can answer.
+    ///
+    /// **Longest match wins.** Nothing stops one target's directory containing another's
+    /// (`path: "Sources"` alongside `Sources/Core`), and the shorter prefix would otherwise
+    /// claim every file of the longer. Sorting by descending path length makes the more
+    /// specific declaration win, which is what SwiftPM itself does.
+    ///
+    /// Nil, not a guess, when the manifest is unreadable or names no containing target — the
+    /// caller then falls through to the `Sources/<module>/` rule, which is exactly the
+    /// behaviour that existed before this was added.
+    private static func manifestModule(forPath path: String, packageRoot: URL) -> String? {
+        let root = packageRoot.standardizedFileURL.path
+        let candidates = TargetIsolation.declaredTargetDirectories(packageRoot: packageRoot)
+            .sorted { $0.path.count > $1.path.count }
+        for candidate in candidates {
+            let directory = URL(fileURLWithPath: root)
+                .appendingPathComponent(candidate.path)
+                .standardizedFileURL
+            guard path.hasPrefix(directory.path + "/") else { continue }
+            // Confirm on disk, for the reason the path-shape rule below gives: a name taken
+            // from a manifest is still a guess until something on disk agrees with it.
+            guard TargetDirectory.isDirectory(directory) else { continue }
+            return candidate.name
+        }
+        return nil
     }
 
     /// Strip the `:line` / `:line:column` suffix a location carries.

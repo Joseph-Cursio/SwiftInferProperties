@@ -72,6 +72,9 @@ public enum TargetIsolation {
     private struct DumpedTarget: Decodable {
         let name: String
         let settings: [DumpedSetting]?
+        /// The target's declared `path:`, relative to the package root, or `nil` when the
+        /// manifest omits it and SwiftPM's `Sources/<name>` default applies.
+        let path: String?
     }
 
     private struct DumpedSetting: Decodable {
@@ -111,6 +114,65 @@ public enum TargetIsolation {
             .kind.defaultIsolation?._0
     }
 
+    /// Where `targetName`'s sources actually live, resolved against the manifest.
+    ///
+    /// **`Sources/<target>` is a DEFAULT, not a rule, and assuming it made whole packages
+    /// unreachable.** A manifest may place a target anywhere via `path:` — the fact
+    /// `packageRoot(containing:)` below already states, and works around, while the callers
+    /// that resolve a target *forward* assumed the opposite.
+    ///
+    /// **Measured on GRDB `b83108d10` (2026-08-14):** it declares `path: "GRDB"`, so its 167
+    /// sources sit at repo root and `prove-then-show --target GRDB` scanned a directory that
+    /// does not exist. The package could not be surveyed **at all** — not a partial gap, and
+    /// not a gap the tool reported as one. GRDB is widely used, so the population is not
+    /// exotic; the run recorded in `docs/measurements/exploratory-swiftformat-grdb.md` §7 was
+    /// obtained by moving the sources by hand.
+    ///
+    /// **The failure direction is deliberate and matches `defaultIsolation` above: every
+    /// can't-answer arm returns the `Sources/<target>` default**, which is exactly what every
+    /// caller did before this existed. A broken manifest read must not invent a path — it
+    /// must leave behaviour unchanged — because this resolves the directory a scan then walks,
+    /// and answering wrongly turns a working package into an empty scan that reports nothing
+    /// to suggest rather than an error.
+    ///
+    /// Returned as an absolute URL under `packageRoot`. A declared `path` is relative to the
+    /// package root by SwiftPM's definition, so it is appended rather than resolved against
+    /// the working directory.
+    public static func sourceDirectory(packageRoot: URL, targetName: String) -> URL {
+        let fallback = packageRoot
+            .appendingPathComponent("Sources")
+            .appendingPathComponent(targetName)
+        guard let dumped = dump(packageRoot: packageRoot),
+              let target = dumped.targets.first(where: { $0.name == targetName }),
+              let declared = target.path,
+              !declared.isEmpty else {
+            return fallback
+        }
+        return packageRoot.appendingPathComponent(declared)
+    }
+
+    /// Every target the manifest declares, with the directory each one actually occupies.
+    ///
+    /// The **inverse** of `sourceDirectory` above, and it has to exist for the same reason: a
+    /// scan resolved through the manifest produces entries whose paths no longer match
+    /// `Sources/<module>/`, so reading a module back out of a path must consult the manifest
+    /// too. Fixing only the forward direction is what made native GRDB *worse* than the
+    /// hand-staged arm — the scan reached 307 picks and then every stub lost its
+    /// `@testable import`, trading `no such directory` for `cannot find type 'SQL' in scope`.
+    ///
+    /// Effective path, not declared path: a target with no `path:` reports `Sources/<name>`,
+    /// so a caller matching against this list needs no special case for the default layout.
+    ///
+    /// Empty when the manifest cannot be read, which leaves every caller on its previous
+    /// path-shape rule.
+    public static func declaredTargetDirectories(packageRoot: URL) -> [(name: String, path: String)] {
+        guard let dumped = dump(packageRoot: packageRoot) else { return [] }
+        return dumped.targets.map { target in
+            let declared = target.path.flatMap { $0.isEmpty ? nil : $0 }
+            return (name: target.name, path: declared ?? "Sources/\(target.name)")
+        }
+    }
+
     /// Walk up from a scanned source directory to the nearest `Package.swift`.
     ///
     /// Mirrors the walk `discover` already does for `.swiftinfer/` and config, rather than
@@ -132,7 +194,54 @@ public enum TargetIsolation {
     // not unified here: sharing a parse means threading a cache through three unrelated call
     // paths, and `TestTargetScope` documents a measured perf reason for calling only after a
     // cheaper check has passed. The duplication is a known cost, recorded rather than hidden.
+    /// Memoised per package root, including the failures.
+    ///
+    /// **This cache is not an optimisation, it is a correctness-of-cost fix.** The three
+    /// original callers each dumped once per *run*. `VerifyTargetInference.module` calls
+    /// `declaredTargetDirectories` once per *index entry*, and a survey has hundreds — so the
+    /// first version of that change spawned a `swift package dump-package` subprocess per row
+    /// and took the ~33-second fast suite past **ten minutes** before it was killed. Measured,
+    /// not predicted: the slowdown is what surfaced it.
+    ///
+    /// Failures are cached too. A missing or unparseable manifest is a property of the
+    /// package, and re-spawning a subprocess to be told `nil` again is the same defect wearing
+    /// a different answer.
+    ///
+    /// Keyed on the standardised path so `/a/b` and `/a/b/` share an entry. A manifest edited
+    /// mid-process keeps the stale answer, which is correct for this process: every consumer
+    /// resolves paths against the manifest as it was when the run began, and a survey that
+    /// changed layout halfway through would be less coherent, not more.
+    private final class DumpCache: @unchecked Sendable {
+        private let lock = NSLock()
+        private var entries: [String: DumpedPackage?] = [:]
+
+        func value(forKey key: String, compute: () -> DumpedPackage?) -> DumpedPackage? {
+            lock.lock()
+            if let cached = entries[key] {
+                lock.unlock()
+                return cached
+            }
+            lock.unlock()
+            // Computed OUTSIDE the lock: `dump-package` is a subprocess and holding a lock
+            // across it would serialise the survey's whole TaskGroup on one manifest read.
+            // Two racing callers may both compute; they compute the same answer, and a
+            // duplicated subprocess is cheaper than a serialised survey.
+            let computed = compute()
+            lock.lock()
+            entries[key] = computed
+            lock.unlock()
+            return computed
+        }
+    }
+
+    private static let dumpCache = DumpCache()
+
     private static func dump(packageRoot: URL) -> DumpedPackage? {
+        let key = packageRoot.standardizedFileURL.path
+        return dumpCache.value(forKey: key) { uncachedDump(packageRoot: packageRoot) }
+    }
+
+    private static func uncachedDump(packageRoot: URL) -> DumpedPackage? {
         let manifest = packageRoot.appendingPathComponent("Package.swift")
         guard FileManager.default.fileExists(atPath: manifest.path) else { return nil }
         guard let data = DrainedProcess.standardOutputViaEnv([
