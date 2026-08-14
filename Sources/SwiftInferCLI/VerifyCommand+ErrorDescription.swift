@@ -7,8 +7,8 @@ import Foundation
 /// moved here is only the rendering.
 ///
 /// **Every message names a remedy, or says there is none.** That distinction is the point of
-/// several of these strings — `monotonicityDomainNotComparable` exists precisely to stop a
-/// reader being sent to write a `gen()` that cannot help.
+/// several of these strings — `carrierNotEquatable` and `monotonicityDomainNotComparable` both
+/// exist to stop a reader being sent to write a `gen()` that cannot help.
 extension VerifyError {
 
     public var description: String {
@@ -83,6 +83,15 @@ extension VerifyError {
 
         case let .invalidArguments(reason):
             return "swift-infer verify: \(reason)"
+
+        case let .carrierNotEquatable(carrier, template):
+            return "swift-infer verify: the `\(template)` law compares values with `==`, and "
+                + "carrier '\(carrier)' is not `Equatable` — so there is no law to run. This "
+                + "is not a missing composer and not a missing generator: neither would help, "
+                + "because the property cannot be written. `inverse-pair` in particular fires "
+                + "only for non-Equatable carriers by design, since `round-trip` covers the "
+                + "Equatable case. Add an `Equatable` conformance if equality is meaningful "
+                + "for this type, or read the suggestion as a structural observation."
 
         case let .monotonicityDomainNotComparable(domain):
             return "swift-infer verify: monotonicity domain '\(domain)' is not Comparable, so "

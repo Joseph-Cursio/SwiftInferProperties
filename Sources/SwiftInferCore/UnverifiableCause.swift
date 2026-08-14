@@ -63,6 +63,27 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
     /// `a ≤ b ⟹ f(a) ≤ f(b)` needs an ordered domain and this one is not.
     case monotonicityDomainNotComparable
 
+    /// The law compares values with `==` and the carrier is not `Equatable`.
+    ///
+    /// **A third answer, because the two it replaces were both wrong** — measured on GRDB
+    /// (`docs/plans/inverse-pair-identity-element-composers-scope.md`), where 31 rows reported
+    /// `unsupported-template` for `inverse-pair` and `identity-element`.
+    ///
+    /// `unsupportedTemplate` says *a gap in swift-infer; nothing you write unblocks these*,
+    /// which is true of the composer and misses the point: **no composer would help**, because
+    /// the law it would emit cannot be written. `inverse-pair` fires precisely WHEN the carrier
+    /// is not `Equatable` — that is its reason for existing, since `RoundTripTemplate` vetoes
+    /// exactly there — so a composer for it is chasing a law that is unstatable by
+    /// construction.
+    ///
+    /// `unsupportedCarrier` is worse: its remedy says *add a `gen()`*, and a generator changes
+    /// nothing here. Sending a reader to write one is the `Gen<T>` mistake again — advice that
+    /// cannot work, on the most-shown channel.
+    ///
+    /// Modelled on `monotonicityDomainNotComparable`, which is the same shape one capability
+    /// over: a law needing an ordered domain against a carrier that has none.
+    case carrierNotEquatable
+
     /// The detail did not match any known prefix — or there was none. Reported, never merged.
     case unrecognised
 
@@ -90,7 +111,8 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
         ("unsupported-pair", .unsupportedPair),
         ("not-a-candidate", .subjectNotVisible),
         ("instance-method-shape-not-supported", .instanceMethodShape),
-        ("monotonicity-domain-not-comparable", .monotonicityDomainNotComparable)
+        ("monotonicity-domain-not-comparable", .monotonicityDomainNotComparable),
+        ("carrier-not-equatable", .carrierNotEquatable)
     ]
 
     /// Short label for a count breakdown.
@@ -102,6 +124,7 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
         case .subjectNotVisible: "subject not visible to tests"
         case .instanceMethodShape: "instance-method shape"
         case .monotonicityDomainNotComparable: "domain not ordered"
+        case .carrierNotEquatable: "carrier has no equality"
         case .unrecognised: "unrecognised"
         }
     }
@@ -159,6 +182,13 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
             "the subject is `private`/`fileprivate`, so no test can call it — not even with "
                 + "`@testable import`. Widen it to `internal`, or lift the logic into a type "
                 + "of its own."
+
+        case .carrierNotEquatable:
+            "the law compares values with `==` and this carrier is not `Equatable`, so there "
+                + "is no law to run — not a missing composer and not a missing generator. "
+                + "Neither writing a `gen()` nor waiting for swift-infer changes it. Give the "
+                + "type an `Equatable` conformance if equality is meaningful for it, or read "
+                + "the row as the structural observation it is."
 
         case .instanceMethodShape:
             "the emitter cannot call that instance-method shape — a gap in swift-infer, not "

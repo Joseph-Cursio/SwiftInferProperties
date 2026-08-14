@@ -304,6 +304,12 @@ public enum VerifyError: Error, CustomStringConvertible {
     /// verified (the ordering is undefined). Thrown at emit so the doomed
     /// `swift build` is skipped; maps to architectural-coverage-pending.
     case monotonicityDomainNotComparable(domain: String)
+
+    /// The template's law compares values with `==` and the carrier is not `Equatable`.
+    /// See `UnverifiableCause.carrierNotEquatable` for why this is neither an
+    /// `unsupportedTemplate` nor an `unsupportedCarrier`.
+    case carrierNotEquatable(carrier: String, template: String)
+
     /// V1.50.B — argument-validation error surfaced when the user
     /// passes a forbidden combination (e.g., `--suggestion` and
     /// `--all-from-index` together, or neither).
