@@ -30,6 +30,21 @@ enum CorpusProvenance {
         return "\(root.path) @ \(revision)" + (dirty ? " (uncommitted changes)" : "")
     }
 
+    /// The FULL revision at `root` and whether the tree is dirty, or `nil` when `root` is not
+    /// a git checkout.
+    ///
+    /// Full rather than `--short`, unlike `describe`, because this answer gets **compared**
+    /// against a pin recorded in `fixtures/corpora/manifest.json` rather than printed. A short
+    /// SHA is a display convenience; comparing two of them is comparing two abbreviations
+    /// whose lengths git chooses per repository.
+    static func head(at root: URL) -> (revision: String, dirty: Bool)? {
+        guard let revision = gitOutput(at: root, ["rev-parse", "HEAD"]), !revision.isEmpty else {
+            return nil
+        }
+        let dirty = gitOutput(at: root, ["status", "--porcelain"]).map { !$0.isEmpty } ?? false
+        return (revision: revision, dirty: dirty)
+    }
+
     /// Trimmed stdout of `git -C <root> <arguments>`, or `nil` on any failure.
     ///
     /// Via `DrainedProcess` rather than a bare `Process` — `git status --porcelain`
