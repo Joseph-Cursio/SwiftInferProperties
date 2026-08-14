@@ -78,8 +78,36 @@ test: lint test-fast perf batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch
 # warnings repeatedly slipped through cycle commits because `swift test` doesn't
 # run SwiftLint (e.g. file_length/type_body_length from added tests). Make is
 # .NOTPARALLEL and dedupes shared prerequisites, so lint runs once before tests.
-test-fast: lint ## SwiftLint + every non-subprocess, non-perf test (~6s)
-	$(SWIFT_TEST) --skip '$(SUBPROCESS_RE)|$(PERF_RE)'
+# Wall-clock ceiling for the fast suite, in seconds.
+#
+# DELIBERATELY LOOSE. The suite runs in ~35s; this fails at 240. It is not here to police
+# seconds — a tight budget on a shared machine is the §13 flake, where a peak-RSS assertion
+# read 150 MB alone and 4,800 MB under load. It is here to catch an ORDER-OF-MAGNITUDE
+# regression, which is the one that actually happened: 2026-08-14, a per-index-entry
+# `swift package dump-package` took this target from ~33s past ten minutes, and nothing
+# reported it. A human noticed a long wait.
+#
+# The precise guard for that defect is `ManifestSpawnBudgetTests`, which counts SwiftPM
+# spawns instead of timing them and fails at the FIRST extra call. This is the backstop for
+# the next slow path nobody thought to count.
+#
+# Raise it when the suite legitimately grows; do not silence it.
+FAST_BUDGET_SECONDS ?= 240
+
+test-fast: lint ## SwiftLint + every non-subprocess, non-perf test (~35s)
+	@start=$$(date +%s); \
+	$(SWIFT_TEST) --skip '$(SUBPROCESS_RE)|$(PERF_RE)'; \
+	status=$$?; \
+	elapsed=$$(($$(date +%s) - start)); \
+	if [ $$status -ne 0 ]; then exit $$status; fi; \
+	echo "fast suite: $${elapsed}s (budget $(FAST_BUDGET_SECONDS)s)"; \
+	if [ $$elapsed -gt $(FAST_BUDGET_SECONDS) ]; then \
+		echo "error: fast suite took $${elapsed}s against a $(FAST_BUDGET_SECONDS)s budget." >&2; \
+		echo "  A 7x regression is a new cost per test, not gradual growth — look for work" >&2; \
+		echo "  added to a per-item path (a subprocess, a file read, a manifest parse)." >&2; \
+		echo "  See ManifestSpawnBudgetTests for the shape this backstops." >&2; \
+		exit 1; \
+	fi
 
 lint: ## SwiftLint, failing on any warning (--strict)
 	@command -v swiftlint >/dev/null 2>&1 || { echo "Error: swiftlint not installed (brew install swiftlint)." >&2; exit 1; }
