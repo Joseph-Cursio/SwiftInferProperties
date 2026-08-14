@@ -85,6 +85,18 @@ uses `subjectFingerprint` to separate:
 | `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `c998752`, kit 3.28.0 | 2026-08-14 |
 | `2026-08-14-SwiftFormat.json` | swift-format `SwiftFormat` @ `d2bd4b3` — first third-party run | 2026-08-14 |
 | `2026-08-14-GRDB-staged.json` | GRDB `GRDB` @ `b83108d10` — **STAGED**, see below | 2026-08-14 |
+| `2026-08-14-GRDB-native.json` | GRDB `GRDB` @ `b83108d10` — **NATIVE**, untouched checkout | 2026-08-14 |
+
+**The two GRDB runs are the same subject reached by different routes, and keeping both is the
+point.** The staged arm moved 167 files and edited a manifest; the native arm reads
+`path: "GRDB"` from the manifest as it ships. They agree bucket-for-bucket — 307 picks,
+5 Proven / 1 Refuted / 277 Unverifiable / 24 Inconclusive — with 42 stubs carrying
+`@testable import GRDB` in both. That agreement is the strongest evidence available that the
+layout resolver finds the same tree a human `git mv` found, and it is only checkable because
+both runs were retained.
+
+The 5 rows that differ are cause-only, all from the `PropertyLawKit` import line shifting stub
+line numbers — the documented cost of that fix, not a layout effect.
 
 **GRDB is a STAGED subject and its numbers must never be quoted as GRDB-as-shipped.** GRDB
 declares `path: "GRDB"`, so its 167 sources sit at repo root and `prove-then-show --target X`

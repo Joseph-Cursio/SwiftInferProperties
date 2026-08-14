@@ -190,16 +190,54 @@ escape hatch** — so the package is unreachable. The run was obtained by
 package otherwise untouched, builds clean.
 
 That is the MacCloud shim precedent (CLAUDE.md's `--sources` row) reused for a **SwiftPM
-library** rather than an Xcode project. **The gap is open**: reach is unchanged for any package
-laid out this way, and a human moved the files. GRDB is widely used, so the population is not
-exotic (falsifier: `ProveThenShowSourcesReachTests`).
+library** rather than an Xcode project.
 
-**The falsifier is named for a guard, not for the option**, and the first draft got this
-wrong in the way `falsifier-naming-failure-modes.md` predicts. `ProveThenShow.sources` resolves
-**today** — three other commands already declare a `sources` property, and the resolver matches
-the last dotted component anywhere in the target — so it would have read as *closed* the day it
-was written. `XcodeSourcesReachTests` is the guard the existing `--sources` work carries; the
-fix here must add its counterpart, and that name exists nowhere yet.
+### §7.0 FIXED the same day — `TargetIsolation.sourceDirectory`
+
+**Not with `--sources`.** That flag is the escape hatch for code with *no manifest*, and
+`verify-interaction` was deliberately denied it because a synthesized verifier does
+`import <module>` and would fail at link time instead. GRDB has a perfectly good manifest; it
+just says where the sources are. So the fix reads it, and no flag is involved.
+
+**The knowledge was already in the tree, one function away.**
+`TargetIsolation.packageRoot(containing:)` documents that "a manifest may place a target
+anywhere via `path`" and walks up rather than assuming. Every caller resolving a target
+*forward* assumed the opposite.
+
+**It took three attempts, and each intermediate state passed its own unit tests.**
+
+| attempt | outcome |
+|---|---|
+| forward only (`--target` → directory) | scan reached all 307 picks, then every stub lost `@testable import GRDB` — native came out **worse** than staged (Proven 5 → 2) |
+| both directions, manifest consulted first | correct, and took `make test-fast` from ~33s past **ten minutes** |
+| memoise the dump | still ten minutes |
+| **reorder: cheap structural rule first** | 34s, and the result preserved |
+
+Attempt 1 is §2's shape at its sharpest: **fixing the first blocker created the second**.
+`VerifyTargetInference` reads a module back *out* of a path by requiring a `Sources/` prefix, so
+a scan resolved through the manifest produced entries it could no longer attribute. The staged
+arm never hit this, because moving files to `Sources/GRDB` satisfied both rules at once — which
+is exactly why the workaround looked like a clean result and the real fix did not.
+
+Attempt 3 is the one worth stealing: **the cost was invoking SwiftPM at all on paths that never
+needed it, not invoking it repeatedly**, so a cache did nothing. `dump-package` is a subprocess
+and `module(forLocation:)` runs once per index entry. Cheap check first, manifest only when the
+convention cannot answer — the ordering `TestTargetScope` already records a measured perf
+reason for.
+
+**Verified end to end**: native GRDB, untouched checkout, matches the staged arm bucket for
+bucket — 307 picks, 5 Proven / 1 Refuted / 277 Unverifiable / 24 Inconclusive, 42 stubs
+carrying `@testable import GRDB`, zero scope errors. Both runs are banked, and their agreement
+is the check: the same subject reached by moving 167 files and by reading one manifest line.
+
+**No falsifier is attached, and the two failed attempts to write one are the lesson.**
+`ProveThenShow.sources` resolves **today** — three other commands declare a `sources` property
+and the resolver matches the last dotted component — so it would have read as *closed* the day
+it was written. Its replacement, `ProveThenShowSourcesReachTests`, could **never** resolve:
+`DeferralFalsifierTests` scans `Sources/` only, so a test-suite name is **inert** — green
+forever and indistinguishable from pending, which is `falsifier-naming-failure-modes.md`'s
+central failure mode. Both errors were made while citing that document. The deferral is closed,
+so the honest record is a fix, not a falsifier.
 
 **Everything in §1's GRDB row is therefore a STAGED subject** and must never be quoted as
 GRDB-as-shipped.

@@ -181,9 +181,15 @@ extension SwiftInferCommand {
 
             // 1. Index WITH Possible — the whole point is to test the
             //    low-confidence picks the default view hides.
-            let scanDirectory = workingDirectory
-                .appendingPathComponent("Sources")
-                .appendingPathComponent(target)
+            // `Sources/<target>` is SwiftPM's DEFAULT, not a rule. GRDB declares
+            // `path: "GRDB"` and was unreachable entirely — see
+            // `TargetIsolation.sourceDirectory`, which falls back to exactly this path
+            // whenever the manifest cannot answer.
+            let scanDirectory = TargetIsolation.sourceDirectory(
+                packageRoot: SwiftInferCommand.Verify
+                    .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory,
+                targetName: target
+            )
             _ = try SwiftInferCommand.Index.performIndex(
                 IndexInputs(
                     scanDirectory: scanDirectory,
