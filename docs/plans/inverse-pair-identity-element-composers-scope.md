@@ -123,5 +123,18 @@ measures which blocker reports first, not how many laws are recoverable.
   re-attribute from `unsupported-template` to `unsupported-carrier`, which is *truer* labelling
   — the same argument the WS-3a fallback deletion made. If that relabelling is judged worth
   having on its own, it is a small change; it is just not tests.
+
+  > **CORRECTED 2026-08-14 — the relabelling shipped, and NOT to the label this bullet names.**
+  > Re-attributing to `unsupported-carrier` was tried against the wording and rejected:
+  > that cause's remedy says *add a `gen()`*, and a generator changes nothing here, so the
+  > 31 rows would have been sent to a fix that cannot work — the `Gen<T>` mistake again, on
+  > the most-shown channel. `unsupported-template` is wrong in the other direction: it says
+  > *a gap in swift-infer; nothing you write unblocks these*, which is true of the composer
+  > and misses that **no composer would help**, because `inverse-pair` fires precisely WHEN
+  > the carrier is non-Equatable and the law is therefore unwritable by construction.
+  >
+  > What shipped is a **third** cause, `UnverifiableCause.carrierNotEquatable`, modelled on
+  > `monotonicityDomainNotComparable` — the same shape one capability over. Both of this
+  > bullet's other claims stand: it is a small change, and it is still not tests.
 - **This is one corpus.** A persistence or query-builder library with `Equatable` AST nodes
   would change the answer, and §4 is how to notice.

@@ -160,6 +160,9 @@ extension SwiftInferCommand.Verify {
         case let .monotonicityDomainNotComparable(domain):
             return "monotonicity-domain-not-comparable: \(domain)"
 
+        case let .carrierNotEquatable(carrier, template):
+            return "carrier-not-equatable: \(carrier) (\(template))"
+
         default:
             return error.description
         }
