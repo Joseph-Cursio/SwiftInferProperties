@@ -65,7 +65,7 @@ BATCH8 := CodableRoundTripCorpusMeasuredTests|CodableRoundTripLiveSurveyMeasured
 # under `make -j`.
 .NOTPARALLEL:
 .DEFAULT_GOAL := help
-.PHONY: help test test-fast lint perf dead-code batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch8 clean-temp
+.PHONY: help test test-fast lint perf dead-code corpus-check batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch8 clean-temp
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort | awk -F'\t' '{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -142,6 +142,15 @@ batch8: ## Subprocess batch 8 — codec round-trip / output-determinism / value-
 
 docs-drift: ## Report which docs/design-internal/ docs have a subject repo that has moved
 	@./scripts/docs_drift.sh
+
+# Run BEFORE a sweep, not after. A corpus that has moved off the revision its baseline was
+# measured at still surveys fine — what it cannot do is tell you whether the SUBJECT or the
+# TOOL moved, which is the one confound `survey-diff` exists to separate.
+# `--strict` fails on off-pin and dirty, and deliberately NOT on a checkout it could not read:
+# these clones live outside the repo and this project is worked from two machines, so an absent
+# one is ordinary. It is reported, and the summary states how many of how many were read.
+corpus-check: ## Report whether each measured corpus stands at the revision its baseline was taken at
+	@swift run --quiet swift-infer corpus --strict
 
 dead-code: ## Report source files no other Sources file reaches (test-only or unreached)
 	@python3 scripts/dead_public_api.py

@@ -1,0 +1,531 @@
+{
+  "schemaVersion": 2,
+  "corpora": [
+    {
+      "id": "swift-infer-core",
+      "subject": "SwiftInferProperties",
+      "kind": "sibling",
+      "target": "SwiftInferCore",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftInferProperties.git",
+      "localPath": ".",
+      "role": "control",
+      "why": "Home turf: the catalog was built alongside this code, so its reach is the ceiling every unfamiliar-subject number is read against. 87 of 159 picks execute here against 1 of 129 on swift-format and 5 of 307 on GRDB, and that gap is invisible from any single-corpus run.",
+      "measurements": [
+        {
+          "apparatus": "prove-then-show",
+          "kind": "baseline",
+          "revision": "ecaa66f6616bad91728144c97df6a8c20e1aa5ea",
+          "takenOn": "2026-08-14",
+          "arm": "post-fix sweep",
+          "record": "fixtures/verify-runs/2026-08-14-SwiftInferCore.json",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-format",
+      "subject": "swift-format",
+      "kind": "package",
+      "target": "SwiftFormat",
+      "sources": null,
+      "remote": "https://github.com/swiftlang/swift-format.git",
+      "localPath": "~/GitHub_projects/swift-format",
+      "role": "unfamiliar",
+      "why": "The platform floor. It declares macOS 13.0, below the kit's 14.0, so every pick failed to build until that was fixed — an entirely ordinary deployment target, invisible on a corpus that agrees with the kit by construction, as this repo does.",
+      "measurements": [
+        {
+          "apparatus": "prove-then-show",
+          "kind": "baseline",
+          "revision": "d2bd4b3935c924dbf63027d952315de452af7af2",
+          "takenOn": "2026-08-14",
+          "arm": "post-fix sweep (arm C)",
+          "record": "fixtures/verify-runs/2026-08-14-SwiftFormat.json",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "grdb",
+      "subject": "GRDB.swift",
+      "kind": "package",
+      "target": "GRDB",
+      "sources": null,
+      "remote": "https://github.com/groue/GRDB.swift.git",
+      "localPath": "~/GitHub_projects/GRDB.swift",
+      "role": "unfamiliar",
+      "why": "The non-default layout: GRDB declares `path: \"GRDB\"`, so its sources sit at repo root rather than under Sources/ and the package was unreachable outright. Also the largest inverse-pair / identity-element population on record, which is what measured those composers as not worth building.",
+      "measurements": [
+        {
+          "apparatus": "prove-then-show",
+          "kind": "baseline",
+          "revision": "b83108d10f42680d78f23fe4d4d80fc88dab3212",
+          "takenOn": "2026-08-14",
+          "arm": "native — untouched checkout, layout read from the manifest",
+          "record": "fixtures/verify-runs/2026-08-14-GRDB-native.json",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        },
+        {
+          "apparatus": "prove-then-show",
+          "kind": "frozen",
+          "revision": "b83108d10f42680d78f23fe4d4d80fc88dab3212",
+          "takenOn": "2026-08-14",
+          "arm": "staged — 167 sources hand-moved into Sources/GRDB, `path:` line deleted",
+          "record": "fixtures/verify-runs/2026-08-14-GRDB-staged.json",
+          "frozenBecause": "Not a baseline but the other half of a pair. Its whole value is that a hand-staged checkout and a manifest-resolved one agree bucket-for-bucket, which re-running it would defeat.",
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-collections",
+      "subject": "swift-collections",
+      "kind": "package",
+      "target": "Collections",
+      "sources": null,
+      "remote": "https://github.com/apple/swift-collections.git",
+      "localPath": "~/GitHub_projects/swift-collections",
+      "role": "unfamiliar",
+      "why": "The equality corpus, and the only subject carrying known-wrong arms. 49 Equatable conformances; the three real projection bugs (OrderedSet order, BitArray padding, Deque head rotation) that pass 4/4 Equatable laws and drove EqualityBodyShape and the model-law families. Also the only corpus on which the kit-coverage A/B moved a row: 12 removed, 3 added, 0 elsewhere.",
+      "measurements": [
+        {
+          "apparatus": "kit-suite-backtest",
+          "kind": "backtest",
+          "revision": "d6b1e6c76768646f353105d7f26584c4ba9a5c2e",
+          "takenOn": "2026-08-02",
+          "arm": "Arm 1 — `876177db^`, the commit before the symmetricDifference fix",
+          "record": "docs/plans/kit-suite-backtest-plan.md",
+          "frozenBecause": null,
+          "expectedOutcome": "HIT. `symmetricDifferenceCommutativity` and `symmetricDifferenceDefinition` must BOTH fail at trial 1 (x=[7,5,4], y=[8,0,5] → [7,4] vs [8,0]); at the fix, 0 violations of 15. Backtest at <fix>^, never at HEAD: these libraries are correct at HEAD, so an all-green run cannot be told apart from the tool being blind.",
+          "answerKey": null
+        },
+        {
+          "apparatus": "kit-suite-backtest",
+          "kind": "backtest",
+          "revision": "c8080d050d99013de39d61dff4584e806e91416a",
+          "takenOn": "2026-08-08",
+          "arm": "Arms 2/3 — three projection mutants injected into a vendored checkout",
+          "record": "docs/measurements/kit-suite-backtest-arms-2-3.md",
+          "frozenBecause": null,
+          "expectedOutcome": "MISS, and registered BECAUSE it is a miss. 26 emitted tests come back verdict-for-verdict identical to correct code. The laws are not structurally blind, as predicted — narrowing only the generator makes `Hashable.equalityConsistency` refute all three (73–102 / 2–12 trials), and the model laws refute at trial 1. So the failure is the generator domain, and this repo owns it. Baseline is NOT green either: 6 of 26 tests fail on correct code, from two derived generators that build invariant-violating values.",
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-syntax",
+      "subject": "swift-syntax",
+      "kind": "package",
+      "target": "SwiftSyntax",
+      "sources": null,
+      "remote": "https://github.com/swiftlang/swift-syntax.git",
+      "localPath": "~/GitHub_projects/swift-syntax",
+      "role": "unfamiliar",
+      "why": "The parser corpus, and where the catalog's limits on parsers were measured — 7 defects shipped from that survey. It is also the standing witness for the Daikon trap: 738 of its 1,115 suggestions sit at the score-20 floor.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "1b5cd99f82b6637a8a1842e889db788c5fdab48b",
+          "takenOn": "2026-07-17",
+          "arm": "swift-syntax survey — the parsing catalog gap ledger",
+          "record": "docs/measurements/parsing-catalog-gap.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-nio",
+      "subject": "swift-nio",
+      "kind": "package",
+      "target": "NIOCore",
+      "sources": null,
+      "remote": "https://github.com/apple/swift-nio.git",
+      "localPath": "~/GitHub_projects/swift-nio",
+      "role": "unfamiliar",
+      "why": "The scaled-decomposition witness. `TimeAmount` is half the population that closed that gap-with-witness family (8 rows over Duration + TimeAmount), and it is the reason the law is stated between CONSTRUCTORS rather than against a decomposition.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "590dd7b4bc222700b429aebb86945d2cd0dddadd",
+          "takenOn": "2026-08-01",
+          "arm": "catalog health census — rows per template across eight corpora",
+          "record": "docs/measurements/dogfood-new-templates-findings.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-numerics",
+      "subject": "swift-numerics",
+      "kind": "package",
+      "target": "RealModule",
+      "sources": null,
+      "remote": "https://github.com/apple/swift-numerics.git",
+      "localPath": "~/GitHub_projects/swift-numerics",
+      "role": "unfamiliar",
+      "why": "The low-conformance end of the Equatable measurement: 2 conformances against swift-collections' 49. Registered as the contrast that made 'conformance does not predict refutability' checkable rather than asserted.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "899af71c0256d0ad181e3b7eb3453c1065d928a5",
+          "takenOn": "2026-07-29",
+          "arm": "Equatable conformance signal — is a conformance-keyed template worth its keep?",
+          "record": "fixtures/equatable-signal/README.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-algorithms",
+      "subject": "swift-algorithms",
+      "kind": "package",
+      "target": "Algorithms",
+      "sources": null,
+      "remote": "https://github.com/apple/swift-algorithms.git",
+      "localPath": "~/GitHub_projects/swift-algorithms",
+      "role": "unfamiliar",
+      "why": "A census corpus in the eight-corpus catalog-health sweep. Registered so the sweep's denominator is checkable: the finding that 6 of 39 templates never fire depends on which corpora were in it.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "ff223da637a97d091d3b54fe46d83451233a6053",
+          "takenOn": "2026-08-01",
+          "arm": "catalog health census — 15% of templates are dead",
+          "record": "docs/measurements/dogfood-new-templates-findings.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-argument-parser",
+      "subject": "swift-argument-parser",
+      "kind": "package",
+      "target": "ArgumentParser",
+      "sources": null,
+      "remote": "https://github.com/apple/swift-argument-parser.git",
+      "localPath": "~/GitHub_projects/swift-argument-parser",
+      "role": "unfamiliar",
+      "why": "A census corpus in the eight-corpus catalog-health sweep, and one of the ten in the whole-to-parts census that measured that template at ~4% against a 70% bar.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "2f77f2fccb6e84fecff338c37b199e33e7dfd119",
+          "takenOn": "2026-08-01",
+          "arm": "catalog health census + whole-to-parts census",
+          "record": "docs/measurements/whole-to-parts-partition-declined.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-foundation",
+      "subject": "swift-foundation",
+      "kind": "package",
+      "target": "FoundationEssentials",
+      "sources": null,
+      "remote": "https://github.com/swiftlang/swift-foundation.git",
+      "localPath": "~/GitHub_projects/swift-foundation",
+      "role": "unfamiliar",
+      "why": "One of the three pinned corpora of the swift.org property-test study, and the subject that priced --require-corroboration: 347 rows to 259, blinded.",
+      "measurements": [
+        {
+          "apparatus": "swiftorg-study",
+          "kind": "census",
+          "revision": "96d4094612d02bdc6f474f73efa0695196e786e9",
+          "takenOn": "2026-07-16",
+          "arm": "swift.org property-style-test study, seeded + stratified sample",
+          "record": "docs/measurements/swiftorg-property-test-study-findings.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swiftlang-swift",
+      "subject": "swift (the compiler repo)",
+      "kind": "package",
+      "target": "stdlib",
+      "sources": null,
+      "remote": "https://github.com/swiftlang/swift.git",
+      "localPath": "~/GitHub_projects/swift",
+      "role": "unfamiliar",
+      "why": "The swift.org study's primary corpus, and the only member with an answer key frozen BEFORE the tool ran — which is what makes its recall number a measurement rather than the tool grading its own homework.",
+      "measurements": [
+        {
+          "apparatus": "swiftorg-study",
+          "kind": "census",
+          "revision": "408632e59834c1a5ee4166ff61dd2c8b0585a1c5",
+          "takenOn": "2026-07-30",
+          "arm": "Q2 — re-pinned off the local PR branch, which was 1,894 commits behind AND had edited a corpus file",
+          "record": "docs/measurements/swiftorg-property-test-study-findings.md",
+          "frozenBecause": null,
+          "expectedOutcome": "Scored against a frozen key committed before any discover run, so anything the tool finds that the key missed is recorded UNSCORED rather than folded in.",
+          "answerKey": "fixtures/swiftorg-study/q2-answer-key.json"
+        }
+      ]
+    },
+    {
+      "id": "harmonize",
+      "subject": "Harmonize",
+      "kind": "package",
+      "target": "Harmonize",
+      "sources": null,
+      "remote": "https://github.com/perrystreetsoftware/Harmonize.git",
+      "localPath": "~/GitHub_projects/Harmonize",
+      "role": "unfamiliar",
+      "why": "The false-positive corpus. It alone contributed 38 of the whole-to-parts census's dominant false-positive class — the filter, where the String parameter is a SEARCH TERM so the law is not false but meaningless — and its `tokens(startingWith:)` is the witness that rejected the result-noun rule at 50%.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "5695966471c91f58094fbb3dcd31281f3084e604",
+          "takenOn": "2026-08-13",
+          "arm": "whole-to-parts census — 208 declarations, 137 admitted, 5 true positives",
+          "record": "docs/measurements/whole-to-parts-partition-declined.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-project-lint",
+      "subject": "SwiftProjectLint",
+      "kind": "sibling",
+      "target": "SwiftProjectLintCore",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftProjectLint.git",
+      "localPath": "../SwiftProjectLint",
+      "role": "unfamiliar",
+      "why": "The upstream producer in the toolchain — it emits the pbt-seeds this repo consumes — and the first SCORED road test, with a frozen answer key. Reading its design doc against the code surfaced three consumer-side defects here in one pass, all the same class: a field the producer sends that this repo does not act on.",
+      "measurements": [
+        {
+          "apparatus": "road-test",
+          "kind": "census",
+          "revision": "e06e39fc272cc8a3395fecbb1cf26919f37a3b23",
+          "takenOn": "2026-08-12",
+          "arm": "scored road test against a frozen answer key",
+          "record": "docs/measurements/roadtest-swiftprojectlint.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-property-laws",
+      "subject": "SwiftPropertyLaws",
+      "kind": "sibling",
+      "target": "PropertyLawKit",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git",
+      "localPath": "../SwiftPropertyLaws",
+      "role": "unfamiliar",
+      "why": "The kit this repo generates suites for, and the denominator of every coverage claim. Registering it makes the seam checkable: 13 of 56 (key, law) coverage claims were false, and the guard written for exactly that passed green through all 13 because it worked at suite granularity.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "b59cdb4e65994f684d7d4a1720f4fd7c5a8d5460",
+          "takenOn": "2026-08-12",
+          "arm": "protocol-coverage law-level drift — is each claim TRUE, law by law?",
+          "record": "docs/measurements/protocol-coverage-law-drift.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-effect-inference",
+      "subject": "SwiftEffectInference",
+      "kind": "sibling",
+      "target": "SwiftEffectInference",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftEffectInference.git",
+      "localPath": "../SwiftEffectInference",
+      "role": "unfamiliar",
+      "why": "The purity oracle that runs inside this package and has no CLI of its own, pinned by revision because it carries no version tags. Registered because the pin has silently gone stale four times, each time missing a shipped capability.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd",
+          "takenOn": "2026-08-01",
+          "arm": "catalog health census — 17 rows, unchanged with the coverage veto disabled",
+          "record": "docs/measurements/dogfood-new-templates-findings.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "maccloud-client-ios",
+      "subject": "MacCloud_client_iOS",
+      "kind": "app",
+      "target": null,
+      "sources": "Shared",
+      "remote": "https://github.com/Joseph-Cursio/MacCloud_client_iOS.git",
+      "localPath": "../MacCloud_client_iOS",
+      "role": "unfamiliar",
+      "why": "The only app-shaped subject, and the reason --sources exists. An Xcode project has no Sources/<target>, so five app-facing commands rejected it outright with an argument error; the same 22 files staged into a shim produced 4 findings on an @Observable view model. The gate never rejected the code.",
+      "measurements": [
+        {
+          "apparatus": "road-test",
+          "kind": "census",
+          "revision": "1491c44f4161f58d61647741b4f6fb7427640172",
+          "takenOn": "2026-08-01",
+          "arm": "five-repo adoption loop, scored against the pbt-road-test-reference key",
+          "record": "docs/plans/PBT_TOOLCHAIN_FIX_PLAN.md",
+          "frozenBecause": null,
+          "expectedOutcome": "The 4 interaction findings are recorded UNSCORED: the answer key predates the interaction surface, and a tool may not grade its own homework.",
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swiftlint-rule-studio",
+      "subject": "SwiftLintRuleStudio",
+      "kind": "app",
+      "target": null,
+      "sources": "SwiftLintRuleStudio",
+      "remote": "https://github.com/Joseph-Cursio/SwiftLintRuleStudio.git",
+      "localPath": "../SwiftLintRuleStudio",
+      "role": "unfamiliar",
+      "why": "The out-of-catalog diagnosis, and the source of the standing rule that a refuter which fires first hides every refuter behind it — three passes each named 'the remaining blocker' for `serialize` and each was wrong. Also carries two retracted closures, which is why its numbers are read with the retraction.",
+      "measurements": [
+        {
+          "apparatus": "road-test",
+          "kind": "census",
+          "revision": "6ffc7553b6f203550e22ae6aef855283627d2abe",
+          "takenOn": "2026-08-12",
+          "arm": "road test — out-of-catalog subjects",
+          "record": "docs/measurements/roadtest-swiftlintrulestudio.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swiftformat-rule-studio",
+      "subject": "SwiftFormatRuleStudio",
+      "kind": "app",
+      "target": null,
+      "sources": "SwiftFormatRuleStudioCore",
+      "remote": "https://github.com/Joseph-Cursio/SwiftFormatRuleStudio.git",
+      "localPath": "../SwiftFormatRuleStudio",
+      "role": "unfamiliar",
+      "why": "The default-isolation subject. One line of its Package.swift — `.defaultIsolation(MainActor.self)` — makes every conformance MainActor-isolated, which cannot satisfy the kit's `Value: Sendable`: 21 carriers and 64 laws emitted live, 132 errors, 0 laws compiled. It is also where the round-trip law found a real defect in the subject, and where that finding then went invisible.",
+      "measurements": [
+        {
+          "apparatus": "road-test",
+          "kind": "census",
+          "revision": "2799291f81096ddcd4816f922556c0030e475a34",
+          "takenOn": "2026-08-13",
+          "arm": "exploratory — scaffold-kit-suites derivation and one law deep",
+          "record": "docs/measurements/exploratory-swiftformatrulestudio.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "planted-defect-arm",
+      "subject": "fixtures/planted-defect-arm",
+      "kind": "mutant",
+      "target": "PlantedDefectArm",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftInferProperties.git",
+      "localPath": "fixtures/planted-defect-arm",
+      "role": "control",
+      "why": "Known-wrong code by construction, built because the only nine natural refutations on record had tier and template perfectly aligned, so neither reading could be tested. Three types, one method name, all at Likely 70 under both templates, so only the implementation varies.",
+      "measurements": [
+        {
+          "apparatus": "planted-defect",
+          "kind": "backtest",
+          "revision": "ecaa66f6616bad91728144c97df6a8c20e1aa5ea",
+          "takenOn": "2026-08-13",
+          "arm": "does the TEMPLATE predict whether a refutation is a bug?",
+          "record": "fixtures/planted-defect-arm/README.md",
+          "frozenBecause": null,
+          "expectedOutcome": "Measured NO. `associativity` on BlendSummary must refute and IS a real defect; `commutativity` on PathSegment must refute and is a FALSE LAW about correct code. Both readings the template hypothesis needed are dead in one run. Planted evidence has no base rate: it falsifies a categorical claim and cannot estimate precision.",
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "cycle27-surface",
+      "subject": "fixtures/cycle27-surface",
+      "kind": "mutant",
+      "target": "Cycle27SurfaceFixture",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftInferProperties.git",
+      "localPath": "fixtures/cycle27-surface",
+      "role": "control",
+      "why": "The v1 algebraic corpus, and the only member measured to completion: 53 of 53, zero false positives, zero coverage-pending. Further movement needs new public algebraic API, not filters or recipes — so a change that moves this number is a change to the catalog's reach, not its tuning.",
+      "measurements": [
+        {
+          "apparatus": "prove-then-show",
+          "kind": "frozen",
+          "revision": "ecaa66f6616bad91728144c97df6a8c20e1aa5ea",
+          "takenOn": "2026-08-05",
+          "arm": "cycle 151 — 53/53, reconfirmed against the frozen key at v1.148.0",
+          "record": "fixtures/toolchain-coverage/owed-laws.frozen.json",
+          "frozenBecause": "A frozen answer key, not a baseline. Re-deriving it from a run would make the tool grade its own homework, which is the one thing a scored corpus may not do.",
+          "expectedOutcome": "53 of 53 picks measured, 0 false positives, 0 coverage-pending.",
+          "answerKey": "fixtures/toolchain-coverage/owed-laws.frozen.json"
+        }
+      ]
+    },
+    {
+      "id": "leaderboard-sort",
+      "subject": "fixtures/leaderboard-sort",
+      "kind": "mutant",
+      "target": "LeaderboardSort",
+      "sources": null,
+      "remote": "https://github.com/Joseph-Cursio/SwiftInferProperties.git",
+      "localPath": "fixtures/leaderboard-sort",
+      "role": "control",
+      "why": "The legible end-to-end example, and the mutant x law matrix that separates a weak GENERATOR from a weak LAW — the attribution problem that blocks auditing a codebase's existing property tests. Its scorecards are WITHDRAWN; the matrix, the template defects and the signal arithmetic stand.",
+      "measurements": [
+        {
+          "apparatus": "planted-defect",
+          "kind": "backtest",
+          "revision": "ecaa66f6616bad91728144c97df6a8c20e1aa5ea",
+          "takenOn": "2026-07-31",
+          "arm": "mutant x law matrix, asserted cell-by-cell so it cannot drift",
+          "record": "fixtures/leaderboard-sort/README.md",
+          "frozenBecause": null,
+          "expectedOutcome": "Ordering and permutation are COMPLEMENTS, neither subsuming the other: a shorter sorted list is still sorted, a reordering is still a permutation. The permutation law — the only one that catches element loss or duplication — is proposed by nothing, which is a diagnosis for `partition`. Also a standing Likely-tier false positive on a PRNG's next().",
+          "answerKey": null
+        }
+      ]
+    }
+  ]
+}
