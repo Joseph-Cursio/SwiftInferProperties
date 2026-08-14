@@ -80,6 +80,27 @@ extension SwiftInferCommand {
         )
         public var family: String?
 
+        @Option(
+            name: .long,
+            help: """
+            Retain this run's per-pick records to a JSON file so a later run can be diffed \
+            against it with `swift-infer survey-diff`. Write it somewhere COMMITTED — \
+            `fixtures/verify-runs/` — because `.swiftinfer/` is swept by `make clean-temp` \
+            and that is how the last four surveys were lost.
+            """
+        )
+        public var retainRun: String?
+
+        @Option(
+            name: .long,
+            help: """
+            Human-readable name for the retained run, recorded in the file. Defaults to \
+            '<target> @ <revision>'. Names the ARM, not the file — a reader comparing two \
+            runs months apart needs to know what differed.
+            """
+        )
+        public var retainLabel: String?
+
         public init() { /* no-op */ }
 
         @Flag(
@@ -204,6 +225,49 @@ extension SwiftInferCommand {
             //    confusion the first time it does move.
             let tiers = loadPreVerifyTiers(workingDirectory: workingDirectory)
             print(ProveThenShowRenderer.render(records, tiers: tiers), terminator: "")
+            retainIfRequested(records: records, tiers: tiers, workingDirectory: workingDirectory)
+        }
+
+        /// Write the retained run, when `--retain-run` asked for one.
+        ///
+        /// **Best-effort, and it warns rather than throwing** — the report on stdout is the
+        /// primary output and a 12-minute survey must not fail at the last step because a
+        /// directory is not writable. That is the same posture `VerifyEvidenceRecorder` takes
+        /// for the evidence side file, for the same reason.
+        private func retainIfRequested(
+            records: [SwiftInferCommand.Verify.SurveyRecord],
+            tiers: [String: Tier],
+            workingDirectory: URL
+        ) {
+            guard let retainRun else { return }
+            let packageRoot = SwiftInferCommand.Verify
+                .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+            let run = RetainedSurveyRun.capturing(
+                records: records,
+                tiers: tiers,
+                context: RetainedSurveyRun.Context(
+                    label: retainLabel
+                        ?? "\(target) @ \(CorpusProvenance.describe(packageRoot))",
+                    target: target,
+                    packageRoot: packageRoot,
+                    capturedAt: Date()
+                )
+            )
+            let destination = URL(fileURLWithPath: retainRun)
+            do {
+                try run.write(to: destination)
+                FileHandle.standardError.write(Data(
+                    ("retained \(records.count) record(s) to \(destination.path) — diff a later "
+                        + "run with `swift-infer survey-diff --before \(retainRun) "
+                        + "--after <next>`\n").utf8
+                ))
+            } catch {
+                FileHandle.standardError.write(Data(
+                    ("warning: could not retain this run to \(destination.path) — \(error). "
+                        + "The report above is unaffected, but there is now no artifact to "
+                        + "compare the next run against.\n").utf8
+                ))
+            }
         }
     }
 }
