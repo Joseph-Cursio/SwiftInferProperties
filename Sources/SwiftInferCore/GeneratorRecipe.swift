@@ -81,8 +81,55 @@ public enum CollisionBias {
     /// Includes the degenerate values on purpose: `"/"` — the root, where *strip the prefix* and
     /// *strip every occurrence* diverge most violently, because stripping `/` deletes **every**
     /// separator and collapses any path to a single component — and `""`.
+    /// Parameter names that positively indicate a **path-shaped** domain.
+    ///
+    /// A deliberate SUBSET of `HostileInputEntryPoints.locationLabels`: that set answers *is this
+    /// a location rather than a payload*, and includes `name`, `key` and `identifier` — which are
+    /// locations in that sense and are **not** path-shaped. `rulesAlreadyPresent(_ name: String,
+    /// kind:)` is the measured witness for the difference: `name` is a rule identifier, and the
+    /// path form told its reader about ancestors and separators that do not exist in its domain.
+    public static let pathShapedNames: Set<String> = [
+        "path", "pathname", "filePath", "file", "url", "directory", "projectRoot", "root"
+    ]
+
+    /// Whether a parameter name indicates a path-shaped domain.
+    public static func isPathShaped(_ name: String) -> Bool {
+        pathShapedNames.contains(HostileInputEntryPoints.normalizedLabel(name))
+    }
+
+    /// A colliding-`String` recipe for `subject`.
+    ///
+    /// **Two forms, because the alphabet generalises and the SHAPE does not.** This type's own
+    /// argument is that *"a template cannot know whether a `String` parameter is a path, a
+    /// filename, a key or a query"* — and then it shipped one recipe that renders `"/" + …` and
+    /// explains itself in terms of ancestors, for every `String` parameter of every predicate.
+    /// `IdempotenceTemplate+Generators` names the problem in as many words: *"`collidingString`
+    /// is path-flavored"*, and declines to reuse it for that reason.
+    ///
+    /// Measured on `SwiftFormatRuleStudioCore`: `rulesAlreadyPresent(_ name: String, kind:)` — a
+    /// rule-name lookup with no separators in its domain — was handed a four-symbol alphabet
+    /// including `/`, the rationale *"any path contains its own ancestors"*, and advice about
+    /// confusing `strip the prefix` with `strip every occurrence`
+    /// (`docs/measurements/exploratory-swiftformatrulestudio.md` §5.3). The collision *advice* is
+    /// sound; the domain it asserts was invented.
+    ///
+    /// The **neutral** form keeps the whole mechanism — a tiny alphabet, so structure repeats —
+    /// and drops the claim, matching `collidingStringArray`, which was always domain-neutral.
     public static func collidingString(subject: String) -> GeneratorRecipe {
-        GeneratorRecipe(
+        guard isPathShaped(subject) else {
+            return GeneratorRecipe(
+                subject: subject,
+                typeName: "String",
+                expression: neutralCollidingStringExpression,
+                rationale: "A four-symbol alphabet, so substrings REPEAT within and across draws. "
+                    + "A wide alphabet essentially never produces a value that contains another "
+                    + "as a substring, and a predicate that has quietly confused two notions "
+                    + "agrees with the right answer everywhere they coincide — which is "
+                    + "everywhere, until they collide. Widen this alphabet only to add values the "
+                    + "predicate treats specially."
+            )
+        }
+        return GeneratorRecipe(
             subject: subject,
             typeName: "String",
             expression: collidingStringExpression,
@@ -93,6 +140,25 @@ public enum CollisionBias {
                 + "they collide. Do not widen this alphabet."
         )
     }
+
+    /// The domain-neutral colliding string: same tiny alphabet, no asserted shape.
+    ///
+    /// The separator stays IN the alphabet rather than being prefixed, so a separator-bearing
+    /// value is still an ordinary draw for a subject that happens to be path-like, while a
+    /// rule-name or key subject is not handed a leading `/` it can never see in production.
+    /// Zero components yields `""`, the degenerate case, for free.
+    private static let neutralCollidingStringExpression: String = {
+        let symbols = (alphabet + ["/"]).map { "\"\($0)\"" }.joined(separator: ", ")
+        return """
+            // A FOUR-symbol alphabet, so substrings repeat within and across draws — the
+            // recurrence a wide alphabet never produces. Zero components yields "", the
+            // degenerate case, for free.
+            Gen<String?>.element(of: [\(symbols)] as [String])
+                .map { $0! }
+                .array(of: 0...6)
+                .map { $0.joined() }
+            """
+    }()
 
     /// The colliding-string generator, as runnable `swift-property-based` Swift.
     ///
@@ -132,20 +198,33 @@ public enum CollisionBias {
     /// `path` from a small alphabet and hold `currentPath` fixed at some plausible `"/Documents/"`,
     /// and the parent never recurs inside the child — the law passes, and the bug is untouched.
     /// **Both halves have to be drawn from the same small universe.**
-    public static func carrierState(typeName: String) -> GeneratorRecipe {
+    /// - Parameter subject: the argument name this carrier's state has to collide WITH, so the
+    ///   recipe can pick the same form the argument got. Path prose on a carrier whose argument
+    ///   took the neutral form would reintroduce the defect one line down.
+    public static func carrierState(typeName: String, subject: String = "") -> GeneratorRecipe {
         // Do NOT emit `\(typeName).gen()` — that method does not exist, and walk 6 caught it not
         // compiling. The template cannot know the carrier's initialiser, so it ships the runnable
-        // half (a colliding *String* for the carrier's path-like state) and names the one manual
-        // step: feed it into the carrier's own init. Compiles; honest about the seam it cannot cross.
-        GeneratorRecipe(
+        // half (a colliding *String* for the carrier's state) and names the one manual step: feed
+        // it into the carrier's own init. Compiles; honest about the seam it cannot cross.
+        //
+        // **It used to name that step concretely, and the name was invented.** The expression read
+        // `.map { \(typeName)(currentPath: $0) } for whatever its path-like stored property is
+        // called` — measured against `SwiftFormatConfig`, which has no `currentPath`, no path-like
+        // stored property, and an argument that is a rule identifier. A reader following it writes
+        // a call that does not compile, which is worse than the `gen()` mistake this comment was
+        // written to prevent: that one was a method that exists nowhere, this one LOOKS specific.
+        // The seam is named without inventing a spelling for it.
+        let isPath = isPathShaped(subject)
+        let stateDescription = isPath ? "path-like String state" : "String state"
+        return GeneratorRecipe(
             subject: "\(typeName) (the carrier's own state)",
             typeName: typeName,
             expression: """
-                // Draw the CARRIER's String state from the SAME colliding alphabet, then build the
-                // carrier from it — e.g. `.map { \(typeName)(currentPath: $0) }` for whatever its
-                // path-like stored property is called. Holding that state fixed while varying only
+                // Draw the CARRIER's \(stateDescription) from the SAME colliding alphabet, then
+                // build the carrier from it — append `.map { ... }` constructing a \(typeName)
+                // whose stored String is this value. Holding that state fixed while varying only
                 // the arguments cannot produce the collision, and the collision is the counterexample.
-                \(collidingStringExpression)
+                \(isPath ? collidingStringExpression : neutralCollidingStringExpression)
                 """,
             rationale: "Half the collision lives in the carrier's stored state. A generator that "
                 + "varies only the arguments, against a carrier fixed at some plausible value, "

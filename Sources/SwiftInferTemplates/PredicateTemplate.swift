@@ -120,7 +120,15 @@ public enum PredicateTemplate {
 
         // A `static` function has no receiver, so there is no state for the argument to collide with.
         if let carrier = summary.containingTypeName, !summary.isStatic {
-            recipes.append(CollisionBias.carrierState(typeName: carrier))
+            // Threaded so the carrier's recipe takes the SAME form its argument did — a path
+            // rationale beside a neutral argument recipe is the same misattribution one line down.
+            let firstStringArgument = summary.parameters
+                .first { $0.typeText.trimmingCharacters(in: .whitespaces) == "String" }
+            recipes.append(
+                CollisionBias.carrierState(
+                    typeName: carrier, subject: firstStringArgument?.internalName ?? ""
+                )
+            )
         }
         return recipes
     }
