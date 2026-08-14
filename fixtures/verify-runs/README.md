@@ -5,15 +5,24 @@ row** rather than count by count.
 
 Written by `prove-then-show --retain-run`, read by `swift-infer survey-diff`.
 
+**Which subject each of these is, and where it came from, lives in
+`fixtures/corpora/manifest.json`** — see that directory's README. Prefer `--corpus <id>` over
+`--target`: it resolves the tree, the target and the label out of the manifest, so the label
+cannot be mistyped and an off-pin checkout says so *in the retained artifact* rather than only
+in the memory of whoever ran it.
+
 ```
-swift-infer prove-then-show --target SwiftInferCore --budget small --max-parallel 4 \
-    --retain-run fixtures/verify-runs/<date>-<target>.json \
-    --retain-label "<target> @ <sha> (kit <version>) — what this arm is"
+swift-infer corpus                       # what is in the corpus, and whether it has moved
+swift-infer prove-then-show --corpus swift-infer-core --budget small --max-parallel 4 \
+    --retain-run fixtures/verify-runs/<date>-<target>.json
 
 swift-infer survey-diff \
     --before fixtures/verify-runs/2026-08-14-SwiftInferCore.json \
     --after  fixtures/verify-runs/<next>.json
 ```
+
+`--retain-label` still wins where it is passed; the manifest removes the *need* to hand-type
+one, not the ability to name an unusual arm.
 
 ## Why these are committed
 
@@ -116,6 +125,12 @@ A clean sweep is the weak-but-correct outcome. The informative version of this r
 been a surprise, and there wasn't one.
 
 ## Inventory
+
+**This table is prose; `fixtures/corpora/manifest.json` is the checked copy.**
+`CorpusManifestTests` asserts in both directions — every manifest run exists and is a run of
+the target its entry claims, and every `.json` here is registered by exactly one corpus. The
+silent direction is the second: an unregistered run sits in this directory looking like a
+baseline while carrying no remote, no revision binding and no reason for existing.
 
 | file | subject | taken |
 |---|---|---|
