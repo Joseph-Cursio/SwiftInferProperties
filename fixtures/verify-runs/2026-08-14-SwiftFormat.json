@@ -1,0 +1,1291 @@
+{
+  "capturedAt" : "2026-08-14T16:11:20Z",
+  "label" : "swift-format SwiftFormat @ d2bd4b3 — arm C, both platform-floor copies fixed",
+  "records" : [
+    {
+      "carrier" : "CommentMovingRewriter",
+      "identityHash" : "0x005F4C2BA6E807CC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "2B91D26E63F395D6",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Trivia",
+      "identityHash" : "0x027F9C8AECF932D9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Trivia",
+      "primaryFunctionName" : "withoutLastLine()",
+      "subjectFingerprint" : "E48DD8E8777637D1",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "UseExplicitNilCheckInConditions",
+      "identityHash" : "0x06833EBA7011AA86",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isDiscardedAssignmentPattern(_:)",
+      "subjectFingerprint" : "4515F442AAC2EFD2",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Trivia",
+      "identityHash" : "0x0CCB97B36853F732",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Trivia",
+      "primaryFunctionName" : "withoutTrailingSpaces()",
+      "subjectFingerprint" : "612527FED2D45DE1",
+      "templateName" : "idempotence"
+    },
+    {
+      "identityHash" : "0x0DD69AD72B907415",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isFormatterIgnored(_:)",
+      "subjectFingerprint" : "A79E0D435FCE8165",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x0E4B869FE7D0272D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isFormatterIgnorePresent(inTrivia:isWholeFile:)",
+      "subjectFingerprint" : "28707C1562705F26",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "PrettyPrinter",
+      "identityHash" : "0x1086814E6218FE80",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "canFit(_:)",
+      "subjectFingerprint" : "6242934B7E64FF90",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x14BDEE9108FAEA44",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "joinLines(_:)",
+      "subjectFingerprint" : "4888E57F7793D2F3",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AlwaysUseLiteralForEmptyCollectionInit",
+      "identityHash" : "0x15734EB4BD162051",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "getLiteralType(_:)",
+      "subjectFingerprint" : "41CBB9FA3F4BA038",
+      "templateName" : "value-round-trip"
+    },
+    {
+      "carrier" : "UseSynthesizedInitializer",
+      "identityHash" : "0x15BDCA1BB23CAD1A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "matchesAssignmentBody(variables:initBody:)",
+      "subjectFingerprint" : "CCE51B3DA4765768",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Syntax",
+      "identityHash" : "0x160437E9FBA03E3B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Selection",
+      "primaryFunctionName" : "isInsideSelection(_:)",
+      "subjectFingerprint" : "DDAA7FDC80E638B4",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0x27ED22CB4CA1682E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isLastKeyPathComponent(_:)",
+      "subjectFingerprint" : "7DD93C5FB9AD5758",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x295BBC4BC7C13EB2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "numberOfLeadingSpaces(in:)",
+      "subjectFingerprint" : "CDF3C745A40A8CB5",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x310D3016F17A7799",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "globMatch(_:pattern:)",
+      "subjectFingerprint" : "31C09C9A9851D03C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x31C45AADB964E247",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "advancedMatch(_:pattern:isDirectory:)",
+      "subjectFingerprint" : "806020318F2DBC17",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "UseShorthandTypeNames",
+      "identityHash" : "0x34AE5CDDF9D47884",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isTypeOfUninitializedStoredVar(_:)",
+      "subjectFingerprint" : "CC23254D3A2E237D",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FileScopedDeclarationPrivacy",
+      "identityHash" : "0x3C6B870D79EF0DA5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "rewrittenDecl(_:)",
+      "subjectFingerprint" : "51C3783D393AA598",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0x3CAE50C6AEDFE8D0",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "shouldGroupAroundArgumentList(_:)",
+      "subjectFingerprint" : "4EE988AE90F85FE6",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "NoAssignmentInExpressions",
+      "identityHash" : "0x3D383DF05F6B954E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isInAllowedFunction(_:)",
+      "subjectFingerprint" : "E51E3DA5FB695274",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0x436B5ACBACACB93D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isCompactSingleFunctionCallArgument(_:)",
+      "subjectFingerprint" : "5C41E55FDF9DE4B5",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0x4480CA0C9C00404B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "shouldInsertNewline(basedOn:)",
+      "subjectFingerprint" : "94D4B84520E1538F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FileScopedDeclarationPrivacy",
+      "identityHash" : "0x44AE58961B65ED7A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "rewrittenCodeBlockItems(_:)",
+      "subjectFingerprint" : "24187F6E9A51A26F",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "UseSynthesizedInitializer",
+      "identityHash" : "0x4848D3642EC01D9F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "matchesAccessLevel(modifiers:properties:)",
+      "subjectFingerprint" : "B19DFDCFF17075F3",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Array",
+      "identityHash" : "0x484CD065A16C9689",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Configuration",
+      "primaryFunctionName" : "length(in:)",
+      "subjectFingerprint" : "127625CF19A0BC64",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "CommentMovingRewriter",
+      "identityHash" : "0x4DEEE219648BEB91",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "2B91D26E63F395D6",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "UseShorthandTypeNames",
+      "identityHash" : "0x4F7C9CF60AFA0F60",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isStoredProperty(_:)",
+      "subjectFingerprint" : "CEECFB50DECB0FB0",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0x505DCB7295FFC646",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "startsWithOpenDelimiter(_:)",
+      "subjectFingerprint" : "04CFEBD4AEBC2616",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "NoCasesWithOnlyFallthrough",
+      "identityHash" : "0x510238D8AB004F60",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isMergeableFallthroughOnly(_:)",
+      "subjectFingerprint" : "75A574CE7DAB6715",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x526CE17CCF747DBF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "parametersAreEqual(params:funcParam:)",
+      "subjectFingerprint" : "193B28E25BE73B36",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OneVariableDeclarationPerLine",
+      "identityHash" : "0x53CF2E0BDA9377B4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "codeBlockItemHasMultipleVariableBindings(_:)",
+      "subjectFingerprint" : "F27A732C167665DB",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DoNotUseSemicolons",
+      "identityHash" : "0x551666B0BBA38D40",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "nodeByRemovingSemicolons(from:)",
+      "subjectFingerprint" : "F9671CD895B2D542",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Finding.Message",
+      "identityHash" : "0x562EB64C7A39A2D7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "collapseCase()",
+      "subjectFingerprint" : "6A2BEB0ED6FB2B80",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoAssignmentInExpressions",
+      "identityHash" : "0x591962F75514071C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isAssignmentExpression(_:)",
+      "subjectFingerprint" : "03AEB5C7EE2E51D9",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DoNotUseSemicolons",
+      "identityHash" : "0x5A131D761D27BA4E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isCodeBlockItem(_:containingStmtType:)",
+      "subjectFingerprint" : "BE646E44621D0F41",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "LazySplitSequence",
+      "identityHash" : "0x5AA171AD813DD24F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: LazySplitSequence",
+      "primaryFunctionName" : "underestimatedCount()",
+      "subjectFingerprint" : "3813B13A50833B74",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "UseLetInEveryBoundCaseVariable",
+      "identityHash" : "0x601C299B8D646063",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "81056FC190B866F7",
+      "templateName" : "idempotence"
+    },
+    {
+      "identityHash" : "0x61775CAD142EF6BB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "leadingNewlineCount(of:)",
+      "subjectFingerprint" : "73B86BBBCEF945D5",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x63115C6ECD1DECF3",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "doubleAsteriskMatch(_:pattern:isDirectory:)",
+      "subjectFingerprint" : "C6CBC887729654AE",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x64278108766BDC68",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isNestedInPostfixIfConfig(node:)",
+      "subjectFingerprint" : "B19049FD59A2963D",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OrderedImports",
+      "identityHash" : "0x6928CE971812351E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "formatImports(_:)",
+      "subjectFingerprint" : "11D61A1B48E3DABE",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0x69FA282566BBFAC9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "areBracesCompletelyEmpty(_:contentsKeyPath:)",
+      "subjectFingerprint" : "A21B2031A2E4E1FC",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Array",
+      "identityHash" : "0x70A5534472603475",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Configuration",
+      "primaryFunctionName" : "length(in:)",
+      "subjectFingerprint" : "127625CF19A0BC64",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "NoVoidReturnOnFunctionSignature",
+      "identityHash" : "0x77F2DB268B59BB0C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "removingReturnClause(from:)",
+      "subjectFingerprint" : "CDD7D61F3B8150EB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x7AF124BD5A7BEC90",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "globMatchRecursive(path:pathIndex:pattern:patternIndex:)",
+      "subjectFingerprint" : "DDE4DA0F99F7AF90",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OrderedImports",
+      "identityHash" : "0x7F9C980A0239CE55",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "orderImports(in:)",
+      "subjectFingerprint" : "3467028927720383",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoPlaygroundLiterals",
+      "identityHash" : "0x88F39E39ECB6C109",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isLiteralMacroCall(_:matchingLabels:)",
+      "subjectFingerprint" : "68B77996CD95FD67",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x89434734D8C0B56B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "shouldSuffixMatch(_:pattern:isDirectory:)",
+      "subjectFingerprint" : "15A309E8A4584C90",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x89D2DA91A79D1CB4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "questionMarkMatch(_:pattern:)",
+      "subjectFingerprint" : "B41569F4B1091FE0",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "AlwaysUseLiteralForEmptyCollectionInit",
+      "identityHash" : "0x8D05D4CB6AA23C54",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "getLiteralType(_:)",
+      "subjectFingerprint" : "95941F19097DC063",
+      "templateName" : "value-round-trip"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0x9960F1CB3961C53A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "wildcardMatch(_:pattern:)",
+      "subjectFingerprint" : "8BAB81A03E36E29C",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x9DEF348C9154E18C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "parseAndEmitDiagnostics(source:operatorTable:assumingFileURL:experimentalFeatures:parsingDiagnosticHandler:)",
+      "subjectFingerprint" : "D5A8D763587673FB",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "UseSynthesizedInitializer",
+      "identityHash" : "0x9E5CD72AEF5E7EBE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "matchesPropertyList(parameters:properties:)",
+      "subjectFingerprint" : "28F9ED27664DF3F1",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "UseLetInEveryBoundCaseVariable",
+      "identityHash" : "0xA4526F3B17DDB6F4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "5506BC96DDCF9098",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoCasesWithOnlyFallthrough",
+      "identityHash" : "0xA5FEDD741524FCAF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "containsValueBindingPattern(_:)",
+      "subjectFingerprint" : "A190F6B8BC114D56",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "UseExplicitNilCheckInConditions",
+      "identityHash" : "0xAACBDA4E53FD84D6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "addingParenthesesIfNecessary(to:)",
+      "subjectFingerprint" : "A770939B1FD9465A",
+      "templateName" : "idempotence"
+    },
+    {
+      "identityHash" : "0xADC8F2162ED43566",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "shouldFormatterIgnore(node:)",
+      "subjectFingerprint" : "9FA776ACD67F51BC",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Selection",
+      "identityHash" : "0xB0EF84AE8F938F6D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Range<AbsolutePosition>",
+      "primaryFunctionName" : "overlapsOrTouches(_:)",
+      "subjectFingerprint" : "939264F49DC6D784",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DeclModifierListSyntax",
+      "identityHash" : "0xB56A12C6CAD0D03A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Set<Keyword>",
+      "primaryFunctionName" : "contains(anyOf:)",
+      "subjectFingerprint" : "FC2B98BBD73F749A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SyntaxProtocol",
+      "identityHash" : "0xB76310C42975A984",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: (any CommaSeparatedListSyntaxProtocol).Protocol",
+      "primaryFunctionName" : "isProtocol(_:)",
+      "subjectFingerprint" : "CC22F5A1DF8692BA",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0xB7C0F91A95D242C4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isCompoundExpression(_:)",
+      "subjectFingerprint" : "6C3292A39466A657",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FileScopedDeclarationPrivacy",
+      "identityHash" : "0xBAC41151CBE8BEE1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "rewrittenDecl(_:)",
+      "subjectFingerprint" : "70ECB0E167D19219",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0xBEDA87695E23FF69",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: GitIgnorePattern",
+      "primaryFunctionName" : "matches(_:isDirectory:)",
+      "subjectFingerprint" : "5269233085E36960",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0xC6ECDACE012A0176",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isAssigningOperator(_:)",
+      "subjectFingerprint" : "A0EE14BDC4075907",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReturnVoidInsteadOfEmptyTuple",
+      "identityHash" : "0xC7CFBEDCFF5367DB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "hasNonWhitespaceTrivia(_:at:)",
+      "subjectFingerprint" : "5CFB3882E9E2B12B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "NoAssignmentInExpressions",
+      "identityHash" : "0xC84ED2406AAEA5E3",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isInfixOperatorWithUnknownPrecedence(_:)",
+      "subjectFingerprint" : "FC3841687F9BECDD",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0xC96AC5CDECEFB5B2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "shouldRequireWhitespace(around:)",
+      "subjectFingerprint" : "206AA98EF7917924",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "NoCasesWithOnlyFallthrough",
+      "identityHash" : "0xCA37D39A2BDFD9D4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "canMergeWithPreviousCases(_:)",
+      "subjectFingerprint" : "9A5CF1B174B0C409",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DeclModifierListSyntax",
+      "identityHash" : "0xCCBDF3A445F8D857",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-pair: remove(anyOf:)",
+      "primaryFunctionName" : "remove(anyOf:)",
+      "subjectFingerprint" : "C271FA58EEEAD629",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "NoEmptyLinesOpeningClosingBraces",
+      "identityHash" : "0xCD52C25EE3650E6A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: C",
+      "primaryFunctionName" : "rewritten(_:)",
+      "subjectFingerprint" : "B601C6B5891AB3CF",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Trivia",
+      "identityHash" : "0xCDCEDD9202203209",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Trivia",
+      "primaryFunctionName" : "withoutLeadingSpaces()",
+      "subjectFingerprint" : "10F6C95EDBDE726D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Finding.Message",
+      "identityHash" : "0xCE793B782AEA52A6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "replaceForEachWithLoop()",
+      "subjectFingerprint" : "E36A034ED2A1F03F",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Trivia",
+      "identityHash" : "0xCECABAC406D90FBD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isWhitespace(_:)",
+      "subjectFingerprint" : "8FC97AB6774144FA",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Context",
+      "identityHash" : "0xD6A6970AE77A81C8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: R.Type",
+      "primaryFunctionName" : "shouldFormat(_:node:)",
+      "subjectFingerprint" : "A311C5292C734578",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "CommentMovingRewriter",
+      "identityHash" : "0xD6B998863D27F9A7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "7E834A00F95920E2",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SourceRange",
+      "identityHash" : "0xDCD0F426489D955D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "089B07EB51379BA3",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0xDD0DA77FB4F58E68",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "mustBreakBeforeClosingDelimiter(of:argumentListPath:)",
+      "subjectFingerprint" : "51A80FB5DD9B0766",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FileScopedDeclarationPrivacy",
+      "identityHash" : "0xDD6A9B0AA61FF989",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "rewrittenIfConfigDecl(_:)",
+      "subjectFingerprint" : "FC1B3025E523B2BC",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoAssignmentInExpressions",
+      "identityHash" : "0xDFBA628D3FF32316",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isStandaloneAssignmentStatement(_:)",
+      "subjectFingerprint" : "EC839A76912300A9",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "IgnoreManager",
+      "identityHash" : "0xE041794E04BF94F5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: IgnoreManager",
+      "primaryFunctionName" : "shouldIgnore(file:isDirectory:)",
+      "subjectFingerprint" : "98AE76AB90195296",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0xE3BD05CF1F607528",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isDiscretionaryNewlineAllowed(before:)",
+      "subjectFingerprint" : "131D637F70A2F2D1",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "UseEarlyExits",
+      "identityHash" : "0xE4DE86E4B445D67F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "codeBlockEndsWithEarlyExit(_:)",
+      "subjectFingerprint" : "F8EFAFEDE4637607",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Syntax",
+      "identityHash" : "0xE6EA89ADD939199B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: CallingExprSyntaxProtocol.Protocol",
+      "primaryFunctionName" : "isProtocol(_:)",
+      "subjectFingerprint" : "4109D11FC5A98AD2",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Selection",
+      "identityHash" : "0xED593C41E32374F7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AbsolutePosition",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "FF6BC0DBA7022A51",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0xEF06A5BCAA70BDC7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "leadingNewlineCount(of:)",
+      "subjectFingerprint" : "73B86BBBCEF945D5",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "UseTripleSlashForDocumentationComments",
+      "identityHash" : "0xF386E3139F4F3B21",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "convertDocBlockCommentToDocLineComment(_:)",
+      "subjectFingerprint" : "6FAD6B9D35198AD4",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "GitIgnorePattern",
+      "identityHash" : "0xF834DA48057A3219",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "simpleMatch(_:pattern:)",
+      "subjectFingerprint" : "CF85A9EEEE91B204",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TokenStreamCreator",
+      "identityHash" : "0xF8F7A5AF0E92AFC7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "leftmostMultilineStringLiteral(of:)",
+      "subjectFingerprint" : "3A235D1CE2575171",
+      "templateName" : "value-round-trip"
+    },
+    {
+      "identityHash" : "0xFB44E64EF6C177A4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "indentationDistance(of:)",
+      "subjectFingerprint" : "DA26FDC01EE67857",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Configuration",
+      "identityHash" : "0xFC8FF8ECE3365435",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Configuration",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "9A8FF7C6E66E8AA6",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "ExprSyntax",
+      "identityHash" : "0xFCCFD406E3CD5077",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: CallingExprSyntaxProtocol.Protocol",
+      "primaryFunctionName" : "isProtocol(_:)",
+      "subjectFingerprint" : "4109D11FC5A98AD2",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Indent",
+      "counterexample" : "tabs(-1491761683272755080)",
+      "identityHash" : "0x040AECE839B8DFC3",
+      "outcome" : "measured-defaultFails",
+      "outcomeDetail" : "trial=0",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "7CE0109AB971C1F5",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "WithAttributesSyntax",
+      "identityHash" : "0x0559861B134B46F3",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V0559861B134B46F3/main.swift:95:27: error: cannot find type 'WithAttributesSynta…",
+      "primaryFunctionName" : "hasAttribute(_:inModule:)",
+      "subjectFingerprint" : "64D8B8B8CD92FF33",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FileScopedDeclarationPrivacy",
+      "identityHash" : "0x064B617D5F4CC2C2",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V064B617D5F4CC2C2/main.swift:97:57: error: cannot find 'FileScopedDeclarationPri…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "16261966B99417CC",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Verbatim",
+      "identityHash" : "0x0988E6C511453CB2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "prettyPrintingLength(maximum:)",
+      "subjectFingerprint" : "0855213335D4E60E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoEmptyLinesOpeningClosingBraces",
+      "identityHash" : "0x0EFC279F174AF1B2",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V0EFC279F174AF1B2/main.swift:97:63: error: cannot find 'NoEmptyLinesOpeningClosi…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "475D4D1DE751DB03",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Array",
+      "identityHash" : "0x148C23BAA54847FD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "length(tabWidth:)",
+      "subjectFingerprint" : "05D4BE2510729560",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "Indent",
+      "identityHash" : "0x1511DEC64A09C58B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "length(tabWidth:)",
+      "subjectFingerprint" : "CF118E629D8F33E9",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "DoNotUseSemicolons",
+      "identityHash" : "0x16257EDB7A8FBADD",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V16257EDB7A8FBADD/main.swift:98:71: error: cannot find 'DoNotUseSemicolons' in s…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "451E125B768D3C29",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AlwaysUseLiteralForEmptyCollectionInit",
+      "identityHash" : "0x18AA608505E834D1",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V18AA608505E834D1/main.swift:98:71: error: cannot find 'AlwaysUseLiteralForEmpty…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "AAAFC70DC14596DB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoLabelsInCasePatterns",
+      "identityHash" : "0x192062E4666A0FA1",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V192062E4666A0FA1/main.swift:98:67: error: cannot find 'NoLabelsInCasePatterns' …",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "E62A9A970409A1FD",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoParensAroundConditions",
+      "identityHash" : "0x1EF17D2639F2E0AF",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V1EF17D2639F2E0AF/main.swift:98:69: error: cannot find 'NoParensAroundConditions…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "27AD449BD71FCDDB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NewlineBehavior",
+      "identityHash" : "0x23D54EEF43B15B2E",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V23D54EEF43B15B2E/main.swift:105:18: error: binary operator '!=' cannot be appli…",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "D7C4712418080C43",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "Indent",
+      "identityHash" : "0x2A199F6E8A5BAA10",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "length(tabWidth:)",
+      "subjectFingerprint" : "CF118E629D8F33E9",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Array",
+      "identityHash" : "0x338C5303937BDB63",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "length(tabWidth:)",
+      "subjectFingerprint" : "05D4BE2510729560",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "NoAssignmentInExpressions",
+      "identityHash" : "0x3799B6CA7F57983F",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3799B6CA7F57983F/main.swift:98:71: error: cannot find 'NoAssignmentInExpression…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "8C80A098850C2D0B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoEmptyLinesOpeningClosingBraces",
+      "identityHash" : "0x390E004B2208FA82",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V390E004B2208FA82/main.swift:97:55: error: cannot find 'NoEmptyLinesOpeningClosi…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "82F29D6AD9E28B2E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NewlineBehavior",
+      "identityHash" : "0x3A9CF5812D625BFA",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3A9CF5812D625BFA/main.swift:106:18: error: binary operator '!=' cannot be appli…",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "D7C4712418080C43",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "NoCasesWithOnlyFallthrough",
+      "identityHash" : "0x42D995337D218176",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V42D995337D218176/main.swift:98:65: error: cannot find 'NoCasesWithOnlyFallthrou…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "F68BF19BA5F85277",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "UseExplicitNilCheckInConditions",
+      "identityHash" : "0x47B6057361AB376E",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V47B6057361AB376E/main.swift:98:69: error: cannot find 'UseExplicitNilCheckInCon…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "A228F2482BDB9680",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "StringProtocol",
+      "identityHash" : "0x4B16E9EA830C94C1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "trimmingTrailingWhitespace()",
+      "subjectFingerprint" : "6B1C37D5EC37BE9D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Verbatim",
+      "identityHash" : "0x517F9563EA8D2FC9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "prettyPrintingLength(maximum:)",
+      "subjectFingerprint" : "0855213335D4E60E",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "UseSingleLinePropertyGetter",
+      "identityHash" : "0x542563CD21CF84BA",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V542563CD21CF84BA/main.swift:97:65: error: cannot find 'UseSingleLinePropertyGet…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "78093AA1401F4723",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Kind",
+      "identityHash" : "0x601240D4385E9A36",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "prefixLength()",
+      "subjectFingerprint" : "8A521FA04A0801B2",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "ReturnVoidInsteadOfEmptyTuple",
+      "identityHash" : "0x636503EB67ABC228",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V636503EB67ABC228/main.swift:98:69: error: cannot find 'ReturnVoidInsteadOfEmpty…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "D571C0882598C828",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DoNotUseSemicolons",
+      "identityHash" : "0x889B06F98D0E630F",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V889B06F98D0E630F/main.swift:98:75: error: cannot find 'DoNotUseSemicolons' in s…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "451E125B768D3C29",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "OrderedImports",
+      "identityHash" : "0x8D18943B98C821D2",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V8D18943B98C821D2/main.swift:97:57: error: cannot find 'OrderedImports' in scope",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "FAE64086663DDC1D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "FormatPipeline",
+      "identityHash" : "0x92D5886A94424867",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "rewrite(_:)",
+      "subjectFingerprint" : "97748C3FB9674816",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoEmptyLinesOpeningClosingBraces",
+      "identityHash" : "0x94139128D9C3D816",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V94139128D9C3D816/main.swift:97:59: error: cannot find 'NoEmptyLinesOpeningClosi…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "5C5C1A057DE4FB71",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Array",
+      "identityHash" : "0xAE0E3979A8C57A93",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "length(tabWidth:)",
+      "subjectFingerprint" : "05D4BE2510729560",
+      "templateName" : "idempotence"
+    },
+    {
+      "identityHash" : "0xB04D4117A5D85CDD",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VB04D4117A5D85CDD/main.swift:107:9: error: cannot find 'statementsImportAnyTestL…",
+      "primaryFunctionName" : "statementsImportAnyTestLibrary(_:)",
+      "subjectFingerprint" : "A6A0E9663DB0D9AB",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Indent",
+      "identityHash" : "0xB2CBC6A06B136175",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "length(tabWidth:)",
+      "subjectFingerprint" : "CF118E629D8F33E9",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "UseEarlyExits",
+      "identityHash" : "0xB84E1F079AB2A908",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VB84E1F079AB2A908/main.swift:98:71: error: cannot find 'UseEarlyExits' in scope",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "EC2D853AFED669C5",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AlwaysUseLiteralForEmptyCollectionInit",
+      "identityHash" : "0xC1D757B802ECED28",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VC1D757B802ECED28/main.swift:97:65: error: cannot find 'AlwaysUseLiteralForEmpty…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "8AD40FEE218C123E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AttributeSyntax",
+      "identityHash" : "0xD125BAAA660E7C66",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VD125BAAA660E7C66/main.swift:95:27: error: cannot find type 'AttributeSyntax' in…",
+      "primaryFunctionName" : "isAttribute(named:inModule:)",
+      "subjectFingerprint" : "5A8B903C6E5514E7",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OneVariableDeclarationPerLine",
+      "identityHash" : "0xD447E6EC0FC7D1A6",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VD447E6EC0FC7D1A6/main.swift:98:71: error: cannot find 'OneVariableDeclarationPe…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "82C105C624F2240A",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "NoEmptyLinesOpeningClosingBraces",
+      "identityHash" : "0xD7EF529E42CD58BF",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VD7EF529E42CD58BF/main.swift:97:47: error: cannot find 'NoEmptyLinesOpeningClosi…",
+      "primaryFunctionName" : "rewritten(_:)",
+      "subjectFingerprint" : "414273DC4EE10A86",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Verbatim",
+      "identityHash" : "0xE6203B69A9FDF499",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "prettyPrintingLength(maximum:)",
+      "subjectFingerprint" : "0855213335D4E60E",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "NoVoidReturnOnFunctionSignature",
+      "identityHash" : "0xF86FD776BA3A94FC",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VF86FD776BA3A94FC/main.swift:98:71: error: cannot find 'NoVoidReturnOnFunctionSi…",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "A53DD247E906DF8C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "OmitExplicitReturns",
+      "identityHash" : "0xFA2561B5C09DD421",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VFA2561B5C09DD421/main.swift:97:65: error: cannot find 'OmitExplicitReturns' in …",
+      "primaryFunctionName" : "visit(_:)",
+      "subjectFingerprint" : "97B3174EDD9EF3EC",
+      "templateName" : "idempotence"
+    }
+  ],
+  "schemaVersion" : 1,
+  "subjectRevision" : "/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus @ d2bd4b3 (uncommitted changes)",
+  "swiftInferVersion" : "1.149.0 (unattributable build)",
+  "target" : "SwiftFormat",
+  "tiersByIdentity" : {
+    "0x005F4C2BA6E807CC" : "advisory",
+    "0x027F9C8AECF932D9" : "possible",
+    "0x040AECE839B8DFC3" : "possible",
+    "0x0559861B134B46F3" : "possible",
+    "0x064B617D5F4CC2C2" : "possible",
+    "0x06833EBA7011AA86" : "advisory",
+    "0x0988E6C511453CB2" : "possible",
+    "0x0CCB97B36853F732" : "possible",
+    "0x0DD69AD72B907415" : "advisory",
+    "0x0E4B869FE7D0272D" : "advisory",
+    "0x0EFC279F174AF1B2" : "possible",
+    "0x1086814E6218FE80" : "advisory",
+    "0x148C23BAA54847FD" : "possible",
+    "0x14BDEE9108FAEA44" : "advisory",
+    "0x1511DEC64A09C58B" : "possible",
+    "0x15734EB4BD162051" : "advisory",
+    "0x15BDCA1BB23CAD1A" : "advisory",
+    "0x160437E9FBA03E3B" : "possible",
+    "0x16257EDB7A8FBADD" : "possible",
+    "0x18AA608505E834D1" : "possible",
+    "0x192062E4666A0FA1" : "possible",
+    "0x1EF17D2639F2E0AF" : "possible",
+    "0x23D54EEF43B15B2E" : "possible",
+    "0x27ED22CB4CA1682E" : "advisory",
+    "0x295BBC4BC7C13EB2" : "advisory",
+    "0x2A199F6E8A5BAA10" : "possible",
+    "0x310D3016F17A7799" : "advisory",
+    "0x31C45AADB964E247" : "advisory",
+    "0x338C5303937BDB63" : "possible",
+    "0x34AE5CDDF9D47884" : "advisory",
+    "0x3799B6CA7F57983F" : "possible",
+    "0x390E004B2208FA82" : "possible",
+    "0x3A9CF5812D625BFA" : "possible",
+    "0x3C6B870D79EF0DA5" : "advisory",
+    "0x3CAE50C6AEDFE8D0" : "advisory",
+    "0x3D383DF05F6B954E" : "advisory",
+    "0x42D995337D218176" : "possible",
+    "0x436B5ACBACACB93D" : "advisory",
+    "0x4480CA0C9C00404B" : "advisory",
+    "0x44AE58961B65ED7A" : "advisory",
+    "0x47B6057361AB376E" : "possible",
+    "0x4848D3642EC01D9F" : "advisory",
+    "0x484CD065A16C9689" : "possible",
+    "0x4B16E9EA830C94C1" : "possible",
+    "0x4DEEE219648BEB91" : "advisory",
+    "0x4F7C9CF60AFA0F60" : "advisory",
+    "0x505DCB7295FFC646" : "advisory",
+    "0x510238D8AB004F60" : "advisory",
+    "0x517F9563EA8D2FC9" : "possible",
+    "0x526CE17CCF747DBF" : "advisory",
+    "0x53CF2E0BDA9377B4" : "advisory",
+    "0x542563CD21CF84BA" : "possible",
+    "0x551666B0BBA38D40" : "advisory",
+    "0x562EB64C7A39A2D7" : "advisory",
+    "0x591962F75514071C" : "advisory",
+    "0x5A131D761D27BA4E" : "advisory",
+    "0x5AA171AD813DD24F" : "possible",
+    "0x601240D4385E9A36" : "possible",
+    "0x601C299B8D646063" : "advisory",
+    "0x61775CAD142EF6BB" : "advisory",
+    "0x63115C6ECD1DECF3" : "advisory",
+    "0x636503EB67ABC228" : "possible",
+    "0x64278108766BDC68" : "advisory",
+    "0x6928CE971812351E" : "advisory",
+    "0x69FA282566BBFAC9" : "advisory",
+    "0x70A5534472603475" : "possible",
+    "0x77F2DB268B59BB0C" : "advisory",
+    "0x7AF124BD5A7BEC90" : "advisory",
+    "0x7F9C980A0239CE55" : "advisory",
+    "0x889B06F98D0E630F" : "possible",
+    "0x88F39E39ECB6C109" : "advisory",
+    "0x89434734D8C0B56B" : "advisory",
+    "0x89D2DA91A79D1CB4" : "advisory",
+    "0x8D05D4CB6AA23C54" : "advisory",
+    "0x8D18943B98C821D2" : "possible",
+    "0x92D5886A94424867" : "possible",
+    "0x94139128D9C3D816" : "possible",
+    "0x9960F1CB3961C53A" : "advisory",
+    "0x9DEF348C9154E18C" : "likely",
+    "0x9E5CD72AEF5E7EBE" : "advisory",
+    "0xA4526F3B17DDB6F4" : "advisory",
+    "0xA5FEDD741524FCAF" : "advisory",
+    "0xAACBDA4E53FD84D6" : "advisory",
+    "0xADC8F2162ED43566" : "advisory",
+    "0xAE0E3979A8C57A93" : "possible",
+    "0xB04D4117A5D85CDD" : "possible",
+    "0xB0EF84AE8F938F6D" : "possible",
+    "0xB2CBC6A06B136175" : "possible",
+    "0xB56A12C6CAD0D03A" : "possible",
+    "0xB76310C42975A984" : "possible",
+    "0xB7C0F91A95D242C4" : "advisory",
+    "0xB84E1F079AB2A908" : "possible",
+    "0xBAC41151CBE8BEE1" : "advisory",
+    "0xBEDA87695E23FF69" : "possible",
+    "0xC1D757B802ECED28" : "possible",
+    "0xC6ECDACE012A0176" : "advisory",
+    "0xC7CFBEDCFF5367DB" : "advisory",
+    "0xC84ED2406AAEA5E3" : "advisory",
+    "0xC96AC5CDECEFB5B2" : "advisory",
+    "0xCA37D39A2BDFD9D4" : "advisory",
+    "0xCCBDF3A445F8D857" : "strong",
+    "0xCD52C25EE3650E6A" : "possible",
+    "0xCDCEDD9202203209" : "possible",
+    "0xCE793B782AEA52A6" : "advisory",
+    "0xCECABAC406D90FBD" : "advisory",
+    "0xD125BAAA660E7C66" : "possible",
+    "0xD447E6EC0FC7D1A6" : "possible",
+    "0xD6A6970AE77A81C8" : "possible",
+    "0xD6B998863D27F9A7" : "advisory",
+    "0xD7EF529E42CD58BF" : "possible",
+    "0xDCD0F426489D955D" : "advisory",
+    "0xDD0DA77FB4F58E68" : "advisory",
+    "0xDD6A9B0AA61FF989" : "advisory",
+    "0xDFBA628D3FF32316" : "advisory",
+    "0xE041794E04BF94F5" : "possible",
+    "0xE3BD05CF1F607528" : "advisory",
+    "0xE4DE86E4B445D67F" : "advisory",
+    "0xE6203B69A9FDF499" : "possible",
+    "0xE6EA89ADD939199B" : "possible",
+    "0xED593C41E32374F7" : "possible",
+    "0xEF06A5BCAA70BDC7" : "advisory",
+    "0xF386E3139F4F3B21" : "advisory",
+    "0xF834DA48057A3219" : "advisory",
+    "0xF86FD776BA3A94FC" : "possible",
+    "0xF8F7A5AF0E92AFC7" : "advisory",
+    "0xFA2561B5C09DD421" : "possible",
+    "0xFB44E64EF6C177A4" : "advisory",
+    "0xFC8FF8ECE3365435" : "likely",
+    "0xFCCFD406E3CD5077" : "possible"
+  }
+}

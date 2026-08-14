@@ -134,8 +134,20 @@ enum SharedVerifierPackage {
     ///
     /// One package holds every member, so it must satisfy the *highest*
     /// requirement present. Members with no user package contribute nothing;
-    /// with none at all this lands on `defaultMacOSVersion`, which is what the
+    /// with none at all this lands on the kit floor, which is what the
     /// survey emitted before this existed.
+    ///
+    /// **This is the SECOND implementation of the corpus-floor rule and it is the one the
+    /// survey actually runs** — `VerifierWorkdir.macOSPlatformLine` serves the per-suggestion
+    /// workdir, this one serves `verify --all-from-index` (and so `prove-then-show`). Fixing
+    /// the corpus-is-LOWER direction in that copy alone moved **0 of 129 rows** on
+    /// swift-format, an A/B whose two arms were byte-identical; the fix had gone into a path
+    /// the survey does not call. Both now route through `VerifierWorkdir.atLeastKitFloor`, so
+    /// the rule lives in one place and cannot diverge again.
+    ///
+    /// The repo has paid this exact tax before — see `TemplateName`'s note that five separate
+    /// enumerations of the template vocabulary must agree, and that missing one is silent in a
+    /// different way each time.
     private static func platformLine(members: [Member]) -> String {
         let versions = members.compactMap { member -> String? in
             member.userPackage.flatMap {
@@ -147,8 +159,8 @@ enum SharedVerifierPackage {
         let highest = versions
             .compactMap { Int($0.split(separator: ".").first.map(String.init) ?? "") }
             .max()
-        let version = highest.map { "\($0).0" } ?? VerifierWorkdir.defaultMacOSVersion
-        return ".macOS(\"\(version)\")"
+        let declared = highest.map { "\($0).0" }
+        return ".macOS(\"\(VerifierWorkdir.atLeastKitFloor(declared))\")"
     }
 
     /// One target directory holding one `main.swift` — the shape SwiftPM requires of

@@ -83,3 +83,16 @@ uses `subjectFingerprint` to separate:
 | file | subject | taken |
 |---|---|---|
 | `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `c998752`, kit 3.28.0 | 2026-08-14 |
+| `2026-08-14-SwiftFormat.json` | swift-format `SwiftFormat` @ `d2bd4b3` — first third-party run | 2026-08-14 |
+
+**The swift-format entry is the POST-fix arm (arm C).** The pre-fix arm is not retained here on
+purpose: it is 129 rows all reporting one instrument failure (the verifier's macOS floor sat
+below the kit's, so every build died), and banking it as a baseline would invite a future diff
+to read the instrument's repair as a change in swift-format. Its numbers are recorded in the
+commit that fixed it — 0 executed before, 2 after — which is where a *superseded* measurement
+belongs.
+
+**Retaining it also caught the fix being wrong the first time.** The corpus-floor rule had two
+implementations; the first repair went into the one `prove-then-show` does not call, and the
+A/B came back **byte-identical, 129 rows, nothing moved**. The renderer said so explicitly
+rather than printing nothing, which is the whole argument for the empty-diff wording above.
