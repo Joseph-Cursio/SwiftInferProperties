@@ -214,6 +214,25 @@ public enum TargetIsolation {
     private final class DumpCache: @unchecked Sendable {
         private let lock = NSLock()
         private var entries: [String: DumpedPackage?] = [:]
+        private var invocations = 0
+
+        /// How many times SwiftPM has actually been spawned, process-wide.
+        ///
+        /// Exposed so a guard can assert the SHAPE of the cost rather than time it: the
+        /// measured defect was one `dump-package` per index entry, and that is a count, not a
+        /// duration. A stopwatch on the suite catches it only once it is catastrophic;
+        /// counting catches it at the first extra call, on any machine, with no flake.
+        var spawnCount: Int {
+            lock.lock()
+            defer { lock.unlock() }
+            return invocations
+        }
+
+        func noteSpawn() {
+            lock.lock()
+            invocations += 1
+            lock.unlock()
+        }
 
         func value(forKey key: String, compute: () -> DumpedPackage?) -> DumpedPackage? {
             lock.lock()
@@ -227,6 +246,7 @@ public enum TargetIsolation {
             // Two racing callers may both compute; they compute the same answer, and a
             // duplicated subprocess is cheaper than a serialised survey.
             let computed = compute()
+            noteSpawn()
             lock.lock()
             entries[key] = computed
             lock.unlock()
@@ -235,6 +255,10 @@ public enum TargetIsolation {
     }
 
     private static let dumpCache = DumpCache()
+
+    /// Process-wide count of `swift package dump-package` spawns. Test-facing; see
+    /// `DumpCache.spawnCount` for why this is a count rather than a timing.
+    static var manifestSpawnCount: Int { dumpCache.spawnCount }
 
     private static func dump(packageRoot: URL) -> DumpedPackage? {
         let key = packageRoot.standardizedFileURL.path
