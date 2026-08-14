@@ -111,6 +111,33 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
     /// **Two of these say the reader cannot fix it, and that is the point.** The tip this
     /// replaces implied every Unverifiable row was one `gen()` away. Naming a tool gap as a
     /// tool gap is more useful than prescribing work that will not move the number.
+    ///
+    /// ## The carrier remedy said `Gen<T>` until 2026-08-14, and that does not compile
+    ///
+    /// `Gen` is `public enum Gen<Value> {}` — an uninhabitable namespace holding static
+    /// factories. Nothing can return one. The real type is
+    /// `Generator<T, some SendableSequenceType>`, which is exactly what the KIT has always
+    /// told people to write (`SwiftPropertyLaws/PropertyLawCore/TodoReason.swift`,
+    /// `PropertyLawMacro`'s documented shape). Two tools in one toolchain gave contradictory
+    /// instructions for the same task, and the wrong one was downstream.
+    ///
+    /// **Note what is NOT wrong: `Gen<Int>.int(in:)` in EXPRESSION position is correct** and
+    /// every emitted recipe uses it (`StrategistDispatchEmitter+OCRecipes`). The defect was
+    /// only ever `Gen<T>` in RETURN-TYPE position, in this one string.
+    ///
+    /// **Scale.** This is the most-shown remedy on unfamiliar code — 138 rows on GRDB and 18
+    /// on swift-format, against 5 on this repo. It is invisible from inside, because nobody
+    /// working here needs to be told how to write a generator.
+    ///
+    /// **Found by following it literally**, which is the one thing no test in either repo
+    /// does. It is issue #256's class exactly — a refusal advertising `--extra-import`, a flag
+    /// that does not exist — and #256's guard (`RefusalFlagVocabularyTests`) cannot catch it,
+    /// because that asserts every `--flag` parses and this is a type name.
+    /// `GenAdviceCompilesTests` closes the gap by reading the signature out of the kit.
+    ///
+    /// The advice also hid a real adoption cost it now states: a `gen()` returning a
+    /// `Generator` needs `import PropertyBased`, so following it makes swift-property-based a
+    /// dependency of the *production* target under test.
     public var remedy: String {
         switch self {
         case .unsupportedTemplate:
@@ -118,9 +145,11 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
                 + "swift-infer, not in your code. Nothing you write unblocks these."
 
         case .unsupportedCarrier:
-            "add `static func gen() -> Gen<T>` for that carrier in your target — a same-file "
-                + "extension works even for external types "
-                + "(e.g. `extension BigUInt { static func gen() … }`)."
+            "add `static func gen() -> Generator<T, some SendableSequenceType>` for that "
+                + "carrier — an extension works even for external types "
+                + "(e.g. `extension BigUInt { static func gen() … }`). It needs "
+                + "`import PropertyBased`, so the target you are testing takes "
+                + "swift-property-based as a dependency."
 
         case .unsupportedPair:
             "the template needs a second function and could not resolve it; check both halves "
