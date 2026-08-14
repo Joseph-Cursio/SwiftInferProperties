@@ -1,6 +1,6 @@
 {
-  "capturedAt" : "2026-08-14T15:48:25Z",
-  "label" : "SwiftInferCore @ c998752 (kit 3.28.0) — first retained baseline",
+  "capturedAt" : "2026-08-14T18:49:37Z",
+  "label" : "SwiftInferCore @ ecaa66f — post-fix sweep",
   "records" : [
     {
       "carrier" : "ReduceClosureWalker",
@@ -1434,7 +1434,7 @@
     }
   ],
   "schemaVersion" : 1,
-  "subjectRevision" : "/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/bank-baseline @ c998752",
+  "subjectRevision" : "/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/core-sweep @ ecaa66f",
   "swiftInferVersion" : "1.149.0 (unattributable build)",
   "target" : "SwiftInferCore",
   "tiersByIdentity" : {

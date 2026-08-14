@@ -78,14 +78,51 @@ uses `subjectFingerprint` to separate:
 - **Do not compare a retained run against a *remembered* count.** §10.3's rule stands: both
   arms on the same day, or the comparison is between a measurement and a memory.
 
+## Baselines are REPLACED, not accumulated
+
+Each corpus keeps **one** retained run, refreshed when a sweep confirms a newer commit
+reproduces it. Git history holds the superseded ones, which is the retention that matters —
+the failure this directory exists to prevent is a run being *destroyed*, and a committed file
+replaced in a tracked tree has not been destroyed.
+
+Accumulating a dated file per run would be worse than it looks: every future diff would keep
+reporting the same stale differences forever. The swift-format baseline carried two
+`build-failed` rows differing only by `:106` → `:107` — the `import PropertyLawKit` line added
+in #273 shifting every stub down by one — and re-basing clears that noise from every
+comparison that follows.
+
+**The exception is `2026-08-14-GRDB-staged.json`, which is never refreshed.** It is not a
+baseline; it is the other half of a pair. Its whole value is that a hand-staged checkout and a
+manifest-resolved one agree, and re-running it would defeat the comparison.
+
+### Sweep of 2026-08-14 (`ecaa66f`)
+
+Ten changes landed in the verify path that day — platform floor, stub imports, layout
+resolution, the diff engine, the remedy text — each verified against its own corpus and none
+against the other two. The sweep is the check none of them got:
+
+| corpus | result |
+|---|---|
+| `SwiftInferCore` | identical at row level |
+| swift-format | identical but for 2 known line shifts |
+| GRDB (native) | identical at row level |
+
+**All three are controls.** The prediction going in was that `SwiftInferCore` would move,
+because Core gained code that day — wrong: the Core-side change was a remedy *string* inside an
+existing function, which adds no public surface for a template to propose a law about. The rest
+was `SwiftInferCLI`, not the surveyed target.
+
+A clean sweep is the weak-but-correct outcome. The informative version of this run would have
+been a surprise, and there wasn't one.
+
 ## Inventory
 
 | file | subject | taken |
 |---|---|---|
-| `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `c998752`, kit 3.28.0 | 2026-08-14 |
-| `2026-08-14-SwiftFormat.json` | swift-format `SwiftFormat` @ `d2bd4b3` — first third-party run | 2026-08-14 |
+| `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `ecaa66f` — post-fix sweep | 2026-08-14 |
+| `2026-08-14-SwiftFormat.json` | swift-format `SwiftFormat` @ `d2bd4b3` — post-fix sweep | 2026-08-14 |
 | `2026-08-14-GRDB-staged.json` | GRDB `GRDB` @ `b83108d10` — **STAGED**, see below | 2026-08-14 |
-| `2026-08-14-GRDB-native.json` | GRDB `GRDB` @ `b83108d10` — **NATIVE**, untouched checkout | 2026-08-14 |
+| `2026-08-14-GRDB-native.json` | GRDB `GRDB` @ `b83108d10` — **NATIVE**, untouched checkout, post-fix sweep | 2026-08-14 |
 
 **The two GRDB runs are the same subject reached by different routes, and keeping both is the
 point.** The staged arm moved 167 files and edited a manifest; the native arm reads

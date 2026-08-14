@@ -1,6 +1,6 @@
 {
-  "capturedAt" : "2026-08-14T18:26:08Z",
-  "label" : "GRDB @ b83108d10 — native layout, cheap-check-first ordering",
+  "capturedAt" : "2026-08-14T18:53:05Z",
+  "label" : "GRDB @ b83108d10 native — post-fix sweep",
   "records" : [
     {
       "carrier" : "Row",

@@ -1,6 +1,6 @@
 {
-  "capturedAt" : "2026-08-14T16:11:20Z",
-  "label" : "swift-format SwiftFormat @ d2bd4b3 — arm C, both platform-floor copies fixed",
+  "capturedAt" : "2026-08-14T18:51:11Z",
+  "label" : "swift-format @ d2bd4b3 — post-fix sweep",
   "records" : [
     {
       "carrier" : "CommentMovingRewriter",
@@ -905,7 +905,7 @@
       "carrier" : "NewlineBehavior",
       "identityHash" : "0x23D54EEF43B15B2E",
       "outcome" : "measured-error",
-      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V23D54EEF43B15B2E/main.swift:105:18: error: binary operator '!=' cannot be appli…",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V23D54EEF43B15B2E/main.swift:106:18: error: binary operator '!=' cannot be appli…",
       "primaryFunctionName" : "+(lhs:rhs:)",
       "subjectFingerprint" : "D7C4712418080C43",
       "templateName" : "commutativity"
@@ -950,7 +950,7 @@
       "carrier" : "NewlineBehavior",
       "identityHash" : "0x3A9CF5812D625BFA",
       "outcome" : "measured-error",
-      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3A9CF5812D625BFA/main.swift:106:18: error: binary operator '!=' cannot be appli…",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/swift-format-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3A9CF5812D625BFA/main.swift:107:18: error: binary operator '!=' cannot be appli…",
       "primaryFunctionName" : "+(lhs:rhs:)",
       "subjectFingerprint" : "D7C4712418080C43",
       "templateName" : "associativity"
