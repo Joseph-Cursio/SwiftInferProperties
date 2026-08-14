@@ -2040,3 +2040,108 @@ identifier the matchers quantify over into a string literal, so the nested form 
 worked stopped matching. Substitution is now restricted to bindings whose initializer is a
 CALL — computed intermediates — and inputs stay symbolic. **Both bugs were in the widening, not
 the feature, and both were found by arms written to fail rather than by reading.**
+
+---
+
+## §11 Fourth pass at `fdae49f` (2026-08-14) — issue #256's re-measurement
+
+Issue #256 closed the message half of its own defect at `3c62596` (a refusal named
+`--extra-import`, a flag the CLI does not declare, for an import the tool already performs).
+Its remaining ask was a measurement, not a fix: **do the syntax-node picks actually reach
+execution now that the kit's generators are wired?** This runs it.
+
+`prove-then-show --target SwiftInferCore --budget small --max-parallel 4`, fresh detached
+`git worktree` at `fdae49f`, release binary built from that commit. §8's method note: the
+worktree makes the index clean by construction, since `.swiftinfer/` is gitignored. Exit 0,
+~10 GB of workdirs.
+
+### §11.1 Buckets
+
+| | §10.10 (`d1eaa1f`, 2026-08-10) | §11 |
+|---|---|---|
+| picks tested | 156 | **159** |
+| Proven | 85 | **87** |
+| Expected-to-hold | 0 | **0** |
+| Disproven | 2 | **2** |
+| Unverifiable | 62 | **61** |
+| Inconclusive | 7 | **9** |
+| `unsupported-carrier` | 5 | **5** |
+| `build-failed` | 0 | **0** |
+
+**Compare against §10.10, not §10.1** — §10.10 is the most recent run and already holds the
+`SubjectFingerprint.of(bodyText:)` refutation, so reading this against §10.1 would report a
+month-old finding as new. Both Disproven rows here are the pair §10.10.2 records
+(`BuildIdentity.versionString`, `SubjectFingerprint.of(bodyText:)`), both `Possible`, both
+false laws about correct code. **No new refutation, and zero defects.**
+
+**Movement is corpus growth, and it is only partly attributable.** Four subjects landed since
+`d1eaa1f`: `CollisionBias.isPathShaped`, `HostileInputEntryPoints.hasResultNoun` and
+`.normalizedLabel` (all Proven here) and `VerifyEvidenceScoring.isContradictedByAuthor`
+(Inconclusive — §10.11's own code, a trap in the generator's domain). That is four new picks
+against a net **+3**, so at least one earlier pick left the corpus or changed bucket, and
+saying which would need the previous run's row list — **which this document does not record**.
+The bucket tables here have always been counts; per-row diffs have only ever been possible for
+populations someone opened by hand. Recorded as a limitation of the method, not smoothed over.
+
+### §11.2 The answer: zero `unsupported-carrier` rows name a syntax node
+
+```
+? EffectResolver           predicate  carriesInformationUpward(_:)   (unsupported-carrier: Effect)
+? FunctionScannerVisitor   predicate  hasSPIAttribute(_:)            (unsupported-carrier: FunctionScannerVisitor)
+? FunctionScannerVisitor   predicate  isNestedLocalFunction(_:)      (unsupported-carrier: FunctionScannerVisitor)
+? ProtocolCoverageMap      predicate  anyCovers(_:_:)                (unsupported-carrier: S)
+? SetAlgebraShape          predicate  isSelfTypedBinaryOp(_:)        (unsupported-carrier: FunctionSummary)
+```
+
+All five are §9.9's residual categories and none is a syntax node: `Effect` cross-module,
+`FunctionScannerVisitor` ×2 our own visitor (a traversal is not a value — correct silence),
+`S` a generic parameter (unsupportable by construction), `FunctionSummary` the one real local
+gap. **The population #256 asked about is gone from this bucket.**
+
+**#256's own baseline was stale when it was filed.** It quotes *"9 of 20 `unsupported-carrier`
+rows ... declined for want of an import, not for want of a generator"* from 2026-08-09 — which
+is §9.3's finding, and §9.3 *measured the answer the same afternoon* in an A/B before the
+wiring shipped as `3c5ebd4`. So this pass is a production **re-test of a branch-arm result**,
+not a first measurement, and the question it settles is narrower than the issue frames it.
+
+### §11.3 It reproduces §9.3 arm B exactly — 1 of 9 reached execution
+
+| arm A row (2026-08-09) | §9.3 arm B | §11 (production) |
+|---|---|---|
+| `ReducerDiscoveryVisitor  declaresReducerConformance` (`InheritanceClauseSyntax?`) | ✓ Proven | **✓ Proven** |
+| `Visitor  isStatic` (`DeclModifierListSyntax`) | `internal-api-not-accessible` | subject not visible to tests |
+| `MemberBlockInspector  isStaticOrClass` (`DeclModifierListSyntax`) | `internal-api-not-accessible` | subject not visible to tests |
+| `EqualityBodyClassifier  iteratesAZipOfBoth` (`StringLiteralExprSyntax`) | `internal-api-not-accessible` | subject not visible to tests |
+| 2 rows (`CodeBlockItemSyntax`, `DictionaryExprSyntax`) | `unsupported-carrier: BodySignalVisitor` | **subject not visible to tests** |
+
+**The honest headline is 1 of 9, not 9 of 9.** Eight were blocked by a second, independent
+thing, and the generator gap was merely the one that reported — the standing rule *a refuter
+that fires first hides every refuter behind it*, confirmed in production rather than on a
+branch. Three have unreachable subjects (§2's case: **lift the law, do not widen access**).
+
+**The two `BodySignalVisitor` rows improved on arm B**, which is the one place production
+beats the branch. Arm B left them declining on a *second* unsupported carrier, the enclosing
+visitor; §9.7's `subjectNotVisibleToTests` re-attribution now fires ahead of the carrier gate,
+so they report the blocker that actually bites first. A reader is no longer sent to write a
+`gen()` for a visitor when the subject is `private` anyway.
+
+Two further syntax carriers are Proven that arm B never listed —
+`MemberBlockInspector.hasUserGen(in:)` and `.hasUserInit(in:)`, both `MemberBlockSyntax`.
+
+### §11.4 What §11 does not claim
+
+**A Proven syntax law is a weak claim wearing a strong-sounding carrier.** The one law that
+executes quantifies over a *randomly drawn* `InheritanceClauseSyntax?`. `measured-bothPass`
+means no counterexample in the generated domain, and a generated syntax node is drawn from a
+pool rather than derived from the shape the code expects — so the standing caveat applies here
+with **more** force than usual, not less. It should not be read as *the law holds*.
+
+**Inconclusive 7 → 9 is not diagnosed.** One is `isContradictedByAuthor`, new code. The other
+is unattributed for the reason §11.1 gives. All nine are the generator-trap family already on
+record — §8.4's unbounded draw, with `SourceLocation(line: -691367222)` visible in the flush
+again, and one `Range requires lowerBound <= upperBound`. **These are evidence about the
+generator's domain, not about the laws**, which is what the bucket exists to say.
+
+**Nothing was shipped and nothing was written to the working repo.** The run was read-only in
+a throwaway worktree; this repo's own `.swiftinfer/` was never touched, so no evidence store
+here was overwritten — the trap `fixtures/whole-corpus-survey/` records.
