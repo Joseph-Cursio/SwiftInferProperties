@@ -42,16 +42,56 @@ extension VerifierWorkdir {
     /// `.v26` does not exist in that version's `PackageDescription` — it fails
     /// with `'v26' is unavailable`. The string form is accepted at every tools
     /// version and needs no table of enum cases to stay current.
+    /// **Mirroring the corpus is only half the requirement, and the other half was missing
+    /// until 2026-08-14.** The paragraph above fixes the corpus-is-HIGHER direction. The
+    /// corpus-is-LOWER direction fails just as totally and in the same words, because
+    /// `PropertyLawKit` declares `.macOS(.v14)`: a verifier mirroring a corpus at 13.0 gets
+    /// *"the executable requires macos 13.0, but depends on the product 'PropertyLawKit' which
+    /// requires macos 14.0"*, and **every pick lands in `build-failed`**.
+    ///
+    /// Measured on swift-format `d2bd4b3` (2026-08-14), whose floor is a wholly ordinary
+    /// `.macOS("13.0")`: **129 picks, 0 executed** — 39 reached a build and all 39 died here,
+    /// the other 90 never got that far. That reads as *the tool cannot verify this package*
+    /// when the truth is one line of a generated manifest.
+    ///
+    /// So the floor is `max(corpus, kit)`, not the corpus's value. Note this is a **regression
+    /// the 2026-08-05 fix introduced**: the hardcoded `.macOS(.v14)` it replaced satisfied the
+    /// kit by construction, so swift-format would have verified before that change and not
+    /// after. A one-directional fix to a two-directional constraint.
     static func macOSPlatformLine(userPackage: UserPackageReference?) -> String {
-        let version = userPackage
+        let declared = userPackage
             .flatMap { declaredMacOSVersion(inPackageAt: $0.packagePath) }
-            ?? defaultMacOSVersion
-        return ".macOS(\"\(version)\")"
+        return ".macOS(\"\(atLeastKitFloor(declared))\")"
     }
 
-    /// The floor used when the corpus declares nothing readable — unchanged from
-    /// the constant this replaced, so a corpus that worked before still does.
-    static let defaultMacOSVersion = "14.0"
+    /// The higher of the corpus's declared floor and the kit's own, compared by major version
+    /// — string ordering ranks "9.0" above "14.0", the same trap `declaredMacOSVersion` calls
+    /// out for its regex matches.
+    ///
+    /// A `nil` declaration (no manifest, or unreadable) yields the kit floor unchanged, which
+    /// is the behaviour every corpus had before this existed.
+    static func atLeastKitFloor(_ declared: String?) -> String {
+        guard let declared,
+              let declaredMajor = Int(declared.split(separator: ".").first ?? ""),
+              let kitMajor = Int(kitMacOSFloor.split(separator: ".").first ?? "") else {
+            return kitMacOSFloor
+        }
+        return declaredMajor > kitMajor ? declared : kitMacOSFloor
+    }
+
+    /// The kit's own `platforms:` floor, which the verifier can never go below because every
+    /// generated executable links `PropertyLawKit`. Also the fallback when the corpus declares
+    /// nothing readable — unchanged from the constant this replaced, so a corpus that worked
+    /// before still does.
+    ///
+    /// **Guarded against the kit's manifest by `VerifierPlatformFloorTests`**, because a
+    /// literal here that drifts below the kit's real floor reintroduces exactly the failure
+    /// above, silently and on every corpus at once.
+    static let kitMacOSFloor = "14.0"
+
+    /// Retained spelling of `kitMacOSFloor` — the name this constant had when it meant only
+    /// "the fallback". Kept so existing call sites and tests read unchanged.
+    static var defaultMacOSVersion: String { kitMacOSFloor }
 
     /// Highest macOS version declared in `<packagePath>/Package.swift`, or `nil`.
     ///
