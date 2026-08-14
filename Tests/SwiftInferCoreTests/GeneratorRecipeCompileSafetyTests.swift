@@ -49,7 +49,16 @@ struct GeneratorRecipeCompileSafetyTests {
         assertCompileSafe(recipe, "carrierState")
         // It ships the runnable half — a colliding string — and names the manual carrier-init step.
         #expect(recipe.expression.contains("Gen<String?>.element(of:"))
-        #expect(recipe.expression.contains("ImmediateChildPredicate("), "must name the init to feed")
+        // **Was `contains("ImmediateChildPredicate(")` — "must name the init to feed" — and that
+        // assertion is what produced the defect it was meant to prevent.** Requiring a rendered
+        // CALL forced the recipe to invent an initialiser label, and it invented
+        // `SwiftFormatConfig(currentPath: $0)` for a type with no such property: a reader pastes
+        // it and it does not compile. The intent was that the recipe must not stop at a bare
+        // string generator with no guidance, so that is what is asserted — the carrier is NAMED
+        // and the manual step is DESCRIBED, without a call to paste.
+        #expect(recipe.expression.contains("ImmediateChildPredicate"), "must name the carrier")
+        #expect(!recipe.expression.contains("ImmediateChildPredicate("), "must not invent a call")
+        #expect(recipe.expression.contains("build the carrier from it"), "must name the step")
     }
 
     @Test("the out-of-range index recipe is compile-safe")

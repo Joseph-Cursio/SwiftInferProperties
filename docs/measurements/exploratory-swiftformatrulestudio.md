@@ -315,7 +315,54 @@ human cannot audit*, one step further along: a row a human cannot **see**.
    spot is `propertyCheck`-shaped bodies; this subject shows the same silence on a plain
    `#expect` with a static-property input, which is the ordinary way a human writes it.
 
-3. **A generator recipe from the wrong domain.** `rulesAlreadyPresent(_ name: String, kind:
+3. **A generator recipe from the wrong domain.**
+
+   > **FIXED 2026-08-14 — `CollisionBias.collidingString` splits into a path-shaped and a
+   > neutral form.** The collision *advice* was always sound; the domain it asserted was
+   > invented, and the type's own header had already argued the right rule — *"what generalises
+   > is not the shape but the alphabet"* — while the code rendered `"/" + …` and explained
+   > itself in terms of ancestors for **every** `String` parameter of every predicate.
+   > `IdempotenceTemplate+Generators` names the problem in as many words (*"`collidingString`
+   > is path-flavored"*) and declines to reuse it for that reason. Two files knew; neither
+   > gate did.
+   >
+   > Selection is on a `pathShapedNames` set that is a deliberate **subset** of
+   > `HostileInputEntryPoints.locationLabels` — that set contains `name`, `key` and
+   > `identifier`, which are locations in its sense and are not path-shaped, and reusing it
+   > whole would have reproduced the defect on exactly the witness.
+   >
+   > **The carrier half was worse and is fully removed.** It rendered
+   > `.map { SwiftFormatConfig(currentPath: $0) }` — a property that type does not have. That
+   > is worse than the `gen()` mistake the surrounding comment was written to prevent: `gen()`
+   > names a method that exists nowhere and fails obviously, while this **looks specific**, so
+   > a reader pastes it. The recipe now names the carrier and describes the manual step without
+   > emitting a call.
+   >
+   > **A/B against a clean baseline, rows unchanged everywhere** — this changes explanation,
+   > not selection:
+   >
+   > | corpus | base rows / path-prose | after |
+   > |---|---|---|
+   > | SwiftFormatRuleStudioCore | 20 / **10** | 20 / **0** |
+   > | SwiftInferCore | 157 / **110** | 157 / 3 |
+   > | SwiftInferCLI | 198 / **52** | 198 / 3 |
+   >
+   > The survivors are two genuine docstrings containing the word and this repo's own
+   > `collidingString` doc — **zero** spurious path claims remain. The 110 is the finding's real
+   > scale: it was never one row on one subject, it was this repo's own output telling readers
+   > about ancestors and separators on subjects that have neither.
+   >
+   > **A passing test was pinning the defect, for the fourth time this run.**
+   > `GeneratorRecipeCompileSafetyTests` asserted `expression.contains("ImmediateChildPredicate(")`
+   > — *"must name the init to feed"* — which **forced** the recipe to invent an initialiser
+   > label. The intent (do not stop at a bare generator with no guidance) is now asserted as
+   > *names the carrier* + *describes the step* + **does not** emit a call.
+   >
+   > **One instance of the same class is left standing, deliberately unfixed here**:
+   > `StateMachineTemplate`'s caveat illustrates its law with *"`currentPath` always ends in a
+   > separator; it never escapes the root"*, which renders on `SwiftFormatConfig.removeOption`.
+   > It is prose rather than pasteable code, and it belongs to a different template — bundling
+   > it would make this commit two changes. `rulesAlreadyPresent(_ name: String, kind:
    RuleDirectiveKind)` — a rule-name lookup — is issued a **path** collision generator:
    a four-symbol alphabet including `/`, the rationale *"any path contains its own
    ancestors"*, `Gen.element(of: ["a","b","c","/"])…map { "/" + $0.joined() }`, and the
