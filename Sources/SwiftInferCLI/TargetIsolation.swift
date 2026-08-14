@@ -214,23 +214,40 @@ public enum TargetIsolation {
     private final class DumpCache: @unchecked Sendable {
         private let lock = NSLock()
         private var entries: [String: DumpedPackage?] = [:]
-        private var invocations = 0
+        private var invocationsByKey: [String: Int] = [:]
 
-        /// How many times SwiftPM has actually been spawned, process-wide.
+        /// How many times SwiftPM has been spawned, process-wide.
         ///
         /// Exposed so a guard can assert the SHAPE of the cost rather than time it: the
         /// measured defect was one `dump-package` per index entry, and that is a count, not a
         /// duration. A stopwatch on the suite catches it only once it is catastrophic;
-        /// counting catches it at the first extra call, on any machine, with no flake.
+        /// counting catches it at the first extra call, on any machine.
         var spawnCount: Int {
             lock.lock()
             defer { lock.unlock() }
-            return invocations
+            return invocationsByKey.values.reduce(0, +)
         }
 
-        func noteSpawn() {
+        /// Spawns for ONE package root.
+        ///
+        /// **Counted per key because the process-wide total cannot be asserted on.** Suites run
+        /// concurrently and at least six of them dump a manifest, so a delta taken around one
+        /// arm's own calls silently collects other suites' spawns — measured here as a
+        /// reproducible off-by-one and off-by-two in `ManifestSpawnBudgetTests`, growing with
+        /// how much else happens to be running. The counter could not tell *whose* spawn it
+        /// was, so the guard reported a defect in the cache when the cache was working.
+        ///
+        /// Per-key is also what the guard actually means: the claim is *this package root is
+        /// dumped at most once*, not *nothing in the process dumps anything*.
+        func spawnCount(forKey key: String) -> Int {
             lock.lock()
-            invocations += 1
+            defer { lock.unlock() }
+            return invocationsByKey[key] ?? 0
+        }
+
+        func noteSpawn(forKey key: String) {
+            lock.lock()
+            invocationsByKey[key, default: 0] += 1
             lock.unlock()
         }
 
@@ -246,7 +263,7 @@ public enum TargetIsolation {
             // Two racing callers may both compute; they compute the same answer, and a
             // duplicated subprocess is cheaper than a serialised survey.
             let computed = compute()
-            noteSpawn()
+            noteSpawn(forKey: key)
             lock.lock()
             entries[key] = computed
             lock.unlock()
@@ -259,6 +276,12 @@ public enum TargetIsolation {
     /// Process-wide count of `swift package dump-package` spawns. Test-facing; see
     /// `DumpCache.spawnCount` for why this is a count rather than a timing.
     static var manifestSpawnCount: Int { dumpCache.spawnCount }
+
+    /// Spawns for one package root. **Prefer this in a guard** — the process-wide total
+    /// collects concurrent suites' spawns and cannot say whose they were.
+    static func manifestSpawnCount(forPackageRoot packageRoot: URL) -> Int {
+        dumpCache.spawnCount(forKey: packageRoot.standardizedFileURL.path)
+    }
 
     private static func dump(packageRoot: URL) -> DumpedPackage? {
         let key = packageRoot.standardizedFileURL.path

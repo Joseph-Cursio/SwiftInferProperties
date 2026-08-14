@@ -23,7 +23,13 @@ import Testing
 /// duration budget only catches it once it is already catastrophic, varies by machine, and
 /// flakes under parallel load; this repo's own §13 note records `MemoryCeilingPerformanceTests`
 /// reading 150 MB alone and 4,800 MB under a full run. Counting spawns catches the same defect
-/// at the **first** extra call, deterministically, everywhere.
+/// at the **first** extra call.
+///
+/// **Corrected 2026-08-14: this used to end "deterministically, everywhere", and it was not.**
+/// The count was process-wide while the cache is per-root, so concurrent suites' spawns landed
+/// in this suite's deltas and it failed at `delta → 1` and `delta → 2` — a count is only
+/// flake-free once it is *attributable*. It now counts per package root (see `spawnDelta`).
+/// A shape is still the right thing to assert; the first version just asserted the wrong one.
 ///
 /// The wall-clock ceiling that complements this lives in the Makefile, deliberately loose: it
 /// exists to catch an order-of-magnitude regression that this suite somehow misses, not to
@@ -53,13 +59,23 @@ struct ManifestSpawnBudgetTests {
         return root
     }
 
-    /// The count is process-wide and other suites may run concurrently, so every arm measures
-    /// a **delta** across its own calls rather than an absolute. A concurrent spawn inflates
-    /// the delta, which can only make an arm fail — never pass wrongly.
-    private func spawnDelta(during work: () -> Void) -> Int {
-        let before = TargetIsolation.manifestSpawnCount
+    /// Spawns attributable to **this arm's own package root**, as a delta across its calls.
+    ///
+    /// It used to read the process-wide total, and that was measured wrong on 2026-08-14: at
+    /// least six suites dump a manifest, they run concurrently, and their spawns landed in this
+    /// arm's delta. It failed with `delta → 1` and `delta → 2` and got steadily more likely as
+    /// the suite grew — reporting a defect in a cache that was working perfectly.
+    ///
+    /// The old comment claimed a concurrent spawn "can only make an arm fail — never pass
+    /// wrongly", which is true and is not a defence: a guard that fails for a reason unrelated
+    /// to what it guards teaches people to re-run it, and then it guards nothing.
+    ///
+    /// Keying by root is also closer to the claim. What is being asserted is *this package root
+    /// is dumped at most once*, not *nothing in the process dumps anything*.
+    private func spawnDelta(forRoot root: URL, during work: () -> Void) -> Int {
+        let before = TargetIsolation.manifestSpawnCount(forPackageRoot: root)
         work()
-        return TargetIsolation.manifestSpawnCount - before
+        return TargetIsolation.manifestSpawnCount(forPackageRoot: root) - before
     }
 
     @Test("a conventional layout never reads the manifest, however many entries")
@@ -70,7 +86,7 @@ struct ManifestSpawnBudgetTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let location = root.appendingPathComponent("Sources/Core/Thing.swift").path + ":7"
 
-        let delta = spawnDelta {
+        let delta = spawnDelta(forRoot: root) {
             for _ in 0 ..< 200 {
                 _ = VerifyTargetInference.module(forLocation: location, packageRoot: root)
             }
@@ -91,7 +107,7 @@ struct ManifestSpawnBudgetTests {
         // first call legitimately spawns.
         _ = VerifyTargetInference.module(forLocation: location, packageRoot: root)
 
-        let delta = spawnDelta {
+        let delta = spawnDelta(forRoot: root) {
             for _ in 0 ..< 200 {
                 _ = VerifyTargetInference.module(forLocation: location, packageRoot: root)
             }
@@ -128,7 +144,7 @@ struct ManifestSpawnBudgetTests {
         let location = root.appendingPathComponent("Elsewhere/Thing.swift").path + ":1"
 
         _ = VerifyTargetInference.module(forLocation: location, packageRoot: root)
-        let delta = spawnDelta {
+        let delta = spawnDelta(forRoot: root) {
             for _ in 0 ..< 50 {
                 _ = VerifyTargetInference.module(forLocation: location, packageRoot: root)
             }
