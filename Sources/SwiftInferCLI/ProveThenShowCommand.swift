@@ -46,7 +46,20 @@ extension SwiftInferCommand {
         public var directory: String?
 
         @Option(name: .long, help: "SwiftPM target to index + verify (resolved to Sources/<target>).")
-        public var target: String
+        public var target: String?
+
+        @Option(
+            name: .long,
+            help: """
+            Survey a registered corpus by id (see `swift-infer corpus`), resolving the tree, \
+            the target and the run label out of \(CorpusManifest.relativePath) instead of the \
+            prompt. Mutually exclusive with --target and --directory: two sources of truth for \
+            which tree was surveyed is the defect this flag exists to remove. Warns, loudly and \
+            in the retained label, when the checkout has moved off the revision its baseline \
+            was measured at.
+            """
+        )
+        public var corpus: String?
 
         @Option(
             name: .long,
@@ -116,8 +129,44 @@ extension SwiftInferCommand {
         )
         public var scanDependencies: Bool = false
 
+        /// Resolve the survey, and emit any corpus warnings **before** the work starts.
+        ///
+        /// Before, not after: a survey is minutes to tens of minutes, and a caveat printed at
+        /// the end arrives after the reader has already started reading the report.
+        func resolveSurvey() throws -> ResolvedSurvey {
+            guard let corpus else {
+                guard let target else {
+                    throw VerifyError.invalidArguments(
+                        reason: "pass --target <name>, or --corpus <id> to survey a registered "
+                            + "corpus (see `swift-infer corpus`)"
+                    )
+                }
+                return ResolvedSurvey(
+                    directory: URL(fileURLWithPath: directory ?? "."),
+                    target: target,
+                    derivedLabel: nil
+                )
+            }
+            guard target == nil, directory == nil else {
+                throw VerifyError.invalidArguments(
+                    reason: "--corpus is mutually exclusive with --target and --directory; the "
+                        + "manifest supplies both. Two sources of truth for which tree was "
+                        + "surveyed is the defect --corpus exists to remove."
+                )
+            }
+            let plan = try CorpusRunPlan.resolve(
+                corpusID: corpus, manifestRoot: URL(fileURLWithPath: ".")
+            )
+            for warning in plan.warnings {
+                FileHandle.standardError.write(Data("warning: \(warning)\n".utf8))
+            }
+            return ResolvedSurvey(
+                directory: plan.directory, target: plan.target, derivedLabel: plan.label
+            )
+        }
+
         public func run() async throws {
-            let workingDirectory = URL(fileURLWithPath: directory ?? ".")
+            let survey = try resolveSurvey()
 
             if surface == "interaction" {
                 guard let corpusModule else {
@@ -127,11 +176,11 @@ extension SwiftInferCommand {
                     )
                 }
                 let entries = try await VerifyInteractionSurvey.collectEntries(
-                    targets: [target],
+                    targets: [survey.target],
                     familyFilter: family,
                     userModuleName: corpusModule,
                     maxParallel: maxParallel,
-                    workingDirectory: workingDirectory
+                    workingDirectory: survey.directory
                 )
                 print(ProveThenShowRenderer.render(interactionEntries: entries), terminator: "")
                 return
@@ -141,7 +190,7 @@ extension SwiftInferCommand {
                     Data("warning: unknown --surface '\(surface)'; using algebraic\n".utf8)
                 )
             }
-            try await runAlgebraic(workingDirectory: workingDirectory)
+            try await runAlgebraic(survey: survey)
         }
 
         /// Pre-verify tier per identity hash, read back off the index written in step 1.
@@ -177,7 +226,9 @@ extension SwiftInferCommand {
             return tiers
         }
 
-        private func runAlgebraic(workingDirectory: URL) async throws {
+        private func runAlgebraic(survey: ResolvedSurvey) async throws {
+            let workingDirectory = survey.directory
+            let target = survey.target
 
             // 1. Index WITH Possible — the whole point is to test the
             //    low-confidence picks the default view hides.
@@ -231,7 +282,7 @@ extension SwiftInferCommand {
             //    confusion the first time it does move.
             let tiers = loadPreVerifyTiers(workingDirectory: workingDirectory)
             print(ProveThenShowRenderer.render(records, tiers: tiers), terminator: "")
-            retainIfRequested(records: records, tiers: tiers, workingDirectory: workingDirectory)
+            retainIfRequested(records: records, tiers: tiers, survey: survey)
         }
 
         /// Write the retained run, when `--retain-run` asked for one.
@@ -243,16 +294,20 @@ extension SwiftInferCommand {
         private func retainIfRequested(
             records: [SwiftInferCommand.Verify.SurveyRecord],
             tiers: [String: Tier],
-            workingDirectory: URL
+            survey: ResolvedSurvey
         ) {
             guard let retainRun else { return }
+            let target = survey.target
             let packageRoot = SwiftInferCommand.Verify
-                .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
+                .findPackageRoot(startingFrom: survey.directory) ?? survey.directory
             let run = RetainedSurveyRun.capturing(
                 records: records,
                 tiers: tiers,
                 context: RetainedSurveyRun.Context(
+                    // An explicit --retain-label still wins: the manifest removes the NEED to
+                    // hand-type one, not the ability to say what an unusual arm was.
                     label: retainLabel
+                        ?? survey.derivedLabel
                         ?? "\(target) @ \(CorpusProvenance.describe(packageRoot))",
                     target: target,
                     packageRoot: packageRoot,
