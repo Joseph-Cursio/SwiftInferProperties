@@ -118,9 +118,12 @@ enum SurveyRunDiff {
             guard let beforeRecord = beforeByIdentity[identity] else { continue }
             let beforeBucket = Bucket.of(beforeRecord.outcome)
             let afterBucket = Bucket.of(afterRecord.outcome)
-            // Cause-only moves are IN, deliberately — see the type doc.
+            // Cause-only moves are IN, deliberately — see the type doc. Compared through
+            // `normalisedDetail`, since a build diagnostic embeds the workdir's absolute path
+            // and two arms run from different directories otherwise differ on every such row.
             guard beforeBucket != afterBucket
-                || beforeRecord.outcomeDetail != afterRecord.outcomeDetail else { continue }
+                || detailsDiffer(beforeRecord.outcomeDetail, afterRecord.outcomeDetail)
+            else { continue }
             changed.append(
                 ChangedRow(
                     identityHash: identity,
@@ -153,6 +156,89 @@ enum SurveyRunDiff {
             afterCounts: counts(after.records),
             targetMismatch: before.target == after.target
                 ? nil : (before: before.target, after: after.target)
+        )
+    }
+
+    /// Whether two decline causes differ in substance, ignoring where the run happened.
+    ///
+    /// **Path collapsing alone was NOT enough, and finding that out took running it.** The
+    /// detail is truncated to a fixed length at write time, so a longer corpus directory
+    /// (`grdb-corpus` vs `grdb-gen`, 11 characters against 8) pushes the cut three characters
+    /// earlier and leaves genuinely different tails — `'SQLExpression' …` against
+    /// `'SQLExpression' to …`. Normalising the path cannot undo a truncation that already
+    /// happened. The first fix reported all 34 rows unchanged-in-count and was measured on the
+    /// same A/B that motivated it, which is the only reason it did not ship.
+    ///
+    /// So when either side was truncated, only the **common prefix** is compared. That is
+    /// principled rather than convenient: a truncated string carries no information past its
+    /// cut, so a difference beyond it is not observable from either record and no comparison
+    /// can honestly claim to see one.
+    static func detailsDiffer(_ before: String?, _ after: String?) -> Bool {
+        guard let beforeText = normalisedDetail(before),
+              let afterText = normalisedDetail(after) else {
+            return normalisedDetail(before) != normalisedDetail(after)
+        }
+        guard beforeText.hasSuffix(truncationMarker) || afterText.hasSuffix(truncationMarker)
+        else { return beforeText != afterText }
+        // Drop the marker itself before comparing. Keeping it compares an ellipsis against
+        // whatever the longer side had at that offset and reports a difference on every
+        // truncated row — the bug this method exists to fix, one layer in. Both records here
+        // are clipped to the SAME budget, so the longer normalised string is simply the one
+        // whose path ate less of it.
+        let beforeBody = droppingUnreliableTail(beforeText)
+        let afterBody = droppingUnreliableTail(afterText)
+        let shared = min(beforeBody.count, afterBody.count)
+        return beforeBody.prefix(shared) != afterBody.prefix(shared)
+    }
+
+    /// Strip the marker and the partial token before it.
+    ///
+    /// A clipped string's **final token is unreliable** — the cut lands wherever the budget
+    /// ran out, mid-word as easily as at a boundary. Dropping the marker alone left a residual
+    /// class visible on real data: a detail holding several diagnostics joined by `|`, cut
+    /// mid-path, compares `| /privat` against `| /private/t`, which no path normalisation can
+    /// reach because neither fragment is a complete path.
+    ///
+    /// Dropping back to the last whitespace boundary is the general form of the same
+    /// principle the prefix comparison rests on: do not compare characters whose presence is
+    /// an artifact of where the string was cut.
+    private static func droppingUnreliableTail(_ text: String) -> String {
+        guard text.hasSuffix(truncationMarker) else { return text }
+        let body = text.dropLast()
+        guard let lastSpace = body.lastIndex(of: " ") else { return String(body) }
+        return String(body[body.startIndex ..< lastSpace])
+    }
+
+    /// The ellipsis the survey appends when it clips a diagnostic.
+    static let truncationMarker = "…"
+
+    /// A decline cause with absolute directory prefixes collapsed, for COMPARISON only.
+    ///
+    /// **Measured defect, 2026-08-14.** A `build-failed` detail carries the compiler
+    /// diagnostic verbatim, which names the verifier workdir —
+    /// `/…/<corpus>/.swiftinfer/verify-workdir/shared-survey/Sources/V<hash>/main.swift:94:18`.
+    /// Two arms run from different directories therefore differ on **every** build-failed row.
+    /// The GRDB generator experiment reported 34 changed rows of which roughly 24 were this
+    /// and nothing else: the tool built to surface cause-only changes was manufacturing them.
+    ///
+    /// Only the **directory prefix** is collapsed. The file name, line and column stay, and so
+    /// does every word of the diagnostic — a real change of message, or of the line it points
+    /// at, still reports. The normalisation is deliberately not applied to what is DISPLAYED:
+    /// the report prints the raw detail, because a reader chasing a build failure needs the
+    /// actual path. Compare normalised, show verbatim.
+    ///
+    /// Conservative in the direction that matters: over-normalising would HIDE a real cause
+    /// change, so this collapses path prefixes and nothing else — not whitespace, not hashes,
+    /// not the identity-derived target name.
+    static func normalisedDetail(_ detail: String?) -> String? {
+        guard let detail else { return nil }
+        // `/a/b/c/main.swift` → `<path>/main.swift`. Anchored on a leading slash so relative
+        // mentions and prose containing slashes are untouched.
+        let pattern = #"/(?:[A-Za-z0-9_.+@\-]+/)+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return detail }
+        let range = NSRange(detail.startIndex..., in: detail)
+        return regex.stringByReplacingMatches(
+            in: detail, range: range, withTemplate: "<path>/"
         )
     }
 
